@@ -286,16 +286,18 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             The result of the join between `X` and inferred rows from
             ``self.aux_table``.
         """
-        main_table = X
+        self._main_table = X
         _join_utils.check_missing_columns(
-            main_table, self._main_key, "'X' (the main table)"
+            self._main_table, self._main_key, "'X' (the main table)"
         )
         key_values = self.vectorizer_.transform(
-            sbd.set_column_names(sbd.col(main_table, self._main_key), self._aux_key)
+            sbd.set_column_names(
+                sbd.col(self._main_table, self._main_key), self._aux_key
+            )
         )
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
-                main_table,
+                self._main_table,
                 key_values,
                 assignment["columns"],
                 assignment["estimator"],
@@ -308,20 +310,25 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         predictions = [
             _join_utils.add_column_name_suffix(df, self.suffix) for df in predictions
         ]
-        return sbd.concat_horizontal(main_table, *predictions)
+        return sbd.concat_horizontal(self._main_table, *predictions)
 
     def _check_prediction_results(self, results):
         checked_results = []
         failed_columns = []
         for res in results:
             new_res = dict(**res)
+            breakpoint()
             if res["failed"]:
                 _pred = [
-                    sbd.all_null_like(sbd.col(self.aux_table, col))
+                    sbd.all_null_like(
+                        sbd.col(self.aux_table, col),
+                        length=sbd.shape(self._main_table)[0],
+                    )
                     for col in res["columns"]
                 ]
                 _pred = [
-                    sbd.make_dataframe_like(self.aux_table, [col]) for col in _pred
+                    sbd.make_dataframe_like(self._main_table, [col])
+                    for col in _pred.copy()
                 ]
                 pred = sbd.concat_horizontal(*_pred)
                 new_res["predictions"] = pred
