@@ -102,8 +102,10 @@ if _POLARS_INSTALLED:
             "module": pl,
             "DataFrame": pl.DataFrame,
             "Column": pl.Series,
-            "make_dataframe": pl.from_dict,
-            "make_column": lambda name, values: pl.Series(name=name, values=values),
+            "make_dataframe": lambda data: pl.from_dict(data, strict=False),
+            "make_column": lambda name, values: pl.Series(
+                name=name, values=values, strict=False
+            ),
             "assert_frame_equal": polars.testing.assert_frame_equal,
             "assert_column_equal": polars.testing.assert_series_equal,
             "empty_dataframe": pl.DataFrame(),

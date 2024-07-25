@@ -648,9 +648,7 @@ def test_drop_nulls(df_module):
 
 def test_fill_nulls(df_module):
     # Test on dataframe
-    df = df_module.make_dataframe(
-        {"col_1": [0.0, np.nan, 2.0], "col_2": [0.0, None, 2.0]}
-    )
+    df = df_module.make_dataframe({"col_1": [0, np.nan, 2], "col_2": [0, None, 2.0]})
     df_module.assert_frame_equal(
         ns.fill_nulls(df, -1),
         df_module.make_dataframe({"col_1": [0.0, -1, 2.0], "col_2": [0.0, -1.0, 2.0]}),
