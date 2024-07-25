@@ -320,6 +320,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
                     sbd.all_null_like(sbd.col(self.aux_table, col))
                     for col in res["columns"]
                 ]
+                _pred = [
+                    sbd.make_dataframe_like(self.aux_table, [col]) for col in _pred
+                ]
                 pred = sbd.concat_horizontal(*_pred)
                 new_res["predictions"] = pred
                 failed_columns.extend(res["columns"])

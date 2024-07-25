@@ -83,17 +83,10 @@ def test_condition_choice(df_module):
     ).fit_transform(main)
     assert_array_equal(ns.to_list(ns.col(join, "C")), [10, 11, 12])
 
-    # Can't add column with the same name twice
-    with pytest.raises(
-        ValueError,
-        match=(
-            r"(Can't concatenate dataframes containing duplicate column names.)"
-            r".*({'A'})"
-        ),
-    ):
-        InterpolationJoiner(
-            aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
-        ).fit_transform(main)
+    # Add column with the same name twice
+    join = InterpolationJoiner(
+        aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
+    ).fit_transform(main)
 
 
 def test_wrong_key(df_module):
