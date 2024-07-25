@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
@@ -75,18 +77,21 @@ def test_custom_vectorizer(df_module):
     assert_array_equal(ns.col(join, "B"), [0, 1])
 
 
-def test_condition_choice(df_module):
+def test_duplicate_column(df_module):
     main = df_module.make_dataframe({"A": [0, 1, 2]})
-    aux = df_module.make_dataframe({"A": [0, 1, 2], "rB": [2, 0, 1], "C": [10, 11, 12]})
+    aux = df_module.make_dataframe({"A": [0, 1, 2], "C": [10, 11, 12]})
     join = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
     assert_array_equal(ns.to_list(ns.col(join, "C")), [10, 11, 12])
 
     # Add column with the same name twice
-    join = InterpolationJoiner(
-        aux, main_key="A", aux_key="rB", regressor=KNeighborsRegressor(1)
-    ).fit_transform(main)
+    join_2 = InterpolationJoiner(
+        aux, key="A", regressor=KNeighborsRegressor(1)
+    ).fit_transform(join)
+    assert ns.shape(join_2) == (3, 3)
+    print(join_2)
+    assert re.match(r"C__skrub_[0-9a-f]+__", ns.column_names(join_2)[2])
 
 
 def test_wrong_key(df_module):
