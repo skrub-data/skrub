@@ -320,17 +320,14 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         for res in results:
             new_res = dict(**res)
             if res["failed"]:
-                _pred = [
+                cols = [
                     sbd.all_null_like(
                         sbd.col(self.aux_table, col),
                         length=res["shape"][0],
                     )
                     for col in res["columns"]
                 ]
-                _pred = [
-                    sbd.make_dataframe_like(main_table, [col]) for col in _pred.copy()
-                ]
-                pred = sbd.concat_horizontal(*_pred)
+                pred = sbd.make_dataframe_like(main_table, cols)
                 new_res["predictions"] = pred
                 failed_columns.extend(res["columns"])
             checked_results.append(new_res)
