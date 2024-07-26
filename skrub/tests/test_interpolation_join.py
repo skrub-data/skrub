@@ -176,8 +176,8 @@ def test_mismatched_indexes():
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
     assert_array_equal(ns.to_list(ns.col(join, "B")), [10, 11])
-    # Index is reset in ``ns.concat_horizontal``
-    assert_array_equal(join.index.values, [0, 1])
+    # Index of main is kept
+    assert_array_equal(join.index.values, [20, 30])
 
 
 def test_fit_on_none(df_module):
