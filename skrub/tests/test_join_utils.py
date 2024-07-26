@@ -80,6 +80,15 @@ def left(df_module):
     return df_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
 
 
+def test_make_column_names_unique(left):
+    right = left
+    result = _join_utils.make_column_names_unique(left, right)
+    assert len(result) == 2
+    assert sbd.column_names(result[0]) == ["left_key", "left_col"]
+    assert re.match(r"left_key__skrub_[0-9a-f]+__", sbd.column_names(result[1])[0])
+    assert re.match(r"left_col__skrub_[0-9a-f]+__", sbd.column_names(result[1])[1])
+
+
 def test_left_join_all_keys_in_right_dataframe(df_module, left):
     right = df_module.make_dataframe({"right_key": [2, 1], "right_col": ["b", "a"]})
     joined = _join_utils.left_join(

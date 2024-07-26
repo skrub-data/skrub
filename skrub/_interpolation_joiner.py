@@ -2,7 +2,6 @@ import warnings
 
 import joblib
 import numpy as np
-import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
@@ -13,6 +12,9 @@ from sklearn.utils._tags import _safe_tags
 from skrub import _join_utils, _utils
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import TableVectorizer
+
+from . import _dataframe as sbd
+from . import _selectors as s
 
 DEFAULT_VECTORIZER = TableVectorizer(high_cardinality=MinHashEncoder())
 DEFAULT_REGRESSOR = HistGradientBoostingRegressor()
@@ -222,12 +224,14 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self._check_inputs()
         if X is not None:
             _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        key_values = self.vectorizer_.fit_transform(self.aux_table[self._aux_key])
+        key_values = self.vectorizer_.fit_transform(
+            s.select(self.aux_table, s.cols(*self._aux_key))
+        )
         estimators = self._get_estimator_assignments()
         fit_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_fit)(
                 key_values,
-                self.aux_table[assignment["columns"]],
+                s.select(self.aux_table, s.cols(*assignment["columns"])),
                 assignment["estimator"],
                 propagate_exceptions=(self.on_estimator_failure == "raise"),
             )
@@ -287,10 +291,13 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             main_table, self._main_key, "'X' (the main table)"
         )
         key_values = self.vectorizer_.transform(
-            main_table[self._main_key].set_axis(self._aux_key, axis="columns")
+            sbd.set_column_names(
+                s.select(main_table, s.cols(*self._main_key)), self._aux_key
+            )
         )
         prediction_results = joblib.Parallel(self.n_jobs)(
             joblib.delayed(_predict)(
+                main_table,
                 key_values,
                 assignment["columns"],
                 assignment["estimator"],
@@ -298,32 +305,29 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             )
             for assignment in self.estimators_
         )
-        prediction_results = self._check_prediction_results(prediction_results)
+        prediction_results = self._check_prediction_results(
+            main_table, prediction_results
+        )
         predictions = [res["predictions"] for res in prediction_results]
         predictions = [
             _join_utils.add_column_name_suffix(df, self.suffix) for df in predictions
         ]
-        for part in predictions:
-            part.index = main_table.index
-        return pd.concat([main_table] + predictions, axis=1)
+        return sbd.concat_horizontal(main_table, *predictions)
 
-    def _check_prediction_results(self, results):
+    def _check_prediction_results(self, main_table, results):
         checked_results = []
         failed_columns = []
         for res in results:
             new_res = dict(**res)
             if res["failed"]:
-                if set(res["columns"]).issubset(
-                    self.aux_table.select_dtypes("number").columns.values
-                ):
-                    dtype = float
-                else:
-                    dtype = object
-                pred = pd.DataFrame(
-                    columns=res["columns"],
-                    index=np.arange(res["shape"][0]),
-                    dtype=dtype,
-                )
+                cols = [
+                    sbd.all_null_like(
+                        sbd.col(self.aux_table, col),
+                        length=res["shape"][0],
+                    )
+                    for col in res["columns"]
+                ]
+                pred = sbd.make_dataframe_like(main_table, cols)
                 new_res["predictions"] = pred
                 failed_columns.extend(res["columns"])
             checked_results.append(new_res)
@@ -354,13 +358,13 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         When the estimator does not handle multi-output, an estimator is fitted
         separately to each column.
         """
-        aux_table = self.aux_table.drop(self._aux_key, axis=1)
+        aux_table = s.select(self.aux_table, ~s.cols(*self._aux_key))
         assignments = []
-        regression_table = aux_table.select_dtypes("number")
+        regression_table = s.select(aux_table, s.numeric())
         assignments.extend(
             _get_assignments_for_estimator(regression_table, self.regressor_)
         )
-        classification_table = aux_table.select_dtypes(["object", "string", "category"])
+        classification_table = s.select(aux_table, s.string() | s.categorical())
         assignments.extend(
             _get_assignments_for_estimator(classification_table, self.classifier_)
         )
@@ -376,15 +380,20 @@ def _get_assignments_for_estimator(table, estimator):
     # estimator is empty (eg the estimator is the regressor and there are no
     # numerical columns), return an empty list -- no columns are assigned to
     # that estimator.
-    if table.empty:
+    if sbd.shape(table) == (0, 0):
         return []
     if not _handles_multioutput(estimator):
-        return [{"columns": [col], "estimator": estimator} for col in table.columns]
-    columns_with_nulls = table.columns[table.isnull().any()]
+        return [
+            {"columns": [col], "estimator": estimator}
+            for col in sbd.column_names(table)
+        ]
+    columns_with_nulls = s.has_nulls().expand(table)
     assignments = [
         {"columns": [col], "estimator": estimator} for col in columns_with_nulls
     ]
-    columns_without_nulls = list(set(table.columns).difference(columns_with_nulls))
+    columns_without_nulls = list(
+        set(sbd.column_names(table)).difference(columns_with_nulls)
+    )
     if columns_without_nulls:
         assignments.append({"columns": columns_without_nulls, "estimator": estimator})
     return assignments
@@ -396,13 +405,17 @@ def _handles_multioutput(estimator):
 
 def _fit(key_values, target_table, estimator, propagate_exceptions):
     estimator = clone(estimator)
-    kept_rows = target_table.notnull().all(axis=1).to_numpy()
-    key_values = key_values[kept_rows]
-    Y = target_table.to_numpy()[kept_rows]
+    null_values = [sbd.is_null(col) for col in sbd.to_column_list(target_table)]
+    discarded_rows = np.array(null_values).any(axis=0)
+    key_values = sbd.filter(key_values, ~discarded_rows)
+    Y = np.concatenate(
+        [sbd.to_numpy(col).reshape(-1, 1) for col in sbd.to_column_list(target_table)],
+        axis=1,
+    )[~discarded_rows]
 
     # Estimators that expect a single output issue a DataConversionWarning if
     # passing a column vector rather than a 1-D array
-    if len(target_table.columns) == 1:
+    if sbd.shape(target_table)[1] == 1:
         Y = Y.ravel()
     failed = False
     try:
@@ -412,10 +425,14 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
             raise
         failed = True
         estimator = None
-    return {"columns": target_table.columns, "estimator": estimator, "failed": failed}
+    return {
+        "columns": sbd.column_names(target_table),
+        "estimator": estimator,
+        "failed": failed,
+    }
 
 
-def _predict(key_values, columns, estimator, propagate_exceptions):
+def _predict(main_table, key_values, columns, estimator, propagate_exceptions):
     failed = False
     try:
         Y_values = estimator.predict(key_values)
@@ -426,10 +443,17 @@ def _predict(key_values, columns, estimator, propagate_exceptions):
     if failed:
         predictions = None
     else:
-        predictions = pd.DataFrame(data=Y_values, columns=columns)
+        # If more than one prediction, need to set predictions as columns
+        # in order to create the dataframe
+        if len(columns) > 1:
+            Y_values = Y_values.T
+            data = dict(zip(columns, Y_values))
+        else:
+            data = {columns[0]: Y_values.ravel()}
+        predictions = sbd.make_dataframe_like(main_table, data)
     return {
         "predictions": predictions,
         "failed": failed,
         "columns": columns,
-        "shape": (key_values.shape[0], len(columns)),
+        "shape": (sbd.shape(key_values)[0], len(columns)),
     }

@@ -7,6 +7,8 @@ import pandas as pd
 import pandas.api.types
 from sklearn.utils.fixes import parse_version
 
+from skrub import _join_utils
+
 try:
     import polars as pl
 except ImportError:
@@ -299,7 +301,7 @@ def _all_null_like_pandas(col, length=None, dtype=None, name=None):
         dtype = col.dtype
     if name is None:
         name = col.name
-    return pd.Series(dtype=dtype, index=col.index, name=name)
+    return pd.Series(dtype=dtype, index=np.arange(length), name=name)
 
 
 @all_null_like.specialize("polars", argument_type="Column")
@@ -320,12 +322,17 @@ def concat_horizontal(*dataframes):
 
 @concat_horizontal.specialize("pandas")
 def _concat_horizontal_pandas(*dataframes):
+    init_index = dataframes[0].index
     dataframes = [df.reset_index(drop=True) for df in dataframes]
-    return pd.concat(dataframes, axis=1, copy=False)
+    dataframes = _join_utils.make_column_names_unique(*dataframes)
+    result = pd.concat(dataframes, axis=1, copy=False)
+    result.index = init_index
+    return result
 
 
 @concat_horizontal.specialize("polars")
 def _concat_horizontal_polars(*dataframes):
+    dataframes = _join_utils.make_column_names_unique(*dataframes)
     return pl.concat(dataframes, how="horizontal")
 
 
