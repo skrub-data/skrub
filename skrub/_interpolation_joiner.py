@@ -452,7 +452,7 @@ def _predict(main_table, key_values, columns, estimator, propagate_exceptions):
             Y_values = Y_values.T
             data = dict(zip(columns, Y_values))
         else:
-            data = {columns[0]: Y_values}
+            data = {columns[0]: Y_values.ravel()}
         predictions = sbd.make_dataframe_like(main_table, data)
     return {
         "predictions": predictions,
