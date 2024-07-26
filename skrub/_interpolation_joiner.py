@@ -418,7 +418,7 @@ def _fit(key_values, target_table, estimator, propagate_exceptions):
 
     # Estimators that expect a single output issue a DataConversionWarning if
     # passing a column vector rather than a 1-D array
-    if len(sbd.column_names(target_table)) == 1:
+    if sbd.shape(target_table)[1] == 1:
         Y = Y.ravel()
     failed = False
     try:
@@ -449,7 +449,7 @@ def _predict(main_table, key_values, columns, estimator, propagate_exceptions):
         # If more than one prediction, need to set predictions as columns
         # in order to create the dataframe
         if len(columns) > 1:
-            Y_values = np.swapaxes(Y_values, 0, 1)
+            Y_values = Y_values.T
             data = dict(zip(columns, Y_values))
         else:
             data = {columns[0]: Y_values}
