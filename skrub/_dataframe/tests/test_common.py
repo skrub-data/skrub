@@ -188,6 +188,15 @@ def test_concat_horizontal(df_module, example_data_dict):
     for n in ns.column_names(df)[8:]:
         assert re.match(r".*__skrub_[0-9a-f]+__", n)
 
+    # Test concatenating pandas dataframes with different indexes (of same length)
+    if df_module.name == "pandas":
+        df1 = df_module.DataFrame(data=[1.0, 2.0], columns=["a"], index=[10, 20])
+        df2 = df_module.DataFrame(data=[3.0, 4.0], columns=["b"], index=[1, 2])
+        df = ns.concat_horizontal(df1, df2)
+        assert ns.shape(df) == (2, 2)
+        # Index of the first dataframe is kept
+        assert_array_equal(df.index, [10, 20])
+
 
 def test_is_column_list(df_module):
     assert ns.is_column_list([])
