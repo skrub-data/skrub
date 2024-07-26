@@ -229,7 +229,7 @@ def make_column_names_unique(*dataframes):
 
     Parameters
     ----------
-    dataframes: list of dataframes
+    *dataframes: DataFrame
         The dataframes to pick new names for.
 
     Returns
