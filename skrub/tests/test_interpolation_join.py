@@ -137,7 +137,6 @@ def test_duplicate_column(df_module):
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(join)
     assert ns.shape(join_2) == (3, 3)
-    print(join_2)
     assert re.match(r"C__skrub_[0-9a-f]+__", ns.column_names(join_2)[2])
 
 
@@ -314,7 +313,6 @@ def test_transform_failures_dtype(df_module, buildings, weather):
         on_estimator_failure="pass",
     )
     join = joiner.fit_transform(buildings)
-    #  print(join)
     assert ns.is_null(ns.col(join, "avg_temp")).all()
     assert ns.dtype(ns.col(join, "avg_temp")) == ns.dtype(ns.col(weather, "avg_temp"))
     assert ns.shape(join) == (2, 5)
