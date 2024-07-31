@@ -204,7 +204,9 @@ ax.plot(
 
 _ = ax.legend()
 plt.show()
-As we can see, adding the weekday yields better predictions on our test set.
+###############################################################################
+# As we can see, adding the weekday yields better predictions on our test set.
+
 
 ###############################################################################
 # Features importance
