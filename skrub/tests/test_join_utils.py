@@ -94,7 +94,7 @@ def test_left_join_some_keys_not_in_right_dataframe(df_module, left):
         {
             "left_key": [1, 2, 2],
             "left_col": [10, 20, 30],
-            "right_col": [np.nan, "a", "a"],
+            "right_col": [None if df_module.name == "polars" else np.nan, "a", "a"],
         }
     )
     df_module.assert_frame_equal(joined, expected)
