@@ -1,6 +1,7 @@
 """Get information and plots for a dataframe, that are used to generate reports."""
+
 from .. import _dataframe as sbd
-from . import _interactions, _plotting, _utils
+from . import _associations, _plotting, _utils
 
 _HIGH_CARDINALITY_THRESHOLD = 10
 _SUBSAMPLE_SIZE = 3000
@@ -56,6 +57,9 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
         df = sbd.sort(df, by=order_by)
         summary["order_by"] = order_by
     for position, column_name in enumerate(sbd.column_names(df)):
+        print(
+            f"Processing column {position + 1: >3} / {n_columns}", end="\r", flush=True
+        )
         summary["columns"].append(
             _summarize_column(
                 sbd.col(df, column_name),
@@ -65,19 +69,20 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
                 order_by_column=None if order_by is None else sbd.col(df, order_by),
             )
         )
+    print()
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
     if n_rows and n_columns:
-        _add_interactions(df, summary)
+        _add_associations(df, summary)
     else:
         summary["top_associations"] = []
     return summary
 
 
-def _add_interactions(df, dataframe_summary):
+def _add_associations(df, dataframe_summary):
     df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
-    associations = _interactions.cramer_v(df)[:20]
+    associations = _associations.cramer_v(df)[:20]
     dataframe_summary["top_associations"] = [
         dict(zip(("left_column", "right_column", "cramer_v"), a))
         for a in associations

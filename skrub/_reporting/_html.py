@@ -12,11 +12,11 @@ from skrub import _selectors as s
 
 from . import _utils
 
-_COLUMN_SIMILARITY_THRESHOLD = 0.9
+_HIGH_ASSOCIATION_THRESHOLD = 0.9
 
 _FILTER_NAMES = {
     "first_10": "First 10 columns",
-    "high_similarity": "Columns with high similarity",
+    "high_association": "Columns with high similarity",
     "all()": "All columns",
     "has_nulls()": "Columns with null values",
     "(~has_nulls())": "Columns without null values",
@@ -51,10 +51,10 @@ def _get_jinja_env():
     return env
 
 
-def _get_high_similarity_columns(summary):
+def _get_high_association_columns(summary):
     columns = set()
     for asso in summary["top_associations"]:
-        if asso["cramer_v"] <= _COLUMN_SIMILARITY_THRESHOLD:
+        if asso["cramer_v"] <= _HIGH_ASSOCIATION_THRESHOLD:
             break
         columns.add(asso["left_column"])
         columns.add(asso["right_column"])
@@ -73,9 +73,9 @@ def _get_column_filters(summary):
             "display_name": _FILTER_NAMES["first_10"],
             "columns": sbd.column_names(df)[:10],
         }
-    filters["high_similarity"] = {
-        "columns": _get_high_similarity_columns(summary),
-        "display_name": _FILTER_NAMES["high_similarity"],
+    filters["high_association"] = {
+        "columns": _get_high_association_columns(summary),
+        "display_name": _FILTER_NAMES["high_association"],
     }
     all_selectors = []
     for selector in [
@@ -134,7 +134,7 @@ def to_html(summary, standalone=True, column_filters=None):
         {
             "summary": summary,
             "column_filters": column_filters,
-            "column_similarity_threshold": _COLUMN_SIMILARITY_THRESHOLD,
+            "high_association_threshold": _HIGH_ASSOCIATION_THRESHOLD,
             "base64_column_filters": _b64_encode(column_filters),
             "report_id": f"report_{secrets.token_hex()[:8]}",
         }
