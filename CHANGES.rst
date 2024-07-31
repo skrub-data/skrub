@@ -14,6 +14,8 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
+* The :class:`InterpolationJoiner` now supports polars dataframes. :pr:`1016`
+  by :user:`Théo Jolivet <TheooJ>`.
 * The :class:`TableReport` provides an interactive report on a dataframe's
   contents: an overview, summary statistics and plots, statistical associations
   between columns. It can be displayed in a jupyter notebook, a browser tab or
@@ -26,6 +28,11 @@ Minor changes
   suffix). This is now allowed and a random string is inserted in the duplicate
   column to ensure all names are unique.
   :pr:`1014` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* :class:`AggJoiner` and :class:`AggTarget` could produce outputs whose column
+  names varied across calls to `transform` in some cases in the presence of
+  duplicate column names, now the output names are always the same.
+  :pr:`1013` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.2.0
 =============
