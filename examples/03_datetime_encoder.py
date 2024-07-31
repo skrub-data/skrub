@@ -39,7 +39,6 @@ It is used by default in the |TableVectorizer|.
     :class:`~skrub.ToDatetime`
 """
 
-
 ###############################################################################
 # A problem with relevant datetime features
 # -----------------------------------------
@@ -172,8 +171,8 @@ cross_val_score(
 # compare the prediction of our model with the actual values.
 # To do so, we will divide our dataset into a train and a test set:
 # we use 2011 data to predict what happened in 2012.
-import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
 
 mask_train = X["date"] < "2012-01-01"
 X_train, X_test = X.loc[mask_train], X.loc[~mask_train]
@@ -209,7 +208,7 @@ ax.plot(
 )
 
 ax.tick_params(axis="x", labelsize=7, labelrotation=75)
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
 _ = ax.legend()
 plt.tight_layout()
 plt.show()
@@ -247,7 +246,11 @@ result = pd.DataFrame(
 ).sort_values("importances", ascending=True)
 
 result.plot.barh(
-    y="importances", x="feature_names", title="Feature Importances", xerr="std", figsize=(12, 9)
+    y="importances",
+    x="feature_names",
+    title="Feature Importances",
+    xerr="std",
+    figsize=(12, 9),
 )
 plt.tight_layout()
 plt.show()
