@@ -18,3 +18,8 @@ import './commands'
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
+
+beforeEach(() => {
+    cy.visit('_reports/employee_salaries.html');
+    cy.get('skrub-table-report').shadow().as('report');
+});

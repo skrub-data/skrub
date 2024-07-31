@@ -4,26 +4,26 @@
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-th[data-is-in-selected-column] {
+th[data-is-in-active-column] {
     background-color: var(--darkgreen);
 }
 
-tr:nth-child(2n -1) .table-cell[data-is-in-selected-column] {
+tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     background-color: var(--mediumgreen);
 }
 
-.table-cell[data-is-in-selected-column] {
+.table-cell[data-is-in-active-column] {
     background-color: var(--lightgreen);
 }
 
-tr:nth-child(2n -1) .table-cell[data-is-selected] {
+tr:nth-child(2n -1) .table-cell[data-is-active] {
     background-color: var(--yellowish);
     border: 1px solid black;
 }
 
 /* The selected cell itself is yellow */
 
-.table-cell[data-is-selected] {
+.table-cell[data-is-active] {
     background-color: var(--yellowish);
     border: 1px solid black;
 }

@@ -1,0 +1,19 @@
+{% macro copybutton(target) %}
+<button
+    class="copybutton"
+    type="button"
+    onclick="copyButtonClick(event)"
+    data-target-id="{{ target }}">
+    {% include "icons/clipboard.svg" %}
+    {% include "icons/check-lg.svg" %}
+    <div class="copied-message">Copied!</div>
+</button>
+{% endmacro %}
+
+{% macro closebutton() %}
+<button class="close-card-button"
+        type="button"
+        data-role="close-button">
+    {% include "icons/x-lg.svg" %}
+</button>
+{% endmacro %}
