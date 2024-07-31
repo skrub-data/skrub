@@ -1,20 +1,23 @@
 <tbody>
-    {% for row in summary[table_part]['data'] %}
+    {% for row_idx in range(summary[table_part]['data'].__len__()) %}
+    {% set row = summary[table_part]['data'][row_idx] %}
     <tr>
         {% for idx in range(row.__len__()) %}
         {% set column_name = summary.head.header[idx] %}
-        <td class="table-cell clickable ellided-short filterable-column"
+        <td class="table-cell clickable ellided-short"
+            id="sample-table-cell-{{ table_part }}-{{ row_idx }}-{{ idx }}"
+            data-manager="SampleTableCell FilterableColumn"
+            data-role="clickable-table-cell"
             data-column-name="{{ column_name }}"
             data-column-idx="{{ idx }}"
             data-value-str="{{ row[idx].__str__() }}"
             data-value-repr="{{ row[idx].__repr__() }}"
             data-col-name-str="{{ summary.head.header[idx] }}"
             data-col-name-repr="{{ summary.head.header[idx].__repr__() }}"
-            {%- if row[idx] | is_null -%}
+            {% if row[idx] | is_null %}
             data-value-is-none=""
-            {%- endif -%}
-            data-dataframe-module="{{ summary.dataframe_module }}"
-            onclick="getReport(event).displayValue(event)">
+            {% endif %}
+            data-dataframe-module="{{ summary.dataframe_module }}">
             {%- if  not (row[idx] | is_null) -%}
             {{ row[idx] }}
             {%- endif -%}

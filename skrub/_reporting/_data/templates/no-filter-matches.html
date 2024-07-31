@@ -1,6 +1,13 @@
+<div data-hidden
+     data-hide-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
+     data-show-on="EMPTY_COLUMN_FILTER_SELECTED"
+     class="text announcement wrapper">
 <p>
-No columns match the selected filter: <strong class="selected-filter-display"></strong>. You can change the column filter in the dropdown menu above.
+No columns match the selected filter: <strong data-manager="ColumnFilterName"></strong>. You can change the column filter in the dropdown menu above.
 </p>
 <p>
-    <button onclick="getReport(event).clearColFilter(event)">Show all columns</button>
+    <button type="button"
+            data-manager="ResetColumnFilter"
+            data-test="show-all-columns-button">Show all columns</button>
 </p>
+</div>

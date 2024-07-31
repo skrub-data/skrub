@@ -3,6 +3,6 @@
 /* because it is unnecessary and looks worse when the report is the only content on */
 /* the page. */
 
-.tab[data-is-displayed] {
+.tab-panel {
     border-bottom: 1px solid var(--mediumg);
 }

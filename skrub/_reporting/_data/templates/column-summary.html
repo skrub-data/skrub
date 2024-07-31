@@ -1,19 +1,32 @@
-<div class="card column-summary filterable-column {{"constant-column" if column.value_is_constant else "" }}"
+{% import "buttons.html" as buttons %}
+
+<div class="card column-summary"
      id="{{ col_id }}"
      data-name-repr="{{ column.name.__repr__() }}"
-     data-column-name="{{ column.name }}">
-    <div class="card-header {% if in_sample_tab %}relative-pos{% endif %}">
+     data-column-name="{{ column.name }}"
+     data-manager="FilterableColumn {% if in_sample_tab %}SampleColumnSummary{% endif %}"
+     {% if column.value_is_constant %}
+     data-constant-column
+     {% endif %}
+     {% if in_sample_tab %}
+     data-role="sample-column"
+     data-hidden
+     {% else %}
+     data-role="selectable-column"
+     {% endif %}>
+    <div class="card-header">
         <h3 class="margin-r-t">
-            <span class="select-all">{{ column.name }}</span>
-        </h3>
         {% if not in_sample_tab %}
-        <input class="select-column-checkbox"
-               type="checkbox"
-               onchange="getReport(event).updateSelectedColsSnippet()" checked />
+            <input data-role="select-column-checkbox"
+                   data-manager="SelectColumnCheckBox"
+                   type="checkbox"
+                   checked>
         {% endif %}
-        <code class="float-end">{{ column.dtype }}</code>
+        <span class="select-all wrap-long-name">{{ column.name }}</span>
+        </h3>
+        <span>{{ column.dtype }}</span>
         {%- if in_sample_tab -%}
-        <button class="close-card-button" onclick="getReport(event).clearTableCellSelection()">⨉</button>
+        {{ buttons.closebutton() }}
         {%- endif -%}
     </div>
     <div class="column-summary-content wrapper">
@@ -61,10 +74,8 @@
         <strong>Constant value:</strong>
         <div class="copybutton-grid">
             <div class="box">
-        <pre id="{{ val_id }}">{{ column.constant_value }}</pre>
-        <button class="copybutton"
-                data-target-id="{{ val_id }}"
-                onclick='copyButtonClick(event)'>📋</button>
+                <pre id="{{ val_id }}">{{ column.constant_value }}</pre>
+                {{ buttons.copybutton(val_id) }}
             </div>
         </div>
         </div>
@@ -72,19 +83,18 @@
 
         {% for plot_name in column.plot_names %}
         <div>
-        <img class="pure-img" src="{{ column[plot_name] | svg_to_img_src | safe }}" alt={{ plot_name }} />
+        <img class="pure-img" src="{{ column[plot_name] | svg_to_img_src | safe }}" alt="{{ plot_name }}">
         {% if plot_name == "value_counts_plot" %}
         <details data-test="frequent-values-details">
             <summary>Most frequent values</summary>
             <div class="shrink">
-            <div class="copybutton-grid">
+            <div class="copybutton-grid" data-manager="ContentSelect">
                 {% set selector_id = "{}_freq_value_select_snippet".format(col_id) %}
-                <select
-                    class="grid-separator select-displayed-siblings"
-                    id="{{ selector_id }}"
-                    onchange="updateSiblingBarContents(event)"
-                    autocomplete="off"
-                    data-test="frequent-values-select-snippet">
+                <select class="grid-separator"
+                        data-role="content-select"
+                        id="{{ selector_id }}"
+                        autocomplete="off"
+                        data-test="frequent-values-select-snippet">
                     <option value="value">Display value</option>
                     <option value="repr">Python expression</option>
                     <option value="filter">Filtered dataframe</option>
@@ -92,18 +102,16 @@
 
                 {% for value in column.value_counts %}
                 {% set val_id = "{}-freq-value-{}".format(col_id, loop.index0) %}
-                <div class="box">
-                <pre
-                     id="{{ val_id }}"
+                <div class="box"
+                data-test="frequent-value-{{ loop.index0 }}">
+                <pre id="{{ val_id }}"
+                     data-role="content-display"
                      data-selector-id="{{ selector_id }}"
-                     data-content-value="{{ value }}"
-                     data-content-repr="{{ value.__repr__() }}"
-                     data-content-filter="{{ value | filter_equal_snippet(column.name, summary.dataframe_module) }}"
+                     data-value="{{ value }}"
+                     data-repr="{{ value.__repr__() }}"
+                     data-filter="{{ value | filter_equal_snippet(column.name, summary.dataframe_module) }}"
                  >{{ value }}</pre>
-                <button class="copybutton"
-                        data-target-id="{{ val_id }}"
-                        onclick='copyButtonClick(event)'
-                        data-test="copybutton-{{ loop.index0 }}">📋</button>
+                {{ buttons.copybutton(val_id) }}
                 </div>
 
             {% endfor %}
@@ -118,7 +126,7 @@
                  data-content-repr="{{ column.value_counts | list }}"
                  data-content-filter="{{ column.value_counts | list | filter_isin_snippet(column.name, summary.dataframe_module) }}"
             >{{ column.value_counts.keys() | list }}</pre>
-            <button class="copybutton" data-target-id="{{ val_id }}" onclick='copyButtonClick(event)'>📋</button>
+            {{ buttons.copybutton(val_id) }}
             </div>
             </div>
             </div>

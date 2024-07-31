@@ -67,6 +67,7 @@ class TableReport:
     For a full, standalone web page:
 
     >>> report.html()
+    Processing...
     '<!DOCTYPE html>\n<html lang="en-US">\n\n<head>\n    <meta charset="utf-8"...'
 
     For an HTML fragment that can be inserted into a page:
