@@ -22,7 +22,7 @@ def test_lrudict():
 
 
 @pytest.mark.parametrize(
-    "values", [[], [None], ["", None], ["abc", "", None], [np.nan, "abc"]]
+    "values", [[], [None], ["", None], ["abc", "", None], ["abc", np.nan]]
 )
 def test_unique_strings(df_module, values):
     c = df_module.make_column("", values) if values else df_module.empty_column
