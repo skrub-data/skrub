@@ -1,4 +1,5 @@
 import datetime
+import inspect
 from types import SimpleNamespace
 
 import numpy as np
@@ -94,6 +95,15 @@ try:
 except ImportError:
     _POLARS_INSTALLED = False
 
+
+def _pl_from_dict(data):
+    import polars as pl
+
+    if "strict" in inspect.signature(pl.from_dict).parameters:
+        return pl.from_dict(data, strict=False)
+    return pl.from_dict(data)
+
+
 if _POLARS_INSTALLED:
     _DATAFAME_MODULES_INFO["polars"] = SimpleNamespace(
         **{
@@ -102,7 +112,7 @@ if _POLARS_INSTALLED:
             "module": pl,
             "DataFrame": pl.DataFrame,
             "Column": pl.Series,
-            "make_dataframe": lambda data: pl.from_dict(data, strict=False),
+            "make_dataframe": _pl_from_dict,
             "make_column": lambda name, values: pl.Series(
                 name=name, values=values, strict=False
             ),
