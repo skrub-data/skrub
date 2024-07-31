@@ -294,7 +294,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        dataframe
+        DataFrame
             The final joined table.
         """
         self._aux_table = CheckInputDataFrame().fit_transform(self.aux_table)
@@ -326,7 +326,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : dataframe
+        X : DataFrame
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
@@ -334,7 +334,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         Returns
         -------
         Joiner
-            Fitted Joiner instance (self).
+            Fitted :class:`Joiner`instance (self).
         """
         _ = self.fit_transform(X, y)
         return self
