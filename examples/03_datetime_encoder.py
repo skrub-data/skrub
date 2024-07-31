@@ -63,7 +63,7 @@ X = data[["date", "holiday", "temp", "hum", "windspeed", "weathersit"]]
 X
 
 ###############################################################################
-# We convert the dataframe date column using |ToDatetime|.
+# We convert the dataframe ``"date"`` column using |ToDatetime|.
 
 from skrub import ToDatetime
 
@@ -75,7 +75,7 @@ X.dtypes
 # Encoding the features
 # .....................
 #
-# We directly encode the date column with a |DatetimeEncoder|.
+# We directly encode the ``"date"`` column with a |DatetimeEncoder|.
 #
 # During the instantiation of the |DatetimeEncoder|, we specify that we want
 # to extract the day of the week, and that we don't want to extract anything
@@ -111,6 +111,7 @@ pprint(table_vec.get_feature_names_out())
 #
 # Here, for example, we want it to extract the day of the week:
 
+# use the `datetime` argument to customize how datetimes are handled
 table_vec_wd = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True)).fit(X)
 pprint(table_vec_wd.get_feature_names_out())
 
@@ -179,7 +180,7 @@ pipeline_wd.fit(X_train, y_train)
 y_pred_wd = pipeline_wd.predict(X_test)
 
 fig, ax = plt.subplots(figsize=(12, 3))
-fig.suptitle("Predictions by linear models")
+fig.suptitle("Predictions with tree models")
 ax.plot(
     X.tail(96)["date"],
     y.tail(96).values,
@@ -192,18 +193,18 @@ ax.plot(
     X_test.tail(96)["date"],
     y_pred[-96:],
     "x-",
-    label="DatetimeEncoder() + HGBD prediction",
+    label="DatetimeEncoder() + HGBR prediction",
 )
 ax.plot(
     X_test.tail(96)["date"],
     y_pred_wd[-96:],
     "x-",
-    label="DatetimeEncoder(add_weekday=True) + HGBD prediction",
+    label="DatetimeEncoder(add_weekday=True) + HGBR prediction",
 )
 
 _ = ax.legend()
 plt.show()
-
+As we can see, adding the weekday yields better predictions on our test set.
 
 ###############################################################################
 # Features importance
