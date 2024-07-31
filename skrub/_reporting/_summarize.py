@@ -69,7 +69,7 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
                 order_by_column=None if order_by is None else sbd.col(df, order_by),
             )
         )
-    print("\033[2K", end="\r", flush=True)
+    print()
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
