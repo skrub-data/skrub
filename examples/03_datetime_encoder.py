@@ -173,6 +173,7 @@ cross_val_score(
 # To do so, we will divide our dataset into a train and a test set:
 # we use 2011 data to predict what happened in 2012.
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 mask_train = X["date"] < "2012-01-01"
 X_train, X_test = X.loc[mask_train], X.loc[~mask_train]
@@ -207,7 +208,10 @@ ax.plot(
     label="DatetimeEncoder(add_weekday=True) + HGBR prediction",
 )
 
+ax.tick_params(axis="x", labelsize=7, labelrotation=75)
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
 _ = ax.legend()
+plt.tight_layout()
 plt.show()
 ###############################################################################
 # As we can see, adding the weekday yields better predictions on our test set.
