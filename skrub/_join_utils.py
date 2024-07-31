@@ -99,54 +99,6 @@ def check_missing_columns(table, key, table_name):
     )
 
 
-def check_column_name_duplicates(
-    main_table,
-    aux_table,
-    suffix,
-    main_table_name="main_table",
-    aux_table_name="aux_table",
-):
-    """Check that there are no duplicate column names after applying a suffix.
-
-    The suffix is applied to (a copy of) `aux_columns` before checking for
-    duplicates.
-
-    Parameters
-    ----------
-    main_table : dataframe
-        The main table to join.
-    aux_table : dataframe
-        The auxiliary table to join.
-    suffix : str
-        The suffix that was provided by the user and will be appended to the
-        auxiliary column names.
-    main_table_name : str
-        How to refer to ``main_table`` in error messages.
-    aux_table_name : str
-        How to refer to ``aux_table`` in error messages.
-    Raises
-    ------
-    ValueError
-        If any of the table has duplicate column names, or if there are column
-        names that are used in both tables.
-    """
-    main_columns = list(main_table.columns)
-    aux_columns = [f"{col}{suffix}" for col in aux_table.columns]
-    for columns, table_name in [
-        (main_columns, main_table_name),
-        (aux_columns, aux_table_name),
-    ]:
-        _utils.check_duplicated_column_names(columns, table_name=table_name)
-    overlap = list(set(main_columns).intersection(aux_columns))
-    if overlap:
-        raise ValueError(
-            f"After applying the suffix {suffix!r} to column names, the following"
-            f" column names are found in both tables '{main_table_name}' and"
-            f" '{aux_table_name}': {overlap}. Please make sure column names do not"
-            " overlap by renaming some columns or choosing a different suffix."
-        )
-
-
 def add_column_name_suffix(dataframe, suffix):
     ns, _ = get_df_namespace(dataframe)
     return ns.rename_columns(dataframe, f"{{}}{suffix}".format)

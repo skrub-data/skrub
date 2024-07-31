@@ -48,25 +48,6 @@ def test_check_key_length_mismatch():
         )
 
 
-def test_check_no_column_name_duplicates_with_no_suffix(df_module):
-    left = df_module.make_dataframe({"A": [], "B": []})
-    right = df_module.make_dataframe({"C": []})
-    _join_utils.check_column_name_duplicates(left, right, "")
-
-
-def test_check_no_column_name_duplicates_after_adding_a_suffix(df_module):
-    left = df_module.make_dataframe({"A": [], "B": []})
-    right = df_module.make_dataframe({"B": []})
-    _join_utils.check_column_name_duplicates(left, right, "_right")
-
-
-def test_check_column_name_duplicates_after_adding_a_suffix(df_module):
-    left = df_module.make_dataframe({"A": [], "B_right": []})
-    right = df_module.make_dataframe({"B": []})
-    with pytest.raises(ValueError, match=".*suffix '_right'.*['B_right']"):
-        _join_utils.check_column_name_duplicates(left, right, "_right")
-
-
 def test_add_column_name_suffix(df_module):
     df = df_module.make_dataframe({"one": [], "two three": [], "x": []})
     df = _join_utils.add_column_name_suffix(df, "")

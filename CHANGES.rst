@@ -23,6 +23,12 @@ Major changes
 
 Minor changes
 -------------
+* :class:`Joiner` and :func:`fuzzy_join` used to raise an error when columns
+  with the same name appeared in the main and auxiliary table (after adding the
+  suffix). This is now allowed and a random string is inserted in the duplicate
+  column to ensure all names are unique.
+  :pr:`1014` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * :class:`AggJoiner` and :class:`AggTarget` could produce outputs whose column
   names varied across calls to `transform` in some cases in the presence of
   duplicate column names, now the output names are always the same.
