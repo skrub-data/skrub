@@ -62,20 +62,23 @@ X = data[["date", "holiday", "temp", "hum", "windspeed", "weathersit"]]
 
 X
 
+# %%
+y
+
 ###############################################################################
-# We convert the dataframe ``"date"`` column using |ToDatetime|.
+# We convert the dataframe's ``"date"`` column using |ToDatetime|.
 
 from skrub import ToDatetime
 
-X["date"] = ToDatetime().fit_transform(X["date"])
+date = ToDatetime().fit_transform(X["date"])
 
-X.dtypes
+print("original dtype:", X["date"].dtypes, "\n\nconverted dtype:", date.dtypes)
 
 ###############################################################################
 # Encoding the features
 # .....................
 #
-# We directly encode the ``"date"`` column with a |DatetimeEncoder|.
+# We now encode this column with a |DatetimeEncoder|.
 #
 # During the instantiation of the |DatetimeEncoder|, we specify that we want
 # to extract the day of the week, and that we don't want to extract anything
@@ -84,21 +87,23 @@ X.dtypes
 
 from skrub import DatetimeEncoder
 
-date_enc = DatetimeEncoder().fit_transform(X["date"])
+date_enc = DatetimeEncoder().fit_transform(date)
 
-print(X.date, "\n\nHas been encoded as:\n\n", date_enc)
+print(date, "\n\nHas been encoded as:\n\n", date_enc)
 
 ###############################################################################
-# We see that the encoder is working as expected: the ``"date"`` column has
+# We see that the encoder is working as expected: the column has
 # been replaced by features extracting the month, day, hour, day of the
 # week and total seconds since Epoch information.
 
 ###############################################################################
-# One-liner with the |TableVectorizer|
-# ....................................
+# One-liner with the TableVectorizer
+# ..................................
 #
 # As mentioned earlier, the |TableVectorizer| makes use of the
-# |DatetimeEncoder| by default.
+# |DatetimeEncoder| by default. Note that ``X["date"]`` is still
+# a string, but will be automatically transformed into a datetime in the
+# |TableVectorizer|.
 
 from skrub import TableVectorizer
 
@@ -111,9 +116,9 @@ pprint(table_vec.get_feature_names_out())
 #
 # Here, for example, we want it to extract the day of the week:
 
-# use the `datetime` argument to customize how datetimes are handled
-table_vec_wd = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True)).fit(X)
-pprint(table_vec_wd.get_feature_names_out())
+# use the ``datetime`` argument to customize how datetimes are handled
+table_vec_weekday = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True)).fit(X)
+pprint(table_vec_weekday.get_feature_names_out())
 
 ###############################################################################
 # .. note:
@@ -122,7 +127,7 @@ pprint(table_vec_wd.get_feature_names_out())
 #
 # Inspecting the |TableVectorizer| further, we can check that the
 # |DatetimeEncoder| is used on the correct column(s).
-pprint(table_vec_wd.transformers_)
+pprint(table_vec_weekday.transformers_)
 
 ###############################################################################
 # Prediction with datetime features
@@ -137,7 +142,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
 
 pipeline = make_pipeline(table_vec, HistGradientBoostingRegressor())
-pipeline_wd = make_pipeline(table_vec_wd, HistGradientBoostingRegressor())
+pipeline_weekday = make_pipeline(table_vec_weekday, HistGradientBoostingRegressor())
 
 ###############################################################################
 # Evaluating the model
@@ -176,8 +181,8 @@ y_train, y_test = y.loc[mask_train], y.loc[~mask_train]
 pipeline.fit(X_train, y_train)
 y_pred = pipeline.predict(X_test)
 
-pipeline_wd.fit(X_train, y_train)
-y_pred_wd = pipeline_wd.predict(X_test)
+pipeline_weekday.fit(X_train, y_train)
+y_pred_weekday = pipeline_weekday.predict(X_test)
 
 fig, ax = plt.subplots(figsize=(12, 3))
 fig.suptitle("Predictions with tree models")
@@ -197,7 +202,7 @@ ax.plot(
 )
 ax.plot(
     X_test.tail(96)["date"],
-    y_pred_wd[-96:],
+    y_pred_weekday[-96:],
     "x-",
     label="DatetimeEncoder(add_weekday=True) + HGBR prediction",
 )
@@ -209,7 +214,7 @@ plt.show()
 
 
 ###############################################################################
-# Features importance
+# Feature importances
 # -------------------
 #
 # Using the |DatetimeEncoder| allows us to better understand how the date
@@ -235,10 +240,10 @@ result = pd.DataFrame(
         std=result.importances_std,
         importances=result.importances_mean,
     )
-).sort_values("importances", ascending=False)
+).sort_values("importances", ascending=True)
 
 result.plot.barh(
-    y="importances", x="feature_names", title="Feature Importances", figsize=(12, 9)
+    y="importances", x="feature_names", title="Feature Importances", xerr="std", figsize=(12, 9)
 )
 plt.tight_layout()
 plt.show()
@@ -251,6 +256,6 @@ plt.show()
 # ----------
 #
 # In this example, we saw how to use the |DatetimeEncoder| to create
-# features from a date column.
+# features from a datetime column.
 # Also check out the |TableVectorizer|, which automatically recognizes
 # and transforms datetime columns by default.
