@@ -30,6 +30,7 @@ def test_simple_agg():
         "rating_mean": ("rating", "mean"),
     }
     expected = main.groupby("movieId").agg(**aggfunc).reset_index()
+    expected = expected.loc[:, sorted(expected.columns)]
     assert_frame_equal(aggregated, expected)
 
 
@@ -49,7 +50,7 @@ def test_value_counts_agg():
             "rating_4.0_user": [3.0, 1.0],
             "userId": [1, 2],
         }
-    ).reset_index(drop=False)
+    )
     assert_frame_equal(aggregated, expected)
 
     aggregated = aggregate(
@@ -66,7 +67,7 @@ def test_value_counts_agg():
             "rating_(3.0, 4.0]_user": [3, 1],
             "userId": [1, 2],
         }
-    ).reset_index(drop=False)
+    )
     assert_frame_equal(aggregated, expected)
 
 

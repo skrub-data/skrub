@@ -447,7 +447,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
         y_[self.main_key_] = X[self.main_key_]
 
         num_operations, categ_operations = split_num_categ_operations(self.operation_)
-
         self.y_ = skrub_px.aggregate(
             y_,
             key=self.main_key_,

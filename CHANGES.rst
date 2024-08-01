@@ -34,6 +34,11 @@ Minor changes
   duplicate column names, now the output names are always the same.
   :pr:`1013` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* In some cases :class:`AggJoiner` and :class:`AggTarget` inserted a column in
+  the output named "index" containing the pandas index of the auxiliary table.
+  This has been corrected.
+  :pr:`1020` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Release 0.2.0
 =============
 
