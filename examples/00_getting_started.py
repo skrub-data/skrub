@@ -39,7 +39,19 @@ from skrub import TableReport
 TableReport(employees_df)
 
 # %%
+#
 # You can use the interactive display above to explore the dataset visually.
+#
+# .. note::
+#
+#    You can see a few more `example reports`_ online. We also
+#    provide an experimental online demo_ that allows you to select a CSV or
+#    parquet file and generate a report directly in your web browser, without
+#    installing anything.
+#
+#    .. _example reports: https://skrub-data.org/skrub-reports/examples/
+#    .. _demo: https://skrub-data.org/skrub-reports/
+
 
 # %%
 # Easily building a strong baseline for tabular machine learning
