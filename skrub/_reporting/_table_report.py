@@ -42,6 +42,15 @@ class TableReport:
     json : str
         Report in JSON format.
 
+    Notes
+    -----
+    You can see some `example reports`_ for a few datasets online. We also
+    provide an experimental online demo_ that allows you to select a CSV or
+    parquet file and generate a report directly in your web browser.
+
+    .. _example reports: https://skrub-data.org/skrub-reports/examples/
+    .. _demo: https://skrub-data.org/skrub-reports/
+
     Examples
     --------
     >>> import pandas as pd
