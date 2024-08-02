@@ -132,7 +132,6 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         onSelectChange() {
-            const reportId = this.elem.getRootNode().host.id;
             const filterName = this.elem.value;
             const filterDisplayName = this.filters[filterName]["display_name"];
             const acceptedColumns = new Set(this.filters[filterName]["columns"]);
@@ -293,7 +292,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             }
         }
 
-        SAMPLE_COLUMN_SUMMARY_CLOSED(msg) {
+        SAMPLE_COLUMN_SUMMARY_CLOSED() {
             this.deactivate();
         }
 
@@ -462,7 +461,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             }));
         }
 
-        CLEAR_COLUMN_SELECTION() {
+        DESELECT_ALL_COLUMNS() {
             this.elem.checked = false;
         }
 
@@ -478,7 +477,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             super(elem, exchange);
             this.elem.addEventListener("click", () => {
                 this.exchange.send({
-                    kind: "CLEAR_COLUMN_SELECTION"
+                    kind: "DESELECT_ALL_COLUMNS"
                 });
                 this.exchange.send({
                     kind: "COLUMN_SELECTION_CHANGED"

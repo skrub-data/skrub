@@ -1,4 +1,5 @@
 """Generate the HTML for TableReport."""
+
 import base64
 import json
 import pathlib
@@ -142,4 +143,6 @@ def to_html(summary, standalone=True, column_filters=None):
 
 
 def _b64_encode(obj):
-    return base64.b64encode(json.dumps(obj).encode("utf-8")).decode("utf-8")
+    return base64.b64encode(json.dumps(obj, ensure_ascii=True).encode("utf-8")).decode(
+        "utf-8"
+    )
