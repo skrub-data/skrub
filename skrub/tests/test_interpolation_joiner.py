@@ -115,27 +115,27 @@ def test_custom_vectorizer(df_module):
         def transform(self, X):
             return X % 10
 
-    join = InterpolationJoiner(
+    transformed = InterpolationJoiner(
         aux,
         key="A",
         regressor=KNeighborsRegressor(1),
         vectorizer=Vectorizer(),
     ).fit_transform(main)
-    assert_array_equal(sbd.col(join, "B"), [0, 1])
+    assert_array_equal(sbd.col(transformed, "B"), [0, 1])
 
 
 def test_duplicate_column(df_module):
     main = df_module.make_dataframe({"A": [0, 1, 2]})
     aux = df_module.make_dataframe({"A": [0, 1, 2], "C": [10, 11, 12]})
-    join = InterpolationJoiner(
+    transformed = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert_array_equal(sbd.to_list(sbd.col(join, "C")), [10, 11, 12])
+    assert_array_equal(sbd.to_list(sbd.col(transformed, "C")), [10, 11, 12])
 
     # Add column with the same name twice
     join_2 = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
-    ).fit_transform(join)
+    ).fit_transform(transformed)
     assert sbd.shape(join_2) == (3, 3)
     assert re.match(r"C__skrub_[0-9a-f]+__", sbd.column_names(join_2)[2])
 
@@ -162,21 +162,21 @@ def test_wrong_key(df_module):
 
 def test_suffix(df_module):
     df = df_module.make_dataframe({"A": [0, 1], "B": [0, 1]})
-    join = InterpolationJoiner(
+    transformed = InterpolationJoiner(
         df, key="A", suffix="_aux", regressor=KNeighborsRegressor(1)
     ).fit_transform(df)
-    assert_array_equal(sbd.column_names(join), ["A", "B", "B_aux"])
+    assert_array_equal(sbd.column_names(transformed), ["A", "B", "B_aux"])
 
 
 def test_mismatched_indexes():
     main = pd.DataFrame({"A": [0, 1]}, index=[20, 30])
     aux = pd.DataFrame({"A": [0, 1], "B": [10, 11]}, index=[0, 1])
-    join = InterpolationJoiner(
+    transformed = InterpolationJoiner(
         aux, key="A", regressor=KNeighborsRegressor(1)
     ).fit_transform(main)
-    assert_array_equal(sbd.to_list(sbd.col(join, "B")), [10, 11])
+    assert_array_equal(sbd.to_list(sbd.col(transformed, "B")), [10, 11])
     # Index of main is kept
-    assert_array_equal(join.index.values, [20, 30])
+    assert_array_equal(transformed.index.values, [20, 30])
 
 
 def test_fit_on_none(df_module):
@@ -186,8 +186,8 @@ def test_fit_on_none(df_module):
         None
     )
     main = df_module.make_dataframe({"A": [0, 1]})
-    join = joiner.transform(main)
-    assert_array_equal(sbd.to_list(sbd.col(join, "B")), [10, 11])
+    transformed = joiner.transform(main)
+    assert_array_equal(sbd.to_list(sbd.col(transformed, "B")), [10, 11])
 
 
 def test_join_on_date(df_module):
@@ -226,11 +226,16 @@ def test_fit_failures(df_module, buildings, weather):
         classifier=FailFit(),
         on_estimator_failure="pass",
     )
-    join = joiner.fit_transform(buildings)
-    assert_array_equal(sbd.to_list(sbd.col(join, "avg_temp")), [10.5, 15.5])
+    transformed = joiner.fit_transform(buildings)
+    assert_array_equal(sbd.to_list(sbd.col(transformed, "avg_temp")), [10.5, 15.5])
     # Only numerical columns have been added
-    assert join.shape == (2, 4)
-    assert sbd.column_names(join) == ["latitude", "longitude", "n_stories", "avg_temp"]
+    assert transformed.shape == (2, 4)
+    assert sbd.column_names(transformed) == [
+        "latitude",
+        "longitude",
+        "n_stories",
+        "avg_temp",
+    ]
 
     joiner = InterpolationJoiner(
         weather,
@@ -240,10 +245,15 @@ def test_fit_failures(df_module, buildings, weather):
         on_estimator_failure="warn",
     )
     with pytest.warns(UserWarning, match="(?s)Estimators failed.*climate"):
-        join = joiner.fit_transform(buildings)
-    assert_array_equal(sbd.to_list(sbd.col(join, "avg_temp")), [10.5, 15.5])
-    assert sbd.shape(join) == (2, 4)
-    assert sbd.column_names(join) == ["latitude", "longitude", "n_stories", "avg_temp"]
+        transformed = joiner.fit_transform(buildings)
+    assert_array_equal(sbd.to_list(sbd.col(transformed, "avg_temp")), [10.5, 15.5])
+    assert sbd.shape(transformed) == (2, 4)
+    assert sbd.column_names(transformed) == [
+        "latitude",
+        "longitude",
+        "n_stories",
+        "avg_temp",
+    ]
 
     joiner = InterpolationJoiner(
         weather,
@@ -253,7 +263,7 @@ def test_fit_failures(df_module, buildings, weather):
         on_estimator_failure="raise",
     )
     with pytest.raises(ValueError, match="FailFit failed"):
-        join = joiner.fit_transform(buildings)
+        transformed = joiner.fit_transform(buildings)
 
 
 class FailPredict(DummyClassifier):
@@ -271,11 +281,13 @@ def test_transform_failures(df_module, buildings, weather):
         classifier=FailPredict(),
         on_estimator_failure="pass",
     )
-    join = joiner.fit_transform(buildings)
-    assert_array_equal(sbd.to_list(sbd.col(join, "avg_temp")), [10.5, 15.5])
-    assert sbd.is_null(sbd.col(join, "climate")).all()
-    assert sbd.dtype(sbd.col(join, "climate")) == sbd.dtype(sbd.col(weather, "climate"))
-    assert sbd.shape(join) == (2, 5)
+    transformed = joiner.fit_transform(buildings)
+    assert_array_equal(sbd.to_list(sbd.col(transformed, "avg_temp")), [10.5, 15.5])
+    assert sbd.is_null(sbd.col(transformed, "climate")).all()
+    assert sbd.dtype(sbd.col(transformed, "climate")) == sbd.dtype(
+        sbd.col(weather, "climate")
+    )
+    assert sbd.shape(transformed) == (2, 5)
 
     joiner = InterpolationJoiner(
         weather,
@@ -285,11 +297,13 @@ def test_transform_failures(df_module, buildings, weather):
         on_estimator_failure="warn",
     )
     with pytest.warns(UserWarning, match="(?s)Prediction failed.*climate"):
-        join = joiner.fit_transform(buildings)
-    assert_array_equal(sbd.to_list(sbd.col(join, "avg_temp")), [10.5, 15.5])
-    assert sbd.is_null(sbd.col(join, "climate")).all()
-    assert sbd.dtype(sbd.col(join, "climate")) == sbd.dtype(sbd.col(weather, "climate"))
-    assert sbd.shape(join) == (2, 5)
+        transformed = joiner.fit_transform(buildings)
+    assert_array_equal(sbd.to_list(sbd.col(transformed, "avg_temp")), [10.5, 15.5])
+    assert sbd.is_null(sbd.col(transformed, "climate")).all()
+    assert sbd.dtype(sbd.col(transformed, "climate")) == sbd.dtype(
+        sbd.col(weather, "climate")
+    )
+    assert sbd.shape(transformed) == (2, 5)
 
     joiner = InterpolationJoiner(
         weather,
@@ -299,7 +313,7 @@ def test_transform_failures(df_module, buildings, weather):
         on_estimator_failure="raise",
     )
     with pytest.raises(Exception, match="FailPredict failed"):
-        join = joiner.fit_transform(buildings)
+        transformed = joiner.fit_transform(buildings)
 
 
 def test_transform_failures_dtype(df_module, buildings, weather):
@@ -312,12 +326,12 @@ def test_transform_failures_dtype(df_module, buildings, weather):
         classifier=DummyClassifier(),
         on_estimator_failure="pass",
     )
-    join = joiner.fit_transform(buildings)
-    assert sbd.is_null(sbd.col(join, "avg_temp")).all()
-    assert sbd.dtype(sbd.col(join, "avg_temp")) == sbd.dtype(
+    transformed = joiner.fit_transform(buildings)
+    assert sbd.is_null(sbd.col(transformed, "avg_temp")).all()
+    assert sbd.dtype(sbd.col(transformed, "avg_temp")) == sbd.dtype(
         sbd.col(weather, "avg_temp")
     )
-    assert sbd.shape(join) == (2, 5)
+    assert sbd.shape(transformed) == (2, 5)
 
     joiner = InterpolationJoiner(
         weather,
@@ -326,7 +340,9 @@ def test_transform_failures_dtype(df_module, buildings, weather):
         classifier=FailPredict(),
         on_estimator_failure="pass",
     )
-    join = joiner.fit_transform(buildings)
-    assert sbd.is_null(sbd.col(join, "climate")).all()
-    assert sbd.dtype(sbd.col(join, "climate")) == sbd.dtype(sbd.col(weather, "climate"))
-    assert sbd.shape(join) == (2, 5)
+    transformed = joiner.fit_transform(buildings)
+    assert sbd.is_null(sbd.col(transformed, "climate")).all()
+    assert sbd.dtype(sbd.col(transformed, "climate")) == sbd.dtype(
+        sbd.col(weather, "climate")
+    )
+    assert sbd.shape(transformed) == (2, 5)
