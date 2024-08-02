@@ -9,12 +9,11 @@ from sklearn.ensemble import (
 )
 from sklearn.utils._tags import _safe_tags
 
-from skrub import _join_utils, _utils
-from skrub._minhash_encoder import MinHashEncoder
-from skrub._table_vectorizer import TableVectorizer
-
 from . import _dataframe as sbd
+from . import _join_utils, _utils
 from . import _selectors as s
+from ._minhash_encoder import MinHashEncoder
+from ._table_vectorizer import TableVectorizer
 
 DEFAULT_REGRESSOR = HistGradientBoostingRegressor()
 DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
