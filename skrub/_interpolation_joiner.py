@@ -75,8 +75,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         column.
 
     suffix : str, default=""
-        Suffix to append to the ``aux_table``'s column names. You can use it
-        to avoid duplicate column names in the join.
+        Suffix to append to the ``aux_table``'s column names. If duplicate column
+        names are found, a __skrub_<random string>__ is added at the end of columns
+        that would otherwise be duplicates.
 
     regressor : scikit-learn regressor, default=HistGradientBoostingRegressor
         Model used to predict the numerical columns of ``aux_table``.
@@ -216,7 +217,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : InterpolationJoiner
+        InterpolationJoiner
             Fitted :class:`InterpolationJoiner` instance (self).
         """
         del y
