@@ -13,15 +13,15 @@ from skrub import _dataframe as sbd
 
 
 @pytest.fixture
-def buildings():
-    return pd.DataFrame(
+def buildings(df_module):
+    return df_module.make_dataframe(
         {"latitude": [1.0, 2.0], "longitude": [1.0, 2.0], "n_stories": [3, 7]}
     )
 
 
 @pytest.fixture
-def weather():
-    return pd.DataFrame(
+def weather(df_module):
+    return df_module.make_dataframe(
         {
             "latitude": [1.2, 0.9, 1.9, 1.7, 5.0, 5.0],
             "longitude": [0.8, 1.1, 1.8, 1.8, 5.0, 5.0],
@@ -31,9 +31,7 @@ def weather():
     )
 
 
-def test_simple_join(df_module, buildings, weather):
-    weather = df_module.DataFrame(weather)
-    buildings = df_module.DataFrame(buildings)
+def test_simple_join(buildings, weather):
     transformed = InterpolationJoiner(
         weather,
         main_key=("latitude", "longitude"),
@@ -42,12 +40,10 @@ def test_simple_join(df_module, buildings, weather):
     assert sbd.shape(transformed) == (2, 5)
 
 
-def test_join_two_numeric_columns(df_module, buildings, weather):
-    weather = df_module.DataFrame(weather)
+def test_join_two_numeric_columns(buildings, weather):
     weather = sbd.with_columns(
         weather, **{"median_temp": [10.1, 10.9, 15.0, 16.2, 20.1, None]}
     )
-    buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         main_key=("latitude", "longitude"),
@@ -56,11 +52,9 @@ def test_join_two_numeric_columns(df_module, buildings, weather):
     assert sbd.shape(transformed) == (2, 6)
 
 
-def test_no_multioutput(df_module, buildings, weather):
+def test_no_multioutput(buildings, weather):
     # Two str cols, not containing nulls, a model that handles them separately
-    weather = df_module.DataFrame(weather)
     weather = sbd.with_columns(weather, **{"new_col": ["1", "1", "2", "2", "3", "3"]})
-    buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         main_key=("latitude", "longitude"),
@@ -72,11 +66,9 @@ def test_no_multioutput(df_module, buildings, weather):
     assert_array_equal(sbd.to_list(sbd.col(transformed, "new_col")), ["1", "2"])
 
 
-def test_multioutput(df_module, buildings, weather):
+def test_multioutput(buildings, weather):
     # Two str cols, not containing nulls, a model that handles both at once
-    weather = df_module.DataFrame(weather)
     weather = sbd.with_columns(weather, **{"new_col": ["1", "1", "2", "2", "3", "3"]})
-    buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         main_key=("latitude", "longitude"),
@@ -89,11 +81,9 @@ def test_multioutput(df_module, buildings, weather):
 
 
 @pytest.mark.parametrize("fill_nulls", [False, True])
-def test_custom_predictors(df_module, buildings, weather, fill_nulls):
+def test_custom_predictors(buildings, weather, fill_nulls):
     if fill_nulls:
         weather = sbd.fill_nulls(weather, 0.0)
-    weather = df_module.DataFrame(weather)
-    buildings = df_module.DataFrame(buildings)
     transformed = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
@@ -215,9 +205,7 @@ class FailFit(DummyClassifier):
         raise ValueError("FailFit failed")
 
 
-def test_fit_failures(df_module, buildings, weather):
-    weather = df_module.DataFrame(weather)
-    buildings = df_module.DataFrame(buildings)
+def test_fit_failures(buildings, weather):
     weather = sbd.with_columns(weather, **{"climate": ["A"] * sbd.shape(weather)[0]})
     joiner = InterpolationJoiner(
         weather,
@@ -271,9 +259,7 @@ class FailPredict(DummyClassifier):
         raise ValueError("FailPredict failed")
 
 
-def test_transform_failures(df_module, buildings, weather):
-    weather = df_module.DataFrame(weather)
-    buildings = df_module.DataFrame(buildings)
+def test_transform_failures(buildings, weather):
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
@@ -316,9 +302,7 @@ def test_transform_failures(df_module, buildings, weather):
         transformed = joiner.fit_transform(buildings)
 
 
-def test_transform_failures_dtype(df_module, buildings, weather):
-    weather = df_module.DataFrame(weather)
-    buildings = df_module.DataFrame(buildings)
+def test_transform_failures_dtype(buildings, weather):
     joiner = InterpolationJoiner(
         weather,
         key=["latitude", "longitude"],
