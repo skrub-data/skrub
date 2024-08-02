@@ -16,9 +16,9 @@ from skrub._table_vectorizer import TableVectorizer
 from . import _dataframe as sbd
 from . import _selectors as s
 
-DEFAULT_VECTORIZER = TableVectorizer(high_cardinality=MinHashEncoder())
 DEFAULT_REGRESSOR = HistGradientBoostingRegressor()
 DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
+DEFAULT_VECTORIZER = TableVectorizer(high_cardinality=MinHashEncoder())
 
 
 class InterpolationJoiner(TransformerMixin, BaseEstimator):
@@ -190,9 +190,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         on_estimator_failure="warn",
     ):
         self.aux_table = aux_table
+        self.key = key
         self.main_key = main_key
         self.aux_key = aux_key
-        self.key = key
         self.suffix = suffix
         self.regressor = _utils.clone_if_default(regressor, DEFAULT_REGRESSOR)
         self.classifier = _utils.clone_if_default(classifier, DEFAULT_CLASSIFIER)
