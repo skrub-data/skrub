@@ -9,16 +9,15 @@ from sklearn.ensemble import (
 )
 from sklearn.utils._tags import _safe_tags
 
-from skrub import _join_utils, _utils
-from skrub._minhash_encoder import MinHashEncoder
-from skrub._table_vectorizer import TableVectorizer
-
 from . import _dataframe as sbd
+from . import _join_utils, _utils
 from . import _selectors as s
+from ._minhash_encoder import MinHashEncoder
+from ._table_vectorizer import TableVectorizer
 
-DEFAULT_VECTORIZER = TableVectorizer(high_cardinality=MinHashEncoder())
 DEFAULT_REGRESSOR = HistGradientBoostingRegressor()
 DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
+DEFAULT_VECTORIZER = TableVectorizer(high_cardinality=MinHashEncoder())
 
 
 class InterpolationJoiner(TransformerMixin, BaseEstimator):
@@ -46,7 +45,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     aux_table : DataFrame
-        The (auxiliary) table to be joined to the `main_table` (which is the
+        The (auxiliary) table to be joined to the ``main_table`` (which is the
         argument of ``transform``). ``aux_table`` is used to train a model that
         takes as inputs the contents of the columns listed in ``aux_key``, and
         predicts the contents of the other columns. In the example above, we
@@ -54,11 +53,11 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         operating on. Therefore, ``aux_table`` is the ``annual_avg_temp``
         table.
 
-    key : list of str, or str
-        Column names to use for both `main_key` and `aux_key`, when they are
-        the same. Provide either `key` (only) or both `main_key` and `aux_key`.
+    key : str or list of str, default=None
+        Column names to use for both ``main_key`` and ``aux_key``, when they are
+        the same. Provide either ``key`` (only) or both ``main_key`` and ``aux_key``.
 
-    main_key : list of str, or str
+    main_key : str or list of str, default=None
         The columns in the main table used for joining. The main table is the
         argument of ``transform``, to which we add information inferred using
         ``aux_table``. The column names listed in ``main_key`` will provide the
@@ -68,22 +67,23 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         column, we can pass its name rather than a list: ``"latitude"`` is
         equivalent to ``["latitude"]``.
 
-    aux_key : list of str, or str
+    aux_key : str or list of str, default=None
         The columns in ``aux_table`` used for joining. Their number and types
         must match those of the ``main_key`` columns in the main table. These
         columns provide the features for the estimators to be fitted. As for
         ``main_key``, it is possible to pass a string when using a single
         column.
 
-    suffix : str
-        Suffix to append to the ``aux_table``'s column names. You can use it
-        to avoid duplicate column names in the join.
+    suffix : str, default=""
+        Suffix to append to the ``aux_table``'s column names. If duplicate column
+        names are found, a __skrub_<random string>__ is added at the end of columns
+        that would otherwise be duplicates.
 
-    regressor : scikit-learn regressor
+    regressor : scikit-learn regressor, default=HistGradientBoostingRegressor
         Model used to predict the numerical columns of ``aux_table``.
 
-    classifier : scikit-learn classifier
-        Model used to predict the categorical (string) columns of ``aux_table``.
+    classifier : scikit-learn classifier, default=HistGradientBoostingClassifier
+        Model used to predict the string and categorical columns of ``aux_table``.
 
     vectorizer : scikit-learn transformer that can operate on a DataFrame
         Used to transform the feature columns before passing them to the
@@ -98,7 +98,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         passing ``vectorizer=TableVectorizer()`` which will encode text with a
         ``GapEncoder`` rather than a ``MinHashEncoder``.
 
-    n_jobs : int or None
+    n_jobs : int or None, default=None
         Number of jobs to run in parallel. ``None`` means 1 unless in a
         ``joblib.parallel_backend`` context. -1 means using all processors.
         Depending on the estimators used and the contents of ``aux_table``,
@@ -108,7 +108,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         not support multi-output tasks. Fitting and querying these estimators
         can be done in parallel.
 
-    on_estimator_failure : "warn", "raise" or "pass"
+    on_estimator_failure : "warn", "raise" or "pass", default="warn"
         How to handle exceptions raised when fitting one of the estimators
         (regressors and classifiers) or querying them for a prediction. If
         "raise", exceptions are propagated. If "pass" (i) if an exception is
@@ -190,9 +190,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         on_estimator_failure="warn",
     ):
         self.aux_table = aux_table
+        self.key = key
         self.main_key = main_key
         self.aux_key = aux_key
-        self.key = key
         self.suffix = suffix
         self.regressor = _utils.clone_if_default(regressor, DEFAULT_REGRESSOR)
         self.classifier = _utils.clone_if_default(classifier, DEFAULT_CLASSIFIER)
@@ -201,24 +201,24 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
         self.on_estimator_failure = on_estimator_failure
 
     def fit(self, X, y=None):
-        """Fit estimators to the `aux_table` provided during initialization.
+        """Fit estimators to the ``aux_table`` provided during initialization.
 
-        `X` and `y` are mostly for scikit-learn compatibility.
+        ``X`` and ``y`` are mostly for scikit-learn compatibility.
 
         Parameters
         ----------
         X : array-like or None
-            The main table to which ``self.aux_table`` could be joined. If `X`
+            The main table to which ``self.aux_table`` could be joined. If ``X``
             is not ``None``, an error is raised if any of the matching columns
-            listed in ``self.main_key`` (or ``self.key``) is missing from `X`.
+            listed in ``self.main_key`` (or ``self.key``) are missing from ``X``.
 
         y : array-like
             Ignored; only exists for compatibility with scikit-learn.
 
         Returns
         -------
-        self : InterpolationJoiner
-            Returns self.
+        InterpolationJoiner
+            Fitted :class:`InterpolationJoiner` instance (self).
         """
         del y
         self._check_inputs()
@@ -271,9 +271,9 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
     def transform(self, X):
         """Transform a table by joining inferred values to it.
 
-        The values of the `main_key` columns in `X` (the main table) are used
+        The values of the ``main_key`` columns in ``X`` (the main table) are used
         to predict likely values for the contents of a matching row in
-        `self.aux_table` (the auxiliary table).
+        ``aux_table`` (the auxiliary table).
 
         Parameters
         ----------
@@ -282,9 +282,8 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        join : DataFrame
-            The result of the join between `X` and inferred rows from
-            ``self.aux_table``.
+        DataFrame
+            The result of the join between ``X`` and inferred rows from ``aux_table``.
         """
         main_table = X
         _join_utils.check_missing_columns(
