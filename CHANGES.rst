@@ -6,11 +6,15 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
-===================
+Release 0.3.0
+=============
 
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
+Highlights
+----------
+* Polars dataframes are now supported across all ``skrub`` estimators.
+* :class:`TableReport` generates an interactive report for a dataframe. This
+  `page <https://skrub-data.org/skrub-reports/examples/>`_ regroups some
+  precomputed examples.
 
 Major changes
 -------------
