@@ -17,7 +17,7 @@
 
 .box pre {
     overflow-x: auto;
-    padding: var(--tiny);
+    padding: var(--micro);
     flex-grow: 1;
     white-space: pre;
 }
@@ -54,7 +54,7 @@
     border-radius: var(--radius, 5px);
     position: absolute;
     right: calc(100% + 5px);
-    top: 5px;
+    top: 3px;
     margin: 0;
 }
 
