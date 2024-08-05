@@ -204,7 +204,7 @@ html_theme_options = {
         "json_url": (
             "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/version.json"
         ),
-        "version_match": "dev",
+        "version_match": version,
     },
     "show_version_warning_banner": True,
 }
