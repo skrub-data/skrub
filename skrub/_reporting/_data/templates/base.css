@@ -44,6 +44,10 @@
     max-width: max-content;
 }
 
+h1 {
+    font-size: var(--huge);
+}
+
 button > * {
     pointer-events: none;
 }
