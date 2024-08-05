@@ -18,6 +18,9 @@ Major changes
 
 Minor changes
 -------------
+* The reports created by :class:`TableReport`, when inserted in an html page (or
+  displayed in a notebook), now use the same font as the surrounding page.
+  :pr:`1038` by :user:`Jérôme Dockès <jeromedockes>`.
 
 
 Release 0.3.0
