@@ -260,9 +260,9 @@ dd {
 }
 
 .announcement  {
-    font-size: var(--large);
-    padding-block-start: var(--huge);
-    padding-block-end: var(--huge);
+    font-size: var(--small);
+    padding-block-start: var(--small);
+    padding-block-end: var(--small);
 }
 
 .important-note {
