@@ -31,17 +31,6 @@ class TableReport:
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
 
-    Attributes
-    ----------
-    html : str
-        Report as an HTML page.
-    html_snippet : str
-        Report as an HTML snippet containing a single '<div>' element. Useful
-        to embed the report in an HTML page or displaying it in a Jupyter
-        notebook.
-    json : str
-        Report in JSON format.
-
     Notes
     -----
     You can see some `example reports`_ for a few datasets online. We also
