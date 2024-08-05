@@ -18,6 +18,24 @@ Highlights
 
 Major changes
 -------------
+
+
+Minor changes
+-------------
+
+
+Release 0.3.0
+=============
+
+Highlights
+----------
+* Polars dataframes are now supported across all ``skrub`` estimators.
+* :class:`TableReport` generates an interactive report for a dataframe. This
+  `page <https://skrub-data.org/skrub-reports/examples/>`_ regroups some
+  precomputed examples.
+
+Major changes
+-------------
 * The :class:`InterpolationJoiner` now supports polars dataframes. :pr:`1016`
   by :user:`Théo Jolivet <TheooJ>`.
 * The :class:`TableReport` provides an interactive report on a dataframe's
