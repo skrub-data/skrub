@@ -79,6 +79,7 @@ pre {
 
 code, pre {
     font-family: var(--fontStack-monospace);
+    font-size: calc(0.9 * var(--small));
 }
 
 :is(td, th) {
