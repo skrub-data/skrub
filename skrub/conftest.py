@@ -1,4 +1,5 @@
 import datetime
+import inspect
 from types import SimpleNamespace
 
 import numpy as np
@@ -94,6 +95,15 @@ try:
 except ImportError:
     _POLARS_INSTALLED = False
 
+
+def _pl_from_dict(data):
+    import polars as pl
+
+    if "strict" in inspect.signature(pl.from_dict).parameters:
+        return pl.from_dict(data, strict=False)
+    return pl.from_dict(data)
+
+
 if _POLARS_INSTALLED:
     _DATAFAME_MODULES_INFO["polars"] = SimpleNamespace(
         **{
@@ -102,8 +112,10 @@ if _POLARS_INSTALLED:
             "module": pl,
             "DataFrame": pl.DataFrame,
             "Column": pl.Series,
-            "make_dataframe": pl.from_dict,
-            "make_column": lambda name, values: pl.Series(name=name, values=values),
+            "make_dataframe": _pl_from_dict,
+            "make_column": lambda name, values: pl.Series(
+                name=name, values=values, strict=False
+            ),
             "assert_frame_equal": polars.testing.assert_frame_equal,
             "assert_column_equal": polars.testing.assert_series_equal,
             "empty_dataframe": pl.DataFrame(),
@@ -129,6 +141,19 @@ pd.set_option("display.show_dimensions", False)
 @pytest.fixture
 def all_dataframe_modules():
     return _DATAFAME_MODULES_INFO
+
+
+@pytest.fixture
+def pd_module(all_dataframe_modules):
+    return all_dataframe_modules["pandas-numpy-dtypes"]
+
+
+@pytest.fixture
+def pl_module(all_dataframe_modules):
+    try:
+        return all_dataframe_modules["polars"]
+    except KeyError:
+        pytest.skip("polars not installed")
 
 
 @pytest.fixture(params=list(_DATAFAME_MODULES_INFO.keys()))

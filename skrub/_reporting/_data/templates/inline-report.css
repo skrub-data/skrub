@@ -1,0 +1,8 @@
+/* Add a horizontal line below the report to separate it from surrounding content. */
+/* This only gets included when generating an html snippet, not a full page, */
+/* because it is unnecessary and looks worse when the report is the only content on */
+/* the page. */
+
+.tab-panel {
+    border-bottom: 1px solid var(--mediumg);
+}

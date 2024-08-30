@@ -15,8 +15,50 @@ It is currently undergoing fast development and backward compatibility is not en
 Major changes
 -------------
 
+
 Minor changes
 -------------
+* The reports created by :class:`TableReport`, when inserted in an html page (or
+  displayed in a notebook), now use the same font as the surrounding page.
+  :pr:`1038` by :user:`Jérôme Dockès <jeromedockes>`.
+
+
+Release 0.3.0
+=============
+
+Highlights
+----------
+* Polars dataframes are now supported across all ``skrub`` estimators.
+* :class:`TableReport` generates an interactive report for a dataframe. This
+  `page <https://skrub-data.org/skrub-reports/examples/>`_ regroups some
+  precomputed examples.
+
+Major changes
+-------------
+* The :class:`InterpolationJoiner` now supports polars dataframes. :pr:`1016`
+  by :user:`Théo Jolivet <TheooJ>`.
+* The :class:`TableReport` provides an interactive report on a dataframe's
+  contents: an overview, summary statistics and plots, statistical associations
+  between columns. It can be displayed in a jupyter notebook, a browser tab or
+  saved as a static HTML page. :pr:`984` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Minor changes
+-------------
+* :class:`Joiner` and :func:`fuzzy_join` used to raise an error when columns
+  with the same name appeared in the main and auxiliary table (after adding the
+  suffix). This is now allowed and a random string is inserted in the duplicate
+  column to ensure all names are unique.
+  :pr:`1014` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* :class:`AggJoiner` and :class:`AggTarget` could produce outputs whose column
+  names varied across calls to `transform` in some cases in the presence of
+  duplicate column names, now the output names are always the same.
+  :pr:`1013` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* In some cases :class:`AggJoiner` and :class:`AggTarget` inserted a column in
+  the output named "index" containing the pandas index of the auxiliary table.
+  This has been corrected.
+  :pr:`1020` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.2.0
 =============

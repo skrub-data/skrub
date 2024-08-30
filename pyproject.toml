@@ -29,6 +29,8 @@ dependencies = [
     "pandas>=1.5.3",
     "scikit-learn>=1.2.1",
     "scipy>=1.9.3",
+    "jinja2>=3.1.2",
+    "matplotlib>=3.4.3",
 ]
 
 [tool.setuptools.dynamic]
@@ -39,7 +41,6 @@ readme = { file = "README.rst" }
 doc = [
     "jupyterlite-sphinx",
     "jupyterlite-pyodide-kernel",
-    "matplotlib",
     "numpydoc",
     "pydata-sphinx-theme",
     "seaborn",
@@ -83,6 +84,8 @@ packaging = ">=23.1"
 pandas = ">=1.5.3"
 scikit-learn = ">=1.2.1"
 scipy = ">=1.9.3"
+jinja2 = ">=3.1.2"
+matplotlib = ">=3.4.3"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
@@ -120,6 +123,8 @@ numpy = "==1.23.5"
 pandas = "==1.5.3"
 scikit-learn = "==1.2.1"
 scipy = "==1.9.3"
+jinja2 = "==3.1.2"
+matplotlib = "==3.4.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
@@ -228,7 +233,8 @@ filterwarnings = [
     'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
     # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
     # should be addressed in pandas
-    'ignore:np.find_common_type is deprecated.*:DeprecationWarning'
+    'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
+    'ignore:.*distutils Version classes are deprecated.*',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"

@@ -1,0 +1,12 @@
+<div class="wrapper" data-manager="InvisibleInAssociationsTabPanel">
+    <label for="column-filter-select">Show: </label>
+    <select data-manager="ColumnFilter"
+            data-all-filters-base64="{{ base64_column_filters | safe }}"
+            data-test="column-filter-select"
+            autocomplete="off">
+        {% for filter_name in column_filters %}
+        <option value="{{ filter_name }}" {{ "selected" if filter_name == "all()" }}>
+            {{ column_filters[filter_name]["display_name"] }}</option>
+        {% endfor %}
+    </select>
+</div>

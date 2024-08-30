@@ -1,0 +1,55 @@
+<article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
+    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
+    {% include "table-bar.html" %}
+
+    <div class="horizontal-scroll">
+        <table class="pure-table pure-table-striped">
+            <thead>
+                <tr>
+                    {% for idx in range(summary.head.header.__len__()) %}
+                    {% set column_name = summary.head.header[idx] %}
+
+                    <th scope="col" class="clickable ellided"
+                        data-manager="SampleTableHeader FilterableColumn"
+                        data-column-name="{{ column_name }}"
+                        data-column-idx="{{ idx }}">{{ column_name }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            {% set table_part = "head" %}
+            {% include "table-part.html" %}
+
+            {% if summary.tail.data %}
+            <tbody>
+                <tr>
+                    {% for column_name in summary.head.header %}
+                    <td class="ellided-table-part" data-manager="FilterableColumn"
+                        data-column-name="{{ column_name }}">⋮</td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+            {% set table_part = "tail" %}
+            {% include "table-part.html" %}
+            {% endif %}
+
+        </table>
+    </div>
+
+    <p>
+        <strong>{{ summary.n_rows }}</strong> rows ✕
+        <strong data-manager="ColumnFilterMatchCount"
+            data-test="n-columns-display">{{ summary.n_columns }}</strong> columns.
+    </p>
+
+
+    <div class="column-summary-group columns-in-sample-tab">
+        {% set in_sample_tab=True %}
+        {% for column in summary.columns %}
+        {% set col_id="col_{}_in_sample_tab".format(loop.index0) %}
+        {% include "column-summary.html" %}
+        {% endfor %}
+        {% set in_sample_tab=False %}
+    </div>
+</article>
+
+{% include "no-filter-matches.html" %}

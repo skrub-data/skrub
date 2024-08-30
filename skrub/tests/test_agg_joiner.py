@@ -369,7 +369,7 @@ def test_not_fitted_dataframe(df_module, main_table):
         key="userId",
     )
     agg_joiner.fit(main_table)
-    error_msg = r"(?=.*columns cannot be used because they do not exist)"
+    error_msg = r"Columns of dataframes passed to fit\(\) and transform\(\) differ"
     with pytest.raises(ValueError, match=error_msg):
         agg_joiner.transform(not_main_table)
 
@@ -400,7 +400,6 @@ def test_agg_target(main_table, y, col_name):
             "movieId": [1, 3, 6, 318, 6, 1704],
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
-            "index": [0, 0, 0, 1, 1, 1],
             f"{col_name}_(1.999, 3.0]_user": [0, 0, 0, 2, 2, 2],
             f"{col_name}_(3.0, 4.0]_user": [3, 3, 3, 1, 1, 1],
             f"{col_name}_2.0_user": [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
@@ -458,3 +457,20 @@ def test_wrong_args_ops(main_table):
     )
     with pytest.raises(ValueError, match=r"(?=.*'mean')(?=.*argument)"):
         agg_target.fit(main_table, y)
+
+
+def test_duplicate_columns(main_table):
+    joiner = AggJoiner(aux_table=main_table, key="userId")
+    X = sbd.with_columns(main_table, rating_mean=sbd.col(main_table, "rating"))
+    out_1 = joiner.fit_transform(X)
+    out_2 = joiner.transform(X)
+    assert sbd.column_names(out_1) == sbd.column_names(out_2)
+
+
+def test_duplicate_columns_target(main_table):
+    joiner = AggTarget(main_key="userId", operation="mean")
+    y = sbd.col(main_table, "rating")
+    X = sbd.with_columns(main_table, rating_mean_target=sbd.col(main_table, "rating"))
+    out_1 = joiner.fit_transform(X, y)
+    out_2 = joiner.transform(X)
+    assert sbd.column_names(out_1) == sbd.column_names(out_2)

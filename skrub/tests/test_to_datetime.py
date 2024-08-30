@@ -170,8 +170,8 @@ def test_fit_object_column():
 
 
 @pytest.mark.parametrize("time_zone", [None, "UTC", "America/Toronto", "Asia/Istanbul"])
-def test_polars_date_columns(all_dataframe_modules, time_zone):
-    pl = pytest.importorskip("polars")
+def test_polars_date_columns(pl_module, time_zone):
+    pl = pl_module.module
     datetime = (
         pl.Series(["2020-02-01T12:01:02"])
         .str.to_datetime()
@@ -179,7 +179,7 @@ def test_polars_date_columns(all_dataframe_modules, time_zone):
     )
     date = datetime.cast(pl.Date)
     encoder = ToDatetime().fit(date)
-    assert_equal = all_dataframe_modules["polars"].assert_column_equal
+    assert_equal = pl_module.assert_column_equal
     assert_equal(encoder.transform(datetime), date)
     encoder = ToDatetime().fit(datetime)
     out = encoder.transform(date)

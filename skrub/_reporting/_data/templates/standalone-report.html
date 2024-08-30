@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ summary.file_name if summary.file_name else "skrub report" }}</title>
+    <style>
+     {% include "standalone-report.css" %}
+    </style>
+</head>
+<body>
+    <main>
+        {% include "report.html" %}
+    </main>
+</body>
+
+</html>

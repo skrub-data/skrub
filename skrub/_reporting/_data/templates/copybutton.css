@@ -1,0 +1,79 @@
+/* Boxes with copy-to-clipboard buttons */
+/* ------------------------------------ */
+
+/* Those are used to quickly copy some code snippets, column names, etc. */
+
+.box {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    border: 1px solid var(--darkg);
+    padding: 0;
+    min-width: 6rem;
+    max-width: 40rem;
+    max-height: 10rem;
+    min-height: 1.8rem;
+}
+
+.box pre {
+    overflow-x: auto;
+    padding: var(--micro);
+    flex-grow: 1;
+    white-space: pre;
+}
+
+.copybutton {
+    margin-left: -2rem;
+    min-width: 2rem;
+    display: none;
+    padding: var(--micro);
+    padding-left: var(--tiny);
+    padding-right: var(--tiny);
+    border: none;
+    background: var(--lightg);
+    position: relative;
+}
+
+.copybutton[data-show-checkmark]{
+    display: inline-block;
+}
+
+.copybutton:not([data-show-checkmark]) > :not(:first-child) {
+    display: none;
+}
+
+.copybutton[data-show-checkmark] > :first-child {
+    display: none;
+}
+
+.copied-message {
+    font-size: 0.8rem;
+    background-color: black;
+    color: white;
+    padding: 5px;
+    border-radius: var(--radius, 5px);
+    position: absolute;
+    right: calc(100% + 5px);
+    top: 3px;
+    margin: 0;
+}
+
+.box:hover .copybutton {
+    display: inline-block;
+    background: var(--lightg);
+}
+
+.box:hover .copybutton:hover {
+    display: inline-block;
+    background: var(--mediumg);
+}
+
+
+[data-shows-placeholder] {
+    color: #777777;
+}
+
+.table-bar .box {
+    flex-grow: 1;
+    max-width: 55rem;
+}

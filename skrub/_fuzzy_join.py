@@ -196,9 +196,6 @@ def fuzzy_join(
     )
     _join_utils.check_missing_columns(left, left_key, "'left' (the left table)")
     _join_utils.check_missing_columns(right, right_key, "'right' (the right table)")
-    _join_utils.check_column_name_duplicates(
-        left, right, suffix, main_table_name="left", aux_table_name="right"
-    )
 
     join = Joiner(
         aux_table=right,

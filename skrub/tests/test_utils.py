@@ -1,6 +1,7 @@
 from inspect import ismodule
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
@@ -22,9 +23,11 @@ def test_lrudict():
 
 
 @pytest.mark.parametrize(
-    "values", [[], [None], ["", None], ["abc", "", None], [np.nan, "abc"]]
+    "values", [[], [None], ["", None], ["abc", "", None], ["abc", np.nan]]
 )
 def test_unique_strings(df_module, values):
+    if df_module.name == "polars":
+        values = [None if pd.isna(v) else v for v in values]
     c = df_module.make_column("", values) if values else df_module.empty_column
     is_null = sbd.to_numpy(sbd.is_null(c))
     unique, idx = unique_strings(sbd.to_numpy(c), is_null)

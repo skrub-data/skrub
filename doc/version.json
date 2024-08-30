@@ -1,0 +1,13 @@
+[
+    {
+        "name": "0.4.dev0 (dev)",
+        "version": "0.4.dev0",
+        "url": "https://skrub-data.org/dev/"
+    },
+    {
+        "name": "0.3.0 (stable)",
+        "version": "0.3.0",
+        "url": "https://skrub-data.org/stable/",
+        "preferred": true
+    }
+]

@@ -10,7 +10,7 @@ from skrub._to_str import ToStr
 
 
 def test_to_str(df_module):
-    values = [object(), True, None, "one"]
+    values = [object(), 17, None, "one"]
     out = ToStr().fit_transform(df_module.make_column("", values))
     assert sbd.is_string(out)
     if df_module.name == "pandas":

@@ -77,11 +77,18 @@ def test_encoder_params(generate_data, hashing, minmax_hash):
 
 @pytest.mark.parametrize("hashing", ["fast", "murmur", "aaa"])
 def test_missing_values(df_module, hashing):
+    na = None
+    if df_module.description == "pandas-nullable-dtypes":
+        na = pd.NA
+    elif df_module.description == "pandas-numpy-dtypes":
+        na = np.nan
+    # polars doesn't let nan in a str column
+
     X = df_module.make_column(
         "",
         [
             "Red",
-            pd.NA if df_module.description == "pandas-nullable-dtypes" else np.nan,
+            na,
             "green",
             "blue",
             "green",

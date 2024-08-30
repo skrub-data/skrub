@@ -1,9 +1,13 @@
+import builtins
+import warnings
 from collections.abc import Mapping, Sequence
 
 import numpy as np
 import pandas as pd
 import pandas.api.types
 from sklearn.utils.fixes import parse_version
+
+from skrub import _join_utils
 
 try:
     import polars as pl
@@ -74,6 +78,14 @@ __all__ = [
     #
     "all",
     "any",
+    "sum",
+    "min",
+    "max",
+    "std",
+    "mean",
+    "sort",
+    "value_counts",
+    "quantile",
     "is_null",
     "has_nulls",
     "drop_nulls",
@@ -84,6 +96,7 @@ __all__ = [
     "where",
     "sample",
     "head",
+    "slice",
     "replace",
     "with_columns",
 ]
@@ -288,7 +301,7 @@ def _all_null_like_pandas(col, length=None, dtype=None, name=None):
         dtype = col.dtype
     if name is None:
         name = col.name
-    return pd.Series(dtype=dtype, index=col.index, name=name)
+    return pd.Series(dtype=dtype, index=np.arange(length), name=name)
 
 
 @all_null_like.specialize("polars", argument_type="Column")
@@ -309,12 +322,17 @@ def concat_horizontal(*dataframes):
 
 @concat_horizontal.specialize("pandas")
 def _concat_horizontal_pandas(*dataframes):
+    init_index = dataframes[0].index
     dataframes = [df.reset_index(drop=True) for df in dataframes]
-    return pd.concat(dataframes, axis=1, copy=False)
+    dataframes = _join_utils.make_column_names_unique(*dataframes)
+    result = pd.concat(dataframes, axis=1, copy=False)
+    result.index = init_index
+    return result
 
 
 @concat_horizontal.specialize("polars")
 def _concat_horizontal_polars(*dataframes):
+    dataframes = _join_utils.make_column_names_unique(*dataframes)
     return pl.concat(dataframes, how="horizontal")
 
 
@@ -696,16 +714,21 @@ def _to_string_pandas(col):
         return col
     if not is_na.any():
         return col
-    return col.fillna(np.nan)
+    return _fill_nulls_pandas(col, np.nan)
 
 
 @to_string.specialize("polars", argument_type="Column")
 def _to_string_polars(col):
     if col.dtype != pl.Object:
-        # Objects are mere passengers in polars dataframes and we can't do
-        # anything with them; map_elements raises an exception.
         return _cast_polars(col, pl.String)
-    return col.map_elements(str)
+    # Objects are mere passengers in polars dataframes and we can't do
+    # anything with them; cast raises an exception.
+    # polars emits a performance warning when using map_elements
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore", category=pl.exceptions.PolarsInefficientMapWarning
+        )
+        return col.map_elements(str, return_dtype=pl.String)
 
 
 @dispatch
@@ -765,7 +788,7 @@ def _to_datetime_polars(col, format, strict=True):
         # differently.
         format = format.replace(".%f", "%.f")
         return col.str.to_datetime(format=format, strict=strict)
-    except pl.ComputeError as e:
+    except (pl.exceptions.ComputeError, pl.exceptions.InvalidOperationError) as e:
         raise ValueError("Failed to convert to datetime") from e
 
 
@@ -839,6 +862,137 @@ def _any_polars(col):
 
 
 @dispatch
+def sum(col):
+    raise NotImplementedError()
+
+
+@sum.specialize("pandas", argument_type="Column")
+def _sum_pandas_col(col):
+    return col.sum()
+
+
+@sum.specialize("polars", argument_type="Column")
+def _sum_polars_col(col):
+    return col.sum()
+
+
+@dispatch
+def min(col):
+    raise NotImplementedError()
+
+
+@min.specialize("pandas", argument_type="Column")
+def _min_pandas_col(col):
+    return col.min()
+
+
+@min.specialize("polars", argument_type="Column")
+def _min_polars_col(col):
+    return col.min()
+
+
+@dispatch
+def max(col):
+    raise NotImplementedError()
+
+
+@max.specialize("pandas", argument_type="Column")
+def _max_pandas_col(col):
+    return col.max()
+
+
+@max.specialize("polars", argument_type="Column")
+def _max_polars_col(col):
+    return col.max()
+
+
+@dispatch
+def std(col):
+    raise NotImplementedError()
+
+
+@std.specialize("pandas", argument_type="Column")
+def _std_pandas_col(col):
+    return col.std()
+
+
+@std.specialize("polars", argument_type="Column")
+def _std_polars_col(col):
+    return col.std()
+
+
+@dispatch
+def mean(col):
+    raise NotImplementedError()
+
+
+@mean.specialize("pandas", argument_type="Column")
+def _mean_pandas_col(col):
+    return col.mean()
+
+
+@mean.specialize("polars", argument_type="Column")
+def _mean_polars_col(col):
+    return col.mean()
+
+
+@dispatch
+def value_counts(column):
+    raise NotImplementedError()
+
+
+@value_counts.specialize("pandas", argument_type="Column")
+def _value_counts_pandas(column):
+    return (
+        column.value_counts(dropna=True)
+        .reset_index()
+        .set_axis(["value", "count"], axis="columns")
+    )
+
+
+@value_counts.specialize("polars", argument_type="Column")
+def _value_counts_polars(column):
+    return (
+        column.drop_nulls()
+        .rename("value")
+        .value_counts()
+        .with_columns(pl.col("count").cast(pl.Int64))
+    )
+
+
+@dispatch
+def sort(df, by, descending=False):
+    raise NotImplementedError()
+
+
+@sort.specialize("pandas", argument_type="DataFrame")
+def _sort_pandas_dataframe(df, by, descending=False):
+    return df.sort_values(
+        by=by, ascending=not descending, ignore_index=True, na_position="last"
+    )
+
+
+@sort.specialize("polars", argument_type="DataFrame")
+def _sort_polars_dataframe(df, by, descending=False):
+    return df.sort(by=by, descending=descending, nulls_last=True)
+
+
+@dispatch
+def quantile(column, q, interpolation="nearest"):
+    raise NotImplementedError()
+
+
+@quantile.specialize("pandas", argument_type="Column")
+def _quantile_pandas_column(column, q, interpolation="nearest"):
+    return column.quantile(q, interpolation=interpolation)
+
+
+@quantile.specialize("polars", argument_type="Column")
+def _quantile_polars_column(column, q, interpolation="nearest"):
+    return _drop_nulls_polars(column).quantile(q, interpolation=interpolation)
+
+
+@dispatch
 def is_null(col):
     raise NotImplementedError()
 
@@ -883,7 +1037,10 @@ def fill_nulls(obj, value):
 
 @fill_nulls.specialize("pandas")
 def _fill_nulls_pandas(obj, value):
-    return obj.fillna(value)
+    if parse_version(pd.__version__) < parse_version("2.2.0"):
+        return obj.fillna(value)
+    with pd.option_context("future.no_silent_downcasting", True):
+        return obj.fillna(value)
 
 
 @fill_nulls.specialize("polars", argument_type="Column")
@@ -993,6 +1150,22 @@ def _head_pandas(obj, n=5):
 @head.specialize("polars")
 def _head_polars(obj, n=5):
     return obj.head(n=n)
+
+
+@dispatch
+def slice(obj, *start_stop):
+    raise NotImplementedError()
+
+
+@slice.specialize("pandas")
+def _slice_pandas(obj, *start_stop):
+    return obj.iloc[builtins.slice(*start_stop)]
+
+
+@slice.specialize("polars")
+def _slice_polars(obj, *start_stop):
+    start, stop, _ = builtins.slice(*start_stop).indices(shape(obj)[0])
+    return obj.slice(start, stop - start)
 
 
 @dispatch

@@ -48,25 +48,6 @@ def test_check_key_length_mismatch():
         )
 
 
-def test_check_no_column_name_duplicates_with_no_suffix(df_module):
-    left = df_module.make_dataframe({"A": [], "B": []})
-    right = df_module.make_dataframe({"C": []})
-    _join_utils.check_column_name_duplicates(left, right, "")
-
-
-def test_check_no_column_name_duplicates_after_adding_a_suffix(df_module):
-    left = df_module.make_dataframe({"A": [], "B": []})
-    right = df_module.make_dataframe({"B": []})
-    _join_utils.check_column_name_duplicates(left, right, "_right")
-
-
-def test_check_column_name_duplicates_after_adding_a_suffix(df_module):
-    left = df_module.make_dataframe({"A": [], "B_right": []})
-    right = df_module.make_dataframe({"B": []})
-    with pytest.raises(ValueError, match=".*suffix '_right'.*['B_right']"):
-        _join_utils.check_column_name_duplicates(left, right, "_right")
-
-
 def test_add_column_name_suffix(df_module):
     df = df_module.make_dataframe({"one": [], "two three": [], "x": []})
     df = _join_utils.add_column_name_suffix(df, "")
@@ -78,6 +59,15 @@ def test_add_column_name_suffix(df_module):
 @pytest.fixture
 def left(df_module):
     return df_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})
+
+
+def test_make_column_names_unique(left):
+    right = left
+    result = _join_utils.make_column_names_unique(left, right)
+    assert len(result) == 2
+    assert sbd.column_names(result[0]) == ["left_key", "left_col"]
+    assert re.match(r"left_key__skrub_[0-9a-f]+__", sbd.column_names(result[1])[0])
+    assert re.match(r"left_col__skrub_[0-9a-f]+__", sbd.column_names(result[1])[1])
 
 
 def test_left_join_all_keys_in_right_dataframe(df_module, left):
@@ -104,7 +94,7 @@ def test_left_join_some_keys_not_in_right_dataframe(df_module, left):
         {
             "left_key": [1, 2, 2],
             "left_col": [10, 20, 30],
-            "right_col": [np.nan, "a", "a"],
+            "right_col": [None if df_module.name == "polars" else np.nan, "a", "a"],
         }
     )
     df_module.assert_frame_equal(joined, expected)

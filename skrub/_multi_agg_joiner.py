@@ -4,7 +4,6 @@ The MultiAggJoiner extends AggJoiner to multiple auxiliary tables.
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from skrub import _join_utils
 from skrub._agg_joiner import AggJoiner
 from skrub._dataframe._namespace import is_pandas, is_polars
 from skrub._utils import _is_array_like
@@ -440,7 +439,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 )
         return suffixes
 
-    def fit(self, X, y=None):
+    def fit_transform(self, X, y=None):
         """Aggregate auxiliary tables based on the main keys.
 
         Parameters
@@ -453,8 +452,8 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        MultiAggJoiner
-            Fitted :class:`MultiAggJoiner` instance (self).
+        DataFrame
+            The augmented input.
         """
         X, self._aux_tables = self._check_dataframes(X, self.aux_tables)
         self._main_keys, self._aux_keys = self._check_keys(
@@ -481,9 +480,28 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 operations=operations,
                 suffix=suffix,
             )
-            agg_joiner.fit(X)
+            X = agg_joiner.fit_transform(X)
             self.agg_joiners_.append(agg_joiner)
 
+        return X
+
+    def fit(self, X, y=None):
+        """Aggregate auxiliary tables based on the main keys.
+
+        Parameters
+        ----------
+        X : DataFrameLike
+            Input data, based table on which to left join the
+            auxiliary tables.
+        y : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        MultiAggJoiner
+            Fitted :class:`MultiAggJoiner` instance (self).
+        """
+        _ = self.fit_transform(X, y)
         return self
 
     def transform(self, X):
@@ -500,11 +518,6 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             The augmented input.
         """
         check_is_fitted(self, "agg_joiners_")
-        X, _ = self._check_dataframes(X, self._aux_tables)
-        for main_key in self._main_keys:
-            _join_utils.check_missing_columns(X, main_key, "'X' (the main table)")
-
         for agg_joiner in self.agg_joiners_:
             X = agg_joiner.transform(X)
-
         return X

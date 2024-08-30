@@ -14,3 +14,4 @@
    auto_examples/index
    CHANGES
    development
+   CONTRIBUTING

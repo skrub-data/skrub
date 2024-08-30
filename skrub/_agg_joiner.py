@@ -11,10 +11,13 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
+from skrub import _dataframe as sbd
 from skrub import _join_utils
 from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
 from skrub._dataframe._pandas import _parse_argument
 from skrub._utils import atleast_1d_or_none
+
+from ._check_input import CheckInputDataFrame
 
 NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
 CATEG_OPERATIONS = ["mode", "count", "value_counts"]
@@ -244,6 +247,44 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         if not isinstance(self.suffix, str):
             raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
 
+    def fit_transform(self, X, y=None):
+        """Aggregate auxiliary table based on the main keys.
+
+        Parameters
+        ----------
+        X : DataFrameLike
+            Input data, based table on which to left join the
+            auxiliary table.
+        y : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        DataFrame
+            The augmented input.
+        """
+        self._check_inputs(X)
+        self._main_check_input = CheckInputDataFrame()
+        X = self._main_check_input.fit_transform(X)
+
+        skrub_px, _ = get_df_namespace(self._aux_table)
+        self.aux_table_ = skrub_px.aggregate(
+            self._aux_table,
+            self._aux_key,
+            self._cols,
+            self.num_operations,
+            self.categ_operations,
+            suffix=self.suffix,
+        )
+        result = _join_utils.left_join(
+            X,
+            right=self.aux_table_,
+            left_on=self._main_key,
+            right_on=self._aux_key,
+        )
+        self.all_outputs_ = sbd.column_names(result)
+        return result
+
     def fit(self, X, y=None):
         """Aggregate auxiliary table based on the main keys.
 
@@ -260,16 +301,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         AggJoiner
             Fitted :class:`AggJoiner` instance (self).
         """
-        self._check_inputs(X)
-        skrub_px, _ = get_df_namespace(self._aux_table)
-        self.aux_table_ = skrub_px.aggregate(
-            self._aux_table,
-            self._aux_key,
-            self._cols,
-            self.num_operations,
-            self.categ_operations,
-            suffix=self.suffix,
-        )
+        _ = self.fit_transform(X, y)
         return self
 
     def transform(self, X):
@@ -287,16 +319,17 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self, "aux_table_")
         X, _ = self._check_dataframes(X, self.aux_table_)
-        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        X = self._main_check_input.transform(X)
 
-        X = _join_utils.left_join(
+        result = _join_utils.left_join(
             X,
             right=self.aux_table_,
             left_on=self._main_key,
             right_on=self._aux_key,
         )
 
-        return X
+        result = sbd.set_column_names(result, self.all_outputs_)
+        return result
 
 
 class AggTarget(TransformerMixin, BaseEstimator):
@@ -379,6 +412,59 @@ class AggTarget(TransformerMixin, BaseEstimator):
         self.operation = operation
         self.suffix = suffix
 
+    def fit_transform(self, X, y):
+        """Aggregate the target ``y`` based on keys from ``X``.
+
+        Parameters
+        ----------
+        X : DataFrameLike
+            Must contains the columns names defined in `main_key`.
+
+        y : DataFrameLike or SeriesLike or ArrayLike
+            `y` length must match `X` length, with matching indices.
+            The target can be continuous or discrete, with multiple columns.
+
+            If the target is continuous, only numerical operations,
+            listed in `num_operations`, can be applied.
+
+            If the target is discrete, only categorical operations,
+            listed in `categ_operations`, can be applied.
+
+            Note that the target type is determined by
+            :func:`sklearn.utils.multiclass.type_of_target`.
+
+        Returns
+        -------
+        Dataframe
+            The augmented input.
+        """
+        y_ = self.check_inputs(X, y)
+        self._main_check_input = CheckInputDataFrame()
+        X = self._main_check_input.fit_transform(X)
+        skrub_px, _ = get_df_namespace(X, y_)
+
+        # Add the main key on the target
+        y_[self.main_key_] = X[self.main_key_]
+
+        num_operations, categ_operations = split_num_categ_operations(self.operation_)
+        self.y_ = skrub_px.aggregate(
+            y_,
+            key=self.main_key_,
+            cols_to_agg=self.cols_,
+            num_operations=num_operations,
+            categ_operations=categ_operations,
+            suffix=self.suffix_,
+        )
+
+        result = _join_utils.left_join(
+            X,
+            right=self.y_,
+            left_on=self.main_key_,
+            right_on=self.main_key_,
+        )
+        self.all_outputs_ = sbd.column_names(result)
+        return result
+
     def fit(self, X, y):
         """Aggregate the target ``y`` based on keys from ``X``.
 
@@ -405,23 +491,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         AggTarget
             Fitted :class:`AggTarget` instance (self).
         """
-        y_ = self.check_inputs(X, y)
-        skrub_px, _ = get_df_namespace(X, y_)
-
-        # Add the main key on the target
-        y_[self.main_key_] = X[self.main_key_]
-
-        num_operations, categ_operations = split_num_categ_operations(self.operation_)
-
-        self.y_ = skrub_px.aggregate(
-            y_,
-            key=self.main_key_,
-            cols_to_agg=self.cols_,
-            num_operations=num_operations,
-            categ_operations=categ_operations,
-            suffix=self.suffix_,
-        )
-
+        _ = self.fit_transform(X, y)
         return self
 
     def transform(self, X):
@@ -438,13 +508,16 @@ class AggTarget(TransformerMixin, BaseEstimator):
             The augmented input.
         """
         check_is_fitted(self, "y_")
+        X = self._main_check_input.transform(X)
 
-        return _join_utils.left_join(
+        result = _join_utils.left_join(
             X,
             right=self.y_,
             left_on=self.main_key_,
             right_on=self.main_key_,
         )
+        result = sbd.set_column_names(result, self.all_outputs_)
+        return result
 
     def check_inputs(self, X, y):
         """Perform a check on column names data type and suffixes.
