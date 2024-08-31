@@ -253,6 +253,11 @@ if (customElements.get('skrub-table-report') === undefined) {
         constructor(elem, exchange) {
             super(elem, exchange);
             this.elem.addEventListener("click", () => this.activate());
+            this.elem.oncopy = (event) => {
+                event.clipboardData.setData("text/plain", this.elem.dataset
+                    .valueRepr);
+                event.preventDefault();
+            };
         }
 
         activate() {
@@ -272,8 +277,10 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         deactivate() {
-            if("isActive" in this.elem.dataset){
-                this.exchange.send({kind: "SAMPLE_TABLE_CELL_DEACTIVATED"});
+            if ("isActive" in this.elem.dataset) {
+                this.exchange.send({
+                    kind: "SAMPLE_TABLE_CELL_DEACTIVATED"
+                });
             }
             delete this.elem.dataset.isActive;
             delete this.elem.dataset.isInActiveColumn;
