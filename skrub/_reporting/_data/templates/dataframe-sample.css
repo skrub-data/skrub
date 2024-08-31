@@ -16,16 +16,9 @@ tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     background-color: var(--lightgreen);
 }
 
-tr:nth-child(2n -1) .table-cell[data-is-active] {
-    background-color: var(--yellowish);
-    border: 1px solid black;
-}
-
-/* The selected cell itself is yellow */
 
 .table-cell[data-is-active] {
-    background-color: var(--yellowish);
-    border: 1px solid black;
+    outline: 2px solid black;
 }
 
 /* The gap separating the head and the tail of the table */
