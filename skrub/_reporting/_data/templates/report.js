@@ -254,6 +254,10 @@ if (customElements.get('skrub-table-report') === undefined) {
             super(elem, exchange);
             this.elem.addEventListener("click", () => this.activate());
             this.elem.oncopy = (event) => {
+                const selection = document.getSelection().toString();
+                if (selection !== ""){
+                    return;
+                }
                 event.clipboardData.setData("text/plain", this.elem.dataset
                     .valueRepr);
                 event.preventDefault();
