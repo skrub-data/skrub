@@ -51,4 +51,14 @@ describe('test the dataframe sample tab', () => {
         cy.get('@announcement').should('be.visible');
         cy.get('@bar').should('have.text', "");
     });
+
+    it('copies the cell contents', () => {
+        cy.get('@report').find('td[data-column-idx="3"]').first().click();
+        cy.get('body').type('{ctrl}c');
+        cy.window().its('navigator.clipboard')
+            .then((clip) => clip.readText())
+            .should('equal',
+                "'MSB Information Mgmt and Tech Division Records Management Section'\n"
+                );
+    });
 });
