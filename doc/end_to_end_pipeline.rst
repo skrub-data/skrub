@@ -83,14 +83,14 @@ not be optimal in all cases but they are methodologically safe.
 Turning a dataframe into a numerical feature matrix
 ---------------------------------------------------
 
-A dataframe can contain columns of all kind of types. We usually refer such data to
-"heterogeneous" data. A good numerical representation of these columns help analytics
+A dataframe can contain columns of all kinds of types. We usually refer to such data as
+"heterogeneous" data. A good numerical representation of these columns helps with analytics
 and statistical learning.
 
 The :class:`TableVectorizer` gives a turn-key solution by applying different
 data-specific encoders to the different columns. It makes reasonable heuristic choices
 that are not necessarily optimal since it is not aware of the learner used for the
-machine learning task). However, it already provides a typically very good baseline.
+machine learning task. However, it already provides a typically very good baseline.
 
 The :class:`TableVectorizer` handles the following type of data:
 
@@ -100,11 +100,11 @@ The :class:`TableVectorizer` handles the following type of data:
 - date and time data represented by `datetime` data type (e.g. :obj:`numpy.datetime64`,
   :obj:`pandas.DatetimeTZDtype`, :obj:`polars.datatypes.Datetime`).
 
-The categorical data are subdivided into group: features containing a large number of
-categories (high-cardinality features) versus features containing a low number of
-categories (low-cardinality features). A feature is declared to be high-cardinality if
-the number of unique values is larger than a given threshold controlled by the
-parameter ``cardinality_threshold``.
+Categorical data are subdivided into two groups: features containing a large number of
+categories (high-cardinality features) and features containing a small number of
+categories (low-cardinality features). A feature is considered high-cardinality if
+the number of unique values is greater than a given threshold, which is controlled by the
+parameter cardinality_threshold.
 
 Each group of data types defined earlier is associated with a specific init parameter
 (e.g. ``numeric``, ``datetime``, etc.). The value of these parameters follows the same
