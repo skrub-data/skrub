@@ -30,7 +30,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     features and impute missing values if necessary, then applies the
     ``estimator``.
 
-    Instead of an actual estimator, ``estimator`` can also be the string
+    Instead of an actual estimator, ``estimator`` can also be the special-cased strings
     ``'regressor'`` or ``'classifier'`` to use a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or a
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default
