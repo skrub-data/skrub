@@ -84,8 +84,8 @@ Turning a dataframe into a numerical feature matrix
 ---------------------------------------------------
 
 A dataframe can contain columns of all kinds of types. We usually refer to such data as
-"heterogeneous" data. A good numerical representation of these columns helps with analytics
-and statistical learning.
+"heterogeneous" data. A good numerical representation of these columns helps with
+analytics and statistical learning.
 
 The :class:`TableVectorizer` gives a turn-key solution by applying different
 data-specific encoders to the different columns. It makes reasonable heuristic choices
@@ -102,8 +102,8 @@ The :class:`TableVectorizer` handles the following type of data:
 
 Categorical data are subdivided into two groups: features containing a large number of
 categories (high-cardinality features) and features containing a small number of
-categories (low-cardinality features). A feature is considered high-cardinality if
-the number of unique values is greater than a given threshold, which is controlled by the
+categories (low-cardinality features). A feature is considered high-cardinality if the
+number of unique values is greater than a given threshold, which is controlled by the
 parameter cardinality_threshold.
 
 Each group of data types defined earlier is associated with a specific init parameter
@@ -112,7 +112,7 @@ convention:
 
 - when set to ``"passthrough"``, the input features are output as they are;
 - when set to ``"drop"``, the input features are dropped;
-- when set to `a compatible scikit-learn transformer <https://scikit-learn.org/stable/glossary.html#term-transformer>`_ (implementing
-  ``fit``, ``transform``, and ``fit_transform`` methods), the transformer is applied to
-  each column independently. The transformer is cloned (using
+- when set to `a compatible scikit-learn transformer <https://scikit-learn.org/stable/glossary.html#term-transformer>`_
+  (implementing ``fit``, ``transform``, and ``fit_transform`` methods), the transformer
+  is applied to each column independently. The transformer is cloned (using
   :func:`sklearn.base.clone`) before calling the ``fit`` method.
