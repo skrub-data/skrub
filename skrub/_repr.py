@@ -3,8 +3,6 @@ import itertools
 import sklearn
 from sklearn.utils.fixes import parse_version
 
-from . import __version__
-
 sklearn_version = parse_version(sklearn.__version__)
 
 if sklearn_version > parse_version("1.6"):
@@ -128,6 +126,8 @@ doc_link_module = "skrub"
 
 
 def doc_link_url_param_generator(estimator):
+    from skrub import __version__
+
     skrub_version = parse_version(__version__)
     if skrub_version.dev is None:
         version_url = f"{skrub_version.major}.{skrub_version.minor}"
