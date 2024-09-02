@@ -116,3 +116,12 @@ convention:
   (implementing ``fit``, ``transform``, and ``fit_transform`` methods), the transformer
   is applied to each column independently. The transformer is cloned (using
   :func:`sklearn.base.clone`) before calling the ``fit`` method.
+
+Examples
+--------
+
+The following examples provide an in-depth look at how to use the
+:class:`~skrub.TableVectorizer` class and the :func:`~skrub.tabular_learner`
+function.
+
+- :ref:`sphx_glr_auto_examples_01_encodings.py`
