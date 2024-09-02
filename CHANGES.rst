@@ -22,6 +22,10 @@ Minor changes
   displayed in a notebook), now use the same font as the surrounding page.
   :pr:`1038` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The content of the dataframe corresponding to the currently selected table
+  cell in the TableReport can be copied without actually selecting the text (as
+  in a spreadsheet).
+
 
 Release 0.3.0
 =============
