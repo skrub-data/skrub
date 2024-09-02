@@ -1,0 +1,57 @@
+<article>
+    <div class="horizontal-scroll">
+        <table class="pure-table pure-table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Column name</th>
+                    <th scope="col">dtype</th>
+                    <th scope="col">Null values</th>
+                    <th scope="col">Unique values</th>
+                    <th scope="col">Mean</th>
+                    <th scope="col">Std</th>
+                    <th scope="col">Min</th>
+                    <th scope="col">Median</th>
+                    <th scope="col">Max</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for column in summary.columns %}
+                <tr>
+                    <td>{{ column.name }}</td>
+                    <td>{{ column.dtype }}</td>
+                    <td class="{{ column.nulls_level }}">{{ column.null_count }} ({{ column.null_proportion | format_percent }})</td>
+
+                    {% if column.n_unique %}
+                    <td>{{ column.n_unique }} ({{ column.unique_proportion | format_percent }})</td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+
+                    {% if "mean" in column %}
+                    <td>{{ column["mean"] | format_number }}</td>
+                    <td>{{ column["standard_deviation"] | format_number }}</td>
+                    {% else %}
+                    <td></td>
+                    <td></td>
+                    {% endif %}
+
+                    {% if column.quantiles %}
+                    <td>{{ column.quantiles[0.0] | format_number }}</td>
+                    <td>{{ column.quantiles[0.5] | format_number }}</td>
+                    <td>{{ column.quantiles[1.0] | format_number }}</td>
+                    {% elif "min" in column %}
+                    <td>{{ column.min | format_number }}</td>
+                    <td></td>
+                    <td>{{ column.max | format_number }}</td>
+                    {% else %}
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    {% endif %}
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>

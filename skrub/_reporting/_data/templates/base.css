@@ -201,7 +201,6 @@ dd {
 .flex-reverse {
     display: flex;
     flex-wrap: wrap-reverse;
-    row-gap: var(--tiny);
 }
 
 .space-between {

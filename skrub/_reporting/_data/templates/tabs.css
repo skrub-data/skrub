@@ -1,38 +1,17 @@
 /* The report's tab panels (dataframe sample, column summaries, column associations) */
 /* --------------------------------------------------------------------------------- */
 
-/*
-
-Vertical ordering:
-
-- the tooltip (when visible) is always on top. To be able to give it a different
-  z-index than the tab, we don't place it in the tab (which has a relative
-  position and creates a stacking context). Instead, we create a zero-height div
-  just below the tab, and of the same width, with a high z-index which serves as
-  the anchor for the tooltip.
-
-- Next comes the panel, the main content.
-
-- Next comes the active tab. It is tucked under the panel so that we can
-  have a big overlap between the 2 and be sure there is no gap, while
-  avoiding that the left and right borders of the tab show up on top of the
-  panel.
-
-- What appears to be the border of the panel needs to be cut below the active
-  tab (so it looks like the border goes around the tab). So it is actually a
-  separate div. The active tab has a higher z index than the border so it cuts
-  through it, inactive tabs have a lower z-index.
-
-- Finally inactive tabs slide under the border and the panel.
-
-*/
-
 
 /* The tabs (buttons that allow selecting the tab panel) */
 /* ----------------------------------------------------- */
 
 .tab-list-wrapper {
-    max-width: 125ch;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--darkg);
+}
+
+.tab-list-scroller {
+    overflow: auto hidden;
 }
 
 .tab-list {
@@ -40,29 +19,39 @@ Vertical ordering:
     column-gap: var(--tiny);
     padding-left: var(--tiny);
     padding-right: var(--tiny);
+    align-items: stretch;
+    margin-bottom: -1px;
+}
+
+.tab-list > * {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin-top: 2px;
 }
 
 .tab {
+    display: flex;
+    column-gap: var(--micro);
     border: 1px solid transparent;
     border-bottom: none;
-    padding: var(--tiny);
-    font-size: var(--small);
-    background-color: var(--lightg);
     border-radius: var(--radius) var(--radius) 0 0;
-    position: relative;
-    margin-bottom: -10px;
-    padding-bottom: calc(10px + var(--tiny));
-    z-index: 1;
+    padding: var(--tiny);
+    padding-top: var(--micro);
+    padding-bottom: var(--tiny);
+    font-size: var(--small);
+    background-color: transparent;
+    opacity: 0.8;
 }
 
 .tab:hover {
-    background-color: var(--mediumg);
+    opacity: 1.0;
 }
 
 .tab[data-is-selected] {
     border-color: var(--darkg);
     background-color: white;
-    z-index: 3;
+    opacity: 1.0;
 }
 
 /* When a tab contains critical content we highlight the corresponding button so */
@@ -77,37 +66,10 @@ Vertical ordering:
     content: "⚠️ ";
 }
 
-.tab-list-border {
-    box-sizing: content-box;
-    height: 0;
-    border: none;
-    border-bottom: 1px solid var(--darkg);
-    position: relative;
-    z-index: 2;
-}
-
-.tab-tooltip-anchor {
-    border: none;
-    padding: none;
-    margin: none;
-    width: 100%;
-    height: 0;
-    position: relative;
-    z-index: 10;
-}
-
-/* Show the tooltip when the tab is hovered (not just the tooltip anchor) */
-
-.tab:hover ~ * .tooltip-text {
-    display: block;
-}
-
 /* The panels (the main content) */
 /* ----------------------------- */
 
 .tab-panel {
     padding-top: var(--tiny);
-    position: relative;
-    z-index: 4;
     background: white;
 }
