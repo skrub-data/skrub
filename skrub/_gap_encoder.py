@@ -19,10 +19,18 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._repr import (
+    _HTMLDocumentationLinkMixin,
+    doc_link_module,
+    doc_link_template,
+    doc_link_url_param_generator,
+)
 from ._utils import unique_strings
 
 
-class GapEncoder(TransformerMixin, SingleColumnTransformer):
+class GapEncoder(
+    _HTMLDocumentationLinkMixin, TransformerMixin, SingleColumnTransformer
+):
     """Constructs latent topics with continuous encoding.
 
     This encoder can be understood as a continuous encoding on a set of latent
@@ -176,6 +184,10 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
     The higher the value, the bigger the correspondence with the topic.
     """
+
+    _doc_link_module = doc_link_module
+    _doc_link_template = doc_link_template
+    _doc_link_url_param_generator = doc_link_url_param_generator
 
     def __init__(
         self,
