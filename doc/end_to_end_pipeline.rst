@@ -21,7 +21,7 @@ The function :func:`tabular_learner` provides a factory function that, given a
 scikit-learn estimator, returns a pipeline combining this estimator with the
 appropriate preprocessing steps. These steps correspond to a :class:`TableVectorizer`
 that handles heterogeneous data and, depending on the capabilities
-of the final estimator, a missing value imputer.
+of the final estimator, a missing value imputer and/or a standard scaler.
 
 In the next section, we provide more details regarding the :class:`TableVectorizer`
 (:ref:`table_vectorizer`). The parameters of the :class:`TableVectorizer` are chosen
