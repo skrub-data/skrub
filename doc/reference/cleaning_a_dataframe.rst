@@ -6,7 +6,7 @@ Cleaning a dataframe
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: base.rst
    :nosignatures:
 
    deduplicate

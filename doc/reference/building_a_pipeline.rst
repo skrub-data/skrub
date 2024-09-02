@@ -6,14 +6,14 @@ Building a pipeline
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: base.rst
    :nosignatures:
 
    tabular_learner
 
 .. autosummary::
    :toctree: generated/
-   :template: class.rst
+   :template: base.rst
    :nosignatures:
 
    TableVectorizer

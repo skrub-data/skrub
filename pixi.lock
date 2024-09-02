@@ -23717,9 +23717,9 @@ packages:
   timestamp: 1620240338595
 - kind: pypi
   name: skrub
-  version: 0.3.0.dev0
+  version: 0.4.dev0
   path: .
-  sha256: 5f298571d4681170073efde2769e396199ff7fb76e7bdbd7b2d11e423d84f00f
+  sha256: d50e1f64e7b0fa9ab370a72820e8d2422765e3c1769e5fb7fc3631084bfb6d16
   requires_dist:
   - numpy>=1.23.5
   - packaging>=23.1

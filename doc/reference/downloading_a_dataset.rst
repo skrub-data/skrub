@@ -6,7 +6,7 @@ Downloading a dataset
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: base.rst
    :nosignatures:
 
    fetch_employee_salaries
