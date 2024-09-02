@@ -11,7 +11,7 @@ End-to-end predictive models
 Create baseline predictive models on heterogeneous dataset
 ----------------------------------------------------------
 
-Crafting a machine-learning pipeline is rather a daunting task. Choosing the ending
+Crafting a machine-learning pipeline is a rather daunting task. Choosing the ending
 learner of such pipeline is usually the easiest part. However, it imposes constraints
 regarding the preprocessing steps that are are required ahead of the learner.
 Programmatically defining these steps is the part that requires the most expertise and
