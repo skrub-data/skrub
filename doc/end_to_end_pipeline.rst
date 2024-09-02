@@ -18,15 +18,14 @@ Programmatically defining these steps is the part that requires the most experti
 that is cumbersome to write.
 
 The function :func:`tabular_learner` provides a factory function that given a
-scikit-learn estimator, returns a pipeline that combines this estimator with a
-preprocessing steps. Those steps corresponds to a :class:`TableVectorizer` that
-is in charge of dealing with heterogeneous data and depending on the capabilities of
-the final estimator, a missing value imputer.
+scikit-learn estimator, returns a pipeline that combines this estimator with the
+appropriate preprocessing steps. Those steps corresponds to a :class:`TableVectorizer`
+that is in charge of dealing with heterogeneous data and depending on the capabilities
+of the final estimator, a missing value imputer.
 
-In the next section, we provide more details regarding the :class:`TableVectorizer`.
-
-The parameters of the :class:`TableVectorizer` are chosen based on the type of the final
-estimator.
+In the next section, we provide more details regarding the :class:`TableVectorizer`
+(:ref:`table_vectorizer`). The parameters of the :class:`TableVectorizer` are chosen
+based on the type of the final estimator.
 
 .. list-table:: Parameter values choice of :class:`TableVectorizer` when using the :func:`tabular_learner` function
    :header-rows: 1
@@ -92,3 +91,23 @@ The :class:`TableVectorizer` gives a turn-key solution by applying different
 data-specific encoders to the different columns. It makes reasonable heuristic choices
 that are not necessarily optimal since it is not aware of the learner used for the
 machine learning task). However, it already provides a typically very good baseline.
+
+The :class:`TableVectorizer` handles the following type of data:
+
+- numerical data represented with the data types `bool`, `int`, and `float`;
+- categorical data represented with the data types `str` or categorical (e.g.
+  :obj:`pandas.CategoricalDtype` or :obj:`polars.Categorical`);
+- date and time data represented by datetime data type (e.g.
+  :obj:`numpy.datetime64`, :obj:`pandas.DatetimeTZDtype`, :obj:`polars.Datetime`).
+
+The categorical data are subdivided into group: features containing a high-cardinality
+of categories and features containing a low-cardinality. The high- versus
+low-cardinality is defined by looking at the number of unique values in a given feature
+and whether it is larger or not to the parameter `cardinality_threshold`.
+
+The previous type of data are handled with the following processing:
+
+- when set to `"passthrough"`, the input features are forwarded without any
+  transformation as output;
+- when set to `"drop"`, the input features are dropped and no values are sent as
+  output;

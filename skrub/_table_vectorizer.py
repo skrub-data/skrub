@@ -115,7 +115,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     Applies a different transformation to each of several kinds of columns:
 
-    - numeric: floats, ints, and booleans.
+    - numeric: floats, integers, and booleans.
     - datetime: datetimes and dates.
     - low_cardinality: string and categorical columns with a count of unique values
       smaller than a given threshold (40 by default). Category encoding schemes such as
@@ -161,32 +161,36 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         than this threshold are handled by the transformer ``low_cardinality``, the rest
         are handled by the transformer ``high_cardinality``.
 
-    low_cardinality : transformer, "passthrough" or "drop", optional
-        The transformer for string or categorical columns with strictly fewer
-        than ``cardinality_threshold`` unique values. The default is a
-        ``OneHotEncoder``.
+    low_cardinality : transformer, "passthrough" or "drop", \
+            default=OneHotEncoder instance
+        The transformer for string or categorical columns with strictly fewer than
+        ``cardinality_threshold`` unique values. By default, we use a
+        :class:`~sklearn.preprocessing.OneHotEncoder` that ignores unknown categories
+        and drop one of the transformed column if the feature contains only 2
+        categories.
 
-    high_cardinality : transformer, "passthrough" or "drop", optional
+    high_cardinality : transformer, "passthrough" or "drop", default=GapEncoder instance
         The transformer for string or categorical columns with at least
-        ``cardinality_threshold`` unique values. The default is a ``GapEncoder``
-        with 30 components (30 output columns for each input).
+        ``cardinality_threshold`` unique values. The default is a
+        :class:`~skrub.GapEncoder` with 30 components (30 output columns for each
+        input).
 
-    numeric : transformer, "passthrough" or "drop", optional
-        The transformer for numeric columns (floats, ints, booleans). The
-        default is passthrough.
+    numeric : transformer, "passthrough" or "drop", default="passthrough"
+        The transformer for numeric columns (floats, ints, booleans).
 
-    datetime : transformer, "passthrough" or "drop", optional
-        The transformer for date and datetime columns. The default is
-        ``DatetimeEncoder``, which extracts features such as year, month, etc.
+    datetime : transformer, "passthrough" or "drop", default=DatetimeEncoder instance
+        The transformer for date and datetime columns. By default, we use a
+        :class:`~skrub.DatetimeEncoder`.
 
-    specific_transformers : list of (transformer, list of column names) pairs, optional
+    specific_transformers : list of (transformer, list of column names) pairs, \
+            default=()
         Override the categories above for the given columns and force using the
         specified transformer. This disables any preprocessing usually done by
         the TableVectorizer; the columns are passed to the transformer without
         any modification. A column is not allowed to appear twice in
         ``specific_transformers``. Using ``specific_transformers`` provides
         similar functionality to what is offered by scikit-learn's
-        ``ColumnTransformer``.
+        :class:`~sklearn.compose.ColumnTransformer`.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -226,14 +230,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         step casting the main transformer's output to float32. See the
         "Examples" section below for details.
 
-    feature_names_in_ : list of strings
+    feature_names_in_ : list of str
         The names of the input columns, after applying some cleaning (casting
         all column names to strings and deduplication).
 
     n_features_in_ : int
         The number of input columns.
 
-    all_outputs_ : list of strings
+    all_outputs_ : list of str
         The names of the output columns.
 
     See Also
@@ -618,7 +622,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             for out in outputs
         }
 
-    # scikt-learn compatibility
+    # scikit-learn compatibility
 
     def _more_tags(self):
         """
