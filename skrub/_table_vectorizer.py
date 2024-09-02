@@ -115,18 +115,19 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     Applies a different transformation to each of several kinds of columns:
 
-    - numeric: floats, integers, and booleans.
-    - datetime: datetimes and dates.
-    - low_cardinality: string and categorical columns with a count of unique values
-      smaller than a given threshold (40 by default). Category encoding schemes such as
-      one-hot encoding, ordinal encoding etc. are typically appropriate for columns with
-      few unique values.
-    - high_cardinality: string and categorical columns with many unique values, such as
-      free-form text. Such columns have so many distinct values that it is not possible
-      to assign a distinct representation to each: the dimension would be too large and
-      there would be too few examples of each category. Representations designed for
-      text, such as topic modelling (:class:`~skrub.GapEncoder`) or locality-sensitive
-      hashing (:class:`~sklearn.MinHash`) are more appropriate.
+    - numerical features: floats, integers, and booleans.
+    - features containing date and time: datetimes and dates.
+    - low-cardinality categorical features: string and categorical columns with a count
+      of unique values smaller than a given threshold (40 by default). Category encoding
+      schemes such as one-hot encoding, ordinal encoding etc. are typically appropriate
+      for columns with few unique values.
+    - high-cardinality categorical features: string and categorical columns with many
+      unique values, such as free-form text. Such columns have so many distinct values
+      that it is not possible to assign a distinct representation to each: the dimension
+      would be too large and there would be too few examples of each category.
+      Representations designed for text, such as topic modelling
+      (:class:`~skrub.GapEncoder`) or locality-sensitive hashing
+      (:class:`~skrub.MinHash`) are more appropriate.
 
     .. note::
 
@@ -134,14 +135,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         different transformer instance is used for each column separately;
         multivariate transformations are therefore not supported.
 
-    The transformer for each kind of column can be configured with the
-    corresponding parameter.
-
-    A transformer can be a scikit-learn Transformer (an object providing the
-    ``fit``, ``fit_transform`` and ``transform`` methods), a clone of which
-    will be applied to each column separately. A transformer can also be the
-    literal string ``"drop"`` to drop the corresponding columns (they will not
-    appear in the output), or ``"passthrough"`` to leave them unchanged.
+    The transformer for each kind of column can be configured with the corresponding
+    parameter. A transformer is expected to be a `compatible scikit-learn transformer
+    <https://scikit-learn.org/stable/glossary.html#term-transformer>`_. Special-cased
+    strings ``"drop"`` and ``"passthrough"`` are accepted as well, to indicate to drop
+    the columns or to pass them through untransformed, respectively.
 
     Additionally, it is possible to specify transformers for specific columns,
     overriding the categorization described above. This is done by providing a
@@ -223,12 +221,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         was derived.
 
     all_processing_steps_ : dict
-        Maps the name of each column to a list of all the processing steps that
-        were applied to it. Those steps may include some pre-processing
-        transformations such as converting strings to datetimes or numbers, the
-        main transformer (e.g. the ``DatetimeEncoder``), and a post-processing
-        step casting the main transformer's output to float32. See the
-        "Examples" section below for details.
+        Maps the name of each column to a list of all the processing steps that were
+        applied to it. Those steps may include some pre-processing transformations such
+        as converting strings to datetimes or numbers, the main transformer (e.g. the
+        :class:`~skrub.DatetimeEncoder`), and a post-processing step casting the main
+        transformer's output to :obj:`numpy.float32`. See the "Examples" section below
+        for details.
 
     feature_names_in_ : list of str
         The names of the input columns, after applying some cleaning (casting

@@ -96,18 +96,23 @@ The :class:`TableVectorizer` handles the following type of data:
 
 - numerical data represented with the data types `bool`, `int`, and `float`;
 - categorical data represented with the data types `str` or categorical (e.g.
-  :obj:`pandas.CategoricalDtype` or :obj:`polars.Categorical`);
-- date and time data represented by datetime data type (e.g.
-  :obj:`numpy.datetime64`, :obj:`pandas.DatetimeTZDtype`, :obj:`polars.Datetime`).
+  :obj:`pandas.CategoricalDtype` or :obj:`polars.datatypes.Categorical`);
+- date and time data represented by `datetime` data type (e.g. :obj:`numpy.datetime64`,
+  :obj:`pandas.DatetimeTZDtype`, :obj:`polars.datatypes.Datetime`).
 
-The categorical data are subdivided into group: features containing a high-cardinality
-of categories and features containing a low-cardinality. The high- versus
-low-cardinality is defined by looking at the number of unique values in a given feature
-and whether it is larger or not to the parameter `cardinality_threshold`.
+The categorical data are subdivided into group: features containing a large number of
+categories (high-cardinality features) versus features containing a low number of
+categories (low-cardinality features). A feature is declared to be high-cardinality if
+the number of unique values is larger than a given threshold controlled by the
+parameter ``cardinality_threshold``.
 
-The previous type of data are handled with the following processing:
+Each group of data types defined earlier is associated with a specific init parameter
+(e.g. ``numeric``, ``datetime``, etc.). The value of these parameters follows the same
+convention:
 
-- when set to `"passthrough"`, the input features are forwarded without any
-  transformation as output;
-- when set to `"drop"`, the input features are dropped and no values are sent as
-  output;
+- when set to ``"passthrough"``, the input features are output as they are;
+- when set to ``"drop"``, the input features are dropped;
+- when set to `a compatible scikit-learn transformer <https://scikit-learn.org/stable/glossary.html#term-transformer>`_ (implementing
+  ``fit``, ``transform``, and ``fit_transform`` methods), the transformer is applied to
+  each column independently. The transformer is cloned (using
+  :func:`sklearn.base.clone`) before calling the ``fit`` method.
