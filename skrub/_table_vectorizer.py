@@ -164,7 +164,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         The transformer for string or categorical columns with strictly fewer than
         ``cardinality_threshold`` unique values. By default, we use a
         :class:`~sklearn.preprocessing.OneHotEncoder` that ignores unknown categories
-        and drop one of the transformed column if the feature contains only 2
+        and drop one of the transformed columns if the feature contains only 2
         categories.
 
     high_cardinality : transformer, "passthrough" or "drop", default=GapEncoder instance
