@@ -25,6 +25,7 @@ Minor changes
 * The content of the dataframe corresponding to the currently selected table
   cell in the TableReport can be copied without actually selecting the text (as
   in a spreadsheet).
+  :pr:`1048` by :user:`Jérôme Dockès <jeromedockes>`.
 
 
 Release 0.3.0
