@@ -17,10 +17,10 @@ regarding the preprocessing steps that are are required ahead of the learner.
 Programmatically defining these steps is the part that requires the most expertise and
 that is cumbersome to write.
 
-The function :func:`tabular_learner` provides a factory function that given a
-scikit-learn estimator, returns a pipeline that combines this estimator with the
-appropriate preprocessing steps. Those steps corresponds to a :class:`TableVectorizer`
-that is in charge of dealing with heterogeneous data and depending on the capabilities
+The function :func:`tabular_learner` provides a factory function that, given a
+scikit-learn estimator, returns a pipeline combining this estimator with the
+appropriate preprocessing steps. These steps correspond to a :class:`TableVectorizer`
+that handles heterogeneous data and, depending on the capabilities
 of the final estimator, a missing value imputer.
 
 In the next section, we provide more details regarding the :class:`TableVectorizer`
