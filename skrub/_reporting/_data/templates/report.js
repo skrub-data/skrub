@@ -261,6 +261,7 @@ if (customElements.get('skrub-table-report') === undefined) {
                 event.clipboardData.setData("text/plain", this.elem.dataset
                     .valueRepr);
                 event.preventDefault();
+                console.log(`copy: ${this.elem.dataset.valueRepr}`);
             };
         }
 
@@ -293,6 +294,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         SAMPLE_TABLE_CELL_ACTIVATED(msg) {
             if (msg.cellId === this.elem.id) {
                 this.elem.dataset.isActive = "";
+                this.elem.focus({focusVisible: false});
             } else {
                 delete this.elem.dataset.isActive;
             }
