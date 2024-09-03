@@ -6,7 +6,7 @@ Joining dataframes
 
 .. autosummary::
    :toctree: generated/
-   :template: class.rst
+   :template: base.rst
    :nosignatures:
 
    Joiner
@@ -17,7 +17,7 @@ Joining dataframes
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: base.rst
    :nosignatures:
 
    fuzzy_join

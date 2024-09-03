@@ -6,7 +6,7 @@ Encoding a column
 
 .. autosummary::
    :toctree: generated/
-   :template: class.rst
+   :template: base.rst
    :nosignatures:
 
    GapEncoder
@@ -18,7 +18,7 @@ Encoding a column
 
 .. autosummary::
    :toctree: generated/
-   :template: function.rst
+   :template: base.rst
    :nosignatures:
 
    to_datetime
