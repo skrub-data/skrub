@@ -257,15 +257,19 @@ if (customElements.get('skrub-table-report') === undefined) {
                 event.preventDefault();
             });
             this.elem.setAttribute("tabindex", -1);
-            this.elem.oncopy = (event) => {
-                const selection = document.getSelection().toString();
-                if (selection !== "") {
-                    return;
-                }
-                event.clipboardData.setData("text/plain", this.elem.dataset
-                    .valueRepr);
-                event.preventDefault();
-            };
+            this.elem.oncopy = (event) => this.copyCell(event);
+        }
+
+        copyCell(event) {
+            const selection = document.getSelection().toString();
+            if (selection !== "") {
+                return;
+            }
+            event.clipboardData.setData("text/plain", this.elem.dataset
+                                        .valueRepr);
+            event.preventDefault();
+            this.elem.dataset.justCopied = "";
+            setTimeout(() => this.elem.removeAttribute("data-just-copied"), 1000);
         }
 
         activate() {

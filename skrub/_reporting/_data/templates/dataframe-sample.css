@@ -21,6 +21,10 @@ tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     outline: 2px solid black;
 }
 
+.table-cell[data-is-active][data-just-copied] {
+    outline: 2px dashed black;
+}
+
 /* The gap separating the head and the tail of the table */
 
 #report .ellided-table-part {
