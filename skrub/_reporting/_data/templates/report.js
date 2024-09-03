@@ -264,7 +264,6 @@ if (customElements.get('skrub-table-report') === undefined) {
                 event.clipboardData.setData("text/plain", this.elem.dataset
                     .valueRepr);
                 event.preventDefault();
-                console.log(`copy: ${this.elem.dataset.valueRepr}`);
             };
         }
 
