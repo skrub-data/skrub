@@ -5,9 +5,9 @@ from sklearn.utils.fixes import parse_version
 
 sklearn_version = parse_version(sklearn.__version__)
 
-# TODO: remove when scikit-learn 1.6 is the minimum supported version
-# TODO: subsequently, we should remove the inheritance from _HTMLDocumentationLinkMixin
-# for each estimator then.
+# TODO: remove when scikit-learn 1.6 is the minimum supported version and only import
+# We have this fix due to the following bug:
+# https://github.com/scikit-learn/scikit-learn/pull/29774
 if sklearn_version > parse_version("1.6"):
     from sklearn.utils._estimator_html_repr import _HTMLDocumentationLinkMixin
 else:
@@ -101,3 +101,9 @@ def doc_link_url_param_generator(estimator):
         "estimator_module": estimator_module,
         "estimator_name": estimator_name,
     }
+
+
+class _SkrubHTMLDocumentationLinkMixin(_HTMLDocumentationLinkMixin):
+    _doc_link_template = doc_link_template
+    _doc_link_module = doc_link_module
+    _doc_link_url_param_generator = doc_link_url_param_generator

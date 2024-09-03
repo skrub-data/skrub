@@ -17,12 +17,7 @@ from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
-from ._repr import (
-    _HTMLDocumentationLinkMixin,
-    doc_link_module,
-    doc_link_template,
-    doc_link_url_param_generator,
-)
+from ._repr import _SkrubHTMLDocumentationLinkMixin
 from ._select_cols import Drop
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
@@ -116,7 +111,9 @@ def _check_transformer(transformer):
     return clone(transformer)
 
 
-class TableVectorizer(_HTMLDocumentationLinkMixin, TransformerMixin, BaseEstimator):
+class TableVectorizer(
+    _SkrubHTMLDocumentationLinkMixin, TransformerMixin, BaseEstimator
+):
     """Transform a dataframe to a numerical (vectorized) representation.
 
     Applies a different transformation to each of several kinds of columns:
@@ -410,10 +407,6 @@ class TableVectorizer(_HTMLDocumentationLinkMixin, TransformerMixin, BaseEstimat
         ...
     ValueError: Column 'A' used twice in 'specific_transformers', at indices 0 and 1.
     """  # noqa: E501
-
-    _doc_link_module = doc_link_module
-    _doc_link_template = doc_link_template
-    _doc_link_url_param_generator = doc_link_url_param_generator
 
     def __init__(
         self,
