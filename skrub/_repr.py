@@ -5,59 +5,15 @@ from sklearn.utils.fixes import parse_version
 
 sklearn_version = parse_version(sklearn.__version__)
 
+# TODO: remove when scikit-learn 1.6 is the minimum supported version
+# TODO: subsequently, we should remove the inheritance from _HTMLDocumentationLinkMixin
+# for each estimator then.
 if sklearn_version > parse_version("1.6"):
     from sklearn.utils._estimator_html_repr import _HTMLDocumentationLinkMixin
 else:
 
     class _HTMLDocumentationLinkMixin:
-        """Mixin class allowing to generate a link to the API documentation.
-
-        This mixin relies on three attributes:
-        - `_doc_link_module`: it corresponds to the root module (e.g. `sklearn`). Using
-          this mixin, the default value is `sklearn`.
-        - `_doc_link_template`: it corresponds to the template used to generate the
-          link to the API documentation. Using this mixin, the default value is
-          `"https://scikit-learn.org/{version_url}/modules/generated/
-          {estimator_module}.{estimator_name}.html"`.
-        - `_doc_link_url_param_generator`: it corresponds to a function that generates
-          the parameters to be used in the template when the estimator module and name
-          are not sufficient.
-
-        The method :meth:`_get_doc_link` generates the link to the API documentation for
-        a given estimator.
-
-        This useful provides all the necessary states for
-        :func:`sklearn.utils.estimator_html_repr` to generate a link to the API
-        documentation for the estimator HTML diagram.
-
-        Examples
-        --------
-        If the default values for `_doc_link_module`, `_doc_link_template` are not
-        suitable, then you can override them and provide a method to generate the URL
-        parameters:
-        >>> from sklearn.base import BaseEstimator
-        >>> doc_link_template = "https://website.com/{single_param}.html"
-        >>> def url_param_generator(estimator):
-        ...     return {"single_param": estimator.__class__.__name__}
-        >>> class MyEstimator(BaseEstimator):
-        ...     _doc_link_module = "builtins"
-        ...     _doc_link_template = doc_link_template
-        ...     _doc_link_url_param_generator = url_param_generator
-        >>> estimator = MyEstimator()
-        >>> estimator._get_doc_link()
-        'https://website.com/MyEstimator.html'
-
-        If instead of overriding the attributes inside the class definition, you want to
-        override a class instance, you can use `types.MethodType` to bind the method to
-        the instance:
-        >>> import types
-        >>> estimator = BaseEstimator()
-        >>> estimator._doc_link_template = doc_link_template
-        >>> estimator._doc_link_url_param_generator = types.MethodType(
-        ...     url_param_generator, estimator)
-        >>> estimator._get_doc_link()
-        'https://website.com/BaseEstimator.html'
-        """
+        """Mixin class allowing to generate a link to the API documentation."""
 
         _doc_link_module = "sklearn"
         _doc_link_url_param_generator = None
