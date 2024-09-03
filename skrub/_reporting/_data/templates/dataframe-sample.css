@@ -1,6 +1,10 @@
 /* The table showing the first few and last rows of the dataframe */
 /* -------------------------------------------------------------- */
 
+.table-with-selectable-cells {
+    margin: 2px;
+}
+
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 

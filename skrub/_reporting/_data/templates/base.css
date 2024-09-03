@@ -145,7 +145,6 @@ dd {
 
 .horizontal-scroll {
     overflow-x: auto;
-    padding: 4px;
 }
 
 .select-all {
