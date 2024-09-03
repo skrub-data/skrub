@@ -11,8 +11,8 @@ but should still have a generated page.
 .. currentmodule:: skrub
 
 .. autosummary::
-   :toctree: generated/
-   :template: class.rst
+   :toctree: reference/generated/
+   :template: base.rst
    :nosignatures:
 
    datasets.DatasetAll
