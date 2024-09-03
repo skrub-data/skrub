@@ -30,13 +30,13 @@ perspective and also inefficient in terms of memory usage.
 
 .. |AggJoiner| replace::
      :class:`~skrub.AggJoiner`
-    
+
 .. |Joiner| replace::
      :class:`~skrub.Joiner`
 
 .. |TableVectorizer| replace::
      :class:`~skrub.TableVectorizer`
-    
+
 .. |MinHashEncoder| replace::
      :class:`~skrub.MinHashEncoder`
 
@@ -76,19 +76,22 @@ X = fetch_figshare("48931237").X
 # The total price is the sum of the price per unit of each product in the basket,
 # multiplied by their quantity. This will also allow us to define a utility function
 # later, in addition of being a useful feature for the learner.
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from skrub import TableReport
+
 
 def total_price(X):
     total_price = pd.Series(np.zeros(X.shape[0]), index=X.index, name="total_price")
     max_item = 24
     for idx in range(1, max_item + 1):
-        total_price += (
-            X[f"cash_price{idx}"].fillna(0) * X[f"Nbr_of_prod_purchas{idx}"].fillna(0)
-        )
+        total_price += X[f"cash_price{idx}"].fillna(0) * X[
+            f"Nbr_of_prod_purchas{idx}"
+        ].fillna(0)
 
     return total_price
+
 
 X["total_price"] = total_price(X)
 TableReport(X)
@@ -100,11 +103,12 @@ TableReport(X)
 # To consider the problem from a business perspective, we define our utility function
 # by the cost matrix in the function ``credit_gain_score``. False positive and false
 # negative predictions incur a negative gain.
-# 
+#
 # Ultimately, we want to maximize this metric. To do so, we can train our learner to
 # minimize a proper scoring rule like the log loss.
 import sklearn
 from sklearn.metrics import log_loss, make_scorer
+
 
 def credit_gain_score(y_true, y_pred, amount):
     mask_tn = (y_true == 0) & (y_pred == 0)
@@ -136,6 +140,7 @@ def get_results(model, X_test, y_test, threshold, amount, time_to_fit):
         "time_to_fit": time_to_fit,
     }
 
+
 sklearn.set_config(enable_metadata_routing=True)
 gain_score = make_scorer(credit_gain_score).set_score_request(amount=True)
 
@@ -149,6 +154,7 @@ results = dict()
 # class (i.e. all transactions are legit).
 # This is a good sanity check to make sure our model actually learns something useful.
 from time import time
+
 from sklearn.dummy import DummyClassifier
 from sklearn.model_selection import train_test_split
 
@@ -157,22 +163,24 @@ X_ = X.drop(columns=[target_col])
 y_ = X[target_col]
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X_, y_, test_size=0.1, stratify=y_, random_state=0,
+    X_,
+    y_,
+    test_size=0.1,
+    stratify=y_,
+    random_state=0,
 )
 
 tic = time()
-dummy_negative = DummyClassifier(
-    strategy="constant", constant=0
-).fit(X_train, y_train)
+dummy_negative = DummyClassifier(strategy="constant", constant=0).fit(X_train, y_train)
 time_to_fit = time() - tic
 
 results["Dummy Negative"] = get_results(
     dummy_negative,
     X_test,
     y_test,
-    threshold=.5,
+    threshold=0.5,
     amount=X_test["total_price"],
-    time_to_fit=time_to_fit
+    time_to_fit=time_to_fit,
 )
 
 # %%
@@ -188,10 +196,10 @@ results["Dummy Negative"] = get_results(
 #
 # We also further split the training set into a training and validation set for
 # post-training tuning in the post-training phase below.
-import numpy as np
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import TargetEncoder
-from sklearn.ensemble import HistGradientBoostingClassifier
+
 from skrub import TableVectorizer
 
 X_train_, X_val, y_train_, y_val = train_test_split(
@@ -241,7 +249,7 @@ from sklearn.calibration import CalibrationDisplay
 
 
 def plot_gain_tradeoff(results):
-    """Scatter plot of the score gain (y) vs the fit time (x) for each model.""" 
+    """Scatter plot of the score gain (y) vs the fit time (x) for each model."""
 
     rows = []
     for estimator_name, result in results.items():
@@ -264,16 +272,16 @@ def plot_gain_tradeoff(results):
         s=200,
     )
     ax.grid()
-    
+
     ticks = df["time_to_fit"].round(3).tolist()
     ticks.insert(1, 10)
     labels = [f"{tick}s" for tick in ticks]
     ax.set_xticks(ticks, labels)
-    
+
     ticks = df["gain_score"].round().tolist()
     ticks.insert(1, 650_000)
     labels = [f"{tick:,} €" for tick in ticks]
-    
+
     ax.set_yticks(ticks, labels)
     ax.set_ylabel("Gain score")
     ax.set_xlabel("Time to fit")
@@ -283,7 +291,7 @@ def plot_gain_tradeoff(results):
 
 def plot_calibration_curve(results):
     """Plot a calibration curve and the log-loss."""
-    
+
     estimator_names = list(results)
     palette = dict(
         zip(
@@ -293,7 +301,7 @@ def plot_calibration_curve(results):
     )
     fig, ax = plt.subplots(figsize=(6, 4), dpi=100)
     for name, result in results.items():
-        log_loss = str(round(result['log_loss'], 4))
+        log_loss = str(round(result["log_loss"], 4))
         label = f"{name}, {'log_loss: ' + log_loss}"
         CalibrationDisplay.from_predictions(
             y_true=result["y_test"],
@@ -307,6 +315,7 @@ def plot_calibration_curve(results):
     ax.set_xlim([-0.001, 0.13])
     ax.set_ylim([-0.001, 0.13])
     ax.set_title("Calibration curve")
+
 
 # %%
 # We see below that the low effort classifier significantly improves our gains compared
@@ -327,43 +336,55 @@ plot_calibration_curve(results)
 # %%
 # Agg-Joiner based estimator
 # --------------------------
-# 
+#
 # We first need to split the dataframe between a dataframe representing baskets and a
 # dataframe representing products. In other words, we need to revert the join operation
 # performed by the creator of this dataset. Conceptually, this is close to a
-# |pandas.melt| operation 
+# |pandas.melt| operation
 #
 # Note that we don't keep the product ordering information, which is probably not an
 # important feature here.
 
+
 def get_columns_at(idx, cols_2_idx):
-    """Small helper that give the position of each of the columns of the idx-th product.
-    """
+    """Small helper that give the position of each of the columns of the idx-th \
+        product."""
     cols = [
-        "ID", target_col, f"item{idx}", f"cash_price{idx}", f"make{idx}",
-        f"model{idx}", f"goods_code{idx}", f"Nbr_of_prod_purchas{idx}",
+        "ID",
+        target_col,
+        f"item{idx}",
+        f"cash_price{idx}",
+        f"make{idx}",
+        f"model{idx}",
+        f"goods_code{idx}",
+        f"Nbr_of_prod_purchas{idx}",
     ]
     return [cols_2_idx[col] for col in cols]
 
 
 def melt_multi_columns(X):
-    """Create a dataframe where each product is a row.
-    """
+    """Create a dataframe where each product is a row."""
     products = []
     cols_2_idx = dict(zip(X.columns, range(X.shape[1])))
     for row in X.values:
         n_products = min(row[cols_2_idx["Nb_of_items"]], 24)
-        for idx in range(1, n_products+1):
+        for idx in range(1, n_products + 1):
             cols = get_columns_at(idx, cols_2_idx)
             products.append(row[cols])
-    
+
     cols = [
-        "ID", target_col, "item", "cash_price", "make",
-        "model", "goods_code", "Nbr_of_prod_purchas",
+        "ID",
+        target_col,
+        "item",
+        "cash_price",
+        "make",
+        "model",
+        "goods_code",
+        "Nbr_of_prod_purchas",
     ]
 
-    products = pd.DataFrame(products, columns=cols) 
-    
+    products = pd.DataFrame(products, columns=cols)
+
     for col in ["make", "model"]:
         products[col] = products[col].fillna("None")
 
@@ -400,13 +421,14 @@ from skrub import MinHashEncoder
 def get_X_y(data):
     return data.drop(columns=[target_col]), data[target_col]
 
+
 tic = time()
 vectorizer = TableVectorizer(
-    high_cardinality=MinHashEncoder(), # applied on ["item", "model", "make"]
+    high_cardinality=MinHashEncoder(),  # applied on ["item", "model", "make"]
     specific_transformers=[
         (TargetEncoder(), ["goods_code"]),
         ("passthrough", ["ID"]),
-    ]
+    ],
 )
 
 products_transformed = vectorizer.fit_transform(*get_X_y(products))
@@ -443,6 +465,7 @@ TableReport(products_transformed)
 # Let's display the output of this preprocessing pipeline.
 
 from sklearn.pipeline import make_pipeline
+
 from skrub import AggJoiner
 from skrub import _selectors as s
 
@@ -459,8 +482,8 @@ pipe_agg_joiner = make_pipeline(
         aux_table=s.select(products_transformed, single_cols),
         key="ID",
         operations=["mean", "sum", "std", "min", "max"],
-    )
-) 
+    ),
+)
 basket_train_transformed = pipe_agg_joiner.fit_transform(baskets_train)
 
 TableReport(basket_train_transformed)
@@ -473,16 +496,12 @@ tic = time()
 agg_join_estimator = make_pipeline(
     pipe_agg_joiner,
     HistGradientBoostingClassifier(),
-).fit(
-    *get_X_y(baskets_train)
-)
+).fit(*get_X_y(baskets_train))
 time_to_fit += time() - tic
 
 agg_join_tuned = TunedThresholdClassifierCV(
     agg_join_estimator, cv="prefit", scoring=gain_score, refit=False
-).fit(
-    *get_X_y(baskets_val), amount=baskets_val["total_price"]
-)
+).fit(*get_X_y(baskets_val), amount=baskets_val["total_price"])
 
 results["Agg Joiner"] = get_results(
     agg_join_tuned,
