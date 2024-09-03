@@ -482,6 +482,7 @@ numpydoc_xref_aliases = {
     "ColumnTransformer": "sklearn.compose.ColumnTransformer",
     "OneHotEncoder": "sklearn.preprocessing.OneHotEncoder",
     "Pipeline": "sklearn.pipeline.Pipeline",
+    "make_pipeline": "sklearn.pipeline.make_pipeline",
     "GridSearchCV": "sklearn.model_selection.GridSearchCV",
     "fetch_openml": "sklearn.datasets.fetch_openml",
     # other libraries
@@ -495,6 +496,7 @@ numpydoc_xref_aliases = {
     "Series": "pandas.Series",
     "pandas.Index": "pandas.Index",
     "read_csv": "pandas.read_csv",
+    "pandas.melt": "pandas.melt",
     "pandas.merge": "pandas.merge",
     # Skrub
     "fetch_ken_table_aliases": "skrub.datasets.fetch_ken_table_aliases",
