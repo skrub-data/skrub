@@ -274,7 +274,6 @@ def plot_gain_tradeoff(results):
     ax.grid()
 
     ticks = df["time_to_fit"].round(3).tolist()
-    ticks.insert(1, 10)
     labels = [f"{tick}s" for tick in ticks]
     ax.set_xticks(ticks, labels)
 
