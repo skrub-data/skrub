@@ -38,6 +38,11 @@ version = { file = "skrub/VERSION.txt" }
 readme = { file = "README.rst" }
 
 [project.optional-dependencies]
+dev = [
+    "ipykernel",
+    "ipython",
+    "jupyterlab",
+]
 doc = [
     "jupyterlite-sphinx",
     "jupyterlite-pyodide-kernel",
@@ -115,6 +120,11 @@ pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
 
+[tool.pixi.feature.dev.dependencies]
+ipykernel = "*"
+ipython = "*"
+jupyterlab = "*"
+
 [tool.pixi.pypi-dependencies]
 skrub = { path = ".", editable = true }
 
@@ -157,7 +167,7 @@ test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 lint = ["lint"]
 doc = ["optional", "doc"]
 test = ["test"]
-dev = ["optional", "doc", "lint", "test"]
+dev = ["dev", "optional", "doc", "lint", "test"]
 ci-py309-min-deps = ["py309", "min-dependencies", "test"]
 ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
 ci-py312-latest-deps = ["py312", "test"]
