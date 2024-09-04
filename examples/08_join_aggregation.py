@@ -111,6 +111,10 @@ from sklearn.metrics import log_loss, make_scorer
 
 
 def credit_gain_score(y_true, y_pred, amount):
+    """Define our utility function.
+
+    These numbers are entirely made-up, don't try this at home!
+    """
     mask_tn = (y_true == 0) & (y_pred == 0)
     mask_fp = (y_true == 0) & (y_pred == 1)
     mask_fn = (y_true == 1) & (y_pred == 0)
