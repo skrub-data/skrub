@@ -1,4 +1,5 @@
-<article>
+<article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
+         data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
     <div class="horizontal-scroll">
         <table class="pure-table pure-table-striped">
             <thead>
@@ -16,13 +17,17 @@
             </thead>
             <tbody>
                 {% for column in summary.columns %}
-                <tr>
+                <tr data-manager="FilterableColumn"
+                    data-column-name="{{ column.name }}">
                     <td>{{ column.name }}</td>
                     <td>{{ column.dtype }}</td>
-                    <td class="{{ column.nulls_level }}">{{ column.null_count }} ({{ column.null_proportion | format_percent }})</td>
+                    <td class="{{ column.nulls_level }}">
+                        {{ column.null_count }} ({{ column.null_proportion | format_percent }})
+                    </td>
 
                     {% if column.n_unique %}
-                    <td>{{ column.n_unique }} ({{ column.unique_proportion | format_percent }})</td>
+                    <td>{{ column.n_unique }} ({{ column.unique_proportion | format_percent }})
+                    </td>
                     {% else %}
                     <td></td>
                     {% endif %}
@@ -55,3 +60,5 @@
         </table>
     </div>
 </article>
+
+{% include "no-filter-matches.html" %}
