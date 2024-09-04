@@ -2,7 +2,7 @@
     display: flex;
     gap: var(--tiny);
     align-items: flex-end;
-    margin-left: var(--small);
+    margin-left: 3rem;
     margin-bottom: var(--micro);
 }
 
