@@ -178,6 +178,11 @@ html_theme_options = {
             "url": "https://github.com/skrub-data/skrub/",
             "icon": "fa-brands fa-github",
         },
+        {
+            "name": "Discord",
+            "url": "https://discord.gg/ABaPnm7fDC",
+            "icon": "fa-brands fa-discord",
+        },
     ],
     # alternative way to set twitter and github header icons
     # "github_url": "https://github.com/pydata/pydata-sphinx-theme",
