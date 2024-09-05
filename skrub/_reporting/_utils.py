@@ -69,7 +69,7 @@ def ellide_string_short(s):
 
 def format_number(number):
     if not isinstance(number, float):
-        return str(number)
+        return f"{number:,}"
     return f"{number:#.3g}"
 
 
