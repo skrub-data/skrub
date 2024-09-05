@@ -110,7 +110,7 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
 
     # checking top associations
 
-    assert len(summary["top_associations"]) == 15
+    assert len(summary["top_associations"]) == 20
     asso = [
         d | {"cramer_v": round(d["cramer_v"], 1)} for d in summary["top_associations"]
     ]
@@ -124,9 +124,9 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     else:
         assert False
     assert asso[-1] == {
-        "cramer_v": 0.5,
-        "right_column": "loc_with_nulls",
-        "left_column": "value",
+        "cramer_v": 0.0,
+        "right_column": "parameter",
+        "left_column": "country",
     }
 
 
