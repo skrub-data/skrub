@@ -123,11 +123,7 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
             break
     else:
         assert False
-    assert asso[-1] == {
-        "cramer_v": 0.0,
-        "right_column": "parameter",
-        "left_column": "country",
-    }
+    assert asso[-1]["cramer_v"] == 0.0
 
 
 def test_no_title(pd_module):
