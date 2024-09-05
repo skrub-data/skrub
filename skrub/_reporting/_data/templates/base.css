@@ -9,6 +9,7 @@
     --huge: 1.5rem;
     --max-content-width: 45rem;
     --radius: 0.25rem;
+    --line-height: 1.5;
 
     --lightgreen: #eafaea;
     --mediumgreen: #d6f5d6;
@@ -24,7 +25,7 @@
 
 :host {
     font-size: 1rem;
-    line-height: 1.5;
+    line-height: var(--line-height);
     -webkit-text-size-adjust: 100%;
 }
 
@@ -261,16 +262,8 @@ dd {
     font-size: var(--large);
 }
 
-.announcement  {
-    font-size: var(--small);
-    padding-block-start: var(--small);
-    padding-block-end: var(--small);
-}
-
 .important-note {
     background-color: var(--lightgreen);
-    padding: var(--small);
+    padding: var(--tiny);
     border-radius: var(--radius);
-    margin-top: var(--tiny);
-    margin-bottom: var(--small);
 }

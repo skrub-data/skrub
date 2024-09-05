@@ -38,3 +38,11 @@ tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     border-bottom: 0;
     background: inherit;
 }
+
+.table-bar-wrapper {
+    min-height: calc(var(--line-height, 1.5) * 1em + 3.5 * var(--tiny));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: var(--micro);
+}
