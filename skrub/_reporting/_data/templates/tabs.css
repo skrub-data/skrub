@@ -73,9 +73,18 @@ Vertical ordering:
     color: red;
 }
 
-.tab-list .tab[data-has-warning]::before {
-    content: "⚠️ ";
+.tab-list .tab:not([data-has-warning]) .warning-sign {
+    display: none;
 }
+
+.tab-list .tab .warning-sign {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+}
+
+
+
 
 .tab-list-border {
     box-sizing: content-box;

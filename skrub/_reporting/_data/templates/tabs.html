@@ -44,7 +44,11 @@ Show which columns are similar (have a strong association).
                         {% if associations_warning %}
                         data-has-warning
                         {% endif %}
-                        data-test="associations-tab">Column
+                        data-test="associations-tab">
+                    <div class="warning-sign">
+                    {% include "icons/exclamation-triangle.svg" %}
+                    </div>
+                    Column
                     similarities</button>
                 <div class="tab-tooltip-anchor tooltip">
                     <span
