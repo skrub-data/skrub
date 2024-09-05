@@ -351,22 +351,6 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(SampleTableBar);
 
-    class ContentSelect extends Manager {
-        constructor(elem, exchange) {
-            super(elem, exchange);
-            this.select = elem.querySelector("[data-role='content-select']");
-            this.displays = elem.querySelectorAll("[data-role='content-display']");
-            this.select.addEventListener("change", () => this.updateDisplays());
-        }
-
-        updateDisplays() {
-            for (let display of this.displays) {
-                display.textContent = display.dataset[this.select.value] || "";
-            }
-        }
-    }
-    SkrubTableReport.register(ContentSelect);
-
     class TabList extends Manager {
         constructor(elem, exchange) {
             super(elem, exchange);
@@ -550,29 +534,5 @@ if (customElements.get('skrub-table-report') === undefined) {
             document.execCommand("copy");
             selection.removeAllRanges();
         }
-    }
-
-    function pandasFilterSnippet(colName, value, valueIsNone) {
-        if (valueIsNone) {
-            return `df.loc[df[${colName}].isnull()]`;
-        }
-        return `df.loc[df[${colName}] == ${value}]`;
-    }
-
-    function polarsFilterSnippet(colName, value, valueIsNone) {
-        if (valueIsNone) {
-            return `df.filter(pl.col(${colName}).is_null())`;
-        }
-        return `df.filter(pl.col(${colName}) == ${value})`;
-    }
-
-    function filterSnippet(colName, value, valueIsNone, dataframeModule) {
-        if (dataframeModule === "polars") {
-            return polarsFilterSnippet(colName, value, valueIsNone);
-        }
-        if (dataframeModule === "pandas") {
-            return pandasFilterSnippet(colName, value, valueIsNone);
-        }
-        return `Unknown dataframe library: ${dataframeModule}`;
     }
 }
