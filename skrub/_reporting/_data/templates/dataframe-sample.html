@@ -36,9 +36,9 @@
     </div>
 
     <p>
-        <strong>{{ summary.n_rows }}</strong> rows ✕
+        <strong>{{ summary.n_rows | format_number }}</strong> rows ✕
         <strong data-manager="ColumnFilterMatchCount"
-            data-test="n-columns-display">{{ summary.n_columns }}</strong> columns.
+            data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong> columns.
     </p>
 
 
