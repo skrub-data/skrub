@@ -33,11 +33,11 @@
         <div>
             <dl>
                 <dt>Null values</dt>
-                <dd class="{{ column.nulls_level }}">{{ column.null_count }} ({{ column.null_proportion | format_percent }})</dd>
+                <dd class="{{ column.nulls_level }}">{{ column.null_count | format_number }} ({{ column.null_proportion | format_percent }})</dd>
                 {% if not column.value_is_constant %}
                 {% if column.n_unique %}
                 <dt>Unique values</dt>
-                <dd>{{ column.n_unique }} ({{ column.unique_proportion | format_percent }})</dd>
+                <dd>{{ column.n_unique | format_number }} ({{ column.unique_proportion | format_percent }})</dd>
                 {% endif %}
                 {% if "mean" in column %}
                 <dt>Mean ± Std</dt>
@@ -47,15 +47,15 @@
                 <dt>Median ± IQR</dt>
                 <dd>{{ column.quantiles[0.5] | format_number }} ± {{ column["inter_quartile_range"] | format_number}}</dd>
 
-                <dt>Min ; Max</dt>
+                <dt>Min | Max</dt>
                 <dd>
-                    {{ column.quantiles[0.0] | format_number }} ;
+                    {{ column.quantiles[0.0] | format_number }} |
                     {{ column.quantiles[1.0] | format_number }}
                 </dd>
                 {% elif "min" in column %}
-                <dt>Min ; Max</dt>
+                <dt>Min | Max</dt>
                 <dd>
-                    {{ column.min | format_number }} ;
+                    {{ column.min | format_number }} |
                     {{ column.max | format_number }}
                 </dd>
                 {% endif %}
