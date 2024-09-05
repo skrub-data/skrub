@@ -5,7 +5,7 @@ from . import _associations, _plotting, _utils
 
 _HIGH_CARDINALITY_THRESHOLD = 10
 _SUBSAMPLE_SIZE = 3000
-_ASSOCIATION_THRESHOLD = 0.2
+_N_TOP_ASSOCIATIONS = 20
 
 
 def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
@@ -82,11 +82,9 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
 
 def _add_associations(df, dataframe_summary):
     df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
-    associations = _associations.cramer_v(df)[:20]
+    associations = _associations.cramer_v(df)[:_N_TOP_ASSOCIATIONS]
     dataframe_summary["top_associations"] = [
-        dict(zip(("left_column", "right_column", "cramer_v"), a))
-        for a in associations
-        if a[2] > _ASSOCIATION_THRESHOLD
+        dict(zip(("left_column", "right_column", "cramer_v"), a)) for a in associations
     ]
 
 
