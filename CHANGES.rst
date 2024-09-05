@@ -31,6 +31,10 @@ Minor changes
   in a spreadsheet).
   :pr:`1048` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* A "stats" panel has been added to the TableReport, showing summary statistics
+  for all columns (number of missing values, mean, etc. -- similar to
+  ``pandas.info()`` ) in a table.
+  :pr:`1056` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.3.0
 =============
