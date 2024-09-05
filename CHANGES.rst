@@ -27,6 +27,10 @@ Minor changes
   in a spreadsheet).
   :pr:`1048` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The selection of content displayed in the TableReport's copy-paste boxes has
+  been removed. Now they always display the value of the selected item. When
+  copied, the repr of the selected item is copied to the clipboard.
+  :pr:`1058` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.3.0
 =============
