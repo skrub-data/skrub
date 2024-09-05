@@ -5,19 +5,10 @@
      data-hidden
      data-show-on="SAMPLE_TABLE_CELL_ACTIVATED"
      data-hide-on="SAMPLE_TABLE_CELL_DEACTIVATED">
-    <select autocomplete="off" data-role="content-select" data-test="table-bar-select">
-        <option value="columnNameStr">Column name</option>
-        <option value="columnNameRepr">Quoted column name</option>
-        <option selected value="valueStr">Cell display value</option>
-        <option value="valueRepr">Cell as Python expression</option>
-        <option value="filterDfSnippet">Filter df by cell value</option>
-    </select>
-
     <div class="box">
         <pre id="sample-table-bar-display" data-role="content-display"></pre>
         {{ buttons.copybutton("sample-table-bar-display") }}
     </div>
-
 </div>
 <div class="flex">
     <div class="announcement text important-note"
