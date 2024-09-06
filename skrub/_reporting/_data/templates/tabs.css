@@ -42,17 +42,19 @@
     padding-bottom: var(--tiny);
     font-size: var(--small);
     background-color: transparent;
-    opacity: 0.8;
+    --color-muted: var(--darkg);
+    --color-default: inherit;
+    color: var(--color-muted);
 }
 
 .tab:hover {
-    opacity: 1.0;
+    color: var(--color-default);
 }
 
 .tab[data-is-selected] {
     border-color: var(--darkg);
     background-color: white;
-    opacity: 1.0;
+    color: var(--color-default);
 }
 
 /* When a tab contains critical content we highlight the corresponding button so */
@@ -71,7 +73,9 @@
 }
 
 .tab-list .tab[data-has-warning] {
-    color: red;
+    --color-muted: var(--darkred);
+    --color-default: var(--red);
+
 }
 
 /* The panels (the main content) */
