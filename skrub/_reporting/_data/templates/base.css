@@ -19,6 +19,9 @@
     --mediumg: #d0d0d0;
     --lightg: #f0f0f0;
 
+    --darkred: #a32929;
+    --red: #dd0000;
+
     --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
 }
 
@@ -248,7 +251,7 @@ dd {
 }
 
 .critical {
-    color: red;
+    color: var(--red);
 }
 
 /* Misc tweaks */

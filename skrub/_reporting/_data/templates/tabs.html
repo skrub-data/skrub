@@ -32,7 +32,11 @@ NOTE: some columns have very strong associations and may be redundant.
                 <button type="button" data-target-panel-id="column-associations-panel"
                     data-role="tab" class="tab" {% if associations_warning %}
                     data-has-warning {% endif %} data-test="associations-tab"
-                    title="{{ associations_title }}">Associations</button>
+                    title="{{ associations_title }}">
+                    <div class="warning-sign">
+                        {% include "icons/exclamation-triangle.svg" %}
+                    </div>
+                    Associations</button>
             </div>
         </div>
         {% include "column-filter.html" %}
