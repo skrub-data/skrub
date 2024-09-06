@@ -336,7 +336,7 @@ a.sk-btn-orange:hover {
     font-weight: bold;
 }
 
-footer {
+.home-footer {
     background-color: #12134b; /* Black background color */
     color: #fff; /* White text color */
     text-align: center;
