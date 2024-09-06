@@ -12,15 +12,12 @@ describe('test the dataframe sample tab', () => {
         cy.get('@announcement').should('not.be.visible');
         cy.get('@bar').should('be.visible');
         cy.get('@bar').should('have.text', 'POL');
-        cy.get('@report').find('[data-test="table-bar-select"]').as(
-            'barSelect').select('columnNameRepr');
-        cy.get('@bar').should('have.text', "'department'");
         cy.get('@report').find('#col_1_in_sample_tab').as('col1Card')
             .should('be.visible');
 
         cy.get('@report').find('td[data-column-idx="2"]').first()
             .click();
-        cy.get('@bar').should('have.text', "'department_name'");
+        cy.get('@bar').should('have.text', "Department of Police");
         cy.get('@report').find('#col_1_in_sample_tab').should(
             'not.be.visible');
         cy.get('@report').find('#col_2_in_sample_tab').as('col2Card')
@@ -37,14 +34,14 @@ describe('test the dataframe sample tab', () => {
             .click();
         cy.get('@report').find('td[data-column-idx="1"]').first()
             .should('have.data', 'isActive', '');
-        cy.get('@bar').should('have.text', "'department'");
+        cy.get('@bar').should('have.text', "POL");
 
         cy.get('@report').find('[data-test="column-filter-select"]').as(
                 "filter")
             .select('String columns');
         cy.get('@bar').should('be.visible');
         cy.get('@announcement').should('not.be.visible');
-        cy.get('@bar').should('have.text', "'department'");
+        cy.get('@bar').should('have.text', "POL");
 
         cy.get('@filter').select('Numeric columns');
         cy.get('@bar').should('not.be.visible');
