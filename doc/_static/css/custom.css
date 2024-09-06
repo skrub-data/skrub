@@ -233,19 +233,13 @@ div.sk-landing-footer {
 }
 
 /** Scikit-learn buttons ***************************/
-/* a.sk-btn-orange {
-    font-size: 1.1rem;
-    font-weight: 500;
-    background-color: #f99f44;  // sk-orange-tint-1
-    color: black !important;
-} */
 
 a.sk-btn-orange {
     font-size: 1.1rem;
     font-weight: 500;
-    background-color: #f99f44; /* Original sk-orange-tint-1 */
+    background-color: #DA7007; /* Original sk-orange-tint-1 */
     color: #ffffff; /* Changed to white for better contrast */
-    border: 2px solid #f99f44; /* Border to match background color */
+    border: 2px solid #DA7007; /* Border to match background color, previous: f99f44 */
     padding: 10px 20px; /* Added padding for better button size */
     border-radius: 5px; /* Rounded corners for a modern look */
     text-decoration: none; /* Remove underline */
@@ -253,38 +247,36 @@ a.sk-btn-orange {
 }
 
 a.sk-btn-orange:hover {
-    background-color: #ffffff; /* Fill with white on hover */
-    color: #f99f44; /* Text color changes to match the original background color */
-    border: 2px solid #f99f44; /* Border remains the same on hover */
+    background-color: #fbe1ca; /* Fill with white on hover */
+    color: #DA7007; /* Text color changes to match the original background color */
+    border: 2px solid #DA7007; /* Border remains the same on hover */
 }
-
-
-a.sk-btn-orange:hover {
-    background-color: #fbe1ca;  /* --sk-orange-tint-3 */
-}
-
 
 .container {
-    max-width: 80%; /* Restrict container width for better readability */
+    max-width: 120ch;
+}
+
+@media (min-width: 768px) {
+    .container {
+        max-width: 80%; /* Restrict container width for better readability */
+    }
 }
 
 .feature-title {
-    color: #f99f44; /* Darker text color for the title */
+    color: #DA7007; /* Darker text color for the title */
     font-weight: 600; /* Bold font for title */
     margin-bottom: 10px; /* Spacing below title */
 }
 
 .feature-text {
-    color: #555; /* Lighter grey for the description text */
     font-size: 1rem; /* Regular font size for text */
     margin-bottom: 0; /* Remove default bottom margin */
 }
 
 
-
 .hero-description {
     text-align: center;
-    font-size: 20px;
+    font-size: 1.25rem;
     margin-bottom: 40px;
 }
 
@@ -294,10 +286,16 @@ a.sk-btn-orange:hover {
     height: 0.5px; /* Adjust the thickness of the line */
     background-color: #12134b; /* Change the color as needed */
     border: none; /* Ensures no border is applied */
-    margin-top: 50px;
-    margin-bottom: 50px;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
+@media (min-width: 768px) {
+    .thin-line {
+        margin-top: 50px;
+        margin-bottom: 50px;
+    }
+}
 
 .contributors-list {
     display: flex;
