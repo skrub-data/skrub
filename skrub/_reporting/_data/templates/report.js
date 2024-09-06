@@ -303,7 +303,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             if (msg.cellId === this.elem.id) {
                 this.elem.dataset.isActive = "";
                 this.elem.setAttribute("tabindex", 0);
-                this.elem.focus({focusVisible: false});
+                this.elem.focus({focusVisible: true});
             } else {
                 delete this.elem.dataset.isActive;
                 this.elem.setAttribute("tabindex", -1);

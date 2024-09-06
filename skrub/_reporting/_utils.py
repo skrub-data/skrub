@@ -1,5 +1,6 @@
 import base64
 import json
+import numbers
 
 import numpy as np
 
@@ -68,9 +69,11 @@ def ellide_string_short(s):
 
 
 def format_number(number):
-    if not isinstance(number, float):
-        return str(number)
-    return f"{number:#.3g}"
+    if isinstance(number, numbers.Integral):
+        return f"{number:,}"
+    if isinstance(number, numbers.Real):
+        return f"{number:#.3g}"
+    return str(number)
 
 
 def format_percent(proportion):

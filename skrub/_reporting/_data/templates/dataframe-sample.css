@@ -22,12 +22,19 @@ tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
 
 
 .table-cell[data-is-active] {
-    outline: 2px solid black;
+    outline: 2px dotted black;
 }
 
-.table-cell[data-is-active][data-just-copied] {
-    outline: 2px dashed black;
+.table-cell[data-is-active]:focus {
+    outline: 2px solid Highlight;
+    outline: 2px solid -webkit-focus-ring-color;
 }
+
+.table-cell[data-is-active][data-just-copied]:focus {
+    outline: 2px dashed Highlight !important;
+    outline: 2px dashed -webkit-focus-ring-color !important;
+}
+
 
 /* The gap separating the head and the tail of the table */
 
