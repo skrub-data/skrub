@@ -330,9 +330,7 @@ if (customElements.get('skrub-table-report') === undefined) {
     class SampleTableBar extends Manager {
         constructor(elem, exchange) {
             super(elem, exchange);
-            this.select = elem.querySelector("[data-role='content-select']");
             this.display = elem.querySelector("[data-role='content-display']");
-            this.select.addEventListener("change", () => this.updateDisplay());
             this.displayValues = new Map();
         }
 
@@ -342,41 +340,16 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         SAMPLE_TABLE_CELL_ACTIVATED(msg) {
-            for (let k of ["valueStr", "valueRepr", "columnNameStr",
-                    "columnNameRepr"
-                ]) {
-                this.displayValues.set(k, msg[k]);
-            }
-            const snippet = filterSnippet(msg.columnNameRepr,
-                msg.valueRepr,
-                msg.valueIsNone,
-                msg.dataframeModule);
-            this.displayValues.set("filterDfSnippet", snippet);
-            this.updateDisplay();
+            this.display.textContent = msg.valueStr || "";
+            this.display.dataset.copyText = msg.valueRepr || "";
         }
 
         SAMPLE_TABLE_CELL_DEACTIVATED() {
-            this.displayValues = new Map();
-            this.updateDisplay();
+            this.display.textContent = "";
+            this.display.removeAttribute("data-copy-text");
         }
     }
     SkrubTableReport.register(SampleTableBar);
-
-    class ContentSelect extends Manager {
-        constructor(elem, exchange) {
-            super(elem, exchange);
-            this.select = elem.querySelector("[data-role='content-select']");
-            this.displays = elem.querySelectorAll("[data-role='content-display']");
-            this.select.addEventListener("change", () => this.updateDisplays());
-        }
-
-        updateDisplays() {
-            for (let display of this.displays) {
-                display.textContent = display.dataset[this.select.value] || "";
-            }
-        }
-    }
-    SkrubTableReport.register(ContentSelect);
 
     class TabList extends Manager {
         constructor(elem, exchange) {
@@ -544,8 +517,12 @@ if (customElements.get('skrub-table-report') === undefined) {
             return;
         }
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(elem.textContent || "");
+            navigator.clipboard.writeText( elem.dataset.copyText || elem.textContent || "");
         } else {
+            // fallback when navigator not available. in this case we just copy
+            // the text content of the element (we could create a hidden one to
+            // fill it with the data-copy-text and select that but this is
+            // probably good enough)
             const selection = window.getSelection();
             if (selection == null) {
                 return;
@@ -557,29 +534,5 @@ if (customElements.get('skrub-table-report') === undefined) {
             document.execCommand("copy");
             selection.removeAllRanges();
         }
-    }
-
-    function pandasFilterSnippet(colName, value, valueIsNone) {
-        if (valueIsNone) {
-            return `df.loc[df[${colName}].isnull()]`;
-        }
-        return `df.loc[df[${colName}] == ${value}]`;
-    }
-
-    function polarsFilterSnippet(colName, value, valueIsNone) {
-        if (valueIsNone) {
-            return `df.filter(pl.col(${colName}).is_null())`;
-        }
-        return `df.filter(pl.col(${colName}) == ${value})`;
-    }
-
-    function filterSnippet(colName, value, valueIsNone, dataframeModule) {
-        if (dataframeModule === "polars") {
-            return polarsFilterSnippet(colName, value, valueIsNone);
-        }
-        if (dataframeModule === "pandas") {
-            return pandasFilterSnippet(colName, value, valueIsNone);
-        }
-        return `Unknown dataframe library: ${dataframeModule}`;
     }
 }
