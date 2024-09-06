@@ -280,23 +280,6 @@ a.sk-btn-orange:hover {
     margin-bottom: 0; /* Remove default bottom margin */
 }
 
-.demo-area {
-    background-color: #f7f7f7; /* Light grey background for demo area */
-    border: 1px solid #e0e0e0; /* Fine grey border around the demo area */
-    border-radius: 8px; /* Slight rounding for modern look */
-    padding: 20px; /* Padding inside demo area for spacing */
-    height: 100%; /* Make demo area fill the column height */
-    display: flex; /* Flexbox for demo content alignment */
-    justify-content: center; /* Center content horizontally */
-    align-items: center; /* Center content vertically */
-}
-
-.coding-demo {
-    color: #007bff; /* Blue text color for coding demo */
-    font-family: "Courier New", Courier, monospace; /* Monospace font for coding feel */
-    font-size: 0.95rem; /* Smaller font size to simulate code appearance */
-    margin: 0; /* Remove default margin around <pre> */
-}
 
 
 .hero-description {
