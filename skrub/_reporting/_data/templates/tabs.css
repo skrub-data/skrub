@@ -32,6 +32,7 @@
 
 .tab {
     display: flex;
+    align-items: center;
     column-gap: var(--micro);
     border: 1px solid transparent;
     border-bottom: none;
@@ -58,18 +59,19 @@
 /* the user is more likely to click on it. ATM this is just used for the */
 /* associations tab when some columns are very strongly associated. */
 
-.tab-list .tab[data-has-warning] {
-    color: red;
-}
-
-.tab-list .tab:not([data-has-warning]) .warning-sign {
-    display: none;
-}
-
 .tab-list .tab .warning-sign {
-    display: inline-block;
+    display: none;
     width: 1em;
     height: 1em;
+    margin: 1px;
+}
+
+.tab-list .tab[data-has-warning] .warning-sign {
+    display: inline-block;
+}
+
+.tab-list .tab[data-has-warning] {
+    color: red;
 }
 
 /* The panels (the main content) */
