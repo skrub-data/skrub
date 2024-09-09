@@ -28,7 +28,7 @@
 
 .card-body {
     padding-left: 0px;
-    padding-right: 32px;
+    padding-right: 0px;
 }
 
 .card-title {
@@ -214,8 +214,8 @@ div.sk-landing-footer {
     }
 
     div.card-landing {
-	margin-left: 5%;
-	margin-right: 5%;
+	margin-left: 0%;
+	margin-right: 0%;
     }
     div.bd-sidebar-primary {
 	margin-right: 5%;
@@ -253,13 +253,7 @@ a.sk-btn-orange:hover {
 }
 
 .container {
-    max-width: 120ch;
-}
-
-@media (min-width: 768px) {
-    .container {
-        max-width: 80%; /* Restrict container width for better readability */
-    }
+    max-width: 150ch;
 }
 
 .feature-title {
