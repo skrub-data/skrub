@@ -49,6 +49,9 @@ The |Recipe| brings 3 major benefits:
 .. |GridSearchCV| replace::
     :class:`~sklearn.model_selection.GridSearchCV`
 
+.. |RandomizedSearchCV| replace::
+    :class:`~sklearn.model_selection.GridSearchCV`
+
 .. |HGB| replace::
     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 
@@ -148,7 +151,6 @@ recipe.get_report()
 
 # %%
 from skrub import ToDatetime
-from skrub import selectors as s
 
 recipe = recipe.add(ToDatetime(), cols="date_first_hired")
 recipe
@@ -198,6 +200,7 @@ recipe.get_report()
 
 # %%
 from skrub import DatetimeEncoder
+from skrub import selectors as s
 
 recipe = recipe.add(DatetimeEncoder(), cols=s.any_date())
 recipe
@@ -285,10 +288,17 @@ recipe
 # human-readable labels that the recipe will use when displaying results. If we
 # do not want to specify such labels we can also pass a list instead of a
 # dictionary: we could have written ``choose_from([TargetEncoder(),
-# MinHashEncoder()])``.
+# MinHashEncoder()])``. The optional ``name="encoder"`` is a label for the
+# whole choice itself (as opposed to "target" and "minhash") which are labels
+# for each of the possible outcomes.
 #
 # When we ask for a sample or a report, the recipe will apply the default choice
 # which is the first one -- in our case, the |TargetEncoder|.
+#
+# Sometimes we have an optional step, for example we may want to try our
+# pipeline with or without a rescaling step. This could be written as
+# ``choose_from([StandardScaler(), 'passthrough'])`` or with the shorthand
+# ``optional(StandardScaler())``.
 
 
 # %%
@@ -299,12 +309,12 @@ recipe
 # supervised learner we are about to add can handle.
 #
 # We can add the final step in our pipeline: the supervised learner which will
-# received the extracted or preprocessed features and learn to predict an
+# receive the extracted or preprocessed features and learn to predict an
 # employee's salary.
 #
 # We will use a |HGB| from scikit-learn, which works very well for tabular data
-# and can handle categorical columns (provided they have a Categorical dtype,
-# which we made sure is the case) and missing values.
+# and can handle missing values and categorical columns (provided they have a
+# Categorical dtype, which we ensured with |ToCategorical|).
 #
 # The |HGB| has a few hyperparameters we can set; an important one is the
 # learning rate. By default, scikit-learn will use ``learning_rate=0.1``. As it
@@ -312,7 +322,7 @@ recipe
 # want to try a few values and pick the best. Here also, the recipe allows us
 # to provide a choice instead of a single value.
 #
-# We could rely on `choose_from` as before, to pick from a few possibilities.
+# We could rely on ``choose_from`` as before, to pick from a few possibilities.
 # But as the learning rate is a number, we can use a more specialized kind of
 # choice: ``choose_float``. It allows us to specify the start and end of a
 # range, and whether values should be sampled uniformly or on a log scale in
@@ -335,8 +345,7 @@ recipe
 # Note that here the choice is not among several estimators, but for the
 # parameter of the |HGB|. We pass the choice directly in the estimator itself,
 # where we would normally give a value for the parameter. The ``"learning
-# rate"`` string is an optional human-readable label for this particular
-# choice.
+# rate"`` string is an optional human-readable label for this choice.
 #
 # Choices can be nested (as deep as we want): we can have a choice between
 # estimators, where each of the estimators contains choices in its parameters.
@@ -354,7 +363,7 @@ recipe
 # As mentioned at the top of the page, a |Recipe| is not a scikit-learn
 # estimator with the usual ``fit`` and ``transform`` methods. Rather, it is a
 # way to configure such an object.
-# We must call one of the recipe's method for getting the scikit-learn object
+# We must call one of the recipe's methods for getting the scikit-learn object
 # we have configured.
 #
 # We can use ``recipe.get_pipeline()`` which will return a scikit-learn
@@ -384,7 +393,7 @@ recipe
 # %%
 from sklearn.metrics import r2_score
 
-randomized_search = recipe.get_randomized_search(n_iter=10, cv=3, verbose=1)
+randomized_search = recipe.get_randomized_search(n_iter=16, cv=3, verbose=1)
 randomized_search.fit(recipe.get_x_train(), recipe.get_y_train())
 
 predictions = randomized_search.predict(recipe.get_x_test())
