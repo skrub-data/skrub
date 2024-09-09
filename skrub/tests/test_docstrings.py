@@ -16,8 +16,6 @@ import pytest
 from numpydoc.validate import validate
 
 DOCSTRING_TEMP_IGNORE_SET = {
-    # tries to validate the docstring of this BaseException method 🤷
-    "skrub._exceptions.RejectColumn.with_traceback",
     "skrub._table_vectorizer.SuperVectorizer",
     # The following are not documented in skrub (and thus are out of scope)
     # They are usually inherited from other libraries.
