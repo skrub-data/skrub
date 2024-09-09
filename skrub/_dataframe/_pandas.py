@@ -1,7 +1,6 @@
 """
 Pandas specialization of the aggregate and join operations.
 """
-
 import re
 from itertools import product
 
