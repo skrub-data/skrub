@@ -152,8 +152,8 @@ def _polars_ops_mapping(col, operation, output_key):
 
     if aggfunc is None:
         raise ValueError(
-            f"Polars operation {operation!r} is not supported. Available:"
-            f" {list(polars_aggfuncs)}"
+            f"Polars operation {operation!r} is not supported. Available"
+            f" operations are: {list(polars_aggfuncs)}"
         )
 
     return aggfunc.alias(output_key)

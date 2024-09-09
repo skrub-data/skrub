@@ -48,6 +48,7 @@ doc = [
     "jupyterlite-pyodide-kernel",
     "numpydoc",
     "pydata-sphinx-theme",
+    "plotly",
     "seaborn",
     "sphinx",
     "sphinx-copybutton",
@@ -98,6 +99,7 @@ jupyterlite-pyodide-kernel = "*"
 matplotlib = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
+plotly = "*"
 seaborn = "*"
 sphinx = "*"
 sphinx-copybutton = "*"
