@@ -14,7 +14,10 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
-
+* The :class:`Recipe` is a new, interactive and convenient way to construct a
+  machine-learning model and its grid of hyperparameters step by step while
+  seeing previews of the transformed data. :pr:`1064` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Minor changes
 -------------
