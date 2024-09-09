@@ -3,7 +3,7 @@ import io
 import itertools
 import re
 import traceback
-from typing import Any, Sequence
+import typing
 
 from sklearn.base import clone
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, train_test_split
@@ -78,9 +78,9 @@ def _squeeze(df):
 class Step:
     """A step that can be added to a Recipe."""
 
-    estimator: Any
+    estimator: typing.Any
     cols: s.Selector
-    name: str | None = None
+    name: typing.Optional[str] = None
     keep_original: bool = False
     rename_columns: str = "{}"
     allow_reject: bool = False
@@ -267,7 +267,7 @@ class Recipe:
         # TODO make gs_params explicit
         grid = self.get_param_grid()
         if any(
-            (hasattr(param, "rvs") and not isinstance(param, Sequence))
+            (hasattr(param, "rvs") and not isinstance(param, typing.Sequence))
             for subgrid in grid
             for param in subgrid.values()
         ):

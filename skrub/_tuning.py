@@ -1,7 +1,7 @@
 import dataclasses
 import io
+import typing
 from collections.abc import Sequence
-from typing import Any, Mapping
 
 import numpy as np
 from scipy import stats
@@ -19,9 +19,9 @@ def _with_fields(obj, **fields):
 
 @dataclasses.dataclass
 class Outcome:
-    value: Any
-    name: str | None = None
-    in_choice: str | None = None
+    value: typing.Any
+    name: typing.Optional[str] = None
+    in_choice: typing.Optional[str] = None
 
     def __str__(self):
         if self.name is not None:
@@ -35,8 +35,8 @@ class BaseChoice:
 
 @dataclasses.dataclass
 class Choice(Sequence, BaseChoice):
-    outcomes: list[Any]
-    name: str | None = None
+    outcomes: list[typing.Any]
+    name: typing.Optional[str] = None
 
     def __post_init__(self):
         if not self.outcomes:
@@ -82,7 +82,7 @@ class Choice(Sequence, BaseChoice):
 
 
 def choose_from(outcomes, name=None):
-    if isinstance(outcomes, Mapping):
+    if isinstance(outcomes, typing.Mapping):
         prepared_outcomes = [Outcome(val, key) for key, val in outcomes.items()]
     else:
         prepared_outcomes = [Outcome(val) for val in outcomes]
@@ -112,10 +112,10 @@ def _check_bounds(low, high, log):
 
 @dataclasses.dataclass
 class NumericOutcome(Outcome):
-    value: int | float
+    value: typing.Union[int, float]
     is_from_log_scale: bool = False
-    name: str | None = None
-    in_choice: str | None = None
+    name: typing.Optional[str] = None
+    in_choice: typing.Optional[str] = None
 
 
 def _repr_numeric_choice(choice):
@@ -236,7 +236,7 @@ def choose_int(low, high, log=False, n_steps=None, name=None):
 
 @dataclasses.dataclass
 class Placeholder:
-    name: str | None = None
+    name: typing.Optional[str] = None
 
     def __repr__(self):
         if self.name is not None:
