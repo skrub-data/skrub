@@ -280,10 +280,15 @@ a.sk-btn-orange:hover {
     margin-bottom: 40px;
 }
 
+.click-table-report-hint {
+    color: #da4607;
+    font-size: 1.25rem;
+}
+
 
 .thin-line {
     width: 100%;
-    height: 0.5px; /* Adjust the thickness of the line */
+    height: 1px; /* Adjust the thickness of the line */
     background-color: #12134b; /* Change the color as needed */
     border: none; /* Ensures no border is applied */
     margin-top: 20px;
