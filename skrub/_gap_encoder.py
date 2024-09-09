@@ -19,10 +19,13 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._repr import _SkrubHTMLDocumentationLinkMixin
 from ._utils import unique_strings
 
 
-class GapEncoder(TransformerMixin, SingleColumnTransformer):
+class GapEncoder(
+    _SkrubHTMLDocumentationLinkMixin, TransformerMixin, SingleColumnTransformer
+):
     """Constructs latent topics with continuous encoding.
 
     This encoder can be understood as a continuous encoding on a set of latent
