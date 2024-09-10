@@ -266,7 +266,7 @@ if (customElements.get('skrub-table-report') === undefined) {
                 return;
             }
             event.clipboardData.setData("text/plain", this.elem.dataset
-                                        .valueRepr);
+                .valueRepr);
             event.preventDefault();
             this.elem.dataset.justCopied = "";
             setTimeout(() => this.elem.removeAttribute("data-just-copied"), 1000);
@@ -303,7 +303,9 @@ if (customElements.get('skrub-table-report') === undefined) {
             if (msg.cellId === this.elem.id) {
                 this.elem.dataset.isActive = "";
                 this.elem.setAttribute("tabindex", 0);
-                this.elem.focus({focusVisible: true});
+                this.elem.focus({
+                    focusVisible: true
+                });
             } else {
                 delete this.elem.dataset.isActive;
                 this.elem.setAttribute("tabindex", -1);
@@ -427,6 +429,67 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(TabList);
 
+    class sortableTable extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelectorAll("button[data-role='sort-button']").forEach(
+                b => b.addEventListener("click", e => this.sort(e)));
+        }
+
+        getVal(row, colIdx) {
+            const td = row.querySelectorAll("td")[colIdx];
+            if (!td.hasAttribute("data-value")) {
+                return td.textContent;
+            }
+            let value = td.dataset.value;
+            if (td.hasAttribute("data-numeric")) {
+                value = Number(value);
+            }
+            return value;
+        }
+
+        compare(rowA, rowB, colIdx, ascending) {
+            let valA = this.getVal(rowA, colIdx);
+            let valB = this.getVal(rowB, colIdx);
+            if(typeof(valA) === "number" && typeof(valB) === "number"){
+                if(isNaN(valA) && !isNaN(valB)){
+                    return 1;
+                }
+                if(isNaN(valB) && !isNaN(valA)){
+                    return -1;
+                }
+            }
+            if (!(valA > valB || valB > valA)) {
+                valA = Number(rowA.dataset.columnIdx);
+                valB = Number(rowB.dataset.columnIdx);
+                return valA - valB;
+            }
+            if (!ascending) {
+                [valA, valB] = [valB, valA];
+            }
+            return valA > valB ? 1 : -1;
+        }
+
+        sort(event) {
+            const headerRow = this.elem.querySelector("thead tr");
+            const colHeaders = Array.from(headerRow.querySelectorAll("th"));
+            const colIdx = colHeaders.findIndex(th => Array.from(th.childNodes)
+                .includes(event.target));
+            const body = this.elem.querySelector("tbody");
+            const rows = Array.from(body.querySelectorAll("tr"));
+            const ascending = event.target.dataset.direction === "ascending";
+
+            rows.sort((a, b) => this.compare(a, b, colIdx, ascending));
+
+            body.innerHTML = "";
+            for (let r of rows) {
+                body.appendChild(r);
+            }
+        }
+
+    }
+    SkrubTableReport.register(sortableTable);
+
     class SelectedColumnsDisplay extends Manager {
 
         constructor(elem, exchange) {
@@ -517,7 +580,8 @@ if (customElements.get('skrub-table-report') === undefined) {
             return;
         }
         if (navigator.clipboard) {
-            navigator.clipboard.writeText( elem.dataset.copyText || elem.textContent || "");
+            navigator.clipboard.writeText(elem.dataset.copyText || elem.textContent ||
+                "");
         } else {
             // fallback when navigator not available. in this case we just copy
             // the text content of the element (we could create a hidden one to
