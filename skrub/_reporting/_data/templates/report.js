@@ -364,15 +364,16 @@ if (customElements.get('skrub-table-report') === undefined) {
             }
         }
 
-        rowName(row){
-            return row === -1? "header": String(row);
+        rowName(row) {
+            return row === -1 ? "header" : String(row);
         }
 
         findCellLeft(tablePart, row, col) {
             let newCol = col;
             while (newCol > 0) {
                 newCol -= 1;
-                let newCellId = `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
+                let newCellId =
+                    `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
                 let newCell = this.root.getElementById(newCellId);
                 if (newCell === null) {
                     return null;
@@ -389,7 +390,8 @@ if (customElements.get('skrub-table-report') === undefined) {
             let newCol = col;
             while (newCol < this.nCols - 1) {
                 newCol += 1;
-                let newCellId = `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
+                let newCellId =
+                    `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
                 let newCell = this.root.getElementById(newCellId);
                 if (newCell === null) {
                     return null;
@@ -436,7 +438,8 @@ if (customElements.get('skrub-table-report') === undefined) {
                 } else {
                     newRow -= 1;
                 }
-                let newCellId = `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${col}`;
+                let newCellId =
+                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${col}`;
                 let newCell = this.root.getElementById(newCellId);
                 if (newCell === null) {
                     return null;
