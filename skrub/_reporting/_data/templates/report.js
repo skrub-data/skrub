@@ -294,7 +294,17 @@ if (customElements.get('skrub-table-report') === undefined) {
                     kind: "SAMPLE_TABLE_CELL_DEACTIVATED"
                 });
             }
+        }
+
+        ACTIVATE_SAMPLE_TABLE_CELL(msg) {
+            if (msg.cellId == this.elem.id) {
+                this.activate();
+            }
+        }
+
+        SAMPLE_TABLE_CELL_DEACTIVATED(){
             this.elem.setAttribute("tabindex", -1);
+            this.elem.blur();
             delete this.elem.dataset.isActive;
             delete this.elem.dataset.isInActiveColumn;
         }
@@ -326,6 +336,133 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
     }
     SkrubTableReport.register(SampleTableCell);
+
+    class SampleTable extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.root = this.elem.getRootNode();
+            this.nHeadRows = this.elem.dataset.nHeadRows;
+            this.nTailRows = this.elem.dataset.nTailRows;
+            this.nCols = this.elem.dataset.nCols;
+            this.elem.addEventListener('keydown', (e) => this.onKeyDown(e));
+        }
+
+        onKeyDown(event) {
+            const cell = event.target;
+            let {tablePart, rowIdxInTablePart: row, columnIdx: col} = cell.dataset;
+            if (tablePart === undefined || row === undefined || col === undefined){
+                return;
+            }
+            [row, col] = [Number(row), Number(col)];
+            let newCellId = null;
+            switch (event.key){
+            case "ArrowLeft":
+                newCellId = this.findCellLeft(tablePart, row, col);
+                break;
+            case "ArrowRight":
+                newCellId = this.findCellRight(tablePart, row, col);
+                break;
+            case "ArrowUp":
+                newCellId = this.findCellUp(tablePart, row, col);
+                break;
+            case "ArrowDown":
+                newCellId = this.findCellDown(tablePart, row, col);
+                break;
+            case "Escape":
+                this.exchange.send({
+                    kind: "SAMPLE_TABLE_CELL_DEACTIVATED"
+                });
+                event.preventDefault();
+                return;
+            default:
+                return;
+            }
+            if (newCellId !== null) {
+                this.exchange.send({kind: "ACTIVATE_SAMPLE_TABLE_CELL", cellId: newCellId});
+                event.preventDefault();
+                return;
+            }
+        }
+
+        findCellLeft(tablePart, row, col){
+            let newCol = col;
+            while(newCol > 0){
+                newCol -= 1;
+                let newCellId = `sample-table-cell-${tablePart}-${row}-${newCol}`;
+                let newCell = this.root.getElementById(newCellId);
+                if (newCell === null) {
+                    return null;
+                }
+                if ("excludedByColumnFilter" in newCell.dataset){
+                    continue;
+                }
+                return newCell.id;
+            }
+            return null;
+        }
+
+        findCellRight(tablePart, row, col){
+            let newCol = col;
+            while(newCol < this.nCols - 1){
+                newCol += 1;
+                let newCellId = `sample-table-cell-${tablePart}-${row}-${newCol}`;
+                let newCell = this.root.getElementById(newCellId);
+                if (newCell === null) {
+                    return null;
+                }
+                if ("excludedByColumnFilter" in newCell.dataset){
+                    continue;
+                }
+                return newCell.id;
+            }
+            return null;
+        }
+
+        findCellDown(tablePart, row, col){
+            let newRow = row;
+            let newTablePart = tablePart;
+            while(newTablePart === "head" || newRow < this.nTailRows - 1){
+                if (newTablePart === "head" && newRow === this.nHeadRows - 1){
+                    if (this.nTailRows === 0){
+                        return null;
+                    }
+                    newTablePart = "tail";
+                    newRow = 0;
+                } else {
+                    newRow += 1;
+                }
+                let newCellId = `sample-table-cell-${newTablePart}-${newRow}-${col}`;
+                let newCell = this.root.getElementById(newCellId);
+                if (newCell === null) {
+                    return null;
+                }
+                return newCell.id;
+            }
+            return null;
+        }
+
+        findCellUp(tablePart, row, col){
+            let newRow = row;
+            let newTablePart = tablePart;
+            while(newTablePart === "tail" || newRow > 0){
+                if (newTablePart === "tail" && newRow === 0){
+                    newTablePart = "head";
+                    newRow = this.nHeadRows - 1;
+                } else {
+                    newRow -= 1;
+                }
+                let newCellId = `sample-table-cell-${newTablePart}-${newRow}-${col}`;
+                let newCell = this.root.getElementById(newCellId);
+                if (newCell === null) {
+                    return null;
+                }
+                return newCell.id;
+            }
+            return null;
+        }
+
+    }
+    SkrubTableReport.register(SampleTable);
 
     class SampleTableBar extends Manager {
         constructor(elem, exchange) {

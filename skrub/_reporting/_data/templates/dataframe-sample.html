@@ -3,7 +3,11 @@
     {% include "table-bar.html" %}
 
     <div class="horizontal-scroll">
-        <table class="pure-table pure-table-striped table-with-selectable-cells">
+        <table class="pure-table pure-table-striped table-with-selectable-cells"
+               data-manager="SampleTable"
+               data-n-head-rows="{{ summary['head']['data'].__len__() }}"
+               data-n-tail-rows="{{ summary['tail']['data'].__len__() }}"
+               data-n-cols="{{ summary.head.header.__len__() }}">
             <thead>
                 <tr>
                     {% for idx in range(summary.head.header.__len__()) %}
