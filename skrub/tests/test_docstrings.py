@@ -16,6 +16,8 @@ import pytest
 from numpydoc.validate import validate
 
 DOCSTRING_TEMP_IGNORE_SET = {
+    # TODO remove
+    "skrub._recipe",
     "skrub._table_vectorizer.SuperVectorizer",
     # The following are not documented in skrub (and thus are out of scope)
     # They are usually inherited from other libraries.
