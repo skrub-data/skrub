@@ -8,6 +8,8 @@
 .tab-list-wrapper {
     align-items: flex-start;
     border-bottom: 1px solid var(--darkg);
+    column-gap: 3rem;
+    row-gap: var(--micro);
 }
 
 .tab-list-scroller {
