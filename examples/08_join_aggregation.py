@@ -233,9 +233,10 @@ search = RandomizedSearchCV(
     model,
     param_distributions,
     scoring="neg_log_loss",
-    refit=True,
+    refit=False,
     n_jobs=2,
     n_iter=10,
+    cv=3,
     verbose=1,
 ).fit(X_train, y_train)
 print(f"This operation took {time() - tic:.1f}s")
