@@ -25,6 +25,7 @@ import pandas as pd
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 from sklearn.datasets._base import _sha256
+from sklearn.utils import Bunch
 from sklearn.utils.fixes import parse_version
 
 from skrub._utils import import_optional_dependency
@@ -1096,3 +1097,22 @@ def fetch_movielens(
         load_dataframe=load_dataframe,
         data_directory=data_directory,
     )
+
+
+def fetch_credit_fraud(load_dataframe=True, data_directory=None):
+    dataset_name_to_id = {
+        "products": "49102276",
+        "baskets": "49045249",
+    }
+    bunch = Bunch()
+    for dataset_name, figshare_id in dataset_name_to_id.items():
+        dataset = fetch_figshare(
+            figshare_id,
+            load_dataframe=load_dataframe,
+            data_directory=data_directory,
+        )
+        bunch[dataset_name] = dataset.X
+        bunch[f"source_{dataset_name}"] = dataset.source
+        bunch[f"path_{dataset_name}"] = dataset.path
+
+    return bunch
