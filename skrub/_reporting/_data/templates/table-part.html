@@ -12,14 +12,11 @@
             data-column-idx="{{ idx }}"
             data-row-idx-in-table-part="{{ row_idx }}"
             data-table-part="{{ table_part }}"
-            data-value-str="{{ row[idx].__str__() }}"
-            data-value-repr="{{ row[idx].__repr__() }}"
-            data-col-name-str="{{ summary.head.header[idx] }}"
-            data-col-name-repr="{{ summary.head.header[idx].__repr__() }}"
             {% if row[idx] | is_null %}
             data-value-is-none=""
             {% endif %}
-            data-dataframe-module="{{ summary.dataframe_module }}">
+            data-value-str="{{ row[idx].__str__() }}"
+            data-value-repr="{{ row[idx].__repr__() }}">
             {%- if  not (row[idx] | is_null) -%}
             {{ row[idx] }}
             {%- endif -%}

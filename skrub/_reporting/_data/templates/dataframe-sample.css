@@ -8,10 +8,6 @@
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-th[data-is-in-active-column] {
-    background-color: var(--darkgreen);
-}
-
 tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     background-color: var(--mediumgreen);
 }
@@ -20,6 +16,9 @@ tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     background-color: var(--lightgreen);
 }
 
+tr:nth-child(2n -1) th.table-cell[data-is-in-active-column] {
+    background-color: var(--darkgreen);
+}
 
 .table-cell[data-is-active] {
     outline: 2px dotted black;

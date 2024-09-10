@@ -13,10 +13,16 @@
                     {% for idx in range(summary.head.header.__len__()) %}
                     {% set column_name = summary.head.header[idx] %}
 
-                    <th scope="col" class="clickable ellided"
-                        data-manager="SampleTableHeader FilterableColumn"
+                    <th scope="col" class="clickable ellided table-cell"
+                        id="sample-table-cell-head-header-{{ idx }}"
+                        data-manager="SampleTableCell FilterableColumn"
                         data-column-name="{{ column_name }}"
-                        data-column-idx="{{ idx }}">{{ column_name }}</th>
+                        data-column-idx="{{ idx }}"
+                        data-row-idx-in-table-part="{{ -1 }}"
+                        data-table-part="head"
+                        data-value-str="{{ column_name.__str__() }}"
+                        data-value-repr="{{ column_name.__repr__() }}"
+                    >{{ column_name }}</th>
                     {% endfor %}
                 </tr>
             </thead>
