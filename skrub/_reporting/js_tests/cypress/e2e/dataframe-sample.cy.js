@@ -29,19 +29,17 @@ describe('test the dataframe sample tab', () => {
         cy.get('@bar').should('have.text', "");
         cy.get('@bar').should('not.be.visible');
 
-        // clicking on the header selects the first cell in the column
-        cy.get('@report').find('th[data-column-idx="1"]').first()
+        cy.get('@report').find('th[data-column-idx="1"]').first().as('header')
             .click();
-        cy.get('@report').find('td[data-column-idx="1"]').first()
-            .should('have.data', 'isActive', '');
-        cy.get('@bar').should('have.text', "POL");
+        cy.get('@header') .should('have.data', 'isActive', '');
+        cy.get('@bar').should('have.text', "department");
 
         cy.get('@report').find('[data-test="column-filter-select"]').as(
                 "filter")
             .select('String columns');
         cy.get('@bar').should('be.visible');
         cy.get('@announcement').should('not.be.visible');
-        cy.get('@bar').should('have.text', "POL");
+        cy.get('@bar').should('have.text', "department");
 
         cy.get('@filter').select('Numeric columns');
         cy.get('@bar').should('not.be.visible');
