@@ -234,7 +234,6 @@ search = RandomizedSearchCV(
     param_distributions,
     scoring="neg_log_loss",
     refit=False,
-    n_jobs=2,
     n_iter=10,
     cv=3,
     verbose=1,
