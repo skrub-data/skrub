@@ -2,6 +2,7 @@
 Implements the MinHashEncoder, which encodes string categorical features by
 applying the MinHash method to n-gram decompositions of strings.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -144,12 +145,10 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         if string == "" or len(grams) == 0:
             return np.zeros(self.n_components)
         for gram in grams:
-            hash_array = np.array(
-                [
-                    murmurhash3_32("".join(gram), seed=d, positive=True)
-                    for d in range(self.n_components)
-                ]
-            )
+            hash_array = np.array([
+                murmurhash3_32("".join(gram), seed=d, positive=True)
+                for d in range(self.n_components)
+            ])
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
@@ -169,19 +168,15 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
             The encoded string, using specified encoding scheme.
         """
         if self.minmax_hash:
-            return np.concatenate(
-                [
-                    ngram_min_hash(string, self.ngram_range, seed, return_minmax=True)
-                    for seed in range(self.n_components // 2)
-                ]
-            )
+            return np.concatenate([
+                ngram_min_hash(string, self.ngram_range, seed, return_minmax=True)
+                for seed in range(self.n_components // 2)
+            ])
         else:
-            return np.array(
-                [
-                    ngram_min_hash(string, self.ngram_range, seed)
-                    for seed in range(self.n_components)
-                ]
-            )
+            return np.array([
+                ngram_min_hash(string, self.ngram_range, seed)
+                for seed in range(self.n_components)
+            ])
 
     def _compute_hash_batched(self, batch, hash_func):
         """Function called to compute the hashes of a batch of strings.
@@ -300,4 +295,8 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         """
 
         check_is_fitted(self)
-        return [f"{self._input_name}_{i}" for i in range(self.n_components)]
+        num_digits = len(str(self.n_components - 1))
+        return [
+            f"{self._input_name}_{str(i).zfill(num_digits)}"
+            for i in range(self.n_components)
+        ]
