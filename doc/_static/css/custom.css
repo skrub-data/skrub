@@ -243,3 +243,14 @@ a.sk-btn-orange {
 a.sk-btn-orange:hover {
     background-color: #fcb575;  /* --sk-orange-tint-3 */
 }
+
+/* Download/laucher links and top hint (sphinx-gallery) */
+
+.sphx-glr-download-link-note,
+.binder-badge,
+.lite-badge,
+.sphx-glr-download-jupyter,
+.sphx-glr-download-python,
+.sphx-glr-download-zip {
+  display: none;
+}

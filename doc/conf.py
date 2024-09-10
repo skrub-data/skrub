@@ -199,7 +199,13 @@ html_theme_options = {
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "footer_start": ["test.html", "test.html"],
-    # "secondary_sidebar_items": ["index.html"],  # Remove the source buttons
+    # When specified as a dictionary, the keys should follow glob-style patterns, as in
+    # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-exclude_patterns
+    # In particular, "**" specifies the default for all pages
+    # Use :html_theme.sidebar_secondary.remove: for file-wide removal
+    "secondary_sidebar_items": {
+        "**": ["page-toc", "sourcelink", "sg_download_links", "sg_launcher_links"]
+    },
     "switcher": {
         "json_url": (
             "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/version.json"

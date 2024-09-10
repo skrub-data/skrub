@@ -22,6 +22,20 @@ Minor changes
   displayed in a notebook), now use the same font as the surrounding page.
   :pr:`1038` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The content of the dataframe corresponding to the currently selected table
+  cell in the TableReport can be copied without actually selecting the text (as
+  in a spreadsheet).
+  :pr:`1048` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The selection of content displayed in the TableReport's copy-paste boxes has
+  been removed. Now they always display the value of the selected item. When
+  copied, the repr of the selected item is copied to the clipboard.
+  :pr:`1058` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* A "stats" panel has been added to the TableReport, showing summary statistics
+  for all columns (number of missing values, mean, etc. -- similar to
+  ``pandas.info()`` ) in a table.
+  :pr:`1056` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.3.0
 =============
