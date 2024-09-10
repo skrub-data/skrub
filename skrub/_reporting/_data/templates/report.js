@@ -321,6 +321,9 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         onKeyDown(event) {
+            if (hasModifier(event)) {
+                return;
+            }
             const cell = event.target;
             let {
                 tablePart,
@@ -536,6 +539,9 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         onKeyDown(event) {
+            if (hasModifier(event)) {
+                return;
+            }
             switch (event.key) {
                 case "ArrowLeft":
                     this.selectPreviousTab();
@@ -660,5 +666,9 @@ if (customElements.get('skrub-table-report') === undefined) {
             document.execCommand("copy");
             selection.removeAllRanges();
         }
+    }
+
+    function hasModifier(event) {
+        return event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
     }
 }

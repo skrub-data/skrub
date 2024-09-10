@@ -68,6 +68,9 @@ describe('test the dataframe sample tab', () => {
         cy.get('@v00').type('{downArrow}');
         cy.get('@report').find('td').contains('v 01').as('v01').should(
             'have.focus');
+        // with a modifier key does nothing
+        cy.get('@v00').type('{shift+downArrow}');
+        cy.get('@v00').should('have.focus');
 
         // we are on the leftmost visible column so move left should do nothing
         cy.get('@v01').type('{leftArrow}');
