@@ -299,7 +299,6 @@ a.sk-btn-orange:hover {
 .contributors-list {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center; /* Centers the content horizontally */
     gap: 30px; /* Adds space between contributors */
 }
 .contributor {
