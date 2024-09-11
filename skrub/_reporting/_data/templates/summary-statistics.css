@@ -1,3 +1,8 @@
+.summary-stats-table {
+    margin: 2px;
+}
+
+
 th.sort-button-group-wrapper {
     --btn-width: 2rem;
     --btn-group-width: calc(var(--btn-width) * 2);
@@ -33,6 +38,10 @@ th.sort-button-group-wrapper {
     color: #222;
     padding: var(--tiny);
     transform: translateY(-1px);
+}
+
+.sort-button-group > .sort-button:focus-visible {
+    z-index: 2;
 }
 
 .sort-button-group > .sort-button ~ .sort-button {
