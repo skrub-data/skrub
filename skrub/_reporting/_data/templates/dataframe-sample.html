@@ -1,3 +1,7 @@
+{% macro kbd(text) %}
+<span class="keyboard-key">{{ text }}</span>
+{% endmacro %}
+
 <article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
     {% include "table-bar.html" %}
@@ -45,11 +49,23 @@
         </table>
     </div>
 
-    <p>
+    <div class="table-footer">
+    <div>
         <strong>{{ summary.n_rows | format_number }}</strong> rows ✕
         <strong data-manager="ColumnFilterMatchCount"
             data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong> columns.
-    </p>
+    </div>
+    <div class="keyboard-hints">
+        <div>
+            {{ kbd("Ctrl-C") }}
+            {{ kbd("←") }}
+            {{ kbd("↑") }}
+            {{ kbd("↓") }}
+            {{ kbd("→") }}
+            {{ kbd("Esc") }}
+        </div>
+    </div>
+    </div>
 
 
     <div class="column-summary-group columns-in-sample-tab">
