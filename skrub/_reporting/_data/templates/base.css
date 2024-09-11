@@ -9,6 +9,7 @@
     --huge: 1.5rem;
     --max-content-width: 45rem;
     --radius: 0.25rem;
+    --line-height: 1.5;
 
     --lightgreen: #eafaea;
     --mediumgreen: #d6f5d6;
@@ -19,12 +20,15 @@
     --mediumg: #d0d0d0;
     --lightg: #f0f0f0;
 
+    --darkred: #a32929;
+    --red: #dd0000;
+
     --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
 }
 
 :host {
     font-size: 1rem;
-    line-height: 1.5;
+    line-height: var(--line-height);
     -webkit-text-size-adjust: 100%;
 }
 
@@ -201,7 +205,6 @@ dd {
 .flex-reverse {
     display: flex;
     flex-wrap: wrap-reverse;
-    row-gap: var(--tiny);
 }
 
 .space-between {
@@ -249,7 +252,7 @@ dd {
 }
 
 .critical {
-    color: red;
+    color: var(--red);
 }
 
 /* Misc tweaks */
@@ -261,16 +264,8 @@ dd {
     font-size: var(--large);
 }
 
-.announcement  {
-    font-size: var(--small);
-    padding-block-start: var(--small);
-    padding-block-end: var(--small);
-}
-
 .important-note {
     background-color: var(--lightgreen);
-    padding: var(--small);
+    padding: var(--tiny);
     border-radius: var(--radius);
-    margin-top: var(--tiny);
-    margin-bottom: var(--small);
 }

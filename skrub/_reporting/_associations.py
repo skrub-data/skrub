@@ -59,7 +59,7 @@ def _stack_symmetric_associations(associations, column_names):
         associations[order],
     )
     return [
-        (column_names[left], column_names[right], a)
+        (column_names[left], column_names[right], float(a))
         for (left, right, a) in zip(left_indices, right_indices, associations)
     ]
 

@@ -1,28 +1,18 @@
 {% import "buttons.html" as buttons %}
 
-<div class="card column-summary"
-     id="{{ col_id }}"
-     data-name-repr="{{ column.name.__repr__() }}"
-     data-column-name="{{ column.name }}"
-     data-manager="FilterableColumn {% if in_sample_tab %}SampleColumnSummary{% endif %}"
-     {% if column.value_is_constant %}
-     data-constant-column
-     {% endif %}
-     {% if in_sample_tab %}
-     data-role="sample-column"
-     data-hidden
-     {% else %}
-     data-role="selectable-column"
-     {% endif %}>
+<div class="card column-summary" id="{{ col_id }}"
+    data-name-repr="{{ column.name.__repr__() }}" data-column-name="{{ column.name }}"
+    data-manager="FilterableColumn {% if in_sample_tab %}SampleColumnSummary{% endif %}"
+    {% if column.value_is_constant %} data-constant-column {% endif %}
+    {% if in_sample_tab %} data-role="sample-column" data-hidden {% else %}
+    data-role="selectable-column" {% endif %}>
     <div class="card-header">
         <h3 class="margin-r-t">
-        {% if not in_sample_tab %}
+            {% if not in_sample_tab %}
             <input data-role="select-column-checkbox"
-                   data-manager="SelectColumnCheckBox"
-                   type="checkbox"
-                   checked>
-        {% endif %}
-        <span class="select-all wrap-long-name">{{ column.name }}</span>
+                data-manager="SelectColumnCheckBox" type="checkbox" checked>
+            {% endif %}
+            <span class="select-all wrap-long-name">{{ column.name }}</span>
         </h3>
         <span>{{ column.dtype }}</span>
         {%- if in_sample_tab -%}
@@ -33,29 +23,33 @@
         <div>
             <dl>
                 <dt>Null values</dt>
-                <dd class="{{ column.nulls_level }}">{{ column.null_count }} ({{ column.null_proportion | format_percent }})</dd>
+               <dd class="{{ column.nulls_level }}">{{ column.null_count | format_number }} ({{ column.null_proportion | format_percent }})</dd>
                 {% if not column.value_is_constant %}
                 {% if column.n_unique %}
                 <dt>Unique values</dt>
-                <dd>{{ column.n_unique }} ({{ column.unique_proportion | format_percent }})</dd>
+                <dd>{{ column.n_unique | format_number }} ({{ column.unique_proportion | format_percent }})</dd>
                 {% endif %}
                 {% if "mean" in column %}
                 <dt>Mean ± Std</dt>
-                <dd>{{ column["mean"] | format_number }} ± {{ column["standard_deviation"] | format_number }}</dd>
+                <dd>{{ column["mean"] | format_number }} ±
+                    {{ column["standard_deviation"] | format_number }}
+                </dd>
                 {% endif %}
                 {% if column.quantiles %}
                 <dt>Median ± IQR</dt>
-                <dd>{{ column.quantiles[0.5] | format_number }} ± {{ column["inter_quartile_range"] | format_number}}</dd>
+                <dd>{{ column.quantiles[0.5] | format_number }} ±
+                    {{ column["inter_quartile_range"] | format_number}}
+                </dd>
 
-                <dt>Min ; Max</dt>
+                <dt>Min | Max</dt>
                 <dd>
-                    {{ column.quantiles[0.0] | format_number }} ;
+                    {{ column.quantiles[0.0] | format_number }} |
                     {{ column.quantiles[1.0] | format_number }}
                 </dd>
                 {% elif "min" in column %}
-                <dt>Min ; Max</dt>
+                <dt>Min | Max</dt>
                 <dd>
-                    {{ column.min | format_number }} ;
+                    {{ column.min | format_number }} |
                     {{ column.max | format_number }}
                 </dd>
                 {% endif %}
@@ -71,69 +65,46 @@
         {% if column.value_is_constant %}
         {% set val_id = "{}-constant-value".format(col_id) %}
         <div class="margin-v-t">
-        <strong>Constant value:</strong>
-        <div class="copybutton-grid">
-            <div class="box">
-                <pre id="{{ val_id }}">{{ column.constant_value }}</pre>
-                {{ buttons.copybutton(val_id) }}
+            <strong>Constant value:</strong>
+            <div class="copybutton-grid">
+                <div class="box">
+                    <pre id="{{ val_id }}">{{ column.constant_value }}</pre>
+                    {{ buttons.copybutton(val_id) }}
+                </div>
             </div>
-        </div>
         </div>
         {% endif %}
 
         {% for plot_name in column.plot_names %}
         <div>
-        <img class="pure-img" src="{{ column[plot_name] | svg_to_img_src | safe }}" alt="{{ plot_name }}">
-        {% if plot_name == "value_counts_plot" %}
-        <details data-test="frequent-values-details">
-            <summary>Most frequent values</summary>
-            <div class="shrink">
-            <div class="copybutton-grid" data-manager="ContentSelect">
-                {% set selector_id = "{}_freq_value_select_snippet".format(col_id) %}
-                <select class="grid-separator"
-                        data-role="content-select"
-                        id="{{ selector_id }}"
-                        autocomplete="off"
-                        data-test="frequent-values-select-snippet">
-                    <option value="value">Display value</option>
-                    <option value="repr">Python expression</option>
-                    <option value="filter">Filtered dataframe</option>
-                </select>
+            <img class="pure-img" src="{{ column[plot_name] | svg_to_img_src | safe }}"
+                alt="{{ plot_name }}">
+            {% if plot_name == "value_counts_plot" %}
+            <details data-test="frequent-values-details">
+                <summary>Most frequent values</summary>
+                <div class="shrink">
+                    <div class="copybutton-grid">
+                        {% for value in column.value_counts %}
+                        {% set val_id = "{}-freq-value-{}".format(col_id, loop.index0) %}
+                        <div class="box" data-test="frequent-value-{{ loop.index0 }}">
+                            <pre id="{{ val_id }}"
+                                data-copy-text="{{ value.__repr__()  }}">{{ value }}</pre>
+                            {{ buttons.copybutton(val_id) }}
+                        </div>
 
-                {% for value in column.value_counts %}
-                {% set val_id = "{}-freq-value-{}".format(col_id, loop.index0) %}
-                <div class="box"
-                data-test="frequent-value-{{ loop.index0 }}">
-                <pre id="{{ val_id }}"
-                     data-role="content-display"
-                     data-selector-id="{{ selector_id }}"
-                     data-value="{{ value }}"
-                     data-repr="{{ value.__repr__() }}"
-                     data-filter="{{ value | filter_equal_snippet(column.name, summary.dataframe_module) }}"
-                 >{{ value }}</pre>
-                {{ buttons.copybutton(val_id) }}
+                        {% endfor %}
+                        <span class="grid-separator">List:</span>
+                        {% set val_id = "{}-freq-value-list".format(col_id) %}
+                        <div class="box">
+                            <pre id="{{ val_id }}"
+                                data-copy-text="{{ column.value_counts | list }}">{{ column.value_counts.keys() | list }}</pre>
+                            {{ buttons.copybutton(val_id) }}
+                        </div>
+                    </div>
                 </div>
-
-            {% endfor %}
-            <span class="grid-separator">List:</span>
-            {% set val_id = "{}-freq-value-list".format(col_id) %}
-
-            <div class="box">
-            <pre
-                 id="{{ val_id }}"
-                 data-selector-id="{{ selector_id }}"
-                 data-content-value="{{ column.value_counts | list }}"
-                 data-content-repr="{{ column.value_counts | list }}"
-                 data-content-filter="{{ column.value_counts | list | filter_isin_snippet(column.name, summary.dataframe_module) }}"
-            >{{ column.value_counts.keys() | list }}</pre>
-            {{ buttons.copybutton(val_id) }}
-            </div>
-            </div>
-            </div>
-        </details>
-        {% endif %}
+            </details>
+            {% endif %}
         </div>
         {% endfor %}
-
     </div>
 </div>
