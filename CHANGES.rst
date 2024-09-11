@@ -34,8 +34,8 @@ Minor changes
 
 * A "stats" panel has been added to the TableReport, showing summary statistics
   for all columns (number of missing values, mean, etc. -- similar to
-  ``pandas.info()`` ) in a table.
-  :pr:`1056` by :user:`Jérôme Dockès <jeromedockes>`.
+  ``pandas.info()`` ) in a table. It can be sorted by each column.
+  :pr:`1056` and :pr:`1068` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.3.0
 =============

@@ -1,15 +1,17 @@
 {% macro th(name, ascending, descending) %}
-<th class="sort-button-group-wrapper" scope="col" >
+<th class="sort-button-group-wrapper" scope="col">
     {% if name %}
     <span class="margin-r-t">{{ name }}</span>
     {% endif %}
     <div class="sort-button-group">
-    <button class="sort-button" data-role="sort-button" data-direction="ascending" title="Sort {{ ascending }}">
-        {% include "icons/arrow-down.svg" %}
-    </button>
-    <button class="sort-button" data-role="sort-button" data-direction="descending" title="Sort {{ descending }}">
-        {% include "icons/arrow-up.svg" %}
-    </button>
+        <button class="sort-button" type="button" data-role="sort-button"
+            data-direction="ascending" title="Sort {{ ascending }}">
+            {% include "icons/arrow-down.svg" %}
+        </button>
+        <button class="sort-button" type="button" data-role="sort-button"
+            data-direction="descending" title="Sort {{ descending }}">
+            {% include "icons/arrow-up.svg" %}
+        </button>
     </div>
 </th>
 {% endmacro %}
@@ -19,10 +21,10 @@
 {% endmacro %}
 
 <article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
-         data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
+    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
     <div class="horizontal-scroll">
         <table class="pure-table pure-table-bordered summary-stats-table"
-               data-manager="sortableTable">
+            data-manager="sortableTable">
             <thead>
                 <tr>
                     {{ th("Column", "from first column to last column", "from last column to first column") }}
@@ -39,39 +41,48 @@
             </thead>
             <tbody>
                 {% for column in summary.columns %}
-                <tr data-manager="FilterableColumn"
-                    data-column-name="{{ column.name }}"
+                <tr data-manager="FilterableColumn" data-column-name="{{ column.name }}"
                     data-column-idx="{{ loop.index0 }}">
-                    <td data-value="{{ loop.index0 }}" data-numeric>{{ loop.index0 }}</td>
+                    <td data-value="{{ loop.index0 }}" data-numeric>{{ loop.index0 }}
+                    </td>
                     <td>{{ column.name }}</td>
                     <td>{{ column.dtype }}</td>
-                    <td class="{{ column.nulls_level }}" data-value="{{ column.null_count }}" data-numeric>
+                    <td class="{{ column.nulls_level }}"
+                        data-value="{{ column.null_count }}" data-numeric>
                         {{ column.null_count }} ({{ column.null_proportion | format_percent }})
                     </td>
 
                     {% if column.n_unique %}
-                    <td data-value="{{ column.n_unique }}" data-numeric>{{ column.n_unique }} ({{ column.unique_proportion | format_percent }})
+                    <td data-value="{{ column.n_unique }}" data-numeric>
+                        {{ column.n_unique }} ({{ column.unique_proportion | format_percent }})
                     </td>
                     {% else %}
                     <td data-value="nan" data-numeric></td>
                     {% endif %}
 
                     {% if "mean" in column %}
-                    <td data-value="{{ column['mean'] }}" data-numeric>{{ column["mean"] | format_number }}</td>
-                    <td data-value="{{ column['standard_deviation'] }}" data-numeric>{{ column["standard_deviation"] | format_number }}</td>
+                    <td data-value="{{ column['mean'] }}" data-numeric>
+                        {{ column["mean"] | format_number }}</td>
+                    <td data-value="{{ column['standard_deviation'] }}" data-numeric>
+                        {{ column["standard_deviation"] | format_number }}</td>
                     {% else %}
                     <td data-value="nan" data-numeric></td>
                     <td data-value="nan" data-numeric></td>
                     {% endif %}
 
                     {% if column.quantiles %}
-                    <td data-value="{{ column.quantiles[0.0] }}" data-numeric>{{ column.quantiles[0.0] | format_number }}</td>
-                    <td data-value="{{ column.quantiles[0.5] }}" data-numeric>{{ column.quantiles[0.5] | format_number }}</td>
-                    <td data-value="{{ column.quantiles[1.0] }}" data-numeric>{{ column.quantiles[1.0] | format_number }}</td>
+                    <td data-value="{{ column.quantiles[0.0] }}" data-numeric>
+                        {{ column.quantiles[0.0] | format_number }}</td>
+                    <td data-value="{{ column.quantiles[0.5] }}" data-numeric>
+                        {{ column.quantiles[0.5] | format_number }}</td>
+                    <td data-value="{{ column.quantiles[1.0] }}" data-numeric>
+                        {{ column.quantiles[1.0] | format_number }}</td>
                     {% elif "min" in column %}
-                    <td data-value="{{ column.min }}" data-numeric>{{ column.min | format_number }}</td>
+                    <td data-value="{{ column.min }}" data-numeric>
+                        {{ column.min | format_number }}</td>
                     <td data-value="nan" data-numeric></td>
-                    <td data-value="{{ column.max }}" data-numeric>{{ column.max | format_number }}</td>
+                    <td data-value="{{ column.max }}" data-numeric>
+                        {{ column.max | format_number }}</td>
                     {% else %}
                     <td data-value="nan" data-numeric></td>
                     <td data-value="nan" data-numeric></td>
