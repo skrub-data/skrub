@@ -15,8 +15,8 @@ still full-width (unlike the article) #}
     <div class="container sk-landing-container">
 	    <div class="row">
 	      <div class="col-md-6 mb-3 mb-md-0">
-	        <h1 class="sk-landing-header text-white text-monospace">skrub</h1>
-	        <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
+            <h1 class="sk-landing-header text-white text-monospace">skrub</h1>
+            <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
 	      </div>
 	      <div class="col-md-6 mb-3 d-flex">
 	        <ul class="sk-landing-header-body">
@@ -31,15 +31,17 @@ still full-width (unlike the article) #}
 {% endblock docs_navbar %}
 
 {% block docs_main %}
-<div class="container-fluid schema-container">
-  <div class="row justify-content-center align-items-center text-center">
-    <div class="col-12" style="max-width: 80%;">
+<div class="container">
+  <div class="row mt-3 mt-md-5">
+    <div class="col-md-4 mb-3 mb-md-0">
       <p class="hero-description">skrub is a Python library to ease preprocessing and feature engineering for
-        tabular machine learning. Our long-term goal is to directly connect
+        tabular machine learning.</p>
+      <p class="hero-description">
+        Our long-term goal is to directly connect
         database tables to machine learning estimators.
       </p>
     </div>
-    <div class="col-12">
+    <div class="col-md-8 d-flex align-items-center justify-content-center">
       <a class="btn sk-btn-orange mb-1" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">Getting started</a>
     </div>
   </div>
@@ -125,7 +127,7 @@ still full-width (unlike the article) #}
       {% include "demo_table_report_code.html" %}
     </div>
     <div class="col-md-7">
-      <p class="click-table-report-hint">Click anywhere on the table!</p>
+      <p class="click-table-report-hint">Click anywhere on the table ↓</p>
 
       {% include "demo_table_report_generated.html" %}
 
@@ -139,17 +141,20 @@ still full-width (unlike the article) #}
 
 <div class="container mb-5 mt-5">
   <div class="row justify-content-center"> <!-- Centers the row content -->
-    <div class="col-md-10">
+    <div class="col-md-9 mb-5 mb-md-0">
       <h2 class="text-center mt-0 mb-4">Our community</h2> <!-- Centers the header text -->
       <p class="mb-5 text-center">
         The Skrub project is powered by the efforts of a world-wide community of contributors. Here we display a randomly selected group of
         30 contributors.</p>
-      <div class="contributors-list" id="contributors-list">
-      <!-- Contributors will be dynamically added here -->
-      </div>
-      <div class="mt-5 text-center" style="font-size: 1.25rem;">
-        <a href="https://github.com/skrub-data/skrub/graphs/contributors">And many more!</a>
-      </div>
+        <div class="contributors-list" id="contributors-list">
+        <!-- Contributors will be dynamically added here -->
+        </div>
+        <div class="mt-5 text-center" style="font-size: 1.25rem;">
+          <a href="https://github.com/skrub-data/skrub/graphs/contributors">And many more!</a>
+        </div>
+    </div>
+    <div class="col-md-3 d-flex align-items-center justify-content-center">
+      <a class="btn sk-btn-orange mb-1" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">Getting started</a>
     </div>
   </div>
 </div>
@@ -196,14 +201,6 @@ contributors.forEach(contributor => {
 
 fetchContributors();
 </script>
-
-<div class="container-fluid schema-container my-5">
-  <div class="row justify-content-center align-items-center text-center">
-    <div class="col-12">
-      <a class="btn sk-btn-orange mb-1" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">Getting started</a>
-    </div>
-  </div>
-</div>
 
 
 {% endblock docs_main %}
