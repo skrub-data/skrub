@@ -49,5 +49,6 @@ th.sort-button-group-wrapper {
 
 .sort-button[data-is-active]{
     background: var(--lightgreen);
+    transform: none;
     color: black;
 }
