@@ -20,7 +20,7 @@ th.sort-button-group-wrapper {
     left: 100%;
     transform: translateX(calc(-1 * var(--btn-group-width) + 1px));
     display: flex;
-    background: #999;
+    background: #aaa;
     gap: 0px;
     padding: 0px;
     padding-bottom: 1px;
