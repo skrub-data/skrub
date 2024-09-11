@@ -1,10 +1,16 @@
 {% macro th(name, ascending, descending) %}
-<th scope="col" >
+<th class="sort-button-group-wrapper" scope="col" >
     {% if name %}
     <span class="margin-r-t">{{ name }}</span>
     {% endif %}
-    <button data-role="sort-button" data-direction="ascending" title="Sort {{ ascending }}">↓</button>
-    <button data-role="sort-button" data-direction="descending" title="Sort {{ descending }}">↑</button>
+    <div class="sort-button-group">
+    <button class="sort-button" data-role="sort-button" data-direction="ascending" title="Sort {{ ascending }}">
+        {% include "icons/arrow-down.svg" %}
+    </button>
+    <button class="sort-button" data-role="sort-button" data-direction="descending" title="Sort {{ descending }}">
+        {% include "icons/arrow-up.svg" %}
+    </button>
+    </div>
 </th>
 {% endmacro %}
 
@@ -19,7 +25,7 @@
                data-manager="sortableTable">
             <thead>
                 <tr>
-                    {{ th("", "from first column to last column", "from last column to first column") }}
+                    {{ th("Index", "from first column to last column", "from last column to first column") }}
                     {{ th("Column name", "by column name from A to Z", "by column name from Z to A") }}
                     {{ th("dtype", "by dtype from A to Z", "by dtype from Z to A") }}
                     {{ th1("Null values", "the fewest null values", "the most null values") }}

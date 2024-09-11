@@ -473,7 +473,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         sort(event) {
             const headerRow = this.elem.querySelector("thead tr");
             const colHeaders = Array.from(headerRow.querySelectorAll("th"));
-            const colIdx = colHeaders.findIndex(th => Array.from(th.childNodes)
+            const colIdx = colHeaders.findIndex(th => Array.from(th.querySelectorAll("button"))
                 .includes(event.target));
             const body = this.elem.querySelector("tbody");
             const rows = Array.from(body.querySelectorAll("tr"));
@@ -481,6 +481,8 @@ if (customElements.get('skrub-table-report') === undefined) {
 
             rows.sort((a, b) => this.compare(a, b, colIdx, ascending));
 
+            this.elem.querySelectorAll("button").forEach(b => b.removeAttribute("data-is-active"));
+            event.target.dataset.isActive = "";
             body.innerHTML = "";
             for (let r of rows) {
                 body.appendChild(r);
