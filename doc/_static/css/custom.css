@@ -171,7 +171,6 @@ div.sk-landing-bg-more-info dd {
 
 div.sk-landing-bg {
     background-image: linear-gradient(160deg, rgba(0,48,70,.75) 0%, rgba(0,118,179,.75) 17%, rgba(255,239,193,.75) 59%, rgba(255,149,40,.75) 100%);
-    margin-top: -18px !important;
     margin-bottom: 0px;
 }
 
@@ -260,6 +259,7 @@ a.sk-btn-orange:hover {
     color: #DA7007; /* Darker text color for the title */
     font-weight: 600; /* Bold font for title */
     margin-bottom: 10px; /* Spacing below title */
+    margin-top: 0px;
 }
 
 .feature-text {
