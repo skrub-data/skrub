@@ -18,6 +18,7 @@ Downloading a dataset
    fetch_drug_directory
    fetch_world_bank_indicator
    fetch_movielens
+   fetch_credit_fraud
    fetch_ken_table_aliases
    fetch_ken_types
    fetch_ken_embeddings

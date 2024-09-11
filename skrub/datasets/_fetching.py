@@ -1100,6 +1100,29 @@ def fetch_movielens(
 
 
 def fetch_credit_fraud(load_dataframe=True, data_directory=None):
+    """Fetch the credit fraud dataset from figshare.
+
+    This is a imbalanced binary classification use-case. This dataset consists in
+    two tables:
+
+    - baskets, containing the binary fraud target label)
+    - products
+
+    Baskets contain at least one product each, so aggregation then joining operations
+    are required to build a design matrix.
+
+    More details on \
+        `Figshare <https://figshare.com/articles/dataset/bnp_fraud_parquet/26892673>`_
+
+    Parameters
+    ----------
+    load_dataframe : bool, default=True
+        Whether or not to load the dataset in memory after download.
+
+    data_directory : str, default=None
+        The directory to which the dataset will be written during the download.
+        If None, the directory is set to ~/skrub_data.
+    """
     dataset_name_to_id = {
         "products": "49102276",
         "baskets": "49045249",
