@@ -280,7 +280,7 @@ def test_get_feature_names_out(df_module):
     ],
 )
 def test_zero_padding_in_feature_names_out(df_module, n_components, expected_columns):
-    """Test that ``get_feature_names_out`` returns the correct zero-padded feature names."""
+    """Check that the feature names are zero-padded."""
     encoder = MinHashEncoder(n_components=n_components)
     X = df_module.make_column("col", ["a", "b", "c", "d", "e", "f", "g", "h"])
     encoder.fit(X)
