@@ -23,8 +23,7 @@ The |Recipe| brings 3 major benefits:
 - When we add a processing step, we can specify a range for any of its
   parameters, rather than a single value. Thus the ranges of hyperparameters to
   consider for tuning are provided directly inside the estimator that uses
-  them. Moreover, these hyperparameters can be given human-readable names which
-  are useful for inspecting hyperparameter search results.
+  them.
 
 .. admonition:: The Recipe has no ``fit()`` or ``predict()``
 
