@@ -14,16 +14,14 @@ th.sort-button-group-wrapper {
 
 .sort-button-group {
     position: absolute;
-    top: 0;
+    top: -1px;
     bottom: 0;
     right: calc(-1 * var(--btn-group-width));
     left: 100%;
     transform: translateX(calc(-1 * var(--btn-group-width) + 1px));
     display: flex;
-    background: #aaa;
     gap: 0px;
     padding: 0px;
-    padding-bottom: 1px;
 }
 
 .sort-button {
@@ -33,11 +31,9 @@ th.sort-button-group-wrapper {
     flex-grow: 1;
     border-radius: 0;
     border: 1px solid #aaa;
-    border-bottom: none;
     background: #e0e0e0;
     color: #222;
     padding: var(--tiny);
-    transform: translateY(-1px);
 }
 
 .sort-button-group > .sort-button:focus-visible {
@@ -48,16 +44,15 @@ th.sort-button-group-wrapper {
     margin-left: -1px;
 }
 
-.sort-button:active {
-    transform: none;
-}
-
 .sort-button:hover {
     background: #eeeeee;
 }
 
+.sort-button:active {
+    background: #cccccc;
+}
+
 .sort-button[data-is-active]{
     background: var(--lightgreen);
-    transform: none;
     color: black;
 }
