@@ -37,6 +37,9 @@ Minor changes
   ``pandas.info()`` ) in a table.
   :pr:`1056` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* Added zero padding for column names in :class:`MinHashEncoder` to improve column ordering consistency.
+  :pr:`1069` by :user:`Shreekant Nandiyawar <Shree7676>`.
+
 Release 0.3.0
 =============
 
