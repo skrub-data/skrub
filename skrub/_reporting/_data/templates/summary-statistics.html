@@ -1,4 +1,4 @@
-{% macro th(name, ascending, descending) %}
+{% macro th(name, ascending, descending, is_numeric) %}
 <th class="sort-button-group-wrapper" scope="col">
     {% if name %}
     <span class="margin-r-t">{{ name }}</span>
@@ -6,18 +6,26 @@
     <div class="sort-button-group">
         <button class="sort-button" type="button" data-role="sort-button"
             data-direction="ascending" title="Sort {{ ascending }}">
-            {% include "icons/arrow-down.svg" %}
+            {% if is_numeric %}
+            {% include "icons/sort-numeric-down.svg" %}
+            {% else %}
+            {% include "icons/sort-alpha-down.svg" %}
+            {% endif %}
         </button>
         <button class="sort-button" type="button" data-role="sort-button"
             data-direction="descending" title="Sort {{ descending }}">
-            {% include "icons/arrow-up.svg" %}
+            {% if is_numeric %}
+            {% include "icons/sort-numeric-down-alt.svg" %}
+            {% else %}
+            {% include "icons/sort-alpha-down-alt.svg" %}
+            {% endif %}
         </button>
     </div>
 </th>
 {% endmacro %}
 
-{% macro th1(name, low, high) %}
-{{ th(name, "from columns with " + low + " to columns with " + high, "from columns with " + high + " to columns with " + low) }}
+{% macro th1(name, low, high, is_numeric) %}
+{{ th(name, "from columns with " + low + " to columns with " + high, "from columns with " + high + " to columns with " + low, is_numeric) }}
 {% endmacro %}
 
 <article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
@@ -27,16 +35,16 @@
             data-manager="sortableTable">
             <thead>
                 <tr>
-                    {{ th("Column", "from first column to last column", "from last column to first column") }}
-                    {{ th("Column name", "by column name from A to Z", "by column name from Z to A") }}
-                    {{ th("dtype", "by dtype from A to Z", "by dtype from Z to A") }}
-                    {{ th1("Null values", "the fewest null values", "the most null values") }}
-                    {{ th1("Unique values", "the fewest unique values", "the most unique values") }}
-                    {{ th1("Mean", "the lowest mean", "the highest mean") }}
-                    {{ th1("Std", "the lowest standard deviation", "the highest standard deviation") }}
-                    {{ th1("Min", "the lowest minimum value", "the highest minimum value") }}
-                    {{ th1("Median", "the lowest median", "the highest median") }}
-                    {{ th1("Max", "the lowest maximum value", "the highest maximum value") }}
+                    {{ th("Column", "from first column to last column", "from last column to first column", True) }}
+                    {{ th("Column name", "by column name from A to Z", "by column name from Z to A", False) }}
+                    {{ th("dtype", "by dtype from A to Z", "by dtype from Z to A", False) }}
+                    {{ th1("Null values", "the fewest null values", "the most null values", True) }}
+                    {{ th1("Unique values", "the fewest unique values", "the most unique values", True) }}
+                    {{ th1("Mean", "the lowest mean", "the highest mean", True) }}
+                    {{ th1("Std", "the lowest standard deviation", "the highest standard deviation", True) }}
+                    {{ th1("Min", "the lowest minimum value", "the highest minimum value", True) }}
+                    {{ th1("Median", "the lowest median", "the highest median", True) }}
+                    {{ th1("Max", "the lowest maximum value", "the highest maximum value", True) }}
                 </tr>
             </thead>
             <tbody>
