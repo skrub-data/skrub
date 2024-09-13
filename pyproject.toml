@@ -54,6 +54,7 @@ doc = [
     "sphinx-gallery",
     "sphinxext-opengraph",
     "statsmodels",
+    "pyarrow",
 ]
 lint = [
     "black==23.3.0",
