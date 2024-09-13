@@ -12,10 +12,13 @@ Because fraud is rare, this dataset is extremely imbalanced, with a prevalence o
 
 The data consists of two distinct entities: e-commerce "baskets", and "products".
 Baskets can be tagged fraudulent (1) or not (0), and are essentially a list of products
-of variable size. Our aim is to predict which baskets are fraudulent.
+of variable size. Each basket is linked to many products, e.g. basket 1 can have
+product A, B and C.
 
-The products dataframe can be joined on the basket dataframe using the basket "ID"
-column. Each basket is linked to at least one product.
+Our aim is to predict which baskets are fraudulent.
+
+The products dataframe can be joined on the basket dataframe using the ``basket_ID``
+column.
 
 Each product has several attributes:
 
