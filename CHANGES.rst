@@ -37,6 +37,9 @@ Minor changes
   ``pandas.info()`` ) in a table. It can be sorted by each column.
   :pr:`1056` and :pr:`1068` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The selection in the TableReport's sample table can now be manipulated with
+  the keyboard. :pr:`1065` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Release 0.3.0
 =============
 

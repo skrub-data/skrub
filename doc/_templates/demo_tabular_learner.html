@@ -1,0 +1,118 @@
+<div class="container-fluid" style="max-width: 58rem;">
+    <div class="sd-card card-landing">
+      <div class="card-body">
+        <details>
+          <summary>Given, a complex dataframe
+            <code class="docutils literal notranslate"><span
+class="pre">df</span></code>: <i>(expand for full code)</i></summary>
+      <div class="doctest highlight-default notranslate">
+        <div class="highlight">
+<pre style="overflow-x: auto;">
+<span class="kn">from</span> <span class="nn">skrub.datasets</span> <span class="kn">import</span> <span class="n">fetch_employee_salaries</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">fetch_employee_salaries</span><span class="p">()</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">X</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y</span>
+<span class="n">df</span></pre>
+        </div>
+      </div>
+    </details>
+<div class="output_subarea output_html rendered_html output_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>gender</th>
+      <th>department</th>
+      <th>department_name</th>
+      <th>division</th>
+      <th>assignment_category</th>
+      <th>employee_position_title</th>
+      <th>date_first_hired</th>
+      <th>year_first_hired</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>F</td>
+      <td>POL</td>
+      <td>Department of Police</td>
+      <td>MSB Information Mgmt and...</td>
+      <td>Fulltime-Regular</td>
+      <td>Office Services Coordinator</td>
+      <td>09/22/1986</td>
+      <td>1986</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>M</td>
+      <td>POL</td>
+      <td>Department of Police</td>
+      <td>ISB Major Crimes...</td>
+      <td>Fulltime-Regular</td>
+      <td>Master Police Officer</td>
+      <td>09/12/1988</td>
+      <td>1988</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>9226</th>
+      <td>M</td>
+      <td>CCL</td>
+      <td>County Council</td>
+      <td>Council Central Staff</td>
+      <td>Fulltime-Regular</td>
+      <td>Manager II</td>
+      <td>09/05/2006</td>
+      <td>2006</td>
+    </tr>
+    <tr>
+      <th>9227</th>
+      <td>M</td>
+      <td>DLC</td>
+      <td>Department of Liquor Control</td>
+      <td>Licensure, Regulation...</td>
+      <td>Fulltime-Regular</td>
+      <td>Alcohol/Tobacco Enforcement Specialist II</td>
+      <td>01/30/2012</td>
+      <td>2012</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+      <div class="doctest highlight-default notranslate">
+        <div class="highlight">
+<pre style="overflow-x: auto;"><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span>
+<span class="kn">from</span> <span class="nn">skrub</span> <span class="kn">import</span> <span class="n">tabular_learner</span>
+<span class="n">cross_val_score</span><span class="p">(</span><span class="n">tabular_learner</span><span class="p">(</span><span class="s1">&#39;regressor&#39;</span><span class="p">),</span> </span><span class="n">df</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></pre>
+        </div>
+      </div>
+<pre><span class="sx">array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])</span></pre>
+    </div>
+  </div>
+</div>
