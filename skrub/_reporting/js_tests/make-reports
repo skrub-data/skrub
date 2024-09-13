@@ -3,6 +3,8 @@
 if __name__ == "__main__":
     import pathlib
 
+    import pandas as pd
+
     from skrub import TableReport, datasets
 
     reports_dir = pathlib.Path(__file__).resolve().parent / "_reports"
@@ -11,3 +13,14 @@ if __name__ == "__main__":
     df = datasets.fetch_employee_salaries().X
     html = TableReport(df).html()
     (reports_dir / "employee_salaries.html").write_text(html, encoding="UTF-8")
+
+    df = pd.DataFrame(
+        {
+            "c 0": list(range(7)),
+            "c 1": [f"v 0{i}" for i in range(7)],
+            "c 2": [i + 10 for i in range(7)],
+            "c 3": [f"v {i + 10}" for i in range(7)],
+        }
+    )
+    html = TableReport(df).html()
+    (reports_dir / "mini.html").write_text(html, encoding="UTF-8")

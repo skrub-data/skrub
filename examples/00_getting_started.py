@@ -6,6 +6,7 @@ Getting Started
 This guide showcases the features of ``skrub``, an open-source package that aims at
 bridging the gap between tabular data sources and machine-learning models.
 
+
 Much of ``skrub`` revolves around vectorizing, assembling, and encoding tabular data,
 to prepare data in a format that shallow or classic machine-learning models understand.
 """

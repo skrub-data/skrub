@@ -39,6 +39,9 @@ Minor changes
 
 * Added zero padding for column names in :class:`MinHashEncoder` to improve column ordering consistency.
   :pr:`1069` by :user:`Shreekant Nandiyawar <Shree7676>`.
+  
+* The selection in the TableReport's sample table can now be manipulated with
+  the keyboard. :pr:`1065` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.3.0
 =============

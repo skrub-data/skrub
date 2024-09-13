@@ -8,10 +8,6 @@
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-th[data-is-in-active-column] {
-    background-color: var(--darkgreen);
-}
-
 tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     background-color: var(--mediumgreen);
 }
@@ -20,6 +16,9 @@ tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     background-color: var(--lightgreen);
 }
 
+tr:nth-child(2n -1) th.table-cell[data-is-in-active-column] {
+    background-color: var(--darkgreen);
+}
 
 .table-cell[data-is-active] {
     outline: 2px dotted black;
@@ -52,4 +51,46 @@ tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
     flex-direction: column;
     justify-content: center;
     margin-bottom: var(--micro);
+}
+
+/* Information below the table: dimensions and keyboard shortcuts */
+
+.table-footer {
+    display: flex;
+    justify-content: space-between;
+    padding-top: var(--micro);
+}
+
+.keyboard-hints  {
+    display: none;
+    flex-basis: max(0px, min(50%, calc((50% - 35ch) * 99999)));
+    flex-shrink: 0;
+    min-width: 0px;
+    height: 2rem;
+    margin-bottom: -1.5rem;
+    margin-right: var(--micro);
+    overflow: hidden;
+    text-align: right;
+    vertical-align: center;
+}
+
+:has(.table-with-selectable-cells:focus-within) ~ .table-footer .keyboard-hints {
+    display: block;
+}
+
+.keyboard-key {
+    font-size: 0.75em;
+    font-family: var(--fontStack-monospace);
+    padding: 0 0.5em;
+    line-height: 1.8;
+    color: #444444;
+    border: 1px solid #cccccc;
+    border-bottom: 1px solid #bbbbbb;
+    box-shadow: inset 0 -1px 0 #bbbbbb;
+    border-radius: 0.2em;
+    min-width: 1em;
+    text-align: center;
+    margin: 0.1em;
+    display: inline-block;
+    vertical-align: center;
 }

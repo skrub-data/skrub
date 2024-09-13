@@ -1,18 +1,32 @@
+{% macro kbd(text) %}
+<span class="keyboard-key">{{ text }}</span>
+{% endmacro %}
+
 <article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
     {% include "table-bar.html" %}
 
     <div class="horizontal-scroll">
-        <table class="pure-table pure-table-striped table-with-selectable-cells">
+        <table class="pure-table pure-table-striped table-with-selectable-cells"
+               data-manager="SampleTable"
+               data-n-head-rows="{{ summary['head']['data'].__len__() }}"
+               data-n-tail-rows="{{ summary['tail']['data'].__len__() }}"
+               data-n-cols="{{ summary.head.header.__len__() }}">
             <thead>
                 <tr>
                     {% for idx in range(summary.head.header.__len__()) %}
                     {% set column_name = summary.head.header[idx] %}
 
-                    <th scope="col" class="clickable ellided"
-                        data-manager="SampleTableHeader FilterableColumn"
+                    <th scope="col" class="clickable ellided table-cell"
+                        id="sample-table-cell-head-header-{{ idx }}"
+                        data-manager="SampleTableCell FilterableColumn"
                         data-column-name="{{ column_name }}"
-                        data-column-idx="{{ idx }}">{{ column_name }}</th>
+                        data-column-idx="{{ idx }}"
+                        data-row-idx-in-table-part="{{ -1 }}"
+                        data-table-part="head"
+                        data-value-str="{{ column_name.__str__() }}"
+                        data-value-repr="{{ column_name.__repr__() }}"
+                    >{{ column_name }}</th>
                     {% endfor %}
                 </tr>
             </thead>
@@ -35,11 +49,23 @@
         </table>
     </div>
 
-    <p>
+    <div class="table-footer">
+    <div>
         <strong>{{ summary.n_rows | format_number }}</strong> rows ✕
         <strong data-manager="ColumnFilterMatchCount"
             data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong> columns.
-    </p>
+    </div>
+    <div class="keyboard-hints">
+        <div>
+            {{ kbd("Ctrl-C") }}
+            {{ kbd("←") }}
+            {{ kbd("↑") }}
+            {{ kbd("↓") }}
+            {{ kbd("→") }}
+            {{ kbd("Esc") }}
+        </div>
+    </div>
+    </div>
 
 
     <div class="column-summary-group columns-in-sample-tab">

@@ -11,230 +11,204 @@
 
     {# We add the full-width banner below the navbar, as the div there is
 still full-width (unlike the article) #}
-    <div class="container-fluid sk-landing-bg">
-    <div class="container sk-landing-container">
-	<div class="row">
-	<div class="col-md-6 mb-3 mb-md-0">
-	    <h1 class="sk-landing-header text-white text-monospace">skrub</h1>
-	    <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
-      <a class="btn sk-btn-orange mb-1" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">Getting started</code></a>
-      <a class="btn sk-btn-orange mb-1" href="{{ pathto('CHANGES') }}" role="button">Recent changes</a>
-	</div>
-	<div class="col-md-6 d-flex">
-	    <ul class="sk-landing-header-body">
-	    <li>Built for scikit-learn, Python</li>
-	    <li>Robust to dirty data</li>
-	    <li>Easy learning on pandas and polars dataframes</li>
-	    </ul>
-	</div>
-	</div>
+  <div class="container-fluid sk-landing-bg">
+    <div class="container">
+	    <div class="row">
+	      <div class="col-md-6 mb-3 mb-md-0 mt-2">
+            <h1 class="sk-landing-header text-white text-monospace">skrub</h1>
+            <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
+	      </div>
+	      <div class="col-md-6 mb-3 d-flex mt-0 mt-md-3">
+	        <ul class="sk-landing-header-body">
+            <li>Pandas and Polars dataframes inputs and outputs</li>
+            <li>scikit-learn compatible</li>
+	          <li>Work on heterogenous types (numeric, categorical, dates, text, missing values...)</li>
+	        </ul>
+	      </div>
+	    </div>
     </div>
-    </div>
+  </div>
 {% endblock docs_navbar %}
 
 {% block docs_main %}
-<div class="container-fluid schema-container">
-    <img src="_static/skrub_pipeline.svg">
-</div>
-
-<article class="bd-article" role="main">
-<div class="bd-content">
-<div class="landing-container">
-
-<div class="container-fluid">
-  <div class="row justify-content-md-center">
-    <div class="col-lg-4">
-      <div class="sd-card sd-shadow-sm card-landing">
-        <div class="card-body">
-          <h4 class="card-title"><a href="{{ pathto('assembling') }}">Assembling</a></h4>
-    <p><a class="reference internal" href="reference/generated/skrub.fuzzy_join.html"
-title="skrub.fuzzy_join"><code class="xref py py-func docutils literal
-notranslate"><span class="pre">fuzzy_join()</span></code></a>: Joining
-tables on non-normalized categories with approximate matching. <a
-class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining') }}"><span class="std std-ref">Example</span></a></p>
-<p><a class="reference internal"
-href="reference/generated/skrub.Joiner.html"
-title="skrub.Joiner"><code class="xref py py-class docutils
-literal notranslate"><span class="pre">Joiner</span></code></a>,
-<a class="reference internal"
-href="reference/generated/skrub.AggJoiner.html"
-title="skrub.AggJoiner"><code class="xref py py-class docutils
-literal notranslate"><span class="pre">AggJoiner</span></code></a>: transformers for joining multiple tables together. <a class="reference internal" href="{{ pathto('auto_examples/04_fuzzy_joining') }}"><span class="std std-ref">Example</span></a></p>
+<div class="container">
+  <div class="row mt-3 mt-md-5">
+    <div class="col-md-6 mb-3 mb-md-0">
+      <p class="hero-description">skrub is a Python library to ease preprocessing and feature engineering for
+        tabular machine learning.</p>
+      <p class="hero-description">
+        Our long-term goal is to directly connect
+        database tables to machine learning estimators.
+      </p>
+    </div>
+    <div class="col-md-6 d-flex align-items-center justify-content-center">
+      <a class="btn sk-btn-orange mb-1" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">See example</a>
     </div>
   </div>
 </div>
-<div class="col-lg-4">
-  <div class="sd-card sd-shadow-sm card-landing">
-    <div class="card-body">
-      <h4 class="card-title"><a href="{{ pathto('encoding') }}">Encoding</a></h4><p><a class="reference
-internal"
-href="reference/generated/skrub.TableVectorizer.html#skrub.TableVectorizer"
-title="skrub.TableVectorizer"><code class="xref py py-class docutils
-literal notranslate"><span class="pre">TableVectorizer</span></code></a>:
-<strong>turn a pandas dataframe into a numerical array</strong> for
-machine learning. <a class="reference internal" href="auto_examples/01_encodings.html#example-table-vectorizer"><span class="std std-ref">Example</span></a></p>
-<p><a class="reference internal"
-href="reference/generated/skrub.GapEncoder.html#skrub.GapEncoder"
-title="skrub.GapEncoder"><code class="xref py py-class docutils literal
-notranslate"><span class="pre">GapEncoder</span></code></a>:
-OneHotEncoder but robust to typos or non-normalized categories. <a
-class="reference internal" href="auto_examples/02_feature_interpretation_with_gapencoder.html#example-gap-encoder"><span class="std std-ref">Example</span></a></p>
-    </div>
-  </div>
-</div>
-<div class="col-lg-4">
-  <div class="sd-card sd-shadow-sm card-landing">
-    <div class="card-body">
-      <h4 class="card-title"><a href="{{ pathto('cleaning') }}">Cleaning</a></h4><p><a class="reference
-internal" href="reference/generated/skrub.deduplicate.html#skrub.deduplicate"
-title="skrub.deduplicate"><code class="xref py py-func docutils literal
-notranslate"><span class="pre">deduplicate()</span></code></a>: merge
-categories of similar morphology (spelling). <a class="reference internal" href="auto_examples/05_deduplication.html"><span class="std std-ref">Example</span></a></p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-</article>
 
-<div class="container-fluid" style="max-width: 58rem;">
-    <div class="sd-card sd-shadow-sm card-landing" style="border: 1px solid var(--pst-color-border, #d1d5da);">
-    <div class="card-body">
-        <div style="display: flex; justify-content: center; padding-bottom: 0.5rem;">
-    <h4 class="card-title">Less data wrangling, more machine learning</h4>
-        </div>
-      <div>
-          <p>
-            <a class="reference
-              internal"
-              href="reference/generated/skrub.tabular_learner.html#skrub.tabular_learner"
-              title="skrub.tabular_learner"><code class="xref py py-class docutils
-              literal notranslate"><span class="pre">tabular_learner</span></code></a>:
-              easily create tabular-learning pipelines that wrangle complex dataframes.
-          </p>
+<hr class="thin-line">
+
+<div class="container my-0">
+  <!-- Feature Section 1 -->
+
+  <div class="row mb-0">
+    <div class="col-md-4 mb-5">
+      <h4 class="feature-title">Effortless Pipelines</h4>
+      <p class="feature-text">Create strong scikit-learn pipeline baselines effortlessly with
+        <a class="reference internal"
+        href="reference/generated/skrub.TableVectorizer.html#tablevectorizer"
+        title="skrub.TableVectorizer"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">TableVectorizer</span></code></a>
+        and
+        <a class="reference internal"
+        href="reference/generated/skrub.tabular_learner.html#skrub.tabular_learner"
+        title="skrub.tabular_learner"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">tabular_learner</span></code></a>.</p>
+    </div>
+
+
+    <div class="col-md-8">
+
+      <!-- Placeholder for coding demo -->
+      {% include "demo_tabular_learner.html" %}
+
+    </div>
+  </div>
+</div>
+
+<hr class="thin-line">
+
+  <!-- Feature Section 2 -->
+<div class="container my-0">
+  <div class="row mb-0 flex-md-row-reverse">
+    <div class="col-md-5">
+      <h4 class="feature-title">Powerful Feature Engineering</h4>
+      <p class="feature-text">Encode text and high cardinality categorical data with the
+        <a class="reference internal"
+        href="reference/generated/skrub.GapEncoder.html#gapencoder"
+        title="skrub.GapEncoder"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">GapEncoder</span></code></a>
+        and
+        <a class="reference internal"
+        href="reference/generated/skrub.MinHashEncoder.html#minhashencoder"
+        title="skrub.MinHashEncoder"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">MinHashEncoder</span></code></a>
+        , and extract features from dates with the
+        <a class="reference internal"
+        href="reference/generated/skrub.DatetimeEncoder.html#datetimeencoder"
+        title="skrub.DatetimeEncoder"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">DatetimeEncoder</span></code></a>
+        .
+      </p>
+      <br>
+      {% include "demo_gap_encoder.html" %}
+    </div>
+    <div class="col-md-7 pe-5">
+      <img src="_static/gap.png">
+    </div>
+  </div>
+</div>
+
+<hr class="thin-line">
+
+  <!-- Feature Section 3 -->
+<div class="container my-0">
+  <div class="row mb-0">
+    <div class="col-md-5">
+      <h4 class="feature-title">Interactive Data Exploration</h4>
+      <p class="feature-text">Explore your dataframes interactively with
+        <a class="reference internal"
+        href="reference/generated/skrub.TableReport.html#tablereport"
+        title="skrub.TableReport"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">TableReport</span></code></a>
+        .</p>
+      <br>
+      {% include "demo_table_report_code.html" %}
+      <div class="row justify-content-start align-items-baseline">
+        <p class="click-table-report-hint">Click anywhere on the table <img src="_static/arrow.svg" width="40px"> </p>
       </div>
-      <details>
-	<summary>Given, a complex dataframe
-	<code class="docutils literal notranslate"><span
-class="pre">df</span></code>: <i>(expand for full code)</i></summary>
-      <div class="doctest highlight-default notranslate">
-        <div class="highlight">
-          <pre style="overflow-x: auto;">
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skrub.datasets</span> <span class="kn">import</span> <span class="n">fetch_employee_salaries</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dataset</span> <span class="o">=</span> <span class="n">fetch_employee_salaries</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">X</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">df</span></pre>
+    </div>
+    <div class="col-md-7">
+
+      {% include "demo_table_report_generated.html" %}
+
+    </div>
+  </div>
+</div>
+
+
+<hr class="thin-line">
+
+<div class="container mb-5 mt-5">
+  <div class="row justify-content-around"> <!-- Centers the row content -->
+    <div class="col-md-8 mb-5 mb-md-0 d-flex align-items-start" style="flex-direction: column;">
+        <div class="contributors-list" id="contributors-list">
+        <!-- Contributors will be dynamically added here -->
         </div>
-      </div>
-    </details>
-<div class="output_subarea output_html rendered_html output_result">
-<div>
-<style scoped="">
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
+        <div class="mt-5 text-center" style="font-size: 1.25rem;">
+          <a href="https://github.com/skrub-data/skrub/graphs/contributors">And many more!</a>
+        </div>
+    </div>
+    <div class="col-md-3 d-flex align-items-start d-flex" style="flex-direction: column;">
+      <h2 class="mt-0 mb-4">Our community</h2> <!-- Centers the header text -->
+      <p>
+        The Skrub project is powered by the efforts of a world-wide community of contributors.</p>
+      <p class="mb-5">Here we display a randomly selected group of
+        30 contributors.</p>
+      <a class="btn sk-btn-orange mb-1" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">See example</a>
+    </div>
+  </div>
+</div>
+
+<script>
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1)); // random index from 0 to i
+        [array[i], array[j]] = [array[j], array[i]];  // swap elements
     }
+    return array;
+}
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
+function selectFirst30(array) {
+    // Shuffle the array
+    shuffleArray(array);
 
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>gender</th>
-      <th>department</th>
-      <th>department_name</th>
-      <th>division</th>
-      <th>assignment_category</th>
-      <th>employee_position_title</th>
-      <th>date_first_hired</th>
-      <th>year_first_hired</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>F</td>
-      <td>POL</td>
-      <td>Department of Police</td>
-      <td>MSB Information Mgmt and...</td>
-      <td>Fulltime-Regular</td>
-      <td>Office Services Coordinator</td>
-      <td>09/22/1986</td>
-      <td>1986</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>M</td>
-      <td>POL</td>
-      <td>Department of Police</td>
-      <td>ISB Major Crimes...</td>
-      <td>Fulltime-Regular</td>
-      <td>Master Police Officer</td>
-      <td>09/12/1988</td>
-      <td>1988</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>9226</th>
-      <td>M</td>
-      <td>CCL</td>
-      <td>County Council</td>
-      <td>Council Central Staff</td>
-      <td>Fulltime-Regular</td>
-      <td>Manager II</td>
-      <td>09/05/2006</td>
-      <td>2006</td>
-    </tr>
-    <tr>
-      <th>9227</th>
-      <td>M</td>
-      <td>DLC</td>
-      <td>Department of Liquor Control</td>
-      <td>Licensure, Regulation...</td>
-      <td>Fulltime-Regular</td>
-      <td>Alcohol/Tobacco Enforcement Specialist II</td>
-      <td>01/30/2012</td>
-      <td>2012</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-</div>
-      <div class="doctest highlight-default notranslate">
-        <div class="highlight">
-          <pre style="overflow-x: auto;">
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skrub</span> <span class="kn">import</span> <span class="n">tabular_learner</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cross_val_score</span><span class="p">(</span><span class="n">tabular_learner</span><span class="p">(</span><span class="s1">&#39;regressor&#39;</span><span class="p">),</span> </span><span class="n">df</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-<span class="go">array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])</span></pre>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+    // Return the first 30 elements
+    return array.slice(0, 30);
+}
+
+async function fetchContributors() {
+const response = await fetch('https://api.github.com/repos/skrub-data/skrub/contributors?per_page=100');
+var contributors = await response.json();
+contributors = selectFirst30(contributors)
+
+const contributorsList = document.getElementById('contributors-list');
+
+contributors.forEach(contributor => {
+    const contributorElement = document.createElement('div');
+    contributorElement.classList.add('contributor');
+
+    contributorElement.innerHTML = `
+        <a href="${contributor.html_url}" target="_blank">
+            <img src="${contributor.avatar_url}" alt="${contributor.login}">
+            <div class="contributor-name">${contributor.login}</div>
+        </a>
+    `;
+
+    contributorsList.appendChild(contributorElement);
+});
+}
+
+fetchContributors();
+</script>
 
 
-{# So far, no article footer. Maybe this is brutal #}
-</div>
-</div>
 {% endblock docs_main %}
 
 {%- block footer %}
+
+<div class="home-footer">the skrub developers - 2024</div>
+
 {%- endblock footer %}
