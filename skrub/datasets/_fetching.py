@@ -1124,8 +1124,8 @@ def fetch_credit_fraud(load_dataframe=True, data_directory=None):
         If None, the directory is set to ~/skrub_data.
     """
     dataset_name_to_id = {
-        "products": "49102276",
-        "baskets": "49045249",
+        "products": "49176205",
+        "baskets": "49176202",
     }
     bunch = Bunch()
     for dataset_name, figshare_id in dataset_name_to_id.items():

@@ -238,9 +238,9 @@ def test_fetch_credit_fraud():
             return
 
         assert (
-            bunch.source_products == "https://ndownloader.figshare.com/files/49102276"
+            bunch.source_products == "https://ndownloader.figshare.com/files/49176205"
         )
-        assert bunch.source_baskets == "https://ndownloader.figshare.com/files/49045249"
+        assert bunch.source_baskets == "https://ndownloader.figshare.com/files/49176202"
 
         assert_frame_equal(bunch.products, pd.read_parquet(bunch.path_products))
         assert_frame_equal(bunch.baskets, pd.read_parquet(bunch.path_baskets))
