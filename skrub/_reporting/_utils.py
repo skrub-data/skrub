@@ -37,7 +37,10 @@ def to_row_list(dataframe):
     rows = []
     for row_idx in range(sbd.shape(dataframe)[0]):
         rows.append([col[row_idx] for col in columns.values()])
-    return {"header": list(columns.keys()), "data": rows}
+    index = sbd.index(dataframe)
+    if index is not None:
+        index = index.to_list()
+    return {"header": list(columns.keys()), "data": rows, "index": index}
 
 
 def top_k_value_counts(column, k):

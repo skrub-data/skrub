@@ -2,6 +2,21 @@
     {% for row_idx in range(summary[table_part]['data'].__len__()) %}
     {% set row = summary[table_part]['data'][row_idx] %}
     <tr>
+        {% if has_index %}
+        {% set index_value = summary[table_part]['index'][row_idx] %}
+        <th scope="row"
+            class="table-cell clickable ellided-short"
+            id="sample-table-cell-{{ table_part }}-{{ row_idx }}-index"
+            data-manager="SampleTableCell"
+            data-role="clickable-table-cell"
+            data-column-idx="-1"
+            data-row-idx-in-table-part="{{ row_idx }}"
+            data-table-part="{{ table_part }}"
+            data-value-str="{{ index_value.__str__() }}"
+            data-value-repr="{{ index_value.__repr__() }}">
+            {{ index_value }}
+        </th>
+        {% endif %}
         {% for idx in range(row.__len__()) %}
         {% set column_name = summary.head.header[idx] %}
         <td class="table-cell clickable ellided-short"

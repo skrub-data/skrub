@@ -1,6 +1,7 @@
 {% macro kbd(text) %}
 <span class="keyboard-key">{{ text }}</span>
 {% endmacro %}
+{% set has_index = summary['head']['index'] is not none %}
 
 <article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
@@ -9,11 +10,17 @@
     <div class="horizontal-scroll">
         <table class="pure-table pure-table-striped table-with-selectable-cells"
                data-manager="SampleTable"
+               {% if has_index %}
+               data-has-index
+               {% endif %}
                data-n-head-rows="{{ summary['head']['data'].__len__() }}"
                data-n-tail-rows="{{ summary['tail']['data'].__len__() }}"
                data-n-cols="{{ summary.head.header.__len__() }}">
             <thead>
                 <tr>
+                    {% if has_index %}
+                    <th scope="col"></th>
+                    {% endif %}
                     {% for idx in range(summary.head.header.__len__()) %}
                     {% set column_name = summary.head.header[idx] %}
 

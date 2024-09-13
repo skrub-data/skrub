@@ -314,6 +314,8 @@ if (customElements.get('skrub-table-report') === undefined) {
         constructor(elem, exchange) {
             super(elem, exchange);
             this.root = this.elem.getRootNode();
+            this.hasIndex = this.elem.dataset.hasIndex;
+            this.minColIdx = this.elem.hasAttribute("data-has-index") ? -1 : 0;
             this.nHeadRows = this.elem.dataset.nHeadRows;
             this.nTailRows = this.elem.dataset.nTailRows;
             this.nCols = this.elem.dataset.nCols;
@@ -371,12 +373,16 @@ if (customElements.get('skrub-table-report') === undefined) {
             return row === -1 ? "header" : String(row);
         }
 
+        colName(col) {
+            return col === -1 ? "index" : String(col);
+        }
+
         findCellLeft(tablePart, row, col) {
             let newCol = col;
-            while (newCol > 0) {
+            while (newCol > this.minColIdx) {
                 newCol -= 1;
                 let newCellId =
-                    `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
+                    `sample-table-cell-${tablePart}-${this.rowName(row)}-${this.colName(newCol)}`;
                 let newCell = this.root.getElementById(newCellId);
                 if (newCell === null) {
                     return null;
@@ -421,7 +427,7 @@ if (customElements.get('skrub-table-report') === undefined) {
                     newRow += 1;
                 }
                 let newCellId =
-                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${col}`;
+                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${this.colName(col)}`;
                 let newCell = this.root.getElementById(newCellId);
                 if (newCell === null) {
                     return null;
@@ -442,7 +448,7 @@ if (customElements.get('skrub-table-report') === undefined) {
                     newRow -= 1;
                 }
                 let newCellId =
-                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${col}`;
+                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${this.colName(col)}`;
                 let newCell = this.root.getElementById(newCellId);
                 if (newCell === null) {
                     return null;
