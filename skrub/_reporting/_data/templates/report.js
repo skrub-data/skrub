@@ -436,8 +436,8 @@ if (customElements.get('skrub-table-report') === undefined) {
                 b => b.addEventListener("click", e => this.sort(e)));
         }
 
-        getVal(row, colIdx) {
-            const td = row.querySelectorAll("td")[colIdx];
+        getVal(row, tableColIdx) {
+            const td = row.querySelectorAll("td")[tableColIdx];
             if (!td.hasAttribute("data-value")) {
                 return td.textContent;
             }
@@ -448,9 +448,10 @@ if (customElements.get('skrub-table-report') === undefined) {
             return value;
         }
 
-        compare(rowA, rowB, colIdx, ascending) {
-            let valA = this.getVal(rowA, colIdx);
-            let valB = this.getVal(rowB, colIdx);
+        compare(rowA, rowB, tableColIdx, ascending) {
+            let valA = this.getVal(rowA, tableColIdx);
+            let valB = this.getVal(rowB, tableColIdx);
+            // NaNs go at the bottom regardless of sorting order
             if(typeof(valA) === "number" && typeof(valB) === "number"){
                 if(isNaN(valA) && !isNaN(valB)){
                     return 1;
@@ -459,11 +460,14 @@ if (customElements.get('skrub-table-report') === undefined) {
                     return -1;
                 }
             }
+            // When the values are equal, keep the original dataframe column
+            // order
             if (!(valA > valB || valB > valA)) {
-                valA = Number(rowA.dataset.columnIdx);
-                valB = Number(rowB.dataset.columnIdx);
+                valA = Number(rowA.dataset.dataframeColumnIdx);
+                valB = Number(rowB.dataset.dataframeColumnIdx);
                 return valA - valB;
             }
+            // Sort
             if (!ascending) {
                 [valA, valB] = [valB, valA];
             }
@@ -471,18 +475,17 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         sort(event) {
-            const headerRow = this.elem.querySelector("thead tr");
-            const colHeaders = Array.from(headerRow.querySelectorAll("th"));
-            const colIdx = colHeaders.findIndex(th => Array.from(th.querySelectorAll("button"))
-                .includes(event.target));
+            const colHeaders = Array.from(this.elem.querySelectorAll("thead tr th"));
+            const tableColIdx = colHeaders.indexOf(event.target.closest("th"));
             const body = this.elem.querySelector("tbody");
             const rows = Array.from(body.querySelectorAll("tr"));
             const ascending = event.target.dataset.direction === "ascending";
 
-            rows.sort((a, b) => this.compare(a, b, colIdx, ascending));
+            rows.sort((a, b) => this.compare(a, b, tableColIdx, ascending));
 
             this.elem.querySelectorAll("button").forEach(b => b.removeAttribute("data-is-active"));
             event.target.dataset.isActive = "";
+
             body.innerHTML = "";
             for (let r of rows) {
                 body.appendChild(r);
