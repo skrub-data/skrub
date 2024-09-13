@@ -22,6 +22,12 @@ import sys
 import warnings
 from datetime import datetime
 
+# Generate the table report html file for the homepage
+sys.path.append(os.path.relpath("."))
+from table_report import generate_demo
+
+generate_demo()
+
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -177,6 +183,11 @@ html_theme_options = {
             "name": "GitHub",
             "url": "https://github.com/skrub-data/skrub/",
             "icon": "fa-brands fa-github",
+        },
+        {
+            "name": "Discord",
+            "url": "https://discord.gg/ABaPnm7fDC",
+            "icon": "fa-brands fa-discord",
         },
     ],
     # alternative way to set twitter and github header icons
