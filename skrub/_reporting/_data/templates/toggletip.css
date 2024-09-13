@@ -42,6 +42,7 @@
 
 :is(.toggletip:focus-within, .toggletip:active, .toggletip:hover) > .toggletip-info {
     visibility: visible;
+    transition-delay: 0ms;
 }
 
 .toggletip > button:is(:focus, :active) {
