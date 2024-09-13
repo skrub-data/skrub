@@ -37,6 +37,10 @@ Minor changes
   ``pandas.info()`` ) in a table.
   :pr:`1056` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The credit fraud dataset is now available with the
+  :func:`fetch_credit_fraud function`.
+  :pr:`1053` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 Release 0.3.0
 =============
 
