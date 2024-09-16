@@ -223,6 +223,7 @@ def test_fetch_movielens():
 
 
 def test_fetch_credit_fraud():
+    pytest.importorskip("pyarrow")
     with TemporaryDirectory() as temp_dir:
         try:
             # Valid call
