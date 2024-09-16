@@ -255,6 +255,10 @@ dd {
     color: var(--red);
 }
 
+.box-shadow {
+    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, .2), 0px 4px 10px 0px rgba(0, 0, 0, .2);
+}
+
 /* Misc tweaks */
 /* ----------- */
 

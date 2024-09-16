@@ -630,6 +630,18 @@ if (customElements.get('skrub-table-report') === undefined) {
     SkrubTableReport.register(SelectAllVisibleColumns);
 
 
+    class Toggletip extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelector("button").addEventListener("keydown", e => {
+                if (e.key === "Escape") {
+                    e.target.blur();
+                }
+            });
+        }
+    }
+    SkrubTableReport.register(Toggletip);
+
     function initReport(reportId) {
         const report = document.getElementById(reportId);
         report.init();

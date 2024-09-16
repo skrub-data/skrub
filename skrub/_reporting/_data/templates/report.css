@@ -6,6 +6,7 @@
 {% include "column-summaries.css" %}
 {% include "dataframe-sample.css" %}
 {% include "tabs.css" %}
+{% include "toggletip.css" %}
 {% include "tooltip.css" %}
 {% include "column-filter.css" %}
 

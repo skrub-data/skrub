@@ -20,7 +20,7 @@
     padding-left: var(--tiny);
     padding-right: var(--tiny);
     align-items: stretch;
-    margin-bottom: -1px;
+    margin-bottom: -1.2px;
 }
 
 .tab-list > * {
