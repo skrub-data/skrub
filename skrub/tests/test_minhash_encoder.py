@@ -118,10 +118,10 @@ def test_missing_values_none(df_module, hashing):
 
     enc = MinHashEncoder(hashing=hashing)
     d = enc.fit_transform(a)
-    assert d["_0"][0] != 0.0
-    assert d["_0"][1] != 0.0
-    assert_array_equal(d["_0"][2], 0.0)
-    assert_array_equal(d["_0"][3], 0.0)
+    assert d["_00"][0] != 0.0
+    assert d["_00"][1] != 0.0
+    assert_array_equal(d["_00"][2], 0.0)
+    assert_array_equal(d["_00"][3], 0.0)
 
 
 def test_cache_overflow(df_module):
@@ -254,3 +254,36 @@ def test_get_feature_names_out(df_module):
     encoder.fit(X)
     expected_columns = ["col1_0", "col1_1", "col1_2", "col1_3"]
     assert encoder.get_feature_names_out() == expected_columns
+
+
+@pytest.mark.parametrize(
+    "n_components, expected_columns",
+    [
+        (3, ["col_0", "col_1", "col_2"]),  # No padding needed for components < 10
+        (
+            12,
+            [
+                "col_00",
+                "col_01",
+                "col_02",
+                "col_03",
+                "col_04",
+                "col_05",
+                "col_06",
+                "col_07",
+                "col_08",
+                "col_09",
+                "col_10",
+                "col_11",
+            ],
+        ),  # 2-digit padding
+    ],
+)
+def test_zero_padding_in_feature_names_out(df_module, n_components, expected_columns):
+    """Check that the feature names are zero-padded."""
+    encoder = MinHashEncoder(n_components=n_components)
+    X = df_module.make_column("col", ["a", "b", "c", "d", "e", "f", "g", "h"])
+    encoder.fit(X)
+    feature_names = encoder.get_feature_names_out()
+
+    assert feature_names[: len(expected_columns)] == expected_columns
