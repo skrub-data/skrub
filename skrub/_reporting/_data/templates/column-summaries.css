@@ -67,7 +67,7 @@
 .card-header > * {
     margin-block-start: 0;
     margin-block-end: 0;
-    font-size: var(--large);
+    font-size: var(--small);
 }
 
 .card-header input[type="checkbox"] {
