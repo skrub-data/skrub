@@ -32,7 +32,7 @@ still full-width (unlike the article) #}
 
 {% block docs_main %}
 <div class="container-fluid">
-  <div class="row mt-3 mt-md-5 row-padding-main-container">
+  <div class="row row-padding-main-container">
     <div class="col-md-8 mb-3 mb-md-0">
       <h1 class="hero-title">Less wrangling, more machine learning</h1>
       <p class="hero-description"><code>skrub</code> is a Python library to ease preprocessing and feature engineering for
@@ -115,15 +115,14 @@ still full-width (unlike the article) #}
         literal notranslate"><span class="pre">TableReport</span></code></a>.
       </p>
       {% include "demo_table_report_code.html" %}
-      <div class="row justify-content-start align-items-baseline">
-        <p class="click-table-report-hint">Click anywhere on the table <img src="_static/arrow.svg" width="40px"> </p>
-      </div>
       <p class="feature-text-see-also">
         <a href="https://skrub-data.org/skrub-reports/">Try on your data →</a>
       </p>
     </div>
     <div class="col-md-7">
-
+      <div class="row justify-content-start align-items-baseline">
+        <p class="click-table-report-hint">Click anywhere on the table <img src="_static/arrow.svg" width="40px"> </p>
+      </div>
       {% include "demo_table_report_generated.html" %}
 
     </div>
