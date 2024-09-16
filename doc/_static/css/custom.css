@@ -105,7 +105,7 @@ div.card-body details[open] summary i {
 .hero-title {
     color: #DA7007; /* Darker text color for the title */
     font-family: var(--pst-font-family-heading);
-    font-size: 2.5rem;
+    font-size: 2.75rem;
     margin-bottom: 4rem;
     margin-top: 0px;
 }
@@ -118,7 +118,7 @@ div.card-body details[open] summary i {
 }
 
 .row-padding-main-container {
-    padding-top: 5rem !important;
+    padding-top: 1.5rem !important;
     padding-bottom: 5rem !important;
 }
 
@@ -130,7 +130,7 @@ div.card-body details[open] summary i {
 .feature-title {
     color: #DA7007; /* Darker text color for the title */
     font-family: var(--pst-font-family-heading);
-    font-size: 1.8rem;
+    font-size: 2rem;
     margin-bottom: 1.25rem; /* Spacing below title */
     margin-top: 0px;
 }
@@ -143,18 +143,18 @@ div.card-body details[open] summary i {
 
 .feature-text-see-also {
     font-family: var(--pst-font-family-base);
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-top: 1.75rem;
 }
 
 .feature-text-see-also a {
-    color: var(--pst-color-text-base);
-    font-weight: 600;
-    text-decoration: none;
+    color: #DA7007;
+    font-weight: bold;
+    transition: font-weight 0.3s ease;
 }
 
 .feature-text-see-also a:hover {
-    color: var(--pst-color-text-base);
+    color: #DA7007;
     font-weight: normal;
 }
 
@@ -178,6 +178,7 @@ html[data-theme="light"] .encoding-image {
 html[data-theme="dark"] .encoding-image {
     background-image: url('../encoding_dark.png');
 }
+
 
 /** Styling **************************************************************/
 
@@ -217,14 +218,20 @@ html[data-theme="dark"] .encoding-image {
 
 /** Landing header *******************************/
 
-
 div.sk-landing-container {
     margin-top: 35px;
     min-height: 130px;
+    max-width: 1400px;
 }
 
 div.sk-landing-container .text-white {
     text-shadow: 0px 0px 8px rgb(42, 98, 128);
+}
+
+div.sk-landing-container a,
+div.sk-landing-container a > code,
+div.sk-landing-container a:hover > code {
+    color: #DA7007;
 }
 
 ul.sk-landing-header-body {
@@ -265,17 +272,13 @@ div.sk-landing-bg-more-info {
     font-family: var(--pst-font-family-base);
 }
 
-div.sk-landing-container {
-    max-width: 1400px;
-}
-
 /** Scikit-learn buttons ***************************/
 
 a.sk-btn-orange {
     font-size: 1.1rem;
     font-weight: 500;
     background-color: #DA7007; /* Original sk-orange-tint-1 */
-    color: #ffffff; /* Changed to white for better contrast */
+    color: #ffffff !important; /* Changed to white for better contrast */
     border: 2px solid #DA7007; /* Border to match background color, previous: f99f44 */
     padding: 10px 20px; /* Added padding for better button size */
     border-radius: 5px; /* Rounded corners for a modern look */
@@ -300,7 +303,7 @@ a.sk-btn-orange:hover {
 .contributors-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 30px; /* Adds space between contributors */
+    gap: 2rem; /* Adds space between contributors */
 }
 .contributor {
     text-align: center;
@@ -311,9 +314,8 @@ a.sk-btn-orange:hover {
     height: 80px;
 }
 .contributor-name {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: bold;
+    margin-top: 0.5rem;
+    font-size: 0.6rem;
 }
 
 /** Footer ***************************/
