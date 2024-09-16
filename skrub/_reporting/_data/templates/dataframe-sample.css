@@ -25,7 +25,7 @@ thead th.table-cell[data-is-in-active-column] {
 }
 
 table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
-    outline: 1px dotted black;
+    outline: 2px dotted black;
 }
 
 .table-cell[data-is-active]:focus {
