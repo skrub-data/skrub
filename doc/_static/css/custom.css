@@ -165,7 +165,7 @@ div.card-body details[open] summary i {
     margin-bottom: 0.75em !important;
 }
 
-.encoding-image {
+html[data-theme="light"] .encoding-image {
     background-image: url('../encoding_light.png');
     background-size: contain;
     background-repeat: no-repeat;
@@ -174,8 +174,13 @@ div.card-body details[open] summary i {
     height: 100%; /* Adjust based on your image aspect ratio */
 }
 
-[data-mode="dark"] .encoding-image {
+html[data-theme="dark"] .encoding-image {
     background-image: url('../encoding_dark.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 100%; /* Adjust as needed */
+    height: 100%; /* Adjust based on your image aspect ratio */
 }
 
 /** Styling **************************************************************/
