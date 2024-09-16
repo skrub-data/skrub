@@ -558,6 +558,72 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(TabList);
 
+    class sortableTable extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelectorAll("button[data-role='sort-button']").forEach(
+                b => b.addEventListener("click", e => this.sort(e)));
+        }
+
+        getVal(row, tableColIdx) {
+            const td = row.querySelectorAll("td")[tableColIdx];
+            if (!td.hasAttribute("data-value")) {
+                return td.textContent;
+            }
+            let value = td.dataset.value;
+            if (td.hasAttribute("data-numeric")) {
+                value = Number(value);
+            }
+            return value;
+        }
+
+        compare(rowA, rowB, tableColIdx, ascending) {
+            let valA = this.getVal(rowA, tableColIdx);
+            let valB = this.getVal(rowB, tableColIdx);
+            // NaNs go at the bottom regardless of sorting order
+            if(typeof(valA) === "number" && typeof(valB) === "number"){
+                if(isNaN(valA) && !isNaN(valB)){
+                    return 1;
+                }
+                if(isNaN(valB) && !isNaN(valA)){
+                    return -1;
+                }
+            }
+            // When the values are equal, keep the original dataframe column
+            // order
+            if (!(valA > valB || valB > valA)) {
+                valA = Number(rowA.dataset.dataframeColumnIdx);
+                valB = Number(rowB.dataset.dataframeColumnIdx);
+                return valA - valB;
+            }
+            // Sort
+            if (!ascending) {
+                [valA, valB] = [valB, valA];
+            }
+            return valA > valB ? 1 : -1;
+        }
+
+        sort(event) {
+            const colHeaders = Array.from(this.elem.querySelectorAll("thead tr th"));
+            const tableColIdx = colHeaders.indexOf(event.target.closest("th"));
+            const body = this.elem.querySelector("tbody");
+            const rows = Array.from(body.querySelectorAll("tr"));
+            const ascending = event.target.dataset.direction === "ascending";
+
+            rows.sort((a, b) => this.compare(a, b, tableColIdx, ascending));
+
+            this.elem.querySelectorAll("button").forEach(b => b.removeAttribute("data-is-active"));
+            event.target.dataset.isActive = "";
+
+            body.innerHTML = "";
+            for (let r of rows) {
+                body.appendChild(r);
+            }
+        }
+
+    }
+    SkrubTableReport.register(sortableTable);
+
     class SelectedColumnsDisplay extends Manager {
 
         constructor(elem, exchange) {

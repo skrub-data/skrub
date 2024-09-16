@@ -1,0 +1,58 @@
+.summary-stats-table {
+    margin: 2px;
+}
+
+
+th.sort-button-group-wrapper {
+    --btn-width: 2rem;
+    --btn-group-width: calc(var(--btn-width) * 2);
+    position: relative;
+    padding-top: var(--micro);
+    padding-bottom: var(--micro);
+    padding-right: calc(var(--tiny) + var(--btn-group-width));
+}
+
+.sort-button-group {
+    position: absolute;
+    top: -1px;
+    bottom: 0;
+    right: calc(-1 * var(--btn-group-width));
+    left: 100%;
+    transform: translateX(calc(-1 * var(--btn-group-width) + 1px));
+    display: flex;
+    gap: 0px;
+    padding: 0px;
+}
+
+.sort-button {
+    margin: 0;
+    box-sizing: border-box;
+    height: 100%;
+    flex-grow: 1;
+    border-radius: 0;
+    border: 1px solid #aaa;
+    background: #e0e0e0;
+    color: #222;
+    padding: var(--micro);
+}
+
+.sort-button-group > .sort-button:focus-visible {
+    z-index: 2;
+}
+
+.sort-button-group > .sort-button ~ .sort-button {
+    margin-left: -1px;
+}
+
+.sort-button:hover {
+    background: #eeeeee;
+}
+
+.sort-button:active {
+    background: #cccccc;
+}
+
+.sort-button[data-is-active]{
+    background: var(--lightgreen);
+    color: black;
+}
