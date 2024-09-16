@@ -117,7 +117,7 @@
 .columns-in-sample-tab .card-header {
     position: relative;
     background-color: var(--darkgreen);
-    border-block-end: 1px solid var(--verydarkgreen);
+    border-block-end: 1px solid var(--shadowgreen);
     padding-right: 2.4rem;
 }
 
