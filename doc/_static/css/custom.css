@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wdth,wght,YTLC@0,6..12,75..125,200..1000,440..540;1,6..12,75..125,200..1000,440..540&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
 /** Landing page *********************************************************/
 
 .bd-article {
@@ -97,6 +100,69 @@ div.card-body details[open] summary {
 
 div.card-body details[open] summary i {
     display: none;
+}
+
+/** Landing page features *************************************************************/
+
+.hero-title {
+    color: #DA7007; /* Darker text color for the title */
+    font-family: "Poppins";
+    font-size: 2.5rem;
+    margin-bottom: 4rem;
+    margin-top: 0px;
+}
+
+.hero-description {
+    font-family: "Nunito Sans";
+    text-align: left;
+    font-size: 1.15rem;
+    margin-bottom: 10px;
+}
+
+.row-padding-main-container {
+    padding-top: 5rem !important;
+    padding-bottom: 5rem !important;
+}
+
+.row-padding-between-features {
+    padding-bottom: 2rem !important;
+    padding-top: 2rem !important;
+}
+
+.feature-title {
+    color: #DA7007; /* Darker text color for the title */
+    font-family: "Poppins";
+    font-size: 1.8rem;
+    margin-bottom: 1.25rem; /* Spacing below title */
+    margin-top: 0px;
+}
+
+.feature-text {
+    font-family: "Nunito Sans";
+    font-size: 1.05rem; /* Regular font size for text */
+    margin-bottom: 0; /* Remove default bottom margin */
+}
+
+.feature-text-see-also {
+    font-family: "Nunito Sans";
+    font-size: 1.2rem;
+    margin-top: 1.75rem;
+}
+
+.feature-text-see-also a {
+    color: var(--pst-color-text-base);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.feature-text-see-also a:hover {
+    color: var(--pst-color-text-base);
+    font-weight: normal;
+}
+
+.code-margin {
+    margin-top: 0.75em !important;
+    margin-bottom: 0.75em !important;
 }
 
 /** Styling **************************************************************/
@@ -209,7 +275,7 @@ div.sk-landing-footer {
 
 @media (min-width: 1200px) {
     .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
-	max-width: 120rem;
+	max-width: 80rem;
     }
 
     div.card-landing {
@@ -251,50 +317,12 @@ a.sk-btn-orange:hover {
     border: 2px solid #DA7007; /* Border remains the same on hover */
 }
 
-.container {
-    max-width: 150ch;
-}
-
-.feature-title {
-    color: #DA7007; /* Darker text color for the title */
-    font-weight: 600; /* Bold font for title */
-    margin-bottom: 10px; /* Spacing below title */
-    margin-top: 0px;
-}
-
-.feature-text {
-    font-size: 1rem; /* Regular font size for text */
-    margin-bottom: 0; /* Remove default bottom margin */
-}
-
-
-.hero-description {
-    text-align: left;
-    font-size: 1.25rem;
-    margin-bottom: 10px;
-}
-
 .click-table-report-hint {
     color: #da4607;
     font-size: 1.25rem;
 }
 
-
-.thin-line {
-    width: 100%;
-    height: 1px; /* Adjust the thickness of the line */
-    background-color: #12134b; /* Change the color as needed */
-    border: none; /* Ensures no border is applied */
-    margin-top: 20px;
-    margin-bottom: 20px;
-}
-
-@media (min-width: 768px) {
-    .thin-line {
-        margin-top: 50px;
-        margin-bottom: 50px;
-    }
-}
+/** Contributors ***************************/
 
 .contributors-list {
     display: flex;
@@ -314,6 +342,8 @@ a.sk-btn-orange:hover {
     font-size: 14px;
     font-weight: bold;
 }
+
+/** Footer ***************************/
 
 .home-footer {
     background-color: #12134b; /* Black background color */
