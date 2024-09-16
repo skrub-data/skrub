@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wdth,wght,YTLC@0,6..12,75..125,200..1000,440..540;1,6..12,75..125,200..1000,440..540&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200..900&display=swap');
+
 /** Landing page *********************************************************/
 
 .bd-article {
@@ -66,7 +70,7 @@
 }
 
 .sk-landing-header text-white text-monospace {
-    font-family: var(--pst-font-family-heading);
+    font-family: 'Poppins', sans-serif;
     margin-top: -20px;
 }
 
@@ -104,14 +108,14 @@ div.card-body details[open] summary i {
 
 .hero-title {
     color: #DA7007; /* Darker text color for the title */
-    font-family: var(--pst-font-family-heading);
+    font-family: 'Poppins', sans-serif;
     font-size: 2.75rem;
     margin-bottom: 2rem;
     margin-top: 0px;
 }
 
 .hero-description {
-    font-family: var(--pst-font-family-base);
+    font-family: 'Nunito Sans', sans-serif;
     text-align: left;
     font-size: 1.15rem;
     margin-bottom: 10px;
@@ -129,20 +133,20 @@ div.card-body details[open] summary i {
 
 .feature-title {
     color: #DA7007; /* Darker text color for the title */
-    font-family: var(--pst-font-family-heading);
+    font-family: 'Poppins', sans-serif;
     font-size: 2rem;
     margin-bottom: 1.25rem; /* Spacing below title */
     margin-top: 0px;
 }
 
 .feature-text {
-    font-family: var(--pst-font-family-base);
+    font-family: 'Nunito Sans', sans-serif;
     font-size: 1.05rem; /* Regular font size for text */
     margin-bottom: 0; /* Remove default bottom margin */
 }
 
 .feature-text-see-also {
-    font-family: var(--pst-font-family-base);
+    font-family: 'Nunito Sans', sans-serif;
     /* font-size: 1.1rem; */
     margin-top: 1.75rem;
 }
@@ -234,10 +238,13 @@ div.sk-landing-container a:hover > code {
     color: #DA7007;
 }
 
+div.sk-landing-container code {
+    font-weight: normal !important;
+
 ul.sk-landing-header-body {
     margin-top: auto;
     margin-bottom: auto;
-    font-family: var(--pst-font-family-base);
+    font-family: 'Nunito Sans', sans-serif;
     font-size: 1.2rem;
     font-weight: 500;
     color: black;
@@ -269,7 +276,7 @@ div.sk-landing-bg-more-info {
 .sk-landing-subheader {
     letter-spacing: 0.17rem;
     margin-top: 5px;
-    font-family: var(--pst-font-family-base);
+    font-family: 'Nunito Sans', sans-serif;
 }
 
 /** Scikit-learn buttons ***************************/
