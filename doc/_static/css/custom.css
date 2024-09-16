@@ -223,14 +223,8 @@ html[data-theme="dark"] .encoding-image {
 
 
 div.sk-landing-container {
-    max-width: 1400px;
     margin-top: 35px;
     min-height: 130px;
-}
-
-div.sk-landing-footer div.row {
-    max-width: 1400px;
-    margin: 0 auto;
 }
 
 div.sk-landing-container .text-white {
@@ -273,46 +267,8 @@ div.sk-landing-bg-more-info {
     margin-top: 5px;
 }
 
-/** Landing footer *******************************/
-div.sk-landing-footer {
-    margin-top: 30px;
-    border-top: 1px solid var(--pst-color-shadow);
-    background-color: var(--sg-code-background-color);
-    padding-top: 15px;
-    padding-bottom: 10px;
-}
-
-/** Tweak for very large screens ********************/
-/* At 1200px, we switch from width = 100% to width = 90vw, we do an
- * affine formula to have a continuous function during the switch */
-@media (min-width: 1200px) {
-    .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
-    width: calc(min(100vw, 90vw + 120px));
-    }
-}
-
-@media (min-width: 1200px) {
-    .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
-	max-width: 80rem;
-    }
-
-    div.card-landing {
-	margin-left: 0%;
-	margin-right: 0%;
-    }
-    div.bd-sidebar-primary {
-	margin-right: 5%;
-	width: 20%;
-    }
-
-    div.bd-sidebar-secondary {
-	max-width: 20%;
-	margin-left: calc(min(max(3%, 3vw), 7rem));
-    }
-
-    .bd-main .bd-content div.bd-article-container {
-	max-width: 60rem;
-    }
+div.sk-landing-container {
+    max-width: 1400px;
 }
 
 /** Scikit-learn buttons ***************************/

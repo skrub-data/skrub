@@ -1,8 +1,8 @@
 .. _installation_instructions:
 
-=========================
-Installation instructions
-=========================
+=======
+Install
+=======
 
 .. raw:: html
 
