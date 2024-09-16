@@ -165,6 +165,19 @@ div.card-body details[open] summary i {
     margin-bottom: 0.75em !important;
 }
 
+.encoding-image {
+    background-image: url('../encoding_light.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 100%; /* Adjust as needed */
+    height: 100%; /* Adjust based on your image aspect ratio */
+}
+
+[data-mode="dark"] .encoding-image {
+    background-image: url('../encoding_dark.png');
+}
+
 /** Styling **************************************************************/
 
 /* Make the footer a bit less visible */
