@@ -163,22 +163,20 @@ div.card-body details[open] summary i {
     margin-bottom: 0.75em !important;
 }
 
-html[data-theme="light"] .encoding-image {
-    background-image: url('../encoding_light.png');
+.encoding-image {
+    width: 100%;
+    aspect-ratio: 1.2;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    width: 100%; /* Adjust as needed */
-    height: 100%; /* Adjust based on your image aspect ratio */
+}
+
+html[data-theme="light"] .encoding-image {
+    background-image: url('../encoding_light.png');
 }
 
 html[data-theme="dark"] .encoding-image {
     background-image: url('../encoding_dark.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    width: 100%; /* Adjust as needed */
-    height: 100%; /* Adjust based on your image aspect ratio */
 }
 
 /** Styling **************************************************************/
