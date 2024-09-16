@@ -106,7 +106,7 @@ div.card-body details[open] summary i {
     color: #DA7007; /* Darker text color for the title */
     font-family: var(--pst-font-family-heading);
     font-size: 2.75rem;
-    margin-bottom: 4rem;
+    margin-bottom: 2rem;
     margin-top: 0px;
 }
 
@@ -143,19 +143,19 @@ div.card-body details[open] summary i {
 
 .feature-text-see-also {
     font-family: var(--pst-font-family-base);
-    font-size: 1.1rem;
+    /* font-size: 1.1rem; */
     margin-top: 1.75rem;
 }
 
 .feature-text-see-also a {
-    color: #DA7007;
-    font-weight: bold;
+    color: var(--pst-color-text-base) !important;
+    font-weight: normal;
     transition: font-weight 0.3s ease;
 }
 
 .feature-text-see-also a:hover {
-    color: #DA7007;
-    font-weight: normal;
+    color: var(--pst-color-text-base) !important;
+    font-weight: bold;
 }
 
 .code-margin {
