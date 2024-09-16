@@ -9,17 +9,26 @@
 
     <div class="horizontal-scroll">
         <table class="pure-table pure-table-striped table-with-selectable-cells"
-               data-manager="SampleTable"
-               {% if has_index %}
-               data-has-index
-               {% endif %}
-               data-n-head-rows="{{ summary['head']['data'].__len__() }}"
-               data-n-tail-rows="{{ summary['tail']['data'].__len__() }}"
-               data-n-cols="{{ summary.head.header.__len__() }}">
+            data-manager="SampleTable" {% if has_index %} data-has-index {% endif %}
+            data-n-head-rows="{{ summary['head']['data'].__len__() }}"
+            data-n-tail-rows="{{ summary['tail']['data'].__len__() }}"
+            data-n-cols="{{ summary.head.header.__len__() }}">
             <thead>
                 <tr>
                     {% if has_index %}
-                    <th scope="col"></th>
+                    {% set index_name = summary.head.index_name %}
+                    <th class="dataframe-index table-cell clickable ellided-short"
+                        scope="col" class="clickable ellided table-cell"
+                        id="sample-table-cell-head-header-index"
+                        data-manager="SampleTableCell" data-role="clickable-table-cell"
+                        data-column-idx="-1" data-row-idx-in-table-part="-1"
+                        data-table-part="head"
+                        data-value-str="{{ index_name.__str__() }}"
+                        data-value-repr="{{ index_name.__repr__() }}">
+                        {% if not index_name | is_null %}
+                        {{ index_name }}
+                        {% endif %}
+                    </th>
                     {% endif %}
                     {% for idx in range(summary.head.header.__len__()) %}
                     {% set column_name = summary.head.header[idx] %}
@@ -27,13 +36,11 @@
                     <th scope="col" class="clickable ellided table-cell"
                         id="sample-table-cell-head-header-{{ idx }}"
                         data-manager="SampleTableCell FilterableColumn"
-                        data-column-name="{{ column_name }}"
-                        data-column-idx="{{ idx }}"
-                        data-row-idx-in-table-part="{{ -1 }}"
-                        data-table-part="head"
+                        data-column-name="{{ column_name }}" data-column-idx="{{ idx }}"
+                        data-row-idx-in-table-part="-1" data-table-part="head"
                         data-value-str="{{ column_name.__str__() }}"
-                        data-value-repr="{{ column_name.__repr__() }}"
-                    >{{ column_name }}</th>
+                        data-value-repr="{{ column_name.__repr__() }}">{{ column_name }}
+                    </th>
                     {% endfor %}
                 </tr>
             </thead>
@@ -57,21 +64,22 @@
     </div>
 
     <div class="table-footer">
-    <div>
-        <strong>{{ summary.n_rows | format_number }}</strong> rows ✕
-        <strong data-manager="ColumnFilterMatchCount"
-            data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong> columns.
-    </div>
-    <div class="keyboard-hints">
         <div>
-            {{ kbd("Ctrl-C") }}
-            {{ kbd("←") }}
-            {{ kbd("↑") }}
-            {{ kbd("↓") }}
-            {{ kbd("→") }}
-            {{ kbd("Esc") }}
+            <strong>{{ summary.n_rows | format_number }}</strong> rows ✕
+            <strong data-manager="ColumnFilterMatchCount"
+                data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong>
+            columns.
         </div>
-    </div>
+        <div class="keyboard-hints">
+            <div>
+                {{ kbd("Ctrl-C") }}
+                {{ kbd("←") }}
+                {{ kbd("↑") }}
+                {{ kbd("↓") }}
+                {{ kbd("→") }}
+                {{ kbd("Esc") }}
+            </div>
+        </div>
     </div>
 
 

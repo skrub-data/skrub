@@ -8,16 +8,28 @@
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-tr:nth-child(2n -1) td.table-cell[data-is-in-active-column] {
-    background-color: var(--mediumgreen);
+.table-cell[data-is-in-active-column] {
+    /* !important to override pure.css */
+    background-color: var(--active-column-color) !important;
 }
 
-td.table-cell[data-is-in-active-column] {
-    background-color: var(--lightgreen);
+tbody tr {
+    --active-column-color: var(--lightgreen);
 }
 
-thead th.table-cell[data-is-in-active-column] {
-    background-color: var(--darkgreen);
+tbody tr:nth-child(2n -1) {
+    --active-column-color: var(--mediumgreen);
+}
+
+thead {
+    --active-column-color: var(--darkgreen);
+}
+
+
+th.dataframe-index {
+    --active-column-color: white;
+    background: white;
+    border: 1px solid #cbcbcb; /* the pure-table border color */
 }
 
 .table-cell[data-is-active] {
@@ -30,6 +42,8 @@ thead th.table-cell[data-is-in-active-column] {
 }
 
 .table-cell[data-is-active][data-just-copied]:focus {
+    /* !important to temporarily override the default focus ring
+       (data-just-copied is removed after 200ms) */
     outline: 2px dashed Highlight !important;
     outline: 2px dashed -webkit-focus-ring-color !important;
 }
