@@ -69,6 +69,7 @@
 }
 
 .sk-landing-header text-white text-monospace {
+    font-family: Poppins;
     margin-top: -20px;
 }
 
@@ -234,6 +235,7 @@ div.sk-landing-container .text-white {
 ul.sk-landing-header-body {
     margin-top: auto;
     margin-bottom: auto;
+    font-family: "Nunito Sans";
     font-size: 1.2rem;
     font-weight: 500;
     color: black;
@@ -265,6 +267,7 @@ div.sk-landing-bg-more-info {
 .sk-landing-subheader {
     letter-spacing: 0.17rem;
     margin-top: 5px;
+    font-family: "Nunito Sans";
 }
 
 div.sk-landing-container {
