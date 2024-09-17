@@ -109,15 +109,16 @@ div.card-body details[open] summary i {
 .hero-title {
     color: #DA7007; /* Darker text color for the title */
     font-family: 'Poppins', sans-serif;
-    font-size: 2.75rem;
+    font-size: 3rem;
     margin-bottom: 2rem;
     margin-top: 0px;
+    text-align: center;
 }
 
 .hero-description {
     font-family: 'Nunito Sans', sans-serif;
-    text-align: left;
-    font-size: 1.15rem;
+    text-align: center;
+    font-size: 1.3rem;
     margin-bottom: 10px;
 }
 
@@ -224,10 +225,15 @@ html[data-theme="dark"] .encoding-image {
 
 /** Landing header *******************************/
 
+.bd-page-width {
+    max-width: 1200px;
+}
+
 div.sk-landing-container {
-    margin-top: 35px;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
     min-height: 130px;
-    max-width: 1400px;
+    max-width: 1200px;
 }
 
 div.sk-landing-container .text-white {
@@ -263,7 +269,6 @@ div.sk-landing-bg-more-info dd {
 
 div.sk-landing-bg {
     background-image: linear-gradient(160deg, rgba(0,48,70,.75) 0%, rgba(0,118,179,.75) 17%, rgba(255,239,193,.75) 59%, rgba(255,149,40,.75) 100%);
-    margin-bottom: 0px;
 }
 
 div.sk-landing-bg-more-info {
@@ -273,14 +278,8 @@ div.sk-landing-bg-more-info {
 
 .sk-landing-header {
     font-size: 3.2rem;
-    margin-bottom: 5px;
 }
 
-.sk-landing-subheader {
-    letter-spacing: 0.17rem;
-    margin-top: 5px;
-    font-family: 'Nunito Sans', sans-serif;
-}
 
 /** Scikit-learn buttons ***************************/
 
@@ -305,7 +304,6 @@ a.sk-btn-orange:hover {
 .click-table-report-hint {
     color: #da4607;
     font-size: 1.25rem;
-    margin-top: 3rem;
 }
 
 /** Contributors ***************************/

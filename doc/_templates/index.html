@@ -11,14 +11,13 @@
 
     {# We add the full-width banner below the navbar, as the div there is
 still full-width (unlike the article) #}
-<div class="container-fluid sk-landing-bg py-4">
+<div class="container-fluid sk-landing-bg">
   <div class="container sk-landing-container">
     <div class="row">
-      <div class="col-md-6 mb-3 mb-md-0 mt-2">
-          <h1 class="sk-landing-header text-white text-monospace">skrub</h1>
-          <h4 class="sk-landing-subheader text-white font-italic mb-3"><i>Prepping tables for machine learning</i></h4>
+      <div class="col-md-6 d-flex align-items-center">
+          <h1 class="sk-landing-header text-white text-monospace mb-0">skrub</h1>
       </div>
-      <div class="col-md-6 mb-3 d-flex mt-0 mt-md-3">
+      <div class="col-md-6">
         <ul class="sk-landing-header-body">
           <li>Pandas and Polars dataframes inputs and outputs</li>
           <li>scikit-learn compatible</li>
@@ -33,16 +32,15 @@ still full-width (unlike the article) #}
 {% block docs_main %}
 <div class="container-fluid sk-landing-container">
   <div class="row row-padding-main-container">
-    <div class="col-md-8 mb-3 mb-md-0">
-      <h1 class="hero-title">Less wrangling, more machine learning</h1>
-      <p class="hero-description"><code>skrub</code> is a Python library to ease preprocessing and feature engineering for
-        tabular machine learning.
-        <br />
-        Our long-term goal is to directly connect database tables to machine learning estimators.
-      </p>
-    </div>
-    <div class="col-md-4 d-flex align-items-center justify-content-center">
-      <a class="btn sk-btn-orange mb-1" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">See example</a>
+    <h1 class="hero-title">Less wrangling, more machine learning</h1>
+    <p class="hero-description"><code>skrub</code> is a Python library to
+      <em>ease preprocessing</em> and <em>feature engineering</em> for
+      <strong>tabular machine learning</strong>.
+      <br />
+      Our long-term goal is to directly connect database tables to machine learning estimators.
+    </p>
+    <div class="text-center mt-4">
+        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">Get started →</a>
     </div>
   </div>
 
@@ -60,9 +58,6 @@ still full-width (unlike the article) #}
         href="reference/generated/skrub.tabular_learner.html#skrub.tabular_learner"
         title="skrub.tabular_learner"><code class="xref py py-class docutils
         literal notranslate"><span class="pre">tabular_learner</span></code></a>.
-      </p>
-      <p class="feature-text-see-also">
-        <a href="{{ pathto('auto_examples/00_getting_started') }}">Get started →</a>
       </p>
     </div>
 
@@ -95,9 +90,6 @@ still full-width (unlike the article) #}
         literal notranslate"><span class="pre">DatetimeEncoder</span></code></a>.
       </p>
       {% include "demo_gap_encoder.html" %}
-      <p class="feature-text-see-also">
-        <a href="{{ pathto('auto_examples/02_feature_interpretation_with_gap_encoder') }}">Go further →</a>
-      </p>
     </div>
     <div class="col-md-7 pe-5">
       <div class="encoding-image"></div>
@@ -115,20 +107,20 @@ still full-width (unlike the article) #}
         literal notranslate"><span class="pre">TableReport</span></code></a>.
       </p>
       {% include "demo_table_report_code.html" %}
-      <p class="feature-text-see-also">
-        <a href="https://skrub-data.org/skrub-reports/">Try on your data →</a>
-      </p>
-    </div>
-    <div class="col-md-7">
       <div class="row justify-content-start align-items-baseline">
         <p class="click-table-report-hint">Click anywhere on the table <img src="_static/arrow.svg" width="40px"> </p>
       </div>
+      <p class="feature-text-see-also">
+        <a href="https://skrub-data.org/skrub-reports/">Try on interactive demo →</a>
+      </p>
+    </div>
+    <div class="col-md-7">
       {% include "demo_table_report_generated.html" %}
 
     </div>
   </div>
 
-  <div class="row justify-content-around row-padding-between-features"> <!-- Centers the row content -->
+  <div class="row mt-5 justify-content-around row-padding-between-features"> <!-- Centers the row content -->
     <div class="col-md-8 mb-5 mb-md-0 d-flex align-items-start" style="flex-direction: column;">
         <div class="contributors-list" id="contributors-list">
         <!-- Contributors will be dynamically added here -->
