@@ -130,7 +130,7 @@ div.card-body details[open] summary i {
     padding-bottom: 2rem !important;
     padding-top: 2rem !important;
     border-top: #aaa solid 3px;
-    border-image: linear-gradient(to right, #f6ac6c 0%, #4085a7 50%, #f6ac6c 100%) 1;
+    border-image: linear-gradient(to right, var(--pst-color-background) 0%, #4085a7 50%, var(--pst-color-background) 100%) 1;
 }
 
 .feature-title {
