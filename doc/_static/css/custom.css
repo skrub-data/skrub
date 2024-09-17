@@ -109,7 +109,7 @@ div.card-body details[open] summary i {
 .hero-title {
     color: #DA7007; /* Darker text color for the title */
     font-family: 'Poppins', sans-serif;
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 2rem;
     margin-top: 0px;
     text-align: center;
@@ -118,13 +118,13 @@ div.card-body details[open] summary i {
 .hero-description {
     font-family: 'Nunito Sans', sans-serif;
     text-align: center;
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     margin-bottom: 10px;
 }
 
 .row-padding-main-container {
     padding-top: 1.5rem !important;
-    padding-bottom: 5rem !important;
+    padding-bottom: 2.5rem !important;
 }
 
 .row-padding-between-features {
@@ -230,8 +230,8 @@ html[data-theme="dark"] .encoding-image {
 }
 
 div.sk-landing-container {
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
     min-height: 130px;
     max-width: 1200px;
 }
