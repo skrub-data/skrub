@@ -131,9 +131,6 @@ still full-width (unlike the article) #}
         <div class="contributors-list" id="contributors-list">
         <!-- Contributors will be dynamically added here -->
         </div>
-        <p class="feature-text-see-also">
-          <a href="https://github.com/skrub-data/skrub/graphs/contributors">And many more →</a>
-        </p>
     </div>
   </div>
 
@@ -187,6 +184,16 @@ contributors.forEach(contributor => {
 
     contributorsList.appendChild(contributorElement);
 });
+
+// Add "And many more" link as the last element
+const andMoreElement = document.createElement('div');
+andMoreElement.classList.add('more-contributors');
+andMoreElement.innerHTML = `
+    <a href="https://github.com/skrub-data/skrub/graphs/contributors" target="_blank">
+        And many more →
+    </a>
+`;
+contributorsList.appendChild(andMoreElement);
 }
 
 fetchContributors();

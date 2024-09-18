@@ -326,21 +326,44 @@ a.sk-btn-orange:hover {
     gap: 2rem;
     justify-content: center;
 }
+
 .contributor {
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
+
 .contributor img {
     border-radius: 50%;
     width: 80px;
     height: 80px;
 }
+
 .contributor-name {
     margin-top: 0.5rem;
     font-size: 0.6rem;
 }
+
+.more-contributors {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+}
+
+.more-contributors a,
+.more-contributors a:visited {
+    font-size: 1rem;
+    transition: color 0.3s ease;
+    font-weight: normal;
+}
+
+.more-contributors a:hover,
+.more-contributors a:visited:hover {
+    font-weight: bold;
+}
+
 
 /** Footer ***************************/
 
