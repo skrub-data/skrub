@@ -107,20 +107,27 @@ still full-width (unlike the article) #}
         literal notranslate"><span class="pre">TableReport</span></code></a>.
       </p>
       {% include "demo_table_report_code.html" %}
-      <div class="row justify-content-start align-items-baseline">
-        <p class="click-table-report-hint">Click anywhere on the table <i class="fa-solid fa-arrow-trend-down"></i> </p>
-      </div>
       <p class="feature-text-see-also">
         <a href="https://skrub-data.org/skrub-reports/">Try it on your dataset →</a>
       </p>
+      <div class="row">
+        <p class="click-table-report-hint">Click anywhere on the table <i class="fa-solid fa-arrow-trend-down"></i> </p>
+      </div>
     </div>
     <div class="col-md-7">
       {% include "demo_table_report_generated.html" %}
     </div>
   </div>
 
-  <div class="row mt-5 justify-content-around row-padding-between-features"> <!-- Centers the row content -->
-    <div class="col-md-8 mb-5 mb-md-0 d-flex align-items-start" style="flex-direction: column;">
+  <div class="row mt-5 flex-md-row-reverse row-padding-between-features">
+    <div class="col-md-4 mb-4">
+      <h4 class="feature-title">Our Community</h4>
+      <p class="feature-text">
+        The Skrub project is powered by the efforts of a world-wide community of contributors.
+        Here we display a randomly selected group of 30 contributors.
+      </p>
+    </div>
+    <div class="col-md-8">
         <div class="contributors-list" id="contributors-list">
         <!-- Contributors will be dynamically added here -->
         </div>
@@ -128,15 +135,8 @@ still full-width (unlike the article) #}
           <a href="https://github.com/skrub-data/skrub/graphs/contributors">And many more →</a>
         </p>
     </div>
-    <div class="col-md-4 d-flex align-items-start d-flex" style="flex-direction: column;">
-      <h4 class="feature-title">Our Community</h4>
-      <p class="feature-text">
-        The Skrub project is powered by the efforts of a world-wide community of contributors.
-        <br />
-        Here we display a randomly selected group of 30 contributors.
-      </p>
-    </div>
   </div>
+
   <div class="row mb-0 row-padding-between-features">
     <h1 class="hero-title">Try it yourself!</h1>
     <p class="hero-description">

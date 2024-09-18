@@ -64,10 +64,6 @@
     }
 }
 
-.row justify-content-md-center {
-    gap: 30px;
-}
-
 .sk-landing-header text-white text-monospace {
     font-family: 'Poppins', sans-serif;
     margin-top: -20px;
@@ -145,6 +141,12 @@ div.card-body details[open] summary i {
     font-family: 'Nunito Sans', sans-serif;
     font-size: 1.05rem; /* Regular font size for text */
     margin-bottom: 0; /* Remove default bottom margin */
+}
+
+@media (max-width: 767px) {
+    .feature-text {
+        text-align: justify;
+    }
 }
 
 .feature-text-see-also {
@@ -309,6 +311,8 @@ a.sk-btn-orange:hover {
 .click-table-report-hint {
     color: #da4607;
     font-size: 1.25rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 /** Contributors ***************************/
@@ -316,10 +320,14 @@ a.sk-btn-orange:hover {
 .contributors-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 2rem; /* Adds space between contributors */
+    gap: 2rem;
+    justify-content: center;
 }
 .contributor {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .contributor img {
     border-radius: 50%;
