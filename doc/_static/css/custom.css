@@ -140,12 +140,6 @@ div.card-body details[open] summary i {
     margin-bottom: 0; /* Remove default bottom margin */
 }
 
-@media (max-width: 767px) {
-    .feature-text {
-        text-align: justify;
-    }
-}
-
 .feature-text-see-also {
     font-family: var(--pst-font-family-base);
     /* font-size: 1.1rem; */
@@ -284,6 +278,18 @@ div.sk-landing-bg-more-info {
     font-size: 3.2rem;
 }
 
+@media (max-width: 768px) {
+    .sk-landing-header {
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .sk-landing-container .col-md-4 {
+        display: flex;
+        justify-content: center;
+    }
+}
 
 /** Scikit-learn buttons ***************************/
 
