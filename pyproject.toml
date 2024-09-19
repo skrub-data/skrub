@@ -64,6 +64,9 @@ optional = [
     "pyarrow",
     "polars",
 ]
+sentence_transformers = [
+    "sentence_transformers",
+]
 test = [
     "numpydoc",
     "pytest",
@@ -166,7 +169,7 @@ test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 [tool.pixi.environments]
 lint = ["lint"]
 doc = ["optional", "doc"]
-test = ["test"]
+test = ["test", "sentence_transformers"]
 dev = ["dev", "optional", "doc", "lint", "test"]
 ci-py309-min-deps = ["py309", "min-dependencies", "test"]
 ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]

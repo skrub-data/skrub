@@ -343,6 +343,7 @@ intersphinx_mapping = {
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable", None),
     "polars": ("https://docs.pola.rs/py-polars/html", None),
     "seaborn": ("http://seaborn.pydata.org", None),
+    "sentence_transformers": ("https://sbert.net/", None),
 }
 
 
