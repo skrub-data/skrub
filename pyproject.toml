@@ -83,7 +83,7 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 packages = ["skrub"]
 
 [tool.pixi.project]
-channels = ["conda-forge"]
+channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
