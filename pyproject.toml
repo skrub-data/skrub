@@ -118,10 +118,13 @@ pyarrow = "*"
 polars = "*"
 
 [tool.pixi.feature.transformers.dependencies]
-pytorch = { version = "*", channel = "pytorch" }
+pytorch = { version = "2.4.1", channel = "pytorch" }
 torchvision = { version = "*", channel = "pytorch" }
 transformers = "*"
 sentence-transformers = "*"
+
+[tool.pixi.feature.transformers]
+platforms = ["linux-64", "osx-arm64", "win-64"]
 
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
@@ -234,7 +237,7 @@ ignore=[
 [tool.pytest.ini_options]
 filterwarnings = [
     # Turn deprecation warnings into errors
-    #"error::FutureWarning",
+    "error::FutureWarning",
     "error::DeprecationWarning",
 
     # Ignore warning from np.in1d since the future behavior is already the desired
@@ -254,6 +257,7 @@ filterwarnings = [
     # should be addressed in pandas
     'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
     'ignore:.*distutils Version classes are deprecated.*',
+    'ignore:.*`resume_download` is deprecated.*'
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
