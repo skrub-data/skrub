@@ -3,7 +3,6 @@ environments:
   ci-py309-min-deps:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -529,7 +528,6 @@ environments:
   ci-py309-min-optional-deps:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -1328,7 +1326,6 @@ environments:
   ci-py312-latest-deps:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -1872,7 +1869,6 @@ environments:
   ci-py312-latest-optional-deps:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -2679,7 +2675,6 @@ environments:
   default:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -3070,7 +3065,6 @@ environments:
   dev:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -4340,7 +4334,6 @@ environments:
   doc:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -5360,7 +5353,6 @@ environments:
   lint:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -5824,7 +5816,6 @@ environments:
   test:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
-    - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
     packages:
@@ -25835,7 +25826,7 @@ packages:
   name: skrub
   version: 0.4.dev0
   path: .
-  sha256: d86d852c7d5f50a1c64d1f3ac3941c7ea8b77f046e960acff3478abf01619b0e
+  sha256: 002efd90db521971664d2589cdff166f9a208b44e03bae869d696aad0f1a85d8
   requires_dist:
   - numpy>=1.23.5
   - packaging>=23.1
@@ -25862,11 +25853,11 @@ packages:
   - pre-commit ; extra == 'lint'
   - pyarrow ; extra == 'optional'
   - polars ; extra == 'optional'
-  - sentence-transformers ; extra == 'sentence-transformers'
   - numpydoc ; extra == 'test'
   - pytest ; extra == 'test'
   - pytest-cov ; extra == 'test'
   - pytest-xdist ; extra == 'test'
+  - sentence-transformers ; extra == 'transformers'
   requires_python: '>=3.9'
   editable: true
 - kind: conda

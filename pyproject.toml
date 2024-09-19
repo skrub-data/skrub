@@ -64,7 +64,7 @@ optional = [
     "pyarrow",
     "polars",
 ]
-sentence-transformers = [
+transformers = [
     "sentence-transformers",
 ]
 test = [
@@ -116,9 +116,6 @@ pre-commit = "*"
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
 polars = "*"
-
-[tool.pixi.feature.sentence-transformers.pypi-dependencies]
-sentence-transformers = "*"
 
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
@@ -173,11 +170,11 @@ test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 lint = ["lint"]
 doc = ["optional", "doc"]
 test = ["test"]
-dev = ["dev", "optional", "doc", "lint", "test", "sentence-transformers"]
+dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
 ci-py309-min-deps = ["py309", "min-dependencies", "test"]
-ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test", "sentence-transformers"]
+ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test", "transformers"]
 ci-py312-latest-deps = ["py312", "test"]
-ci-py312-latest-optional-deps = ["py312", "optional", "test", "sentence-transformers"]
+ci-py312-latest-optional-deps = ["py312", "optional", "test", "transformers"]
 
 [tool.black]
 line-length = 88
