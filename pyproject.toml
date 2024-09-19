@@ -118,7 +118,7 @@ pyarrow = "*"
 polars = "*"
 
 [tool.pixi.feature.transformers.dependencies]
-pytorch = { version = "2.4.1", channel = "pytorch" }
+pytorch = { version = "*", channel = "pytorch" }
 torchvision = { version = "*", channel = "pytorch" }
 transformers = "*"
 sentence-transformers = "*"
