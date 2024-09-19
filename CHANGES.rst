@@ -22,6 +22,13 @@ Major changes
 
 Minor changes
 -------------
+
+* For tree-based models, :func:`tabular_learner` now adds
+  `handle_unknown='use_encoded_value'` to the `OrdinalEncoder`, to avoid
+  errors with new categories in the test set. This is consistent with the
+  setting of `OneHotEncoder` used by default in the
+  :class:`TableVectorizer`. :pr:`1078` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
 * The reports created by :class:`TableReport`, when inserted in an html page (or
   displayed in a notebook), now use the same font as the surrounding page.
   :pr:`1038` by :user:`Jérôme Dockès <jeromedockes>`.
