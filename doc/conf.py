@@ -499,7 +499,6 @@ numpydoc_xref_aliases = {
     "ColumnTransformer": "sklearn.compose.ColumnTransformer",
     "OneHotEncoder": "sklearn.preprocessing.OneHotEncoder",
     "Pipeline": "sklearn.pipeline.Pipeline",
-    "make_pipeline": "sklearn.pipeline.make_pipeline",
     "GridSearchCV": "sklearn.model_selection.GridSearchCV",
     "fetch_openml": "sklearn.datasets.fetch_openml",
     # other libraries
