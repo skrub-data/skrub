@@ -117,14 +117,14 @@ pre-commit = "*"
 pyarrow = "*"
 polars = "*"
 
+[tool.pixi.feature.transformers]
+# pytorch is not anymore released on osx-64 platform
+platforms = ["linux-64", "osx-arm64", "win-64"]
+
 [tool.pixi.feature.transformers.dependencies]
-pytorch = { version = "2.4.1", channel = "pytorch" }
-torchvision = { version = "*", channel = "pytorch" }
+pytorch = { version = ">=2.4.1", channel = "pytorch" }
 transformers = "*"
 sentence-transformers = "*"
-
-[tool.pixi.feature.transformers]
-platforms = ["linux-64", "osx-arm64", "win-64"]
 
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
@@ -178,12 +178,13 @@ test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 [tool.pixi.environments]
 lint = ["lint"]
 doc = ["optional", "doc"]
-test = ["test", "transformers"]
+test = ["test"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
 ci-py309-min-deps = ["py309", "min-dependencies", "test"]
 ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
-ci-py312-latest-deps = ["py312", "test", "transformers"]
-ci-py312-latest-optional-deps = ["py312", "optional", "test", "transformers"]
+ci-py311-transformers = ["py311", "transformers", "test"]
+ci-py312-latest-deps = ["py312", "test"]
+ci-py312-latest-optional-deps = ["py312", "optional", "test"]
 
 [tool.black]
 line-length = 88

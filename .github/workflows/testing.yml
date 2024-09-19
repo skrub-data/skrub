@@ -18,6 +18,7 @@ jobs:
         environment: [
             ci-py309-min-deps,
             ci-py309-min-optional-deps,
+            ci-py311-transformers,
             ci-py312-latest-deps,
             ci-py312-latest-optional-deps
         ]
