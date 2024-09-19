@@ -264,7 +264,7 @@ def tabular_learner(estimator, *, n_jobs=None):
         vectorizer.set_params(
             low_cardinality=OrdinalEncoder(
                 handle_unknown="use_encoded_value",
-                unknown_values=-1,
+                unknown_value=-1,
             ),
             high_cardinality=MinHashEncoder(),
         )
