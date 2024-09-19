@@ -110,6 +110,7 @@ def test_wrong_model_name():
 
 
 def test_transform_equal_fit_transform(df_module):
+    pytest.importorskip("sentence_transformers")
     x = df_module.make_column("", ["hello again"])
     encoder = SentenceEncoder()
     X_out = encoder.fit_transform(x)
