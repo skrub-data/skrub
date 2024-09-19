@@ -263,9 +263,9 @@ def tabular_learner(estimator, *, n_jobs=None):
     elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         vectorizer.set_params(
             low_cardinality=OrdinalEncoder(
-                handle_unknown='use_encoded_value',
+                handle_unknown="use_encoded_value",
                 unknown_values=-1,
-                ),
+            ),
             high_cardinality=MinHashEncoder(),
         )
     steps = [vectorizer]
