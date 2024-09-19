@@ -119,6 +119,7 @@ polars = "*"
 
 [tool.pixi.feature.transformers.dependencies]
 pytorch = { version = "2.2.1", channel = "pytorch" }
+torchvision = { version = "*", channel = "pytorch" }
 transformers = "4.39.3"
 sentence-transformers = "2.7.0"
 
