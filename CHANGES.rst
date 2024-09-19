@@ -14,7 +14,8 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
-
+* The :class:`SentenceEncoder` is now available to encode columns with diverse entries.
+  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 Minor changes
 -------------
