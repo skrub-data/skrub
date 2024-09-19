@@ -83,7 +83,7 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 packages = ["skrub"]
 
 [tool.pixi.project]
-channels = ["conda-forge"]
+channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
@@ -116,6 +116,11 @@ pre-commit = "*"
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
 polars = "*"
+
+[tool.pixi.feature.transformers.dependencies]
+pytorch = { version = "2.2.1", channel = "pytorch" }
+transformers = "4.39.3"
+sentence-transformers = "2.7.0"
 
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
