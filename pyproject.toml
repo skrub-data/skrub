@@ -122,7 +122,8 @@ polars = "*"
 platforms = ["linux-64", "osx-arm64", "win-64"]
 
 [tool.pixi.feature.transformers.dependencies]
-pytorch = { version = ">=2.4.1", channel = "pytorch" }
+numpy = ">=1.23.5,<2"
+pytorch = { version = "*", channel = "pytorch" }
 transformers = "*"
 sentence-transformers = "*"
 
