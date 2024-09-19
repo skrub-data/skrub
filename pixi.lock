@@ -28690,7 +28690,7 @@ packages:
   name: skrub
   version: 0.4.dev0
   path: .
-  sha256: 0f67164b802c8c84c2257d0b05091402c2d7a771005423df0f48dcabc16305af
+  sha256: 5576004fa89c6e39dcbcded9e7523ced8c2cc982c858e1b598dfd5e70c8daa20
   requires_dist:
   - numpy>=1.23.5
   - packaging>=23.1
