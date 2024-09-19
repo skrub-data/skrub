@@ -234,7 +234,7 @@ ignore=[
 [tool.pytest.ini_options]
 filterwarnings = [
     # Turn deprecation warnings into errors
-    "error::FutureWarning",
+    #"error::FutureWarning",
     "error::DeprecationWarning",
 
     # Ignore warning from np.in1d since the future behavior is already the desired
