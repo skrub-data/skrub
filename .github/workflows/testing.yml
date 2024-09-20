@@ -34,7 +34,12 @@ jobs:
           frozen: true
 
       - name: Run tests
-        run: pixi run -e ${{ matrix.environment }} test -n 3
+        run: |
+          if [ "${{ matrix.environment }}" = "ci-py311-transformers" ]; then
+            pixi run -e ${{ matrix.environment }} test
+          else
+            pixi run -e ${{ matrix.environment }} test -n 3
+          fi
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.5.0
