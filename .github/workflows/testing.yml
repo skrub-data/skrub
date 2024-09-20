@@ -35,7 +35,7 @@ jobs:
 
       - name: Run tests
         run: |
-          if [ "${{ matrix.environment }}" = "ci-py311-transformers" ]; then
+          if [[ "${{ matrix.environment }}" = "ci-py311-transformers" ]]; then
             pixi run -e ${{ matrix.environment }} test
           else
             pixi run -e ${{ matrix.environment }} test -n 3
