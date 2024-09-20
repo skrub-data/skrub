@@ -7,17 +7,17 @@ from skrub._on_each_column import RejectColumn
 from skrub._sentence_encoder import ModelNotFound
 from skrub._utils import import_optional_dependency
 
-try:
-    import_optional_dependency("sentence_transformers")
-    _SENTENCE_TFS_INSTALLED = True
-except ImportError:
-    _SENTENCE_TFS_INSTALLED = False
+pytest.importorskip("sentence_transformers")
 
 
-@pytest.mark.skipif(
-    _SENTENCE_TFS_INSTALLED, reason="sentence_transformers is installed"
-)
 def test_missing_import_error():
+    try:
+        import_optional_dependency("sentence_transformers")
+    except ImportError:
+        pass
+    else:
+        return
+
     st = SentenceEncoder()
     x = pd.Series(["oh no"])
     with pytest.raises(ImportError, match="Missing optional dependency"):
@@ -25,7 +25,6 @@ def test_missing_import_error():
 
 
 def test_sentence_encoder(df_module):
-    pytest.importorskip("sentence_transformers")
     X = df_module.make_column("", ["hello sir", "hola que tal"])
     encoder = SentenceEncoder(n_components=2)
     X_out = encoder.fit_transform(X)
@@ -37,20 +36,17 @@ def test_sentence_encoder(df_module):
 
 @pytest.mark.parametrize("X", [["hello"], "hello"])
 def test_not_a_series(X):
-    pytest.importorskip("sentence_transformers")
     with pytest.raises(ValueError):
         SentenceEncoder().fit(X)
 
 
 def test_not_a_series_with_string(df_module):
-    pytest.importorskip("sentence_transformers")
     X = df_module.make_column("", [1, 2, 3])
     with pytest.raises(RejectColumn):
         SentenceEncoder().fit(X)
 
 
 def test_missing_value(df_module):
-    pytest.importorskip("sentence_transformers")
     X = df_module.make_column("", [None, None, "hey"])
     encoder = SentenceEncoder(n_components="all")
     X_out = encoder.fit_transform(X)
@@ -61,7 +57,6 @@ def test_missing_value(df_module):
 
 
 def test_n_components(df_module):
-    pytest.importorskip("sentence_transformers")
     X = df_module.make_column("", ["hello sir", "hola que tal"])
     encoder = SentenceEncoder(n_components="all")
     X_out = encoder.fit_transform(X)
@@ -82,7 +77,6 @@ def test_n_components(df_module):
 
 
 def test_wrong_parameters():
-    pytest.importorskip("sentence_transformers")
     with pytest.raises(ValueError, match="Got n_components='yes'"):
         SentenceEncoder(n_components="yes")._check_params()
 
@@ -103,14 +97,12 @@ def test_wrong_parameters():
 
 
 def test_wrong_model_name():
-    pytest.importorskip("sentence_transformers")
     x = pd.Series(["Good evening Dave"])
     with pytest.raises(ModelNotFound):
         SentenceEncoder(model_name_or_path="HAL-9000").fit(x)
 
 
 def test_transform_equal_fit_transform(df_module):
-    pytest.importorskip("sentence_transformers")
     x = df_module.make_column("", ["hello again"])
     encoder = SentenceEncoder()
     X_out = encoder.fit_transform(x)
