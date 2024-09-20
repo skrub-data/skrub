@@ -19,6 +19,13 @@ Major changes
 
 Minor changes
 -------------
+
+* For tree-based models, :func:`tabular_learner` now adds
+  `handle_unknown='use_encoded_value'` to the `OrdinalEncoder`, to avoid
+  errors with new categories in the test set. This is consistent with the
+  setting of `OneHotEncoder` used by default in the
+  :class:`TableVectorizer`. :pr:`1078` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
 * The reports created by :class:`TableReport`, when inserted in an html page (or
   displayed in a notebook), now use the same font as the surrounding page.
   :pr:`1038` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -35,8 +42,8 @@ Minor changes
 
 * A "stats" panel has been added to the TableReport, showing summary statistics
   for all columns (number of missing values, mean, etc. -- similar to
-  ``pandas.info()`` ) in a table.
-  :pr:`1056` by :user:`Jérôme Dockès <jeromedockes>`.
+  ``pandas.info()`` ) in a table. It can be sorted by each column.
+  :pr:`1056` and :pr:`1068` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * Added zero padding for column names in :class:`MinHashEncoder` to improve column ordering consistency.
   :pr:`1069` by :user:`Shreekant Nandiyawar <Shree7676>`.
