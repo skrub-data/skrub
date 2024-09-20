@@ -76,18 +76,20 @@ def test_missing_value(df_module, encoder):
 
 def test_n_components(df_module, encoder):
     X = df_module.make_column("", ["hello sir", "hola que tal"])
-    encoder_all = clone(encoder).set_params(n_components="all")
-    X_out = encoder_all.fit_transform(X)
-    assert X_out.shape[1] == 768
-    assert encoder_all.n_components_ == 768
+    encoder_all = clone(encoder).set_params(n_components="all").fit(X)
+    for meth in ("fit_transform", "transform"):
+        X_out = getattr(encoder_all, meth)(X)
+        assert X_out.shape[1] == 768
+        assert encoder_all.n_components_ == 768
 
-    encoder_2 = clone(encoder).set_params(n_components=2)
-    X_out = encoder_2.fit_transform(X)
-    assert X_out.shape[1] == 2
-    assert encoder_2.n_components_ == 2
+    encoder_2 = clone(encoder).set_params(n_components=2).fit(X)
+    for meth in ("fit_transform", "transform"):
+        X_out = getattr(encoder_2, meth)(X)
+        assert X_out.shape[1] == 2
+        assert encoder_2.n_components_ == 2
 
     encoder_30 = clone(encoder).set_params(n_components=30)
-    with pytest.warns(UserWarning):
+    with pytest.warns(UserWarning, match="The embeddings will be truncated"):
         X_out = encoder_30.fit_transform(X)
     assert not hasattr(encoder_30, "pca_")
     assert X_out.shape[1] == 30
@@ -126,3 +128,15 @@ def test_transform_equal_fit_transform(df_module, encoder):
     X_out = encoder.fit_transform(x)
     X_out_2 = encoder.transform(x)
     df_module.assert_frame_equal(X_out, X_out_2)
+
+
+def test_transform_error_on_float_data(df_module, encoder):
+    """Check that we raise an error when data without any string is passed at
+    transform."""
+    x = df_module.make_column("", [1.0, 2.5, 3.7])
+
+    encoder = clone(encoder)
+    encoder.fit(df_module.make_column("", ["hello", "world"]))
+
+    with pytest.raises(RejectColumn, match="does not contain strings"):
+        encoder.transform(x)
