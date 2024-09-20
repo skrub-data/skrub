@@ -34,6 +34,7 @@ jobs:
           frozen: true
 
       - name: Run tests
+        shell: bash {0}
         run: |
           if [[ "${{ matrix.environment }}" = "ci-py311-transformers" ]]; then
             pixi run -e ${{ matrix.environment }} test
