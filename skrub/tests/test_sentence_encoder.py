@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from sklearn.base import clone
 
 from skrub import SentenceEncoder
 from skrub._on_each_column import RejectColumn
@@ -8,10 +9,26 @@ from skrub._sentence_encoder import ModelNotFound
 
 pytest.importorskip("sentence_transformers")
 
-MODEL_NAME = "sentence-transformers/paraphrase-albert-small-v2"
+
+@pytest.fixture
+def encoder():
+    """Create a fixture such that we set the common parameters of the encoder.
+
+    Here, we have two constraints:
+
+    - We want a really small model to not blow up the memory of the GitHub Actions
+      workers.
+    - We want to force the use of the CPU. GitHub Actions workers on macOS ARM64 will
+      detect the MPS backend, but due to limitations, no memory can be allocated.
+      See https://github.com/actions/runner-images/issues/9918 for more details.
+    """
+    return SentenceEncoder(
+        model_name_or_path="sentence-transformers/paraphrase-albert-small-v2",
+        device="cpu",
+    )
 
 
-def test_missing_import_error():
+def test_missing_import_error(encoder):
     try:
         import sentence_transformers  # noqa
     except ImportError:
@@ -19,17 +36,15 @@ def test_missing_import_error():
     else:
         return
 
-    st = SentenceEncoder(model_name_or_path=MODEL_NAME, device="cpu")
+    st = clone(encoder)
     x = pd.Series(["oh no"])
     with pytest.raises(ImportError, match="Missing optional dependency"):
         st.fit(x)
 
 
-def test_sentence_encoder(df_module):
+def test_sentence_encoder(df_module, encoder):
     X = df_module.make_column("", ["hello sir", "hola que tal"])
-    encoder = SentenceEncoder(
-        model_name_or_path=MODEL_NAME, n_components=2, device="cpu"
-    )
+    encoder = clone(encoder).set_params(n_components=2)
     X_out = encoder.fit_transform(X)
     assert X_out.shape == (2, 2)
 
@@ -38,92 +53,76 @@ def test_sentence_encoder(df_module):
 
 
 @pytest.mark.parametrize("X", [["hello"], "hello"])
-def test_not_a_series(X):
+def test_not_a_series(X, encoder):
     with pytest.raises(ValueError):
-        SentenceEncoder(model_name_or_path=MODEL_NAME, device="cpu").fit(X)
+        clone(encoder).fit(X)
 
 
-def test_not_a_series_with_string(df_module):
+def test_not_a_series_with_string(df_module, encoder):
     X = df_module.make_column("", [1, 2, 3])
     with pytest.raises(RejectColumn):
-        SentenceEncoder(model_name_or_path=MODEL_NAME, device="cpu").fit(X)
+        clone(encoder).fit(X)
 
 
-def test_missing_value(df_module):
+def test_missing_value(df_module, encoder):
     X = df_module.make_column("", [None, None, "hey"])
-    encoder = SentenceEncoder(
-        model_name_or_path=MODEL_NAME, n_components="all", device="cpu"
-    )
+    encoder = clone(encoder).set_params(n_components="all")
     X_out = encoder.fit_transform(X)
 
-    assert X_out.shape == (3, 384)
+    assert X_out.shape == (3, 768)
     X_out = X_out.to_numpy()
     assert_array_equal(X_out[0, :], X_out[1, :])
 
 
-def test_n_components(df_module):
+def test_n_components(df_module, encoder):
     X = df_module.make_column("", ["hello sir", "hola que tal"])
-    encoder = SentenceEncoder(
-        model_name_or_path=MODEL_NAME, n_components="all", device="cpu"
-    )
-    X_out = encoder.fit_transform(X)
-    assert X_out.shape[1] == 384
-    assert encoder.n_components_ == 384
+    encoder_all = clone(encoder).set_params(n_components="all")
+    X_out = encoder_all.fit_transform(X)
+    assert X_out.shape[1] == 768
+    assert encoder_all.n_components_ == 768
 
-    encoder = SentenceEncoder(
-        model_name_or_path=MODEL_NAME, n_components=2, device="cpu"
-    )
-    X_out = encoder.fit_transform(X)
+    encoder_2 = clone(encoder).set_params(n_components=2)
+    X_out = encoder_2.fit_transform(X)
     assert X_out.shape[1] == 2
-    assert encoder.n_components_ == 2
+    assert encoder_2.n_components_ == 2
 
-    encoder = SentenceEncoder(
-        model_name_or_path=MODEL_NAME, n_components=30, device="cpu"
-    )
+    encoder_30 = clone(encoder).set_params(n_components=30)
     with pytest.warns(UserWarning):
-        X_out = encoder.fit_transform(X)
-    assert not hasattr(encoder, "pca_")
+        X_out = encoder_30.fit_transform(X)
+    assert not hasattr(encoder_30, "pca_")
     assert X_out.shape[1] == 30
-    assert encoder.n_components_ == 30
+    assert encoder_30.n_components_ == 30
 
 
-def test_wrong_parameters():
+def test_wrong_parameters(encoder):
     with pytest.raises(ValueError, match="Got n_components='yes'"):
-        SentenceEncoder(
-            model_name_or_path=MODEL_NAME, n_components="yes", device="cpu"
-        )._check_params()
+        clone(encoder).set_params(n_components="yes")._check_params()
 
     with pytest.raises(ValueError, match="Got batch_size=-10"):
-        SentenceEncoder(
-            model_name_or_path=MODEL_NAME, batch_size=-10, device="cpu"
-        )._check_params()
+        clone(encoder).set_params(batch_size=-10)._check_params()
 
     with pytest.raises(ValueError, match="Got model_name_or_path=1"):
-        SentenceEncoder(model_name_or_path=1, device="cpu")._check_params()
+        clone(encoder).set_params(model_name_or_path=1)._check_params()
 
     with pytest.raises(ValueError, match="Got norm=l3"):
-        SentenceEncoder(
-            model_name_or_path=MODEL_NAME, norm="l3", device="cpu"
-        )._check_params()
+        clone(encoder).set_params(norm="l3")._check_params()
 
     with pytest.raises(ValueError, match="Got cache_folder=1"):
-        SentenceEncoder(
-            model_name_or_path=MODEL_NAME, cache_folder=1, device="cpu"
-        )._check_params()
+        clone(encoder).set_params(cache_folder=1)._check_params()
 
     with pytest.raises(ValueError, match="Got model_name_or_path=1"):
-        SentenceEncoder(model_name_or_path=1, device="cpu")._check_params()
+        clone(encoder).set_params(model_name_or_path=1)._check_params()
 
 
-def test_wrong_model_name():
+def test_wrong_model_name(encoder):
     x = pd.Series(["Good evening Dave"])
     with pytest.raises(ModelNotFound):
-        SentenceEncoder(model_name_or_path="HAL-9000", device="cpu").fit(x)
+        clone(encoder).set_params(model_name_or_path="HAL-9000").fit(x)
 
 
-def test_transform_equal_fit_transform(df_module):
+def test_transform_equal_fit_transform(df_module, encoder):
     x = df_module.make_column("", ["hello again"])
-    encoder = SentenceEncoder(model_name_or_path=MODEL_NAME, device="cpu")
+    encoder = clone(encoder)
     X_out = encoder.fit_transform(x)
     X_out_2 = encoder.transform(x)
     df_module.assert_frame_equal(X_out, X_out_2)
