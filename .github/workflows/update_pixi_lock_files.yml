@@ -26,6 +26,9 @@ jobs:
         with:
           pixi-version: v0.30.0
 
+      - name: Remove the current lock file
+        run: rm -f pixi.lock
+
       - name: Update the pixi lock files
         run: pixi update
 
