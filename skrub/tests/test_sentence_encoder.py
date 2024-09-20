@@ -5,14 +5,13 @@ from numpy.testing import assert_array_equal
 from skrub import SentenceEncoder
 from skrub._on_each_column import RejectColumn
 from skrub._sentence_encoder import ModelNotFound
-from skrub._utils import import_optional_dependency
 
 pytest.importorskip("sentence_transformers")
 
 
 def test_missing_import_error():
     try:
-        import_optional_dependency("sentence_transformers")
+        import sentence_transformers  # noqa
     except ImportError:
         pass
     else:
