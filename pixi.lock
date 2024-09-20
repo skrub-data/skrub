@@ -6273,7 +6273,7 @@ packages:
   license: MIT
   license_family: MIT
   purls:
-  - pkg:pypi/anyio?source=compressed-mapping
+  - pkg:pypi/anyio?source=hash-mapping
   size: 107387
   timestamp: 1726753494173
 - kind: conda
