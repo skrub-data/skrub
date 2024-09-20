@@ -27,8 +27,8 @@
 }
 
 .card-body {
-    padding-left: 32px;
-    padding-right: 32px;
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .card-title {
@@ -61,11 +61,8 @@
     }
 }
 
-.row justify-content-md-center {
-    gap: 30px;
-}
-
 .sk-landing-header text-white text-monospace {
+    font-family: var(--pst-font-family-heading);
     margin-top: -20px;
 }
 
@@ -99,6 +96,89 @@ div.card-body details[open] summary i {
     display: none;
 }
 
+/** Landing page features *************************************************************/
+
+.hero-title {
+    color: #DA7007; /* Darker text color for the title */
+    font-family: var(--pst-font-family-heading);
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    margin-top: 0px;
+    text-align: center;
+}
+
+.hero-description {
+    font-family: var(--pst-font-family-base);
+    text-align: center;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.row-padding-main-container {
+    padding-top: 1.5rem !important;
+    padding-bottom: 2.5rem !important;
+}
+
+.row-padding-between-features {
+    padding-bottom: 2rem !important;
+    padding-top: 2rem !important;
+    border-top: #aaa solid 3px;
+    border-image: linear-gradient(to right, var(--pst-color-background) 0%, #4085a7 50%, var(--pst-color-background) 100%) 1;
+}
+
+.feature-title {
+    color: #DA7007; /* Darker text color for the title */
+    font-family: var(--pst-font-family-heading);
+    font-size: 2rem;
+    margin-bottom: 1.25rem; /* Spacing below title */
+    margin-top: 0px;
+}
+
+.feature-text {
+    font-family: var(--pst-font-family-base);
+    font-size: 1.05rem; /* Regular font size for text */
+    margin-bottom: 0; /* Remove default bottom margin */
+}
+
+.feature-text-see-also {
+    font-family: var(--pst-font-family-base);
+    /* font-size: 1.1rem; */
+    margin-top: 1.75rem;
+}
+
+.feature-text-see-also a {
+    color: var(--pst-color-text-base) !important;
+    font-weight: normal;
+    transition: font-weight 0.3s ease;
+}
+
+.feature-text-see-also a:hover {
+    color: var(--pst-color-text-base) !important;
+    font-weight: bold;
+}
+
+.code-margin {
+    margin-top: 0.75em !important;
+    margin-bottom: 0.75em !important;
+}
+
+.encoding-image {
+    width: 100%;
+    aspect-ratio: 1.2;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+html[data-theme="light"] .encoding-image {
+    background-image: url('../encoding_light.png');
+}
+
+html[data-theme="dark"] .encoding-image {
+    background-image: url('../encoding_dark.png');
+}
+
+
 /** Styling **************************************************************/
 
 /* Make the footer a bit less visible */
@@ -115,9 +195,9 @@ div.card-body details[open] summary i {
     color: var(--pst-color-info-highlight);
 }
 
-/** Adapt boostrap colors ************************/
+/** Adapt bootstrap colors ************************/
 :root {
-    /* Change colors on boostrap elements to use the theme's colors */
+    /* Change colors on bootstrap elements to use the theme's colors */
     --bs-nav-pills-link-active-bg: var(--pst-color-primary);
     --bs-nav-link-color:  var(--pst-color-primary);
     --bs-nav-link-hover-color: var(--pst-color-link-hover);
@@ -137,25 +217,41 @@ div.card-body details[open] summary i {
 
 /** Landing header *******************************/
 
-
-div.sk-landing-container {
-    max-width: 1400px;
-    margin-top: 35px;
-    min-height: 130px;
+header > .bd-page-width {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-div.sk-landing-footer div.row {
-    max-width: 1400px;
-    margin: 0 auto;
+div.sk-landing-container {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    max-width: 1200px;
 }
 
 div.sk-landing-container .text-white {
     text-shadow: 0px 0px 8px rgb(42, 98, 128);
 }
 
+div.sk-landing-container a,
+div.sk-landing-container a:hover,
+div.sk-landing-container a:visited,
+div.sk-landing-container a:visited:hover,
+div.sk-landing-container a > code,
+div.sk-landing-container a:hover > code,
+div.sk-landing-container a:visited > code,
+div.sk-landing-container a:visited:hover > code {
+    color: #DA7007;
+}
+
+div.sk-landing-container code {
+    font-weight: normal !important;
+}
+
 ul.sk-landing-header-body {
     margin-top: auto;
     margin-bottom: auto;
+    font-family: var(--pst-font-family-base);
     font-size: 1.2rem;
     font-weight: 500;
     color: black;
@@ -171,8 +267,6 @@ div.sk-landing-bg-more-info dd {
 
 div.sk-landing-bg {
     background-image: linear-gradient(160deg, rgba(0,48,70,.75) 0%, rgba(0,118,179,.75) 17%, rgba(255,239,193,.75) 59%, rgba(255,149,40,.75) 100%);
-    margin-top: -18px !important;
-    margin-bottom: 45px;
 }
 
 div.sk-landing-bg-more-info {
@@ -182,67 +276,108 @@ div.sk-landing-bg-more-info {
 
 .sk-landing-header {
     font-size: 3.2rem;
-    margin-bottom: 5px;
 }
 
-.sk-landing-subheader {
-    letter-spacing: 0.17rem;
-    margin-top: 5px;
-}
-
-/** Landing footer *******************************/
-div.sk-landing-footer {
-    margin-top: 30px;
-    border-top: 1px solid var(--pst-color-shadow);
-    background-color: var(--sg-code-background-color);
-    padding-top: 15px;
-    padding-bottom: 10px;
-}
-
-/** Tweak for very large screens ********************/
-/* At 1200px, we switch from width = 100% to width = 90vw, we do an
- * affine formula to have a continuous function during the switch */
-@media (min-width: 1200px) {
-    .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
-    width: calc(min(100vw, 90vw + 120px));
-    }
-}
-
-@media (min-width: 1200px) {
-    .bd-page-width, div.sk-landing-container, div.sk-landing-footer div.row {
-	max-width: 120rem;
+@media (max-width: 768px) {
+    .sk-landing-header {
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
     }
 
-    div.card-landing {
-	margin-left: 5%;
-	margin-right: 5%;
-    }
-    div.bd-sidebar-primary {
-	margin-right: 5%;
-	width: 20%;
-    }
-
-    div.bd-sidebar-secondary {
-	max-width: 20%;
-	margin-left: calc(min(max(3%, 3vw), 7rem));
-    }
-
-    .bd-main .bd-content div.bd-article-container {
-	max-width: 60rem;
+    .sk-landing-container .col-md-4 {
+        display: flex;
+        justify-content: center;
     }
 }
 
 /** Scikit-learn buttons ***************************/
+
 a.sk-btn-orange {
     font-size: 1.1rem;
     font-weight: 500;
-    background-color: #f99f44;  /* sk-orange-tint-1 */
-    color: black !important;
+    background-color: #DA7007; /* Original sk-orange-tint-1 */
+    color: #ffffff !important; /* Changed to white for better contrast */
+    border: 2px solid #DA7007; /* Border to match background color, previous: f99f44 */
+    padding: 10px 20px; /* Added padding for better button size */
+    border-radius: 5px; /* Rounded corners for a modern look */
+    text-decoration: none; /* Remove underline */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
 }
 
 a.sk-btn-orange:hover {
-    background-color: #fcb575;  /* --sk-orange-tint-3 */
+    background-color: #fbe1ca; /* Fill with white on hover */
+    color: #DA7007 !important; /* Text color changes to match the original background color */
+    border: 2px solid #DA7007; /* Border remains the same on hover */
 }
+
+.click-table-report-hint {
+    color: #da4607;
+    font-size: 1.25rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+/** Contributors ***************************/
+
+.contributors-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+}
+
+.contributor {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.contributor img {
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+}
+
+.contributor-name {
+    margin-top: 0.5rem;
+    font-size: 0.6rem;
+}
+
+.more-contributors {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+}
+
+.more-contributors a,
+.more-contributors a:visited {
+    font-size: 1rem;
+    transition: color 0.3s ease;
+    font-weight: normal;
+}
+
+.more-contributors a:hover,
+.more-contributors a:visited:hover {
+    font-weight: bold;
+}
+
+
+/** Footer ***************************/
+
+.home-footer {
+    background-color: #12134b; /* Black background color */
+    color: #fff; /* White text color */
+    text-align: center;
+    padding: 10px 0; /* Padding for the footer */
+    position: relative;
+    width: 100%;
+    bottom: 0; /* Sticks footer to the bottom */
+    margin-top: 50px;
+}
+
 
 /* Download/laucher links and top hint (sphinx-gallery) */
 
