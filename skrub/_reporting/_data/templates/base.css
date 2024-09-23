@@ -279,6 +279,12 @@ dd {
 .report-header {
     --max-content-width: 100rem;
     font-size: var(--large);
+    padding-block-start: var(--micro);
+    padding-block-end: var(--micro);
+}
+
+.report-header > h1 {
+    margin: 0;
 }
 
 .important-note {

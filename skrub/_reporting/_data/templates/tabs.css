@@ -8,7 +8,7 @@
 .tab-list-wrapper {
     align-items: flex-start;
     border-bottom: 1px solid var(--darkg);
-    column-gap: 3rem;
+    column-gap: 2rem;
     row-gap: var(--micro);
 }
 
@@ -85,5 +85,4 @@
 
 .tab-panel {
     padding-top: var(--tiny);
-    background: white;
 }
