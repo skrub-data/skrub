@@ -36,7 +36,6 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         and ``torch`` libraries on your machine. Be aware that this might lead
         to dependency conflicts.
 
-
     This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
     will not train or fine-tune the model. Instead, the model is loaded from disk,
     and a PCA is fitted if ``n_components`` is not None.
@@ -119,7 +118,6 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         n_components=30,
         device=None,
         batch_size=32,
-        norm="l2",
         use_auth_token=None,
         cache_folder=None,
         random_state=None,
@@ -129,7 +127,6 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         self.n_components = n_components
         self.device = device
         self.batch_size = batch_size
-        self.norm = norm
         self.use_auth_token = use_auth_token
         self.cache_folder = cache_folder
         self.random_state = random_state
