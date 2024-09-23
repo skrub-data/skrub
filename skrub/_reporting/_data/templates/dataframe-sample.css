@@ -3,25 +3,76 @@
 
 .table-with-selectable-cells {
     margin: 2px;
+    border: none;
+}
+
+.table-with-selectable-cells tbody {
+    border: 1px solid var(--mediumg);
+}
+
+.table-with-selectable-cells thead th {
+    vertical-align: top;
+    border: 1px solid var(--mediumg);
 }
 
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-tr:nth-child(2n -1) td.table-cell[data-is-in-active-column] {
-    background-color: var(--bg-color, var(--mediumgreen));
+#report .table-cell[data-is-in-active-column] {
+    background-color: var(--active-column-color);
 }
 
-td.table-cell[data-is-in-active-column] {
-    background-color: var(--bg-color, var(--lightgreen));
+tbody tr {
+    --active-column-color: var(--lightgreen);
 }
 
-thead th.table-cell[data-is-in-active-column] {
-    background-color: var(--bg-color, var(--darkgreen));
+tbody tr:nth-child(2n -1) {
+    --active-column-color: var(--mediumgreen);
 }
+
+thead {
+    --active-column-color: var(--darkgreen);
+}
+
+.table-with-selectable-cells th[data-role="padding"]{
+    background-color: white;
+    border: none;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"]{
+    text-align: right;
+    padding-right: 1.5rem;
+    position: relative;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"] > .arrow-icon {
+    position: absolute;
+    width: 1rem;
+    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    right: -1rem;
+    transform: translateX(-1.3rem);
+    display: flex;
+    user-select: none;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-value"]{}
+.table-with-selectable-cells th[data-role="column-name"]{}
+
+
+.table-with-selectable-cells th[data-role="index-level-name"],
+.table-with-selectable-cells th[data-role="index-level-value"]{
+    background-color: white;
+    border: 1px solid var(--mediumg);
+    text-align: right;
+}
+
+.table-with-selectable-cells th[data-role="dataframe-data"]{}
 
 .table-cell[data-is-active] {
-    --bg-color: var(--lightyellow);
+    --active-column-color: var(--lightyellow);
 }
 
 table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
@@ -33,9 +84,9 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
     outline: 2px solid -webkit-focus-ring-color;
 }
 
-.table-cell[data-is-active][data-just-copied]:focus {
-    outline: 2px dashed Highlight !important;
-    outline: 2px dashed -webkit-focus-ring-color !important;
+#report .table-cell[data-is-active][data-just-copied]:focus {
+    outline: 2px dashed Highlight;
+    outline: 2px dashed -webkit-focus-ring-color;
 }
 
 
@@ -47,6 +98,10 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
     border-top: 0;
     border-bottom: 0;
     background: inherit;
+}
+
+#report table:has([data-role="index-level-value"]) .ellided-table-part:first-child{
+    text-align: right;
 }
 
 .table-bar-wrapper {

@@ -230,6 +230,13 @@ class Selector:
                 matching_col_names.append(col_name)
         return matching_col_names
 
+    def expand_index(self, df):
+        matching_col_indices = []
+        for col_idx, col in enumerate(sbd.to_column_list(df)):
+            if self._matches(col):
+                matching_col_indices.append(col_idx)
+        return matching_col_indices
+
     def __invert__(self):
         return Inv(self)
 

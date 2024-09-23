@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 
 if __name__ == "__main__":
+    import datetime
     import pathlib
 
+    import numpy as np
     import pandas as pd
 
     from skrub import TableReport, datasets
@@ -24,3 +26,29 @@ if __name__ == "__main__":
     )
     html = TableReport(df).html()
     (reports_dir / "mini.html").write_text(html, encoding="UTF-8")
+
+    # Example from https://pandas.pydata.org/docs/user_guide/reshaping.html#pivot-table
+
+    df = pd.DataFrame(
+        {
+            "A": ["one", "one", "two", "three"] * 6,
+            "B": ["A", "B", "C"] * 8,
+            "C": ["foo", "foo", "foo", "bar", "bar", "bar"] * 4,
+            "D": np.random.randn(24),
+            "E": np.random.randn(24),
+            "F": [datetime.datetime(2013, i, 1) for i in range(1, 13)] + [
+                datetime.datetime(2013, i, 15) for i in range(1, 13)
+            ],
+        }
+    )
+
+    df = pd.pivot_table(
+        df,
+        values="E",
+        index=["B", "C"],
+        columns=["A"],
+        aggfunc=["sum", "mean"],
+    )
+
+    html = TableReport(df).html()
+    (reports_dir / "multi_index.html").write_text(html, encoding="UTF-8")

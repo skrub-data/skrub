@@ -2,6 +2,16 @@
 <span class="keyboard-key">{{ text }}</span>
 {% endmacro %}
 
+{% macro add_spanned(cell) %}
+{% set rowspan = cell['rowspan'] or 1 %}
+{% set colspan = cell['colspan'] or 1 %}
+{% for i in range(cell['i'], cell['i'] + rowspan) %}
+{% for j in range(cell['j'], cell['j'] + colspan) %}
+data-spans__{{ i }}__{{ j }}
+{% endfor %}
+{% endfor %}
+{% endmacro %}
+
 <article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
     {% include "table-bar.html" %}
@@ -9,43 +19,66 @@
     <div class="horizontal-scroll">
         <table class="pure-table pure-table-striped table-with-selectable-cells"
                data-manager="SampleTable"
-               data-n-head-rows="{{ summary['head']['data'].__len__() }}"
-               data-n-tail-rows="{{ summary['tail']['data'].__len__() }}"
-               data-n-cols="{{ summary.head.header.__len__() }}">
-            <thead>
-                <tr>
-                    {% for idx in range(summary.head.header.__len__()) %}
-                    {% set column_name = summary.head.header[idx] %}
-
-                    <th scope="col" class="clickable ellided table-cell"
-                        id="sample-table-cell-head-header-{{ idx }}"
-                        data-manager="SampleTableCell FilterableColumn"
-                        data-column-name="{{ column_name }}"
-                        data-column-idx="{{ idx }}"
-                        data-row-idx-in-table-part="{{ -1 }}"
-                        data-table-part="head"
-                        data-value-str="{{ column_name.__str__() }}"
-                        data-value-repr="{{ column_name.__repr__() }}"
-                    >{{ column_name }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            {% set table_part = "head" %}
-            {% include "table-part.html" %}
-
-            {% if summary.tail.data %}
+        data-start-i="{{ summary['sample_table']['start_i'] }}"
+        data-stop-i="{{ summary['sample_table']['stop_i'] }}"
+        data-start-j="{{ summary['sample_table']['start_j'] }}"
+        data-stop-j="{{ summary['sample_table']['stop_j'] }}"
+        >
+            {% for table_part in summary["sample_table"]["parts"] %}
+            {% if table_part["name"] == "ellipsis" %}
             <tbody>
                 <tr>
-                    {% for column_name in summary.head.header %}
-                    <td class="ellided-table-part" data-manager="FilterableColumn"
-                        data-column-name="{{ column_name }}">⋮</td>
+                    {% for i in range(summary["sample_table"]["start_j"], summary["sample_table"]["stop_j"])%}
+                    <td
+                        class="ellided-table-part"
+                        {% if i >= 0%}
+                        data-manager="FilterableColumn"
+                        data-column-idx="{{ i }}"
+                        data-role="ellipsis"
+                        {% endif %}
+                    >⋮</td>
                     {% endfor %}
                 </tr>
             </tbody>
-            {% set table_part = "tail" %}
-            {% include "table-part.html" %}
+            {% else %}
+            <{{ table_part['elem'] }}>
+            {% for row in table_part["rows"] %}
+            <tr>
+                {% for cell in row %}
+                {% set is_padding = cell["role"] == "padding" %}
+                <{{ cell['elem'] }}
+                id="{{ random_string() }}"
+                class="table-cell ellided-short {{ 'clickable' if not is_padding }}"
+                {% if 'role' in cell %}
+                data-role="{{ cell['role'] }}"
+                {% endif %}
+                {% if not is_padding %}
+                data-manager="SampleTableCell {{ 'FilterableColumn' if 'column_idx' in cell }}"
+                {% endif %}
+                data-i="{{ cell['i'] }}"
+                data-j="{{ cell['j'] }}"
+                {{ add_spanned(cell) }}
+                rowspan="{{ cell['rowspan'] or 1 }}"
+                colspan="{{ cell['colspan'] or 1 }}"
+                data-value-repr="{{ cell['value'].__repr__() }}"
+                data-value-str="{{ cell['value'].__str__() }}"
+                {% if 'column_idx' in cell %}
+                data-column-idx="{{ cell['column_idx'] }}"
+                {% endif %}
+                >
+                {%- if not (cell["value"]) | is_null -%}
+                {{ cell["value"] }}
+                {%-  if cell["role"] == "columns-level-name" -%}
+                <div class="arrow-icon">{% include "icons/arrow-right.svg" %}</div>
+                {%- endif -%}
+                {%- endif -%}
+                </{{ cell['elem'] }}>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+            </{{ table_part['elem'] }}>
             {% endif %}
-
+            {% endfor %}
         </table>
     </div>
 

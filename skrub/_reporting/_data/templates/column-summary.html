@@ -1,7 +1,9 @@
 {% import "buttons.html" as buttons %}
 
 <div class="card box-shadow column-summary" id="{{ col_id }}"
-    data-name-repr="{{ column.name.__repr__() }}" data-column-name="{{ column.name }}"
+    data-name-repr="{{ column.name.__repr__() }}"
+    data-column-name="{{ column.name }}"
+    data-column-idx="{{ column.idx }}"
     data-manager="FilterableColumn {% if in_sample_tab %}SampleColumnSummary{% endif %}"
     {% if column.value_is_constant %} data-constant-column {% endif %}
     {% if in_sample_tab %} data-role="sample-column" data-hidden {% else %}
