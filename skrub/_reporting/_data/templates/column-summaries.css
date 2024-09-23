@@ -42,6 +42,7 @@
     margin: 0.75rem;
     border-radius: var(--radius);
     min-width: min-content;
+    border: 1px solid var(--mediumg);
 }
 
 .card-header {
@@ -71,13 +72,6 @@
 .column-summary-content {
     display: flex;
     flex-direction: column;
-}
-
-/* The "constant columns" card has a similar aspect to the other ones but a */
-/* different color because it does not correspond to an actual column. */
-
-.pseudocolumn {
-    --header-color: #ffffff;
 }
 
 /* Grid of boxes with copybuttons for a column's most frequent values */
@@ -113,6 +107,10 @@
     background-color: var(--darkgreen);
     border-block-end: 1px solid var(--shadowgreen);
     padding-right: 2.4rem;
+}
+
+.columns-in-sample-tab .card {
+    border-color: var(--shadowgreen);
 }
 
 /* Button for closing the card / deselecting the column in the table */
