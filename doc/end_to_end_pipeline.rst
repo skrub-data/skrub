@@ -80,7 +80,7 @@ not be optimal in all cases but they are methodologically safe.
 
 .. _table_vectorizer:
 
-Turning a dataframe into a numerical feature matrix
+Turning a dataframe into a numeric feature matrix
 ---------------------------------------------------
 
 A dataframe can contain columns of all kinds of types. We usually refer to such data as
