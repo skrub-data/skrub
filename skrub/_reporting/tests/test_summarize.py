@@ -40,6 +40,14 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     }
     assert summary["dataframe"] is air_quality
     assert summary["dataframe_module"] == df_module.name
+    assert summary["sample_table"]["start_i"] == (
+        -2 if df_module.name == "pandas" else -1
+    )
+    assert summary["sample_table"]["stop_i"] == 10
+    assert summary["sample_table"]["start_j"] == (
+        -1 if df_module.name == "pandas" else 0
+    )
+    assert summary["sample_table"]["stop_j"] == 11
 
     # checking columns
 
@@ -90,17 +98,9 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     asso = [
         d | {"cramer_v": round(d["cramer_v"], 1)} for d in summary["top_associations"]
     ]
-    for top_asso in asso[:3]:
-        if top_asso == {
-            "cramer_v": 1.0,
-            "left_column_name": "city",
-            "right_column_name": "country",
-            "left_column_idx": 0,
-            "right_column_idx": 1,
-        }:
-            break
-        else:
-            assert False
+    assert set(
+        tuple(sorted((a["left_column_name"], a["right_column_name"]))) for a in asso[:3]
+    ) == {("city", "country"), ("city", "location"), ("country", "location")}
     assert asso[-1]["cramer_v"] == 0.0
 
 
