@@ -1,14 +1,16 @@
 """Get information and plots for a dataframe, that are used to generate reports."""
 
 from .. import _dataframe as sbd
-from . import _associations, _plotting, _utils
+from . import _associations, _plotting, _sample_table, _utils
 
 _HIGH_CARDINALITY_THRESHOLD = 10
 _SUBSAMPLE_SIZE = 3000
 _N_TOP_ASSOCIATIONS = 20
 
 
-def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
+def summarize_dataframe(
+    df, *, order_by=None, with_plots=True, title=None, n_head_rows=5, n_tail_rows=5
+):
     """Collect information about a dataframe, used to produce reports.
 
     Parameters
@@ -29,27 +31,31 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
         A title that gets added to the returned dictionary and can be picked up
         and inserted in the report.
 
+    n_head_rows : int, default=5
+        Maximum number of rows from the top of the dataframe to show in the
+        sample table.
+
+    n_tail_rows : int, default=5
+        Maximum number of rows from the end of the dataframe to show in the
+        sample table.
+
     Returns
     -------
     dict
         A dictionary containing the extracted information.
     """
     n_rows, n_columns = sbd.shape(df)
-    tail_size = max(0, min(5, n_rows - 5))
-    if tail_size:
-        tail = _utils.to_row_list(sbd.slice(df, -tail_size, None))
-    else:
-        tail = _utils.to_row_list(sbd.slice(df, n_rows, None))
     summary = {
         "dataframe": df,
         "dataframe_module": sbd.dataframe_module_name(df),
         "n_rows": n_rows,
         "n_columns": n_columns,
         "columns": [],
-        "head": _utils.to_row_list(sbd.slice(df, 5)),
-        "tail": tail,
         "first_row_dict": _utils.first_row_dict(df) if n_rows else {},
         "dataframe_is_empty": not n_rows or not n_columns,
+        "sample_table": _sample_table.make_table(
+            df, max_top_slice_size=n_head_rows, max_bottom_slice_size=n_tail_rows
+        ),
     }
     if title is not None:
         summary["title"] = title
@@ -83,9 +89,7 @@ def summarize_dataframe(df, *, order_by=None, with_plots=True, title=None):
 def _add_associations(df, dataframe_summary):
     df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
     associations = _associations.cramer_v(df)[:_N_TOP_ASSOCIATIONS]
-    dataframe_summary["top_associations"] = [
-        dict(zip(("left_column", "right_column", "cramer_v"), a)) for a in associations
-    ]
+    dataframe_summary["top_associations"] = associations
 
 
 def _summarize_column(
@@ -93,6 +97,7 @@ def _summarize_column(
 ):
     summary = {
         "position": position,
+        "idx": position,
         "name": sbd.name(column),
         "dtype": _utils.get_dtype_name(column),
         "value_is_constant": False,

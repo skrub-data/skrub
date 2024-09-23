@@ -30,6 +30,12 @@ class TableReport:
         mapping with the keys ``display_name`` (the name shown in the menu,
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
+    n_head_rows : int, default=5
+        Maximum number of rows from the top of the dataframe to show in the
+        sample table.
+    n_tail_rows : int, default=5
+        Maximum number of rows from the end of the dataframe to show in the
+        sample table.
 
     Notes
     -----
@@ -90,8 +96,20 @@ class TableReport:
     "b".
     """
 
-    def __init__(self, dataframe, order_by=None, title=None, column_filters=None):
-        self._summary_kwargs = {"order_by": order_by}
+    def __init__(
+        self,
+        dataframe,
+        order_by=None,
+        title=None,
+        column_filters=None,
+        n_head_rows=5,
+        n_tail_rows=5,
+    ):
+        self._summary_kwargs = {
+            "order_by": order_by,
+            "n_head_rows": n_head_rows,
+            "n_tail_rows": n_tail_rows,
+        }
         self.title = title
         self.column_filters = column_filters
         self.dataframe = dataframe
@@ -153,7 +171,7 @@ class TableReport:
         str :
             The JSON data.
         """
-        to_remove = ["dataframe", "head", "tail", "first_row_dict"]
+        to_remove = ["dataframe", "sample_table", "first_row_dict"]
         data = {
             k: v for k, v in self._summary_without_plots.items() if k not in to_remove
         }

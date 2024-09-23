@@ -3,22 +3,74 @@
 
 .table-with-selectable-cells {
     margin: 2px;
+    border: none;
+}
+
+.table-with-selectable-cells tbody {
+    border: 1px solid var(--mediumg);
+}
+
+.table-with-selectable-cells thead th {
+    vertical-align: top;
+    border: 1px solid var(--mediumg);
 }
 
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
-    background-color: var(--mediumgreen);
-}
-
 .table-cell[data-is-in-active-column] {
-    background-color: var(--lightgreen);
+    /* !important to override pure.css */
+    background-color: var(--active-column-color) !important;
 }
 
-tr:nth-child(2n -1) th.table-cell[data-is-in-active-column] {
-    background-color: var(--darkgreen);
+tbody tr {
+    --active-column-color: var(--lightgreen);
 }
+
+tbody tr:nth-child(2n -1) {
+    --active-column-color: var(--mediumgreen);
+}
+
+thead {
+    --active-column-color: var(--darkgreen);
+}
+
+.table-with-selectable-cells th[data-role="padding"]{
+    background-color: white;
+    border: none;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"]{
+    text-align: right;
+    padding-right: 1.5rem;
+    position: relative;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"] > .arrow-icon {
+    position: absolute;
+    width: 1rem;
+    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    right: -1rem;
+    transform: translateX(-1.3rem);
+    display: flex;
+    user-select: none;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-value"]{}
+.table-with-selectable-cells th[data-role="column-name"]{}
+
+
+.table-with-selectable-cells th[data-role="index-level-name"],
+.table-with-selectable-cells th[data-role="index-level-value"]{
+    background-color: white;
+    border: 1px solid var(--mediumg);
+    text-align: right;
+}
+
+.table-with-selectable-cells th[data-role="dataframe-data"]{}
 
 .table-cell[data-is-active] {
     outline: 2px dotted black;
@@ -43,6 +95,10 @@ tr:nth-child(2n -1) th.table-cell[data-is-in-active-column] {
     border-top: 0;
     border-bottom: 0;
     background: inherit;
+}
+
+#report table:has([data-role="index-level-value"]) .ellided-table-part:first-child{
+    text-align: right;
 }
 
 .table-bar-wrapper {

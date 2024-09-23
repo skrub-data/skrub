@@ -32,6 +32,9 @@
     -webkit-text-size-adjust: 100%;
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 /* The report is in a shadow DOM so outside selectors don't reach it but properties */
 /* can still be inherited from a parent element. We make sure it has black text on */
@@ -45,6 +48,8 @@
     border-radius: var(--radius, 0);
     max-width: max-content;
 }
+
+
 
 h1 {
     font-size: var(--huge);
