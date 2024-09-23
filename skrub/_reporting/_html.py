@@ -11,6 +11,7 @@ import pandas as pd
 from skrub import _dataframe as sbd
 from skrub import _selectors as s
 
+from .._utils import random_string
 from . import _utils
 
 _HIGH_ASSOCIATION_THRESHOLD = 0.9
@@ -47,6 +48,7 @@ def _get_jinja_env():
     ]:
         env.filters[function_name] = getattr(_utils, function_name)
     env.filters["is_null"] = pd.isna
+    env.globals["random_string"] = random_string
     return env
 
 
@@ -55,8 +57,8 @@ def _get_high_association_columns(summary):
     for asso in summary["top_associations"]:
         if asso["cramer_v"] <= _HIGH_ASSOCIATION_THRESHOLD:
             break
-        columns.add(asso["left_column"])
-        columns.add(asso["right_column"])
+        columns.add(asso["left_column_idx"])
+        columns.add(asso["right_column_idx"])
     return list(columns)
 
 
@@ -65,12 +67,12 @@ def _get_column_filters(summary):
     filters = {}
     filters["all()"] = {
         "display_name": _FILTER_NAMES["all()"],
-        "columns": sbd.column_names(df),
+        "columns": list(range(sbd.shape(df)[1])),
     }
     if sbd.shape(df)[1] > 10:
         filters["first_10"] = {
             "display_name": _FILTER_NAMES["first_10"],
-            "columns": sbd.column_names(df)[:10],
+            "columns": list(range(10)),
         }
     filters["high_association"] = {
         "columns": _get_high_association_columns(summary),
@@ -90,7 +92,7 @@ def _get_column_filters(summary):
         display_name = _FILTER_NAMES[selector_name]
         filters[selector_name] = {
             "display_name": display_name,
-            "columns": selector.expand(df),
+            "columns": selector.expand_index(df),
         }
     return filters
 
