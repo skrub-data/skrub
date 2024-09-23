@@ -18,9 +18,8 @@
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-.table-cell[data-is-in-active-column] {
-    /* !important to override pure.css */
-    background-color: var(--active-column-color) !important;
+#report .table-cell[data-is-in-active-column] {
+    background-color: var(--active-column-color);
 }
 
 tbody tr {
