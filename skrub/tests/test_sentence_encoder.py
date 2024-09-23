@@ -23,7 +23,7 @@ def encoder():
       See https://github.com/actions/runner-images/issues/9918 for more details.
     """
     return SentenceEncoder(
-        model_name_or_path="sentence-transformers/paraphrase-albert-small-v2",
+        model_name="sentence-transformers/paraphrase-albert-small-v2",
         device="cpu",
     )
 
@@ -66,7 +66,7 @@ def test_not_a_series_with_string(df_module, encoder):
 
 def test_missing_value(df_module, encoder):
     X = df_module.make_column("", [None, None, "hey"])
-    encoder = clone(encoder).set_params(n_components="all")
+    encoder = clone(encoder).set_params(n_components=None)
     X_out = encoder.fit_transform(X)
 
     assert X_out.shape == (3, 768)
@@ -76,7 +76,7 @@ def test_missing_value(df_module, encoder):
 
 def test_n_components(df_module, encoder):
     X = df_module.make_column("", ["hello sir", "hola que tal"])
-    encoder_all = clone(encoder).set_params(n_components="all").fit(X)
+    encoder_all = clone(encoder).set_params(n_components=None).fit(X)
     for meth in ("fit_transform", "transform"):
         X_out = getattr(encoder_all, meth)(X)
         assert X_out.shape[1] == 768
@@ -103,28 +103,25 @@ def test_wrong_parameters(encoder):
     with pytest.raises(ValueError, match="Got batch_size=-10"):
         clone(encoder).set_params(batch_size=-10)._check_params()
 
-    with pytest.raises(ValueError, match="Got model_name_or_path=1"):
-        clone(encoder).set_params(model_name_or_path=1)._check_params()
-
-    with pytest.raises(ValueError, match="Got norm=l3"):
-        clone(encoder).set_params(norm="l3")._check_params()
+    with pytest.raises(ValueError, match="Got model_name=1"):
+        clone(encoder).set_params(model_name=1)._check_params()
 
     with pytest.raises(ValueError, match="Got cache_folder=1"):
         clone(encoder).set_params(cache_folder=1)._check_params()
 
-    with pytest.raises(ValueError, match="Got model_name_or_path=1"):
-        clone(encoder).set_params(model_name_or_path=1)._check_params()
+    with pytest.raises(ValueError, match="Got model_name=1"):
+        clone(encoder).set_params(model_name=1)._check_params()
 
 
 def test_wrong_model_name(encoder):
     x = pd.Series(["Good evening Dave"])
     with pytest.raises(ModelNotFound):
-        clone(encoder).set_params(model_name_or_path="HAL-9000").fit(x)
+        clone(encoder).set_params(model_name="HAL-9000").fit(x)
 
 
 def test_transform_equal_fit_transform(df_module, encoder):
     x = df_module.make_column("", ["hello again"])
-    encoder = clone(encoder)
+    encoder = clone(encoder).set_params(n_components=None)
     X_out = encoder.fit_transform(x)
     X_out_2 = encoder.transform(x)
     df_module.assert_frame_equal(X_out, X_out_2)
@@ -135,7 +132,7 @@ def test_transform_error_on_float_data(df_module, encoder):
     transform."""
     x = df_module.make_column("", [1.0, 2.5, 3.7])
 
-    encoder = clone(encoder)
+    encoder = clone(encoder).set_params(n_components=None)
     encoder.fit(df_module.make_column("", ["hello", "world"]))
 
     with pytest.raises(RejectColumn, match="does not contain strings"):
