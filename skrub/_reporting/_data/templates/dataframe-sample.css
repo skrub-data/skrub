@@ -61,21 +61,20 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
 
 .table-footer {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
+    column-gap: 4ch;
     padding-top: var(--micro);
 }
 
 .keyboard-hints  {
     display: none;
-    flex-basis: max(0px, min(50%, calc((50% - 35ch) * 99999)));
+    flex-basis: max(0px, min(50%, calc((50% - 30ch) * 99999)));
     flex-shrink: 0;
     min-width: 0px;
     height: 2rem;
-    margin-bottom: -1.5rem;
+    margin-bottom: calc(-1 * var(--small));
     margin-right: var(--micro);
     overflow: hidden;
-    text-align: right;
-    vertical-align: center;
 }
 
 :has(.table-with-selectable-cells:focus-within) ~ .table-footer .keyboard-hints {
