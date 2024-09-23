@@ -81,7 +81,7 @@ not be optimal in all cases but they are methodologically safe.
 .. _table_vectorizer:
 
 Turning a dataframe into a numeric feature matrix
----------------------------------------------------
+-------------------------------------------------
 
 A dataframe can contain columns of all kinds of types. We usually refer to such data as
 "heterogeneous" data. A good numerical representation of these columns helps with
@@ -100,9 +100,9 @@ The :class:`TableVectorizer` handles the following type of data:
 - date and time data represented by `datetime` data type (e.g. :obj:`numpy.datetime64`,
   :obj:`pandas.DatetimeTZDtype`, :obj:`polars.datatypes.Datetime`).
 
-Categorical data are subdivided into two groups: features containing a large number of
-categories (high-cardinality features) and features containing a small number of
-categories (low-cardinality features). A feature is considered high-cardinality if the
+Categorical data are subdivided into two groups: columns containing a large number of
+categories (high-cardinality columns) and columns containing a small number of
+categories (low-cardinality columns). A column is considered high-cardinality if the
 number of unique values is greater than a given threshold, which is controlled by the
 parameter cardinality_threshold.
 
@@ -110,8 +110,8 @@ Each group of data types defined earlier is associated with a specific init para
 (e.g. ``numeric``, ``datetime``, etc.). The value of these parameters follows the same
 convention:
 
-- when set to ``"passthrough"``, the input features are output as they are;
-- when set to ``"drop"``, the input features are dropped;
+- when set to ``"passthrough"``, the input columns are output as they are;
+- when set to ``"drop"``, the input columns are dropped;
 - when set to `a compatible scikit-learn transformer <https://scikit-learn.org/stable/glossary.html#term-transformer>`_
   (implementing ``fit``, ``transform``, and ``fit_transform`` methods), the transformer
   is applied to each column independently. The transformer is cloned (using
