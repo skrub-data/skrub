@@ -149,12 +149,12 @@ def test_small_df(small_df_summary):
     assert len(first_slice["rows"]) == 5
     assert len(last_slice["rows"]) == 5
 
-    summary = small_df_summary(11, n_head_rows=2, n_tail_rows=3)
+    summary = small_df_summary(11, max_top_slice_size=2, max_bottom_slice_size=3)
     thead, first_slice, ellipsis, last_slice = summary["sample_table"]["parts"]
     assert len(first_slice["rows"]) == 2
     assert len(last_slice["rows"]) == 3
 
-    summary = small_df_summary(10, n_head_rows=5, n_tail_rows=0)
+    summary = small_df_summary(10, max_top_slice_size=5, max_bottom_slice_size=0)
     thead, first_slice, ellipsis = summary["sample_table"]["parts"]
     assert len(first_slice["rows"]) == 5
 

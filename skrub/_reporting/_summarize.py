@@ -9,7 +9,13 @@ _N_TOP_ASSOCIATIONS = 20
 
 
 def summarize_dataframe(
-    df, *, order_by=None, with_plots=True, title=None, n_head_rows=5, n_tail_rows=5
+    df,
+    *,
+    order_by=None,
+    with_plots=True,
+    title=None,
+    max_top_slice_size=5,
+    max_bottom_slice_size=5,
 ):
     """Collect information about a dataframe, used to produce reports.
 
@@ -31,11 +37,11 @@ def summarize_dataframe(
         A title that gets added to the returned dictionary and can be picked up
         and inserted in the report.
 
-    n_head_rows : int, default=5
+    max_top_slice_size : int, default=5
         Maximum number of rows from the top of the dataframe to show in the
         sample table.
 
-    n_tail_rows : int, default=5
+    max_bottom_slice_size : int, default=5
         Maximum number of rows from the end of the dataframe to show in the
         sample table.
 
@@ -54,7 +60,9 @@ def summarize_dataframe(
         "first_row_dict": _utils.first_row_dict(df) if n_rows else {},
         "dataframe_is_empty": not n_rows or not n_columns,
         "sample_table": _sample_table.make_table(
-            df, max_top_slice_size=n_head_rows, max_bottom_slice_size=n_tail_rows
+            df,
+            max_top_slice_size=max_top_slice_size,
+            max_bottom_slice_size=max_bottom_slice_size,
         ),
     }
     if title is not None:

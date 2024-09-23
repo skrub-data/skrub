@@ -18,6 +18,11 @@ class TableReport:
     ----------
     dataframe : pandas or polars DataFrame
         The dataframe to summarize.
+    n_rows : int, default=10
+        Maximum number of rows to show in the sample table. Half will be taken
+        from the beginning (head) of the dataframe and half from the end
+        (tail). Note this is only for display. Summary statistics, histograms
+        etc. are computed using the whole dataframe.
     order_by : str
         Column name to use for sorting. Other numerical columns will be plotted
         as function of the sorting column. Must be of numerical or datetime
@@ -30,12 +35,6 @@ class TableReport:
         mapping with the keys ``display_name`` (the name shown in the menu,
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
-    n_head_rows : int, default=5
-        Maximum number of rows from the top of the dataframe to show in the
-        sample table.
-    n_tail_rows : int, default=5
-        Maximum number of rows from the end of the dataframe to show in the
-        sample table.
 
     Notes
     -----
@@ -99,16 +98,16 @@ class TableReport:
     def __init__(
         self,
         dataframe,
+        n_rows=10,
         order_by=None,
         title=None,
         column_filters=None,
-        n_head_rows=5,
-        n_tail_rows=5,
     ):
+        n_rows = max(1, n_rows)
         self._summary_kwargs = {
             "order_by": order_by,
-            "n_head_rows": n_head_rows,
-            "n_tail_rows": n_tail_rows,
+            "max_top_slice_size": -(n_rows // -2),
+            "max_bottom_slice_size": n_rows // 2,
         }
         self.title = title
         self.column_filters = column_filters
