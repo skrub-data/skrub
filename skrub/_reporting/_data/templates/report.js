@@ -227,6 +227,9 @@ if (customElements.get('skrub-table-report') === undefined) {
                 this.activate();
                 event.preventDefault();
             });
+            // See forwardKeyboardEvent for details about captureKeys
+            this.elem.dataset.captureKeys =
+                "ArrowRight ArrowLeft ArrowUp ArrowDown Escape";
             this.elem.setAttribute("tabindex", -1);
             this.elem.oncopy = (event) => this.copyCell(event);
         }
@@ -318,6 +321,8 @@ if (customElements.get('skrub-table-report') === undefined) {
             this.nTailRows = this.elem.dataset.nTailRows;
             this.nCols = this.elem.dataset.nCols;
             this.elem.addEventListener('keydown', (e) => this.onKeyDown(e));
+            this.elem.addEventListener('skrub-keydown', (e) => this.onKeyDown(
+                unwrapSkrubKeyDown(e)));
         }
 
         onKeyDown(event) {
@@ -493,8 +498,13 @@ if (customElements.get('skrub-table-report') === undefined) {
                     }
                     this.lastTab = tab;
                     tab.addEventListener("click", () => this.selectTab(tab));
+                    // See forwardKeyboardEvent for details about captureKeys
+                    tab.dataset.captureKeys = "ArrowRight ArrowLeft";
                     tab.addEventListener("keydown", (event) => this.onKeyDown(
                         event));
+                    tab.addEventListener("skrub-keydown", (event) => this
+                        .onKeyDown(
+                            unwrapSkrubKeyDown(event)));
                 });
             this.selectTab(this.firstTab, false);
         }
@@ -557,6 +567,72 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
     }
     SkrubTableReport.register(TabList);
+
+    class sortableTable extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelectorAll("button[data-role='sort-button']").forEach(
+                b => b.addEventListener("click", e => this.sort(e)));
+        }
+
+        getVal(row, tableColIdx) {
+            const td = row.querySelectorAll("td")[tableColIdx];
+            if (!td.hasAttribute("data-value")) {
+                return td.textContent;
+            }
+            let value = td.dataset.value;
+            if (td.hasAttribute("data-numeric")) {
+                value = Number(value);
+            }
+            return value;
+        }
+
+        compare(rowA, rowB, tableColIdx, ascending) {
+            let valA = this.getVal(rowA, tableColIdx);
+            let valB = this.getVal(rowB, tableColIdx);
+            // NaNs go at the bottom regardless of sorting order
+            if(typeof(valA) === "number" && typeof(valB) === "number"){
+                if(isNaN(valA) && !isNaN(valB)){
+                    return 1;
+                }
+                if(isNaN(valB) && !isNaN(valA)){
+                    return -1;
+                }
+            }
+            // When the values are equal, keep the original dataframe column
+            // order
+            if (!(valA > valB || valB > valA)) {
+                valA = Number(rowA.dataset.dataframeColumnIdx);
+                valB = Number(rowB.dataset.dataframeColumnIdx);
+                return valA - valB;
+            }
+            // Sort
+            if (!ascending) {
+                [valA, valB] = [valB, valA];
+            }
+            return valA > valB ? 1 : -1;
+        }
+
+        sort(event) {
+            const colHeaders = Array.from(this.elem.querySelectorAll("thead tr th"));
+            const tableColIdx = colHeaders.indexOf(event.target.closest("th"));
+            const body = this.elem.querySelector("tbody");
+            const rows = Array.from(body.querySelectorAll("tr"));
+            const ascending = event.target.dataset.direction === "ascending";
+
+            rows.sort((a, b) => this.compare(a, b, tableColIdx, ascending));
+
+            this.elem.querySelectorAll("button").forEach(b => b.removeAttribute("data-is-active"));
+            event.target.dataset.isActive = "";
+
+            body.innerHTML = "";
+            for (let r of rows) {
+                body.appendChild(r);
+            }
+        }
+
+    }
+    SkrubTableReport.register(sortableTable);
 
     class SelectedColumnsDisplay extends Manager {
 
@@ -630,6 +706,18 @@ if (customElements.get('skrub-table-report') === undefined) {
     SkrubTableReport.register(SelectAllVisibleColumns);
 
 
+    class Toggletip extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelector("button").addEventListener("keydown", e => {
+                if (e.key === "Escape") {
+                    e.target.blur();
+                }
+            });
+        }
+    }
+    SkrubTableReport.register(Toggletip);
+
     function initReport(reportId) {
         const report = document.getElementById(reportId);
         report.init();
@@ -671,4 +759,72 @@ if (customElements.get('skrub-table-report') === undefined) {
     function hasModifier(event) {
         return event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
     }
+
+    /* Jupyter notebooks and vscode stop the propagation of some keyboard events
+    during the capture phase to implement their keyboard shortcuts etc. When an
+    element inside the TableReport has the keyboard focus and wants to react on
+    that event (eg in the sample table arrow keys allow selecting a neighbouring
+    cell) we need to override that behavior.
+
+    We do that by adding an event listener on the window that is triggered
+    during the capture phase. If it can make sure the key press is for a report
+    element that will react to it, we stop its propagation (to avoid eg the
+    notebook jumping to the next jupyter code cell) and dispatch an event on the
+    targeted element. To make sure it does not get handled again by the listener
+    on the window and cause infinite recursion, we dispatch a custom event
+    instead of a KeyDown event.
+
+    This capture is only enabled if we detect the report is inserted in a page
+    where it is needed, by checking if there are elements in the page with class
+    names that are used by jupyter or vscode.
+    */
+    function forwardKeyboardEvent(e) {
+        if (e.eventPhase !== 1) {
+            return;
+        }
+        if (e.target.tagName !== "SKRUB-TABLE-REPORT") {
+            return;
+        }
+        if (hasModifier(e)) {
+            return;
+        }
+        const target = e.target.shadowRoot.activeElement;
+        // only capture the event if the element lists the key in the keys it
+        // wants to capture ie in captureKeys
+        const wantsKey = target?.dataset.captureKeys?.split(/\s+/).includes(e.key);
+        if (!wantsKey) {
+            return;
+        }
+        const newEvent = new CustomEvent('skrub-keydown', {
+            bubbles: true,
+            cancelable: true,
+            detail: {
+                key: e.key,
+                code: e.code,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                ctrlKey: e.ctrlKey,
+                metaKey: e.metaKey,
+            }
+        });
+        target.dispatchEvent(newEvent);
+        e.stopImmediatePropagation();
+        e.preventDefault();
+    }
+
+    /* Helper to unpack the custom event (see forwardKeyboardEvent above) and
+    make it look like a regular KeyDown event. */
+    function unwrapSkrubKeyDown(e) {
+        return {
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            target: e.target,
+            ...e.detail
+        };
+    }
+
+    if (document.querySelector(".jp-Cell, .widgetarea")) {
+        window.addEventListener("keydown", forwardKeyboardEvent, true);
+    }
+
 }
