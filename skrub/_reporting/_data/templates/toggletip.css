@@ -19,7 +19,7 @@
     color: white;
     border: 1px solid var(--darkblue);
     border-radius: 50%;
-    margin: none;
+    margin: 0;
     padding: none;
 }
 
