@@ -80,9 +80,9 @@ thead {
     outline: 2px solid -webkit-focus-ring-color;
 }
 
-.table-cell[data-is-active][data-just-copied]:focus {
-    outline: 2px dashed Highlight !important;
-    outline: 2px dashed -webkit-focus-ring-color !important;
+#report .table-cell[data-is-active][data-just-copied]:focus {
+    outline: 2px dashed Highlight;
+    outline: 2px dashed -webkit-focus-ring-color;
 }
 
 
