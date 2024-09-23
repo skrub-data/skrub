@@ -257,6 +257,10 @@ ul.sk-landing-header-body {
     color: black;
 }
 
+.simple dd {
+    margin-left: 0;
+}
+
 div.sk-landing-bg-more-info dd {
     padding-left: 0;
 }

@@ -29,17 +29,17 @@ Install
 
 .. code:: console
 
-    $ pip install skrub -U
+    pip install skrub -U
 
 .. raw:: html
 
-    </div>
-          <div class="tab-pane fade" id="conda-tab-pane" role="tabpanel" aria-labelledby="conda-tab" tabindex="0">
+        </div>
+        <div class="tab-pane fade" id="conda-tab-pane" role="tabpanel" aria-labelledby="conda-tab" tabindex="0">
             <hr />
 
 .. code:: console
 
-    $ conda install -c conda-forge skrub
+    conda install -c conda-forge skrub
 
 .. raw:: html
 
@@ -49,7 +49,7 @@ Install
 
 .. code:: console
 
-    $ mamba install -c conda-forge skrub
+    mamba install -c conda-forge skrub
 
 .. raw:: html
 
@@ -57,51 +57,90 @@ Install
         <div class="tab-pane fade" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
             <hr />
 
-Advanced usage, for contributors
---------------------------------
+Advanced Usage for Contributors
+-------------------------------
 
-If you want to contribute to the project, you can install the development version
-of skrub from the source code:
+1. Fork the project
+'''''''''''''''''''
 
-.. code:: console
+To contribute to the project, you first need to
+`fork skrub on Github <https://github.com/skrub-data/skrub/fork>`_.
 
-    $ git clone https://github.com/skrub-data/skrub
+That will enable you to push your commits to a branch *on your fork*.
 
-Create a virtual environment, here for example, using `conda <https://docs.conda.io/en/latest/>`_:
+2. Clone your fork
+''''''''''''''''''
 
-.. code:: console
-
-    $ conda create -n skrub python=3.10 # or any later python version
-    $ conda activate skrub
-
-Then, install the local package in editable mode,
-with the development requirements:
+Clone your forked repo to your local machine:
 
 .. code:: console
 
-    $ cd skrub
-    $ pip install -e ".[dev]"
+    git clone https://github.com/<YOUR_USERNAME>/skrub
+    cd skrub
 
-Next step, enable the pre-commit hooks:
-
-.. code:: console
-
-    $ pre-commit install
-
-Finally, a few revisions better be ignored by ``git blame`` and IDE integrations.
-These revisions are listed in ``.git-blame-ignore-revs``,
-which can be set in your local repository with:
+Next, add the *upstream* remote (i.e. the official skrub repository). This allows you
+to pull the latest changes from the main repository:
 
 .. code:: console
 
-    $ git config blame.ignoreRevsFile .git-blame-ignore-revs
+    git remote add upstream https://github.com/skrub-data/skrub.git
 
-You're ready to go! If not already done, please have a look at
-the `contributing guidelines <https://skrub-data.org/stable/CONTRIBUTING.html>`_.
+Verify that both the origin (your fork) and upstream (official repo)
+are correctly set up:
+
+.. code:: console
+
+    git remote -v
+
+
+3. Setup your environment
+'''''''''''''''''''''''''
+
+Now, setup a development environment. For example, you can use
+`conda <https://docs.conda.io/en/latest/>`_  to create a virtual environment:
+
+.. code:: console
+
+    conda create -n skrub python=3.10 # or any later python version
+    conda activate skrub
+
+Install the local package in editable mode with development dependencies:
+
+.. code:: console
+
+    pip install -e ".[dev, lint, test]"
+
+Enable pre-commit hooks to ensure code style consistency:
+
+.. code:: console
+
+    pre-commit install
+
+
+Optionally, configure Git to ignore certain revisions in git blame and
+IDE integrations. These revisions are listed in .git-blame-ignore-revs:
+
+.. code:: console
+
+    git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+4. Run the tests
+''''''''''''''''
+
+To ensure your environment is correctly set up, run the test suite:
+
+.. code:: console
+
+    pytest -s skrub/tests
+
+Testing should take about 5 minutes.
+If no errors or failures are found, your environment is ready for development!
+
+Now that you're set up, review our :ref:`implementation guidelines<implementation guidelines>`
+and start coding!
 
 .. raw:: html
 
         </div>
     </div>
-
     </div>
