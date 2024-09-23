@@ -1,10 +1,13 @@
 import datetime
+from types import SimpleNamespace
 
+import numpy as np
+import pandas as pd
 import pytest
 import zoneinfo
 
 from skrub import _dataframe as sbd
-from skrub._reporting import _associations
+from skrub._reporting import _associations, _sample_table
 from skrub._reporting._summarize import summarize_dataframe
 
 
@@ -20,34 +23,6 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     assert summary["n_columns"] == 11
     assert summary["n_constant_columns"] == 4
     assert summary["n_rows"] == 17
-    assert summary["head"]["header"] == [
-        "city",
-        "country",
-        "date.utc",
-        "location",
-        "parameter",
-        "value",
-        "unit",
-        "loc_with_nulls",
-        "all_null",
-        "constant_numeric",
-        "constant_datetime",
-    ]
-    assert summary["tail"]["header"] == summary["head"]["header"]
-    assert summary["head"]["data"][0] == [
-        "London",
-        "GB",
-        datetime.datetime(2019, 6, 13, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")),
-        "London Westminster",
-        "no2",
-        29.0,
-        "µg/m³",
-        None,
-        None,
-        2.7,
-        datetime.datetime(2024, 7, 5, 12, 17, 29, 427865),
-    ]
-    assert len(summary["head"]["data"]) == len(summary["tail"]["data"]) == 5
     assert summary["first_row_dict"] == {
         "all_null": None,
         "city": "London",
@@ -65,6 +40,14 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     }
     assert summary["dataframe"] is air_quality
     assert summary["dataframe_module"] == df_module.name
+    assert summary["sample_table"]["start_i"] == (
+        -2 if df_module.name == "pandas" else -1
+    )
+    assert summary["sample_table"]["stop_i"] == 10
+    assert summary["sample_table"]["start_j"] == (
+        -1 if df_module.name == "pandas" else 0
+    )
+    assert summary["sample_table"]["stop_j"] == 11
 
     # checking columns
 
@@ -80,6 +63,7 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
         c["plot_names"] = []
         c.pop("value_counts_plot")
     assert c == {
+        "idx": 0,
         "dtype": "string",
         "high_cardinality": False,
         "n_unique": 2,
@@ -114,15 +98,9 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     asso = [
         d | {"cramer_v": round(d["cramer_v"], 1)} for d in summary["top_associations"]
     ]
-    for top_asso in asso[:3]:
-        if top_asso == {
-            "cramer_v": 1.0,
-            "left_column": "city",
-            "right_column": "country",
-        }:
-            break
-    else:
-        assert False
+    assert set(
+        tuple(sorted((a["left_column_name"], a["right_column_name"]))) for a in asso[:3]
+    ) == {("city", "country"), ("city", "location"), ("country", "location")}
     assert asso[-1]["cramer_v"] == 0.0
 
 
@@ -156,11 +134,112 @@ def test_empty_df(df_module):
     assert summarize_dataframe(df_module.empty_dataframe)["dataframe_is_empty"]
 
 
-@pytest.mark.parametrize(
-    "df_size, expected_tail_len",
-    [(11, 5), (10, 5), (9, 4), (7, 2), (6, 1), (5, 0), (4, 0), (1, 0), (0, 0)],
-)
-def test_small_df(df_module, df_size, expected_tail_len):
-    df = df_module.make_dataframe(dict(a=[10.5] * df_size))
+@pytest.fixture
+def small_df_summary(df_module):
+    def make_summary(df_size, **summarize_kwargs):
+        df = df_module.make_dataframe(dict(a=[10.5] * df_size))
+        return summarize_dataframe(df, **summarize_kwargs)
+
+    return make_summary
+
+
+def test_small_df(small_df_summary):
+    summary = small_df_summary(11)
+    thead, first_slice, ellipsis, last_slice = summary["sample_table"]["parts"]
+    assert len(first_slice["rows"]) == 5
+    assert len(last_slice["rows"]) == 5
+
+    summary = small_df_summary(11, max_top_slice_size=2, max_bottom_slice_size=3)
+    thead, first_slice, ellipsis, last_slice = summary["sample_table"]["parts"]
+    assert len(first_slice["rows"]) == 2
+    assert len(last_slice["rows"]) == 3
+
+    summary = small_df_summary(10, max_top_slice_size=5, max_bottom_slice_size=0)
+    thead, first_slice, ellipsis = summary["sample_table"]["parts"]
+    assert len(first_slice["rows"]) == 5
+
+    summary = small_df_summary(10)
+    thead, first_slice = summary["sample_table"]["parts"]
+    assert len(first_slice["rows"]) == 10
+
+    summary = small_df_summary(9)
+    thead, first_slice = summary["sample_table"]["parts"]
+    assert len(first_slice["rows"]) == 9
+
+    summary = small_df_summary(1)
+    thead, first_slice = summary["sample_table"]["parts"]
+    assert len(first_slice["rows"]) == 1
+
+    summary = small_df_summary(0)
+    thead, first_slice = summary["sample_table"]["parts"]
+    assert len(first_slice["rows"]) == 0
+
+
+def get_pivoted_df():
+    # Example from https://pandas.pydata.org/docs/user_guide/reshaping.html#pivot-table
+
+    df = pd.DataFrame(
+        {
+            "A": ["one", "one", "two", "three"] * 6,
+            "B": ["A", "B", "C"] * 8,
+            "C": ["foo", "foo", "foo", "bar", "bar", "bar"] * 4,
+            "D": np.random.randn(24),
+            "E": np.random.randn(24),
+            "F": [datetime.datetime(2013, i, 1) for i in range(1, 13)] + [
+                datetime.datetime(2013, i, 15) for i in range(1, 13)
+            ],
+        }
+    )
+
+    df = pd.pivot_table(
+        df,
+        values="E",
+        index=["B", "C"],
+        columns=["A"],
+        aggfunc=["sum", "mean"],
+    )
+    return df
+
+
+def test_multi_index():
+    df = get_pivoted_df()
     summary = summarize_dataframe(df)
-    assert len(summary["tail"]["data"]) == expected_tail_len
+    th = summary["sample_table"]["parts"][0]["rows"][0][0]
+    assert th["colspan"] == 2
+    assert th["rowspan"] == 1
+    assert th["value"] is None
+
+    df = get_pivoted_df()
+    df.columns.names = [None, None]
+    summary = summarize_dataframe(df)
+    th = summary["sample_table"]["parts"][0]["rows"][0][0]
+    assert th.get("colspan", 1) == 1
+    assert th["rowspan"] == 3
+    assert th["value"] == "B"
+
+    df = get_pivoted_df()
+    df.index.names = [None, None]
+    summary = summarize_dataframe(df)
+    th = summary["sample_table"]["parts"][0]["rows"][0][0]
+    assert th["colspan"] == 2
+    assert th.get("rowspan", 1) == 1
+    assert th["value"] is None
+
+    df = get_pivoted_df()
+    df.index.names = [None, None]
+    df.columns.names = [None, None]
+    summary = summarize_dataframe(df)
+    th = summary["sample_table"]["parts"][0]["rows"][0][0]
+    assert th["colspan"] == 2
+    assert th["rowspan"] == 3
+    assert th["value"] is None
+
+
+def test_level_names():
+    # fallbacks in case some pandas non-multi index does not have the ".names" alias
+    idx = SimpleNamespace()
+    assert _sample_table._level_names(idx) == [None]
+    idx.name = "the name"
+    assert _sample_table._level_names(idx) == ["the name"]
+    idx.names = ["a", "b"]
+    assert _sample_table._level_names(idx) == ["a", "b"]
