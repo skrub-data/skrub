@@ -85,4 +85,5 @@
 
 .tab-panel {
     padding-top: var(--tiny);
+    border-radius: 0 0 var(--radius) var(--radius);
 }
