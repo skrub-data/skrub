@@ -93,7 +93,7 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
 /* The gap separating the head and the tail of the table */
 
 #report .ellided-table-part {
-    border: 1px dashed #e8e8e8;
+    border: 1px dashed  var(--mediumg);
     text-align: center;
     border-top: 0;
     border-bottom: 0;
