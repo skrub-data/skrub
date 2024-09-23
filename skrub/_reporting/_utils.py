@@ -1,5 +1,6 @@
 import base64
 import json
+import numbers
 
 import numpy as np
 
@@ -31,14 +32,6 @@ def first_row_dict(dataframe):
     return {col_name: col[0] for col_name, col in to_dict(first_row).items()}
 
 
-def to_row_list(dataframe):
-    columns = to_dict(dataframe)
-    rows = []
-    for row_idx in range(sbd.shape(dataframe)[0]):
-        rows.append([col[row_idx] for col in columns.values()])
-    return {"header": list(columns.keys()), "data": rows}
-
-
 def top_k_value_counts(column, k):
     counts = sbd.value_counts(column)
     n_unique = sbd.shape(counts)[0]
@@ -68,9 +61,11 @@ def ellide_string_short(s):
 
 
 def format_number(number):
-    if not isinstance(number, float):
-        return str(number)
-    return f"{number:#.3g}"
+    if isinstance(number, numbers.Integral):
+        return f"{number:,}"
+    if isinstance(number, numbers.Real):
+        return f"{number:#.3g}"
+    return str(number)
 
 
 def format_percent(proportion):
@@ -82,42 +77,6 @@ def format_percent(proportion):
 def svg_to_img_src(svg):
     encoded_svg = base64.b64encode(svg.encode("UTF-8")).decode("UTF-8")
     return f"data:image/svg+xml;base64,{encoded_svg}"
-
-
-def _pandas_filter_equal_snippet(value, column_name):
-    if value is None:
-        return f"df.loc[df[{column_name!r}].isnull()]"
-    return f"df.loc[df[{column_name!r}] == {value!r}]"
-
-
-def _pandas_filter_isin_snippet(values, column_name):
-    return f"df.loc[df[{column_name!r}].isin({list(values)!r})]"
-
-
-def _polars_filter_equal_snippet(value, column_name):
-    if value is None:
-        return f"df.filter(pl.col({column_name!r}).is_null())"
-    return f"df.filter(pl.col({column_name!r}) == {value!r})"
-
-
-def _polars_filter_isin_snippet(values, column_name):
-    return f"df.filter(pl.col({column_name!r}).is_in({list(values)!r}))"
-
-
-def filter_equal_snippet(value, column_name, dataframe_module="polars"):
-    if dataframe_module == "polars":
-        return _polars_filter_equal_snippet(value, column_name)
-    if dataframe_module == "pandas":
-        return _pandas_filter_equal_snippet(value, column_name)
-    return f"Unknown dataframe library: {dataframe_module}"
-
-
-def filter_isin_snippet(values, column_name, dataframe_module="polars"):
-    if dataframe_module == "polars":
-        return _polars_filter_isin_snippet(values, column_name)
-    if dataframe_module == "pandas":
-        return _pandas_filter_isin_snippet(values, column_name)
-    return f"Unknown dataframe library: {dataframe_module}"
 
 
 class JSONEncoder(json.JSONEncoder):

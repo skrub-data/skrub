@@ -7,7 +7,7 @@ Generating an HTML report
 
 .. autosummary::
    :toctree: generated/
-   :template: class.rst
+   :template: base.rst
    :nosignatures:
 
    TableReport

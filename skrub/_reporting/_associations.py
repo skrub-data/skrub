@@ -59,7 +59,13 @@ def _stack_symmetric_associations(associations, column_names):
         associations[order],
     )
     return [
-        (column_names[left], column_names[right], a)
+        {
+            "left_column_name": column_names[left],
+            "left_column_idx": int(left),
+            "right_column_name": column_names[right],
+            "right_column_idx": int(right),
+            "cramer_v": float(a),
+        }
         for (left, right, a) in zip(left_indices, right_indices, associations)
     ]
 

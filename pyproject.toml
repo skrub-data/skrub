@@ -38,6 +38,11 @@ version = { file = "skrub/VERSION.txt" }
 readme = { file = "README.rst" }
 
 [project.optional-dependencies]
+dev = [
+    "ipykernel",
+    "ipython",
+    "jupyterlab",
+]
 doc = [
     "jupyterlite-sphinx",
     "jupyterlite-pyodide-kernel",
@@ -115,6 +120,11 @@ pytest = "*"
 pytest-cov = "*"
 pytest-xdist = "*"
 
+[tool.pixi.feature.dev.dependencies]
+ipykernel = "*"
+ipython = "*"
+jupyterlab = "*"
+
 [tool.pixi.pypi-dependencies]
 skrub = { path = ".", editable = true }
 
@@ -145,7 +155,7 @@ python = "~=3.12.0"
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
-clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
+clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
 
 [tool.pixi.feature.lint.tasks]
 lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
@@ -157,7 +167,7 @@ test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 lint = ["lint"]
 doc = ["optional", "doc"]
 test = ["test"]
-dev = ["optional", "doc", "lint", "test"]
+dev = ["dev", "optional", "doc", "lint", "test"]
 ci-py309-min-deps = ["py309", "min-dependencies", "test"]
 ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
 ci-py312-latest-deps = ["py312", "test"]

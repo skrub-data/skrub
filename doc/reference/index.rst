@@ -1,6 +1,6 @@
-#############
-API reference
-#############
+###
+API
+###
 
 This page lists all available functions and classes of `skrub`.
 

@@ -6,9 +6,6 @@ describe('test using the copybuttons', {
             .click();
         cy.get('@report').find('#col_1').as('col1').find(
             '[data-test="frequent-values-details"]').click();
-        cy.get('@col1').find(
-            '[data-test="frequent-values-select-snippet"]').select(
-            "repr");
         cy.get('@col1').find('[data-test="frequent-value-1"]').find("button").click({
             force: true
         });
