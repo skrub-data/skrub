@@ -54,6 +54,14 @@ Minor changes
 * The selection in the TableReport's sample table can now be manipulated with
   the keyboard. :pr:`1065` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The ``TableReport`` now displays the pandas (multi-)index, and has a better
+  display & interaction of pandas columns when the columns are a MultiIndex.
+  :pr:`1083` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* It is possible to control the number of rows displayed by the TableReport in
+  the "sample" tab panel by specifying ``n_rows``.
+  :pr:`1083` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Release 0.3.0
 =============
 

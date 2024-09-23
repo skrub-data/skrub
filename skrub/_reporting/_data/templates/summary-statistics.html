@@ -50,7 +50,8 @@
             <tbody>
                 {% for column in summary.columns %}
                 <tr data-manager="FilterableColumn" data-column-name="{{ column.name }}"
-                    data-dataframe-column-idx="{{ loop.index0 }}">
+                    data-column-idx="{{ column.idx }}"
+                    data-dataframe-column-idx="{{ column.idx }}">
                     <td data-value="{{ loop.index0 }}" data-numeric>{{ loop.index0 }}
                     </td>
                     <td>{{ column.name }}</td>

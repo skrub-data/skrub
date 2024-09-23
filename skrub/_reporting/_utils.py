@@ -32,14 +32,6 @@ def first_row_dict(dataframe):
     return {col_name: col[0] for col_name, col in to_dict(first_row).items()}
 
 
-def to_row_list(dataframe):
-    columns = to_dict(dataframe)
-    rows = []
-    for row_idx in range(sbd.shape(dataframe)[0]):
-        rows.append([col[row_idx] for col in columns.values()])
-    return {"header": list(columns.keys()), "data": rows}
-
-
 def top_k_value_counts(column, k):
     counts = sbd.value_counts(column)
     n_unique = sbd.shape(counts)[0]
