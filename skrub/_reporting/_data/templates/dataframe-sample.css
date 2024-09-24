@@ -94,7 +94,7 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
 
 #report .ellided-table-part,
 #report .ellided-table-part td {
-    border: 1px dashed var(--darkg);
+    border: 2px dashed var(--mediumg);
     text-align: center;
     border-top: 0;
     border-bottom: 0;
