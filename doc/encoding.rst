@@ -54,21 +54,21 @@ categories, eg to replace :class:`~sklearn.preprocessing.OneHotEncoder`:
 Encoding text with diverse entries
 ----------------------------------
 
-When it comes to encoding text with diverse entries, large language models,
-fine-tuned for embedding purposes, improve data processing. Diverse entries are
-typically represented by free-form text, i.e. strings with markedly more unique
-ngrams than dirty categories.
+When it comes to encoding text with diverse entries, large language models
+fine-tuned for embedding purposes enhance data processing. These diverse entries are
+typically represented by free-form text, such as strings with significantly
+more unique n-grams than unclean categorical data.
 
-Skrub provides :class:`SentenceEncoder`: a wrapper around
-`SentenceTransformer <https://sbert.net/>`_ package that lets you use any sentence
-embedding model available on the HuggingFace Hub.
+Skrub offers the :class:`SentenceEncoder`, a wrapper around
+the `SentenceTransformer <https://sbert.net/>`_ package, allowing you to use any
+sentence embedding model available on the Hugging Face Hub
 
 .. topic:: References
 
     See `Vectorizing string entries for data processing on tables: when are larger
     language models better? <https://hal.science/hal-043459>`_ [3]_
-    for a comparison between large language models and string-based encoders (
-    such as the :class:`MinHashEncoder`) in the context of dirty categories versus
+    for a comparison between large language models and string-based encoders
+    (such as the :class:`MinHashEncoder`) in the context of dirty categories versus
     diverse entries regimes.
 
 .. [3]  L. Grinsztajn, M. Kim, E. Oyallon, G. Varoquaux.
