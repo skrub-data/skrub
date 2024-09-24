@@ -100,7 +100,7 @@ If the enhancement is refused
 '''''''''''''''''''''''''''''
 
 Although many ideas are great, not all will align with the objectives
-of the skrub library.
+of skrub.
 
 If your enhancement is not accepted, consider implementing it
 as a separate package that builds on top of skrub!

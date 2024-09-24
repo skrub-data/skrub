@@ -64,7 +64,7 @@ Advanced Usage for Contributors
 '''''''''''''''''''
 
 To contribute to the project, you first need to
-`fork skrub on Github <https://github.com/skrub-data/skrub/fork>`_.
+`fork skrub on GitHub <https://github.com/skrub-data/skrub/fork>`_.
 
 That will enable you to push your commits to a branch *on your fork*.
 
