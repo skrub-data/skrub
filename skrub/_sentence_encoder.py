@@ -45,7 +45,8 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
     and ``transform``.
 
     Be aware that parallelizing this class (e.g., using
-    :class:~skrub.TableVectorizer with ``n_jobs`` > 1) may be computationally expensive.
+    :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
+    expensive.
     This is because a copy of the pre-trained model is loaded into memory
     for each thread. If memory usage is a concern, check the characteristics of
     your selected model.
@@ -94,7 +95,7 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
 
     cache_folder : str, default=None
         Path to store models. By default ``~/skrub_data``.
-        See :func:`~skrub.datasets._utils.get_data_dir`.
+        See :func:`skrub.datasets._utils.get_data_dir`.
 
     random_state : int, RandomState instance or None, default=None
         Used when the PCA dimension reduction mechanism is used, for reproducible
@@ -132,15 +133,15 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         self.random_state = random_state
         self.verbose = verbose
 
-    def fit_transform(self, X, y=None):
-        """Fit the SentenceEncoder from ``X``.
+    def fit_transform(self, column, y=None):
+        """Fit the SentenceEncoder from ``column``.
 
         In practice, it loads the pre-trained model from disk and returns
-        the embeddings of X.
+        the embeddings of the column.
 
         Parameters
         ----------
-        X : pandas or polars Series of shape (n_samples,)
+        column : pandas or polars Series of shape (n_samples,)
             The string column to compute embeddings from.
 
         y : None
@@ -153,8 +154,8 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         """
         st = import_optional_dependency("sentence_transformers")
 
-        if not sbd.is_string(X):
-            raise RejectColumn(f"Column {sbd.name(X)!r} does not contain strings.")
+        if not sbd.is_string(column):
+            raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
 
         self._check_params()
 
@@ -176,9 +177,9 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
                 "permission to this repo by passing `use_auth_token=<your_token>`"
             ) from e
 
-        self.input_name_ = sbd.name(X)
+        self.input_name_ = sbd.name(column)
 
-        X_out = self._vectorize(X)
+        X_out = self._vectorize(column)
 
         if self.n_components is not None:
             if (min_shape := min(X_out.shape)) >= self.n_components:
@@ -203,20 +204,20 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         self.n_components_ = X_out.shape[1]
 
         cols = self.get_feature_names_out()
-        X_out = sbd.make_dataframe_like(X, dict(zip(cols, X_out.T)))
-        X_out = sbd.copy_index(X, X_out)
+        X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))
+        X_out = sbd.copy_index(column, X_out)
 
         return X_out
 
-    def transform(self, X):
-        """Transform ``X`` using the SentenceEncoder.
+    def transform(self, column):
+        """Transform ``column`` using the SentenceEncoder.
 
         This method uses the embedding model loaded in memory during ``fit``
         or ``fit_transform``.
 
         Parameters
         ----------
-        X : pandas or polars Series of shape (n_samples,)
+        column : pandas or polars Series of shape (n_samples,)
             The string column to compute embeddings from.
 
         Returns
@@ -226,10 +227,10 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         """
         check_is_fitted(self, "estimator_")
 
-        if not sbd.is_string(X):
-            raise RejectColumn(f"Column {sbd.name(X)!r} does not contain strings.")
+        if not sbd.is_string(column):
+            raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
 
-        X_out = self._vectorize(X)
+        X_out = self._vectorize(column)
 
         if hasattr(self, "pca_"):
             X_out = self.pca_.transform(X_out)
@@ -237,15 +238,15 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
             X_out = X_out[:, : self.n_components]
 
         cols = self.get_feature_names_out()
-        X_out = sbd.make_dataframe_like(X, dict(zip(cols, X_out.T)))
-        X_out = sbd.copy_index(X, X_out)
+        X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))
+        X_out = sbd.copy_index(column, X_out)
 
         return X_out
 
-    def _vectorize(self, X):
-        is_null = sbd.to_numpy(sbd.is_null(X))
-        X = sbd.to_numpy(X)
-        unique_x, indices_x = unique_strings(X, is_null)
+    def _vectorize(self, column):
+        is_null = sbd.to_numpy(sbd.is_null(column))
+        column = sbd.to_numpy(column)
+        unique_x, indices_x = unique_strings(column, is_null)
 
         return self.estimator_.encode(
             unique_x,

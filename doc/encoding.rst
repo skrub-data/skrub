@@ -60,15 +60,16 @@ typically represented by free-form text, i.e. strings with markedly more unique
 ngrams than dirty categories.
 
 Skrub provides :class:`SentenceEncoder`: a wrapper around
-`SentenceTransformer <https://sbert.net/>`_ package that lets you use any embedding
-model available on the HuggingFace Hub for Sentence Transformers.
+`SentenceTransformer <https://sbert.net/>`_ package that lets you use any sentence
+embedding model available on the HuggingFace Hub.
 
 .. topic:: References
 
     See `Vectorizing string entries for data processing on tables: when are larger
     language models better? <https://hal.science/hal-043459>`_ [3]_
-    for a comparison between the dirty categories and diverse entries regimes against
-    large language models and string-based encoders like the :class:`MinHashEncoder`.
+    for a comparison between large language models and string-based encoders (
+    such as the :class:`MinHashEncoder`) in the context of dirty categories versus
+    diverse entries regimes.
 
 .. [3]  L. Grinsztajn, M. Kim, E. Oyallon, G. Varoquaux.
         Vectorizing string entries for data processing on tables: when are larger
