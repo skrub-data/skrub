@@ -23,19 +23,32 @@
 }
 
 .copybutton {
-    margin-left: -2rem;
+    margin: 1px;
     min-width: 2rem;
-    display: none;
+    min-height: calc(1.8rem - 4px);
+    display: inline-block;
     padding: var(--micro);
     padding-left: var(--tiny);
     padding-right: var(--tiny);
     border: none;
-    background: var(--lightg);
     position: relative;
+    align-self: flex-start;
 }
 
-.copybutton[data-show-checkmark]{
-    display: inline-block;
+.copybutton-left {
+    order: -1;
+}
+
+.copybutton {
+    background: #e0e0e0;
+}
+
+.copybutton:hover {
+    background: #eee;
+}
+
+.copybutton:active {
+    background: #cccccc;
 }
 
 .copybutton:not([data-show-checkmark]) > :not(:first-child) {
@@ -53,21 +66,15 @@
     padding: 5px;
     border-radius: var(--radius, 5px);
     position: absolute;
-    right: calc(100% + 5px);
-    top: 3px;
+    top: 1px;
     margin: 0;
+    right: calc(100% + 5px);
 }
 
-.box:hover .copybutton {
-    display: inline-block;
-    background: var(--lightg);
+.copybutton-left .copied-message {
+    left: calc(100% + 5px);
+    right: auto;
 }
-
-.box:hover .copybutton:hover {
-    display: inline-block;
-    background: var(--mediumg);
-}
-
 
 [data-shows-placeholder] {
     color: #777777;
