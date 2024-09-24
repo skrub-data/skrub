@@ -94,14 +94,19 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
 
 #report .ellided-table-part,
 #report .ellided-table-part td {
-    border: 2px dashed var(--mediumg);
     text-align: center;
     border-top: 0;
     border-bottom: 0;
     background: inherit;
 }
 
+#report .ellided-table-part {
+    border: 1px solid var(--mediumg);
+}
+
 #report .ellided-table-part td {
+    border-left: 1px dashed var(--mediumg);
+    border-right: 1px dashed var(--mediumg);
     padding: var(--tiny);
 }
 
