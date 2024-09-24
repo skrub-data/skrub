@@ -26,17 +26,16 @@ data-spans__{{ i }}__{{ j }}
         >
             {% for table_part in summary["sample_table"]["parts"] %}
             {% if table_part["name"] == "ellipsis" %}
-            <tbody>
+            <tbody class="ellided-table-part">
                 <tr>
                     {% for i in range(summary["sample_table"]["start_j"], summary["sample_table"]["stop_j"])%}
                     <td
-                        class="ellided-table-part"
                         {% if i >= 0%}
                         data-manager="FilterableColumn"
                         data-column-idx="{{ i }}"
                         data-role="ellipsis"
                         {% endif %}
-                    >⋮</td>
+                        ><div class="ellipsis-icon">{% include "icons/three-dots-vertical.svg" %}</div></td>
                     {% endfor %}
                 </tr>
             </tbody>
