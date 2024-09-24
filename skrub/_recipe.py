@@ -388,6 +388,8 @@ class Recipe:
         if (transform_result := self._transform_preview(sampling_method, n=n)) is None:
             return None
         data, last_step_cols = transform_result
+        last_step_cols_idx = s.cols(*last_step_cols).expand_index(data)
+        not_last_step_cols_idx = (~s.cols(*last_step_cols)).expand_index(data)
         if last_step_only:
             data = s.select(
                 data, last_step_cols + ([] if order_by is None else [order_by])
@@ -396,11 +398,11 @@ class Recipe:
             column_filters = {
                 "last_step_output": {
                     "display_name": "Modified by last step",
-                    "columns": last_step_cols,
+                    "columns": last_step_cols_idx,
                 },
                 "~last_step_output": {
                     "display_name": "Not modified by last step",
-                    "columns": (~s.cols(*last_step_cols)).expand(data),
+                    "columns": not_last_step_cols_idx,
                 },
             }
         title = (
