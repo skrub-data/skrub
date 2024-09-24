@@ -92,16 +92,27 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
 
 /* The gap separating the head and the tail of the table */
 
-#report .ellided-table-part {
-    border: 1px solid white;
+#report .ellided-table-part,
+#report .ellided-table-part td {
+    border: 2px dashed var(--mediumg);
     text-align: center;
     border-top: 0;
     border-bottom: 0;
     background: inherit;
 }
 
-#report table:has([data-role="index-level-value"]) .ellided-table-part:first-child{
-    text-align: right;
+#report .ellided-table-part td {
+    padding: var(--tiny);
+}
+
+#report .ellipsis-icon {
+    display: flex;
+    flex-direction: column;
+    max-height: var(--large);
+}
+
+#report table:has([data-role="index-level-value"]) .ellided-table-part td:first-child .ellipsis-icon * {
+    align-self: flex-end;
 }
 
 .table-bar-wrapper {
