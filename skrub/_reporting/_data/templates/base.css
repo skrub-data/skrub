@@ -15,6 +15,9 @@
     --mediumgreen: #d6f5d6;
     --darkgreen: 	#c1f0c1;
     --verydarkgreen: #84e184;
+    --shadowgreen: #9fce9f;
+
+    --lightyellow: #ffffaa;
 
     --darkg: #555555;
     --mediumg: #d0d0d0;
@@ -32,6 +35,9 @@
     -webkit-text-size-adjust: 100%;
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
 
 /* The report is in a shadow DOM so outside selectors don't reach it but properties */
 /* can still be inherited from a parent element. We make sure it has black text on */
@@ -46,6 +52,8 @@
     max-width: max-content;
 }
 
+
+
 h1 {
     font-size: var(--huge);
 }
@@ -57,8 +65,8 @@ button > * {
 /* pure.css / Normalize.css overrides the default firefox blue ring around focussed */
 /* elements with something almost impossible to see, making it impossible to use */
 /* tab navigation. We revert it to the browser's appropriate default. */
-:focus-visible {
-    outline: revert !important;
+#report :focus-visible {
+    outline: revert;
 }
 
 
@@ -255,6 +263,15 @@ dd {
     color: var(--red);
 }
 
+.box-shadow {
+    --shadow-color: 0deg 0% 63%;
+    box-shadow:
+    0.3px 0.5px 0.7px hsl(var(--shadow-color) / 0.36),
+    0.8px 1.6px 2px -0.8px hsl(var(--shadow-color) / 0.36),
+    2.1px 4.1px 5.2px -1.7px hsl(var(--shadow-color) / 0.36),
+    5px 10px 12.6px -2.5px hsl(var(--shadow-color) / 0.36);
+}
+
 /* Misc tweaks */
 /* ----------- */
 
@@ -262,6 +279,12 @@ dd {
 .report-header {
     --max-content-width: 100rem;
     font-size: var(--large);
+    padding-block-start: var(--micro);
+    padding-block-end: var(--micro);
+}
+
+.report-header > h1 {
+    margin: 0;
 }
 
 .important-note {

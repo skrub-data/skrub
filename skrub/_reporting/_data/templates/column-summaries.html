@@ -9,17 +9,25 @@
         {{ buttons.copybutton("selected-columns-display") }}
         </div>
     </div>
-    <button type="button"
-            class="margin-r-s"
-            data-test="deselect-all-columns"
-            data-manager="DeselectAllColumns">Deselect all</button>
+    <div class="flex flex-wrap toggletip-wrapper">
+        <div class="toggletip" data-manager="Toggletip">
+        <button type="button" class="toggletip">i</button>
+        <div class="toggletip-info box-shadow">
+            To construct a list of column names that you can easily copy-paste
+            (in the box above), select some columns using the checkboxes next
+            to the column names or the "Select all" button.
+        </div>
+    </div>
     <button type="button"
             data-test="select-all-columns"
             data-manager="SelectAllVisibleColumns">Select all</button>
-
+    <button type="button"
+            data-test="deselect-all-columns"
+            data-manager="DeselectAllColumns">Deselect all</button>
+    </div>
     <div class="column-summary-group">
         {% for column in summary.columns %}
-        {% set col_id="col_{}".format(loop.index0) %}
+        {% set col_id="col_{}".format(column["idx"]) %}
         {% include "column-summary.html" %}
         {% endfor %}
     </div>

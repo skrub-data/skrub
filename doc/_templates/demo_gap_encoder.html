@@ -1,0 +1,11 @@
+<div class="doctest highlight-default notranslate">
+
+    <div class="highlight hl-ipython3 code-margin">
+<pre><span></span><span class="kn">from</span> <span class="nn">skrub</span> <span class="kn">import</span> <span class="n">GapEncoder</span>
+<span class="n">gap</span> <span class="o">=</span> <span class="n">GapEncoder</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"employee_position_title"</span><span class="p">])</span>
+<span class="n">encoded_labels</span> <span class="o">=</span> <span class="n">gap</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">[</span><span class="s2">"employee_position_title"</span><span class="p">]</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">encoded_labels</span><span class="p">)</span></pre>
+    </div>
+  </div>
