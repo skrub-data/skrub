@@ -62,6 +62,10 @@ Minor changes
   the "sample" tab panel by specifying ``n_rows``.
   :pr:`1083` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* the `TableReport` used to raise an exception when the dataframe contained
+  unhashable types such as python lists. This has been fixed in :pr:`1087` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+
 Release 0.3.0
 =============
 
