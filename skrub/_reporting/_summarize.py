@@ -154,10 +154,11 @@ def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
     summary["unique_proportion"] = n_unique / max(1, dataframe_summary["n_rows"])
     summary["high_cardinality"] = n_unique >= _HIGH_CARDINALITY_THRESHOLD
     summary["value_counts"] = value_counts
+    summary["most_frequent_values"] = [v for v, _ in value_counts]
 
     if n_unique == 1:
         summary["value_is_constant"] = True
-        summary["constant_value"] = next(iter(value_counts.keys()))
+        summary["constant_value"] = value_counts[0][0]
     else:
         summary["value_is_constant"] = False
         if with_plots:
