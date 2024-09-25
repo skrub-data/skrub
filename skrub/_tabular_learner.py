@@ -27,10 +27,10 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Given a scikit-learn ``estimator``, this function creates a
     machine-learning pipeline that preprocesses tabular data to extract numeric
-    features and impute missing values if necessary, then applies the
+    features, impute missing values and scale the data if necessary, then applies the
     ``estimator``.
 
-    Instead of an actual estimator, ``estimator`` can also be the string
+    Instead of an actual estimator, ``estimator`` can also be the special-cased strings
     ``'regressor'`` or ``'classifier'`` to use a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or a
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default
@@ -262,7 +262,10 @@ def tabular_learner(estimator, *, n_jobs=None):
         )
     elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         vectorizer.set_params(
-            low_cardinality=OrdinalEncoder(),
+            low_cardinality=OrdinalEncoder(
+                handle_unknown="use_encoded_value",
+                unknown_value=-1,
+            ),
             high_cardinality=MinHashEncoder(),
         )
     steps = [vectorizer]

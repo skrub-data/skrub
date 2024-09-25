@@ -1,10 +1,10 @@
 {% macro copybutton(target) %}
 <button
-    class="copybutton"
+    class="copybutton copybutton-left"
     type="button"
     onclick="copyButtonClick(event)"
     data-target-id="{{ target }}">
-    {% include "icons/clipboard.svg" %}
+    {% include "icons/copy.svg" %}
     {% include "icons/check-lg.svg" %}
     <div class="copied-message">Copied!</div>
 </button>

@@ -40,10 +40,17 @@ if (customElements.get('skrub-table-report') === undefined) {
             delete this.elem.dataset.hidden;
         }
 
+        matchesColumnIdx(idx) {
+            if (!this.elem.hasAttribute("data-column-idx")) {
+                return false;
+            }
+            return Number(this.elem.dataset.columnIdx) === idx;
+        }
+
         matchesColumnFilter({
             acceptedColumns
         }) {
-            return acceptedColumns.has(this.elem.dataset.columnName);
+            return acceptedColumns.has(Number(this.elem.dataset.columnIdx));
         }
     }
 
@@ -195,7 +202,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         SAMPLE_TABLE_CELL_ACTIVATED(msg) {
-            if (msg.columnName === this.elem.dataset.columnName) {
+            if (this.matchesColumnIdx(msg.columnIdx)) {
                 this.show();
             } else {
                 this.hide();
@@ -219,62 +226,61 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(FilterableColumn);
 
-    class SampleTableHeader extends Manager {
-        constructor(elem, exchange) {
-            super(elem, exchange);
-            this.elem.addEventListener("click", () => this.activateFirstCell());
-        }
-
-        activateFirstCell() {
-            const idx = this.elem.dataset.columnIdx;
-            const firstCell = this.elem.closest("table").querySelector(
-                `[data-role="clickable-table-cell"][data-column-idx="${idx}"]`);
-            if (firstCell) {
-                firstCell.click();
-            }
-        }
-
-        SAMPLE_TABLE_CELL_ACTIVATED(msg) {
-            if (msg.columnName === this.elem.dataset.columnName) {
-                this.elem.dataset.isInActiveColumn = "";
-            } else {
-                delete this.elem.dataset.isInActiveColumn;
-            }
-        }
-
-        SAMPLE_TABLE_CELL_DEACTIVATED() {
-            delete this.elem.dataset.isInActiveColumn;
-        }
-    }
-    SkrubTableReport.register(SampleTableHeader);
-
     class SampleTableCell extends Manager {
 
         constructor(elem, exchange) {
             super(elem, exchange);
-            this.elem.addEventListener("click", () => this.activate());
+            this.elem.addEventListener("click", (event) => {
+                this.activate();
+                event.preventDefault();
+            });
+            // See forwardKeyboardEvent for details about captureKeys
+            this.elem.dataset.captureKeys =
+                "ArrowRight ArrowLeft ArrowUp ArrowDown Escape";
+            this.elem.setAttribute("tabindex", -1);
+            this.elem.oncopy = (event) => this.copyCell(event);
+        }
+
+        copyCell(event) {
+            const selection = document.getSelection().toString();
+            if (selection !== "") {
+                return;
+            }
+            event.clipboardData.setData("text/plain", this.elem.dataset
+                .valueRepr);
+            event.preventDefault();
+            this.elem.dataset.justCopied = "";
+            setTimeout(() => this.elem.removeAttribute("data-just-copied"), 1000);
         }
 
         activate() {
             const msg = {
                 kind: "SAMPLE_TABLE_CELL_ACTIVATED",
                 cellId: this.elem.id,
-                columnName: this.elem.dataset.columnName,
-                columnIdx: this.elem.dataset.columnIdx,
+                columnIdx: Number(this.elem.dataset.columnIdx),
                 valueStr: this.elem.dataset.valueStr,
                 valueRepr: this.elem.dataset.valueRepr,
-                columnNameStr: this.elem.dataset.colNameStr,
-                columnNameRepr: this.elem.dataset.colNameRepr,
-                dataframeModule: this.elem.dataset.dataframeModule,
-                valueIsNone: "valueIsNone" in this.elem.dataset,
             };
             this.exchange.send(msg);
         }
 
         deactivate() {
-            if("isActive" in this.elem.dataset){
-                this.exchange.send({kind: "SAMPLE_TABLE_CELL_DEACTIVATED"});
+            if ("isActive" in this.elem.dataset) {
+                this.exchange.send({
+                    kind: "SAMPLE_TABLE_CELL_DEACTIVATED"
+                });
             }
+        }
+
+        ACTIVATE_SAMPLE_TABLE_CELL(msg) {
+            if (msg.cellId == this.elem.id) {
+                this.activate();
+            }
+        }
+
+        SAMPLE_TABLE_CELL_DEACTIVATED() {
+            this.elem.setAttribute("tabindex", -1);
+            this.elem.blur();
             delete this.elem.dataset.isActive;
             delete this.elem.dataset.isInActiveColumn;
         }
@@ -282,10 +288,15 @@ if (customElements.get('skrub-table-report') === undefined) {
         SAMPLE_TABLE_CELL_ACTIVATED(msg) {
             if (msg.cellId === this.elem.id) {
                 this.elem.dataset.isActive = "";
+                this.elem.setAttribute("tabindex", 0);
+                this.elem.contentEditable = "true";
+                this.elem.focus({});
+                this.elem.contentEditable = "false";
             } else {
                 delete this.elem.dataset.isActive;
+                this.elem.setAttribute("tabindex", -1);
             }
-            if (msg.columnName === this.elem.dataset.columnName) {
+            if (this.matchesColumnIdx(msg.columnIdx)) {
                 this.elem.dataset.isInActiveColumn = "";
             } else {
                 delete this.elem.dataset.isInActiveColumn;
@@ -297,19 +308,116 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         COLUMN_FILTER_CHANGED(msg) {
-            if (!this.matchesColumnFilter(msg)) {
+            if (this.elem.hasAttribute("data-column-idx") && !this
+                .matchesColumnFilter(msg)) {
                 this.deactivate();
             }
         }
     }
     SkrubTableReport.register(SampleTableCell);
 
+    class SampleTable extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.root = this.elem.getRootNode();
+            this.startI = Number(this.elem.dataset.startI) || 0;
+            this.stopI = Number(this.elem.dataset.stopI) || 0;
+            this.startJ = Number(this.elem.dataset.startJ) || 0;
+            this.stopJ = Number(this.elem.dataset.stopJ) || 0;
+            this.elem.addEventListener('keydown', (e) => this.onKeyDown(e));
+            this.elem.addEventListener('skrub-keydown', (e) => this.onKeyDown(
+                unwrapSkrubKeyDown(e)));
+        }
+
+        onKeyDown(event) {
+            if (hasModifier(event)) {
+                return;
+            }
+            const cell = event.target;
+            let {
+                i,
+                j
+            } = cell.dataset;
+            [i, j] = [Number(i), Number(j)];
+            if (isNaN(i) || isNaN(j)) {
+                return;
+            }
+            let newCellId = null;
+            switch (event.key) {
+                case "ArrowLeft":
+                    newCellId = this.findCellLeft(cell.id, i, j);
+                    break;
+                case "ArrowRight":
+                    newCellId = this.findCellRight(cell.id, i, j);
+                    break;
+                case "ArrowUp":
+                    newCellId = this.findCellUp(cell.id, i, j);
+                    break;
+                case "ArrowDown":
+                    newCellId = this.findCellDown(cell.id, i, j);
+                    break;
+                case "Escape":
+                    this.exchange.send({
+                        kind: "SAMPLE_TABLE_CELL_DEACTIVATED"
+                    });
+                    event.preventDefault();
+                    return;
+                default:
+                    return;
+            }
+            if (newCellId !== null) {
+                this.exchange.send({
+                    kind: "ACTIVATE_SAMPLE_TABLE_CELL",
+                    cellId: newCellId
+                });
+                event.preventDefault();
+                return;
+            }
+        }
+
+        findNextCell(startCellId, i, j, next, stop) {
+            [i, j] = next(i, j);
+            while (!stop(i, j)) {
+                const cell = this.elem.querySelector(`[data-spans__${i}__${j}]`);
+                if (cell !== null && cell.id !== startCellId && !cell.hasAttribute(
+                        "data-excluded-by-column-filter") && cell.dataset.role !==
+                    "padding" && cell.dataset.role !== "ellipsis") {
+                    return cell.id;
+                }
+                [i, j] = next(i, j);
+            }
+            return null;
+        }
+
+        findCellLeft(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i, j - 1], (i,
+                j) => (j < this
+                .startJ));
+        }
+        findCellRight(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i, j + 1], (i,
+                j) => (this
+                .stopJ <= j));
+        }
+
+        findCellUp(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i - 1, j], (i,
+                j) => (i < this
+                .startI));
+        }
+
+        findCellDown(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i + 1, j], (i,
+                j) => (this
+                .stopI <= i));
+        }
+    }
+    SkrubTableReport.register(SampleTable);
+
     class SampleTableBar extends Manager {
         constructor(elem, exchange) {
             super(elem, exchange);
-            this.select = elem.querySelector("[data-role='content-select']");
             this.display = elem.querySelector("[data-role='content-display']");
-            this.select.addEventListener("change", () => this.updateDisplay());
             this.displayValues = new Map();
         }
 
@@ -319,41 +427,16 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         SAMPLE_TABLE_CELL_ACTIVATED(msg) {
-            for (let k of ["valueStr", "valueRepr", "columnNameStr",
-                    "columnNameRepr"
-                ]) {
-                this.displayValues.set(k, msg[k]);
-            }
-            const snippet = filterSnippet(msg.columnNameRepr,
-                msg.valueRepr,
-                msg.valueIsNone,
-                msg.dataframeModule);
-            this.displayValues.set("filterDfSnippet", snippet);
-            this.updateDisplay();
+            this.display.textContent = msg.valueStr || "";
+            this.display.dataset.copyText = msg.valueRepr || "";
         }
 
         SAMPLE_TABLE_CELL_DEACTIVATED() {
-            this.displayValues = new Map();
-            this.updateDisplay();
+            this.display.textContent = "";
+            this.display.removeAttribute("data-copy-text");
         }
     }
     SkrubTableReport.register(SampleTableBar);
-
-    class ContentSelect extends Manager {
-        constructor(elem, exchange) {
-            super(elem, exchange);
-            this.select = elem.querySelector("[data-role='content-select']");
-            this.displays = elem.querySelectorAll("[data-role='content-display']");
-            this.select.addEventListener("change", () => this.updateDisplays());
-        }
-
-        updateDisplays() {
-            for (let display of this.displays) {
-                display.textContent = display.dataset[this.select.value] || "";
-            }
-        }
-    }
-    SkrubTableReport.register(ContentSelect);
 
     class TabList extends Manager {
         constructor(elem, exchange) {
@@ -369,8 +452,13 @@ if (customElements.get('skrub-table-report') === undefined) {
                     }
                     this.lastTab = tab;
                     tab.addEventListener("click", () => this.selectTab(tab));
+                    // See forwardKeyboardEvent for details about captureKeys
+                    tab.dataset.captureKeys = "ArrowRight ArrowLeft";
                     tab.addEventListener("keydown", (event) => this.onKeyDown(
                         event));
+                    tab.addEventListener("skrub-keydown", (event) => this
+                        .onKeyDown(
+                            unwrapSkrubKeyDown(event)));
                 });
             this.selectTab(this.firstTab, false);
         }
@@ -415,6 +503,9 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         onKeyDown(event) {
+            if (hasModifier(event)) {
+                return;
+            }
             switch (event.key) {
                 case "ArrowLeft":
                     this.selectPreviousTab();
@@ -430,6 +521,74 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
     }
     SkrubTableReport.register(TabList);
+
+    class sortableTable extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelectorAll("button[data-role='sort-button']").forEach(
+                b => b.addEventListener("click", e => this.sort(e)));
+        }
+
+        getVal(row, tableColIdx) {
+            const td = row.querySelectorAll("td")[tableColIdx];
+            if (!td.hasAttribute("data-value")) {
+                return td.textContent;
+            }
+            let value = td.dataset.value;
+            if (td.hasAttribute("data-numeric")) {
+                value = Number(value);
+            }
+            return value;
+        }
+
+        compare(rowA, rowB, tableColIdx, ascending) {
+            let valA = this.getVal(rowA, tableColIdx);
+            let valB = this.getVal(rowB, tableColIdx);
+            // NaNs go at the bottom regardless of sorting order
+            if (typeof(valA) === "number" && typeof(valB) === "number") {
+                if (isNaN(valA) && !isNaN(valB)) {
+                    return 1;
+                }
+                if (isNaN(valB) && !isNaN(valA)) {
+                    return -1;
+                }
+            }
+            // When the values are equal, keep the original dataframe column
+            // order
+            if (!(valA > valB || valB > valA)) {
+                valA = Number(rowA.dataset.dataframeColumnIdx);
+                valB = Number(rowB.dataset.dataframeColumnIdx);
+                return valA - valB;
+            }
+            // Sort
+            if (!ascending) {
+                [valA, valB] = [valB, valA];
+            }
+            return valA > valB ? 1 : -1;
+        }
+
+        sort(event) {
+            const colHeaders = Array.from(this.elem.querySelectorAll(
+                "thead tr th"));
+            const tableColIdx = colHeaders.indexOf(event.target.closest("th"));
+            const body = this.elem.querySelector("tbody");
+            const rows = Array.from(body.querySelectorAll("tr"));
+            const ascending = event.target.dataset.direction === "ascending";
+
+            rows.sort((a, b) => this.compare(a, b, tableColIdx, ascending));
+
+            this.elem.querySelectorAll("button").forEach(b => b.removeAttribute(
+                "data-is-active"));
+            event.target.dataset.isActive = "";
+
+            body.innerHTML = "";
+            for (let r of rows) {
+                body.appendChild(r);
+            }
+        }
+
+    }
+    SkrubTableReport.register(sortableTable);
 
     class SelectedColumnsDisplay extends Manager {
 
@@ -503,6 +662,18 @@ if (customElements.get('skrub-table-report') === undefined) {
     SkrubTableReport.register(SelectAllVisibleColumns);
 
 
+    class Toggletip extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelector("button").addEventListener("keydown", e => {
+                if (e.key === "Escape") {
+                    e.target.blur();
+                }
+            });
+        }
+    }
+    SkrubTableReport.register(Toggletip);
+
     function initReport(reportId) {
         const report = document.getElementById(reportId);
         report.init();
@@ -521,8 +692,13 @@ if (customElements.get('skrub-table-report') === undefined) {
             return;
         }
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(elem.textContent || "");
+            navigator.clipboard.writeText(elem.dataset.copyText || elem.textContent ||
+                "");
         } else {
+            // fallback when navigator not available. in this case we just copy
+            // the text content of the element (we could create a hidden one to
+            // fill it with the data-copy-text and select that but this is
+            // probably good enough)
             const selection = window.getSelection();
             if (selection == null) {
                 return;
@@ -536,27 +712,75 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
     }
 
-    function pandasFilterSnippet(colName, value, valueIsNone) {
-        if (valueIsNone) {
-            return `df.loc[df[${colName}].isnull()]`;
-        }
-        return `df.loc[df[${colName}] == ${value}]`;
+    function hasModifier(event) {
+        return event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
     }
 
-    function polarsFilterSnippet(colName, value, valueIsNone) {
-        if (valueIsNone) {
-            return `df.filter(pl.col(${colName}).is_null())`;
+    /* Jupyter notebooks and vscode stop the propagation of some keyboard events
+    during the capture phase to implement their keyboard shortcuts etc. When an
+    element inside the TableReport has the keyboard focus and wants to react on
+    that event (eg in the sample table arrow keys allow selecting a neighbouring
+    cell) we need to override that behavior.
+
+    We do that by adding an event listener on the window that is triggered
+    during the capture phase. If it can make sure the key press is for a report
+    element that will react to it, we stop its propagation (to avoid eg the
+    notebook jumping to the next jupyter code cell) and dispatch an event on the
+    targeted element. To make sure it does not get handled again by the listener
+    on the window and cause infinite recursion, we dispatch a custom event
+    instead of a KeyDown event.
+
+    This capture is only enabled if we detect the report is inserted in a page
+    where it is needed, by checking if there are elements in the page with class
+    names that are used by jupyter or vscode.
+    */
+    function forwardKeyboardEvent(e) {
+        if (e.eventPhase !== 1) {
+            return;
         }
-        return `df.filter(pl.col(${colName}) == ${value})`;
+        if (e.target.tagName !== "SKRUB-TABLE-REPORT") {
+            return;
+        }
+        if (hasModifier(e)) {
+            return;
+        }
+        const target = e.target.shadowRoot.activeElement;
+        // only capture the event if the element lists the key in the keys it
+        // wants to capture ie in captureKeys
+        const wantsKey = target?.dataset.captureKeys?.split(/\s+/).includes(e.key);
+        if (!wantsKey) {
+            return;
+        }
+        const newEvent = new CustomEvent('skrub-keydown', {
+            bubbles: true,
+            cancelable: true,
+            detail: {
+                key: e.key,
+                code: e.code,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                ctrlKey: e.ctrlKey,
+                metaKey: e.metaKey,
+            }
+        });
+        target.dispatchEvent(newEvent);
+        e.stopImmediatePropagation();
+        e.preventDefault();
     }
 
-    function filterSnippet(colName, value, valueIsNone, dataframeModule) {
-        if (dataframeModule === "polars") {
-            return polarsFilterSnippet(colName, value, valueIsNone);
-        }
-        if (dataframeModule === "pandas") {
-            return pandasFilterSnippet(colName, value, valueIsNone);
-        }
-        return `Unknown dataframe library: ${dataframeModule}`;
+    /* Helper to unpack the custom event (see forwardKeyboardEvent above) and
+    make it look like a regular KeyDown event. */
+    function unwrapSkrubKeyDown(e) {
+        return {
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            target: e.target,
+            ...e.detail
+        };
     }
+
+    if (document.querySelector(".jp-Cell, .widgetarea")) {
+        window.addEventListener("keydown", forwardKeyboardEvent, true);
+    }
+
 }

@@ -1,39 +1,165 @@
 /* The table showing the first few and last rows of the dataframe */
 /* -------------------------------------------------------------- */
 
+.table-with-selectable-cells {
+    margin: 2px;
+    border: none;
+}
+
+.table-with-selectable-cells tbody {
+    border: 1px solid var(--mediumg);
+}
+
+.table-with-selectable-cells thead th {
+    vertical-align: top;
+    border: 1px solid var(--mediumg);
+}
+
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-th[data-is-in-active-column] {
-    background-color: var(--darkgreen);
+#report .table-cell[data-is-in-active-column] {
+    background-color: var(--active-column-color);
 }
 
-tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
-    background-color: var(--mediumgreen);
+tbody tr {
+    --active-column-color: var(--lightgreen);
 }
 
-.table-cell[data-is-in-active-column] {
-    background-color: var(--lightgreen);
+tbody tr:nth-child(2n -1) {
+    --active-column-color: var(--mediumgreen);
 }
 
-tr:nth-child(2n -1) .table-cell[data-is-active] {
-    background-color: var(--yellowish);
-    border: 1px solid black;
+thead {
+    --active-column-color: var(--darkgreen);
 }
 
-/* The selected cell itself is yellow */
+.table-with-selectable-cells th[data-role="padding"]{
+    background-color: white;
+    border: none;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"]{
+    text-align: right;
+    padding-right: 1.5rem;
+    position: relative;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"] > .arrow-icon {
+    position: absolute;
+    width: 1rem;
+    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    right: -1rem;
+    transform: translateX(-1.3rem);
+    display: flex;
+    user-select: none;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-value"]{}
+.table-with-selectable-cells th[data-role="column-name"]{}
+
+
+.table-with-selectable-cells th[data-role="index-level-name"],
+.table-with-selectable-cells th[data-role="index-level-value"]{
+    background-color: white;
+    border: 1px solid var(--mediumg);
+    text-align: right;
+}
+
+.table-with-selectable-cells th[data-role="dataframe-data"]{}
 
 .table-cell[data-is-active] {
-    background-color: var(--yellowish);
-    border: 1px solid black;
+    --active-column-color: var(--lightyellow);
 }
+
+table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
+    outline: 2px dotted black;
+}
+
+.table-cell[data-is-active]:focus {
+    outline: 2px solid Highlight;
+    outline: 2px solid -webkit-focus-ring-color;
+}
+
+#report .table-cell[data-is-active][data-just-copied]:focus {
+    outline: 2px dashed Highlight;
+    outline: 2px dashed -webkit-focus-ring-color;
+}
+
 
 /* The gap separating the head and the tail of the table */
 
-#report .ellided-table-part {
-    border: 1px solid white;
+#report .ellided-table-part,
+#report .ellided-table-part td {
+    border: 2px dashed var(--mediumg);
     text-align: center;
     border-top: 0;
     border-bottom: 0;
     background: inherit;
+}
+
+#report .ellided-table-part td {
+    padding: var(--tiny);
+}
+
+#report .ellipsis-icon {
+    display: flex;
+    flex-direction: column;
+    max-height: var(--large);
+}
+
+#report table:has([data-role="index-level-value"]) .ellided-table-part td:first-child .ellipsis-icon * {
+    align-self: flex-end;
+}
+
+.table-bar-wrapper {
+    min-height: calc(var(--line-height, 1.5) * 1em + 3.5 * var(--tiny));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: var(--micro);
+}
+
+/* Information below the table: dimensions and keyboard shortcuts */
+
+.table-footer {
+    display: flex;
+    justify-content: flex-start;
+    column-gap: 4ch;
+    padding-top: var(--micro);
+}
+
+.keyboard-hints  {
+    display: none;
+    flex-basis: max(0px, min(50%, calc((50% - 30ch) * 99999)));
+    flex-shrink: 0;
+    min-width: 0px;
+    height: 2rem;
+    margin-bottom: calc(-1 * var(--small));
+    margin-right: var(--micro);
+    overflow: hidden;
+}
+
+:has(.table-with-selectable-cells:focus-within) ~ .table-footer .keyboard-hints {
+    display: block;
+}
+
+.keyboard-key {
+    font-size: 0.75em;
+    font-family: var(--fontStack-monospace);
+    padding: 0 0.5em;
+    line-height: 1.8;
+    color: #444444;
+    border: 1px solid #cccccc;
+    border-bottom: 1px solid #bbbbbb;
+    box-shadow: inset 0 -1px 0 #bbbbbb;
+    border-radius: 0.2em;
+    min-width: 1em;
+    text-align: center;
+    margin: 0.1em;
+    display: inline-block;
+    vertical-align: center;
 }

@@ -133,5 +133,5 @@ def test_pickling_selectors_with_args(df_module):
         assert unpickled.expand(df) == selector.expand(df)
     # unless of course the ones that have been initialized with an un-picklable
     # attribute
-    with pytest.raises(Exception, match="Can't pickle"):
+    with pytest.raises(Exception):
         pickle.dumps(s.filter(lambda _: False))

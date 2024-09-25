@@ -9,27 +9,34 @@
     --huge: 1.5rem;
     --max-content-width: 45rem;
     --radius: 0.25rem;
-
-    --yellowish: #ffffaa;
+    --line-height: 1.5;
 
     --lightgreen: #eafaea;
     --mediumgreen: #d6f5d6;
     --darkgreen: 	#c1f0c1;
     --verydarkgreen: #84e184;
+    --shadowgreen: #9fce9f;
+
+    --lightyellow: #ffffaa;
 
     --darkg: #555555;
     --mediumg: #d0d0d0;
     --lightg: #f0f0f0;
 
+    --darkred: #a32929;
+    --red: #dd0000;
+
     --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
-    --fontStack-sansSerif: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 }
 
 :host {
-    font-family: var(--fontStack-sansSerif);
     font-size: 1rem;
-    line-height: 1.5;
+    line-height: var(--line-height);
     -webkit-text-size-adjust: 100%;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
 /* The report is in a shadow DOM so outside selectors don't reach it but properties */
@@ -45,6 +52,12 @@
     max-width: max-content;
 }
 
+
+
+h1 {
+    font-size: var(--huge);
+}
+
 button > * {
     pointer-events: none;
 }
@@ -52,8 +65,8 @@ button > * {
 /* pure.css / Normalize.css overrides the default firefox blue ring around focussed */
 /* elements with something almost impossible to see, making it impossible to use */
 /* tab navigation. We revert it to the browser's appropriate default. */
-:focus-visible {
-    outline: revert !important;
+#report :focus-visible {
+    outline: revert;
 }
 
 
@@ -80,6 +93,7 @@ pre {
 
 code, pre {
     font-family: var(--fontStack-monospace);
+    font-size: calc(0.9 * var(--small));
 }
 
 :is(td, th) {
@@ -199,7 +213,6 @@ dd {
 .flex-reverse {
     display: flex;
     flex-wrap: wrap-reverse;
-    row-gap: var(--tiny);
 }
 
 .space-between {
@@ -247,7 +260,16 @@ dd {
 }
 
 .critical {
-    color: red;
+    color: var(--red);
+}
+
+.box-shadow {
+    --shadow-color: 0deg 0% 63%;
+    box-shadow:
+    0.3px 0.5px 0.7px hsl(var(--shadow-color) / 0.36),
+    0.8px 1.6px 2px -0.8px hsl(var(--shadow-color) / 0.36),
+    2.1px 4.1px 5.2px -1.7px hsl(var(--shadow-color) / 0.36),
+    5px 10px 12.6px -2.5px hsl(var(--shadow-color) / 0.36);
 }
 
 /* Misc tweaks */
@@ -257,18 +279,16 @@ dd {
 .report-header {
     --max-content-width: 100rem;
     font-size: var(--large);
+    padding-block-start: var(--micro);
+    padding-block-end: var(--micro);
 }
 
-.announcement  {
-    font-size: var(--large);
-    padding-block-start: var(--huge);
-    padding-block-end: var(--huge);
+.report-header > h1 {
+    margin: 0;
 }
 
 .important-note {
     background-color: var(--lightgreen);
-    padding: var(--small);
+    padding: var(--tiny);
     border-radius: var(--radius);
-    margin-top: var(--tiny);
-    margin-bottom: var(--small);
 }

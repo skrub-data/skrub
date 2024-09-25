@@ -11,9 +11,9 @@ describe('test filtering visible columns', () => {
         cy.get('@report').find('#col_0').should('not.be.visible');
         cy.get('@report').find('[data-test="sample-tab"]').as(
             'sampleTab').click();
-        cy.get('@report').find('#sample-table-cell-head-1-7').as(
+        cy.get('@report').find('[data-role="dataframe-data"][data-i="1"][data-j="7"]').as(
             'cell7').should('be.visible');
-        cy.get('@report').find('#sample-table-cell-head-1-0').as(
+        cy.get('@report').find('[data-role="dataframe-data"][data-i="1"][data-j="0"]').as(
             'cell0').should('not.be.visible');
         cy.get('@nColumns').should('have.text', '1');
 

@@ -1,0 +1,12 @@
+.column-filter {
+    display: flex;
+    gap: var(--tiny);
+    align-items: flex-end;
+    margin-bottom: var(--micro);
+    margin-left: var(--small);
+}
+
+.column-filter > label {
+    padding: 0;
+    margin: 0;
+}

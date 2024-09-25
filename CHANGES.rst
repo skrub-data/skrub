@@ -6,6 +6,55 @@ Release history
 
 .. currentmodule:: skrub
 
+Release 0.3.1
+=============
+
+Minor changes
+-------------
+
+* For tree-based models, :func:`tabular_learner` now adds
+  `handle_unknown='use_encoded_value'` to the `OrdinalEncoder`, to avoid
+  errors with new categories in the test set. This is consistent with the
+  setting of `OneHotEncoder` used by default in the
+  :class:`TableVectorizer`. :pr:`1078` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+* The reports created by :class:`TableReport`, when inserted in an html page (or
+  displayed in a notebook), now use the same font as the surrounding page.
+  :pr:`1038` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The content of the dataframe corresponding to the currently selected table
+  cell in the TableReport can be copied without actually selecting the text (as
+  in a spreadsheet).
+  :pr:`1048` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The selection of content displayed in the TableReport's copy-paste boxes has
+  been removed. Now they always display the value of the selected item. When
+  copied, the repr of the selected item is copied to the clipboard.
+  :pr:`1058` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* A "stats" panel has been added to the TableReport, showing summary statistics
+  for all columns (number of missing values, mean, etc. -- similar to
+  ``pandas.info()`` ) in a table. It can be sorted by each column.
+  :pr:`1056` and :pr:`1068` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Added zero padding for column names in :class:`MinHashEncoder` to improve column ordering consistency.
+  :pr:`1069` by :user:`Shreekant Nandiyawar <Shree7676>`.
+
+* The selection in the TableReport's sample table can now be manipulated with
+  the keyboard. :pr:`1065` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The ``TableReport`` now displays the pandas (multi-)index, and has a better
+  display & interaction of pandas columns when the columns are a MultiIndex.
+  :pr:`1083` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* It is possible to control the number of rows displayed by the TableReport in
+  the "sample" tab panel by specifying ``n_rows``.
+  :pr:`1083` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* the `TableReport` used to raise an exception when the dataframe contained
+  unhashable types such as python lists. This has been fixed in :pr:`1087` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+
 Release 0.3.0
 =============
 

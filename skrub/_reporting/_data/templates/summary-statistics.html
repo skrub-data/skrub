@@ -1,0 +1,108 @@
+{% macro th(name, ascending, descending, is_numeric) %}
+<th class="sort-button-group-wrapper" scope="col">
+    {% if name %}
+    <span class="margin-r-t">{{ name }}</span>
+    {% endif %}
+    <div class="sort-button-group">
+        <button class="sort-button" type="button" data-role="sort-button"
+            data-direction="ascending" title="Sort {{ ascending }}">
+            {% if is_numeric %}
+            {% include "icons/sort-numeric-down.svg" %}
+            {% else %}
+            {% include "icons/sort-alpha-down.svg" %}
+            {% endif %}
+        </button>
+        <button class="sort-button" type="button" data-role="sort-button"
+            data-direction="descending" title="Sort {{ descending }}">
+            {% if is_numeric %}
+            {% include "icons/sort-numeric-down-alt.svg" %}
+            {% else %}
+            {% include "icons/sort-alpha-down-alt.svg" %}
+            {% endif %}
+        </button>
+    </div>
+</th>
+{% endmacro %}
+
+{% macro th1(name, low, high, is_numeric) %}
+{{ th(name, "from columns with " + low + " to columns with " + high, "from columns with " + high + " to columns with " + low, is_numeric) }}
+{% endmacro %}
+
+<article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
+    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
+    <div class="horizontal-scroll">
+        <table class="pure-table pure-table-bordered summary-stats-table"
+            data-manager="sortableTable">
+            <thead>
+                <tr>
+                    {{ th("Column", "from first column to last column", "from last column to first column", True) }}
+                    {{ th("Column name", "by column name from A to Z", "by column name from Z to A", False) }}
+                    {{ th("dtype", "by dtype from A to Z", "by dtype from Z to A", False) }}
+                    {{ th1("Null values", "the fewest null values", "the most null values", True) }}
+                    {{ th1("Unique values", "the fewest unique values", "the most unique values", True) }}
+                    {{ th1("Mean", "the lowest mean", "the highest mean", True) }}
+                    {{ th1("Std", "the lowest standard deviation", "the highest standard deviation", True) }}
+                    {{ th1("Min", "the lowest minimum value", "the highest minimum value", True) }}
+                    {{ th1("Median", "the lowest median", "the highest median", True) }}
+                    {{ th1("Max", "the lowest maximum value", "the highest maximum value", True) }}
+                </tr>
+            </thead>
+            <tbody>
+                {% for column in summary.columns %}
+                <tr data-manager="FilterableColumn" data-column-name="{{ column.name }}"
+                    data-column-idx="{{ column.idx }}"
+                    data-dataframe-column-idx="{{ column.idx }}">
+                    <td data-value="{{ loop.index0 }}" data-numeric>{{ loop.index0 }}
+                    </td>
+                    <td>{{ column.name }}</td>
+                    <td>{{ column.dtype }}</td>
+                    <td class="{{ column.nulls_level }}"
+                        data-value="{{ column.null_count }}" data-numeric>
+                        {{ column.null_count }} ({{ column.null_proportion | format_percent }})
+                    </td>
+
+                    {% if column.n_unique %}
+                    <td data-value="{{ column.n_unique }}" data-numeric>
+                        {{ column.n_unique }} ({{ column.unique_proportion | format_percent }})
+                    </td>
+                    {% else %}
+                    <td data-value="nan" data-numeric></td>
+                    {% endif %}
+
+                    {% if "mean" in column %}
+                    <td data-value="{{ column['mean'] }}" data-numeric>
+                        {{ column["mean"] | format_number }}</td>
+                    <td data-value="{{ column['standard_deviation'] }}" data-numeric>
+                        {{ column["standard_deviation"] | format_number }}</td>
+                    {% else %}
+                    <td data-value="nan" data-numeric></td>
+                    <td data-value="nan" data-numeric></td>
+                    {% endif %}
+
+                    {% if column.quantiles %}
+                    <td data-value="{{ column.quantiles[0.0] }}" data-numeric>
+                        {{ column.quantiles[0.0] | format_number }}</td>
+                    <td data-value="{{ column.quantiles[0.5] }}" data-numeric>
+                        {{ column.quantiles[0.5] | format_number }}</td>
+                    <td data-value="{{ column.quantiles[1.0] }}" data-numeric>
+                        {{ column.quantiles[1.0] | format_number }}</td>
+                    {% elif "min" in column %}
+                    <td data-value="{{ column.min }}" data-numeric>
+                        {{ column.min | format_number }}</td>
+                    <td data-value="nan" data-numeric></td>
+                    <td data-value="{{ column.max }}" data-numeric>
+                        {{ column.max | format_number }}</td>
+                    {% else %}
+                    <td data-value="nan" data-numeric></td>
+                    <td data-value="nan" data-numeric></td>
+                    <td data-value="nan" data-numeric></td>
+                    {% endif %}
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</article>
+
+{% include "no-filter-matches.html" %}
