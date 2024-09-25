@@ -37,7 +37,7 @@ def top_k_value_counts(column, k):
     n_unique = sbd.shape(counts)[0]
     counts = sbd.sort(counts, by="count", descending=True)
     counts = sbd.slice(counts, k)
-    return n_unique, dict(zip(*to_dict(counts).values()))
+    return n_unique, list(zip(*to_dict(counts).values()))
 
 
 def quantiles(column):

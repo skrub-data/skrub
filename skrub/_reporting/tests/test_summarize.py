@@ -74,7 +74,8 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
         "plot_names": [],
         "position": 0,
         "unique_proportion": 0.118,
-        "value_counts": {"London": 8, "Paris": 9},
+        "value_counts": [("Paris", 9), ("London", 8)],
+        "most_frequent_values": ["Paris", "London"],
         "value_is_constant": False,
     }
 
