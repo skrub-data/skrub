@@ -779,7 +779,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         };
     }
 
-    if (document.querySelector(".jp-Cell, .widgetarea")) {
+    if (document.querySelector(".jp-Cell, .widgetarea, .reveal")) {
         window.addEventListener("keydown", forwardKeyboardEvent, true);
     }
 
