@@ -1,9 +1,10 @@
 .column-filter {
     display: flex;
-    gap: var(--tiny);
+    gap: var(--space-m);
     align-items: flex-end;
-    margin-bottom: var(--micro);
-    margin-left: var(--small);
+    margin-bottom: var(--space-s);
+    margin-left: var(--space-l);
+    margin-right: var(--space-s);
 }
 
 .column-filter > label {

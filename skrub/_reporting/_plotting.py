@@ -2,7 +2,9 @@
 
 The figures are returned in the form of svg strings.
 """
+
 import io
+import re
 
 from matplotlib import pyplot as plt
 
@@ -37,10 +39,19 @@ def _despine(ax):
     ax.spines["right"].set_visible(False)
 
 
+def _to_em(pt_match):
+    attr, pt = pt_match.groups()
+    pt = float(pt)
+    px = pt * 96 / 72
+    em = px / 16
+    return f'{attr}="{em:.2f}em"'
+
+
 def _serialize(fig):
     buffer = io.BytesIO()
     fig.savefig(buffer, format="svg", bbox_inches="tight")
     out = buffer.getvalue().decode("UTF-8")
+    out = re.sub(r'(width|height)="([0-9.]+)pt"', _to_em, out)
     plt.close(fig)
     return out
 

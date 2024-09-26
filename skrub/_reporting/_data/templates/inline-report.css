@@ -4,5 +4,5 @@
 /* the page. */
 
 .tab-panel {
-    border-bottom: 1px solid var(--mediumg);
+    border-bottom: var(--border-s) solid var(--mediumg);
 }

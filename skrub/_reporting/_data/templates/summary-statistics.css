@@ -1,20 +1,20 @@
 .summary-stats-table {
-    margin: 2px;
+    margin: var(--border-m);
 }
 
 
-th.sort-button-group-wrapper {
-    --btn-width: 2rem;
+#report th.sort-button-group-wrapper {
+    --btn-width: var(--button-m);
     --btn-group-width: calc(var(--btn-width) * 2);
     position: relative;
-    padding-top: var(--micro);
-    padding-bottom: var(--micro);
-    padding-right: calc(var(--tiny) + var(--btn-group-width));
+    padding-top: var(--space-s);
+    padding-bottom: var(--space-s);
+    padding-right: calc(var(--space-m) + var(--btn-group-width));
 }
 
 .sort-button-group {
     position: absolute;
-    top: -1px;
+    top: calc(-1 * var(--border-s));
     bottom: 0;
     right: calc(-1 * var(--btn-group-width));
     left: 100%;
@@ -30,10 +30,10 @@ th.sort-button-group-wrapper {
     height: 100%;
     flex-grow: 1;
     border-radius: 0;
-    border: 1px solid #aaa;
+    border: var(--border-s) solid #aaa;
     background: #e0e0e0;
     color: #222;
-    padding: var(--micro);
+    padding: var(--space-s);
 }
 
 .sort-button-group > .sort-button:focus-visible {
@@ -41,7 +41,7 @@ th.sort-button-group-wrapper {
 }
 
 .sort-button-group > .sort-button ~ .sort-button {
-    margin-left: -1px;
+    margin-left: calc(-1 * var(--border-s));
 }
 
 .sort-button:hover {

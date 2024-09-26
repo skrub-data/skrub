@@ -1,9 +1,9 @@
 {% import "buttons.html" as buttons %}
 
-<article class="wrapper"
+<article class="wrapper flow"
          data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
          data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
-    <div class="flex wrapper-vert">
+    <div class="flex">
         <div class="box">
         <pre id="selected-columns-display" data-manager="SelectedColumnsDisplay"></pre>
         {{ buttons.copybutton("selected-columns-display") }}
