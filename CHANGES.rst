@@ -62,6 +62,9 @@ Minor changes
   unhashable types such as python lists. This has been fixed in :pr:`1087` by
   :user:`Jérôme Dockès <jeromedockes>`.
 
+* Display's columns name with the HTML representation of the fitted TableVectorizer.
+  This has been fixed in :pr:`1093` by :user:`Shreekant Nandiyawar <Shree7676>`.
+
 Release 0.3.0
 =============
 
