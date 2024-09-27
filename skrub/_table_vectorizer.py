@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils._estimator_html_repr import _VisualBlock
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -619,6 +620,23 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             for (input_, outputs) in self.input_to_outputs_.items()
             for out in outputs
         }
+
+    def _sk_visual_block_(self):
+        if hasattr(self, "kind_to_columns_"):
+            name_details = [
+                self.kind_to_columns_["numeric"],
+                self.kind_to_columns_["datetime"],
+                self.kind_to_columns_["low_cardinality"],
+                self.kind_to_columns_["high_cardinality"],
+            ]
+        else:
+            name_details = None
+        return _VisualBlock(
+            "parallel",
+            [self.numeric, self.datetime, self.low_cardinality, self.high_cardinality],
+            names=["numeric", "datetime", "low_cardinality", "high_cardinality"],
+            name_details=name_details,
+        )
 
     # scikit-learn compatibility
 
