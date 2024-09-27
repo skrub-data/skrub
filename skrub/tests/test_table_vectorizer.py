@@ -714,7 +714,7 @@ def test_bad_specific_cols():
         TableVectorizer(specific_transformers=[(None, [0])]).fit(None)
 
 
-def test_html_repr():
+def test_sk_visual_block_():
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
