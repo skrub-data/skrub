@@ -35,7 +35,7 @@ categories, eg to replace :class:`~sklearn.preprocessing.OneHotEncoder`:
   Useful when there are a small number of categories, but we still want
   to capture the links between them (eg: "west", "north", "north-west")
 
-.. topic:: References::
+.. topic:: References
 
     For a detailed description of the problem of encoding dirty
     categorical data, see `Similarity encoding for learning with dirty
@@ -49,6 +49,32 @@ categories, eg to replace :class:`~sklearn.preprocessing.OneHotEncoder`:
 .. [2] Patricio Cerda, Gaël Varoquaux, Balázs Kégl.
        Similarity encoding for learning with dirty categorical variables. 2018.
        Machine Learning journal, Springer.
+
+
+Encoding text with diverse entries
+----------------------------------
+
+When it comes to encoding text with diverse entries, large language models
+fine-tuned for embedding purposes enhance data processing. These diverse entries are
+typically represented by free-form text, such as strings with significantly
+more unique n-grams than unclean categorical data.
+
+Skrub offers the :class:`SentenceEncoder`, a wrapper around
+the `SentenceTransformer <https://sbert.net/>`_ package, allowing you to use any
+sentence embedding model available on the Hugging Face Hub
+
+.. topic:: References
+
+    See `Vectorizing string entries for data processing on tables: when are larger
+    language models better? <https://hal.science/hal-043459>`_ [3]_
+    for a comparison between large language models and string-based encoders
+    (such as the :class:`MinHashEncoder`) in the context of dirty categories versus
+    diverse entries regimes.
+
+.. [3]  L. Grinsztajn, M. Kim, E. Oyallon, G. Varoquaux.
+        Vectorizing string entries for data processing on tables: when are larger
+        language models better? 2023.
+
 
 Encoding dates
 ---------------

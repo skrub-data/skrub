@@ -12,6 +12,7 @@ Encoding a column
    GapEncoder
    MinHashEncoder
    SimilarityEncoder
+   SentenceEncoder
    DatetimeEncoder
    ToCategorical
    ToDatetime
