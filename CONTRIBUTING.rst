@@ -3,33 +3,30 @@ Contributing to skrub
 
 First off, thanks for taking the time to contribute!
 
-The following is a set of guidelines for contributing to
-`skrub <https://github.com/skrub-data/skrub>`__.
+Below are some guidelines to help you get started.
 
-|
-.. contents::
-   :local:
 
-|
+Have a question?
+----------------
 
-I just have a question
-----------------------
+If you have any questions, feel free to reach out:
 
-We use GitHub Discussions for general chat and Q&As. `Check it
-out! <https://github.com/skrub-data/skrub/discussions>`__
+- Join our community on `Discord <https://discord.gg/ABaPnm7fDC>`_ for general chat and Q&A.
+- Alternatively, you can `start a discussion on GitHub <https://github.com/skrub-data/skrub/discussions>`_.
 
-What should I know before I get started?
-----------------------------------------
+What to know before you begin
+-----------------------------
 
-To understand in more depth the incentives behind skrub,
-read our `vision statement. <https://skrub-data.org/stable/vision.html>`__
-Also, if scientific literature doesn't scare you, we greatly
-encourage you to read the two following papers:
+To understand the purpose and goals behind skrub, please read our
+`vision statement. <https://skrub-data.org/stable/vision.html>`_
 
-- `Similarity encoding for learning
-  with dirty categorical variables <https://hal.inria.fr/hal-01806175>`__
-- `Encoding high-cardinality string categorical
-  variables <https://hal.inria.fr/hal-02171256v4>`__.
+If you're interested in the research behind skrub,
+we encourage you to explore these papers:
+
+- `Similarity Encoding for Learning with Dirty
+  Categorical Variables <https://hal.inria.fr/hal-01806175>`_
+- `Encoding High-Cardinality String Categorical
+  Variables <https://hal.inria.fr/hal-02171256v4>`_.
 
 How can I contribute?
 ---------------------
@@ -37,84 +34,80 @@ How can I contribute?
 Reporting bugs
 ~~~~~~~~~~~~~~
 
-Using the library is the best way to discover new bugs and limitations.
+Using the library is the best way to discover bugs and limitations. If you find one,
+please:
 
-If you find one, please `check whether a similar issue already
-exists. <https://github.com/skrub-data/skrub/issues?q=is%3Aissue>`__
+1. **Check if an issue already exists**
+   by searching the `GitHub issues <https://github.com/skrub-data/skrub/issues?q=is%3Aissue>`_
 
-- If so...
+   - If **open**, leave a 👍 on the original message to signal that others are affected.
+   - If closed, check for one of the following:
+      - A **merged pull request** may indicate the bug is fixed. Update your
+        skrub version or note if the fix is pending a release.
+      - A **wontfix label** or reasoning may be provided if the issue was
+        closed without a fix.
+2. If the issue does not exist, `create a new one <https://github.com/skrub-data/skrub/issues/new>`_.
 
-  - **Issue is still open**: leave a 👍 on the original message to
-    let us know there are several users affected by this issue.
-  - **Issue has been closed**:
-
-    - **By a merged pull request** (1) update your skrub version,
-      or (2) the fix has not been released yet.
-    - **Without pull request**, there might be a ``wontfix`` label, and/or a reason at the bottom of the conversation.
-
-- Otherwise, `file a new issue <https://github.com/skrub-data/skrub/issues/new>`__.
-
-How do I submit a bug report?
+How to submit a bug report?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To solve your issue, first explain the problem and include
-additional details to help maintainers easily reproduce the problem:
+To help us resolve the issue quickly, please include:
 
--  **Use a clear and descriptive title** which identifies the problem.
--  **Describe the result you expected**.
--  **Add additional details to your description problem** such as
-   situations where the bug should have appeared but didn't.
--  **Include a snippet of code that reproduces the error**, if any, as it allows
-   maintainers to reproduce it in a matter of seconds!
--  **Specify versions** of Python, skrub, and other dependencies
-   which might be linked to the issue (e.g., scikit-learn, numpy,
-   pandas, etc.).
+- A **clear and descriptive title**.
+- A **summary of the expected result**.
+- Any **additional details** where the bug might occur or doesn't occur unexpectedly.
+- A **code snippet** that reproduces the issue, if applicable.
+- **Version information** for Python, skrub, and relevant dependencies (e.g., scikit-learn, numpy, pandas).
 
 Suggesting enhancements
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-This section will guide you through submitting a new enhancement for
-skrub, whether it is a small fix or a new feature.
+If you have an idea for improving skrub, whether it's a small fix
+or a new feature, first:
 
-First, you should `check whether the feature has not already been proposed or
-implemented <https://github.com/skrub-data/skrub/pulls?q=is%3Apr>`__.
+- **Check if it has been proposed or implemented** by reviewing
+  `open pull requests <https://github.com/skrub-data/skrub/pulls?q=is%3Apr>`_.
+- If not, `submit a new issue <https://github.com/skrub-data/skrub/issues/new>`_
+  with your proposal before writing any code.
 
-If not, before writing any code, `submit a new
-issue <https://github.com/skrub-data/skrub/issues/new>`__ proposing
-the change.
-
-How do I submit an enhancement proposal?
+How to submit an enhancement proposal?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
--  **Use a clear and descriptive title**.
--  **Provide a quick explanation of the goal of this enhancement**.
--  **Provide a step-by-step description of the suggested enhancement**
-   with as many details as possible.
--  **If it exists elsewhere, link resources**.
+When proposing an enhancement:
+
+- **Use a clear and descriptive title**.
+- **Explain the goal** of the enhancement.
+- Provide a **detailed step-by-step description** of the proposed change.
+- **Link to any relevant resources** that may support the enhancement.
+
 
 If the enhancement proposal is validated
 ''''''''''''''''''''''''''''''''''''''''
 
-Let maintainers know whether:
+Once your enhancement proposal is approved, let the maintainers know the following:
 
-- **You will write the code and submit a pull request (PR)**.
-  Writing the feature yourself is the fastest way to getting it
-  implemented in the library, and we'll help in that process if guidance
-  is needed! To go further, refer to the section
-  :ref:`writing-your-first-pull-request`.
-- **You won't write the code**, in which case a
-  developer can start working on it. Note however that we cannot guarantee how much time
-  it will take to implement the change.
+- **If you will write the code and submit a Pull Request (PR)**:
+  Contributing the feature yourself is the quickest way to see it implemented.
+  We're here to guide you through the process if needed! To get started,
+  refer to the section :ref:`writing-your-first-pull-request`.
+- **If you won't be writing the code**:
+  A developer can then take over the implementation.
+  However, please note that we cannot guarantee how long
+  it will take for the feature to be added.
+
 
 If the enhancement is refused
 '''''''''''''''''''''''''''''
 
-There are specific incentives behind skrub. While most enhancement
-ideas are good, they don't always fit in the context of the library.
+Although many ideas are great, not all will align with the objectives
+of skrub.
 
-If you'd like to implement your idea regardless, we'd be very glad if
-you create a new package that builds on top of skrub! In some cases,
-we might even feature it on the official repository!
+If your enhancement is not accepted, consider implementing it
+as a separate package that builds on top of skrub!
+
+We would love to see your work, and in some cases, we might even
+feature your package in the official repository.
+
 
 .. _writing-your-first-pull-request:
 
@@ -124,62 +117,51 @@ Writing your first Pull Request
 Preparing the ground
 ^^^^^^^^^^^^^^^^^^^^
 
-If not already done, first create an issue, and discuss
-the changes with the project's maintainers.
-
-See in the sections above for the right way to do this.
+Before writing any code, ensure you have created an issue
+discussing the proposed changes with the maintainers.
+See the relevant sections above on how to do this.
 
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, `fork skrub on Github <https://github.com/skrub-data/skrub/fork>`__.
+Follow the steps in the :ref:`installation_instructions` > "From Source" section to
+set up your environment.
 
-That will enable you to push your commits to a branch *on your fork*.
-
-Then, clone the repo on your computer:
-
-.. code:: console
-
-   git clone https://github.com/<YOUR_NAME>/skrub
-
-It is advised to create a new branch every time you work on a new issue,
-to avoid confusion:
+When starting to work on a new issue, it's recommended to create a new branch:
 
 .. code:: console
 
    git switch -c branch_name
 
-Finally, install the dependencies by heading to the `installation process <https://skrub-data.org/stable/install.html#advanced-usage-for-contributors>`__,
-advanced usage section.
 
-Implementation
-^^^^^^^^^^^^^^
+.. _implementation guidelines:
 
-There are a few specific project goals to keep in mind:
+Implementation Guidelines
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- Pure Python code - no binary extensions, Cython, etc.
-- Make production-friendly code.
+When contributing, keep these project goals in mind:
 
-  - Try to target the broadest range of versions (Python and dependencies).
-  - Use the least amount of dependencies.
-  - Make code as backward compatible as possible.
-- Prefer performance to readability.
+- **Pure Python code**: Avoid using binary extensions, Cython, or other compiled languages.
+- **Production-friendly code**:
+    - Target the widest possible range of Python versions and dependencies.
+    - Minimize the use of external dependencies.
+    - Ensure backward compatibility as much as possible.
+- **Performance over readability**:
+  Optimized code may be less readable, so please include clear and detailed comments.
+  Refer to this `best practice guide <https://stackoverflow.blog/2021/12/23/best-practices-for-writing-code-comments/>`_.
+- **Explicit variable/function names**: Use descriptive, verbose names for clarity.
+- **Document public API components**:
+    - Document all public functions, methods, variables, and class signatures.
+    - The public API refers to all components available for import and use by library users. Anything that doesn't begin with an underscore is considered part of the public API.
 
-  - Optimized code might be hard to read, so
-    `please comment it <https://stackoverflow.blog/2021/12/23/best-practices-for-writing-code-comments/>`__
-- Use explicit, borderline verbose variables / function names
-- Public functions / methods / variables / class signatures should be documented
-  and type-hinted.
-
-  - The public API describes the components users of the
-    library will import and use. It's everything that can be imported and
-    does not start with an underscore.
 
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
 
-After pushing your commits to your remote repository, you can use the Github “Compare & pull request” button to submit
-your branch code as a PR targeting the skrub repository.
+Once you have pushed your commits to your remote repository, you can submit
+a PR by clicking the "Compare & pull request" button on GitHub,
+targeting the skrub repository.
+
 
 Integration
 ^^^^^^^^^^^
@@ -188,16 +170,16 @@ Community consensus is key in the integration process. Expect a minimum
 of 1 to 3 reviews depending on the size of the change before we consider
 merging the PR.
 
-Once again, remember that maintainers are **volunteers** and therefore
-cannot guarantee how much time it will take to review the changes.
+Please be mindful that maintainers are volunteers, so review times may vary.
 
 Continuous Integration (CI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Github Actions are used for various tasks including testing skrub on Linux, Mac
-  and Windows, with different dependencies and settings.
-
-* CircleCI is used to build the documentation.
+- **Github Actions**:
+  Used for testing skrub across various platforms (Linux, macOS, Windows)
+  and dependencies.
+- **CircleCI**:
+  Builds and verifies the project documentation.
 
 If any of the following markers appears in the commit message, the following
 actions are taken.
@@ -223,11 +205,12 @@ Building the documentation
 ..
   Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
 
-**Before submitting a pull request, check if your modifications have introduced
-new sphinx warnings by building the documentation locally and try to fix them.**
+**Before submitting your pull request, ensure that your modifications haven't
+introduced any new Sphinx warnings by building the documentation locally
+and addressing any issues.**
 
-First, make sure you have `properly installed <https://skrub-data.org/stable/install.html>`__
-the development version.
+First, make sure you have properly installed the development version of skrub.
+You can follow the :ref:`installation_instructions` > "From source" section, if needed.
 
 Building the documentation requires installing some additional packages:
 
@@ -242,7 +225,8 @@ To build the documentation, you need to be in the ``doc`` folder:
 
     cd doc
 
-To generate the docs, including the example gallery, you can use:
+To generate the full documentation, including the example gallery,
+run the following command:
 
 .. code:: bash
 
@@ -252,11 +236,11 @@ The documentation will be generated in the ``_build/html/`` directory
 and are viewable in a web browser, for instance by opening the local
 ``_build/html/index.html`` file.
 
-This will run all the examples, which takes a while. If you only want to
-generate a few examples, you can use:
+Running all the examples can take a while, so if you only want to generate
+specific examples, you can use the following command with a regex pattern:
 
 .. code:: bash
 
-    EXAMPLES_PATTERN=your_regex_goes_here make html
+    make html EXAMPLES_PATTERN=your_regex_goes_here make html
 
-This is particularly useful if you are modifying a few examples.
+This is especially helpful when you're only modifying or checking a few examples.

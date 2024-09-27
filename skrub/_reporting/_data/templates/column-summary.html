@@ -1,7 +1,9 @@
 {% import "buttons.html" as buttons %}
 
 <div class="card box-shadow column-summary" id="{{ col_id }}"
-    data-name-repr="{{ column.name.__repr__() }}" data-column-name="{{ column.name }}"
+    data-name-repr="{{ column.name.__repr__() }}"
+    data-column-name="{{ column.name }}"
+    data-column-idx="{{ column.idx }}"
     data-manager="FilterableColumn {% if in_sample_tab %}SampleColumnSummary{% endif %}"
     {% if column.value_is_constant %} data-constant-column {% endif %}
     {% if in_sample_tab %} data-role="sample-column" data-hidden {% else %}
@@ -84,7 +86,7 @@
                 <summary>Most frequent values</summary>
                 <div class="shrink">
                     <div class="copybutton-grid">
-                        {% for value in column.value_counts %}
+                        {% for (value, count) in column.value_counts %}
                         {% set val_id = "{}-freq-value-{}".format(col_id, loop.index0) %}
                         <div class="box" data-test="frequent-value-{{ loop.index0 }}">
                             <pre id="{{ val_id }}"
@@ -97,7 +99,7 @@
                         {% set val_id = "{}-freq-value-list".format(col_id) %}
                         <div class="box">
                             <pre id="{{ val_id }}"
-                                data-copy-text="{{ column.value_counts | list }}">{{ column.value_counts.keys() | list }}</pre>
+                                data-copy-text="{{ column.most_frequent_values }}">{{ column.most_frequent_values }}</pre>
                             {{ buttons.copybutton(val_id) }}
                         </div>
                     </div>

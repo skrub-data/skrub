@@ -40,10 +40,17 @@ if (customElements.get('skrub-table-report') === undefined) {
             delete this.elem.dataset.hidden;
         }
 
+        matchesColumnIdx(idx) {
+            if (!this.elem.hasAttribute("data-column-idx")) {
+                return false;
+            }
+            return Number(this.elem.dataset.columnIdx) === idx;
+        }
+
         matchesColumnFilter({
             acceptedColumns
         }) {
-            return acceptedColumns.has(this.elem.dataset.columnName);
+            return acceptedColumns.has(Number(this.elem.dataset.columnIdx));
         }
     }
 
@@ -195,7 +202,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         SAMPLE_TABLE_CELL_ACTIVATED(msg) {
-            if (msg.columnName === this.elem.dataset.columnName) {
+            if (this.matchesColumnIdx(msg.columnIdx)) {
                 this.show();
             } else {
                 this.hide();
@@ -250,14 +257,9 @@ if (customElements.get('skrub-table-report') === undefined) {
             const msg = {
                 kind: "SAMPLE_TABLE_CELL_ACTIVATED",
                 cellId: this.elem.id,
-                columnName: this.elem.dataset.columnName,
-                columnIdx: this.elem.dataset.columnIdx,
+                columnIdx: Number(this.elem.dataset.columnIdx),
                 valueStr: this.elem.dataset.valueStr,
                 valueRepr: this.elem.dataset.valueRepr,
-                columnNameStr: this.elem.dataset.colNameStr,
-                columnNameRepr: this.elem.dataset.colNameRepr,
-                dataframeModule: this.elem.dataset.dataframeModule,
-                valueIsNone: "valueIsNone" in this.elem.dataset,
             };
             this.exchange.send(msg);
         }
@@ -294,7 +296,7 @@ if (customElements.get('skrub-table-report') === undefined) {
                 delete this.elem.dataset.isActive;
                 this.elem.setAttribute("tabindex", -1);
             }
-            if (msg.columnName === this.elem.dataset.columnName) {
+            if (this.matchesColumnIdx(msg.columnIdx)) {
                 this.elem.dataset.isInActiveColumn = "";
             } else {
                 delete this.elem.dataset.isInActiveColumn;
@@ -306,7 +308,8 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         COLUMN_FILTER_CHANGED(msg) {
-            if (!this.matchesColumnFilter(msg)) {
+            if (this.elem.hasAttribute("data-column-idx") && !this
+                .matchesColumnFilter(msg)) {
                 this.deactivate();
             }
         }
@@ -317,9 +320,10 @@ if (customElements.get('skrub-table-report') === undefined) {
         constructor(elem, exchange) {
             super(elem, exchange);
             this.root = this.elem.getRootNode();
-            this.nHeadRows = this.elem.dataset.nHeadRows;
-            this.nTailRows = this.elem.dataset.nTailRows;
-            this.nCols = this.elem.dataset.nCols;
+            this.startI = Number(this.elem.dataset.startI) || 0;
+            this.stopI = Number(this.elem.dataset.stopI) || 0;
+            this.startJ = Number(this.elem.dataset.startJ) || 0;
+            this.stopJ = Number(this.elem.dataset.stopJ) || 0;
             this.elem.addEventListener('keydown', (e) => this.onKeyDown(e));
             this.elem.addEventListener('skrub-keydown', (e) => this.onKeyDown(
                 unwrapSkrubKeyDown(e)));
@@ -331,27 +335,26 @@ if (customElements.get('skrub-table-report') === undefined) {
             }
             const cell = event.target;
             let {
-                tablePart,
-                rowIdxInTablePart: row,
-                columnIdx: col
+                i,
+                j
             } = cell.dataset;
-            if (tablePart === undefined || row === undefined || col === undefined) {
+            [i, j] = [Number(i), Number(j)];
+            if (isNaN(i) || isNaN(j)) {
                 return;
             }
-            [row, col] = [Number(row), Number(col)];
             let newCellId = null;
             switch (event.key) {
                 case "ArrowLeft":
-                    newCellId = this.findCellLeft(tablePart, row, col);
+                    newCellId = this.findCellLeft(cell.id, i, j);
                     break;
                 case "ArrowRight":
-                    newCellId = this.findCellRight(tablePart, row, col);
+                    newCellId = this.findCellRight(cell.id, i, j);
                     break;
                 case "ArrowUp":
-                    newCellId = this.findCellUp(tablePart, row, col);
+                    newCellId = this.findCellUp(cell.id, i, j);
                     break;
                 case "ArrowDown":
-                    newCellId = this.findCellDown(tablePart, row, col);
+                    newCellId = this.findCellDown(cell.id, i, j);
                     break;
                 case "Escape":
                     this.exchange.send({
@@ -372,91 +375,42 @@ if (customElements.get('skrub-table-report') === undefined) {
             }
         }
 
-        rowName(row) {
-            return row === -1 ? "header" : String(row);
-        }
-
-        findCellLeft(tablePart, row, col) {
-            let newCol = col;
-            while (newCol > 0) {
-                newCol -= 1;
-                let newCellId =
-                    `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
-                let newCell = this.root.getElementById(newCellId);
-                if (newCell === null) {
-                    return null;
+        findNextCell(startCellId, i, j, next, stop) {
+            [i, j] = next(i, j);
+            while (!stop(i, j)) {
+                const cell = this.elem.querySelector(`[data-spans__${i}__${j}]`);
+                if (cell !== null && cell.id !== startCellId && !cell.hasAttribute(
+                        "data-excluded-by-column-filter") && cell.dataset.role !==
+                    "padding" && cell.dataset.role !== "ellipsis") {
+                    return cell.id;
                 }
-                if ("excludedByColumnFilter" in newCell.dataset) {
-                    continue;
-                }
-                return newCell.id;
+                [i, j] = next(i, j);
             }
             return null;
         }
 
-        findCellRight(tablePart, row, col) {
-            let newCol = col;
-            while (newCol < this.nCols - 1) {
-                newCol += 1;
-                let newCellId =
-                    `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
-                let newCell = this.root.getElementById(newCellId);
-                if (newCell === null) {
-                    return null;
-                }
-                if ("excludedByColumnFilter" in newCell.dataset) {
-                    continue;
-                }
-                return newCell.id;
-            }
-            return null;
+        findCellLeft(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i, j - 1], (i,
+                j) => (j < this
+                .startJ));
+        }
+        findCellRight(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i, j + 1], (i,
+                j) => (this
+                .stopJ <= j));
         }
 
-        findCellDown(tablePart, row, col) {
-            let newRow = row;
-            let newTablePart = tablePart;
-            while (newTablePart === "head" || newRow < this.nTailRows - 1) {
-                if (newTablePart === "head" && newRow === this.nHeadRows - 1) {
-                    if (this.nTailRows === 0) {
-                        return null;
-                    }
-                    newTablePart = "tail";
-                    newRow = 0;
-                } else {
-                    newRow += 1;
-                }
-                let newCellId =
-                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${col}`;
-                let newCell = this.root.getElementById(newCellId);
-                if (newCell === null) {
-                    return null;
-                }
-                return newCell.id;
-            }
-            return null;
+        findCellUp(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i - 1, j], (i,
+                j) => (i < this
+                .startI));
         }
 
-        findCellUp(tablePart, row, col) {
-            let newRow = row;
-            let newTablePart = tablePart;
-            while (newTablePart === "tail" || newRow > -1) {
-                if (newTablePart === "tail" && newRow === 0) {
-                    newTablePart = "head";
-                    newRow = this.nHeadRows - 1;
-                } else {
-                    newRow -= 1;
-                }
-                let newCellId =
-                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${col}`;
-                let newCell = this.root.getElementById(newCellId);
-                if (newCell === null) {
-                    return null;
-                }
-                return newCell.id;
-            }
-            return null;
+        findCellDown(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i + 1, j], (i,
+                j) => (this
+                .stopI <= i));
         }
-
     }
     SkrubTableReport.register(SampleTable);
 
@@ -591,11 +545,11 @@ if (customElements.get('skrub-table-report') === undefined) {
             let valA = this.getVal(rowA, tableColIdx);
             let valB = this.getVal(rowB, tableColIdx);
             // NaNs go at the bottom regardless of sorting order
-            if(typeof(valA) === "number" && typeof(valB) === "number"){
-                if(isNaN(valA) && !isNaN(valB)){
+            if (typeof(valA) === "number" && typeof(valB) === "number") {
+                if (isNaN(valA) && !isNaN(valB)) {
                     return 1;
                 }
-                if(isNaN(valB) && !isNaN(valA)){
+                if (isNaN(valB) && !isNaN(valA)) {
                     return -1;
                 }
             }
@@ -614,7 +568,8 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         sort(event) {
-            const colHeaders = Array.from(this.elem.querySelectorAll("thead tr th"));
+            const colHeaders = Array.from(this.elem.querySelectorAll(
+                "thead tr th"));
             const tableColIdx = colHeaders.indexOf(event.target.closest("th"));
             const body = this.elem.querySelector("tbody");
             const rows = Array.from(body.querySelectorAll("tr"));
@@ -622,7 +577,8 @@ if (customElements.get('skrub-table-report') === undefined) {
 
             rows.sort((a, b) => this.compare(a, b, tableColIdx, ascending));
 
-            this.elem.querySelectorAll("button").forEach(b => b.removeAttribute("data-is-active"));
+            this.elem.querySelectorAll("button").forEach(b => b.removeAttribute(
+                "data-is-active"));
             event.target.dataset.isActive = "";
 
             body.innerHTML = "";
@@ -823,7 +779,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         };
     }
 
-    if (document.querySelector(".jp-Cell, .widgetarea")) {
+    if (document.querySelector(".jp-Cell, .widgetarea, .reveal")) {
         window.addEventListener("keydown", forwardKeyboardEvent, true);
     }
 

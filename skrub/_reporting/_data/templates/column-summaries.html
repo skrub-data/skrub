@@ -27,7 +27,7 @@
     </div>
     <div class="column-summary-group">
         {% for column in summary.columns %}
-        {% set col_id="col_{}".format(loop.index0) %}
+        {% set col_id="col_{}".format(column["idx"]) %}
         {% include "column-summary.html" %}
         {% endfor %}
     </div>

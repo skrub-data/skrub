@@ -27,10 +27,10 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Given a scikit-learn ``estimator``, this function creates a
     machine-learning pipeline that preprocesses tabular data to extract numeric
-    features and impute missing values if necessary, then applies the
+    features, impute missing values and scale the data if necessary, then applies the
     ``estimator``.
 
-    Instead of an actual estimator, ``estimator`` can also be the string
+    Instead of an actual estimator, ``estimator`` can also be the special-cased strings
     ``'regressor'`` or ``'classifier'`` to use a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or a
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default

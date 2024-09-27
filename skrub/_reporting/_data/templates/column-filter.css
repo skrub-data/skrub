@@ -2,8 +2,8 @@
     display: flex;
     gap: var(--tiny);
     align-items: flex-end;
-    margin-left: 3rem;
     margin-bottom: var(--micro);
+    margin-left: var(--small);
 }
 
 .column-filter > label {
