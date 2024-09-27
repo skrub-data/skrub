@@ -717,6 +717,8 @@ def test_bad_specific_cols():
 def test_sk_visual_block_():
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer()
+    unfitted_repr = vectorizer._repr_html_()
+    assert "TableVectorizer" in unfitted_repr
     vectorizer.fit(X)
     assert (
         "[&#x27;str1&#x27;, &#x27;str2&#x27;, &#x27;cat1&#x27;, &#x27;cat2&#x27;]"
