@@ -65,6 +65,9 @@ Minor changes
 * Display's columns name with the HTML representation of the fitted TableVectorizer.
   This has been fixed in :pr:`1093` by :user:`Shreekant Nandiyawar <Shree7676>`.
 
+* AggTarget will now work even when y is a Series and not raise any error.
+  This has been fixed in :pr:`1094` by :user:`Shreekant Nandiyawar <Shree7676>`.
+
 Release 0.3.0
 =============
 
