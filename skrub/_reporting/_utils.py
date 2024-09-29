@@ -1,6 +1,8 @@
 import base64
 import json
 import numbers
+import re
+import unicodedata
 
 import numpy as np
 
@@ -44,20 +46,24 @@ def quantiles(column):
     return {q: sbd.quantile(column, q) for q in [0.0, 0.25, 0.5, 0.75, 1.0]}
 
 
-def ellide_string(s, max_len=100):
+def ellide_string(s, max_len=30):
     if not isinstance(s, str):
         return s
+    s = re.sub(r"\s+", " ", s)
     if len(s) <= max_len:
         return s
-    if max_len < 30:
-        return s[:max_len] + "…"
-    shown_len = max_len - 30
-    truncated = len(s) - shown_len
-    return s[:shown_len] + f"[…{truncated} more chars]"
-
-
-def ellide_string_short(s):
-    return ellide_string(s, 29)
+    shown_text = s[:max_len].strip()
+    ellipsis = "…"
+    end = ""
+    if shown_text and unicodedata.bidirectional(shown_text[-1]) in [
+        "R",
+        "AL",
+        "RLE",
+        "RLO",
+        "RLI",
+    ]:
+        end = "\u200f"
+    return shown_text + ellipsis + end
 
 
 def format_number(number):

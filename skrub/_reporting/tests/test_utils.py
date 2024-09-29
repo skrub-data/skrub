@@ -11,15 +11,20 @@ from skrub._reporting import _utils
     [
         (1, 1),
         ("aa", "aa"),
-        ("a" * 120, "a" * 70 + "[…50 more chars]"),
+        ("a\na", "a a"),
+        ("a" * 70, "a" * 30 + "…"),
+        (
+            (
+                "اللغة هي نسق على من الإشارات والرموز، تشكل أداة من أدوات المعرفة،"
+                " وتعتبر اللغة أهم وسائل التفاهم والاحتكاك بين أفراد المجتمع في جميع"
+                " ميادين الحياة"
+            ),
+            "اللغة هي نسق على من الإشارات و…‏",
+        ),
     ],
 )
 def test_ellide_string(s_in, s_out):
     assert _utils.ellide_string(s_in) == s_out
-
-
-def test_ellide_string_short():
-    assert _utils.ellide_string_short("a" * 100) == "a" * 29 + "…"
 
 
 @pytest.mark.parametrize(

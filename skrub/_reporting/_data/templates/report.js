@@ -674,6 +674,104 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(Toggletip);
 
+    class SvgAdjustedViewBox extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.adjustViewBox();
+        }
+
+        computeViewBox(svg) {
+            try {
+                const {
+                    width
+                } = svg.getBBox();
+                if (width === 0) {
+                    return null;
+                }
+            } catch (e) {
+                return null;
+            }
+            let [xMin, yMin, xMax, yMax] = [null, null, null, null];
+            for (const child of svg.children) {
+                if (typeof child.getBBox !== 'function') {
+                    continue;
+                }
+                const {
+                    x,
+                    y,
+                    width,
+                    height
+                } = child.getBBox();
+                if (xMin === null) {
+                    xMin = x;
+                    yMin = y;
+                    xMax = x + width;
+                    yMax = y + height;
+                    continue;
+                }
+                xMin = Math.min(x, xMin);
+                yMin = Math.min(y, yMin);
+                xMax = Math.max(x + width, xMax);
+                yMax = Math.max(y + height, yMax);
+            }
+            if (xMin === null) {
+                return null;
+            }
+            return {
+                x: xMin,
+                y: yMin,
+                width: xMax - xMin,
+                height: yMax - yMin
+            };
+        }
+
+        adjustSize(svg, newViewBox, attribute) {
+            const match = svg.getAttribute(attribute).match(/^([0-9.]+)(.+)$/);
+            if (!match) {
+                return;
+            }
+            const size = Number(match[1]);
+            if (isNaN(size)) {
+                return;
+            }
+            const unit = match[2];
+            const scale = newViewBox[attribute] / svg.viewBox.baseVal[attribute];
+            if (scale !== 1) {
+                console.log(`${attribute} scale: ${scale}`);
+            }
+            const newSize = size * scale;
+            if (isNaN(newSize)) {
+                return;
+            }
+            svg.setAttribute(attribute, `${newSize}${unit}`);
+        }
+
+        adjustViewBox() {
+            const svg = this.elem.querySelector('svg');
+            const report = this.elem.getRootNode().getElementById('report');
+            const clone = svg.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.left = '-9999px';
+            clone.style.top = '-9999px';
+            clone.style.visibility = 'hidden';
+            report.appendChild(clone);
+            try {
+                const viewBox = this.computeViewBox(clone);
+                if (viewBox !== null) {
+                    this.adjustSize(svg, viewBox, 'width');
+                    this.adjustSize(svg, viewBox, 'height');
+                    svg.setAttribute('viewBox',
+                        `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`
+                    );
+                }
+            } finally {
+                report.removeChild(clone);
+            }
+        }
+
+    }
+    SkrubTableReport.register(SvgAdjustedViewBox);
+
     function initReport(reportId) {
         const report = document.getElementById(reportId);
         report.init();

@@ -15,6 +15,21 @@ It is currently undergoing fast development and backward compatibility is not en
 Major changes
 -------------
 
+Minor changes
+-------------
+
+* Display of labels in the plots of the TableReport, especially for other
+  scripts than the latin alphabet, has improved.
+  - before, some characters could be missing and replaced by empty boxes.
+  - before, when the text is truncated, the ellipsis "..." could appear on the
+    wrong side for right-to-left scripts.
+  Moreover, when the text contains line breaks it now appears all on one line.
+  Note this only affects the labels in the plots; the rest of the report did not
+  have these problems.
+  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Release 0.3.1
+=============
 
 Minor changes
 -------------

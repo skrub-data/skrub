@@ -79,8 +79,9 @@
 
         {% for plot_name in column.plot_names %}
         <div>
-            <img class="pure-img" src="{{ column[plot_name] | svg_to_img_src | safe }}"
-                alt="{{ plot_name }}">
+            <div data-manager="SvgAdjustedViewBox">
+                {{ column[plot_name] | safe }}
+            </div>
             {% if plot_name == "value_counts_plot" %}
             <details data-test="frequent-values-details">
                 <summary>Most frequent values</summary>
