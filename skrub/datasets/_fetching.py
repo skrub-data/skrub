@@ -1105,7 +1105,7 @@ def fetch_credit_fraud(load_dataframe=True, data_directory=None):
     This is a imbalanced binary classification use-case. This dataset consists in
     two tables:
 
-    - baskets, containing the binary fraud target label)
+    - baskets, containing the binary fraud target label
     - products
 
     Baskets contain at least one product each, so aggregation then joining operations

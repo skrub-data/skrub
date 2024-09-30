@@ -17,7 +17,7 @@ product A, B and C.
 
 Our aim is to predict which baskets are fraudulent.
 
-The products dataframe can be joined on the basket dataframe using the ``basket_ID``
+The products dataframe can be joined on the baskets dataframe using the ``basket_ID``
 column.
 
 Each product has several attributes:
@@ -87,8 +87,8 @@ products_grouped
 
 # %%
 # Then, we can expand all lists into columns, as if we were "flattening" the dataframe.
-# We end up with a product dataframe ready to be joined on the basket dataframe, using
-# basket IDs as join keys.
+# We end up with a products dataframe ready to be joined on the baskets dataframe, using
+# ``"basket_ID"`` as the join key.
 import pandas as pd
 
 products_flatten = []
@@ -111,7 +111,7 @@ TableReport(products_flatten)
 #
 # Moreover, if we wanted to replace text columns with encodings, we would create
 # :math:`d \times 24 \times 2` columns (encoding of dimensionality :math:`d`, for
-# 24 products, for the "item" and "make" columns), which would explode the memory usage.
+# 24 products, for the ``"item"`` and ``"make"`` columns), which would explode the memory usage.
 #
 # AggJoiner
 # ---------
@@ -149,21 +149,21 @@ products_transformed = vectorizer.fit_transform(products)
 TableReport(products_transformed)
 
 # %%
-# Our objective is now to aggregate this dataframe by basket ID, then merging it
-# on the basket dataframe, still on the basket ID.
+# Our objective is now to aggregate this dataframe by ``"basket_ID"``, then merging it
+# on the baskets dataframe, still on the ``"basket_ID"``.
 #
 # AggJoiner can help us achieve exactly this. We need to pass the product dataframe as
 # an auxiliary table argument to AggJoiner in ``__init__``. ``aux_key`` represent both
 # the columns used to groupby on, and the columns used to join on.
 #
-# The basket dataframe is our main table, and we indicate the columns to join with
+# The basket dataframe is our main table, and we indicate the columns to join on with
 # ``main_key``. Note that we pass the main table during ``fit``, and we discuss the
 # limitations of this design in the conclusion at the bottom of this notebook.
 #
 # The minimum is the most appropriate operation to aggregate encodings from
 # MinHashEncoder, for reasons that are out of the scope of this notebook.
 #
-# Notice that the ``basket_ID`` column is dropped from the joined table.
+# Notice that the ``"basket_ID"`` column is dropped from the joined table.
 from skrub import AggJoiner
 from skrub import _selectors as s
 
@@ -190,7 +190,7 @@ TableReport(baskets_products)
 # For the second AggJoiner, we use the mean, standard deviation, minimum and maximum
 # operations to extract a representative summary of each distribution.
 #
-# DropCols is another sklearn transformer which removes the "ID" column, which doesn't
+# DropCols is another skrub transformer which removes the "ID" column, which doesn't
 # bring any information after the joining operation.
 from scipy.stats import loguniform, randint
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -252,7 +252,7 @@ search.best_params_
 # against the log loss of a dummy model that always output the observed probability of
 # the two classes.
 #
-# As this dataset is extremely imbalanced, this dummy should be a good baseline.
+# As this dataset is extremely imbalanced, this dummy model should be a good baseline.
 #
 # The vertical bar represents one standard deviation around the mean of the cross
 # validation log-loss.
