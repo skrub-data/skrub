@@ -702,6 +702,9 @@ if (customElements.get('skrub-table-report') === undefined) {
                     width,
                     height
                 } = child.getBBox();
+                if (width === 0 || height === 0){
+                    continue;
+                }
                 if (xMin === null) {
                     xMin = x;
                     yMin = y;

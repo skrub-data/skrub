@@ -56,6 +56,7 @@ def _despine(ax):
 
 def _serialize(fig):
     buffer = io.BytesIO()
+    fig.patch.set_visible(False)
     fig.savefig(buffer, format="svg", bbox_inches="tight")
     out = buffer.getvalue().decode("UTF-8")
     plt.close(fig)
