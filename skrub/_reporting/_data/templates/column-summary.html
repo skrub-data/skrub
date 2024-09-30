@@ -79,7 +79,7 @@
 
         {% for plot_name in column.plot_names %}
         <div>
-            <div data-manager="SvgAdjustedViewBox">
+            <div class="figure" data-manager="SvgAdjustedViewBox">
                 {{ column[plot_name] | safe }}
             </div>
             {% if plot_name == "value_counts_plot" %}
