@@ -47,14 +47,27 @@ def quantiles(column):
 
 
 def ellide_string(s, max_len=30):
+    """Shorten a string so it can be used as a plot axis title or label."""
     if not isinstance(s, str):
         return s
+    # normalize whitespace
     s = re.sub(r"\s+", " ", s)
     if len(s) <= max_len:
         return s
     shown_text = s[:max_len].strip()
     ellipsis = "…"
     end = ""
+
+    # The ellipsis, like most punctuation, is a neutral character (it has no
+    # direction). As here it is the last character in the sentence, its
+    # direction will be that of the paragraph and it will probably be displayed
+    # on the right: if we have truncated text in a right-to-left script the
+    # ellipsis will be on the wrong side, at the beginning of the text. So if
+    # the last character before truncation has a RTL direction, we insert after
+    # the ellipsis a right-to-left mark (U200F), which is a zero-width space
+    # with RTL direction. Thus the ellipsis is surrounded by 2 strong RTL
+    # characters and it will be displayed RTL as well -- on the correct side of
+    # the ellided text.
     if shown_text and unicodedata.bidirectional(shown_text[-1]) in [
         "R",
         "AL",

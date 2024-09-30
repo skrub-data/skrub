@@ -39,10 +39,20 @@ COLOR_0 = COLORS[0]
 
 
 def _plot(plotting_fun):
+    """Set the maptlotib config & silence some warnings for all report plots.
+
+    All the plotting functions exposed by this module should be decorated with
+    `_plot`.
+    """
+
     @functools.wraps(plotting_fun)
     def plot_with_config(*args, **kwargs):
+        # This causes matplotlib to insert labels etc as text in the svg rather
+        # than drawing the glyphs.
         with matplotlib.rc_context({"svg.fonttype": "none"}):
             with warnings.catch_warnings():
+                # We do not care about missing glyphs because the text is
+                # rendered & the viewbox is recomputed in the browser.
                 warnings.filterwarnings("ignore", "Glyph.*missing from font")
                 return plotting_fun(*args, **kwargs)
 
