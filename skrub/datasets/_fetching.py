@@ -1102,7 +1102,7 @@ def fetch_movielens(
 def fetch_credit_fraud(load_dataframe=True, data_directory=None):
     """Fetch the credit fraud dataset from figshare.
 
-    This is a imbalanced binary classification use-case. This dataset consists in
+    This is an imbalanced binary classification use-case. This dataset consists in
     two tables:
 
     - baskets, containing the binary fraud target label
