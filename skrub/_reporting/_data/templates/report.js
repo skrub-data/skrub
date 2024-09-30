@@ -40,10 +40,17 @@ if (customElements.get('skrub-table-report') === undefined) {
             delete this.elem.dataset.hidden;
         }
 
+        matchesColumnIdx(idx) {
+            if (!this.elem.hasAttribute("data-column-idx")) {
+                return false;
+            }
+            return Number(this.elem.dataset.columnIdx) === idx;
+        }
+
         matchesColumnFilter({
             acceptedColumns
         }) {
-            return acceptedColumns.has(this.elem.dataset.columnName);
+            return acceptedColumns.has(Number(this.elem.dataset.columnIdx));
         }
     }
 
@@ -195,7 +202,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         SAMPLE_TABLE_CELL_ACTIVATED(msg) {
-            if (msg.columnName === this.elem.dataset.columnName) {
+            if (this.matchesColumnIdx(msg.columnIdx)) {
                 this.show();
             } else {
                 this.hide();
@@ -227,6 +234,9 @@ if (customElements.get('skrub-table-report') === undefined) {
                 this.activate();
                 event.preventDefault();
             });
+            // See forwardKeyboardEvent for details about captureKeys
+            this.elem.dataset.captureKeys =
+                "ArrowRight ArrowLeft ArrowUp ArrowDown Escape";
             this.elem.setAttribute("tabindex", -1);
             this.elem.oncopy = (event) => this.copyCell(event);
         }
@@ -247,14 +257,9 @@ if (customElements.get('skrub-table-report') === undefined) {
             const msg = {
                 kind: "SAMPLE_TABLE_CELL_ACTIVATED",
                 cellId: this.elem.id,
-                columnName: this.elem.dataset.columnName,
-                columnIdx: this.elem.dataset.columnIdx,
+                columnIdx: Number(this.elem.dataset.columnIdx),
                 valueStr: this.elem.dataset.valueStr,
                 valueRepr: this.elem.dataset.valueRepr,
-                columnNameStr: this.elem.dataset.colNameStr,
-                columnNameRepr: this.elem.dataset.colNameRepr,
-                dataframeModule: this.elem.dataset.dataframeModule,
-                valueIsNone: "valueIsNone" in this.elem.dataset,
             };
             this.exchange.send(msg);
         }
@@ -291,7 +296,7 @@ if (customElements.get('skrub-table-report') === undefined) {
                 delete this.elem.dataset.isActive;
                 this.elem.setAttribute("tabindex", -1);
             }
-            if (msg.columnName === this.elem.dataset.columnName) {
+            if (this.matchesColumnIdx(msg.columnIdx)) {
                 this.elem.dataset.isInActiveColumn = "";
             } else {
                 delete this.elem.dataset.isInActiveColumn;
@@ -303,7 +308,8 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         COLUMN_FILTER_CHANGED(msg) {
-            if (!this.matchesColumnFilter(msg)) {
+            if (this.elem.hasAttribute("data-column-idx") && !this
+                .matchesColumnFilter(msg)) {
                 this.deactivate();
             }
         }
@@ -314,10 +320,13 @@ if (customElements.get('skrub-table-report') === undefined) {
         constructor(elem, exchange) {
             super(elem, exchange);
             this.root = this.elem.getRootNode();
-            this.nHeadRows = this.elem.dataset.nHeadRows;
-            this.nTailRows = this.elem.dataset.nTailRows;
-            this.nCols = this.elem.dataset.nCols;
+            this.startI = Number(this.elem.dataset.startI) || 0;
+            this.stopI = Number(this.elem.dataset.stopI) || 0;
+            this.startJ = Number(this.elem.dataset.startJ) || 0;
+            this.stopJ = Number(this.elem.dataset.stopJ) || 0;
             this.elem.addEventListener('keydown', (e) => this.onKeyDown(e));
+            this.elem.addEventListener('skrub-keydown', (e) => this.onKeyDown(
+                unwrapSkrubKeyDown(e)));
         }
 
         onKeyDown(event) {
@@ -326,27 +335,26 @@ if (customElements.get('skrub-table-report') === undefined) {
             }
             const cell = event.target;
             let {
-                tablePart,
-                rowIdxInTablePart: row,
-                columnIdx: col
+                i,
+                j
             } = cell.dataset;
-            if (tablePart === undefined || row === undefined || col === undefined) {
+            [i, j] = [Number(i), Number(j)];
+            if (isNaN(i) || isNaN(j)) {
                 return;
             }
-            [row, col] = [Number(row), Number(col)];
             let newCellId = null;
             switch (event.key) {
                 case "ArrowLeft":
-                    newCellId = this.findCellLeft(tablePart, row, col);
+                    newCellId = this.findCellLeft(cell.id, i, j);
                     break;
                 case "ArrowRight":
-                    newCellId = this.findCellRight(tablePart, row, col);
+                    newCellId = this.findCellRight(cell.id, i, j);
                     break;
                 case "ArrowUp":
-                    newCellId = this.findCellUp(tablePart, row, col);
+                    newCellId = this.findCellUp(cell.id, i, j);
                     break;
                 case "ArrowDown":
-                    newCellId = this.findCellDown(tablePart, row, col);
+                    newCellId = this.findCellDown(cell.id, i, j);
                     break;
                 case "Escape":
                     this.exchange.send({
@@ -367,91 +375,42 @@ if (customElements.get('skrub-table-report') === undefined) {
             }
         }
 
-        rowName(row) {
-            return row === -1 ? "header" : String(row);
-        }
-
-        findCellLeft(tablePart, row, col) {
-            let newCol = col;
-            while (newCol > 0) {
-                newCol -= 1;
-                let newCellId =
-                    `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
-                let newCell = this.root.getElementById(newCellId);
-                if (newCell === null) {
-                    return null;
+        findNextCell(startCellId, i, j, next, stop) {
+            [i, j] = next(i, j);
+            while (!stop(i, j)) {
+                const cell = this.elem.querySelector(`[data-spans__${i}__${j}]`);
+                if (cell !== null && cell.id !== startCellId && !cell.hasAttribute(
+                        "data-excluded-by-column-filter") && cell.dataset.role !==
+                    "padding" && cell.dataset.role !== "ellipsis") {
+                    return cell.id;
                 }
-                if ("excludedByColumnFilter" in newCell.dataset) {
-                    continue;
-                }
-                return newCell.id;
+                [i, j] = next(i, j);
             }
             return null;
         }
 
-        findCellRight(tablePart, row, col) {
-            let newCol = col;
-            while (newCol < this.nCols - 1) {
-                newCol += 1;
-                let newCellId =
-                    `sample-table-cell-${tablePart}-${this.rowName(row)}-${newCol}`;
-                let newCell = this.root.getElementById(newCellId);
-                if (newCell === null) {
-                    return null;
-                }
-                if ("excludedByColumnFilter" in newCell.dataset) {
-                    continue;
-                }
-                return newCell.id;
-            }
-            return null;
+        findCellLeft(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i, j - 1], (i,
+                j) => (j < this
+                .startJ));
+        }
+        findCellRight(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i, j + 1], (i,
+                j) => (this
+                .stopJ <= j));
         }
 
-        findCellDown(tablePart, row, col) {
-            let newRow = row;
-            let newTablePart = tablePart;
-            while (newTablePart === "head" || newRow < this.nTailRows - 1) {
-                if (newTablePart === "head" && newRow === this.nHeadRows - 1) {
-                    if (this.nTailRows === 0) {
-                        return null;
-                    }
-                    newTablePart = "tail";
-                    newRow = 0;
-                } else {
-                    newRow += 1;
-                }
-                let newCellId =
-                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${col}`;
-                let newCell = this.root.getElementById(newCellId);
-                if (newCell === null) {
-                    return null;
-                }
-                return newCell.id;
-            }
-            return null;
+        findCellUp(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i - 1, j], (i,
+                j) => (i < this
+                .startI));
         }
 
-        findCellUp(tablePart, row, col) {
-            let newRow = row;
-            let newTablePart = tablePart;
-            while (newTablePart === "tail" || newRow > -1) {
-                if (newTablePart === "tail" && newRow === 0) {
-                    newTablePart = "head";
-                    newRow = this.nHeadRows - 1;
-                } else {
-                    newRow -= 1;
-                }
-                let newCellId =
-                    `sample-table-cell-${newTablePart}-${this.rowName(newRow)}-${col}`;
-                let newCell = this.root.getElementById(newCellId);
-                if (newCell === null) {
-                    return null;
-                }
-                return newCell.id;
-            }
-            return null;
+        findCellDown(startCellId, i, j) {
+            return this.findNextCell(startCellId, i, j, (i, j) => [i + 1, j], (i,
+                j) => (this
+                .stopI <= i));
         }
-
     }
     SkrubTableReport.register(SampleTable);
 
@@ -493,8 +452,13 @@ if (customElements.get('skrub-table-report') === undefined) {
                     }
                     this.lastTab = tab;
                     tab.addEventListener("click", () => this.selectTab(tab));
+                    // See forwardKeyboardEvent for details about captureKeys
+                    tab.dataset.captureKeys = "ArrowRight ArrowLeft";
                     tab.addEventListener("keydown", (event) => this.onKeyDown(
                         event));
+                    tab.addEventListener("skrub-keydown", (event) => this
+                        .onKeyDown(
+                            unwrapSkrubKeyDown(event)));
                 });
             this.selectTab(this.firstTab, false);
         }
@@ -557,6 +521,74 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
     }
     SkrubTableReport.register(TabList);
+
+    class sortableTable extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelectorAll("button[data-role='sort-button']").forEach(
+                b => b.addEventListener("click", e => this.sort(e)));
+        }
+
+        getVal(row, tableColIdx) {
+            const td = row.querySelectorAll("td")[tableColIdx];
+            if (!td.hasAttribute("data-value")) {
+                return td.textContent;
+            }
+            let value = td.dataset.value;
+            if (td.hasAttribute("data-numeric")) {
+                value = Number(value);
+            }
+            return value;
+        }
+
+        compare(rowA, rowB, tableColIdx, ascending) {
+            let valA = this.getVal(rowA, tableColIdx);
+            let valB = this.getVal(rowB, tableColIdx);
+            // NaNs go at the bottom regardless of sorting order
+            if (typeof(valA) === "number" && typeof(valB) === "number") {
+                if (isNaN(valA) && !isNaN(valB)) {
+                    return 1;
+                }
+                if (isNaN(valB) && !isNaN(valA)) {
+                    return -1;
+                }
+            }
+            // When the values are equal, keep the original dataframe column
+            // order
+            if (!(valA > valB || valB > valA)) {
+                valA = Number(rowA.dataset.dataframeColumnIdx);
+                valB = Number(rowB.dataset.dataframeColumnIdx);
+                return valA - valB;
+            }
+            // Sort
+            if (!ascending) {
+                [valA, valB] = [valB, valA];
+            }
+            return valA > valB ? 1 : -1;
+        }
+
+        sort(event) {
+            const colHeaders = Array.from(this.elem.querySelectorAll(
+                "thead tr th"));
+            const tableColIdx = colHeaders.indexOf(event.target.closest("th"));
+            const body = this.elem.querySelector("tbody");
+            const rows = Array.from(body.querySelectorAll("tr"));
+            const ascending = event.target.dataset.direction === "ascending";
+
+            rows.sort((a, b) => this.compare(a, b, tableColIdx, ascending));
+
+            this.elem.querySelectorAll("button").forEach(b => b.removeAttribute(
+                "data-is-active"));
+            event.target.dataset.isActive = "";
+
+            body.innerHTML = "";
+            for (let r of rows) {
+                body.appendChild(r);
+            }
+        }
+
+    }
+    SkrubTableReport.register(sortableTable);
 
     class SelectedColumnsDisplay extends Manager {
 
@@ -630,6 +662,18 @@ if (customElements.get('skrub-table-report') === undefined) {
     SkrubTableReport.register(SelectAllVisibleColumns);
 
 
+    class Toggletip extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelector("button").addEventListener("keydown", e => {
+                if (e.key === "Escape") {
+                    e.target.blur();
+                }
+            });
+        }
+    }
+    SkrubTableReport.register(Toggletip);
+
     function initReport(reportId) {
         const report = document.getElementById(reportId);
         report.init();
@@ -671,4 +715,72 @@ if (customElements.get('skrub-table-report') === undefined) {
     function hasModifier(event) {
         return event.ctrlKey || event.metaKey || event.shiftKey || event.altKey;
     }
+
+    /* Jupyter notebooks and vscode stop the propagation of some keyboard events
+    during the capture phase to implement their keyboard shortcuts etc. When an
+    element inside the TableReport has the keyboard focus and wants to react on
+    that event (eg in the sample table arrow keys allow selecting a neighbouring
+    cell) we need to override that behavior.
+
+    We do that by adding an event listener on the window that is triggered
+    during the capture phase. If it can make sure the key press is for a report
+    element that will react to it, we stop its propagation (to avoid eg the
+    notebook jumping to the next jupyter code cell) and dispatch an event on the
+    targeted element. To make sure it does not get handled again by the listener
+    on the window and cause infinite recursion, we dispatch a custom event
+    instead of a KeyDown event.
+
+    This capture is only enabled if we detect the report is inserted in a page
+    where it is needed, by checking if there are elements in the page with class
+    names that are used by jupyter or vscode.
+    */
+    function forwardKeyboardEvent(e) {
+        if (e.eventPhase !== 1) {
+            return;
+        }
+        if (e.target.tagName !== "SKRUB-TABLE-REPORT") {
+            return;
+        }
+        if (hasModifier(e)) {
+            return;
+        }
+        const target = e.target.shadowRoot.activeElement;
+        // only capture the event if the element lists the key in the keys it
+        // wants to capture ie in captureKeys
+        const wantsKey = target?.dataset.captureKeys?.split(/\s+/).includes(e.key);
+        if (!wantsKey) {
+            return;
+        }
+        const newEvent = new CustomEvent('skrub-keydown', {
+            bubbles: true,
+            cancelable: true,
+            detail: {
+                key: e.key,
+                code: e.code,
+                shiftKey: e.shiftKey,
+                altKey: e.altKey,
+                ctrlKey: e.ctrlKey,
+                metaKey: e.metaKey,
+            }
+        });
+        target.dispatchEvent(newEvent);
+        e.stopImmediatePropagation();
+        e.preventDefault();
+    }
+
+    /* Helper to unpack the custom event (see forwardKeyboardEvent above) and
+    make it look like a regular KeyDown event. */
+    function unwrapSkrubKeyDown(e) {
+        return {
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            target: e.target,
+            ...e.detail
+        };
+    }
+
+    if (document.querySelector(".jp-Cell, .widgetarea, .reveal")) {
+        window.addEventListener("keydown", forwardKeyboardEvent, true);
+    }
+
 }

@@ -72,12 +72,18 @@ describe('test the dataframe sample tab', () => {
         cy.get('@v00').type('{shift+downArrow}');
         cy.get('@v00').should('have.focus');
 
-        // we are on the leftmost visible column so move left should do nothing
         cy.get('@v01').type('{leftArrow}');
-        cy.get('@v01').should('have.focus');
+        cy.get('@report').find('th[data-role="index-level-value"]')
+            .contains('1').as('index1').should('have.focus');
+        cy.get('@index1').should('have.focus');
+
+        // we are on the leftmost visible column so move left should do nothing
+        cy.get('@index1').type('{leftArrow}');
+        cy.get('@index1').should('have.focus');
 
         // move right should go to the next visible column, skipping over the
         // hidden numeric one
+        cy.get('@index1').type('{rightArrow}');
         cy.get('@v01').type('{rightArrow}');
         cy.get('@report').find('td').contains('v 11').as('v11').should(
             'have.focus');
@@ -105,5 +111,33 @@ describe('test the dataframe sample tab', () => {
         cy.get('@v16').type('{esc}');
         cy.get('@v16').should('not.have.focus');
         cy.get('@c3card').should('not.be.visible');
+    });
+
+    it('works with multi-index and multi-columns', () => {
+        cy.visit('_reports/multi_index.html');
+        cy.get('skrub-table-report').shadow().as('report');
+        cy.get('@report').find('#sample-table-bar-display').as('bar');
+        const getIJ = (i, j) => cy.get('@report').find(`[data-i=${i}][data-j=${j}]`).as(`${i} ${j}`);
+        getIJ(-3, -2).click();
+        cy.get('@bar').should('have.text', 'None');
+        getIJ(-3, -2).type('{rightArrow}');
+        cy.get('@bar').should('have.text', 'sum');
+        getIJ(-3, 0).should('have.focus');
+        getIJ(-3, 0).type('{downArrow}');
+        cy.get('@bar').should('have.text', 'one');
+        getIJ(-2, 0).type('{leftArrow}');
+        cy.get('@bar').should('have.text', 'A');
+        getIJ(-2, -2).should('have.focus');
+        getIJ(-2, -2).type('{downArrow}');
+        cy.get('@bar').should('have.text', 'B');
+        getIJ(-1, -2).should('have.focus');
+        getIJ(-1, -2).type('{downArrow}');
+        cy.get('@bar').should('have.text', 'A');
+        getIJ(0, -2).should('have.focus');
+        getIJ(0, -2).type('{rightArrow}');
+        cy.get('@bar').should('have.text', 'bar');
+        getIJ(0, -1).type('{rightArrow}');
+        getIJ(0, 0).should('have.focus');
+        getIJ(0, 0).should('have.attr', 'data-role', 'dataframe-data');
     });
 });

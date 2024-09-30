@@ -8,6 +8,8 @@
 .tab-list-wrapper {
     align-items: flex-start;
     border-bottom: 1px solid var(--darkg);
+    column-gap: 2rem;
+    row-gap: var(--micro);
 }
 
 .tab-list-scroller {
@@ -20,7 +22,7 @@
     padding-left: var(--tiny);
     padding-right: var(--tiny);
     align-items: stretch;
-    margin-bottom: -1px;
+    margin-bottom: -1.2px;
 }
 
 .tab-list > * {
@@ -83,5 +85,5 @@
 
 .tab-panel {
     padding-top: var(--tiny);
-    background: white;
+    border-radius: 0 0 var(--radius) var(--radius);
 }

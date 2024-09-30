@@ -3,24 +3,79 @@
 
 .table-with-selectable-cells {
     margin: 2px;
+    border: none;
+}
+
+.table-with-selectable-cells tbody {
+    border: 1px solid var(--mediumg);
+}
+
+.table-with-selectable-cells thead th {
+    vertical-align: top;
+    border: 1px solid var(--mediumg);
 }
 
 /* The column containing the selected cell has green stripes. */
 /* The rest of the table has gray stripes added by pure.css */
 
-tr:nth-child(2n -1) .table-cell[data-is-in-active-column] {
-    background-color: var(--mediumgreen);
+#report .table-cell[data-is-in-active-column] {
+    background-color: var(--active-column-color);
 }
 
-.table-cell[data-is-in-active-column] {
-    background-color: var(--lightgreen);
+tbody tr {
+    --active-column-color: var(--lightgreen);
 }
 
-tr:nth-child(2n -1) th.table-cell[data-is-in-active-column] {
-    background-color: var(--darkgreen);
+tbody tr:nth-child(2n -1) {
+    --active-column-color: var(--mediumgreen);
 }
+
+thead {
+    --active-column-color: var(--darkgreen);
+}
+
+.table-with-selectable-cells th[data-role="padding"]{
+    background-color: white;
+    border: none;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"]{
+    text-align: right;
+    padding-right: 1.5rem;
+    position: relative;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"] > .arrow-icon {
+    position: absolute;
+    width: 1rem;
+    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    right: -1rem;
+    transform: translateX(-1.3rem);
+    display: flex;
+    user-select: none;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-value"]{}
+.table-with-selectable-cells th[data-role="column-name"]{}
+
+
+.table-with-selectable-cells th[data-role="index-level-name"],
+.table-with-selectable-cells th[data-role="index-level-value"]{
+    background-color: white;
+    border: 1px solid var(--mediumg);
+    text-align: right;
+}
+
+.table-with-selectable-cells th[data-role="dataframe-data"]{}
 
 .table-cell[data-is-active] {
+    --active-column-color: var(--lightyellow);
+}
+
+table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
     outline: 2px dotted black;
 }
 
@@ -29,20 +84,35 @@ tr:nth-child(2n -1) th.table-cell[data-is-in-active-column] {
     outline: 2px solid -webkit-focus-ring-color;
 }
 
-.table-cell[data-is-active][data-just-copied]:focus {
-    outline: 2px dashed Highlight !important;
-    outline: 2px dashed -webkit-focus-ring-color !important;
+#report .table-cell[data-is-active][data-just-copied]:focus {
+    outline: 2px dashed Highlight;
+    outline: 2px dashed -webkit-focus-ring-color;
 }
 
 
 /* The gap separating the head and the tail of the table */
 
-#report .ellided-table-part {
-    border: 1px solid white;
+#report .ellided-table-part,
+#report .ellided-table-part td {
+    border: 2px dashed var(--mediumg);
     text-align: center;
     border-top: 0;
     border-bottom: 0;
     background: inherit;
+}
+
+#report .ellided-table-part td {
+    padding: var(--tiny);
+}
+
+#report .ellipsis-icon {
+    display: flex;
+    flex-direction: column;
+    max-height: var(--large);
+}
+
+#report table:has([data-role="index-level-value"]) .ellided-table-part td:first-child .ellipsis-icon * {
+    align-self: flex-end;
 }
 
 .table-bar-wrapper {
@@ -57,21 +127,20 @@ tr:nth-child(2n -1) th.table-cell[data-is-in-active-column] {
 
 .table-footer {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
+    column-gap: 4ch;
     padding-top: var(--micro);
 }
 
 .keyboard-hints  {
     display: none;
-    flex-basis: max(0px, min(50%, calc((50% - 35ch) * 99999)));
+    flex-basis: max(0px, min(50%, calc((50% - 30ch) * 99999)));
     flex-shrink: 0;
     min-width: 0px;
     height: 2rem;
-    margin-bottom: -1.5rem;
+    margin-bottom: calc(-1 * var(--small));
     margin-right: var(--micro);
     overflow: hidden;
-    text-align: right;
-    vertical-align: center;
 }
 
 :has(.table-with-selectable-cells:focus-within) ~ .table-footer .keyboard-hints {

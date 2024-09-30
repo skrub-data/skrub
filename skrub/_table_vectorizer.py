@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.utils._estimator_html_repr import _VisualBlock
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -111,27 +112,23 @@ def _check_transformer(transformer):
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
-    """Transform a dataframe to a numerical (vectorized) representation.
+    """Transform a dataframe to a numeric (vectorized) representation.
 
     Applies a different transformation to each of several kinds of columns:
 
-    - numeric:
-        Floats, ints, and Booleans.
-    - datetime:
-        Datetimes and dates.
-    - low_cardinality:
-        String and categorical columns with a count of unique values smaller
-        than a given threshold (40 by default). Category encoding schemes such
-        as one-hot encoding, ordinal encoding etc. are typically appropriate
-        for columns with few unique values.
-    - high_cardinality:
-        String and categorical columns with many unique values, such as
-        free-form text. Such columns have so many distinct values that it is
-        not possible to assign a distinct representation to each: the dimension
-        would be too large and there would be too few examples of each
-        category. Representations designed for text, such as topic modelling
-        (GapEncoder) or locality-sensitive hashing (MinHash) are more
-        appropriate.
+    - `numeric`: floats, integers, and booleans.
+    - `datetime`: datetimes and dates.
+    - `low_cardinality`: string and categorical columns with a count
+      of unique values smaller than a given threshold (40 by default). Category encoding
+      schemes such as one-hot encoding, ordinal encoding etc. are typically appropriate
+      for columns with few unique values.
+    - `high_cardinality`: string and categorical columns with many
+      unique values, such as free-form text. Such columns have so many distinct values
+      that it is not possible to assign a distinct representation to each: the dimension
+      would be too large and there would be too few examples of each category.
+      Representations designed for text, such as topic modelling
+      (:class:`~skrub.GapEncoder`) or locality-sensitive hashing
+      (:class:`~skrub.MinHash`) are more appropriate.
 
     .. note::
 
@@ -139,14 +136,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         different transformer instance is used for each column separately;
         multivariate transformations are therefore not supported.
 
-    The transformer for each kind of column can be configured with the
-    corresponding parameter.
-
-    A transformer can be a scikit-learn Transformer (an object providing the
-    ``fit``, ``fit_transform`` and ``transform`` methods), a clone of which
-    will be applied to each column separately. A transformer can also be the
-    literal string ``"drop"`` to drop the corresponding columns (they will not
-    appear in the output), or ``"passthrough"`` to leave them unchanged.
+    The transformer for each kind of column can be configured with the corresponding
+    parameter. A transformer is expected to be a `compatible scikit-learn transformer
+    <https://scikit-learn.org/stable/glossary.html#term-transformer>`_. Special-cased
+    strings ``"drop"`` and ``"passthrough"`` are accepted as well, to indicate to drop
+    the columns or to pass them through untransformed, respectively.
 
     Additionally, it is possible to specify transformers for specific columns,
     overriding the categorization described above. This is done by providing a
@@ -162,36 +156,40 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     cardinality_threshold : int, default=40
-        String and categorical features with a number of unique values strictly
-        smaller than this threshold are handled by the transformer ``low_cardinality``, the
-        rest are handled by the transformer ``high_cardinality``.
+        String and categorical columns with a number of unique values strictly smaller
+        than this threshold are handled by the transformer ``low_cardinality``, the rest
+        are handled by the transformer ``high_cardinality``.
 
-    low_cardinality : transformer, "passthrough" or "drop", optional
-        The transformer for string or categorical columns with strictly fewer
-        than ``cardinality_threshold`` unique values. The default is a
-        ``OneHotEncoder``.
+    low_cardinality : transformer, "passthrough" or "drop", \
+            default=OneHotEncoder instance
+        The transformer for string or categorical columns with strictly fewer than
+        ``cardinality_threshold`` unique values. By default, we use a
+        :class:`~sklearn.preprocessing.OneHotEncoder` that ignores unknown categories
+        and drop one of the transformed columns if the feature contains only 2
+        categories.
 
-    high_cardinality : transformer, "passthrough" or "drop", optional
+    high_cardinality : transformer, "passthrough" or "drop", default=GapEncoder instance
         The transformer for string or categorical columns with at least
-        ``cardinality_threshold`` unique values. The default is a ``GapEncoder``
-        with 30 components (30 output columns for each input).
+        ``cardinality_threshold`` unique values. The default is a
+        :class:`~skrub.GapEncoder` with 30 components (30 output columns for each
+        input).
 
-    numeric : transformer, "passthrough" or "drop", optional
-        The transformer for numeric columns (floats, ints, booleans). The
-        default is passthrough.
+    numeric : transformer, "passthrough" or "drop", default="passthrough"
+        The transformer for numeric columns (floats, ints, booleans).
 
-    datetime : transformer, "passthrough" or "drop", optional
-        The transformer for date and datetime columns. The default is
-        ``DatetimeEncoder``, which extracts features such as year, month, etc.
+    datetime : transformer, "passthrough" or "drop", default=DatetimeEncoder instance
+        The transformer for date and datetime columns. By default, we use a
+        :class:`~skrub.DatetimeEncoder`.
 
-    specific_transformers : list of (transformer, list of column names) pairs, optional
+    specific_transformers : list of (transformer, list of column names) pairs, \
+            default=()
         Override the categories above for the given columns and force using the
         specified transformer. This disables any preprocessing usually done by
         the TableVectorizer; the columns are passed to the transformer without
         any modification. A column is not allowed to appear twice in
         ``specific_transformers``. Using ``specific_transformers`` provides
         similar functionality to what is offered by scikit-learn's
-        ``ColumnTransformer``.
+        :class:`~sklearn.compose.ColumnTransformer`.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -224,21 +222,21 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         was derived.
 
     all_processing_steps_ : dict
-        Maps the name of each column to a list of all the processing steps that
-        were applied to it. Those steps may include some pre-processing
-        transformations such as converting strings to datetimes or numbers, the
-        main transformer (e.g. the ``DatetimeEncoder``), and a post-processing
-        step casting the main transformer's output to float32. See the
-        "Examples" section below for details.
+        Maps the name of each column to a list of all the processing steps that were
+        applied to it. Those steps may include some pre-processing transformations such
+        as converting strings to datetimes or numbers, the main transformer (e.g. the
+        :class:`~skrub.DatetimeEncoder`), and a post-processing step casting the main
+        transformer's output to :obj:`numpy.float32`. See the "Examples" section below
+        for details.
 
-    feature_names_in_ : list of strings
+    feature_names_in_ : list of str
         The names of the input columns, after applying some cleaning (casting
         all column names to strings and deduplication).
 
     n_features_in_ : int
         The number of input columns.
 
-    all_outputs_ : list of strings
+    all_outputs_ : list of str
         The names of the output columns.
 
     See Also
@@ -623,7 +621,24 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             for out in outputs
         }
 
-    # scikt-learn compatibility
+    def _sk_visual_block_(self):
+        if hasattr(self, "kind_to_columns_"):
+            name_details = [
+                self.kind_to_columns_["numeric"],
+                self.kind_to_columns_["datetime"],
+                self.kind_to_columns_["low_cardinality"],
+                self.kind_to_columns_["high_cardinality"],
+            ]
+        else:
+            name_details = None
+        return _VisualBlock(
+            "parallel",
+            [self.numeric, self.datetime, self.low_cardinality, self.high_cardinality],
+            names=["numeric", "datetime", "low_cardinality", "high_cardinality"],
+            name_details=name_details,
+        )
+
+    # scikit-learn compatibility
 
     def _more_tags(self):
         """

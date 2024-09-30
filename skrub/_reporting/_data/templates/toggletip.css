@@ -1,0 +1,51 @@
+.toggletip-wrapper {
+    position: relative;
+}
+
+.toggletip {
+    display: inline-block;
+    --blue: #3584e4;
+    --darkblue: #0f4e9b;
+    --buttonheight: 1.4rem;
+}
+
+.toggletip > button {
+    height: var(--buttonheight);
+    width: var(--buttonheight);
+    background-color: var(--blue);
+    text-shadow: 0px 0px 1px var(--darkblue);
+    font-family: var(--fontStack-monospace);
+    font-weight: bold;
+    color: white;
+    border: 1px solid var(--darkblue);
+    border-radius: 50%;
+    margin: 0;
+    padding: none;
+}
+
+.toggletip > .toggletip-info {
+    box-sizing: border-box;
+    position: absolute;
+    top: calc(1.8 * var(--buttonheight));
+    left: calc(0.5 * var(--buttonheight));
+    width: calc(min(50ch, 100% - var(--buttonheight)));
+    min-width: min-content;
+    padding: var(--small);
+    background: white;
+    border: 2px solid var(--blue);
+    border-radius: var(--radius);
+    z-index: 2;
+    visibility: hidden;
+    transition: visibility 0ms 400ms;
+}
+
+
+:is(.toggletip:focus-within, .toggletip:active, .toggletip:hover) > .toggletip-info {
+    visibility: visible;
+    transition-delay: 0ms;
+}
+
+.toggletip > button:is(:focus, :active) {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+}

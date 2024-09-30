@@ -41,8 +41,8 @@
     padding: 0;
     margin: 0.75rem;
     border-radius: var(--radius);
-    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, .2), 0px 4px 10px 0px rgba(0, 0, 0, .2);
     min-width: min-content;
+    border: 1px solid var(--mediumg);
 }
 
 .card-header {
@@ -62,7 +62,7 @@
 .card-header > * {
     margin-block-start: 0;
     margin-block-end: 0;
-    font-size: var(--large);
+    font-size: var(--small);
 }
 
 .card-header input[type="checkbox"] {
@@ -72,13 +72,6 @@
 .column-summary-content {
     display: flex;
     flex-direction: column;
-}
-
-/* The "constant columns" card has a similar aspect to the other ones but a */
-/* different color because it does not correspond to an actual column. */
-
-.pseudocolumn {
-    --header-color: #ffffff;
 }
 
 /* Grid of boxes with copybuttons for a column's most frequent values */
@@ -112,8 +105,12 @@
 .columns-in-sample-tab .card-header {
     position: relative;
     background-color: var(--darkgreen);
-    border-block-end: 1px solid var(--verydarkgreen);
+    border-block-end: 1px solid var(--shadowgreen);
     padding-right: 2.4rem;
+}
+
+.columns-in-sample-tab .card {
+    border-color: var(--shadowgreen);
 }
 
 /* Button for closing the card / deselecting the column in the table */
