@@ -87,3 +87,9 @@
     padding-top: var(--space-m);
     border-radius: 0 0 var(--radius) var(--radius);
 }
+
+.report-bottom-border {
+    width: calc(100% - 2 * var(--radius));
+    border-bottom: var(--border-s) solid var(--mediumg);
+    margin: var(--space-m) auto 0 auto;
+}
