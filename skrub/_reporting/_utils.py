@@ -59,23 +59,32 @@ def ellide_string(s, max_len=30):
     end = ""
 
     # The ellipsis, like most punctuation, is a neutral character (it has no
-    # direction). As here it is the last character in the sentence, its
-    # direction will be that of the paragraph and it will probably be displayed
-    # on the right: if we have truncated text in a right-to-left script the
-    # ellipsis will be on the wrong side, at the beginning of the text. So if
-    # the last character before truncation has a RTL direction, we insert after
-    # the ellipsis a right-to-left mark (U200F), which is a zero-width space
-    # with RTL direction. Thus the ellipsis is surrounded by 2 strong RTL
-    # characters and it will be displayed RTL as well -- on the correct side of
-    # the ellided text.
-    if shown_text and unicodedata.bidirectional(shown_text[-1]) in [
-        "R",
-        "AL",
-        "RLE",
-        "RLO",
-        "RLI",
-    ]:
-        end = "\u200f"
+    # writing direction). As here it is the last character in the sentence, its
+    # direction will be that of the paragraph and it might be displayed on the
+    # wrong side of the text (eg on the right, at the beginning of the text
+    # rather than the end, if the text is written in a right-to-left script).
+    # As a simple heuristic to correct this, we force the ellipsis to have the
+    # same direction as the last character before the truncation. This is done
+    # by appending a mark (a zero-width space with the writing direction we
+    # want, so that the ellipsis is enclosed between 2 strong characters with
+    # the same direction and thus inherits that direction).
+
+    if shown_text:
+        direction = unicodedata.bidirectional(shown_text[-1])
+        if direction in [
+            "R",
+            "RLE",
+            "RLO",
+            "RLI",
+        ]:
+            # RIGHT-TO-LEFT MARK
+            end = "\u200f"
+        elif direction in ["AL"]:
+            # ARABIC LETTER MARK
+            end = "\u061c"
+        elif direction in ["L", "LRE", "LRO", "LRI"]:
+            # LEFT-TO-RIGHT MARK
+            end = "\u200e"
     return shown_text + ellipsis + end
 
 

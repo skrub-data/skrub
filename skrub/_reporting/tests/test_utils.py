@@ -12,19 +12,32 @@ from skrub._reporting import _utils
         (1, 1),
         ("aa", "aa"),
         ("a\na", "a a"),
-        ("a" * 70, "a" * 30 + "…"),
+        ("a" * 70, "a" * 30 + "…‎"),
+        ("0" * 70, "0" * 30 + "…"),
         (
             (
                 "اللغة هي نسق على من الإشارات والرموز، تشكل أداة من أدوات المعرفة،"
                 " وتعتبر اللغة أهم وسائل التفاهم والاحتكاك بين أفراد المجتمع في جميع"
                 " ميادين الحياة"
             ),
-            "اللغة هي نسق على من الإشارات و…‏",
+            "اللغة هي نسق على من الإشارات و…؜",
+        ),
+        (
+            (
+                "שפה היא דרך תקשורת המבוססת על מערכת"
+                " סמלים מורכבת בעלת חוקיות, המאפשרת לקודד"
+            ),
+            "שפה היא דרך תקשורת המבוססת על…‏",
         ),
     ],
 )
 def test_ellide_string(s_in, s_out):
     assert _utils.ellide_string(s_in) == s_out
+
+
+def test_ellide_string_empty():
+    # useless corner case to make codecov happy
+    assert _utils.ellide_string(" a", 1) == "…"
 
 
 @pytest.mark.parametrize(
@@ -65,3 +78,24 @@ def test_json_encoder():
     assert json.dumps(d, cls=_utils.JSONEncoder) == '{"a": 1, "b": 1.0}'
     with pytest.raises(TypeError, match=".*JSON serializable"):
         json.dumps({"a": x}, cls=_utils.JSONEncoder)
+
+
+def test_svg_to_img_src():
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" '
+        'fill="currentColor" viewBox="0 0 16 16">'
+        '<path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 '
+        ".5-.5h11.793l-3.147-3.146a.5.5 0 0 1 "
+        ".708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 "
+        '0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8"/></svg>'
+    )
+    assert (
+        _utils.svg_to_img_src(svg)
+        == "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL"
+        "3d3dy53My5vcmcvMjAwMC9zdmciIGZpbGw9ImN1cnJlbnRDb2xvciI"
+        "gdmlld0JveD0iMCAwIDE2IDE2Ij48cGF0aCBmaWxsLXJ1bGU9ImV2Z"
+        "W5vZGQiIGQ9Ik0xIDhhLjUuNSAwIDAgMSAuNS0uNWgxMS43OTNsLTM"
+        "uMTQ3LTMuMTQ2YS41LjUgMCAwIDEgLjcwOC0uNzA4bDQgNGEuNS41I"
+        "DAgMCAxIDAgLjcwOGwtNCA0YS41LjUgMCAwIDEtLjcwOC0uNzA4TDE"
+        "zLjI5MyA4LjVIMS41QS41LjUgMCAwIDEgMSA4Ii8+PC9zdmc+"
+    )

@@ -766,9 +766,6 @@ if (customElements.get('skrub-table-report') === undefined) {
             }
             const unit = match[2];
             const scale = newViewBox[attribute] / svg.viewBox.baseVal[attribute];
-            if (scale !== 1) {
-                console.log(`${attribute} scale: ${scale}`);
-            }
             const newSize = size * scale;
             if (isNaN(newSize)) {
                 return;
