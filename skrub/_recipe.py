@@ -507,6 +507,10 @@ class Recipe:
                 "Therefore we cannot add more steps. "
                 "You can remove the final step with '.truncated(-1)'."
             )
+        if isinstance(estimator, Choice):
+            estimator = estimator.map_values(_check_passthrough)
+        else:
+            estimator = _check_passthrough(estimator)
         step = Step(
             estimator=estimator,
             cols=s.make_selector(cols),
