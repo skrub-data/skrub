@@ -47,6 +47,10 @@ Minor changes
   ``pandas.info()`` ) in a table. It can be sorted by each column.
   :pr:`1056` and :pr:`1068` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The credit fraud dataset is now available with the
+  :func:`fetch_credit_fraud function`.
+  :pr:`1053` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 * Added zero padding for column names in :class:`MinHashEncoder` to improve column ordering consistency.
   :pr:`1069` by :user:`Shreekant Nandiyawar <Shree7676>`.
 
@@ -60,6 +64,16 @@ Minor changes
 * It is possible to control the number of rows displayed by the TableReport in
   the "sample" tab panel by specifying ``n_rows``.
   :pr:`1083` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* the `TableReport` used to raise an exception when the dataframe contained
+  unhashable types such as python lists. This has been fixed in :pr:`1087` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+
+* Display's columns name with the HTML representation of the fitted TableVectorizer.
+  This has been fixed in :pr:`1093` by :user:`Shreekant Nandiyawar <Shree7676>`.
+
+* AggTarget will now work even when y is a Series and not raise any error.
+  This has been fixed in :pr:`1094` by :user:`Shreekant Nandiyawar <Shree7676>`.
 
 Release 0.3.0
 =============

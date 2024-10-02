@@ -74,3 +74,10 @@ def test_empty_dataframe(df_module):
 def test_open(pd_module, browser_mock):
     TableReport(pd_module.example_dataframe, title="the title").open()
     assert b"the title" in browser_mock.content
+
+
+def test_non_hashable_values(df_module):
+    # non-regression test for #1066
+    df = df_module.make_dataframe(dict(a=[[1, 2, 3], None, [4]]))
+    html = TableReport(df).html()
+    assert "[1, 2, 3]" in html

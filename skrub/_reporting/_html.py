@@ -33,6 +33,13 @@ _FILTER_NAMES = {
 }
 
 
+def _is_null(value):
+    isna = pd.isna(value)
+    if isinstance(isna, bool):
+        return isna
+    return False
+
+
 def _get_jinja_env():
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(
@@ -47,7 +54,7 @@ def _get_jinja_env():
         "svg_to_img_src",
     ]:
         env.filters[function_name] = getattr(_utils, function_name)
-    env.filters["is_null"] = pd.isna
+    env.filters["is_null"] = _is_null
     env.globals["random_string"] = random_string
     return env
 

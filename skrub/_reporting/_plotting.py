@@ -2,7 +2,9 @@
 
 The figures are returned in the form of svg strings.
 """
+
 import io
+import re
 
 from matplotlib import pyplot as plt
 
@@ -37,10 +39,19 @@ def _despine(ax):
     ax.spines["right"].set_visible(False)
 
 
+def _to_em(pt_match):
+    attr, pt = pt_match.groups()
+    pt = float(pt)
+    px = pt * 96 / 72
+    em = px / 16
+    return f'{attr}="{em:.2f}em"'
+
+
 def _serialize(fig):
     buffer = io.BytesIO()
     fig.savefig(buffer, format="svg", bbox_inches="tight")
     out = buffer.getvalue().decode("UTF-8")
+    out = re.sub(r'(width|height)="([0-9.]+)pt"', _to_em, out)
     plt.close(fig)
     return out
 
@@ -109,9 +120,8 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
 
     Parameters
     ----------
-    value_counts : dict
-        The keys are values, and values are counts. Must be sorted from most to
-        least frequent.
+    value_counts : list
+        Pairs of (value, count). Must be sorted from most to least frequent.
 
     n_unique : int
         Cardinality of the plotted column, used to determine if all unique
@@ -129,8 +139,8 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     str
         The plot as a XML string.
     """
-    values = [_utils.ellide_string_short(s) for s in value_counts.keys()][::-1]
-    counts = list(value_counts.values())[::-1]
+    values = [_utils.ellide_string_short(v) for v, _ in value_counts][::-1]
+    counts = [c for _, c in value_counts][::-1]
     if n_unique > len(value_counts):
         title = f"{len(value_counts)} most frequent"
     else:

@@ -58,3 +58,7 @@ NOTE: some columns have very strong associations and may be redundant.
     data-test="associations-panel">
     {% include "column-associations.html" %}
 </div>
+
+{% if is_inline_report %}
+<div class="report-bottom-border"></div>
+{% endif %}
