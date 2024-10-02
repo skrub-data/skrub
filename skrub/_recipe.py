@@ -6,7 +6,7 @@ import traceback
 import typing
 
 from sklearn.base import clone
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV, train_test_split
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
@@ -350,37 +350,9 @@ class Recipe:
     def get_x(self):
         return s.select(self.input_data, s.all() - self.y_cols)
 
-    def get_x_train(self):
-        x = self.get_x()
-        x_train, _ = train_test_split(
-            x, random_state=self.random_seed, shuffle=self.shuffle_split
-        )
-        return x_train
-
-    def get_x_test(self):
-        x = self.get_x()
-        _, x_test = train_test_split(
-            x, random_state=self.random_seed, shuffle=self.shuffle_split
-        )
-        return x_test
-
     def get_y(self):
         y = _squeeze(s.select(self.input_data, self.y_cols))
         return y
-
-    def get_y_train(self):
-        y = self.get_y()
-        y_train, _ = train_test_split(
-            y, random_state=self.random_seed, shuffle=self.shuffle_split
-        )
-        return y_train
-
-    def get_y_test(self):
-        y = self.get_y()
-        _, y_test = train_test_split(
-            y, random_state=self.random_seed, shuffle=self.shuffle_split
-        )
-        return y_test
 
     def get_report(
         self, order_by=None, sampling_method="random", n=None, last_step_only=False

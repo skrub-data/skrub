@@ -391,29 +391,20 @@ recipe
 
 # %%
 from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split
 
 randomized_search = recipe.get_randomized_search(n_iter=16, cv=3, verbose=1)
-randomized_search.fit(recipe.get_x_train(), recipe.get_y_train())
+x_train, x_test, y_train, y_test = train_test_split(recipe.get_x(), recipe.get_y())
+randomized_search.fit(x_train, y_train)
 
-predictions = randomized_search.predict(recipe.get_x_test())
-score = r2_score(recipe.get_y_test(), predictions)
+predictions = randomized_search.predict(x_test)
+score = r2_score(y_test, predictions)
 print(f"R² score: {score:.2f}")
 
-# %%
-# We can use ``get_x_train()``, ``get_x_test()`` to get a default train/test
-# split of our data. If we wanted the whole data instead, for example to run a
-# cross-validation loop with ``sklearn.model_selection.cross_validate``, we
-# could use ``get_x()`` and ``get_y()``.
-#
 
 # %%
 # Inspecting hyperparameter search results
 # ----------------------------------------
-# Here we fitted a single model instead of running a cross-validation so that
-# we could inspect the results stored during the hyperparameter search
-# procedure. By default, the |RandomizedSearchCV| can provide those results as
-# a dictionary with somewhat complicated keys.
-#
 # We can ask the |Recipe| to create a nicer display of those results, using the
 # human-readable labels we provided earlier for the different hyperparameter
 # choices.
