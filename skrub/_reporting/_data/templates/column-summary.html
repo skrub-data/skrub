@@ -9,7 +9,7 @@
     {% if in_sample_tab %} data-role="sample-column" data-hidden {% else %}
     data-role="selectable-column" {% endif %}>
     <div class="card-header">
-        <h3 class="margin-r-t">
+        <h3 class="margin-r-m">
             {% if not in_sample_tab %}
             <input data-role="select-column-checkbox"
                 data-manager="SelectColumnCheckBox" type="checkbox">
@@ -66,7 +66,7 @@
 
         {% if column.value_is_constant %}
         {% set val_id = "{}-constant-value".format(col_id) %}
-        <div class="margin-v-t">
+        <div class="margin-v-m">
             <strong>Constant value:</strong>
             <div class="copybutton-grid">
                 <div class="box">
@@ -79,8 +79,7 @@
 
         {% for plot_name in column.plot_names %}
         <div>
-            <img class="pure-img" src="{{ column[plot_name] | svg_to_img_src | safe }}"
-                alt="{{ plot_name }}">
+            {{ column[plot_name] | safe }}
             {% if plot_name == "value_counts_plot" %}
             <details data-test="frequent-values-details">
                 <summary>Most frequent values</summary>

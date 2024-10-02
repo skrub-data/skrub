@@ -8,9 +8,4 @@
 {% include "summary-statistics.css" %}
 {% include "tabs.css" %}
 {% include "toggletip.css" %}
-{% include "tooltip.css" %}
 {% include "column-filter.css" %}
-
-{% if is_inline_report %}
-{% include "inline-report.css" %}
-{% endif %}

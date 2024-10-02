@@ -2,13 +2,30 @@
 /* -------------------------------- */
 
 :host {
-    --micro: 0.25rem;
-    --tiny: 0.5rem;
-    --small: 1.0rem;
-    --large: 1.2rem;
-    --huge: 1.5rem;
-    --max-content-width: 45rem;
-    --radius: 0.25rem;
+    --base-size: 1em;
+
+    --text-xs: calc(0.8 * var(--base-size));
+    --text-s: calc(0.9 * var(--base-size));
+    --text-m: var(--base-size);
+    --text-l: calc(1.2 * var(--base-size));
+    --text-xl: calc(1.5 * var(--base-size));
+
+    --space-xs: calc(0.125 * var(--base-size));
+    --space-s: calc(0.25 * var(--base-size));
+    --space-m: calc(0.5 * var(--base-size));
+    --space-l: calc(1.0 * var(--base-size));
+    --space-xl: calc(1.2 * var(--base-size));
+    --space-xxl: calc(1.5 * var(--base-size));
+
+    --border-s: 1px;
+    --border-m: 2px;
+
+    --checkbox-size: var(--text-s);
+    --button-s: calc(1.8 * var(--base-size));
+    --button-m: calc(2.0 * var(--base-size));
+
+    --max-content-width: calc(45 * var(--base-size));
+    --radius: var(--space-s);
     --line-height: 1.5;
 
     --lightgreen: #eafaea;
@@ -30,7 +47,7 @@
 }
 
 :host {
-    font-size: 1rem;
+    font-size: var(--text-m);
     line-height: var(--line-height);
     -webkit-text-size-adjust: 100%;
 }
@@ -55,11 +72,16 @@
 
 
 h1 {
-    font-size: var(--huge);
+    font-size: var(--text-xl);
 }
 
 button > * {
     pointer-events: none;
+}
+
+input[type="checkbox"] {
+    height: var(--checkbox-size);
+    width: var(--checkbox-size);
 }
 
 /* pure.css / Normalize.css overrides the default firefox blue ring around focussed */
@@ -79,8 +101,7 @@ summary > * {
 }
 
 p {
-    margin-block-start: var(--tiny);
-    margin-block-end: var(--tiny);
+    margin: var(--space-m) 0;
 }
 
 code {
@@ -93,11 +114,15 @@ pre {
 
 code, pre {
     font-family: var(--fontStack-monospace);
-    font-size: calc(0.9 * var(--small));
+    font-size: var(--text-s);
 }
 
-:is(td, th) {
-    padding: var(--tiny);
+table {
+    font-size: var(--text-m);
+}
+
+#report :is(td, th) {
+    padding: var(--space-s) var(--space-m);
     white-space: nowrap;
 }
 
@@ -107,7 +132,7 @@ code, pre {
 dl {
     display: grid;
     grid-template-columns: max-content auto;
-    column-gap: var(--tiny);
+    column-gap: var(--space-m);
     margin: 0;
 }
 
@@ -142,17 +167,17 @@ dd {
     overflow-wrap: anywhere;
 }
 
-.margin-r-s {
-    margin-inline-end: var(--small);
+.margin-r-m {
+    margin-inline-end: var(--space-m);
 }
 
-.margin-r-t {
-    margin-inline-end: var(--tiny);
+.margin-v-m {
+    margin-block-start: var(--space-m);
+    margin-block-end: var(--space-m);
 }
 
-.margin-v-t {
-    margin-block-start: var(--tiny);
-    margin-block-end: var(--tiny);
+.margin-t-s {
+    margin-top: var(--space-s);
 }
 
 .horizontal-scroll {
@@ -168,18 +193,13 @@ dd {
 }
 
 .wrapper {
-    padding-inline-start: var(--small);
-    padding-inline-end: var(--small);
-    padding-block-end: var(--tiny);
+    padding-inline-start: var(--space-l);
+    padding-inline-end: var(--space-l);
+    padding-block-end: var(--space-m);
 }
 
-.wrapper-vert {
-    padding-block-end: var(--tiny);
-}
-
-.wrapper-vert-l {
-    padding-block-start: var(--large);
-    padding-block-end: var(--huge);
+.flow > * + * {
+    margin-top: var(--space-m);
 }
 
 .text {
@@ -202,12 +222,12 @@ dd {
 
 .flex {
     display: flex;
-    gap: var(--tiny);
+    gap: var(--space-m);
     align-items: center;
 }
 
 .gap-l {
-    gap: var(--large);
+    gap: var(--space-xl);
 }
 
 .flex-reverse {
@@ -221,8 +241,6 @@ dd {
 
 .flex-wrap {
     flex-wrap: wrap;
-    padding-block-start: var(--tiny);
-    padding-block-end: var(--tiny);
 }
 
 .flex-wrap > * {
@@ -276,11 +294,19 @@ dd {
 /* ----------- */
 
 
+#report {
+    padding-top: var(--space-s);
+}
+
+#report svg {
+    max-width: 100%;
+}
+
 .report-header {
-    --max-content-width: 100rem;
-    font-size: var(--large);
-    padding-block-start: var(--micro);
-    padding-block-end: var(--micro);
+    --max-content-width: 100em;
+    font-size: var(--text-l);
+    padding-block-start: var(--space-s);
+    padding-block-end: var(--space-s);
 }
 
 .report-header > h1 {
@@ -289,6 +315,6 @@ dd {
 
 .important-note {
     background-color: var(--lightgreen);
-    padding: var(--tiny);
+    padding: var(--space-m);
     border-radius: var(--radius);
 }

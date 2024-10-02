@@ -1,7 +1,7 @@
 {% macro th(name, ascending, descending, is_numeric) %}
 <th class="sort-button-group-wrapper" scope="col">
     {% if name %}
-    <span class="margin-r-t">{{ name }}</span>
+    <span class="margin-r-m">{{ name }}</span>
     {% endif %}
     <div class="sort-button-group">
         <button class="sort-button" type="button" data-role="sort-button"
@@ -28,11 +28,11 @@
 {{ th(name, "from columns with " + low + " to columns with " + high, "from columns with " + high + " to columns with " + low, is_numeric) }}
 {% endmacro %}
 
-<article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
+<article class="wrapper margin-t-s" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
     <div class="horizontal-scroll">
         <table class="pure-table pure-table-bordered summary-stats-table"
-            data-manager="sortableTable">
+            data-manager="SortableTable">
             <thead>
                 <tr>
                     {{ th("Column", "from first column to last column", "from last column to first column", True) }}
