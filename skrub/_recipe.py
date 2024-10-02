@@ -84,6 +84,21 @@ def _is_predictor(estimator):
     return hasattr(estimator, "predict")
 
 
+def _check_passthrough(estimator):
+    """Convert any value representing passthrough to the string 'passthrough'.
+
+    `optional(Estimator())` is essentially equivalent to a
+    `Choice([Estimator(), None])` so a passthrough transformer can be
+    represented either by `None` or `"passthrough"`.
+
+    The scikit-learn Pipeline only recognizes `"passthrough"` so this helper
+    handles the conversion.
+    """
+    if _is_passthrough(estimator):
+        return "passthrough"
+    return estimator
+
+
 @dataclasses.dataclass
 class Step:
     """A step that can be added to a Recipe."""
