@@ -44,6 +44,10 @@ Minor changes
   ``pandas.info()`` ) in a table. It can be sorted by each column.
   :pr:`1056` and :pr:`1068` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The credit fraud dataset is now available with the
+  :func:`fetch_credit_fraud function`.
+  :pr:`1053` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 * Added zero padding for column names in :class:`MinHashEncoder` to improve column ordering consistency.
   :pr:`1069` by :user:`Shreekant Nandiyawar <Shree7676>`.
 

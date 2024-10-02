@@ -1,6 +1,7 @@
 from ._fetching import (
     DatasetAll,
     DatasetInfoOnly,
+    fetch_credit_fraud,
     fetch_drug_directory,
     fetch_employee_salaries,
     fetch_figshare,
@@ -32,6 +33,7 @@ __all__ = [
     "fetch_traffic_violations",
     "fetch_world_bank_indicator",
     "fetch_figshare",
+    "fetch_credit_fraud",
     "fetch_movielens",
     "get_data_dir",
     "make_deduplication_data",
