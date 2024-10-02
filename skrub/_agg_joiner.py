@@ -551,7 +551,11 @@ class AggTarget(TransformerMixin, BaseEstimator):
             # Need to copy since we add columns in place
             # during fit.
             y_ = y.copy()
+        elif sbd.is_column(y) and sbd.name(y) is not None:
+            y_ = sbd.make_dataframe_like(y, {sbd.name(y): y})
         else:
+            if sbd.is_column(y):
+                y = sbd.to_numpy(y)
             y_ = np.atleast_2d(y)
 
             # If y is Series or an array derived from a

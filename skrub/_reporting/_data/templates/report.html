@@ -4,11 +4,11 @@
          {% include "report.css" %}
         </style>
         <div id="report">
+            {% if summary.title %}
             <div class="report-header wrapper text">
-                {% if summary.title %}
                 <h1>{{ summary.title }}</h1>
-                {% endif %}
             </div>
+            {% endif %}
 
             {% if summary.dataframe_is_empty  %}
             <div class="text wrapper">

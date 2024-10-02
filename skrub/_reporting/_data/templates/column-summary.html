@@ -9,7 +9,7 @@
     {% if in_sample_tab %} data-role="sample-column" data-hidden {% else %}
     data-role="selectable-column" {% endif %}>
     <div class="card-header">
-        <h3 class="margin-r-t">
+        <h3 class="margin-r-m">
             {% if not in_sample_tab %}
             <input data-role="select-column-checkbox"
                 data-manager="SelectColumnCheckBox" type="checkbox">
@@ -66,7 +66,7 @@
 
         {% if column.value_is_constant %}
         {% set val_id = "{}-constant-value".format(col_id) %}
-        <div class="margin-v-t">
+        <div class="margin-v-m">
             <strong>Constant value:</strong>
             <div class="copybutton-grid">
                 <div class="box">

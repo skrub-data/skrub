@@ -522,7 +522,7 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(TabList);
 
-    class sortableTable extends Manager {
+    class SortableTable extends Manager {
         constructor(elem, exchange) {
             super(elem, exchange);
             this.elem.querySelectorAll("button[data-role='sort-button']").forEach(
@@ -588,7 +588,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
     }
-    SkrubTableReport.register(sortableTable);
+    SkrubTableReport.register(SortableTable);
 
     class SelectedColumnsDisplay extends Manager {
 
