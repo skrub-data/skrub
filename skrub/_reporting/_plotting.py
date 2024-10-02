@@ -2,6 +2,7 @@
 
 The figures are returned in the form of svg strings.
 """
+
 import functools
 import io
 import re
@@ -54,6 +55,9 @@ def _plot(plotting_fun):
                 # We do not care about missing glyphs because the text is
                 # rendered & the viewbox is recomputed in the browser.
                 warnings.filterwarnings("ignore", "Glyph.*missing from font")
+                warnings.filterwarnings(
+                    "ignore", "Matplotlib currently does not support Arabic natively"
+                )
                 return plotting_fun(*args, **kwargs)
 
     return plot_with_config
