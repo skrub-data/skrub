@@ -7,7 +7,7 @@
     --box-min-width: calc(6 * var(--base-size));
     --box-max-width: calc(40 * var(--base-size));
     --table-box-max-width: calc(55 * var(--base-size));
-    --box-min-height: calc(1.8 * var(--base-size));
+    --box-min-height: calc(1.9 * var(--base-size));
     --box-max-height: calc(10 * var(--base-size));
 }
 
@@ -26,21 +26,19 @@
 .box pre {
     overflow-x: auto;
     padding: var(--space-s);
+    padding-left: var(--space-m);
     flex-grow: 1;
     white-space: pre;
 }
 
 .copybutton {
     margin: var(--border-s);
-    min-width: var(--button-m);
-    min-height: var(--box-min-height);
-    display: inline-block;
+    min-width: var(--button-s);
+    max-width: var(--button-s);
+    max-height: var(--button-s);
     padding: var(--space-s);
-    padding-left: var(--space-m);
-    padding-right: var(--space-m);
     border: none;
     position: relative;
-    align-self: flex-start;
 }
 
 .copybutton-left {
@@ -76,11 +74,11 @@
     position: absolute;
     top: var(--space-xs);
     margin: 0;
-    right: calc(100% + var(--space-xs));
+    right: calc(100% + var(--space-s));
 }
 
 .copybutton-left .copied-message {
-    left: calc(100% + var(--space-xs));
+    left: calc(100% + var(--space-s));
     right: auto;
 }
 

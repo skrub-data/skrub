@@ -167,7 +167,6 @@ dd {
     overflow-wrap: anywhere;
 }
 
-
 .margin-r-m {
     margin-inline-end: var(--space-m);
 }
@@ -175,6 +174,10 @@ dd {
 .margin-v-m {
     margin-block-start: var(--space-m);
     margin-block-end: var(--space-m);
+}
+
+.margin-t-s {
+    margin-top: var(--space-s);
 }
 
 .horizontal-scroll {
@@ -193,15 +196,6 @@ dd {
     padding-inline-start: var(--space-l);
     padding-inline-end: var(--space-l);
     padding-block-end: var(--space-m);
-}
-
-.wrapper-vert {
-    padding-block-end: var(--space-m);
-}
-
-.wrapper-vert-l {
-    padding-block-start: var(--space-xl);
-    padding-block-end: var(--space-xxl);
 }
 
 .flow > * + * {
