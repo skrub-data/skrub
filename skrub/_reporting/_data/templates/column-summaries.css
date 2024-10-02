@@ -77,9 +77,6 @@
     flex-direction: column;
 }
 
-.figure {
-    padding-top: var(--tiny);
-}
 
 /* Grid of boxes with copybuttons for a column's most frequent values */
 

@@ -180,6 +180,10 @@ dd {
     margin-top: var(--space-s);
 }
 
+.margin-t-m {
+    margin-top: var(--space-m);
+}
+
 .horizontal-scroll {
     overflow-x: auto;
 }
