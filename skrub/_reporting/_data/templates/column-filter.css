@@ -1,5 +1,6 @@
 .column-filter {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-m);
     align-items: flex-end;
     margin-bottom: var(--space-s);
