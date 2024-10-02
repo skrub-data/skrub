@@ -18,7 +18,7 @@
     bottom: 0;
     right: calc(-1 * var(--btn-group-width));
     left: 100%;
-    transform: translateX(calc(-1 * var(--btn-group-width) + 1px));
+    transform: translateX(calc(-1 * var(--btn-group-width) + var(--border-s)));
     display: flex;
     gap: 0px;
     padding: 0px;
