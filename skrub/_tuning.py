@@ -1,3 +1,169 @@
+"""
+Choices and Outcomes
+--------------------
+
+This module provides classes to represent a range of hyperparameters for an
+estimator, or a range of different estimators.
+
+The main reason for those custom classes is that we can use them directly to
+initialize scikit-learn estimators or pipeline steps. Then, because of their
+special type, the ``Recipe`` can easily spot them and handle them appropriately
+to construct a grid of hyperparameters.
+
+Some hyperparameters take their value from a discrete set (for example the
+``svd_solver`` of a ``PCA`` can be "auto", "full", "covariance_eigh", ...). Some
+others take their values from a range of real or integral numbers (for example
+the ``n_components`` of a ``PCA`` is an int between 0 and the smallest dimension
+of ``X``). This module allows to represent all those kinds of ranges.
+
+A "choice" represents a range of things from which we can choose. Each of those
+things --the result of choosing-- is referred to here as an "outcome".
+
+Imagine that we want a dimensionality reduction step in our machine-learning
+model, and that we want to try both a PCA or feature selection:
+
+>>> from sklearn.decomposition import PCA
+>>> from sklearn.feature_selection import SelectKBest
+
+We can represent this range of possibilities with a Choice. The ``choose_from``
+factory constructs it for us.
+
+>>> from skrub._tuning import choose_from
+>>> dim_reduction = choose_from([PCA(), SelectKBest()])
+>>> dim_reduction
+choose_from([PCA(), SelectKBest()])
+>>> type(dim_reduction)
+<class 'skrub._tuning.Choice'>
+
+>>> dim_reduction.outcomes
+[Outcome(value=PCA(), name=None, in_choice=None), Outcome(value=SelectKBest(), name=None, in_choice=None)]
+
+(Ignore ``name`` and ``in_choice`` which refer to optional human-readable labels that we
+have not provided here, they are discussed later.)
+
+Choices provide the sequence interface which is used by ``GridSearchCV`` to
+index the possible outcomes:
+>>> list(dim_reduction)
+[Outcome(value=PCA(), name=None, in_choice=None), Outcome(value=SelectKBest(), name=None, in_choice=None)]
+
+Note that it is important that the list is wrapped in a special class. When a
+Choice is used as a parameter of an estimator, we can recognize it by its type
+and extract it to build the hyperparameter grid. If we used a plain list
+instead, we would have no way to know if it represents a choice or simply a
+parameter value. For example the ``alphas`` parameter of ``RidgeCV`` expects a
+list of numbers. Moreover the ``Choice`` adds some features that are useful for
+inspecting hyperparameter search results as shown below.
+
+It is possible to give the choice a human-readable ``name``, which is used for
+example by the ``Recipe`` to refer to it when showing hyperparameter search
+results. This can provide a more readable display in the results table or in the
+parallel coordinate plots.
+
+>>> choose_from([PCA(), SelectKBest()], name='dim reduction')
+choose_from([PCA(), SelectKBest()], name='dim reduction')
+
+Here is another example where giving a name can be useful (note that choices
+can be nested arbitrarily):
+
+>>> n_dims = choose_from([10, 20, 30], name='n dimensions')
+>>> choose_from([PCA(n_components=n_dims), SelectKBest(k=n_dims)])
+choose_from([PCA(n_components=choose_from([10, 20, 30], name='n dimensions')), SelectKBest(k=choose_from([10, 20, 30], name='n dimensions'))])
+
+We are applying the same label 'n dimensions' to ``k`` and ``n_components``
+because they play the same role in our pipeline.
+
+Moreover, each of the outcomes can also be given a name. This is acheived by
+using a dictionary rather than a list:
+
+>>> dim_reduction = choose_from({'pca': PCA(), 'k best': 'SelectKBest'}, name='dim reduction')
+>>> dim_reduction
+choose_from({'pca': PCA(), 'k best': 'SelectKBest'}, name='dim reduction')
+
+Each of the outcomes records its name so that when they are passed to an
+estimator and recorded in grid search results they can be inspected to know
+their name and which choice they came from.
+
+>>> dim_reduction.outcomes
+[Outcome(value=PCA(), name='pca', in_choice='dim reduction'), Outcome(value='SelectKBest', name='k best', in_choice='dim reduction')]
+
+Again, this is a way to give a human-readable label to each outcome rather than
+relying on the value's ``__repr__()`` which can be verbose or uninformative.
+
+A choice between an enumerated set of values is represented by a ``Choice`` and
+constructed with ``choose_from`` as shown above.
+Additional classes are provided to represent ranges of numeric values.
+
+A ``NumericChoice`` is a range of numbers between a low and a high value, either
+on a log or linear scale. It can produce either floats and ints. It exposes a
+``rvs`` method to draw a random sample from the range, making it possible to use
+with scikit-learn's ``RandomizedSearchCV``. It can be constructed with
+``choose_int`` or ``choose_float``.
+
+>>> from skrub._tuning import choose_int, choose_float
+>>> n_dims = choose_int(10, 100, name='n dims')
+>>> n_dims
+choose_int(10, 100, name='n dims')
+>>> type(n_dims)
+<class 'skrub._tuning.NumericChoice'>
+>>> n_dims.rvs() # doctest: +SKIP
+NumericOutcome(value=98, name=None, in_choice='n dims', is_from_log_scale=False)
+
+If we would rather use a log scale:
+
+>>> n_dims = choose_int(10, 100, name='n dims', log=True)
+>>> n_dims
+choose_int(10, 100, log=True, name='n dims')
+>>> n_dims.rvs() # doctest: +SKIP
+NumericOutcome(value=80, name=None, in_choice='n dims', is_from_log_scale=True)
+
+As we can see, the outcomes record whether they came from a log scale, which is
+useful to set the scales of axes in the plots where they are displayed.
+
+If we need floating-point numbers rather than ints we use ``choose_float``:
+>>> alpha = choose_float(.01, 100, log=True, name='α')
+>>> alpha
+choose_float(0.01, 100, log=True, name='α')
+>>> alpha.rvs() # doctest: +SKIP
+NumericOutcome(value=16.656593316727974, name=None, in_choice='α', is_from_log_scale=True)
+
+It is possible to specify a number of steps on the range of value to discretize
+it. Too big a step size loses the benefits of a randomized search. However,
+discretizing the range is useful to make better use of caching by reusing the
+same values. If we set a number of steps, we get a ``DiscretizedNumericChoice``.
+
+>>> n_dims = choose_int(10, 100, name='n dims', log=True, n_steps=5)
+>>> n_dims
+choose_int(10, 100, log=True, n_steps=5, name='n dims')
+>>> type(n_dims)
+<class 'skrub._tuning.DiscretizedNumericChoice'>
+
+Discretized ranges are sequences so they can be used either with
+``RandomizedSearchCV`` or ``GridSearchCV``.
+
+>>> n_dims.rvs() # doctest: +SKIP
+NumericOutcome(value=32, name=None, in_choice='n dims', is_from_log_scale=True)
+>>> list(n_dims)
+[10, 18, 32, 56, 100]
+
+Finally, it is common to choose between something or nothing. The last type of
+choice is a shorthand for a choice between one value and ``None``:
+
+>>> from skrub._tuning import optional
+>>> feature_selection = optional(SelectKBest(), name='feature selection')
+>>> feature_selection
+optional(SelectKBest(), name='feature selection')
+>>> type(feature_selection)
+<class 'skrub._tuning.Optional'>
+>>> list(feature_selection)
+[Outcome(value=SelectKBest(), name='true', in_choice='feature selection'), Outcome(value=None, name='false', in_choice='feature selection')]
+
+Constructing a hyperparameter grid
+----------------------------------
+
+TODO
+
+"""  # noqa: E501
+
 import dataclasses
 import io
 import typing
