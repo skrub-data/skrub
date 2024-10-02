@@ -41,7 +41,7 @@
     border-radius: var(--radius) var(--radius) 0 0;
     padding: var(--space-m);
     padding-top: var(--space-s);
-    padding-bottom: var(--space-s);
+    padding-bottom: calc(var(--space-s) + var(--border-s));
     font-size: var(--space-l);
     background-color: transparent;
     --color-muted: var(--darkg);
