@@ -432,11 +432,42 @@ choose_from({'pca': PCA(), 'kbest': SelectKBest()}, name='dim reduction')
 >>> dim_reduction.outcomes
 [Outcome(value=PCA(), name='pca', in_choice='dim reduction'), Outcome(value=SelectKBest(), name='kbest', in_choice='dim reduction')]
 
+The helper ``unwrap`` extracts the value from its argument if it is an outcome,
+otherwise returns the argument:
+
+>>> unwrap(dim_reduction.outcomes[0])
+PCA()
+>>> unwrap(PCA())
+PCA()
+
 The ``Choice`` is a sequence, which allows it to be used in a hyperparameter
 grid passed to a ``GridSearchCV``:
 
 >>> list(dim_reduction)
 [Outcome(value=PCA(), name='pca', in_choice='dim reduction'), Outcome(value=SelectKBest(), name='kbest', in_choice='dim reduction')]
+
+Choices also have a default outcome, which is used if we want to get a pipeline
+and fit it without doing any hyperparameter search (e.g. for the previews of the
+``Recipe``). For enumerated choices, the default outcome is simply the first in
+the list:
+
+>>> dim_reduction.default()
+Outcome(value=PCA(), name='pca', in_choice='dim reduction')
+
+Note: in the future, we may want to allow providing an explicit default
+(especially for numeric choices, described in the next section).
+
+We can use the ``unwrap_default`` helper to get the default outcome and extract
+its ``value``:
+
+>>> from skrub._tuning import unwrap_default
+>>> unwrap_default(dim_reduction)
+PCA()
+
+Like ``unwrap``, it returns its argument when it is just a regular value:
+
+>>> unwrap_default(PCA())
+PCA()
 
 Numeric choices
 ---------------
@@ -467,6 +498,17 @@ NumericOutcome(value=80, name=None, in_choice='n dims', is_from_log_scale=True)
 As we can see, the outcomes record whether they came from a log scale, which is
 useful to set the scales of axes in the plots where they are displayed.
 
+We can illustrate the difference between log and linear scale by drawing a
+larger sample:
+
+>>> n = choose_int(0, 100, log=False)
+>>> q = [0, 25, 50, 75, 100]
+>>> np.percentile([unwrap(v) for v in n.rvs(1000, random_state=0)], q)
+array([ 0., 24., 48., 73., 99.])
+>>> n = choose_int(1, 100, log=True)
+>>> np.percentile([unwrap(v) for v in n.rvs(1000, random_state=0)], q)
+array([ 1.,  3.,  9., 29., 99.])
+
 If we need floating-point numbers rather than ints we use ``choose_float``:
 
 >>> alpha = choose_float(.01, 100, log=True, name='α')
@@ -474,6 +516,14 @@ If we need floating-point numbers rather than ints we use ``choose_float``:
 choose_float(0.01, 100, log=True, name='α')
 >>> alpha.rvs() # doctest: +SKIP
 NumericOutcome(value=16.656593316727974, name=None, in_choice='α', is_from_log_scale=True)
+
+The default outcome of a numeric choice is the middle of its range (either on a
+linear or log scale):
+
+>>> unwrap_default(choose_float(0.0, 100.0, log=False))
+50.0
+>>> unwrap_default(choose_float(1.0, 100.0, log=True))
+10.000000000000002
 
 It is possible to specify a number of steps on the range of value to discretize
 it. Too big a step size loses the benefits of a randomized search. However,
@@ -494,6 +544,12 @@ NumericOutcome(value=32, name=None, in_choice='n dims', is_from_log_scale=True)
 >>> list(n_dims)
 [10, 18, 32, 56, 100]
 
+The default outcome is as close as possible to the middle while respecting the
+steps:
+
+>>> unwrap_default(n_dims)
+32
+
 Optional
 --------
 
@@ -508,6 +564,8 @@ optional(SelectKBest(), name='feature selection')
 <class 'skrub._tuning.Optional'>
 >>> list(feature_selection)
 [Outcome(value=SelectKBest(), name='true', in_choice='feature selection'), Outcome(value=None, name='false', in_choice='feature selection')]
+>>> unwrap_default(feature_selection)
+SelectKBest()
 """  # noqa: E501
 
 import dataclasses
@@ -682,6 +740,50 @@ def choose_from(outcomes, name=None):
     return Choice(prepared_outcomes, name=name)
 
 
+def unwrap(obj):
+    """Extract the value from an Outcome or a plain value.
+
+    If the input is a plain value, it is returned unchanged.
+
+    >>> from skrub._tuning import choose_from, unwrap
+    >>> choice = choose_from([1, 2])
+    >>> outcome = choice.default()
+    >>> outcome
+    Outcome(value=1, name=None, in_choice=None)
+    >>> unwrap(outcome)
+    1
+    >>> unwrap(1)
+    1
+    """
+    if isinstance(obj, Outcome):
+        return obj.value
+    return obj
+
+
+def unwrap_default(obj):
+    """Extract a value from a Choice, Outcome or plain value.
+
+    If the input is a Choice, the default outcome is used.
+    For other inputs, behaves like ``unwrap``.
+
+    >>> from skrub._tuning import choose_from, unwrap_default
+    >>> choice = choose_from([1, 2])
+    >>> choice
+    choose_from([1, 2])
+    >>> choice.default()
+    Outcome(value=1, name=None, in_choice=None)
+    >>> unwrap_default(choice)
+    1
+    >>> unwrap_default(choice.default())
+    1
+    >>> unwrap_default(1)
+    1
+    """
+    if isinstance(obj, BaseChoice):
+        return obj.default().value
+    return unwrap(obj)
+
+
 class Optional(Choice):
     """A choice between something and nothing."""
 
@@ -751,11 +853,20 @@ def _repr_numeric_choice(choice):
 
 
 class BaseNumericChoice(BaseChoice):
-    """Base class to help identify numeric choices with ``isinstance``."""
+    """Base class to help identify numeric choices with ``isinstance``.
+
+    It also provides a helper to wrap a (randomly sampled) number in a
+    ``NumericOutcome``.
+    """
+
+    def _wrap_outcome(self, value):
+        return NumericOutcome(value, is_from_log_scale=self.log, in_choice=self.name)
 
 
 @dataclasses.dataclass
 class NumericChoice(BaseNumericChoice):
+    """A choice within a numeric range."""
+
     low: float
     high: float
     log: bool
@@ -773,7 +884,9 @@ class NumericChoice(BaseNumericChoice):
         value = self._distrib.rvs(size=size, random_state=random_state)
         if self.to_int:
             value = value.astype(int)
-        return NumericOutcome(value, is_from_log_scale=self.log, in_choice=self.name)
+        if size is None:
+            return self._wrap_outcome(value)
+        return [self._wrap_outcome(v) for v in value]
 
     def default(self):
         low, high = self.low, self.high
@@ -784,7 +897,7 @@ class NumericChoice(BaseNumericChoice):
             midpoint = np.exp(midpoint)
         if self.to_int:
             midpoint = np.round(midpoint).astype(int)
-        return NumericOutcome(midpoint, is_from_log_scale=self.log, in_choice=self.name)
+        return self._wrap_outcome(midpoint)
 
     def __repr__(self):
         return _repr_numeric_choice(self)
@@ -792,6 +905,8 @@ class NumericChoice(BaseNumericChoice):
 
 @dataclasses.dataclass
 class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
+    """A choice from a numeric range discretized by providing ``n_steps``."""
+
     low: float
     high: float
     n_steps: int
@@ -816,11 +931,19 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
     def rvs(self, size=None, random_state=None):
         random_state = check_random_state(random_state)
         value = random_state.choice(self.grid, size=size)
-        return NumericOutcome(value, is_from_log_scale=self.log, in_choice=self.name)
+        if size is None:
+            return self._wrap_outcome(value)
+        return [self._wrap_outcome(v) for v in value]
 
     def default(self):
         value = self.grid[(len(self.grid) - 1) // 2]
-        return NumericOutcome(value, is_from_log_scale=self.log, in_choice=self.name)
+        return self._wrap_outcome(value)
+
+    def __repr__(self):
+        return _repr_numeric_choice(self)
+
+    # Provide the Sequence interface so that discretized numeric choices are
+    # compatible with ``GridSearchCV`` (in addition to ``RandomizedSearchCV``).
 
     def __getitem__(self, item):
         return self.grid[item]
@@ -830,9 +953,6 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
 
     def __iter__(self):
         return iter(self.grid)
-
-    def __repr__(self):
-        return _repr_numeric_choice(self)
 
 
 def choose_float(low, high, log=False, n_steps=None, name=None):
@@ -859,20 +979,6 @@ class Placeholder:
         if self.name is not None:
             return f"<{self.name}>"
         return "..."
-
-
-def unwrap_default(obj):
-    if isinstance(obj, BaseChoice):
-        return obj.default().value
-    if isinstance(obj, Outcome):
-        return obj.value
-    return obj
-
-
-def unwrap(obj):
-    if isinstance(obj, Outcome):
-        return obj.value
-    return obj
 
 
 def contains_choice(estimator):
