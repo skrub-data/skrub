@@ -1,97 +1,445 @@
 """
+Hyperparameter grids
+====================
+
+This module provides the functionality that allows specifying ranges of
+hyperparameters directly inside the estimators when adding steps to a
+``skrub.Recipe``. They are the low-level building blocks that allow users to
+write code like:
+
+>>> recipe.add(choose_from([PCA(), SelectKBest()]))  # doctest: +SKIP
+>>> recipe.add(Ridge(alpha=choose_float(0.01, 100.0, log=True)))  # doctest: +SKIP
+
+The main components are classes that represent ranges of hyperparameters, such
+as ``Choice``, and the ``expand_grid`` function, which inspects a pipeline
+containing choices and constructs a hyperparameter grid suitable for
+scikit-learn's ``GridSearchCV`` or ``RandomizedSearchCV``.
+
+To illustrate what ``expand_grid`` does, let us construct by hand a
+hyperparameter grid for a simple pipeline.
+
+Suppose we have a pipeline with a dimensionality reduction step and a
+regressor, which we might construct like this:
+
+>>> from sklearn.pipeline import Pipeline
+>>> from sklearn.decomposition import PCA
+>>> from sklearn.linear_model import Ridge
+
+>>> model = Pipeline([("dim_reduction", PCA()), ("regressor", Ridge())])
+
+If we want to tune the choice of estimators or their hyperparameters, we need to
+construct a grid of possible values for each estimator and its hyperparameters.
+Then the ``GridSearchCV`` will evaluate each possible combination of values and
+select the best.
+
+Let us start with a very simple grid that contains only one node: the estimators
+we have used above and their default parameters.
+
+>>> grid = {"dim_reduction": [PCA()], "regressor": [Ridge()]}
+
+Note here that ``[PCA()]`` is wrapped in a list: it is the list of all
+dimensionality reduction transformers we want to include in the grid. Here we
+have only one option for each item so our grid has 1 x 1 = 1 node.
+
+We now add a range of values for the ``alpha`` hyperparameter of the ridge:
+
+>>> grid = {
+...     "dim_reduction": [PCA()],
+...     "regressor": [Ridge()],
+...     "regressor__alpha": [0.1, 1.0, 10.0],
+... }
+
+We may also want to try different estimators, rather than just modifying the
+parameters of a given estimator. Suppose we want to consider ``SelectKBest``
+as an alternative to the ``PCA``:
+
+>>> from sklearn.feature_selection import SelectKBest, f_regression
+
+>>> grid = {
+...     "dim_reduction": [PCA(), SelectKBest(f_regression)],
+...     "regressor": [Ridge()],
+...     "regressor__alpha": [0.1, 1.0, 10.0],
+... }
+
+Now we want to specify ranges for the parameters that control the reduced
+dimension: ``n_components`` for the ``PCA`` and ``k`` for ``SelectKBest``. Note
+they are incompatible: setting ``k`` on a ``PCA`` would be an error, so we need
+to separate them by splitting our grid into 2 subgrids. Instead of one
+dictionary we now have a list containing 2 dictionaries.
+
+>>> grid = [
+...     {
+...         "dim_reduction": [PCA()],
+...         "regressor": [Ridge()],
+...         "dim_reduction__n_components": [10, 20, 30],
+...         "regressor__alpha": [0.1, 1.0, 10.0],
+...     },
+...     {
+...         "dim_reduction": [SelectKBest(f_regression)],
+...         "regressor": [Ridge()],
+...         "dim_reduction__k": [10, 20, 30],
+...         "regressor__alpha": [0.1, 1.0, 10.0],
+...     },
+... ]
+
+This is an important step that the ``expand_grid`` function of this module has
+to perform: whenever we have a choice of different estimators, and one of those
+estimators has a choice of different values for one of its hyperparameters, the
+grid must be split. The estimator must be placed into its own subgrid which
+contains its ranges of hyperparameters.
+
+If we also want alternatives to the ``Ridge``, and if we have nested estimators
+such as a ``StackingRegressor`` or ``TableVectorizer``, constructing such
+hyperparameter grids by hand becomes unwieldy. Moreover, here we are
+constructing and storing the grid separately from the pipeline, which is
+error-prone and impractical.
+
+This module allows us to store ranges of values (possibly nested) directly in
+the estimators. Then, ``expand_grid`` will extract them and construct the grid
+and its subgrids as needed.
+
+We call a "choice" a range of things that we can pick from, such as estimators
+or hyperparameter values. Each of those things —the result of choosing— is
+referred to as an "outcome".
+
+We have different kinds of choices for enumerated sets and numerical ranges. The
+simplest one is an explicitly enumerated set of discrete options, constructed
+with ``choose_from``. Other options are described later.
+
+Let us rebuild the previous grid using ``choose_from``. To make things more
+interesting we also add a ``LinearSVR`` as an alternative to the ``Ridge``.
+
+>>> from sklearn.svm import LinearSVR
+>>> from skrub._tuning import choose_from
+
+>>> grid = {
+...     "dim_reduction": choose_from([PCA(), SelectKBest(f_regression)]),
+...     "regressor": choose_from([Ridge(), LinearSVR()]),
+... }
+
+We can also add hyperparameter ranges. The key point here is that choices can be
+nested, rather than manually extracting them with names such as
+``regressor__alpha`` and building a flat list of subgrids.
+
+>>> n_dim = choose_from([10, 20, 30])
+>>> pca = PCA(n_components=n_dim)
+>>> kbest = SelectKBest(f_regression, k=n_dim)
+
+>>> ridge = Ridge(alpha=choose_from([0.1, 1.0, 10.0]))
+>>> svr = LinearSVR(C=choose_from([0.1, 1.0]))
+
+>>> grid = {
+...     "dim_reduction": choose_from([pca, kbest]),
+...     "regressor": choose_from([ridge, svr]),
+... }
+>>> grid
+{'dim_reduction': choose_from([PCA(n_components=choose_from([10, 20, 30])), SelectKBest(k=choose_from([10, 20, 30]),
+            score_func=<function f_regression at 0x...>)]), 'regressor': choose_from([Ridge(alpha=choose_from([0.1, 1.0, 10.0])), LinearSVR(C=choose_from([0.1, 1.0]))])}
+
+Now we have a few nested choices that do not have any meaning for scikit-learn.
+In order to obtain a grid that can be used with ``GridSearchCV``, we need to
+extract the necessary information with ``expand_grid``.
+
+>>> from skrub._tuning import expand_grid
+>>> from pprint import pprint
+
+>>> expanded = expand_grid(grid)
+>>> pprint(expanded)
+[{'dim_reduction': choose_from([PCA(n_components=<dim_reduction__n_components>)]),
+  'dim_reduction__n_components': choose_from([10, 20, 30]),
+  'regressor': choose_from([Ridge(alpha=<regressor__alpha>)]),
+  'regressor__alpha': choose_from([0.1, 1.0, 10.0])},
+ {'dim_reduction': choose_from([PCA(n_components=<dim_reduction__n_components>)]),
+  'dim_reduction__n_components': choose_from([10, 20, 30]),
+  'regressor': choose_from([LinearSVR(C=<regressor__C>)]),
+  'regressor__C': choose_from([0.1, 1.0])},
+ {'dim_reduction': choose_from([SelectKBest(k=<dim_reduction__k>,
+            score_func=<function f_regression at 0x...>)]),
+  'dim_reduction__k': choose_from([10, 20, 30]),
+  'regressor': choose_from([Ridge(alpha=<regressor__alpha>)]),
+  'regressor__alpha': choose_from([0.1, 1.0, 10.0])},
+ {'dim_reduction': choose_from([SelectKBest(k=<dim_reduction__k>,
+            score_func=<function f_regression at 0x...>)]),
+  'dim_reduction__k': choose_from([10, 20, 30]),
+  'regressor': choose_from([LinearSVR(C=<regressor__C>)]),
+  'regressor__C': choose_from([0.1, 1.0])}]
+
+``expand_grid`` has constructed a hyperparameter grid with 4 subgrids which can
+be fed to ``GridSearchCV`` or ``RandomizedSearchCV``. (The ``choose_from``
+objects implement the interface of a sequence so they look like lists to
+``GridSearchCV``, which is what it expects).
+
+To inspect a grid a bit more easily we have the convenience function ``grid_description``.
+
+>>> from skrub._tuning import grid_description
+
+>>> print(grid_description(expanded))
+- 'dim_reduction': PCA(n_components=<dim_reduction__n_components>)
+  'dim_reduction__n_components':
+      - 10
+      - 20
+      - 30
+  'regressor': Ridge(alpha=<regressor__alpha>)
+  'regressor__alpha':
+      - 0.1
+      - 1.0
+      - 10.0
+- 'dim_reduction': PCA(n_components=<dim_reduction__n_components>)
+  'dim_reduction__n_components':
+      - 10
+      - 20
+      - 30
+  'regressor': LinearSVR(C=<regressor__C>)
+  'regressor__C':
+      - 0.1
+      - 1.0
+- 'dim_reduction': SelectKBest(k=<dim_reduction__k>,
+                               score_func=<function f_regression at 0x...>)
+  'dim_reduction__k':
+      - 10
+      - 20
+      - 30
+  'regressor': Ridge(alpha=<regressor__alpha>)
+  'regressor__alpha':
+      - 0.1
+      - 1.0
+      - 10.0
+- 'dim_reduction': SelectKBest(k=<dim_reduction__k>,
+                               score_func=<function f_regression at 0x...>)
+  'dim_reduction__k':
+      - 10
+      - 20
+      - 30
+  'regressor': LinearSVR(C=<regressor__C>)
+  'regressor__C':
+      - 0.1
+      - 1.0
+
+Here we see that we get the default labels for the choices (such as
+``'regressor__alpha'``) and their outcomes (such as
+``'Ridge(alpha=<regressor__alpha>)'``). However ``choose_from`` allows us to
+provide human-readable labels, both for the choice itself and for each
+individual outcome.
+
+We can rewrite our grid with labels we choose.
+
+Giving a name to a choice:
+
+>>> n_dim = choose_from([10, 20, 30], name="n dimensions")
+>>> pca = PCA(n_components=n_dim)
+>>> kbest = SelectKBest(f_regression, k=n_dim)
+
+>>> ridge = Ridge(alpha=choose_from([0.1, 1.0, 10.0], name="α"))
+>>> svr = LinearSVR(C=choose_from([0.1, 1.0], name="C"))
+
+Giving names to the outcomes is also possible, by passing a dictionary rather
+than a list to ``choose_from``. The dictionary keys are the names of the
+corresponding values:
+
+>>> grid = {
+...     "dim_reduction": choose_from({"pca": pca, "kbest": kbest}),
+...     "regressor": choose_from({"ridge": ridge, "svr": svr}),
+... }
+>>> expanded = expand_grid(grid)
+
+Let us display the new grid:
+
+>>> print(grid_description(expanded))
+- 'dim_reduction': 'pca'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'ridge'
+  'α':
+      - 0.1
+      - 1.0
+      - 10.0
+- 'dim_reduction': 'pca'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'svr'
+  'C':
+      - 0.1
+      - 1.0
+- 'dim_reduction': 'kbest'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'ridge'
+  'α':
+      - 0.1
+      - 1.0
+      - 10.0
+- 'dim_reduction': 'kbest'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'svr'
+  'C':
+      - 0.1
+      - 1.0
+
+This makes our grid description more readable, but most importantly it allows
+the ``Recipe`` to use those human-readable labels and provide a much better
+display when showing hyperparameter search results (either in a table or in the
+parallel coordinate plots).
+
+Finally, let us note that choices can be nested as deep as we want for example
+in meta-estimators. Imagine we also want to consider stacking as an alternative
+to ridge and the SVR.
+
+>>> from sklearn.ensemble import BaggingRegressor
+
+>>> bagging = BaggingRegressor(
+...     estimator=choose_from({'ridge': ridge, 'svr': svr}, name="bagged estimator"),
+...     n_estimators=choose_from([10, 20], name="n bagged estimators")
+... )
+>>> grid = {
+...     "dim_reduction": choose_from({"pca": pca, "kbest": kbest}),
+...     "regressor": choose_from({"ridge": ridge, "svr": svr, "bagging": bagging}),
+... }
+>>> expanded = expand_grid(grid)
+>>> print(grid_description(expanded))
+- 'dim_reduction': 'pca'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'ridge'
+  'α':
+      - 0.1
+      - 1.0
+      - 10.0
+- 'dim_reduction': 'pca'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'svr'
+  'C':
+      - 0.1
+      - 1.0
+- 'dim_reduction': 'pca'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'bagging'
+  'bagged estimator': 'ridge'
+  'α':
+      - 0.1
+      - 1.0
+      - 10.0
+  'n bagged estimators':
+      - 10
+      - 20
+- 'dim_reduction': 'pca'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'bagging'
+  'bagged estimator': 'svr'
+  'C':
+      - 0.1
+      - 1.0
+  'n bagged estimators':
+      - 10
+      - 20
+- 'dim_reduction': 'kbest'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'ridge'
+  'α':
+      - 0.1
+      - 1.0
+      - 10.0
+- 'dim_reduction': 'kbest'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'svr'
+  'C':
+      - 0.1
+      - 1.0
+- 'dim_reduction': 'kbest'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'bagging'
+  'bagged estimator': 'ridge'
+  'α':
+      - 0.1
+      - 1.0
+      - 10.0
+  'n bagged estimators':
+      - 10
+      - 20
+- 'dim_reduction': 'kbest'
+  'n dimensions':
+      - 10
+      - 20
+      - 30
+  'regressor': 'bagging'
+  'bagged estimator': 'svr'
+  'C':
+      - 0.1
+      - 1.0
+  'n bagged estimators':
+      - 10
+      - 20
+
 Choices and Outcomes
---------------------
-
-This module provides classes to represent a range of hyperparameters for an
-estimator, or a range of different estimators.
-
-The main reason for those custom classes is that we can use them directly to
-initialize scikit-learn estimators or pipeline steps. Then, because of their
-special type, the ``Recipe`` can easily spot them and handle them appropriately
-to construct a grid of hyperparameters.
-
-Some hyperparameters take their value from a discrete set (for example the
-``svd_solver`` of a ``PCA`` can be "auto", "full", "covariance_eigh", ...). Some
-others take their values from a range of real or integral numbers (for example
-the ``n_components`` of a ``PCA`` is an int between 0 and the smallest dimension
-of ``X``). This module allows to represent all those kinds of ranges.
+====================
 
 A "choice" represents a range of things from which we can choose. Each of those
 things --the result of choosing-- is referred to here as an "outcome".
 
-Imagine that we want a dimensionality reduction step in our machine-learning
-model, and that we want to try both a PCA or feature selection:
+Some hyperparameters take their value from a discrete, explicitly enumerated set
+(for example the ``svd_solver`` of a ``PCA`` can be "auto", "full",
+"covariance_eigh", ...). Some others take their values from a range of real or
+integral numbers (for example the ``n_components`` of a ``PCA`` is an int
+between 0 and the smallest dimension of ``X``). This module allows to represent
+all those kinds of ranges.
 
->>> from sklearn.decomposition import PCA
->>> from sklearn.feature_selection import SelectKBest
+The simplest kind is the enumerated choice we have seen before.
 
-We can represent this range of possibilities with a Choice. The ``choose_from``
-factory constructs it for us.
-
->>> from skrub._tuning import choose_from
 >>> dim_reduction = choose_from([PCA(), SelectKBest()])
 >>> dim_reduction
 choose_from([PCA(), SelectKBest()])
 >>> type(dim_reduction)
 <class 'skrub._tuning.Choice'>
-
 >>> dim_reduction.outcomes
 [Outcome(value=PCA(), name=None, in_choice=None), Outcome(value=SelectKBest(), name=None, in_choice=None)]
 
-(Ignore ``name`` and ``in_choice`` which refer to optional human-readable labels that we
-have not provided here, they are discussed later.)
+``name`` and ``in_choice`` in the outcomes record the labels given to the
+outcome itself and the ``Choice`` that contains it, which we have not specified
+here. We can provide them which is useful to the ``Recipe`` for displaying
+search results in a table or a plot.
 
-Choices provide the sequence interface which is used by ``GridSearchCV`` to
-index the possible outcomes:
->>> list(dim_reduction)
-[Outcome(value=PCA(), name=None, in_choice=None), Outcome(value=SelectKBest(), name=None, in_choice=None)]
-
-Note that it is important that the list is wrapped in a special class. When a
-Choice is used as a parameter of an estimator, we can recognize it by its type
-and extract it to build the hyperparameter grid. If we used a plain list
-instead, we would have no way to know if it represents a choice or simply a
-parameter value. For example the ``alphas`` parameter of ``RidgeCV`` expects a
-list of numbers. Moreover the ``Choice`` adds some features that are useful for
-inspecting hyperparameter search results as shown below.
-
-It is possible to give the choice a human-readable ``name``, which is used for
-example by the ``Recipe`` to refer to it when showing hyperparameter search
-results. This can provide a more readable display in the results table or in the
-parallel coordinate plots.
-
->>> choose_from([PCA(), SelectKBest()], name='dim reduction')
-choose_from([PCA(), SelectKBest()], name='dim reduction')
-
-Here is another example where giving a name can be useful (note that choices
-can be nested arbitrarily):
-
->>> n_dims = choose_from([10, 20, 30], name='n dimensions')
->>> choose_from([PCA(n_components=n_dims), SelectKBest(k=n_dims)])
-choose_from([PCA(n_components=choose_from([10, 20, 30], name='n dimensions')), SelectKBest(k=choose_from([10, 20, 30], name='n dimensions'))])
-
-We are applying the same label 'n dimensions' to ``k`` and ``n_components``
-because they play the same role in our pipeline.
-
-Moreover, each of the outcomes can also be given a name. This is acheived by
-using a dictionary rather than a list:
-
->>> dim_reduction = choose_from({'pca': PCA(), 'k best': 'SelectKBest'}, name='dim reduction')
+>>> dim_reduction = choose_from({'pca': PCA(), 'kbest': SelectKBest()}, name='dim reduction')
 >>> dim_reduction
-choose_from({'pca': PCA(), 'k best': 'SelectKBest'}, name='dim reduction')
-
-Each of the outcomes records its name so that when they are passed to an
-estimator and recorded in grid search results they can be inspected to know
-their name and which choice they came from.
-
+choose_from({'pca': PCA(), 'kbest': SelectKBest()}, name='dim reduction')
 >>> dim_reduction.outcomes
-[Outcome(value=PCA(), name='pca', in_choice='dim reduction'), Outcome(value='SelectKBest', name='k best', in_choice='dim reduction')]
+[Outcome(value=PCA(), name='pca', in_choice='dim reduction'), Outcome(value=SelectKBest(), name='kbest', in_choice='dim reduction')]
 
-Again, this is a way to give a human-readable label to each outcome rather than
-relying on the value's ``__repr__()`` which can be verbose or uninformative.
+The ``Choice`` is a sequence, which allows it to be used in a hyperparameter
+grid passed to a ``GridSearchCV``:
 
-A choice between an enumerated set of values is represented by a ``Choice`` and
-constructed with ``choose_from`` as shown above.
-Additional classes are provided to represent ranges of numeric values.
+>>> list(dim_reduction)
+[Outcome(value=PCA(), name='pca', in_choice='dim reduction'), Outcome(value=SelectKBest(), name='kbest', in_choice='dim reduction')]
+
+Numeric choices
+---------------
 
 A ``NumericChoice`` is a range of numbers between a low and a high value, either
 on a log or linear scale. It can produce either floats and ints. It exposes a
@@ -120,6 +468,7 @@ As we can see, the outcomes record whether they came from a log scale, which is
 useful to set the scales of axes in the plots where they are displayed.
 
 If we need floating-point numbers rather than ints we use ``choose_float``:
+
 >>> alpha = choose_float(.01, 100, log=True, name='α')
 >>> alpha
 choose_float(0.01, 100, log=True, name='α')
@@ -145,8 +494,11 @@ NumericOutcome(value=32, name=None, in_choice='n dims', is_from_log_scale=True)
 >>> list(n_dims)
 [10, 18, 32, 56, 100]
 
-Finally, it is common to choose between something or nothing. The last type of
-choice is a shorthand for a choice between one value and ``None``:
+Optional
+--------
+
+Finally, it is common to choose between something and nothing. The last type of
+choice is a shorthand for a choice between a given value and ``None``:
 
 >>> from skrub._tuning import optional
 >>> feature_selection = optional(SelectKBest(), name='feature selection')
@@ -156,12 +508,6 @@ optional(SelectKBest(), name='feature selection')
 <class 'skrub._tuning.Optional'>
 >>> list(feature_selection)
 [Outcome(value=SelectKBest(), name='true', in_choice='feature selection'), Outcome(value=None, name='false', in_choice='feature selection')]
-
-Constructing a hyperparameter grid
-----------------------------------
-
-TODO
-
 """  # noqa: E501
 
 import dataclasses
