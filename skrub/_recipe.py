@@ -26,9 +26,9 @@ from ._tuning import (
     grid_description,
     optional,
     params_description,
-    set_params_to_default,
     unwrap,
     unwrap_default,
+    with_default_params,
     write_indented,
 )
 from ._wrap_transformer import wrap_transformer
@@ -238,10 +238,7 @@ class Recipe:
         return [step.get_estimator(self.n_jobs) for step in self._steps]
 
     def _get_default_estimators(self):
-        return [
-            set_params_to_default(unwrap_default(estimator))
-            for estimator in self._get_estimators()
-        ]
+        return [with_default_params(estimator) for estimator in self._get_estimators()]
 
     def get_param_grid(self):
         grid = {

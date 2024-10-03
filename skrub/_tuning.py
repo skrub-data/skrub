@@ -580,6 +580,15 @@ from sklearn.utils import check_random_state
 
 from . import _utils
 
+#
+# Choices and Outcomes
+# ====================
+#
+# We start by defining the different kinds of choices and their outcomes, and
+# the functions that construct them such as ``choose_from`` and
+# ``choose_float``.
+#
+
 
 def _with_fields(obj, **fields):
     """
@@ -956,6 +965,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
 
 
 def choose_float(low, high, log=False, n_steps=None, name=None):
+    """Construct a choice of floating-point numbers from a numeric range."""
     if n_steps is None:
         return NumericChoice(low, high, log=log, to_int=False, name=name)
     return DiscretizedNumericChoice(
@@ -964,6 +974,7 @@ def choose_float(low, high, log=False, n_steps=None, name=None):
 
 
 def choose_int(low, high, log=False, n_steps=None, name=None):
+    """Construct a choice of integers from a numeric range."""
     if n_steps is None:
         return NumericChoice(low, high, log=log, to_int=True, name=name)
     return DiscretizedNumericChoice(
@@ -971,8 +982,42 @@ def choose_int(low, high, log=False, n_steps=None, name=None):
     )
 
 
+#
+# ``expand_grid``
+# ===============
+#
+# Now that we have the representations for different kinds of choices and
+# functions to construct them, the rest of this module provides the
+# implementation of ``expand_grid``, which turns estimators containing choices
+# into a grid of hyperparameters that can be understood by ``GridSearchCV`` and
+# ``RandomizedSearchCV``.
+#
+
+
 @dataclasses.dataclass
-class Placeholder:
+class PlaceHolder:
+    """Inserted in place of parameters that will get replaced with set_params anyway.
+
+    This allows controlling the repr and clarifying what will take the place of
+    a given parameter.
+
+    For example the ``PlaceHolder`` repr is ``<α>`` in this grid:
+
+    >>> from skrub._tuning import expand_grid, grid_description, choose_from
+    >>> from sklearn.linear_model import Ridge, Lasso
+    >>> alpha = choose_from([10, 100], name="α")
+    >>> grid = {'regressor': choose_from([Lasso(alpha=alpha), Ridge(alpha=alpha)])}
+    >>> print(grid_description(expand_grid(grid)))
+    - 'regressor': Lasso(alpha=<α>)
+      'α':
+          - 10
+          - 100
+    - 'regressor': Ridge(alpha=<α>)
+      'α':
+          - 10
+          - 100
+    """
+
     name: typing.Optional[str] = None
 
     def __repr__(self):
@@ -981,11 +1026,61 @@ class Placeholder:
         return "..."
 
 
+def _find_param_choices(obj):
+    """Find all the choices in an estimator.
+
+    This uses scikit-learn's ``get_params`` to find all hyperparameters
+    (attributes) that are ``BaseChoice``s in the input estimator (or its nested
+    sub-estimators).
+
+    >>> from skrub._tuning import _find_param_choices, choose_float, choose_int
+    >>> from sklearn.ensemble import BaggingRegressor
+    >>> from sklearn.linear_model import Ridge
+
+    >>> reg = BaggingRegressor(
+    ...     Ridge(alpha=choose_float(1.0, 10.0)), n_estimators=choose_int(10, 30)
+    ... )
+    >>> _find_param_choices(reg)
+    {'estimator__alpha': choose_float(1.0, 10.0), 'n_estimators': choose_int(10, 30)}
+    """  # noqa: E501
+    if not hasattr(obj, "get_params"):
+        return []
+    params = obj.get_params(deep=True)
+    return {k: v for k, v in params.items() if isinstance(v, BaseChoice)}
+
+
 def contains_choice(estimator):
+    """Return ``True`` if an estimator is a choice or contains one."""
     return isinstance(estimator, Choice) or bool(_find_param_choices(estimator))
 
 
-def set_params_to_default(estimator):
+def with_default_params(estimator):
+    """Replace all choices by their default value in an estimator's parameters.
+
+    If the estimator itself is a choice, also resolve that choice to its
+    default value.
+
+    The input itself is not modified, a new object is returned.
+
+    >>> from skrub._tuning import choose_float, choose_int, choose_from
+    >>> from skrub._tuning import with_default_params
+
+    >>> from sklearn.ensemble import BaggingRegressor
+    >>> from sklearn.linear_model import Ridge
+
+    >>> ridge = Ridge(alpha=choose_float(1.0, 100.0, log=True))
+    >>> bag = BaggingRegressor(ridge, n_estimators=choose_int(10, 20))
+    >>> reg = choose_from([ridge, bag])
+    >>> reg
+    choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True)), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True)),
+                     n_estimators=choose_int(10, 20))])
+    >>> with_default_params(reg)
+    Ridge(alpha=10.000000000000002)
+    >>> reg
+    choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True)), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True)),
+                     n_estimators=choose_int(10, 20))])
+    >>>
+    """  # noqa: E501
     estimator = unwrap_default(estimator)
     if not hasattr(estimator, "set_params"):
         return estimator
@@ -994,13 +1089,6 @@ def set_params_to_default(estimator):
         params = {k: unwrap_default(v) for k, v in param_choices.items()}
         estimator.set_params(**params)
     return estimator
-
-
-def _find_param_choices(obj):
-    if not hasattr(obj, "get_params"):
-        return []
-    params = obj.get_params(deep=True)
-    return {k: v for k, v in params.items() if isinstance(v, BaseChoice)}
 
 
 def _extract_choices(grid):
@@ -1026,7 +1114,7 @@ def _extract_choices(grid):
         for subparam_name, subparam_choice in all_subparam_choices.items():
             subparam_id = f"{param_name}__{subparam_name}"
             placeholder_name = subparam_id if (n := subparam_choice.name) is None else n
-            placeholders[subparam_name] = Placeholder(placeholder_name)
+            placeholders[subparam_name] = PlaceHolder(placeholder_name)
             new_grid[subparam_id] = subparam_choice
         if param_name in new_grid:
             estimator = clone(param.value)
