@@ -1275,7 +1275,7 @@ def _check_name_collisions(subgrid):
     to ``n_components``. So we can expand the grid without errors:
 
     >>> expand_grid(grid)
-    [{'reduce_dom': choose_from([SelectKBest(k=<my param>)]), 'reduce_dom__k': choose_from([10, 20], name='my param')}, {'reduce_dom': choose_from([PCA(n_components=<my param>)]), 'reduce_dom__n_components': choose_from([30, 40], name='my param')}]
+    [{'reduce_dim': choose_from([SelectKBest(k=<my param>)]), 'reduce_dim__k': choose_from([10, 20], name='my param')}, {'reduce_dim': choose_from([PCA(n_components=<my param>)]), 'reduce_dim__n_components': choose_from([30, 40], name='my param')}]
     """  # noqa: E501
     all_names = {}
     for param_id, param in subgrid.items():
