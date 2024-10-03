@@ -524,6 +524,9 @@ from . import _utils
 
 
 def _with_fields(obj, **fields):
+    """
+    Make a copy of a dataclass instance with different values for some of the attributes
+    """
     return obj.__class__(
         **({f.name: getattr(obj, f.name) for f in dataclasses.fields(obj)} | fields)
     )
@@ -531,6 +534,18 @@ def _with_fields(obj, **fields):
 
 @dataclasses.dataclass
 class Outcome:
+    """The outcome of a choice.
+
+    Represents one of the different options that constitute a choice. It
+    records its value, an optional name for the outcome (such as "ridge" and
+    "lasso" in
+
+    ``choose_from({"ridge": Ridge(), "lasso": Lasso()}, name="regressor")``)
+
+    and optionally the name of the choice it belongs to (such as "regressor" in
+    the example above).
+    """
+
     value: typing.Any
     name: typing.Optional[str] = None
     in_choice: typing.Optional[str] = None
@@ -542,11 +557,17 @@ class Outcome:
 
 
 class BaseChoice:
-    pass
+    """A base class for all kinds of choices (enumerated, numeric range, ...)
+
+    The main reason they all derive from this base class is to make them easily
+    recognizable with ``isinstance`` checks.
+    """
 
 
 @dataclasses.dataclass
 class Choice(Sequence, BaseChoice):
+    """A choice among an enumerated set of outcomes."""
+
     outcomes: list[typing.Any]
     name: typing.Optional[str] = None
 
@@ -558,6 +579,25 @@ class Choice(Sequence, BaseChoice):
         ]
 
     def take_outcome(self, idx):
+        """
+        Remove an outcome from the choice.
+
+        This does not modify the choice in-place. It returns a tuple containing
+        the taken outcome and a new, reduced choice which does not contain the
+        taken outcome.
+
+        This function is used to split choices as necessary when constructing a
+        hyperparameter grid.
+
+        >>> from skrub._tuning import choose_from
+        >>> choice = choose_from([1, 2, 3], name='number')
+        >>> choice
+        choose_from([1, 2, 3], name='number')
+        >>> choice.take_outcome(1)
+        (Outcome(value=2, name=None, in_choice='number'), choose_from([1, 3], name='number'))
+        >>> choice
+        choose_from([1, 2, 3], name='number')
+        """  # noqa : E501
         out = self.outcomes[idx]
         rest = self.outcomes[:idx] + self.outcomes[idx + 1 :]
         if not rest:
@@ -565,10 +605,30 @@ class Choice(Sequence, BaseChoice):
         return out, _with_fields(self, outcomes=rest)
 
     def map_values(self, func):
+        """
+        Apply ``func`` to each of the outcomes' value.
+
+        This does not modify the choice nor its outcomes in-place. It returns a
+        new choice where each of the outcome's value has been replaced by its
+        image through ``func``. The choice name and outcome names are
+        preserved.
+
+        >>> from skrub._tuning import choose_from
+        >>> choice = choose_from(
+        ...     {"a": "outcome a", "b": "outcome b"}, name="the choice"
+        ... )
+        >>> choice
+        choose_from({'a': 'outcome a', 'b': 'outcome b'}, name='the choice')
+        >>> choice.map_values(str.upper)
+        choose_from({'a': 'OUTCOME A', 'b': 'OUTCOME B'}, name='the choice')
+        >>> choice
+        choose_from({'a': 'outcome a', 'b': 'outcome b'}, name='the choice')
+        """
         outcomes = [_with_fields(out, value=func(out.value)) for out in self.outcomes]
         return _with_fields(self, outcomes=outcomes)
 
     def default(self):
+        """Default outcome: the first one in the list."""
         return self.outcomes[0]
 
     def __repr__(self):
@@ -583,6 +643,9 @@ class Choice(Sequence, BaseChoice):
         )
         return f"choose_from({args_r})"
 
+    # The following methods provide the interface of a Sequence so that a
+    # hyperparameter grid given to ``GridSearchCV`` can contain a ``Choice``.
+
     def __getitem__(self, item):
         return self.outcomes[item]
 
@@ -594,6 +657,24 @@ class Choice(Sequence, BaseChoice):
 
 
 def choose_from(outcomes, name=None):
+    """Construct a choice among several possible outcomes.
+
+    Outcomes can be provided in a list:
+
+    >>> from skrub import choose_from
+    >>> choose_from([1, 2])
+    choose_from([1, 2])
+
+    They can also be provided in a dictionary to give a name to each outcome:
+
+    >>> choose_from({'one': 1, 'two': 2})
+    choose_from({'one': 1, 'two': 2})
+
+    The choice itself can also be given a name:
+
+    >>> choose_from({'one': 1, 'two': 2}, name='my favorite number')
+    choose_from({'one': 1, 'two': 2}, name='my favorite number')
+    """
     if isinstance(outcomes, typing.Mapping):
         prepared_outcomes = [Outcome(val, key) for key, val in outcomes.items()]
     else:
@@ -602,6 +683,8 @@ def choose_from(outcomes, name=None):
 
 
 class Optional(Choice):
+    """A choice between something and nothing."""
+
     def __repr__(self):
         args = _utils.repr_args(
             (unwrap_default(self),), {"name": self.name}, defaults={"name": None}
@@ -610,6 +693,20 @@ class Optional(Choice):
 
 
 def optional(value, name=None):
+    """Construct a choice between a value and ``None``.
+
+    This is useful for optional steps in a pipeline. If we want to try our
+    pipeline with or without dimensionality reduction, we can add a step such
+    as:
+
+    >>> from sklearn.decomposition import PCA
+    >>> from skrub import optional
+    >>> optional(PCA(), name="use dim reduction")
+    optional(PCA(), name='use dim reduction')
+
+    The constructed parameter grid will include a version of the pipeline with
+    the PCA and one without.
+    """
     return Optional([Outcome(value, "true"), Outcome(None, "false")], name=name)
 
 
@@ -624,6 +721,14 @@ def _check_bounds(low, high, log):
 
 @dataclasses.dataclass
 class NumericOutcome(Outcome):
+    """An outcome in a choice from a numeric range.
+
+    In addition to the attributes of ``Outcome``, this records whether the
+    choice is made on a log scale (``is_from_log_scale``). This is useful to
+    choose the scale of the plot axis on which those values are displayed for
+    example in the parallel coordinate plots.
+    """
+
     value: typing.Union[int, float]
     is_from_log_scale: bool = False
     name: typing.Optional[str] = None
@@ -646,7 +751,7 @@ def _repr_numeric_choice(choice):
 
 
 class BaseNumericChoice(BaseChoice):
-    pass
+    """Base class to help identify numeric choices with ``isinstance``."""
 
 
 @dataclasses.dataclass
