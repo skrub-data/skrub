@@ -1091,7 +1091,74 @@ def with_default_params(estimator):
     return estimator
 
 
+def expand_grid(grid):
+    grid = _split_grid(grid)
+    new_grid = []
+    for subgrid in grid:
+        new_subgrid = {}
+        for k, v in subgrid.items():
+            if isinstance(v, Outcome):
+                v = Choice([v], name=v.in_choice)
+            new_subgrid[k] = v
+        new_grid.append(new_subgrid)
+        _check_name_collisions(new_subgrid)
+    return new_grid
+
+
+"""
+Constructing the grid of hyperparameters is done by repeating 2 steps.
+
+``_extract_choices`` looks at all estimators at the top level of the grid, i.e.
+estimators that are not part of a Choice. If one of them contains a choice as
+one of its hyperparameters, the choice is extracted from the estimator and
+placed onto the grid.
+
+For example:
+
+>>> _extract_choices({'regressor': Ridge(alpha=choose_from([1., 10.]))}) # doctest: +SKIP
+{'regressor__alpha': choose_from([1.0, 10.0])}
+
+``alpha`` has been moved out of the ``Ridge`` and placed onto the grid. Once
+this is done, as there are no alternative to the ``Ridge`` in this example, it
+is not needed anymore and is removed from the grid to reduce clutter. It could
+have been retained in which case we would also have ``"regressor": [Ridge()]``
+but that would be redundant as there is only one option in the ``[Ridge()]``
+list, which is already the value set on the pipeline.
+
+When the estimator itself is a choice, and the outcomes contain hyperparameter
+choices, we cannot mix all of their hyperparameter ranges in the same
+dictionary. In this case we need to split the grid into subgrids, one for each
+of the possible estimators. This is handled by ``_split_grid``.
+
+>>> split = _split_grid({'dim_reduction': choose_from([PCA(n_components=n), SelectKBest(k=n)])}) # doctest: +SKIP
+>>> pprint(split)
+[{'dim_reduction': Outcome(value=PCA(n_components=<dim_reduction__n_components>),
+                           name=None,
+                           in_choice=None),
+  'dim_reduction__n_components': choose_from([10, 20])},
+ {'dim_reduction': Outcome(value=SelectKBest(k=<dim_reduction__k>),
+                           name=None,
+                           in_choice=None),
+  'dim_reduction__k': choose_from([10, 20])}]
+
+We see that the grid has been split into one subgrid for the case
+'dim_reduction=PCA' and one for the case 'dim_reduction=SelectKBest'. Then,
+``_split_grid`` calls itself recursively on each subgrid. As ``_split_grid``
+starts by applying ``_extract_choices``, the ``dim_reduction__k`` and
+``dim_reduction__n_components`` have been extracted from the estimators and
+placed on their subgrids, and the result is now ready to be given to
+``GridSearchCV`` or ``RandomizedSearchCV`` after some small post-processing
+performed by ``expand_grid``.
+"""  # noqa: E501
+
+
 def _extract_choices(grid):
+    """Extract hyperparameter ranges and place them on the grid.
+
+    This only considers estimators that are not inside of a Choice.
+    Any of their hyperparameters that is a Choice is extracted and placed on
+    the grid.
+    """
     new_grid = {}
     for param_name, param in grid.items():
         if isinstance(param, Choice) and len(param.outcomes) == 1:
@@ -1101,12 +1168,17 @@ def _extract_choices(grid):
         else:
             # In this case we have a 'raw' estimator that has not been wrapped
             # in an Outcome. Therefore it is not part of a choice itself, but it
-            # contains a choice. We pull out the choices to include them in the
-            # grid, but the param itself does not need to be in the grid so we
+            # contains a choice. We will pull out the choices to include them in the
+            # grid, but the estimator itself does not need to be in the grid so we
             # don't include it to keep the grid more compact.
             param = Outcome(param)
         if isinstance(param, BaseChoice):
+            # If the grid item is a Choice, we leave it alone as it requires a
+            # split, it will be handled in ``split_grid``.
             continue
+
+        # Extract any choices contained in the estimator and put them on the
+        # grid.
         all_subparam_choices = _find_param_choices(param.value)
         if not all_subparam_choices:
             continue
@@ -1124,12 +1196,29 @@ def _extract_choices(grid):
 
 
 def _split_grid(grid):
+    """Construct the hyperparameter grid.
+
+    It starts by calling ``_extract_choices`` to move hyperparameter choices
+    out of the estimators and placing them on the grid.
+
+    Then, whenever a Choice contains an estimator that itself has a
+    hyperparameter grid, this estimator needs to be expanded in its own
+    subgrid.
+
+    In this case ``_split_grid`` creates the subgrids, then calls itself
+    recursively on each of them.
+    """
     grid = _extract_choices(grid)
     for param_name, param in grid.items():
         if not isinstance(param, Choice):
             continue
         for idx, outcome in enumerate(param.outcomes):
             if _find_param_choices(outcome.value):
+                # This is an outcome in a choice, and it contains choices
+                # itself. For example the SelectKBest in {'dim_reduc':
+                # choose_from([SelectKBest(k=choose_from([10, 20])), PCA()])}
+                # -- the grid needs to be split so that the k can be extracted
+                # into a separate subgrid.
                 grid_1 = grid.copy()
                 grid_1[param_name] = outcome
                 _, rest = param.take_outcome(idx)
@@ -1142,6 +1231,52 @@ def _split_grid(grid):
 
 
 def _check_name_collisions(subgrid):
+    """
+    When we need to evaluate combinations of 2 parameters, they cannot be given the
+    same ``name``. For example:
+
+    >>> from sklearn.linear_model import Ridge
+    >>> from sklearn.feature_selection import SelectKBest
+    >>> from sklearn.decomposition import PCA
+    >>> from skrub._tuning import expand_grid, choose_from
+
+    >>> grid = {
+    ...     "kbest": SelectKBest(k=choose_from([10, 20], name="my param")),
+    ...     "ridge": Ridge(alpha=choose_from([10, 20], name="my param")),
+    ... }
+
+    Here we will need to evaluate 4 combinations of the value for ``k`` and for
+    ``alpha``. However we have given them the same alias, "my param". When looking
+    at hyperparameter search results we would not know to which of those "my param"
+    refers. So it is an error:
+
+    >>> expand_grid(grid)
+    Traceback (most recent call last):
+        ...
+    ValueError: Parameter alias 'my param' used for several parameters: (('kbest__k', choose_from([10, 20], name='my param')), ('ridge__alpha', choose_from([10, 20], name='my param'))).
+
+    Note that reusing the same name for estimators that are different outcomes in a
+    choice is fine. For example in this grid:
+
+    >>> grid = {
+    ...     "reduce_dim": choose_from(
+    ...         [
+    ...             SelectKBest(k=choose_from([10, 20], name="my param")),
+    ...             PCA(n_components=choose_from([30, 40], name="my param")),
+    ...         ]
+    ...     )
+    ... }
+
+    For each run we are using _either_ the ``SelectKBest`` _or_ ``PCA``. This is
+    different from the example above where each run used _both_ the ``SelectKBest``
+    _and_ the ``Ridge``. Therefore in this case there is no ambiguity: if we are in
+    the case where ``reduce_dim`` is ``SelectKBest``, we know that "my param" refers
+    to ``k``. Conversely if ``reduce_dim`` is ``PCA`` we know that "my param" refers
+    to ``n_components``. So we can expand the grid without errors:
+
+    >>> expand_grid(grid)
+    [{'reduce_dom': choose_from([SelectKBest(k=<my param>)]), 'reduce_dom__k': choose_from([10, 20], name='my param')}, {'reduce_dom': choose_from([PCA(n_components=<my param>)]), 'reduce_dom__n_components': choose_from([30, 40], name='my param')}]
+    """  # noqa: E501
     all_names = {}
     for param_id, param in subgrid.items():
         name = param.name or param_id
@@ -1153,18 +1288,9 @@ def _check_name_collisions(subgrid):
         all_names[name] = (param_id, param)
 
 
-def expand_grid(grid):
-    grid = _split_grid(grid)
-    new_grid = []
-    for subgrid in grid:
-        new_subgrid = {}
-        for k, v in subgrid.items():
-            if isinstance(v, Outcome):
-                v = Choice([v], name=v.in_choice)
-            new_subgrid[k] = v
-        new_grid.append(new_subgrid)
-        _check_name_collisions(new_subgrid)
-    return new_grid
+#
+# A few helpers to display parameter grids or nodes in a parameter grid
+#
 
 
 def write_indented(prefix, text, ostream):
