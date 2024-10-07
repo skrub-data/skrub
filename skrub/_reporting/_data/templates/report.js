@@ -327,6 +327,8 @@ if (customElements.get('skrub-table-report') === undefined) {
             this.elem.addEventListener('keydown', (e) => this.onKeyDown(e));
             this.elem.addEventListener('skrub-keydown', (e) => this.onKeyDown(
                 unwrapSkrubKeyDown(e)));
+            this.elem.tabIndex = "0";
+            this.elem.addEventListener('focus', (e) => this.activateFirstCell());
         }
 
         onKeyDown(event) {
@@ -411,6 +413,45 @@ if (customElements.get('skrub-table-report') === undefined) {
                 j) => (this
                 .stopI <= i));
         }
+
+        /*
+          When no cell is active, the table itself is sequentially focusable.
+          When it receives focus, it redirects it to the first visible data cell
+          (if any). Once a cell is active, the cell is sequentially focusable
+          and the table is not. If a cell is active but the focus is given to
+          the table (by clicking one of the non-clickable elements such as the
+          ellipsis "..." cells), focus is set on the active cell rather than the
+          first one.
+         */
+        activateFirstCell() {
+            const activeCell = this.elem.querySelector("[data-is-active]");
+            if (activeCell){
+                activeCell.focus();
+                return;
+            }
+            const firstCell = this.elem.querySelector(
+                "[data-role='dataframe-data']:not([data-excluded-by-column-filter])"
+                );
+            if (!firstCell) {
+                return;
+            }
+            // blur immediately to avoid the focus ring flashing before the cell
+            // grabs keyboard focus.
+            this.elem.blur();
+            this.exchange.send({
+                kind: "ACTIVATE_SAMPLE_TABLE_CELL",
+                cellId: firstCell.id
+            });
+        }
+
+        SAMPLE_TABLE_CELL_ACTIVATED() {
+            this.elem.tabIndex = "-1";
+        }
+
+        SAMPLE_TABLE_CELL_DEACTIVATED() {
+            this.elem.tabIndex = "0";
+        }
+
     }
     SkrubTableReport.register(SampleTable);
 

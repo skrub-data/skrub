@@ -140,4 +140,10 @@ describe('test the dataframe sample tab', () => {
         getIJ(0, 0).should('have.focus');
         getIJ(0, 0).should('have.attr', 'data-role', 'dataframe-data');
     });
+
+    it('can reach the sample table with the tab key', () => {
+        // TODO whenever cypress adds support for testing tab key navigation,
+        // or we start using a testing tool that does
+        // https://github.com/cypress-io/cypress/issues/299
+    });
 });
