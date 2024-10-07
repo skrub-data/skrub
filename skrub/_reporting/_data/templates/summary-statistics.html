@@ -1,5 +1,5 @@
 {% macro th(name, ascending, descending, is_numeric) %}
-<th class="sort-button-group-wrapper" scope="col">
+<th class="sort-button-group-wrapper  {{ 'ellided' if name == 'Column name' }}" scope="col">
     {% if name %}
     <span class="margin-r-m">{{ name }}</span>
     {% endif %}
@@ -28,9 +28,11 @@
 {{ th(name, "from columns with " + low + " to columns with " + high, "from columns with " + high + " to columns with " + low, is_numeric) }}
 {% endmacro %}
 
-<article class="wrapper margin-t-s" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
+<article class="wrapper relative margin-t-s" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
-    <div class="horizontal-scroll">
+    <div class="horizontal-scroll"
+         data-manager="StickyColTableScroller"
+         data-sticky-col="2">
         <table class="pure-table pure-table-bordered summary-stats-table"
             data-manager="SortableTable">
             <thead>
@@ -54,7 +56,7 @@
                     data-dataframe-column-idx="{{ column.idx }}">
                     <td data-value="{{ loop.index0 }}" data-numeric>{{ loop.index0 }}
                     </td>
-                    <td>{{ column.name }}</td>
+                    <td class="ellided">{{ column.name }}</td>
                     <td>{{ column.dtype }}</td>
                     <td class="{{ column.nulls_level }}"
                         data-value="{{ column.null_count }}" data-numeric>

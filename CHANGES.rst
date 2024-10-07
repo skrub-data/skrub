@@ -22,6 +22,10 @@ Minor changes
   reach the dataframe sample table and activate a cell with tab key navigation.
   :pr:`1101` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The "Column name" column of the "summary statistics" table in the TableReport
+  is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
 Release 0.3.1
 =============
 

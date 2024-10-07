@@ -631,6 +631,50 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(SortableTable);
 
+    /*
+      Add the "data-is-scrolling" attribute to the scrolling div whenever a
+      given column is partially hidden; used to manage the border of the sticky
+      column in the summary statistics table.
+    */
+    class StickyColTableScroller extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.stickyCol = Number(this.elem.dataset.stickyCol) || 1;
+            this.registerObserver();
+        }
+
+        registerObserver() {
+            const options = {
+                root: this.elem,
+                // The first threshold is crossed when the parent becomes
+                // visible (eg when the summary statistics table is loaded, it
+                // is in a hidden tab panel so the intersection is 0). The other
+                // thresholds are crossed when the left border is just past the
+                // edge of the scrollable area.
+                threshold: [0.01, 0.93, 0.97]
+            };
+            const observer = new IntersectionObserver(e => this
+                .intersectionCallback(e), options);
+            this.elem.querySelectorAll(`:is(th, td):nth-child(${this.stickyCol})`)
+                .forEach((e) => observer.observe(e));
+        }
+
+        intersectionCallback(entries) {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+                if (entry.intersectionRatio >= 0.95) {
+                    this.elem.removeAttribute("data-is-scrolling");
+                } else {
+                    this.elem.dataset.isScrolling = "";
+                }
+            });
+        }
+
+    }
+    SkrubTableReport.register(StickyColTableScroller);
+
     class SelectedColumnsDisplay extends Manager {
 
         constructor(elem, exchange) {
