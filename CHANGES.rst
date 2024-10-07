@@ -18,6 +18,14 @@ Major changes
 Minor changes
 -------------
 
+* The TableReport now uses the font size of its parent element when inserted
+  into another page. This makes it smaller in pages that use a smaller font size
+  than the browser default such as VSCode in some configurations. It also makes
+  it easier to control its size when inserting it in a web page by setting the
+  font size of its parent element. A few other small adjustments have also been
+  made to make it a bit more compact. :pr:`1098` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+
 * Display of labels in the plots of the TableReport, especially for other
   scripts than the latin alphabet, has improved.
   - before, some characters could be missing and replaced by empty boxes.
