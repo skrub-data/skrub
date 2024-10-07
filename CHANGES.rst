@@ -22,7 +22,7 @@ Minor changes
   is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
   Dockès <jeromedockes>`.
 
-Release 0.3.0
+Release 0.3.1
 =============
 
 Minor changes
