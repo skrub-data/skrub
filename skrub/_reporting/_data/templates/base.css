@@ -64,7 +64,7 @@
 #report {
     background: white;
     color: black;
-    color-scheme: light;
+    color-scheme: only light;
     border-radius: var(--radius, 0);
     max-width: max-content;
 }
