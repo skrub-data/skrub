@@ -26,6 +26,16 @@ Minor changes
   made to make it a bit more compact. :pr:`1098` by :user:`Jérôme Dockès
   <jeromedockes>`.
 
+* Display of labels in the plots of the TableReport, especially for other
+  scripts than the latin alphabet, has improved.
+  - before, some characters could be missing and replaced by empty boxes.
+  - before, when the text is truncated, the ellipsis "..." could appear on the
+    wrong side for right-to-left scripts.
+  Moreover, when the text contains line breaks it now appears all on one line.
+  Note this only affects the labels in the plots; the rest of the report did not
+  have these problems.
+  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * In the TableReport it is now possible, before clicking any of the cells, to
   reach the dataframe sample table and activate a cell with tab key navigation.
   :pr:`1101` by :user:`Jérôme Dockès <jeromedockes>`.

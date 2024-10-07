@@ -759,6 +759,143 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(Toggletip);
 
+    /*
+      In the matplotlib svg plots, the labels are stored as text (we want the
+      browser, rather than matplotlib, to choose the font & render the text, and
+      this also makes the plots smaller than letting matplotlib draw the
+      glyphs). As matplotlib may use a different font than the one eventually
+      chosen by the browser, it cannot compute the correct viewbox for the svg.
+
+      When the page loads, we render the svg plot and iterate over all children
+      to compute the correct viewbox. We then adjust the svg element's width and
+      height (otherwise if we put a wider viewbox but don't adjust the size we
+      effectively zoom out and details will appear smaller).
+
+      In the default report view, all plots are hidden (they only show up if we
+      select a column or change the displayed tab panel). Thus when the page
+      loads they are not rendered. To force rendering the svg so that we get
+      correct bounding boxes for all the child elements, we clone it and insert
+      the clone in the DOM (but with absolute positioning and a big offset so it
+      is outside of the viewport and the user does not see it). We insert the
+      clone as a child of the #report element so that we know it is displayed
+      and uses the same font family and size as the actual figure we want to
+      resize. Once we have the viewbox we remove the clone from the DOM.
+    */
+    class SvgAdjustedViewBox extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.adjustViewBox();
+        }
+
+        computeViewBox(svg) {
+            try {
+                const {
+                    width
+                } = svg.getBBox();
+                if (width === 0) {
+                    return null;
+                }
+            } catch (e) {
+                return null;
+            }
+            let [xMin, yMin, xMax, yMax] = [null, null, null, null];
+            for (const child of svg.children) {
+                if (typeof child.getBBox !== 'function') {
+                    continue;
+                }
+                const {
+                    x,
+                    y,
+                    width,
+                    height
+                } = child.getBBox();
+                if (width === 0 || height === 0){
+                    continue;
+                }
+                if (xMin === null) {
+                    xMin = x;
+                    yMin = y;
+                    xMax = x + width;
+                    yMax = y + height;
+                    continue;
+                }
+                xMin = Math.min(x, xMin);
+                yMin = Math.min(y, yMin);
+                xMax = Math.max(x + width, xMax);
+                yMax = Math.max(y + height, yMax);
+            }
+            if (xMin === null) {
+                return null;
+            }
+            return {
+                x: xMin,
+                y: yMin,
+                width: xMax - xMin,
+                height: yMax - yMin
+            };
+        }
+
+        /*
+          Adjust the svg element's width and height so that if we need to set a
+          wider viewbox, we get a bigger figure rather than zooming out while
+          keeping the figure size constant.
+        */
+        adjustSize(svg, newViewBox, attribute) {
+            const match = svg.getAttribute(attribute).match(/^([0-9.]+)(.+)$/);
+            if (!match) {
+                return;
+            }
+            const size = Number(match[1]);
+            if (isNaN(size)) {
+                return;
+            }
+            const unit = match[2];
+            const scale = newViewBox[attribute] / svg.viewBox.baseVal[attribute];
+            const newSize = size * scale;
+            if (isNaN(newSize)) {
+                return;
+            }
+            svg.setAttribute(attribute, `${newSize}${unit}`);
+        }
+
+        adjustViewBox() {
+            const svg = this.elem.querySelector('svg');
+
+            // The svg is inside a div with {display: none} in its style. So it
+            // is not rendered and all bounding boxes will have 0 width and
+            // height. We insert a clone higher up the DOM below #report, which
+            // we know is displayed. To avoid the user seeing it flash we position
+            // it outside of the viewport. The column summary cards use the same
+            // font family & size as #report so the computed sizes will be the
+            // same as those of the actual svg when it is rendered.
+
+            const report = this.elem.getRootNode().getElementById('report');
+            const clone = svg.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.left = '-9999px';
+            clone.style.top = '-9999px';
+            // (visibility = 'hidden' still requires the size to be computed and
+            // thus the svg to be rendered.)
+            clone.style.visibility = 'hidden';
+            report.appendChild(clone);
+
+            try {
+                const viewBox = this.computeViewBox(clone);
+                if (viewBox !== null) {
+                    this.adjustSize(svg, viewBox, 'width');
+                    this.adjustSize(svg, viewBox, 'height');
+                    svg.setAttribute('viewBox',
+                        `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`
+                    );
+                }
+            } finally {
+                report.removeChild(clone);
+            }
+        }
+
+    }
+    SkrubTableReport.register(SvgAdjustedViewBox);
+
     function initReport(reportId) {
         const report = document.getElementById(reportId);
         report.init();
