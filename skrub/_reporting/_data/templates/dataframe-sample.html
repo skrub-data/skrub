@@ -16,7 +16,7 @@ data-spans__{{ i }}__{{ j }}
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
     {% include "table-bar.html" %}
 
-    <div class="horizontal-scroll">
+    <div class="horizontal-scroll" tabindex="-1">
         <table class="pure-table pure-table-striped table-with-selectable-cells"
                data-manager="SampleTable"
         data-start-i="{{ summary['sample_table']['start_i'] }}"

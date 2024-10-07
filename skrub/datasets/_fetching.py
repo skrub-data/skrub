@@ -25,6 +25,7 @@ import pandas as pd
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 from sklearn.datasets._base import _sha256
+from sklearn.utils import Bunch
 from sklearn.utils.fixes import parse_version
 
 from skrub._utils import import_optional_dependency
@@ -1096,3 +1097,45 @@ def fetch_movielens(
         load_dataframe=load_dataframe,
         data_directory=data_directory,
     )
+
+
+def fetch_credit_fraud(load_dataframe=True, data_directory=None):
+    """Fetch the credit fraud dataset from figshare.
+
+    This is an imbalanced binary classification use-case. This dataset consists in
+    two tables:
+
+    - baskets, containing the binary fraud target label
+    - products
+
+    Baskets contain at least one product each, so aggregation then joining operations
+    are required to build a design matrix.
+
+    More details on \
+        `Figshare <https://figshare.com/articles/dataset/bnp_fraud_parquet/26892673>`_
+
+    Parameters
+    ----------
+    load_dataframe : bool, default=True
+        Whether or not to load the dataset in memory after download.
+
+    data_directory : str, default=None
+        The directory to which the dataset will be written during the download.
+        If None, the directory is set to ~/skrub_data.
+    """
+    dataset_name_to_id = {
+        "products": "49176205",
+        "baskets": "49176202",
+    }
+    bunch = Bunch()
+    for dataset_name, figshare_id in dataset_name_to_id.items():
+        dataset = fetch_figshare(
+            figshare_id,
+            load_dataframe=load_dataframe,
+            data_directory=data_directory,
+        )
+        bunch[dataset_name] = dataset.X
+        bunch[f"source_{dataset_name}"] = dataset.source
+        bunch[f"path_{dataset_name}"] = dataset.path
+
+    return bunch

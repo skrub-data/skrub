@@ -28,6 +28,14 @@ Minor changes
   have these problems.
   :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* In the TableReport it is now possible, before clicking any of the cells, to
+  reach the dataframe sample table and activate a cell with tab key navigation.
+  :pr:`1101` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The "Column name" column of the "summary statistics" table in the TableReport
+  is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
 Release 0.3.1
 =============
 
@@ -58,6 +66,10 @@ Minor changes
   for all columns (number of missing values, mean, etc. -- similar to
   ``pandas.info()`` ) in a table. It can be sorted by each column.
   :pr:`1056` and :pr:`1068` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The credit fraud dataset is now available with the
+  :func:`fetch_credit_fraud function`.
+  :pr:`1053` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 * Added zero padding for column names in :class:`MinHashEncoder` to improve column ordering consistency.
   :pr:`1069` by :user:`Shreekant Nandiyawar <Shree7676>`.

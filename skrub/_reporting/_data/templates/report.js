@@ -327,6 +327,8 @@ if (customElements.get('skrub-table-report') === undefined) {
             this.elem.addEventListener('keydown', (e) => this.onKeyDown(e));
             this.elem.addEventListener('skrub-keydown', (e) => this.onKeyDown(
                 unwrapSkrubKeyDown(e)));
+            this.elem.tabIndex = "0";
+            this.elem.addEventListener('focus', (e) => this.activateFirstCell());
         }
 
         onKeyDown(event) {
@@ -411,6 +413,45 @@ if (customElements.get('skrub-table-report') === undefined) {
                 j) => (this
                 .stopI <= i));
         }
+
+        /*
+          When no cell is active, the table itself is sequentially focusable.
+          When it receives focus, it redirects it to the first visible data cell
+          (if any). Once a cell is active, the cell is sequentially focusable
+          and the table is not. If a cell is active but the focus is given to
+          the table (by clicking one of the non-clickable elements such as the
+          ellipsis "..." cells), focus is set on the active cell rather than the
+          first one.
+         */
+        activateFirstCell() {
+            const activeCell = this.elem.querySelector("[data-is-active]");
+            if (activeCell){
+                activeCell.focus();
+                return;
+            }
+            const firstCell = this.elem.querySelector(
+                "[data-role='dataframe-data']:not([data-excluded-by-column-filter])"
+                );
+            if (!firstCell) {
+                return;
+            }
+            // blur immediately to avoid the focus ring flashing before the cell
+            // grabs keyboard focus.
+            this.elem.blur();
+            this.exchange.send({
+                kind: "ACTIVATE_SAMPLE_TABLE_CELL",
+                cellId: firstCell.id
+            });
+        }
+
+        SAMPLE_TABLE_CELL_ACTIVATED() {
+            this.elem.tabIndex = "-1";
+        }
+
+        SAMPLE_TABLE_CELL_DEACTIVATED() {
+            this.elem.tabIndex = "0";
+        }
+
     }
     SkrubTableReport.register(SampleTable);
 
@@ -589,6 +630,50 @@ if (customElements.get('skrub-table-report') === undefined) {
 
     }
     SkrubTableReport.register(SortableTable);
+
+    /*
+      Add the "data-is-scrolling" attribute to the scrolling div whenever a
+      given column is partially hidden; used to manage the border of the sticky
+      column in the summary statistics table.
+    */
+    class StickyColTableScroller extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.stickyCol = Number(this.elem.dataset.stickyCol) || 1;
+            this.registerObserver();
+        }
+
+        registerObserver() {
+            const options = {
+                root: this.elem,
+                // The first threshold is crossed when the parent becomes
+                // visible (eg when the summary statistics table is loaded, it
+                // is in a hidden tab panel so the intersection is 0). The other
+                // thresholds are crossed when the left border is just past the
+                // edge of the scrollable area.
+                threshold: [0.01, 0.93, 0.97]
+            };
+            const observer = new IntersectionObserver(e => this
+                .intersectionCallback(e), options);
+            this.elem.querySelectorAll(`:is(th, td):nth-child(${this.stickyCol})`)
+                .forEach((e) => observer.observe(e));
+        }
+
+        intersectionCallback(entries) {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+                if (entry.intersectionRatio >= 0.95) {
+                    this.elem.removeAttribute("data-is-scrolling");
+                } else {
+                    this.elem.dataset.isScrolling = "";
+                }
+            });
+        }
+
+    }
+    SkrubTableReport.register(StickyColTableScroller);
 
     class SelectedColumnsDisplay extends Manager {
 
