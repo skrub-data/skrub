@@ -12,22 +12,35 @@ from skrub._reporting import _utils
         (1, 1),
         ("aa", "aa"),
         ("a\na", "a a"),
-        ("a" * 70, "a" * 30 + "…‎"),
+        ("a" * 70, "a" * 30 + "…\u200e"),
         ("0" * 70, "0" * 30 + "…"),
+        # Note: in the right-to-left examples below, the ellipsis of the
+        # expected output probably appears to be on the wrong side on your
+        # display. This is because the Unicode marks (eg U+061C ARABIC LETTER MARK)
+        # are written as Unicode escape sequences "u061c" rather than literal
+        # characters in the python strings. If we include them literally the
+        # "…" will be on the right side but some editors or github might issue
+        # a warning about the potential malicious use of bidirectional
+        # characters:
+        # https://en.wikipedia.org/wiki/Trojan_Source
+        #
+        # To visually check the output of TableReport for some right-to-left
+        # samples, see:
+        # ``/skrub/_reporting/js_tests/make-reports``.
         (
             (
                 "اللغة هي نسق على من الإشارات والرموز، تشكل أداة من أدوات المعرفة،"
                 " وتعتبر اللغة أهم وسائل التفاهم والاحتكاك بين أفراد المجتمع في جميع"
                 " ميادين الحياة"
             ),
-            "اللغة هي نسق على من الإشارات و…؜",
+            "اللغة هي نسق على من الإشارات و…\u061c",
         ),
         (
             (
                 "שפה היא דרך תקשורת המבוססת על מערכת"
                 " סמלים מורכבת בעלת חוקיות, המאפשרת לקודד"
             ),
-            "שפה היא דרך תקשורת המבוססת על…‏",
+            "שפה היא דרך תקשורת המבוססת על…\u200f",
         ),
     ],
 )
