@@ -1,5 +1,10 @@
 #! /usr/bin/env python
 
+"""Generate some reports that are stored in the ``_reports/`` directory.
+
+Those are used for running tests or visually checking the output.
+"""
+
 if __name__ == "__main__":
     import datetime
     import pathlib
@@ -12,9 +17,19 @@ if __name__ == "__main__":
     reports_dir = pathlib.Path(__file__).resolve().parent / "_reports"
     reports_dir.mkdir(exist_ok=True)
 
+    #
+    # "Vanilla" employee salaries dataset
+    # -----------------------------------
+    #
+
     df = datasets.fetch_employee_salaries().X
     html = TableReport(df).html()
     (reports_dir / "employee_salaries.html").write_text(html, encoding="UTF-8")
+
+    #
+    # Small df with col names & values that facilitate testing keyboard navigation
+    # ----------------------------------------------------------------------------
+    #
 
     df = pd.DataFrame(
         {
@@ -27,7 +42,50 @@ if __name__ == "__main__":
     html = TableReport(df).html()
     (reports_dir / "mini.html").write_text(html, encoding="UTF-8")
 
+    #
+    # Example with column values in different writing systems
+    # -------------------------------------------------------
+    #
+    # This is only for checking visually that they display correctly, in
+    # particular the (ellided) strings in the matplotlib axis labels.
+    # See https://github.com/skrub-data/skrub/pull/1097
+    #
+
+    df = pd.DataFrame(
+        {
+            "Computer programming": [
+                "程序设计",
+                (
+                    "在计算机技术发展的早期，軟體開發主要就是程序设计。但随着技术的发展，"
+                    "软件系统越来越复杂，逐渐分化出许多专用的软件系统"
+                ),
+                "برمجة",
+                (
+                    "البرمجة هي عملية كتابة تعليمات وتوجيه أوامر لجهاز"
+                    " الحاسوب أو أي جهاز آخر مثل قارئات"
+                ),
+                "🖥️💻🖱️🖨️📄📝🔢📊📌🤖",
+                (
+                    "🖥️💻🖱️🖨️📄👨‍💻👩‍💻📝🔢📊📌🤖🌐🔧🛠️👨‍🔬👩‍🔬💡📚⚙️🛡️🕹️"
+                    "🧠👩‍💼🖥️💻🖱️🖨️📄👨‍💻👩‍💻📝🔢📊📌🤖🌐🔧🛠️👨‍🔬👩‍🔬💡📚⚙️🛡️🕹️🧠👩‍💼"
+                ),
+                "Computer programming",
+                (
+                    "Computer programming or coding is the composition of sequences"
+                    " of instructions, called programs, that computers can follow to"
+                ),
+            ]
+        }
+    )
+    html = TableReport(df).html()
+    (reports_dir / "unicode.html").write_text(html, encoding="UTF-8")
+
+    #
+    # Pandas MultiIndex
+    # -----------------
+    #
     # Example from https://pandas.pydata.org/docs/user_guide/reshaping.html#pivot-table
+    #
 
     df = pd.DataFrame(
         {
