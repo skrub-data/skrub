@@ -18,6 +18,14 @@ Major changes
 Minor changes
 -------------
 
+* The TableReport now uses the font size of its parent element when inserted
+  into another page. This makes it smaller in pages that use a smaller font size
+  than the browser default such as VSCode in some configurations. It also makes
+  it easier to control its size when inserting it in a web page by setting the
+  font size of its parent element. A few other small adjustments have also been
+  made to make it a bit more compact. :pr:`1098` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+
 * In the TableReport it is now possible, before clicking any of the cells, to
   reach the dataframe sample table and activate a cell with tab key navigation.
   :pr:`1101` by :user:`Jérôme Dockès <jeromedockes>`.
