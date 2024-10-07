@@ -15,6 +15,11 @@ It is currently undergoing fast development and backward compatibility is not en
 Major changes
 -------------
 
+Minor changes
+-------------
+
+Release 0.3.1
+=============
 
 Minor changes
 -------------
