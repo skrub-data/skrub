@@ -15,6 +15,15 @@ It is currently undergoing fast development and backward compatibility is not en
 Major changes
 -------------
 
+Minor changes
+-------------
+
+* The "Column name" column of the "summary statistics" table in the TableReport
+  is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
+Release 0.3.0
+=============
 
 Minor changes
 -------------
