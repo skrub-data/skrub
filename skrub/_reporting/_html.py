@@ -17,19 +17,19 @@ from . import _utils
 _HIGH_ASSOCIATION_THRESHOLD = 0.9
 
 _FILTER_NAMES = {
-    "first_10": "First 10 columns",
-    "high_association": "Columns with high similarity",
+    "first_10": "First 10",
+    "high_association": "High similarity",
     "all()": "All columns",
-    "has_nulls()": "Columns with null values",
-    "(~has_nulls())": "Columns without null values",
-    "numeric()": "Numeric columns",
-    "(~numeric())": "Non-numeric columns",
-    "string()": "String columns",
-    "(~string())": "Non-string columns",
-    "categorical()": "Categorical columns",
-    "(~categorical())": "Non-categorical columns",
-    "any_date()": "Datetime columns",
-    "(~any_date())": "Non-datetime columns",
+    "has_nulls()": "With nulls",
+    "(~has_nulls())": "Without nulls",
+    "numeric()": "Numeric",
+    "(~numeric())": "Non-numeric",
+    "string()": "String",
+    "(~string())": "Non-string",
+    "categorical()": "Categorical",
+    "(~categorical())": "Non-categorical",
+    "any_date()": "Datetime",
+    "(~any_date())": "Non-datetime",
 }
 
 
