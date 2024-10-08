@@ -79,7 +79,9 @@
 
         {% for plot_name in column.plot_names %}
         <div>
-            {{ column[plot_name] | safe }}
+            <div class="margin-t-m" data-manager="SvgAdjustedViewBox">
+                {{ column[plot_name] | safe }}
+            </div>
             {% if plot_name == "value_counts_plot" %}
             <details data-test="frequent-values-details">
                 <summary>Most frequent values</summary>

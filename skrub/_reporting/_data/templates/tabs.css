@@ -8,7 +8,7 @@
 .tab-list-wrapper {
     align-items: flex-start;
     border-bottom: var(--border-s) solid var(--darkg);
-    column-gap: calc(2 * var(--base-size));
+    column-gap: calc(var(--space-xs));
     row-gap: var(--space-s);
 }
 

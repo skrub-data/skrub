@@ -14,10 +14,47 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
+
 * The :class:`Recipe` is a new, interactive and convenient way to construct a
   machine-learning model and its grid of hyperparameters step by step while
   seeing previews of the transformed data. :pr:`1064` by :user:`Jérôme Dockès
   <jeromedockes>`.
+
+Minor changes
+-------------
+
+* The column filter selection dropdown in the tablereport is smaller and its
+  label has been removed to save space. :pr:`1107` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+
+* The TableReport now uses the font size of its parent element when inserted
+  into another page. This makes it smaller in pages that use a smaller font size
+  than the browser default such as VSCode in some configurations. It also makes
+  it easier to control its size when inserting it in a web page by setting the
+  font size of its parent element. A few other small adjustments have also been
+  made to make it a bit more compact. :pr:`1098` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+
+* Display of labels in the plots of the TableReport, especially for other
+  scripts than the latin alphabet, has improved.
+  - before, some characters could be missing and replaced by empty boxes.
+  - before, when the text is truncated, the ellipsis "..." could appear on the
+    wrong side for right-to-left scripts.
+  Moreover, when the text contains line breaks it now appears all on one line.
+  Note this only affects the labels in the plots; the rest of the report did not
+  have these problems.
+  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* In the TableReport it is now possible, before clicking any of the cells, to
+  reach the dataframe sample table and activate a cell with tab key navigation.
+  :pr:`1101` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The "Column name" column of the "summary statistics" table in the TableReport
+  is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
+Release 0.3.1
+=============
 
 Minor changes
 -------------

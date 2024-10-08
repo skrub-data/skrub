@@ -19,8 +19,8 @@ def test_report(air_quality):
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
     html = report.html()
     assert "the title" in html
-    assert "Columns with null values" in html
-    assert "First 10 columns" in html
+    assert "With nulls" in html
+    assert "First 10" in html
     assert "First 2" in html
     for col_name in sbd.column_names(air_quality):
         assert col_name in html

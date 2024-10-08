@@ -3,14 +3,19 @@
 The figures are returned in the form of svg strings.
 """
 
+import functools
 import io
 import re
+import warnings
 
+import matplotlib
 from matplotlib import pyplot as plt
 
 from skrub import _dataframe as sbd
 
 from . import _utils
+
+__all__ = ["COLORS", "COLOR_0", "histogram", "line", "value_counts"]
 
 # from matplotlib import colormaps, colors
 # _TAB10 = list(map(colors.rgb2hex, colormaps.get_cmap("tab10").colors))
@@ -34,6 +39,30 @@ COLORS = _SEABORN
 COLOR_0 = COLORS[0]
 
 
+def _plot(plotting_fun):
+    """Set the maptlotib config & silence some warnings for all report plots.
+
+    All the plotting functions exposed by this module should be decorated with
+    `_plot`.
+    """
+
+    @functools.wraps(plotting_fun)
+    def plot_with_config(*args, **kwargs):
+        # This causes matplotlib to insert labels etc as text in the svg rather
+        # than drawing the glyphs.
+        with matplotlib.rc_context({"svg.fonttype": "none"}):
+            with warnings.catch_warnings():
+                # We do not care about missing glyphs because the text is
+                # rendered & the viewbox is recomputed in the browser.
+                warnings.filterwarnings("ignore", "Glyph.*missing from font")
+                warnings.filterwarnings(
+                    "ignore", "Matplotlib currently does not support Arabic natively"
+                )
+                return plotting_fun(*args, **kwargs)
+
+    return plot_with_config
+
+
 def _despine(ax):
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -49,6 +78,7 @@ def _to_em(pt_match):
 
 def _serialize(fig):
     buffer = io.BytesIO()
+    fig.patch.set_visible(False)
     fig.savefig(buffer, format="svg", bbox_inches="tight")
     out = buffer.getvalue().decode("UTF-8")
     out = re.sub(r'(width|height)="([0-9.]+)pt"', _to_em, out)
@@ -84,6 +114,7 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
     fig.set_size_inches((w, h))
 
 
+@_plot
 def histogram(col, color=COLOR_0):
     """Histogram for a numeric column."""
     values = sbd.to_numpy(col)
@@ -96,6 +127,7 @@ def histogram(col, color=COLOR_0):
     return _serialize(fig)
 
 
+@_plot
 def line(x_col, y_col):
     """Line plot for a numeric column.
 
@@ -108,13 +140,14 @@ def line(x_col, y_col):
     fig, ax = plt.subplots()
     _despine(ax)
     ax.plot(x, y)
-    ax.set_xlabel(_utils.ellide_string_short(x_col.name))
+    ax.set_xlabel(_utils.ellide_string(x_col.name))
     if sbd.is_any_date(x_col):
         _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
     return _serialize(fig)
 
 
+@_plot
 def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     """Bar plot of the frequencies of the most frequent values in a column.
 
@@ -139,7 +172,7 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     str
         The plot as a XML string.
     """
-    values = [_utils.ellide_string_short(v) for v, _ in value_counts][::-1]
+    values = [_utils.ellide_string(v) for v, _ in value_counts][::-1]
     counts = [c for _, c in value_counts][::-1]
     if n_unique > len(value_counts):
         title = f"{len(value_counts)} most frequent"
