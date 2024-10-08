@@ -6,7 +6,7 @@ describe('test filtering visible columns', () => {
         cy.get('@report').find('[data-test="summaries-tab"]').as(
             'summariesTab').click();
         cy.get('@report').find('[data-test="column-filter-select"]')
-            .select('Numeric columns');
+            .select('Numeric');
         cy.get('@report').find('#col_7').should('be.visible');
         cy.get('@report').find('#col_0').should('not.be.visible');
         cy.get('@report').find('[data-test="sample-tab"]').as(
@@ -18,7 +18,7 @@ describe('test filtering visible columns', () => {
         cy.get('@nColumns').should('have.text', '1');
 
         cy.get('@report').find('[data-test="column-filter-select"]')
-            .select('Non-numeric columns');
+            .select('Non-numeric');
         cy.get('@cell7').should('not.be.visible');
         cy.get('@cell0').should('be.visible');
         cy.get('@nColumns').should('have.text', '7');
@@ -27,7 +27,7 @@ describe('test filtering visible columns', () => {
         cy.get('@report').find('#col_0').should('be.visible');
 
         cy.get('@report').find('[data-test="column-filter-select"]')
-            .select('Datetime columns');
+            .select('Datetime');
         cy.get('@report').find('[data-test="summaries-panel"]').find(
             '[data-test="show-all-columns-button"]').should(
             'be.visible');
