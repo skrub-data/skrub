@@ -59,9 +59,9 @@ def patch_display(pandas=True, polars=True):
 
     Parameters
     ----------
-    pandas: bool, optional (default=True)
+    pandas : bool, optional (default=True)
         If False, do not override the displays for pandas dataframes.
-    polars: bool, optional (default=True)
+    polars : bool, optional (default=True)
         If False, do not override the displays for polars dataframes.
     """
     _change_display(_patch, _get_to_patch(pandas=pandas, polars=polars))
@@ -75,9 +75,9 @@ def unpatch_display(pandas=True, polars=True):
 
     Parameters
     ----------
-    pandas: bool, optional (default=True)
+    pandas : bool, optional (default=True)
         If False, do not restore the displays for pandas dataframes.
-    polars: bool, optional (default=True)
+    polars : bool, optional (default=True)
         If False, do not restore the displays for polars dataframes.
     """
     _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))
