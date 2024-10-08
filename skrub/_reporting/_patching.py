@@ -1,6 +1,6 @@
 import importlib
 
-from . import TableReport
+from ._table_report import TableReport
 
 __all__ = ["patch_display", "unpatch_display"]
 
