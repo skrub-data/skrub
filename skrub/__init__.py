@@ -3,6 +3,7 @@ skrub: Prepping tables for machine learning.
 """
 from pathlib import Path as _Path
 
+from . import _selectors as selectors
 from ._agg_joiner import AggJoiner, AggTarget
 from ._check_dependencies import check_dependencies
 from ._datetime_encoder import DatetimeEncoder
@@ -13,8 +14,15 @@ from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
+from ._recipe import (
+    Recipe,
+    choose_float,
+    choose_from,
+    choose_int,
+    optional,
+)
 from ._reporting import TableReport
-from ._select_cols import DropCols, SelectCols
+from ._select_cols import Drop, DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import TableVectorizer
 from ._tabular_learner import tabular_learner
@@ -48,4 +56,12 @@ __all__ = [
     "AggTarget",
     "SelectCols",
     "DropCols",
+    "Drop",
+    "selectors",
+    "Recipe",
+    "choose_from",
+    "optional",
+    "choose_float",
+    "choose_int",
+    "selectors",
 ]
