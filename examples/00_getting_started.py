@@ -53,6 +53,18 @@ TableReport(employees_df)
 #    .. _example reports: https://skrub-data.org/skrub-reports/examples/
 #    .. _demo: https://skrub-data.org/skrub-reports/
 
+# %%
+# It is also possible to tell skrub to replace the default pandas & polars
+# displays with ``TableReport``.
+
+from skrub import patch_display
+
+patch_display()
+
+employees_df
+
+# %%
+# The effect of ``patch_display`` can be undone with ``skrub.unpatch_display()``
 
 # %%
 # Easily building a strong baseline for tabular machine learning
