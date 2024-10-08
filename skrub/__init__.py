@@ -5,6 +5,7 @@ from pathlib import Path as _Path
 
 from ._agg_joiner import AggJoiner, AggTarget
 from ._check_dependencies import check_dependencies
+from ._column_associations import column_associations
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._fuzzy_join import fuzzy_join
@@ -48,4 +49,5 @@ __all__ = [
     "AggTarget",
     "SelectCols",
     "DropCols",
+    "column_associations",
 ]

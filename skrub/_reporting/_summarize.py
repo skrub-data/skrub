@@ -1,7 +1,8 @@
 """Get information and plots for a dataframe, that are used to generate reports."""
 
+from .. import _column_associations
 from .. import _dataframe as sbd
-from . import _associations, _plotting, _sample_table, _utils
+from . import _plotting, _sample_table, _utils
 
 _HIGH_CARDINALITY_THRESHOLD = 10
 _SUBSAMPLE_SIZE = 3000
@@ -96,8 +97,19 @@ def summarize_dataframe(
 
 def _add_associations(df, dataframe_summary):
     df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
-    associations = _associations.cramer_v(df)[:_N_TOP_ASSOCIATIONS]
-    dataframe_summary["top_associations"] = associations
+    associations = _column_associations.column_associations(df)
+
+    # get only the top _N_TOP_ASSOCIATIONS
+    associations = sbd.slice(associations, _N_TOP_ASSOCIATIONS)
+
+    # transform dataframe into the format expected by the HTML template
+    # (list of dicts):
+    asso_dict = _utils.to_dict(associations)
+    values = zip(*asso_dict.values())
+    keys = list(asso_dict.keys())
+    asso_list = [dict(zip(keys, vals)) for vals in values]
+
+    dataframe_summary["top_associations"] = asso_list
 
 
 def _summarize_column(
