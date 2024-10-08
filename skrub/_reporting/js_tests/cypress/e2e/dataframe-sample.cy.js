@@ -37,12 +37,12 @@ describe('test the dataframe sample tab', () => {
 
         cy.get('@report').find('[data-test="column-filter-select"]').as(
                 "filter")
-            .select('String columns');
+            .select('String');
         cy.get('@bar').should('be.visible');
         cy.get('@announcement').should('not.be.visible');
         cy.get('@bar').should('have.text', "department");
 
-        cy.get('@filter').select('Numeric columns');
+        cy.get('@filter').select('Numeric');
         cy.get('@bar').should('not.be.visible');
         cy.get('@announcement').should('be.visible');
         cy.get('@bar').should('have.text', "");
@@ -55,7 +55,7 @@ describe('test the dataframe sample tab', () => {
         // hide the numeric columns
         cy.get('@report').find('[data-test="column-filter-select"]').as(
                 "filter")
-            .select('String columns');
+            .select('String');
 
         // type arrow down on the first header should move to first cell
         cy.get('@report').find('th').contains('c 1').as('c1').click();

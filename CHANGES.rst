@@ -18,6 +18,10 @@ Major changes
 Minor changes
 -------------
 
+* The column filter selection dropdown in the tablereport is smaller and its
+  label has been removed to save space. :pr:`1107` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+
 * The TableReport now uses the font size of its parent element when inserted
   into another page. This makes it smaller in pages that use a smaller font size
   than the browser default such as VSCode in some configurations. It also makes
