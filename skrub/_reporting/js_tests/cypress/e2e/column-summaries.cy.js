@@ -13,7 +13,7 @@ describe('test the column summaries', () => {
             "['department']");
 
         cy.get('@report').find('[data-test="column-filter-select"]')
-            .select('Numeric columns');
+            .select('Numeric');
         cy.get('@selectedColumns').should('have.text',
             "['department']");
         cy.get('@report').find('[data-test="select-all-columns"]')

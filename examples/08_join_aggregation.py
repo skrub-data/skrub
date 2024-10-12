@@ -1,302 +1,342 @@
 """
-Self-aggregation on MovieLens
-=============================
+AggJoiner on a credit fraud dataset
+===================================
 
-MovieLens is a famous movie dataset used for both explicit
-and implicit recommender systems. It provides a main table,
-"ratings", that can be viewed as logs or transactions, comprised
-of only 4 columns: ``userId``, ``movieId``, ``rating`` and ``timestamp``.
-MovieLens also gives a contextual table "movies", including
-``movieId``, ``title`` and ``types``, to enable content-based feature extraction.
+Many problems involve tables whose entities have a one-to-many relationship.
+To simplify aggregate-then-join operations for machine learning, we can include
+the |AggJoiner| in our pipeline.
 
-From the perspective of machine-learning pipelines, one challenge is to
-transform the transaction log into features that can be fed to supervised learning.
+In this example, we are tackling a fraudulent loan detection use case.
+Because fraud is rare, this dataset is extremely imbalanced, with a prevalence of around
+1.4%.
 
-In this notebook, we only deal with the main table "ratings".
-Our objective is **not to achieve state-of-the-art performance** on
-the explicit regression task, but rather to illustrate how to perform
-feature engineering in a simple way using |AggJoiner| and |AggTarget|.
-Note that our performance is higher than the baseline of using the mean
-rating per movies.
+The data consists of two distinct entities: e-commerce "baskets", and "products".
+Baskets can be tagged fraudulent (1) or not (0), and are essentially a list of products
+of variable size. Each basket is linked to at least one products, e.g. basket 1 can have
+product 1 and 2.
 
-The benefit of using  |AggJoiner| and |AggTarget| is that they readily
-provide a full pipeline, from the original tables to the prediction, that can
-be cross-validated or applied to new data to serve prediction. At the end of
-this example, we showcase hyper-parameter optimization on the whole pipeline.
+.. image:: ../../_static/08_example_data.png
+    :width: 450 px
 
+|
+
+Our aim is to predict which baskets are fraudulent.
+
+The products dataframe can be joined on the baskets dataframe using the ``basket_ID``
+column.
+
+Each product has several attributes:
+
+- a category (marked by the column ``"item"``),
+- a model (``"model"``),
+- a brand (``"make"``),
+- a merchant code (``"goods_code"``),
+- a price per unit (``"cash_price"``),
+- a quantity selected in the basket (``"Nbr_of_prod_purchas"``)
 
 .. |AggJoiner| replace::
      :class:`~skrub.AggJoiner`
 
-.. |AggTarget| replace::
-     :class:`~skrub.AggTarget`
+.. |Joiner| replace::
+     :class:`~skrub.Joiner`
+
+.. |DropCols| replace::
+     :class:`~skrub.DropCols`
 
 .. |TableVectorizer| replace::
      :class:`~skrub.TableVectorizer`
 
-.. |DatetimeEncoder| replace::
-     :class:`~skrub.DatetimeEncoder`
+.. |TableReport| replace::
+     :class:`~skrub.TableReport`
+
+.. |MinHashEncoder| replace::
+     :class:`~skrub.MinHashEncoder`
 
 .. |TargetEncoder| replace::
      :class:`~sklearn.preprocessing.TargetEncoder`
 
 .. |make_pipeline| replace::
-     :class:`~sklearn.pipeline.make_pipeline`
+     :func:`~sklearn.pipeline.make_pipeline`
 
 .. |Pipeline| replace::
      :class:`~sklearn.pipeline.Pipeline`
 
-.. |GridSearchCV| replace::
-     :class:`~sklearn.model_selection.GridSearchCV`
+.. |HGBC| replace::
+     :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
 
-.. |TimeSeriesSplit| replace::
-     :class:`~sklearn.model_selection.TimeSeriesSplit`
+.. |OrdinalEncoder| replace::
+     :class:`~sklearn.preprocessing.OrdinalEncoder`
 
-.. |HGBR| replace::
-     :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
+.. |TunedThresholdClassifierCV| replace::
+     :class:`~sklearn.model_selection.TunedThresholdClassifierCV`
+
+.. |CalibrationDisplay| replace::
+     :class:`~sklearn.calibration.CalibrationDisplay`
+
+.. |pandas.melt| replace::
+     :func:`~pandas.melt`
+
 """
+# %%
+from skrub import TableReport
+from skrub.datasets import fetch_credit_fraud
 
-###############################################################################
-# The data
-# --------
+bunch = fetch_credit_fraud()
+products, baskets = bunch.products, bunch.baskets
+TableReport(products)
+
+# %%
+TableReport(baskets)
+
+# %%
+# Naive aggregation
+# -----------------
 #
-# We begin with loading the ratings table from MovieLens.
-# Note that we use the light version (100k rows).
+# Let's explore a naive solution first.
+#
+# .. note::
+#
+#    Click :ref:`here<agg-joiner-anchor>` to skip this section and see the AggJoiner
+#    in action!
+#
+#
+# The first idea that comes to mind to merge these two tables is to aggregate the
+# products attributes into lists, using their basket IDs.
+products_grouped = products.groupby("basket_ID").agg(list)
+TableReport(products_grouped)
+
+# %%
+# Then, we can expand all lists into columns, as if we were "flattening" the dataframe.
+# We end up with a products dataframe ready to be joined on the baskets dataframe, using
+# ``"basket_ID"`` as the join key.
 import pandas as pd
 
-from skrub.datasets import fetch_movielens
+products_flatten = []
+for col in products_grouped.columns:
+    cols = [f"{col}{idx}" for idx in range(24)]
+    products_flatten.append(pd.DataFrame(products_grouped[col].to_list(), columns=cols))
+products_flatten = pd.concat(products_flatten, axis=1)
+products_flatten.insert(0, "basket_ID", products_grouped.index)
+TableReport(products_flatten)
 
-ratings = fetch_movielens(dataset_id="ratings")
-ratings = ratings.X.sort_values("timestamp").reset_index(drop=True)
-ratings["timestamp"] = pd.to_datetime(ratings["timestamp"], unit="s")
-
-X = ratings[["userId", "movieId", "timestamp"]]
-y = ratings["rating"]
-X.shape, y.shape
-###############################################################################
-X.head()
-
-###############################################################################
-# Encoding the timestamp with a TableVectorizer
-# ---------------------------------------------
+# %%
+# Look at the "Stats" section of the |TableReport| above. Does anything strike you?
 #
-# Our first step is to extract features from the timestamp, using the
-# |TableVectorizer|. Natively, it uses the |DatetimeEncoder| on datetime
-# columns, and doesn't interact with numerical columns.
-from skrub import DatetimeEncoder, TableVectorizer
+# Not only did we create 144 columns, but most of these columns are filled with NaN,
+# which is very inefficient for learning!
+#
+# This is because each basket contains a variable number of products, up to 24, and we
+# created one column for each product attribute, for each position (up to 24) in
+# the dataframe.
+#
+# Moreover, if we wanted to replace text columns with encodings, we would create
+# :math:`d \times 24 \times 2` columns (encoding of dimensionality :math:`d`, for
+# 24 products, for the ``"item"`` and ``"make"`` columns), which would explode the
+# memory usage.
+#
+# .. _agg-joiner-anchor:
+#
+# AggJoiner
+# ---------
+# Let's now see how the |AggJoiner| can help us solve this. We begin with splitting our
+# basket dataset in a training and testing set.
+from sklearn.model_selection import train_test_split
 
-table_vectorizer = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True))
-X_date_encoded = table_vectorizer.fit_transform(X)
-X_date_encoded.head()
+X, y = baskets[["ID"]], baskets["fraud_flag"]
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.1)
+X_train.shape, y_train.shape
 
-###############################################################################
-# We can now make a couple of plots and gain some insight on our dataset.
-import seaborn as sns
-from matplotlib import pyplot as plt
+# %%
+# Before aggregating our product dataframe, we need to vectorize our categorical
+# columns. To do so, we use:
+#
+# - |MinHashEncoder| on "item" and "model" columns, because they both expose typos
+#   and text similarities.
+# - |OrdinalEncoder| on "make" and "goods_code" columns, because they consist in
+#   orthogonal categories.
+#
+# We bring this logic into a |TableVectorizer| to vectorize these columns in a
+# single step.
+# See `this example <https://skrub-data.org/stable/auto_examples/01_encodings.html#specializing-the-tablevectorizer-for-histgradientboosting>`_
+# for more details about these encoding choices.
+from sklearn.preprocessing import OrdinalEncoder
 
-sns.set_style("darkgrid")
+from skrub import MinHashEncoder, TableVectorizer
 
-
-def make_barplot(x, y, title):
-    fig, ax = plt.subplots(layout="constrained")
-    norm = plt.Normalize(y.min(), y.max())
-    cmap = plt.get_cmap("magma")
-
-    sns.barplot(x=x, y=y, palette=cmap(norm(y)), ax=ax)
-    ax.set_title(title)
-    ax.set_xticks(ax.get_xticks(), labels=ax.get_xticklabels(), rotation=30)
-    ax.set_ylabel(None)
-
-
-# O is Monday, 6 is Sunday
-
-daily_volume = X_date_encoded["timestamp_weekday"].value_counts().sort_index()
-
-make_barplot(
-    x=daily_volume.index,
-    y=daily_volume.values,
-    title="Daily volume of ratings",
+vectorizer = TableVectorizer(
+    high_cardinality=MinHashEncoder(),  # encode ["item", "model"]
+    specific_transformers=[
+        (OrdinalEncoder(), ["make", "goods_code"]),
+    ],
 )
+products_transformed = vectorizer.fit_transform(products)
+TableReport(products_transformed)
 
-###############################################################################
-# We also display the distribution of our target ``y``.
-rating_count = y.value_counts().sort_index()
+# %%
+# Our objective is now to aggregate this vectorized product dataframe by
+# ``"basket_ID"``, then to merge it on the baskets dataframe, still on
+# the ``"basket_ID"``.
+#
+# .. image:: ../../_static/08_example_aggjoiner.png
+#    :width: 900
+#
+# |
+#
+# |AggJoiner| can help us achieve exactly this. We need to pass the product dataframe as
+# an auxiliary table argument to |AggJoiner| in ``__init__``. The ``aux_key`` argument
+# represent both the columns used to groupby on, and the columns used to join on.
+#
+# The basket dataframe is our main table, and we indicate the columns to join on with
+# ``main_key``. Note that we pass the main table during ``fit``, and we discuss the
+# limitations of this design in the conclusion at the bottom of this notebook.
+#
+# The minimum ("min") is the most appropriate operation to aggregate encodings from
+# |MinHashEncoder|, for reasons that are out of the scope of this notebook.
+#
+from skrub import AggJoiner
+from skrub import _selectors as s
 
-make_barplot(
-    x=rating_count.index,
-    y=rating_count.values,
-    title="Distribution of ratings given to movies",
+# Skrub selectors allow us to select columns using regexes, which reduces
+# the boilerplate.
+minhash_cols_query = s.glob("item*") | s.glob("model*")
+minhash_cols = s.select(products_transformed, minhash_cols_query).columns
+
+agg_joiner = AggJoiner(
+    aux_table=products_transformed,
+    aux_key="basket_ID",
+    main_key="ID",
+    cols=minhash_cols,
+    operations=["min"],
 )
+baskets_products = agg_joiner.fit_transform(baskets)
+TableReport(baskets_products)
 
-
-###############################################################################
-# AggTarget: aggregate y, then join
-# ---------------------------------
+# %%
+# Now that we understand how to use the |AggJoiner|, we can now assemble our pipeline by
+# chaining two |AggJoiner| together:
 #
-# We have just extracted datetime features from timestamps.
+# - the first one to deal with the |MinHashEncoder| vectors as we just saw
+# - the second one to deal with the all the other columns
 #
-# Let's now perform an expansion for the target ``y``, by aggregating it before
-# joining it back on the main table. The biggest risk of doing target expansion
-# with multiple dataframe operations yourself is to end up leaking the target.
+# For the second |AggJoiner|, we use the mean, standard deviation, minimum and maximum
+# operations to extract a representative summary of each distribution.
 #
-# To solve this, the |AggTarget| transformer allows you to
-# aggregate the target ``y`` before joining it on the main table, without
-# risk of leaking. Note that to perform aggregation then joining on the features
-# ``X``, you need to use |AggJoiner| instead.
-#
-# You can also think of it as a generalization of the |TargetEncoder|, which
-# encodes categorical features based on the target.
-#
-# We only focus on aggregating the target by **users**, but later we will
-# also consider aggregating by **movies**. Here, we compute the histogram of the
-# target with 3 bins, before joining it back on the initial table.
-#
-# This feature answer questions like
-# *"How many times has this user given a bad, medium or good rate to movies?"*.
-from skrub import AggTarget
-
-agg_target_user = AggTarget(
-    main_key="userId",
-    suffix="_user",
-    operation="hist(3)",
-)
-X_transformed = agg_target_user.fit_transform(X, y)
-
-X_transformed.shape
-###############################################################################
-X_transformed.head()
-
-###############################################################################
-# Similarly, we join on ``movieId`` instead of ``userId``.
-#
-# This feature answer questions like
-# *"How many times has this movie received a bad, medium or good rate from users?"*.
-agg_target_movie = AggTarget(
-    main_key="movieId",
-    suffix="_movie",
-    operation="hist(3)",
-)
-X_transformed = agg_target_movie.fit_transform(X, y)
-X_transformed.shape
-###############################################################################
-X_transformed.head()
-
-###############################################################################
-# Chaining everything together in a pipeline
-# ------------------------------------------
-#
-# To perform cross-validation and enable hyper-parameter tuning, we gather
-# all elements into a scikit-learn |Pipeline| by using |make_pipeline|,
-# and define a scikit-learn |HGBR|.
-from sklearn.ensemble import HistGradientBoostingRegressor
+# |DropCols| is another skrub transformer which removes the "ID" column, which doesn't
+# bring any information after the joining operation.
+from scipy.stats import loguniform, randint
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import make_pipeline
 
-pipeline = make_pipeline(
-    table_vectorizer,
-    agg_target_user,
-    agg_target_movie,
-    HistGradientBoostingRegressor(learning_rate=0.1, max_depth=4, max_iter=40),
+from skrub import DropCols
+
+model = make_pipeline(
+    AggJoiner(
+        aux_table=products_transformed,
+        aux_key="basket_ID",
+        main_key="ID",
+        cols=minhash_cols,
+        operations=["min"],
+    ),
+    AggJoiner(
+        aux_table=products_transformed,
+        aux_key="basket_ID",
+        main_key="ID",
+        cols=["make", "goods_code", "cash_price", "Nbr_of_prod_purchas"],
+        operations=["sum", "mean", "std", "min", "max"],
+    ),
+    DropCols(["ID"]),
+    HistGradientBoostingClassifier(),
+)
+model
+
+# %%
+# We tune the hyper-parameters of the |HGBC| to get a good performance.
+from time import time
+
+from sklearn.model_selection import RandomizedSearchCV
+
+param_distributions = dict(
+    histgradientboostingclassifier__learning_rate=loguniform(1e-3, 1),
+    histgradientboostingclassifier__max_depth=randint(3, 9),
+    histgradientboostingclassifier__max_leaf_nodes=[None, 10, 30, 60, 90],
+    histgradientboostingclassifier__max_iter=randint(50, 500),
 )
 
-pipeline
+tic = time()
+search = RandomizedSearchCV(
+    model,
+    param_distributions,
+    scoring="neg_log_loss",
+    refit=False,
+    n_iter=10,
+    cv=3,
+    verbose=1,
+).fit(X_train, y_train)
+print(f"This operation took {time() - tic:.1f}s")
+# %%
+# The best hyper parameters are:
 
-###############################################################################
-# Hyper-parameters tuning and cross validation
-# --------------------------------------------
+pd.Series(search.best_params_)
+
+# %%
+# To benchmark our performance, we plot the log loss of our model on the test set
+# against the log loss of a dummy model that always output the observed probability of
+# the two classes.
 #
-# We can finally create our hyper-parameter search space, and use a
-# |GridSearchCV|. We select the cross validation splitter to be
-# the |TimeSeriesSplit| to prevent leakage, since our data are timestamped
-# logs.
+# As this dataset is extremely imbalanced, this dummy model should be a good baseline.
 #
-# Note that you need the name of the pipeline elements to assign them
-# hyper-parameters search.
+# The vertical bar represents one standard deviation around the mean of the cross
+# validation log-loss.
+import seaborn as sns
+from matplotlib import pyplot as plt
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import log_loss
+
+results = search.cv_results_
+best_idx = search.best_index_
+log_loss_model_mean = -results["mean_test_score"][best_idx]
+log_loss_model_std = results["std_test_score"][best_idx]
+
+dummy = DummyClassifier(strategy="prior").fit(X_train, y_train)
+y_proba_dummy = dummy.predict_proba(X_test)
+log_loss_dummy = log_loss(y_true=y_test, y_pred=y_proba_dummy)
+
+fig, ax = plt.subplots()
+ax.bar(
+    height=[log_loss_model_mean, log_loss_dummy],
+    x=["AggJoiner model", "Dummy"],
+    color=["C0", "C4"],
+)
+for container in ax.containers:
+    ax.bar_label(container, padding=4)
+
+ax.vlines(
+    x="AggJoiner model",
+    ymin=log_loss_model_mean - log_loss_model_std,
+    ymax=log_loss_model_mean + log_loss_model_std,
+    linestyle="-",
+    linewidth=1,
+    color="k",
+)
+sns.despine()
+ax.set_title("Log loss (lower is better)")
+
+# %%
+# Conclusion
+# ----------
+# With |AggJoiner|, you can bring the aggregation and joining operations within a
+# sklearn pipeline, and train models more efficiently.
 #
-# You can lookup the name of the pipeline elements by doing:
-list(pipeline.named_steps)
-
-###############################################################################
-# Alternatively, you can use scikit-learn |Pipeline| to name your transformers:
-# ``Pipeline([("agg_target_user", agg_target_user), ...])``
+# One known limitation of both the |AggJoiner| and |Joiner| is that the auxiliary data
+# to join is passed during the ``__init__`` method instead of the ``fit`` method, and
+# is therefore fixed once the model has been trained.
+# This limitation causes two main issues:
 #
-# We now perform the grid search over the ``AggTarget`` transformers to find the
-# operation maximizing our validation score.
-from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
-
-operations = ["mean", "hist(3)", "hist(5)", "hist(7)", "value_counts"]
-param_grid = [
-    {
-        "aggtarget-2__operation": [op],
-    }
-    for op in operations
-]
-
-cv = GridSearchCV(pipeline, param_grid, cv=TimeSeriesSplit(n_splits=10))
-cv.fit(X, y)
-
-results = pd.DataFrame(cv.cv_results_)
-
-cols = [f"split{idx}_test_score" for idx in range(10)]
-results = results.set_index("param_aggtarget-2__operation")[cols].T
-results
-
-###############################################################################
-# The score used in this regression task is the R2. Remember that the R2
-# evaluates the relative performance compared to the naive baseline consisting
-# in always predicting the mean value of ``y_test``.
-# Therefore, the R2 is 0 when ``y_pred = y_true.mean()`` and is upper bounded
-# to 1 when ``y_pred = y_true``.
+# 1. **Bigger model serialization:** Since the dataset has to be pickled along with
+# the model, it can result in a massive file size on disk.
 #
-# To get a better sense of the learning performances of our simple pipeline,
-# we also compute the average rating of each movie in the training set,
-# and uses this average to predict the ratings in the test set.
-from sklearn.metrics import r2_score
-
-
-def baseline_r2(X, y, train_idx, test_idx):
-    """Compute the average rating for all movies in the train set,
-    and map these averages to the test set as a prediction.
-
-    If a movie in the test set is not present in the training set,
-    we simply predict the global average rating of the training set.
-    """
-    X_train, y_train = X.iloc[train_idx].copy(), y.iloc[train_idx]
-    X_test, y_test = X.iloc[test_idx], y.iloc[test_idx]
-
-    X_train["y"] = y_train
-
-    movie_avg_rating = X_train.groupby("movieId")["y"].mean().to_frame().reset_index()
-
-    y_pred = X_test.merge(movie_avg_rating, on="movieId", how="left")["y"]
-    y_pred = y_pred.fillna(y_pred.mean())
-
-    return r2_score(y_true=y_test, y_pred=y_pred)
-
-
-all_baseline_r2 = []
-for train_idx, test_idx in TimeSeriesSplit(n_splits=10).split(X, y):
-    all_baseline_r2.append(baseline_r2(X, y, train_idx, test_idx))
-
-results.insert(0, "naive mean estimator", all_baseline_r2)
-
-# we only keep the 5 out of 10 last results
-# because the initial size of the train set is rather small
-fig, ax = plt.subplots(layout="constrained")
-sns.boxplot(results.tail(5), palette="magma", ax=ax)
-ax.set_ylabel("R2 score")
-ax.set_title("Hyper parameters grid-search results")
-plt.tight_layout()
-
-###############################################################################
-# The naive estimator has a lower performance than our pipeline, which means
-# that our extracted features brought some predictive power.
+# 2. **Inflexibility with new, unseen data in a production environment:** To use new
+# auxiliary data, you would need to replace the auxiliary table in the |AggJoiner| that
+# was used during ``fit`` with the updated data, which is a rather hacky approach.
 #
-# It seems that using the ``"value_counts"`` as an aggregation operator for
-# |AggTarget| yields better performances than using the mean (which is
-# equivalent to using the |TargetEncoder|).
-#
-# Here, the number of bins encoding the target is proportional to the
-# performance: computing the mean yields a single statistic, whereas histograms
-# yield a density over a reduced set of bins, and ``"value_counts"`` yields an
-# exhaustive histogram over all the possible values of ratings
-# (here 10 different values, from 0.5 to 5).
+# These limitations will be addressed later in skrub.

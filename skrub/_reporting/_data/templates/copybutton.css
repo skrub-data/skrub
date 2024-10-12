@@ -3,39 +3,58 @@
 
 /* Those are used to quickly copy some code snippets, column names, etc. */
 
+:host {
+    --box-min-width: calc(6 * var(--base-size));
+    --box-max-width: calc(40 * var(--base-size));
+    --table-box-max-width: calc(55 * var(--base-size));
+    --box-min-height: calc(1.9 * var(--base-size));
+    --box-max-height: calc(10 * var(--base-size));
+}
+
 .box {
     display: flex;
     justify-content: space-between;
     align-items: stretch;
-    border: 1px solid var(--darkg);
+    border: var(--border-s) solid var(--darkg);
     padding: 0;
-    min-width: 6rem;
-    max-width: 40rem;
-    max-height: 10rem;
-    min-height: 1.8rem;
+    min-width: var(--box-min-width);
+    max-width: var(--box-max-width);
+    min-height: var(--box-min-height);
+    max-height: var(--box-max-height);
 }
 
 .box pre {
     overflow-x: auto;
-    padding: var(--micro);
+    padding: var(--space-s);
+    padding-left: var(--space-m);
     flex-grow: 1;
     white-space: pre;
 }
 
 .copybutton {
-    margin-left: -2rem;
-    min-width: 2rem;
-    display: none;
-    padding: var(--micro);
-    padding-left: var(--tiny);
-    padding-right: var(--tiny);
+    margin: var(--border-s);
+    min-width: var(--button-s);
+    max-width: var(--button-s);
+    max-height: var(--button-s);
+    padding: var(--space-s);
     border: none;
-    background: var(--lightg);
     position: relative;
 }
 
-.copybutton[data-show-checkmark]{
-    display: inline-block;
+.copybutton-left {
+    order: -1;
+}
+
+.copybutton {
+    background: #e0e0e0;
+}
+
+.copybutton:hover {
+    background: #eee;
+}
+
+.copybutton:active {
+    background: #cccccc;
 }
 
 .copybutton:not([data-show-checkmark]) > :not(:first-child) {
@@ -47,27 +66,21 @@
 }
 
 .copied-message {
-    font-size: 0.8rem;
+    font-size: var(--text-s);
     background-color: black;
     color: white;
-    padding: 5px;
-    border-radius: var(--radius, 5px);
+    padding: var(--space-s);
+    border-radius: var(--radius);
     position: absolute;
-    right: calc(100% + 5px);
-    top: 3px;
+    top: var(--space-xs);
     margin: 0;
+    right: calc(100% + var(--space-s));
 }
 
-.box:hover .copybutton {
-    display: inline-block;
-    background: var(--lightg);
+.copybutton-left .copied-message {
+    left: calc(100% + var(--space-s));
+    right: auto;
 }
-
-.box:hover .copybutton:hover {
-    display: inline-block;
-    background: var(--mediumg);
-}
-
 
 [data-shows-placeholder] {
     color: #777777;
@@ -75,5 +88,5 @@
 
 .table-bar .box {
     flex-grow: 1;
-    max-width: 55rem;
+    max-width: var(--table-box-max-width);
 }

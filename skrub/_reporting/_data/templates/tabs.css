@@ -7,9 +7,9 @@
 
 .tab-list-wrapper {
     align-items: flex-start;
-    border-bottom: 1px solid var(--darkg);
-    column-gap: 2rem;
-    row-gap: var(--micro);
+    border-bottom: var(--border-s) solid var(--darkg);
+    column-gap: calc(var(--space-xs));
+    row-gap: var(--space-s);
 }
 
 .tab-list-scroller {
@@ -18,31 +18,31 @@
 
 .tab-list {
     display: flex;
-    column-gap: var(--tiny);
-    padding-left: var(--tiny);
-    padding-right: var(--tiny);
+    column-gap: var(--space-m);
+    padding-left: var(--space-m);
+    padding-right: var(--space-m);
     align-items: stretch;
-    margin-bottom: -1.2px;
+    margin-bottom: calc(-1 * var(--border-s));
 }
 
 .tab-list > * {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    margin-top: 2px;
+    margin-top: var(--border-m);
 }
 
 .tab {
     display: flex;
     align-items: center;
-    column-gap: var(--micro);
-    border: 1px solid transparent;
+    column-gap: var(--space-s);
+    border: var(--border-s) solid transparent;
     border-bottom: none;
     border-radius: var(--radius) var(--radius) 0 0;
-    padding: var(--tiny);
-    padding-top: var(--micro);
-    padding-bottom: var(--tiny);
-    font-size: var(--small);
+    padding: var(--space-m);
+    padding-top: var(--space-s);
+    padding-bottom: calc(var(--space-s) + var(--border-s));
+    font-size: var(--space-l);
     background-color: transparent;
     --color-muted: var(--darkg);
     --color-default: inherit;
@@ -65,9 +65,9 @@
 
 .tab-list .tab .warning-sign {
     display: none;
-    width: 1em;
-    height: 1em;
-    margin: 1px;
+    width: var(--text-m);
+    height: var(--text-m);
+    margin: var(--space-xs);
 }
 
 .tab-list .tab[data-has-warning] .warning-sign {
@@ -84,6 +84,12 @@
 /* ----------------------------- */
 
 .tab-panel {
-    padding-top: var(--tiny);
+    padding-top: var(--space-m);
     border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.report-bottom-border {
+    width: calc(100% - 2 * var(--radius));
+    border-bottom: var(--border-s) solid var(--mediumg);
+    margin: var(--space-m) auto 0 auto;
 }

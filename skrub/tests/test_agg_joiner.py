@@ -451,6 +451,7 @@ y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
         (y["rating"], "rating"),
         (y.values, "y_0"),
         (y.values.tolist(), "y_0"),
+        (y["rating"].rename(None), "y_0"),
     ],
 )
 def test_agg_target(main_table, y, col_name):
