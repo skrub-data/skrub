@@ -142,7 +142,10 @@ def _perform_groupby_polars(table, key, cols_to_agg, operations):
         aggfunc = polars_aggfuncs.get(operation, None).alias(output_key)
         aggfuncs.append(aggfunc)
 
-    aggregated = table.group_by(key).agg(aggfuncs)
+    # `maintain_order` ensures that outputs are in the same order as inputs
+    # this disables the streaming engine, but ensures results are consistant
+    # for pandas and polars
+    aggregated = table.group_by(key, maintain_order=True).agg(aggfuncs)
 
     return aggregated
 

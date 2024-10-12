@@ -33,8 +33,8 @@ def test_aggregate_single_operation(df_module, main_table):
     )
     # In that order because columns are sorted in ``aggregate``
     expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
-    rating_mean = sbd.to_float32(sbd.col(expected, "rating_mean"))
-    expected = sbd.with_columns(expected, **{"rating_mean": rating_mean})
+    # rating_mean = sbd.to_float32(sbd.col(expected, "rating_mean"))
+    # expected = sbd.with_columns(expected, **{"rating_mean": rating_mean})
 
     print("expected  :", expected)
     print("aggregated  :", aggregated)
