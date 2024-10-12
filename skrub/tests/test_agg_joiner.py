@@ -6,6 +6,7 @@ from skrub._agg_joiner import AggJoiner, AggTarget, aggregate
 from skrub.conftest import _POLARS_INSTALLED
 
 
+# TODO: rename tests to correspond to AggJoiner / AggTarget
 # TODO: parametrize the fixture with df_module
 # TODO: check boolean col
 # TODO: check empty col
@@ -33,12 +34,9 @@ def test_aggregate_single_operation(df_module, main_table):
     )
     # In that order because columns are sorted in ``aggregate``
     expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
-    # TODO: handle pandas-nullable-dtypes in a smarter way
-    if df_module.description == "pandas-nullable-dtypes":
-        expected["userId"] = expected["userId"].astype("int64")
-        expected["rating_mean"] = expected["rating_mean"].astype("float64")
-
-    df_module.assert_frame_equal(aggregated, expected)
+    df_module.assert_frame_equal(
+        sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
+    )
 
     aggregated = aggregate(
         main_table,
@@ -50,12 +48,9 @@ def test_aggregate_single_operation(df_module, main_table):
     expected = df_module.make_dataframe(
         {"genre_mode": ["drama", "sf"], "userId": [1, 2]}
     )
-    # TODO: handle pandas-nullable-dtypes in a smarter way
-    if df_module.description == "pandas-nullable-dtypes":
-        expected["userId"] = expected["userId"].astype("int64")
-        expected["genre_mode"] = expected["genre_mode"].astype("object")
-
-    df_module.assert_frame_equal(aggregated, expected)
+    df_module.assert_frame_equal(
+        sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
+    )
 
 
 def test_aggregate_multiple_operations(df_module, main_table):
@@ -71,13 +66,9 @@ def test_aggregate_multiple_operations(df_module, main_table):
     expected = df_module.make_dataframe(
         {"rating_mean": [4.0, 3.0], "rating_sum": [12.0, 9.0], "userId": [1, 2]}
     )
-    # TODO: handle pandas-nullable-dtypes in a smarter way
-    if df_module.description == "pandas-nullable-dtypes":
-        expected["userId"] = expected["userId"].astype("int64")
-        expected["rating_mean"] = expected["rating_mean"].astype("float64")
-        expected["rating_sum"] = expected["rating_sum"].astype("float64")
-
-    df_module.assert_frame_equal(aggregated, expected)
+    df_module.assert_frame_equal(
+        sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
+    )
 
 
 def test_aggregate_multiple_columns(df_module, main_table):
@@ -124,7 +115,8 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
         aux_table=aux,
         aux_key="userId",
         main_key="userId",
-        cols=["rating", "genre"],
+        cols="genre",
+        operations="mode",
         suffix="_user",
     )
 
@@ -136,7 +128,7 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
             "movieId": [1, 3, 6, 318, 6, 1704],
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
-            "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
+            "genre_mode_user": ["drama", "drama", "drama", "sf", "sf", "sf"],
         }
     )
     df_module.assert_frame_equal(
@@ -147,7 +139,8 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
         aux_table=aux,
         aux_key="movieId",
         main_key="movieId",
-        cols=["rating"],
+        cols="rating",
+        operations="mean",
         suffix="_movie",
     )
 
