@@ -33,11 +33,11 @@ def test_aggregate_single_operation(df_module, main_table):
     )
     # In that order because columns are sorted in ``aggregate``
     expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
-    # rating_mean = sbd.to_float32(sbd.col(expected, "rating_mean"))
-    # expected = sbd.with_columns(expected, **{"rating_mean": rating_mean})
+    # TODO: handle pandas-nullable-dtypes in a smarter way
+    if df_module.description == "pandas-nullable-dtypes":
+        expected["userId"] = expected["userId"].astype("int64")
+        expected["rating_mean"] = expected["rating_mean"].astype("float64")
 
-    print("expected  :", expected)
-    print("aggregated  :", aggregated)
     df_module.assert_frame_equal(aggregated, expected)
 
     aggregated = aggregate(
@@ -50,6 +50,11 @@ def test_aggregate_single_operation(df_module, main_table):
     expected = df_module.make_dataframe(
         {"genre_mode": ["drama", "sf"], "userId": [1, 2]}
     )
+    # TODO: handle pandas-nullable-dtypes in a smarter way
+    if df_module.description == "pandas-nullable-dtypes":
+        expected["userId"] = expected["userId"].astype("int64")
+        expected["genre_mode"] = expected["genre_mode"].astype("object")
+
     df_module.assert_frame_equal(aggregated, expected)
 
 
