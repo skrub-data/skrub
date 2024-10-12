@@ -7,6 +7,8 @@ from skrub.conftest import _POLARS_INSTALLED
 
 
 # TODO: parametrize the fixture with df_module
+# TODO: check boolean col
+# TODO: check empty col
 @pytest.fixture
 def main_table():
     df = pd.DataFrame(
@@ -49,8 +51,21 @@ def test_aggregate_single_operation(df_module, main_table):
     df_module.assert_frame_equal(aggregated, expected)
 
 
-def test_aggregate_wrong_operation_type():
-    assert True
+def test_aggregate_wrong_operation_type(df_module, main_table):
+    main_table = df_module.DataFrame(main_table)
+    with pytest.raises(
+        AttributeError,
+        match=(
+            r"(removing the following columns: \[\'genre\'\] or the following"
+            r" operations: \[\'std\'\])"
+        ),
+    ):
+        aggregate(
+            main_table,
+            key="userId",
+            cols_to_agg="genre",
+            operations="std",
+        )
 
 
 def test_aggregate_3():

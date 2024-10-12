@@ -64,16 +64,22 @@ def aggregate(table, key, cols_to_agg, operations=["mean", "mode"], suffix=""):
         The aggregated output.
     """
 
-    cat_operations = ["count", "mode", "min", "max"]
     # summing strings works in pandas, not in polars
-    num_supported_operations = cat_operations + ["sum", "median", "mean", "std"]
+    num_only_operations = ["sum", "median", "mean", "std"]
 
     key = atleast_1d_or_none(key)
     cols_to_agg = atleast_1d_or_none(cols_to_agg)
     operations = atleast_1d_or_none(operations)
 
-    # TODO: check column types
-    # TODO: if operations & types not compat, raise helpful error
+    cat_cols = (s.string() | s.categorical()).expand(table)
+    num_only_op = list(set(operations).intersection(set(num_only_operations)))
+
+    if (len(cat_cols) > 0) & (len(num_only_op) > 0):
+        raise AttributeError(
+            f"The operations {num_only_operations} are restricted to numeric columns."
+            f" \nConsider removing the following columns: {cat_cols} or the following"
+            f" operations: {num_only_op}."
+        )
 
     aggregated = perform_groupby(table, key, cols_to_agg, operations)
 
