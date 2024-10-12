@@ -2,10 +2,11 @@ import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub._agg_joiner import AggJoiner, AggTarget, split_num_categ_operations
+from skrub._agg_joiner import AggJoiner, AggTarget, aggregate
 from skrub.conftest import _POLARS_INSTALLED
 
 
+# TODO: parametrize the fixture with df_module
 @pytest.fixture
 def main_table():
     df = pd.DataFrame(
@@ -19,15 +20,41 @@ def main_table():
     return df
 
 
-def test_split_num_categ_operations():
-    "Check that the operations are correctly separated."
-
-    # Check split ops
-    num_ops, categ_ops = split_num_categ_operations(
-        ["mean", "std", "min", "mode", "max", "sum"]
+def test_aggregate_single_operation(df_module, main_table):
+    main_table = df_module.DataFrame(main_table)
+    aggregated = aggregate(
+        main_table,
+        key="userId",
+        cols_to_agg="rating",
+        operations="mean",
     )
-    assert num_ops == ["mean", "std", "min", "max", "sum"]
-    assert categ_ops == ["mode"]
+    # In that order because columns are sorted in ``aggregate``
+    expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
+    rating_mean = sbd.to_float32(sbd.col(expected, "rating_mean"))
+    expected = sbd.with_columns(expected, **{"rating_mean": rating_mean})
+
+    print("expected  :", expected)
+    print("aggregated  :", aggregated)
+    df_module.assert_frame_equal(aggregated, expected)
+
+    aggregated = aggregate(
+        main_table,
+        key="userId",
+        cols_to_agg="genre",
+        operations="mode",
+    )
+    expected = df_module.make_dataframe(
+        {"genre_mode": ["drama", "sf"], "userId": [1, 2]}
+    )
+    df_module.assert_frame_equal(aggregated, expected)
+
+
+def test_aggregate_wrong_operation_type():
+    assert True
+
+
+def test_aggregate_3():
+    assert True
 
 
 @pytest.mark.parametrize("use_X_placeholder", [False, True])

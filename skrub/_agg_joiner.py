@@ -6,24 +6,135 @@ Both classes aggregate the auxiliary table first, then join this grouped
 table with the main table.
 """
 
+from itertools import product
+
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
 from skrub import _join_utils
+from skrub import _selectors as s
 from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
 from skrub._dataframe._pandas import _parse_argument
+from skrub._dispatch import dispatch
 from skrub._utils import atleast_1d_or_none
 
 from ._check_input import CheckInputDataFrame
+
+try:
+    import polars as pl
+except ImportError:
+    pass
 
 NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
 CATEG_OPERATIONS = ["mode", "count", "value_counts"]
 ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
 
 
+def aggregate(table, key, cols_to_agg, operations=["mean", "mode"], suffix=""):
+    """Aggregate `table` on `key` and compute statistics on `cols_to_agg`.
+
+    Add a suffix to columns not in `key` and sort columns by name.
+
+    Parameters
+    ----------
+    table : DataFrame
+        The input dataframe to aggregate.
+
+    key : str or iterable of str
+        The columns used as keys to aggregate on.
+
+    cols_to_agg : str or iterable of str
+        The columns to aggregate.
+
+    operations : str or iterable of str, default=["mean", "mode"]
+        The reduction functions to apply on columns
+        in ``cols_to_agg`` during the aggregation.
+
+    suffix : str, default=""
+        The suffix appended to output columns. Will only be applied
+        to columns created by the aggregations.
+
+    Returns
+    -------
+    DataFrame
+        The aggregated output.
+    """
+
+    cat_operations = ["count", "mode", "min", "max"]
+    # summing strings works in pandas, not in polars
+    num_supported_operations = cat_operations + ["sum", "median", "mean", "std"]
+
+    key = atleast_1d_or_none(key)
+    cols_to_agg = atleast_1d_or_none(cols_to_agg)
+    operations = atleast_1d_or_none(operations)
+
+    # TODO: check column types
+    # TODO: if operations & types not compat, raise helpful error
+
+    aggregated = perform_groupby(table, key, cols_to_agg, operations)
+
+    new_col_names = {
+        col: f"{col}{suffix}" if col not in key else col
+        for col in sbd.column_names(aggregated)
+    }
+    aggregated = sbd.set_column_names(aggregated, new_col_names)
+    aggregated = s.select(aggregated, sorted(sbd.column_names(aggregated)))
+
+    return aggregated
+
+
+@dispatch
+def perform_groupby(table, key, cols_to_agg, operations):
+    raise NotImplementedError()
+
+
+@perform_groupby.specialize("pandas", argument_type="DataFrame")
+def _perform_groupby_pandas(table, key, cols_to_agg, operations):
+    pandas_aggfuncs = {
+        "mode": pd.Series.mode,
+    }
+    named_agg = {}
+    for col, operation in product(cols_to_agg, operations):
+        aggfunc = pandas_aggfuncs.get(operation, operation)
+        output_key = f"{col}_{operation}"
+        named_agg[output_key] = (col, aggfunc)
+
+    try:
+        aggregated = table.groupby(key).agg(**named_agg).reset_index(drop=False)
+    except TypeError:
+        # TODO
+        raise ValueError(
+            "Not all operations are available on the requested `cols_to_agg`"
+        )
+    return aggregated
+
+
+@perform_groupby.specialize("polars", argument_type="DataFrame")
+def _perform_groupby_polars(table, key, cols_to_agg, operations):
+    aggfuncs = []
+    for col, operation in product(cols_to_agg, operations):
+        polars_aggfuncs = {
+            "mean": pl.col(col).mean(),
+            "std": pl.col(col).std(),
+            "sum": pl.col(col).sum(),
+            "min": pl.col(col).min(),
+            "max": pl.col(col).max(),
+            "mode": pl.col(col).mode().first(),
+        }
+        output_key = f"{col}_{operation}"
+        aggfunc = polars_aggfuncs.get(operation, None).alias(output_key)
+        aggfuncs.append(aggfunc)
+
+    aggregated = table.group_by(key).agg(aggfuncs)
+
+    return aggregated
+
+
+# TODO: rm
 def split_num_categ_operations(operations):
     """Separate aggregator operators input by their type.
 
