@@ -131,6 +131,8 @@ def _perform_groupby_polars(table, key, cols_to_agg, operations):
     aggfuncs = []
     for col, operation in product(cols_to_agg, operations):
         polars_aggfuncs = {
+            "count": pl.col(col).count(),
+            "median": pl.col(col).median(),
             "mean": pl.col(col).mean(),
             "std": pl.col(col).std(),
             "sum": pl.col(col).sum(),
@@ -367,9 +369,9 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         else:
             self._operations = self.operations
 
-        self.num_operations, self.categ_operations = split_num_categ_operations(
-            self._operations
-        )
+        # self.num_operations, self.categ_operations = split_num_categ_operations(
+        #     self._operations
+        # )
 
         if not isinstance(self.suffix, str):
             raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
@@ -394,13 +396,20 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
 
-        skrub_px, _ = get_df_namespace(self._aux_table)
-        self.aux_table_ = skrub_px.aggregate(
+        # skrub_px, _ = get_df_namespace(self._aux_table)
+        # self.aux_table_ = aggregate(
+        #     self._aux_table,
+        #     self._aux_key,
+        #     self._cols,
+        #     self.num_operations,
+        #     self.categ_operations,
+        #     suffix=self.suffix,
+        # )
+        self.aux_table_ = aggregate(
             self._aux_table,
             self._aux_key,
             self._cols,
-            self.num_operations,
-            self.categ_operations,
+            self.operations,
             suffix=self.suffix,
         )
         result = _join_utils.left_join(

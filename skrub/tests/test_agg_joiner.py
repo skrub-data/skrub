@@ -58,6 +58,28 @@ def test_aggregate_single_operation(df_module, main_table):
     df_module.assert_frame_equal(aggregated, expected)
 
 
+def test_aggregate_multiple_operations(df_module, main_table):
+    main_table = df_module.DataFrame(main_table)
+    aggregated = aggregate(
+        main_table,
+        key="userId",
+        cols_to_agg="rating",
+        operations=["mean", "sum"],
+        suffix="",
+    )
+
+    expected = df_module.make_dataframe(
+        {"rating_mean": [4.0, 3.0], "rating_sum": [12.0, 9.0], "userId": [1, 2]}
+    )
+    # TODO: handle pandas-nullable-dtypes in a smarter way
+    if df_module.description == "pandas-nullable-dtypes":
+        expected["userId"] = expected["userId"].astype("int64")
+        expected["rating_mean"] = expected["rating_mean"].astype("float64")
+        expected["rating_sum"] = expected["rating_sum"].astype("float64")
+
+    df_module.assert_frame_equal(aggregated, expected)
+
+
 def test_aggregate_wrong_operation_type(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     with pytest.raises(
@@ -74,10 +96,6 @@ def test_aggregate_wrong_operation_type(df_module, main_table):
             operations="std",
             suffix="",
         )
-
-
-def test_aggregate_3():
-    assert True
 
 
 @pytest.mark.parametrize("use_X_placeholder", [False, True])
@@ -102,7 +120,6 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
             "movieId": [1, 3, 6, 318, 6, 1704],
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
-            "genre_mode_user": ["drama", "drama", "drama", "sf", "sf", "sf"],
             "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
         }
     )
