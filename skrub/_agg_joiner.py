@@ -90,10 +90,10 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
 
     aggregated = perform_groupby(table_to_agg, key, cols_to_agg, operations)
 
-    new_col_names = {
-        col: f"{col}{suffix}" if col not in key else col
+    new_col_names = [
+        f"{col}{suffix}" if col not in key else col
         for col in sbd.column_names(aggregated)
-    }
+    ]
     aggregated = sbd.set_column_names(aggregated, new_col_names)
     aggregated = s.select(aggregated, sorted(sbd.column_names(aggregated)))
 

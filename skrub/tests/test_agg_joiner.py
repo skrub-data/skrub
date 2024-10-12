@@ -80,6 +80,22 @@ def test_aggregate_multiple_operations(df_module, main_table):
     df_module.assert_frame_equal(aggregated, expected)
 
 
+def test_aggregate_multiple_columns(df_module, main_table):
+    assert True
+
+
+def test_aggregate_suffix(df_module, main_table):
+    main_table = df_module.DataFrame(main_table)
+    aggregated = aggregate(
+        main_table,
+        key="userId",
+        cols_to_agg="rating",
+        operations="mean",
+        suffix="_custom_suffix",
+    )
+    assert sbd.column_names(aggregated) == ["rating_mean_custom_suffix", "userId"]
+
+
 def test_aggregate_wrong_operation_type(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     with pytest.raises(
