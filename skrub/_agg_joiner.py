@@ -222,6 +222,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     operations : str or iterable of str, default=None
         Aggregation operations to perform on the auxiliary table.
 
+        # TODO: doc + default value
         - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
           "hist" and "value_counts" accept an integer argument to parametrize
           the binning.

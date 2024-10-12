@@ -167,9 +167,7 @@ def test_correct_keys(df_module, main_table):
 
     # Check only key
     agg_joiner = AggJoiner(
-        aux_table=main_table,
-        key="userId",
-        cols=["rating", "genre"],
+        aux_table=main_table, key="userId", cols=["rating", "genre"], operations="mode"
     )
     agg_joiner.fit(main_table)
     assert agg_joiner._main_key == ["userId"]
@@ -180,6 +178,7 @@ def test_correct_keys(df_module, main_table):
         aux_table=main_table,
         key=["userId", "movieId"],
         cols=["rating", "genre"],
+        operations="mode",
     )
     agg_joiner.fit(main_table)
 
@@ -189,6 +188,7 @@ def test_correct_keys(df_module, main_table):
         main_key=["userId", "movieId"],
         aux_key=["userId", "movieId"],
         cols=["rating", "genre"],
+        operations="mode",
     )
     agg_joiner.fit(main_table)
     assert agg_joiner._main_key == ["userId", "movieId"]
@@ -205,6 +205,7 @@ def test_wrong_keys(df_module, main_table):
         main_key=["userId", "movieId"],
         aux_key="userId",
         cols=["rating", "genre"],
+        operations="mode",
     )
     with pytest.raises(
         ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
@@ -217,6 +218,7 @@ def test_wrong_keys(df_module, main_table):
         main_key="userId",
         aux_key=["userId", "movieId"],
         cols=["rating", "genre"],
+        operations="mode",
     )
     with pytest.raises(
         ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
@@ -229,6 +231,7 @@ def test_wrong_keys(df_module, main_table):
         key="userId",
         main_key="userId",
         cols=["rating", "genre"],
+        operations="mode",
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
         agg_joiner.fit(main_table)
@@ -239,6 +242,7 @@ def test_wrong_keys(df_module, main_table):
         key="userId",
         aux_key="userId",
         cols=["rating", "genre"],
+        operations="mode",
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
         agg_joiner.fit(main_table)
@@ -249,6 +253,7 @@ def test_wrong_keys(df_module, main_table):
         main_key="wrong_key",
         aux_key="userId",
         cols=["rating", "genre"],
+        operations="mode",
     )
     match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
@@ -260,6 +265,7 @@ def test_wrong_keys(df_module, main_table):
         main_key="userId",
         aux_key="wrong_key",
         cols=["rating", "genre"],
+        operations="mode",
     )
     match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
@@ -272,9 +278,7 @@ def test_default_suffix(df_module, main_table):
 
     # Check no suffix
     agg_joiner = AggJoiner(
-        aux_table=main_table,
-        key="userId",
-        cols=["rating", "genre"],
+        aux_table=main_table, key="userId", cols=["rating", "genre"], operations="mode"
     )
     agg_joiner.fit(main_table)
     assert agg_joiner.suffix == ""
@@ -301,8 +305,7 @@ def test_default_cols(df_module, main_table):
 
     # Check no cols
     agg_joiner = AggJoiner(
-        aux_table=main_table,
-        key=["movieId", "userId"],
+        aux_table=main_table, key=["movieId", "userId"], operations="mode"
     )
     agg_joiner.fit(main_table)
     agg_joiner._cols == ["rating", "genre"]
