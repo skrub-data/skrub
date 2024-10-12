@@ -29,6 +29,7 @@ def test_aggregate_single_operation(df_module, main_table):
         key="userId",
         cols_to_agg="rating",
         operations="mean",
+        suffix="",
     )
     # In that order because columns are sorted in ``aggregate``
     expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
@@ -44,6 +45,7 @@ def test_aggregate_single_operation(df_module, main_table):
         key="userId",
         cols_to_agg="genre",
         operations="mode",
+        suffix="",
     )
     expected = df_module.make_dataframe(
         {"genre_mode": ["drama", "sf"], "userId": [1, 2]}
@@ -65,6 +67,7 @@ def test_aggregate_wrong_operation_type(df_module, main_table):
             key="userId",
             cols_to_agg="genre",
             operations="std",
+            suffix="",
         )
 
 

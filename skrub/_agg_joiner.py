@@ -34,8 +34,10 @@ CATEG_OPERATIONS = ["mode", "count", "value_counts"]
 ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
 
 
-def aggregate(table, key, cols_to_agg, operations=["mean", "mode"], suffix=""):
+def aggregate(table, key, cols_to_agg, operations, suffix):
     """Aggregate `table` on `key` and compute statistics on `cols_to_agg`.
+
+    Operations ["sum", "median", "mean", "std"] are only supported for numeric columns.
 
     Add a suffix to columns not in `key` and sort columns by name.
 
@@ -50,11 +52,11 @@ def aggregate(table, key, cols_to_agg, operations=["mean", "mode"], suffix=""):
     cols_to_agg : str or iterable of str
         The columns to aggregate.
 
-    operations : str or iterable of str, default=["mean", "mode"]
+    operations : str or iterable of str
         The reduction functions to apply on columns
         in ``cols_to_agg`` during the aggregation.
 
-    suffix : str, default=""
+    suffix : str
         The suffix appended to output columns. Will only be applied
         to columns created by the aggregations.
 
@@ -71,7 +73,12 @@ def aggregate(table, key, cols_to_agg, operations=["mean", "mode"], suffix=""):
     cols_to_agg = atleast_1d_or_none(cols_to_agg)
     operations = atleast_1d_or_none(operations)
 
-    cat_cols = (s.string() | s.categorical()).expand(table)
+    table_to_agg = s.select(table, s.cols(*key) | s.cols(*cols_to_agg))
+
+    # Don't check the ID column, as it's not the one we aggregate on
+    table_to_check = s.select(table_to_agg, ~s.cols(*key))
+    cat_cols = (s.string() | s.categorical()).expand(table_to_check)
+
     num_only_op = list(set(operations).intersection(set(num_only_operations)))
 
     if (len(cat_cols) > 0) & (len(num_only_op) > 0):
@@ -81,7 +88,7 @@ def aggregate(table, key, cols_to_agg, operations=["mean", "mode"], suffix=""):
             f" operations: {num_only_op}."
         )
 
-    aggregated = perform_groupby(table, key, cols_to_agg, operations)
+    aggregated = perform_groupby(table_to_agg, key, cols_to_agg, operations)
 
     new_col_names = {
         col: f"{col}{suffix}" if col not in key else col
