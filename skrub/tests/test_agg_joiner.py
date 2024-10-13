@@ -366,7 +366,7 @@ def test_default_operations(df_module, main_table):
     agg_joiner = AggJoiner(
         aux_table=main_table,
         key="userId",
-        cols=["rating", "genre"],
+        cols="rating",
     )
     agg_joiner.fit(main_table)
     assert agg_joiner._operations == ["mean", "mode"]
@@ -429,6 +429,7 @@ def test_not_fitted_dataframe(df_module, main_table):
     agg_joiner = AggJoiner(
         aux_table=main_table,
         key="userId",
+        cols="rating",
     )
     agg_joiner.fit(main_table)
     error_msg = r"Columns of dataframes passed to fit\(\) and transform\(\) differ"
@@ -522,8 +523,9 @@ def test_wrong_args_ops(main_table):
         agg_target.fit(main_table, y)
 
 
-def test_duplicate_columns(main_table):
-    joiner = AggJoiner(aux_table=main_table, key="userId")
+def test_duplicate_columns(df_module, main_table):
+    main_table = df_module.DataFrame(main_table)
+    joiner = AggJoiner(aux_table=main_table, key="userId", cols="rating")
     X = sbd.with_columns(main_table, rating_mean=sbd.col(main_table, "rating"))
     out_1 = joiner.fit_transform(X)
     out_2 = joiner.transform(X)
