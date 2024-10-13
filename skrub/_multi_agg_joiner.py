@@ -111,7 +111,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
 
         If not `None`, there must be an iterable of `operations` for each
         table in `aux_tables`.
-
+        TODO: change doc, change default ?
         - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
           "hist" and "value_counts" accept an integer argument to parametrize
           the binning.

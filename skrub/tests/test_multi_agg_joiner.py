@@ -29,7 +29,8 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
         aux_tables=aux,
         main_keys=[["userId"], ["movieId"]],
         aux_keys=[["userId"], ["movieId"]],
-        cols=[["rating", "genre"], ["rating"]],
+        cols=[["genre"], ["rating"]],
+        operations=[["mode"], ["mean"]],
         suffixes=["_user", "_movie"],
     )
 
@@ -42,7 +43,6 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
             "genre_mode_user": ["drama", "drama", "drama", "sf", "sf", "sf"],
-            "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
             "rating_mean_movie": [4.0, 4.0, 3.0, 3.0, 3.0, 4.0],
         }
     )
@@ -61,6 +61,7 @@ def test_X_placeholder(df_module, main_table):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=["X", main_table],
         keys=[["userId"], ["userId"]],
+        operations=[["mode"], ["mode"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [main_table, main_table]
@@ -68,6 +69,7 @@ def test_X_placeholder(df_module, main_table):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=["X", "X"],
         keys=[["userId"], ["userId"]],
+        operations=[["mode"], ["mode"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [main_table, main_table]
@@ -75,6 +77,7 @@ def test_X_placeholder(df_module, main_table):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table, "X", main_table],
         keys=[["userId"], ["userId"], ["userId"], ["userId"]],
+        operations=[["mode"], ["mode"], ["mode"], ["mode"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [
@@ -159,6 +162,7 @@ def test_correct_keys(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
         keys=[["userId"]],
+        operations=[["mode"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._main_keys == [["userId"]]
@@ -168,6 +172,7 @@ def test_correct_keys(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
         keys=[["userId", "movieId"]],
+        operations=[["mode"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
@@ -175,6 +180,7 @@ def test_correct_keys(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
         keys=[["userId"], ["userId"]],
+        operations=[["mode"], ["mode"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
@@ -183,6 +189,7 @@ def test_correct_keys(main_table, df_module):
         aux_tables=[main_table],
         main_keys=[["userId", "movieId"]],
         aux_keys=[["userId", "movieId"]],
+        operations=[["mode"], ["mode"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
@@ -311,6 +318,7 @@ def test_default_cols(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
         keys=[["userId", "movieId"], ["userId"]],
+        operations=[["mode"], ["mode"]],
     )
     multi_agg_joiner.fit(main_table)
     multi_agg_joiner._cols == [["rating", "genre"], ["movieId", "rating", "genre"]]
@@ -598,6 +606,7 @@ def test_not_fitted_dataframe(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
         keys=[["userId"]],
+        operations=[["mode"]],
     )
     multi_agg_joiner.fit(main_table)
     error_msg = r"Columns of dataframes passed to fit\(\) and transform\(\) differ"
