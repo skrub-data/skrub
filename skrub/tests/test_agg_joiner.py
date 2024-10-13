@@ -415,7 +415,7 @@ def test_not_supported_operations(df_module, main_table):
         cols=["rating", "genre"],
         operations=["nunique", "mode"],
     )
-    match = r"(?=.*operations options are)"
+    match = r"(?=.*`operations` options are)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main_table)
 

@@ -32,6 +32,7 @@ except ImportError:
 NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
 CATEG_OPERATIONS = ["mode", "count", "value_counts"]
 ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
+SUPPORTED_OPS = ["count", "mode", "min", "max", "sum", "median", "mean", "std"]
 
 
 def aggregate(table, key, cols_to_agg, operations, suffix):
@@ -219,15 +220,12 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         the aggregation operations.
         If set to `None`, `cols` are all columns from `aux_table`, except `aux_key`.
 
-    operations : str or iterable of str, default=None
+    operations : str or iterable of str, default=["mean", "mode"]
         Aggregation operations to perform on the auxiliary table.
 
-        # TODO: doc + default value
-        - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-          "hist" and "value_counts" accept an integer argument to parametrize
-          the binning.
-        - categorical : {"mode", "count", "value_counts"}
-        - If set to `None` (the default), ["mean", "mode"] will be used.
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type columns.
 
     suffix : str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it
@@ -279,7 +277,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         main_key=None,
         aux_key=None,
         cols=None,
-        operations=None,
+        operations=["mean", "mode"],
         suffix="",
     ):
         self.aux_table = aux_table
@@ -361,14 +359,18 @@ class AggJoiner(TransformerMixin, BaseEstimator):
             self._cols = self.cols
         _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
 
-        if self.operations is None:
-            self._operations = ["mean", "mode"]
-        elif isinstance(self.operations, str):
+        if isinstance(self.operations, str):
             self._operations = [
                 self.operations,
             ]
         else:
             self._operations = self.operations
+
+        unsupported_ops = set(self._operations).difference(set(SUPPORTED_OPS))
+        if unsupported_ops:
+            raise ValueError(
+                f"`operations` options are {SUPPORTED_OPS}, got: {unsupported_ops}."
+            )
 
         # self.num_operations, self.categ_operations = split_num_categ_operations(
         #     self._operations
@@ -583,6 +585,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         # Add the main key on the target
         y_[self.main_key_] = X[self.main_key_]
 
+        # TODO: rm
         num_operations, categ_operations = split_num_categ_operations(self.operation_)
         self.y_ = skrub_px.aggregate(
             y_,
