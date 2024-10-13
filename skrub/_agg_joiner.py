@@ -18,7 +18,6 @@ from skrub import _dataframe as sbd
 from skrub import _join_utils
 from skrub import _selectors as s
 from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
-from skrub._dataframe._pandas import _parse_argument
 from skrub._dispatch import dispatch
 from skrub._utils import atleast_1d_or_none
 
@@ -29,9 +28,6 @@ try:
 except ImportError:
     pass
 
-NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
-CATEG_OPERATIONS = ["mode", "count", "value_counts"]
-ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
 SUPPORTED_OPS = ["count", "mode", "min", "max", "sum", "median", "mean", "std"]
 
 
@@ -78,14 +74,14 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
 
     # Don't check the ID column, as it's not the one we aggregate on
     table_to_check = s.select(table_to_agg, ~s.cols(*key))
-    cat_cols = (s.string() | s.categorical()).expand(table_to_check)
+    categ_cols = (s.string() | s.categorical()).expand(table_to_check)
 
     num_only_op = list(set(operations).intersection(set(num_only_operations)))
 
-    if (len(cat_cols) > 0) & (len(num_only_op) > 0):
+    if (len(categ_cols) > 0) & (len(num_only_op) > 0):
         raise AttributeError(
             f"The operations {num_only_operations} are restricted to numeric columns."
-            f" \nConsider removing the following columns: {cat_cols} or the following"
+            f" \nConsider removing the following columns: {categ_cols} or the following"
             f" operations: {num_only_op}."
         )
 
@@ -146,34 +142,6 @@ def _perform_groupby_polars(table, key, cols_to_agg, operations):
     aggregated = table.group_by(key, maintain_order=True).agg(aggfuncs)
 
     return aggregated
-
-
-# TODO: rm
-def split_num_categ_operations(operations):
-    """Separate aggregator operators input by their type.
-
-    Parameters
-    ----------
-    operations : list of str
-        The input operators names.
-
-    Returns
-    -------
-    num_operations, categ_operations : Tuple of list of str
-        List of operator names.
-    """
-    num_operations, categ_operations = [], []
-    for operation in operations:
-        # hist(5) -> hist
-        op_root, _ = _parse_argument(operation)
-        if op_root in NUM_OPERATIONS:
-            num_operations.append(operation)
-        if op_root in CATEG_OPERATIONS:
-            categ_operations.append(operation)
-        if op_root not in ALL_OPS:
-            raise ValueError(f"operations options are {ALL_OPS}, got: {operation=!r}.")
-
-    return num_operations, categ_operations
 
 
 class AggJoiner(TransformerMixin, BaseEstimator):
@@ -471,17 +439,16 @@ class AggTarget(TransformerMixin, BaseEstimator):
         aggregated using each key separately, then each aggregation of
         the target will be joined on the main table.
 
+    # TODO: set default
+    # TODO: rename into `operation`
     operation : str or iterable of str, optional
         Aggregation operations to perform on the target.
 
-        numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-            'hist' and 'value_counts' accept an integer argument to parametrize
-            the binning.
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type targets.
 
-        categorical : {"mode", "count", "value_counts"}
-
-        If set to None (the default), ["mean", "mode"] will be used.
-
+    # TODO: set default
     suffix : str, optional
         The suffix to append to the columns of the target table if the join
         results in duplicates columns.
@@ -545,12 +512,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
             `y` length must match `X` length, with matching indices.
             The target can be continuous or discrete, with multiple columns.
 
-            If the target is continuous, only numerical operations,
-            listed in `num_operations`, can be applied.
-
-            If the target is discrete, only categorical operations,
-            listed in `categ_operations`, can be applied.
-
             Note that the target type is determined by
             :func:`sklearn.utils.multiclass.type_of_target`.
 
@@ -567,14 +528,11 @@ class AggTarget(TransformerMixin, BaseEstimator):
         # Add the main key on the target
         y_[self.main_key_] = X[self.main_key_]
 
-        # TODO: rm
-        num_operations, categ_operations = split_num_categ_operations(self.operation_)
-        self.y_ = skrub_px.aggregate(
+        self.y_ = aggregate(
             y_,
             key=self.main_key_,
             cols_to_agg=self.cols_,
-            num_operations=num_operations,
-            categ_operations=categ_operations,
+            operations=self.operation_,
             suffix=self.suffix_,
         )
 
@@ -598,12 +556,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
         y : DataFrameLike or SeriesLike or ArrayLike
             `y` length must match `X` length, with matching indices.
             The target can be continuous or discrete, with multiple columns.
-
-            If the target is continuous, only numerical operations,
-            listed in `num_operations`, can be applied.
-
-            If the target is discrete, only categorical operations,
-            listed in `categ_operations`, can be applied.
 
             Note that the target type is determined by
             :func:`sklearn.utils.multiclass.type_of_target`.

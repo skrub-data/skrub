@@ -451,11 +451,7 @@ y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
     ],
 )
 def test_agg_target(main_table, y, col_name):
-    agg_target = AggTarget(
-        main_key="userId",
-        suffix="_user",
-        operation=["hist(2)", "value_counts"],
-    )
+    agg_target = AggTarget(main_key="userId", suffix="_user", operation="mean")
     main_transformed = agg_target.fit_transform(main_table, y)
 
     main_transformed_expected = pd.DataFrame(
@@ -464,11 +460,7 @@ def test_agg_target(main_table, y, col_name):
             "movieId": [1, 3, 6, 318, 6, 1704],
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
-            f"{col_name}_(1.999, 3.0]_user": [0, 0, 0, 2, 2, 2],
-            f"{col_name}_(3.0, 4.0]_user": [3, 3, 3, 1, 1, 1],
-            f"{col_name}_2.0_user": [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
-            f"{col_name}_3.0_user": [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
-            f"{col_name}_4.0_user": [3.0, 3.0, 3.0, 1.0, 1.0, 1.0],
+            f"{col_name}_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
         }
     )
     pd.testing.assert_frame_equal(main_transformed, main_transformed_expected)
@@ -503,24 +495,6 @@ def test_agg_target_check_input(main_table):
     match = r"(?=.*length)(?=.*match)"
     with pytest.raises(ValueError, match=match):
         agg_target.fit(main_table, y["rating"][:2])
-
-
-def test_no_aggregation_exception(main_table):
-    agg_target = AggTarget(
-        main_key="userId",
-        operation=[],
-    )
-    with pytest.raises(ValueError, match=r"(?=.*No aggregation)"):
-        agg_target.fit(main_table, y)
-
-
-def test_wrong_args_ops(main_table):
-    agg_target = AggTarget(
-        main_key="userId",
-        operation="mean(2)",
-    )
-    with pytest.raises(ValueError, match=r"(?=.*'mean')(?=.*argument)"):
-        agg_target.fit(main_table, y)
 
 
 def test_duplicate_columns(df_module, main_table):
