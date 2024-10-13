@@ -439,17 +439,16 @@ class AggTarget(TransformerMixin, BaseEstimator):
         aggregated using each key separately, then each aggregation of
         the target will be joined on the main table.
 
-    # TODO: set default
-    # TODO: rename into `operation`
     operation : str or iterable of str, optional
+        TODO: set default, rename into `operations`
         Aggregation operations to perform on the target.
 
         Supported operations are "count", "mode", "min", "max", "sum", "median",
         "mean", "std". The operations "sum", "median", "mean", "std" are reserved
         to numeric type targets.
 
-    # TODO: set default
     suffix : str, optional
+        TODO: set default
         The suffix to append to the columns of the target table if the join
         results in duplicates columns.
         If set to None, "_target" is used.
