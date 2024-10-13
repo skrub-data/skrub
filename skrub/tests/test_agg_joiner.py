@@ -3,7 +3,6 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub._agg_joiner import AggJoiner, AggTarget, aggregate
-from skrub.conftest import _POLARS_INSTALLED
 
 
 # TODO: rename tests to correspond to AggJoiner / AggTarget
@@ -386,22 +385,6 @@ def test_correct_operations_input(df_module, main_table):
     )
     agg_joiner.fit(main_table)
     assert agg_joiner._operations == ["min", "max", "mode"]
-
-
-@pytest.mark.skipif(not _POLARS_INSTALLED, reason="Polars is not available")
-def test_polars_unavailable_operation(main_table):
-    "Check that the 'value_counts' operation is not supported for Polars."
-    import polars as pl
-
-    agg_joiner = AggJoiner(
-        aux_table="X",
-        main_key="userId",
-        aux_key="movieId",
-        cols="rating",
-        operations=["value_counts"],
-    )
-    with pytest.raises(ValueError, match=r"(?=.*value_counts)(?=.*supported)"):
-        agg_joiner.fit(pl.DataFrame(main_table))
 
 
 def test_not_supported_operations(df_module, main_table):

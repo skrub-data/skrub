@@ -117,13 +117,8 @@ def _perform_groupby_pandas(table, key, cols_to_agg, operations):
         output_key = f"{col}_{operation}"
         named_agg[output_key] = (col, aggfunc)
 
-    try:
-        aggregated = table.groupby(key).agg(**named_agg).reset_index(drop=False)
-    except TypeError:
-        # TODO
-        raise ValueError(
-            "Not all operations are available on the requested `cols_to_agg`"
-        )
+    aggregated = table.groupby(key).agg(**named_agg).reset_index(drop=False)
+
     return aggregated
 
 
@@ -372,10 +367,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
                 f"`operations` options are {SUPPORTED_OPS}, got: {unsupported_ops}."
             )
 
-        # self.num_operations, self.categ_operations = split_num_categ_operations(
-        #     self._operations
-        # )
-
         if not isinstance(self.suffix, str):
             raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
 
@@ -399,15 +390,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
 
-        # skrub_px, _ = get_df_namespace(self._aux_table)
-        # self.aux_table_ = aggregate(
-        #     self._aux_table,
-        #     self._aux_key,
-        #     self._cols,
-        #     self.num_operations,
-        #     self.categ_operations,
-        #     suffix=self.suffix,
-        # )
         self.aux_table_ = aggregate(
             self._aux_table,
             self._aux_key,
