@@ -14,13 +14,11 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
-<<<<<<< HEAD
 * The :class:`TextEncoder` is now available to encode columns with diverse entries.
   It allows the representation of table entries as embeddings computed by a deep
   learning model. The weights of this model can be fetched locally or from the
   HuggingFace Hub.
   :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
-=======
 
 Minor changes
 -------------
@@ -57,7 +55,6 @@ Minor changes
 
 Release 0.3.1
 =============
->>>>>>> main
 
 Minor changes
 -------------
