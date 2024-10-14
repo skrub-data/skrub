@@ -262,6 +262,8 @@ filterwarnings = [
     # TODO: add more context but linked to sentence-transformers
     'ignore:.*`resume_download` is deprecated.*',
     'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+    'ignore:The current process just got forked.*',
+    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"

@@ -54,14 +54,25 @@ categories, eg to replace :class:`~sklearn.preprocessing.OneHotEncoder`:
 Encoding text with diverse entries
 ----------------------------------
 
-When it comes to encoding text with diverse entries, large language models
-fine-tuned for embedding purposes enhance data processing. These diverse entries are
-typically represented by free-form text, such as strings with significantly
-more unique n-grams than unclean categorical data.
+When encoding strings with diverse entries and large chunks of text, we can leverage
+language models of various sizes to represent string columns as embeddings.
+Depending on the task and dataset, this approach may lead to significant performance
+improvements, albeit with potential increases in memory usage and latency.
 
-Skrub offers the :class:`SentenceEncoder`, a wrapper around
-the `SentenceTransformer <https://sbert.net/>`_ package, allowing you to use any
-sentence embedding model available on the Hugging Face Hub
+Skrub integrates these language models as scikit-learn transformers, allowing them
+to be easily plugged into :class:`TableVectorizer` and
+:class:`~sklearn.pipeline.Pipeline`.
+
+These language models are pre-trained deep-learning encoders that have been fine-tuned
+specifically for embedding tasks. Note that skrub does not provide a simple way to
+fine-tune language models directly on your dataset.
+
+With :class:`TextEncoder`, a wrapper around the `sentence-transformers <https://sbert.net/>`_
+package, you can use any sentence embedding model available on the HuggingFace Hub
+or locally stored on your disk. This means you can fine-tune a model using
+the sentence-transformers library and then use it with the :class:`TextEncoder`
+like any other pre-trained model. For more information, see the
+`sentence-transformers fine-tuning guide <https://sbert.net/docs/sentence_transformer/training_overview.html#why-finetune>`_.
 
 .. topic:: References
 

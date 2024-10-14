@@ -16,7 +16,7 @@ class ModelNotFound(ValueError):
     pass
 
 
-class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
+class TextEncoder(SingleColumnTransformer, TransformerMixin):
     """Encode string features by applying an embedding model downloaded \
         from the HuggingFace Hub.
 
@@ -26,19 +26,13 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
     .. warning::
 
         To use this class, you need to install the optional ``transformers``
-        dependencies for skrub. For example, you can use pip:
-
-        .. code::
-
-           pip install skrub[transformers] -U
-
-        This will install the ``sentence-transformers``, ``transformers``,
-        and ``torch`` libraries on your machine. Be aware that this might lead
-        to dependency conflicts.
+        dependencies for skrub. See the "deep learning dependencies" section
+        in the :ref:`installation_instructions` guide for more details.
 
     This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
     will not train or fine-tune the model. Instead, the model is loaded from disk,
-    and a PCA is fitted if ``n_components`` is not None.
+    and a PCA is fitted to reduce the dimension of the language model's output,
+    if ``n_components`` is not None.
 
     When PCA is disabled, this class is essentially stateless, with loading the
     pre-trained model from disk being the only difference between ``fit_transform``
@@ -46,10 +40,11 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
 
     Be aware that parallelizing this class (e.g., using
     :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
-    expensive.
-    This is because a copy of the pre-trained model is loaded into memory
-    for each thread. If memory usage is a concern, check the characteristics of
-    your selected model.
+    expensive. This is because a copy of the pre-trained model is loaded into memory
+    for each thread. Therefore, we recommend you to let the default n_jobs=None
+    (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
+
+    If memory usage is a concern, check the characteristics of your selected model.
 
     Parameters
     ----------
@@ -111,6 +106,29 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
             "Vectorizing string entries for data processing on tables: when are larger
             language models better?", 2023.
             https://hal.science/hal-04345931
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skrub import TextEncoder
+
+    Let's encode video comments using only 2 embedding dimensions:
+
+    >>> enc = TextEncoder(model_name='intfloat/e5-small-v2', n_components=2)
+    >>> X = pd.Series([
+    ...   "The professor snatched a good interview out of the jaws of these questions.",
+    ...   "Bookmarking this to watch later.",
+    ...   "When you don't know the lyrics of the song except the chorus",
+    ... ], name='video comments')
+
+    Fitting does not train the underlying pre-trained deep-learning model,
+    but ensure various checks and enable dimension reduction.
+
+    >>> enc.fit_transform(X)
+       video comments_1  video comments_2
+    0          0.411395          0.096504
+    1         -0.105210         -0.344567
+    2         -0.306184          0.248063
     """
 
     def __init__(
@@ -134,7 +152,7 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         self.verbose = verbose
 
     def fit_transform(self, column, y=None):
-        """Fit the SentenceEncoder from ``column``.
+        """Fit the TextEncoder from ``column``.
 
         In practice, it loads the pre-trained model from disk and returns
         the embeddings of the column.
@@ -152,10 +170,10 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         X_out : pandas or polars DataFrame of shape (n_samples, n_components)
             The embedding representation of the input.
         """
-        st = import_optional_dependency("sentence_transformers")
-
         if not sbd.is_string(column):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
+
+        st = import_optional_dependency("sentence_transformers")
 
         self._check_params()
 
@@ -210,7 +228,7 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         return X_out
 
     def transform(self, column):
-        """Transform ``column`` using the SentenceEncoder.
+        """Transform ``column`` using the TextEncoder.
 
         This method uses the embedding model loaded in memory during ``fit``
         or ``fit_transform``.
@@ -228,13 +246,13 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         check_is_fitted(self, "estimator_")
 
         if not sbd.is_string(column):
-            raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
+            raise ValueError(f"Column {sbd.name(column)!r} does not contain strings.")
 
         X_out = self._vectorize(column)
 
         if hasattr(self, "pca_"):
             X_out = self.pca_.transform(X_out)
-        elif self.n_components != "all":
+        elif self.n_components is not None:
             X_out = X_out[:, : self.n_components]
 
         cols = self.get_feature_names_out()
@@ -248,6 +266,8 @@ class SentenceEncoder(SingleColumnTransformer, TransformerMixin):
         column = sbd.to_numpy(column)
         unique_x, indices_x = unique_strings(column, is_null)
 
+        # sentence-transformers deals with converting a torch tensor
+        # to a numpy array, on CPU.
         return self.estimator_.encode(
             unique_x,
             normalize_embeddings=False,

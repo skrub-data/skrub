@@ -3,9 +3,10 @@ import pytest
 from numpy.testing import assert_array_equal
 from sklearn.base import clone
 
-from skrub import SentenceEncoder
+import skrub._dataframe as sbd
+from skrub import TableVectorizer, TextEncoder
 from skrub._on_each_column import RejectColumn
-from skrub._sentence_encoder import ModelNotFound
+from skrub._text_encoder import ModelNotFound
 
 pytest.importorskip("sentence_transformers")
 
@@ -22,7 +23,7 @@ def encoder():
       detect the MPS backend, but due to limitations, no memory can be allocated.
       See https://github.com/actions/runner-images/issues/9918 for more details.
     """
-    return SentenceEncoder(
+    return TextEncoder(
         model_name="sentence-transformers/paraphrase-albert-small-v2",
         device="cpu",
     )
@@ -42,11 +43,11 @@ def test_missing_import_error(encoder):
         st.fit(x)
 
 
-def test_sentence_encoder(df_module, encoder):
+def test_text_encoder(df_module, encoder):
     X = df_module.make_column("", ["hello sir", "hola que tal"])
     encoder = clone(encoder).set_params(n_components=2)
     X_out = encoder.fit_transform(X)
-    assert X_out.shape == (2, 2)
+    assert sbd.shape(X_out) == (2, 2)
 
     X_out_2 = encoder.fit_transform(X)
     df_module.assert_frame_equal(X_out, X_out_2)
@@ -69,7 +70,7 @@ def test_missing_value(df_module, encoder):
     encoder = clone(encoder).set_params(n_components=None)
     X_out = encoder.fit_transform(X)
 
-    assert X_out.shape == (3, 768)
+    assert sbd.shape(X_out) == (3, 768)
     X_out = X_out.to_numpy()
     assert_array_equal(X_out[0, :], X_out[1, :])
 
@@ -79,20 +80,21 @@ def test_n_components(df_module, encoder):
     encoder_all = clone(encoder).set_params(n_components=None).fit(X)
     for meth in ("fit_transform", "transform"):
         X_out = getattr(encoder_all, meth)(X)
-        assert X_out.shape[1] == 768
+        assert sbd.shape(X_out)[1] == 768
         assert encoder_all.n_components_ == 768
 
     encoder_2 = clone(encoder).set_params(n_components=2).fit(X)
     for meth in ("fit_transform", "transform"):
         X_out = getattr(encoder_2, meth)(X)
-        assert X_out.shape[1] == 2
+        assert sbd.shape(X_out)[1] == 2
         assert encoder_2.n_components_ == 2
 
     encoder_30 = clone(encoder).set_params(n_components=30)
     with pytest.warns(UserWarning, match="The embeddings will be truncated"):
-        X_out = encoder_30.fit_transform(X)
+        for meth in ("fit_transform", "transform"):
+            X_out = getattr(encoder_30, meth)(X)
     assert not hasattr(encoder_30, "pca_")
-    assert X_out.shape[1] == 30
+    assert sbd.shape(X_out)[1] == 30
     assert encoder_30.n_components_ == 30
 
 
@@ -135,5 +137,12 @@ def test_transform_error_on_float_data(df_module, encoder):
     encoder = clone(encoder).set_params(n_components=None)
     encoder.fit(df_module.make_column("", ["hello", "world"]))
 
-    with pytest.raises(RejectColumn, match="does not contain strings"):
+    with pytest.raises(ValueError, match="does not contain strings"):
         encoder.transform(x)
+
+
+@pytest.mark.parametrize("n_jobs", [1, 2])
+def test_encoder_in_table_vectorizer(df_module, encoder, n_jobs):
+    X = df_module.make_dataframe({"msg": ["hey there", "hello"]})
+    X_out = TableVectorizer(low_cardinality=encoder, n_jobs=n_jobs).fit_transform(X)
+    assert sbd.shape(X_out) == (2, 30)

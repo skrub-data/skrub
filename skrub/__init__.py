@@ -15,10 +15,10 @@ from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
 from ._reporting import TableReport
 from ._select_cols import DropCols, SelectCols
-from ._sentence_encoder import SentenceEncoder
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import TableVectorizer
 from ._tabular_learner import tabular_learner
+from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
 
@@ -49,5 +49,5 @@ __all__ = [
     "AggTarget",
     "SelectCols",
     "DropCols",
-    "SentenceEncoder",
+    "TextEncoder",
 ]

@@ -1,5 +1,7 @@
 .. _installation_instructions:
 
+.. currentmodule:: skrub
+
 =======
 Install
 =======
@@ -31,6 +33,21 @@ Install
 
     $ pip install skrub -U
 
+|
+
+**Deep learning dependencies**
+
+Deep-learning based encoders like :class:`TextEncoder` require installing optional
+dependencies to use them. The following will install
+`torch <https://pypi.org/project/torch/>`_,
+`transformers <https://pypi.org/project/transformers/>`_,
+and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
+
+.. code:: console
+
+    $ pip install skrub[transformers] -U
+
+
 .. raw:: html
 
     </div>
@@ -41,6 +58,22 @@ Install
 
     $ conda install -c conda-forge skrub
 
+|
+
+**Deep learning dependencies**
+
+Deep-learning based encoders like :class:`TextEncoder` require installing optional
+dependencies to use them. The following will install
+`torch <https://anaconda.org/pytorch/pytorch>`_,
+`transformers <https://anaconda.org/conda-forge/transformers>`_,
+`torchvision <https://anaconda.org/pytorch/torchvision>`_,
+and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transformers>`_.
+
+.. code:: console
+
+    $ conda install -c conda-forge skrub[transformers]
+
+
 .. raw:: html
 
         </div>
@@ -50,6 +83,22 @@ Install
 .. code:: console
 
     $ mamba install -c conda-forge skrub
+
+|
+
+**Deep learning dependencies**
+
+Deep-learning based encoders like :class:`TextEncoder` require installing optional
+dependencies to use them. The following will install
+`torch <https://anaconda.org/pytorch/pytorch>`_,
+`transformers <https://anaconda.org/conda-forge/transformers>`_,
+`torchvision <https://anaconda.org/pytorch/torchvision>`_,
+and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transformers>`_.
+
+.. code:: console
+
+    $ mamba install -c conda-forge skrub[transformers]
+
 
 .. raw:: html
 
@@ -99,9 +148,23 @@ which can be set in your local repository with:
 You're ready to go! If not already done, please have a look at
 the `contributing guidelines <https://skrub-data.org/stable/CONTRIBUTING.html>`_.
 
+|
+
+**Deep learning dependencies**
+
+Deep-learning based encoders like :class:`TextEncoder` require installing optional
+dependencies to use them. The following will install
+`torch <https://pypi.org/project/torch/>`_,
+`transformers <https://pypi.org/project/transformers/>`_,
+and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
+
+.. code:: console
+
+    $ pip install -e ".[transformers]"
+
+
 .. raw:: html
 
         </div>
     </div>
-
     </div>
