@@ -513,6 +513,7 @@ numpydoc_xref_aliases = {
     "Series": "pandas.Series",
     "pandas.Index": "pandas.Index",
     "read_csv": "pandas.read_csv",
+    "pandas.melt": "pandas.melt",
     "pandas.merge": "pandas.merge",
     # Skrub
     "fetch_ken_table_aliases": "skrub.datasets.fetch_ken_table_aliases",

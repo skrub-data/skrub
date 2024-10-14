@@ -5,6 +5,7 @@ from urllib.error import URLError
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
 from skrub.datasets import _fetching
 
@@ -219,3 +220,40 @@ def test_fetch_movielens():
             )
             mock_urlretrieve.assert_not_called()
             assert disk_loaded_info == returned_info
+
+
+def test_fetch_credit_fraud():
+    pytest.importorskip("pyarrow")
+    with TemporaryDirectory() as temp_dir:
+        try:
+            # Valid call
+            bunch = _fetching.fetch_credit_fraud(
+                data_directory=temp_dir,
+            )
+
+        except (ConnectionError, URLError):
+            pytest.skip(
+                "Exception: Skipping this test because we encountered an "
+                "issue probably related to an Internet connection problem. "
+            )
+            return
+
+        assert (
+            bunch.source_products == "https://ndownloader.figshare.com/files/49176205"
+        )
+        assert bunch.source_baskets == "https://ndownloader.figshare.com/files/49176202"
+
+        assert_frame_equal(bunch.products, pd.read_parquet(bunch.path_products))
+        assert_frame_equal(bunch.baskets, pd.read_parquet(bunch.path_baskets))
+
+        # Now that we have verified the file is on disk, we want to test
+        # whether calling the function again reads it from disk (it should)
+        # or queries the network again (it shouldn't).
+        with mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
+            # Same valid call as above
+            disk_bunch = _fetching.fetch_credit_fraud(
+                data_directory=temp_dir,
+            )
+            mock_urlretrieve.assert_not_called()
+            assert_frame_equal(bunch.products, disk_bunch.products)
+            assert_frame_equal(bunch.baskets, disk_bunch.baskets)

@@ -719,10 +719,10 @@ def _to_string_pandas(col):
 
 @to_string.specialize("polars", argument_type="Column")
 def _to_string_polars(col):
-    if col.dtype != pl.Object:
+    # polars raises an error when trying to cast those types to string directly
+    # so we have to use map_elements
+    if col.dtype not in (pl.Object, pl.List, pl.Array):
         return _cast_polars(col, pl.String)
-    # Objects are mere passengers in polars dataframes and we can't do
-    # anything with them; cast raises an exception.
     # polars emits a performance warning when using map_elements
     with warnings.catch_warnings():
         warnings.filterwarnings(

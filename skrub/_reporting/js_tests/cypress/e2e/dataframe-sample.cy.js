@@ -37,12 +37,12 @@ describe('test the dataframe sample tab', () => {
 
         cy.get('@report').find('[data-test="column-filter-select"]').as(
                 "filter")
-            .select('String columns');
+            .select('String');
         cy.get('@bar').should('be.visible');
         cy.get('@announcement').should('not.be.visible');
         cy.get('@bar').should('have.text', "department");
 
-        cy.get('@filter').select('Numeric columns');
+        cy.get('@filter').select('Numeric');
         cy.get('@bar').should('not.be.visible');
         cy.get('@announcement').should('be.visible');
         cy.get('@bar').should('have.text', "");
@@ -55,7 +55,7 @@ describe('test the dataframe sample tab', () => {
         // hide the numeric columns
         cy.get('@report').find('[data-test="column-filter-select"]').as(
                 "filter")
-            .select('String columns');
+            .select('String');
 
         // type arrow down on the first header should move to first cell
         cy.get('@report').find('th').contains('c 1').as('c1').click();
@@ -139,5 +139,11 @@ describe('test the dataframe sample tab', () => {
         getIJ(0, -1).type('{rightArrow}');
         getIJ(0, 0).should('have.focus');
         getIJ(0, 0).should('have.attr', 'data-role', 'dataframe-data');
+    });
+
+    it('can reach the sample table with the tab key', () => {
+        // TODO whenever cypress adds support for testing tab key navigation,
+        // or we start using a testing tool that does
+        // https://github.com/cypress-io/cypress/issues/299
     });
 });

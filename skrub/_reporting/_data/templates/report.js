@@ -327,6 +327,8 @@ if (customElements.get('skrub-table-report') === undefined) {
             this.elem.addEventListener('keydown', (e) => this.onKeyDown(e));
             this.elem.addEventListener('skrub-keydown', (e) => this.onKeyDown(
                 unwrapSkrubKeyDown(e)));
+            this.elem.tabIndex = "0";
+            this.elem.addEventListener('focus', (e) => this.activateFirstCell());
         }
 
         onKeyDown(event) {
@@ -411,6 +413,45 @@ if (customElements.get('skrub-table-report') === undefined) {
                 j) => (this
                 .stopI <= i));
         }
+
+        /*
+          When no cell is active, the table itself is sequentially focusable.
+          When it receives focus, it redirects it to the first visible data cell
+          (if any). Once a cell is active, the cell is sequentially focusable
+          and the table is not. If a cell is active but the focus is given to
+          the table (by clicking one of the non-clickable elements such as the
+          ellipsis "..." cells), focus is set on the active cell rather than the
+          first one.
+         */
+        activateFirstCell() {
+            const activeCell = this.elem.querySelector("[data-is-active]");
+            if (activeCell){
+                activeCell.focus();
+                return;
+            }
+            const firstCell = this.elem.querySelector(
+                "[data-role='dataframe-data']:not([data-excluded-by-column-filter])"
+                );
+            if (!firstCell) {
+                return;
+            }
+            // blur immediately to avoid the focus ring flashing before the cell
+            // grabs keyboard focus.
+            this.elem.blur();
+            this.exchange.send({
+                kind: "ACTIVATE_SAMPLE_TABLE_CELL",
+                cellId: firstCell.id
+            });
+        }
+
+        SAMPLE_TABLE_CELL_ACTIVATED() {
+            this.elem.tabIndex = "-1";
+        }
+
+        SAMPLE_TABLE_CELL_DEACTIVATED() {
+            this.elem.tabIndex = "0";
+        }
+
     }
     SkrubTableReport.register(SampleTable);
 
@@ -522,7 +563,7 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(TabList);
 
-    class sortableTable extends Manager {
+    class SortableTable extends Manager {
         constructor(elem, exchange) {
             super(elem, exchange);
             this.elem.querySelectorAll("button[data-role='sort-button']").forEach(
@@ -588,7 +629,51 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
     }
-    SkrubTableReport.register(sortableTable);
+    SkrubTableReport.register(SortableTable);
+
+    /*
+      Add the "data-is-scrolling" attribute to the scrolling div whenever a
+      given column is partially hidden; used to manage the border of the sticky
+      column in the summary statistics table.
+    */
+    class StickyColTableScroller extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.stickyCol = Number(this.elem.dataset.stickyCol) || 1;
+            this.registerObserver();
+        }
+
+        registerObserver() {
+            const options = {
+                root: this.elem,
+                // The first threshold is crossed when the parent becomes
+                // visible (eg when the summary statistics table is loaded, it
+                // is in a hidden tab panel so the intersection is 0). The other
+                // thresholds are crossed when the left border is just past the
+                // edge of the scrollable area.
+                threshold: [0.01, 0.93, 0.97]
+            };
+            const observer = new IntersectionObserver(e => this
+                .intersectionCallback(e), options);
+            this.elem.querySelectorAll(`:is(th, td):nth-child(${this.stickyCol})`)
+                .forEach((e) => observer.observe(e));
+        }
+
+        intersectionCallback(entries) {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+                if (entry.intersectionRatio >= 0.95) {
+                    this.elem.removeAttribute("data-is-scrolling");
+                } else {
+                    this.elem.dataset.isScrolling = "";
+                }
+            });
+        }
+
+    }
+    SkrubTableReport.register(StickyColTableScroller);
 
     class SelectedColumnsDisplay extends Manager {
 
@@ -673,6 +758,143 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
     }
     SkrubTableReport.register(Toggletip);
+
+    /*
+      In the matplotlib svg plots, the labels are stored as text (we want the
+      browser, rather than matplotlib, to choose the font & render the text, and
+      this also makes the plots smaller than letting matplotlib draw the
+      glyphs). As matplotlib may use a different font than the one eventually
+      chosen by the browser, it cannot compute the correct viewbox for the svg.
+
+      When the page loads, we render the svg plot and iterate over all children
+      to compute the correct viewbox. We then adjust the svg element's width and
+      height (otherwise if we put a wider viewbox but don't adjust the size we
+      effectively zoom out and details will appear smaller).
+
+      In the default report view, all plots are hidden (they only show up if we
+      select a column or change the displayed tab panel). Thus when the page
+      loads they are not rendered. To force rendering the svg so that we get
+      correct bounding boxes for all the child elements, we clone it and insert
+      the clone in the DOM (but with absolute positioning and a big offset so it
+      is outside of the viewport and the user does not see it). We insert the
+      clone as a child of the #report element so that we know it is displayed
+      and uses the same font family and size as the actual figure we want to
+      resize. Once we have the viewbox we remove the clone from the DOM.
+    */
+    class SvgAdjustedViewBox extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.adjustViewBox();
+        }
+
+        computeViewBox(svg) {
+            try {
+                const {
+                    width
+                } = svg.getBBox();
+                if (width === 0) {
+                    return null;
+                }
+            } catch (e) {
+                return null;
+            }
+            let [xMin, yMin, xMax, yMax] = [null, null, null, null];
+            for (const child of svg.children) {
+                if (typeof child.getBBox !== 'function') {
+                    continue;
+                }
+                const {
+                    x,
+                    y,
+                    width,
+                    height
+                } = child.getBBox();
+                if (width === 0 || height === 0){
+                    continue;
+                }
+                if (xMin === null) {
+                    xMin = x;
+                    yMin = y;
+                    xMax = x + width;
+                    yMax = y + height;
+                    continue;
+                }
+                xMin = Math.min(x, xMin);
+                yMin = Math.min(y, yMin);
+                xMax = Math.max(x + width, xMax);
+                yMax = Math.max(y + height, yMax);
+            }
+            if (xMin === null) {
+                return null;
+            }
+            return {
+                x: xMin,
+                y: yMin,
+                width: xMax - xMin,
+                height: yMax - yMin
+            };
+        }
+
+        /*
+          Adjust the svg element's width and height so that if we need to set a
+          wider viewbox, we get a bigger figure rather than zooming out while
+          keeping the figure size constant.
+        */
+        adjustSize(svg, newViewBox, attribute) {
+            const match = svg.getAttribute(attribute).match(/^([0-9.]+)(.+)$/);
+            if (!match) {
+                return;
+            }
+            const size = Number(match[1]);
+            if (isNaN(size)) {
+                return;
+            }
+            const unit = match[2];
+            const scale = newViewBox[attribute] / svg.viewBox.baseVal[attribute];
+            const newSize = size * scale;
+            if (isNaN(newSize)) {
+                return;
+            }
+            svg.setAttribute(attribute, `${newSize}${unit}`);
+        }
+
+        adjustViewBox() {
+            const svg = this.elem.querySelector('svg');
+
+            // The svg is inside a div with {display: none} in its style. So it
+            // is not rendered and all bounding boxes will have 0 width and
+            // height. We insert a clone higher up the DOM below #report, which
+            // we know is displayed. To avoid the user seeing it flash we position
+            // it outside of the viewport. The column summary cards use the same
+            // font family & size as #report so the computed sizes will be the
+            // same as those of the actual svg when it is rendered.
+
+            const report = this.elem.getRootNode().getElementById('report');
+            const clone = svg.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.left = '-9999px';
+            clone.style.top = '-9999px';
+            // (visibility = 'hidden' still requires the size to be computed and
+            // thus the svg to be rendered.)
+            clone.style.visibility = 'hidden';
+            report.appendChild(clone);
+
+            try {
+                const viewBox = this.computeViewBox(clone);
+                if (viewBox !== null) {
+                    this.adjustSize(svg, viewBox, 'width');
+                    this.adjustSize(svg, viewBox, 'height');
+                    svg.setAttribute('viewBox',
+                        `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`
+                    );
+                }
+            } finally {
+                report.removeChild(clone);
+            }
+        }
+
+    }
+    SkrubTableReport.register(SvgAdjustedViewBox);
 
     function initReport(reportId) {
         const report = document.getElementById(reportId);
@@ -779,7 +1001,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         };
     }
 
-    if (document.querySelector(".jp-Cell, .widgetarea")) {
+    if (document.querySelector(".jp-Cell, .widgetarea, .reveal")) {
         window.addEventListener("keydown", forwardKeyboardEvent, true);
     }
 

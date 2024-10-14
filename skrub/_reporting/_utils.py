@@ -1,6 +1,8 @@
 import base64
 import json
 import numbers
+import re
+import unicodedata
 
 import numpy as np
 
@@ -37,27 +39,53 @@ def top_k_value_counts(column, k):
     n_unique = sbd.shape(counts)[0]
     counts = sbd.sort(counts, by="count", descending=True)
     counts = sbd.slice(counts, k)
-    return n_unique, dict(zip(*to_dict(counts).values()))
+    return n_unique, list(zip(*to_dict(counts).values()))
 
 
 def quantiles(column):
     return {q: sbd.quantile(column, q) for q in [0.0, 0.25, 0.5, 0.75, 1.0]}
 
 
-def ellide_string(s, max_len=100):
+def ellide_string(s, max_len=30):
+    """Shorten a string so it can be used as a plot axis title or label."""
     if not isinstance(s, str):
         return s
+    # normalize whitespace
+    s = re.sub(r"\s+", " ", s)
     if len(s) <= max_len:
         return s
-    if max_len < 30:
-        return s[:max_len] + "…"
-    shown_len = max_len - 30
-    truncated = len(s) - shown_len
-    return s[:shown_len] + f"[…{truncated} more chars]"
+    shown_text = s[:max_len].strip()
+    ellipsis = "…"
+    end = ""
 
+    # The ellipsis, like most punctuation, is a neutral character (it has no
+    # writing direction). As here it is the last character in the sentence, its
+    # direction will be that of the paragraph and it might be displayed on the
+    # wrong side of the text (eg on the right, at the beginning of the text
+    # rather than the end, if the text is written in a right-to-left script).
+    # As a simple heuristic to correct this, we force the ellipsis to have the
+    # same direction as the last character before the truncation. This is done
+    # by appending a mark (a zero-width space with the writing direction we
+    # want, so that the ellipsis is enclosed between 2 strong characters with
+    # the same direction and thus inherits that direction).
 
-def ellide_string_short(s):
-    return ellide_string(s, 29)
+    if shown_text:
+        direction = unicodedata.bidirectional(shown_text[-1])
+        if direction in [
+            "R",
+            "RLE",
+            "RLO",
+            "RLI",
+        ]:
+            # RIGHT-TO-LEFT MARK
+            end = "\u200f"
+        elif direction in ["AL"]:
+            # ARABIC LETTER MARK
+            end = "\u061c"
+        elif direction in ["L", "LRE", "LRO", "LRI"]:
+            # LEFT-TO-RIGHT MARK
+            end = "\u200e"
+    return shown_text + ellipsis + end
 
 
 def format_number(number):

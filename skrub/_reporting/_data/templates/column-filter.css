@@ -1,12 +1,16 @@
 .column-filter {
     display: flex;
-    gap: var(--tiny);
+    flex-wrap: wrap;
+    gap: var(--space-m);
     align-items: flex-end;
-    margin-left: 3rem;
-    margin-bottom: var(--micro);
+    margin-bottom: var(--space-s);
+    margin-left: var(--space-m);
+    margin-right: var(--space-s);
 }
 
-.column-filter > label {
-    padding: 0;
-    margin: 0;
+.column-filter > select {
+    max-width: 15ch;
+    text-overflow: ellipsis;
+    padding: 0 var(--border-s) 0 var(--space-s);
+    font-size: var(--text-s);
 }
