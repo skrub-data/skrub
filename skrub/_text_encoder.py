@@ -1,4 +1,5 @@
 import numbers
+import os
 import warnings
 from pathlib import Path
 
@@ -85,8 +86,10 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     batch_size : int, default=32
         The batch size to use during ``transform``.
 
-    use_auth_token : bool or str, default=None
-        HuggingFace authentication token to download private models.
+    token_env_variable : str, default=None
+        The name of the environment variable which stores your HuggingFace
+        authentication token to download private models.
+        Note that we only store the name of the variable but not the token itself.
 
     cache_folder : str, default=None
         Path to store models. By default ``~/skrub_data``.
@@ -137,7 +140,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         n_components=30,
         device=None,
         batch_size=32,
-        use_auth_token=None,
+        token_env_variable=None,
         cache_folder=None,
         random_state=None,
         verbose=False,
@@ -146,7 +149,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         self.n_components = n_components
         self.device = device
         self.batch_size = batch_size
-        self.use_auth_token = use_auth_token
+        self.token_env_variable = token_env_variable
         self.cache_folder = cache_folder
         self.random_state = random_state
         self.verbose = verbose
@@ -180,12 +183,16 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         self.cache_folder_ = get_data_dir(
             name=self.model_name, data_home=self.cache_folder
         )
+        if self.token_env_variable is not None:
+            token = os.getenv(self.token_env_variable)
+        else:
+            token = None
         try:
             self.estimator_ = st.SentenceTransformer(
                 self.model_name,
                 device=self.device,
                 cache_folder=self.cache_folder_,
-                use_auth_token=self.use_auth_token,
+                token=token,
             )
         except OSError as e:
             raise ModelNotFound(

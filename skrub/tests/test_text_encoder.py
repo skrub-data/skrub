@@ -146,3 +146,10 @@ def test_encoder_in_table_vectorizer(df_module, encoder, n_jobs):
     X = df_module.make_dataframe({"msg": ["hey there", "hello"]})
     X_out = TableVectorizer(low_cardinality=encoder, n_jobs=n_jobs).fit_transform(X)
     assert sbd.shape(X_out) == (2, 30)
+
+
+def test_token_env_variable(df_module, encoder):
+    token_env_variable = "my_imaginary_token"
+    X = df_module.make_column("", ["hello", "hola"])
+    encoder = clone(encoder).set_params(token_env_variable=token_env_variable).fit(X)
+    assert encoder.token_env_variable == token_env_variable
