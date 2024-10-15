@@ -26,9 +26,9 @@ def test_aggregate_single_operation(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     aggregated = aggregate(
         main_table,
+        operations="mean",
         key="userId",
         cols_to_agg="rating",
-        operations="mean",
         suffix="",
     )
     # In that order because columns are sorted in ``aggregate``
@@ -41,9 +41,9 @@ def test_aggregate_single_operation(df_module, main_table):
 
     aggregated = aggregate(
         main_table,
+        operations="mode",
         key="userId",
         cols_to_agg="genre",
-        operations="mode",
         suffix="",
     )
     expected = df_module.make_dataframe(
@@ -60,9 +60,9 @@ def test_aggregate_multiple_operations(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     aggregated = aggregate(
         main_table,
+        operations=["mean", "sum"],
         key="userId",
         cols_to_agg="rating",
-        operations=["mean", "sum"],
         suffix="",
     )
 
@@ -84,9 +84,9 @@ def test_aggregate_suffix(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     aggregated = aggregate(
         main_table,
+        operations="mean",
         key="userId",
         cols_to_agg="rating",
-        operations="mean",
         suffix="_custom_suffix",
     )
     assert sbd.column_names(aggregated) == ["rating_mean_custom_suffix", "userId"]
@@ -103,9 +103,9 @@ def test_aggregate_wrong_operation_type(df_module, main_table):
     ):
         aggregate(
             main_table,
+            operations="std",
             key="userId",
             cols_to_agg="genre",
-            operations="std",
             suffix="",
         )
 
@@ -118,10 +118,10 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
 
     agg_joiner_user = AggJoiner(
         aux_table=aux,
+        operations="mode",
         aux_key="userId",
         main_key="userId",
         cols="genre",
-        operations="mode",
         suffix="_user",
     )
 
@@ -142,10 +142,10 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
 
     agg_joiner_movie = AggJoiner(
         aux_table=aux,
+        operations="mean",
         aux_key="movieId",
         main_key="movieId",
         cols="rating",
-        operations="mean",
         suffix="_movie",
     )
 
@@ -172,7 +172,7 @@ def test_correct_keys(df_module, main_table):
 
     # Check only key
     agg_joiner = AggJoiner(
-        aux_table=main_table, key="userId", cols=["rating", "genre"], operations="mode"
+        aux_table=main_table, operations="mode", key="userId", cols=["rating", "genre"]
     )
     agg_joiner.fit(main_table)
     assert agg_joiner._main_key == ["userId"]
@@ -181,9 +181,9 @@ def test_correct_keys(df_module, main_table):
     # Check multiple key
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mode",
         key=["userId", "movieId"],
         cols=["rating", "genre"],
-        operations="mode",
     )
     agg_joiner.fit(main_table)
 
@@ -207,10 +207,10 @@ def test_wrong_keys(df_module, main_table):
     # Check too many main_key
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mode",
         main_key=["userId", "movieId"],
         aux_key="userId",
         cols=["rating", "genre"],
-        operations="mode",
     )
     with pytest.raises(
         ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
@@ -220,10 +220,10 @@ def test_wrong_keys(df_module, main_table):
     # Check too many aux_key
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mode",
         main_key="userId",
         aux_key=["userId", "movieId"],
         cols=["rating", "genre"],
-        operations="mode",
     )
     with pytest.raises(
         ValueError, match=r"(?=.*Cannot join on different numbers of columns)"
@@ -233,10 +233,10 @@ def test_wrong_keys(df_module, main_table):
     # Check providing key and extra main_key
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mode",
         key="userId",
         main_key="userId",
         cols=["rating", "genre"],
-        operations="mode",
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
         agg_joiner.fit(main_table)
@@ -244,10 +244,10 @@ def test_wrong_keys(df_module, main_table):
     # Check providing key and extra aux_key
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mode",
         key="userId",
         aux_key="userId",
         cols=["rating", "genre"],
-        operations="mode",
     )
     with pytest.raises(ValueError, match=r"(?=.*not a combination of both.)"):
         agg_joiner.fit(main_table)
@@ -255,10 +255,10 @@ def test_wrong_keys(df_module, main_table):
     # Check main_key doesn't exist in table
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mode",
         main_key="wrong_key",
         aux_key="userId",
         cols=["rating", "genre"],
-        operations="mode",
     )
     match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
@@ -267,10 +267,10 @@ def test_wrong_keys(df_module, main_table):
     # Check aux_key doesn't exist in table
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mode",
         main_key="userId",
         aux_key="wrong_key",
         cols=["rating", "genre"],
-        operations="mode",
     )
     match = r"(?=.*columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
@@ -283,7 +283,7 @@ def test_default_suffix(df_module, main_table):
 
     # Check no suffix
     agg_joiner = AggJoiner(
-        aux_table=main_table, key="userId", cols=["rating", "genre"], operations="mode"
+        aux_table=main_table, operations="mode", key="userId", cols=["rating", "genre"]
     )
     agg_joiner.fit(main_table)
     assert agg_joiner.suffix == ""
@@ -296,6 +296,7 @@ def test_too_many_suffixes(df_module, main_table):
     # Check inconsistent number of suffixes
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mean",
         key="userId",
         cols="rating",
         suffix=["_user", "_movie", "_tag"],
@@ -310,7 +311,7 @@ def test_default_cols(df_module, main_table):
 
     # Check no cols
     agg_joiner = AggJoiner(
-        aux_table=main_table, key=["movieId", "userId"], operations="mode"
+        aux_table=main_table, operations="mode", key=["movieId", "userId"]
     )
     agg_joiner.fit(main_table)
     agg_joiner._cols == ["rating", "genre"]
@@ -323,6 +324,7 @@ def test_correct_cols(df_module, main_table):
     # Check one col
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mean",
         key=["movieId", "userId"],
         cols=["rating"],
     )
@@ -337,10 +339,11 @@ def test_wrong_cols(df_module, main_table):
     # Check missing agg or keys cols in tables
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mean",
         key="userId",
         cols="unknown_col",
     )
-    match = r"(?=.*columns cannot be used because they do not exist)"
+    match = r"(The following columns are requested for selection)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main_table)
 
@@ -352,6 +355,7 @@ def test_input_multiple_tables(df_module, main_table):
     # Check too many aux_table
     agg_joiner = AggJoiner(
         aux_table=[main_table, main_table],
+        operations="mean",
         main_key="userId",
         aux_key=["userId", "userId"],
         cols=[["rating"], ["rating"]],
@@ -364,18 +368,19 @@ def test_input_multiple_tables(df_module, main_table):
         agg_joiner.fit_transform(main_table)
 
 
-def test_default_operations(df_module, main_table):
-    "Check that the default `operations` of `AggJoiner` are ['mean', 'mode']."
-    main_table = df_module.DataFrame(main_table)
-
-    # Check default operations
-    agg_joiner = AggJoiner(
-        aux_table=main_table,
-        key="userId",
-        cols="rating",
-    )
-    agg_joiner.fit(main_table)
-    assert agg_joiner._operations == ["mean", "mode"]
+# TODO: change this
+# def test_default_operations(df_module, main_table):
+#     "Check that the default `operations` of `AggJoiner` are ['mean', 'mode']."
+#     main_table = df_module.DataFrame(main_table)
+#
+#     # Check default operations
+#     agg_joiner = AggJoiner(
+#         aux_table=main_table,
+#         key="userId",
+#         cols="rating",
+#     )
+#     agg_joiner.fit(main_table)
+#     assert agg_joiner._operations == ["mean", "mode"]
 
 
 def test_correct_operations_input(df_module, main_table):
@@ -385,9 +390,9 @@ def test_correct_operations_input(df_module, main_table):
     # Check invariant operations input
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations=["min", "max", "mode"],
         key="userId",
         cols=["rating", "genre"],
-        operations=["min", "max", "mode"],
     )
     agg_joiner.fit(main_table)
     assert agg_joiner._operations == ["min", "max", "mode"]
@@ -400,9 +405,9 @@ def test_not_supported_operations(df_module, main_table):
     # Check not supported operations
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations=["nunique", "mode"],
         key="userId",
         cols=["rating", "genre"],
-        operations=["nunique", "mode"],
     )
     match = r"(?=.*`operations` options are)"
     with pytest.raises(ValueError, match=match):
@@ -415,6 +420,7 @@ def test_wrong_string_placeholder(df_module, main_table):
 
     agg_joiner = AggJoiner(
         aux_table="Y",
+        operations="mean",
         key="userId",
         cols="genre",
     )
@@ -434,6 +440,7 @@ def test_not_fitted_dataframe(df_module, main_table):
 
     agg_joiner = AggJoiner(
         aux_table=main_table,
+        operations="mean",
         key="userId",
         cols="rating",
     )
@@ -505,7 +512,9 @@ def test_agg_target_check_input(main_table):
 
 def test_duplicate_columns(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
-    joiner = AggJoiner(aux_table=main_table, key="userId", cols="rating")
+    joiner = AggJoiner(
+        aux_table=main_table, operations="mean", key="userId", cols="rating"
+    )
     X = sbd.with_columns(main_table, rating_mean=sbd.col(main_table, "rating"))
     out_1 = joiner.fit_transform(X)
     out_2 = joiner.transform(X)
