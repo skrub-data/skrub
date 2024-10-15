@@ -57,7 +57,7 @@ Encoding text with diverse entries
 When encoding strings with diverse entries and large chunks of text, we can leverage
 language models of various sizes to represent string columns as embeddings.
 Depending on the task and dataset, this approach may lead to significant performance
-improvements, albeit with potential increases in memory usage and latency.
+improvements, albeit with potential increases in memory usage and computation time.
 
 Skrub integrates these language models as scikit-learn transformers, allowing them
 to be easily plugged into :class:`TableVectorizer` and

@@ -1,3 +1,4 @@
+import functools
 import numbers
 import os
 import warnings
@@ -75,11 +76,12 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         to set the number of embedding to ``n_components`` during ``transform``.
         Set ``n_components=None`` to skip the PCA dimension reduction mechanism.
 
-        See [1]_ for more details on the choice of the PCA and default ``n_components``.
+        See [1]_ for more details on the choice of the PCA and default
+        ``n_components``.
 
     device : str, default=None
-        Device (e.g. "cpu", "cuda", "mps") that should be used for computation. If None,
-        checks if a GPU can be used.
+        Device (e.g. "cpu", "cuda", "mps") that should be used for computation.
+        If None, checks if a GPU can be used.
         Note that macOS ARM64 users can enable the GPU on their local machine
         by setting ``device="mps"``.
 
@@ -94,6 +96,27 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     cache_folder : str, default=None
         Path to store models. By default ``~/skrub_data``.
         See :func:`skrub.datasets._utils.get_data_dir`.
+        Note that when unpickling ``TextEncoder`` on another machine,
+        the ``cache_folder`` path needs to be accessible to store the downloaded model.
+
+    store_weights_in_pickle : bool, default=False
+        Whether or not to keep the loaded sentence-transformer model
+        in the TextEncoder when pickling.
+
+        - When set to False, the ``_estimator`` property is removed from
+          the objects to pickle, which significantly reduces the size of
+          the serialized object. Note that when the serialized object is
+          unpickled on another machine, the TextEncoder will try to download
+          the sentence-transformer model again from HuggingFace Hub.
+          This process could fail if, for example, the machine doesn't have
+          internet access. Additionally, if you use weights stored on disk
+          that are *not* on the HuggingFace Hub (by passing a path to
+          ``model_name``), these weights will not be pickled either.
+          Therefore you would need to copy them to the machine where you
+          unpickle the ``TextEncoder``.
+        - When set to True, the ``_estimator`` property is included in
+          the serialized object. Users deploying fine-tuned models stored on
+          disk are recommended to use this option.
 
     random_state : int, RandomState instance or None, default=None
         Used when the PCA dimension reduction mechanism is used, for reproducible
@@ -102,6 +125,26 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     verbose : bool, default=True
         Verbose level, controls whether to show a progress bar or not during
         ``transform``.
+
+    Attributes
+    ----------
+    _estimator : sentence_transformers.SentenceTransformer
+        The torch encoder.
+
+    _cache_folder : Path
+        The path where the downloaded model repository is stored.
+        Removed from the pickle object
+
+    input_name_ : str
+        The name of the fitted column.
+
+    pca_ : sklearn.decomposition.PCA
+        A fitted PCA to reduce the embedding dimensionality (either PCA or truncation,
+        see the ``n_components`` parameter).
+
+    n_components_ : int
+        The number of dimensions of the embeddings after dimensionality
+        reduction.
 
     References
     ----------
@@ -127,7 +170,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     Fitting does not train the underlying pre-trained deep-learning model,
     but ensure various checks and enable dimension reduction.
 
-    >>> enc.fit_transform(X)
+    >>> enc.fit_transform(X) # doctest: +SKIP
        video comments_1  video comments_2
     0          0.411395          0.096504
     1         -0.105210         -0.344567
@@ -142,6 +185,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         batch_size=32,
         token_env_variable=None,
         cache_folder=None,
+        store_weights_in_pickle=False,
         random_state=None,
         verbose=False,
     ):
@@ -151,6 +195,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         self.batch_size = batch_size
         self.token_env_variable = token_env_variable
         self.cache_folder = cache_folder
+        self.store_weights_in_pickle = store_weights_in_pickle
         self.random_state = random_state
         self.verbose = verbose
 
@@ -173,34 +218,11 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         X_out : pandas or polars DataFrame of shape (n_samples, n_components)
             The embedding representation of the input.
         """
+        del y
         if not sbd.is_string(column):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
 
-        st = import_optional_dependency("sentence_transformers")
-
         self._check_params()
-
-        self.cache_folder_ = get_data_dir(
-            name=self.model_name, data_home=self.cache_folder
-        )
-        if self.token_env_variable is not None:
-            token = os.getenv(self.token_env_variable)
-        else:
-            token = None
-        try:
-            self.estimator_ = st.SentenceTransformer(
-                self.model_name,
-                device=self.device,
-                cache_folder=self.cache_folder_,
-                token=token,
-            )
-        except OSError as e:
-            raise ModelNotFound(
-                f"{self.model_name} is not a local folder and is not a valid "
-                "model identifier listed on 'https://huggingface.co/models'.\n "
-                "If this is a private repository, make sure to pass a token having "
-                "permission to this repo by passing `use_auth_token=<your_token>`"
-            ) from e
 
         self.input_name_ = sbd.name(column)
 
@@ -224,6 +246,10 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                     "Set n_components=None to keep all dimensions and remove "
                     "this warning."
                 )
+                # self.n_components can be greater than the number
+                # of dimensions of X_out.
+                # Therefore, self.n_components_ below stores the resulting
+                # number of dimensions of X_out.
                 X_out = X_out[:, : self.n_components]
 
         self.n_components_ = X_out.shape[1]
@@ -250,7 +276,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         X_out : pandas or polars DataFrame of shape (n_samples, n_components)
             The embedding representation of the input.
         """
-        check_is_fitted(self, "estimator_")
+        check_is_fitted(self, "_estimator")
 
         if not sbd.is_string(column):
             raise ValueError(f"Column {sbd.name(column)!r} does not contain strings.")
@@ -275,12 +301,48 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
         # sentence-transformers deals with converting a torch tensor
         # to a numpy array, on CPU.
-        return self.estimator_.encode(
+        return self._estimator.encode(
             unique_x,
             normalize_embeddings=False,
             batch_size=self.batch_size,
             show_progress_bar=self.verbose,
         )[indices_x]
+
+    @functools.cached_property
+    def _estimator(self):
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=r".*IProgress not found.*",
+            )
+            st = import_optional_dependency("sentence_transformers")
+
+        self._cache_folder = get_data_dir(
+            name=self.model_name, data_home=self.cache_folder
+        )
+
+        if self.token_env_variable is not None:
+            token = os.getenv(self.token_env_variable)
+        else:
+            token = None
+
+        try:
+            estimator = st.SentenceTransformer(
+                self.model_name,
+                device=self.device,
+                cache_folder=self._cache_folder,
+                token=token,
+            )
+        except OSError as e:
+            raise ModelNotFound(
+                f"{self.model_name} is not a local folder and is not a valid "
+                "model identifier listed on 'https://huggingface.co/models'.\n "
+                "If this is a private repository, make sure to pass a token having "
+                "permission to this repo by setting this token as an environment "
+                "variable, and passing this variable to the TextEncoder as "
+                "`token_env_variable=<your_token_env_variable>`"
+            ) from e
+        return estimator
 
     def _check_params(self):
         # XXX: Use sklearn _parameter_constraints instead?
@@ -325,3 +387,19 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             f"{self.input_name_}_{str(i).zfill(n_digits)}"
             for i in range(1, self.n_components_ + 1)
         ]
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Always dump self._cache_folder because it is overwritten when the model
+        # is loaded, and it shows an absolut path on the user machine.
+        # However, we have to include self.cache_folder in the serialized object
+        # because that is a parameter provided by the user.
+        remove_props = ["_cache_folder"]
+        if not self.store_weights_in_pickle:
+            remove_props.append("_estimator")
+
+        for prop in remove_props:
+            if prop in state:
+                del state[prop]
+
+        return state

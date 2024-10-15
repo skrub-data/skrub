@@ -1,3 +1,5 @@
+import pickle
+
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
@@ -153,3 +155,21 @@ def test_token_env_variable(df_module, encoder):
     X = df_module.make_column("", ["hello", "hola"])
     encoder = clone(encoder).set_params(token_env_variable=token_env_variable).fit(X)
     assert encoder.token_env_variable == token_env_variable
+
+
+@pytest.mark.parametrize("store_weights_in_pickle", [True, False])
+def test_store_weights_in_pickle(df_module, encoder, store_weights_in_pickle):
+    X = df_module.make_column("", ["hello", "hola", "guttentag"])
+    encoder = (
+        clone(encoder)
+        .set_params(
+            store_weights_in_pickle=store_weights_in_pickle,
+            n_components=2,
+        )
+        .fit(X)
+    )
+    assert hasattr(encoder, "_estimator")
+
+    obj = pickle.dumps(encoder)
+    encoder_unpickled = pickle.loads(obj)
+    assert ("_estimator" in encoder_unpickled.__dict__) is store_weights_in_pickle
