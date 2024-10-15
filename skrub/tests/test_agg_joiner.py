@@ -22,7 +22,6 @@ def main_table():
     return df
 
 
-# TODO: order rows for polars
 def test_aggregate_single_operation(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     aggregated = aggregate(
@@ -34,6 +33,8 @@ def test_aggregate_single_operation(df_module, main_table):
     )
     # In that order because columns are sorted in ``aggregate``
     expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
+    if df_module.name == "polars":
+        aggregated = sbd.sort(aggregated, by="userId")
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
     )
@@ -48,6 +49,8 @@ def test_aggregate_single_operation(df_module, main_table):
     expected = df_module.make_dataframe(
         {"genre_mode": ["drama", "sf"], "userId": [1, 2]}
     )
+    if df_module.name == "polars":
+        aggregated = sbd.sort(aggregated, by="userId")
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
     )
@@ -66,6 +69,8 @@ def test_aggregate_multiple_operations(df_module, main_table):
     expected = df_module.make_dataframe(
         {"rating_mean": [4.0, 3.0], "rating_sum": [12.0, 9.0], "userId": [1, 2]}
     )
+    if df_module.name == "polars":
+        aggregated = sbd.sort(aggregated, by="userId")
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
     )
