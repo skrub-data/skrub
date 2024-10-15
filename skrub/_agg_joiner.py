@@ -74,15 +74,15 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
 
     # Don't check the ID column, as it's not the one we aggregate on
     table_to_check = s.select(table_to_agg, ~s.cols(*key))
-    categ_cols = (s.string() | s.categorical()).expand(table_to_check)
+    not_numeric_cols = (~s.numeric()).expand(table_to_check)
 
     num_only_op = list(set(operations).intersection(set(num_only_operations)))
 
-    if (len(categ_cols) > 0) & (len(num_only_op) > 0):
+    if (len(not_numeric_cols) > 0) & (len(num_only_op) > 0):
         raise AttributeError(
             f"The operations {num_only_operations} are restricted to numeric columns."
-            f" \nConsider removing the following columns: {categ_cols} or the following"
-            f" operations: {num_only_op}."
+            f" \nConsider removing the following columns: {not_numeric_cols} or the"
+            f" following operations: {num_only_op}."
         )
 
     aggregated = perform_groupby(table_to_agg, key, cols_to_agg, operations)
@@ -137,10 +137,7 @@ def _perform_groupby_polars(table, key, cols_to_agg, operations):
         aggfunc = polars_aggfuncs.get(operation, None).alias(output_key)
         aggfuncs.append(aggfunc)
 
-    # `maintain_order` ensures that outputs are in the same order as inputs
-    # this disables the streaming engine, but ensures results are consistant
-    # for pandas and polars
-    aggregated = table.group_by(key, maintain_order=True).agg(aggfuncs)
+    aggregated = table.group_by(key).agg(aggfuncs)
 
     return aggregated
 
@@ -164,6 +161,13 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
 
+    operations : str or iterable of str
+        Aggregation operations to perform on the auxiliary table.
+
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type columns.
+
     key : str, default=None
         The column name to use for both `main_key` and `aux_key` when they
         are the same. Provide either `key` or both `main_key` and `aux_key`.
@@ -179,17 +183,10 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         the join operation.
         If `aux_key` is an iterable, we will perform a multi-column join.
 
-    cols : str or iterable of str, default=None
+    cols : str or iterable of str or selector, default=s.all()
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
-        If set to `None`, `cols` are all columns from `aux_table`, except `aux_key`.
-
-    operations : str or iterable of str, default=["mean", "mode"]
-        Aggregation operations to perform on the auxiliary table.
-
-        Supported operations are "count", "mode", "min", "max", "sum", "median",
-        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
-        to numeric type columns.
+        By default, `cols` are all columns from `aux_table`, except `aux_key`.
 
     suffix : str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it
@@ -208,6 +205,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    TODO: change example
     >>> import pandas as pd
     >>> from skrub import AggJoiner
     >>> main = pd.DataFrame({
@@ -222,34 +220,34 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     ... })
     >>> agg_joiner = AggJoiner(
     ...     aux_table=aux,
+    ...     operations="mean",
     ...     main_key="airportId",
     ...     aux_key="from_airport",
-    ...     cols=["total_passengers", "company"],
-    ...     operations=["mean", "mode"],
+    ...     cols="total_passengers",
     ... )
     >>> agg_joiner.fit_transform(main)
-       airportId  airportName  company_mode  total_passengers_mean
-    0          1    Paris CDG            AF              103.33...
-    1          2       NY JFK            DL               80.00...
+       airportId  airportName  total_passengers_mean
+    0          1    Paris CDG              103.33...
+    1          2       NY JFK               80.00...
     """
 
     def __init__(
         self,
         aux_table,
+        operations,
         *,
         key=None,
         main_key=None,
         aux_key=None,
-        cols=None,
-        operations=["mean", "mode"],
+        cols=s.all(),
         suffix="",
     ):
         self.aux_table = aux_table
+        self.operations = operations
         self.key = key
         self.main_key = main_key
         self.aux_key = aux_key
         self.cols = cols
-        self.operations = operations
         self.suffix = suffix
 
     def _check_dataframes(self, X, aux_table):
@@ -313,15 +311,15 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
 
         # If no `cols` provided, all columns but `aux_key` are used.
-        if self.cols is None:
-            self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
-        elif isinstance(self.cols, str):
-            self._cols = [
-                self.cols,
-            ]
-        else:
-            self._cols = self.cols
-        _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
+        # TODO: check_missing_columns should accept selectors
+        # If selector, just try to expand on table and return
+        _join_utils.check_missing_columns(
+            self._aux_table,
+            s.make_selector(self.cols).expand(self._aux_table),
+            "'aux_table'",
+        )
+
+        self._cols = s.make_selector(self.cols) - self._aux_key
 
         if isinstance(self.operations, str):
             self._operations = [
@@ -362,7 +360,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self.aux_table_ = aggregate(
             self._aux_table,
             self._aux_key,
-            self._cols,
+            self._cols.expand(self._aux_table),
             self.operations,
             suffix=self.suffix,
         )

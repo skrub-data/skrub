@@ -22,6 +22,7 @@ def main_table():
     return df
 
 
+# TODO: order rows for polars
 def test_aggregate_single_operation(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     aggregated = aggregate(
