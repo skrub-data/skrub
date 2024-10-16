@@ -45,6 +45,12 @@ class TableReport:
     .. _example reports: https://skrub-data.org/skrub-reports/examples/
     .. _demo: https://skrub-data.org/skrub-reports/
 
+    See Also
+    --------
+    patch_display :
+        Replace the default DataFrame HTML displays in the output of notebook
+        cells with a TableReport.
+
     Examples
     --------
     >>> import pandas as pd

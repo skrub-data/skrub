@@ -63,6 +63,14 @@ def patch_display(pandas=True, polars=True):
         If False, do not override the displays for pandas dataframes.
     polars : bool, optional (default=True)
         If False, do not override the displays for polars dataframes.
+
+    See Also
+    --------
+    unpatch_display :
+        Undo the change made by this function.
+
+    TableReport :
+        Directly create a report from a dataframe.
     """
     _change_display(_patch, _get_to_patch(pandas=pandas, polars=polars))
 
@@ -79,5 +87,13 @@ def unpatch_display(pandas=True, polars=True):
         If False, do not restore the displays for pandas dataframes.
     polars : bool, optional (default=True)
         If False, do not restore the displays for polars dataframes.
+
+    See Also
+    --------
+    patch_display :
+        Replace the default dataframe display with a TableReport.
+
+    TableReport :
+        Directly create a report from a dataframe.
     """
     _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))
