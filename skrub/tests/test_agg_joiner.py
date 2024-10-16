@@ -32,10 +32,11 @@ def test_aggregate_single_operation(df_module, main_table):
         cols_to_agg="rating",
         suffix="",
     )
-    # In that order because columns are sorted in ``aggregate``
-    expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
+    # Sorting rows because polars doesn't necessarily maintain order in group_by
     if df_module.name == "polars":
         aggregated = sbd.sort(aggregated, by="userId")
+    # In that order because columns are sorted in ``aggregate``
+    expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
     )
@@ -47,11 +48,11 @@ def test_aggregate_single_operation(df_module, main_table):
         cols_to_agg="genre",
         suffix="",
     )
+    if df_module.name == "polars":
+        aggregated = sbd.sort(aggregated, by="userId")
     expected = df_module.make_dataframe(
         {"genre_mode": ["drama", "sf"], "userId": [1, 2]}
     )
-    if df_module.name == "polars":
-        aggregated = sbd.sort(aggregated, by="userId")
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
     )
@@ -66,22 +67,56 @@ def test_aggregate_multiple_operations(df_module, main_table):
         cols_to_agg="rating",
         suffix="",
     )
-
+    if df_module.name == "polars":
+        aggregated = sbd.sort(aggregated, by="userId")
     expected = df_module.make_dataframe(
         {"rating_mean": [4.0, 3.0], "rating_sum": [12.0, 9.0], "userId": [1, 2]}
     )
-    if df_module.name == "polars":
-        aggregated = sbd.sort(aggregated, by="userId")
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
     )
 
 
-def test_aggregate_multiple_columns(df_module, main_table):
-    assert True
+def test_aggregate_multiple_columns(df_module):
+    main_table = df_module.make_dataframe(
+        {
+            "userId": [1, 1, 1, 2, 2, 2],
+            "apples": [1, 2, 3, 4, 5, 6],
+            "oranges": [10, 20, 30, 40, 50, 60],
+        }
+    )
+
+    aggregated = aggregate(
+        main_table,
+        operations="sum",
+        key="userId",
+        cols_to_agg=["apples", "oranges"],
+        suffix="",
+    )
+    if df_module.name == "polars":
+        aggregated = sbd.sort(aggregated, by="userId")
+    expected = df_module.make_dataframe(
+        {"apples_sum": [6, 15], "oranges_sum": [60, 150], "userId": [1, 2]}
+    )
+    df_module.assert_frame_equal(aggregated, expected)
 
 
-# TODO: check boolean col
+def test_aggregate_boolean_columns(df_module):
+    """Boolean columns are considered non numeric by selectors."""
+    main_table = df_module.make_dataframe(
+        {"userId": [1, 1, 1, 2, 2, 2], "flag": [False, False, True, False, True, True]}
+    )
+    aggregated = aggregate(
+        main_table,
+        operations="mode",
+        key="userId",
+        cols_to_agg="flag",
+        suffix="",
+    )
+    if df_module.name == "polars":
+        aggregated = sbd.sort(aggregated, by="userId")
+    expected = df_module.make_dataframe({"flag_mode": [False, True], "userId": [1, 2]})
+    df_module.assert_frame_equal(aggregated, expected)
 
 
 def test_aggregate_suffix(df_module, main_table):
