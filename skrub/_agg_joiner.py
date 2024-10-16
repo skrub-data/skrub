@@ -91,7 +91,7 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
         f"{col}{suffix}" if col not in key else col
         for col in sbd.column_names(aggregated)
     ]
-    # TODO: check that applying suffixes doesn't create duplicate column names
+    new_col_names = _join_utils.pick_column_names(new_col_names)
     aggregated = sbd.set_column_names(aggregated, new_col_names)
     aggregated = s.select(aggregated, sorted(sbd.column_names(aggregated)))
 

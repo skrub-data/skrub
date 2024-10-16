@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 import pytest
 
@@ -7,7 +9,6 @@ from skrub._agg_joiner import AggJoiner, AggTarget, aggregate
 
 # TODO: rename tests to correspond to AggJoiner / AggTarget
 # TODO: parametrize the fixture with df_module
-# TODO: check boolean col
 # TODO: check empty col
 @pytest.fixture
 def main_table():
@@ -78,6 +79,9 @@ def test_aggregate_multiple_operations(df_module, main_table):
 
 def test_aggregate_multiple_columns(df_module, main_table):
     assert True
+
+
+# TODO: check boolean col
 
 
 def test_aggregate_suffix(df_module, main_table):
@@ -305,6 +309,26 @@ def test_too_many_suffixes(df_module, main_table):
         agg_joiner.fit(main_table)
 
 
+def test_duplicate_col_name_after_suffix(df_module, main_table):
+    "Check that ``__skrub_<random string>__`` is added for duplicate column names."
+    main_table = df_module.DataFrame(main_table)
+
+    main_table = sbd.with_columns(
+        main_table, **{"rating_mean": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0]}
+    )
+    # Check inconsistent number of suffixes
+    agg_joiner = AggJoiner(
+        aux_table=main_table,
+        operations="mean",
+        key="userId",
+        cols="rating",
+        suffix="",
+    )
+    aggregated = agg_joiner.fit_transform(main_table)
+    assert aggregated.shape == (6, 6)
+    assert re.match(r"rating_mean__skrub_[0-9a-f]+__", sbd.column_names(aggregated)[5])
+
+
 def test_default_cols(df_module, main_table):
     "Check that by default, `cols` are all the columns of `aux_table` except `aux_key`."
     main_table = df_module.DataFrame(main_table)
@@ -366,21 +390,6 @@ def test_input_multiple_tables(df_module, main_table):
     )
     with pytest.raises(TypeError, match=error_msg):
         agg_joiner.fit_transform(main_table)
-
-
-# TODO: change this
-# def test_default_operations(df_module, main_table):
-#     "Check that the default `operations` of `AggJoiner` are ['mean', 'mode']."
-#     main_table = df_module.DataFrame(main_table)
-#
-#     # Check default operations
-#     agg_joiner = AggJoiner(
-#         aux_table=main_table,
-#         key="userId",
-#         cols="rating",
-#     )
-#     agg_joiner.fit(main_table)
-#     assert agg_joiner._operations == ["mean", "mode"]
 
 
 def test_correct_operations_input(df_module, main_table):
