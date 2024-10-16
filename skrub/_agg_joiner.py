@@ -91,6 +91,7 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
         f"{col}{suffix}" if col not in key else col
         for col in sbd.column_names(aggregated)
     ]
+    # TODO: check that applying suffixes doesn't create duplicate column names
     aggregated = sbd.set_column_names(aggregated, new_col_names)
     aggregated = s.select(aggregated, sorted(sbd.column_names(aggregated)))
 
@@ -309,16 +310,11 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
-
-        # If no `cols` provided, all columns but `aux_key` are used.
-        # TODO: check_missing_columns should accept selectors
-        # If selector, just try to expand on table and return
         _join_utils.check_missing_columns(
-            self._aux_table,
-            s.make_selector(self.cols).expand(self._aux_table),
-            "'aux_table'",
+            self._aux_table, s.make_selector(self.cols), ""
         )
 
+        # If no `cols` provided, all columns but `aux_key` are used.
         self._cols = s.make_selector(self.cols) - self._aux_key
 
         if isinstance(self.operations, str):

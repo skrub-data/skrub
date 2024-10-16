@@ -84,12 +84,15 @@ def check_missing_columns(table, key, table_name):
     table : DataFrame
         The table that should contain the columns listed in `key`.
 
-    key : list of str
+    key : list of str or selector
         List of column names, all of which must be found in `table`.
 
     table_name : str
         Name by which to refer to `table` in the error message if necessary.
     """
+    if isinstance(key, s.Selector):
+        key.expand(table)
+        return
     missing_columns = set(key) - set(table.columns)
     if not missing_columns:
         return
