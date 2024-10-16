@@ -61,7 +61,8 @@ def test_X_placeholder(df_module, main_table):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=["X", main_table],
         keys=[["userId"], ["userId"]],
-        operations=[["mode"], ["mode"]],
+        cols=[["rating"], ["rating"]],
+        operations=[["mean"], ["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [main_table, main_table]
@@ -69,7 +70,8 @@ def test_X_placeholder(df_module, main_table):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=["X", "X"],
         keys=[["userId"], ["userId"]],
-        operations=[["mode"], ["mode"]],
+        cols=[["rating"], ["rating"]],
+        operations=[["mean"], ["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [main_table, main_table]
@@ -77,7 +79,8 @@ def test_X_placeholder(df_module, main_table):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table, "X", main_table],
         keys=[["userId"], ["userId"], ["userId"], ["userId"]],
-        operations=[["mode"], ["mode"], ["mode"], ["mode"]],
+        cols=[["rating"], ["rating"], ["rating"], ["rating"]],
+        operations=[["mean"], ["mean"], ["mean"], ["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [
@@ -162,7 +165,8 @@ def test_correct_keys(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
         keys=[["userId"]],
-        operations=[["mode"]],
+        cols=[["rating"]],
+        operations=[["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._main_keys == [["userId"]]
@@ -172,7 +176,8 @@ def test_correct_keys(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
         keys=[["userId", "movieId"]],
-        operations=[["mode"]],
+        cols=[["rating"]],
+        operations=[["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
@@ -180,7 +185,8 @@ def test_correct_keys(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
         keys=[["userId"], ["userId"]],
-        operations=[["mode"], ["mode"]],
+        cols=[["rating"], ["rating"]],
+        operations=[["mean"], ["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
@@ -189,7 +195,8 @@ def test_correct_keys(main_table, df_module):
         aux_tables=[main_table],
         main_keys=[["userId", "movieId"]],
         aux_keys=[["userId", "movieId"]],
-        operations=[["mode"], ["mode"]],
+        cols=[["rating"]],
+        operations=[["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
@@ -318,7 +325,7 @@ def test_default_cols(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
         keys=[["userId", "movieId"], ["userId"]],
-        operations=[["mode"], ["mode"]],
+        operations=[["count"], ["count"]],
     )
     multi_agg_joiner.fit(main_table)
     multi_agg_joiner._cols == [["rating", "genre"], ["movieId", "rating", "genre"]]
@@ -395,7 +402,7 @@ def test_cols_not_in_table(main_table, df_module):
         keys=[["userId"]],
         cols=[["wrong_col"]],
     )
-    error_msg = r"(?=.*columns cannot be used because they do not exist)"
+    error_msg = r"(The following columns are requested for selection)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
@@ -411,7 +418,7 @@ def test_default_operations(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
         keys=[["userId"], ["userId"]],
-        cols=[["rating", "genre"], ["rating", "genre"]],
+        cols=[["rating"], ["rating"]],
     )
     multi_agg_joiner.fit(main_table)
     assert multi_agg_joiner._operations == [["mean", "mode"], ["mean", "mode"]]
@@ -606,7 +613,7 @@ def test_not_fitted_dataframe(main_table, df_module):
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
         keys=[["userId"]],
-        operations=[["mode"]],
+        operations=[["count"]],
     )
     multi_agg_joiner.fit(main_table)
     error_msg = r"Columns of dataframes passed to fit\(\) and transform\(\) differ"
