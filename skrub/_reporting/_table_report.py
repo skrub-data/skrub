@@ -36,6 +36,12 @@ class TableReport:
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
 
+    See Also
+    --------
+    patch_display :
+        Replace the default DataFrame HTML displays in the output of notebook
+        cells with a TableReport.
+
     Notes
     -----
     You can see some `example reports`_ for a few datasets online. We also
@@ -44,12 +50,6 @@ class TableReport:
 
     .. _example reports: https://skrub-data.org/skrub-reports/examples/
     .. _demo: https://skrub-data.org/skrub-reports/
-
-    See Also
-    --------
-    patch_display :
-        Replace the default DataFrame HTML displays in the output of notebook
-        cells with a TableReport.
 
     Examples
     --------
