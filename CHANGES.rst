@@ -18,6 +18,11 @@ Major changes
 Minor changes
 -------------
 
+* The :func:`patch_display` function has been added. It changes the display of
+  pandas and polars dataframes in jupyter notebooks to replace them with a
+  :class:`TableReport`. This can be undone with :func:`unpatch_display`.
+  :pr:`1108` by :user:`Jérôme Dockès <jeromedockes>`
+
 * The column filter selection dropdown in the tablereport is smaller and its
   label has been removed to save space. :pr:`1107` by :user:`Jérôme Dockès
   <jeromedockes>`.
