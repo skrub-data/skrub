@@ -117,6 +117,7 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
 @_plot
 def histogram(col, color=COLOR_0):
     """Histogram for a numeric column."""
+    col = sbd.drop_nulls(col)
     values = sbd.to_numpy(col)
     fig, ax = plt.subplots()
     _despine(ax)

@@ -48,6 +48,10 @@ Minor changes
   is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
   Dockès <jeromedockes>`.
 
+* The :class:`TableReport` could raise an exception when one of the columns
+  contained datetimes with time zones and missing values; this has been fixed in
+  :pr:`1114` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Release 0.3.1
 =============
 
