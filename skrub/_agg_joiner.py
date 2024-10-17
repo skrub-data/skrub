@@ -6,49 +6,140 @@ Both classes aggregate the auxiliary table first, then join this grouped
 table with the main table.
 """
 
+from itertools import product
+
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
 from skrub import _join_utils
+from skrub import _selectors as s
 from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
-from skrub._dataframe._pandas import _parse_argument
+from skrub._dispatch import dispatch
 from skrub._utils import atleast_1d_or_none
 
 from ._check_input import CheckInputDataFrame
 
-NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
-CATEG_OPERATIONS = ["mode", "count", "value_counts"]
-ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
+try:
+    import polars as pl
+except ImportError:
+    pass
+
+SUPPORTED_OPS = ["count", "mode", "min", "max", "sum", "median", "mean", "std"]
 
 
-def split_num_categ_operations(operations):
-    """Separate aggregator operators input by their type.
+def aggregate(table, key, cols_to_agg, operations, suffix):
+    """Aggregate `table` on `key` and compute statistics on `cols_to_agg`.
+
+    Operations ["sum", "median", "mean", "std"] are only supported for numeric columns.
+
+    Add a suffix to columns not in `key` and sort columns by name.
 
     Parameters
     ----------
-    operations : list of str
-        The input operators names.
+    table : DataFrame
+        The input dataframe to aggregate.
+
+    key : str or iterable of str
+        The columns used as keys to aggregate on.
+
+    cols_to_agg : str or iterable of str
+        The columns to aggregate.
+
+    operations : str or iterable of str
+        The reduction functions to apply on columns
+        in ``cols_to_agg`` during the aggregation.
+
+    suffix : str
+        The suffix appended to output columns. Will only be applied
+        to columns created by the aggregations.
 
     Returns
     -------
-    num_operations, categ_operations : Tuple of list of str
-        List of operator names.
+    DataFrame
+        The aggregated output.
     """
-    num_operations, categ_operations = [], []
-    for operation in operations:
-        # hist(5) -> hist
-        op_root, _ = _parse_argument(operation)
-        if op_root in NUM_OPERATIONS:
-            num_operations.append(operation)
-        if op_root in CATEG_OPERATIONS:
-            categ_operations.append(operation)
-        if op_root not in ALL_OPS:
-            raise ValueError(f"operations options are {ALL_OPS}, got: {operation=!r}.")
 
-    return num_operations, categ_operations
+    # summing strings works in pandas, not in polars
+    num_only_operations = ["sum", "median", "mean", "std"]
+
+    key = atleast_1d_or_none(key)
+    cols_to_agg = atleast_1d_or_none(cols_to_agg)
+    operations = atleast_1d_or_none(operations)
+
+    table_to_agg = s.select(table, s.cols(*key) | s.cols(*cols_to_agg))
+
+    # Don't check the ID column, as it's not the one we aggregate on
+    table_to_check = s.select(table_to_agg, ~s.cols(*key))
+    not_numeric_cols = (~s.numeric()).expand(table_to_check)
+
+    num_only_op = list(set(operations).intersection(set(num_only_operations)))
+
+    if (len(not_numeric_cols) > 0) & (len(num_only_op) > 0):
+        raise AttributeError(
+            f"The operations {num_only_operations} are restricted to numeric columns."
+            f" \nConsider removing the following columns: {not_numeric_cols} or the"
+            f" following operations: {num_only_op}."
+        )
+
+    aggregated = perform_groupby(table_to_agg, key, cols_to_agg, operations)
+
+    new_col_names = [
+        f"{col}{suffix}" if col not in key else col
+        for col in sbd.column_names(aggregated)
+    ]
+    new_col_names = _join_utils.pick_column_names(new_col_names)
+    aggregated = sbd.set_column_names(aggregated, new_col_names)
+    aggregated = s.select(aggregated, sorted(sbd.column_names(aggregated)))
+
+    return aggregated
+
+
+@dispatch
+def perform_groupby(table, key, cols_to_agg, operations):
+    raise NotImplementedError()
+
+
+@perform_groupby.specialize("pandas", argument_type="DataFrame")
+def _perform_groupby_pandas(table, key, cols_to_agg, operations):
+    pandas_aggfuncs = {
+        "mode": pd.Series.mode,
+    }
+    named_agg = {}
+    for col, operation in product(cols_to_agg, operations):
+        aggfunc = pandas_aggfuncs.get(operation, operation)
+        output_key = f"{col}_{operation}"
+        named_agg[output_key] = (col, aggfunc)
+
+    aggregated = table.groupby(key).agg(**named_agg).reset_index(drop=False)
+
+    return aggregated
+
+
+@perform_groupby.specialize("polars", argument_type="DataFrame")
+def _perform_groupby_polars(table, key, cols_to_agg, operations):
+    aggfuncs = []
+    for col, operation in product(cols_to_agg, operations):
+        polars_aggfuncs = {
+            "count": pl.col(col).count(),
+            "median": pl.col(col).median(),
+            "mean": pl.col(col).mean(),
+            "std": pl.col(col).std(),
+            "sum": pl.col(col).sum(),
+            "min": pl.col(col).min(),
+            "max": pl.col(col).max(),
+            "mode": pl.col(col).mode().first(),
+        }
+        output_key = f"{col}_{operation}"
+        aggfunc = polars_aggfuncs.get(operation, None).alias(output_key)
+        aggfuncs.append(aggfunc)
+
+    aggregated = table.group_by(key).agg(aggfuncs)
+
+    return aggregated
 
 
 class AggJoiner(TransformerMixin, BaseEstimator):
@@ -70,6 +161,13 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
 
+    operations : str or iterable of str
+        Aggregation operations to perform on the auxiliary table.
+
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type columns.
+
     key : str, default=None
         The column name to use for both `main_key` and `aux_key` when they
         are the same. Provide either `key` or both `main_key` and `aux_key`.
@@ -85,19 +183,10 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         the join operation.
         If `aux_key` is an iterable, we will perform a multi-column join.
 
-    cols : str or iterable of str, default=None
+    cols : str or iterable of str or selector, default=s.all()
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
-        If set to `None`, `cols` are all columns from `aux_table`, except `aux_key`.
-
-    operations : str or iterable of str, default=None
-        Aggregation operations to perform on the auxiliary table.
-
-        - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-          "hist" and "value_counts" accept an integer argument to parametrize
-          the binning.
-        - categorical : {"mode", "count", "value_counts"}
-        - If set to `None` (the default), ["mean", "mode"] will be used.
+        By default, `cols` are all columns from `aux_table`, except `aux_key`.
 
     suffix : str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it
@@ -130,34 +219,34 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     ... })
     >>> agg_joiner = AggJoiner(
     ...     aux_table=aux,
+    ...     operations="mean",
     ...     main_key="airportId",
     ...     aux_key="from_airport",
-    ...     cols=["total_passengers", "company"],
-    ...     operations=["mean", "mode"],
+    ...     cols="total_passengers",
     ... )
     >>> agg_joiner.fit_transform(main)
-       airportId  airportName  company_mode  total_passengers_mean
-    0          1    Paris CDG            AF              103.33...
-    1          2       NY JFK            DL               80.00...
+       airportId  airportName  total_passengers_mean
+    0          1    Paris CDG              103.33...
+    1          2       NY JFK               80.00...
     """
 
     def __init__(
         self,
         aux_table,
+        operations,
         *,
         key=None,
         main_key=None,
         aux_key=None,
-        cols=None,
-        operations=None,
+        cols=s.all(),
         suffix="",
     ):
         self.aux_table = aux_table
+        self.operations = operations
         self.key = key
         self.main_key = main_key
         self.aux_key = aux_key
         self.cols = cols
-        self.operations = operations
         self.suffix = suffix
 
     def _check_dataframes(self, X, aux_table):
@@ -219,30 +308,25 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
+        _join_utils.check_missing_columns(
+            self._aux_table, s.make_selector(self.cols), ""
+        )
 
         # If no `cols` provided, all columns but `aux_key` are used.
-        if self.cols is None:
-            self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
-        elif isinstance(self.cols, str):
-            self._cols = [
-                self.cols,
-            ]
-        else:
-            self._cols = self.cols
-        _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
+        self._cols = s.make_selector(self.cols) - self._aux_key
 
-        if self.operations is None:
-            self._operations = ["mean", "mode"]
-        elif isinstance(self.operations, str):
+        if isinstance(self.operations, str):
             self._operations = [
                 self.operations,
             ]
         else:
             self._operations = self.operations
 
-        self.num_operations, self.categ_operations = split_num_categ_operations(
-            self._operations
-        )
+        unsupported_ops = set(self._operations).difference(set(SUPPORTED_OPS))
+        if unsupported_ops:
+            raise ValueError(
+                f"`operations` options are {SUPPORTED_OPS}, got: {unsupported_ops}."
+            )
 
         if not isinstance(self.suffix, str):
             raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
@@ -267,13 +351,11 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
 
-        skrub_px, _ = get_df_namespace(self._aux_table)
-        self.aux_table_ = skrub_px.aggregate(
+        self.aux_table_ = aggregate(
             self._aux_table,
             self._aux_key,
-            self._cols,
-            self.num_operations,
-            self.categ_operations,
+            self._cols.expand(self._aux_table),
+            self.operations,
             suffix=self.suffix,
         )
         result = _join_utils.left_join(
@@ -351,17 +433,15 @@ class AggTarget(TransformerMixin, BaseEstimator):
         the target will be joined on the main table.
 
     operation : str or iterable of str, optional
+        TODO: set default, rename into `operations`
         Aggregation operations to perform on the target.
 
-        numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-            'hist' and 'value_counts' accept an integer argument to parametrize
-            the binning.
-
-        categorical : {"mode", "count", "value_counts"}
-
-        If set to None (the default), ["mean", "mode"] will be used.
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type targets.
 
     suffix : str, optional
+        TODO: set default
         The suffix to append to the columns of the target table if the join
         results in duplicates columns.
         If set to None, "_target" is used.
@@ -424,12 +504,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
             `y` length must match `X` length, with matching indices.
             The target can be continuous or discrete, with multiple columns.
 
-            If the target is continuous, only numerical operations,
-            listed in `num_operations`, can be applied.
-
-            If the target is discrete, only categorical operations,
-            listed in `categ_operations`, can be applied.
-
             Note that the target type is determined by
             :func:`sklearn.utils.multiclass.type_of_target`.
 
@@ -446,13 +520,11 @@ class AggTarget(TransformerMixin, BaseEstimator):
         # Add the main key on the target
         y_[self.main_key_] = X[self.main_key_]
 
-        num_operations, categ_operations = split_num_categ_operations(self.operation_)
-        self.y_ = skrub_px.aggregate(
+        self.y_ = aggregate(
             y_,
             key=self.main_key_,
             cols_to_agg=self.cols_,
-            num_operations=num_operations,
-            categ_operations=categ_operations,
+            operations=self.operation_,
             suffix=self.suffix_,
         )
 
@@ -476,12 +548,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
         y : DataFrameLike or SeriesLike or ArrayLike
             `y` length must match `X` length, with matching indices.
             The target can be continuous or discrete, with multiple columns.
-
-            If the target is continuous, only numerical operations,
-            listed in `num_operations`, can be applied.
-
-            If the target is discrete, only categorical operations,
-            listed in `categ_operations`, can be applied.
 
             Note that the target type is determined by
             :func:`sklearn.utils.multiclass.type_of_target`.
