@@ -12,6 +12,14 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+New features
+------------
+
+* The :func:`column_associations` function has been added. It computes a
+  pairwise measure of statistical dependence between all columns in a dataframe
+  (the same as shown in the :class:`TableReport`). :pr:`1109` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
 Major changes
 -------------
 

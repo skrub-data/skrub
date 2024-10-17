@@ -6,15 +6,16 @@ import pandas as pd
 import pytest
 import zoneinfo
 
+from skrub import _column_associations
 from skrub import _dataframe as sbd
-from skrub._reporting import _associations, _sample_table
+from skrub._reporting import _sample_table
 from skrub._reporting._summarize import summarize_dataframe
 
 
 @pytest.mark.parametrize("order_by", [None, "date.utc", "value"])
 @pytest.mark.parametrize("with_plots", [False, True])
 def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
-    monkeypatch.setattr(_associations, "_CATEGORICAL_THRESHOLD", 10)
+    monkeypatch.setattr(_column_associations, "_CATEGORICAL_THRESHOLD", 10)
     summary = summarize_dataframe(
         air_quality, with_plots=with_plots, order_by=order_by, title="the title"
     )
