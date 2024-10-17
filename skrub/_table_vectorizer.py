@@ -23,6 +23,7 @@ from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
+from ._dropnull import DropNullColumn
 
 __all__ = ["TableVectorizer"]
 
@@ -190,6 +191,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         ``specific_transformers``. Using ``specific_transformers`` provides
         similar functionality to what is offered by scikit-learn's
         :class:`~sklearn.compose.ColumnTransformer`.
+
+    drop_null_columns : bool, default=False
+        If set to `True`, columns that contain only null values are dropped. 
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -412,6 +416,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
+        drop_null_columns=False,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -425,6 +430,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.datetime = _utils.clone_if_default(datetime, DATETIME_TRANSFORMER)
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
+        self.drop_null_columns = drop_null_columns
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -536,6 +542,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         cols = s.all() - self._specific_columns
 
         self._preprocessors = [CheckInputDataFrame()]
+        if self.drop_null_columns:
+            add_step(self._preprocessors, DropNullColumn(), cols, allow_reject=True)
+
         for transformer in [
             CleanNullStrings(),
             ToDatetime(),
