@@ -105,7 +105,6 @@ def perform_groupby(table, key, cols_to_agg, operations):
 
 @perform_groupby.specialize("pandas", argument_type="DataFrame")
 def _perform_groupby_pandas(table, key, cols_to_agg, operations):
-    # TODO: if mode returns numerical array for all keys, it will raise
     pandas_aggfuncs = {
         "mode": pd.Series.mode,
     }
@@ -206,7 +205,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    TODO: change example
     >>> import pandas as pd
     >>> from skrub import AggJoiner
     >>> main = pd.DataFrame({
