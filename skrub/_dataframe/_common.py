@@ -73,6 +73,7 @@ __all__ = [
     "to_datetime",
     "is_categorical",
     "to_categorical",
+    "is_all_null",
     #
     # Inspecting, selecting and modifying values
     #
@@ -99,6 +100,7 @@ __all__ = [
     "slice",
     "replace",
     "with_columns",
+    "drop",
 ]
 
 #
@@ -824,6 +826,25 @@ def _to_categorical_polars(col):
     col = to_string(col)
     return _cast_polars(col, pl.Categorical())
 
+@dispatch
+def is_all_null(col):
+    raise NotImplementedError()
+
+
+@is_all_null.specialize("pandas", argument_type="Column")
+def _is_all_null_pandas(col):
+    return bool(col.isna().all())
+
+
+@is_all_null.specialize("polars", argument_type="Column")
+def _is_all_null_polars(col):
+    if col.dtype == pl.Null:
+        return True
+    elif col.dtype.is_numeric() and col.is_nan().all():
+        return True
+    # col is non numeric
+    elif col.null_count() == col.len():
+        return True
 
 #
 # Inspecting, selecting and modifying values
@@ -1187,3 +1208,15 @@ def with_columns(df, **new_cols):
     cols = {col_name: col(df, col_name) for col_name in column_names(df)}
     cols.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
     return make_dataframe_like(df, cols)
+
+@dispatch
+def drop(obj, col):
+    raise NotImplementedError()
+
+@drop.specialize("pandas")
+def _drop_pandas(obj, col):
+    return obj.drop(col, axis=1)
+
+@drop.specialize("polars")
+def _drop_polars(obj,col):
+    return obj.drop(col)
