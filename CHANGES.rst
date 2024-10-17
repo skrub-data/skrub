@@ -15,6 +15,10 @@ It is currently undergoing fast development and backward compatibility is not en
 Major changes
 -------------
 
+* AggJoiner, AggTarget and MultiAggJoiner now require the operations argument. They do not
+  split columns by type anymore, but apply operations on all selected cols. :pr:`1116`
+  by :user:`Théo Jolivet <TheooJ>`.
+
 Minor changes
 -------------
 
