@@ -12,16 +12,19 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
-Major changes
--------------
-
-Minor changes
--------------
+New features
+------------
 
 * The :func:`patch_display` function has been added. It changes the display of
   pandas and polars dataframes in jupyter notebooks to replace them with a
   :class:`TableReport`. This can be undone with :func:`unpatch_display`.
   :pr:`1108` by :user:`Jérôme Dockès <jeromedockes>`
+
+Major changes
+-------------
+
+Minor changes
+-------------
 
 * The column filter selection dropdown in the tablereport is smaller and its
   label has been removed to save space. :pr:`1107` by :user:`Jérôme Dockès
