@@ -19,4 +19,3 @@ Generating an HTML report
 
    patch_display
    unpatch_display
-
