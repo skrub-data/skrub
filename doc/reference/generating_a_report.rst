@@ -11,3 +11,12 @@ Generating an HTML report
    :nosignatures:
 
    TableReport
+
+.. autosummary::
+   :toctree: generated/
+   :template: base.rst
+   :nosignatures:
+
+   patch_display
+   unpatch_display
+
