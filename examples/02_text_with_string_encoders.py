@@ -28,15 +28,21 @@ available in skrub.
 
 .. |HistGradientBoostingClassifier| replace::
      :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
+
+.. |RandomizedSearchCV| replace::
+     :class:`~sklearn.model_selection.RandomizedSearchCV`
+
+.. |GridSearchCV| replace::
+     :class:`~sklearn.model_selection.GridSearchCV`
 """
 
 # %%
 # The Toxicity dataset
 # --------------------
-# We focus on the toxicity dataset, a corpus of 1,000 Tweets, evenly balanced
+# We focus on the toxicity dataset, a corpus of 1,000 tweets, evenly balanced
 # between the binary labels "Toxic" and "Not Toxic".
 # Our objective is to classify each entry between these two labels, using only the
-# text of the Tweet as features.
+# text of the tweets as features.
 # When it comes to displaying large chunks of text, the |TableReport| is especially
 # useful!
 from skrub import TableReport
@@ -54,13 +60,13 @@ TableReport(X)
 # `high cardinality categorical encoders <https://inria.hal.science/hal-02171256v4>`_
 # provided by skrub.
 # As introduced in the :ref:`previous example<example_encodings>`, the |GapEncoder|
-# performs matrix factorization for topic modeling. It excels at handling
-# categorical columns with high cardinality, but here the column consists of free-form
-# text.
-# Sentences are generally longer, with more unique ngrams than high cardinality
-# categories.
-# Since the GapEncoder produces topics that are easy to interpret, we can compare topic
-# activations against their original text.
+# performs matrix factorization for topic modeling. It builds latent topics by
+# capturing combinations of substrings that frequently co-occur, and encoded vectors
+# correspond to topic activations.
+#
+# To interpret these latent topics, we select for each of them a few labels from
+# the input data with the highest activations. In the example below we select 3 labels
+# to summarize each topic.
 from skrub import GapEncoder
 
 gap = GapEncoder(n_components=30)
@@ -108,10 +114,22 @@ plot_gap_feature_importance(X_trans.head())
 
 # %%
 # Now that we have an understanding of the vectors produced by the |GapEncoder|,
-# let's evaluate its performance in toxicity classification. We integrate
-# the |GapEncoder| into a |TableVectorizer|, as introduced in the previous example,
-# and create a |pipeline| by appending a |HistGradientBoostingClassifier|,
-# which consumes the vectors produced by the |GapEncoder|.
+# let's evaluate its performance in toxicity classification. The |GapEncoder| excels
+# at handling categorical columns with high cardinality, but here the column consists
+# of free-form text. Sentences are generally longer, with more unique ngrams than
+# high cardinality categories.
+#
+# To benchmark the performance of the |GapEncoder| against the toxicity dataset,
+# we integrate it into a |TableVectorizer|, as introduced in the
+# :ref:`previous example<example_encodings>`,
+# and create a |pipeline| by appending a |HistGradientBoostingClassifier|, which
+# consumes the vectors produced by the |GapEncoder|.
+#
+# We set ``n_components`` to 30; however, to achieve the best performance, we would
+# need to find the optimal value for this hyperparameter using either |GridSearchCV|
+# or |RandomizedSearchCV|. We skip this part to keep the computation time for this
+# example small.
+
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import cross_validate
 from sklearn.pipeline import make_pipeline
@@ -127,6 +145,10 @@ def plot_box_results(named_results):
     ax.boxplot(scores)
     ax.set_xticks(range(1, len(names) + 1), labels=list(names), size=12)
     ax.set_ylabel("ROC AUC", size=14)
+    plt.title(
+        "AUC distribution across folds (higher is better)",
+        size=14,
+    )
     plt.show()
 
 
@@ -140,8 +162,8 @@ gap_pipe = make_pipeline(
 )
 gap_results = cross_validate(gap_pipe, X, y, scoring="roc_auc")
 results.append(("GapEncoder", gap_results))
-plot_box_results(results)
 
+plot_box_results(results)
 
 # %%
 # MinHashEncoder
@@ -235,17 +257,28 @@ def plot_performance_tradeoff(results):
             c="k",
             capsize=2,
         )
+
         ax.set_xlabel("Time to fit (seconds)")
         ax.set_ylabel("ROC AUC")
         ax.set_title("Prediction performance / training time trade-off")
 
-    ax.legend()
+    ax.annotate(
+        "",
+        xy=(1.5, 0.98),
+        xytext=(8.5, 0.90),
+        arrowprops=dict(arrowstyle="->", mutation_scale=15),
+    )
+    ax.text(8, 0.86, "Best time / \nperformance trade-off")
+    ax.legend(bbox_to_anchor=(1, 0.3))
     plt.show()
 
 
 plot_performance_tradeoff(results)
 
 # %%
+# The black points represent the average time to fit and AUC for each vectorizer,
+# and the width of the bars represents one standard deviation
+#
 # The green outlier dot on the right side of the plot corresponds to the first time
 # the Sentence Transformers model was downloaded and loaded into memory.
 # During the subsequent cross-validation iterations, the model is simply copied,
