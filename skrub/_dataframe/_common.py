@@ -73,6 +73,7 @@ __all__ = [
     "to_datetime",
     "is_categorical",
     "to_categorical",
+    "is_all_null",
     #
     # Inspecting, selecting and modifying values
     #
@@ -823,6 +824,27 @@ def _to_categorical_polars(col):
         return col
     col = to_string(col)
     return _cast_polars(col, pl.Categorical())
+
+
+@dispatch
+def is_all_null(col):
+    raise NotImplementedError()
+
+
+@is_all_null.specialize("pandas", argument_type="Column")
+def _is_all_null_pandas(col):
+    return bool(col.isna().all())
+
+
+@is_all_null.specialize("polars", argument_type="Column")
+def _is_all_null_polars(col):
+    if col.dtype == pl.Null:
+        return True
+    elif col.dtype.is_numeric() and col.is_nan().all():
+        return True
+    # col is non numeric
+    elif col.null_count() == col.len():
+        return True
 
 
 #

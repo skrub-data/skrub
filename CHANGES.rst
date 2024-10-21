@@ -60,6 +60,10 @@ Minor changes
   contained datetimes with time zones and missing values; this has been fixed in
   :pr:`1114` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* Added a `DropNullColumn` transformer that drops columns that contain only null
+  values. :pr:`1115` by :user: `Riccardo Cappuzzo <riccardocappuzzo>`
+
+
 Release 0.3.1
 =============
 
