@@ -44,7 +44,7 @@ available in skrub.
 # Our objective is to classify each entry between these two labels, using only the
 # text of the tweets as features.
 # When it comes to displaying large chunks of text, the |TableReport| is especially
-# useful!
+# useful! Click on any cell below to expand and read the tweet in full.
 from skrub import TableReport
 from skrub.datasets import fetch_toxicity
 
