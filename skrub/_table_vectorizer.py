@@ -16,6 +16,7 @@ from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
+from ._drop_null import DropNullColumn
 from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
@@ -23,7 +24,6 @@ from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
-from ._dropnull import DropNullColumn
 
 __all__ = ["TableVectorizer"]
 
@@ -193,7 +193,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         :class:`~sklearn.compose.ColumnTransformer`.
 
     drop_null_columns : bool, default=False
-        If set to `True`, columns that contain only null values are dropped. 
+        If set to `True`, columns that contain only null values are dropped.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
