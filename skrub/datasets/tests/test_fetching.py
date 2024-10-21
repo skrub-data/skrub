@@ -257,3 +257,36 @@ def test_fetch_credit_fraud():
             mock_urlretrieve.assert_not_called()
             assert_frame_equal(bunch.products, disk_bunch.products)
             assert_frame_equal(bunch.baskets, disk_bunch.baskets)
+
+
+def test_fetch_toxicity():
+    pytest.importorskip("pyarrow")
+    with TemporaryDirectory() as temp_dir:
+        try:
+            # Valid call
+            bunch = _fetching.fetch_toxicity(
+                data_directory=temp_dir,
+            )
+
+        except (ConnectionError, URLError):
+            pytest.skip(
+                "Exception: Skipping this test because we encountered an "
+                "issue probably related to an Internet connection problem. "
+            )
+            return
+
+        assert bunch.source == "https://ndownloader.figshare.com/files/49823901"
+
+        df = pd.concat([bunch.X, bunch.y], axis=1)
+        assert_frame_equal(df, pd.read_parquet(bunch.path))
+
+        # Now that we have verified the file is on disk, we want to test
+        # whether calling the function again reads it from disk (which it should)
+        # or queries the network again (which it shouldn't).
+        with mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
+            # Same valid call as above
+            disk_bunch = _fetching.fetch_toxicity(
+                data_directory=temp_dir,
+            )
+            mock_urlretrieve.assert_not_called()
+            assert_frame_equal(bunch.X, disk_bunch.X)

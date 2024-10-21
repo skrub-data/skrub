@@ -1045,6 +1045,7 @@ def fetch_world_bank_indicator(
 def fetch_figshare(
     figshare_id: str,
     *,
+    target=None,
     load_dataframe: bool = True,
     data_directory: Path | str | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
@@ -1062,7 +1063,7 @@ def fetch_figshare(
         source="figshare",
         dataset_name=f"figshare_{figshare_id!r}",
         dataset_id=figshare_id,
-        target=None,
+        target=target,
         load_dataframe=load_dataframe,
         data_directory=data_directory,
     )
@@ -1122,6 +1123,17 @@ def fetch_credit_fraud(load_dataframe=True, data_directory=None):
     data_directory : str, default=None
         The directory to which the dataset will be written during the download.
         If None, the directory is set to ~/skrub_data.
+
+    Returns
+    -------
+    bunch : sklearn.utils.Bunch
+        A dictionnary-like object, whose fields are:
+        - product : pd.DataFrame
+        - baskets : pd.DataFrame
+        - source_product : str
+        - source_baskets : str
+        - path_product : str
+        - path_baskets : str
     """
     dataset_name_to_id = {
         "products": "49176205",
@@ -1139,3 +1151,43 @@ def fetch_credit_fraud(load_dataframe=True, data_directory=None):
         bunch[f"path_{dataset_name}"] = dataset.path
 
     return bunch
+
+
+def fetch_toxicity(load_dataframe=True, data_directory=None):
+    """Fetch the toxicity dataset from figshare.
+
+    This is a balanced binary classification use-case, where the single table
+    consists in only two columns:
+    - `text`: the text of the comment
+    - `is_toxic`: whether or not the comment is toxic
+
+    Parameters
+    ----------
+    load_dataframe : bool, default=True
+        Whether or not to load the dataset in memory after download.
+
+    data_directory : str, default=None
+        The directory to which the dataset will be written during the download.
+        If None, the directory is set to ~/skrub_data.
+
+    Returns
+    -------
+    dataset : DatasetAll
+        A dataclass object whose fields are:
+        - name: str
+        - description: str
+        - source: str
+        - target: str
+        - X: pd.DataFrame
+        - y: pd.Series
+        - path: Path
+    """
+
+    figshare_id = "49823901"
+    dataset = fetch_figshare(
+        figshare_id,
+        load_dataframe=load_dataframe,
+        data_directory=data_directory,
+        target="is_toxic",
+    )
+    return dataset
