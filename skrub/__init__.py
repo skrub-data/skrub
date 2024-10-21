@@ -13,7 +13,7 @@ from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
-from ._reporting import TableReport
+from ._reporting import TableReport, patch_display, unpatch_display
 from ._select_cols import DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import TableVectorizer
@@ -29,6 +29,8 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 __all__ = [
     "TableReport",
+    "patch_display",
+    "unpatch_display",
     "tabular_learner",
     "DatetimeEncoder",
     "ToDatetime",
