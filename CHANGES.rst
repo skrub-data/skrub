@@ -48,6 +48,9 @@ Minor changes
   is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
   Dockès <jeromedockes>`.
 
+* Added a `DropNullColumn` transformer that drops columns that contain only null
+  values. :pr:`1115` by :user: `Riccardo Cappuzzo <riccardocappuzzo>`
+
 Release 0.3.1
 =============
 
