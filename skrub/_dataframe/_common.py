@@ -100,7 +100,6 @@ __all__ = [
     "slice",
     "replace",
     "with_columns",
-    "drop",
 ]
 
 #
@@ -1210,18 +1209,3 @@ def with_columns(df, **new_cols):
     cols = {col_name: col(df, col_name) for col_name in column_names(df)}
     cols.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
     return make_dataframe_like(df, cols)
-
-
-@dispatch
-def drop(obj, col):
-    raise NotImplementedError()
-
-
-@drop.specialize("pandas")
-def _drop_pandas(obj, col):
-    return obj.drop(col, axis=1)
-
-
-@drop.specialize("polars")
-def _drop_polars(obj, col):
-    return obj.drop(col)
