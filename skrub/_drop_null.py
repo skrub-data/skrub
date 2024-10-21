@@ -8,7 +8,8 @@ __all__ = ["DropNullColumn"]
 
 
 class DropNullColumn(SingleColumnTransformer):
-
+    """
+    """
     def __init__(self):
         super().__init__()
         self._is_fitted = False
