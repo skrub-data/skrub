@@ -15,6 +15,11 @@ It is currently undergoing fast development and backward compatibility is not en
 New features
 ------------
 
+* The :func:`column_associations` function has been added. It computes a
+  pairwise measure of statistical dependence between all columns in a dataframe
+  (the same as shown in the :class:`TableReport`). :pr:`1109` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
 * The :func:`patch_display` function has been added. It changes the display of
   pandas and polars dataframes in jupyter notebooks to replace them with a
   :class:`TableReport`. This can be undone with :func:`unpatch_display`.

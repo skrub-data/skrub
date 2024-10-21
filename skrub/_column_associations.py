@@ -4,26 +4,33 @@ import warnings
 import numpy as np
 from sklearn.preprocessing import KBinsDiscretizer, OneHotEncoder
 
-from .. import _dataframe as sbd
+from . import _dataframe as sbd
 
 _N_BINS = 10
 _CATEGORICAL_THRESHOLD = 30
 
 
-def cramer_v(df):
-    """Get the Cramer V statistic of association between all pairs of columns.
+def column_associations(df):
+    """Get measures of statistical associations between all pairs of columns.
 
-    The result is returned as a list of tuples (col_1_name, col_2_name,
-    statistic_value). As the function is commutative, each pair of columns
-    appears only once (either col_1, col_2 or col_2, col_1 but not both).
-    The results are sorted from most associated to least associated.
+    At the moment, the only reported metric is Cramer's V statistic. More may
+    be added in the future.
 
-    To compute the statistic, all columns are discretized. Numeric columns are
-    binned with 10 bins. For categorical columns, only the 10 most frequent
-    categories are considered. In both cases, nulls are treated as a separate
-    category, ie a separate row in the contingency table. Thus associations
-    betwen the values of 2 columns or between their missingness patterns may be
-    captured.
+    The result is returned as a dataframe with columns:
+
+    ['left_column_name', 'left_column_idx', 'right_column_name',
+    'right_column_idx', 'cramer_v']
+
+    As the function is commutative, each pair of columns appears only once
+    (either col_1, col_2 or col_2, col_1 but not both). The results are sorted
+    from most associated to least associated.
+
+    To compute the Cramer V statistic, all columns are discretized. Numeric
+    columns are binned with 10 bins. For categorical columns, only the 10 most
+    frequent categories are considered. In both cases, nulls are treated as a
+    separate category, ie a separate row in the contingency table. Thus
+    associations betwen the values of 2 columns or between their missingness
+    patterns may be captured.
 
     Parameters
     ----------
@@ -32,14 +39,13 @@ def cramer_v(df):
 
     Returns
     -------
-    list of (str, str, float) tuples
-        The associations: each tuple contains the names of the two columns and
-        the corresponding V statistic.
+    dataframe
+        The computed associations.
     """
-    return _stack_symmetric_associations(_cramer_v_matrix(df), sbd.column_names(df))
+    return _stack_symmetric_associations(_cramer_v_matrix(df), df)
 
 
-def _stack_symmetric_associations(associations, column_names):
+def _stack_symmetric_associations(associations, df):
     """Turn a symmetric matrix of V statistics into a list of (col, col, value).
 
     The input is the symmetric matrix where entry i, j contains the V statistic
@@ -58,16 +64,19 @@ def _stack_symmetric_associations(associations, column_names):
         right_indices[order],
         associations[order],
     )
-    return [
-        {
-            "left_column_name": column_names[left],
-            "left_column_idx": int(left),
-            "right_column_name": column_names[right],
-            "right_column_idx": int(right),
-            "cramer_v": float(a),
-        }
-        for (left, right, a) in zip(left_indices, right_indices, associations)
-    ]
+    col_names = np.asarray(list(map(str, sbd.column_names(df))))
+    left_column_names, right_column_names = (
+        col_names[left_indices],
+        col_names[right_indices],
+    )
+    result = {
+        "left_column_name": left_column_names,
+        "left_column_idx": left_indices,
+        "right_column_name": right_column_names,
+        "right_column_idx": right_indices,
+        "cramer_v": associations,
+    }
+    return sbd.make_dataframe_like(df, result)
 
 
 def _cramer_v_matrix(df):
