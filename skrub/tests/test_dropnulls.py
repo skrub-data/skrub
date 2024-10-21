@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_array_equal
 
 from skrub import TableVectorizer
-from skrub._dataframe import _common as ns
+from skrub import _dataframe as sbd
 from skrub._drop_null import DropNullColumn
 
 
