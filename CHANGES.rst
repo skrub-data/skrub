@@ -12,6 +12,14 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+New features
+------------
+
+* The :func:`patch_display` function has been added. It changes the display of
+  pandas and polars dataframes in jupyter notebooks to replace them with a
+  :class:`TableReport`. This can be undone with :func:`unpatch_display`.
+  :pr:`1108` by :user:`Jérôme Dockès <jeromedockes>`
+
 Major changes
 -------------
 
@@ -48,8 +56,13 @@ Minor changes
   is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
   Dockès <jeromedockes>`.
 
+* The :class:`TableReport` could raise an exception when one of the columns
+  contained datetimes with time zones and missing values; this has been fixed in
+  :pr:`1114` by :user:`Jérôme Dockès <jeromedockes>`.
+
 * Added a `DropNullColumn` transformer that drops columns that contain only null
   values. :pr:`1115` by :user: `Riccardo Cappuzzo <riccardocappuzzo>`
+
 
 Release 0.3.1
 =============
