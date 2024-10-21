@@ -31,6 +31,7 @@ def drop_null_table(df_module):
 
 
 def test_single_column(drop_null_table):
+    """Check that null columns are dropped and non-null columns are kept."""
     dn = DropNullColumn()
     assert dn.fit_transform(drop_null_table["value_nan"]) == []
     assert dn.fit_transform(drop_null_table["value_null"]) == []
@@ -41,9 +42,7 @@ def test_single_column(drop_null_table):
 
 
 def test_drop_null_column(drop_null_table):
-    main_table_dropped = sbd.drop(drop_null_table, "value_null")
-    main_table_dropped = sbd.drop(main_table_dropped, "value_nan")
-
+    """Check that all null columns are dropped, and no more."""
     # Don't drop null columns
     tv = TableVectorizer(drop_null_columns=False)
     transformed = tv.fit_transform(drop_null_table)
