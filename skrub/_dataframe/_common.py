@@ -826,6 +826,7 @@ def _to_categorical_polars(col):
     col = to_string(col)
     return _cast_polars(col, pl.Categorical())
 
+
 @dispatch
 def is_all_null(col):
     raise NotImplementedError()
@@ -845,6 +846,7 @@ def _is_all_null_polars(col):
     # col is non numeric
     elif col.null_count() == col.len():
         return True
+
 
 #
 # Inspecting, selecting and modifying values
@@ -1209,14 +1211,17 @@ def with_columns(df, **new_cols):
     cols.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
     return make_dataframe_like(df, cols)
 
+
 @dispatch
 def drop(obj, col):
     raise NotImplementedError()
+
 
 @drop.specialize("pandas")
 def _drop_pandas(obj, col):
     return obj.drop(col, axis=1)
 
+
 @drop.specialize("polars")
-def _drop_polars(obj,col):
+def _drop_polars(obj, col):
     return obj.drop(col)
