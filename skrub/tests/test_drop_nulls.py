@@ -3,8 +3,8 @@ import pytest
 from numpy.testing import assert_array_equal
 
 from skrub import TableVectorizer
-from skrub._drop_null import DropNullColumn
 from skrub import _dataframe as sbd
+from skrub._drop_null import DropNullColumn
 
 
 @pytest.fixture
@@ -35,7 +35,9 @@ def test_single_column(drop_null_table):
     assert dn.fit_transform(drop_null_table["value_nan"]) == []
     assert dn.fit_transform(drop_null_table["value_null"]) == []
 
-    assert_array_equal(sbd.to_numpy(sbd.col(drop_null_table, "idx")), np.array([1, 2, 3]))
+    assert_array_equal(
+        sbd.to_numpy(sbd.col(drop_null_table, "idx")), np.array([1, 2, 3])
+    )
 
 
 def test_drop_null_column(drop_null_table):
