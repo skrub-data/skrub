@@ -8,18 +8,17 @@ __all__ = ["DropNullColumn"]
 
 
 class DropNullColumn(SingleColumnTransformer):
-    '''Drop a single column if it contains only null values. 
-    '''
+    """Drop a single column if it contains only null values."""
 
     def __init__(self):
         super().__init__()
         self._is_fitted = False
 
     def fit_transform(self, column, y=None):
-        """Fit the encoder and transform a column. 
+        """Fit the encoder and transform a column.
 
         Args:
-            column : Pandas or Polars series. The input column to check. 
+            column : Pandas or Polars series. The input column to check.
             y : None. Ignored.
 
         Returns:
@@ -34,7 +33,7 @@ class DropNullColumn(SingleColumnTransformer):
         """Transform a column.
 
         Args:
-            column : Pandas or Polars series. The input column to check. 
+            column : Pandas or Polars series. The input column to check.
 
         Returns:
             The input column, or an empty list if the column contains only null values.
