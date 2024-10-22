@@ -471,13 +471,13 @@ class AggTarget(TransformerMixin, BaseEstimator):
     ...     operation=["mean", "max"],
     ... )
     >>> agg_target.fit_transform(X, y)
-       flightId  from_airport  ...  y_0_max_target y_0_mean_target
-    0         1             1  ...               1        0.666667
-    1         2             1  ...               1        0.500000
-    2         3             1  ...               1        0.500000
-    3         4             2  ...               1        0.666667
-    4         5             2  ...               1        0.666667
-    5         6             2  ...               1        1.000000
+       flightId  from_airport  ...  y_0_mean_target  y_0_max_target
+    0         1             1  ...         0.666667               1
+    1         2             1  ...         0.500000               1
+    2         3             1  ...         0.500000               1
+    3         4             2  ...         0.666667               1
+    4         5             2  ...         0.666667               1
+    5         6             2  ...         1.000000               1
     """
 
     def __init__(
