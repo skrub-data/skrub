@@ -32,7 +32,7 @@ SUPPORTED_OPS = ["count", "mode", "min", "max", "sum", "median", "mean", "std"]
 
 
 def aggregate(table, key, cols_to_agg, operations, suffix):
-    """Aggregate `table` on `key` and compute statistics on `cols_to_agg`.
+    """Aggregate the `table` by `key` and compute statistics for `cols_to_agg`.
 
     Operations ["sum", "median", "mean", "std"] are only supported for numeric columns.
 
@@ -70,7 +70,7 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
     cols_to_agg = atleast_1d_or_none(cols_to_agg)
     operations = atleast_1d_or_none(operations)
 
-    table_to_agg = s.select(table, s.cols(*key) | s.cols(*cols_to_agg))
+    table_to_agg = s.select(table, s.make_selector(key) | s.make_selector(cols_to_agg))
 
     # Don't check the ID column, as it's not the one we aggregate on
     table_to_check = s.select(table_to_agg, ~s.cols(*key))
@@ -325,7 +325,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         unsupported_ops = set(self._operations).difference(set(SUPPORTED_OPS))
         if unsupported_ops:
             raise ValueError(
-                f"`operations` options are {SUPPORTED_OPS}, got: {unsupported_ops}."
+                f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are not supported."
             )
 
         if not isinstance(self.suffix, str):
