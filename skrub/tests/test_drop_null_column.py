@@ -3,7 +3,7 @@ import pytest
 
 from skrub import TableVectorizer
 from skrub import _dataframe as sbd
-from skrub._drop_null import DropNullColumn
+from skrub._drop_null_column import DropNullColumn
 
 
 @pytest.fixture
