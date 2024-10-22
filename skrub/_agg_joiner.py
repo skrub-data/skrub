@@ -41,13 +41,13 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
     table : DataFrame
         The input dataframe to aggregate.
 
-    key : str or iterable of str
+    key : iterable of str
         The columns used as keys to aggregate on.
 
-    cols_to_agg : str or iterable of str
+    cols_to_agg : iterable of str
         The columns to aggregate.
 
-    operations : str or iterable of str
+    operations : iterable of str
         The reduction functions to apply on columns in ``cols_to_agg``
         during the aggregation.
 
@@ -64,10 +64,6 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
     DataFrame
         The aggregated output.
     """
-    key = atleast_1d_or_none(key)
-    cols_to_agg = atleast_1d_or_none(cols_to_agg)
-    operations = atleast_1d_or_none(operations)
-
     table_to_agg = s.select(table, s.make_selector(key) | s.make_selector(cols_to_agg))
 
     # Don't check the ID column, as it's not the one we aggregate on
@@ -312,12 +308,15 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         # If no `cols` provided, all columns but `aux_key` are used.
         self._cols = s.make_selector(self.cols) - self._aux_key
 
-        if isinstance(self.operations, str):
-            self._operations = [
-                self.operations,
-            ]
-        else:
-            self._operations = self.operations
+        self._operations = atleast_1d_or_none(self.operations)
+        if (
+            not all([isinstance(op, str) for op in self._operations])
+            or self._operations == []
+        ):
+            raise ValueError(
+                "`operations` must be string or an iterable of strings, got"
+                f" {self.operations}."
+            )
 
         unsupported_ops = set(self._operations).difference(set(SUPPORTED_OPS))
         if unsupported_ops:
@@ -353,7 +352,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
             self._aux_table,
             self._aux_key,
             self._cols.expand(self._aux_table),
-            self.operations,
+            self._operations,
             suffix=self.suffix,
         )
         result = _join_utils.left_join(

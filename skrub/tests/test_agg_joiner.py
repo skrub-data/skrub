@@ -27,9 +27,9 @@ def test_aggregate_single_operation(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     aggregated = aggregate(
         main_table,
-        operations="mean",
-        key="userId",
-        cols_to_agg="rating",
+        operations=["mean"],
+        key=["userId"],
+        cols_to_agg=["rating"],
         suffix="",
     )
     # Sorting rows because polars doesn't necessarily maintain order in group_by
@@ -43,9 +43,9 @@ def test_aggregate_single_operation(df_module, main_table):
 
     aggregated = aggregate(
         main_table,
-        operations="mode",
-        key="userId",
-        cols_to_agg="genre",
+        operations=["mode"],
+        key=["userId"],
+        cols_to_agg=["genre"],
         suffix="",
     )
     if df_module.name == "polars":
@@ -63,8 +63,8 @@ def test_aggregate_multiple_operations(df_module, main_table):
     aggregated = aggregate(
         main_table,
         operations=["mean", "sum"],
-        key="userId",
-        cols_to_agg="rating",
+        key=["userId"],
+        cols_to_agg=["rating"],
         suffix="",
     )
     if df_module.name == "polars":
@@ -80,8 +80,8 @@ def test_aggregate_multiple_operations(df_module, main_table):
     aggregated = aggregate(
         main_table,
         operations=["sum", "mean"],
-        key="userId",
-        cols_to_agg="rating",
+        key=["userId"],
+        cols_to_agg=["rating"],
         suffix="",
     )
     if df_module.name == "polars":
@@ -105,8 +105,8 @@ def test_aggregate_multiple_columns(df_module):
 
     aggregated = aggregate(
         main_table,
-        operations="sum",
-        key="userId",
+        operations=["sum"],
+        key=["userId"],
         cols_to_agg=["apples", "oranges"],
         suffix="",
     )
@@ -125,9 +125,9 @@ def test_aggregate_boolean_columns(df_module):
     )
     aggregated = aggregate(
         main_table,
-        operations="mode",
-        key="userId",
-        cols_to_agg="flag",
+        operations=["mode"],
+        key=["userId"],
+        cols_to_agg=["flag"],
         suffix="",
     )
     if df_module.name == "polars":
@@ -140,9 +140,9 @@ def test_aggregate_suffix(df_module, main_table):
     main_table = df_module.DataFrame(main_table)
     aggregated = aggregate(
         main_table,
-        operations="mean",
-        key="userId",
-        cols_to_agg="rating",
+        operations=["mean"],
+        key=["userId"],
+        cols_to_agg=["rating"],
         suffix="_custom_suffix",
     )
     assert sbd.column_names(aggregated) == ["userId", "rating_mean_custom_suffix"]
@@ -159,9 +159,9 @@ def test_aggregate_wrong_operation_type(df_module, main_table):
     ):
         aggregate(
             main_table,
-            operations="std",
-            key="userId",
-            cols_to_agg="genre",
+            operations=["std"],
+            key=["userId"],
+            cols_to_agg=["genre"],
             suffix="",
         )
 
@@ -220,6 +220,47 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(main_movie), sbd.pandas_convert_dtypes(expected_movie)
     )
+
+
+def test_wrong_operations(df_module, main_table):
+    "Check that a useful error is raised when `operations` is not supported"
+    main_table = df_module.DataFrame(main_table)
+
+    # Test operations is string not in list
+    agg_joiner = AggJoiner(
+        aux_table=main_table,
+        operations="wrong_op",
+        key="userId",
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"(`operations` options are)",
+    ):
+        agg_joiner.fit(main_table)
+
+    # Test operations is None
+    agg_joiner = AggJoiner(
+        aux_table=main_table,
+        operations=None,
+        key="userId",
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"(`operations` must be string or an iterable of strings)",
+    ):
+        agg_joiner.fit(main_table)
+
+    # Test operations is int
+    agg_joiner = AggJoiner(
+        aux_table=main_table,
+        operations=2,
+        key="userId",
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"(`operations` must be string or an iterable of strings)",
+    ):
+        agg_joiner.fit(main_table)
 
 
 def test_correct_keys(df_module, main_table):
