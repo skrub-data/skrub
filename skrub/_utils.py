@@ -191,11 +191,12 @@ def set_output(transformer, X):
     if not hasattr(transformer, "set_output"):
         return
     module_name = sbd.dataframe_module_name(X)
-    target_module = module_name
     if module_name == "polars" and parse_version(sklearn.__version__) < parse_version(
         "1.4"
     ):
         # TODO: remove when scikit-learn 1.3 support is dropped.
+        target_module = "pandas"
+    else:
         target_module = module_name
     try:
         transformer.set_output(transform=target_module)
