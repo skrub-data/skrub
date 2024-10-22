@@ -176,7 +176,7 @@ class TableReport:
         str :
             The JSON data.
         """
-        to_remove = ["dataframe", "sample_table", "first_row_dict"]
+        to_remove = ["dataframe", "sample_table"]
         data = {
             k: v for k, v in self._summary_without_plots.items() if k not in to_remove
         }
