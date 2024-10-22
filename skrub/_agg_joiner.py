@@ -36,10 +36,6 @@ NUM_ONLY_OPS = ["sum", "median", "mean", "std"]
 def aggregate(table, key, cols_to_agg, operations, suffix):
     """Aggregate the `table` by `key` and compute statistics for `cols_to_agg`.
 
-    Operations ["sum", "median", "mean", "std"] are only supported for numeric columns.
-
-    Add a suffix to columns not in `key` and sort columns by name.
-
     Parameters
     ----------
     table : DataFrame
@@ -52,8 +48,12 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
         The columns to aggregate.
 
     operations : str or iterable of str
-        The reduction functions to apply on columns
-        in ``cols_to_agg`` during the aggregation.
+        The reduction functions to apply on columns in ``cols_to_agg``
+        during the aggregation.
+
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type columns.
 
     suffix : str
         The suffix appended to output columns. Will only be applied
