@@ -191,7 +191,6 @@ def set_output(transformer, X):
     if not hasattr(transformer, "set_output"):
         return
     module_name = sbd.dataframe_module_name(X)
-    target_module = module_name
     if module_name == "polars" and parse_version(sklearn.__version__) < parse_version(
         "1.4"
     ):

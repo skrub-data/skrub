@@ -306,5 +306,6 @@ def test_output_index(cols):
 def test_set_output_polars(pl_module):
     # non-regression for an issue introduced in #973; set_output('polars')
     # would cause a failure in old scikit-learn versions.
+    # see #1122 for details
     df = pl_module.make_dataframe({"x": ["a", "b", "c"]})
     OnEachColumn(OneHotEncoder(sparse_output=False)).fit_transform(df)
