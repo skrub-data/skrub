@@ -29,6 +29,8 @@ except ImportError:
     pass
 
 SUPPORTED_OPS = ["count", "mode", "min", "max", "sum", "median", "mean", "std"]
+# summing strings works in pandas, not in polars
+NUM_ONLY_OPS = ["sum", "median", "mean", "std"]
 
 
 def aggregate(table, key, cols_to_agg, operations, suffix):
@@ -62,10 +64,6 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
     DataFrame
         The aggregated output.
     """
-
-    # summing strings works in pandas, not in polars
-    num_only_operations = ["sum", "median", "mean", "std"]
-
     key = atleast_1d_or_none(key)
     cols_to_agg = atleast_1d_or_none(cols_to_agg)
     operations = atleast_1d_or_none(operations)
@@ -76,11 +74,11 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
     table_to_check = s.select(table_to_agg, ~s.cols(*key))
     not_numeric_cols = (~s.numeric()).expand(table_to_check)
 
-    num_only_op = list(set(operations).intersection(set(num_only_operations)))
+    num_only_op = list(set(operations).intersection(set(NUM_ONLY_OPS)))
 
     if (len(not_numeric_cols) > 0) & (len(num_only_op) > 0):
         raise AttributeError(
-            f"The operations {num_only_operations} are restricted to numeric columns."
+            f"The operations {NUM_ONLY_OPS} are restricted to numeric columns."
             f" \nConsider removing the following columns: {not_numeric_cols} or the"
             f" following operations: {num_only_op}."
         )
@@ -93,7 +91,6 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
     ]
     new_col_names = _join_utils.pick_column_names(new_col_names)
     aggregated = sbd.set_column_names(aggregated, new_col_names)
-    aggregated = s.select(aggregated, sorted(sbd.column_names(aggregated)))
 
     return aggregated
 
@@ -325,7 +322,8 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         unsupported_ops = set(self._operations).difference(set(SUPPORTED_OPS))
         if unsupported_ops:
             raise ValueError(
-                f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are not supported."
+                f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are"
+                " not supported."
             )
 
         if not isinstance(self.suffix, str):

@@ -36,7 +36,7 @@ def test_aggregate_single_operation(df_module, main_table):
     if df_module.name == "polars":
         aggregated = sbd.sort(aggregated, by="userId")
     # In that order because columns are sorted in ``aggregate``
-    expected = df_module.make_dataframe({"rating_mean": [4.0, 3.0], "userId": [1, 2]})
+    expected = df_module.make_dataframe({"userId": [1, 2], "rating_mean": [4.0, 3.0]})
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
     )
@@ -51,7 +51,7 @@ def test_aggregate_single_operation(df_module, main_table):
     if df_module.name == "polars":
         aggregated = sbd.sort(aggregated, by="userId")
     expected = df_module.make_dataframe(
-        {"genre_mode": ["drama", "sf"], "userId": [1, 2]}
+        {"userId": [1, 2], "genre_mode": ["drama", "sf"]}
     )
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
@@ -70,7 +70,24 @@ def test_aggregate_multiple_operations(df_module, main_table):
     if df_module.name == "polars":
         aggregated = sbd.sort(aggregated, by="userId")
     expected = df_module.make_dataframe(
-        {"rating_mean": [4.0, 3.0], "rating_sum": [12.0, 9.0], "userId": [1, 2]}
+        {"userId": [1, 2], "rating_mean": [4.0, 3.0], "rating_sum": [12.0, 9.0]}
+    )
+    df_module.assert_frame_equal(
+        sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
+    )
+
+    # Test that the order of the operations is kept in output columns
+    aggregated = aggregate(
+        main_table,
+        operations=["sum", "mean"],
+        key="userId",
+        cols_to_agg="rating",
+        suffix="",
+    )
+    if df_module.name == "polars":
+        aggregated = sbd.sort(aggregated, by="userId")
+    expected = df_module.make_dataframe(
+        {"userId": [1, 2], "rating_sum": [12.0, 9.0], "rating_mean": [4.0, 3.0]}
     )
     df_module.assert_frame_equal(
         sbd.pandas_convert_dtypes(aggregated), sbd.pandas_convert_dtypes(expected)
@@ -96,7 +113,7 @@ def test_aggregate_multiple_columns(df_module):
     if df_module.name == "polars":
         aggregated = sbd.sort(aggregated, by="userId")
     expected = df_module.make_dataframe(
-        {"apples_sum": [6, 15], "oranges_sum": [60, 150], "userId": [1, 2]}
+        {"userId": [1, 2], "apples_sum": [6, 15], "oranges_sum": [60, 150]}
     )
     df_module.assert_frame_equal(aggregated, expected)
 
@@ -115,7 +132,7 @@ def test_aggregate_boolean_columns(df_module):
     )
     if df_module.name == "polars":
         aggregated = sbd.sort(aggregated, by="userId")
-    expected = df_module.make_dataframe({"flag_mode": [False, True], "userId": [1, 2]})
+    expected = df_module.make_dataframe({"userId": [1, 2], "flag_mode": [False, True]})
     df_module.assert_frame_equal(aggregated, expected)
 
 
@@ -128,7 +145,7 @@ def test_aggregate_suffix(df_module, main_table):
         cols_to_agg="rating",
         suffix="_custom_suffix",
     )
-    assert sbd.column_names(aggregated) == ["rating_mean_custom_suffix", "userId"]
+    assert sbd.column_names(aggregated) == ["userId", "rating_mean_custom_suffix"]
 
 
 def test_aggregate_wrong_operation_type(df_module, main_table):
