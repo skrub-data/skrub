@@ -128,13 +128,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
     Attributes
     ----------
-    _estimator : sentence_transformers.SentenceTransformer
-        The torch encoder.
-
-    _cache_folder : Path
-        The path where the downloaded model repository is stored.
-        Removed from the pickle object
-
     input_name_ : str
         The name of the fitted column.
 
