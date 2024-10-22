@@ -10,10 +10,6 @@ __all__ = ["DropNullColumn"]
 class DropNullColumn(SingleColumnTransformer):
     """Drop a single column if it contains only null values."""
 
-    def __init__(self):
-        super().__init__()
-        self._is_fitted = False
-
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
 
