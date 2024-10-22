@@ -100,13 +100,13 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         the ``cache_folder`` path needs to be accessible to store the downloaded model.
 
     store_weights_in_pickle : bool, default=False
-        Whether or not to keep the loaded sentence-transformer model
-        in the TextEncoder when pickling.
+        Whether or not to keep the loaded sentence-transformers model
+        in the ``TextEncoder`` when pickling.
 
         - When set to False, the ``_estimator`` property is removed from
-          the objects to pickle, which significantly reduces the size of
+          the object to pickle, which significantly reduces the size of
           the serialized object. Note that when the serialized object is
-          unpickled on another machine, the TextEncoder will try to download
+          unpickled on another machine, the ``TextEncoder`` will try to download
           the sentence-transformer model again from HuggingFace Hub.
           This process could fail if, for example, the machine doesn't have
           internet access. Additionally, if you use weights stored on disk
@@ -116,7 +116,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
           unpickle the ``TextEncoder``.
         - When set to True, the ``_estimator`` property is included in
           the serialized object. Users deploying fine-tuned models stored on
-          disk are recommended to use this option.
+          disk are recommended to use this option. Note that the machine
+          where the ``TextEncoder`` is unpickled must have the same device than
+          the machine where it was pickled.
 
     random_state : int, RandomState instance or None, default=None
         Used when the PCA dimension reduction mechanism is used, for reproducible
