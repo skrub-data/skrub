@@ -196,6 +196,8 @@ def set_output(transformer, X):
         "1.4"
     ):
         # TODO: remove when scikit-learn 1.3 support is dropped.
+        target_module = "pandas"
+    else:
         target_module = module_name
     try:
         transformer.set_output(transform=target_module)
