@@ -533,6 +533,30 @@ def test_to_categorical(df_module):
         assert list(s.cat.categories) == list("ab")
 
 
+def test_is_all_null(df_module):
+    """Check that is_all_null is evaluating null counts correctly."""
+
+    # Check that all null columns are marked as "all null"
+    assert ns.is_all_null(df_module.make_column("all_null", [None, None, None]))
+    assert ns.is_all_null(df_module.make_column("all_nan", [np.nan, np.nan, np.nan]))
+
+    # Check that the other columns are *not* marked as "all null"
+    assert not ns.is_all_null(
+        df_module.make_column("almost_all_null", ["almost", None, None])
+    )
+    assert not ns.is_all_null(
+        df_module.make_column("almost_all_nan", [2.5, None, None])
+    )
+
+
+def test_is_all_null_polars(pl_module):
+    """Special case for polars: column is full of nulls, but doesn't have dtype Null"""
+    col = pl_module.make_column("col", [1, None, None])
+    col = col[1:]
+
+    assert ns.is_all_null(col)
+
+
 # Inspecting, selecting and modifying values
 # ==========================================
 #

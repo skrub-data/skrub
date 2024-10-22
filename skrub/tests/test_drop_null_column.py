@@ -72,15 +72,3 @@ def test_drop_null_column(drop_null_table):
     tv = TableVectorizer(drop_null_columns=True)
     transformed = tv.fit_transform(drop_null_table)
     assert sbd.shape(transformed) == (sbd.shape(drop_null_table)[0], 3)
-
-
-def test_is_all_null(drop_null_table):
-    """Check that is_all_null is evaluating null counts correctly."""
-    # Check that all null columns are marked as "all null"
-    assert sbd.is_all_null(drop_null_table["value_nan"])
-    assert sbd.is_all_null(drop_null_table["value_null"])
-
-    # Check that the other columns are *not* marked as "all null"
-    assert not sbd.is_all_null(drop_null_table["value_almost_null"])
-    assert not sbd.is_all_null(drop_null_table["value_almost_nan"])
-    assert not sbd.is_all_null(drop_null_table["idx"])
