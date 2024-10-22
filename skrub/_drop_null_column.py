@@ -22,7 +22,9 @@ class DropNullColumn(SingleColumnTransformer):
         """
         del y
 
+        self.drop_ = sbd.is_all_null(column)
         self._is_fitted = True
+
         return self.transform(column)
 
     def transform(self, column):
@@ -38,10 +40,7 @@ class DropNullColumn(SingleColumnTransformer):
             self,
         )
 
-        if sbd.is_all_null(column):
-            return []
-        else:
-            return column
+        return [] if self.drop_ else column
 
     def __sklearn_is_fitted__(self):
         """
