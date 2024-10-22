@@ -19,6 +19,7 @@ from ._select_cols import DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._table_vectorizer import TableVectorizer
 from ._tabular_learner import tabular_learner
+from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
 
@@ -51,5 +52,6 @@ __all__ = [
     "AggTarget",
     "SelectCols",
     "DropCols",
+    "TextEncoder",
     "column_associations",
 ]
