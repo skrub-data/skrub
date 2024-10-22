@@ -131,7 +131,7 @@ def _perform_groupby_polars(table, key, cols_to_agg, operations):
             "mode": pl.col(col).mode().first(),
         }
         output_key = f"{col}_{operation}"
-        aggfunc = polars_aggfuncs.get(operation, None).alias(output_key)
+        aggfunc = polars_aggfuncs[operation].alias(output_key)
         aggfuncs.append(aggfunc)
 
     aggregated = table.group_by(key).agg(aggfuncs)
