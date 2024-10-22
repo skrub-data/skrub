@@ -833,18 +833,17 @@ def is_all_null(col):
 
 @is_all_null.specialize("pandas", argument_type="Column")
 def _is_all_null_pandas(col):
-    return bool(col.isna().all())
+    return all(is_null(col))
 
 
 @is_all_null.specialize("polars", argument_type="Column")
 def _is_all_null_polars(col):
     if col.dtype == pl.Null:
         return True
-    elif col.dtype.is_numeric() and col.is_nan().all():
-        return True
     # col is non numeric
-    elif col.null_count() == col.len():
+    if col.null_count() == col.len():
         return True
+    return all(is_null(col))
 
 
 #
