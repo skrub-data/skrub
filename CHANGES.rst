@@ -61,16 +61,15 @@ Minor changes
   is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
   Dockès <jeromedockes>`.
 
+* Added a `DropNullColumn` transformer that drops columns that contain only null
+  values. :pr:`1115` by :user: `Riccardo Cappuzzo <riccardocappuzzo>`
+
 Bug fixes
 ---------
 
 * The :class:`TableReport` could raise an exception when one of the columns
   contained datetimes with time zones and missing values; this has been fixed in
   :pr:`1114` by :user:`Jérôme Dockès <jeromedockes>`.
-
-* Added a `DropNullColumn` transformer that drops columns that contain only null
-  values. :pr:`1115` by :user: `Riccardo Cappuzzo <riccardocappuzzo>`
-
 
 * In scikit-learn versions older than 1.4 the :class:`TableVectorizer` could
   fail on polars dataframes when used with the default parameters. This has been
