@@ -566,7 +566,7 @@ y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
     ],
 )
 def test_agg_target(main_table, y, col_name):
-    agg_target = AggTarget(main_key="userId", suffix="_user", operations="mean")
+    agg_target = AggTarget(main_key="userId", operations="mean", suffix="_user")
     main_transformed = agg_target.fit_transform(main_table, y)
 
     main_transformed_expected = pd.DataFrame(
@@ -581,26 +581,28 @@ def test_agg_target(main_table, y, col_name):
     pd.testing.assert_frame_equal(main_transformed, main_transformed_expected)
 
 
-def test_agg_target_missing_operations(main_table):
-    agg_target = AggTarget(
-        main_key="userId",
-        suffix="_user",
-    )
-
-    # y is continuous
-    y = pd.DataFrame(dict(rating=[4.0, 4.1, 4.2, 4.3, 4.4, 4.5]))
-    agg_target.fit(main_table, y)
-    assert agg_target.operations_ == ["mean"]
-
-    # y is categorical
-    y = pd.DataFrame(dict(rating=["1", "2", "3", "1", "2", "3"]))
-    agg_target.fit(main_table, y)
-    assert agg_target.operations_ == ["mode"]
+# TODO: change this test, there are no longer default operations
+# def test_agg_target_missing_operations(main_table):
+#     agg_target = AggTarget(
+#         main_key="userId",
+#         suffix="_user",
+#     )
+#
+#     # y is continuous
+#     y = pd.DataFrame(dict(rating=[4.0, 4.1, 4.2, 4.3, 4.4, 4.5]))
+#     agg_target.fit(main_table, y)
+#     assert agg_target.operations_ == ["mean"]
+#
+#     # y is categorical
+#     y = pd.DataFrame(dict(rating=["1", "2", "3", "1", "2", "3"]))
+#     agg_target.fit(main_table, y)
+#     assert agg_target.operations_ == ["mode"]
 
 
 def test_agg_target_check_input(main_table):
     agg_target = AggTarget(
         main_key="userId",
+        operations="count",
         suffix="_user",
     )
     match = r"(?=.*X must be a dataframe)"

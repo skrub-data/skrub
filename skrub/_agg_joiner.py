@@ -392,7 +392,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         aggregated using each key separately, then each aggregation of
         the target will be joined on the main table.
 
-    operations : str or iterable of str, optional
+    operations : str or iterable of str
         Aggregation operations to perform on the target.
 
         Supported operations are "count", "mode", "min", "max", "sum", "median",
@@ -444,7 +444,8 @@ class AggTarget(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         main_key,
-        operations=None,
+        operations,
+        *,
         suffix=None,
     ):
         self.main_key = main_key
