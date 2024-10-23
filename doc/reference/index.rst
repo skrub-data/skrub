@@ -96,6 +96,7 @@ Generating an HTML report
 
    patch_display
    unpatch_display
+   column_associations
 
 
 .. _cleaning_a_dataframe_ref:
