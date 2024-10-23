@@ -566,7 +566,7 @@ y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
     ],
 )
 def test_agg_target(main_table, y, col_name):
-    agg_target = AggTarget(main_key="userId", suffix="_user", operation="mean")
+    agg_target = AggTarget(main_key="userId", suffix="_user", operations="mean")
     main_transformed = agg_target.fit_transform(main_table, y)
 
     main_transformed_expected = pd.DataFrame(
@@ -590,12 +590,12 @@ def test_agg_target_missing_operations(main_table):
     # y is continuous
     y = pd.DataFrame(dict(rating=[4.0, 4.1, 4.2, 4.3, 4.4, 4.5]))
     agg_target.fit(main_table, y)
-    assert agg_target.operation_ == ["mean"]
+    assert agg_target.operations_ == ["mean"]
 
     # y is categorical
     y = pd.DataFrame(dict(rating=["1", "2", "3", "1", "2", "3"]))
     agg_target.fit(main_table, y)
-    assert agg_target.operation_ == ["mode"]
+    assert agg_target.operations_ == ["mode"]
 
 
 def test_agg_target_check_input(main_table):
@@ -624,7 +624,7 @@ def test_duplicate_columns(df_module, main_table):
 
 
 def test_duplicate_columns_target(main_table):
-    joiner = AggTarget(main_key="userId", operation="mean")
+    joiner = AggTarget(main_key="userId", operations="mean")
     y = sbd.col(main_table, "rating")
     X = sbd.with_columns(main_table, rating_mean_target=sbd.col(main_table, "rating"))
     out_1 = joiner.fit_transform(X, y)

@@ -392,8 +392,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         aggregated using each key separately, then each aggregation of
         the target will be joined on the main table.
 
-    operation : str or iterable of str, optional
-        TODO: set default, rename into `operations`
+    operations : str or iterable of str, optional
         Aggregation operations to perform on the target.
 
         Supported operations are "count", "mode", "min", "max", "sum", "median",
@@ -430,7 +429,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
     >>> y = np.array([1, 1, 0, 0, 1, 1])
     >>> agg_target = AggTarget(
     ...     main_key="company",
-    ...     operation=["mean", "max"],
+    ...     operations=["mean", "max"],
     ... )
     >>> agg_target.fit_transform(X, y)
        flightId  from_airport  ...  y_0_mean_target  y_0_max_target
@@ -445,11 +444,11 @@ class AggTarget(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         main_key,
-        operation=None,
+        operations=None,
         suffix=None,
     ):
         self.main_key = main_key
-        self.operation = operation
+        self.operations = operations
         self.suffix = suffix
 
     def fit_transform(self, X, y):
@@ -484,7 +483,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
             y_,
             key=self.main_key_,
             cols_to_agg=self.cols_,
-            operations=self.operation_,
+            operations=self.operations_,
             suffix=self.suffix_,
         )
 
@@ -607,14 +606,14 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         self.cols_ = y_.columns
 
-        if self.operation is None:
+        if self.operations is None:
             y_type = type_of_target(y_)
             if y_type in ["continuous", "continuous-multioutput"]:
-                operation = ["mean"]
+                operations = ["mean"]
             else:
-                operation = ["mode"]
+                operations = ["mode"]
         else:
-            operation = np.atleast_1d(self.operation).tolist()
-        self.operation_ = operation
+            operations = np.atleast_1d(self.operations).tolist()
+        self.operations_ = operations
 
         return y_
