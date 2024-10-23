@@ -17,7 +17,7 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import _dataframe as sbd
 from skrub import _join_utils
 from skrub import _selectors as s
-from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
+from skrub._dataframe._namespace import get_df_namespace
 from skrub._dispatch import dispatch
 from skrub._utils import atleast_1d_or_none
 
@@ -242,49 +242,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self.cols = cols
         self.suffix = suffix
 
-    def _check_dataframes(self, X, aux_table):
-        """Check dataframes input types.
-
-            Raises an error if frames aren't both Pandas or Polars dataframes,
-            or if there is a Polars lazyframe.
-            Alternatively, allows `aux_table` to be "X".
-
-            Parameters
-            ----------
-            X : DataFrameLike
-                The main table to augment.
-            aux_table : DataFrameLike or "X"
-                The auxiliary table.
-
-        Returns
-        -------
-        X, aux_table: DataFrameLike
-            The validated main and auxiliary dataframes.
-        """
-        # Polars lazyframes will raise an error here.
-        if not hasattr(X, "__dataframe__"):
-            raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
-        if isinstance(aux_table, str):
-            if aux_table == "X":
-                return X, X
-            raise ValueError("'aux_table' must be a dataframe or the string 'X'.")
-        elif not hasattr(aux_table, "__dataframe__"):
-            raise TypeError(
-                "'aux_table' must be a dataframe or the string 'X', got"
-                f" {type(aux_table)}. If you have more than one 'aux_table',"
-                " use the MultiAggJoiner instead."
-            )
-
-        if (is_pandas(X) and not is_pandas(aux_table)) or (
-            is_polars(X) and not is_polars(aux_table)
-        ):
-            raise TypeError(
-                "'X' and 'aux_table' must be of the same dataframe type, got"
-                f"{type(X)} and {type(aux_table)}"
-            )
-
-        return X, aux_table
-
     def _check_inputs(self, X):
         """Check inputs before fitting.
 
@@ -294,8 +251,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
             Input data, based table on which to left join the
             auxiliary table.
         """
-        X, self._aux_table = self._check_dataframes(X, self.aux_table)
-
         self._main_key, self._aux_key = _join_utils.check_key(
             self.main_key, self.aux_key, self.key
         )
@@ -344,9 +299,18 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         DataFrame
             The augmented input.
         """
-        self._check_inputs(X)
+        if isinstance(self.aux_table, str) and self.aux_table == "X":
+            self.aux_table = X
+        elif not hasattr(self.aux_table, "__dataframe__"):
+            raise ValueError(
+                "'aux_table' must be a dataframe or the string 'X', got"
+                f" {type(self.aux_table)}. If you have more than one 'aux_table',"
+                " use the MultiAggJoiner instead."
+            )
+        self._aux_table = CheckInputDataFrame().fit_transform(self.aux_table)
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
+        self._check_inputs(X)
 
         self.aux_table_ = aggregate(
             self._aux_table,
@@ -397,7 +361,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
             The augmented input.
         """
         check_is_fitted(self, "aux_table_")
-        X, _ = self._check_dataframes(X, self.aux_table_)
         X = self._main_check_input.transform(X)
 
         result = _join_utils.left_join(

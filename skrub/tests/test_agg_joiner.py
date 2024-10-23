@@ -481,7 +481,7 @@ def test_input_multiple_tables(df_module, main_table):
         r"(?=.*must be a dataframe or the string 'X')"
         r"(?=.*use the MultiAggJoiner instead)"
     )
-    with pytest.raises(TypeError, match=error_msg):
+    with pytest.raises(ValueError, match=error_msg):
         agg_joiner.fit_transform(main_table)
 
 
