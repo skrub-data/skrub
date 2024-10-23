@@ -474,7 +474,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         X = self._main_check_input.fit_transform(X)
 
         # Add the main key on the target
-        y_[self.main_key_] = X[self.main_key_]
+        y_ = sbd.with_columns(y_, **{k: sbd.col(X, k) for k in self.main_key_})
 
         self.y_ = aggregate(
             y_,
@@ -505,9 +505,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
             `y` length must match `X` length, with matching indices.
             The target can be continuous or discrete, with multiple columns.
 
-            Note that the target type is determined by
-            :func:`sklearn.utils.multiclass.type_of_target`.
-
         Returns
         -------
         AggTarget
@@ -521,12 +518,12 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : DataFrameLike,
+        X : DataFrameLike
             The input data to transform.
 
         Returns
         -------
-        X_transformed : DataFrameLike,
+        X_transformed : DataFrameLike
             The augmented input.
         """
         check_is_fitted(self, "y_")
@@ -553,7 +550,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        y_ : DataFrameLike,
+        y_ : DataFrameLike
             Transformation of the target.
         """
         if not hasattr(X, "__dataframe__"):
@@ -571,6 +568,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         if hasattr(y, "__dataframe__"):
             # Need to copy since we add columns in place
             # during fit.
+            # TODO: dispatch copy
             y_ = y.copy()
         elif sbd.is_column(y) and sbd.name(y) is not None:
             y_ = sbd.make_dataframe_like(y, {sbd.name(y): y})
@@ -579,6 +577,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
                 y = sbd.to_numpy(y)
             y_ = np.atleast_2d(y)
 
+            # TODO: the section below needs to be reworked
             # If y is Series or an array derived from a
             # Series, we need to transpose it.
             if len(y_) == 1 and len(y) != 1:
@@ -589,18 +588,19 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
             if hasattr(y, "name"):
                 # y is a Series
-                cols = [y.name]
+                cols = [sbd.name(y)]
             else:
-                cols = [f"y_{col}" for col in y_.columns]
-            y_.columns = cols
+                cols = [f"y_{col}" for col in sbd.column_names(y_)]
+            y_ = sbd.set_column_names(y_, cols)
 
         # Check lengths
-        if y_.shape[0] != X.shape[0]:
+        if sbd.shape(y_)[0] != sbd.shape(X)[0]:
             raise ValueError(
-                f"X and y length must match, got {X.shape[0]} and {y_.shape[0]}."
+                f"X and y length must match, got {sbd.shape(X)[0]} and"
+                f" {sbd.shape(y_)[0]}."
             )
 
-        self.cols_ = y_.columns
+        self.cols_ = sbd.column_names(y_)
 
         self.operations_ = np.atleast_1d(self.operations).tolist()
 

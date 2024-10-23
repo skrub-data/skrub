@@ -593,6 +593,8 @@ def test_agg_target_fit_transform(main_table, y, col_name):
 
 # TODO: test multiple main_key
 
+# TODO: test based on :func:`sklearn.utils.multiclass.type_of_target` ?
+
 
 def test_agg_target_check_input(main_table):
     agg_target = AggTarget(
