@@ -11,7 +11,6 @@ from itertools import product
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
@@ -473,7 +472,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
         y_ = self.check_inputs(X, y)
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
-        skrub_px, _ = get_df_namespace(X, y_)
 
         # Add the main key on the target
         y_[self.main_key_] = X[self.main_key_]
@@ -604,14 +602,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         self.cols_ = y_.columns
 
-        if self.operations is None:
-            y_type = type_of_target(y_)
-            if y_type in ["continuous", "continuous-multioutput"]:
-                operations = ["mean"]
-            else:
-                operations = ["mode"]
-        else:
-            operations = np.atleast_1d(self.operations).tolist()
-        self.operations_ = operations
+        self.operations_ = np.atleast_1d(self.operations).tolist()
 
         return y_

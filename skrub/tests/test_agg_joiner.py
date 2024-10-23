@@ -598,6 +598,8 @@ def test_agg_target(main_table, y, col_name):
 #     agg_target.fit(main_table, y)
 #     assert agg_target.operations_ == ["mode"]
 
+# TODO: test multiple main_key
+
 
 def test_agg_target_check_input(main_table):
     agg_target = AggTarget(
