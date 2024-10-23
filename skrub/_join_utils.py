@@ -93,7 +93,7 @@ def check_missing_columns(table, key, table_name):
     if isinstance(key, s.Selector):
         key.expand(table)
         return
-    missing_columns = set(key) - set(table.columns)
+    missing_columns = set(key) - set(sbd.column_names(table))
     if not missing_columns:
         return
     raise ValueError(

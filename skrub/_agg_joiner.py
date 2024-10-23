@@ -138,8 +138,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
     Apply numerical and categorical aggregation operations on the columns (i.e. `cols`)
-    to aggregate, selected by dtypes. See the list of supported operations
-    at the parameter `operations`.
+    to aggregate. See the list of supported operations at the parameter `operations`.
 
     If `cols` is not provided, `cols` are all columns from `aux_table`,
     except `aux_key`.
@@ -458,11 +457,9 @@ class AggTarget(TransformerMixin, BaseEstimator):
             Must contains the columns names defined in `main_key`.
 
         y : DataFrameLike or SeriesLike or ArrayLike
+            # TODO: remove the matching indices part ?
             `y` length must match `X` length, with matching indices.
             The target can be continuous or discrete, with multiple columns.
-
-            Note that the target type is determined by
-            :func:`sklearn.utils.multiclass.type_of_target`.
 
         Returns
         -------
