@@ -399,11 +399,9 @@ class AggTarget(TransformerMixin, BaseEstimator):
         "mean", "std". The operations "sum", "median", "mean", "std" are reserved
         to numeric type targets.
 
-    suffix : str, optional
-        TODO: set default
+    suffix : str, default="_target"
         The suffix to append to the columns of the target table if the join
         results in duplicates columns.
-        If set to None, "_target" is used.
 
     See Also
     --------
@@ -446,7 +444,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         main_key,
         operations,
         *,
-        suffix=None,
+        suffix="_target",
     ):
         self.main_key = main_key
         self.operations = operations
@@ -565,10 +563,9 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         self.main_key_ = atleast_1d_or_none(self.main_key)
 
-        self.suffix_ = "_target" if self.suffix is None else self.suffix
-
-        if not isinstance(self.suffix_, str):
-            raise ValueError(f"'suffix' must be a string, got {self.suffix_!r}")
+        if not isinstance(self.suffix, str):
+            raise ValueError(f"'suffix' must be a string, got {self.suffix!r}")
+        self.suffix_ = self.suffix
 
         _join_utils.check_missing_columns(X, self.main_key_, "'X' (the main table)")
 
