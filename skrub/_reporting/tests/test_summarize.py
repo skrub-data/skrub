@@ -229,3 +229,15 @@ def test_level_names():
     assert _sample_table._level_names(idx) == ["the name"]
     idx.names = ["a", "b"]
     assert _sample_table._level_names(idx) == ["a", "b"]
+
+
+def test_duplicate_columns(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    df.columns = ["a", "a"]
+    summary = summarize_dataframe(df)
+    cols = summary["columns"]
+    assert len(cols) == 2
+    assert cols[0]["name"] == "a"
+    assert cols[0]["mean"] == 1.5
+    assert cols[1]["name"] == "a"
+    assert cols[1]["mean"] == 3.5

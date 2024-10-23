@@ -93,3 +93,9 @@ def test_nat(df_module):
     col = ToDatetime().fit_transform(col)
     df = df_module.make_dataframe({"a": col})
     TableReport(df).html()
+
+
+def test_duplicate_columns(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    df.columns = ["a", "a"]
+    TableReport(df).html()
