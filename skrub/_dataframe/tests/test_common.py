@@ -228,12 +228,36 @@ def test_to_column_list(df_module, example_data_dict):
         ns.to_column_list(None)
 
 
+def test_to_column_list_duplicate_columns(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    df.columns = ["a", "a"]
+    col_list = ns.to_column_list(df)
+    assert ns.name(col_list[0]) == "a"
+    assert ns.to_list(col_list[0]) == [1, 2]
+    assert ns.name(col_list[1]) == "a"
+    assert ns.to_list(col_list[1]) == [3, 4]
+
+
 def test_collect(df_module):
     assert ns.collect(df_module.example_dataframe) is df_module.example_dataframe
     if df_module.name == "polars":
         df_module.assert_frame_equal(
             ns.collect(df_module.example_dataframe.lazy()), df_module.example_dataframe
         )
+
+
+def test_col(df_module):
+    assert ns.to_list(ns.col(df_module.example_dataframe, "float-col"))[0] == 4.5
+
+
+def test_col_by_idx(df_module):
+    assert ns.name(ns.col_by_idx(df_module.example_dataframe, 2)) == "float-col"
+
+
+def test_col_by_idx_duplicate_columns(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    df.columns = ["a", "a"]
+    assert ns.to_list(ns.col_by_idx(df, 0)) == [1, 2]
 
 
 #

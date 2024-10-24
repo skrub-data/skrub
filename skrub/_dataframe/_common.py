@@ -40,6 +40,7 @@ __all__ = [
     "is_column_list",
     "to_column_list",
     "col",
+    "col_by_idx",
     "collect",
     #
     # Querying and modifying metadata
@@ -351,7 +352,7 @@ def to_column_list(obj):
     if is_column(obj):
         return [obj]
     if is_dataframe(obj):
-        return [col(obj, c) for c in column_names(obj)]
+        return [col_by_idx(obj, idx) for idx in range(shape(obj)[1])]
     if not is_column_list(obj):
         raise TypeError("obj should be a DataFrame, a Column or a list of Columns.")
     return obj
@@ -370,6 +371,21 @@ def _col_pandas(df, col_name):
 @col.specialize("polars", argument_type="DataFrame")
 def _col_polars(df, col_name):
     return df[col_name]
+
+
+@dispatch
+def col_by_idx(df, col_idx):
+    raise NotImplementedError()
+
+
+@col_by_idx.specialize("pandas", argument_type="DataFrame")
+def _col_by_idx_pandas(df, col_idx):
+    return df.iloc[:, col_idx]
+
+
+@col_by_idx.specialize("polars", argument_type="DataFrame")
+def _col_by_idx_polars(df, col_idx):
+    return df[df.columns[col_idx]]
 
 
 @dispatch
