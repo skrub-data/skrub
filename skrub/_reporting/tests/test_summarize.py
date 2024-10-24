@@ -4,7 +4,6 @@ from types import SimpleNamespace
 import numpy as np
 import pandas as pd
 import pytest
-import zoneinfo
 
 from skrub import _column_associations
 from skrub import _dataframe as sbd
@@ -24,21 +23,6 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     assert summary["n_columns"] == 11
     assert summary["n_constant_columns"] == 4
     assert summary["n_rows"] == 17
-    assert summary["first_row_dict"] == {
-        "all_null": None,
-        "city": "London",
-        "constant_datetime": datetime.datetime(2024, 7, 5, 12, 17, 29, 427865),
-        "constant_numeric": 2.7,
-        "country": "GB",
-        "date.utc": datetime.datetime(
-            2019, 6, 13, 0, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
-        ),
-        "loc_with_nulls": None,
-        "location": "London Westminster",
-        "parameter": "no2",
-        "unit": "µg/m³",
-        "value": 29.0,
-    }
     assert summary["dataframe"] is air_quality
     assert summary["dataframe_module"] == df_module.name
     assert summary["sample_table"]["start_i"] == (
@@ -245,3 +229,15 @@ def test_level_names():
     assert _sample_table._level_names(idx) == ["the name"]
     idx.names = ["a", "b"]
     assert _sample_table._level_names(idx) == ["a", "b"]
+
+
+def test_duplicate_columns(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    df.columns = ["a", "a"]
+    summary = summarize_dataframe(df)
+    cols = summary["columns"]
+    assert len(cols) == 2
+    assert cols[0]["name"] == "a"
+    assert cols[0]["mean"] == 1.5
+    assert cols[1]["name"] == "a"
+    assert cols[1]["mean"] == 3.5

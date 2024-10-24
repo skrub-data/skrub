@@ -72,6 +72,10 @@ Bug fixes
   fail on polars dataframes when used with the default parameters. This has been
   fixed in :pr:`1122` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The :class:`TableReport` would raise an exception when the input (pandas)
+  dataframe contained several columns with the same name. This has been fixed in
+  :pr:`1125` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Release 0.3.1
 =============
 
