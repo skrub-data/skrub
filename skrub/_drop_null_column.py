@@ -37,3 +37,7 @@ class DropNullColumn(SingleColumnTransformer):
             The input column, or an empty list if the column contains only null values.
         """
         check_is_fitted(self)
+
+        if self.drop_:
+            return []
+        return column
