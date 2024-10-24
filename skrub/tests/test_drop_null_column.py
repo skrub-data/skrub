@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 
-from skrub import TableVectorizer
 from skrub import _dataframe as sbd
 from skrub._drop_null_column import DropNullColumn
 
@@ -58,17 +57,3 @@ def test_single_column(drop_null_table, df_module):
         sbd.col(drop_null_table, "value_almost_null"),
         df_module.make_column("value_almost_null", ["almost", None, None]),
     )
-
-
-def test_drop_null_column(drop_null_table):
-    """Check that all null columns are dropped, and no more."""
-    # Don't drop null columns
-    tv = TableVectorizer(drop_null_columns=False)
-    transformed = tv.fit_transform(drop_null_table)
-
-    assert sbd.shape(transformed) == sbd.shape(drop_null_table)
-
-    # Drop null columns
-    tv = TableVectorizer(drop_null_columns=True)
-    transformed = tv.fit_transform(drop_null_table)
-    assert sbd.shape(transformed) == (sbd.shape(drop_null_table)[0], 3)

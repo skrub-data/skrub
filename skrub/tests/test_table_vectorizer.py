@@ -164,6 +164,28 @@ def _get_datetimes_dataframe():
     )
 
 
+def _get_missing_values_dataframe(categorical_dtype="object"):
+    """
+    Creates a simple DataFrame with some columns that contain only missing values.
+    We'll use different types of missing values (np.nan, pd.NA, None)
+    to test how the vectorizer handles full null columns with mixed null values.
+    """
+    return pd.DataFrame(
+        {
+            "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
+            "all_null": pd.Series(
+                [None, None, None, None, None], dtype=categorical_dtype
+            ),
+            "all_nan": pd.Series(
+                [np.nan, np.nan, np.nan, np.nan, np.nan], dtype="Float64"
+            ),
+            "mixed_nulls": pd.Series(
+                [np.nan, None, pd.NA, "NULL", "NA"], dtype=categorical_dtype
+            ),
+        }
+    )
+
+
 def test_fit_default_transform():
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer()
@@ -734,3 +756,18 @@ def test_supervised_encoder(df_module):
     y = np.random.default_rng(0).normal(size=sbd.shape(X)[0])
     tv = TableVectorizer(low_cardinality=TargetEncoder())
     tv.fit_transform(X, y)
+
+
+def test_drop_null_column():
+    """Check that all null columns are dropped, and no more."""
+    # Don't drop null columns
+    X = _get_missing_values_dataframe()
+    tv = TableVectorizer(drop_null_columns=False)
+    transformed = tv.fit_transform(X)
+
+    assert sbd.shape(transformed) == sbd.shape(X)
+
+    # Drop null columns
+    tv = TableVectorizer(drop_null_columns=True)
+    transformed = tv.fit_transform(X)
+    assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)
