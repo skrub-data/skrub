@@ -36,14 +36,4 @@ class DropNullColumn(SingleColumnTransformer):
         Returns:
             The input column, or an empty list if the column contains only null values.
         """
-        check_is_fitted(
-            self,
-        )
-
-        return [] if self.drop_ else column
-
-    def __sklearn_is_fitted__(self):
-        """
-        Check fitted status and return a Boolean value.
-        """
-        return hasattr(self, "_is_fitted") and self._is_fitted
+        check_is_fitted(self)
