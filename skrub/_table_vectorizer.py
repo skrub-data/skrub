@@ -192,7 +192,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         similar functionality to what is offered by scikit-learn's
         :class:`~sklearn.compose.ColumnTransformer`.
 
-    drop_null_columns : bool, default=False
+    drop_null_columns : bool, default=True
         If set to `True`, columns that contain only null values are dropped.
 
     n_jobs : int, default=None
@@ -416,7 +416,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
-        drop_null_columns=False,
+        drop_null_columns=True,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
