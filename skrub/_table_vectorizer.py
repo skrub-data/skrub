@@ -313,12 +313,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     Before applying the main transformer, the ``TableVectorizer`` applies
     several preprocessing steps, for example to detect numbers or dates that are
-    represented as strings. Moreover, a final post-processing step is applied to
-    all non-categorical columns in the encoder's output to cast them to float32.
+    represented as strings. By default, columns that contain only null values are
+    dropped. Moreover, a final post-processing step is applied to all
+    non-categorical columns in the encoder's output to cast them to float32.
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), DropNullColumn(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
     Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
@@ -327,7 +328,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``all_processing_steps_`` is useful to inspect the details of the
     choices made by the ``TableVectorizer`` during preprocessing, for example:
 
-    >>> vectorizer.all_processing_steps_['B'][1]
+    >>> vectorizer.all_processing_steps_['B'][2]
     ToDatetime()
     >>> _.format_
     '%d/%m/%Y'
@@ -393,7 +394,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropNullColumn(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 
