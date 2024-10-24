@@ -838,10 +838,13 @@ def _is_all_null_pandas(col):
 
 @is_all_null.specialize("polars", argument_type="Column")
 def _is_all_null_polars(col):
+    # Column type is Null
     if col.dtype == pl.Null:
         return True
+    # Column type is not Null, but all values are nulls: more efficient
     if col.null_count() == col.len():
         return True
+    # Column type is not Null, not all values are null (check if NaN etc.): slower
     return all(is_null(col))
 
 
