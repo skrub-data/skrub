@@ -840,7 +840,6 @@ def _is_all_null_pandas(col):
 def _is_all_null_polars(col):
     if col.dtype == pl.Null:
         return True
-    # col is non numeric
     if col.null_count() == col.len():
         return True
     return all(is_null(col))
