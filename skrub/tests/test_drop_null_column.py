@@ -42,9 +42,9 @@ def drop_null_table(df_module):
 def test_single_column(drop_null_table, df_module):
     """Check that null columns are dropped and non-null columns are kept."""
     dn = DropNullColumn()
-    assert dn.fit_transform(drop_null_table["value_nan"]) == []
-    assert dn.fit_transform(drop_null_table["value_null"]) == []
-    assert dn.fit_transform(drop_null_table["mixed_null"]) == []
+    assert dn.fit_transform(sbd.col(drop_null_table, "value_nan")) == []
+    assert dn.fit_transform(sbd.col(drop_null_table, "value_null")) == []
+    assert dn.fit_transform(sbd.col(drop_null_table, "mixed_null")) == []
 
     df_module.assert_column_equal(
         dn.fit_transform(sbd.col(drop_null_table, "idx")),
