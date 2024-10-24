@@ -543,9 +543,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
         self._preprocessors = [CheckInputDataFrame()]
 
-        transformer_list = [
-            CleanNullStrings(),
-        ]
+        transformer_list = [CleanNullStrings()]
         if self.drop_null_columns:
             transformer_list.append(DropNullColumn())
 
