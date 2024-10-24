@@ -528,8 +528,11 @@ def test_changing_types(X_train, X_test, expected_X_out):
     """
     table_vec = TableVectorizer(
         # only extract the total seconds
-        datetime=DatetimeEncoder(resolution=None)
+        datetime=DatetimeEncoder(resolution=None),
+        # True by default
+        drop_null_columns=False,
     )
+
     table_vec.fit(X_train)
     X_out = table_vec.transform(X_test)
     assert (X_out.isna() == expected_X_out.isna()).all().all()
