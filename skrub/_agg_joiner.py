@@ -298,7 +298,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         """
         if isinstance(self.aux_table, str) and self.aux_table == "X":
             self.aux_table = X
-        elif not hasattr(self.aux_table, "__dataframe__"):
+        elif not sbd.is_dataframe(self.aux_table):
             raise ValueError(
                 "'aux_table' must be a dataframe or the string 'X', got"
                 f" {type(self.aux_table)}. If you have more than one 'aux_table',"
@@ -466,7 +466,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         y_ : DataFrameLike
             The transformed target.
         """
-        if not hasattr(X, "__dataframe__"):
+        if not sbd.is_dataframe(X):
             raise TypeError(f"X must be a dataframe, got {type(X)}")
 
         self._main_key = atleast_1d_or_none(self.main_key)
@@ -475,10 +475,8 @@ class AggTarget(TransformerMixin, BaseEstimator):
         # `y` is copied or converted to a df to be compatible with `aggregate`
 
         # If `y` is already a dataframe
-        if hasattr(y, "__dataframe__"):
-            # Need to copy since we add columns in place during fit
-            # TODO: dispatch copy
-            y_ = y.copy()
+        if sbd.is_dataframe(y):
+            y_ = sbd.make_dataframe_like(y, sbd.to_column_list(y))
         # If `y` is a named series, we convert it to a dataframe
         elif sbd.is_column(y) and sbd.name(y) is not None:
             y_ = sbd.make_dataframe_like(y, {sbd.name(y): y})
