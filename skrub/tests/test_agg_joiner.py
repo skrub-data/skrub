@@ -601,7 +601,7 @@ y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
         (y["rating"].rename(None), "y_0"),
     ],
 )
-def test_agg_target_fit_transform(main_table, y, col_name):
+def test_agg_target_simple_fit_transform(main_table, y, col_name):
     agg_target = AggTarget(main_key="userId", operations="mean", suffix="_user")
     main_transformed = agg_target.fit_transform(main_table, y)
 
@@ -612,6 +612,39 @@ def test_agg_target_fit_transform(main_table, y, col_name):
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
             f"{col_name}_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
+        }
+    )
+    pd.testing.assert_frame_equal(main_transformed, main_transformed_expected)
+
+
+y_2 = pd.DataFrame(
+    {
+        "a": [10, 20, 30, 40, 50, 60],
+        "b": [60, 50, 40, 30, 20, 10],
+    }
+)
+
+
+@pytest.mark.parametrize(
+    "y_2, col_name_a, col_name_b",
+    [
+        (y_2, "a", "b"),
+        (y_2.values, "y_0", "y_1"),
+        (y_2.values.tolist(), "y_0", "y_1"),
+    ],
+)
+def test_agg_target_multiple_columns(main_table, y_2, col_name_a, col_name_b):
+    agg_target = AggTarget(main_key="userId", operations="mean", suffix="_user")
+    main_transformed = agg_target.fit_transform(main_table, y_2)
+
+    main_transformed_expected = pd.DataFrame(
+        {
+            "userId": [1, 1, 1, 2, 2, 2],
+            "movieId": [1, 3, 6, 318, 6, 1704],
+            "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
+            "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
+            f"{col_name_a}_mean_user": [20.0, 20.0, 20.0, 50.0, 50.0, 50.0],
+            f"{col_name_b}_mean_user": [50.0, 50.0, 50.0, 20.0, 20.0, 20.0],
         }
     )
     pd.testing.assert_frame_equal(main_transformed, main_transformed_expected)
