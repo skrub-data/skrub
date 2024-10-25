@@ -7,9 +7,11 @@ from sklearn.exceptions import NotFittedError
 from skrub import _dataframe as sbd
 from skrub._agg_joiner import AggJoiner, AggTarget, aggregate
 
+# TODO: check empty col
+# TODO: AggTarget test based on :func:`sklearn.utils.multiclass.type_of_target` ?
+
 
 # TODO: parametrize the fixture with df_module
-# TODO: check empty col
 @pytest.fixture
 def main_table():
     df = pd.DataFrame(
@@ -615,32 +617,33 @@ def test_agg_target_fit_transform(main_table, y, col_name):
     pd.testing.assert_frame_equal(main_transformed, main_transformed_expected)
 
 
-# TODO: change this test, there are no longer default operations
-# def test_agg_target_missing_operations(main_table):
-#     agg_target = AggTarget(
-#         main_key="userId",
-#     )
-#
-#     match = useful error msg
-#     with pytest.raises(ValueError, match=match):
-#         agg_target.fit(main_table)
+def test_agg_target_multiple_main_key(main_table):
+    agg_target = AggTarget(
+        main_key=["userId", "genre"],
+        operations="count",
+    )
+    aggregated = agg_target.fit_transform(main_table, y)
+    sbd.column_names(aggregated) == [
+        "userId",
+        "movieId",
+        "rating",
+        "genre",
+        "rating_count_target",
+    ]
+    y_expected = sbd.make_column_like(
+        main_table, [2, 2, 1, 2, 1, 2], "rating_count_target"
+    )
+    pd.testing.assert_series_equal(
+        sbd.col(aggregated, "rating_count_target"), y_expected
+    )
 
 
-# TODO: test multiple main_key
-
-# TODO: test based on :func:`sklearn.utils.multiclass.type_of_target` ?
-
-
-def test_agg_target_check_input(main_table):
+def test_agg_target_wrong_target_size(main_table):
     agg_target = AggTarget(
         main_key="userId",
         operations="count",
         suffix="_user",
     )
-    # TODO: rework this
-    # match = r"(?=.*X must be a dataframe)"
-    # with pytest.raises(TypeError, match=match):
-    #     agg_target.fit(main_table, y)
 
     match = r"(?=.*length)(?=.*match)"
     with pytest.raises(ValueError, match=match):
