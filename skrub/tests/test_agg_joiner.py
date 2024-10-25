@@ -2,6 +2,7 @@ import re
 
 import pandas as pd
 import pytest
+from sklearn.exceptions import NotFittedError
 
 from skrub import _dataframe as sbd
 from skrub._agg_joiner import AggJoiner, AggTarget, aggregate
@@ -527,6 +528,28 @@ def test_agg_joiner_wrong_string_placeholder(df_module, main_table):
     )
     with pytest.raises(ValueError, match=r"(?=.*dataframe)(?=.*'X')"):
         agg_joiner.fit(main_table)
+
+
+def test_agg_joiner_get_feature_names_out(df_module, main_table):
+    main_table = df_module.DataFrame(main_table)
+
+    agg_joiner = AggJoiner(
+        aux_table=main_table,
+        operations="count",
+        key="userId",
+        cols="genre",
+    )
+    with pytest.raises(NotFittedError):
+        agg_joiner.get_feature_names_out()
+
+    agg_joiner.fit(main_table)
+    assert agg_joiner.get_feature_names_out() == [
+        "userId",
+        "movieId",
+        "rating",
+        "genre",
+        "genre_count",
+    ]
 
 
 def test_agg_joiner_not_fitted_dataframe(df_module, main_table):

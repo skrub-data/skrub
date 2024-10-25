@@ -371,6 +371,11 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         result = sbd.set_column_names(result, self.all_outputs_)
         return result
 
+    def get_feature_names_out(self):
+        """Get output feature names for transformation."""
+        check_is_fitted(self, "aux_table_")
+        return self.all_outputs_
+
 
 class AggTarget(TransformerMixin, BaseEstimator):
     """Aggregate a target ``y`` before joining its aggregation on a base dataframe.
