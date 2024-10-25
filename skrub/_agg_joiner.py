@@ -246,7 +246,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         Parameters
         ----------
         X : DataFrameLike
-            Input data, based table on which to left join the
+            Input data, base table on which to left join the
             auxiliary table.
         """
         self._main_key, self._aux_key = _join_utils.check_key(
@@ -378,7 +378,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
 
 
 class AggTarget(TransformerMixin, BaseEstimator):
-    """Aggregate a target ``y`` before joining its aggregation on a base dataframe.
+    """Aggregate a target `y` before joining its aggregation on a base dataframe.
 
     Accepts :obj:`pandas.DataFrame` or :class:`polars.DataFrame` inputs.
 
@@ -391,9 +391,8 @@ class AggTarget(TransformerMixin, BaseEstimator):
         If `main_key` refer to a single column, a single aggregation
         for this key will be generated and a single join will be performed.
 
-        Otherwise, if `main_key` is a list of keys, the target will be
-        aggregated using each key separately, then each aggregation of
-        the target will be joined on the main table.
+        If `main_key` is a list of keys, a multi-column aggregation will be performed
+        on the target.
 
     operations : str or iterable of str
         Aggregation operations to perform on the target.
@@ -454,19 +453,19 @@ class AggTarget(TransformerMixin, BaseEstimator):
         self.suffix = suffix
 
     def check_inputs(self, X, y):
-        """Perform a check on column names data type and suffixes.
+        """Check inputs before fitting.
 
         Parameters
         ----------
         X : DataFrameLike
-            The raw input to check.
+            Input data, base table on which to left join the target.
         y : DataFrameLike or SeriesLike or ArrayLike
-            The raw target to check.
+            The target to check.
 
         Returns
         -------
         y_ : DataFrameLike
-            Transformation of the target.
+            The transformed target.
         """
         if not hasattr(X, "__dataframe__"):
             raise TypeError(f"X must be a dataframe, got {type(X)}")
@@ -535,7 +534,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         return y_
 
     def fit_transform(self, X, y):
-        """Aggregate the target ``y`` based on keys from ``X``.
+        """Aggregate the target `y` based on keys from `X`.
 
         Parameters
         ----------
@@ -577,7 +576,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         return result
 
     def fit(self, X, y):
-        """Aggregate the target ``y`` based on keys from ``X``.
+        """Aggregate the target `y` based on keys from `X`.
 
         Parameters
         ----------
@@ -585,6 +584,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
             Must contains the columns names defined in `main_key`.
 
         y : DataFrameLike or SeriesLike or ArrayLike
+            # TODO: remove the matching indices part ?
             `y` length must match `X` length, with matching indices.
             The target can be continuous or discrete, with multiple columns.
 
@@ -597,7 +597,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, X):
-        """Left-join pre-aggregated table on `X`.
+        """Left-join pre-aggregated target on `X`.
 
         Parameters
         ----------
