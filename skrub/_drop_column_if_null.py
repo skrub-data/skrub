@@ -4,11 +4,12 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
 
-__all__ = ["DropNullColumn"]
+__all__ = ["DropColumnIfNull"]
 
 
-class DropNullColumn(SingleColumnTransformer):
-    """Drop a single column if it contains only null values."""
+class DropColumnIfNull(SingleColumnTransformer):
+    """Drop a single column if it contains only Null, NaN, or a mixture of null
+    values. If at least one non-null value is found, the column is kept."""
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.

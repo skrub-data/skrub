@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub._drop_null_column import DropNullColumn
+from skrub._drop_column_if_null import DropColumnIfNull
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def drop_null_table(df_module):
 
 def test_single_column(drop_null_table, df_module):
     """Check that null columns are dropped and non-null columns are kept."""
-    dn = DropNullColumn()
+    dn = DropColumnIfNull()
     assert dn.fit_transform(sbd.col(drop_null_table, "value_nan")) == []
     assert dn.fit_transform(sbd.col(drop_null_table, "value_null")) == []
     assert dn.fit_transform(sbd.col(drop_null_table, "mixed_null")) == []
