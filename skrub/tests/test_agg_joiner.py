@@ -574,6 +574,7 @@ def test_agg_joiner_not_fitted_dataframe(df_module, main_table):
         agg_joiner.transform(not_main_table)
 
 
+# TODO: make fixture
 y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
 
 
@@ -633,6 +634,58 @@ def test_agg_target_check_input(main_table):
     match = r"(?=.*length)(?=.*match)"
     with pytest.raises(ValueError, match=match):
         agg_target.fit(main_table, sbd.col(y, "rating")[:2])
+
+
+def test_agg_target_wrong_operations(df_module, main_table):
+    "Check that a useful error is raised when `operations` is not supported"
+    main_table = df_module.DataFrame(main_table)
+
+    # Test operations is string not in list
+    agg_target = AggTarget(
+        main_key="userId",
+        operations="wrong_op",
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"(`operations` options are)",
+    ):
+        agg_target.fit(main_table, y)
+
+    # Test operations is None
+    agg_target = AggTarget(
+        main_key="userId",
+        operations=None,
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"(`operations` must be string or an iterable of strings)",
+    ):
+        agg_target.fit(main_table, y)
+
+    # Test operations is int
+    agg_target = AggTarget(
+        main_key="userId",
+        operations=2,
+    )
+    with pytest.raises(
+        ValueError,
+        match=r"(`operations` must be string or an iterable of strings)",
+    ):
+        agg_target.fit(main_table, y)
+
+
+def test_agg_target_too_many_suffixes(df_module, main_table):
+    "Check that providing more than one `suffix` for the `AggTarget` raises an error."
+    main_table = df_module.DataFrame(main_table)
+
+    # Check inconsistent number of suffixes
+    agg_target = AggTarget(
+        main_key="userId",
+        operations="mean",
+        suffix=["_user", "_movie", "_tag"],
+    )
+    with pytest.raises(ValueError, match=r"(?='suffix' must be a string.*)"):
+        agg_target.fit(main_table, y)
 
 
 def test_agg_joiner_duplicate_columns(df_module, main_table):

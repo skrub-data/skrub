@@ -453,6 +453,87 @@ class AggTarget(TransformerMixin, BaseEstimator):
         self.operations = operations
         self.suffix = suffix
 
+    def check_inputs(self, X, y):
+        """Perform a check on column names data type and suffixes.
+
+        Parameters
+        ----------
+        X : DataFrameLike
+            The raw input to check.
+        y : DataFrameLike or SeriesLike or ArrayLike
+            The raw target to check.
+
+        Returns
+        -------
+        y_ : DataFrameLike
+            Transformation of the target.
+        """
+        if not hasattr(X, "__dataframe__"):
+            raise TypeError(f"X must be a dataframe, got {type(X)}")
+
+        self._main_key = atleast_1d_or_none(self.main_key)
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+
+        # If y is not a dataframe, we convert it.
+        if hasattr(y, "__dataframe__"):
+            # Need to copy since we add columns in place
+            # during fit.
+            # TODO: dispatch copy
+            y_ = y.copy()
+        elif sbd.is_column(y) and sbd.name(y) is not None:
+            y_ = sbd.make_dataframe_like(y, {sbd.name(y): y})
+        else:
+            if sbd.is_column(y):
+                y = sbd.to_numpy(y)
+            y_ = np.atleast_2d(y)
+
+            # TODO: the section below needs to be reworked
+            # If y is Series or an array derived from a
+            # Series, we need to transpose it.
+            if len(y_) == 1 and len(y) != 1:
+                y_ = y_.T
+
+            _, px = get_df_namespace(X)
+            y_ = px.DataFrame(y_)
+
+            if hasattr(y, "name"):
+                # y is a Series
+                cols = [sbd.name(y)]
+            else:
+                cols = [f"y_{col}" for col in sbd.column_names(y_)]
+            y_ = sbd.set_column_names(y_, cols)
+
+        # Check lengths
+        if sbd.shape(y_)[0] != sbd.shape(X)[0]:
+            raise ValueError(
+                f"X and y length must match, got {sbd.shape(X)[0]} and"
+                f" {sbd.shape(y_)[0]}."
+            )
+
+        self._cols = sbd.column_names(y_)
+
+        self._operations = atleast_1d_or_none(self.operations)
+        if (
+            not all([isinstance(op, str) for op in self._operations])
+            or self._operations == []
+        ):
+            raise ValueError(
+                "`operations` must be string or an iterable of strings, got"
+                f" {self.operations}."
+            )
+
+        unsupported_ops = set(self._operations).difference(set(SUPPORTED_OPS))
+        if unsupported_ops:
+            raise ValueError(
+                f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are"
+                " not supported."
+            )
+
+        if not isinstance(self.suffix, str):
+            raise ValueError(f"'suffix' must be a string, got {self.suffix!r}")
+
+        return y_
+
     def fit_transform(self, X, y):
         """Aggregate the target ``y`` based on keys from ``X``.
 
@@ -476,21 +557,21 @@ class AggTarget(TransformerMixin, BaseEstimator):
         X = self._main_check_input.fit_transform(X)
 
         # Add the main key on the target
-        y_ = sbd.with_columns(y_, **{k: sbd.col(X, k) for k in self.main_key_})
+        y_ = sbd.with_columns(y_, **{k: sbd.col(X, k) for k in self._main_key})
 
         self.y_ = aggregate(
             y_,
-            key=self.main_key_,
-            cols_to_agg=self.cols_,
-            operations=self.operations_,
-            suffix=self.suffix_,
+            key=self._main_key,
+            cols_to_agg=self._cols,
+            operations=self._operations,
+            suffix=self.suffix,
         )
 
         result = _join_utils.left_join(
             X,
             right=self.y_,
-            left_on=self.main_key_,
-            right_on=self.main_key_,
+            left_on=self._main_key,
+            right_on=self._main_key,
         )
         self.all_outputs_ = sbd.column_names(result)
         return result
@@ -534,76 +615,8 @@ class AggTarget(TransformerMixin, BaseEstimator):
         result = _join_utils.left_join(
             X,
             right=self.y_,
-            left_on=self.main_key_,
-            right_on=self.main_key_,
+            left_on=self._main_key,
+            right_on=self._main_key,
         )
         result = sbd.set_column_names(result, self.all_outputs_)
         return result
-
-    def check_inputs(self, X, y):
-        """Perform a check on column names data type and suffixes.
-
-        Parameters
-        ----------
-        X : DataFrameLike
-            The raw input to check.
-        y : DataFrameLike or SeriesLike or ArrayLike
-            The raw target to check.
-
-        Returns
-        -------
-        y_ : DataFrameLike
-            Transformation of the target.
-        """
-        if not hasattr(X, "__dataframe__"):
-            raise TypeError(f"X must be a dataframe, got {type(X)}")
-
-        self.main_key_ = atleast_1d_or_none(self.main_key)
-
-        if not isinstance(self.suffix, str):
-            raise ValueError(f"'suffix' must be a string, got {self.suffix!r}")
-        self.suffix_ = self.suffix
-
-        _join_utils.check_missing_columns(X, self.main_key_, "'X' (the main table)")
-
-        # If y is not a dataframe, we convert it.
-        if hasattr(y, "__dataframe__"):
-            # Need to copy since we add columns in place
-            # during fit.
-            # TODO: dispatch copy
-            y_ = y.copy()
-        elif sbd.is_column(y) and sbd.name(y) is not None:
-            y_ = sbd.make_dataframe_like(y, {sbd.name(y): y})
-        else:
-            if sbd.is_column(y):
-                y = sbd.to_numpy(y)
-            y_ = np.atleast_2d(y)
-
-            # TODO: the section below needs to be reworked
-            # If y is Series or an array derived from a
-            # Series, we need to transpose it.
-            if len(y_) == 1 and len(y) != 1:
-                y_ = y_.T
-
-            _, px = get_df_namespace(X)
-            y_ = px.DataFrame(y_)
-
-            if hasattr(y, "name"):
-                # y is a Series
-                cols = [sbd.name(y)]
-            else:
-                cols = [f"y_{col}" for col in sbd.column_names(y_)]
-            y_ = sbd.set_column_names(y_, cols)
-
-        # Check lengths
-        if sbd.shape(y_)[0] != sbd.shape(X)[0]:
-            raise ValueError(
-                f"X and y length must match, got {sbd.shape(X)[0]} and"
-                f" {sbd.shape(y_)[0]}."
-            )
-
-        self.cols_ = sbd.column_names(y_)
-
-        self.operations_ = np.atleast_1d(self.operations).tolist()
-
-        return y_
