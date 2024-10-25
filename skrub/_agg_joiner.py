@@ -16,7 +16,6 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import _dataframe as sbd
 from skrub import _join_utils
 from skrub import _selectors as s
-from skrub._dataframe._namespace import get_df_namespace
 from skrub._dispatch import dispatch
 from skrub._utils import atleast_1d_or_none
 
@@ -473,34 +472,24 @@ class AggTarget(TransformerMixin, BaseEstimator):
         self._main_key = atleast_1d_or_none(self.main_key)
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
-        # If y is not a dataframe, we convert it.
+        # `y` is copied or converted to a df to be compatible with `aggregate`
+
+        # If `y` is already a dataframe
         if hasattr(y, "__dataframe__"):
-            # Need to copy since we add columns in place
-            # during fit.
+            # Need to copy since we add columns in place during fit
             # TODO: dispatch copy
             y_ = y.copy()
+        # If `y` is a named series, we convert it to a dataframe
         elif sbd.is_column(y) and sbd.name(y) is not None:
             y_ = sbd.make_dataframe_like(y, {sbd.name(y): y})
         else:
+            # If `y` is an unnamed series
             if sbd.is_column(y):
-                y = sbd.to_numpy(y)
+                y = sbd.to_numpy(y).reshape(-1, 1)
             y_ = np.atleast_2d(y)
 
-            # TODO: the section below needs to be reworked
-            # If y is Series or an array derived from a
-            # Series, we need to transpose it.
-            if len(y_) == 1 and len(y) != 1:
-                y_ = y_.T
-
-            _, px = get_df_namespace(X)
-            y_ = px.DataFrame(y_)
-
-            if hasattr(y, "name"):
-                # y is a Series
-                cols = [sbd.name(y)]
-            else:
-                cols = [f"y_{col}" for col in sbd.column_names(y_)]
-            y_ = sbd.set_column_names(y_, cols)
+            cols = {f"y_{i}": y_[:, i] for i in range(y_.shape[1])}
+            y_ = sbd.make_dataframe_like(X, cols)
 
         # Check lengths
         if sbd.shape(y_)[0] != sbd.shape(X)[0]:
@@ -542,8 +531,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
             Must contains the columns names defined in `main_key`.
 
         y : DataFrameLike or SeriesLike or ArrayLike
-            # TODO: remove the matching indices part ?
-            `y` length must match `X` length, with matching indices.
+            `y` length must match `X` length.
             The target can be continuous or discrete, with multiple columns.
 
         Returns
@@ -584,8 +572,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
             Must contains the columns names defined in `main_key`.
 
         y : DataFrameLike or SeriesLike or ArrayLike
-            # TODO: remove the matching indices part ?
-            `y` length must match `X` length, with matching indices.
+            `y` length must match `X` length.
             The target can be continuous or discrete, with multiple columns.
 
         Returns
