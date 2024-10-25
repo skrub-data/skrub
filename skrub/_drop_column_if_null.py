@@ -24,7 +24,6 @@ class DropColumnIfNull(SingleColumnTransformer):
         del y
 
         self.drop_ = sbd.is_all_null(column)
-        self._is_fitted = True
 
         return self.transform(column)
 
