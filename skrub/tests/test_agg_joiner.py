@@ -574,6 +574,17 @@ def test_agg_joiner_not_fitted_dataframe(df_module, main_table):
         agg_joiner.transform(not_main_table)
 
 
+def test_agg_joiner_duplicate_columns(df_module, main_table):
+    main_table = df_module.DataFrame(main_table)
+    joiner = AggJoiner(
+        aux_table=main_table, operations="mean", key="userId", cols="rating"
+    )
+    X = sbd.with_columns(main_table, rating_mean=sbd.col(main_table, "rating"))
+    out_1 = joiner.fit_transform(X)
+    out_2 = joiner.transform(X)
+    assert sbd.column_names(out_1) == sbd.column_names(out_2)
+
+
 # TODO: make fixture
 y = pd.DataFrame(dict(rating=[4.0, 4.0, 4.0, 3.0, 2.0, 4.0]))
 
@@ -688,15 +699,22 @@ def test_agg_target_too_many_suffixes(df_module, main_table):
         agg_target.fit(main_table, y)
 
 
-def test_agg_joiner_duplicate_columns(df_module, main_table):
-    main_table = df_module.DataFrame(main_table)
-    joiner = AggJoiner(
-        aux_table=main_table, operations="mean", key="userId", cols="rating"
+def test_agg_target_get_feature_names_out(main_table):
+    agg_target = AggTarget(
+        main_key="userId",
+        operations="count",
     )
-    X = sbd.with_columns(main_table, rating_mean=sbd.col(main_table, "rating"))
-    out_1 = joiner.fit_transform(X)
-    out_2 = joiner.transform(X)
-    assert sbd.column_names(out_1) == sbd.column_names(out_2)
+    with pytest.raises(NotFittedError):
+        agg_target.get_feature_names_out()
+
+    agg_target.fit(main_table, y)
+    assert agg_target.get_feature_names_out() == [
+        "userId",
+        "movieId",
+        "rating",
+        "genre",
+        "rating_count_target",
+    ]
 
 
 def test_agg_target_duplicate_columns(main_table):

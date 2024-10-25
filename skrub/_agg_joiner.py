@@ -620,3 +620,8 @@ class AggTarget(TransformerMixin, BaseEstimator):
         )
         result = sbd.set_column_names(result, self.all_outputs_)
         return result
+
+    def get_feature_names_out(self):
+        """Get output feature names for transformation."""
+        check_is_fitted(self, "y_")
+        return self.all_outputs_
