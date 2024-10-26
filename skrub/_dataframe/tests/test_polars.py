@@ -33,7 +33,7 @@ def test_simple_agg():
     )
     aggfunc = pl.col("rating").mean().alias("rating_mean")
     expected = main.group_by("movieId").agg(aggfunc)
-    # As group_by parallizes threads, the row order of its output isn't
+    # As group_by parallelizes threads, the row order of its output isn't
     # deterministic. Hence, we need to set check_row_order to False.
     assert_frame_equal(aggregated, expected, check_row_order=False)
 

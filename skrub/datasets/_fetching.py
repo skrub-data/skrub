@@ -63,7 +63,7 @@ DRUG_DIRECTORY_ID: int = 43044
 
 MOVIELENS_URL = "https://files.grouplens.org/datasets/movielens/{zip_directory}.zip"
 
-# A dictionnary storing the sha256 hashes of the figshare files
+# A dictionary storing the sha256 hashes of the figshare files
 figshare_id_to_hash = {
     39142985: "47d73381ef72b050002a8642194c6718a4954ec9e6c556f4c4ddc6ed84ceec92",
     39149066: "e479cf9741a90c40401697e7fa54409e3b9cfa09f27502877382e64e86fbfcd0",

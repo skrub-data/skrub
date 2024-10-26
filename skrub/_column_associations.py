@@ -29,7 +29,7 @@ def column_associations(df):
     columns are binned with 10 bins. For categorical columns, only the 10 most
     frequent categories are considered. In both cases, nulls are treated as a
     separate category, ie a separate row in the contingency table. Thus
-    associations betwen the values of 2 columns or between their missingness
+    associations between the values of 2 columns or between their missingness
     patterns may be captured.
 
     Parameters
@@ -171,7 +171,7 @@ def _compute_cramer(table, n_samples):
     The input is the table computed by ``_contingency_table`` with shape
     (n cols, n cols, n bins, n bins).
 
-    This returs the symmetric matrix with shape (n cols, n cols) where entry
+    This returns the symmetric matrix with shape (n cols, n cols) where entry
     i, j contains the statistic for column i x column j.
     """
     marginal_0 = table.sum(axis=-2)

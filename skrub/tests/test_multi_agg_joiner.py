@@ -278,7 +278,7 @@ def test_wrong_keys_length(main_table, df_module):
     "Check that providing wrong key lengths in the `MultiAggJoiner` raise an error."
     main_table = df_module.DataFrame(main_table)
 
-    # Check wrong main_keys lenght
+    # Check wrong main_keys length
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
         main_keys=[["userId"]],

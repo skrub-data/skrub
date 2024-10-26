@@ -250,7 +250,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         ``cols``) are passed through.
 
     rename_columns : str, default='{}'
-        Format string applied to all transformation ouput column names. For
+        Format string applied to all transformation output column names. For
         example pass ``'transformed_{}'`` to prepend ``'transformed_'`` to all
         output column names. The default value does not modify the names.
         Renaming is not applied to columns not selected by ``cols``.

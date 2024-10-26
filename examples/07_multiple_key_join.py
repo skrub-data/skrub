@@ -14,7 +14,7 @@ longitude and latitude.
 
 |joiner| is a scikit-learn compatible transformer that enables
 performing joins across multiple keys,
-independantly of the data type (numerical, string or mixed).
+independently of the data type (numerical, string or mixed).
 
 The following example uses US domestic flights data
 to illustrate how space and time information from a
@@ -104,7 +104,7 @@ aux = pd.merge(stations, weather, on="ID")
 aux.head()
 
 ###############################################################################
-# Then we join this table with the airports so that we get all auxilliary
+# Then we join this table with the airports so that we get all auxiliary
 # tables into one.
 
 from skrub import Joiner
@@ -117,7 +117,7 @@ aux_augmented.head()
 
 ###############################################################################
 # Joining airports with flights data:
-# Let's instanciate another multiple key joiner on the date and the airport:
+# Let's instantiate another multiple key joiner on the date and the airport:
 
 joiner = Joiner(
     aux_augmented,

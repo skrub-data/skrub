@@ -37,7 +37,7 @@ def fetch_data(
         The name of the dataset to download.
 
     save: bool, default=true
-        Wheter to save the datasets locally.
+        Whether to save the datasets locally.
 
     data_home: Path or str, optional
         The path to the root data directory.
@@ -104,7 +104,7 @@ def fetch_big_data(
         Options are {'Dirty', 'Structured', 'Textual'}.
 
     save: bool, default=true
-        Wheter to save the datasets locally.
+        Whether to save the datasets locally.
 
     data_home: Path or str, optional
         The path to the root data directory.

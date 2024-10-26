@@ -422,7 +422,7 @@ Minor changes
 * :class:`TableVectorizer` never output a sparse matrix by default. This can be changed by
   increasing the `sparse_threshold` parameter. :pr:`646` by :user:`Leo Grinsztajn <LeoGrin>`
 
-* :class:`TableVectorizer` doesn't fail anymore if an infered type doesn't work during transform.
+* :class:`TableVectorizer` doesn't fail anymore if an inferred type doesn't work during transform.
   The new entries not matching the type are replaced by missing values. :pr:`666` by :user:`Leo Grinsztajn <LeoGrin>`
 
 - Dataset fetcher :func:`datasets.fetch_employee_salaries` now has a parameter
