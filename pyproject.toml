@@ -255,4 +255,4 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*'
 check-hidden = true
 # ignore-regex = ''
-# ignore-words-list = ''
+ignore-words-list = 'ans,serie'
