@@ -371,7 +371,13 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         return result
 
     def get_feature_names_out(self):
-        """Get output feature names for transformation."""
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        List of str
+            Transformed feature names.
+        """
         check_is_fitted(self, "aux_table_")
         return self.all_outputs_
 
@@ -607,6 +613,12 @@ class AggTarget(TransformerMixin, BaseEstimator):
         return result
 
     def get_feature_names_out(self):
-        """Get output feature names for transformation."""
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        List of str
+            Transformed feature names.
+        """
         check_is_fitted(self, "y_")
         return self.all_outputs_
