@@ -765,9 +765,15 @@ def test_agg_target_get_feature_names_out(main_table, y_df):
     ]
 
 
+def test_agg_target_non_dataframe_input(y_df):
+    agg_target = AggTarget(main_key="userId", operations="mean")
+    with pytest.raises(TypeError, match=r"(X must be a dataframe, got).*(str)"):
+        agg_target.fit("should_be_a_dataframe", y_df)
+
+
 def test_agg_target_duplicate_columns(main_table, y_df):
-    joiner = AggTarget(main_key="userId", operations="mean")
+    agg_target = AggTarget(main_key="userId", operations="mean")
     X = sbd.with_columns(main_table, rating_mean_target=sbd.col(main_table, "rating"))
-    out_1 = joiner.fit_transform(X, y_df)
-    out_2 = joiner.transform(X)
+    out_1 = agg_target.fit_transform(X, y_df)
+    out_2 = agg_target.transform(X)
     assert sbd.column_names(out_1) == sbd.column_names(out_2)
