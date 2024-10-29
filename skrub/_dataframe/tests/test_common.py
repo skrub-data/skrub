@@ -563,6 +563,7 @@ def test_is_all_null(df_module):
     # Check that all null columns are marked as "all null"
     assert ns.is_all_null(df_module.make_column("all_null", [None, None, None]))
     assert ns.is_all_null(df_module.make_column("all_nan", [np.nan, np.nan, np.nan]))
+    assert ns.is_all_null(df_module.make_column("all_nan_or_null", [np.nan, np.nan, None]))
 
     # Check that the other columns are *not* marked as "all null"
     assert not ns.is_all_null(
