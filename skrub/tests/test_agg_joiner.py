@@ -1,14 +1,13 @@
 import re
 
 import numpy as np
+import pandas as pd
+import pandas.testing
 import pytest
 from sklearn.exceptions import NotFittedError
 
 from skrub import _dataframe as sbd
 from skrub._agg_joiner import AggJoiner, AggTarget, aggregate
-
-# TODO: check empty col
-# TODO: AggTarget test based on :func:`sklearn.utils.multiclass.type_of_target` ?
 
 
 @pytest.fixture
@@ -559,7 +558,7 @@ def y_df(df_module):
     return df_module.make_dataframe({"rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1]})
 
 
-@pytest.fixture(params=["df", "named_column", "array", "list"])  # "unnamed_column",
+@pytest.fixture(params=["df", "named_column", "array", "list"])
 def y_col_name(df_module, request):
     input_type = request.param
     y = df_module.make_dataframe({"rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1]})
@@ -567,14 +566,13 @@ def y_col_name(df_module, request):
         return (y, "rating")
     if input_type == "named_column":
         return (sbd.col(y, "rating"), "rating")
-    # if input_type == "unnamed_column":
-    #     return (sbd.col(y, "rating"), "rating")
-    #     sbd.rename(pd.Series([1, 2, 3]), None)
-    # Ok in pandas but not in polars
     if input_type == "array":
-        return (np.array(y), "y_0")
+        return (np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T, "y_0")
     if input_type == "list":
-        return (np.array(y).tolist(), "y_0")
+        return (
+            np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T.tolist(),
+            "y_0",
+        )
 
 
 def test_agg_target_simple_fit_transform(df_module, main_table, y_col_name):
@@ -592,7 +590,31 @@ def test_agg_target_simple_fit_transform(df_module, main_table, y_col_name):
         }
     )
 
+    if df_module.description == "pandas-nullable-dtypes":
+        main_transformed = sbd.pandas_convert_dtypes(main_transformed)
     df_module.assert_frame_equal(main_transformed, main_transformed_expected)
+
+
+def test_agg_target_unnamed_column():
+    main_table = pd.DataFrame(
+        {
+            "userId": [1, 1, 1, 2, 2, 2],
+            "rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1],
+        }
+    )
+    y = pd.Series([4.1, 4.1, 4.1, 3.1, 2.1, 4.1], name=None)
+
+    agg_target = AggTarget(main_key="userId", operations="mean", suffix="_user")
+    main_transformed = agg_target.fit_transform(main_table, y)
+    main_transformed_expected = pd.DataFrame(
+        {
+            "userId": [1, 1, 1, 2, 2, 2],
+            "rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1],
+            "y_0_mean_user": [4.1, 4.1, 4.1, 3.1, 3.1, 3.1],
+        }
+    )
+
+    pandas.testing.assert_frame_equal(main_transformed, main_transformed_expected)
 
 
 @pytest.fixture(params=["df", "array", "list"])
@@ -600,16 +622,24 @@ def y_2_col_names(df_module, request):
     input_type = request.param
     y = df_module.make_dataframe(
         {
-            "a": [10, 20, 30, 40, 50, 60],
-            "b": [60, 50, 40, 30, 20, 10],
+            "a": [10.1, 20.1, 30.1, 40.1, 50.1, 60.1],
+            "b": [60.1, 50.1, 40.1, 30.1, 20.1, 10.1],
         }
     )
     if input_type == "df":
         return (y, "a", "b")
     if input_type == "array":
-        return (np.array(y), "y_0", "y_1")
+        return (
+            np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T,
+            "y_0",
+            "y_1",
+        )
     if input_type == "list":
-        return (np.array(y).tolist(), "y_0", "y_1")
+        return (
+            np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T.tolist(),
+            "y_0",
+            "y_1",
+        )
 
 
 def test_agg_target_multiple_columns(df_module, main_table, y_2_col_names):
@@ -623,31 +653,35 @@ def test_agg_target_multiple_columns(df_module, main_table, y_2_col_names):
             "movieId": [1, 3, 6, 318, 6, 1704],
             "rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
-            f"{col_name_a}_mean_user": [20, 20, 20, 50, 50, 50],
-            f"{col_name_b}_mean_user": [50, 50, 50, 20, 20, 20],
+            f"{col_name_a}_mean_user": [20.1, 20.1, 20.1, 50.1, 50.1, 50.1],
+            f"{col_name_b}_mean_user": [50.1, 50.1, 50.1, 20.1, 20.1, 20.1],
         }
     )
+    if df_module.description == "pandas-nullable-dtypes":
+        main_transformed = sbd.pandas_convert_dtypes(main_transformed)
     df_module.assert_frame_equal(main_transformed, main_transformed_expected)
 
 
 def test_agg_target_multiple_main_key(df_module, main_table, y_df):
     agg_target = AggTarget(
         main_key=["userId", "genre"],
-        operations="count",
+        operations="max",
     )
-    aggregated = agg_target.fit_transform(main_table, y_df)
-    sbd.column_names(aggregated) == [
+    main_transformed = agg_target.fit_transform(main_table, y_df)
+    sbd.column_names(main_transformed) == [
         "userId",
         "movieId",
         "rating",
         "genre",
-        "rating_count_target",
+        "rating_max_target",
     ]
-    y_expected = sbd.make_column_like(
-        main_table, [2, 2, 1, 2, 1, 2], "rating_count_target"
+    if df_module.description == "pandas-nullable-dtypes":
+        main_transformed = sbd.pandas_convert_dtypes(main_transformed)
+    y_expected = df_module.make_column(
+        "rating_max_target", [4.1, 4.1, 4.1, 4.1, 2.1, 4.1]
     )
     df_module.assert_column_equal(
-        sbd.col(aggregated, "rating_count_target"), y_expected
+        sbd.col(main_transformed, "rating_max_target"), y_expected
     )
 
 
