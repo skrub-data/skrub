@@ -1,0 +1,12 @@
+[run]
+branch = True
+
+[report]
+exclude_lines =
+    if self.debug:
+    pragma: no cover
+    raise NotImplementedError
+ignore_errors = True
+omit =
+    */tests/*
+    **/setup.py
