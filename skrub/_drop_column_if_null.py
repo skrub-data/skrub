@@ -14,11 +14,13 @@ class DropColumnIfNull(SingleColumnTransformer):
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
 
-        Args:
+        Parameters
+        ----------
             column : Pandas or Polars series. The input column to check.
             y : None. Ignored.
 
-        Returns:
+        Returns
+        -------
             The input column, or an empty list if the column contains only null values.
         """
         del y
@@ -30,10 +32,13 @@ class DropColumnIfNull(SingleColumnTransformer):
     def transform(self, column):
         """Transform a column.
 
-        Args:
+        Parameters:
+        -----------
             column : Pandas or Polars series. The input column to check.
 
-        Returns:
+        Returns
+        -------
+        column
             The input column, or an empty list if the column contains only null values.
         """
         check_is_fitted(self)
