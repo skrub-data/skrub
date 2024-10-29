@@ -6,6 +6,7 @@ import pytest
 from pandas.testing import assert_index_equal
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import OneHotEncoder
 
 from skrub import _dataframe as sbd
 from skrub import _selectors as s
@@ -300,3 +301,11 @@ def test_output_index(cols):
     assert_index_equal(transformer.fit_transform(df).index, df.index)
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
     assert_index_equal(transformer.transform(df).index, df.index)
+
+
+def test_set_output_polars(pl_module):
+    # non-regression for an issue introduced in #973; set_output('polars')
+    # would cause a failure in old scikit-learn versions.
+    # see #1122 for details
+    df = pl_module.make_dataframe({"x": ["a", "b", "c"]})
+    OnEachColumn(OneHotEncoder(sparse_output=False)).fit_transform(df)

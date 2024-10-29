@@ -1,7 +1,8 @@
 """Get information and plots for a dataframe, that are used to generate reports."""
 
+from .. import _column_associations
 from .. import _dataframe as sbd
-from . import _associations, _plotting, _sample_table, _utils
+from . import _plotting, _sample_table, _utils
 
 _HIGH_CARDINALITY_THRESHOLD = 10
 _SUBSAMPLE_SIZE = 3000
@@ -57,7 +58,6 @@ def summarize_dataframe(
         "n_rows": n_rows,
         "n_columns": n_columns,
         "columns": [],
-        "first_row_dict": _utils.first_row_dict(df) if n_rows else {},
         "dataframe_is_empty": not n_rows or not n_columns,
         "sample_table": _sample_table.make_table(
             df,
@@ -70,17 +70,22 @@ def summarize_dataframe(
     if order_by is not None:
         df = sbd.sort(df, by=order_by)
         summary["order_by"] = order_by
-    for position, column_name in enumerate(sbd.column_names(df)):
+    if order_by is None:
+        order_by_column = None
+    else:
+        order_by_idx = sbd.column_names(df).index(order_by)
+        order_by_column = sbd.col_by_idx(df, order_by_idx)
+    for position in range(sbd.shape(df)[1]):
         print(
             f"Processing column {position + 1: >3} / {n_columns}", end="\r", flush=True
         )
         summary["columns"].append(
             _summarize_column(
-                sbd.col(df, column_name),
+                sbd.col_by_idx(df, position),
                 position,
                 dataframe_summary=summary,
                 with_plots=with_plots,
-                order_by_column=None if order_by is None else sbd.col(df, order_by),
+                order_by_column=order_by_column,
             )
         )
     print(flush=True)
@@ -96,8 +101,19 @@ def summarize_dataframe(
 
 def _add_associations(df, dataframe_summary):
     df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
-    associations = _associations.cramer_v(df)[:_N_TOP_ASSOCIATIONS]
-    dataframe_summary["top_associations"] = associations
+    associations = _column_associations.column_associations(df)
+
+    # get only the top _N_TOP_ASSOCIATIONS
+    associations = sbd.slice(associations, _N_TOP_ASSOCIATIONS)
+
+    # transform dataframe into the format expected by the HTML template
+    # (list of dicts):
+    asso_dict = _utils.to_dict(associations)
+    values = zip(*asso_dict.values())
+    keys = list(asso_dict.keys())
+    asso_list = [dict(zip(keys, vals)) for vals in values]
+
+    dataframe_summary["top_associations"] = asso_list
 
 
 def _summarize_column(
