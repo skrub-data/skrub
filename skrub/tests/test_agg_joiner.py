@@ -567,7 +567,10 @@ def y_col_name(df_module, request):
     if input_type == "named_column":
         return (sbd.col(y, "rating"), "rating")
     if input_type == "array":
-        return (np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T, "y_0")
+        return (
+            np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)], dtype=float).T,
+            "y_0",
+        )
     if input_type == "list":
         return (
             np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T.tolist(),
@@ -630,7 +633,7 @@ def y_2_col_names(df_module, request):
         return (y, "a", "b")
     if input_type == "array":
         return (
-            np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T,
+            np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)], dtype=float).T,
             "y_0",
             "y_1",
         )
