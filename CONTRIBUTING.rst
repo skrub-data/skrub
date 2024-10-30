@@ -173,7 +173,7 @@ Testing the code
 
 Tests for files in a given folder should be located in a sub-folder
 named ``tests``: tests for Skrub objects are located in ``skrub/tests/``,
-tests for the dataframe API are in ``skrub/_dataframe/tests`` and so on.
+tests for the dataframe API are in ``skrub/_dataframe/tests/`` and so on.
 
 Tests should check all functionalities of the code that you are going to
 add. If needed, additional tests should be added to verify that other
