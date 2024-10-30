@@ -558,7 +558,7 @@ def y_df(df_module):
     return df_module.make_dataframe({"rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1]})
 
 
-@pytest.fixture(params=["df", "named_column", "array", "list"])
+@pytest.fixture(params=["df", "named_column", "1d_array", "2d_array", "list"])
 def y_col_name(df_module, request):
     input_type = request.param
     y = df_module.make_dataframe({"rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1]})
@@ -566,7 +566,9 @@ def y_col_name(df_module, request):
         return (y, "rating")
     if input_type == "named_column":
         return (sbd.col(y, "rating"), "rating")
-    if input_type == "array":
+    if input_type == "1d_array":
+        return (np.array([4.1, 4.1, 4.1, 3.1, 2.1, 4.1]), "y_0")
+    if input_type == "2d_array":
         return (
             np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)], dtype=float).T,
             "y_0",
