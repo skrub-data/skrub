@@ -490,9 +490,14 @@ class AggTarget(TransformerMixin, BaseEstimator):
             # If `y` is an unnamed series
             if sbd.is_column(y):
                 y = sbd.to_numpy(y).reshape(-1, 1)
-            y_ = np.atleast_2d(y)
+            # If `y` is a list
+            elif isinstance(y, list):
+                y = np.atleast_2d(y)
+            # 1d array that needs to be reshaped
+            elif isinstance(y, np.ndarray) & len(y.shape) == 1:
+                y = y.reshape(-1, 1)
 
-            cols = {f"y_{i}": y_[:, i] for i in range(y_.shape[1])}
+            cols = {f"y_{i}": y[:, i] for i in range(y.shape[1])}
             y_ = sbd.make_dataframe_like(X, cols)
 
         # Check lengths
