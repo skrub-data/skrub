@@ -104,8 +104,8 @@ def _onehot_encode(df, n_bins):
     """
     n_rows, n_cols = sbd.shape(df)
     output = np.zeros((n_cols, n_bins, n_rows), dtype=bool)
-    for col_idx, col_name in enumerate(sbd.column_names(df)):
-        col = sbd.col(df, col_name)
+    for col_idx in range(n_cols):
+        col = sbd.col_by_idx(df, col_idx)
         if sbd.is_numeric(col):
             col = sbd.to_float32(col)
             if _CATEGORICAL_THRESHOLD <= sbd.n_unique(col):

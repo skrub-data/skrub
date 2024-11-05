@@ -58,7 +58,6 @@ def summarize_dataframe(
         "n_rows": n_rows,
         "n_columns": n_columns,
         "columns": [],
-        "first_row_dict": _utils.first_row_dict(df) if n_rows else {},
         "dataframe_is_empty": not n_rows or not n_columns,
         "sample_table": _sample_table.make_table(
             df,
@@ -71,17 +70,22 @@ def summarize_dataframe(
     if order_by is not None:
         df = sbd.sort(df, by=order_by)
         summary["order_by"] = order_by
-    for position, column_name in enumerate(sbd.column_names(df)):
+    if order_by is None:
+        order_by_column = None
+    else:
+        order_by_idx = sbd.column_names(df).index(order_by)
+        order_by_column = sbd.col_by_idx(df, order_by_idx)
+    for position in range(sbd.shape(df)[1]):
         print(
             f"Processing column {position + 1: >3} / {n_columns}", end="\r", flush=True
         )
         summary["columns"].append(
             _summarize_column(
-                sbd.col(df, column_name),
+                sbd.col_by_idx(df, position),
                 position,
                 dataframe_summary=summary,
                 with_plots=with_plots,
-                order_by_column=None if order_by is None else sbd.col(df, order_by),
+                order_by_column=order_by_column,
             )
         )
     print(flush=True)

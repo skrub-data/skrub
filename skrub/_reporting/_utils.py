@@ -29,11 +29,6 @@ def _to_dict_polars(df):
     return df.to_dict(as_series=False)
 
 
-def first_row_dict(dataframe):
-    first_row = sbd.slice(dataframe, 0, 1)
-    return {col_name: col[0] for col_name, col in to_dict(first_row).items()}
-
-
 def top_k_value_counts(column, k):
     counts = sbd.value_counts(column)
     n_unique = sbd.shape(counts)[0]
