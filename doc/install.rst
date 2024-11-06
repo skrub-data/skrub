@@ -66,7 +66,6 @@ Deep-learning based encoders like :class:`TextEncoder` require installing option
 dependencies to use them. The following will install
 `torch <https://anaconda.org/pytorch/pytorch>`_,
 `transformers <https://anaconda.org/conda-forge/transformers>`_,
-`torchvision <https://anaconda.org/pytorch/torchvision>`_,
 and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transformers>`_.
 
 .. code:: console
@@ -92,7 +91,6 @@ Deep-learning based encoders like :class:`TextEncoder` require installing option
 dependencies to use them. The following will install
 `torch <https://anaconda.org/pytorch/pytorch>`_,
 `transformers <https://anaconda.org/conda-forge/transformers>`_,
-`torchvision <https://anaconda.org/pytorch/torchvision>`_,
 and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transformers>`_.
 
 .. code:: console
