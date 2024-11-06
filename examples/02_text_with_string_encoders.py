@@ -129,7 +129,10 @@ plot_gap_feature_importance(X_trans.head())
 # need to find the optimal value for this hyperparameter using either |GridSearchCV|
 # or |RandomizedSearchCV|. We skip this part to keep the computation time for this
 # example small.
-
+#
+# Recall that the ROC AUC is a metric that quantifies the ranking power of estimators,
+# where a random estimator scores 0.5, and an oracle —providing perfect predictions—
+# scores 1.
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import cross_validate
 from sklearn.pipeline import make_pipeline
@@ -187,9 +190,7 @@ plot_box_results(results)
 
 # %%
 # Remarkably, the vectors produced by the |MinHashEncoder| offer less predictive
-# power than those from the |GapEncoder| on this dataset. Recall that the ROC AUC
-# is a metric that quantifies the ranking power of estimators, where a random
-# estimator scores 0.5, and an oracle —providing perfect predictions— scores 1.
+# power than those from the |GapEncoder| on this dataset.
 #
 # TextEncoder
 # -----------
