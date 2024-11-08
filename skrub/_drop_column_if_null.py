@@ -25,6 +25,8 @@ class DropColumnIfNull(SingleColumnTransformer):
     """
 
     def __init__(self, null_column_strategy="warn"):
+        if null_column_strategy not in ["warn", "drop", "keep", "raise"]:
+            raise ValueError(f"Unknown strategy {null_column_strategy}")
         self.null_column_strategy = null_column_strategy
 
     def fit_transform(self, column, y=None):
