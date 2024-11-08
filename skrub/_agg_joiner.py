@@ -485,15 +485,13 @@ class AggTarget(TransformerMixin, BaseEstimator):
         # If `y` is already a dataframe
         if sbd.is_dataframe(y):
             y_ = y
-        # If `y` is a named series, we convert it to a dataframe
-        elif sbd.is_column(y) and sbd.name(y) is not None:
-            y_ = sbd.make_dataframe_like(y, {sbd.name(y): y})
+        # If `y` is a series, we convert it to a dataframe
+        elif sbd.is_column(y):
+            name = sbd.name(y) if sbd.name(y) else "y_0"
+            y_ = sbd.make_dataframe_like(y, {name: y})
         else:
-            # If `y` is an unnamed series
-            if sbd.is_column(y):
-                y = sbd.to_numpy(y).reshape(-1, 1)
             # 1d array that needs to be reshaped
-            elif isinstance(y, np.ndarray) and y.ndim == 1:
+            if isinstance(y, np.ndarray) and y.ndim == 1:
                 y = y.reshape(-1, 1)
 
             cols = {f"y_{i}": y[:, i] for i in range(y.shape[1])}
