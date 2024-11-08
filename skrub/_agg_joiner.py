@@ -298,14 +298,16 @@ class AggJoiner(TransformerMixin, BaseEstimator):
             The augmented input.
         """
         if isinstance(self.aux_table, str) and self.aux_table == "X":
-            self.aux_table = X
+            self._aux_table = X
         elif not sbd.is_dataframe(self.aux_table):
             raise ValueError(
                 "'aux_table' must be a dataframe or the string 'X', got"
                 f" {type(self.aux_table)}. If you have more than one 'aux_table',"
                 " use the MultiAggJoiner instead."
             )
-        self._aux_table = CheckInputDataFrame().fit_transform(self.aux_table)
+        else:
+            self._aux_table = self.aux_table
+        self._aux_table = CheckInputDataFrame().fit_transform(self._aux_table)
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
         self._check_inputs(X)
@@ -479,10 +481,10 @@ class AggTarget(TransformerMixin, BaseEstimator):
         self._main_key = atleast_1d_or_none(self.main_key)
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
-        # `y` is copied or converted to a df to be compatible with `aggregate`
+        # `y` is converted to a df to be compatible with `aggregate`
         # If `y` is already a dataframe
         if sbd.is_dataframe(y):
-            y_ = sbd.make_dataframe_like(y, sbd.to_column_list(y))
+            y_ = y
         # If `y` is a named series, we convert it to a dataframe
         elif sbd.is_column(y) and sbd.name(y) is not None:
             y_ = sbd.make_dataframe_like(y, {sbd.name(y): y})
