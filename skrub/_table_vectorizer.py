@@ -192,8 +192,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         similar functionality to what is offered by scikit-learn's
         :class:`~sklearn.compose.ColumnTransformer`.
 
-    drop_null_columns : bool, default=True
-        If set to `True`, columns that contain only null values are dropped.
+    null_column_strategy : str, default="warn", "drop", "keep", "raise"
+        If `warn`, columns that contain only null values are kept, but a warning
+        is issued.
+        If `drop`, null columns are dropped.
+        If `keep`, null columns are kept as is, and no warning is raised.
+        If `raise`, a RejectColumn exception is raised if a null column is detected.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -417,7 +421,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
-        null_column_strategy="ignore",
+        null_column_strategy="warn",
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -545,10 +549,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self._preprocessors = [CheckInputDataFrame()]
 
         transformer_list = [CleanNullStrings()]
-        if self.null_column_strategy != "ignore":
-            transformer_list.append(
-                DropColumnIfNull(null_column_strategy=self.null_column_strategy)
-            )
+        transformer_list.append(
+            DropColumnIfNull(null_column_strategy=self.null_column_strategy)
+        )
 
         transformer_list += [
             ToDatetime(),
