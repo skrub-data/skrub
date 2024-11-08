@@ -134,6 +134,40 @@ def _perform_groupby_polars(table, key, cols_to_agg, operations):
     return aggregated
 
 
+def check_other_inputs(operations, suffix):
+    """Check operations and suffix inputs.
+
+    Parameters
+    ----------
+    operations : str or list of str
+        The operations to check.
+    suffix : str
+        The suffix to check.
+
+    Returns
+    -------
+    The checked inputs.
+    """
+    operations = np.atleast_1d(operations).tolist()
+    if not all([isinstance(op, str) for op in operations]) or operations == []:
+        raise ValueError(
+            "`operations` must be a string or an iterable of strings, got"
+            f" {operations}."
+        )
+
+    unsupported_ops = set(operations).difference(SUPPORTED_OPS)
+    if unsupported_ops:
+        raise ValueError(
+            f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are"
+            " not supported."
+        )
+
+    if not isinstance(suffix, str):
+        raise ValueError(f"'suffix' must be a string. Got {suffix}")
+
+    return operations, suffix
+
+
 class AggJoiner(TransformerMixin, BaseEstimator):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
@@ -240,47 +274,6 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self.cols = cols
         self.suffix = suffix
 
-    def _check_inputs(self, X):
-        """Check inputs before fitting.
-
-        Parameters
-        ----------
-        X : DataFrameLike
-            Input data, base table on which to left join the
-            auxiliary table.
-        """
-        self._main_key, self._aux_key = _join_utils.check_key(
-            self.main_key, self.aux_key, self.key
-        )
-        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
-        _join_utils.check_missing_columns(
-            self._aux_table, s.make_selector(self.cols), ""
-        )
-
-        # If no `cols` provided, all columns but `aux_key` are used.
-        self._cols = s.make_selector(self.cols) - self._aux_key
-
-        self._operations = np.atleast_1d(self.operations).tolist()
-        if (
-            not all([isinstance(op, str) for op in self._operations])
-            or self._operations == []
-        ):
-            raise ValueError(
-                "`operations` must be a string or an iterable of strings, got"
-                f" {self.operations}."
-            )
-
-        unsupported_ops = set(self._operations).difference(SUPPORTED_OPS)
-        if unsupported_ops:
-            raise ValueError(
-                f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are"
-                " not supported."
-            )
-
-        if not isinstance(self.suffix, str):
-            raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
-
     def fit_transform(self, X, y=None):
         """Aggregate auxiliary table based on the main keys.
 
@@ -310,14 +303,29 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self._aux_table = CheckInputDataFrame().fit_transform(self._aux_table)
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
-        self._check_inputs(X)
+
+        self._main_key, self._aux_key = _join_utils.check_key(
+            self.main_key, self.aux_key, self.key
+        )
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
+        _join_utils.check_missing_columns(
+            self._aux_table, s.make_selector(self.cols), ""
+        )
+
+        # If no `cols` provided, all columns but `aux_key` are used.
+        self._cols = s.make_selector(self.cols) - self._aux_key
+
+        self._operations, self._suffix = check_other_inputs(
+            self.operations, self.suffix
+        )
 
         self.aggregated_aux_table_ = aggregate(
             self._aux_table,
             self._aux_key,
             self._cols.expand(self._aux_table),
             self._operations,
-            suffix=self.suffix,
+            suffix=self._suffix,
         )
         result = _join_utils.left_join(
             X,
@@ -460,21 +468,26 @@ class AggTarget(TransformerMixin, BaseEstimator):
         self.operations = operations
         self.suffix = suffix
 
-    def check_inputs(self, X, y):
-        """Check inputs before fitting.
+    def fit_transform(self, X, y):
+        """Aggregate the target `y` based on keys from `X`.
 
         Parameters
         ----------
         X : DataFrameLike
-            Input data, base table on which to left join the target.
+            Must contains the columns names defined in `main_key`.
+
         y : DataFrameLike or SeriesLike or ArrayLike
-            The target to check.
+            `y` length must match `X` length.
+            The target can be continuous or discrete, with multiple columns.
 
         Returns
         -------
-        y_ : DataFrameLike
-            The transformed target.
+        Dataframe
+            The augmented input.
         """
+        self._main_check_input = CheckInputDataFrame()
+        X = self._main_check_input.fit_transform(X)
+
         self._main_key = np.atleast_1d(self.main_key).tolist()
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
@@ -505,48 +518,9 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         self._cols = sbd.column_names(y_)
 
-        self._operations = np.atleast_1d(self.operations).tolist()
-        if (
-            not all([isinstance(op, str) for op in self._operations])
-            or self._operations == []
-        ):
-            raise ValueError(
-                "`operations` must be a string or an iterable of strings, got"
-                f" {self.operations}."
-            )
-
-        unsupported_ops = set(self._operations).difference(set(SUPPORTED_OPS))
-        if unsupported_ops:
-            raise ValueError(
-                f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are"
-                " not supported."
-            )
-
-        if not isinstance(self.suffix, str):
-            raise ValueError(f"'suffix' must be a string, got {self.suffix!r}")
-
-        return y_
-
-    def fit_transform(self, X, y):
-        """Aggregate the target `y` based on keys from `X`.
-
-        Parameters
-        ----------
-        X : DataFrameLike
-            Must contains the columns names defined in `main_key`.
-
-        y : DataFrameLike or SeriesLike or ArrayLike
-            `y` length must match `X` length.
-            The target can be continuous or discrete, with multiple columns.
-
-        Returns
-        -------
-        Dataframe
-            The augmented input.
-        """
-        self._main_check_input = CheckInputDataFrame()
-        X = self._main_check_input.fit_transform(X)
-        y_ = self.check_inputs(X, y)
+        self._operations, self._suffix = check_other_inputs(
+            self.operations, self.suffix
+        )
 
         # Add the main key on the target
         y_ = sbd.with_columns(y_, **{k: sbd.col(X, k) for k in self._main_key})
@@ -556,7 +530,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
             key=self._main_key,
             cols_to_agg=self._cols,
             operations=self._operations,
-            suffix=self.suffix,
+            suffix=self._suffix,
         )
 
         result = _join_utils.left_join(
