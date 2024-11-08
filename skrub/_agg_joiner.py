@@ -475,9 +475,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
         y_ : DataFrameLike
             The transformed target.
         """
-        if not sbd.is_dataframe(X):
-            raise TypeError(f"X must be a dataframe, got {type(X)}")
-
         self._main_key = atleast_1d_or_none(self.main_key)
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
@@ -545,9 +542,9 @@ class AggTarget(TransformerMixin, BaseEstimator):
         Dataframe
             The augmented input.
         """
-        y_ = self.check_inputs(X, y)
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
+        y_ = self.check_inputs(X, y)
 
         # Add the main key on the target
         y_ = sbd.with_columns(y_, **{k: sbd.col(X, k) for k in self._main_key})

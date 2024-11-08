@@ -761,7 +761,9 @@ def test_agg_target_get_feature_names_out(main_table, y_df):
 
 def test_agg_target_non_dataframe_input(y_df):
     agg_target = AggTarget(main_key="userId", operations="mean")
-    with pytest.raises(TypeError, match=r"(X must be a dataframe, got).*(str)"):
+    with pytest.raises(
+        TypeError, match=r"Only pandas and polars DataFrames are supported"
+    ):
         agg_target.fit("should_be_a_dataframe", y_df)
 
 
