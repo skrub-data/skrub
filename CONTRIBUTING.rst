@@ -124,14 +124,9 @@ See the relevant sections above on how to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Follow the steps in the :ref:`installation_instructions` > "From Source" section to
-set up your environment.
-Make sure that pre-commit hooks are enabled, and run the test suite:
-
-.. code:: console
-
-   pytest -s skrub/tests
-
+Follow the steps in the :ref:`installation_instructions` > "From Source" section
+to set up your environment, install the required development dependencies, and
+run the tests.
 
 When starting to work on a new issue, it's recommended to create a new branch:
 
@@ -161,13 +156,6 @@ When contributing, keep these project goals in mind:
     - The public API refers to all components available for import and use by library users. Anything that doesn't begin with an underscore is considered part of the public API.
 
 
-Submitting your code
-^^^^^^^^^^^^^^^^^^^^
-
-Once you have pushed your commits to your remote repository, you can submit
-a PR by clicking the "Compare & pull request" button on GitHub,
-targeting the skrub repository.
-
 Testing the code
 ~~~~~~~~~~~~~~~~
 
@@ -182,14 +170,14 @@ objects behave correctly.
 Consider an example: your contribution is for the
 ``AmazingTransformer``, whose code is in
 ``skrub/_amazing_transformer.py``. The ``AmazingTransformer`` is added
-to as one of the default transformers for ``TableVectorizer``.
+as one of the default transformers for ``TableVectorizer``.
 
 As such, you should add a new file testing the functionality of
 ``AmazingTransformer`` in ``skrub/tests/test_amazing_transformer.py``,
 and update the file ``skrub/tests/test_table_vectorizer.py`` so that it
 takes into account the new transformer.
 
-Additionally, you might have updated the dataframe API in
+Additionally, you might have updated the internal dataframe API in
 ``skrub/_dataframe/_common.py`` with a new function,
 ``amazing_function``. In this case, you should also update
 ``skrub/_dataframe/tests/test_common.py`` to add a test for the
@@ -199,7 +187,9 @@ Run your tests using ``pytest``:
 
 .. code:: sh
 
-   pytest skrub/tests/test_amazing_transformer.py
+   pytest -vsl skrub/tests/test_amazing_transformer.py
+
+The ``--vsl`` flag provides more information when running the tests.
 
 All tests should pass before submitting the code.
 
@@ -236,7 +226,14 @@ the docstrings. Check for possible problems by running
 
 .. code:: sh
 
-   pytest --doctest-modules skrub/path/to/file
+   pytest skrub/path/to/file
+
+Submitting your code
+^^^^^^^^^^^^^^^^^^^^
+
+Once you have pushed your commits to your remote repository, you can submit
+a PR by clicking the "Compare & pull request" button on GitHub,
+targeting the skrub repository.
 
 
 Integration
