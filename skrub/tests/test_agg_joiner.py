@@ -558,7 +558,7 @@ def y_df(df_module):
     return df_module.make_dataframe({"rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1]})
 
 
-@pytest.fixture(params=["df", "named_column", "1d_array", "2d_array", "list"])
+@pytest.fixture(params=["df", "named_column", "1d_array", "2d_array"])
 def y_col_name(df_module, request):
     input_type = request.param
     y = df_module.make_dataframe({"rating": [4.1, 4.1, 4.1, 3.1, 2.1, 4.1]})
@@ -571,11 +571,6 @@ def y_col_name(df_module, request):
     if input_type == "2d_array":
         return (
             np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)], dtype=float).T,
-            "y_0",
-        )
-    if input_type == "list":
-        return (
-            np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T.tolist(),
             "y_0",
         )
 
@@ -622,7 +617,7 @@ def test_agg_target_unnamed_column():
     pandas.testing.assert_frame_equal(main_transformed, main_transformed_expected)
 
 
-@pytest.fixture(params=["df", "array", "list"])
+@pytest.fixture(params=["df", "array"])
 def y_2_col_names(df_module, request):
     input_type = request.param
     y = df_module.make_dataframe(
@@ -636,12 +631,6 @@ def y_2_col_names(df_module, request):
     if input_type == "array":
         return (
             np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)], dtype=float).T,
-            "y_0",
-            "y_1",
-        )
-    if input_type == "list":
-        return (
-            np.asarray([sbd.to_numpy(c) for c in sbd.to_column_list(y)]).T.tolist(),
             "y_0",
             "y_1",
         )
