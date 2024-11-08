@@ -229,7 +229,7 @@ def test_agg_joiner_wrong_operations(df_module, main_table):
     )
     with pytest.raises(
         ValueError,
-        match=r"(`operations` must be string or an iterable of strings)",
+        match=r"(`operations` must be a string or an iterable of strings)",
     ):
         agg_joiner.fit(main_table)
 
@@ -241,7 +241,7 @@ def test_agg_joiner_wrong_operations(df_module, main_table):
     )
     with pytest.raises(
         ValueError,
-        match=r"(`operations` must be string or an iterable of strings)",
+        match=r"(`operations` must be a string or an iterable of strings)",
     ):
         agg_joiner.fit(main_table)
 
@@ -712,7 +712,7 @@ def test_agg_target_wrong_operations(main_table, y_df):
     )
     with pytest.raises(
         ValueError,
-        match=r"(`operations` must be string or an iterable of strings)",
+        match=r"(`operations` must be a string or an iterable of strings)",
     ):
         agg_target.fit(main_table, y_df)
 
@@ -723,7 +723,7 @@ def test_agg_target_wrong_operations(main_table, y_df):
     )
     with pytest.raises(
         ValueError,
-        match=r"(`operations` must be string or an iterable of strings)",
+        match=r"(`operations` must be a string or an iterable of strings)",
     ):
         agg_target.fit(main_table, y_df)
 
@@ -759,12 +759,20 @@ def test_agg_target_get_feature_names_out(main_table, y_df):
     ]
 
 
-def test_agg_target_non_dataframe_input(y_df):
+def test_agg_target_non_dataframe_X(y_df):
     agg_target = AggTarget(main_key="userId", operations="mean")
     with pytest.raises(
         TypeError, match=r"Only pandas and polars DataFrames are supported"
     ):
         agg_target.fit("should_be_a_dataframe", y_df)
+
+
+def test_agg_target_non_dataframe_y(main_table):
+    agg_target = AggTarget(main_key="userId", operations="mean")
+    with pytest.raises(
+        TypeError, match=r"`y` must be a dataframe, a series or a numpy array"
+    ):
+        agg_target.fit(main_table, "should_be_array_like")
 
 
 def test_agg_target_duplicate_columns(main_table, y_df):

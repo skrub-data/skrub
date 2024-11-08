@@ -96,6 +96,8 @@ def perform_groupby(table, key, cols_to_agg, operations):
 
 @perform_groupby.specialize("pandas", argument_type="DataFrame")
 def _perform_groupby_pandas(table, key, cols_to_agg, operations):
+    # Pandas does not allow the keyword "mode" for aggregating
+    # its ``DataFrameGroupBy`` objects, this is a workaround
     pandas_aggfuncs = {
         "mode": pd.Series.mode,
     }
@@ -266,7 +268,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
             or self._operations == []
         ):
             raise ValueError(
-                "`operations` must be string or an iterable of strings, got"
+                "`operations` must be a string or an iterable of strings, got"
                 f" {self.operations}."
             )
 
@@ -477,21 +479,23 @@ class AggTarget(TransformerMixin, BaseEstimator):
         self._main_key = np.atleast_1d(self.main_key).tolist()
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
-        # `y` is converted to a df to be compatible with `aggregate`
-        # If `y` is already a dataframe
         if sbd.is_dataframe(y):
             y_ = y
         # If `y` is a series, we convert it to a dataframe
         elif sbd.is_column(y):
             name = sbd.name(y) if sbd.name(y) else "y_0"
             y_ = sbd.make_dataframe_like(y, {name: y})
-        else:
-            # 1d array that needs to be reshaped
-            if isinstance(y, np.ndarray) and y.ndim == 1:
+        elif isinstance(y, np.ndarray):
+            # 1d arrays need to be reshaped
+            if y.ndim == 1:
                 y = y.reshape(-1, 1)
 
             cols = {f"y_{i}": y[:, i] for i in range(y.shape[1])}
             y_ = sbd.make_dataframe_like(X, cols)
+        else:
+            raise TypeError(
+                f"`y` must be a dataframe, a series or a numpy array, got {y}."
+            )
 
         # Check lengths
         if sbd.shape(y_)[0] != sbd.shape(X)[0]:
@@ -508,7 +512,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
             or self._operations == []
         ):
             raise ValueError(
-                "`operations` must be string or an iterable of strings, got"
+                "`operations` must be a string or an iterable of strings, got"
                 f" {self.operations}."
             )
 
