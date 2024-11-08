@@ -201,18 +201,11 @@ submitting the code. As this operation may take a long time online, it
 is possible to check whether the code coverage is high enough on your
 local machine.
 
-First, run your tests with the ``--cov`` argument:
+Run your tests with the ``--cov`` and ``--cov-report`` arguments:
 
 .. code:: sh
 
-   pytest skrub/tests/test_amazing_transformer.py --cov=skrub
-
-This will create a ``.coverage`` file in the main folder, that can be
-converted to html with
-
-.. code:: sh
-
-   coverage html
+   pytest -vsl skrub/tests/test_amazing_transformer.py --cov=skrub --cov-report=html
 
 This will create the folder ``htmlcov``: by opening
 ``htmlcov/index.html`` it is possible to check what lines are covered in
