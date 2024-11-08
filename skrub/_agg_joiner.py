@@ -17,7 +17,6 @@ from skrub import _dataframe as sbd
 from skrub import _join_utils
 from skrub import _selectors as s
 from skrub._dispatch import dispatch
-from skrub._utils import atleast_1d_or_none
 
 from ._check_input import CheckInputDataFrame
 
@@ -261,7 +260,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         # If no `cols` provided, all columns but `aux_key` are used.
         self._cols = s.make_selector(self.cols) - self._aux_key
 
-        self._operations = atleast_1d_or_none(self.operations)
+        self._operations = np.atleast_1d(self.operations).tolist()
         if (
             not all([isinstance(op, str) for op in self._operations])
             or self._operations == []
@@ -475,7 +474,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         y_ : DataFrameLike
             The transformed target.
         """
-        self._main_key = atleast_1d_or_none(self.main_key)
+        self._main_key = np.atleast_1d(self.main_key).tolist()
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
         # `y` is converted to a df to be compatible with `aggregate`
@@ -503,7 +502,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         self._cols = sbd.column_names(y_)
 
-        self._operations = atleast_1d_or_none(self.operations)
+        self._operations = np.atleast_1d(self.operations).tolist()
         if (
             not all([isinstance(op, str) for op in self._operations])
             or self._operations == []
