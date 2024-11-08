@@ -417,7 +417,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
-        drop_null_columns=True,
+        null_column_strategy="ignore",
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -431,7 +431,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.datetime = _utils.clone_if_default(datetime, DATETIME_TRANSFORMER)
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
-        self.drop_null_columns = drop_null_columns
+        self.null_column_strategy = null_column_strategy
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -545,8 +545,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self._preprocessors = [CheckInputDataFrame()]
 
         transformer_list = [CleanNullStrings()]
-        if self.drop_null_columns:
-            transformer_list.append(DropColumnIfNull())
+        if self.null_column_strategy != "ignore":
+            transformer_list.append(
+                DropColumnIfNull(null_column_strategy=self.null_column_strategy)
+            )
 
         transformer_list += [
             ToDatetime(),
