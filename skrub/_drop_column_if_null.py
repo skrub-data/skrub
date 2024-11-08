@@ -4,7 +4,7 @@ import warnings
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._on_each_column import SingleColumnTransformer
 
 __all__ = ["DropColumnIfNull"]
 
@@ -74,7 +74,7 @@ class DropColumnIfNull(SingleColumnTransformer):
             if self.null_column_strategy == "keep":
                 return column
             if self.null_column_strategy == "raise":
-                raise RejectColumn(
+                raise ValueError(
                     f"Column {sbd.name(column)} contains only null values."
                 )
         return column
