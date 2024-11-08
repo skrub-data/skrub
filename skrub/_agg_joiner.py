@@ -36,10 +36,10 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
 
     Parameters
     ----------
-    table : DataFrame
+    table : DataFrame of shape (n_samples, n_features)
         The input dataframe to aggregate.
 
-    key : iterable of str
+    key : list of str
         The columns used as keys to aggregate on.
 
     cols_to_agg : iterable of str
@@ -59,7 +59,8 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
 
     Returns
     -------
-    DataFrame
+    DataFrame of shape ``(n_aggregated_samples, k)``
+    where ``k = n_operations * n_cols_to_agg``
         The aggregated output.
     """
     table_to_agg = s.select(table, s.make_selector(key) | s.make_selector(cols_to_agg))
@@ -70,7 +71,7 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
 
     num_only_op = list(set(operations).intersection(set(NUM_ONLY_OPS)))
 
-    if (len(not_numeric_cols) > 0) & (len(num_only_op) > 0):
+    if not_numeric_cols and num_only_op:
         raise AttributeError(
             f"The operations {NUM_ONLY_OPS} are restricted to numeric columns."
             f" \nConsider removing the following columns: {not_numeric_cols} or the"
@@ -173,7 +174,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         the join operation.
         If `aux_key` is an iterable, we will perform a multi-column join.
 
-    cols : str or iterable of str or selector, default=s.all()
+    cols : str or iterable of str or skrub selector, default=s.all()
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
         By default, `cols` are all columns from `aux_table`, except `aux_key`.
@@ -270,7 +271,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
                 f" {self.operations}."
             )
 
-        unsupported_ops = set(self._operations).difference(set(SUPPORTED_OPS))
+        unsupported_ops = set(self._operations).difference(SUPPORTED_OPS)
         if unsupported_ops:
             raise ValueError(
                 f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are"
@@ -479,7 +480,6 @@ class AggTarget(TransformerMixin, BaseEstimator):
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
 
         # `y` is copied or converted to a df to be compatible with `aggregate`
-
         # If `y` is already a dataframe
         if sbd.is_dataframe(y):
             y_ = sbd.make_dataframe_like(y, sbd.to_column_list(y))
@@ -494,7 +494,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
             elif isinstance(y, list):
                 y = np.atleast_2d(y)
             # 1d array that needs to be reshaped
-            elif isinstance(y, np.ndarray) & len(y.shape) == 1:
+            elif isinstance(y, np.ndarray) and y.ndim == 1:
                 y = y.reshape(-1, 1)
 
             cols = {f"y_{i}": y[:, i] for i in range(y.shape[1])}
