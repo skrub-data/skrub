@@ -310,7 +310,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         X = self._main_check_input.fit_transform(X)
         self._check_inputs(X)
 
-        self.aux_table_ = aggregate(
+        self.aggregated_aux_table_ = aggregate(
             self._aux_table,
             self._aux_key,
             self._cols.expand(self._aux_table),
@@ -319,7 +319,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         )
         result = _join_utils.left_join(
             X,
-            right=self.aux_table_,
+            right=self.aggregated_aux_table_,
             left_on=self._main_key,
             right_on=self._aux_key,
         )
@@ -358,12 +358,12 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         DataFrame
             The augmented input.
         """
-        check_is_fitted(self, "aux_table_")
+        check_is_fitted(self, "aggregated_aux_table_")
         X = self._main_check_input.transform(X)
 
         result = _join_utils.left_join(
             X,
-            right=self.aux_table_,
+            right=self.aggregated_aux_table_,
             left_on=self._main_key,
             right_on=self._aux_key,
         )
@@ -379,7 +379,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         List of str
             Transformed feature names.
         """
-        check_is_fitted(self, "aux_table_")
+        check_is_fitted(self, "aggregated_aux_table_")
         return self.all_outputs_
 
 
@@ -555,7 +555,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
         # Add the main key on the target
         y_ = sbd.with_columns(y_, **{k: sbd.col(X, k) for k in self._main_key})
 
-        self.y_ = aggregate(
+        self.aggregated_y_ = aggregate(
             y_,
             key=self._main_key,
             cols_to_agg=self._cols,
@@ -565,7 +565,7 @@ class AggTarget(TransformerMixin, BaseEstimator):
 
         result = _join_utils.left_join(
             X,
-            right=self.y_,
+            right=self.aggregated_y_,
             left_on=self._main_key,
             right_on=self._main_key,
         )
@@ -605,12 +605,12 @@ class AggTarget(TransformerMixin, BaseEstimator):
         X_transformed : DataFrameLike
             The augmented input.
         """
-        check_is_fitted(self, "y_")
+        check_is_fitted(self, "aggregated_y_")
         X = self._main_check_input.transform(X)
 
         result = _join_utils.left_join(
             X,
-            right=self.y_,
+            right=self.aggregated_y_,
             left_on=self._main_key,
             right_on=self._main_key,
         )
@@ -625,5 +625,5 @@ class AggTarget(TransformerMixin, BaseEstimator):
         List of str
             Transformed feature names.
         """
-        check_is_fitted(self, "y_")
+        check_is_fitted(self, "aggregated_y_")
         return self.all_outputs_
