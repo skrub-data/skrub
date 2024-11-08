@@ -28,9 +28,12 @@ New features
 Major changes
 -------------
 
-* AggJoiner, AggTarget and MultiAggJoiner now require the `operations` argument. They do not
-  split columns by type anymore, but apply `operations` on all selected cols. "median" is now
-  supported, "hist" and "value_counts" are no longer supported. :pr:`1116`
+* :class:`AggJoiner`, :class:`AggTarget` and :class:`MultiAggJoiner` now require
+  the `operations` argument. They do not split columns by type anymore, but
+  apply `operations` on all selected cols. "median" is now supported, "hist" and
+  "value_counts" are no longer supported. :pr:`1116` by :user:`Théo Jolivet <TheooJ>`.
+
+* The :class:`AggTarget` no longer supports `y` inputs of type list. :pr:`1116`
   by :user:`Théo Jolivet <TheooJ>`.
 
 Minor changes
