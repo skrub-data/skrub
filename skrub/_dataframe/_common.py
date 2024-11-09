@@ -326,7 +326,7 @@ def _concat_horizontal_pandas(*dataframes):
     init_index = dataframes[0].index
     dataframes = [df.reset_index(drop=True) for df in dataframes]
     dataframes = _join_utils.make_column_names_unique(*dataframes)
-    result = pd.concat(dataframes, axis=1, copy=False)
+    result = pd.concat(dataframes, axis=1)
     result.index = init_index
     return result
 
