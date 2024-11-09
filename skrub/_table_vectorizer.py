@@ -3,10 +3,13 @@ from collections import UserDict
 from typing import Iterable
 
 import numpy as np
+import sklearn
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils._estimator_html_repr import _VisualBlock
+from sklearn.utils.fixes import parse_version
+from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -25,6 +28,13 @@ from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
 __all__ = ["TableVectorizer"]
+
+
+def check_version(estimator):
+    return (
+        parse_version(parse_version(sklearn.__version__).base_version)
+        < parse_version("1.6").base_version
+    )
 
 
 class PassThrough(SingleColumnTransformer):
@@ -640,6 +650,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     # scikit-learn compatibility
 
+    @available_if(check_version)
     def _more_tags(self):
         """
         Used internally by sklearn to ease the estimator checks.
@@ -651,6 +662,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                 "check_complex_data": "Passthrough complex columns as-is.",
             },
         }
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.string = True
+        tags.input_tags.allow_nan = True
+        return tags
 
     def get_feature_names_out(self):
         """Return the column names of the output of ``transform`` as a list of strings.

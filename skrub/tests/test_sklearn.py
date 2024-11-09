@@ -34,7 +34,6 @@ def _enforce_estimator_tags_X_monkey_patch(estimator, X, X_test=None, kernel=lin
             if X_test is not None:
                 X_test = X_test - X_test.min()  # pragma: no cover
         if "categorical" in tags["X_types"]:
-            dtype = np.float64 if tags["allow_nan"] else np.int32
             X = np.round((X - X.min()))
             if X_test is not None:
                 X_test = np.round((X_test - X_test.min()))  #pragma: no cover
@@ -82,21 +81,38 @@ def _enforce_estimator_tags_X_monkey_patch(estimator, X, X_test=None, kernel=lin
         # scikit-learn >= 1.6
         # Estimators with `1darray` in `X_types` tag only accept
         # X of shape (`n_samples`,)
-        if get_tags(estimator).input_tags.one_d_array:
+        if tags.input_tags.one_d_array:
             X = X[:, 0]
             if X_test is not None:
                 X_test = X_test[:, 0]  # pragma: no cover
         # Estimators with a `requires_positive_X` tag only accept
         # strictly positive data
-        if get_tags(estimator).input_tags.positive_only:
+        if tags.input_tags.positive_only:
             X = X - X.min()
             if X_test is not None:
                 X_test = X_test - X_test.min()  # pragma: no cover
-        if get_tags(estimator).input_tags.categorical:
-            dtype = np.float64 if get_tags(estimator).input_tags.allow_nan else np.int32
-            X = np.round((X - X.min())).astype(dtype)
+        if tags.input_tags.categorical:
+            X = np.round((X - X.min()))
             if X_test is not None:
-                X_test = np.round((X_test - X_test.min())).astype(dtype)  # pragma: no cover
+                X_test = np.round((X_test - X_test.min()))  # pragma: no cover
+            if tags.input_tags.string:
+                X = X.astype(object)
+                for i in range(X.shape[0]):
+                    for j in range(X.shape[1]):
+                        X[i, j] = str(X[i, j])
+                if X_test is not None:
+                    X_test = X_test.astype(object)
+                    for i in range(X_test.shape[0]):
+                        for j in range(X_test.shape[1]):
+                            X_test[i, j] = str(X_test[i, j])
+            elif tags.input_tags.allow_nan:
+                X = X.astype(np.float64)
+                if X_test is not None:
+                    X_test = X_test.astype(np.float64)  # pragma: no cover
+            else:
+                X = X.astype(np.int32)
+                if X_test is not None:
+                    X_test = X_test.astype(np.int32)  # pragma: no cover
 
         if estimator.__class__.__name__ == "SkewedChi2Sampler":
             # SkewedChi2Sampler requires X > -skewdness in transform
@@ -114,7 +130,7 @@ def _enforce_estimator_tags_X_monkey_patch(estimator, X, X_test=None, kernel=lin
                 X_test = pairwise_distances(
                     X_test, X, metric="euclidean"
                 )  # pragma: no cover
-        elif get_tags(estimator).input_tags.pairwise:
+        elif tags.input_tags.pairwise:
             X_res = kernel(X, X)
             if X_test is not None:
                 X_test = kernel(X_test, X)  # pragma: no cover

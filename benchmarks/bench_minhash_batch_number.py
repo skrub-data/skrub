@@ -11,6 +11,7 @@ import pickle
 from argparse import ArgumentParser
 from pathlib import Path
 
+import sklearn
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -18,6 +19,8 @@ import seaborn as sns
 from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
+from sklearn.utils.fixes import parse_version
+from sklearn.utils.metaestimators import available_if
 from utils import default_parser, find_result, monitor
 
 from skrub._fast_hash import ngram_min_hash
@@ -30,6 +33,13 @@ NoneType = type(None)
 
 # Ignore lines too long, as links can't be cut
 # flake8: noqa: E501
+
+
+def check_version(estimator):
+    return (
+        parse_version(parse_version(sklearn.__version__).base_version)
+        < parse_version("1.6").base_version
+    )
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
@@ -126,11 +136,17 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.batch_per_job = batch_per_job
         self.n_jobs = n_jobs
 
+    @available_if(check_version)
     def _more_tags(self):
         """
         Used internally by sklearn to ease the estimator checks.
         """
         return {"X_types": ["categorical"]}
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.categorical = True
+        return tags
 
     def _get_murmur_hash(self, string):
         """
