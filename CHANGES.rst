@@ -61,6 +61,9 @@ Minor changes
   is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
   Dockès <jeromedockes>`.
 
+* Make `skrub` compatible with scikit-learn 1.6.
+  :pr:`1135` by :user:`Guillaume Lemaitre <glemaitre>`.
+
 Bug fixes
 ---------
 
