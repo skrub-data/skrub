@@ -38,7 +38,7 @@ NoneType = type(None)
 def check_version(estimator):
     return (
         parse_version(parse_version(sklearn.__version__).base_version)
-        < parse_version("1.6").base_version
+        < parse_version("1.6")
     )
 
 
