@@ -8,8 +8,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
-from ._minhash_encoder import MinHashEncoder
 from ._fixes import get_tags
+from ._minhash_encoder import MinHashEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
