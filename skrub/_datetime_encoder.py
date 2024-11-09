@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 import pandas as pd
+from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 try:
@@ -69,7 +70,7 @@ def _get_dt_feature_polars(col, feature):
     return getattr(col.dt, feature)()
 
 
-class DatetimeEncoder(SingleColumnTransformer):
+class DatetimeEncoder(TransformerMixin, SingleColumnTransformer):
     """
     Extract temporal features such as month, day of the week, … from a datetime column.
 

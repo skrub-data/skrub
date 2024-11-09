@@ -14,6 +14,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
+from ._fixes import _check_n_features
 from ._string_distances import get_ngram_count, preprocess
 
 # Ignore lines too long, first docstring lines can't be cut
@@ -332,7 +333,7 @@ class SimilarityEncoder(OneHotEncoder):
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
-        self._check_n_features(X, reset=True)
+        _check_n_features(self, X, reset=True)
 
         if self.handle_unknown not in ["error", "ignore"]:
             raise ValueError(
@@ -451,7 +452,7 @@ class SimilarityEncoder(OneHotEncoder):
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
-        self._check_n_features(X, reset=False)
+        _check_n_features(self, X, reset=False)
 
         for i in range(n_features):
             Xi = Xlist[i]
