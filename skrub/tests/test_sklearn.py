@@ -15,7 +15,9 @@ from skrub import (  # isort:skip
 from skrub._fixes import get_tags
 
 
-def _enforce_estimator_tags_X_monkey_patch(estimator, X, X_test=None, kernel=linear_kernel):
+def _enforce_estimator_tags_X_monkey_patch(
+    estimator, X, X_test=None, kernel=linear_kernel
+):
     """Monkey patch scikit-learn function to create a specific case where to enforce
     having only strings with some encoders.
     """
@@ -36,7 +38,7 @@ def _enforce_estimator_tags_X_monkey_patch(estimator, X, X_test=None, kernel=lin
         if "categorical" in tags["X_types"]:
             X = np.round((X - X.min()))
             if X_test is not None:
-                X_test = np.round((X_test - X_test.min()))  #pragma: no cover
+                X_test = np.round((X_test - X_test.min()))  # pragma: no cover
             if "string" in tags["X_types"]:
                 # Note: this part is the monkey patch
                 X = X.astype(object)

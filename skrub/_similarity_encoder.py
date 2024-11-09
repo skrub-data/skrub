@@ -3,7 +3,6 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
-
 import numpy as np
 import pandas as pd
 import sklearn
@@ -23,11 +22,9 @@ from ._string_distances import get_ngram_count, preprocess
 
 
 def check_version(estimator):
-    return (
-        parse_version(parse_version(sklearn.__version__).base_version)
-        < parse_version("1.6")
-    )
-
+    return parse_version(
+        parse_version(sklearn.__version__).base_version
+    ) < parse_version("1.6")
 
 
 def _ngram_similarity_one_sample_inplace(
