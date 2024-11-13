@@ -435,7 +435,7 @@ def test_agg_joiner_wrong_cols(main_table):
         key="userId",
         cols="unknown_col",
     )
-    match = r"(The following columns are requested for selection)"
+    match = r"(columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=match):
         agg_joiner.fit(main_table)
 

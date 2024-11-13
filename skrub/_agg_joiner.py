@@ -14,7 +14,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
-from skrub import _join_utils
+from skrub import _join_utils, _utils
 from skrub import _selectors as s
 from skrub._dispatch import dispatch
 
@@ -208,7 +208,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         the join operation.
         If `aux_key` is an iterable, we will perform a multi-column join.
 
-    cols : str or iterable of str or skrub selector, default=s.all()
+    cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
         By default, `cols` are all columns from `aux_table`, except `aux_key`.
@@ -263,7 +263,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         key=None,
         main_key=None,
         aux_key=None,
-        cols=s.all(),
+        cols=None,
         suffix="",
     ):
         self.aux_table = aux_table
@@ -309,12 +309,12 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         )
         _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
         _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
-        _join_utils.check_missing_columns(
-            self._aux_table, s.make_selector(self.cols), ""
-        )
 
+        self._cols = _utils.atleast_1d_or_none(self.cols)
         # If no `cols` provided, all columns but `aux_key` are used.
-        self._cols = s.make_selector(self.cols) - self._aux_key
+        if self.cols is None:
+            self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
+        _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
 
         self._operations, self._suffix = check_other_inputs(
             self.operations, self.suffix
@@ -323,7 +323,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         self.aggregated_aux_table_ = aggregate(
             self._aux_table,
             self._aux_key,
-            self._cols.expand(self._aux_table),
+            self._cols,
             self._operations,
             suffix=self._suffix,
         )

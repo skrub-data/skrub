@@ -420,7 +420,7 @@ def test_cols_not_in_table(main_table, df_module):
         keys=[["userId"]],
         cols=[["wrong_col"]],
     )
-    error_msg = r"(The following columns are requested for selection)"
+    error_msg = r"(columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
 
