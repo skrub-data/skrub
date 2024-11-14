@@ -6,7 +6,6 @@ import re
 from skrub import _dataframe as sbd
 from skrub import _selectors as s
 from skrub import _utils
-from skrub._dataframe._namespace import get_df_namespace
 from skrub._dispatch import dispatch
 
 
@@ -97,11 +96,6 @@ def check_missing_columns(table, key, table_name):
         "The following columns cannot be used because they do not exist"
         f" in {table_name}:\n{missing_columns}"
     )
-
-
-def add_column_name_suffix(dataframe, suffix):
-    ns, _ = get_df_namespace(dataframe)
-    return ns.rename_columns(dataframe, f"{{}}{suffix}".format)
 
 
 def pick_column_names(suggested_names, forbidden_names=()):
