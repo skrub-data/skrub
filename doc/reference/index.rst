@@ -65,6 +65,7 @@ Building a pipeline
    :template: base.rst
    :nosignatures:
 
+   Recipe
    TableVectorizer
    SelectCols
    DropCols
