@@ -5,7 +5,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skrub._agg_joiner import AggJoiner
-from skrub._dataframe._namespace import is_pandas, is_polars
+from skrub._dataframe import _common as sbd
 from skrub._utils import _is_array_like
 
 
@@ -250,14 +250,14 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 )
 
         # Check that all input types are matching
-        if is_pandas(X):
-            if not all(is_pandas(aux_table) for aux_table in aux_tables):
+        if sbd.is_pandas(X):
+            if not all(sbd.is_pandas(aux_table) for aux_table in aux_tables):
                 raise TypeError(
                     "All `aux_tables` must be Pandas dataframes"
                     " when `X` is a Pandas dataframe."
                 )
-        if is_polars(X):
-            if not all(is_polars(aux_table) for aux_table in aux_tables):
+        if sbd.is_polars(X):
+            if not all(sbd.is_polars(aux_table) for aux_table in aux_tables):
                 raise TypeError(
                     "All `aux_tables` must be Polars dataframes"
                     " when `X` is a Polars dataframe."
