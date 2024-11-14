@@ -1,7 +1,7 @@
 import json
 import re
 
-from skrub import TableReport
+from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
 
 
@@ -81,3 +81,21 @@ def test_non_hashable_values(df_module):
     df = df_module.make_dataframe(dict(a=[[1, 2, 3], None, [4]]))
     html = TableReport(df).html()
     assert "[1, 2, 3]" in html
+
+
+def test_nat(df_module):
+    # non-regression for:
+    # https://github.com/skrub-data/skrub/issues/1111
+    # NaT used to cause exception when plotting histogram
+    col = df_module.make_column(
+        "a", ["2020-01-01T01:00:00 UTC", "2020-01-02T01:00:00 UTC", None]
+    )
+    col = ToDatetime().fit_transform(col)
+    df = df_module.make_dataframe({"a": col})
+    TableReport(df).html()
+
+
+def test_duplicate_columns(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    df.columns = ["a", "a"]
+    TableReport(df).html()

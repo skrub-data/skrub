@@ -36,6 +36,12 @@ class TableReport:
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
 
+    See Also
+    --------
+    patch_display :
+        Replace the default DataFrame HTML displays in the output of notebook
+        cells with a TableReport.
+
     Notes
     -----
     You can see some `example reports`_ for a few datasets online. We also
@@ -170,7 +176,7 @@ class TableReport:
         str :
             The JSON data.
         """
-        to_remove = ["dataframe", "sample_table", "first_row_dict"]
+        to_remove = ["dataframe", "sample_table"]
         data = {
             k: v for k, v in self._summary_without_plots.items() if k not in to_remove
         }
