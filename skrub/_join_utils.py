@@ -90,7 +90,7 @@ def check_missing_columns(table, key, table_name):
     table_name : str
         Name by which to refer to `table` in the error message if necessary.
     """
-    missing_columns = set(key) - set(table.columns)
+    missing_columns = set(key) - set(sbd.column_names(table))
     if not missing_columns:
         return
     raise ValueError(
