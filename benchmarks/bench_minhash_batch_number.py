@@ -35,7 +35,7 @@ NoneType = type(None)
 
 
 sklearn_below_1_6 = parse_version(
-    parse_version(sklearn.__version).base_version
+    parse_version(sklearn.__version__).base_version
 ) < parse_version("1.6")
 
 
