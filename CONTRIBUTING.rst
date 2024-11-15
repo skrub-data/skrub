@@ -183,15 +183,23 @@ Additionally, you might have updated the internal dataframe API in
 ``skrub/_dataframe/tests/test_common.py`` to add a test for the
 ``amazing_function``.
 
-Run your tests using ``pytest``:
+Run each updated test file using ``pytest``:
 
 .. code:: sh
 
-   pytest -vsl skrub/tests/test_amazing_transformer.py
+   pytest -vsl skrub/tests/test_amazing_transformer.py \
+   skrub/_dataframe/tests/test_common.py \
+   skrub/_dataframe/tests/test_table_vectorizer.py
 
 The ``--vsl`` flag provides more information when running the tests.
 
-All tests should pass before submitting the code.
+Once you are satisfied with your changes, you can run all the tests to make sure
+that your change did not break code elsewhere:
+
+.. code:: sh
+    pytest -s skrub/tests
+
+Finally, sync your changes with the remote repository and wait for CI to run.
 
 Checking coverage on the local machine
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
