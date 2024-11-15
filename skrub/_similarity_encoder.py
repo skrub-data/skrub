@@ -11,7 +11,6 @@ from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.fixes import parse_version
-from sklearn.utils.metaestimators import available_if
 from sklearn.utils.validation import check_is_fitted
 
 from ._fixes import _check_n_features
@@ -21,10 +20,10 @@ from ._string_distances import get_ngram_count, preprocess
 # flake8: noqa: E501
 
 
-def check_version(estimator):
-    return parse_version(
-        parse_version(sklearn.__version__).base_version
-    ) < parse_version("1.6")
+sklearn_below_1_6 = (
+    parse_version(parse_version(sklearn.__version).base_version)
+    < parse_version("1.6")
+)
 
 
 def _ngram_similarity_one_sample_inplace(
@@ -555,23 +554,23 @@ class SimilarityEncoder(OneHotEncoder):
 
         return np.nan_to_num(out, copy=False)
 
-    @available_if(check_version)
-    def _more_tags(self):
-        return {
-            "X_types": ["2darray", "categorical", "string"],
-            "preserves_dtype": [],
-            "allow_nan": True,
-            "_xfail_checks": {
-                "check_estimator_sparse_data": (
-                    "Cannot create sparse matrix with strings."
-                ),
-                "check_estimators_dtypes": "We only support string dtypes.",
-            },
-        }
-
-    def __sklearn_tags__(self):
-        tags = super().__sklearn_tags__()
-        tags.input_tags.categorical = True
-        tags.input_tags.string = True
-        tags.transformer_tags.preserves_dtype = []
-        return tags
+    if sklearn_below_1_6:
+        def _more_tags(self):
+            return {
+                "X_types": ["2darray", "categorical", "string"],
+                "preserves_dtype": [],
+                "allow_nan": True,
+                "_xfail_checks": {
+                    "check_estimator_sparse_data": (
+                        "Cannot create sparse matrix with strings."
+                    ),
+                    "check_estimators_dtypes": "We only support string dtypes.",
+                },
+            }
+    else:
+        def __sklearn_tags__(self):
+            tags = super().__sklearn_tags__()
+            tags.input_tags.categorical = True
+            tags.input_tags.string = True
+            tags.transformer_tags.preserves_dtype = []
+            return tags
