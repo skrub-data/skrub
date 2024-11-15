@@ -20,10 +20,9 @@ from ._string_distances import get_ngram_count, preprocess
 # flake8: noqa: E501
 
 
-sklearn_below_1_6 = (
-    parse_version(parse_version(sklearn.__version).base_version)
-    < parse_version("1.6")
-)
+sklearn_below_1_6 = parse_version(
+    parse_version(sklearn.__version).base_version
+) < parse_version("1.6")
 
 
 def _ngram_similarity_one_sample_inplace(
@@ -555,6 +554,7 @@ class SimilarityEncoder(OneHotEncoder):
         return np.nan_to_num(out, copy=False)
 
     if sklearn_below_1_6:
+
         def _more_tags(self):
             return {
                 "X_types": ["2darray", "categorical", "string"],
@@ -567,7 +567,9 @@ class SimilarityEncoder(OneHotEncoder):
                     "check_estimators_dtypes": "We only support string dtypes.",
                 },
             }
+
     else:
+
         def __sklearn_tags__(self):
             tags = super().__sklearn_tags__()
             tags.input_tags.categorical = True

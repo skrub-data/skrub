@@ -34,10 +34,9 @@ NoneType = type(None)
 # flake8: noqa: E501
 
 
-sklearn_below_1_6 = (
-    parse_version(parse_version(sklearn.__version).base_version)
-    < parse_version("1.6")
-)
+sklearn_below_1_6 = parse_version(
+    parse_version(sklearn.__version).base_version
+) < parse_version("1.6")
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
@@ -135,12 +134,15 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.n_jobs = n_jobs
 
     if sklearn_below_1_6:
+
         def _more_tags(self):
             """
             Used internally by sklearn to ease the estimator checks.
             """
             return {"X_types": ["categorical"]}
+
     else:
+
         def __sklearn_tags__(self):
             tags = super().__sklearn_tags__()
             tags.input_tags.categorical = True

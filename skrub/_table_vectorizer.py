@@ -29,10 +29,10 @@ from ._wrap_transformer import wrap_transformer
 __all__ = ["TableVectorizer"]
 
 
-sklearn_below_1_6 = (
-    parse_version(parse_version(sklearn.__version).base_version)
-    < parse_version("1.6")
-)
+sklearn_below_1_6 = parse_version(
+    parse_version(sklearn.__version).base_version
+) < parse_version("1.6")
+
 
 class PassThrough(SingleColumnTransformer):
     def fit_transform(self, column, y=None):
@@ -647,7 +647,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     # scikit-learn compatibility
 
-    if sklearn_below_1_6
+    if sklearn_below_1_6:
+
         def _more_tags(self):
             """
             Used internally by sklearn to ease the estimator checks.
@@ -659,7 +660,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                     "check_complex_data": "Passthrough complex columns as-is.",
                 },
             }
+
     else:
+
         def __sklearn_tags__(self):
             tags = super().__sklearn_tags__()
             tags.input_tags.string = True
