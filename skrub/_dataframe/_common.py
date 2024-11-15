@@ -102,7 +102,7 @@ __all__ = [
     "with_columns",
 ]
 
-pandas_version = parse_version(parse_version(pd.__version).base_version)
+pandas_version = parse_version(parse_version(pd.__version__).base_version)
 
 #
 # Inspecting containers' type and module
