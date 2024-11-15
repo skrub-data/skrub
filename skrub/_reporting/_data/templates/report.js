@@ -68,6 +68,8 @@ if (customElements.get('skrub-table-report') === undefined) {
                 mode: "open"
             });
             this.shadowRoot.appendChild(template.content.cloneNode(true));
+
+            setTimeout(() => this.init());
         }
 
         static register(managerClass) {
@@ -90,6 +92,8 @@ if (customElements.get('skrub-table-report') === undefined) {
             this.shadowRoot.querySelectorAll("[data-hide-on]").forEach((elem) => {
                 this.exchange.add(new HideOn(elem, this.exchange));
             });
+
+            adjustAllSvgViewBoxes(this.shadowRoot.getElementById('report'));
         }
     }
     customElements.define("skrub-table-report", SkrubTableReport);
@@ -425,13 +429,13 @@ if (customElements.get('skrub-table-report') === undefined) {
          */
         activateFirstCell() {
             const activeCell = this.elem.querySelector("[data-is-active]");
-            if (activeCell){
+            if (activeCell) {
                 activeCell.focus();
                 return;
             }
             const firstCell = this.elem.querySelector(
                 "[data-role='dataframe-data']:not([data-excluded-by-column-filter])"
-                );
+            );
             if (!firstCell) {
                 return;
             }
@@ -759,6 +763,14 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(Toggletip);
 
+    class CopyButton extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.addEventListener("click", e => copyButtonClick(e));
+        }
+    }
+    SkrubTableReport.register(CopyButton);
+
     /*
       In the matplotlib svg plots, the labels are stored as text (we want the
       browser, rather than matplotlib, to choose the font & render the text, and
@@ -781,124 +793,128 @@ if (customElements.get('skrub-table-report') === undefined) {
       and uses the same font family and size as the actual figure we want to
       resize. Once we have the viewbox we remove the clone from the DOM.
     */
-    class SvgAdjustedViewBox extends Manager {
-        constructor(elem, exchange) {
-            super(elem, exchange);
-            this.adjustViewBox();
-        }
 
-        computeViewBox(svg) {
-            try {
-                const {
-                    width
-                } = svg.getBBox();
-                if (width === 0) {
-                    return null;
-                }
-            } catch (e) {
+    /*
+      Compute a tight viewbox for all elements in an svg document.
+    */
+    function computeViewBox(svg) {
+        try {
+            const {
+                width
+            } = svg.getBBox();
+            if (width === 0) {
                 return null;
             }
-            let [xMin, yMin, xMax, yMax] = [null, null, null, null];
-            for (const child of svg.children) {
-                if (typeof child.getBBox !== 'function') {
-                    continue;
-                }
-                const {
-                    x,
-                    y,
-                    width,
-                    height
-                } = child.getBBox();
-                if (width === 0 || height === 0){
-                    continue;
-                }
-                if (xMin === null) {
-                    xMin = x;
-                    yMin = y;
-                    xMax = x + width;
-                    yMax = y + height;
-                    continue;
-                }
-                xMin = Math.min(x, xMin);
-                yMin = Math.min(y, yMin);
-                xMax = Math.max(x + width, xMax);
-                yMax = Math.max(y + height, yMax);
+        } catch (e) {
+            return null;
+        }
+        let [xMin, yMin, xMax, yMax] = [null, null, null, null];
+        for (const child of svg.children) {
+            if (typeof child.getBBox !== 'function') {
+                continue;
+            }
+            const {
+                x,
+                y,
+                width,
+                height
+            } = child.getBBox();
+            if (width === 0 || height === 0) {
+                continue;
             }
             if (xMin === null) {
-                return null;
+                xMin = x;
+                yMin = y;
+                xMax = x + width;
+                yMax = y + height;
+                continue;
             }
-            return {
-                x: xMin,
-                y: yMin,
-                width: xMax - xMin,
-                height: yMax - yMin
-            };
+            xMin = Math.min(x, xMin);
+            yMin = Math.min(y, yMin);
+            xMax = Math.max(x + width, xMax);
+            yMax = Math.max(y + height, yMax);
         }
-
-        /*
-          Adjust the svg element's width and height so that if we need to set a
-          wider viewbox, we get a bigger figure rather than zooming out while
-          keeping the figure size constant.
-        */
-        adjustSize(svg, newViewBox, attribute) {
-            const match = svg.getAttribute(attribute).match(/^([0-9.]+)(.+)$/);
-            if (!match) {
-                return;
-            }
-            const size = Number(match[1]);
-            if (isNaN(size)) {
-                return;
-            }
-            const unit = match[2];
-            const scale = newViewBox[attribute] / svg.viewBox.baseVal[attribute];
-            const newSize = size * scale;
-            if (isNaN(newSize)) {
-                return;
-            }
-            svg.setAttribute(attribute, `${newSize}${unit}`);
+        if (xMin === null) {
+            return null;
         }
+        return {
+            x: xMin,
+            y: yMin,
+            width: xMax - xMin,
+            height: yMax - yMin
+        };
+    }
 
-        adjustViewBox() {
-            const svg = this.elem.querySelector('svg');
+    /*
+      Adjust the svg element's width and height so that if we need to set a
+      wider viewbox, we get a bigger figure rather than zooming out while
+      keeping the figure size constant.
+    */
+    function adjustSvgSize(svg, newViewBox, attribute) {
+        const match = svg.getAttribute(attribute).match(/^([0-9.]+)(.+)$/);
+        if (!match) {
+            return;
+        }
+        const size = Number(match[1]);
+        if (isNaN(size)) {
+            return;
+        }
+        const unit = match[2];
+        const scale = newViewBox[attribute] / svg.viewBox.baseVal[attribute];
+        const newSize = size * scale;
+        if (isNaN(newSize)) {
+            return;
+        }
+        svg.setAttribute(attribute, `${newSize}${unit}`);
+    }
 
-            // The svg is inside a div with {display: none} in its style. So it
-            // is not rendered and all bounding boxes will have 0 width and
-            // height. We insert a clone higher up the DOM below #report, which
-            // we know is displayed. To avoid the user seeing it flash we position
-            // it outside of the viewport. The column summary cards use the same
-            // font family & size as #report so the computed sizes will be the
-            // same as those of the actual svg when it is rendered.
+    /*
+      Adjust the size and viewbox of all svg elements that require it so that
+      their content is not cropped.
+    */
+    function adjustAllSvgViewBoxes(reportElem) {
+        const allSvg = Array.from(reportElem.querySelectorAll(
+            '[data-svg-needs-adjust-viewbox] svg'));
+        let svgClones = [];
+        try {
+            for (const svg of allSvg) {
+                // The svg is inside a div with {display: none} in its style. So it
+                // is not rendered and all bounding boxes will have 0 width and
+                // height. We insert a clone higher up the DOM below #report, which
+                // we know is displayed. To avoid the user seeing it flash we position
+                // it outside of the viewport. The column summary cards use the same
+                // font family & size as #report so the computed sizes will be the
+                // same as those of the actual svg when it is rendered.
 
-            const report = this.elem.getRootNode().getElementById('report');
-            const clone = svg.cloneNode(true);
-            clone.style.position = 'absolute';
-            clone.style.left = '-9999px';
-            clone.style.top = '-9999px';
-            // (visibility = 'hidden' still requires the size to be computed and
-            // thus the svg to be rendered.)
-            clone.style.visibility = 'hidden';
-            report.appendChild(clone);
+                const clone = svg.cloneNode(true);
+                clone.style.position = 'absolute';
+                clone.style.left = '-9999px';
+                clone.style.top = '-9999px';
+                clone.style.visibility = 'hidden';
+                reportElem.appendChild(clone);
+                svgClones.push([svg, clone]);
+            }
 
-            try {
-                const viewBox = this.computeViewBox(clone);
+            // We use 3 separate loops so that we do not modify the document (by
+            // inserting or removing the cloned svg elements) between the
+            // getBBox() computations, to avoid re-computation of styles and
+            // layout.
+            for (const [svg, clone] of svgClones) {
+                const viewBox = clone.getBBox();
                 if (viewBox !== null) {
-                    this.adjustSize(svg, viewBox, 'width');
-                    this.adjustSize(svg, viewBox, 'height');
+                    adjustSvgSize(svg, viewBox, 'width');
+                    adjustSvgSize(svg, viewBox, 'height');
                     svg.setAttribute('viewBox',
                         `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`
                     );
                 }
-            } finally {
-                report.removeChild(clone);
+            }
+
+        } finally {
+            for (const [_, clone] of svgClones) {
+                reportElem.removeChild(clone);
             }
         }
-
-    }
-    SkrubTableReport.register(SvgAdjustedViewBox);
-
-    function initReport(reportId) {
-        const report = document.getElementById(reportId);
-        report.init();
     }
 
     function copyButtonClick(event) {

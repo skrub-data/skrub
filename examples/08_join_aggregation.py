@@ -6,6 +6,7 @@ Many problems involve tables whose entities have a one-to-many relationship.
 To simplify aggregate-then-join operations for machine learning, we can include
 the |AggJoiner| in our pipeline.
 
+
 In this example, we are tackling a fraudulent loan detection use case.
 Because fraud is rare, this dataset is extremely imbalanced, with a prevalence of around
 1.4%.

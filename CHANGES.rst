@@ -59,7 +59,8 @@ Minor changes
   Moreover, when the text contains line breaks it now appears all on one line.
   Note this only affects the labels in the plots; the rest of the report did not
   have these problems.
-  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`.
+  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`1138` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * In the TableReport it is now possible, before clicking any of the cells, to
   reach the dataframe sample table and activate a cell with tab key navigation.
