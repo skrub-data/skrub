@@ -71,6 +71,12 @@ These language models are pre-trained deep-learning encoders that have been fine
 specifically for embedding tasks. Note that skrub does not provide a simple way to
 fine-tune language models directly on your dataset.
 
+.. warning::
+
+    These encoders require installing additional dependencies around torch.
+    See the "deep learning dependencies" section in the :ref:`installation_instructions`
+    guide for more details.
+
 With :class:`TextEncoder`, a wrapper around the `sentence-transformers <https://sbert.net/>`_
 package, you can use any sentence embedding model available on the HuggingFace Hub
 or locally stored on your disk. This means you can fine-tune a model using
