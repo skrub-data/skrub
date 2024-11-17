@@ -23,7 +23,7 @@ from ._utils import unique_strings
 
 
 class GapEncoder(TransformerMixin, SingleColumnTransformer):
-    """Constructs latent topics with continuous encoding.
+    """Encode string columns by constructing latent topics.
 
     This encoder can be understood as a continuous encoding on a set of latent
     categories estimated from the data. The latent categories are built by
@@ -130,6 +130,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         Encode string columns as a numeric array with the minhash method.
     SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
+    TextEncoder :
+        Encode string columns with a pretrained language model.
     deduplicate :
         Deduplicate data by hierarchically clustering similar strings.
 

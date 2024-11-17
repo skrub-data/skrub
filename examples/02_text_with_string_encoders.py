@@ -41,16 +41,18 @@ available in skrub.
 # --------------------
 # We focus on the toxicity dataset, a corpus of 1,000 tweets, evenly balanced
 # between the binary labels "Toxic" and "Not Toxic".
-# Our objective is to classify each entry between these two labels, using only the
+# Our goal is to classify each entry between these two labels, using only the
 # text of the tweets as features.
-# When it comes to displaying large chunks of text, the |TableReport| is especially
-# useful! Click on any cell below to expand and read the tweet in full.
-from skrub import TableReport
 from skrub.datasets import fetch_toxicity
 
 dataset = fetch_toxicity()
 X, y = dataset.X, dataset.y
 X["is_toxic"] = y
+
+# %%
+# When it comes to displaying large chunks of text, the |TableReport| is especially
+# useful! Click on any cell below to expand and read the tweet in full.
+from skrub import TableReport
 TableReport(X)
 
 # %%
@@ -71,6 +73,7 @@ from skrub import GapEncoder
 
 gap = GapEncoder(n_components=30)
 X_trans = gap.fit_transform(X["text"])
+# Add the original text as a first column
 X_trans.insert(0, "text", X["text"])
 TableReport(X_trans)
 
