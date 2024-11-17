@@ -1,11 +1,11 @@
 """
 .. _example_string_encoders:
 
-===============================================
-Sentiment analysis with various string encoders
-===============================================
+=====================================================
+Various string encoders: a sentiment analysis example
+=====================================================
 
-In this notebook, we will explore the performance of string and categorical encoders
+In this example, we explore the performance of string and categorical encoders
 available in skrub.
 
 .. |GapEncoder| replace::
