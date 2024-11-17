@@ -12,8 +12,11 @@ for different types of data.
 
 .. _dirty_categories:
 
-Encoding open-ended entries and dirty categories
-------------------------------------------------
+Encoding string columns
+-------------------------
+
+Non-normalized entries and dirty categories
+............................................
 
 String columns can be seen categories for statistical analysis, but
 standard tools to represent categories fail if these strings are not
@@ -51,11 +54,12 @@ categories, eg to replace :class:`~sklearn.preprocessing.OneHotEncoder`:
        Machine Learning journal, Springer.
 
 
-Encoding text with diverse entries
-----------------------------------
+Text with diverse entries
+...........................
 
-When encoding strings with diverse entries and large chunks of text, we can leverage
-language models of various sizes to represent string columns as embeddings.
+When strings in a column are not dirty categories, but rather diverse
+entries of text (names, open-ended or free-flowing text) it is useful to
+use language models of various sizes to represent string columns as embeddings.
 Depending on the task and dataset, this approach may lead to significant improvements
 in the quality of predictions, albeit with potential increases in memory usage and computation time.
 
