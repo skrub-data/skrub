@@ -3,6 +3,7 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub._drop_column_if_null import DropColumnIfNull
+from skrub._on_each_column import RejectColumn
 
 
 @pytest.fixture
@@ -114,11 +115,11 @@ def test_single_column_keep(drop_null_table, df_module):
 def test_single_column_raise(drop_null_table, df_module):
     """Check that an exception is raised if a null column is detected."""
     dn = DropColumnIfNull(null_column_strategy="raise")
-    with pytest.raises(ValueError):
+    with pytest.raises(RejectColumn):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
-    with pytest.raises(ValueError):
+    with pytest.raises(RejectColumn):
         dn.fit_transform(sbd.col(drop_null_table, "value_null"))
-    with pytest.raises(ValueError):
+    with pytest.raises(RejectColumn):
         dn.fit_transform(sbd.col(drop_null_table, "mixed_null"))
 
 
