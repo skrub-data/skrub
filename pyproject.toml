@@ -65,6 +65,9 @@ optional = [
     "pyarrow",
     "polars",
 ]
+transformers = [
+    "sentence-transformers",
+]
 test = [
     "numpydoc",
     "pytest",
@@ -81,7 +84,7 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 packages = ["skrub"]
 
 [tool.pixi.project]
-channels = ["conda-forge"]
+channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
@@ -114,6 +117,15 @@ pre-commit = "*"
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
 polars = "*"
+
+[tool.pixi.feature.transformers]
+# pytorch is not anymore released on osx-64 platform
+platforms = ["linux-64", "osx-arm64", "win-64"]
+
+[tool.pixi.feature.transformers.dependencies]
+pytorch = { version = ">=2.4.1,<3", channel = "pytorch" }
+transformers = "*"
+sentence-transformers = ">=3.0,<4"
 
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
@@ -166,11 +178,12 @@ test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 
 [tool.pixi.environments]
 lint = ["lint"]
-doc = ["optional", "doc"]
+doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
-dev = ["dev", "optional", "doc", "lint", "test"]
+dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
 ci-py309-min-deps = ["py309", "min-dependencies", "test"]
 ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
+ci-py311-transformers = ["py311", "transformers", "test"]
 ci-py312-latest-deps = ["py312", "test"]
 ci-py312-latest-optional-deps = ["py312", "optional", "test"]
 
@@ -246,6 +259,10 @@ filterwarnings = [
     # should be addressed in pandas
     'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
     'ignore:.*distutils Version classes are deprecated.*',
+    'ignore:.*`resume_download` is deprecated.*',
+    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+    'ignore:The current process just got forked.*',
+    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"

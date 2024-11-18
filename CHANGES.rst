@@ -27,6 +27,12 @@ New features
 
 Major changes
 -------------
+* The :class:`TextEncoder` is now available to encode string columns with
+  diverse entries.
+  It allows the representation of table entries as embeddings computed by a deep
+  learning language model. The weights of this model can be fetched locally
+  or from the HuggingFace Hub.
+  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 * :class:`AggJoiner`, :class:`AggTarget` and :class:`MultiAggJoiner` now require
   the `operations` argument. They do not split columns by type anymore, but

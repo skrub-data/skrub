@@ -54,6 +54,20 @@ Encoding a column
 
    to_datetime
 
+Deep Learning
+-------------
+
+These encoders require installing additional dependencies around torch.
+See the "deep learning dependencies" section in the :ref:`installation_instructions`
+guide for more details.
+
+.. autosummary::
+   :toctree: generated/
+   :template: base.rst
+   :nosignatures:
+
+   TextEncoder
+
 
 .. _building_a_pipeline_ref:
 
