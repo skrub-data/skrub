@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 
 import pandas as pd
-from sklearn.base import TransformerMixin
+import sklearn
+from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 try:
@@ -25,6 +26,11 @@ _TIME_LEVELS = [
     "microsecond",
     "nanosecond",
 ]
+
+
+sklearn_below_1_6 = parse_version(
+    parse_version(sklearn.__version__).base_version
+) < parse_version("1.6")
 
 
 @dispatch
@@ -70,7 +76,7 @@ def _get_dt_feature_polars(col, feature):
     return getattr(col.dt, feature)()
 
 
-class DatetimeEncoder(TransformerMixin, SingleColumnTransformer):
+class DatetimeEncoder(SingleColumnTransformer):
     """
     Extract temporal features such as month, day of the week, … from a datetime column.
 
@@ -324,3 +330,17 @@ class DatetimeEncoder(TransformerMixin, SingleColumnTransformer):
             raise ValueError(
                 f"'resolution' options are {allowed}, got {self.resolution!r}."
             )
+
+    if sklearn_below_1_6:
+
+        def _more_tags(self):
+            return {"preserves_dtype": []}
+
+    else:
+
+        def __sklearn_tags__(self):
+            tags = super().__sklearn_tags__()
+            from sklearn.utils import TransformerTags
+
+            tags.transformer_tags = TransformerTags()
+            return tags
