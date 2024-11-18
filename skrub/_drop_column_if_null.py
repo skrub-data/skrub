@@ -11,18 +11,7 @@ __all__ = ["DropColumnIfNull"]
 
 class DropColumnIfNull(SingleColumnTransformer):
     """Drop a single column if it contains only Null, NaN, or a mixture of null
-    values. If at least one non-null value is found, the column is kept.
-
-
-    Parameters
-    ----------
-    null_column_strategy : str, default="warn", "drop", "keep", "raise"
-        If `warn`, columns that contain only null values are kept, but a warning
-        is issued.
-        If `drop`, null columns are dropped.
-        If `keep`, null columns are kept as is, and no warning is raised.
-        If `raise`, a RejectColumn exception is raised if a null column is detected.
-    """
+    values. If at least one non-null value is found, the column is kept."""
 
     def __init__(self, null_column_strategy="warn"):
         self.null_column_strategy = null_column_strategy
@@ -66,10 +55,10 @@ class DropColumnIfNull(SingleColumnTransformer):
                     UserWarning,
                     stacklevel=2,
                 )
-                return column
+                return []
             if self.null_column_strategy == "drop":
                 return []
-            if self.null_column_strategy == "keep":
+            if self.null_column_strategy == "ignore":
                 return column
             if self.null_column_strategy == "raise":
                 raise RejectColumn(
