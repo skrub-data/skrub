@@ -28,6 +28,8 @@ def _get_time_zone_pandas(col):
         return None
     if hasattr(tz, "zone"):
         return tz.zone
+    if hasattr(tz, "key"):
+        return tz.key
     return tz.tzname(None)
 
 
