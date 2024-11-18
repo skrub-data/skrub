@@ -43,6 +43,11 @@ __all__ = [
     "col_by_idx",
     "collect",
     #
+    # Loading data
+    #
+    "read_parquet",
+    "read_csv",
+    #
     # Querying and modifying metadata
     #
     "shape",
@@ -395,6 +400,40 @@ def collect(df):
 @collect.specialize("polars", argument_type="LazyFrame")
 def _collect_polars_lazyframe(df):
     return df.collect()
+
+
+#
+# Loading data
+# ============
+#
+@dispatch
+def read_parquet(input_path):
+    raise NotImplementedError()
+
+
+@read_parquet.specialize("pandas", argument_type=["DataFrame"])
+def _read_parquet_pandas(input_path):
+    return pd.read_parquet(input_path)
+
+
+@read_parquet.specialize("polars", argument_type=["DataFrame"])
+def _read_parquet_polars(input_path):
+    return pl.read_parquet(input_path)
+
+
+@dispatch
+def read_csv(input_path):
+    raise NotImplementedError()
+
+
+@read_csv.specialize("pandas", argument_type=["DataFrame"])
+def _read_csv_pandas(input_path):
+    return pd.read_csv(input_path)
+
+
+@read_csv.specialize("polars", argument_type=["DataFrame"])
+def _read_csv_polars(input_path):
+    return pl.read_csv(input_path)
 
 
 #
