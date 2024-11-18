@@ -19,6 +19,7 @@ from skrub import _dataframe as sbd
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
+from skrub._on_each_column import RejectColumn
 from skrub._table_vectorizer import TableVectorizer
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -530,7 +531,7 @@ def test_changing_types(X_train, X_test, expected_X_out):
         # only extract the total seconds
         datetime=DatetimeEncoder(resolution=None),
         # True by default
-        null_column_strategy="keep",
+        null_column_strategy=False,
     )
 
     table_vec.fit(X_train)
@@ -765,7 +766,7 @@ def test_drop_null_column():
     """Check that all null columns are dropped, and no more."""
     # Don't drop null columns
     X = _get_missing_values_dataframe()
-    tv = TableVectorizer(null_column_strategy="keep")
+    tv = TableVectorizer(null_column_strategy="ignore")
     transformed = tv.fit_transform(X)
 
     assert sbd.shape(transformed) == sbd.shape(X)
@@ -777,7 +778,11 @@ def test_drop_null_column():
 
     # Raise exception if a null column is found
     with pytest.raises(
-        ValueError,
+        RejectColumn, match="Column all_null contains only null values."
     ):
         tv = TableVectorizer(null_column_strategy="raise")
         transformed = tv.fit_transform(X)
+
+    # # Raise an exception if an unknown parameter is found
+    # tv = TableVectorizer(null_column_strategy="wrong_parameter")
+    # transformed = tv.fit_transform(X)
