@@ -2,9 +2,10 @@ from glob import glob
 from pathlib import Path
 
 import polars as pl
-import polars.selectors as cs
 from sklearn.base import BaseEstimator
 
+from . import _dataframe as sbd
+from . import _selectors as cs
 from ._multi_agg_joiner import MultiAggJoiner
 
 
@@ -23,6 +24,7 @@ def find_unique_values(table: pl.DataFrame, columns: list[str] = None) -> dict:
     Returns:
         A dict that contains the unique values found for each selected column.
     """
+    print("eh")
     # select the columns of interest
     if columns is not None:
         # error checking columns
@@ -30,17 +32,17 @@ def find_unique_values(table: pl.DataFrame, columns: list[str] = None) -> dict:
             raise ValueError("No columns provided.")
         for col in columns:
             if col not in table.columns:
-                raise pl.ColumnNotFoundError
+                # TODO: more specific ColumnNotFound error?
+                raise ValueError
     else:
         # Selecting only columns with strings
-        columns = table.select(cs.string(include_categorical=True)).columns
+        # TODO: string? categorical? both?
+        columns = table.select(cs.string()).columns
 
+    unique_values = {}
     # find the unique values
-    unique_values = dict(
-        table.select(cs.by_name(columns).implode().list.unique())
-        .transpose(include_header=True)
-        .rows()
-    )
+    for col in columns:
+        unique_values[col] = sbd.unique(sbd.col(table, col))
     # return the dictionary of unique values
     return unique_values
 
@@ -240,14 +242,17 @@ class Discover(BaseEstimator):
         """
         for col in self.query_columns:
             if col not in X.columns:
-                raise pl.ColumnNotFoundError(f"Column {col} not found in X.")
+                # TODO: add a more specific error? update sbd?
+                raise ValueError(f"Column {col} not found in X.")
 
         # load list of tables
         self._candidate_paths = load_table_paths(self.path_tables)
 
         # find unique values for each table
         for table_path in self._candidate_paths:
-            table = pl.read_parquet(table_path)
+            # TODO: check type of the table, is it parquet or csv?
+            # TODO: is this going to hold everything in memory?
+            table = sbd.read_parquet(table_path)
             self._unique_values_candidates[table_path] = find_unique_values(table)
 
         # find unique values for the query columns
