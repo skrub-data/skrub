@@ -160,8 +160,8 @@ agg_joiner = AggJoiner(
     aux_table=flights,
     main_key="airport_id",
     aux_key="from_airport",
-    cols=["total_passengers", "company"],  # the cols to perform aggregation on
-    operations=["mean", "mode"],  # the operations to compute
+    cols=["total_passengers"],  # the cols to perform aggregation on
+    operations=["mean", "std"],  # the operations to compute
 )
 agg_joiner.fit_transform(airports)
 

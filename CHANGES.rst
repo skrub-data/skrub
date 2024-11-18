@@ -28,6 +28,14 @@ New features
 Major changes
 -------------
 
+* :class:`AggJoiner`, :class:`AggTarget` and :class:`MultiAggJoiner` now require
+  the `operations` argument. They do not split columns by type anymore, but
+  apply `operations` on all selected cols. "median" is now supported, "hist" and
+  "value_counts" are no longer supported. :pr:`1116` by :user:`Théo Jolivet <TheooJ>`.
+
+* The :class:`AggTarget` no longer supports `y` inputs of type list. :pr:`1116`
+  by :user:`Théo Jolivet <TheooJ>`.
+
 Minor changes
 -------------
 
@@ -51,7 +59,8 @@ Minor changes
   Moreover, when the text contains line breaks it now appears all on one line.
   Note this only affects the labels in the plots; the rest of the report did not
   have these problems.
-  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`.
+  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`1138` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * In the TableReport it is now possible, before clicking any of the cells, to
   reach the dataframe sample table and activate a cell with tab key navigation.
