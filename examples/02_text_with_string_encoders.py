@@ -53,6 +53,7 @@ X["is_toxic"] = y
 # When it comes to displaying large chunks of text, the |TableReport| is especially
 # useful! Click on any cell below to expand and read the tweet in full.
 from skrub import TableReport
+
 TableReport(X)
 
 # %%
