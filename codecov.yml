@@ -2,6 +2,8 @@
 comment: false
 
 coverage:
+  wait_for_ci: true
+
   status:
     project:
       default:
