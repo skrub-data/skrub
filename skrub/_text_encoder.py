@@ -19,8 +19,8 @@ class ModelNotFound(ValueError):
 
 
 class TextEncoder(SingleColumnTransformer, TransformerMixin):
-    """Encode string features by applying an embedding model downloaded \
-        from the HuggingFace Hub.
+    """Encode string features by applying a pretrained language model \
+        downloaded from the HuggingFace Hub.
 
     This is a thin wrapper around :class:`~sentence_transformers.SentenceTransformer`
     that follows the scikit-learn API, making it usable within a scikit-learn pipeline.
@@ -140,6 +140,15 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     n_components_ : int
         The number of dimensions of the embeddings after dimensionality
         reduction.
+
+    See Also
+    --------
+    MinHashEncoder :
+        Encode string columns as a numeric array with the minhash method.
+    GapEncoder :
+        Encode string columns by constructing latent topics.
+    SimilarityEncoder :
+        Encode string columns as a numeric array with n-gram string similarity.
 
     References
     ----------
