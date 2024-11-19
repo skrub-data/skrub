@@ -161,20 +161,20 @@ X = flights.drop(columns=["ArrDelay"])
 y = (y > 0).astype(int)
 y.value_counts()
 
-# ###############################################################################
-# # The results:
+###############################################################################
+# The results:
 
-# from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score
 
-# scores = cross_val_score(pipeline_hgb, X, y)
-# scores.mean()
+scores = cross_val_score(pipeline_hgb, X, y)
+scores.mean()
 
-# ###############################################################################
-# # Conclusion
-# # ----------
-# #
-# # In this example, we have combined multiple tables with complex joins
-# # on imprecise and multiple-key correspondences.
-# # This is made easy by skrub's |Joiner| transformer.
-# #
-# # Our final cross-validated accuracy score is 0.58.
+###############################################################################
+# Conclusion
+# ----------
+#
+# In this example, we have combined multiple tables with complex joins
+# on imprecise and multiple-key correspondences.
+# This is made easy by skrub's |Joiner| transformer.
+#
+# Our final cross-validated accuracy score is 0.58.
