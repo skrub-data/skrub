@@ -52,6 +52,10 @@ flights = fetch_figshare("41771418").X
 flights = flights.sample(20_000, random_state=1, ignore_index=True)
 flights.head()
 
+from skrub import TableReport
+
+TableReport(flights)
+
 ###############################################################################
 # Let us see the arrival delay of the flights in the dataset:
 import matplotlib.pyplot as plt
@@ -76,6 +80,8 @@ plt.show()
 airports = fetch_figshare("41710257").X
 airports.head()
 
+TableReport(airports)
+
 ########################################################################
 # Weather data: auxiliary tables from external sources
 # ....................................................
@@ -88,12 +94,16 @@ weather = fetch_figshare("41771457").X
 weather = weather.sample(100_000, random_state=1, ignore_index=True)
 weather.head()
 
+TableReport(weather)
+
 ########################################################################
 #     - The ``stations`` dataset. Provides location of all the weather
 #       measurement stations in the US.
 
 stations = fetch_figshare("41710524").X
 stations.head()
+
+TableReport(stations)
 
 ###############################################################################
 # Joining: feature augmentation across tables
@@ -102,6 +112,8 @@ stations.head()
 
 aux = pd.merge(stations, weather, on="ID")
 aux.head()
+
+TableReport(aux)
 
 ###############################################################################
 # Then we join this table with the airports so that we get all auxilliary
@@ -114,6 +126,8 @@ joiner = Joiner(airports, aux_key=["lat", "long"], main_key=["LATITUDE", "LONGIT
 aux_augmented = joiner.fit_transform(aux)
 
 aux_augmented.head()
+
+TableReport(aux_augmented)
 
 ###############################################################################
 # Joining airports with flights data:
@@ -160,6 +174,8 @@ X = flights.drop(columns=["ArrDelay"])
 
 y = (y > 0).astype(int)
 y.value_counts()
+
+TableReport(y)
 
 ###############################################################################
 # The results:
