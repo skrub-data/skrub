@@ -103,78 +103,78 @@ stations.head()
 aux = pd.merge(stations, weather, on="ID")
 aux.head()
 
-###############################################################################
-# Then we join this table with the airports so that we get all auxilliary
-# tables into one.
+# ###############################################################################
+# # Then we join this table with the airports so that we get all auxilliary
+# # tables into one.
 
-from skrub import Joiner
+# from skrub import Joiner
 
-joiner = Joiner(airports, aux_key=["lat", "long"], main_key=["LATITUDE", "LONGITUDE"])
+# joiner = Joiner(airports, aux_key=["lat", "long"], main_key=["LATITUDE", "LONGITUDE"])
 
-aux_augmented = joiner.fit_transform(aux)
+# aux_augmented = joiner.fit_transform(aux)
 
-aux_augmented.head()
+# aux_augmented.head()
 
-###############################################################################
-# Joining airports with flights data:
-# Let's instanciate another multiple key joiner on the date and the airport:
+# ###############################################################################
+# # Joining airports with flights data:
+# # Let's instanciate another multiple key joiner on the date and the airport:
 
-joiner = Joiner(
-    aux_augmented,
-    aux_key=["YEAR/MONTH/DAY", "iata"],
-    main_key=["Year_Month_DayofMonth", "Origin"],
-)
+# joiner = Joiner(
+#     aux_augmented,
+#     aux_key=["YEAR/MONTH/DAY", "iata"],
+#     main_key=["Year_Month_DayofMonth", "Origin"],
+# )
 
-flights.drop(columns=["TailNum", "FlightNum"])
+# flights.drop(columns=["TailNum", "FlightNum"])
 
-###############################################################################
-# Training data is then passed through a |Pipeline|:
-#
-# - We will combine all the information from our pool of tables into "flights",
-# our main table.
-# - We will use this main table to model the prediction of flight delay.
+# ###############################################################################
+# # Training data is then passed through a |Pipeline|:
+# #
+# # - We will combine all the information from our pool of tables into "flights",
+# # our main table.
+# # - We will use this main table to model the prediction of flight delay.
 
-from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.pipeline import make_pipeline
+# from sklearn.ensemble import HistGradientBoostingClassifier
+# from sklearn.pipeline import make_pipeline
 
-from skrub import TableVectorizer
+# from skrub import TableVectorizer
 
-tv = TableVectorizer()
-hgb = HistGradientBoostingClassifier()
+# tv = TableVectorizer()
+# hgb = HistGradientBoostingClassifier()
 
-pipeline_hgb = make_pipeline(joiner, tv, hgb)
+# pipeline_hgb = make_pipeline(joiner, tv, hgb)
 
-###############################################################################
-# We isolate our target variable and remove useless ID variables:
+# ###############################################################################
+# # We isolate our target variable and remove useless ID variables:
 
-y = flights["ArrDelay"]
-X = flights.drop(columns=["ArrDelay"])
+# y = flights["ArrDelay"]
+# X = flights.drop(columns=["ArrDelay"])
 
-###############################################################################
-# We want to frame this as a classification problem:
-# suppose that your company is obliged to reimburse the ticket
-# price if the flight is delayed.
-#
-# We have a binary classification problem:
-# the flight was delayed (1) or not (0).
+# ###############################################################################
+# # We want to frame this as a classification problem:
+# # suppose that your company is obliged to reimburse the ticket
+# # price if the flight is delayed.
+# #
+# # We have a binary classification problem:
+# # the flight was delayed (1) or not (0).
 
-y = (y > 0).astype(int)
-y.value_counts()
+# y = (y > 0).astype(int)
+# y.value_counts()
 
-###############################################################################
-# The results:
+# ###############################################################################
+# # The results:
 
-from sklearn.model_selection import cross_val_score
+# from sklearn.model_selection import cross_val_score
 
-scores = cross_val_score(pipeline_hgb, X, y)
-scores.mean()
+# scores = cross_val_score(pipeline_hgb, X, y)
+# scores.mean()
 
-###############################################################################
-# Conclusion
-# ----------
-#
-# In this example, we have combined multiple tables with complex joins
-# on imprecise and multiple-key correspondences.
-# This is made easy by skrub's |Joiner| transformer.
-#
-# Our final cross-validated accuracy score is 0.58.
+# ###############################################################################
+# # Conclusion
+# # ----------
+# #
+# # In this example, we have combined multiple tables with complex joins
+# # on imprecise and multiple-key correspondences.
+# # This is made easy by skrub's |Joiner| transformer.
+# #
+# # Our final cross-validated accuracy score is 0.58.
