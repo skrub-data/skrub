@@ -178,7 +178,7 @@ test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 
 [tool.pixi.environments]
 lint = ["lint"]
-doc = ["optional", "doc"]
+doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
 ci-py309-min-deps = ["py309", "min-dependencies", "test"]
