@@ -103,29 +103,29 @@ stations.head()
 aux = pd.merge(stations, weather, on="ID")
 aux.head()
 
-# ###############################################################################
-# # Then we join this table with the airports so that we get all auxilliary
-# # tables into one.
+###############################################################################
+# Then we join this table with the airports so that we get all auxilliary
+# tables into one.
 
-# from skrub import Joiner
+from skrub import Joiner
 
-# joiner = Joiner(airports, aux_key=["lat", "long"], main_key=["LATITUDE", "LONGITUDE"])
+joiner = Joiner(airports, aux_key=["lat", "long"], main_key=["LATITUDE", "LONGITUDE"])
 
-# aux_augmented = joiner.fit_transform(aux)
+aux_augmented = joiner.fit_transform(aux)
 
-# aux_augmented.head()
+aux_augmented.head()
 
-# ###############################################################################
-# # Joining airports with flights data:
-# # Let's instanciate another multiple key joiner on the date and the airport:
+###############################################################################
+# Joining airports with flights data:
+# Let's instanciate another multiple key joiner on the date and the airport:
 
-# joiner = Joiner(
-#     aux_augmented,
-#     aux_key=["YEAR/MONTH/DAY", "iata"],
-#     main_key=["Year_Month_DayofMonth", "Origin"],
-# )
+joiner = Joiner(
+    aux_augmented,
+    aux_key=["YEAR/MONTH/DAY", "iata"],
+    main_key=["Year_Month_DayofMonth", "Origin"],
+)
 
-# flights.drop(columns=["TailNum", "FlightNum"])
+flights.drop(columns=["TailNum", "FlightNum"])
 
 # ###############################################################################
 # # Training data is then passed through a |Pipeline|:
