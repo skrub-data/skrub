@@ -164,10 +164,10 @@ y.value_counts()
 ###############################################################################
 # The results:
 
+from sklearn.model_selection import cross_val_score
 
-pipeline_hgb.fit(X, y)
-# scores = cross_val_score(pipeline_hgb, X, y)
-# scores.mean()
+scores = cross_val_score(pipeline_hgb, X, y)
+scores.mean()
 
 ###############################################################################
 # Conclusion
