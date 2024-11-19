@@ -166,7 +166,8 @@ y.value_counts()
 
 from sklearn.model_selection import cross_val_score
 
-scores = cross_val_score(pipeline_hgb, X, y, verbose=10)
+print("debug debug debug", end="\r", flush=True)
+scores = cross_val_score(pipeline_hgb, X, y)
 scores.mean()
 
 ###############################################################################
