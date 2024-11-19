@@ -127,39 +127,39 @@ joiner = Joiner(
 
 flights.drop(columns=["TailNum", "FlightNum"])
 
-# ###############################################################################
-# # Training data is then passed through a |Pipeline|:
-# #
-# # - We will combine all the information from our pool of tables into "flights",
-# # our main table.
-# # - We will use this main table to model the prediction of flight delay.
+###############################################################################
+# Training data is then passed through a |Pipeline|:
+#
+# - We will combine all the information from our pool of tables into "flights",
+# our main table.
+# - We will use this main table to model the prediction of flight delay.
 
-# from sklearn.ensemble import HistGradientBoostingClassifier
-# from sklearn.pipeline import make_pipeline
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.pipeline import make_pipeline
 
-# from skrub import TableVectorizer
+from skrub import TableVectorizer
 
-# tv = TableVectorizer()
-# hgb = HistGradientBoostingClassifier()
+tv = TableVectorizer()
+hgb = HistGradientBoostingClassifier()
 
-# pipeline_hgb = make_pipeline(joiner, tv, hgb)
+pipeline_hgb = make_pipeline(joiner, tv, hgb)
 
-# ###############################################################################
-# # We isolate our target variable and remove useless ID variables:
+###############################################################################
+# We isolate our target variable and remove useless ID variables:
 
-# y = flights["ArrDelay"]
-# X = flights.drop(columns=["ArrDelay"])
+y = flights["ArrDelay"]
+X = flights.drop(columns=["ArrDelay"])
 
-# ###############################################################################
-# # We want to frame this as a classification problem:
-# # suppose that your company is obliged to reimburse the ticket
-# # price if the flight is delayed.
-# #
-# # We have a binary classification problem:
-# # the flight was delayed (1) or not (0).
+###############################################################################
+# We want to frame this as a classification problem:
+# suppose that your company is obliged to reimburse the ticket
+# price if the flight is delayed.
+#
+# We have a binary classification problem:
+# the flight was delayed (1) or not (0).
 
-# y = (y > 0).astype(int)
-# y.value_counts()
+y = (y > 0).astype(int)
+y.value_counts()
 
 # ###############################################################################
 # # The results:
