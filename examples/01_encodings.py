@@ -50,6 +50,8 @@ We study the case of predicting wages using the
 # contains the target (aka dependent, response variable) that we want to learn to
 # predict from ``X``. In this case ``y`` is the annual salary.
 
+raise ValueError("debug")
+
 from skrub.datasets import fetch_employee_salaries
 
 dataset = fetch_employee_salaries()

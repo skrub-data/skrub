@@ -175,7 +175,7 @@ X = flights.drop(columns=["ArrDelay"])
 y = (y > 0).astype(int)
 y.value_counts()
 
-TableReport(y)
+TableReport(y.to_frame())
 
 ###############################################################################
 # The results:
