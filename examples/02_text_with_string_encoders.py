@@ -209,8 +209,12 @@ plot_box_results(results)
 # column in a dataframe. By default, |TextEncoder| uses the e5-small-v2 model.
 from skrub import TextEncoder
 
+text_encoder = TextEncoder(
+    "sentence-transformers/paraphrase-albert-small-v2",
+    device="cpu",
+)
 text_encoder_pipe = clone(gap_pipe).set_params(
-    **{"tablevectorizer__high_cardinality": TextEncoder()}
+    **{"tablevectorizer__high_cardinality": text_encoder}
 )
 text_encoder_results = cross_validate(text_encoder_pipe, X, y, scoring="roc_auc")
 results.append(("TextEncoder", text_encoder_results))
