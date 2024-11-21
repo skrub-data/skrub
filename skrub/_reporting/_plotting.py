@@ -9,6 +9,7 @@ import re
 import warnings
 
 import matplotlib
+import numpy as np
 from matplotlib import pyplot as plt
 
 from skrub import _dataframe as sbd
@@ -119,6 +120,7 @@ def histogram(col, color=COLOR_0):
     """Histogram for a numeric column."""
     col = sbd.drop_nulls(col)
     values = sbd.to_numpy(col)
+    values = values[np.isfinite(values)]
     fig, ax = plt.subplots()
     _despine(ax)
     ax.hist(values, color=color)
