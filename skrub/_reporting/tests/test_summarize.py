@@ -62,6 +62,7 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
         "value_counts": [("Paris", 9), ("London", 8)],
         "most_frequent_values": ["Paris", "London"],
         "value_is_constant": False,
+        "is_duration": False,
     }
 
     assert summary["columns"][4]["constant_value"] == "no2"
