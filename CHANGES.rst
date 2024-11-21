@@ -77,7 +77,7 @@ Minor changes
   Dockès <jeromedockes>`.
 
 * Added a `DropColumnIfNull` transformer that drops columns that contain only null
-  values. :pr:`1115` by :user: `Riccardo Cappuzzo <riccardocappuzzo>`
+  values. :pr:`1115` by :user: `Riccardo Cappuzzo <rcap107>`
 
 Bug fixes
 ---------
