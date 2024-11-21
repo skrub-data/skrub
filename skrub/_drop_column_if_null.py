@@ -20,7 +20,7 @@ class DropColumnIfNull(SingleColumnTransformer):
         Threshold of null values past which the column is dropped.
     """
 
-    def __init__(self, threshold: float | None = 1.0):
+    def __init__(self, threshold=1.0):
         if threshold is not None:
             assert 0.0 <= threshold <= 1.0, "Invalid value for the threshold."
 
