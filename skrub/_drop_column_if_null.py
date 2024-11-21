@@ -11,15 +11,14 @@ class DropColumnIfNull(SingleColumnTransformer):
     """Drop a single column if the fraction of Null or NaN values in the column
     is larger than the given threshold.
 
-    By default, the threshold is set to `1.0`, so only columns that contain only
-    nulls or NaNs are dropped.
-
-    If the threshold is set to `None`, all columns are kept. If the threshold is
-    set to 0, columns with at least one null value are dropped.
+    If the threshold is set to `1.0`, the column is dropped if it contains only
+    nulls or NaNs (this is the default value). If the threshold is set to `None`,
+    all columns are kept. Otherwise, the column is dropped if the fraction
+    of nulls is strictly larger than the threshold
 
     Parameters
     ----------
-    threshold : float, or None
+    threshold : float in range [0, 1], or None
         Threshold of null values past which the column is dropped.
     """
 
@@ -42,7 +41,10 @@ class DropColumnIfNull(SingleColumnTransformer):
         del y
 
         if self.threshold is not None:
-            if not 0.0 <= self.threshold <= 1.0:
+            if (
+                not isinstance(self.threshold, float)
+                or not 0.0 <= self.threshold <= 1.0
+            ):
                 raise ValueError(
                     f"Threshold {self.threshold} is invalid. Threshold should be in the"
                     " range [0, 1]"
@@ -54,12 +56,12 @@ class DropColumnIfNull(SingleColumnTransformer):
             self.drop_ = False
         else:
             # Count nulls
-            n_count = sum(sbd.is_null(column))
+            null_count = sum(sbd.is_null(column))
             # No nulls found
-            if n_count == 0:
+            if null_count == 0:
                 self.drop_ = False
             else:  # some nulls found, check if fraction > threshold
-                self.drop_ = n_count / len(column) > self.threshold
+                self.drop_ = null_count / len(column) > self.threshold
         return self.transform(column)
 
     def transform(self, column):
