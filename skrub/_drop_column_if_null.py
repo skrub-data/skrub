@@ -21,9 +21,6 @@ class DropColumnIfNull(SingleColumnTransformer):
     """
 
     def __init__(self, threshold=1.0):
-        if threshold is not None:
-            assert 0.0 <= threshold <= 1.0, "Invalid value for the threshold."
-
         self.threshold = threshold
 
     def fit_transform(self, column, y=None):
@@ -40,16 +37,25 @@ class DropColumnIfNull(SingleColumnTransformer):
         """
         del y
 
+        if self.threshold is not None:
+            if not 0.0 <= self.threshold <= 1.0:
+                raise ValueError(
+                    f"Threshold {self.threshold} is invalid. Threshold should be in the"
+                    " range [0, 1]"
+                )
+
         if self.threshold == 1.0:
             self.drop_ = sbd.is_all_null(column)
         elif self.threshold is None:
             self.drop_ = False
         else:
+            # Count nulls
             n_count = sum(sbd.is_null(column))
-            if n_count / len(column) > self.threshold:
-                self.drop_ = True
-            else:
+            # No nulls found
+            if n_count == 0:
                 self.drop_ = False
+            else:  # some nulls found, check if fraction > threshold
+                self.drop_ = n_count / len(column) > self.threshold
         return self.transform(column)
 
     def transform(self, column):
