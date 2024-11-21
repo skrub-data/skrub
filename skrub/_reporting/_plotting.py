@@ -120,7 +120,8 @@ def histogram(col, color=COLOR_0):
     """Histogram for a numeric column."""
     col = sbd.drop_nulls(col)
     values = sbd.to_numpy(col)
-    values = values[np.isfinite(values)]
+    if np.issubdtype(values.dtype, np.floating):
+        values = values[np.isfinite(values)]
     fig, ax = plt.subplots()
     _despine(ax)
     ax.hist(values, color=color)
