@@ -12,7 +12,10 @@ class DropColumnIfNull(SingleColumnTransformer):
     is larger than the given threshold.
 
     By default, the threshold is set to `1.0`, so only columns that contain only
-    nulls or NaNs are dropped. Set the threshold to `None` to keep all columns.
+    nulls or NaNs are dropped.
+
+    If the threshold is set to `None`, all columns are kept. If the threshold is
+    set to 0, columns with at least one null value are dropped.
 
     Parameters
     ----------
@@ -33,7 +36,8 @@ class DropColumnIfNull(SingleColumnTransformer):
 
         Returns
         -------
-            The input column, or an empty list if the column contains only null values.
+            The input column, or an empty list if the column is selected to be
+            dropped depending on the threshold.
         """
         del y
 
@@ -68,7 +72,8 @@ class DropColumnIfNull(SingleColumnTransformer):
         Returns
         -------
         column
-            The input column, or an empty list if the column contains only null values.
+            The input column, or an empty list if the column is chosen to be
+            dropped.
         """
         check_is_fitted(self)
 
