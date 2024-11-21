@@ -11,6 +11,9 @@ class DropColumnIfNull(SingleColumnTransformer):
     """Drop a single column if it contains only Null, NaN, or a mixture of null
     values. If at least one non-null value is found, the column is kept."""
 
+    def __init__(self, threshold: float = 1.0):
+        self.threshold = threshold
+
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
 
@@ -25,8 +28,16 @@ class DropColumnIfNull(SingleColumnTransformer):
         """
         del y
 
-        self.drop_ = sbd.is_all_null(column)
-
+        if self.threshold == 1.0:
+            self.drop_ = sbd.is_all_null(column)
+        elif self.threshold is None:
+            self.drop_ = False
+        else:
+            n_count = sum(sbd.is_null(column))
+            if n_count / len(column) > self.threshold:
+                self.drop_ = True
+            else:
+                self.drop_ = False
         return self.transform(column)
 
     def transform(self, column):

@@ -34,6 +34,16 @@ def drop_null_table(df_module):
                 None,
                 None,
             ],
+            "value_mostly_not_nan": [
+                2.5,
+                2.5,
+                np.nan,
+            ],
+            "value_mostly_not_null": [
+                "almost",
+                "almost",
+                None,
+            ],
             "mixed_null": [None, np.nan, None],
         }
     )
@@ -59,4 +69,33 @@ def test_single_column(drop_null_table, df_module):
     df_module.assert_column_equal(
         dn.fit_transform(sbd.col(drop_null_table, "value_almost_null")),
         df_module.make_column("value_almost_null", ["almost", None, None]),
+    )
+
+    """Check that the threshold works"""
+    dn = DropColumnIfNull(threshold=0.5)
+    assert dn.fit_transform(sbd.col(drop_null_table, "value_nan")) == []
+    assert dn.fit_transform(sbd.col(drop_null_table, "value_almost_nan")) == []
+    assert dn.fit_transform(sbd.col(drop_null_table, "value_almost_nan")) == []
+
+    df_module.assert_column_equal(
+        dn.fit_transform(sbd.col(drop_null_table, "value_mostly_not_nan")),
+        df_module.make_column("value_mostly_not_nan", [2.5, 2.5, np.nan]),
+    )
+
+    df_module.assert_column_equal(
+        dn.fit_transform(sbd.col(drop_null_table, "value_mostly_not_null")),
+        df_module.make_column("value_mostly_not_null", ["almost", "almost", None]),
+    )
+
+    """Check that setting the threshold to None keeps null columns"""
+    dn = DropColumnIfNull(threshold=None)
+
+    df_module.assert_column_equal(
+        dn.fit_transform(sbd.col(drop_null_table, "value_nan")),
+        df_module.make_column("value_nan", [np.nan, np.nan, np.nan]),
+    )
+
+    df_module.assert_column_equal(
+        dn.fit_transform(sbd.col(drop_null_table, "value_null")),
+        df_module.make_column("value_null", [None, None, None]),
     )
