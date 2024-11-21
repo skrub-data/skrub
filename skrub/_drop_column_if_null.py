@@ -42,7 +42,9 @@ class DropColumnIfNull(SingleColumnTransformer):
 
         if self.threshold is not None:
             if (
-                not isinstance(self.threshold, float)
+                not (
+                    isinstance(self.threshold, float) or isinstance(self.threshold, int)
+                )
                 or not 0.0 <= self.threshold <= 1.0
             ):
                 raise ValueError(
