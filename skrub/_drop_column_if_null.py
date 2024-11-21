@@ -8,10 +8,23 @@ __all__ = ["DropColumnIfNull"]
 
 
 class DropColumnIfNull(SingleColumnTransformer):
-    """Drop a single column if it contains only Null, NaN, or a mixture of null
-    values. If at least one non-null value is found, the column is kept."""
+    """Drop a single column if the fraction of Null or NaN values in the column
+    is larger than the given threshold.
 
-    def __init__(self, threshold: float = 1.0):
+    By default, the threshold is set to `1.0`, so only columns that contain only
+    nulls or NaNs are dropped. Set the threshold to `None` to keep all columns.
+
+    Parameters
+    ----------
+    threshold : float, or None
+        Threshold of null values past which the column is dropped.
+    """
+
+    def __init__(self, threshold: float | None = 1.0):
+        assert (
+            0.0 < threshold < 1.0
+        ) or threshold is None, "Invalid value for the threshold."
+
         self.threshold = threshold
 
     def fit_transform(self, column, y=None):
