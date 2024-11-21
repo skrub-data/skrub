@@ -406,33 +406,36 @@ def _collect_polars_lazyframe(df):
 # Loading data
 # ============
 #
+
+
+# TODO: Adding X here as a placeholder to get around the type check,
 @dispatch
-def read_parquet(input_path):
+def read_parquet(X, input_path):
     raise NotImplementedError()
 
 
 @read_parquet.specialize("pandas", argument_type=["DataFrame"])
-def _read_parquet_pandas(input_path):
+def _read_parquet_pandas(X, input_path):
     return pd.read_parquet(input_path)
 
 
 @read_parquet.specialize("polars", argument_type=["DataFrame"])
-def _read_parquet_polars(input_path):
+def _read_parquet_polars(X, input_path):
     return pl.read_parquet(input_path)
 
 
 @dispatch
-def read_csv(input_path):
+def read_csv(X, input_path):
     raise NotImplementedError()
 
 
 @read_csv.specialize("pandas", argument_type=["DataFrame"])
-def _read_csv_pandas(input_path):
+def _read_csv_pandas(X, input_path):
     return pd.read_csv(input_path)
 
 
 @read_csv.specialize("polars", argument_type=["DataFrame"])
-def _read_csv_polars(input_path):
+def _read_csv_polars(X, input_path):
     return pl.read_csv(input_path)
 
 

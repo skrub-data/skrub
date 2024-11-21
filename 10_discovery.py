@@ -18,5 +18,7 @@ discover = Discover(data_lake_path, [query_column])
 print("fitting")
 discover.fit(base_table)
 print("transforming")
-joined_table = discover.transform(base_table)
-print(joined_table)
+ranking = discover.transform(base_table)
+print(ranking)
+
+# %%
