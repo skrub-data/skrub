@@ -94,6 +94,10 @@ Bug fixes
   dataframe contained several columns with the same name. This has been fixed in
   :pr:`1125` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The :class:`TableReport` would raise an exception when a column contained
+  infinite values. This has been fixed in :pr:`1150` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+
 Release 0.3.1
 =============
 
