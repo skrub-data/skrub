@@ -159,7 +159,7 @@ def _add_nulls_summary(summary, column, dataframe_summary):
 
 
 def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
-    if sbd.is_numeric(column) or sbd.is_any_date(column):
+    if sbd.is_numeric(column) or sbd.is_any_date(column) or sbd.is_duration(column):
         summary["high_cardinality"] = True
         return
     n_unique, value_counts = _utils.top_k_value_counts(column, k=10)
@@ -208,8 +208,16 @@ def _add_numeric_summary(
     summary, column, dataframe_summary, with_plots, order_by_column
 ):
     del dataframe_summary
-    if not sbd.is_numeric(column):
-        return
+    first_value = sbd.to_list(sbd.head(column, 1))[0]
+    if sbd.is_duration(column):
+        summary["is_duration"] = True
+        column, duration_unit = _utils.duration_to_numeric(column)
+    else:
+        summary["is_duration"] = False
+        if not sbd.is_numeric(column):
+            return
+        duration_unit = None
+    summary["duration_unit"] = duration_unit
     std = sbd.std(column)
     summary["standard_deviation"] = float("nan") if std is None else std
     summary["mean"] = sbd.mean(column)
@@ -217,7 +225,7 @@ def _add_numeric_summary(
     summary["inter_quartile_range"] = quantiles[0.75] - quantiles[0.25]
     if quantiles[0.0] == quantiles[1.0]:
         summary["value_is_constant"] = True
-        summary["constant_value"] = quantiles[0.0]
+        summary["constant_value"] = first_value
         return
     summary["value_is_constant"] = False
     summary["quantiles"] = quantiles
@@ -225,7 +233,7 @@ def _add_numeric_summary(
         return
     if order_by_column is None:
         summary["histogram_plot"] = _plotting.histogram(
-            column, color=_plotting.COLORS[0]
+            column, duration_unit=duration_unit, color=_plotting.COLORS[0]
         )
     else:
         summary["line_plot"] = _plotting.line(order_by_column, column)

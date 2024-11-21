@@ -72,6 +72,7 @@ __all__ = [
     "is_pandas_object",
     "is_any_date",
     "to_datetime",
+    "is_duration",
     "is_categorical",
     "to_categorical",
     "is_all_null",
@@ -101,6 +102,8 @@ __all__ = [
     "slice",
     "replace",
     "with_columns",
+    "abs",
+    "total_seconds",
 ]
 
 #
@@ -810,6 +813,21 @@ def _to_datetime_polars(col, format, strict=True):
 
 
 @dispatch
+def is_duration(col):
+    raise NotImplementedError()
+
+
+@is_duration.specialize("pandas", argument_type="Column")
+def _is_duration_pandas(col):
+    return pd.api.types.is_timedelta64_dtype(col)
+
+
+@is_duration.specialize("polars", argument_type="Column")
+def _is_duration_polars(col):
+    return col.dtype == pl.Duration
+
+
+@dispatch
 def is_categorical(col):
     raise NotImplementedError()
 
@@ -1226,3 +1244,33 @@ def with_columns(df, **new_cols):
     cols = {col_name: col(df, col_name) for col_name in column_names(df)}
     cols.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
     return make_dataframe_like(df, cols)
+
+
+@dispatch
+def abs(col):
+    raise NotImplementedError()
+
+
+@abs.specialize("pandas", argument_type="Column")
+def _abs_pandas(col):
+    return col.abs()
+
+
+@abs.specialize("polars", argument_type="Column")
+def _abs_polars(col):
+    return col.abs()
+
+
+@dispatch
+def total_seconds(col):
+    raise NotImplementedError()
+
+
+@total_seconds.specialize("pandas")
+def _total_seconds_pandas(col):
+    return col.dt.total_seconds()
+
+
+@total_seconds.specialize("polars")
+def _total_seconds_polars(col):
+    return col.dt.total_seconds()
