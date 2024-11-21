@@ -21,9 +21,8 @@ class DropColumnIfNull(SingleColumnTransformer):
     """
 
     def __init__(self, threshold: float | None = 1.0):
-        assert (
-            0.0 < threshold < 1.0
-        ) or threshold is None, "Invalid value for the threshold."
+        if threshold is not None:
+            assert 0.0 <= threshold <= 1.0, "Invalid value for the threshold."
 
         self.threshold = threshold
 
