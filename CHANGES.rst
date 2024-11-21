@@ -27,6 +27,20 @@ New features
 
 Major changes
 -------------
+* The :class:`TextEncoder` is now available to encode string columns with
+  diverse entries.
+  It allows the representation of table entries as embeddings computed by a deep
+  learning language model. The weights of this model can be fetched locally
+  or from the HuggingFace Hub.
+  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+* :class:`AggJoiner`, :class:`AggTarget` and :class:`MultiAggJoiner` now require
+  the `operations` argument. They do not split columns by type anymore, but
+  apply `operations` on all selected cols. "median" is now supported, "hist" and
+  "value_counts" are no longer supported. :pr:`1116` by :user:`Théo Jolivet <TheooJ>`.
+
+* The :class:`AggTarget` no longer supports `y` inputs of type list. :pr:`1116`
+  by :user:`Théo Jolivet <TheooJ>`.
 
 Minor changes
 -------------
@@ -51,7 +65,8 @@ Minor changes
   Moreover, when the text contains line breaks it now appears all on one line.
   Note this only affects the labels in the plots; the rest of the report did not
   have these problems.
-  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`.
+  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`1138` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * In the TableReport it is now possible, before clicking any of the cells, to
   reach the dataframe sample table and activate a cell with tab key navigation.
@@ -62,7 +77,7 @@ Minor changes
   Dockès <jeromedockes>`.
 
 * Added a `DropColumnIfNull` transformer that drops columns that contain only null
-  values. :pr:`1115` by :user: `Riccardo Cappuzzo <riccardocappuzzo>`
+  values. :pr:`1115` by :user: `Riccardo Cappuzzo <rcap107>`
 
 Bug fixes
 ---------

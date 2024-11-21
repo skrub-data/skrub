@@ -12,8 +12,11 @@ for different types of data.
 
 .. _dirty_categories:
 
-Encoding open-ended entries and dirty categories
-------------------------------------------------
+Encoding string columns
+-------------------------
+
+Non-normalized entries and dirty categories
+............................................
 
 String columns can be seen categories for statistical analysis, but
 standard tools to represent categories fail if these strings are not
@@ -35,7 +38,7 @@ categories, eg to replace :class:`~sklearn.preprocessing.OneHotEncoder`:
   Useful when there are a small number of categories, but we still want
   to capture the links between them (eg: "west", "north", "north-west")
 
-.. topic:: References::
+.. topic:: References
 
     For a detailed description of the problem of encoding dirty
     categorical data, see `Similarity encoding for learning with dirty
@@ -49,6 +52,50 @@ categories, eg to replace :class:`~sklearn.preprocessing.OneHotEncoder`:
 .. [2] Patricio Cerda, Gaël Varoquaux, Balázs Kégl.
        Similarity encoding for learning with dirty categorical variables. 2018.
        Machine Learning journal, Springer.
+
+
+Text with diverse entries
+...........................
+
+When strings in a column are not dirty categories, but rather diverse
+entries of text (names, open-ended or free-flowing text) it is useful to
+use language models of various sizes to represent string columns as embeddings.
+Depending on the task and dataset, this approach may lead to significant improvements
+in the quality of predictions, albeit with potential increases in memory usage and computation time.
+
+Skrub integrates these language models as scikit-learn transformers, allowing them
+to be easily plugged into :class:`TableVectorizer` and
+:class:`~sklearn.pipeline.Pipeline`.
+
+These language models are pre-trained deep-learning encoders that have been fine-tuned
+specifically for embedding tasks. Note that skrub does not provide a simple way to
+fine-tune language models directly on your dataset.
+
+.. warning::
+
+    These encoders require installing additional dependencies around torch.
+    See the "deep learning dependencies" section in the :ref:`installation_instructions`
+    guide for more details.
+
+With :class:`TextEncoder`, a wrapper around the `sentence-transformers <https://sbert.net/>`_
+package, you can use any sentence embedding model available on the HuggingFace Hub
+or locally stored on your disk. This means you can fine-tune a model using
+the sentence-transformers library and then use it with the :class:`TextEncoder`
+like any other pre-trained model. For more information, see the
+`sentence-transformers fine-tuning guide <https://sbert.net/docs/sentence_transformer/training_overview.html#why-finetune>`_.
+
+.. topic:: References
+
+    See `Vectorizing string entries for data processing on tables: when are larger
+    language models better? <https://hal.science/hal-043459>`_ [3]_
+    for a comparison between large language models and string-based encoders
+    (such as the :class:`MinHashEncoder`) in the context of dirty categories versus
+    diverse entries regimes.
+
+.. [3]  L. Grinsztajn, M. Kim, E. Oyallon, G. Varoquaux.
+        Vectorizing string entries for data processing on tables: when are larger
+        language models better? 2023.
+
 
 Encoding dates
 ---------------

@@ -634,8 +634,8 @@ def test_max(df_module):
 
 
 def test_std(df_module):
-    assert ns.std(df_module.example_column) == np.nanstd(
-        ns.to_numpy(df_module.example_column), ddof=1
+    assert float(ns.std(df_module.example_column)) == pytest.approx(
+        float(np.nanstd(ns.to_numpy(df_module.example_column), ddof=1))
     )
 
 
