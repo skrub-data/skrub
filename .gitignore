@@ -22,6 +22,8 @@ var/
 *.pkl
 data/
 
+data/
+
 .pytest_cache/
 
 # PyInstaller
