@@ -120,6 +120,11 @@ def _onehot_encode(df, n_bins):
 
 def _onehot_encode_categories(values, n_bins, output):
     """One-hot encode a categorical column."""
+    if np.issubdtype(values.dtype, np.floating):
+        # OneHotEncoder allows NaN but not inf , so clip to finite values when
+        # the input is floating-point
+        finfo = np.finfo(values.dtype)
+        values = np.clip(values, finfo.min, finfo.max)
     encoded = OneHotEncoder(max_categories=n_bins, sparse_output=False).fit_transform(
         values[:, None]
     )
