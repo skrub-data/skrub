@@ -208,6 +208,7 @@ def _add_numeric_summary(
     summary, column, dataframe_summary, with_plots, order_by_column
 ):
     del dataframe_summary
+    assert len(column)  # _add_numeric_summary is not called if the column is empty
     first_value = sbd.to_list(sbd.head(column, 1))[0]
     if sbd.is_duration(column):
         summary["is_duration"] = True

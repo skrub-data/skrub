@@ -1273,4 +1273,4 @@ def _total_seconds_pandas(col):
 
 @total_seconds.specialize("polars")
 def _total_seconds_polars(col):
-    return col.dt.total_seconds()
+    return col.dt.total_microseconds().cast(float) * 1e-6

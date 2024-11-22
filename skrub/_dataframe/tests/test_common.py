@@ -6,7 +6,7 @@ in ``skrub.conftest``. See the corresponding docstrings for details.
 import inspect
 import re
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 
 import numpy as np
@@ -515,6 +515,14 @@ def test_to_datetime(df_module):
     assert str(dt[0]) == "2020-01-01 02:00:00+00:00"
 
 
+def test_is_duration(df_module):
+    df = df_module.make_dataframe(
+        {"a": [timedelta(days=1)], "b": [datetime(2020, 3, 4)]}
+    )
+    assert ns.is_duration(ns.col(df, "a"))
+    assert not ns.is_duration(ns.col(df, "b"))
+
+
 def test_is_categorical(df_module):
     if df_module.name == "pandas":
         import pandas as pd
@@ -845,3 +853,15 @@ def test_with_columns(df_module):
         out = ns.pandas_convert_dtypes(out)
     expected = df_module.make_dataframe({"a": [5, 6], "b": [3, 4]})
     df_module.assert_frame_equal(out, expected)
+
+
+def test_abs(df_module):
+    s = df_module.make_column("", [-1.0, 2.0, None])
+    df_module.assert_column_equal(
+        ns.abs(s), df_module.make_column("", [1.0, 2.0, None])
+    )
+
+
+def test_total_seconds(df_module):
+    s = df_module.make_column("", [timedelta(seconds=20), timedelta(hours=1)])
+    assert ns.to_list(ns.total_seconds(s)) == [20, 3600]

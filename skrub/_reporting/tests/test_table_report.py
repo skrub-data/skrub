@@ -1,3 +1,4 @@
+import datetime
 import json
 import re
 import warnings
@@ -113,3 +114,8 @@ def test_infinite_values(df_module):
         )
 
     TableReport(df).html()
+
+
+def test_duration(df_module):
+    df = df_module.make_dataframe({"a": [datetime.timedelta(days=2)]})
+    assert re.search(r"2(\.0)?\s+days", TableReport(df).html())

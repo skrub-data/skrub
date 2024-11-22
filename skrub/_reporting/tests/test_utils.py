@@ -1,8 +1,10 @@
+import datetime
 import json
 
 import numpy as np
 import pytest
 
+from skrub import _dataframe as sbd
 from skrub._reporting import _utils
 
 
@@ -112,3 +114,20 @@ def test_svg_to_img_src():
         "DAgMCAxIDAgLjcwOGwtNCA0YS41LjUgMCAwIDEtLjcwOC0uNzA4TDE"
         "zLjI5MyA4LjVIMS41QS41LjUgMCAwIDEgMSA4Ii8+PC9zdmc+"
     )
+
+
+@pytest.mark.parametrize(
+    "kwargs,value,unit",
+    [
+        ({"seconds": 0.5}, 500, "millisecond"),
+        ({"seconds": 5}, 5, "second"),
+        ({"hours": 5}, 5, "hour"),
+        ({"days": 5}, 5, "day"),
+        ({"days": 500}, 1.3689, "year"),
+    ],
+)
+def test_duration_to_numeric(df_module, kwargs, value, unit):
+    s = df_module.make_column("", [datetime.timedelta(**kwargs)])
+    chosen_value, chosen_unit = _utils.duration_to_numeric(s)
+    assert sbd.to_list(chosen_value)[0] == pytest.approx(value, 0.001)
+    assert chosen_unit == unit
