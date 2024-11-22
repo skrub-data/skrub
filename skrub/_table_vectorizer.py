@@ -195,9 +195,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     null_threshold : float or None, default=1.0
         Fraction of null above which the column is dropped. If `null_threshold` is
         set to ``1.0``, the column is dropped if it contains only
-        nulls or NaNs (this is the default behavior). If `null_threshold` is a number in ``[0.0, 1.0)``, the column is dropped if the
-        fraction of nulls is strictly larger than `null_threshold`. If `null_threshold` is ``None``, this selection is 
-        disabled: no columns are dropped based on the number of null values they contain.
+        nulls or NaNs (this is the default behavior). If `null_threshold` is a
+        number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
+        is strictly larger than `null_threshold`. If `null_threshold` is ``None``,
+        this selection is disabled: no columns are dropped based on the number
+        of null values they contain.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
