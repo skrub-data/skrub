@@ -119,6 +119,7 @@ def test_svg_to_img_src():
 @pytest.mark.parametrize(
     "kwargs,value,unit",
     [
+        ({"seconds": 2e-6}, 2, "microsecond"),
         ({"seconds": 0.5}, 500, "millisecond"),
         ({"seconds": 5}, 5, "second"),
         ({"hours": 5}, 5, "hour"),

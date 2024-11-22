@@ -117,5 +117,7 @@ def test_infinite_values(df_module):
 
 
 def test_duration(df_module):
-    df = df_module.make_dataframe({"a": [datetime.timedelta(days=2)]})
+    df = df_module.make_dataframe(
+        {"a": [datetime.timedelta(days=2), datetime.timedelta(days=3)]}
+    )
     assert re.search(r"2(\.0)?\s+days", TableReport(df).html())
