@@ -529,8 +529,7 @@ def test_changing_types(X_train, X_test, expected_X_out):
     table_vec = TableVectorizer(
         # only extract the total seconds
         datetime=DatetimeEncoder(resolution=None),
-        # True by default
-        drop_null_columns=False,
+        null_threshold=None,
     )
 
     table_vec.fit(X_train)
@@ -765,12 +764,12 @@ def test_drop_null_column():
     """Check that all null columns are dropped, and no more."""
     # Don't drop null columns
     X = _get_missing_values_dataframe()
-    tv = TableVectorizer(drop_null_columns=False)
+    tv = TableVectorizer(null_threshold=None)
     transformed = tv.fit_transform(X)
 
     assert sbd.shape(transformed) == sbd.shape(X)
 
     # Drop null columns
-    tv = TableVectorizer(drop_null_columns=True)
+    tv = TableVectorizer(null_threshold=1.0)
     transformed = tv.fit_transform(X)
     assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)

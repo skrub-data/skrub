@@ -192,8 +192,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         similar functionality to what is offered by scikit-learn's
         :class:`~sklearn.compose.ColumnTransformer`.
 
-    drop_null_columns : bool, default=True
-        If set to `True`, columns that contain only null values are dropped.
+    null_threshold : float or None, default=1.0
+        Fraction of null above which the column is dropped. If null_threshold is
+        set to `1.0`, the column is dropped if it contains only
+        nulls or NaNs (this is the default behavior). If it is set to
+        `None`, all columns are kept. Otherwise, the column is dropped if the
+        fraction of nulls is strictly larger than null_threshold.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -417,7 +421,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
-        drop_null_columns=True,
+        null_threshold=1.0,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -431,7 +435,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.datetime = _utils.clone_if_default(datetime, DATETIME_TRANSFORMER)
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
-        self.drop_null_columns = drop_null_columns
+        self.null_threshold = null_threshold
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -545,8 +549,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self._preprocessors = [CheckInputDataFrame()]
 
         transformer_list = [CleanNullStrings()]
-        if self.drop_null_columns:
-            transformer_list.append(DropColumnIfNull())
+        transformer_list.append(DropColumnIfNull(self.null_threshold))
 
         transformer_list += [
             ToDatetime(),

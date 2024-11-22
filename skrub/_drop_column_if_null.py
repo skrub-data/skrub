@@ -1,4 +1,5 @@
-# drop columns that contain all null values
+import numbers
+
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -42,14 +43,12 @@ class DropColumnIfNull(SingleColumnTransformer):
 
         if self.threshold is not None:
             if (
-                not (
-                    isinstance(self.threshold, float) or isinstance(self.threshold, int)
-                )
+                not isinstance(self.threshold, numbers.Number)
                 or not 0.0 <= self.threshold <= 1.0
             ):
                 raise ValueError(
-                    f"Threshold {self.threshold} is invalid. Threshold should be in the"
-                    " range [0, 1]"
+                    f"Threshold {self.threshold} is invalid. Threshold should be "
+                    "a number in the range [0, 1]."
                 )
 
         if self.threshold == 1.0:
