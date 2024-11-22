@@ -96,7 +96,7 @@ Bug fixes
 
 * The :class:`TableReport` would raise an exception when a column contained
   infinite values. This has been fixed in :pr:`1150` by :user:`Jérôme Dockès
-  <jeromedockes>`.
+  <jeromedockes>` and :pr:`1151` by Jérôme Dockès.
 
 Release 0.3.1
 =============
