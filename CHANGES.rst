@@ -79,6 +79,9 @@ Minor changes
 * Added a `DropColumnIfNull` transformer that drops columns that contain only null
   values. :pr:`1115` by :user: `Riccardo Cappuzzo <riccardocappuzzo>`
 
+* The :class:`TableReport` now also reports the number of unique values for
+  numeric columns. :pr:`1154` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Bug fixes
 ---------
 
