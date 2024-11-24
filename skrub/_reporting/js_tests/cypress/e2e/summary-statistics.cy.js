@@ -18,12 +18,12 @@ describe('test sorting the summary stats columns', () => {
         cy.get('@table').find('tbody tr').first().should('have.attr',
             'data-column-name', 'gender');
         cy.get('@table').find('tbody tr').last().should('have.attr',
-            'data-column-name', 'year_first_hired');
+            'data-column-name', 'date_first_hired');
         cy.get('@unique').parent().find('button').first().next()
     .click();
         cy.get('@table').find('tbody tr').first().should('have.attr',
             'data-column-name', 'date_first_hired');
         cy.get('@table').find('tbody tr').last().should('have.attr',
-            'data-column-name', 'year_first_hired');
+            'data-column-name', 'assignment_category');
     });
 });
