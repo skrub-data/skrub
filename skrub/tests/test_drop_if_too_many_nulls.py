@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub._drop_column_if_null import DropColumnIfNull
+from skrub._drop_if_too_many_nulls import DropIfTooManyNulls
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def drop_null_table(df_module):
 
 def test_single_column(drop_null_table, df_module):
     # Check that null columns are dropped and non-null columns are kept.
-    dn = DropColumnIfNull()
+    dn = DropIfTooManyNulls()
     assert dn.fit_transform(sbd.col(drop_null_table, "value_nan")) == []
     assert dn.fit_transform(sbd.col(drop_null_table, "value_null")) == []
     assert dn.fit_transform(sbd.col(drop_null_table, "mixed_null")) == []
@@ -72,7 +72,7 @@ def test_single_column(drop_null_table, df_module):
     )
 
     # Check that the threshold works
-    dn = DropColumnIfNull(threshold=0.5)
+    dn = DropIfTooManyNulls(threshold=0.5)
     assert dn.fit_transform(sbd.col(drop_null_table, "value_nan")) == []
     assert dn.fit_transform(sbd.col(drop_null_table, "value_almost_nan")) == []
     assert dn.fit_transform(sbd.col(drop_null_table, "value_almost_nan")) == []
@@ -88,7 +88,7 @@ def test_single_column(drop_null_table, df_module):
     )
 
     # Check that setting the threshold to None keeps null columns
-    dn = DropColumnIfNull(threshold=None)
+    dn = DropIfTooManyNulls(threshold=None)
 
     df_module.assert_column_equal(
         dn.fit_transform(sbd.col(drop_null_table, "value_nan")),
@@ -103,7 +103,7 @@ def test_single_column(drop_null_table, df_module):
     # Check that setting the threshold to 0 drops columns with at least one
     # null, but keeps columns with no nulls
 
-    dn = DropColumnIfNull(threshold=0)
+    dn = DropIfTooManyNulls(threshold=0)
 
     assert dn.fit_transform(sbd.col(drop_null_table, "value_mostly_not_null")) == []
 
@@ -114,7 +114,7 @@ def test_single_column(drop_null_table, df_module):
 
 
 def test_error_checking(drop_null_table):
-    dn = DropColumnIfNull(threshold=-1)
+    dn = DropIfTooManyNulls(threshold=-1)
 
     with pytest.raises(ValueError):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
