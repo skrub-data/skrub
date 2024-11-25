@@ -31,28 +31,39 @@
                 <dt>Unique values</dt>
                 <dd>{{ column.n_unique | format_number }} ({{ column.unique_proportion | format_percent }})</dd>
                 {% endif %}
+
+                {% if column["duration_unit"] %}
+                {% set unit = " {}s".format(column['duration_unit']) %}
+                {% else %}
+                {% set unit = "" %}
+                {% endif %}
+
                 {% if "mean" in column %}
                 <dt>Mean ± Std</dt>
                 <dd>{{ column["mean"] | format_number }} ±
                     {{ column["standard_deviation"] | format_number }}
+                    {{ unit }}
                 </dd>
                 {% endif %}
                 {% if column.quantiles %}
                 <dt>Median ± IQR</dt>
                 <dd>{{ column.quantiles[0.5] | format_number }} ±
                     {{ column["inter_quartile_range"] | format_number}}
+                    {{ unit }}
                 </dd>
 
                 <dt>Min | Max</dt>
                 <dd>
                     {{ column.quantiles[0.0] | format_number }} |
                     {{ column.quantiles[1.0] | format_number }}
+                    {{ unit }}
                 </dd>
                 {% elif "min" in column %}
                 <dt>Min | Max</dt>
                 <dd>
                     {{ column.min | format_number }} |
                     {{ column.max | format_number }}
+                    {{ unit }}
                 </dd>
                 {% endif %}
                 {% endif %}
@@ -70,7 +81,8 @@
             <strong>Constant value:</strong>
             <div class="copybutton-grid">
                 <div class="box">
-                    <pre id="{{ val_id }}">{{ column.constant_value }}</pre>
+                    <pre id="{{ val_id }}"
+                         data-copy-text="{{ column.constant_value.__repr__() }}">{{ column.constant_value }}</pre>
                     {{ buttons.copybutton(val_id) }}
                 </div>
             </div>
