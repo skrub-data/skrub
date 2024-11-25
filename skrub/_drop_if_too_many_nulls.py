@@ -5,10 +5,10 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
 
-__all__ = ["DropColumnIfNull"]
+__all__ = ["DropIfTooManyNulls"]
 
 
-class DropColumnIfNull(SingleColumnTransformer):
+class DropIfTooManyNulls(SingleColumnTransformer):
     """Drop a single column if the fraction of Null or NaN values in the column
     is larger than the given threshold.
 
