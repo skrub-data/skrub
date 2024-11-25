@@ -76,9 +76,9 @@ Minor changes
   is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
   Dockès <jeromedockes>`.
 
-* Added parameter `null_threshold` to `TableVectorizer` to drop columns based
-  on how many nulls they contain. :pr:`1115` and :pr:`1149` by :user:
-  `Riccardo Cappuzzo <rcap107>`.
+* Added parameter `drop_null_fraction` to `TableVectorizer` to drop columns based
+  on whether they contain a fraction of nulls larger than the given threshold.
+  :pr:`1115` and :pr:`1149` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bug fixes
 ---------
