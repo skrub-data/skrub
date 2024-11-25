@@ -85,6 +85,10 @@ Minor changes
 * The :class:`TableReport` now also reports the number of unique values for
   numeric columns. :pr:`1154` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The :class:`TableReport`, when plotting histograms, now detects outliers and
+  clips the range of data shown in the histogram. This allows seeing more detail
+  in the shown distribution. :pr:`1157` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Bug fixes
 ---------
 
