@@ -118,13 +118,24 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
 
 
 def _get_range(values, frac=0.2, factor=3.0):
-    min_value, low, high, max_value = np.percentile(
+    min_value, low_p, high_p, max_value = np.percentile(
         values, [0, frac * 100.0, (1.0 - frac) * 100.0, 100.0]
     )
-    delta = high - low
+    delta = high_p - low_p
     if not delta:
         return min_value, max_value
-    return max(min_value, low - factor * delta), min(max_value, high + factor * delta)
+    margin = factor * delta
+    low = low_p - margin
+    high = high_p + margin
+
+    # Chosen low bound should be max(low, min_value). Moreover, we add a small
+    # tolerance: if the clipping value is close to the actual minimum, extend
+    # it (so we don't clip right above the minimum which looks a bit silly).
+    if low - margin * 0.15 < min_value:
+        low = min_value
+    if max_value < high + margin * 0.15:
+        high = max_value
+    return low, high
 
 
 def _robust_hist(values, ax, color):

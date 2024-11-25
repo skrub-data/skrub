@@ -17,6 +17,10 @@ def test_histogram():
     _, n_low, n_high = _plotting.histogram(data)
     assert (n_low, n_high) == (10, 0)
 
+    data = pd.Series(np.concatenate([x, o + 1000]))
+    _, n_low, n_high = _plotting.histogram(data)
+    assert (n_low, n_high) == (0, 10)
+
     data = pd.Series(x)
     _, n_low, n_high = _plotting.histogram(data)
     assert (n_low, n_high) == (0, 0)
