@@ -50,7 +50,6 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     assert c == {
         "idx": 0,
         "dtype": "string",
-        "high_cardinality": False,
         "n_unique": 2,
         "name": "city",
         "null_count": 0,

@@ -82,6 +82,9 @@ Minor changes
 * The :class:`TableReport` now provides more helpful output for columns of dtype
   TimeDelta / Duration. :pr:`1152` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The :class:`TableReport` now also reports the number of unique values for
+  numeric columns. :pr:`1154` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Bug fixes
 ---------
 
