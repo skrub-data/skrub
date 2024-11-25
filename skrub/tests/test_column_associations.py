@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pytest
 
@@ -19,3 +21,18 @@ def test_column_associations(df_module):
     assert sbd.to_list(sbd.col(asso, "cramer_v")) == pytest.approx(
         [1.0, 0.6546536, 0.6546536]
     )
+
+
+def test_infinite(df_module):
+    # non-regression test for https://github.com/skrub-data/skrub/issues/1133
+    # (colum associations would raise an exception on low-cardinality float
+    # column with infinite values)
+    with warnings.catch_warnings():
+        # pandas convert_dtypes() emits a spurious warning while trying to decide if
+        # floats should be cast to int or not
+        # eg `pd.Series([float('inf')]).convert_dtypes()` raises the warning
+        warnings.filterwarnings("ignore", message="invalid value encountered in cast")
+
+        column_associations(
+            df_module.make_dataframe({"a": [float("inf"), 1.5], "b": [0.0, 1.5]})
+        )

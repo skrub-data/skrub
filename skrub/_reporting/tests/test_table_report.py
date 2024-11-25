@@ -1,5 +1,7 @@
+import datetime
 import json
 import re
+import warnings
 
 from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
@@ -99,3 +101,23 @@ def test_duplicate_columns(pd_module):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     df.columns = ["a", "a"]
     TableReport(df).html()
+
+
+def test_infinite_values(df_module):
+    # Non-regression for https://github.com/skrub-data/skrub/issues/1134
+    # (histogram plot failing with infinite values)
+    with warnings.catch_warnings():
+        # convert_dtypes() emits spurious warning while deciding whether to cast to int
+        warnings.filterwarnings("ignore", message="invalid value encountered in cast")
+        df = df_module.make_dataframe(
+            dict(a=[float("inf"), 1.0, 2.0], b=[0.0, 1.0, 2.0])
+        )
+
+    TableReport(df).html()
+
+
+def test_duration(df_module):
+    df = df_module.make_dataframe(
+        {"a": [datetime.timedelta(days=2), datetime.timedelta(days=3)]}
+    )
+    assert re.search(r"2(\.0)?\s+days", TableReport(df).html())

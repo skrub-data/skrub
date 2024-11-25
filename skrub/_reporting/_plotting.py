@@ -9,6 +9,7 @@ import re
 import warnings
 
 import matplotlib
+import numpy as np
 from matplotlib import pyplot as plt
 
 from skrub import _dataframe as sbd
@@ -115,13 +116,22 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
 
 
 @_plot
-def histogram(col, color=COLOR_0):
+def histogram(col, duration_unit=None, color=COLOR_0):
     """Histogram for a numeric column."""
     col = sbd.drop_nulls(col)
+    if sbd.is_float(col):
+        # avoid any issues with pandas nullable dtypes
+        # (to_numpy can yield a numpy array with object dtype in old pandas
+        # version if there are inf or nan)
+        col = sbd.to_float32(col)
     values = sbd.to_numpy(col)
+    if np.issubdtype(values.dtype, np.floating):
+        values = values[np.isfinite(values)]
     fig, ax = plt.subplots()
     _despine(ax)
     ax.hist(values, color=color)
+    if duration_unit is not None:
+        ax.set_xlabel(f"{duration_unit.capitalize()}s")
     if sbd.is_any_date(col):
         _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
