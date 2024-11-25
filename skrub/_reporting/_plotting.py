@@ -142,11 +142,11 @@ def _robust_hist(values, ax, color):
     if n_low_outliers:
         start = bins[0] - width
         ax.stairs([n_low_outliers], [start, bins[0]], color=_RED, fill=True)
-        ax.axvline(low, **line_params)
+        ax.axvline(bins[0], **line_params)
     if n_high_outliers:
         stop = bins[-1] + width
         ax.stairs([n_high_outliers], [bins[-1], stop], color=_RED, fill=True)
-        ax.axvline(high, **line_params)
+        ax.axvline(bins[-1], **line_params)
     ax.text(
         0.5,
         1.0,
