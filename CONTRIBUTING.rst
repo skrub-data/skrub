@@ -191,7 +191,7 @@ Run each updated test file using ``pytest``:
    skrub/_dataframe/tests/test_common.py \
    skrub/_dataframe/tests/test_table_vectorizer.py
 
-The ``--vsl`` flag provides more information when running the tests.
+The ``-vsl`` flag provides more information when running the tests.
 
 Once you are satisfied with your changes, you can run all the tests to make sure
 that your change did not break code elsewhere:
