@@ -9,7 +9,7 @@
 }
 
 .column-filter > select {
-    max-width: 15ch;
+    max-width: 17ch;
     text-overflow: ellipsis;
     padding: 0 var(--border-s) 0 var(--space-s);
     font-size: var(--text-s);
