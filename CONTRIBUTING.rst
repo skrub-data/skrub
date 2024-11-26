@@ -124,8 +124,9 @@ See the relevant sections above on how to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Follow the steps in the :ref:`installation_instructions` > "From Source" section to
-set up your environment.
+Follow the steps in the :ref:`installation_instructions` > "From Source" section
+to set up your environment, install the required development dependencies, and
+run the tests.
 
 When starting to work on a new issue, it's recommended to create a new branch:
 
@@ -154,6 +155,79 @@ When contributing, keep these project goals in mind:
     - Document all public functions, methods, variables, and class signatures.
     - The public API refers to all components available for import and use by library users. Anything that doesn't begin with an underscore is considered part of the public API.
 
+
+Testing the code
+~~~~~~~~~~~~~~~~
+
+Tests for files in a given folder should be located in a sub-folder
+named ``tests``: tests for Skrub objects are located in ``skrub/tests/``,
+tests for the dataframe API are in ``skrub/_dataframe/tests/`` and so on.
+
+Tests should check all functionalities of the code that you are going to
+add. If needed, additional tests should be added to verify that other
+objects behave correctly.
+
+Consider an example: your contribution is for the
+``AmazingTransformer``, whose code is in
+``skrub/_amazing_transformer.py``. The ``AmazingTransformer`` is added
+as one of the default transformers for ``TableVectorizer``.
+
+As such, you should add a new file testing the functionality of
+``AmazingTransformer`` in ``skrub/tests/test_amazing_transformer.py``,
+and update the file ``skrub/tests/test_table_vectorizer.py`` so that it
+takes into account the new transformer.
+
+Additionally, you might have updated the internal dataframe API in
+``skrub/_dataframe/_common.py`` with a new function,
+``amazing_function``. In this case, you should also update
+``skrub/_dataframe/tests/test_common.py`` to add a test for the
+``amazing_function``.
+
+Run each updated test file using ``pytest``:
+
+.. code:: sh
+
+   pytest -vsl skrub/tests/test_amazing_transformer.py \
+   skrub/_dataframe/tests/test_common.py \
+   skrub/_dataframe/tests/test_table_vectorizer.py
+
+The ``-vsl`` flag provides more information when running the tests.
+
+Once you are satisfied with your changes, you can run all the tests to make sure
+that your change did not break code elsewhere:
+
+.. code:: sh
+    pytest -s skrub/tests
+
+Finally, sync your changes with the remote repository and wait for CI to run.
+
+Checking coverage on the local machine
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Checking coverage is one of the operations that is performed after
+submitting the code. As this operation may take a long time online, it
+is possible to check whether the code coverage is high enough on your
+local machine.
+
+Run your tests with the ``--cov`` and ``--cov-report`` arguments:
+
+.. code:: sh
+
+   pytest -vsl skrub/tests/test_amazing_transformer.py --cov=skrub --cov-report=html
+
+This will create the folder ``htmlcov``: by opening
+``htmlcov/index.html`` it is possible to check what lines are covered in
+each file.
+
+Updating doctests
+~~~~~~~~~~~~~~~~~
+
+If you alter the default behavior of an object, then this might affect
+the docstrings. Check for possible problems by running
+
+.. code:: sh
+
+   pytest skrub/path/to/file
 
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
@@ -198,6 +272,20 @@ actions are taken.
 
 Note that by default the documentation is built, but only the examples that are
 directly modified by the pull request are executed.
+
+- If the remote repository was changed, you might need to run
+  ``pre-commit run --all-files`` to make sure that the formatting is
+  correct.
+- If a specific test environment fails, it is possible to run the tests
+  in the environment that is failing by using pixi. For example if the
+  env is ``ci-py309-min-optional-deps``, it is possible to replicate it
+  using the following command:
+
+.. code:: sh
+
+   pixi run -e ci-py309-min-optional-deps  pytest skrub/tests/path/to/test
+
+
 
 Building the documentation
 --------------------------
