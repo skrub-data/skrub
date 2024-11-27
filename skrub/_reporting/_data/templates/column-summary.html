@@ -4,6 +4,12 @@
     data-name-repr="{{ column.name.__repr__() }}"
     data-column-name="{{ column.name }}"
     data-column-idx="{{ column.idx }}"
+     {% if column['n_low_outliers'] %}
+     data-has-low-outliers
+     {% endif %}
+     {% if column['n_high_outliers'] %}
+     data-has-high-outliers
+     {% endif %}
     data-manager="FilterableColumn {% if in_sample_tab %}SampleColumnSummary{% endif %}"
     {% if column.value_is_constant %} data-constant-column {% endif %}
     {% if in_sample_tab %} data-role="sample-column" data-hidden {% else %}
@@ -54,15 +60,15 @@
 
                 <dt>Min | Max</dt>
                 <dd>
-                    {{ column.quantiles[0.0] | format_number }} |
-                    {{ column.quantiles[1.0] | format_number }}
+                    <span class="min-value">{{ column.quantiles[0.0] | format_number }}</span> |
+                    <span class="max-value">{{ column.quantiles[1.0] | format_number }}</span>
                     {{ unit }}
                 </dd>
                 {% elif "min" in column %}
                 <dt>Min | Max</dt>
                 <dd>
-                    {{ column.min | format_number }} |
-                    {{ column.max | format_number }}
+                    <span class="min-value">{{ column.min | format_number }}</span> |
+                    <span class="max-value">{{ column.max | format_number }}</span>
                     {{ unit }}
                 </dd>
                 {% endif %}
