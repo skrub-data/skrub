@@ -1,7 +1,3 @@
-from sklearn.decomposition import PCA
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.pipeline import Pipeline
-
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
 
@@ -19,12 +15,6 @@ class StringEncoder(SingleColumnTransformer):
 
     def _transform(self, X):
         # TODO: vocabulary?
-        self.pipe = Pipeline(
-            [
-                ("tfidf", TfidfVectorizer()),
-                ("pca", PCA(n_components=self.pca_components)),
-            ]
-        ).fit(X)
 
         return self.pipe.transform(X)
 
