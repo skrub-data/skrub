@@ -136,15 +136,25 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
     padding-top: var(--space-s);
 }
 
+.table-footer > * {
+    flex-shrink: 1;
+}
+
 .keyboard-hints  {
     display: none;
-    flex-basis: max(0px, min(50%, calc((50% - 30ch) * 99999)));
-    flex-shrink: 0;
+    flex-basis: max(0px, min(50%, calc((50% - 25ch) * 99999)));
     min-width: 0px;
     height: 2em;
-    margin-bottom: calc(-1 * var(--space-l));
+    margin-bottom: calc(-1 * var(--space-m));
     margin-right: var(--space-s);
     overflow: hidden;
+    flex-shrink: 10000;
+}
+
+.keyboard-hints > div {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 2em;
 }
 
 :has(.table-with-selectable-cells:focus-within) ~ .table-footer .keyboard-hints {
@@ -165,5 +175,6 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
     text-align: center;
     margin: var(--space-xs);
     display: inline-block;
-    vertical-align: center;
+    text-wrap: nowrap;
+    flex-shrink: 0;
 }
