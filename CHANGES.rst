@@ -22,6 +22,22 @@ Highlights
 * The :class:`TableVectorizer` can now drop columns that contain a fraction of
   null values above a user-chosen threshold.
 
+Release 0.4.0
+=============
+
+Highlights
+----------
+* The :class:`TextEncoder` can extract embeddings from a string column with  a deep
+  learning language model (possibly downloaded from the HuggingFace Hub).
+
+* Several improvements to the :class:`TableReport` such as better support for
+  other scripts than the latin alphabet in the bar plot labels, smaller report
+  sizes, clipping the outliers to better see the details of distributions in
+  histograms. See the full changelog for details.
+
+* The :class:`TableVectorizer` can now drop columns that contain a fraction of
+  null values above a user-chosen threshold.
+
 New features
 ------------
 * The :class:`TextEncoder` is now available to encode string columns with
