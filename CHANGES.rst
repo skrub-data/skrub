@@ -6,14 +6,30 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
-===================
+Release 0.4.0
+=============
 
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
+Highlights
+----------
+* The :class:`TextEncoder` can extract embeddings from a string column with  a deep
+  learning language model (possibly downloaded from the HuggingFace Hub).
+
+* Several improvements to the :class:`TableReport` such as better support for
+  other scripts than the latin alphabet in the bar plot labels, smaller report
+  sizes, clipping the outliers to better see the details of distributions in
+  histograms. See the full changelog for details.
+
+* The :class:`TableVectorizer` can now drop columns that contain a fraction of
+  null values above a user-chosen threshold.
 
 New features
 ------------
+* The :class:`TextEncoder` is now available to encode string columns with
+  diverse entries.
+  It allows the representation of table entries as embeddings computed by a deep
+  learning language model. The weights of this model can be fetched locally
+  or from the HuggingFace Hub.
+  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 * The :func:`column_associations` function has been added. It computes a
   pairwise measure of statistical dependence between all columns in a dataframe
@@ -27,13 +43,6 @@ New features
 
 Major changes
 -------------
-* The :class:`TextEncoder` is now available to encode string columns with
-  diverse entries.
-  It allows the representation of table entries as embeddings computed by a deep
-  learning language model. The weights of this model can be fetched locally
-  or from the HuggingFace Hub.
-  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
-
 * :class:`AggJoiner`, :class:`AggTarget` and :class:`MultiAggJoiner` now require
   the `operations` argument. They do not split columns by type anymore, but
   apply `operations` on all selected cols. "median" is now supported, "hist" and
