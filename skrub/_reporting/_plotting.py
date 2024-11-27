@@ -159,14 +159,17 @@ def _robust_hist(values, ax, color):
         ax.stairs([n_high_outliers], [bins[-1], stop], color=_RED, fill=True)
         ax.axvline(bins[-1], **line_params)
     ax.text(
-        0.5,
+        # we place the text offset from the left rather than centering it to
+        # make room for the factor matplotlib sometimes places on the right of
+        # the axis eg "1e6" when the ticks are labelled in millions.
+        0.15,
         1.0,
         (
             f"{_utils.format_number(n_out)} outliers "
             f"({_utils.format_percent(n_out / len(values))})"
         ),
         transform=ax.transAxes,
-        ha="center",
+        ha="left",
         va="baseline",
         fontweight="bold",
         color=_RED,
