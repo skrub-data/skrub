@@ -46,15 +46,15 @@
 }
 
 .copybutton {
-    background: #e0e0e0;
+    background: var(--color-button);
 }
 
 .copybutton:hover {
-    background: #eee;
+    background: var(--color-button-hover);
 }
 
 .copybutton:active {
-    background: #cccccc;
+    background: var(--color-button-active);
 }
 
 .copybutton:not([data-show-checkmark]) > :not(:first-child) {
@@ -67,8 +67,8 @@
 
 .copied-message {
     font-size: var(--text-s);
-    background-color: black;
-    color: white;
+    background-color: var(--color-text);
+    color: var(--color-background);
     padding: var(--space-s);
     border-radius: var(--radius);
     position: absolute;
@@ -83,7 +83,7 @@
 }
 
 [data-shows-placeholder] {
-    color: #777777;
+    color: var(--color-muted-text);
 }
 
 .table-bar .box {

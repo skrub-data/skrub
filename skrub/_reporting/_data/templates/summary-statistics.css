@@ -50,11 +50,11 @@
    others. */
 
 #report .summary-stats-table tr > td:nth-child(2) {
-    background: white;
+    background: var(--color-background);
 }
 
 #report .summary-stats-table tr > th:nth-child(2) {
-    background: #e0e0e0;
+    background: var(--color-table-head-bg);
 }
 
 #report th.sort-button-group-wrapper {
@@ -84,9 +84,9 @@
     height: 100%;
     flex-grow: 1;
     border-radius: 0;
-    border: var(--border-s) solid #aaa;
-    background: #e0e0e0;
-    color: #222;
+    border: var(--border-s) solid var(--color-strong-border);
+    background: var(--color-button);
+    color: var(--color-muted-text);
     padding: var(--space-s);
 }
 
@@ -99,14 +99,14 @@
 }
 
 .sort-button:hover {
-    background: #eeeeee;
+    background: var(--color-button-hover);
 }
 
 .sort-button:active {
-    background: #cccccc;
+    background: var(--color-button-active);
 }
 
 .sort-button[data-is-active]{
-    background: var(--lightgreen);
-    color: black;
+    background: var(--color-active-column-2);
+    color: var(--color-text);
 }

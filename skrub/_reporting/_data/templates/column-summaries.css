@@ -58,7 +58,7 @@
 
     padding: var(--space-m);
     margin-block-end: var(--space-m);
-    background-color: var(--header-color, var(--lightg));
+    background-color: var(--color-card-header);
     border-block-end: var(--border-s) solid var(--mediumg);
 }
 
@@ -124,13 +124,13 @@
 
 .columns-in-sample-tab .card-header {
     position: relative;
-    background-color: var(--darkgreen);
-    border-block-end: var(--border-s) solid var(--shadowgreen);
+    background-color: var(--color-sample-tab-card-header);
+    border-block-end: var(--border-s) solid var(--color-sample-tab-card-border);
     padding-right: calc(var(--button-s) + var(--space-m));
 }
 
 .columns-in-sample-tab .card {
-    border-color: var(--shadowgreen);
+    border-color: var(--color-sample-tab-card-border);
 }
 
 /* Button for closing the card / deselecting the column in the table */
@@ -142,7 +142,7 @@
     padding: var(--space-s);
     border: none;
     border-radius: var(--radius);
-    background: var(--darkgreen);
+    background: var(--color-sample-tab-card-button);
 
     position: absolute;
     top: var(--space-m);
@@ -150,5 +150,9 @@
 }
 
 .card .close-card-button:hover {
-    background: var(--verydarkgreen);
+    background: var(--color-sample-tab-card-button-hover);
+}
+
+.card .close-card-button:active {
+    background: var(--color-sample-tab-card-button-active);
 }
