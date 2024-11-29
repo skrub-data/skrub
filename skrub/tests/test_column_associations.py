@@ -25,7 +25,7 @@ def test_column_associations(df_module):
 
 def test_infinite(df_module):
     # non-regression test for https://github.com/skrub-data/skrub/issues/1133
-    # (colum associations would raise an exception on low-cardinality float
+    # (column associations would raise an exception on low-cardinality float
     # column with infinite values)
     with warnings.catch_warnings():
         # pandas convert_dtypes() emits a spurious warning while trying to decide if
