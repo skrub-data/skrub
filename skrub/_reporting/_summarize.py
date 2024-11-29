@@ -209,9 +209,11 @@ def _add_datetime_summary(summary, column, with_plots):
     summary["min"] = min_date.isoformat()
     summary["max"] = max_date.isoformat()
     if with_plots:
-        summary["histogram_plot"] = _plotting.histogram(
-            column, color=_plotting.COLORS[0]
-        )
+        (
+            summary["histogram_plot"],
+            summary["n_low_outliers"],
+            summary["n_high_outliers"],
+        ) = _plotting.histogram(column, color=_plotting.COLORS[0])
 
 
 def _add_numeric_summary(
@@ -243,7 +245,11 @@ def _add_numeric_summary(
     if not with_plots:
         return
     if order_by_column is None:
-        summary["histogram_plot"] = _plotting.histogram(
+        (
+            summary["histogram_plot"],
+            summary["n_low_outliers"],
+            summary["n_high_outliers"],
+        ) = _plotting.histogram(
             column, duration_unit=duration_unit, color=_plotting.COLORS[0]
         )
     else:

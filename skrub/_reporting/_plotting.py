@@ -39,6 +39,8 @@ _SEABORN = [
 COLORS = _SEABORN
 COLOR_0 = COLORS[0]
 
+_RED = "#dd0000"
+
 
 def _plot(plotting_fun):
     """Set the maptlotib config & silence some warnings for all report plots.
@@ -115,6 +117,67 @@ def _adjust_fig_size(fig, ax, target_w, target_h):
     fig.set_size_inches((w, h))
 
 
+def _get_range(values, frac=0.2, factor=3.0):
+    min_value, low_p, high_p, max_value = np.quantile(
+        values, [0.0, frac, 1.0 - frac, 1.0]
+    )
+    delta = high_p - low_p
+    if not delta:
+        return min_value, max_value
+    margin = factor * delta
+    low = low_p - margin
+    high = high_p + margin
+
+    # Chosen low bound should be max(low, min_value). Moreover, we add a small
+    # tolerance: if the clipping value is close to the actual minimum, extend
+    # it (so we don't clip right above the minimum which looks a bit silly).
+    if low - margin * 0.15 < min_value:
+        low = min_value
+    if max_value < high + margin * 0.15:
+        high = max_value
+    return low, high
+
+
+def _robust_hist(values, ax, color):
+    low, high = _get_range(values)
+    inliers = values[(low <= values) & (values <= high)]
+    n_low_outliers = (values < low).sum()
+    n_high_outliers = (high < values).sum()
+    n, bins, patches = ax.hist(inliers)
+    n_out = n_low_outliers + n_high_outliers
+    if not n_out:
+        return 0, 0
+    width = bins[1] - bins[0]
+    start, stop = bins[0], bins[-1]
+    line_params = dict(color=_RED, linestyle="--", ymax=0.95)
+    if n_low_outliers:
+        start = bins[0] - width
+        ax.stairs([n_low_outliers], [start, bins[0]], color=_RED, fill=True)
+        ax.axvline(bins[0], **line_params)
+    if n_high_outliers:
+        stop = bins[-1] + width
+        ax.stairs([n_high_outliers], [bins[-1], stop], color=_RED, fill=True)
+        ax.axvline(bins[-1], **line_params)
+    ax.text(
+        # we place the text offset from the left rather than centering it to
+        # make room for the factor matplotlib sometimes places on the right of
+        # the axis eg "1e6" when the ticks are labelled in millions.
+        0.15,
+        1.0,
+        (
+            f"{_utils.format_number(n_out)} outliers "
+            f"({_utils.format_percent(n_out / len(values))})"
+        ),
+        transform=ax.transAxes,
+        ha="left",
+        va="baseline",
+        fontweight="bold",
+        color=_RED,
+    )
+    ax.set_xlim(start, stop)
+    return n_low_outliers, n_high_outliers
+
+
 @_plot
 def histogram(col, duration_unit=None, color=COLOR_0):
     """Histogram for a numeric column."""
@@ -125,17 +188,15 @@ def histogram(col, duration_unit=None, color=COLOR_0):
         # version if there are inf or nan)
         col = sbd.to_float32(col)
     values = sbd.to_numpy(col)
-    if np.issubdtype(values.dtype, np.floating):
-        values = values[np.isfinite(values)]
     fig, ax = plt.subplots()
     _despine(ax)
-    ax.hist(values, color=color)
+    n_low_outliers, n_high_outliers = _robust_hist(values, ax, color=color)
     if duration_unit is not None:
         ax.set_xlabel(f"{duration_unit.capitalize()}s")
     if sbd.is_any_date(col):
         _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
-    return _serialize(fig)
+    return _serialize(fig), n_low_outliers, n_high_outliers
 
 
 @_plot
