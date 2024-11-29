@@ -12,8 +12,30 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+Release 0.4.0
+=============
+
+Highlights
+----------
+* The :class:`TextEncoder` can extract embeddings from a string column with  a deep
+  learning language model (possibly downloaded from the HuggingFace Hub).
+
+* Several improvements to the :class:`TableReport` such as better support for
+  other scripts than the latin alphabet in the bar plot labels, smaller report
+  sizes, clipping the outliers to better see the details of distributions in
+  histograms. See the full changelog for details.
+
+* The :class:`TableVectorizer` can now drop columns that contain a fraction of
+  null values above a user-chosen threshold.
+
 New features
 ------------
+* The :class:`TextEncoder` is now available to encode string columns with
+  diverse entries.
+  It allows the representation of table entries as embeddings computed by a deep
+  learning language model. The weights of this model can be fetched locally
+  or from the HuggingFace Hub.
+  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 * The :func:`column_associations` function has been added. It computes a
   pairwise measure of statistical dependence between all columns in a dataframe
@@ -27,13 +49,6 @@ New features
 
 Major changes
 -------------
-* The :class:`TextEncoder` is now available to encode string columns with
-  diverse entries.
-  It allows the representation of table entries as embeddings computed by a deep
-  learning language model. The weights of this model can be fetched locally
-  or from the HuggingFace Hub.
-  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
-
 * :class:`AggJoiner`, :class:`AggTarget` and :class:`MultiAggJoiner` now require
   the `operations` argument. They do not split columns by type anymore, but
   apply `operations` on all selected cols. "median" is now supported, "hist" and
@@ -59,9 +74,11 @@ Minor changes
 
 * Display of labels in the plots of the TableReport, especially for other
   scripts than the latin alphabet, has improved.
+
   - before, some characters could be missing and replaced by empty boxes.
   - before, when the text is truncated, the ellipsis "..." could appear on the
     wrong side for right-to-left scripts.
+
   Moreover, when the text contains line breaks it now appears all on one line.
   Note this only affects the labels in the plots; the rest of the report did not
   have these problems.
