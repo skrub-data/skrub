@@ -1,8 +1,8 @@
 {% macro copybutton(target) %}
 <button
     class="copybutton copybutton-left"
+    data-manager="CopyButton"
     type="button"
-    onclick="copyButtonClick(event)"
     data-target-id="{{ target }}">
     {% include "icons/copy.svg" %}
     {% include "icons/check-lg.svg" %}

@@ -4,7 +4,6 @@ from .. import _column_associations
 from .. import _dataframe as sbd
 from . import _plotting, _sample_table, _utils
 
-_HIGH_CARDINALITY_THRESHOLD = 10
 _SUBSAMPLE_SIZE = 3000
 _N_TOP_ASSOCIATIONS = 20
 
@@ -130,6 +129,15 @@ def _summarize_column(
     if summary["null_count"] == dataframe_summary["n_rows"]:
         summary["plot_names"] = []
         return summary
+    try:
+        summary["n_unique"] = sbd.n_unique(column)
+        summary["unique_proportion"] = summary["n_unique"] / max(
+            1, dataframe_summary["n_rows"]
+        )
+    except Exception:
+        # for some dtypes n_unique can fail eg with a typeerror for
+        # non-hashable types in pandas.
+        pass
     _add_value_counts(
         summary, column, dataframe_summary=dataframe_summary, with_plots=with_plots
     )
@@ -159,16 +167,18 @@ def _add_nulls_summary(summary, column, dataframe_summary):
 
 
 def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
-    if sbd.is_numeric(column) or sbd.is_any_date(column):
-        summary["high_cardinality"] = True
+    if sbd.is_numeric(column) or sbd.is_any_date(column) or sbd.is_duration(column):
         return
     n_unique, value_counts = _utils.top_k_value_counts(column, k=10)
     # if the column contains all nulls, _add_value_counts does not get called
     assert n_unique > 0
 
+    # value_counts may be able to find the number of unique values in cases
+    # where n_unique() fails (eg non-hashable column content in pandas) so we
+    # update n_unique and unique_proportion
     summary["n_unique"] = n_unique
     summary["unique_proportion"] = n_unique / max(1, dataframe_summary["n_rows"])
-    summary["high_cardinality"] = n_unique >= _HIGH_CARDINALITY_THRESHOLD
+
     summary["value_counts"] = value_counts
     summary["most_frequent_values"] = [v for v, _ in value_counts]
 
@@ -199,17 +209,28 @@ def _add_datetime_summary(summary, column, with_plots):
     summary["min"] = min_date.isoformat()
     summary["max"] = max_date.isoformat()
     if with_plots:
-        summary["histogram_plot"] = _plotting.histogram(
-            column, color=_plotting.COLORS[0]
-        )
+        (
+            summary["histogram_plot"],
+            summary["n_low_outliers"],
+            summary["n_high_outliers"],
+        ) = _plotting.histogram(column, color=_plotting.COLORS[0])
 
 
 def _add_numeric_summary(
     summary, column, dataframe_summary, with_plots, order_by_column
 ):
     del dataframe_summary
-    if not sbd.is_numeric(column):
-        return
+    assert len(column)  # _add_numeric_summary is not called if the column is empty
+    first_value = sbd.to_list(sbd.head(column, 1))[0]
+    if sbd.is_duration(column):
+        summary["is_duration"] = True
+        column, duration_unit = _utils.duration_to_numeric(column)
+    else:
+        summary["is_duration"] = False
+        if not sbd.is_numeric(column):
+            return
+        duration_unit = None
+    summary["duration_unit"] = duration_unit
     std = sbd.std(column)
     summary["standard_deviation"] = float("nan") if std is None else std
     summary["mean"] = sbd.mean(column)
@@ -217,15 +238,19 @@ def _add_numeric_summary(
     summary["inter_quartile_range"] = quantiles[0.75] - quantiles[0.25]
     if quantiles[0.0] == quantiles[1.0]:
         summary["value_is_constant"] = True
-        summary["constant_value"] = quantiles[0.0]
+        summary["constant_value"] = first_value
         return
     summary["value_is_constant"] = False
     summary["quantiles"] = quantiles
     if not with_plots:
         return
     if order_by_column is None:
-        summary["histogram_plot"] = _plotting.histogram(
-            column, color=_plotting.COLORS[0]
+        (
+            summary["histogram_plot"],
+            summary["n_low_outliers"],
+            summary["n_high_outliers"],
+        ) = _plotting.histogram(
+            column, duration_unit=duration_unit, color=_plotting.COLORS[0]
         )
     else:
         summary["line_plot"] = _plotting.line(order_by_column, column)

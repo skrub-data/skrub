@@ -106,7 +106,9 @@ def _onehot_encode(df, n_bins):
     output = np.zeros((n_cols, n_bins, n_rows), dtype=bool)
     for col_idx in range(n_cols):
         col = sbd.col_by_idx(df, col_idx)
-        if sbd.is_numeric(col):
+        if sbd.is_duration(col):
+            col = sbd.total_seconds(col)
+        if sbd.is_numeric(col) or sbd.is_any_date(col):
             col = sbd.to_float32(col)
             if _CATEGORICAL_THRESHOLD <= sbd.n_unique(col):
                 _onehot_encode_numbers(sbd.to_numpy(col), n_bins, output[col_idx])
@@ -120,6 +122,11 @@ def _onehot_encode(df, n_bins):
 
 def _onehot_encode_categories(values, n_bins, output):
     """One-hot encode a categorical column."""
+    if np.issubdtype(values.dtype, np.floating):
+        # OneHotEncoder allows NaN but not inf , so clip to finite values when
+        # the input is floating-point
+        finfo = np.finfo(values.dtype)
+        values = np.clip(values, finfo.min, finfo.max)
     encoded = OneHotEncoder(max_categories=n_bins, sparse_output=False).fit_transform(
         values[:, None]
     )

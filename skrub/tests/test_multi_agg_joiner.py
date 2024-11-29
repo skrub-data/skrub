@@ -27,9 +27,10 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=aux,
+        operations=[["mode"], ["mean"]],
         main_keys=[["userId"], ["movieId"]],
         aux_keys=[["userId"], ["movieId"]],
-        cols=[["rating", "genre"], ["rating"]],
+        cols=[["genre"], ["rating"]],
         suffixes=["_user", "_movie"],
     )
 
@@ -42,7 +43,6 @@ def test_simple_fit_transform(df_module, main_table, use_X_placeholder):
             "rating": [4.0, 4.0, 4.0, 3.0, 2.0, 4.0],
             "genre": ["drama", "drama", "comedy", "sf", "comedy", "sf"],
             "genre_mode_user": ["drama", "drama", "drama", "sf", "sf", "sf"],
-            "rating_mean_user": [4.0, 4.0, 4.0, 3.0, 3.0, 3.0],
             "rating_mean_movie": [4.0, 4.0, 3.0, 3.0, 3.0, 4.0],
         }
     )
@@ -60,21 +60,27 @@ def test_X_placeholder(df_module, main_table):
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=["X", main_table],
+        operations=[["mean"], ["mean"]],
         keys=[["userId"], ["userId"]],
+        cols=[["rating"], ["rating"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [main_table, main_table]
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=["X", "X"],
+        operations=[["mean"], ["mean"]],
         keys=[["userId"], ["userId"]],
+        cols=[["rating"], ["rating"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [main_table, main_table]
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table, "X", main_table],
+        operations=[["mean"], ["mean"], ["mean"], ["mean"]],
         keys=[["userId"], ["userId"], ["userId"], ["userId"]],
+        cols=[["rating"], ["rating"], ["rating"], ["rating"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._aux_tables == [
@@ -92,6 +98,7 @@ def test_wrong_aux_tables(df_module, main_table):
     # Check aux_tables isn't an array
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=main_table,
+        operations=[["mean"]],
         keys=["userId"],
     )
     with pytest.raises(
@@ -103,6 +110,7 @@ def test_wrong_aux_tables(df_module, main_table):
     # Check aux_tables is not a dataframe or "X"
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[1],
+        operations=[["mean"]],
         keys=["userId"],
     )
     with pytest.raises(
@@ -119,6 +127,7 @@ def test_wrong_main_table(df_module, main_table):
     # Check wrong `X`
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         keys=[["userId"]],
     )
     with pytest.raises(
@@ -142,6 +151,7 @@ def test_check_wrong_aux_table_type(main_table, df_module):
     # Check aux_tables is pandas when X is polars or the opposite
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[aux_table],
+        operations=[["mean"]],
         keys=[["userId"]],
     )
     wanted_type = "Pandas" if df_module.module == pd else "Polars"
@@ -158,7 +168,9 @@ def test_correct_keys(main_table, df_module):
     # Check only keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         keys=[["userId"]],
+        cols=[["rating"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._main_keys == [["userId"]]
@@ -167,22 +179,28 @@ def test_correct_keys(main_table, df_module):
     # Check multiple keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         keys=[["userId", "movieId"]],
+        cols=[["rating"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
     # Check keys multiple tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["mean"], ["mean"]],
         keys=[["userId"], ["userId"]],
+        cols=[["rating"], ["rating"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
     # Check multiple main_keys and aux_keys, same length
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         main_keys=[["userId", "movieId"]],
         aux_keys=[["userId", "movieId"]],
+        cols=[["rating"]],
     )
     multi_agg_joiner.fit_transform(main_table)
 
@@ -194,6 +212,7 @@ def test_no_keys(main_table, df_module):
     # Check no keys at all
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
     )
     error_msg = r"Must pass either `keys`, or \(`main_keys` and `aux_keys`\)."
     with pytest.raises(ValueError, match=error_msg):
@@ -207,6 +226,7 @@ def test_too_many_keys(main_table, df_module):
     # Check too many main_keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         main_keys=[["userId", "movieId"]],
         aux_keys=[["userId"]],
     )
@@ -222,6 +242,7 @@ def test_too_many_keys(main_table, df_module):
     # Check too many aux_keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         main_keys=[["userId"]],
         aux_keys=[["userId", "movieId"]],
     )
@@ -233,6 +254,7 @@ def test_too_many_keys(main_table, df_module):
     # Check providing keys and extra main_keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         keys=[["userId"]],
         main_keys=[["userId"]],
     )
@@ -242,6 +264,7 @@ def test_too_many_keys(main_table, df_module):
     # Check providing keys and extra aux_keys
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         keys=[["userId"]],
         aux_keys=[["userId"]],
     )
@@ -256,6 +279,7 @@ def test_unknown_keys(main_table, df_module):
     # Check main_keys doesn't exist in table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["count"]],
         main_keys=[["wrong_key"]],
         aux_keys=[["userId"]],
     )
@@ -266,6 +290,7 @@ def test_unknown_keys(main_table, df_module):
     # Check aux_keys doesn't exist in table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["count"]],
         main_keys=[["userId"]],
         aux_keys=[["wrong_key"]],
     )
@@ -281,6 +306,7 @@ def test_wrong_keys_length(main_table, df_module):
     # Check wrong main_keys length
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["count"], ["count"]],
         main_keys=[["userId"]],
         aux_keys=[["userId"], ["userId"]],
     )
@@ -291,6 +317,7 @@ def test_wrong_keys_length(main_table, df_module):
     # Check wrong aux_keys length
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["count"], ["count"]],
         main_keys=[["userId"], ["userId"]],
         aux_keys=[["userId"]],
     )
@@ -310,6 +337,7 @@ def test_default_cols(main_table, df_module):
     # Check no cols
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["count"], ["count"]],
         keys=[["userId", "movieId"], ["userId"]],
     )
     multi_agg_joiner.fit(main_table)
@@ -323,6 +351,7 @@ def test_correct_cols(main_table, df_module):
     # Check providing one col
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["count"]],
         keys=[["userId"]],
         cols=[["rating"]],
     )
@@ -332,6 +361,7 @@ def test_correct_cols(main_table, df_module):
     # Check providing one col for each aux_tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["count"], ["count"]],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
     )
@@ -346,6 +376,7 @@ def test_wrong_cols_input_type(main_table, df_module):
     # Check providing wrong cols type
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["count"]],
         keys=[["userId"]],
         cols=[[1]],
     )
@@ -364,6 +395,7 @@ def test_too_many_cols(main_table, df_module):
     # Check providing too many cols
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["count"]],
         keys=[["userId"]],
         cols=[["rating"], ["rating"]],
     )
@@ -384,29 +416,13 @@ def test_cols_not_in_table(main_table, df_module):
     # Check cols not in table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["count"]],
         keys=[["userId"]],
         cols=[["wrong_col"]],
     )
-    error_msg = r"(?=.*columns cannot be used because they do not exist)"
+    error_msg = r"(columns cannot be used because they do not exist)"
     with pytest.raises(ValueError, match=error_msg):
         multi_agg_joiner.fit_transform(main_table)
-
-
-def test_default_operations(main_table, df_module):
-    """
-    Check that the default `operations` in the `MultiAggJoiner` is an
-    iterable of ['mode', 'mean'].
-    """
-    main_table = df_module.DataFrame(main_table)
-
-    # Check default operations
-    multi_agg_joiner = MultiAggJoiner(
-        aux_tables=[main_table, main_table],
-        keys=[["userId"], ["userId"]],
-        cols=[["rating", "genre"], ["rating", "genre"]],
-    )
-    multi_agg_joiner.fit(main_table)
-    assert multi_agg_joiner._operations == [["mean", "mode"], ["mean", "mode"]]
 
 
 def test_correct_operations(main_table, df_module):
@@ -416,9 +432,9 @@ def test_correct_operations(main_table, df_module):
     # Check one operation
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["mean"]],
         keys=[["userId"]],
         cols=[["rating"]],
-        operations=[["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._operations == [["mean"]]
@@ -426,9 +442,9 @@ def test_correct_operations(main_table, df_module):
     # Check one operation for each aux table
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["mean"], ["mean"]],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
-        operations=[["mean"], ["mean"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._operations == [["mean"], ["mean"]]
@@ -436,9 +452,9 @@ def test_correct_operations(main_table, df_module):
     # Check one and two operations
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["mean"], ["mean", "mode"]],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
-        operations=[["mean"], ["mean", "mode"]],
     )
     multi_agg_joiner.fit_transform(main_table)
     assert multi_agg_joiner._operations == [["mean"], ["mean", "mode"]]
@@ -451,9 +467,9 @@ def test_wrong_operations(main_table, df_module):
     # Check list of operations
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations="mean",
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
-        operations="mean",
     )
     error_msg = (
         r"Accepted inputs for `operations` are None and iterable of iterable of str."
@@ -464,9 +480,9 @@ def test_wrong_operations(main_table, df_module):
     # Check badly formatted operation
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["mean", "mean", "mode"]],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
-        operations=[["mean", "mean", "mode"]],
     )
     error_msg = (
         r"The number of iterables in `operations` must match the number of tables"
@@ -485,6 +501,7 @@ def test_default_suffixes(main_table, df_module):
     # check default suffixes with multiple tables
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["count"], ["count"]],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
     )
@@ -499,6 +516,7 @@ def test_suffixes(main_table, df_module):
     # check suffixes when defined
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["count"], ["count"]],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
         suffixes=["_this", "_works"],
@@ -514,6 +532,7 @@ def test_too_many_suffixes(main_table, df_module):
     # check too many suffixes
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table, main_table],
+        operations=[["count"], ["count"]],
         keys=[["userId"], ["userId"]],
         cols=[["rating"], ["rating"]],
         suffixes=["_0", "_1", "_2"],
@@ -533,6 +552,7 @@ def test_non_str_suffixes(main_table, df_module):
     # check suffixes not str
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["count"]],
         keys=[["userId"]],
         cols=[["rating"]],
         suffixes=[1],
@@ -597,6 +617,7 @@ def test_not_fitted_dataframe(main_table, df_module):
 
     multi_agg_joiner = MultiAggJoiner(
         aux_tables=[main_table],
+        operations=[["count"]],
         keys=[["userId"]],
     )
     multi_agg_joiner.fit(main_table)

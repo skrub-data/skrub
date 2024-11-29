@@ -12,8 +12,30 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+Release 0.4.0
+=============
+
+Highlights
+----------
+* The :class:`TextEncoder` can extract embeddings from a string column with  a deep
+  learning language model (possibly downloaded from the HuggingFace Hub).
+
+* Several improvements to the :class:`TableReport` such as better support for
+  other scripts than the latin alphabet in the bar plot labels, smaller report
+  sizes, clipping the outliers to better see the details of distributions in
+  histograms. See the full changelog for details.
+
+* The :class:`TableVectorizer` can now drop columns that contain a fraction of
+  null values above a user-chosen threshold.
+
 New features
 ------------
+* The :class:`TextEncoder` is now available to encode string columns with
+  diverse entries.
+  It allows the representation of table entries as embeddings computed by a deep
+  learning language model. The weights of this model can be fetched locally
+  or from the HuggingFace Hub.
+  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 * The :func:`column_associations` function has been added. It computes a
   pairwise measure of statistical dependence between all columns in a dataframe
@@ -27,6 +49,13 @@ New features
 
 Major changes
 -------------
+* :class:`AggJoiner`, :class:`AggTarget` and :class:`MultiAggJoiner` now require
+  the `operations` argument. They do not split columns by type anymore, but
+  apply `operations` on all selected cols. "median" is now supported, "hist" and
+  "value_counts" are no longer supported. :pr:`1116` by :user:`Théo Jolivet <TheooJ>`.
+
+* The :class:`AggTarget` no longer supports `y` inputs of type list. :pr:`1116`
+  by :user:`Théo Jolivet <TheooJ>`.
 
 Minor changes
 -------------
@@ -45,13 +74,16 @@ Minor changes
 
 * Display of labels in the plots of the TableReport, especially for other
   scripts than the latin alphabet, has improved.
+
   - before, some characters could be missing and replaced by empty boxes.
   - before, when the text is truncated, the ellipsis "..." could appear on the
     wrong side for right-to-left scripts.
+
   Moreover, when the text contains line breaks it now appears all on one line.
   Note this only affects the labels in the plots; the rest of the report did not
   have these problems.
-  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`.
+  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`1138` by :user:`Jérôme Dockès <jeromedockes>`.
 
 * In the TableReport it is now possible, before clicking any of the cells, to
   reach the dataframe sample table and activate a cell with tab key navigation.
@@ -60,6 +92,20 @@ Minor changes
 * The "Column name" column of the "summary statistics" table in the TableReport
   is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
   Dockès <jeromedockes>`.
+
+* Added parameter `drop_null_fraction` to `TableVectorizer` to drop columns based
+  on whether they contain a fraction of nulls larger than the given threshold.
+  :pr:`1115` and :pr:`1149` by :user:`Riccardo Cappuzzo <rcap107>`.
+
+* The :class:`TableReport` now provides more helpful output for columns of dtype
+  TimeDelta / Duration. :pr:`1152` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The :class:`TableReport` now also reports the number of unique values for
+  numeric columns. :pr:`1154` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The :class:`TableReport`, when plotting histograms, now detects outliers and
+  clips the range of data shown in the histogram. This allows seeing more detail
+  in the shown distribution. :pr:`1157` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bug fixes
 ---------
@@ -75,6 +121,10 @@ Bug fixes
 * The :class:`TableReport` would raise an exception when the input (pandas)
   dataframe contained several columns with the same name. This has been fixed in
   :pr:`1125` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The :class:`TableReport` would raise an exception when a column contained
+  infinite values. This has been fixed in :pr:`1150` by :user:`Jérôme Dockès
+  <jeromedockes>` and :pr:`1151` by Jérôme Dockès.
 
 Release 0.3.1
 =============

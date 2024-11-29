@@ -16,6 +16,7 @@ from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
+from ._drop_if_too_many_nulls import DropIfTooManyNulls
 from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
@@ -191,6 +192,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         similar functionality to what is offered by scikit-learn's
         :class:`~sklearn.compose.ColumnTransformer`.
 
+    drop_null_fraction : float or None, default=1.0
+        Fraction of null above which the column is dropped. If `drop_null_fraction` is
+        set to ``1.0``, the column is dropped if it contains only
+        nulls or NaNs (this is the default behavior). If `drop_null_fraction` is a
+        number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
+        is strictly larger than `drop_null_fraction`. If `drop_null_fraction` is ``None``,
+        this selection is disabled: no columns are dropped based on the number
+        of null values they contain.
+
     n_jobs : int, default=None
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
@@ -309,12 +319,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     Before applying the main transformer, the ``TableVectorizer`` applies
     several preprocessing steps, for example to detect numbers or dates that are
-    represented as strings. Moreover, a final post-processing step is applied to
-    all non-categorical columns in the encoder's output to cast them to float32.
+    represented as strings. By default, columns that contain only null values are
+    dropped. Moreover, a final post-processing step is applied to all
+    non-categorical columns in the encoder's output to cast them to float32.
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
     Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
@@ -323,7 +334,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``all_processing_steps_`` is useful to inspect the details of the
     choices made by the ``TableVectorizer`` during preprocessing, for example:
 
-    >>> vectorizer.all_processing_steps_['B'][1]
+    >>> vectorizer.all_processing_steps_['B'][2]
     ToDatetime()
     >>> _.format_
     '%d/%m/%Y'
@@ -389,7 +400,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropIfTooManyNulls(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 
@@ -412,6 +423,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
+        drop_null_fraction=1.0,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -425,6 +437,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.datetime = _utils.clone_if_default(datetime, DATETIME_TRANSFORMER)
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
+        self.drop_null_fraction = drop_null_fraction
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -536,13 +549,18 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         cols = s.all() - self._specific_columns
 
         self._preprocessors = [CheckInputDataFrame()]
-        for transformer in [
-            CleanNullStrings(),
+
+        transformer_list = [CleanNullStrings()]
+        transformer_list.append(DropIfTooManyNulls(self.drop_null_fraction))
+
+        transformer_list += [
             ToDatetime(),
             ToFloat32(),
             CleanCategories(),
             ToStr(),
-        ]:
+        ]
+
+        for transformer in transformer_list:
             add_step(self._preprocessors, transformer, cols, allow_reject=True)
 
         self._encoders = []

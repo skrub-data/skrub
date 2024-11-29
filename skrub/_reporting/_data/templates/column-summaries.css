@@ -94,6 +94,18 @@
     justify-self: left;
 }
 
+/* Highlight min and max values when outliers were truncated from the histogram*/
+
+.column-summary[data-has-low-outliers] .min-value{
+    color: var(--red);
+    font-weight: bold;
+}
+
+.column-summary[data-has-high-outliers] .max-value{
+    color: var(--red);
+    font-weight: bold;
+}
+
 
 /* Aspects specific to the single card shown in the dataframe sample tab */
 /* --------------------------------------------------------------------- */
