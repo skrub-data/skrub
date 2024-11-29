@@ -132,6 +132,11 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         """
         return {"X_types": ["categorical"]}
 
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.categorical = True
+        return tags
+
     def _get_murmur_hash(self, string):
         """
         Encode a string using murmur hashing function.
