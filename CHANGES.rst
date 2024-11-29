@@ -12,6 +12,15 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+Release 0.4.1
+=============
+
+Maintenance
+-----------
+
+* Make `skrub` compatible with scikit-learn 1.6.
+  :pr:`1169` by :user:`Guillaume Lemaitre <glemaitre>`.
+
 Release 0.4.0
 =============
 
