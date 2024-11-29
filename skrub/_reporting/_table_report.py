@@ -65,7 +65,7 @@ class TableReport:
     >>> report
     <TableReport: use .open() to display>
 
-    (Note that above we only see the string represention, not the report itself,
+    (Note that above we only see the string representation, not the report itself,
     because we are not in a notebook.)
 
     Whether you are using a notebook or not, you can always open the report as a
