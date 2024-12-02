@@ -24,7 +24,7 @@ def wrap_transformer(
     ``OnEachColumn`` instance. Otherwise it is wrapped in a ``OnSubFrame``
     instance.
 
-    This default choice can be overriden by passing ``columnwise=True`` to
+    This default choice can be overridden by passing ``columnwise=True`` to
     force the use of ``OnEachColumn`` or ``columnwise=False`` to force the use
     of ``OnSubFrame``.
 

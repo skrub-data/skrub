@@ -98,7 +98,7 @@ def fuzzy_join(
         If False, the order of the join keys depends on the join type
         (`how` keyword).
     suffixes : typing.Tuple[str, str], default=('_x', '_y')
-        A list of strings indicating the suffix to add when overlaping
+        A list of strings indicating the suffix to add when overlapping
         column names.
 
     Returns
