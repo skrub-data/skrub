@@ -98,7 +98,7 @@ class ToDatetime(SingleColumnTransformer):
     format : str or None, optional, default=None
         Format to use for parsing dates that are stored as strings, e.g.
         ``"%Y-%m-%dT%H:%M%S"``.
-        If not specfied, the format is inferred from the data when possible.
+        If not specified, the format is inferred from the data when possible.
         When doing so, for dates presented as 01/02/2003, it is usually
         possible to infer from the data whether the month comes first (USA
         convention) or the day comes first, ie ``"%m/%d/%Y"`` vs
