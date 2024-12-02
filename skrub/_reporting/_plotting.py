@@ -231,7 +231,7 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     n_unique : int
         Cardinality of the plotted column, used to determine if all unique
         values are plotted or if there are too many and some have been
-        ommitted. The figure's title is adjusted accordingly.
+        omitted. The figure's title is adjusted accordingly.
 
     n_rows : int
         Total length of the column, used to convert the counts to proportions.

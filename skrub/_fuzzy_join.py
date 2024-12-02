@@ -60,7 +60,7 @@ def fuzzy_join(
         in the right table.
 
     'self_join_neighbor'
-        Once the match candidate (i.e. the nearest neigbor from the right
+        Once the match candidate (i.e. the nearest neighbor from the right
         table) has been found, we find its nearest neighbor in the right
         table (excluding itself). The reference distance is the distance that
         separates those 2 right rows.

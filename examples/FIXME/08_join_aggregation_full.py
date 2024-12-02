@@ -520,7 +520,7 @@ results["Agg Joiner"] = get_results(
 plot_gain_tradeoff(results)
 
 # %%
-# We see that the agg-joiner model is slighly more calibrated, with a lower (better)
+# We see that the agg-joiner model is slightly more calibrated, with a lower (better)
 # log loss.
 
 plot_calibration_curve(results)
@@ -545,4 +545,4 @@ plot_calibration_curve(results)
 # auxiliary data, you would need to replace the auxiliary table in the AggJoiner that
 # was used during ``fit`` with the updated data, which is a rather hacky approach.
 #
-# These limitations will be addresssed later in skrub.
+# These limitations will be addressed later in skrub.

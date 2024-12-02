@@ -143,7 +143,7 @@ augmented_df.tail(20)
 
 ###############################################################################
 #
-# We see that our |fj| succesfully identified the countries,
+# We see that our |fj| successfully identified the countries,
 # even though some country names differ between tables.
 #
 # For instance, "Egypt" and "Egypt, Arab Rep." are correctly matched, as are
@@ -167,7 +167,7 @@ augmented_df.tail(20)
 augmented_df.sort_values("skrub_Joiner_rescaled_distance").tail(10)
 
 ###############################################################################
-# We see that some matches were unsuccesful
+# We see that some matches were unsuccessful
 # (e.g "Palestinian Territories*" and "Palau"),
 # because there is simply no match in the two tables.
 
@@ -343,7 +343,7 @@ print(f"Mean R² score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # many ways to clean a table as there are errors. |fj|
 # method is generalizable across all datasets.
 #
-# Data transformation is also often very costly in both time and ressources.
+# Data transformation is also often very costly in both time and resources.
 # |fj| is fast and easy-to-use.
 #
 # Now up to you, try improving our model by adding information into it and
