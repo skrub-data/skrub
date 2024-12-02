@@ -20,7 +20,7 @@ jobs:
             ci-py309-min-optional-deps,
             ci-py311-transformers,
             ci-py312-latest-deps,
-            ci-py312-latest-optional-deps
+            ci-py313-latest-optional-deps
         ]
     runs-on: ${{ matrix.os }}
     steps:
