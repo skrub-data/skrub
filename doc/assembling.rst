@@ -31,7 +31,7 @@ has no need for pre-cleaning.
 Joining external tables for machine learning
 --------------------------------------------
 
-Joining is straigthforward for two tables because you only need to identify
+Joining is straightforward for two tables because you only need to identify
 the common key.
 
 In addition, skrub also enable more advanced analysis:

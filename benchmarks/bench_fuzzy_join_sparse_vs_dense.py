@@ -258,7 +258,7 @@ def fuzzy_join(
         If False, the order of the join keys depends on the join type
         (`how` keyword).
     suffixes : str 2-tuple, default=('_x', '_y')
-        A list of strings indicating the suffix to add when overlaping
+        A list of strings indicating the suffix to add when overlapping
         column names.
     sparse : boolean, default=True
         Use sparse or dense arrays for nearest neighbor search.

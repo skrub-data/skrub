@@ -6,7 +6,7 @@ When the data comprises common entities (cities,
 companies or famous people), bringing new information assembled from external
 sources may be the key to improving the analysis.
 
-Embeddings, or vectorial representations of entities, are a conveniant way to
+Embeddings, or vectorial representations of entities, are a convenient way to
 capture and summarize the information on an entity.
 Relational data embeddings capture all common entities from Wikipedia. [#]_
 These will be called `KEN embeddings` in the following example.
@@ -204,7 +204,7 @@ pipeline = make_pipeline(encoder, hgb)
 # The |Pipeline| can now be readily applied to the dataframe for prediction:
 from sklearn.model_selection import cross_validate
 
-# We will save the results in a dictionnary:
+# We will save the results in a dictionary:
 all_r2_scores = dict()
 all_rmse_scores = dict()
 
