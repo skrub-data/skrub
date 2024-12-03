@@ -51,7 +51,7 @@ def _plot(plotting_fun):
     @functools.wraps(plotting_fun)
     def plot_with_config(*args, **kwargs):
         #
-        # Note: we do use `matplotlib.rc_context` because it can prevent the
+        # Note: we do not use `matplotlib.rc_context` because it can prevent the
         # inline display of plots in jupyter notebooks:
         #
         # https://github.com/matplotlib/matplotlib/issues/25041
