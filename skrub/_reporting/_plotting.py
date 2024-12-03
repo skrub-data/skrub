@@ -51,11 +51,18 @@ def _plot(plotting_fun):
     @functools.wraps(plotting_fun)
     def plot_with_config(*args, **kwargs):
         #
-        # TODO once this is fixed: https://github.com/matplotlib/matplotlib/issues/25041
-        # use the context manager:
+        # Note: we do use `matplotlib.rc_context` because it can prevent the
+        # inline display of plots in jupyter notebooks:
+        #
+        # https://github.com/matplotlib/matplotlib/issues/25041
+        # https://github.com/matplotlib/matplotlib/issues/26716
+        #
+        # otherwise we could write
         # with matplotlib.rc_context({"svg.fonttype": "none"}):
         #
-        svg_font_type = plt.rcParams["svg.fonttype"]
+        # See https://github.com/skrub-data/skrub/pull/1172
+        #
+        original_font_type = plt.rcParams["svg.fonttype"]
         try:
             # This causes matplotlib to insert labels etc as text in the svg rather
             # than drawing the glyphs.
@@ -69,7 +76,7 @@ def _plot(plotting_fun):
                 )
                 return plotting_fun(*args, **kwargs)
         finally:
-            plt.rcParams["svg.fonttype"] = svg_font_type
+            plt.rcParams["svg.fonttype"] = original_font_type
 
     return plot_with_config
 
