@@ -11,6 +11,7 @@ except ImportError:
 from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._sklearn_compat import TransformerTags
 
 __all__ = ["DatetimeEncoder"]
 
@@ -323,3 +324,11 @@ class DatetimeEncoder(SingleColumnTransformer):
             raise ValueError(
                 f"'resolution' options are {allowed}, got {self.resolution!r}."
             )
+
+    def _more_tags(self):
+        return {"preserves_dtype": []}
+
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.transformer_tags = TransformerTags(preserves_dtype=[])
+        return tags
