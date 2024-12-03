@@ -8,7 +8,6 @@ import io
 import re
 import warnings
 
-import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -51,9 +50,16 @@ def _plot(plotting_fun):
 
     @functools.wraps(plotting_fun)
     def plot_with_config(*args, **kwargs):
-        # This causes matplotlib to insert labels etc as text in the svg rather
-        # than drawing the glyphs.
-        with matplotlib.rc_context({"svg.fonttype": "none"}):
+        #
+        # TODO once this is fixed: https://github.com/matplotlib/matplotlib/issues/25041
+        # use the context manager:
+        # with matplotlib.rc_context({"svg.fonttype": "none"}):
+        #
+        svg_font_type = plt.rcParams["svg.fonttype"]
+        try:
+            # This causes matplotlib to insert labels etc as text in the svg rather
+            # than drawing the glyphs.
+            plt.rcParams["svg.fonttype"] = "none"
             with warnings.catch_warnings():
                 # We do not care about missing glyphs because the text is
                 # rendered & the viewbox is recomputed in the browser.
@@ -62,6 +68,8 @@ def _plot(plotting_fun):
                     "ignore", "Matplotlib currently does not support Arabic natively"
                 )
                 return plotting_fun(*args, **kwargs)
+        finally:
+            plt.rcParams["svg.fonttype"] = svg_font_type
 
     return plot_with_config
 
