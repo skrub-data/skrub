@@ -12,6 +12,13 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+Release 0.4.1
+=============
+
+New features
+------------
+* Added :class:`StringEncoder`. :pr:`1159` by :user:`Riccardo Cappuzzo <rcap107>`
+
 Release 0.4.0
 =============
 
