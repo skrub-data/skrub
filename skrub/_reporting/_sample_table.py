@@ -329,7 +329,7 @@ class _PandasTable:
     i=0  | my house   | 1st   | df.iloc[0, 0] | df.iloc[0, 1] | ... | ... |
     i=1  |            | 2nd   | df.iloc[1, 0] | df.iloc[1, 1] | ... | ... |
     i=2  | your house | 1st   | ...           | ...           | ... | ... |
-    i=3  |            | 2st   | ...           | ...           | ... | ... |
+    i=3  |            | 2nd   | ...           | ...           | ... | ... |
 
 
     start_i, start_j are the first i, j coords (here -3, -2)
