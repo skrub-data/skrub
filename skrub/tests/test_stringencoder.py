@@ -35,4 +35,8 @@ def test_encoding(encode_column, df_module):
     se = StringEncoder(2)
     result = se.fit_transform(encode_column)
 
+    # Converting dtypes to avoid nullable shenanigans
+    check_df = sbd.pandas_convert_dtypes(check_df)
+    result = sbd.pandas_convert_dtypes(result)
+
     df_module.assert_frame_equal(check_df, result)
