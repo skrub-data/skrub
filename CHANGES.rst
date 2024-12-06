@@ -14,7 +14,9 @@ It is currently undergoing fast development and backward compatibility is not en
 
 Major changes
 -------------
-* :func:`tabular_learner` accepts the alias ``"regression"`` for the option ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+* :func:`tabular_learner` accepts the alias ``"regression"`` for the option
+   ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+   :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
 
 
 Release 0.4.0
