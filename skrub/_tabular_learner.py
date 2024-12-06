@@ -31,7 +31,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     ``estimator``.
 
     Instead of an actual estimator, ``estimator`` can also be the special-cased strings
-    ``'regressor'`` or ``'classifier'`` to use a
+    ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'`` to use a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or a
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default
     parameters.

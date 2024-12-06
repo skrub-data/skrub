@@ -12,6 +12,11 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+Major changes
+-------------
+* :func:`tabular_learner` accepts the alias ``"regression"`` for the option ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+
+
 Release 0.4.0
 =============
 
