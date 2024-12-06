@@ -121,3 +121,22 @@ def test_duration(df_module):
         {"a": [datetime.timedelta(days=2), datetime.timedelta(days=3)]}
     )
     assert re.search(r"2(\.0)?\s+days", TableReport(df).html())
+
+
+def test_verbosity_parameter(df_module):
+    df = df_module.make_dataframe(
+        dict(
+            a=[1, 2, 3, 4],
+            b=["one", "two", "three", "four"],
+            c=[11.1, 11.2, 11.3, 11.4],
+        )
+    )
+
+    report = TableReport(df)
+    report.html()
+
+    report_2 = TableReport(df, verbose=0)
+    report_2.html()
+
+    report_3 = TableReport(df, verbose=1)
+    report_3.html()

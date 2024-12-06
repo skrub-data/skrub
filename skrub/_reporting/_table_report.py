@@ -36,8 +36,8 @@ class TableReport:
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
      verbose: int, default = 1
-        A switch that determines if messages show in the standard output 
-        when report summary is being opened. Defaults to 1 to show messages. 
+        A switch that determines if messages show in the standard output
+        when report summary is being opened. Defaults to 1 to show messages.
         Set it to 0 to avoid displaying messages in standard output.
 
 
@@ -113,14 +113,14 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
-        verbose = 1
+        verbose=1,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
-            "verbose": verbose
+            "verbose": verbose,
         }
         self.title = title
         self.column_filters = column_filters
