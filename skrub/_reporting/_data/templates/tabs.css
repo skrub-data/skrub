@@ -32,7 +32,7 @@
     margin-top: var(--border-m);
 }
 
-.tab {
+button.tab {
     display: flex;
     align-items: center;
     column-gap: var(--space-s);
@@ -44,9 +44,8 @@
     padding-bottom: calc(var(--space-s) + var(--border-s));
     font-size: var(--space-l);
     background-color: transparent;
-    --color-muted: var(--darkg);
     --color-default: inherit;
-    color: var(--color-muted);
+    color: var(--color-muted-text);
 }
 
 .tab:hover {
@@ -55,7 +54,7 @@
 
 .tab[data-is-selected] {
     border-color: var(--darkg);
-    background-color: white;
+    background-color: var(--color-selected-tab);
     color: var(--color-default);
 }
 
@@ -75,8 +74,8 @@
 }
 
 .tab-list .tab[data-has-warning] {
-    --color-muted: var(--darkred);
-    --color-default: var(--red);
+    --color-muted-text: var(--color-critical-muted);
+    --color-default: var(--color-critical);
 
 }
 

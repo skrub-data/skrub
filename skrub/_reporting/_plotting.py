@@ -69,6 +69,7 @@ def _plot(plotting_fun):
 def _despine(ax):
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+    ax.set_facecolor("none")
 
 
 def _to_em(pt_match):
@@ -85,6 +86,7 @@ def _serialize(fig):
     fig.savefig(buffer, format="svg", bbox_inches="tight")
     out = buffer.getvalue().decode("UTF-8")
     out = re.sub(r'(width|height)="([0-9.]+)pt"', _to_em, out)
+    out = re.sub(r"#000000", "var(--color-text)", out)
     plt.close(fig)
     return out
 
