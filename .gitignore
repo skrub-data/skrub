@@ -76,3 +76,6 @@ jupyterlite_contents
 
 # Pixi folder
 .pixi/
+
+# python virtual environment
+venv

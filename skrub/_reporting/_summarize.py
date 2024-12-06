@@ -16,6 +16,7 @@ def summarize_dataframe(
     title=None,
     max_top_slice_size=5,
     max_bottom_slice_size=5,
+    verbose = 1
 ):
     """Collect information about a dataframe, used to produce reports.
 
@@ -44,6 +45,11 @@ def summarize_dataframe(
     max_bottom_slice_size : int, default=5
         Maximum number of rows from the end of the dataframe to show in the
         sample table.
+        
+    verbose: int, default = 1
+        A switch that determines if messages show in the standard output 
+        when report summary is being opened. Defaults to 1 to show messages. 
+        Set it to 0 to avoid displaying messages in standard output.
 
     Returns
     -------
@@ -75,9 +81,10 @@ def summarize_dataframe(
         order_by_idx = sbd.column_names(df).index(order_by)
         order_by_column = sbd.col_by_idx(df, order_by_idx)
     for position in range(sbd.shape(df)[1]):
-        print(
-            f"Processing column {position + 1: >3} / {n_columns}", end="\r", flush=True
-        )
+        if verbose == 1:
+            print(
+                f"Processing column {position + 1: >3} / {n_columns}", end="\r", flush=True
+            )
         summary["columns"].append(
             _summarize_column(
                 sbd.col_by_idx(df, position),
@@ -87,7 +94,9 @@ def summarize_dataframe(
                 order_by_column=order_by_column,
             )
         )
-    print(flush=True)
+    if verbose == 1:
+        print(flush=True)
+        
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
