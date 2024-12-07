@@ -47,9 +47,10 @@ def summarize_dataframe(
         sample table.
 
     verbose : int, default = 1
-        A switch that determines if messages show in the standard output
-        when report summary is being opened. Defaults to 1 to show messages.
-        Set it to 0 to avoid displaying messages in standard output.
+        Whether to print progress information while the report is being generated.
+
+        * verbose = 1 prints how many columns have been processed so far.
+        * verbose = 0 silences the output.
 
     Returns
     -------
