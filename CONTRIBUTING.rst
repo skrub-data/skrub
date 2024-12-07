@@ -129,8 +129,12 @@ To contribute, you will first have to run through some steps:
 - Set up your environment by forking the repository ((`Github doc on
   forking and
   cloning <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`__)).
-- While at the root of your local copy of skrub, install the required
-  development dependencies by running
+- Create a new virtual environment either with
+  `venv <https://docs.python.org/3/library/venv.html>`__ or
+  `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__,
+  then activate it.
+- While at the root of your local copy of skrub and within the new env,
+  install the required development dependencies by running
   ``pip install --editable ".[dev, lint, test, doc]"``.
 - Run all the tests by running ``pytest -s skrub/tests``.
 - Run ``pre-commit install`` to activate some checks that will run every
