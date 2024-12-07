@@ -18,11 +18,12 @@ def column_associations(df):
 
     The result is returned as a dataframe with columns:
 
-    `['left_column_name', 'left_column_idx', 'right_column_name',
-    'right_column_idx', 'cramer_v']`
+    ``['left_column_name', 'left_column_idx', 'right_column_name',
+    'right_column_idx', 'cramer_v']``
 
     As the function is commutative, each pair of columns appears only once
-    (either `col_1`, `col_2` or `col_2`, `col_1` but not both). The results are sorted
+    (either ``col_1``, ``col_2`` or ``col_2``, ``col_1`` but not both).
+    The results are sorted
     from most associated to least associated.
 
     To compute the Cramer's V statistic, all columns are discretized. Numeric
@@ -229,7 +230,6 @@ def _compute_cramer(table, n_samples):
 
     This returns the symmetric matrix with shape (n cols, n cols) where entry
     i, j contains the statistic for column i x column j.
-
     """
     marginal_0 = table.sum(axis=-2)
     marginal_1 = table.sum(axis=-1)
