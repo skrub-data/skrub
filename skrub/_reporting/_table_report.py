@@ -35,11 +35,10 @@ class TableReport:
         mapping with the keys ``display_name`` (the name shown in the menu,
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
-     verbose: int, default = 1
-        A switch that determines if messages show in the standard output
-        when report summary is being opened. Defaults to 1 to show messages.
-        Set it to 0 to avoid displaying messages in standard output.
-
+    verbose : int, default = 1
+       A switch that determines if messages show in the standard output
+       when report summary is being opened. Defaults to 1 to show messages.
+       Set it to 0 to avoid displaying messages in standard output.
 
     See Also
     --------
