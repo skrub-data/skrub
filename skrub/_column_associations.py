@@ -46,6 +46,7 @@ def column_associations(df):
     -----
     Cramér's V is a measure of association between two nominal variables,
     giving a value between 0 and +1 (inclusive).
+
     * `Cramer V <https://en.wikipedia.org/wiki/Cramér%27s_V>`_
 
     Examples
