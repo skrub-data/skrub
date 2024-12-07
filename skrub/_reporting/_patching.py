@@ -2,8 +2,6 @@ import importlib
 
 from ._table_report import TableReport
 
-# from functools import partial
-
 __all__ = ["patch_display", "unpatch_display"]
 
 _METHODS_TO_PATCH = ["_repr_mimebundle_", "_repr_html_"]
