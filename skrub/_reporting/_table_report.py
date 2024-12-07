@@ -199,7 +199,7 @@ class TableReport:
         return self._repr_mimebundle_()["text/html"]
 
     def write_html(self, filename):
-        """saving an html report
+        """Store the report into an HTML file.
 
         Parameters
         ----------
@@ -211,7 +211,10 @@ class TableReport:
             if isinstance(filename, str):
                 filename = Path(filename)
             if filename.suffix != ".html":
-                raise ValueError("Not ending with .html")
+                raise ValueError(
+                    "The filename does not end with the suffix `.html`. "
+                    f"Instead, got {filename.suffix}."
+                )
             file_object = open(filename, "w", encoding="utf-8")
         else:
             # already a file object

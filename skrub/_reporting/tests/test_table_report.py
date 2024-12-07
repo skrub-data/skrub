@@ -127,7 +127,7 @@ def test_duration(df_module):
     assert re.search(r"2(\.0)?\s+days", TableReport(df).html())
 
 
-@pytest.mark.parametrize("filename_path", ["str", "Path", "file_object"])
+@pytest.mark.parametrize("filename_type", ["str", "Path", "file_object"])
 def test_write_html(pd_module, filename_path):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     report = TableReport(df)
@@ -145,7 +145,6 @@ def test_write_html(pd_module, filename_path):
             file_object = open(f_name, "w", encoding="utf-8")
             report.write_html(file_object)
 
-        # Check if the file exists
         assert f_name.exists()
 
 
@@ -157,7 +156,6 @@ def test_write_html_with_no_suffix(pd_module):
         with pytest.raises(ValueError, match="Not ending with .html"):
             report.write_html(f_name)
 
-        # Check if the file exists
         assert not f_name.exists()
 
 
