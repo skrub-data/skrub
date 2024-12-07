@@ -203,7 +203,8 @@ class TableReport:
 
         Parameters
         ----------
-        filename : str, pathlib.Path or file object.
+        filename : str, pathlib.Path or file object
+            The file object or path of the file to store the HTML output.
         """
 
         if isinstance(filename, (str, Path)):
