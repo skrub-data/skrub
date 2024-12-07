@@ -128,35 +128,39 @@ def test_duration(df_module):
 
 
 @pytest.mark.parametrize("filename_type", ["str", "Path", "file_object"])
-def test_write_html(pd_module, filename_path):
+def test_write_html(pd_module, filename_type):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     report = TableReport(df)
 
     with TemporaryDirectory() as td:
-        f_name = Path(td) / Path("report.html")
+        tmp_file_path = Path(td) / Path("report.html")
 
-        if filename_path == "str":
-            report.write_html(f_name.absolute())
+        if filename_type == "str":
+            filename = str(tmp_file_path)
+        elif filename_type == "file_object":
+            filename = open(tmp_file_path, "w", encoding="utf-8")
+        else:
+            filename = tmp_file_path
 
-        if filename_path == "Path":
-            report.write_html(f_name)
-
-        if filename_path == "file_object":
-            file_object = open(f_name, "w", encoding="utf-8")
-            report.write_html(file_object)
-
-        assert f_name.exists()
+        report.write_html(filename)
+        assert tmp_file_path.exists()
 
 
 def test_write_html_with_no_suffix(pd_module):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     report = TableReport(df)
     with TemporaryDirectory() as td:
-        f_name = Path(td) / Path("report")
-        with pytest.raises(ValueError, match="Not ending with .html"):
-            report.write_html(f_name)
+        filename = Path(td) / Path("report.txt")
+        with pytest.raises(
+            ValueError,
+            match=(
+                "The filename does not end with the suffix `.html`. "
+                f"Instead, got {filename.suffix}"
+            ),
+        ):
+            report.write_html(filename)
 
-        assert not f_name.exists()
+        assert not filename.exists()
 
 
 def test_verbosity_parameter(df_module, capsys):
