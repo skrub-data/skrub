@@ -13,8 +13,8 @@ _CATEGORICAL_THRESHOLD = 30
 def column_associations(df):
     """Get measures of statistical associations between all pairs of columns.
 
-    At the moment, the only reported metric is Cramer's V statistic. More may
-    be added in the future.
+    Reported metrics include Cramer's V statistic and Pearson's Correlation
+    Coefficient. More may be added in the future.
 
     The result is returned as a dataframe with columns:
 
@@ -247,3 +247,20 @@ def _compute_cramer(table, n_samples):
     stat = np.sqrt(chi_stat / (n_samples * np.maximum(min_dim, 1)))
     stat[min_dim == 0] = 0.0
     return stat
+
+
+def _compute_pearsons(table, n_samples):
+    """Compute the Pearson correlation coefficient statistic given a
+    contingency table / pandas dataframe.
+
+    The input is the table computed by ``_contingency_table`` with shape
+    (n cols, n cols, n bins, n bins).
+
+    This returns the symmetric matrix with shape (n cols, n cols) where entry
+    i, j contains the statistic for column i x column j.
+
+    NOTE: get correct number
+    """
+    stats = table.corr(method="pearson", min_periods=1, numeric_only=True)
+
+    return stats
