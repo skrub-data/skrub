@@ -22,10 +22,10 @@ def column_associations(df):
     'right_column_idx', 'cramer_v']`
 
     As the function is commutative, each pair of columns appears only once
-    (either col_1, col_2 or col_2, col_1 but not both). The results are sorted
+    (either `col_1`, `col_2` or `col_2`, `col_1` but not both). The results are sorted
     from most associated to least associated.
 
-    To compute the Cramer V statistic, all columns are discretized. Numeric
+    To compute the Cramer's V statistic, all columns are discretized. Numeric
     columns are binned with 10 bins. For categorical columns, only the 10 most
     frequent categories are considered. In both cases, nulls are treated as a
     separate category, ie a separate row in the contingency table. Thus
@@ -47,7 +47,7 @@ def column_associations(df):
     Cramér's V is a measure of association between two nominal variables,
     giving a value between 0 and +1 (inclusive).
 
-    * `Cramer V <https://en.wikipedia.org/wiki/Cramér%27s_V>`_
+    * `Cramer's V <https://en.wikipedia.org/wiki/Cramér%27s_V>`_
 
     Examples
     --------
@@ -217,7 +217,7 @@ def _contingency_table(encoded):
 
 
 def _compute_cramer(table, n_samples):
-    """Compute the Cramer V statistic given a contingency table.
+    """Compute the Cramer's V statistic given a contingency table.
 
     The input is the table computed by ``_contingency_table`` with shape
     (n cols, n cols, n bins, n bins).
