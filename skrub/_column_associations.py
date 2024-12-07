@@ -18,8 +18,8 @@ def column_associations(df):
 
     The result is returned as a dataframe with columns:
 
-    ['left_column_name', 'left_column_idx', 'right_column_name',
-    'right_column_idx', 'cramer_v']
+    `['left_column_name', 'left_column_idx', 'right_column_name',
+    'right_column_idx', 'cramer_v']`
 
     As the function is commutative, each pair of columns appears only once
     (either col_1, col_2 or col_2, col_1 but not both). The results are sorted
@@ -180,6 +180,31 @@ def _compute_cramer(table, n_samples):
 
     This returns the symmetric matrix with shape (n cols, n cols) where entry
     i, j contains the statistic for column i x column j.
+
+    Returns
+    -------
+    dataframe
+        of computed associations.
+
+    Notes
+    -----
+    Cramér's V is a measure of association between two nominal variables,
+    giving a value between 0 and +1 (inclusive).
+    * `Cramer V <https://en.wikipedia.org/wiki/Cramér%27s_V>`_
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> import skrub
+    >>> pd.set_option('display.precision', 4)
+    >>> rng = np.random.default_rng()
+    >>> df = pd.DataFrame({f"c_{i}": rng.random(size=20)*10 for i in range(5)})
+    >>> df["c_str"] = [f"val {i}" for i in range(df.shape[0])]
+    >>> df.shape()
+    >>> df.head()
+    >>> associations = skrub.column_associations(df)
+    >>> associations
     """
     marginal_0 = table.sum(axis=-2)
     marginal_1 = table.sum(axis=-1)
