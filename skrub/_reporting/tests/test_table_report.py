@@ -123,7 +123,7 @@ def test_duration(df_module):
     assert re.search(r"2(\.0)?\s+days", TableReport(df).html())
 
 
-def test_verbosity_parameter(df_module):
+def test_verbosity_parameter(df_module, capsys):
     df = df_module.make_dataframe(
         dict(
             a=[1, 2, 3, 4],
@@ -134,9 +134,12 @@ def test_verbosity_parameter(df_module):
 
     report = TableReport(df)
     report.html()
+    assert capsys.readouterr().out != ""
 
     report_2 = TableReport(df, verbose=0)
     report_2.html()
+    assert capsys.readouterr().out == ""
 
     report_3 = TableReport(df, verbose=1)
     report_3.html()
+    assert capsys.readouterr().out != ""
