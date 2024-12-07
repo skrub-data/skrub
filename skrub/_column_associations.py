@@ -54,13 +54,36 @@ def column_associations(df):
     >>> import pandas as pd
     >>> import skrub
     >>> pd.set_option('display.precision', 4)
-    >>> rng = np.random.default_rng()
+    >>> rng = np.random.default_rng(33)
     >>> df = pd.DataFrame({f"c_{i}": rng.random(size=20)*10 for i in range(5)})
     >>> df["c_str"] = [f"val {i}" for i in range(df.shape[0])]
     >>> df.shape
+    (20, 6)
     >>> df.head()
+          c_0     c_1     c_2     c_3     c_4  c_str
+    0  4.4364  4.0114  6.9271  7.0970  4.8913  val 0
+    1  5.6849  0.7192  7.6430  4.6441  2.5116  val 1
+    2  9.0810  9.4011  1.9257  5.7429  6.2358  val 2
+    3  2.5425  2.9678  9.7801  9.9879  6.0709  val 3
+    4  5.8878  9.3223  5.3840  7.2006  2.1494  val 4
     >>> associations = skrub.column_associations(df)
     >>> associations
+       left_column_name  left_column_idx right_column_name  right_column_idx  cramer_v
+    0               c_3                3             c_str                 5    0.8215
+    1               c_1                1               c_4                 4    0.8215
+    2               c_0                0               c_1                 1    0.8215
+    3               c_2                2             c_str                 5    0.7551
+    4               c_0                0             c_str                 5    0.7551
+    5               c_0                0               c_3                 3    0.7551
+    6               c_1                1               c_3                 3    0.6837
+    7               c_0                0               c_4                 4    0.6837
+    8               c_4                4             c_str                 5    0.6837
+    9               c_3                3               c_4                 4    0.6053
+    10              c_2                2               c_3                 3    0.6053
+    11              c_1                1             c_str                 5    0.6053
+    12              c_0                0               c_2                 2    0.6053
+    13              c_2                2               c_4                 4    0.5169
+    14              c_1                1               c_2                 2    0.4122
     """
     return _stack_symmetric_associations(_cramer_v_matrix(df), df)
 
