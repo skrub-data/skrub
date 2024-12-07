@@ -22,6 +22,18 @@ Highlights
 * The :class:`TableVectorizer` can now drop columns that contain a fraction of
   null values above a user-chosen threshold.
 
+New features
+------------
+
+
+Changes
+-------
+
+
+Bug fixes
+---------
+
+
 Release 0.4.0
 =============
 
