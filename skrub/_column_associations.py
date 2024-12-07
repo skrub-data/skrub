@@ -54,6 +54,8 @@ def column_associations(df):
     >>> import numpy as np
     >>> import pandas as pd
     >>> import skrub
+    >>> pd.set_option('display.width', 200)
+    >>> pd.set_option('display.max_columns', 10)
     >>> pd.set_option('display.precision', 4)
     >>> rng = np.random.default_rng(33)
     >>> df = pd.DataFrame({f"c_{i}": rng.random(size=20)*10 for i in range(5)})
@@ -85,6 +87,9 @@ def column_associations(df):
     12              c_0                0               c_2                 2    0.6053
     13              c_2                2               c_4                 4    0.5169
     14              c_1                1               c_2                 2    0.4122
+    >>> pd.reset_option('display.width')
+    >>> pd.reset_option('display.max_columns')
+    >>> pd.reset_option('display.precision')
     """
     return _stack_symmetric_associations(_cramer_v_matrix(df), df)
 
