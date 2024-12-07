@@ -67,12 +67,12 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         You can find more options on the `sentence-transformers documentation
         <https://www.sbert.net/docs/pretrained_models.html#model-overview>`_.
 
-        The default model is a shrinked version of e5-v2, which has shown good
+        The default model is a shrunk version of e5-v2, which has shown good
         performance in the benchmark of [1]_.
 
     n_components : int or None, default=30,
         The number of embedding dimensions. As the number of dimensions is different
-        accross embedding models, this class uses a :class:`~sklearn.decomposition.PCA`
+        across embedding models, this class uses a :class:`~sklearn.decomposition.PCA`
         to set the number of embedding to ``n_components`` during ``transform``.
         Set ``n_components=None`` to skip the PCA dimension reduction mechanism.
 
@@ -395,7 +395,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     def __getstate__(self):
         state = self.__dict__.copy()
         # Always dump self._cache_folder because it is overwritten when the model
-        # is loaded, and it shows an absolut path on the user machine.
+        # is loaded, and it shows an absolute path on the user machine.
         # However, we have to include self.cache_folder in the serialized object
         # because that is a parameter provided by the user.
         remove_props = ["_cache_folder"]
