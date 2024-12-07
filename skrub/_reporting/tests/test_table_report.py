@@ -2,6 +2,10 @@ import datetime
 import json
 import re
 import warnings
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import pytest
 
 from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
@@ -121,3 +125,37 @@ def test_duration(df_module):
         {"a": [datetime.timedelta(days=2), datetime.timedelta(days=3)]}
     )
     assert re.search(r"2(\.0)?\s+days", TableReport(df).html())
+
+
+@pytest.mark.parametrize("filename_path", ["str", "Path", "file_object"])
+def test_write_html(pd_module, filename_path):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+
+    with TemporaryDirectory() as td:
+        f_name = Path(td) / Path("report.html")
+
+        if filename_path == "str":
+            report.write_html(f_name.absolute())
+
+        if filename_path == "Path":
+            report.write_html(f_name)
+
+        if filename_path == "file_object":
+            file_object = open(f_name, "w", encoding="utf-8")
+            report.write_html(file_object)
+
+        # Check if the file exists
+        assert f_name.exists()
+
+
+def test_write_html_with_no_suffix(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+    with TemporaryDirectory() as td:
+        f_name = Path(td) / Path("report")
+        with pytest.raises(ValueError, match="Not ending with .html"):
+            report.write_html(f_name)
+
+        # Check if the file exists
+        assert not f_name.exists()

@@ -1,5 +1,6 @@
 import functools
 import json
+from pathlib import Path
 
 from ._html import to_html
 from ._serve import open_in_browser
@@ -188,6 +189,26 @@ class TableReport:
 
     def _repr_html_(self):
         return self._repr_mimebundle_()["text/html"]
+
+    def write_html(self, filename):
+        """saving an html report
+
+        Parameters
+        ----------
+        filename : str, pathlib.Path or file object.
+        """
+
+        if isinstance(filename, (str, Path)):
+            if isinstance(filename, str):
+                filename = Path(filename)
+            if filename.suffix != ".html":
+                raise ValueError("Not ending with .html")
+            file_object = open(filename, "w", encoding="utf-8")
+        else:
+            # already a file object
+            file_object = filename
+        file_object.write(self.html())
+        file_object.close()
 
     def open(self):
         """Open the HTML report in a web browser."""
