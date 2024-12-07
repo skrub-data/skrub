@@ -36,9 +36,10 @@ class TableReport:
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
     verbose : int, default = 1
-       A switch that determines if messages show in the standard output
-       when report summary is being opened. Defaults to 1 to show messages.
-       Set it to 0 to avoid displaying messages in standard output.
+        Whether to print progress information while the report is being generated.
+
+        * verbose = 1 prints how many columns have been processed so far.
+        * verbose = 0 silences the output.
 
     See Also
     --------
