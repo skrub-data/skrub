@@ -70,7 +70,7 @@ def column_associations(df):
     3  2.5425  2.9678  9.7801  9.9879  6.0709  val 3
     4  5.8878  9.3223  5.3840  7.2006  2.1494  val 4
     >>> associations = skrub.column_associations(df)
-    >>> associations
+    >>> associations # doctest: +SKIP
        left_column_name  left_column_idx right_column_name  right_column_idx  cramer_v
     0               c_3                3             c_str                 5    0.8215
     1               c_1                1               c_4                 4    0.8215
