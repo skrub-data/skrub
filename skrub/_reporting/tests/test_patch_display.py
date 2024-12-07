@@ -8,7 +8,13 @@ from skrub import patch_display, unpatch_display
 @pytest.mark.parametrize("repeat_patch", [1, 2])
 @pytest.mark.parametrize("repeat_unpatch", [1, 2])
 def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
-    df = df_module.example_dataframe
+    df = df_module.make_dataframe(
+        dict(
+            a=[1, 2, 3, 4],
+            b=["one", "two", "three", "four"],
+            c=[11.1, 11.2, 11.3, 11.4],
+        )
+    )
     assert "<table" in df._repr_html_()
     assert "<skrub-table-report" not in df._repr_html_()
     patch_display(pandas=False, polars=False)
@@ -26,7 +32,6 @@ def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
     assert "<table" in df._repr_html_()
     assert "<skrub-table-report" not in df._repr_html_()
 
-    unpatch_display()
     try:
         capsys.readouterr()
         patch_display(verbose=0)
