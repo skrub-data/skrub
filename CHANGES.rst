@@ -12,11 +12,26 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
-Major changes
--------------
+New features
+------------
+
+
+Changes
+-------
+* A new parameter `verbose` has been added to the :class:`TableReport` to toggle on or off the
+  printing of progress information when a report is being generated.
+  :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
+
+* A parameter `verbose` has been added to the :func:`patch_display` to toggle on or off the
+  printing of progress information when a table report is being generated.
+  :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
+  
 * :func:`tabular_learner` accepts the alias ``"regression"`` for the option
    ``"regressor"`` and ``"classification"`` for ``"classifier"``.
    :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
+
+Bug fixes
+---------
 
 
 Release 0.4.0
