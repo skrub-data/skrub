@@ -15,7 +15,9 @@ from skrub import (
 )
 
 
-@pytest.mark.parametrize("learner_kind", ["regressor", "classifier"])
+@pytest.mark.parametrize(
+    "learner_kind", ["regressor", "regression", "classifier", "classification"]
+)
 def test_default_pipeline(learner_kind):
     p = tabular_learner(learner_kind)
     tv, learner = [e for _, e in p.steps]
@@ -26,14 +28,17 @@ def test_default_pipeline(learner_kind):
     else:
         assert isinstance(tv.low_cardinality, ToCategorical)
         assert learner.categorical_features == "from_dtype"
-    if learner_kind == "regressor":
+    if learner_kind in ("regressor", "regression"):
         assert isinstance(learner, ensemble.HistGradientBoostingRegressor)
     else:
         assert isinstance(learner, ensemble.HistGradientBoostingClassifier)
 
 
 def test_bad_learner():
-    with pytest.raises(ValueError, match=".*should be 'regressor' or 'classifier'"):
+    with pytest.raises(
+        ValueError,
+        match=".*should be 'regressor', 'regression', 'classifier' or 'classification'",
+    ):
         tabular_learner("bad")
     with pytest.raises(
         TypeError, match=".*Pass an instance of HistGradientBoostingRegressor"
