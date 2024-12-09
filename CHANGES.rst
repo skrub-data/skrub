@@ -38,6 +38,10 @@ Bug fixes
   :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
   [here](https://github.com/matplotlib/matplotlib/issues/25041).
 
+Maintenance
+-----------
+* Make `skrub` compatible with scikit-learn 1.6.
+  :pr:`1135` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.4.0
 =============
