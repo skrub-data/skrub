@@ -38,10 +38,16 @@ Bug fixes
   :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
   [here](https://github.com/matplotlib/matplotlib/issues/25041).
 
+* Improve the performance of :func:`deduplicate` by removing some unnecessary
+  computations. :pr:`1193` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Maintenance
 -----------
 * Make `skrub` compatible with scikit-learn 1.6.
   :pr:`1135` by :user:`Guillaume Lemaitre <glemaitre>`.
+
+* Make `skrub` compatible with pandas ``3.0`` and scipy ``1.16``. :pr:`1193` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.4.0
 =============
