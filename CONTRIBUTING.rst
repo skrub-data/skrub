@@ -150,6 +150,7 @@ the tests with the command ``pytest -s skrub/tests``; note that this may
 take a long time. Some tests may raise warnings such as:
 
 .. code:: sh
+
   UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
     warnings.warn(
 
@@ -281,7 +282,7 @@ Formatting and pre-commit checks
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Formatting the code well helps with code development and maintenance,
-which is skrub requires that all commits follow a specific set of
+which why is skrub requires that all commits follow a specific set of
 formatting rules to ensure code quality.
 
 Luckily, these checks are performed automatically by the ``pre-commit``
