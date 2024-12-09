@@ -232,7 +232,7 @@ plot_box_results(results)
 # case, 30.
 from skrub import StringEncoder
 
-string_encoder = StringEncoder(components=30)
+string_encoder = StringEncoder(n_components=30)
 
 string_encoder_pipe = clone(gap_pipe).set_params(
     **{"tablevectorizer__high_cardinality": string_encoder}
