@@ -11,9 +11,9 @@ else:
 
 
 def _check_n_features(estimator, X, *, reset):
-    if hasattr(estimator, "_check_n_features"):
-        estimator._check_n_features(X, reset=reset)
-    else:
+    try:
         from sklearn.utils.validation import _check_n_features
 
         _check_n_features(estimator, X, reset=reset)
+    except ImportError:
+        estimator._check_n_features(X, reset=reset)
