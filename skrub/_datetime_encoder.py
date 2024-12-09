@@ -134,7 +134,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     0   2024-05-13 12:05:36
     1                   NaT
     2   2024-05-15 13:46:02
-    Name: login, dtype: datetime64[ns]
+    Name: login, dtype: datetime64[...]
     >>> from skrub import DatetimeEncoder
 
     >>> DatetimeEncoder().fit_transform(login)
@@ -237,7 +237,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     0   2024-05-13 07:05:36-03:00
     1                         NaT
     2   2024-05-15 08:46:02-03:00
-    Name: login, dtype: datetime64[ns, America/Sao_Paulo]
+    Name: login, dtype: datetime64[..., America/Sao_Paulo]
     >>> encoder.transform(login_sp)['login_hour']
     0    7.0
     1    NaN
