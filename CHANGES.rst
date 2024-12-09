@@ -25,7 +25,7 @@ Changes
 * A parameter `verbose` has been added to the :func:`patch_display` to toggle on or off the
   printing of progress information when a table report is being generated.
   :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
-  
+
 * :func:`tabular_learner` accepts the alias ``"regression"`` for the option
    ``"regressor"`` and ``"classification"`` for ``"classifier"``.
    :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
