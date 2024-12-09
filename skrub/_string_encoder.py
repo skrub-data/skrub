@@ -1,4 +1,4 @@
-from sklearn.decomposition import PCA
+from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
@@ -9,18 +9,18 @@ from ._on_each_column import SingleColumnTransformer
 
 class StringEncoder(SingleColumnTransformer):
     """Generate a lightweight string encoding of a given column. First, apply a
-    tf-idf vectorization of the text, then reduce the dimensionality with a PCA
-    decomposition with the given number of parameters.
+    tf-idf vectorization of the text, then reduce the dimensionality with a
+    truncated SVD decomposition with the given number of parameters.
 
     Parameters
     ----------
-    pca_components : int
+    components : int
         Number of components to be used for the PCA decomposition.
 
     """
 
-    def __init__(self, pca_components=30):
-        self.pca_components = pca_components
+    def __init__(self, components=30):
+        self.components = components
 
     def _transform(self, X):
         result = self.pipe.transform(sbd.to_numpy(X))
@@ -34,8 +34,8 @@ class StringEncoder(SingleColumnTransformer):
     def get_feature_names_out(self, X):
         name = sbd.name(X)
         if not name:
-            name = "pca"
-        names = [f"{name}_{idx}" for idx in range(self.pca_components)]
+            name = "tsvd"
+        names = [f"{name}_{idx}" for idx in range(self.components)]
         return names
 
     def fit_transform(self, X, y=None):
@@ -50,14 +50,14 @@ class StringEncoder(SingleColumnTransformer):
         Returns
         -------
         A Pandas or Polars dataframe (depending on input) with shape
-        (len(X), pca_components). New features will be named `{col_name}_{component}`
-        if the series has a name, and `pca_{component}` if it does not.
+        (len(X), tsvd_components). New features will be named `{col_name}_{component}`
+        if the series has a name, and `tsvd_{component}` if it does not.
         """
         del y
         self.pipe = Pipeline(
             [
                 ("tfidf", TfidfVectorizer()),
-                ("pca", PCA(n_components=self.pca_components)),
+                ("tsvd", TruncatedSVD(n_components=self.components)),
             ]
         )
 
@@ -78,8 +78,8 @@ class StringEncoder(SingleColumnTransformer):
         Returns
         -------
         A Pandas or Polars dataframe (depending on input) with shape
-        (len(X), pca_components). New features will be named `{col_name}_{component}`
-        if the series has a name, and `pca_{component}` if it does not.
+        (len(X), components). New features will be named `{col_name}_{component}`
+        if the series has a name, and `tsvd_{component}` if it does not.
         """
         check_is_fitted(self)
         return self._transform(X)

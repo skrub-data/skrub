@@ -1,5 +1,5 @@
 import pytest
-from sklearn.decomposition import PCA
+from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
 
@@ -23,7 +23,7 @@ def test_encoding(encode_column, df_module):
     pipe = Pipeline(
         [
             ("tfidf", TfidfVectorizer()),
-            ("pca", PCA(n_components=2)),
+            ("tsvd", TruncatedSVD(n_components=2)),
         ]
     )
     check = pipe.fit_transform(sbd.to_numpy(encode_column))
