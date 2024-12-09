@@ -32,6 +32,11 @@ Changes
 
 Bug fixes
 ---------
+* Generating a ``TableReport`` could have an effect on the matplotib
+  configuration which could cause plots not to display inline in jupyter
+  notebooks any more. This has been fixed in skrub in :pr:`1172` by
+  :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
+  [here](https://github.com/matplotlib/matplotlib/issues/25041).
 
 
 Release 0.4.0
