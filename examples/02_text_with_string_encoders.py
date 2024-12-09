@@ -17,6 +17,9 @@ available in skrub.
 .. |TextEncoder| replace::
      :class:`~skrub.TextEncoder`
 
+.. |StringEncoder| replace::
+     :class:`~skrub.StringEncoder`
+
 .. |TableReport| replace::
      :class:`~skrub.TableReport`
 
