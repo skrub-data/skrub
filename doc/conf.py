@@ -175,9 +175,9 @@ html_theme_options = {
     "header_links_before_dropdown": 4,
     "icon_links": [
         {
-            "name": "Twitter",
-            "url": "https://twitter.com/skrub_data",
-            "icon": "fa-brands fa-twitter",
+            "name": "Bluesky",
+            "url": "https://bsky.app/profile/skrub-data.bsky.social",
+            "icon": "fa-brands fa-bluesky",
         },
         {
             "name": "GitHub",
@@ -190,9 +190,8 @@ html_theme_options = {
             "icon": "fa-brands fa-discord",
         },
     ],
-    # alternative way to set twitter and github header icons
+    # alternative way to set github header icon
     # "github_url": "https://github.com/pydata/pydata-sphinx-theme",
-    # "twitter_url": "https://twitter.com/PyData",
     "use_edit_page_button": True,
     "show_toc_level": 1,
     # "navbar_align": [left, content, right] to test that navbar items align properly
