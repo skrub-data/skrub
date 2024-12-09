@@ -1,3 +1,5 @@
+from dataclasses import is_dataclass
+
 import sklearn
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
@@ -6,6 +8,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
+from ._fixes import get_tags
 from ._minhash_encoder import MinHashEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
@@ -270,9 +273,15 @@ def tabular_learner(estimator, *, n_jobs=None):
             high_cardinality=MinHashEncoder(),
         )
     steps = [vectorizer]
-    if not hasattr(estimator, "_get_tags") or not estimator._get_tags().get(
-        "allow_nan", False
-    ):
+    try:
+        tags = get_tags(estimator)
+        if is_dataclass(tags):
+            allow_nan = tags.input_tags.allow_nan
+        else:
+            allow_nan = tags.get("allow_nan", False)
+    except TypeError:
+        allow_nan = False
+    if not allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
     if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         steps.append(StandardScaler())
