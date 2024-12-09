@@ -17,6 +17,7 @@ from ._multi_agg_joiner import MultiAggJoiner
 from ._reporting import TableReport, patch_display, unpatch_display
 from ._select_cols import DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
+from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._tabular_learner import tabular_learner
 from ._text_encoder import TextEncoder
@@ -53,5 +54,6 @@ __all__ = [
     "SelectCols",
     "DropCols",
     "TextEncoder",
+    "StringEncoder",
     "column_associations",
 ]
