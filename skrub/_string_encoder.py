@@ -19,7 +19,7 @@ class StringEncoder(SingleColumnTransformer):
 
     Parameters
     ----------
-    components : int
+    n_components : int
         Number of components to be used for the PCA decomposition.
 
     See Also
@@ -40,7 +40,7 @@ class StringEncoder(SingleColumnTransformer):
 
     We will encode the comments using 2 components:
 
-    >>> enc = StringEncoder(components=2)
+    >>> enc = StringEncoder(n_components=2)
     >>> X = pd.Series([
     ...   "The professor snatched a good interview out of the jaws of these questions.",
     ...   "Bookmarking this to watch later.",
@@ -54,24 +54,26 @@ class StringEncoder(SingleColumnTransformer):
     2      8.218069e-01     -3.046564e-16
     """
 
-    def __init__(self, components=30):
-        self.components = components
+    def __init__(self, n_components=30):
+        self.n_components = n_components
 
     def _transform(self, X):
         result = self.pipe.transform(sbd.to_numpy(X))
 
-        names = self._get_feature_names_out(X)
-        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
+        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result.T)))
         result = sbd.copy_index(X, result)
 
         return result
 
-    def _get_feature_names_out(self, X):
-        name = sbd.name(X)
-        if not name:
-            name = "tsvd"
-        names = [f"{name}_{idx}" for idx in range(self.components)]
-        return names
+    def get_feature_names_out(self):
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        feature_names_out : list of str objects
+            Transformed feature names.
+        """
+        return list(self.all_outputs_)
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -85,16 +87,21 @@ class StringEncoder(SingleColumnTransformer):
 
         Returns
         -------
-        X_out: Pandas or Polars dataframe with shape (len(X), tsvd_components)
+        X_out: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
             The embedding representation of the input.
         """
         del y
         self.pipe = Pipeline(
             [
                 ("tfidf", TfidfVectorizer()),
-                ("tsvd", TruncatedSVD(n_components=self.components)),
+                ("tsvd", TruncatedSVD(n_components=self.n_components)),
             ]
         )
+
+        name = sbd.name(X)
+        if not name:
+            name = "tsvd"
+        self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components)]
 
         self.pipe.fit(sbd.to_numpy(X))
 
@@ -112,7 +119,7 @@ class StringEncoder(SingleColumnTransformer):
 
         Returns
         -------
-        X_out: Pandas or Polars dataframe with shape (len(X), tsvd_components)
+        X_out: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
             The embedding representation of the input.
         """
         check_is_fitted(self)

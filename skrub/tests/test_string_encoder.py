@@ -16,7 +16,7 @@ def encode_column(df_module):
         "is this the first document",
     ]
 
-    return df_module.make_column("test_column", corpus)
+    return df_module.make_column("col1", corpus)
 
 
 def test_encoding(encode_column, df_module):
@@ -28,7 +28,7 @@ def test_encoding(encode_column, df_module):
     )
     check = pipe.fit_transform(sbd.to_numpy(encode_column))
 
-    names = [f"test_column_{idx}" for idx in range(2)]
+    names = [f"col1_{idx}" for idx in range(2)]
 
     check_df = df_module.make_dataframe(dict(zip(names, check.T)))
 
@@ -40,3 +40,12 @@ def test_encoding(encode_column, df_module):
     result = sbd.pandas_convert_dtypes(result)
 
     df_module.assert_frame_equal(check_df, result)
+
+
+def test_get_feature_names_out(encode_column):
+    """Test that ``get_feature_names_out`` returns the correct feature names."""
+    encoder = StringEncoder(n_components=4)
+
+    encoder.fit(encode_column)
+    expected_columns = ["col1_0", "col1_1", "col1_2", "col1_3"]
+    assert encoder.get_feature_names_out() == expected_columns
