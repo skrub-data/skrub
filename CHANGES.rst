@@ -18,6 +18,9 @@ New features
 
 Changes
 -------
+* :class: `TableReport` has `write_html` method
+  :pr:`1190` by :user: `Mojdeh Rastgoo<mrastgoo>`.
+
 * A new parameter `verbose` has been added to the :class:`TableReport` to toggle on or off the
   printing of progress information when a report is being generated.
   :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.

@@ -3,7 +3,6 @@ import json
 import re
 import warnings
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -127,39 +126,48 @@ def test_duration(df_module):
     assert re.search(r"2(\.0)?\s+days", TableReport(df).html())
 
 
-@pytest.mark.parametrize("filename_type", ["str", "Path", "file_object"])
-def test_write_html(pd_module, filename_type):
+@pytest.mark.parametrize(
+    "filename_type",
+    ["str", "Path", "file_object", "binary_mode", "file_object_encoding_None"],
+)
+def test_write_html(tmp_path, pd_module, filename_type):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     report = TableReport(df)
 
-    with TemporaryDirectory() as td:
-        tmp_file_path = Path(td) / Path("report.html")
+    tmp_file_path = tmp_path / Path("report.html")
 
-        if filename_type == "str":
-            filename = str(tmp_file_path)
-        elif filename_type == "file_object":
-            filename = open(tmp_file_path, "w", encoding="utf-8")
-        else:
-            filename = tmp_file_path
+    if filename_type == "str":
+        filename = str(tmp_file_path)
+    elif filename_type == "file_object":
+        filename = open(tmp_file_path, "w", encoding="utf-8")
+    elif filename_type == "file_object_encoding_None":
+        filename = open(tmp_file_path, "w")
+    elif filename_type == "binary_mode":
+        filename = open(tmp_file_path, "wb")
+    else:
+        filename = tmp_file_path
 
+    report.write_html(filename)
+    assert tmp_file_path.exists()
+
+    with open(tmp_file_path, "r") as file:
+        saved_content = file.read()
+    assert "</html>" in saved_content
+
+
+def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    report = TableReport(df)
+
+    filename = open(tmp_path / Path("report.html"), "w", encoding="latin-1")
+    encoding = getattr(filename, "encoding", None)
+    with pytest.raises(
+        ValueError,
+        match=(
+            f"If `file` is a text file it should use utf-8 encoding; got: {encoding!r}"
+        ),
+    ):
         report.write_html(filename)
-        assert tmp_file_path.exists()
-
-
-def test_write_html_with_no_suffix(pd_module):
-    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
-    report = TableReport(df)
-    with TemporaryDirectory() as td:
-        filename = Path(td) / Path("report.txt")
-        with pytest.raises(
-            ValueError,
-            match=(
-                "The filename does not end with the suffix `.html`. "
-                f"Instead, got {filename.suffix}"
-            ),
-        ):
-            report.write_html(filename)
-
         assert not filename.exists()
 
 
