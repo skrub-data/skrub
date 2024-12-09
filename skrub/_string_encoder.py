@@ -8,15 +8,50 @@ from ._on_each_column import SingleColumnTransformer
 
 
 class StringEncoder(SingleColumnTransformer):
-    """Generate a lightweight string encoding of a given column. First, apply a
-    tf-idf vectorization of the text, then reduce the dimensionality with a
-    truncated SVD decomposition with the given number of parameters.
+    """Generate a lightweight string encoding of a given column using tf-idf \
+        vectorization and truncated SVD.
+
+    First, apply a tf-idf vectorization of the text, then reduce the dimensionality
+    with a truncated SVD decomposition with the given number of parameters.
+
+    New features will be named `{col_name}_{component}` if the series has a name,
+    and `tsvd_{component}` if it does not.
 
     Parameters
     ----------
     components : int
         Number of components to be used for the PCA decomposition.
 
+    See Also
+    --------
+    MinHashEncoder :
+        Encode string columns as a numeric array with the minhash method.
+    GapEncoder :
+        Encode string columns by constructing latent topics.
+    SimilarityEncoder :
+        Encode string columns as a numeric array with n-gram string similarity.
+    TextEncoder :
+        Encode string columns using pre-trained language models.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skrub import StringEncoder
+
+    We will encode the comments using 2 components:
+
+    >>> enc = StringEncoder(components=2)
+    >>> X = pd.Series([
+    ...   "The professor snatched a good interview out of the jaws of these questions.",
+    ...   "Bookmarking this to watch later.",
+    ...   "When you don't know the lyrics of the song except the chorus",
+    ... ], name='video comments')
+
+    >>> enc.fit_transform(X) # doctest: +SKIP
+       video comments_0  video comments_1
+    0      8.218069e-01      4.557474e-17
+    1      6.971618e-16      1.000000e+00
+    2      8.218069e-01     -3.046564e-16
     """
 
     def __init__(self, components=30):
@@ -25,13 +60,13 @@ class StringEncoder(SingleColumnTransformer):
     def _transform(self, X):
         result = self.pipe.transform(sbd.to_numpy(X))
 
-        names = self.get_feature_names_out(X)
+        names = self._get_feature_names_out(X)
         result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
         result = sbd.copy_index(X, result)
 
         return result
 
-    def get_feature_names_out(self, X):
+    def _get_feature_names_out(self, X):
         name = sbd.name(X)
         if not name:
             name = "tsvd"
@@ -43,15 +78,15 @@ class StringEncoder(SingleColumnTransformer):
 
         Parameters
         ----------
-        X : Pandas or Polars series.
+        X : Pandas or Polars series
             The column to transform.
-        y : None. Ignored
+        y : None
+            Unused. Here for compatibility with scikit-learn.
 
         Returns
         -------
-        A Pandas or Polars dataframe (depending on input) with shape
-        (len(X), tsvd_components). New features will be named `{col_name}_{component}`
-        if the series has a name, and `tsvd_{component}` if it does not.
+        X_out: Pandas or Polars dataframe with shape (len(X), tsvd_components)
+            The embedding representation of the input.
         """
         del y
         self.pipe = Pipeline(
@@ -72,14 +107,13 @@ class StringEncoder(SingleColumnTransformer):
 
         Parameters
         ----------
-        X : Pandas or Polars series.
+        X : Pandas or Polars series
             The column to transform.
 
         Returns
         -------
-        A Pandas or Polars dataframe (depending on input) with shape
-        (len(X), components). New features will be named `{col_name}_{component}`
-        if the series has a name, and `tsvd_{component}` if it does not.
+        X_out: Pandas or Polars dataframe with shape (len(X), tsvd_components)
+            The embedding representation of the input.
         """
         check_is_fitted(self)
         return self._transform(X)
