@@ -26,9 +26,22 @@ Changes
   printing of progress information when a table report is being generated.
   :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
 
+* :func:`tabular_learner` accepts the alias ``"regression"`` for the option
+   ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+   :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
+
 Bug fixes
 ---------
+* Generating a ``TableReport`` could have an effect on the matplotib
+  configuration which could cause plots not to display inline in jupyter
+  notebooks any more. This has been fixed in skrub in :pr:`1172` by
+  :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
+  [here](https://github.com/matplotlib/matplotlib/issues/25041).
 
+Maintenance
+-----------
+* Make `skrub` compatible with scikit-learn 1.6.
+  :pr:`1135` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.4.0
 =============
