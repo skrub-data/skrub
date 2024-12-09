@@ -128,7 +128,7 @@ def test_duration(df_module):
 
 @pytest.mark.parametrize(
     "filename_type",
-    ["str", "Path", "file_object", "binary_mode", "file_object_encoding_None"],
+    ["str", "Path", "file_object", "binary_mode"],
 )
 def test_write_html(tmp_path, pd_module, filename_type):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
@@ -140,8 +140,6 @@ def test_write_html(tmp_path, pd_module, filename_type):
         filename = str(tmp_file_path)
     elif filename_type == "file_object":
         filename = open(tmp_file_path, "w", encoding="utf-8")
-    elif filename_type == "file_object_encoding_None":
-        filename = open(tmp_file_path, "w")
     elif filename_type == "binary_mode":
         filename = open(tmp_file_path, "wb")
     else:

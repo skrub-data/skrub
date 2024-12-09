@@ -219,6 +219,7 @@ class TableReport:
         except TypeError:
             pass
 
+        print(getattr(file, "encoding", None))
         if (encoding := getattr(file, "encoding", None)) is not None:
             try:
                 assert codecs.lookup(encoding).name == "utf-8"
@@ -227,7 +228,7 @@ class TableReport:
                     "If `file` is a text file it should use utf-8 encoding; got:"
                     f" {encoding!r}"
                 )
-        elif locale.getencodeing().lower() != "utf-8":
+        elif locale.getencoding().lower() != "utf-8":
             # when encoding=None, it will default on the platform-specific encoding
             # raise if not utf-8
             raise ValueError(
