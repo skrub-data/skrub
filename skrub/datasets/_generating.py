@@ -28,7 +28,7 @@ def make_deduplication_data(
         Number of duplications per example.
     prob_mistake_per_letter : float in [0, 1], default=0.2
         Probability of misspelling a character in duplications.
-        By default, 1/5 of the characters will be misspeled.
+        By default, 1/5 of the characters will be misspelled.
     random_state : int, RandomState instance, optional
         Determines random number generation for dataset noise. Pass an int
         for reproducible output across multiple function calls.

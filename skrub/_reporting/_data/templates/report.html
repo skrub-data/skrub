@@ -23,11 +23,8 @@
     <skrub-table-report class="report" id="{{ report_id }}">
     </skrub-table-report>
 
-    <script>
+    <script type="module">
      {% include "report.js" %}
-    </script>
-    <script>
-     setTimeout(() => {initReport("{{ report_id }}");});
     </script>
 </div>
 

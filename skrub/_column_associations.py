@@ -18,18 +18,19 @@ def column_associations(df):
 
     The result is returned as a dataframe with columns:
 
-    ['left_column_name', 'left_column_idx', 'right_column_name',
-    'right_column_idx', 'cramer_v']
+    ``['left_column_name', 'left_column_idx', 'right_column_name',
+    'right_column_idx', 'cramer_v']``
 
     As the function is commutative, each pair of columns appears only once
-    (either col_1, col_2 or col_2, col_1 but not both). The results are sorted
+    (either ``col_1``, ``col_2`` or ``col_2``, ``col_1`` but not both).
+    The results are sorted
     from most associated to least associated.
 
-    To compute the Cramer V statistic, all columns are discretized. Numeric
+    To compute the Cramer's V statistic, all columns are discretized. Numeric
     columns are binned with 10 bins. For categorical columns, only the 10 most
     frequent categories are considered. In both cases, nulls are treated as a
     separate category, ie a separate row in the contingency table. Thus
-    associations betwen the values of 2 columns or between their missingness
+    associations between the values of 2 columns or between their missingness
     patterns may be captured.
 
     Parameters
@@ -41,6 +42,55 @@ def column_associations(df):
     -------
     dataframe
         The computed associations.
+
+    Notes
+    -----
+    Cramér's V is a measure of association between two nominal variables,
+    giving a value between 0 and +1 (inclusive).
+
+    * `Cramer's V <https://en.wikipedia.org/wiki/Cramér%27s_V>`_
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> import skrub
+    >>> pd.set_option('display.width', 200)
+    >>> pd.set_option('display.max_columns', 10)
+    >>> pd.set_option('display.precision', 4)
+    >>> rng = np.random.default_rng(33)
+    >>> df = pd.DataFrame({f"c_{i}": rng.random(size=20)*10 for i in range(5)})
+    >>> df["c_str"] = [f"val {i}" for i in range(df.shape[0])]
+    >>> df.shape
+    (20, 6)
+    >>> df.head()
+          c_0     c_1     c_2     c_3     c_4  c_str
+    0  4.4364  4.0114  6.9271  7.0970  4.8913  val 0
+    1  5.6849  0.7192  7.6430  4.6441  2.5116  val 1
+    2  9.0810  9.4011  1.9257  5.7429  6.2358  val 2
+    3  2.5425  2.9678  9.7801  9.9879  6.0709  val 3
+    4  5.8878  9.3223  5.3840  7.2006  2.1494  val 4
+    >>> associations = skrub.column_associations(df)
+    >>> associations # doctest: +SKIP
+       left_column_name  left_column_idx right_column_name  right_column_idx  cramer_v
+    0               c_3                3             c_str                 5    0.8215
+    1               c_1                1               c_4                 4    0.8215
+    2               c_0                0               c_1                 1    0.8215
+    3               c_2                2             c_str                 5    0.7551
+    4               c_0                0             c_str                 5    0.7551
+    5               c_0                0               c_3                 3    0.7551
+    6               c_1                1               c_3                 3    0.6837
+    7               c_0                0               c_4                 4    0.6837
+    8               c_4                4             c_str                 5    0.6837
+    9               c_3                3               c_4                 4    0.6053
+    10              c_2                2               c_3                 3    0.6053
+    11              c_1                1             c_str                 5    0.6053
+    12              c_0                0               c_2                 2    0.6053
+    13              c_2                2               c_4                 4    0.5169
+    14              c_1                1               c_2                 2    0.4122
+    >>> pd.reset_option('display.width')
+    >>> pd.reset_option('display.max_columns')
+    >>> pd.reset_option('display.precision')
     """
     return _stack_symmetric_associations(_cramer_v_matrix(df), df)
 
@@ -106,7 +156,9 @@ def _onehot_encode(df, n_bins):
     output = np.zeros((n_cols, n_bins, n_rows), dtype=bool)
     for col_idx in range(n_cols):
         col = sbd.col_by_idx(df, col_idx)
-        if sbd.is_numeric(col):
+        if sbd.is_duration(col):
+            col = sbd.total_seconds(col)
+        if sbd.is_numeric(col) or sbd.is_any_date(col):
             col = sbd.to_float32(col)
             if _CATEGORICAL_THRESHOLD <= sbd.n_unique(col):
                 _onehot_encode_numbers(sbd.to_numpy(col), n_bins, output[col_idx])
@@ -120,6 +172,11 @@ def _onehot_encode(df, n_bins):
 
 def _onehot_encode_categories(values, n_bins, output):
     """One-hot encode a categorical column."""
+    if np.issubdtype(values.dtype, np.floating):
+        # OneHotEncoder allows NaN but not inf , so clip to finite values when
+        # the input is floating-point
+        finfo = np.finfo(values.dtype)
+        values = np.clip(values, finfo.min, finfo.max)
     encoded = OneHotEncoder(max_categories=n_bins, sparse_output=False).fit_transform(
         values[:, None]
     )
@@ -166,12 +223,12 @@ def _contingency_table(encoded):
 
 
 def _compute_cramer(table, n_samples):
-    """Compute the Cramer V statistic given a contingency table.
+    """Compute the Cramer's V statistic given a contingency table.
 
     The input is the table computed by ``_contingency_table`` with shape
     (n cols, n cols, n bins, n bins).
 
-    This returs the symmetric matrix with shape (n cols, n cols) where entry
+    This returns the symmetric matrix with shape (n cols, n cols) where entry
     i, j contains the statistic for column i x column j.
     """
     marginal_0 = table.sum(axis=-2)

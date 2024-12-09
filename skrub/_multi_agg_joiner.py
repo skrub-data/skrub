@@ -5,7 +5,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from skrub._agg_joiner import AggJoiner
-from skrub._dataframe._namespace import is_pandas, is_polars
+from skrub._dataframe import _common as sbd
 from skrub._utils import _is_array_like
 
 
@@ -60,6 +60,14 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         as in ``aux_tables = [table, "X"]``. If that's the case, the second table will
         be replaced by the input data.
 
+    operations : iterable of iterable of str
+        Aggregation operations to perform on the auxiliary tables.
+
+        Must be an iterable of `operations` for each table in `aux_tables`.
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type columns.
+
     keys : iterable of iterable of str, default=None
         The column names to use for both `main_keys` and `aux_key` when they
         are the same. Provide either `key` or both `main_keys` and `aux_keys`.
@@ -105,19 +113,6 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
         If set to `None`, `cols` is set to a list of lists. For each table
         in `aux_tables`, the corresponding list will be all columns of that table,
         except the `aux_keys` associated with that table.
-
-    operations : iterable of iterable of str, default=None
-        Aggregation operations to perform on the auxiliary tables.
-
-        If not `None`, there must be an iterable of `operations` for each
-        table in `aux_tables`.
-
-        - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-          "hist" and "value_counts" accept an integer argument to parametrize
-          the binning.
-        - categorical : {"mode", "count", "value_counts"}
-        - If set to `None` (the default), ["mean", "mode"] will be used
-          for all auxiliary tables.
 
     suffixes : iterable of str, default=None
         Suffixes to append to the `aux_tables`' column names.
@@ -202,20 +197,20 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         aux_tables,
+        operations,
         *,
         keys=None,
         main_keys=None,
         aux_keys=None,
         cols=None,
-        operations=None,
         suffixes=None,
     ):
         self.aux_tables = aux_tables
+        self.operations = operations
         self.keys = keys
         self.main_keys = main_keys
         self.aux_keys = aux_keys
         self.cols = cols
-        self.operations = operations
         self.suffixes = suffixes
 
     def _check_dataframes(self, X, aux_tables):
@@ -255,14 +250,14 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
                 )
 
         # Check that all input types are matching
-        if is_pandas(X):
-            if not all(is_pandas(aux_table) for aux_table in aux_tables):
+        if sbd.is_pandas(X):
+            if not all(sbd.is_pandas(aux_table) for aux_table in aux_tables):
                 raise TypeError(
                     "All `aux_tables` must be Pandas dataframes"
                     " when `X` is a Pandas dataframe."
                 )
-        if is_polars(X):
-            if not all(is_polars(aux_table) for aux_table in aux_tables):
+        if sbd.is_polars(X):
+            if not all(sbd.is_polars(aux_table) for aux_table in aux_tables):
                 raise TypeError(
                     "All `aux_tables` must be Polars dataframes"
                     " when `X` is a Polars dataframe."
@@ -386,21 +381,18 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             or if `operations` is not of a valid type.
         """
         operations = self.operations
-        if operations is None:
-            operations = [["mean", "mode"]] * len(self._aux_tables)
-        else:
-            if _is_iterable_of_iterable_of_str(operations) is not True:
-                raise ValueError(
-                    "Accepted inputs for `operations` are None and iterable of iterable"
-                    " of str."
-                )
+        if _is_iterable_of_iterable_of_str(operations) is not True:
+            raise ValueError(
+                "Accepted inputs for `operations` are None and iterable of iterable"
+                " of str."
+            )
 
-            if len(operations) != len(self._aux_tables):
-                raise ValueError(
-                    "The number of iterables in `operations` must match the number of"
-                    f" tables in `aux_tables`. Got {len(operations)} iterables in"
-                    f" operations and {len(self._aux_tables)} auxiliary tables."
-                )
+        if len(operations) != len(self._aux_tables):
+            raise ValueError(
+                "The number of iterables in `operations` must match the number of"
+                f" tables in `aux_tables`. Got {len(operations)} iterables in"
+                f" operations and {len(self._aux_tables)} auxiliary tables."
+            )
         return operations
 
     def _check_suffixes(self):

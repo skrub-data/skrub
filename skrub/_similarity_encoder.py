@@ -222,6 +222,8 @@ class SimilarityEncoder(OneHotEncoder):
     GapEncoder :
         Encodes dirty categories (strings) by constructing latent topics
         with continuous encoding.
+    TextEncoder :
+        Encode string columns with a pretrained language model.
     deduplicate :
         Deduplicate data by hierarchically clustering similar strings.
 

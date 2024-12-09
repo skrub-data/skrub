@@ -309,8 +309,12 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             main_table, prediction_results
         )
         predictions = [res["predictions"] for res in prediction_results]
+
         predictions = [
-            _join_utils.add_column_name_suffix(df, self.suffix) for df in predictions
+            sbd.set_column_names(
+                df, [f"{col}{self.suffix}" for col in sbd.column_names(df)]
+            )
+            for df in predictions
         ]
         return sbd.concat_horizontal(main_table, *predictions)
 

@@ -35,6 +35,11 @@ class TableReport:
         mapping with the keys ``display_name`` (the name shown in the menu,
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
+    verbose : int, default = 1
+        Whether to print progress information while the report is being generated.
+
+        * verbose = 1 prints how many columns have been processed so far.
+        * verbose = 0 silences the output.
 
     See Also
     --------
@@ -65,7 +70,7 @@ class TableReport:
     >>> report
     <TableReport: use .open() to display>
 
-    (Note that above we only see the string represention, not the report itself,
+    (Note that above we only see the string representation, not the report itself,
     because we are not in a notebook.)
 
     Whether you are using a notebook or not, you can always open the report as a
@@ -108,16 +113,19 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
+        verbose=1,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
+            "verbose": verbose,
         }
         self.title = title
         self.column_filters = column_filters
         self.dataframe = dataframe
+        self.verbose = verbose
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"

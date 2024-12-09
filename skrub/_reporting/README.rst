@@ -102,7 +102,7 @@ Distributing non-Python files
 The html templates, javascript and CSS files are not python files so some special
 steps must be taken in the build configuration to make sure they are included in
 the source distribution and the wheel. At the moment (see ``pyproject.toml``)
-skrub's ``build-system`` requires the ``setuptools_scm`` plugin, which pacakges
+skrub's ``build-system`` requires the ``setuptools_scm`` plugin, which packages
 all files that are tracked by git. If the build backend is replaced by a
 different one, refer to the new build backend's documentation on handling
 "package data" (non-python files).

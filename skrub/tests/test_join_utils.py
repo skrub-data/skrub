@@ -48,14 +48,6 @@ def test_check_key_length_mismatch():
         )
 
 
-def test_add_column_name_suffix(df_module):
-    df = df_module.make_dataframe({"one": [], "two three": [], "x": []})
-    df = _join_utils.add_column_name_suffix(df, "")
-    assert list(df.columns) == ["one", "two three", "x"]
-    df = _join_utils.add_column_name_suffix(df, "_y")
-    assert list(df.columns) == ["one_y", "two three_y", "x_y"]
-
-
 @pytest.fixture
 def left(df_module):
     return df_module.make_dataframe({"left_key": [1, 2, 2], "left_col": [10, 20, 30]})

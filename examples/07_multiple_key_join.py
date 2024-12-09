@@ -14,7 +14,7 @@ longitude and latitude.
 
 |joiner| is a scikit-learn compatible transformer that enables
 performing joins across multiple keys,
-independantly of the data type (numerical, string or mixed).
+independently of the data type (numerical, string or mixed).
 
 The following example uses US domestic flights data
 to illustrate how space and time information from a
@@ -47,9 +47,11 @@ import pandas as pd
 
 from skrub.datasets import fetch_figshare
 
+seed = 1
 flights = fetch_figshare("41771418").X
+
 # Sampling for faster computation.
-flights = flights.sample(20_000, random_state=1, ignore_index=True)
+flights = flights.sample(5_000, random_state=seed, ignore_index=True)
 flights.head()
 
 ###############################################################################
@@ -85,7 +87,7 @@ airports.head()
 
 weather = fetch_figshare("41771457").X
 # Sampling for faster computation.
-weather = weather.sample(100_000, random_state=1, ignore_index=True)
+weather = weather.sample(10_000, random_state=seed, ignore_index=True)
 weather.head()
 
 ########################################################################
@@ -104,7 +106,7 @@ aux = pd.merge(stations, weather, on="ID")
 aux.head()
 
 ###############################################################################
-# Then we join this table with the airports so that we get all auxilliary
+# Then we join this table with the airports so that we get all auxiliary
 # tables into one.
 
 from skrub import Joiner
@@ -117,7 +119,7 @@ aux_augmented.head()
 
 ###############################################################################
 # Joining airports with flights data:
-# Let's instanciate another multiple key joiner on the date and the airport:
+# Let's instantiate another multiple key joiner on the date and the airport:
 
 joiner = Joiner(
     aux_augmented,
@@ -164,10 +166,10 @@ y.value_counts()
 ###############################################################################
 # The results:
 
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import train_test_split
 
-scores = cross_val_score(pipeline_hgb, X, y)
-scores.mean()
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=seed)
+pipeline_hgb.fit(X_train, y_train).score(X_test, y_test)
 
 ###############################################################################
 # Conclusion
@@ -177,4 +179,4 @@ scores.mean()
 # on imprecise and multiple-key correspondences.
 # This is made easy by skrub's |Joiner| transformer.
 #
-# Our final cross-validated accuracy score is 0.58.
+# Our final cross-validated accuracy score is 0.55.

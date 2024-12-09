@@ -18,8 +18,9 @@ jobs:
         environment: [
             ci-py309-min-deps,
             ci-py309-min-optional-deps,
-            ci-py312-latest-deps,
-            ci-py312-latest-optional-deps
+            ci-py311-transformers,
+            ci-py313-latest-deps,
+            ci-py313-latest-optional-deps
         ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -33,10 +34,10 @@ jobs:
           frozen: true
 
       - name: Run tests
-        run: pixi run -e ${{ matrix.environment }} test -n 3
+        run: pixi run -e ${{ matrix.environment }} test -n auto
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.6.0
+        uses: codecov/codecov-action@v5.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: skrub-data/skrub
