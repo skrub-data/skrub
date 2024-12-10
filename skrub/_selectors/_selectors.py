@@ -312,8 +312,8 @@ def any_date():
     0 2020-03-02 10:30:00 2020-03-02 10:30:00+00:00  2020-03-02 10:30:00
 
     >>> df.dtypes
-    dt           datetime64[ns]
-    tzdt    datetime64[ns, UTC]
+    dt           datetime64[...]
+    tzdt    datetime64[..., UTC]
     str_                 object
     dtype: object
 

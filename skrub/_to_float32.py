@@ -158,7 +158,7 @@ class ToFloat32(SingleColumnTransformer):
     >>> to_float.fit_transform(pd.to_datetime(pd.Series(['2024-05-13'], name='s')))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to cast column 's' with dtype 'datetime64[ns]' to numbers.
+    skrub._on_each_column.RejectColumn: Refusing to cast column 's' with dtype 'datetime64[...]' to numbers.
 
     float32 columns are passed through:
 
