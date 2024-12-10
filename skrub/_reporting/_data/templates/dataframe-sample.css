@@ -27,19 +27,19 @@
 }
 
 tbody tr {
-    --active-column-color: var(--lightgreen);
+    --active-column-color: var(--color-active-column-1);
 }
 
 tbody tr:nth-child(2n -1) {
-    --active-column-color: var(--mediumgreen);
+    --active-column-color: var(--color-active-column-2);
 }
 
 thead {
-    --active-column-color: var(--darkgreen);
+    --active-column-color: var(--color-active-column-3);
 }
 
 .table-with-selectable-cells th[data-role="padding"]{
-    background-color: white;
+    background-color: var(--color-background);
     border: none;
 }
 
@@ -68,33 +68,29 @@ thead {
 
 .table-with-selectable-cells th[data-role="index-level-name"],
 .table-with-selectable-cells th[data-role="index-level-value"]{
-    background-color: white;
-    border: 1px solid var(--mediumg);
+    background-color: var(--color-background);
+    border: 1px solid var(--color-table-border);
     text-align: right;
 }
 
 .table-with-selectable-cells th[data-role="dataframe-data"]{}
 
 .table-cell[data-is-active] {
-    --active-column-color: var(--lightyellow);
+    --active-column-color: var(--color-active-cell);
 }
 
 table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
-    outline: var(--border-m) dotted black;
+    outline: var(--border-m) dotted;
 }
 
 .table-cell[data-is-active]:focus {
     outline-width: var(--border-m);
     outline-style: solid;
-    outline-color: Highlight;
-    outline-color: -webkit-focus-ring-color;
 }
 
 #report .table-cell[data-is-active][data-just-copied]:focus {
     outline-width: var(--border-m);
     outline-style: dashed;
-    outline-color: Highlight;
-    outline-color: -webkit-focus-ring-color;
 }
 
 
@@ -166,10 +162,10 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
     font-family: var(--fontStack-monospace);
     padding: 0 var(--space-m);
     line-height: 1.8;
-    color: #444444;
-    border: var(--border-s) solid #cccccc;
-    border-bottom: var(--border-s) solid #bbbbbb;
-    box-shadow: inset 0 calc(-1 * var(--border-s)) 0 #bbbbbb;
+    color: var(--color-keyboard-text);
+    border: var(--border-s) solid var(--color-keyboard-border);
+    border-bottom: var(--border-s) solid var(--color-keyboard-shadow);
+    box-shadow: inset 0 calc(-1 * var(--border-s)) 0 var(--color-keyboard-shadow);
     border-radius: 0.2em;
     min-width: 1em;
     text-align: center;
