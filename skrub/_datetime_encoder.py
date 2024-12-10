@@ -1,8 +1,6 @@
 from datetime import datetime, timezone
 
 import pandas as pd
-import sklearn
-from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 try:
@@ -13,6 +11,7 @@ except ImportError:
 from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._sklearn_compat import TransformerTags
 
 __all__ = ["DatetimeEncoder"]
 
@@ -26,11 +25,6 @@ _TIME_LEVELS = [
     "microsecond",
     "nanosecond",
 ]
-
-
-sklearn_below_1_6 = parse_version(
-    parse_version(sklearn.__version__).base_version
-) < parse_version("1.6")
 
 
 @dispatch
@@ -331,16 +325,10 @@ class DatetimeEncoder(SingleColumnTransformer):
                 f"'resolution' options are {allowed}, got {self.resolution!r}."
             )
 
-    if sklearn_below_1_6:
+    def _more_tags(self):
+        return {"preserves_dtype": []}
 
-        def _more_tags(self):
-            return {"preserves_dtype": []}
-
-    else:
-
-        def __sklearn_tags__(self):
-            tags = super().__sklearn_tags__()
-            from sklearn.utils import TransformerTags
-
-            tags.transformer_tags = TransformerTags()
-            return tags
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.transformer_tags = TransformerTags(preserves_dtype=[])
+        return tags

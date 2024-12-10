@@ -12,7 +12,7 @@ from skrub import (  # isort:skip
     SimilarityEncoder,
     TableVectorizer,
 )
-from skrub._fixes import get_tags
+from skrub._sklearn_compat import get_tags
 
 
 def _enforce_estimator_tags_X_monkey_patch(
@@ -22,120 +22,59 @@ def _enforce_estimator_tags_X_monkey_patch(
     having only strings with some encoders.
     """
     tags = get_tags(estimator)
-    if isinstance(tags, dict):
-        # Estimators with `1darray` in `X_types` tag only accept
-        # X of shape (`n_samples`,)
-        if "1darray" in tags["X_types"]:
-            X = X[:, 0]
+    if tags.input_tags.one_d_array:
+        X = X[:, 0]
+        if X_test is not None:
+            X_test = X_test[:, 0]  # pragma: no cover
+    # Estimators with a `requires_positive_X` tag only accept
+    # strictly positive data
+    if tags.input_tags.positive_only:
+        X = X - X.min()
+        if X_test is not None:
+            X_test = X_test - X_test.min()  # pragma: no cover
+    if tags.input_tags.categorical:
+        X = np.round((X - X.min()))
+        if X_test is not None:
+            X_test = np.round((X_test - X_test.min()))  # pragma: no cover
+        if tags.input_tags.string:
+            X = X.astype(object)
+            for i in range(X.shape[0]):
+                for j in range(X.shape[1]):
+                    X[i, j] = str(X[i, j])
             if X_test is not None:
-                X_test = X_test[:, 0]  # pragma: no cover
-        # Estimators with a `requires_positive_X` tag only accept
-        # strictly positive data
-        if tags["requires_positive_X"]:
-            X = X - X.min()
+                X_test = X_test.astype(object)
+                for i in range(X_test.shape[0]):
+                    for j in range(X_test.shape[1]):
+                        X_test[i, j] = str(X_test[i, j])
+        elif tags.input_tags.allow_nan:
+            X = X.astype(np.float64)
             if X_test is not None:
-                X_test = X_test - X_test.min()  # pragma: no cover
-        if "categorical" in tags["X_types"]:
-            X = np.round((X - X.min()))
+                X_test = X_test.astype(np.float64)  # pragma: no cover
+        else:
+            X = X.astype(np.int32)
             if X_test is not None:
-                X_test = np.round((X_test - X_test.min()))  # pragma: no cover
-            if "string" in tags["X_types"]:
-                # Note: this part is the monkey patch
-                X = X.astype(object)
-                for i in range(X.shape[0]):
-                    for j in range(X.shape[1]):
-                        X[i, j] = str(X[i, j])
-                if X_test is not None:
-                    X_test = X_test.astype(object)
-                    for i in range(X_test.shape[0]):
-                        for j in range(X_test.shape[1]):
-                            X_test[i, j] = str(X_test[i, j])
-            elif tags["allow_nan"]:
-                X = X.astype(np.float64)
-                if X_test is not None:
-                    X_test = X_test.astype(np.float64)  # pragma: no cover
-            else:
-                X = X.astype(np.int32)
-                if X_test is not None:
-                    X_test = X_test.astype(np.int32)  # pragma: no cover
+                X_test = X_test.astype(np.int32)  # pragma: no cover
 
-        if estimator.__class__.__name__ == "SkewedChi2Sampler":
-            # SkewedChi2Sampler requires X > -skewdness in transform
-            X = X - X.min()
-            if X_test is not None:
-                X_test = X_test - X_test.min()  # pragma: no cover
+    if estimator.__class__.__name__ == "SkewedChi2Sampler":
+        # SkewedChi2Sampler requires X > -skewdness in transform
+        X = X - X.min()
+        if X_test is not None:
+            X_test = X_test - X_test.min()  # pragma: no cover
 
-        X_res = X
+    X_res = X
 
-        # Pairwise estimators only accept
-        # X of shape (`n_samples`, `n_samples`)
-        if _is_pairwise_metric(estimator):
-            X_res = pairwise_distances(X, metric="euclidean")
-            if X_test is not None:
-                X_test = pairwise_distances(
-                    X_test, X, metric="euclidean"
-                )  # pragma: no cover
-        elif tags["pairwise"]:
-            X_res = kernel(X, X)
-            if X_test is not None:
-                X_test = kernel(X_test, X)  # pragma: no cover
-    else:
-        # scikit-learn >= 1.6
-        # Estimators with `1darray` in `X_types` tag only accept
-        # X of shape (`n_samples`,)
-        if tags.input_tags.one_d_array:
-            X = X[:, 0]
-            if X_test is not None:
-                X_test = X_test[:, 0]  # pragma: no cover
-        # Estimators with a `requires_positive_X` tag only accept
-        # strictly positive data
-        if tags.input_tags.positive_only:
-            X = X - X.min()
-            if X_test is not None:
-                X_test = X_test - X_test.min()  # pragma: no cover
-        if tags.input_tags.categorical:
-            X = np.round((X - X.min()))
-            if X_test is not None:
-                X_test = np.round((X_test - X_test.min()))  # pragma: no cover
-            if tags.input_tags.string:
-                X = X.astype(object)
-                for i in range(X.shape[0]):
-                    for j in range(X.shape[1]):
-                        X[i, j] = str(X[i, j])
-                if X_test is not None:
-                    X_test = X_test.astype(object)
-                    for i in range(X_test.shape[0]):
-                        for j in range(X_test.shape[1]):
-                            X_test[i, j] = str(X_test[i, j])
-            elif tags.input_tags.allow_nan:
-                X = X.astype(np.float64)
-                if X_test is not None:
-                    X_test = X_test.astype(np.float64)  # pragma: no cover
-            else:
-                X = X.astype(np.int32)
-                if X_test is not None:
-                    X_test = X_test.astype(np.int32)  # pragma: no cover
-
-        if estimator.__class__.__name__ == "SkewedChi2Sampler":
-            # SkewedChi2Sampler requires X > -skewdness in transform
-            X = X - X.min()
-            if X_test is not None:
-                X_test = X_test - X_test.min()  # pragma: no cover
-
-        X_res = X
-
-        # Pairwise estimators only accept
-        # X of shape (`n_samples`, `n_samples`)
-        if _is_pairwise_metric(estimator):
-            X_res = pairwise_distances(X, metric="euclidean")
-            if X_test is not None:
-                X_test = pairwise_distances(
-                    X_test, X, metric="euclidean"
-                )  # pragma: no cover
-        elif tags.input_tags.pairwise:
-            X_res = kernel(X, X)
-            if X_test is not None:
-                X_test = kernel(X_test, X)  # pragma: no cover
+    # Pairwise estimators only accept
+    # X of shape (`n_samples`, `n_samples`)
+    if _is_pairwise_metric(estimator):
+        X_res = pairwise_distances(X, metric="euclidean")
+        if X_test is not None:
+            X_test = pairwise_distances(
+                X_test, X, metric="euclidean"
+            )  # pragma: no cover
+    elif tags.input_tags.pairwise:
+        X_res = kernel(X, X)
+        if X_test is not None:
+            X_test = kernel(X_test, X)  # pragma: no cover
     if X_test is not None:
         return X_res, X_test
     return X_res
