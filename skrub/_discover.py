@@ -5,7 +5,6 @@ import polars as pl
 from sklearn.base import BaseEstimator
 
 from . import _dataframe as sbd
-from . import _selectors as cs
 from ._multi_agg_joiner import MultiAggJoiner
 
 
@@ -36,8 +35,8 @@ def find_unique_values(table: pl.DataFrame, columns: list[str] = None) -> dict:
     else:
         # Selecting only columns with strings
         # TODO: string? categorical? both?
-        columns = cs.select(table, cs.string()).columns
-
+        # columns = cs.select(table, cs.string()).columns
+        columns = table.columns
     unique_values = {}
     # find the unique values
     for col in columns:
