@@ -3,6 +3,7 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
+
 import numpy as np
 import pandas as pd
 import sklearn
@@ -13,16 +14,10 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
-from ._fixes import _check_n_features
 from ._string_distances import get_ngram_count, preprocess
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
-
-
-sklearn_below_1_6 = parse_version(
-    parse_version(sklearn.__version__).base_version
-) < parse_version("1.6")
 
 
 def _ngram_similarity_one_sample_inplace(
@@ -339,7 +334,7 @@ class SimilarityEncoder(OneHotEncoder):
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
-        _check_n_features(self, X, reset=True)
+        self._check_n_features(X, reset=True)
 
         if self.handle_unknown not in ["error", "ignore"]:
             raise ValueError(
@@ -458,7 +453,7 @@ class SimilarityEncoder(OneHotEncoder):
                     X[mask] = self.handle_missing
 
         Xlist, n_samples, n_features = self._check_X(X)
-        _check_n_features(self, X, reset=False)
+        self._check_n_features(X, reset=False)
 
         for i in range(n_features):
             Xi = Xlist[i]
@@ -555,26 +550,15 @@ class SimilarityEncoder(OneHotEncoder):
 
         return np.nan_to_num(out, copy=False)
 
-    if sklearn_below_1_6:
-
-        def _more_tags(self):
-            return {
-                "X_types": ["2darray", "categorical", "string"],
-                "preserves_dtype": [],
-                "allow_nan": True,
-                "_xfail_checks": {
-                    "check_estimator_sparse_data": (
-                        "Cannot create sparse matrix with strings."
-                    ),
-                    "check_estimators_dtypes": "We only support string dtypes.",
-                },
-            }
-
-    else:
-
-        def __sklearn_tags__(self):
-            tags = super().__sklearn_tags__()
-            tags.input_tags.categorical = True
-            tags.input_tags.string = True
-            tags.transformer_tags.preserves_dtype = []
-            return tags
+    def _more_tags(self):
+        return {
+            "X_types": ["2darray", "categorical", "string"],
+            "preserves_dtype": [],
+            "allow_nan": True,
+            "_xfail_checks": {
+                "check_estimator_sparse_data": (
+                    "Cannot create sparse matrix with strings."
+                ),
+                "check_estimators_dtypes": "We only support string dtypes.",
+            },
+        }

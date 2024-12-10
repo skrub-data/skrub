@@ -1,5 +1,4 @@
 import warnings
-from dataclasses import is_dataclass
 
 import joblib
 import numpy as np
@@ -8,11 +7,11 @@ from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
 )
+from sklearn.utils._tags import _safe_tags
 
 from . import _dataframe as sbd
 from . import _join_utils, _utils
 from . import _selectors as s
-from ._fixes import get_tags
 from ._minhash_encoder import MinHashEncoder
 from ._table_vectorizer import TableVectorizer
 
@@ -404,14 +403,7 @@ def _get_assignments_for_estimator(table, estimator):
 
 
 def _handles_multioutput(estimator):
-    tags = get_tags(estimator)
-    if isinstance(tags, dict):
-        # scikit-learn < 1.6
-        return tags.get("multioutput", False)
-    elif is_dataclass(tags):
-        # scikit-learn >= 1.6
-        return tags.target_tags.multi_output
-    return False
+    return _safe_tags(estimator).get("multioutput", False)
 
 
 def _fit(key_values, target_table, estimator, propagate_exceptions):
