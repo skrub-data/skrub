@@ -1,5 +1,8 @@
+import codecs
 import functools
 import json
+import locale
+from pathlib import Path
 
 from ._html import to_html
 from ._serve import open_in_browser
@@ -196,6 +199,43 @@ class TableReport:
 
     def _repr_html_(self):
         return self._repr_mimebundle_()["text/html"]
+
+    def write_html(self, file):
+        """Store the report into an HTML file.
+
+        Parameters
+        ----------
+        file : str, pathlib.Path or file object
+            The file object or path of the file to store the HTML output.
+        """
+        html = self.html()
+        if isinstance(file, (str, Path)):
+            with open(file, "w", encoding="utf8") as stream:
+                stream.write(html)
+            return
+        try:
+            file.write(html.encode("utf-8"))
+            return
+        except TypeError:
+            pass
+
+        print(getattr(file, "encoding", None))
+        if (encoding := getattr(file, "encoding", None)) is not None:
+            try:
+                assert codecs.lookup(encoding).name == "utf-8"
+            except (AssertionError, LookupError):
+                raise ValueError(
+                    "If `file` is a text file it should use utf-8 encoding; got:"
+                    f" {encoding!r}"
+                )
+        elif locale.getencoding().lower() != "utf-8":
+            # when encoding=None, it will default on the platform-specific encoding
+            # raise if not utf-8
+            raise ValueError(
+                f"Platform encoding is not utf-8; got {locale.getencoding()}"
+            )
+
+        file.write(html)
 
     def open(self):
         """Open the HTML report in a web browser."""
