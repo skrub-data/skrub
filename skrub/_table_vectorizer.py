@@ -670,6 +670,12 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             },
         }
 
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.string = True
+        tags.input_tags.allow_nan = True
+        return tags
+
     def get_feature_names_out(self):
         """Return the column names of the output of ``transform`` as a list of strings.
 
