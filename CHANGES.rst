@@ -22,9 +22,11 @@ Highlights
 * The :class:`TableVectorizer` can now drop columns that contain a fraction of
   null values above a user-chosen threshold.
 
+Release 0.4.1
+=============
+
 New features
 ------------
-
 
 Changes
 -------
@@ -48,6 +50,10 @@ Bug fixes
   :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
   [here](https://github.com/matplotlib/matplotlib/issues/25041).
 
+Maintenance
+-----------
+* Make `skrub` compatible with scikit-learn 1.6.
+  :pr:`1169` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.4.0
 =============

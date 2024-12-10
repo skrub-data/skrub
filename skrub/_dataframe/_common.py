@@ -106,6 +106,8 @@ __all__ = [
     "total_seconds",
 ]
 
+pandas_version = parse_version(parse_version(pd.__version__).base_version)
+
 #
 # Inspecting containers' type and module
 # ======================================
@@ -330,7 +332,8 @@ def _concat_horizontal_pandas(*dataframes):
     init_index = dataframes[0].index
     dataframes = [df.reset_index(drop=True) for df in dataframes]
     dataframes = _join_utils.make_column_names_unique(*dataframes)
-    result = pd.concat(dataframes, axis=1, copy=False)
+    kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
+    result = pd.concat(dataframes, axis=1, **kwargs)
     result.index = init_index
     return result
 
