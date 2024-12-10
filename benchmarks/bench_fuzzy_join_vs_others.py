@@ -42,7 +42,7 @@ def thefuzz_merge(
                high to low
 
     Return:
-        Dataframe with boths keys and matches.
+        Dataframe with both keys and matches.
     """
     s = df_2[right_on].tolist()
     m = df_1[left_on].apply(lambda x: process.extract(x, s, limit=limit, scorer=scorer))

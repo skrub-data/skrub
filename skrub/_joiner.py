@@ -126,7 +126,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         in the auxiliary table.
 
     'self_join_neighbor'
-        Once the match candidate (i.e. the nearest neigbor from the auxiliary
+        Once the match candidate (i.e. the nearest neighbor from the auxiliary
         table) has been found, we find its nearest neighbor in the auxiliary
         table (excluding itself). The reference distance is the distance that
         separates those 2 auxiliary rows.

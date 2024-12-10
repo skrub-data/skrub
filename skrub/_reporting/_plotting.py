@@ -8,7 +8,6 @@ import io
 import re
 import warnings
 
-import matplotlib
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -51,9 +50,23 @@ def _plot(plotting_fun):
 
     @functools.wraps(plotting_fun)
     def plot_with_config(*args, **kwargs):
-        # This causes matplotlib to insert labels etc as text in the svg rather
-        # than drawing the glyphs.
-        with matplotlib.rc_context({"svg.fonttype": "none"}):
+        #
+        # Note: we do not use `matplotlib.rc_context` because it can prevent the
+        # inline display of plots in jupyter notebooks:
+        #
+        # https://github.com/matplotlib/matplotlib/issues/25041
+        # https://github.com/matplotlib/matplotlib/issues/26716
+        #
+        # otherwise we could write
+        # with matplotlib.rc_context({"svg.fonttype": "none"}):
+        #
+        # See https://github.com/skrub-data/skrub/pull/1172
+        #
+        original_font_type = plt.rcParams["svg.fonttype"]
+        try:
+            # This causes matplotlib to insert labels etc as text in the svg rather
+            # than drawing the glyphs.
+            plt.rcParams["svg.fonttype"] = "none"
             with warnings.catch_warnings():
                 # We do not care about missing glyphs because the text is
                 # rendered & the viewbox is recomputed in the browser.
@@ -62,6 +75,8 @@ def _plot(plotting_fun):
                     "ignore", "Matplotlib currently does not support Arabic natively"
                 )
                 return plotting_fun(*args, **kwargs)
+        finally:
+            plt.rcParams["svg.fonttype"] = original_font_type
 
     return plot_with_config
 
@@ -231,7 +246,7 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     n_unique : int
         Cardinality of the plotted column, used to determine if all unique
         values are plotted or if there are too many and some have been
-        ommitted. The figure's title is adjusted accordingly.
+        omitted. The figure's title is adjusted accordingly.
 
     n_rows : int
         Total length of the column, used to convert the counts to proportions.
