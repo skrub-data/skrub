@@ -11,7 +11,7 @@ from skrub._reporting import _utils
 @pytest.mark.parametrize(
     "s_in, s_out",
     [
-        (1, 1),
+        (1, "1"),
         ("aa", "aa"),
         ("a\na", "a a"),
         ("a" * 70, "a" * 30 + "…\u200e"),
@@ -53,6 +53,16 @@ def test_ellide_string(s_in, s_out):
 def test_ellide_string_empty():
     # useless corner case to make codecov happy
     assert _utils.ellide_string(" a", 1) == "…"
+
+
+def test_ellide_non_string():
+    # non-regression for #1195: objects in columns must be converted to strings
+    # before elliding and plotting
+    class A:
+        def __repr__(self):
+            return "one\ntwo\nthree"
+
+    assert _utils.ellide_string(A()) == "one two three"
 
 
 @pytest.mark.parametrize(
