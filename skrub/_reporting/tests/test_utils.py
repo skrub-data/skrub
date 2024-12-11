@@ -11,7 +11,7 @@ from skrub._reporting import _utils
 @pytest.mark.parametrize(
     "s_in, s_out",
     [
-        (1, 1),
+        (1, "1"),
         ("aa", "aa"),
         ("a\na", "a a"),
         ("a" * 70, "a" * 30 + "…\u200e"),
