@@ -235,11 +235,11 @@ X_tuples = [
     (
         X,
         {
-            "pd_datetime": "datetime64[ns]",
-            "np_datetime": "datetime64[ns]",
-            "dmy-": "datetime64[ns]",
-            "ymd/": "datetime64[ns]",
-            "ymd/_hms:": "datetime64[ns]",
+            "pd_datetime": "datetime",
+            "np_datetime": "datetime",
+            "dmy-": "datetime",
+            "ymd/": "datetime",
+            "ymd/_hms:": "datetime",
         },
     ),
     # Test other types detection
@@ -285,7 +285,10 @@ def test_auto_cast(X, dict_expected_types):
     vectorizer = passthrough_vectorizer()
     X_trans = vectorizer.fit_transform(X)
     for col in X_trans.columns:
-        assert dict_expected_types[col] == X_trans[col].dtype
+        if dict_expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            assert dict_expected_types[col] == X_trans[col].dtype
 
 
 def test_auto_cast_missing_categories():

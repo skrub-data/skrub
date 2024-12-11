@@ -145,7 +145,7 @@ class ToDatetime(SingleColumnTransformer):
     0   2024-05-05 13:17:52
     1                   NaT
     2   2024-05-07 13:17:52
-    Name: when, dtype: datetime64[ns]
+    Name: when, dtype: datetime64[...]
 
     The attributes ``format_``, ``output_dtype_``, ``output_time_zone_``
     record information about the conversion result.
@@ -153,7 +153,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.format_
     '%Y-%m-%dT%H:%M:%S'
     >>> to_dt.output_dtype_
-    dtype('<M8[ns]')
+    dtype('<M8[...]')
     >>> to_dt.output_time_zone_ is None
     True
 
@@ -164,7 +164,7 @@ class ToDatetime(SingleColumnTransformer):
     0   2024-05-05 13:17:52
     1                   NaT
     2   2024-05-07 13:17:52
-    Name: when, dtype: datetime64[ns]
+    Name: when, dtype: datetime64[...]
 
     >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)
     Traceback (most recent call last):
@@ -179,7 +179,7 @@ class ToDatetime(SingleColumnTransformer):
     0   2024-05-05 13:17:52+02:00
     1                         NaT
     2   2024-05-07 13:17:52+02:00
-    Name: when, dtype: datetime64[ns, Europe/Paris]
+    Name: when, dtype: datetime64[..., Europe/Paris]
     >>> to_dt.fit_transform(s) is s
     True
 
@@ -188,7 +188,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.format_ is None
     True
     >>> to_dt.output_dtype_
-    datetime64[ns, Europe/Paris]
+    datetime64[..., Europe/Paris]
     >>> to_dt.output_time_zone_
     'Europe/Paris'
 
@@ -220,13 +220,13 @@ class ToDatetime(SingleColumnTransformer):
     0   2024-05-05 13:17:52
     1                   NaT
     2   2024-05-07 13:17:52
-    Name: when, dtype: datetime64[ns]
+    Name: when, dtype: datetime64[...]
     >>> s = pd.Series(["05/05/2024", None, "07/05/2024"], name="when")
     >>> to_dt.transform(s)
     0   NaT
     1   NaT
     2   NaT
-    Name: when, dtype: datetime64[ns]
+    Name: when, dtype: datetime64[...]
 
     **Time zones**
 
@@ -237,7 +237,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     0   2020-01-01 02:00:00+00:00
     1   2020-01-01 01:00:00+00:00
-    dtype: datetime64[ns, UTC]
+    dtype: datetime64[..., UTC]
     >>> to_dt.format_
     '%Y-%m-%dT%H:%M:%S%z'
     >>> to_dt.output_time_zone_
@@ -249,7 +249,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     0   2020-01-01 04:00:00
     1   2020-01-01 04:00:00
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
     >>> to_dt.output_time_zone_ is None
     True
 
@@ -262,10 +262,10 @@ class ToDatetime(SingleColumnTransformer):
     >>> s_paris
     0   2024-05-07 14:24:49+02:00
     1   2024-05-06 14:24:49+02:00
-    dtype: datetime64[ns, Europe/Paris]
+    dtype: datetime64[..., Europe/Paris]
     >>> to_dt = ToDatetime().fit(s_paris)
     >>> to_dt.output_dtype_
-    datetime64[ns, Europe/Paris]
+    datetime64[..., Europe/Paris]
 
     Here our converter is set to output datetimes with nanosecond resolution,
     localized in "Europe/Paris".
@@ -276,7 +276,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s_london
     0   2024-05-07 13:24:49+01:00
     1   2024-05-06 13:24:49+01:00
-    dtype: datetime64[ns, Europe/London]
+    dtype: datetime64[..., Europe/London]
 
     Here the timezone is "Europe/London" and the times are offset by 1 hour. During
     ``transform`` datetimes will be converted to the original dtype and the
@@ -285,7 +285,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.transform(s_london)
     0   2024-05-07 14:24:49+02:00
     1   2024-05-06 14:24:49+02:00
-    dtype: datetime64[ns, Europe/Paris]
+    dtype: datetime64[..., Europe/Paris]
 
     Moreover, we may have to transform a timezone-naive column whereas the
     transformer was fitted on a timezone-aware column. Note that is somewhat a
@@ -296,7 +296,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s_naive
     0   2024-05-07 12:24:49
     1   2024-05-06 12:24:49
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
 
     In this case, we make the arbitrary choice to assume that the timezone-naive
     datetimes are in UTC.
@@ -304,7 +304,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.transform(s_naive)
     0   2024-05-07 14:24:49+02:00
     1   2024-05-06 14:24:49+02:00
-    dtype: datetime64[ns, Europe/Paris]
+    dtype: datetime64[..., Europe/Paris]
 
     Conversely, a transformer fitted on a timezone-naive column can convert
     timezone-aware columns. Here also, we assume the naive datetimes were in UTC.
@@ -313,7 +313,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.transform(s_london)
     0   2024-05-07 12:24:49
     1   2024-05-06 12:24:49
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
 
     **``%d/%m/%Y`` vs ``%m/%d/%Y``**
 
@@ -324,7 +324,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["05/23/2024"])
     >>> to_dt.fit_transform(s)
     0   2024-05-23
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
     >>> to_dt.format_
     '%m/%d/%Y'
 
@@ -334,7 +334,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["23/05/2024"])
     >>> to_dt.fit_transform(s)
     0   2024-05-23
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
     >>> to_dt.format_
     '%d/%m/%Y'
 
@@ -343,7 +343,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["03/05/2024"])
     >>> to_dt.fit_transform(s)
     0   2024-03-05
-    dtype: datetime64[ns]
+    dtype: datetime64[...]
     >>> to_dt.format_
     '%m/%d/%Y'
 
