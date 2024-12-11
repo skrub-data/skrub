@@ -56,6 +56,8 @@ def test_ellide_string_empty():
 
 
 def test_ellide_non_string():
+    # non-regression for #1195: objects in columns must be converted to strings
+    # before elliding and plotting
     class A:
         def __repr__(self):
             return "one\ntwo\nthree"
