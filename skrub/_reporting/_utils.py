@@ -43,8 +43,8 @@ def quantiles(column):
 
 def ellide_string(s, max_len=30):
     """Shorten a string so it can be used as a plot axis title or label."""
-    if not isinstance(s, str):
-        return s
+    s = str(s)
+
     # normalize whitespace
     s = re.sub(r"\s+", " ", s)
     if len(s) <= max_len:
