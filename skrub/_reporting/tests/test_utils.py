@@ -55,6 +55,14 @@ def test_ellide_string_empty():
     assert _utils.ellide_string(" a", 1) == "…"
 
 
+def test_ellide_non_string():
+    class A:
+        def __repr__(self):
+            return "one\ntwo\nthree"
+
+    assert _utils.ellide_string(A()) == "one two three"
+
+
 @pytest.mark.parametrize(
     "n_in, n_out",
     [
