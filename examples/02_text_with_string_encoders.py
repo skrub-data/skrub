@@ -226,8 +226,9 @@ plot_box_results(results)
 
 # %%
 # |TextEncoder| embeddings are very strong, but they are also quite expensive to
-# train. A simpler, faster alternative for encoding strings is the |StringEncoder|,
-# which works by first performing a tf-idf vectorization of the text, and then
+# use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
+# which works by first performing a tf-idf (computing vectors of rescaled word
+# counts, [wiki](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)) of the text, and then
 # following it with TruncatedSVD to reduce the number of dimensions to, in this
 # case, 30.
 from skrub import StringEncoder

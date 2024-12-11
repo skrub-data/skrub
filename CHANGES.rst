@@ -18,7 +18,7 @@ Release 0.4.1
 New features
 ------------
 * The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
-  decomposition and provides a cheaper alternative to :class:`TextEncoder`.
+  decomposition and provides a cheaper alternative to :class:`GapEncoder`.
   :pr:`1159` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Changes

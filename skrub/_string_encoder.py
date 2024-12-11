@@ -57,14 +57,6 @@ class StringEncoder(SingleColumnTransformer):
     def __init__(self, n_components=30):
         self.n_components = n_components
 
-    def _transform(self, X):
-        result = self.pipe.transform(sbd.to_numpy(X))
-
-        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result.T)))
-        result = sbd.copy_index(X, result)
-
-        return result
-
     def get_feature_names_out(self):
         """Get output feature names for transformation.
 
@@ -103,11 +95,11 @@ class StringEncoder(SingleColumnTransformer):
             name = "tsvd"
         self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components)]
 
-        self.pipe.fit(sbd.to_numpy(X))
+        result = self.pipe.fit_transform(sbd.to_numpy(X))
 
         self._is_fitted = True
 
-        return self.transform(X)
+        return self._transform(X, result)
 
     def transform(self, X):
         """Transform a column.
@@ -123,7 +115,15 @@ class StringEncoder(SingleColumnTransformer):
             The embedding representation of the input.
         """
         check_is_fitted(self)
-        return self._transform(X)
+
+        result = self.pipe.transform(sbd.to_numpy(X))
+        return self._transform(X, result)
+
+    def _transform(self, X, result):
+        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result.T)))
+        result = sbd.copy_index(X, result)
+
+        return result
 
     def __sklearn_is_fitted__(self):
         """
