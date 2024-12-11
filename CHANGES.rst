@@ -44,6 +44,9 @@ Bug fixes
   that have a repr spanning multiple lines could be unreadable. This has been
   fixed in :pr:`1196` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* Improve the performance of :func:`deduplicate` by removing some unnecessary
+  computations. :pr:`1193` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Maintenance
 -----------
 * Make `skrub` compatible with scikit-learn 1.6.

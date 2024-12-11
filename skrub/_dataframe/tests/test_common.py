@@ -500,13 +500,11 @@ def test_to_datetime(df_module):
     s = df_module.make_column("", ["01/02/2020", "02/01/2021", "bad"])
     with pytest.raises(ValueError):
         ns.to_datetime(s, "%m/%d/%Y", True)
-    df_module.assert_column_equal(
-        ns.to_datetime(s, "%m/%d/%Y", False),
-        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None]),
+    assert ns.to_list(ns.to_datetime(s, "%m/%d/%Y", False)) == ns.to_list(
+        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None])
     )
-    df_module.assert_column_equal(
-        ns.to_datetime(s, "%d/%m/%Y", False),
-        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None]),
+    assert ns.to_list(ns.to_datetime(s, "%d/%m/%Y", False)) == ns.to_list(
+        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None])
     )
     dt_col = ns.col(df_module.example_dataframe, "datetime-col")
     assert ns.to_datetime(dt_col, None) is dt_col
