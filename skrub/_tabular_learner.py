@@ -7,6 +7,7 @@ from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
 from ._minhash_encoder import MinHashEncoder
+from ._sklearn_compat import get_tags
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
@@ -270,9 +271,7 @@ def tabular_learner(estimator, *, n_jobs=None):
             high_cardinality=MinHashEncoder(),
         )
     steps = [vectorizer]
-    if not hasattr(estimator, "_get_tags") or not estimator._get_tags().get(
-        "allow_nan", False
-    ):
+    if not get_tags(estimator).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
     if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         steps.append(StandardScaler())
