@@ -6,41 +6,22 @@ Release history
 
 .. currentmodule:: skrub
 
-Release 0.4.0
-=============
-
-Highlights
-----------
-* The :class:`TextEncoder` can extract embeddings from a string column with  a deep
-  learning language model (possibly downloaded from the HuggingFace Hub).
-
-* Several improvements to the :class:`TableReport` such as better support for
-  other scripts than the latin alphabet in the bar plot labels, smaller report
-  sizes, clipping the outliers to better see the details of distributions in
-  histograms. See the full changelog for details.
-
-* The :class:`TableVectorizer` can now drop columns that contain a fraction of
-  null values above a user-chosen threshold.
-
 Release 0.4.1
 =============
 
-New features
-------------
-
 Changes
 -------
-* A new parameter `verbose` has been added to the :class:`TableReport` to toggle on or off the
+* A new parameter ``verbose`` has been added to the :class:`TableReport` to toggle on or off the
   printing of progress information when a report is being generated.
   :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
 
-* A parameter `verbose` has been added to the :func:`patch_display` to toggle on or off the
+* A parameter ``verbose`` has been added to the :func:`patch_display` to toggle on or off the
   printing of progress information when a table report is being generated.
   :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
 
 * :func:`tabular_learner` accepts the alias ``"regression"`` for the option
-   ``"regressor"`` and ``"classification"`` for ``"classifier"``.
-   :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
+  ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+  :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
 
 Bug fixes
 ---------
@@ -48,7 +29,7 @@ Bug fixes
   configuration which could cause plots not to display inline in jupyter
   notebooks any more. This has been fixed in skrub in :pr:`1172` by
   :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
-  [here](https://github.com/matplotlib/matplotlib/issues/25041).
+  `here <https://github.com/matplotlib/matplotlib/issues/25041>`_.
 
 * The labels on bar plots in the ``TableReport`` for columns of object dtypes
   that have a repr spanning multiple lines could be unreadable. This has been
@@ -59,7 +40,7 @@ Bug fixes
 
 Maintenance
 -----------
-* Make `skrub` compatible with scikit-learn 1.6.
+* Make ``skrub`` compatible with scikit-learn 1.6.
   :pr:`1169` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.4.0
