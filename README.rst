@@ -32,13 +32,7 @@ The goal of skrub is to bridge the gap between tabular data sources and machine-
 
 skrub provides high-level tools for joining dataframes (``Joiner``, ``AggJoiner``, ...),
 encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeline
-(``TableVectorizer``, ``tabular_learner``, ...), and explore interactively your data (``TableReport``).
-
-.. figure::
-   https://github.com/rcap107/skrub-datasets/blob/master/data/output.gif?raw=true
-   :alt: An animation showing how TableReport works
-
-   An animation showing how TableReport works
+(``TableVectorizer``, ``tabular_learner``, ...), and exploring interactively your data (``TableReport``).
 
 
 >>> from skrub.datasets import fetch_employee_salaries
