@@ -17,6 +17,9 @@ available in skrub.
 .. |TextEncoder| replace::
      :class:`~skrub.TextEncoder`
 
+.. |StringEncoder| replace::
+     :class:`~skrub.StringEncoder`
+
 .. |TableReport| replace::
      :class:`~skrub.TableReport`
 
@@ -132,7 +135,7 @@ plot_gap_feature_importance(X_trans.head())
 # We set ``n_components`` to 30; however, to achieve the best performance, we would
 # need to find the optimal value for this hyperparameter using either |GridSearchCV|
 # or |RandomizedSearchCV|. We skip this part to keep the computation time for this
-# example small.
+# small example.
 #
 # Recall that the ROC AUC is a metric that quantifies the ranking power of estimators,
 # where a random estimator scores 0.5, and an oracle —providing perfect predictions—
@@ -222,6 +225,26 @@ results.append(("TextEncoder", text_encoder_results))
 plot_box_results(results)
 
 # %%
+# |TextEncoder| embeddings are very strong, but they are also quite expensive to
+# use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
+# which works by first performing a tf-idf (computing vectors of rescaled word
+# counts, [wiki](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)) of the text, and then
+# following it with TruncatedSVD to reduce the number of dimensions to, in this
+# case, 30.
+from skrub import StringEncoder
+
+string_encoder = StringEncoder(n_components=30)
+
+string_encoder_pipe = clone(gap_pipe).set_params(
+    **{"tablevectorizer__high_cardinality": string_encoder}
+)
+string_encoder_results = cross_validate(string_encoder_pipe, X, y, scoring="roc_auc")
+results.append(("StringEncoder", string_encoder_results))
+
+plot_box_results(results)
+
+
+# %%
 # The performance of the |TextEncoder| is significantly stronger than that of
 # the syntactic encoders, which is expected. But how long does it take to load
 # and vectorize text on a CPU using a Sentence Transformer model? Below, we display
@@ -232,7 +255,7 @@ plot_box_results(results)
 
 def plot_performance_tradeoff(results):
     fig, ax = plt.subplots(figsize=(5, 4), dpi=200)
-    markers = ["s", "o", "^"]
+    markers = ["s", "o", "^", "x"]
     for idx, (name, result) in enumerate(results):
         ax.scatter(
             result["fit_time"],
@@ -293,8 +316,11 @@ plot_performance_tradeoff(results)
 # During the subsequent cross-validation iterations, the model is simply copied,
 # which reduces computation time for the remaining folds.
 #
+# Interestingly, |StringEncoder| has a performance remarkably similar to that of
+# |GapEncoder|, while being significantly faster.
 # Conclusion
 # ----------
 # In conclusion, |TextEncoder| provides powerful vectorization for text, but at
 # the cost of longer computation times and the need for additional dependencies,
-# such as torch.
+# such as torch. \StringEncoder| represents a simpler alternative that can provide
+# good performance at a fraction of the cost of more complex methods.

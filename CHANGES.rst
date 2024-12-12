@@ -12,9 +12,14 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
+Release 0.4.1
+=============
+
 New features
 ------------
-
+* The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
+  decomposition and provides a cheaper alternative to :class:`GapEncoder`.
+  :pr:`1159` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Changes
 -------
@@ -22,9 +27,26 @@ Changes
   printing of progress information when a report is being generated.
   :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
 
+* A parameter `verbose` has been added to the :func:`patch_display` to toggle on or off the
+  printing of progress information when a table report is being generated.
+  :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
+
+* :func:`tabular_learner` accepts the alias ``"regression"`` for the option
+   ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+   :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
+
 Bug fixes
 ---------
+* Generating a ``TableReport`` could have an effect on the matplotib
+  configuration which could cause plots not to display inline in jupyter
+  notebooks any more. This has been fixed in skrub in :pr:`1172` by
+  :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
+  [here](https://github.com/matplotlib/matplotlib/issues/25041).
 
+Maintenance
+-----------
+* Make `skrub` compatible with scikit-learn 1.6.
+  :pr:`1169` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.4.0
 =============
