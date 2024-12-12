@@ -28,23 +28,109 @@
     --radius: var(--space-s);
     --line-height: 1.5;
 
+    --blue: #3584e4;
+    --darkblue: #0f4e9b;
     --lightgreen: #eafaea;
     --mediumgreen: #d6f5d6;
     --darkgreen: 	#c1f0c1;
     --verydarkgreen: #84e184;
     --shadowgreen: #9fce9f;
-
     --lightyellow: #ffffaa;
-
     --darkg: #555555;
     --mediumg: #d0d0d0;
     --lightg: #f0f0f0;
-
     --darkred: #a32929;
     --red: #dd0000;
 
+    --color-background: white;
+    --color-text: black;
+    --color-shadow: 0deg 0% 63%;
+    --color-muted-text: var(--darkg);
+    --color-keyboard-text: #444444;
+    --color-keyboard-border: #cccccc;
+    --color-keyboard-shadow: #bbbbbb;
+    --color-ok: green;
+    --color-warning: #ff6600;
+    --color-critical: var(--red);
+    --color-critical-muted: var(--darkred);
+    --color-important-note-background: var(--lightgreen);
+    --color-strong-border: #aaa;
+    --color-table-border: #cbcbcb;
+    --color-table-head-bg: #e0e0e0;
+    --color-table-head-text: black;
+    --color-table-stripe-1: #f2f2f2;
+    --color-button: #e0e0e0;
+    --color-button-hover: #eee;
+    --color-button-active: #ccc;
+    --color-toggletip-button-bg: var(--blue);
+    --color-toggletip-button-border: var(--darkblue);
+    --color-toggletip-button-text: white;
+    --color-card-header: var(--lightg);
+
+    --color-active-column-1: var(--lightgreen);
+    --color-active-column-2: var(--mediumgreen);
+    --color-active-column-3: var(--darkgreen);
+    --color-active-cell: var(--lightyellow);
+
+
+    --color-sample-tab-card-header: var(--verydarkgreen);
+    --color-sample-tab-card-button: var(--darkgreen);
+    --color-sample-tab-card-button-hover: var(--verydarkgreen);
+    --color-sample-tab-card-button-active: var(--shadowgreen);
+    --color-sample-tab-card-border: var(--shadowgreen);
+    --color-selected-tab: var(--color-background);
+
     --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
 }
+
+@media (prefers-color-scheme: dark)
+{
+:host {
+    --color-background: #222233;
+    --color-text: #fcfcfc;
+    --color-muted-text: #f0f0f6;
+    --color-keyboard-text: var(--color-muted-text);
+    --color-keyboard-border: var(--color-muted-text);
+    --color-keyboard-shadow: var(--color-muted-text);
+    --color-shadow: transparent;
+    --color-ok: var(--mediumgreen);
+    --color-warning: #ff6600;
+    --color-critical: var(--red);
+    --color-important-note-background: var(--color-active-column-2);
+    --color-strong-border: var(--color-text);
+    --color-table-border: #a0a0a6;
+    --color-table-head-bg: #444455;
+    --color-table-head-text: var(--color-text);
+    --color-table-stripe-1: #333344;
+    --color-button: #444455;
+    --color-button-hover: #333344;
+    --color-button-active: #555566;
+    --color-toggletip-button-bg: var(--blue);
+    --color-toggletip-button-border: var(--darkblue);
+    --color-toggletip-button-text: white;
+    --color-card-header: var(--color-table-head-bg);
+
+    --color-active-column-3: #634675;
+    --color-active-column-2: #7d5f9f;
+    --color-active-column-1: #9979bd;
+    --color-active-cell: #004e55;
+
+    --color-sample-tab-card-header: #634675;
+    --color-sample-tab-card-button: #7d5f9f;
+    --color-sample-tab-card-button-hover: #7d5f9f;
+    --color-sample-tab-card-button-active: #7d5f9f;
+    --color-sample-tab-card-border: #9979bd;
+    --color-selected-tab: var(--color-background);
+}
+
+
+}
+
+svg {
+    /* filter: invert(); */
+    fill: var(--color-text);
+}
+
 
 :host {
     font-size: var(--text-m);
@@ -56,27 +142,40 @@
     box-sizing: border-box;
 }
 
-/* The report is in a shadow DOM so outside selectors don't reach it but properties */
-/* can still be inherited from a parent element. We make sure it has black text on */
-/* a white background otherwise eg a dark mode in the page could make parts of it */
-/* unreadable. */
-
 #report {
-    background: white;
-    color: black;
-    color-scheme: only light;
+    background: var(--color-background);
+    color: var(--color-text);
+    color-scheme: light dark;
     border-radius: var(--radius, 0);
     max-width: max-content;
 }
-
 
 
 h1 {
     font-size: var(--text-xl);
 }
 
+button {
+    background: var(--color-button);
+    border: 1px solid var(--color-text);
+    border-radius: var(--radius);
+    padding: var(--space-s) var(--space-m);
+}
+
+button:hover {
+    background: var(--color-button-hover);
+}
+
+button:active {
+    background: var(--color-button-active);
+}
+
 button > * {
     pointer-events: none;
+}
+
+select {
+    background: var(--color-button);
 }
 
 input[type="checkbox"] {
@@ -220,7 +319,7 @@ dd {
 }
 
 .shrinkable-text {
-    flex-basis: 20rem;
+    flex-basis: 20em;
     flex-grow: 1;
 }
 
@@ -274,25 +373,24 @@ dd {
 }
 
 .ok {
-    color: green;
+    color: var(--color-ok);
 }
 
 .warning {
-    color: #ff6600;
+    color: var(--color-warning);
 }
 
 .critical {
-    color: var(--red);
+    color: var(--color-critical);
 }
 
 .box-shadow {
-    --shadow-color: 0deg 0% 63%;
 
     box-shadow:
-    0.3px 0.5px 0.7px hsl(var(--shadow-color) / 0.36),
-    0.8px 1.6px 2px -0.8px hsl(var(--shadow-color) / 0.36),
-    2.1px 4.1px 5.2px -1.7px hsl(var(--shadow-color) / 0.36),
-    5px 10px 12.6px -2.5px hsl(var(--shadow-color) / 0.36);
+    0.3px 0.5px 0.7px hsl(var(--color-shadow) / 0.36),
+    0.8px 1.6px 2px -0.8px hsl(var(--color-shadow) / 0.36),
+    2.1px 4.1px 5.2px -1.7px hsl(var(--color-shadow) / 0.36),
+    5px 10px 12.6px -2.5px hsl(var(--color-shadow) / 0.36);
 }
 
 /* Misc tweaks */
@@ -319,7 +417,7 @@ dd {
 }
 
 .important-note {
-    background-color: var(--lightgreen);
+    background-color: var(--color-important-note-background);
     padding: var(--space-m);
     border-radius: var(--radius);
 }
