@@ -1,5 +1,9 @@
 from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import (
+    HashingVectorizer,
+    TfidfTransformer,
+    TfidfVectorizer,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
@@ -54,8 +58,23 @@ class StringEncoder(SingleColumnTransformer):
     2      8.218069e-01     -3.046564e-16
     """
 
-    def __init__(self, n_components=30):
+    def __init__(
+        self,
+        n_components=30,
+        vectorizer="tfidf",
+        ngram_range=(1, 1),
+        tf_idf_followup=False,
+        n_features=None,
+        max_features=None,
+        analyzer="word",
+    ):
         self.n_components = n_components
+        self.vectorizer = vectorizer
+        self.ngram_range = ngram_range
+        self.tf_idf_followup = tf_idf_followup
+        self.n_features = n_features
+        self.max_features = max_features
+        self.analyzer = analyzer
 
     def get_feature_names_out(self):
         """Get output feature names for transformation.
@@ -83,12 +102,35 @@ class StringEncoder(SingleColumnTransformer):
             The embedding representation of the input.
         """
         del y
-        self.pipe = Pipeline(
-            [
-                ("tfidf", TfidfVectorizer()),
-                ("tsvd", TruncatedSVD(n_components=self.n_components)),
+
+        if self.vectorizer == "tfidf":
+            self.pipe = Pipeline(
+                [
+                    (
+                        "tfidf",
+                        TfidfVectorizer(
+                            ngram_range=self.ngram_range, analyzer=self.analyzer
+                        ),
+                    ),
+                    ("tsvd", TruncatedSVD(n_components=self.n_components)),
+                ]
+            )
+
+        elif self.vectorizer == "hashing":
+            pipe_elements = [
+                (
+                    "hashing",
+                    HashingVectorizer(
+                        ngram_range=self.ngram_range, analyzer=self.analyzer
+                    ),
+                ),
             ]
-        )
+            if self.tf_idf_followup:
+                pipe_elements.append(("tfidf", TfidfTransformer()))
+            pipe_elements.append(("tsvd", TruncatedSVD(n_components=self.n_components)))
+            self.pipe = Pipeline(pipe_elements)
+        else:
+            raise ValueError(f"Unknown vectorizer {self.vectorizer}.")
 
         name = sbd.name(X)
         if not name:
