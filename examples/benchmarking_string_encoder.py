@@ -21,6 +21,9 @@ from matplotlib import pyplot as plt
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.model_selection import cross_validate
 from sklearn.pipeline import make_pipeline
+import pandas as pd
+import seaborn as sns
+
 
 from skrub import TableVectorizer
 
@@ -119,11 +122,11 @@ plot_box_results(results)
 
 # %%
 configurations = {
-    "ngram_range": [(1, 1), (3, 4)],
+    "ngram_range": [(1, 1),(1,2) ,(3, 4)],
     "analyzer": ["word", "char", "char_wb"],
-    "vectorizer": ["tfidf"],
+    "vectorizer": ["tfidf", "hashing"],
     "n_components": [30],
-    # "tf_idf_followup": [True],
+    "tf_idf_followup": [True, False],
 }
 
 # %%
@@ -175,6 +178,8 @@ df = df.with_columns(
     std_fit_time=pl.col("fit_time").list.std(),
     std_score=pl.col("test_score").list.std(),
 )
+
+df.write_csv("results.csv")
 
 # %%
 plot_performance_tradeoff(results)
@@ -268,5 +273,5 @@ for ax, hue_var in zip(axs, ["analyzer", "ngram_range", "vectorizer"]):
         hue_var=hue_var,
         ax=ax,
     )
-
+fig.savefig("results.png")
 # %%
