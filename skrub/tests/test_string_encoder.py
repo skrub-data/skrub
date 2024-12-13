@@ -88,8 +88,8 @@ def test_hashing(encode_column, df_module):
 def test_error_checking(encode_column):
     n_components = -1
     vectorizer = "notavectorizer"
-    ngram_range = (-1, 2)
-    analyzer = "noanalyzer"
+    ngram_range = "a"
+    analyzer = "notanalyzer"
 
     se = StringEncoder(
         n_components=n_components,
@@ -104,13 +104,13 @@ def test_error_checking(encode_column):
         se.fit_transform(encode_column)
 
     se = StringEncoder(
-        ngram_range=ngram_range,
+        analyzer=analyzer,
     )
     with pytest.raises(ValueError):
         se.fit_transform(encode_column)
 
     se = StringEncoder(
-        analyzer=analyzer,
+        ngram_range=ngram_range,
     )
     with pytest.raises(ValueError):
         se.fit_transform(encode_column)

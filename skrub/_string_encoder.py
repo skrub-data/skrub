@@ -116,21 +116,6 @@ class StringEncoder(SingleColumnTransformer):
         if self.analyzer not in ["char_wb", "char", "word"]:
             raise ValueError(f"Unknown analyzer {self.analyzer}")
 
-        if not all(isinstance(x, int) and x > 0 for x in self.ngram_range):
-            raise ValueError(
-                "Values in `ngram_range` must be positive integers, "
-                f"found {self.ngram_range} instead."
-            )
-        if not len(self.ngram_range) == 2:
-            raise ValueError(
-                f"`ngram_range` must have length 2, found {len(self.ngram_range)}."
-            )
-
-        if not isinstance(self.n_components, int) and self.n_components > 0:
-            raise ValueError(
-                f"`n_components` must be a positive integer, found {self.n_components}"
-            )
-
         if self.vectorizer == "tfidf":
             self.pipe = Pipeline(
                 [
