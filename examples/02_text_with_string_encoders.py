@@ -322,5 +322,5 @@ plot_performance_tradeoff(results)
 # ----------
 # In conclusion, |TextEncoder| provides powerful vectorization for text, but at
 # the cost of longer computation times and the need for additional dependencies,
-# such as torch. \StringEncoder| represents a simpler alternative that can provide
+# such as torch. |StringEncoder| represents a simpler alternative that can provide
 # good performance at a fraction of the cost of more complex methods.
