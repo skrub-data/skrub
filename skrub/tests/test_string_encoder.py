@@ -1,6 +1,6 @@
 import pytest
 from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import HashingVectorizer, TfidfVectorizer
 from sklearn.pipeline import Pipeline
 
 from skrub import _dataframe as sbd
@@ -20,10 +20,15 @@ def encode_column(df_module):
 
 
 def test_encoding(encode_column, df_module):
+    ngram_range = (3, 4)
+    analyzer = "char_wb"
+    n_components = 2
+
+    #### tfidf vectorizer
     pipe = Pipeline(
         [
-            ("tfidf", TfidfVectorizer()),
-            ("tsvd", TruncatedSVD(n_components=2)),
+            ("tfidf", TfidfVectorizer(ngram_range=ngram_range, analyzer=analyzer)),
+            ("tsvd", TruncatedSVD(n_components=n_components)),
         ]
     )
     check = pipe.fit_transform(sbd.to_numpy(encode_column))
@@ -32,7 +37,12 @@ def test_encoding(encode_column, df_module):
 
     check_df = df_module.make_dataframe(dict(zip(names, check.T)))
 
-    se = StringEncoder(2)
+    se = StringEncoder(
+        n_components=n_components,
+        vectorizer="tfidf",
+        ngram_range=ngram_range,
+        analyzer=analyzer,
+    )
     result = se.fit_transform(encode_column)
 
     # Converting dtypes to avoid nullable shenanigans
@@ -40,6 +50,70 @@ def test_encoding(encode_column, df_module):
     result = sbd.pandas_convert_dtypes(result)
 
     df_module.assert_frame_equal(check_df, result)
+
+
+def test_hashing(encode_column, df_module):
+    ngram_range = (3, 4)
+    analyzer = "char_wb"
+    n_components = 2
+
+    #### hashing vectorizer
+    pipe = Pipeline(
+        [
+            ("tfidf", HashingVectorizer(ngram_range=ngram_range, analyzer=analyzer)),
+            ("tsvd", TruncatedSVD(n_components=n_components)),
+        ]
+    )
+    check = pipe.fit_transform(sbd.to_numpy(encode_column))
+
+    names = [f"col1_{idx}" for idx in range(2)]
+
+    check_df = df_module.make_dataframe(dict(zip(names, check.T)))
+
+    se = StringEncoder(
+        n_components=n_components,
+        vectorizer="hashing",
+        ngram_range=ngram_range,
+        analyzer=analyzer,
+    )
+    result = se.fit_transform(encode_column)
+
+    # Converting dtypes to avoid nullable shenanigans
+    check_df = sbd.pandas_convert_dtypes(check_df)
+    result = sbd.pandas_convert_dtypes(result)
+
+    df_module.assert_frame_equal(check_df, result)
+
+
+def test_error_checking(encode_column):
+    n_components = -1
+    vectorizer = "notavectorizer"
+    ngram_range = (-1, 2)
+    analyzer = "noanalyzer"
+
+    se = StringEncoder(
+        n_components=n_components,
+    )
+    with pytest.raises(ValueError):
+        se.fit_transform(encode_column)
+
+    se = StringEncoder(
+        vectorizer=vectorizer,
+    )
+    with pytest.raises(ValueError):
+        se.fit_transform(encode_column)
+
+    se = StringEncoder(
+        ngram_range=ngram_range,
+    )
+    with pytest.raises(ValueError):
+        se.fit_transform(encode_column)
+
+    se = StringEncoder(
+        analyzer=analyzer,
+    )
+    with pytest.raises(ValueError):
+        se.fit_transform(encode_column)
 
 
 def test_get_feature_names_out(encode_column, df_module):

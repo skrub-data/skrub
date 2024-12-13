@@ -23,8 +23,23 @@ class StringEncoder(SingleColumnTransformer):
 
     Parameters
     ----------
-    n_components : int
-        Number of components to be used for the PCA decomposition.
+    n_components : int, default=30
+        Number of components to be used for the PCA decomposition. Must be a
+        positive integer.
+    vectorizer : str, "tfidf" or "hashing"
+        Vectorizer to apply to the strings, either `tfidf` or `hashing` for
+        scikit-learn TfidfVectorizer or HashingVectorizer respectively.
+
+    ngram_range : tuple of (int, int) pairs, default=(3,4)
+        Whether the feature should be made of word or character n-grams.
+        Option ‘char_wb’ creates character n-grams only from text inside word
+        boundaries; n-grams at the edges of words are padded with space.
+
+    analyzer : str, "char", "word" or "char_wb", default="char_wb"
+        The lower and upper boundary of the range of n-values for different
+        n-grams to be extracted. All values of n such that min_n <= n <= max_n
+        will be used. For example an `ngram_range` of `(1, 1)` means only unigrams,
+        `(1, 2)` means unigrams and bigrams, and `(2, 2)` means only bigrams.
 
     See Also
     --------
@@ -62,18 +77,12 @@ class StringEncoder(SingleColumnTransformer):
         self,
         n_components=30,
         vectorizer="tfidf",
-        ngram_range=(1, 1),
-        tf_idf_followup=False,
-        n_features=None,
-        max_features=None,
-        analyzer="word",
+        ngram_range=(3, 4),
+        analyzer="char_wb",
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
         self.ngram_range = ngram_range
-        self.tf_idf_followup = tf_idf_followup
-        self.n_features = n_features
-        self.max_features = max_features
         self.analyzer = analyzer
 
     def get_feature_names_out(self):
@@ -103,6 +112,25 @@ class StringEncoder(SingleColumnTransformer):
         """
         del y
 
+        # ERROR CHECKING
+        if self.analyzer not in ["char_wb", "char", "word"]:
+            raise ValueError(f"Unknown analyzer {self.analyzer}")
+
+        if not all(isinstance(x, int) and x > 0 for x in self.ngram_range):
+            raise ValueError(
+                "Values in `ngram_range` must be positive integers, "
+                f"found {self.ngram_range} instead."
+            )
+        if not len(self.ngram_range) == 2:
+            raise ValueError(
+                f"`ngram_range` must have length 2, found {len(self.ngram_range)}."
+            )
+
+        if not isinstance(self.n_components, int) and self.n_components > 0:
+            raise ValueError(
+                f"`n_components` must be a positive integer, found {self.n_components}"
+            )
+
         if self.vectorizer == "tfidf":
             self.pipe = Pipeline(
                 [
@@ -125,8 +153,7 @@ class StringEncoder(SingleColumnTransformer):
                     ),
                 ),
             ]
-            if self.tf_idf_followup:
-                pipe_elements.append(("tfidf", TfidfTransformer()))
+            pipe_elements.append(("tfidf", TfidfTransformer()))
             pipe_elements.append(("tsvd", TruncatedSVD(n_components=self.n_components)))
             self.pipe = Pipeline(pipe_elements)
         else:
