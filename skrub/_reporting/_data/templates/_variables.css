@@ -1,0 +1,95 @@
+/**
+ * All variables are centralized here.
+ * This opens a possibility to create themes.
+ *
+ * A note on variable naming convention:
+ * Proposal here is to use a consistent pattern: --what-where-variation-interactivity
+ * `what` could be colors for now but may scale to sizes
+ * `where` defines in which css rules the variable should be used (background for background, text for font color, ...)
+ * `variation` values may be variable according to context a title may not have exactly the same color as a subtitle for example
+ * `interactivity` value on hover for example
+ */
+
+:host {
+  --base-size: 1em;
+
+  /* typography */
+  --font-size-xs: calc(0.8 * var(--base-size));
+  --font-size-s: calc(0.9 * var(--base-size));
+  --font-size-m: var(--base-size);
+  --font-size-l: calc(1.2 * var(--base-size));
+  --font-size-xl: calc(1.5 * var(--base-size));
+  --line-height: 1.5;
+  --font-family-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo,
+    Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
+
+  /* spacings */
+  --spacing-xs: calc(0.125 * var(--base-size));
+  --spacing-s: calc(0.25 * var(--base-size));
+  --spacing-m: calc(0.5 * var(--base-size));
+  --spacing-l: calc(1 * var(--base-size));
+  --spacing-xl: calc(1.2 * var(--base-size));
+  --spacing-xxl: calc(1.5 * var(--base-size));
+
+  /* strokes & radii */
+  --border-s: 1px;
+  --border-m: 2px;
+  --radius: var(--spacing-s);
+
+  /* branding */
+  --color-branding-orange: #f89939;
+  --color-branding-blue: #3499cd;
+
+  /* animations */
+  --animation-duration: 0.3s;
+  --animation-easing: ease;
+}
+
+@media (prefers-color-scheme: light) {
+  :host {
+    /* backgrounds */
+    --color-background-primary: white;
+    --color-background-secondary: rgb(240, 240, 240);
+    --color-background-tertiary: rgb(250, 250, 250);
+    --color-background-quaternary: rgb(210, 210, 210);
+    --color-background-highlight-primary: #d6f5d6;
+    --color-background-highlight-secondary: #eafaea;
+    --color-background-active: #ffffaa;
+    --color-background-info: #0f4e9b;
+
+    /* buttons */
+    --color-background-button-primary: #e0e0e0;
+    --color-background-button-primary-hover: #eee;
+    --color-background-button-primary-active: #ccc;
+    --color-background-button-secondary: transparent;
+    --color-background-button-secondary-hover: #84e184;
+    --color-background-button-secondary-active: #eafaea;
+
+    /* texts */
+    --color-text-primary: black;
+    --color-text-secondary: #555;
+    --color-text-success: green;
+    --color-text-info: white;
+    --color-text-warning: #ff6600;
+    --color-text-critical: #dd0000;
+
+    /* borders */
+    --color-border-primary: #aaa;
+    --color-border-secondary: #cbcbcb;
+    --color-border-highlight-primary: #84e184;
+    --color-border-highlight-secondary: #eafaea;
+
+    /* shadows */
+    --color-shadow: hsl(0, 0%, 63%);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    /* backgrounds */
+
+    /* texts */
+
+    /* shadows */
+  }
+}

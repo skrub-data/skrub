@@ -1,49 +1,48 @@
 .toggletip-wrapper {
-    position: relative;
+  position: relative;
 }
 
 .toggletip {
-    display: inline-block;
-    --buttonheight: var(--text-xl);
+  display: inline-block;
+  --height-button: var(--font-size-xl);
 }
 
 .toggletip > button {
-    height: var(--buttonheight);
-    width: var(--buttonheight);
-    background-color: var(--color-toggletip-button-bg);
-    text-shadow: 0px 0px 1px var(--color-toggletip-button-border);
-    font-family: var(--fontStack-monospace);
-    font-weight: bold;
-    color: var(--color-toggletip-button-text);
-    border: var(--border-s) solid var(--color-toggletip-button-border);
-    border-radius: 50%;
-    margin: 0;
-    padding: none;
+  height: var(--height-button);
+  width: var(--height-button);
+  background-color: var(--color-background-info);
+  font-family: var(--font-family-monospace);
+  font-weight: bold;
+  color: var(--color-text-info);
+  border: var(--border-s) solid var(--color-background-info);
+  border-radius: 50%;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .toggletip > .toggletip-info {
-    box-sizing: border-box;
-    position: absolute;
-    top: calc(1.2 * var(--buttonheight));
-    left: calc(0.9 * var(--buttonheight));
-    width: calc(min(50ch, 100% - var(--buttonheight)));
-    min-width: min-content;
-    padding: var(--space-l);
-    background: var(--color-background);
-    border: var(--border-m) solid var(--color-toggletip-button-bg);
-    border-radius: var(--radius);
-    z-index: 2;
-    visibility: hidden;
-    transition: visibility 0ms 400ms;
+  box-sizing: border-box;
+  position: absolute;
+  top: calc(1.2 * var(--height-button));
+  left: calc(0.9 * var(--height-button));
+  width: calc(min(50ch, 100% - var(--height-button)));
+  min-width: min-content;
+  padding: var(--spacing-l);
+  background-color: var(--color-background-primary);
+  border: var(--border-m) solid var(--color-background-info);
+  border-radius: var(--radius);
+  z-index: 2;
+  opacity: 0;
+  transition: opacity var(--animation-duration) var(--animation-easing);
 }
 
-
-:is(.toggletip:focus-within, .toggletip:active, .toggletip:hover) > .toggletip-info {
-    visibility: visible;
-    transition-delay: 0ms;
+.toggletip:has(button:is(:focus, :active, :hover)) > .toggletip-info {
+  opacity: 1;
 }
 
-.toggletip > button:is(:focus, :active) {
-    outline: var(--border-m) solid var(--color-toggletip-button-bg);
-    outline-offset: var(--border-m);
+.toggletip button:is(:focus, :active) {
+  outline: var(--border-m) solid var(--color-text-info);
+  outline-offset: var(--border-m);
 }

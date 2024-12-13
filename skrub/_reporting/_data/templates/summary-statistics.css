@@ -1,112 +1,111 @@
 .summary-stats-table {
-    margin: var(--border-m);
+  margin: var(--spacing-m);
 
-    /* "collapse" prevents reliably showing the right border of the sticky
+  /* "collapse" prevents reliably showing the right border of the sticky
        column when it overlaps others */
-    border-collapse: separate;
+  border-collapse: separate;
 
-    /* Avoid a border twice as thick on the left of the table due to separate
+  /* Avoid a border twice as thick on the left of the table due to separate
        border (there is already a left border on the table cells). */
-    border-left: none;
+  border-left: none;
 }
 
 .relative {
-    position: relative;
+  position: relative;
 }
-
+#report .summary-stats-table thead th {
+  background-color: var(--color-background-quaternary);
+}
 /* pure.css puts the border on the left of each cell, but we want one on the
    right of the second column which will overlap other columns. */
-#report .summary-stats-table tr > :is(th, td):nth-child(3){
-    border-left: none;
+#report .summary-stats-table tr > :is(th, td):nth-child(3) {
+  border-left: none;
 }
 
 /* Make the second column sticky and allow it to overlap others. */
 #report .summary-stats-table tr > :is(th, td):nth-child(2) {
-
-    /* We allow part of the column to be hidden to save space; seeing the end of
+  /* We allow part of the column to be hidden to save space; seeing the end of
        the column name should be enough to recognize to which column a row
        belongs. */
-    --left-overlap: calc(4 * var(--base-size));
+  --left-overlap: calc(4 * var(--base-size));
 
-    position: sticky;
-    left: calc(-1 * var(--left-overlap));
-    z-index: 10;
+  position: sticky;
+  left: calc(-1 * var(--left-overlap));
+  z-index: 10;
 
-    text-align: right;
-    max-width: calc(min(30ch, var(--left-overlap) + 40vw));
+  text-align: right;
+  max-width: calc(min(30ch, var(--left-overlap) + 40vw));
 
-    border-right: 1px solid #cbcbcb;
-    box-shadow: 0px 0 0 0 #aaa;
-    transition: box-shadow 200ms;
+  border-right: var(--border-s) solid var(--color-border-secondary);
+  box-shadow: 2px 0 0 0 var(--color-shadow);
+  transition: box-shadow var(--animation-duration) var(--animation-easing);
 }
 
 /* Draw a larger & darker border when the 2nd column is overlapping others. */
-#report [data-is-scrolling] > .summary-stats-table tr > :is(th, td):nth-child(2) {
-    box-shadow: 2px 0 0 0 #aaa;
-    transition: box-shadow 400ms;
+#report
+  [data-is-scrolling]
+  > .summary-stats-table
+  tr
+  > :is(th, td):nth-child(2) {
+  box-shadow: 2px 0 0 0 var(--color-shadow);
+  transition: box-shadow var(--animation-duration) var(--animation-easing);
 }
 
 /* Elements in the 2nd column should have an opaque background as they overlap
    others. */
-
-#report .summary-stats-table tr > td:nth-child(2) {
-    background: var(--color-background);
-}
-
 #report .summary-stats-table tr > th:nth-child(2) {
-    background: var(--color-table-head-bg);
+  background-color: var(--color-background-quaternary);
+}
+#report .summary-stats-table tr > td:nth-child(2) {
+  background-color: var(--color-background-primary);
 }
 
 #report th.sort-button-group-wrapper {
-    --btn-width: var(--button-m);
-    --btn-group-width: calc(var(--btn-width) * 2);
-    position: relative;
-    padding-top: var(--space-s);
-    padding-bottom: var(--space-s);
-    padding-right: calc(var(--space-m) + var(--btn-group-width));
+  --btn-width: 22px;
+  --btn-group-width: calc(var(--btn-width) * 2);
+  position: relative;
+  padding-top: var(--spacing-s);
+  padding-bottom: var(--spacing-s);
+  padding-right: calc(var(--spacing-m) + var(--btn-group-width));
 }
 
 .sort-button-group {
-    position: absolute;
-    top: 0;
-    bottom: var(--border-s);
-    right: calc(-1 * var(--btn-group-width));
-    left: 100%;
-    transform: translateX(calc(-1 * var(--btn-group-width)));
-    display: flex;
-    gap: 0px;
-    padding: 0px;
+  position: absolute;
+  top: 0;
+  bottom: var(--border-s);
+  right: calc(-1 * var(--btn-group-width));
+  left: 100%;
+  transform: translateX(calc(-1 * var(--btn-group-width)));
+  display: flex;
+  gap: 0;
+  padding: 0;
 }
 
 .sort-button {
-    margin: 0;
-    box-sizing: border-box;
-    height: 100%;
-    flex-grow: 1;
-    border-radius: 0;
-    border: var(--border-s) solid var(--color-strong-border);
-    background: var(--color-button);
-    color: var(--color-muted-text);
-    padding: var(--space-s);
+  margin: 0;
+  box-sizing: border-box;
+  height: 100%;
+  flex-grow: 1;
+  border-radius: 0;
+  border: var(--border-s) solid var(--color-border-primary);
+  background-color: var(--color-background-button-primary);
+  color: var(--color-text-secondary);
+  padding: var(--spacing-s);
+  transition: background-color var(--animation-duration) var(--animation-easing);
 }
 
 .sort-button-group > .sort-button:focus-visible {
-    z-index: 2;
+  z-index: 2;
 }
 
 .sort-button-group > .sort-button ~ .sort-button {
-    margin-left: calc(-1 * var(--border-s));
+  margin-left: calc(-1 * var(--border-s));
 }
 
 .sort-button:hover {
-    background: var(--color-button-hover);
+  background-color: var(--color-background-button-primary-hover);
 }
 
 .sort-button:active {
-    background: var(--color-button-active);
-}
-
-.sort-button[data-is-active]{
-    background: var(--color-active-column-2);
-    color: var(--color-text);
+  background-color: var(--color-background-button-primary-active);
 }
