@@ -123,12 +123,12 @@
   position: relative;
   background-color: var(--color-background-highlight-primary);
   border-block-end: var(--border-s) solid
-    var(--color-border-highlight-secondary);
+    var(--color-border-highlight);
   padding-right: 36px;
 }
 
 .columns-in-sample-tab .card {
-  border-color: var(--color-border-highlight-secondary);
+  border-color: var(--color-border-highlight);
 }
 
 /* Button for closing the card / deselecting the column in the table */

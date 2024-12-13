@@ -75,8 +75,7 @@
     /* borders */
     --color-border-primary: #aaa;
     --color-border-secondary: #cbcbcb;
-    --color-border-highlight-primary: #84e184;
-    --color-border-highlight-secondary: #eafaea;
+    --color-border-highlight: #eafaea;
 
     /* shadows */
     --color-shadow: rgb(255, 255, 255, 0.5);
@@ -114,8 +113,7 @@
     /* borders */
     --color-border-primary: #666;
     --color-border-secondary: #444;
-    --color-border-highlight-primary: #2a9d8f;
-    --color-border-highlight-secondary: #264653;
+    --color-border-highlight: #264653;
 
     /* shadows */
     --color-shadow: rgba(0, 0, 0, 0.5);
