@@ -49,11 +49,10 @@
   :host {
     /* backgrounds */
     --color-background-primary: white;
-    --color-background-secondary: rgb(240, 240, 240);
-    --color-background-tertiary: rgb(250, 250, 250);
-    --color-background-quaternary: rgb(210, 210, 210);
+    --color-background-secondary: #f0f0f0;
+    --color-background-tertiary: #fafafa;
+    --color-background-quaternary: #d2d2d2;
     --color-background-highlight-primary: #d6f5d6;
-    --color-background-highlight-secondary: #eafaea;
     --color-background-active: #ffffaa;
     --color-background-info: #0f4e9b;
 
@@ -80,16 +79,45 @@
     --color-border-highlight-secondary: #eafaea;
 
     /* shadows */
-    --color-shadow: hsl(0, 0%, 63%);
+    --color-shadow: rgb(255, 255, 255, 0.5);
+    --color-shadow-keyboard: rgb(255, 255, 255, 0.5)
   }
 }
 
 @media (prefers-color-scheme: dark) {
   :host {
     /* backgrounds */
+    --color-background-primary: #121212;
+    --color-background-secondary: #1e1e1e;
+    --color-background-tertiary: #232323;
+    --color-background-quaternary: #333;
+    --color-background-highlight-primary: #f89939;
+    --color-background-active: #2a9d8f;
+    --color-background-info: #0f4e9b;
+
+    /* buttons */
+    --color-background-button-primary: #212121;
+    --color-background-button-primary-hover: #272727;
+    --color-background-button-primary-active: #353535;
+    --color-background-button-secondary: transparent;
+    --color-background-button-secondary-hover: #457b9d;
+    --color-background-button-secondary-active: #1d3557;
 
     /* texts */
+    --color-text-primary: white;
+    --color-text-secondary: #d4d4d4;
+    --color-text-success: #2a9d8f;
+    --color-text-info: white;
+    --color-text-warning: #e76f51;
+    --color-text-critical: #e63946;
+
+    /* borders */
+    --color-border-primary: #666;
+    --color-border-secondary: #444;
+    --color-border-highlight-primary: #2a9d8f;
+    --color-border-highlight-secondary: #264653;
 
     /* shadows */
+    --color-shadow: rgba(0, 0, 0, 0.5);
   }
 }

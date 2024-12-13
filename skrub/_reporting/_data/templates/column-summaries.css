@@ -121,7 +121,7 @@
 
 .columns-in-sample-tab .card-header {
   position: relative;
-  background-color: var(--color-border-highlight-secondary);
+  background-color: var(--color-background-highlight-primary);
   border-block-end: var(--border-s) solid
     var(--color-border-highlight-secondary);
   padding-right: 36px;

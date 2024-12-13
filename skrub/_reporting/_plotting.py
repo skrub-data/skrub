@@ -98,10 +98,10 @@ def _to_em(pt_match):
 def _serialize(fig):
     buffer = io.BytesIO()
     fig.patch.set_visible(False)
-    fig.savefig(buffer, format="svg", bbox_inches="tight")
+    fig.savefig(buffer, transparent=True, format="svg", bbox_inches="tight")
     out = buffer.getvalue().decode("UTF-8")
     out = re.sub(r'(width|height)="([0-9.]+)pt"', _to_em, out)
-    out = re.sub(r"#000000", "var(--color-text)", out)
+    out = re.sub(r"<text ", '<text fill="var(--color-text-primary) "', out)
     plt.close(fig)
     return out
 

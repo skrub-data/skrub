@@ -41,7 +41,11 @@
   tbody
   tr:nth-child(2n -1)
   .table-cell[data-is-in-active-column] {
-  background-color: var(--color-background-highlight-secondary);
+  background-color: color-mix(
+    in srgb,
+    var(--color-background-highlight-primary),
+    var(--color-background-primary)
+  );
 }
 
 .table-with-selectable-cells thead tr .table-cell[data-is-active],
@@ -173,8 +177,8 @@ table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
   line-height: 1.8;
   color: var(--color-text-secondary);
   border: var(--border-s) solid var(--color-border-secondary);
-  border-bottom: var(--border-s) solid var(--color-shadow);
-  box-shadow: inset 0 calc(-1 * var(--border-s)) 0 var(--color-shadow);
+  border-bottom: var(--border-s) solid var(--color-border-secondary);
+  box-shadow: inset 0 calc(-1 * var(--border-s)) 0 var(--color-shadow-keyboard);
   border-radius: 0.2em;
   min-width: 1em;
   text-align: center;
