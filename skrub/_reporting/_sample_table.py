@@ -128,10 +128,8 @@ class _PolarsTable:
         self.start_i = -1
         self.start_j = 0
 
-        self.top_slice_size, self.bottom_slice_size, self.is_elided = (
-            _pick_slice_sizes(
-                self.df, self.max_top_slice_size, self.max_bottom_slice_size
-            )
+        self.top_slice_size, self.bottom_slice_size, self.is_elided = _pick_slice_sizes(
+            self.df, self.max_top_slice_size, self.max_bottom_slice_size
         )
 
         self.parts = []
@@ -346,10 +344,8 @@ class _PandasTable:
         self.start_i = -_n_levels(self.df.columns) - 1
         self.start_j = -_n_levels(self.df.index)
 
-        self.top_slice_size, self.bottom_slice_size, self.is_elided = (
-            _pick_slice_sizes(
-                self.df, self.max_top_slice_size, self.max_bottom_slice_size
-            )
+        self.top_slice_size, self.bottom_slice_size, self.is_elided = _pick_slice_sizes(
+            self.df, self.max_top_slice_size, self.max_bottom_slice_size
         )
 
         self.parts = []
