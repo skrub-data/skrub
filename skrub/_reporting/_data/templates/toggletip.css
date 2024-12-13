@@ -35,6 +35,7 @@
   border-radius: var(--radius);
   z-index: 2;
   opacity: 0;
+  pointer-events: none;
   transition: opacity var(--animation-duration) var(--animation-easing);
 }
 
