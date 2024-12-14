@@ -79,7 +79,7 @@
 
     /* shadows */
     --color-shadow: rgb(255, 255, 255, 0.5);
-    --color-shadow-keyboard: rgb(255, 255, 255, 0.5)
+    --color-shadow-keyboard: rgb(255, 255, 255, 0.5);
   }
 }
 
@@ -117,5 +117,6 @@
 
     /* shadows */
     --color-shadow: rgba(0, 0, 0, 0.5);
+    --color-shadow-keyboard: rgb(255, 255, 255, 0.5);
   }
 }
