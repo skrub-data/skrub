@@ -15,6 +15,9 @@ It is currently undergoing fast development and backward compatibility is not en
 New features
 ------------
 
+- The :class:`TableReport` now switch it's visual theme between light and dark according to the user preferences.
+  :pr:`1201` by :user:`rouk1 <rouk1>`.
+
 Changes
 -------
 
