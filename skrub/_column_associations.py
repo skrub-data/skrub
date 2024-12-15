@@ -20,12 +20,11 @@ def column_associations(df):
     The result is returned as a dataframe with columns:
 
     ``['left_column_name', 'left_column_idx', 'right_column_name',
-    'right_column_idx', 'cramer_v']``
+    'right_column_idx', 'cramer_v', 'pearson']``
 
     As the function is commutative, each pair of columns appears only once
     (either ``col_1``, ``col_2`` or ``col_2``, ``col_1`` but not both).
-    The results are sorted
-    from most associated to least associated.
+    The results are sorted from most associated to least associated.
 
     To compute the Cramer's V statistic, all columns are discretized. Numeric
     columns are binned with 10 bins. For categorical columns, only the 10 most
@@ -33,6 +32,10 @@ def column_associations(df):
     separate category, ie a separate row in the contingency table. Thus
     associations between the values of 2 columns or between their missingness
     patterns may be captured.
+
+    To compute the Pearson's Correlation Coefficient, only numeric columns are
+    considered. The correlation is computed using the Pearson method used in
+    pandas.
 
     Parameters
     ----------
@@ -50,6 +53,15 @@ def column_associations(df):
     giving a value between 0 and +1 (inclusive).
 
     * `Cramer's V <https://en.wikipedia.org/wiki/Cramér%27s_V>`_
+
+    Pearson's Correlation Coefficient is a measure of the linear correlation
+    between two variables, giving a value between -1 and +1 (inclusive).
+
+    * `Pearson's Correlation Coefficient
+    <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_
+    * `pandas.DataFrame.corr
+    <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html>`_
+
 
     Examples
     --------
@@ -74,58 +86,20 @@ def column_associations(df):
     >>> # Compute the associations
     >>> associations = skrub.column_associations(df)
     >>> associations # doctest: +SKIP
-       left_column_name  left_column_idx right_column_name  right_column_idx  cramer_v
-    0               c_3                3             c_str                 5    0.8215
-    1               c_1                1               c_4                 4    0.8215
-    2               c_0                0               c_1                 1    0.8215
-    3               c_2                2             c_str                 5    0.7551
-    4               c_0                0             c_str                 5    0.7551
-    5               c_0                0               c_3                 3    0.7551
-    6               c_1                1               c_3                 3    0.6837
-    7               c_0                0               c_4                 4    0.6837
-    8               c_4                4             c_str                 5    0.6837
-    9               c_3                3               c_4                 4    0.6053
-    10              c_2                2               c_3                 3    0.6053
-    11              c_1                1             c_str                 5    0.6053
-    12              c_0                0               c_2                 2    0.6053
-    13              c_2                2               c_4                 4    0.5169
-    14              c_1                1               c_2                 2    0.4122
-    >>> pd.reset_option('display.width')
-    >>> pd.reset_option('display.max_columns')
-    >>> pd.reset_option('display.precision')
-
-    This is an example of the Pearson correlation coefficient:
-    >>> # Compute the correlations
-    >>> correlations = df.corr(method="pearson", min_periods=1, numeric_only=True)
-    >>> correlations
-            c_0     c_1     c_2     c_3     c_4
-    c_0  1.0000  0.1123 -0.0578  0.3212 -0.3202
-    c_1  0.1123  1.0000 -0.4986 -0.1887  0.1597
-    c_2 -0.0578 -0.4986  1.0000  0.1757 -0.2885
-    c_3  0.3212 -0.1887  0.1757  1.0000 -0.0150
-    c_4 -0.3202  0.1597 -0.2885 -0.0150  1.0000
-    >>> correlations = (correlations.stack().reset_index().set_axis
-    ...     (["left", "right", "pearson"], axis=1))
-    >>> correlations.head()
-      left  right pearson
-    0  c_0   c_0   1.0000
-    1  c_0   c_1   0.1123
-    2  c_0   c_2  -0.0578
-    3  c_0   c_3   0.3212
-    4  c_0   c_4  -0.3202
-    >>> associations = pd.merge(
-    ...     associations,
-    ...     correlations,
-    ...     left_on=["left_column_name", "right_column_name"],
-    ...     right_on=["left", "right"],
-    ...     how="left",
-    ... ).drop(columns=["left", "right"])
     >>> pd.reset_option('display.width')
     >>> pd.reset_option('display.max_columns')
     >>> pd.reset_option('display.precision')
     """
-    associations_table = _stack_symmetric_associations(_cramer_v_matrix(df), df)
-    return _compute_pearsons(associations_table)
+    cramer_v_table = _stack_symmetric_associations(_cramer_v_matrix(df), df)
+    pearson_c_table = _compute_pearsons(df)
+    stats = pd.merge(
+        cramer_v_table,
+        pearson_c_table,
+        left_on=["left_column_name", "right_column_name"],
+        right_on=["left", "right"],
+        how="left",
+    ).drop(columns=["left", "right"])
+    return stats
 
 
 def _stack_symmetric_associations(associations, df):
@@ -282,7 +256,7 @@ def _compute_cramer(table, n_samples):
     return stat
 
 
-def _compute_pearsons(table):
+def _compute_pearsons(df):
     """Compute the Pearson correlation coefficient statistic given a
     contingency table / pandas dataframe.
 
@@ -293,18 +267,10 @@ def _compute_pearsons(table):
     i, j contains the statistic for column i x column j.
 
     """
-    associations = table
-    correlations = table.corr(method="pearson", min_periods=1, numeric_only=True)
-    correlations = (
+    correlations = df.corr(method="pearson", min_periods=1, numeric_only=True)
+    stat = (
         correlations.stack()
         .reset_index()
         .set_axis(["left", "right", "pearson"], axis=1)
     )
-    stats = pd.merge(
-        associations,
-        correlations,
-        left_on=["left_column_name", "right_column_name"],
-        right_on=["left", "right"],
-        how="left",
-    ).drop(columns=["left", "right"])
-    return stats
+    return stat
