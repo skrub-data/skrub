@@ -148,7 +148,7 @@ def test_write_html(tmp_path, pd_module, filename_type):
     report.write_html(filename)
     assert tmp_file_path.exists()
 
-    with open(tmp_file_path, "r") as file:
+    with open(tmp_file_path, "r", encoding="utf-8") as file:
         saved_content = file.read()
     assert "</html>" in saved_content
 
