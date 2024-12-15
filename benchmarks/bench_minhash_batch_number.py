@@ -15,11 +15,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import sklearn
 from joblib import Parallel, delayed, effective_n_jobs
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
-from sklearn.utils.fixes import parse_version
 from utils import default_parser, find_result, monitor
 
 from skrub._fast_hash import ngram_min_hash
@@ -32,11 +30,6 @@ NoneType = type(None)
 
 # Ignore lines too long, as links can't be cut
 # flake8: noqa: E501
-
-
-sklearn_below_1_6 = parse_version(
-    parse_version(sklearn.__version__).base_version
-) < parse_version("1.6")
 
 
 class MinHashEncoder(BaseEstimator, TransformerMixin):
@@ -133,20 +126,16 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         self.batch_per_job = batch_per_job
         self.n_jobs = n_jobs
 
-    if sklearn_below_1_6:
+    def _more_tags(self):
+        """
+        Used internally by sklearn to ease the estimator checks.
+        """
+        return {"X_types": ["categorical"]}
 
-        def _more_tags(self):
-            """
-            Used internally by sklearn to ease the estimator checks.
-            """
-            return {"X_types": ["categorical"]}
-
-    else:
-
-        def __sklearn_tags__(self):
-            tags = super().__sklearn_tags__()
-            tags.input_tags.categorical = True
-            return tags
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.categorical = True
+        return tags
 
     def _get_murmur_hash(self, string):
         """
