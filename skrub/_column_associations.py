@@ -2,6 +2,7 @@
 import warnings
 
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer, OneHotEncoder
 
 from . import _dataframe as sbd
@@ -70,6 +71,7 @@ def column_associations(df):
     2  9.0810  9.4011  1.9257  5.7429  6.2358  val 2
     3  2.5425  2.9678  9.7801  9.9879  6.0709  val 3
     4  5.8878  9.3223  5.3840  7.2006  2.1494  val 4
+    >>> # Compute the associations
     >>> associations = skrub.column_associations(df)
     >>> associations # doctest: +SKIP
        left_column_name  left_column_idx right_column_name  right_column_idx  cramer_v
@@ -91,8 +93,39 @@ def column_associations(df):
     >>> pd.reset_option('display.width')
     >>> pd.reset_option('display.max_columns')
     >>> pd.reset_option('display.precision')
+
+    This is an example of the Pearson correlation coefficient:
+    >>> # Compute the correlations
+    >>> correlations = df.corr(method="pearson", min_periods=1, numeric_only=True)
+    >>> correlations
+            c_0     c_1     c_2     c_3     c_4
+    c_0  1.0000  0.1123 -0.0578  0.3212 -0.3202
+    c_1  0.1123  1.0000 -0.4986 -0.1887  0.1597
+    c_2 -0.0578 -0.4986  1.0000  0.1757 -0.2885
+    c_3  0.3212 -0.1887  0.1757  1.0000 -0.0150
+    c_4 -0.3202  0.1597 -0.2885 -0.0150  1.0000
+    >>> correlations = (correlations.stack().reset_index().set_axis
+    ...     (["left", "right", "pearson"], axis=1))
+    >>> correlations.head()
+      left  right pearson
+    0  c_0   c_0   1.0000
+    1  c_0   c_1   0.1123
+    2  c_0   c_2  -0.0578
+    3  c_0   c_3   0.3212
+    4  c_0   c_4  -0.3202
+    >>> associations = pd.merge(
+    ...     associations,
+    ...     correlations,
+    ...     left_on=["left_column_name", "right_column_name"],
+    ...     right_on=["left", "right"],
+    ...     how="left",
+    ... ).drop(columns=["left", "right"])
+    >>> pd.reset_option('display.width')
+    >>> pd.reset_option('display.max_columns')
+    >>> pd.reset_option('display.precision')
     """
-    return _stack_symmetric_associations(_cramer_v_matrix(df), df)
+    associations_table = _stack_symmetric_associations(_cramer_v_matrix(df), df)
+    return _compute_pearsons(associations_table)
 
 
 def _stack_symmetric_associations(associations, df):
@@ -249,7 +282,7 @@ def _compute_cramer(table, n_samples):
     return stat
 
 
-def _compute_pearsons(table, n_samples):
+def _compute_pearsons(table):
     """Compute the Pearson correlation coefficient statistic given a
     contingency table / pandas dataframe.
 
@@ -259,8 +292,19 @@ def _compute_pearsons(table, n_samples):
     This returns the symmetric matrix with shape (n cols, n cols) where entry
     i, j contains the statistic for column i x column j.
 
-    NOTE: get correct number
     """
-    stats = table.corr(method="pearson", min_periods=1, numeric_only=True)
-
+    associations = table
+    correlations = table.corr(method="pearson", min_periods=1, numeric_only=True)
+    correlations = (
+        correlations.stack()
+        .reset_index()
+        .set_axis(["left", "right", "pearson"], axis=1)
+    )
+    stats = pd.merge(
+        associations,
+        correlations,
+        left_on=["left_column_name", "right_column_name"],
+        right_on=["left", "right"],
+        how="left",
+    ).drop(columns=["left", "right"])
     return stats
