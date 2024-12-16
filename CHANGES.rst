@@ -12,9 +12,6 @@ Ongoing development
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
 
-Release 0.4.1
-=============
-
 New features
 ------------
 * The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
@@ -23,17 +20,29 @@ New features
 
 Changes
 -------
-* A new parameter `verbose` has been added to the :class:`TableReport` to toggle on or off the
+
+Bug fixes
+---------
+
+Maintenance
+-----------
+
+Release 0.4.1
+=============
+
+Changes
+-------
+* A new parameter ``verbose`` has been added to the :class:`TableReport` to toggle on or off the
   printing of progress information when a report is being generated.
   :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
 
-* A parameter `verbose` has been added to the :func:`patch_display` to toggle on or off the
+* A parameter ``verbose`` has been added to the :func:`patch_display` to toggle on or off the
   printing of progress information when a table report is being generated.
   :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
 
 * :func:`tabular_learner` accepts the alias ``"regression"`` for the option
-   ``"regressor"`` and ``"classification"`` for ``"classifier"``.
-   :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
+  ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+  :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
 
 Bug fixes
 ---------
@@ -41,11 +50,18 @@ Bug fixes
   configuration which could cause plots not to display inline in jupyter
   notebooks any more. This has been fixed in skrub in :pr:`1172` by
   :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
-  [here](https://github.com/matplotlib/matplotlib/issues/25041).
+  `here <https://github.com/matplotlib/matplotlib/issues/25041>`_.
+
+* The labels on bar plots in the ``TableReport`` for columns of object dtypes
+  that have a repr spanning multiple lines could be unreadable. This has been
+  fixed in :pr:`1196` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Improve the performance of :func:`deduplicate` by removing some unnecessary
+  computations. :pr:`1193` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Maintenance
 -----------
-* Make `skrub` compatible with scikit-learn 1.6.
+* Make ``skrub`` compatible with scikit-learn 1.6.
   :pr:`1169` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.4.0
