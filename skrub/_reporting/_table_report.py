@@ -1,7 +1,6 @@
 import codecs
 import functools
 import json
-import locale
 from pathlib import Path
 
 from ._html import to_html
