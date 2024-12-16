@@ -13,19 +13,19 @@ from ._on_each_column import SingleColumnTransformer
 
 class StringEncoder(SingleColumnTransformer):
     """Generate a lightweight string encoding of a given column using tf-idf \
-        vectorization and truncated SVD.
+        vectorization and truncated singular value decomposition (SVD).
 
     First, apply a tf-idf vectorization of the text, then reduce the dimensionality
-    with a truncated SVD decomposition with the given number of parameters.
+    with a truncated SVD with the given number of parameters.
 
-    New features will be named `{col_name}_{component}` if the series has a name,
-    and `tsvd_{component}` if it does not.
+    New features will be named ``{col_name}_{component}`` if the series has a name,
+    and ``tsvd_{component}`` if it does not.
 
     Parameters
     ----------
     n_components : int, default=30
-        Number of components to be used for the PCA decomposition. Must be a
-        positive integer.
+        Number of components to be used for the singular value decomposition (SVD).
+        Must be a positive integer.
     vectorizer : str, "tfidf" or "hashing"
         Vectorizer to apply to the strings, either `tfidf` or `hashing` for
         scikit-learn TfidfVectorizer or HashingVectorizer respectively.
