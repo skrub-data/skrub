@@ -135,9 +135,12 @@ results.append(("Drop", drop_results))
 
 
 # %% OrdinalEncoder
+import numpy as np
 from sklearn.preprocessing import OrdinalEncoder
 
-ordinal_encoder = OrdinalEncoder(handle_unknown="use_encoded_value")
+ordinal_encoder = OrdinalEncoder(
+    handle_unknown="use_encoded_value", unknown_value=np.nan
+)
 
 ordinal_encoder_pipe = clone(gap_pipe).set_params(
     **{"tablevectorizer__high_cardinality": ordinal_encoder}
