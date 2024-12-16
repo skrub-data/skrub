@@ -47,8 +47,6 @@ class StringEncoder(SingleColumnTransformer):
         Encode string columns as a numeric array with the minhash method.
     GapEncoder :
         Encode string columns by constructing latent topics.
-    SimilarityEncoder :
-        Encode string columns as a numeric array with n-gram string similarity.
     TextEncoder :
         Encode string columns using pre-trained language models.
 
