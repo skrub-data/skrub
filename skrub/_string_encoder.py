@@ -31,15 +31,15 @@ class StringEncoder(SingleColumnTransformer):
         scikit-learn TfidfVectorizer or HashingVectorizer respectively.
 
     ngram_range : tuple of (int, int) pairs, default=(3,4)
-        Whether the feature should be made of word or character n-grams.
-        Option ‘char_wb’ creates character n-grams only from text inside word
-        boundaries; n-grams at the edges of words are padded with space.
-
-    analyzer : str, "char", "word" or "char_wb", default="char_wb"
         The lower and upper boundary of the range of n-values for different
         n-grams to be extracted. All values of n such that min_n <= n <= max_n
-        will be used. For example an `ngram_range` of `(1, 1)` means only unigrams,
-        `(1, 2)` means unigrams and bigrams, and `(2, 2)` means only bigrams.
+        will be used. For example an ``ngram_range`` of ``(1, 1)`` means only unigrams,
+        ``(1, 2)`` means unigrams and bigrams, and ``(2, 2)`` means only bigrams.
+
+    analyzer : str, "char", "word" or "char_wb", default="char_wb"
+        Whether the feature should be made of word or character n-grams.
+        Option ``char_wb`` creates character n-grams only from text inside word
+        boundaries; n-grams at the edges of words are padded with space.
 
     See Also
     --------
