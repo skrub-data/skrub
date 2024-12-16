@@ -55,6 +55,12 @@ def test_tfidf_vectorizer(encode_column, df_module):
 
     df_module.assert_frame_equal(check_df, result)
 
+    # Making coverage happy
+    result_transform = se.transform(encode_column)
+    result_transform = sbd.pandas_convert_dtypes(result_transform)
+
+    df_module.assert_frame_equal(result, result_transform)
+
 
 def test_hashing_vectorizer(encode_column, df_module):
     # Testing is less strict because HashingVectorizer is not deterministic.
