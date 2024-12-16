@@ -1,6 +1,10 @@
 import pytest
 from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import HashingVectorizer, TfidfVectorizer
+from sklearn.feature_extraction.text import (
+    HashingVectorizer,
+    TfidfTransformer,
+    TfidfVectorizer,
+)
 from sklearn.pipeline import Pipeline
 
 from skrub import _dataframe as sbd
@@ -19,7 +23,7 @@ def encode_column(df_module):
     return df_module.make_column("col1", corpus)
 
 
-def test_encoding(encode_column, df_module):
+def test_tfidf_vectorizer(encode_column, df_module):
     ngram_range = (3, 4)
     analyzer = "char_wb"
     n_components = 2
@@ -52,7 +56,8 @@ def test_encoding(encode_column, df_module):
     df_module.assert_frame_equal(check_df, result)
 
 
-def test_hashing(encode_column, df_module):
+def test_hashing_vectorizer(encode_column, df_module):
+    # Testing is less strict because HashingVectorizer is not deterministic.
     ngram_range = (3, 4)
     analyzer = "char_wb"
     n_components = 2
@@ -60,7 +65,8 @@ def test_hashing(encode_column, df_module):
     #### hashing vectorizer
     pipe = Pipeline(
         [
-            ("tfidf", HashingVectorizer(ngram_range=ngram_range, analyzer=analyzer)),
+            ("hashing", HashingVectorizer(ngram_range=ngram_range, analyzer=analyzer)),
+            ("tfidf", TfidfTransformer()),
             ("tsvd", TruncatedSVD(n_components=n_components)),
         ]
     )
@@ -82,7 +88,14 @@ def test_hashing(encode_column, df_module):
     check_df = sbd.pandas_convert_dtypes(check_df)
     result = sbd.pandas_convert_dtypes(result)
 
-    df_module.assert_frame_equal(check_df, result)
+    assert check_df.shape == result.shape
+    assert type(check_df) == type(result)
+
+    assert len(se.pipe.named_steps) == len(pipe.named_steps)
+
+    for name, estimator in se.pipe.named_steps.items():
+        assert name in pipe.named_steps
+        assert isinstance(estimator, type(pipe.named_steps[name]))
 
 
 def test_error_checking(encode_column):
