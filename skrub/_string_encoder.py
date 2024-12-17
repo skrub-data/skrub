@@ -1,3 +1,5 @@
+import warnings
+
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -115,41 +117,50 @@ class StringEncoder(SingleColumnTransformer):
             raise ValueError(f"Unknown analyzer {self.analyzer}")
 
         if self.vectorizer == "tfidf":
-            self.pipe = Pipeline(
+            self.vectorizer_ = TfidfVectorizer(
+                ngram_range=self.ngram_range, analyzer=self.analyzer
+            )
+        elif self.vectorizer == "hashing":
+            self.vectorizer_ = Pipeline(
                 [
                     (
-                        "tfidf",
-                        TfidfVectorizer(
+                        "hashing",
+                        HashingVectorizer(
                             ngram_range=self.ngram_range, analyzer=self.analyzer
                         ),
                     ),
-                    ("tsvd", TruncatedSVD(n_components=self.n_components)),
+                    ("tfidf", TfidfTransformer()),
                 ]
             )
-
-        elif self.vectorizer == "hashing":
-            pipe_elements = [
-                (
-                    "hashing",
-                    HashingVectorizer(
-                        ngram_range=self.ngram_range, analyzer=self.analyzer
-                    ),
-                ),
-            ]
-            pipe_elements.append(("tfidf", TfidfTransformer()))
-            pipe_elements.append(("tsvd", TruncatedSVD(n_components=self.n_components)))
-            self.pipe = Pipeline(pipe_elements)
         else:
             raise ValueError(f"Unknown vectorizer {self.vectorizer}.")
+
+        X_out = self.vectorizer_.fit_transform(sbd.to_numpy(X))
+
+        if (min_shape := min(X_out.shape)) >= self.n_components:
+            self.tsvd_ = TruncatedSVD(n_components=self.n_components)
+            result = self.tsvd_.fit_transform(X_out)
+        else:
+            warnings.warn(
+                f"The matrix shape is {(X_out.shape)}, and its minimum is "
+                f"{min_shape}, which is too small to fit a truncated SVD with "
+                f"n_components={self.n_components}. "
+                "The embeddings will be truncated by keeping the first "
+                f"{self.n_components} dimensions instead. "
+            )
+            # self.n_components can be greater than the number
+            # of dimensions of result.
+            # Therefore, self.n_components_ below stores the resulting
+            # number of dimensions of result.
+            result = X_out[:, : self.n_components].toarray()
+
+        self._is_fitted = True
+        self.n_components_ = result.shape[1]
 
         name = sbd.name(X)
         if not name:
             name = "tsvd"
-        self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components)]
-
-        result = self.pipe.fit_transform(sbd.to_numpy(X))
-
-        self._is_fitted = True
+        self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components_)]
 
         return self._transform(X, result)
 
@@ -163,12 +174,17 @@ class StringEncoder(SingleColumnTransformer):
 
         Returns
         -------
-        X_out: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
+        result: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
             The embedding representation of the input.
         """
         check_is_fitted(self)
 
-        result = self.pipe.transform(sbd.to_numpy(X))
+        X_out = self.vectorizer_.fit_transform(sbd.to_numpy(X))
+        if hasattr(self, "tsvd_"):
+            result = self.tsvd_.fit_transform(X_out)
+        else:
+            result = X_out[:, : self.n_components].toarray()
+
         return self._transform(X, result)
 
     def _transform(self, X, result):

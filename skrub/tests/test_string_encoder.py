@@ -1,4 +1,5 @@
 import pytest
+from sklearn.base import clone
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -95,11 +96,11 @@ def test_hashing_vectorizer(encode_column, df_module):
     result = sbd.pandas_convert_dtypes(result)
 
     assert check_df.shape == result.shape
-    assert type(check_df) == type(result)
+    assert isinstance(check_df, type(result))
 
-    assert len(se.pipe.named_steps) == len(pipe.named_steps)
+    assert all(hasattr(se, x) for x in ["tsvd_", "vectorizer"])
 
-    for name, estimator in se.pipe.named_steps.items():
+    for name, estimator in se.vectorizer_.named_steps.items():
         assert name in pipe.named_steps
         assert isinstance(estimator, type(pipe.named_steps[name]))
 
@@ -159,3 +160,32 @@ def test_get_feature_names_out(encode_column, df_module):
     encoder.fit(X)
     expected_columns = ["tsvd_0", "tsvd_1", "tsvd_2", "tsvd_3"]
     assert encoder.get_feature_names_out() == expected_columns
+
+
+def test_n_components(df_module):
+    ngram_range = (3, 4)
+    analyzer = "char_wb"
+    n_components = 2
+
+    encoder = StringEncoder(
+        n_components=n_components,
+        vectorizer="tfidf",
+        ngram_range=ngram_range,
+        analyzer=analyzer,
+    )
+
+    X = df_module.make_column("", ["hello sir", "hola que tal"])
+
+    encoder_2 = clone(encoder).set_params(n_components=2).fit(X)
+    for meth in ("fit_transform", "transform"):
+        X_out = getattr(encoder_2, meth)(X)
+        assert sbd.shape(X_out)[1] == 2
+        assert encoder_2.n_components_ == 2
+
+    encoder_30 = clone(encoder).set_params(n_components=30)
+    with pytest.warns(UserWarning, match="The embeddings will be truncated"):
+        for meth in ("fit_transform", "transform"):
+            X_out = getattr(encoder_30, meth)(X)
+    assert not hasattr(encoder_30, "tsvd_")
+    assert sbd.shape(X_out)[1] == 30
+    assert encoder_30.n_components_ == 30
