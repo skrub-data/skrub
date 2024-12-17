@@ -218,7 +218,6 @@ class TableReport:
         except TypeError:
             pass
 
-        print(getattr(file, "encoding", None))
         if (encoding := getattr(file, "encoding", None)) is not None:
             try:
                 assert codecs.lookup(encoding).name == "utf-8"
