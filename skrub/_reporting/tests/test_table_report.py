@@ -137,6 +137,8 @@ def test_write_html(tmp_path, pd_module, filename_type):
 
     tmp_file_path = tmp_path / Path("report.html")
 
+    # making sure we are closing the open files, and dealing with the first
+    # condition which doesn't require opening any file
     with contextlib.ExitStack() as stack:
         if filename_type == "str":
             filename = str(tmp_file_path)
