@@ -61,7 +61,7 @@ TableReport(X)
 
 # %%
 # GapEncoder
-# ----------
+# ^^^^^^^^^^
 # First, let's vectorize our text column using the |GapEncoder|, one of the
 # `high cardinality categorical encoders <https://inria.hal.science/hal-02171256v4>`_
 # provided by skrub.
@@ -177,7 +177,7 @@ plot_box_results(results)
 
 # %%
 # MinHashEncoder
-# --------------
+# ^^^^^^^^^^^^^^
 # We now compare these results with the |MinHashEncoder|, which is faster
 # and produces vectors better suited for tree-based estimators like
 # |HistGradientBoostingClassifier|. To do this, we can simply replace
@@ -200,7 +200,7 @@ plot_box_results(results)
 # power than those from the |GapEncoder| on this dataset.
 #
 # TextEncoder
-# -----------
+# ^^^^^^^^^^^
 # Let's now shift our focus to pre-trained deep learning encoders. Our previous
 # encoders are syntactic models that we trained directly on the toxicity dataset.
 # To generate more powerful vector representations for free-form text and diverse
@@ -225,10 +225,12 @@ results.append(("TextEncoder", text_encoder_results))
 plot_box_results(results)
 
 # %%
+# SringEncoder
+# ^^^^^^^^^^^^
 # |TextEncoder| embeddings are very strong, but they are also quite expensive to
 # use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
 # which works by first performing a tf-idf (computing vectors of rescaled word
-# counts, [wiki](https://en.wikipedia.org/wiki/Tf%E2%80%93idf)) of the text, and then
+# counts of the text `wiki <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_), and then
 # following it with TruncatedSVD to reduce the number of dimensions to, in this
 # case, 30.
 from skrub import StringEncoder
@@ -318,6 +320,7 @@ plot_performance_tradeoff(results)
 #
 # Interestingly, |StringEncoder| has a performance remarkably similar to that of
 # |GapEncoder|, while being significantly faster.
+#
 # Conclusion
 # ----------
 # In conclusion, |TextEncoder| provides powerful vectorization for text, but at
