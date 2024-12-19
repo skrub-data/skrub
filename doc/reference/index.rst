@@ -46,6 +46,7 @@ Encoding a column
    DatetimeEncoder
    ToCategorical
    ToDatetime
+   StringEncoder
 
 .. autosummary::
    :toctree: generated/
