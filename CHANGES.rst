@@ -14,6 +14,9 @@ It is currently undergoing fast development and backward compatibility is not en
 
 New features
 ------------
+* The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
+  decomposition and provides a cheaper alternative to :class:`GapEncoder`.
+  :pr:`1159` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Changes
 -------
