@@ -103,13 +103,13 @@ def _make_table_polars(df, max_top_slice_size=5, max_bottom_slice_size=5):
 
 
 def _pick_slice_sizes(df, max_top_size, max_bottom_size):
-    """Return (top slice size, bottom slice size, is ellided).
+    """Return (top slice size, bottom slice size, is elided).
 
     If the whole dataframe fits in max_top_size + max_bottom_size, the whole
     dataframe is shown as one table part (there are no ellipsis nor bottom
     slice).
 
-    is_ellided indicates whether some rows of the dataframe will be missing
+    is_elided indicates whether some rows of the dataframe will be missing
     from the table (and thus a row o f"..." needs to be shown).
     """
     if sbd.shape(df)[0] <= max_top_size + max_bottom_size:
@@ -128,10 +128,8 @@ class _PolarsTable:
         self.start_i = -1
         self.start_j = 0
 
-        self.top_slice_size, self.bottom_slice_size, self.is_ellided = (
-            _pick_slice_sizes(
-                self.df, self.max_top_slice_size, self.max_bottom_slice_size
-            )
+        self.top_slice_size, self.bottom_slice_size, self.is_elided = _pick_slice_sizes(
+            self.df, self.max_top_slice_size, self.max_bottom_slice_size
         )
 
         self.parts = []
@@ -162,7 +160,7 @@ class _PolarsTable:
 
     def add_df_slices(self):
         self.add_table_body(sbd.slice(self.df, self.top_slice_size), "top_slice", 0)
-        if self.is_ellided:
+        if self.is_elided:
             self.add_ellipsis()
         if self.bottom_slice_size:
             self.add_table_body(
@@ -346,10 +344,8 @@ class _PandasTable:
         self.start_i = -_n_levels(self.df.columns) - 1
         self.start_j = -_n_levels(self.df.index)
 
-        self.top_slice_size, self.bottom_slice_size, self.is_ellided = (
-            _pick_slice_sizes(
-                self.df, self.max_top_slice_size, self.max_bottom_slice_size
-            )
+        self.top_slice_size, self.bottom_slice_size, self.is_elided = _pick_slice_sizes(
+            self.df, self.max_top_slice_size, self.max_bottom_slice_size
         )
 
         self.parts = []
@@ -483,7 +479,7 @@ class _PandasTable:
     def add_df_slices(self):
         # add the dataframe data, ie the top and bottom dataframe slices
         self.add_table_body(self.df.iloc[: self.top_slice_size], "top_slice", 0)
-        if self.is_ellided:
+        if self.is_elided:
             self.add_ellipsis()
         if self.bottom_slice_size:
             self.add_table_body(

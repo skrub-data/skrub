@@ -1,0 +1,37 @@
+.pure-table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    empty-cells: show;
+    border: var(--border-s) solid var(--color-border-secondary);
+}
+
+.pure-table td,
+.pure-table th {
+    border-left: var(--border-s) solid var(--color-border-secondary);
+    border-width: 0 0 0 var(--border-s);
+    font-size: inherit;
+    margin: 0;
+    overflow: visible;
+    padding: var(--sacing-xs) var(--sacing-s);
+}
+
+.pure-table thead {
+    text-align: left;
+    vertical-align: bottom;
+    background-color: var(--color-background-quaternary);
+}
+
+.pure-table-bordered td {
+    border-bottom: var(--border-s) solid var(--color-border-secondary);
+}
+.pure-table-bordered tbody > tr:last-child > td {
+    border-bottom-width: 0;
+}
+
+.pure-table-horizontal td,
+.pure-table-horizontal th {
+    border-bottom: var(--border-s) solid var(--color-border-secondary);
+}
+.pure-table-horizontal tbody > tr:last-child > td {
+    border-bottom-width: 0;
+}
