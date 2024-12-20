@@ -5,60 +5,60 @@
 /* ----------------------------------------------------- */
 
 .tab-list-wrapper {
-  align-items: flex-start;
-  border-bottom: var(--border-s) solid var(--color-border-primary);
+    align-items: flex-start;
+    border-bottom: var(--border-s) solid var(--color-border-primary);
 
-  column-gap: calc(var(--spacing-xs));
-  row-gap: var(--spacing-s);
+    column-gap: calc(var(--spacing-xs));
+    row-gap: var(--spacing-s);
 }
 
 .tab-list-scroller {
-  overflow: auto hidden;
+    overflow: auto hidden;
 }
 
 .tab-list {
-  display: flex;
-  column-gap: var(--spacing-m);
-  padding-left: var(--spacing-m);
-  padding-right: var(--spacing-m);
-  align-items: stretch;
-  margin-bottom: calc(-1 * var(--border-s));
+    display: flex;
+    column-gap: var(--spacing-m);
+    padding-left: var(--spacing-m);
+    padding-right: var(--spacing-m);
+    align-items: stretch;
+    margin-bottom: calc(-1 * var(--border-s));
 }
 
 .tab-list > * {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  margin-top: var(--border-m);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin-top: var(--border-m);
 }
 
 button.tab {
-  display: flex;
-  align-items: center;
-  column-gap: var(--spacing-s);
-  border: var(--border-s) solid transparent;
-  border-bottom: none;
-  border-radius: var(--radius) var(--radius) 0 0;
-  padding: var(--spacing-m);
-  padding-top: var(--spacing-s);
-  padding-bottom: calc(var(--spacing-s) + var(--border-s));
-  font-size: var(--spacing-l);
-  background-color: transparent;
-  color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    column-gap: var(--spacing-s);
+    border: var(--border-s) solid transparent;
+    border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: var(--spacing-m);
+    padding-top: var(--spacing-s);
+    padding-bottom: calc(var(--spacing-s) + var(--border-s));
+    font-size: var(--spacing-l);
+    background-color: transparent;
+    color: var(--color-text-secondary);
 }
 
 button.tab[data-has-warning] {
-  color: var(--color-text-critical);
+    color: var(--color-text-critical);
 }
 
 .tab:hover {
-  color: var(--color-text-primary);
+    color: var(--color-text-primary);
 }
 
 .tab[data-is-selected] {
-  border-color: var(--color-border-primary);
-  border-bottom: var(--border-s) solid var(--color-background-primary);
-  color: var(--color-text-primary);
+    border-color: var(--color-border-primary);
+    border-bottom: var(--border-s) solid var(--color-background-primary);
+    color: var(--color-text-primary);
 }
 
 /* When a tab contains critical content we highlight the corresponding button so */
@@ -66,26 +66,26 @@ button.tab[data-has-warning] {
 /* associations tab when some columns are very strongly associated. */
 
 .tab-list .tab .warning-sign {
-  display: none;
-  width: var(--font-size-m);
-  height: var(--font-size-m);
-  margin: var(--spacing-xs);
+    display: none;
+    width: var(--font-size-m);
+    height: var(--font-size-m);
+    margin: var(--spacing-xs);
 }
 
 .tab-list .tab[data-has-warning] .warning-sign {
-  display: inline-block;
+    display: inline-block;
 }
 
 /* The panels (the main content) */
 /* ----------------------------- */
 
 .tab-panel {
-  padding-top: var(--spacing-m);
-  border-radius: 0 0 var(--radius) var(--radius);
+    padding-top: var(--spacing-m);
+    border-radius: 0 0 var(--radius) var(--radius);
 }
 
 .report-bottom-border {
-  width: calc(100% - 2 * var(--radius));
-  border-bottom: var(--border-s) solid var(--mediumg);
-  margin: var(--spacing-m) auto 0 auto;
+    width: calc(100% - 2 * var(--radius));
+    border-bottom: var(--border-s) solid var(--mediumg);
+    margin: var(--spacing-m) auto 0 auto;
 }
