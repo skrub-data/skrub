@@ -18,6 +18,7 @@
 .pure-table thead {
   text-align: left;
   vertical-align: bottom;
+  background-color: var(--color-background-quaternary);
 }
 
 .pure-table-bordered td {
