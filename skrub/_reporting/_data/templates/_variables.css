@@ -78,7 +78,7 @@
     --color-border-highlight: #eafaea;
 
     /* shadows */
-    --color-shadow: rgb(255, 255, 255, 0.5);
+    --color-shadow: hsl(0, 0%, 63%);
     --color-shadow-keyboard: rgb(255, 255, 255, 0.5);
   }
 }
@@ -86,10 +86,10 @@
 @media (prefers-color-scheme: dark) {
   :host {
     /* backgrounds */
-    --color-background-primary: #121212;
-    --color-background-secondary: #1e1e1e;
-    --color-background-tertiary: #232323;
-    --color-background-quaternary: #333;
+    --color-background-primary: #202020;
+    --color-background-secondary: #242424;
+    --color-background-tertiary: #2b2b2b;
+    --color-background-quaternary: #353535;
     --color-background-highlight-primary: #f89939;
     --color-background-active: #2a9d8f;
     --color-background-info: #0f4e9b;
@@ -116,7 +116,7 @@
     --color-border-highlight: #264653;
 
     /* shadows */
-    --color-shadow: rgba(0, 0, 0, 0.5);
+    --color-shadow: #0f0f0f;
     --color-shadow-keyboard: rgb(255, 255, 255, 0.5);
   }
 }
