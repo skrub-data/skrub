@@ -14,7 +14,7 @@
 .box {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: start;
     border: var(--border-s) solid var(--color-border-primary);
     padding: 0;
     max-width: 100%;
@@ -33,7 +33,7 @@
     padding: var(--spacing-s);
     border: none;
     position: relative;
-    min-width: 20px;
+    min-width: 24px;
 }
 
 .copybutton-left {
@@ -81,9 +81,4 @@
 
 [data-shows-placeholder] {
     color: var(--color-background-secondary);
-}
-
-.table-bar .box {
-    flex-grow: 1;
-    max-width: 100%;
 }

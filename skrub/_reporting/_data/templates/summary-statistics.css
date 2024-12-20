@@ -62,44 +62,40 @@
 
 #report th.sort-button-group-wrapper {
   --btn-width: 22px;
-  --btn-group-width: calc(var(--btn-width) * 2);
+
   position: relative;
-  padding-top: var(--spacing-s);
-  padding-bottom: var(--spacing-s);
-  padding-right: calc(var(--spacing-m) + var(--btn-group-width));
+  padding: var(--spacing-s) calc((var(--btn-width) * 2) + var(--spacing-m)) 0 var(--spacing-s);
+  text-align: left;
 }
 
 .sort-button-group {
+  display: flex;
   position: absolute;
   top: 0;
-  bottom: var(--border-s);
-  right: calc(-1 * var(--btn-group-width));
-  left: 100%;
-  transform: translateX(calc(-1 * var(--btn-group-width)));
-  display: flex;
-  gap: 0;
-  padding: 0;
+  right: 0;
 }
 
 .sort-button {
-  margin: 0;
   box-sizing: border-box;
   height: 100%;
-  flex-grow: 1;
+  margin: 0;
+  padding: 0;
   border-radius: 0;
   border: var(--border-s) solid var(--color-border-primary);
   background-color: var(--color-background-button-primary);
   color: var(--color-text-secondary);
-  padding: var(--spacing-s);
   transition: background-color var(--animation-duration) var(--animation-easing);
+}
+
+.sort-button > svg {
+  --inner-size: calc(var(--btn-width) - (var(--border-s) * 3));
+
+  height: var(--inner-size);
+  width: var(--inner-size);
 }
 
 .sort-button-group > .sort-button:focus-visible {
   z-index: 2;
-}
-
-.sort-button-group > .sort-button ~ .sort-button {
-  margin-left: calc(-1 * var(--border-s));
 }
 
 .sort-button:hover {
