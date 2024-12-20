@@ -25,8 +25,8 @@
 .toggletip > .toggletip-info {
   box-sizing: border-box;
   position: absolute;
-  top: calc(1.2 * var(--height-button));
-  left: calc(0.9 * var(--height-button));
+  top: calc(0.9 * var(--height-button));
+  left: calc(0.4 * var(--height-button));
   width: calc(min(50ch, 100% - var(--height-button)));
   min-width: min-content;
   padding: var(--spacing-l);
@@ -39,11 +39,13 @@
   transition: opacity var(--animation-duration) var(--animation-easing);
 }
 
+.toggletip:hover > .toggletip-info,
 .toggletip:has(button:is(:focus, :active, :hover)) > .toggletip-info {
   opacity: 1;
+  pointer-events: all;
 }
 
 .toggletip button:is(:focus, :active) {
-  outline: var(--border-m) solid var(--color-text-info);
+  outline: var(--border-m) solid var(--color-background-info);
   outline-offset: var(--border-m);
 }
