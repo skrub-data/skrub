@@ -56,7 +56,7 @@
 
   padding: var(--spacing-m);
   margin-block-end: var(--spacing-m);
-  background-color: var(--color-background-highlight-primary);
+  background-color: var(--color-background-tertiary);
   border-block-end: var(--border-s) solid var(--color-border-secondary);
 }
 
