@@ -62,6 +62,7 @@
 
 .copied-message {
     font-size: var(--font-size-s);
+    font-weight: bold;
     background-color: var(--color-background-primary);
     color: var(--color-text-primary);
     padding: var(--spacing-s);
@@ -70,6 +71,7 @@
     top: var(--spacing-xs);
     margin: 0;
     right: calc(100% + var(--spacing-s));
+    filter: invert(1);
 }
 
 .copybutton-left .copied-message {
