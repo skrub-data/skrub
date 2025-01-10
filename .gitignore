@@ -78,4 +78,6 @@ jupyterlite_contents
 .pixi/
 
 # python virtual environment
+.venv
 venv
+env_skrub
