@@ -25,7 +25,7 @@ import pandas as pd
 from sklearn import __version__ as sklearn_version
 from sklearn.datasets import fetch_openml
 from sklearn.datasets._base import _sha256
-from sklearn.utils import Bunch
+from sklearn.utils import Bunch, shuffle
 from sklearn.utils.fixes import parse_version
 
 from skrub._utils import import_optional_dependency
@@ -651,6 +651,7 @@ def _fetch_dataset_as_dataclass(
     dataset_id: int | str,
     target: str | None,
     load_dataframe: bool,
+    shuffling: bool | bool = False,
     data_directory: Path | str | None = None,
     read_csv_kwargs: dict | None = None,
 ) -> DatasetAll | DatasetInfoOnly:
@@ -702,6 +703,8 @@ def _fetch_dataset_as_dataclass(
             df = pd.read_parquet(info["path"])
         else:
             df = pd.read_csv(info["path"], **read_csv_kwargs)
+        if shuffling:
+            df = shuffle(df, random_state=42).reset_index(drop=True)
         y = df[target]
         X = df.drop(target, axis="columns")
         dataset = DatasetAll(
@@ -777,6 +780,7 @@ def fetch_employee_salaries(
         dataset_name="Employee salaries",
         dataset_id=EMPLOYEE_SALARIES_ID,
         target="current_annual_salary",
+        shuffling=True,
         read_csv_kwargs={
             "quotechar": "'",
             "escapechar": "\\",
