@@ -226,7 +226,7 @@ class TableReport:
         if (encoding := getattr(file, "encoding", None)) is not None:
             try:
                 encoding_name = codecs.lookup(encoding).name
-            except LookupError:
+            except LookupError:  # pragma: no cover
                 encoding_name = None
             if encoding_name != "utf-8":
                 raise ValueError(
