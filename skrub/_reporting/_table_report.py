@@ -225,8 +225,10 @@ class TableReport:
 
         if (encoding := getattr(file, "encoding", None)) is not None:
             try:
-                assert codecs.lookup(encoding).name == "utf-8"
-            except (AssertionError, LookupError):
+                encoding_name = codecs.lookup(encoding).name
+            except LookupError:
+                encoding_name = None
+            if encoding_name != "utf-8":
                 raise ValueError(
                     "If `file` is a text file it should use utf-8 encoding; got:"
                     f" {encoding!r}"
