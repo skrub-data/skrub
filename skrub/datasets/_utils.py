@@ -9,7 +9,7 @@ DATA_HOME_ENVAR = environ.get(DATA_HOME_ENVAR_NAME)
 if DATA_HOME_ENVAR and (path := Path(DATA_HOME_ENVAR)).is_absolute():
     DATA_HOME_DEFAULT = path
 else:
-    DATA_HOME_DEFAULT = Path("~").expanduser() / "skrub_data"
+    DATA_HOME_DEFAULT = Path.home() / "skrub_data"
 
 
 print(f"Setting `DATA_HOME_DEFAULT` to '{DATA_HOME_DEFAULT}'.", file=stderr)
