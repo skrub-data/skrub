@@ -1,7 +1,7 @@
 from os import environ
 from pathlib import Path
+from sys import stderr
 
-from loguru import logger
 
 DATA_HOME_ENVAR_NAME = "SKRUB_DATA_DIRECTORY"
 DATA_HOME_ENVAR = environ.get(DATA_HOME_ENVAR_NAME)
@@ -11,7 +11,8 @@ if DATA_HOME_ENVAR and (path := Path(DATA_HOME_ENVAR)).is_absolute():
 else:
     DATA_HOME_DEFAULT = Path("~").expanduser() / "skrub_data"
 
-logger.debug(f"Setting `DATA_HOME_DEFAULT` to '{DATA_HOME_DEFAULT}'.")
+
+print(f"Setting `DATA_HOME_DEFAULT` to '{DATA_HOME_DEFAULT}'.", file=stderr)
 
 
 def get_data_home(data_home=None):
