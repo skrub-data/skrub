@@ -2,7 +2,6 @@ from os import environ
 from pathlib import Path
 from sys import stderr
 
-
 DATA_HOME_ENVAR_NAME = "SKRUB_DATA_DIRECTORY"
 DATA_HOME_ENVAR = environ.get(DATA_HOME_ENVAR_NAME)
 
