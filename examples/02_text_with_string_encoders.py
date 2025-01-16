@@ -183,12 +183,12 @@ plot_box_results(results)
 # |HistGradientBoostingClassifier|. To do this, we can simply replace
 # the |GapEncoder| with the |MinHashEncoder| in the previous pipeline
 # using ``set_params()``.
-from sklearn.base import clone
 
 from skrub import MinHashEncoder
 
-minhash_pipe = clone(gap_pipe).set_params(
-    **{"tablevectorizer__high_cardinality": MinHashEncoder(n_components=30)}
+minhash_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=MinHashEncoder(n_components=30)),
+    HistGradientBoostingClassifier(),
 )
 minhash_results = cross_validate(minhash_pipe, X, y, scoring="roc_auc")
 results.append(("MinHashEncoder", minhash_results))
@@ -216,8 +216,10 @@ text_encoder = TextEncoder(
     "sentence-transformers/paraphrase-albert-small-v2",
     device="cpu",
 )
-text_encoder_pipe = clone(gap_pipe).set_params(
-    **{"tablevectorizer__high_cardinality": text_encoder}
+
+text_encoder_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=text_encoder),
+    HistGradientBoostingClassifier(),
 )
 text_encoder_results = cross_validate(text_encoder_pipe, X, y, scoring="roc_auc")
 results.append(("TextEncoder", text_encoder_results))
@@ -235,11 +237,17 @@ plot_box_results(results)
 # case, 30.
 from skrub import StringEncoder
 
-string_encoder = StringEncoder(n_components=30)
+string_encoder = StringEncoder(ngram_range=(3, 4), analyzer="char_wb")
 
-string_encoder_pipe = clone(gap_pipe).set_params(
-    **{"tablevectorizer__high_cardinality": string_encoder}
+# string_encoder_pipe = clone(gap_pipe).set_params(
+#     **{"tablevectorizer__high_cardinality": string_encoder}
+# )
+
+string_encoder_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=string_encoder),
+    HistGradientBoostingClassifier(),
 )
+
 string_encoder_results = cross_validate(string_encoder_pipe, X, y, scoring="roc_auc")
 results.append(("StringEncoder", string_encoder_results))
 

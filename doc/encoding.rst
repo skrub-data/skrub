@@ -86,7 +86,8 @@ A lightweight solution for handling diverse strings is to first apply a
 follow it with a dimensionality reduction algorithm such as
 `TruncatedSVD <https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html>`_
 to limit the number of features: the :class:`StringEncoder` implements this
-operation.
+operation. Since tf-idf produces sparse vectors as outputs, applying TruncatedSVD
+also allows to concatenate them to dataframes, which would not be possible otherwise.
 
 In simpler terms, :class:`StringEncoder` builds a sparse matrix that counts the
 number of times each word appears in all documents (where a document in this case

@@ -112,10 +112,6 @@ class StringEncoder(SingleColumnTransformer):
         """
         del y
 
-        # ERROR CHECKING
-        if self.analyzer not in ["char_wb", "char", "word"]:
-            raise ValueError(f"Unknown analyzer {self.analyzer}")
-
         if self.vectorizer == "tfidf":
             self.vectorizer_ = TfidfVectorizer(
                 ngram_range=self.ngram_range, analyzer=self.analyzer
