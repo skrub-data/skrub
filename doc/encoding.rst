@@ -18,7 +18,7 @@ work titles, city names etc.) and free-flowing text (reviews, comments etc.),
 while being very efficient and quick to fit.
 
 :class:`GapEncoder` provides better performance on dirty categories, while
-:class:`TextEncoder` works better on free-flowing text. However, both encoders
+:class:`TextEncoder` works better on free-flowing text or when external context helps. However, both encoders
 are much slower to execute, and in the case of ``TextEncoder``, additional
 dependencies are needed.
 

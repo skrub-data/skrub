@@ -129,7 +129,7 @@ class StringEncoder(SingleColumnTransformer):
                 ]
             )
         else:
-            raise ValueError(f"Unknown vectorizer {self.vectorizer}.")
+            raise ValueError(f"Unknown vectorizer {self.vectorizer}. Options are 'tfidf' or 'hashing', got {self.vectorizer!r}")
 
         X_out = self.vectorizer_.fit_transform(X)
 
