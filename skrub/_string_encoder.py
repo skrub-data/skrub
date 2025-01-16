@@ -131,7 +131,7 @@ class StringEncoder(SingleColumnTransformer):
         else:
             raise ValueError(f"Unknown vectorizer {self.vectorizer}.")
 
-        X_out = self.vectorizer_.fit_transform(sbd.to_numpy(X))
+        X_out = self.vectorizer_.fit_transform(X)
 
         if (min_shape := min(X_out.shape)) >= self.n_components:
             self.tsvd_ = TruncatedSVD(n_components=self.n_components)
@@ -173,11 +173,10 @@ class StringEncoder(SingleColumnTransformer):
         result: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
             The embedding representation of the input.
         """
-        check_is_fitted(self)
 
-        X_out = self.vectorizer_.fit_transform(sbd.to_numpy(X))
+        X_out = self.vectorizer_.transform(X)
         if hasattr(self, "tsvd_"):
-            result = self.tsvd_.fit_transform(X_out)
+            result = self.tsvd_.transform(X_out)
         else:
             result = X_out[:, : self.n_components].toarray()
 
@@ -193,4 +192,4 @@ class StringEncoder(SingleColumnTransformer):
         """
         Check fitted status and return a Boolean value.
         """
-        return hasattr(self, "_is_fitted") and self._is_fitted
+        return check_is_fitted(self, "all_outputs_")
