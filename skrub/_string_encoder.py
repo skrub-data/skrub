@@ -129,7 +129,10 @@ class StringEncoder(SingleColumnTransformer):
                 ]
             )
         else:
-            raise ValueError(f"Unknown vectorizer {self.vectorizer}. Options are 'tfidf' or 'hashing', got {self.vectorizer!r}")
+            raise ValueError(
+                f"Unknown vectorizer {self.vectorizer}. Options are 'tfidf' or"
+                f" 'hashing', got {self.vectorizer!r}"
+            )
 
         X_out = self.vectorizer_.fit_transform(X)
 
@@ -158,7 +161,7 @@ class StringEncoder(SingleColumnTransformer):
             name = "tsvd"
         self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components_)]
 
-        return self._transform(X, result)
+        return self._post_process(X, result)
 
     def transform(self, X):
         """Transform a column.
@@ -180,9 +183,9 @@ class StringEncoder(SingleColumnTransformer):
         else:
             result = X_out[:, : self.n_components].toarray()
 
-        return self._transform(X, result)
+        return self._post_process(X, result)
 
-    def _transform(self, X, result):
+    def _post_process(self, X, result):
         result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result.T)))
         result = sbd.copy_index(X, result)
 
