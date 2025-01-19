@@ -14,45 +14,22 @@ import gzip
 import json
 import urllib.request
 import warnings
-from dataclasses import dataclass
-from itertools import chain
 from pathlib import Path
 from typing import Any, Literal, TextIO
 from urllib.error import URLError
 from zipfile import BadZipFile, ZipFile
 
 import pandas as pd
-from sklearn import __version__ as sklearn_version
-from sklearn.datasets import fetch_openml
-from sklearn.datasets._base import _sha256
 from sklearn.utils import Bunch
-from sklearn.utils.fixes import parse_version
 
-from skrub._utils import import_optional_dependency
-from skrub.datasets._utils import get_data_dir
+from skrub.datasets._base import get_data_dir
+from skrub.datasets._figshare import fetch_figshare
+from skrub.datasets._openml import fetch_openml_skb
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
 
 
-# Directory where the ``.gz`` files containing the
-# details on downloaded datasets are stored.
-# Note: the tree structure is created by ``fetch_openml()``.
-# As of october 2020, this function is annotated as
-# ``Experimental`` so the structure might change in future releases.
-# This path will be concatenated to the skrub data directory,
-# available via the function ``get_data_dir()``.
-DETAILS_DIRECTORY: str = "openml/openml.org/api/v1/json/data/"
-
-# Same as above; for the datasets features location.
-FEATURES_DIRECTORY: str = "openml/openml.org/api/v1/json/data/features/"
-
-# Same as above; for the datasets data location.
-DATA_DIRECTORY: str = "openml/openml.org/data/v1/download/"
-
-# The IDs of the datasets, from OpenML.
-# For each dataset, its URL is constructed as follows:
-openml_url: str = "https://www.openml.org/d/{ID}"
 ROAD_SAFETY_ID: int = 42803
 OPEN_PAYMENTS_ID: int = 42738
 MIDWEST_SURVEY_ID: int = 42805
@@ -76,156 +53,6 @@ figshare_id_to_hash = {
     40019230: "4d43fed75dba1e59a5587bf31c1addf2647a1f15ebea66e93177ccda41e18f2f",
     40019788: "67ae86496c8a08c6cc352f573160a094f605e7e0da022eb91c603abb7edf3747",
 }
-
-
-@dataclass(unsafe_hash=True)
-class Details:
-    name: str
-    file_id: str
-    description: str
-
-
-@dataclass(unsafe_hash=True)
-class Features:
-    names: list[str]
-
-
-@dataclass(unsafe_hash=True)
-class DatasetAll:
-    """
-    Represents a dataset and its information.
-    With this state, the dataset is loaded in memory as a DataFrame (`X` and `y`).
-    Additional information such as `path` and `read_csv_kwargs` are provided
-    in case the dataframe has to be read from disk, as such:
-
-    .. code:: python
-
-        ds = fetch_employee_salaries(load_dataframe=False)
-        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
-    """
-
-    name: str
-    description: str
-    source: str
-    target: str
-    X: pd.DataFrame
-    y: pd.Series
-    path: Path
-    read_csv_kwargs: dict[str, Any]
-
-    def __eq__(self, other: DatasetAll) -> bool:
-        """
-        Implemented for the tests to work without bloating the code.
-        The main reason for which it's needed is that equality between
-        DataFrame (`X` and `y`) is often ambiguous and will raise an error.
-        """
-        return (
-            self.name == other.name
-            and self.description == other.description
-            and self.source == other.source
-            and self.target == other.target
-            and self.X.equals(other.X)
-            and self.y.equals(other.y)
-            and self.path == other.path
-            and self.read_csv_kwargs == other.read_csv_kwargs
-        )
-
-
-@dataclass(unsafe_hash=True)
-class DatasetInfoOnly:
-    """
-    Represents a dataset and its information.
-    With this state, the dataset is NOT loaded in memory, but can be read
-    with `path` and `read_csv_kwargs`, as such:
-
-    .. code:: python
-
-        ds = fetch_employee_salaries(load_dataframe=False)
-        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
-    """
-
-    name: str
-    description: str
-    source: str
-    target: str
-    path: Path
-    read_csv_kwargs: dict[str, Any]
-
-
-def _fetch_openml_dataset(
-    dataset_id: int,
-    data_directory: Path | None = None,
-) -> dict[str, Any]:
-    """
-    Gets a dataset from OpenML (https://www.openml.org).
-
-    Parameters
-    ----------
-    dataset_id : int
-        The ID of the dataset to fetch.
-    data_directory : pathlib.Path, optional
-        The directory where the dataset is stored.
-        By default, a subdirectory "openml" in the skrub data directory.
-
-    Returns
-    -------
-    mapping of str to any
-        A dictionary containing:
-          - `description` : str
-              The description of the dataset,
-              as gathered from OpenML.
-          - `source` : str
-              The dataset's URL from OpenML.
-          - `path` : pathlib.Path
-              The local path leading to the dataset,
-              saved as a CSV file.
-    """
-    if data_directory is None:
-        data_directory = get_data_dir(name="openml")
-
-    # Make path absolute
-    data_directory = data_directory.resolve()
-    data_directory.mkdir(parents=True, exist_ok=True)
-
-    # Construct the path to the gzip file containing the details on a dataset.
-    details_gz_path = data_directory / DETAILS_DIRECTORY / f"{dataset_id}.gz"
-    features_gz_path = data_directory / FEATURES_DIRECTORY / f"{dataset_id}.gz"
-
-    if not details_gz_path.is_file() or not features_gz_path.is_file():
-        # If the details file or the features file don't exist,
-        # download the dataset.
-        _download_and_write_openml_dataset(
-            dataset_id=dataset_id, data_directory=data_directory
-        )
-    details = _get_details(details_gz_path)
-
-    # The file ID is required because the data file is named after this ID,
-    # and not after the dataset's.
-    file_id = details.file_id
-    csv_path = data_directory / f"{details.name}.csv"
-
-    data_gz_path = data_directory / DATA_DIRECTORY / f"{file_id}.gz"
-
-    if not data_gz_path.is_file():
-        # double-check.
-        # If the data file does not exist, download the dataset.
-        _download_and_write_openml_dataset(
-            dataset_id=dataset_id, data_directory=data_directory
-        )
-
-    if not csv_path.is_file():
-        # If the CSV file does not exist, use the dataset
-        # downloaded by ``fetch_openml()`` to construct it.
-        features = _get_features(features_gz_path)
-        _export_gz_data_to_csv(data_gz_path, csv_path, features)
-
-    url = openml_url.format(ID=dataset_id)
-
-    return {
-        "description": details.description,
-        "source": url,
-        "path": csv_path.resolve(),
-    }
 
 
 def _fetch_world_bank_data(
@@ -313,122 +140,6 @@ def _fetch_world_bank_data(
     }
 
 
-def _fetch_figshare(
-    figshare_id: str,
-    data_directory: Path | None = None,
-) -> dict[str, Any]:
-    """Fetch a dataset from figshare using the download ID number.
-
-    Parameters
-    ----------
-    figshare_id : str
-        The ID of the dataset to fetch.
-    data_directory : pathlib.Path, optional
-        The directory where the dataset is stored.
-        By default, a subdirectory "figshare" in the skrub data directory.
-
-    Returns
-    -------
-    mapping of str to any
-        A dictionary containing:
-          - `description` : str
-              The description of the dataset.
-          - `source` : str
-              The dataset's URL.
-          - `path` : pathlib.Path
-              The local path leading to the dataset,
-              saved as a parquet file.
-
-    Notes
-    -----
-    The files are read and returned in parquet format, this function needs
-    pyarrow installed to run correctly.
-    """
-    if data_directory is None:
-        data_directory = get_data_dir(name="figshare")
-
-    parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
-    data_directory.mkdir(parents=True, exist_ok=True)
-    url = f"https://ndownloader.figshare.com/files/{figshare_id}"
-    description = f"This table shows the {figshare_id!r} figshare file."
-    file_paths = [
-        file
-        for file in data_directory.iterdir()
-        if file.name.startswith(f"figshare_{figshare_id}")
-    ]
-    if len(file_paths) > 0:
-        if len(file_paths) == 1:
-            parquet_paths = [str(file_paths[0].resolve())]
-        else:
-            parquet_paths = []
-            for path in file_paths:
-                parquet_path = str(path.resolve())
-                parquet_paths += [parquet_path]
-        return {
-            "dataset_name": figshare_id,
-            "description": description,
-            "source": url,
-            "path": parquet_paths,
-        }
-    else:
-        warnings.warn(
-            (
-                f"Could not find the dataset {figshare_id!r} locally. "
-                "Downloading it from figshare; this might take a while... "
-                "If it is interrupted, some files might be invalid/incomplete: "
-                "if on the following run, the fetching raises errors, you can try "
-                f"fixing this issue by deleting the directory {parquet_path!s}."
-            ),
-            UserWarning,
-            stacklevel=2,
-        )
-        import_optional_dependency(
-            "pyarrow", extra="pyarrow is required for parquet support."
-        )
-        from pyarrow.parquet import ParquetFile
-
-        try:
-            filehandle, _ = urllib.request.urlretrieve(url)
-
-            # checksum the file
-            checksum = _sha256(filehandle)
-            if figshare_id in figshare_id_to_hash:
-                expected_checksum = figshare_id_to_hash[figshare_id]
-                if checksum != expected_checksum:
-                    raise OSError(
-                        f"{filehandle!r} SHA256 checksum differs from "
-                        f"expected ({checksum}!={expected_checksum}) ; "
-                        "file is probably corrupted. Please try again. "
-                        "If the error persists, please open an issue on GitHub. "
-                    )
-
-            df = ParquetFile(filehandle)
-            record = df.iter_batches(
-                batch_size=1_000_000,
-            )
-            idx = []
-            for _, x in enumerate(
-                chain(range(0, df.metadata.num_rows, 1_000_000), [df.metadata.num_rows])
-            ):
-                idx += [x]
-            parquet_paths = []
-            for i in range(1, len(idx)):
-                parquet_path = (
-                    data_directory / f"figshare_{figshare_id}_{idx[i]}.parquet"
-                ).resolve()
-                batch = next(record).to_pandas()
-                batch.to_parquet(parquet_path, index=False)
-                parquet_paths += [parquet_path]
-            return {
-                "dataset_name": figshare_id,
-                "description": description,
-                "source": url,
-                "path": parquet_paths,
-            }
-        except URLError:
-            raise URLError("No internet connection or the website is down.")
-
-
 def _fetch_movielens(dataset_id: str, data_directory: Path | None = None) -> dict[str]:
     """Downloads a subset of the Movielens dataset.
 
@@ -494,50 +205,6 @@ def _download_and_write_movielens_dataset(dataset_id, data_directory, zip_direct
         if tmp_file is not None and Path(tmp_file).exists():
             Path(tmp_file).unlink()
         raise
-
-
-def _download_and_write_openml_dataset(dataset_id: int, data_directory: Path) -> None:
-    """Downloads a dataset from OpenML, taking care of creating the directories.
-
-    Parameters
-    ----------
-    dataset_id : int
-        The ID of the dataset to download.
-    data_directory : pathlib.Path
-        The directory in which the data will be saved.
-
-    Raises
-    ------
-    ValueError
-        If the ID is incorrect (does not exist on OpenML)
-    urllib.error.URLError
-        If there is no Internet connection.
-    """
-    # The ``fetch_openml()`` function returns a Scikit-Learn ``Bunch`` object,
-    # which behaves just like a ``namedtuple``.
-    # However, we do not want to save this data into memory:
-    # we will read it from the disk later.
-    kwargs = {}
-    if parse_version("1.2") <= parse_version(sklearn_version) < parse_version("1.2.2"):
-        # Avoid the warning, but don't use auto yet because of
-        # https://github.com/scikit-learn/scikit-learn/issues/25478
-        kwargs.update(
-            {
-                "parser": "liac-arff",
-            }
-        )
-    elif parse_version(sklearn_version) >= parse_version("1.2.2"):
-        kwargs.update(
-            {
-                "parser": "auto",
-            }
-        )
-    fetch_openml(
-        data_id=dataset_id,
-        data_home=str(data_directory),
-        as_frame=True,
-        **kwargs,
-    )
 
 
 def _read_json_from_gz(compressed_dir_path: Path) -> dict:
@@ -681,7 +348,7 @@ def _fetch_dataset_as_dataclass(
         data_directory = Path(data_directory)
 
     if source == "openml":
-        info = _fetch_openml_dataset(dataset_id, data_directory)
+        info = (dataset_id, data_directory)
     elif source == "world_bank":
         info = _fetch_world_bank_data(dataset_id, data_directory)
     elif source == "figshare":
@@ -727,19 +394,17 @@ def _fetch_dataset_as_dataclass(
     return dataset
 
 
-# Datasets fetchers section
-# Public API
-
-
 def fetch_employee_salaries(
     *,
-    load_dataframe: bool = True,
-    drop_linked: bool = True,
-    drop_irrelevant: bool = True,
-    overload_job_titles: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
-    """Fetches the employee salaries dataset (regression), available at https://openml.org/d/42125
+    load_dataframe=True,
+    drop_linked=True,
+    drop_irrelevant=True,
+    overload_job_titles=True,
+    data_directory=None,
+    return_X_y=False,
+):
+    """Fetches the employee salaries dataset (regression), available at \
+        https://openml.org/d/42125
 
     Description of the dataset:
         Annual salary information including gross pay and overtime pay for all
@@ -764,50 +429,42 @@ def fetch_employee_salaries(
     data_directory: pathlib.Path or str, optional
         The directory where the dataset is stored.
 
+    TODO
+
     Returns
     -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
+    TODO
     """
-    dataset = _fetch_dataset_as_dataclass(
-        source="openml",
-        dataset_name="Employee salaries",
-        dataset_id=EMPLOYEE_SALARIES_ID,
-        target="current_annual_salary",
-        read_csv_kwargs={
-            "quotechar": "'",
-            "escapechar": "\\",
-            "na_values": ["?"],
-        },
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
+    data = fetch_openml_skb(
+        data_id=EMPLOYEE_SALARIES_ID,
+        target_column="current_annual_salary",
+        data_home=data_directory,
+        return_X_y=return_X_y,
     )
-    if load_dataframe:
-        if drop_linked:
-            dataset.X.drop(
-                ["2016_gross_pay_received", "2016_overtime_pay"], axis=1, inplace=True
-            )
-        if drop_irrelevant:
-            dataset.X.drop(["full_name"], axis=1, inplace=True)
-        if overload_job_titles:
-            dataset.X["employee_position_title"] = dataset.X[
-                "underfilled_job_title"
-            ].fillna(dataset.X["employee_position_title"])
-            dataset.X.drop(
-                labels=["underfilled_job_title"], axis="columns", inplace=True
-            )
+    if return_X_y:
+        X = data[0]
+    else:
+        X = data.data
 
-    return dataset
+    if drop_linked:
+        X.drop(["2016_gross_pay_received", "2016_overtime_pay"], axis=1, inplace=True)
+    if drop_irrelevant:
+        X.drop(["full_name"], axis=1, inplace=True)
+    if overload_job_titles:
+        X["employee_position_title"] = X["underfilled_job_title"].fillna(
+            X["employee_position_title"]
+        )
+        X.drop(labels=["underfilled_job_title"], axis="columns", inplace=True)
+
+    return data
 
 
 def fetch_road_safety(
     *,
-    load_dataframe: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
+    load_dataframe=True,
+    data_directory=None,
+    return_X_y=False,
+):
     """Fetches the road safety dataset (classification), available at https://openml.org/d/42803
 
     Description of the dataset:
@@ -818,30 +475,22 @@ def fetch_road_safety(
 
     Returns
     -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
+    TODO
     """
-    return _fetch_dataset_as_dataclass(
-        source="openml",
-        dataset_name="Road safety",
-        dataset_id=ROAD_SAFETY_ID,
-        target="Sex_of_Driver",
-        read_csv_kwargs={
-            "na_values": ["?"],
-        },
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
+    return fetch_openml_skb(
+        data_id=ROAD_SAFETY_ID,
+        data_home=data_directory,
+        target_column="Sex_of_Driver",
+        return_X_y=return_X_y,
     )
 
 
 def fetch_medical_charge(
     *,
-    load_dataframe: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
+    load_dataframe,
+    data_directory,
+    return_X_y=False,
+):
     """Fetches the medical charge dataset (regression), available at https://openml.org/d/42720
 
     Description of the dataset:
@@ -856,31 +505,22 @@ def fetch_medical_charge(
 
     Returns
     -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
+    TODO
     """
-    return _fetch_dataset_as_dataclass(
-        source="openml",
-        dataset_name="Medical charge",
-        dataset_id=MEDICAL_CHARGE_ID,
-        target="Average_Total_Payments",
-        read_csv_kwargs={
-            "quotechar": "'",
-            "escapechar": "\\",
-        },
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
+    return fetch_openml_skb(
+        data_home=data_directory,
+        data_id=MEDICAL_CHARGE_ID,
+        target_column="Average_Total_Payments",
+        return_X_y=return_X_y,
     )
 
 
 def fetch_midwest_survey(
     *,
-    load_dataframe: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
+    load_dataframe=True,
+    data_directory=None,
+    return_X_y=False,
+):
     """Fetches the midwest survey dataset (classification), available at https://openml.org/d/42805
 
     Description of the dataset:
@@ -888,31 +528,22 @@ def fetch_midwest_survey(
 
     Returns
     -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
+    TODO
     """
-    return _fetch_dataset_as_dataclass(
-        source="openml",
-        dataset_name="Midwest survey",
-        dataset_id=MIDWEST_SURVEY_ID,
-        target="Census_Region",
-        read_csv_kwargs={
-            "quotechar": "'",
-            "escapechar": "\\",
-        },
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
+    return fetch_openml_skb(
+        data_id=MIDWEST_SURVEY_ID,
+        data_home=data_directory,
+        target_column="Census_Region",
+        return_X_y=return_X_y,
     )
 
 
 def fetch_open_payments(
     *,
-    load_dataframe: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
+    load_dataframe=True,
+    data_directory=None,
+    return_X_y=False,
+):
     """Fetches the open payments dataset (classification), available at https://openml.org/d/42738
 
     Description of the dataset:
@@ -921,32 +552,22 @@ def fetch_open_payments(
 
     Returns
     -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
+    TODO
     """
-    return _fetch_dataset_as_dataclass(
-        source="openml",
-        dataset_name="Open payments",
-        dataset_id=OPEN_PAYMENTS_ID,
-        target="status",
-        read_csv_kwargs={
-            "quotechar": "'",
-            "escapechar": "\\",
-            "na_values": ["?"],
-        },
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
+    return fetch_openml_skb(
+        data_id=OPEN_PAYMENTS_ID,
+        data_home=data_directory,
+        target_column="status",
+        return_X_y=return_X_y,
     )
 
 
 def fetch_traffic_violations(
     *,
-    load_dataframe: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
+    load_dataframe=True,
+    data_directory=None,
+    return_X_y=False,
+):
     """Fetches the traffic violations dataset (classification), available at https://openml.org/d/42132
 
     Description of the dataset:
@@ -957,32 +578,22 @@ def fetch_traffic_violations(
 
     Returns
     -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
+    TODO
     """
-    return _fetch_dataset_as_dataclass(
-        source="openml",
-        dataset_name="Traffic violations",
-        dataset_id=TRAFFIC_VIOLATIONS_ID,
-        target="violation_type",
-        read_csv_kwargs={
-            "quotechar": "'",
-            "escapechar": "\\",
-            "na_values": ["?"],
-        },
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
+    return fetch_openml_skb(
+        data_id=TRAFFIC_VIOLATIONS_ID,
+        data_home=data_directory,
+        target_columns="violation_type",
+        return_X_y=return_X_y,
     )
 
 
 def fetch_drug_directory(
     *,
-    load_dataframe: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
+    load_dataframe=True,
+    data_directory=None,
+    return_X_y=False,
+):
     """Fetches the drug directory dataset (classification), available at https://openml.org/d/43044
 
     Description of the dataset:
@@ -991,23 +602,13 @@ def fetch_drug_directory(
 
     Returns
     -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
+    TODO
     """
-    return _fetch_dataset_as_dataclass(
-        source="openml",
-        dataset_name="Drug directory",
-        dataset_id=DRUG_DIRECTORY_ID,
-        target="PRODUCTTYPENAME",
-        read_csv_kwargs={
-            "quotechar": "'",
-            "escapechar": "\\",
-        },
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
+    return fetch_openml_skb(
+        data_id=DRUG_DIRECTORY_ID,
+        data_home=data_directory,
+        target_column="PRODUCTTYPENAME",
+        return_X_y=return_X_y,
     )
 
 
@@ -1037,33 +638,6 @@ def fetch_world_bank_indicator(
         dataset_name=f"World Bank indicator {indicator_id!r}",
         dataset_id=indicator_id,
         target=None,
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
-    )
-
-
-def fetch_figshare(
-    figshare_id: str,
-    *,
-    target=None,
-    load_dataframe: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
-    """Fetches a table of from figshare.
-
-    Returns
-    -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
-    """
-    return _fetch_dataset_as_dataclass(
-        source="figshare",
-        dataset_name=f"figshare_{figshare_id!r}",
-        dataset_id=figshare_id,
-        target=target,
         load_dataframe=load_dataframe,
         data_directory=data_directory,
     )
@@ -1182,12 +756,9 @@ def fetch_toxicity(load_dataframe=True, data_directory=None):
         - y: pd.Series
         - path: Path
     """
-
-    figshare_id = "49823901"
-    dataset = fetch_figshare(
-        figshare_id,
+    return fetch_figshare(
+        figshare_id="49823901",
         load_dataframe=load_dataframe,
         data_directory=data_directory,
         target="is_toxic",
     )
-    return dataset
