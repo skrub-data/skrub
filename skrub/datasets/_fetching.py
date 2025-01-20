@@ -58,38 +58,7 @@ def fetch_employee_salaries(data_home=None):
     return load_dataset("employee_salaries", data_home=data_home)
 
 
-def fetch_road_safety(
-    *,
-    load_dataframe=True,
-    data_directory=None,
-    return_X_y=False,
-):
-    """Fetches the road safety dataset (classification), available at https://openml.org/d/42803
-
-    Description of the dataset:
-        Data reported to the police about the circumstances of personal injury
-        road accidents in Great Britain from 1979, and the maker and model
-        information of vehicles involved in the respective accident.
-        This version includes data up to 2015.
-
-    Returns
-    -------
-    TODO
-    """
-    return fetch_openml_skb(
-        data_id=ROAD_SAFETY_ID,
-        data_home=data_directory,
-        target_column="Sex_of_Driver",
-        return_X_y=return_X_y,
-    )
-
-
-def fetch_medical_charge(
-    *,
-    load_dataframe,
-    data_directory,
-    return_X_y=False,
-):
+def fetch_medical_charge(data_home=None):
     """Fetches the medical charge dataset (regression), available at https://openml.org/d/42720
 
     Description of the dataset:
@@ -106,11 +75,27 @@ def fetch_medical_charge(
     -------
     TODO
     """
-    return fetch_openml_skb(
+    return load_dataset("medical_charge", data_home)
+
+
+def fetch_road_safety(data_home=None):
+    """Fetches the road safety dataset (classification), available at https://openml.org/d/42803
+
+    Description of the dataset:
+        Data reported to the police about the circumstances of personal injury
+        road accidents in Great Britain from 1979, and the maker and model
+        information of vehicles involved in the respective accident.
+        This version includes data up to 2015.
+
+    Returns
+    -------
+    TODO
+    """
+    return load_dataset(
+        data_id=ROAD_SAFETY_ID,
         data_home=data_directory,
-        data_id=MEDICAL_CHARGE_ID,
-        target_column="Average_Total_Payments",
-        return_X_y=return_X_y
+        target_column="Sex_of_Driver",
+        return_X_y=return_X_y,
     )
 
 

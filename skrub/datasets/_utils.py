@@ -84,19 +84,19 @@ def get_data_dir(name=None, data_home=None):
 def load_dataset(dataset_name, data_home=None):
     """
     skrub_data/
-        datasets/
+        fraud/
+            fraud.tar.gz
             fraud/
                 baskets.csv
                 products.csv
                 metadata.json
-        archives/
-            fraud.tar.gz            
     """
     data_home = get_data_home(data_home)
-    dataset_dir = data_home / "datasets" / dataset_name
+    dataset_dir = data_home / dataset_name
+    datafiles_dir = dataset_dir / dataset_name
     
-    if not dataset_dir.exists() or not any(dataset_dir.iterdir()):
-        extract_archive(dataset_name, data_home)
+    if not datafiles_dir.exists() or not any(datafiles_dir.iterdir()):
+        extract_archive(dataset_dir)
     
     bunch = Bunch()
     for file_path in dataset_dir.iterdir():        
@@ -109,17 +109,18 @@ def load_dataset(dataset_name, data_home=None):
     return bunch
     
 
-def extract_archive(dataset_name, data_home):
+def extract_archive(dataset_dir):
 
-    archive_path = data_home / "archives" / dataset_name
+    dataset_name = dataset_dir.name
+    archive_path = dataset_dir / f"{dataset_name}.zip"
     if not archive_path.exists():
-        download_archive(dataset_name, data_home)
+        download_archive(dataset_name, archive_path)
 
-    dataset_dir = data_home / "datasets"
-    shutil.unpack_archive(archive_path, dataset_dir, format="zip")
+    datafiles_dir = dataset_dir / dataset_name
+    shutil.unpack_archive(archive_path, datafiles_dir, format="zip")
 
 
-def download_archive(dataset_name, data_home, retry=3, delay=1, timeout=30):
+def download_archive(dataset_name, archive_path, retry=3, delay=1, timeout=30):
     
     metadata = DATASET_INFO[dataset_name]
     error_flag = False
@@ -151,5 +152,4 @@ def download_archive(dataset_name, data_home, retry=3, delay=1, timeout=30):
         retry -= 1
         timeout *= 2
 
-    archive_path = data_home / "archives" / dataset_name
-    archive_path.write_bytes(r.content) 
+    archive_path.write_bytes(r.content)
