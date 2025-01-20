@@ -130,14 +130,19 @@ def download_archive(dataset_name, data_home, retry=3, delay=1, timeout=30):
             except requests.HTTPError as e:
                 error_flag = True
                 warnings.warn(e)
+
+        if not error_flag:
+            if hashlib.sha256(r.content).hexdigest() != metadata["sha256"]:
+                raise OSError(
+                    "The file has been updated, please update your skrub version."
+                )
+            break
         
-        if hashlib.sha256(r.content).hexdigest() != metadata["sha256"]:
+        if not retry:
             raise OSError(
-                "The file has been updated, please update your skrub version."
+                f"Can't download the file {dataset_name} from urls {metadata['urls']}."
             )
 
-        if not error_flag or not retry:
-            break
         time.sleep(delay)
         retry -= 1
         timeout *= 2
