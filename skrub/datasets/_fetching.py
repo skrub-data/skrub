@@ -4,28 +4,9 @@ Fetching functions to retrieve example datasets, using fetch_openml.
 Public API functions should return either a DatasetInfoOnly or a DatasetAll.
 """
 
-# Future notes:
-# - Watch out for ``fetch_openml()`` API modifications:
-# as of january 2021, the function is marked as experimental.
-
-from __future__ import annotations
-
-import gzip
-import json
-import urllib.request
-import warnings
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Literal, TextIO
-from urllib.error import URLError
-from zipfile import BadZipFile, ZipFile
-
-import pandas as pd
 from sklearn.utils import Bunch
 
-from skrub.datasets._utils import get_data_dir
-from skrub.datasets._openml import fetch_openml_skb
-from skrub.datasets._figshare import fetch_figshare
+from ._utils import load_dataset
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
@@ -56,120 +37,8 @@ figshare_id_to_hash = {
 }
 
 
-def _read_json_from_gz(compressed_dir_path: Path) -> dict:
-    """Opens a gzip file, reads its content (JSON expected), and returns a dictionary.
 
-    Parameters
-    ----------
-    compressed_dir_path : pathlib.Path
-        Path to the `.gz` file to read.
-
-    Returns
-    -------
-    dict
-        The information contained in the file,
-        parsed from plain-text JSON.
-    """
-    if not compressed_dir_path.is_file():
-        raise FileNotFoundError(f"Couldn't find file {compressed_dir_path!s}")
-
-    # Read content
-    with gzip.open(compressed_dir_path, mode="rt") as gz:
-        content = gz.read()
-
-    details_json = json.JSONDecoder().decode(content)
-    return details_json
-
-
-def _get_details(compressed_dir_path: Path) -> Details:
-    """Gets useful details from the details file.
-
-    Parameters
-    ----------
-    compressed_dir_path : pathlib.Path
-        The path to the `.gz` file containing the details.
-
-    Returns
-    -------
-    Details
-        A Details instance.
-    """
-    details = _read_json_from_gz(compressed_dir_path)["data_set_description"]
-    # We filter out the irrelevant information.
-    # If you want to modify this list (to add or remove items)
-    # you must also modify the ``Details`` object definition.
-    return Details(
-        name=details["name"],
-        file_id=details["file_id"],
-        description=details["description"],
-    )
-
-
-def _get_features(compressed_dir_path: Path) -> Features:
-    """Gets features that can be inserted in the CSV file.
-
-    The most important feature are the column names.
-
-    Parameters
-    ----------
-    compressed_dir_path : pathlib.Path
-        Path to the gzip file containing the features.
-
-    Returns
-    -------
-    Features
-        A Features instance.
-    """
-    raw_features = _read_json_from_gz(compressed_dir_path)["data_features"]
-    # We filter out the irrelevant information.
-    # If you want to modify this list (to add or remove items)
-    # you must also modify the ``Features`` object definition.
-    return Features(names=[column["name"] for column in raw_features["feature"]])
-
-
-def _export_gz_data_to_csv(
-    compressed_dir_path: Path, destination_file: Path, features: Features
-) -> None:
-    """Reads a gzip file containing ARFF data, and writes it to a CSV file.
-
-    Parameters
-    ----------
-    compressed_dir_path : pathlib.Path
-        Path to the `.gz` file containing the ARFF data.
-    destination_file : pathlib.Path
-        A CSV file to write to.
-    features : Features
-        A Features instance containing the first CSV line (the column names).
-    """
-    atdata_found = False
-    with destination_file.open(mode="w", encoding="utf8") as csv:
-        with gzip.open(compressed_dir_path, mode="rt", encoding="utf8") as gz:
-            gz: TextIO  # Clarify for IDEs
-            csv.write(_features_to_csv_format(features))
-            csv.write("\n")
-            # We will look at each line of the file until we find
-            # "@data": only after this tag is the actual CSV data.
-            for line in gz.readlines():
-                if not atdata_found:
-                    if line.lower().startswith("@data"):
-                        atdata_found = True
-                else:
-                    csv.write(line)
-
-
-def _features_to_csv_format(features: Features) -> str:
-    return ",".join(features.names)
-
-
-def fetch_employee_salaries(
-    *,
-    load_dataframe=True,
-    drop_linked=True,
-    drop_irrelevant=True,
-    overload_job_titles=True,
-    data_directory=None,
-    return_X_y=False,
-):
+def fetch_employee_salaries(data_home=None):
     """Fetches the employee salaries dataset (regression), available at \
         https://openml.org/d/42125
 
@@ -180,54 +49,13 @@ def fetch_employee_salaries(
 
     Parameters
     ----------
-    drop_linked : bool, default=True
-        Drops columns "2016_gross_pay_received" and "2016_overtime_pay",
-        which are closely linked to "current_annual_salary", the target.
-
-    drop_irrelevant : bool, default=True
-        Drops column "full_name", which is usually irrelevant to the
-        statistical analysis.
-
-    overload_job_titles : bool, default=True
-        Uses the column `underfilled_job_title` to enrich the
-        `employee_position_title` column, as it contains more detailed
-        information about the job title.
-
-    data_directory: pathlib.Path or str, optional
-        The directory where the dataset is stored.
-
     TODO
 
     Returns
     -------
     TODO
     """
-    data = fetch_openml_skb(
-        data_id=EMPLOYEE_SALARIES_ID,
-        target_column="current_annual_salary",
-        data_home=data_directory,
-        return_X_y=return_X_y,
-    )
-    if return_X_y:
-        X = data[0]
-    else:
-        X = data.data
-
-    if drop_linked:
-        X.drop(
-            ["2016_gross_pay_received", "2016_overtime_pay"], axis=1, inplace=True
-        )
-    if drop_irrelevant:
-        X.drop(["full_name"], axis=1, inplace=True)
-    if overload_job_titles:
-        X["employee_position_title"] = X[
-            "underfilled_job_title"
-        ].fillna(X["employee_position_title"])
-        X.drop(
-            labels=["underfilled_job_title"], axis="columns", inplace=True
-        )
-
-    return data
+    return load_dataset("employee_salaries", data_home=data_home)
 
 
 def fetch_road_safety(
