@@ -9,8 +9,9 @@ from ._fetching import (
     fetch_toxicity,
     fetch_traffic_violations,
 )
-from ._utils import get_data_dir
 from ._generating import make_deduplication_data
+from ._utils import get_data_dir
+
 # from ._ken_embeddings import (
 #     fetch_ken_embeddings,
 #     fetch_ken_table_aliases,
@@ -25,10 +26,10 @@ __all__ = [
     "fetch_open_payments",
     "fetch_road_safety",
     "fetch_traffic_violations",
-    #"fetch_world_bank_indicator",
+    # "fetch_world_bank_indicator",
     "fetch_credit_fraud",
     "fetch_toxicity",
-    #"fetch_movielens",
+    # "fetch_movielens",
     "get_data_dir",
     "make_deduplication_data",
     # "fetch_ken_embeddings",

@@ -37,7 +37,6 @@ figshare_id_to_hash = {
 }
 
 
-
 def fetch_employee_salaries(data_home=None):
     """Fetches the employee salaries dataset (regression), available at \
         https://openml.org/d/42125
@@ -142,7 +141,7 @@ def fetch_open_payments(
         data_id=OPEN_PAYMENTS_ID,
         data_home=data_directory,
         target_column="status",
-        return_X_y=return_X_y
+        return_X_y=return_X_y,
     )
 
 

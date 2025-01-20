@@ -1,11 +1,12 @@
-import json
 import hashlib
-import pandas as pd
+import json
 import shutil
 import time
 import warnings
-import requests
 from pathlib import Path
+
+import pandas as pd
+import requests
 from sklearn.utils import Bunch
 
 DATASET_INFO = {
@@ -94,23 +95,22 @@ def load_dataset(dataset_name, data_home=None):
     data_home = get_data_home(data_home)
     dataset_dir = data_home / dataset_name
     datafiles_dir = dataset_dir / dataset_name
-    
+
     if not datafiles_dir.exists() or not any(datafiles_dir.iterdir()):
         extract_archive(dataset_dir)
-    
+
     bunch = Bunch()
-    for file_path in dataset_dir.iterdir():        
+    for file_path in dataset_dir.iterdir():
         if file_path.suffix == ".csv":
             bunch[file_path.stem] = pd.read_csv(file_path)
         elif file_path.suffix == ".json":
             metadata_key = f"{file_path.stem}_metadata"
             bunch[metadata_key] = json.loads(file_path.read_text(), "utf-8")
-        
+
     return bunch
-    
+
 
 def extract_archive(dataset_dir):
-
     dataset_name = dataset_dir.name
     archive_path = dataset_dir / f"{dataset_name}.zip"
     if not archive_path.exists():
@@ -121,11 +121,10 @@ def extract_archive(dataset_dir):
 
 
 def download_archive(dataset_name, archive_path, retry=3, delay=1, timeout=30):
-    
     metadata = DATASET_INFO[dataset_name]
     error_flag = False
 
-    while True:
+    for _ in range(retry):
         for target_url in metadata["urls"]:
             r = requests.get(target_url, timeout=timeout)
             try:
@@ -142,14 +141,12 @@ def download_archive(dataset_name, archive_path, retry=3, delay=1, timeout=30):
                     "The file has been updated, please update your skrub version."
                 )
             break
-        
-        if not retry:
-            raise OSError(
-                f"Can't download the file {dataset_name} from urls {metadata['urls']}."
-            )
-
         time.sleep(delay)
-        retry -= 1
         timeout *= 2
+
+    else:
+        raise OSError(
+            f"Can't download the file {dataset_name} from urls {metadata['urls']}."
+        )
 
     archive_path.write_bytes(r.content)
