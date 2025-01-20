@@ -1,23 +1,27 @@
 import json
 import hashlib
 import pandas as pd
-import os
 import shutil
 import time
-import tarfile
 import warnings
 import requests
-from collections import namedtuple
 from pathlib import Path
-from tempfile import NamedTemporaryFile
-from urllib.error import URLError
-from urllib.request import urlretrieve
 from sklearn.utils import Bunch
 
-ARCHIVE_METADATA = {
+DATASET_INFO = {
     "medical_charge": {
-        "urls": ["https://figshare.com/ndownloader/files/51807752"],
+        "urls": [
+            "https://osf.io/download/pu2hq/",
+            "https://figshare.com/ndownloader/files/51807752",
+        ],
         "sha256": "d10a9d7c0862a8bebe9292ed948df9e6e02cdf4415a8e66306b12578f5f56754",
+    },
+    "employee_salaries": {
+        "urls": [
+            "https://osf.io/download/bszkv/",
+            "https://figshare.com/ndownloader/files/51807500",
+        ],
+        "sha256": "1a73268a1a5ce0d376e493737a5fcf0d3f8ffb4cafeca20c7b39381bbc943292",
     },
 }
 
@@ -117,7 +121,7 @@ def extract_archive(dataset_name, data_home):
 
 def download_archive(dataset_name, data_home, retry=3, delay=1, timeout=30):
     
-    metadata = ARCHIVE_METADATA[dataset_name]
+    metadata = DATASET_INFO[dataset_name]
     error_flag = False
 
     while True:
