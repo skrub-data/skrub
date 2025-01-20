@@ -14,6 +14,7 @@ import gzip
 import json
 import urllib.request
 import warnings
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, TextIO
 from urllib.error import URLError
@@ -22,9 +23,9 @@ from zipfile import BadZipFile, ZipFile
 import pandas as pd
 from sklearn.utils import Bunch
 
-from skrub.datasets._base import get_data_dir
-from skrub.datasets._figshare import fetch_figshare
+from skrub.datasets._utils import get_data_dir
 from skrub.datasets._openml import fetch_openml_skb
+from skrub.datasets._figshare import fetch_figshare
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
@@ -53,158 +54,6 @@ figshare_id_to_hash = {
     40019230: "4d43fed75dba1e59a5587bf31c1addf2647a1f15ebea66e93177ccda41e18f2f",
     40019788: "67ae86496c8a08c6cc352f573160a094f605e7e0da022eb91c603abb7edf3747",
 }
-
-
-def _fetch_world_bank_data(
-    indicator_id: str,
-    data_directory: Path | None = None,
-) -> dict[str, Any]:
-    """Gets a dataset from World Bank open data platform (https://data.worldbank.org/).
-
-    Parameters
-    ----------
-    indicator_id : str
-        The ID of the indicator's dataset to fetch.
-    data_directory : pathlib.Path, optional
-        The directory where the dataset is stored.
-        By default, a subdirectory "world_bank" in the skrub data directory.
-
-    Returns
-    -------
-    mapping of str to any
-        A dictionary containing:
-          - `description` : str
-              The description of the dataset,
-              as gathered from World Bank data.
-          - `source` : str
-              The dataset's URL from the World Bank data platform.
-          - `path` : pathlib.Path
-              The local path leading to the dataset,
-              saved as a CSV file.
-    """
-    if data_directory is None:
-        data_directory = get_data_dir(name="world_bank")
-
-    csv_path = (data_directory / f"{indicator_id}.csv").resolve()
-    data_directory.mkdir(parents=True, exist_ok=True)
-    url = f"https://api.worldbank.org/v2/en/indicator/{indicator_id}?downloadformat=csv"
-    if csv_path.is_file():
-        df = pd.read_csv(csv_path, nrows=0)
-        indicator_name = df.columns[1]
-    else:
-        warnings.warn(
-            (
-                f"Could not find the dataset {indicator_id!r} locally. "
-                "Downloading it from the World Bank; this might take a while... "
-                "If it is interrupted, some files might be invalid/incomplete: "
-                "if on the following run, the fetching raises errors, you can try "
-                f"fixing this issue by deleting the directory {csv_path!s}."
-            ),
-            UserWarning,
-            stacklevel=2,
-        )
-        try:
-            filehandle, _ = urllib.request.urlretrieve(url)
-            zip_file_object = ZipFile(filehandle, "r")
-            for name in zip_file_object.namelist():
-                if "Metadata" not in name:
-                    true_file = name
-                    break
-            else:
-                raise FileNotFoundError(
-                    "Could not find any non-metadata file "
-                    f"for indicator {indicator_id!r}."
-                )
-            file = zip_file_object.open(true_file)
-        except BadZipFile as e:
-            raise FileNotFoundError(
-                "Couldn't find csv file, the indicator id "
-                f"{indicator_id!r} seems invalid."
-            ) from e
-        except URLError:
-            raise URLError("No internet connection or the website is down.")
-        # Read and modify the csv file
-        df = pd.read_csv(file, skiprows=3)  # FIXME: why three rows?
-        indicator_name = df.iloc[0, 2]
-        df[indicator_name] = df.stack().groupby(level=0).last()
-        df = df[df[indicator_name] != indicator_id]
-        df = df[["Country Name", indicator_name]]
-
-        df.to_csv(csv_path, index=False)
-    description = f"This table shows the {indicator_name!r} World Bank indicator."
-    return {
-        "dataset_name": indicator_name,
-        "description": description,
-        "source": url,
-        "path": csv_path,
-    }
-
-
-def _fetch_movielens(dataset_id: str, data_directory: Path | None = None) -> dict[str]:
-    """Downloads a subset of the Movielens dataset.
-
-    Parameters
-    ----------
-    data_directory : :obj:`~pathlib.Path`
-        The directory in which the data will be saved.
-    """
-    if data_directory is None:
-        data_directory = get_data_dir()
-
-    options = ["movies", "ratings"]
-    if dataset_id not in options:
-        raise ValueError(f"dataset_id options are {options}, got '{dataset_id}'.")
-
-    zip_directory = Path("ml-latest-small")
-    file_path = data_directory / zip_directory / f"{dataset_id}.csv"
-    detail_path = data_directory / zip_directory / "README.txt"
-    if not file_path.is_file() or not detail_path.is_file():
-        # If the details file or the features file don't exist,
-        # download the dataset.
-        warnings.warn(
-            (
-                f"Could not find the dataset {dataset_id!r} locally. "
-                "Downloading it from MovieLens; this might take a while... "
-                "If it is interrupted, some files might be invalid/incomplete: "
-                "if on the following run, the fetching raises errors, you can try "
-                f"fixing this issue by deleting the directory {data_directory!s}."
-            ),
-            UserWarning,
-            stacklevel=2,
-        )
-        _download_and_write_movielens_dataset(
-            dataset_id,
-            data_directory,
-            zip_directory,
-        )
-
-    description = open(detail_path).read()
-
-    url = MOVIELENS_URL.format(zip_directory=zip_directory)
-
-    return {
-        "description": description,
-        "source": url,
-        "path": Path(data_directory) / zip_directory / f"{dataset_id}.csv",
-    }
-
-
-def _download_and_write_movielens_dataset(dataset_id, data_directory, zip_directory):
-    url = MOVIELENS_URL.format(zip_directory=zip_directory)
-    tmp_file = None
-    try:
-        tmp_file, _ = urllib.request.urlretrieve(url)
-        data_file = str((zip_directory / f"{dataset_id}.csv").as_posix())
-        readme_file = str((zip_directory / "README.txt").as_posix())
-        with ZipFile(tmp_file, "r") as zip_file:
-            zip_file.extractall(
-                data_directory,
-                members=[data_file, readme_file],
-            )
-    except Exception:
-        if tmp_file is not None and Path(tmp_file).exists():
-            Path(tmp_file).unlink()
-        raise
 
 
 def _read_json_from_gz(compressed_dir_path: Path) -> dict:
@@ -312,88 +161,6 @@ def _features_to_csv_format(features: Features) -> str:
     return ",".join(features.names)
 
 
-def _fetch_dataset_as_dataclass(
-    source: Literal["openml", "world_bank", "figshare"],
-    dataset_name: str,
-    dataset_id: int | str,
-    target: str | None,
-    load_dataframe: bool,
-    data_directory: Path | str | None = None,
-    read_csv_kwargs: dict | None = None,
-) -> DatasetAll | DatasetInfoOnly:
-    """Fetches a dataset from a source, and returns it as a dataclass.
-
-    Takes a dataset identifier, a target column name (if applicable),
-    and some additional keyword arguments for read_csv.
-
-    If you don't need the dataset to be loaded in memory,
-    pass `load_dataframe=False`.
-
-    To save/load the dataset to/from a specific directory,
-    pass `data_directory`. If `None`, uses the default skrub
-    data directory.
-
-    If the dataset doesn't have a target (unsupervised learning or inapplicable),
-    explicitly specify `target=None`.
-
-    Returns
-    -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
-    """
-    if isinstance(data_directory, str):
-        data_directory = Path(data_directory)
-
-    if source == "openml":
-        info = (dataset_id, data_directory)
-    elif source == "world_bank":
-        info = _fetch_world_bank_data(dataset_id, data_directory)
-    elif source == "figshare":
-        info = _fetch_figshare(dataset_id, data_directory)
-    elif source == "movielens":
-        info = _fetch_movielens(dataset_id, data_directory)
-    else:
-        raise ValueError(f"Unknown source {source!r}")
-
-    if read_csv_kwargs is None:
-        read_csv_kwargs = {}
-
-    if target is None:
-        target = []
-
-    if load_dataframe:
-        if source == "figshare":
-            df = pd.read_parquet(info["path"])
-        else:
-            df = pd.read_csv(info["path"], **read_csv_kwargs)
-        y = df[target]
-        X = df.drop(target, axis="columns")
-        dataset = DatasetAll(
-            name=dataset_name,
-            description=info["description"],
-            source=info["source"],
-            target=target,
-            X=X,
-            y=y,
-            path=info["path"],
-            read_csv_kwargs=read_csv_kwargs,
-        )
-    else:
-        dataset = DatasetInfoOnly(
-            name=dataset_name,
-            description=info["description"],
-            source=info["source"],
-            target=target,
-            path=info["path"],
-            read_csv_kwargs=read_csv_kwargs,
-        )
-
-    return dataset
-
-
 def fetch_employee_salaries(
     *,
     load_dataframe=True,
@@ -447,14 +214,18 @@ def fetch_employee_salaries(
         X = data.data
 
     if drop_linked:
-        X.drop(["2016_gross_pay_received", "2016_overtime_pay"], axis=1, inplace=True)
+        X.drop(
+            ["2016_gross_pay_received", "2016_overtime_pay"], axis=1, inplace=True
+        )
     if drop_irrelevant:
         X.drop(["full_name"], axis=1, inplace=True)
     if overload_job_titles:
-        X["employee_position_title"] = X["underfilled_job_title"].fillna(
-            X["employee_position_title"]
+        X["employee_position_title"] = X[
+            "underfilled_job_title"
+        ].fillna(X["employee_position_title"])
+        X.drop(
+            labels=["underfilled_job_title"], axis="columns", inplace=True
         )
-        X.drop(labels=["underfilled_job_title"], axis="columns", inplace=True)
 
     return data
 
@@ -511,7 +282,7 @@ def fetch_medical_charge(
         data_home=data_directory,
         data_id=MEDICAL_CHARGE_ID,
         target_column="Average_Total_Payments",
-        return_X_y=return_X_y,
+        return_X_y=return_X_y
     )
 
 
@@ -558,7 +329,7 @@ def fetch_open_payments(
         data_id=OPEN_PAYMENTS_ID,
         data_home=data_directory,
         target_column="status",
-        return_X_y=return_X_y,
+        return_X_y=return_X_y
     )
 
 
@@ -609,68 +380,6 @@ def fetch_drug_directory(
         data_home=data_directory,
         target_column="PRODUCTTYPENAME",
         return_X_y=return_X_y,
-    )
-
-
-def fetch_world_bank_indicator(
-    indicator_id: str,
-    *,
-    load_dataframe: bool = True,
-    data_directory: Path | str | None = None,
-) -> DatasetAll | DatasetInfoOnly:
-    """Fetches a dataset of an indicator from the World Bank open data platform.
-
-    Description of the dataset:
-        The dataset contains two columns: the indicator value and the
-        country names. A list of all available indicators can be found
-        at https://data.worldbank.org/indicator.
-
-    Returns
-    -------
-    DatasetAll
-        If `load_dataframe=True`
-
-    DatasetInfoOnly
-        If `load_dataframe=False`
-    """
-    return _fetch_dataset_as_dataclass(
-        source="world_bank",
-        dataset_name=f"World Bank indicator {indicator_id!r}",
-        dataset_id=indicator_id,
-        target=None,
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
-    )
-
-
-def fetch_movielens(
-    dataset_id: str = "ratings",
-    *,
-    load_dataframe: bool = True,
-    data_directory: Path | None = None,
-) -> DatasetAll | DatasetInfoOnly:
-    """Fetches a dataset from Movielens.
-
-    Parameters
-    ----------
-    dataset_id : str
-        Either 'ratings' or 'movies'
-
-    Returns
-    -------
-    :obj:`DatasetAll`
-        If `load_dataframe=True`
-
-    :obj:`DatasetInfoOnly`
-        If `load_dataframe=False`
-    """
-    return _fetch_dataset_as_dataclass(
-        source="movielens",
-        dataset_name="ml-latest-small",
-        dataset_id=dataset_id,
-        target=None,
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
     )
 
 

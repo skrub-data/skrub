@@ -1,3 +1,4 @@
+
 import sklearn
 from sklearn.datasets import fetch_openml
 from sklearn.utils.fixes import parse_version
@@ -16,7 +17,7 @@ def fetch_openml_skb(
     as_frame=True,
     n_retries=3,
     delay=1,
-    parser=None,
+    parser=None
 ):
     """Downloads a dataset from OpenML, taking care of creating the directories.
 

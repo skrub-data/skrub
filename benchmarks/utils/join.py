@@ -1,6 +1,6 @@
 import pandas as pd
 
-from skrub.datasets._base import get_data_dir
+from skrub.datasets._utils import get_data_dir
 
 
 def get_local_data(

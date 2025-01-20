@@ -4,7 +4,7 @@ from itertools import chain
 from urllib.error import URLError
 
 from .._utils import import_optional_dependency
-from ._base import get_data_dir
+from ._utils import get_data_dir
 
 FIGSHARE_URL = "https://ndownloader.figshare.com/files/{figshare_id}"
 

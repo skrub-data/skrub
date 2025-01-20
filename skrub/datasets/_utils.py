@@ -1,3 +1,4 @@
+import json
 import hashlib
 import pandas as pd
 import os
@@ -13,7 +14,12 @@ from urllib.error import URLError
 from urllib.request import urlretrieve
 from sklearn.utils import Bunch
 
-RemoteFileMetadata = namedtuple("RemoteFileMetadata", ["filename", "url", "checksum"])
+ARCHIVE_METADATA = {
+    "medical_charge": {
+        "urls": ["https://figshare.com/ndownloader/files/51807752"],
+        "sha256": "d10a9d7c0862a8bebe9292ed948df9e6e02cdf4415a8e66306b12578f5f56754",
+    },
+}
 
 
 def get_data_home(data_home=None):
@@ -71,172 +77,70 @@ def get_data_dir(name=None, data_home=None):
     return data_dir
 
 
-# Vendored from scikit-learn 1.6.0
-def _sha256(path):
-    """Calculate the sha256 hash of the file at path."""
-    sha256hash = hashlib.sha256()
-    chunk_size = 8192
-    with open(path, "rb") as f:
-        while True:
-            buffer = f.read(chunk_size)
-            if not buffer:
-                break
-            sha256hash.update(buffer)
-    return sha256hash.hexdigest()
-
-
 def load_dataset(dataset_name, data_home=None):
     """
     skrub_data/
-        fraud/
-            fraud.tar.gz
+        datasets/
             fraud/
                 baskets.csv
                 products.csv
+                metadata.json
+        archives/
+            fraud.tar.gz            
     """
     data_home = get_data_home(data_home)
-    data_dir = data_home / dataset_name / dataset_name
+    dataset_dir = data_home / "datasets" / dataset_name
     
-    if not list(data_dir.glob("*.csv")):
+    if not dataset_dir.exists() or not any(dataset_dir.iterdir()):
         extract_archive(dataset_name, data_home)
     
     bunch = Bunch()
-    for filename in data_dir.glob("*.csv"):        
-        bunch[filename.stem] = pd.read_csv(filename)
+    for file_path in dataset_dir.iterdir():        
+        if file_path.suffix == ".csv":
+            bunch[file_path.stem] = pd.read_csv(file_path)
+        elif file_path.suffix == ".json":
+            metadata_key = f"{file_path.stem}_metadata"
+            bunch[metadata_key] = json.loads(file_path.read_text(), "utf-8")
         
     return bunch
     
 
 def extract_archive(dataset_name, data_home):
 
-    path_archive = data_home / dataset_name / f"{dataset_name}.tar.gz"
-    if not path_archive.exists():
+    archive_path = data_home / "archives" / dataset_name
+    if not archive_path.exists():
         download_archive(dataset_name, data_home)
 
-    data_dir = data_home / dataset_name / dataset_name
-    with tarfile.open(path_archive, "r:gz") as tar_f:
-        members = [m for m in tar_f.getmembers() if m.name.endswith(".csv")]
-        tar_f.extractall(data_dir, members=members)
+    dataset_dir = data_home / "datasets"
+    shutil.unpack_archive(archive_path, dataset_dir, format="zip")
 
 
-def download_archive(dataset_name, data_home):
+def download_archive(dataset_name, data_home, retry=3, delay=1, timeout=30):
     
-    figshare_url = FIGSHARE_URL[dataset_name]
+    metadata = ARCHIVE_METADATA[dataset_name]
+    error_flag = False
 
-    r = requests.get(figshare_url)
-    try:
-        r.raise_for_status()
-    except requests.HTTPError as e:
-        warnings.warn(e)
-
-
-
-
-
-# Vendored from scikit-learn 1.6.0
-def _fetch_remote(remote, dirname=None, n_retries=3, delay=1):
-    """Helper function to download a remote dataset.
-
-    Fetch a dataset pointed by remote's url, save into path using remote's
-    filename and ensure its integrity based on the SHA256 checksum of the
-    downloaded file.
-
-    .. versionchanged:: 1.6
-
-        If the file already exists locally and the SHA256 checksums match, the
-        path to the local file is returned without re-downloading.
-
-    Parameters
-    ----------
-    remote : RemoteFileMetadata
-        Named tuple containing remote dataset meta information: url, filename
-        and checksum.
-
-    dirname : str or Path, default=None
-        Directory to save the file to. If None, the current working directory
-        is used.
-
-    n_retries : int, default=3
-        Number of retries when HTTP errors are encountered.
-
-        .. versionadded:: 1.5
-
-    delay : int, default=1
-        Number of seconds between retries.
-
-        .. versionadded:: 1.5
-
-    Returns
-    -------
-    file_path: Path
-        Full path of the created file.
-    """
-    if dirname is None:
-        folder_path = Path(".")
-    else:
-        folder_path = Path(dirname)
-
-    file_path = folder_path / remote.filename
-
-    if file_path.exists():
-        if remote.checksum is None:
-            return file_path
-
-        checksum = _sha256(file_path)
-        if checksum == remote.checksum:
-            return file_path
-        else:
-            warnings.warn(
-                f"SHA256 checksum of existing local file {file_path.name} "
-                f"({checksum}) differs from expected ({remote.checksum}): "
-                f"re-downloading from {remote.url} ."
-            )
-
-    # We create a temporary file dedicated to this particular download to avoid
-    # conflicts with parallel downloads. If the download is successful, the
-    # temporary file is atomically renamed to the final file path (with
-    # `shutil.move`). We therefore pass `delete=False` to `NamedTemporaryFile`.
-    # Otherwise, garbage collecting temp_file would raise an error when
-    # attempting to delete a file that was already renamed. If the download
-    # fails or the result does not match the expected SHA256 digest, the
-    # temporary file is removed manually in the except block.
-    temp_file = NamedTemporaryFile(
-        prefix=remote.filename + ".part_", dir=folder_path, delete=False
-    )
-    # Note that Python 3.12's `delete_on_close=True` is ignored as we set
-    # `delete=False` explicitly. So after this line the empty temporary file still
-    # exists on disk to make sure that it's uniquely reserved for this specific call of
-    # `_fetch_remote` and therefore it protects against any corruption by parallel
-    # calls.
-    temp_file.close()
-    try:
-        temp_file_path = Path(temp_file.name)
-        while True:
+    while True:
+        for target_url in metadata["urls"]:
+            r = requests.get(target_url, timeout=timeout)
             try:
-                urlretrieve(remote.url, temp_file_path)
+                error_flag = False
+                r.raise_for_status()
                 break
-            except (URLError, TimeoutError):
-                if n_retries == 0:
-                    # If no more retries are left, re-raise the caught exception.
-                    raise
-                warnings.warn(f"Retry downloading from url: {remote.url}")
-                n_retries -= 1
-                time.sleep(delay)
-
-        checksum = _sha256(temp_file_path)
-        if remote.checksum is not None and remote.checksum != checksum:
+            except requests.HTTPError as e:
+                error_flag = True
+                warnings.warn(e)
+        
+        if hashlib.sha256(r.content).hexdigest() != metadata["sha256"]:
             raise OSError(
-                f"The SHA256 checksum of {remote.filename} ({checksum}) "
-                f"differs from expected ({remote.checksum})."
+                "The file has been updated, please update your skrub version."
             )
-    except (Exception, KeyboardInterrupt):
-        os.unlink(temp_file.name)
-        raise
 
-    # The following renaming is atomic whenever temp_file_path and
-    # file_path are on the same filesystem. This should be the case most of
-    # the time, but we still use shutil.move instead of os.rename in case
-    # they are not.
-    shutil.move(temp_file_path, file_path)
+        if not error_flag or not retry:
+            break
+        time.sleep(delay)
+        retry -= 1
+        timeout *= 2
 
-    return file_path
+    archive_path = data_home / "archives" / dataset_name
+    archive_path.write_bytes(r.content) 

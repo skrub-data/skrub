@@ -11,7 +11,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._utils import import_optional_dependency, unique_strings
-from .datasets._base import get_data_dir
+from .datasets._utils import get_data_dir
 
 
 class ModelNotFound(ValueError):
