@@ -1,17 +1,8 @@
 from os import environ
 from pathlib import Path
-from sys import stderr
+
 
 DATA_HOME_ENVAR_NAME = "SKRUB_DATA_DIRECTORY"
-DATA_HOME_ENVAR = environ.get(DATA_HOME_ENVAR_NAME)
-
-if DATA_HOME_ENVAR and (path := Path(DATA_HOME_ENVAR)).is_absolute():
-    DATA_HOME_DEFAULT = path
-else:
-    DATA_HOME_DEFAULT = Path.home() / "skrub_data"
-
-
-print(f"Setting `DATA_HOME_DEFAULT` to '{DATA_HOME_DEFAULT}'.", file=stderr)
 
 
 def get_data_home(data_home=None):
@@ -53,7 +44,12 @@ def get_data_home(data_home=None):
         # https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve
         data_home = data_home.resolve()
     else:
-        data_home = DATA_HOME_DEFAULT
+        data_home_envar = environ.get(DATA_HOME_ENVAR_NAME)
+
+        if data_home_envar and (path := Path(data_home_envar)).is_absolute():
+            data_home = path
+        else:
+            data_home = Path.home() / "skrub_data"
 
     data_home.mkdir(parents=True, exist_ok=True)
 
