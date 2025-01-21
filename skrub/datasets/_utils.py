@@ -152,7 +152,6 @@ def _download_archive(
     chunk_size=4096,
 ):
     metadata = DATASET_INFO[dataset_name]
-    error_flag = False
 
     for idx in range(1, retry + 1):
         for target_url in metadata["urls"]:
