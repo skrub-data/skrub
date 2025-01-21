@@ -6,7 +6,7 @@ Public API functions should return either a DatasetInfoOnly or a DatasetAll.
 
 from sklearn.utils import Bunch
 
-from ._utils import load_dataset
+from ._utils import load_simple_dataset, _load_dataset_files
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
@@ -54,7 +54,7 @@ def fetch_employee_salaries(data_home=None):
     -------
     TODO
     """
-    return load_dataset("employee_salaries", data_home=data_home)
+    return load_simple_dataset("employee_salaries", data_home)
 
 
 def fetch_medical_charge(data_home=None):
@@ -74,7 +74,7 @@ def fetch_medical_charge(data_home=None):
     -------
     TODO
     """
-    return load_dataset("medical_charge", data_home)
+    return load_simple_dataset("medical_charge", data_home)
 
 
 def fetch_road_safety(data_home=None):
