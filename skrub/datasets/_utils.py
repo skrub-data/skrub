@@ -107,8 +107,22 @@ def _load_dataset_files(dataset_name, data_home):
     datafiles_dir = dataset_dir / dataset_name
     datafiles_dir.mkdir(parents=True, exist_ok=True)
 
-    if not datafiles_dir.exists() or not any(datafiles_dir.iterdir()):
-        _extract_archive(dataset_dir)
+    archive_path = dataset_dir / f"{dataset_name}.zip"
+    metadata = DATASET_INFO[dataset_name]
+
+    diff_checksum = False
+    if archive_path.exists():
+        expected_checksum = metadata["sha256"]
+        checksum = _sha256(archive_path)
+        if (diff_checksum := expected_checksum != checksum):
+            warnings.warn(
+                f"SHA256 checksum of existing local file {archive_path.name} "
+                f"({checksum}) differs from expected ({expected_checksum}): "
+                f"re-downloading from {metadata['urls']} ."
+            ) 
+
+    if not any(datafiles_dir.iterdir()) or diff_checksum:
+        _extract_archive(dataset_dir, archive_path, diff_checksum)
 
     bunch = Bunch()
     for file_path in datafiles_dir.iterdir():
@@ -120,21 +134,8 @@ def _load_dataset_files(dataset_name, data_home):
     return bunch
 
 
-def _extract_archive(dataset_dir):
+def _extract_archive(dataset_dir, archive_path, diff_checksum):
     dataset_name = dataset_dir.name
-    archive_path = dataset_dir / f"{dataset_name}.zip"
-
-    metadata = DATASET_INFO[dataset_name]
-
-    if archive_path.exists():
-        expected_checksum = metadata["sha256"]
-        checksum = _sha256(archive_path)
-        if diff_checksum := expected_checksum != checksum:
-            warnings.warn(
-                f"SHA256 checksum of existing local file {archive_path.name} "
-                f"({checksum}) differs from expected ({expected_checksum}): "
-                f"re-downloading from {metadata['urls']} ."
-            )
 
     if not archive_path.exists() or diff_checksum:
         _download_archive(dataset_name, archive_path)
