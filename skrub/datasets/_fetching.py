@@ -6,7 +6,7 @@ Public API functions should return either a DatasetInfoOnly or a DatasetAll.
 
 from sklearn.utils import Bunch
 
-from ._utils import load_simple_dataset, _load_dataset_files
+from ._utils import load_simple_dataset
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501

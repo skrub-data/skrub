@@ -129,7 +129,7 @@ def _extract_archive(dataset_dir):
     if archive_path.exists():
         expected_checksum = metadata["sha256"]
         checksum = _sha256(archive_path)
-        if (diff_checksum := expected_checksum != checksum):
+        if diff_checksum := expected_checksum != checksum:
             warnings.warn(
                 f"SHA256 checksum of existing local file {archive_path.name} "
                 f"({checksum}) differs from expected ({expected_checksum}): "
@@ -194,8 +194,7 @@ def _stream_download(
     # `shutil.move`). We therefore pass `delete=False` to `NamedTemporaryFile`.
     # Otherwise, garbage collecting temp_file would raise an error when
     # attempting to delete a file that was already renamed. If the download
-    # fails or the result does not match the expected SHA256 digest, the
-    # temporary file is removed manually in the except block.
+    # fails, the temporary file is removed manually in the except block.
     temp_file = NamedTemporaryFile(
         mode="wb",
         prefix=archive_path.stem + ".part_",
