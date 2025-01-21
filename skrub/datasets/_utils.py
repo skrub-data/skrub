@@ -84,6 +84,8 @@ def get_data_dir(name=None, data_home=None):
 
 
 def load_simple_dataset(dataset_name, data_home=None):
+    """TODO
+    """
     bunch = _load_dataset_files(dataset_name, data_home)
     bunch["X"] = bunch.pop(dataset_name)
     if (target := bunch.metadata.get("target", None)) is not None:
@@ -94,6 +96,7 @@ def load_simple_dataset(dataset_name, data_home=None):
 
 def _load_dataset_files(dataset_name, data_home):
     """
+    TODO
     skrub_data/
         fraud/
             fraud.tar.gz

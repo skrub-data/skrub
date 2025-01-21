@@ -40,7 +40,7 @@ def test_fetching_single_tables(monkeypatch, dataset_name):
 def test_fetching_wrong_checksum(monkeypatch):
     dataset_info = _utils.DATASET_INFO["employee_salaries"]
     monkeypatch.setitem(dataset_info, "sha256", "bad_checksum")
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match=".*checksum verification has failed"):
         with TemporaryDirectory() as temp_dir:
             _fetching.fetch_employee_salaries(data_home=temp_dir)
 
