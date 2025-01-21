@@ -1,7 +1,6 @@
 from os import environ
 from pathlib import Path
 
-
 DATA_HOME_ENVAR_NAME = "SKRUB_DATA_DIRECTORY"
 
 
