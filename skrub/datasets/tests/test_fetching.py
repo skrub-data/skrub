@@ -8,15 +8,17 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 from skrub.datasets import _fetching, _utils
 
 
-@pytest.mark.parametrize(
-    "dataset_name",
-    [
-        "medical_charge",
-        "employee_salaries",
-        # TODO
-    ],
-)
-def test_fetching_single_tables(monkeypatch, dataset_name):
+def _get_dataset_names():
+    ignore = ["road_safety"]
+    return set(_utils.DATASET_INFO) - set(ignore)
+
+
+def _get_table_names_from_bunch(bunch):
+    return [k for k in bunch if isinstance(bunch[k], pd.DataFrame)]
+
+
+@pytest.mark.parametrize("dataset_name", _get_dataset_names())
+def test_fetching(monkeypatch, dataset_name):
     with TemporaryDirectory() as temp_dir:
         fetch_func = getattr(_fetching, f"fetch_{dataset_name}")
         bunch = fetch_func(data_home=temp_dir)
@@ -30,7 +32,9 @@ def test_fetching_single_tables(monkeypatch, dataset_name):
         # calling the fetch function one more time
         local_bunch = fetch_func(data_home=temp_dir)
 
-    assert_frame_equal(bunch.X, local_bunch.X)
+    for table_name in _get_table_names_from_bunch(bunch):
+        assert_frame_equal(bunch[table_name], local_bunch[table_name])
+
     if hasattr(bunch, "y"):
         if isinstance(bunch.y, pd.Series):
             assert_series_equal(bunch.y, local_bunch.y)

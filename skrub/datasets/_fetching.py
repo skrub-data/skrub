@@ -177,7 +177,15 @@ def fetch_toxicity(data_home=None):
     return load_simple_dataset("toxicity", data_home)
 
 
-def fetch_movie_lens(data_home=None):
+def fetch_videogame_sales(data_home=None):
+    return load_simple_dataset("videogame_sales", data_home)
+
+
+def fetch_bike_sharing(data_home=None):
+    return load_simple_dataset("bike_sharing", data_home)
+
+
+def fetch_movielens(data_home=None):
     return _load_dataset_files("movielens", data_home)
 
 
@@ -187,11 +195,3 @@ def fetch_flight_delays(data_home=None):
 
 def fetch_country_happiness(data_home=None):
     return _load_dataset_files("country_happiness", data_home)
-
-
-def fetch_bike_sharing(data_home=None):
-    return load_simple_dataset("bike_sharing", data_home)
-
-
-def fetch_videogame_sales(data_home=None):
-    return load_simple_dataset("videogame_sales", data_home)
