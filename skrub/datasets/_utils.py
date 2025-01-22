@@ -309,8 +309,7 @@ def _stream_download(
                 f"File {archive_path.stem!r} checksum verification has failed."
             )
         temp_file_path.rename(archive_path)
-
-    except (Exception, KeyboardInterrupt):
+    finally:
         try:
             temp_file_path.unlink()
         except Exception:
