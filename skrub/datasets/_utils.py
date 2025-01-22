@@ -1,29 +1,110 @@
 import hashlib
 import json
 import shutil
+import tempfile
 import time
 import warnings
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 
 import pandas as pd
 import requests
 from sklearn.utils import Bunch
 
 DATASET_INFO = {
-    "medical_charge": {
+    "bike_sharing": {
         "urls": [
-            "https://osf.io/download/pu2hq/",
-            "https://figshare.com/ndownloader/files/51807752",
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/bike_sharing.zip"
         ],
-        "sha256": "d10a9d7c0862a8bebe9292ed948df9e6e02cdf4415a8e66306b12578f5f56754",
+        "sha256": "33745414801712034cf1d8615d7f086bba411ea8e44bfffefc0c6f23cb8afb83",
+    },
+    "country_happiness": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/country_happiness.zip",
+            "https://osf.io/download/6t75y/",
+        ],
+        "sha256": "10b35da781a13a94dedcfeb43b291d16677b06a781e9b88a780f04ad173b422d",
+    },
+    "credit_fraud": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/credit_fraud.zip",
+            "https://osf.io/download/puwtz/",
+        ],
+        "sha256": "ec40d370a275d4bd2637d4c617120e91e2e7946d23c93b1a1ea7df824ee1e514",
+    },
+    "drug_directory": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/drug_directory.zip",
+            "https://osf.io/download/97yxc/",
+        ],
+        "sha256": "0c3885894baf02fc787109801ec2c34cc25cd4a31e0066a16941b74157474887",
     },
     "employee_salaries": {
         "urls": [
-            "https://osf.io/download/bszkv/",
-            "https://figshare.com/ndownloader/files/51807500",
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/employee_salaries.zip",
+            "https://osf.io/download/se2bn/",
         ],
-        "sha256": "1a73268a1a5ce0d376e493737a5fcf0d3f8ffb4cafeca20c7b39381bbc943292",
+        "sha256": "4b4919f38d921014cb1fd24ad302f44bccc55d1eeeeb8482902b09d9b43576cb",
+    },
+    "flight_delays": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/flight_delays.zip"
+        ],
+        "sha256": "f26ed72db5792dba3c6f0c32bdd83438e49b1e6e007a6e4e467f805207b2e4ab",
+    },
+    "medical_charge": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/medical_charge.zip",
+            "https://osf.io/download/5vwa8/",
+        ],
+        "sha256": "4850651103b7c7580587aafaccc05ca7a31125767d4da662e87890346f984b93",
+    },
+    "midwest_survey": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/midwest_survey.zip",
+            "https://osf.io/download/2sbgx/",
+        ],
+        "sha256": "94d5005402e5e72c2d5ce62f4d3115742dd12190db85920159b2ed8f44df7fc2",
+    },
+    "movielens": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/movielens.zip",
+            "https://osf.io/download/937jn/",
+        ],
+        "sha256": "ca17946092588d42701ffe8cc1ba9bce4898c13b5d59754208e85ff027d76780",
+    },
+    "open_payments": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/open_payments.zip",
+            "https://osf.io/download/w4576/",
+        ],
+        "sha256": "ead65dcb8d45ec16ab30dd71025c3cfc5730128f85eeb19ce6f56670923f04ba",
+    },
+    "road_safety": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/road_safety.zip",
+            "https://osf.io/download/59eb8/",
+        ],
+        "sha256": "035df2a644ba2be52022aa9ca5f41790a24cbd9c76434c3e5224c8c218cf6f87",
+    },
+    "toxicity": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/toxicity.zip",
+            "https://osf.io/download/hmswc/",
+        ],
+        "sha256": "ee187c119925ea4cdb9abd7f0f3758159f042e71b172cafe5b784d79c7590ce3",
+    },
+    "traffic_violations": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/traffic_violations.zip",
+            "https://osf.io/download/xz5gk/",
+        ],
+        "sha256": "b52a145a34b1866b6deee7cbfd1c0b8d2af3bbd53fb5658b155f752ac7d85ce0",
+    },
+    "videogame_sales": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/videogame_sales.zip"
+        ],
+        "sha256": "3e6d995af025b8a3a1dc64983aa9d53c3c6e72150644d42c58c8b86888c3dacd",
     },
 }
 
@@ -84,8 +165,7 @@ def get_data_dir(name=None, data_home=None):
 
 
 def load_simple_dataset(dataset_name, data_home=None):
-    """TODO
-    """
+    """TODO"""
     bunch = _load_dataset_files(dataset_name, data_home)
     bunch["X"] = bunch.pop(dataset_name)
     if (target := bunch.metadata.get("target", None)) is not None:
@@ -108,24 +188,24 @@ def _load_dataset_files(dataset_name, data_home):
     data_home = get_data_home(data_home)
     dataset_dir = data_home / dataset_name
     datafiles_dir = dataset_dir / dataset_name
-    datafiles_dir.mkdir(parents=True, exist_ok=True)
 
     archive_path = dataset_dir / f"{dataset_name}.zip"
     metadata = DATASET_INFO[dataset_name]
 
-    diff_checksum = False
     if archive_path.exists():
         expected_checksum = metadata["sha256"]
         checksum = _sha256(archive_path)
-        if (diff_checksum := expected_checksum != checksum):
+        if expected_checksum != checksum:
             warnings.warn(
                 f"SHA256 checksum of existing local file {archive_path.name} "
                 f"({checksum}) differs from expected ({expected_checksum}): "
                 f"re-downloading from {metadata['urls']} ."
-            ) 
+            )
+            shutil.rmtree(datafiles_dir)
+            archive_path.unlink()
 
-    if not any(datafiles_dir.iterdir()) or diff_checksum:
-        _extract_archive(dataset_dir, archive_path, diff_checksum)
+    if not datafiles_dir.exists():
+        _extract_archive(dataset_dir, archive_path)
 
     bunch = Bunch()
     for file_path in datafiles_dir.iterdir():
@@ -137,13 +217,28 @@ def _load_dataset_files(dataset_name, data_home):
     return bunch
 
 
-def _extract_archive(dataset_dir, archive_path, diff_checksum):
+def _extract_archive(dataset_dir, archive_path):
     dataset_name = dataset_dir.name
 
-    if not archive_path.exists() or diff_checksum:
+    if not archive_path.exists():
         _download_archive(dataset_name, archive_path)
 
-    shutil.unpack_archive(archive_path, dataset_dir, format="zip")
+    try:
+        temp_dir = tempfile.mkdtemp(dir=dataset_dir)
+        shutil.unpack_archive(archive_path, temp_dir, format="zip")
+        path_source = Path(temp_dir) / dataset_name
+        path_source.rename(dataset_dir / dataset_name)
+    except (Exception, KeyboardInterrupt):
+        try:
+            archive_path.unlink()
+        except (Exception, KeyboardInterrupt):
+            pass
+        raise
+    finally:
+        try:
+            shutil.rmtree(temp_dir)
+        except (Exception, KeyboardInterrupt):
+            pass
 
 
 def _download_archive(
@@ -151,10 +246,11 @@ def _download_archive(
     archive_path,
     retry=3,
     delay=1,
-    timeout=30,
+    timeout=3,
     chunk_size=4096,
 ):
     metadata = DATASET_INFO[dataset_name]
+    remote_checksum = metadata["sha256"]
 
     for idx in range(1, retry + 1):
         for target_url in metadata["urls"]:
@@ -162,22 +258,19 @@ def _download_archive(
                 f"Downloading {dataset_name!r} from {target_url} (retry {idx}/{retry})"
             )
             try:
-                error_flag = False
-                _stream_download(archive_path, target_url, timeout, chunk_size)
-            except Exception as e:
-                error_flag = True
-                warnings.warn(repr(e), category=FutureWarning)
-
-            if not error_flag:
-                if _sha256(archive_path) != metadata["sha256"]:
-                    raise OSError(
-                        f"File {archive_path.stem!r} checksum verification has failed, "
-                        "which means the remote file has been updated.\n"
-                        "Please update your skrub version."
-                    )
+                _stream_download(
+                    archive_path,
+                    target_url,
+                    timeout,
+                    chunk_size,
+                    remote_checksum,
+                )
                 return
+            except Exception as e:
+                print(repr(e))
+
         time.sleep(delay)
-        delay *= 5
+        delay *= 3
 
     else:
         raise OSError(
@@ -190,7 +283,10 @@ def _stream_download(
     target_url,
     timeout,
     chunk_size,
+    remote_checksum,
 ):
+    dataset_dir = archive_path.parent
+    dataset_dir.mkdir(exist_ok=True)
     # We create a temporary file dedicated to this particular download to avoid
     # conflicts with parallel downloads. If the download is successful, the
     # temporary file is atomically renamed to the final file path (with
@@ -198,28 +294,30 @@ def _stream_download(
     # Otherwise, garbage collecting temp_file would raise an error when
     # attempting to delete a file that was already renamed. If the download
     # fails, the temporary file is removed manually in the except block.
-    temp_file = NamedTemporaryFile(
+    temp_file = tempfile.NamedTemporaryFile(
         mode="wb",
         prefix=archive_path.stem + ".part_",
-        dir=archive_path.parent,
+        dir=dataset_dir,
         delete=False,
     )
+    temp_file.close()
 
     try:
         temp_file_path = Path(temp_file.name)
-        response = requests.get(target_url, timeout=timeout, stream=True)
-        for chunk in response.iter_content(chunk_size):
-            temp_file.write(chunk)
+        with open(temp_file_path, "wb") as tf:
+            response = requests.get(target_url, timeout=timeout, stream=True)
+            for chunk in response.iter_content(chunk_size):
+                tf.write(chunk)
+
+        if _sha256(temp_file_path) != remote_checksum:
+            raise OSError(
+                f"File {archive_path.stem!r} checksum verification has failed."
+            )
+        temp_file_path.rename(archive_path)
 
     except (Exception, KeyboardInterrupt):
-        Path(temp_file.name).unlink()
+        shutil.rmtree(dataset_dir)
         raise
-
-    # The following renaming is atomic whenever temp_file_path and
-    # file_path are on the same filesystem. This should be the case most of
-    # the time, but we still use shutil.move instead of os.rename in case
-    # they are not.
-    shutil.move(temp_file_path, archive_path)
 
 
 def _sha256(path):

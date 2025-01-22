@@ -4,37 +4,12 @@ Fetching functions to retrieve example datasets, using fetch_openml.
 Public API functions should return either a DatasetInfoOnly or a DatasetAll.
 """
 
-from sklearn.utils import Bunch
-
-from ._utils import load_simple_dataset
+from ._utils import _load_dataset_files, load_simple_dataset
 
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
 
-
-ROAD_SAFETY_ID: int = 42803
-OPEN_PAYMENTS_ID: int = 42738
-MIDWEST_SURVEY_ID: int = 42805
-MEDICAL_CHARGE_ID: int = 42720
-EMPLOYEE_SALARIES_ID: int = 42125
-TRAFFIC_VIOLATIONS_ID: int = 42132
-DRUG_DIRECTORY_ID: int = 43044
-
 MOVIELENS_URL = "https://files.grouplens.org/datasets/movielens/{zip_directory}.zip"
-
-# A dictionary storing the sha256 hashes of the figshare files
-figshare_id_to_hash = {
-    39142985: "47d73381ef72b050002a8642194c6718a4954ec9e6c556f4c4ddc6ed84ceec92",
-    39149066: "e479cf9741a90c40401697e7fa54409e3b9cfa09f27502877382e64e86fbfcd0",
-    39149069: "7b0dcdb15d3aeecba6022c929665ee064f6fb4b8b94186a6e89b6fbc781b3775",
-    39149072: "4f58f15168bb8a6cc8b152bd48995bc7d1a4d4d89a9e22d87aa51ccf30118122",
-    39149075: "7037603362af1d4bf73551d50644c0957cb91d2b4892e75413f57f415962029a",
-    39254360: "531130c714ba6ee9902108d4010f42388aa9c0b3167d124cd57e2c632df3e05a",
-    39266300: "37b23b2c37a1f7ff906bc7951cbed4be15d8417dad0762092282f7b491cf8c21",
-    39266678: "4e041322985e078de8b08acfd44b93a5ce347c1e501e9d869651e753de747ba1",
-    40019230: "4d43fed75dba1e59a5587bf31c1addf2647a1f15ebea66e93177ccda41e18f2f",
-    40019788: "67ae86496c8a08c6cc352f573160a094f605e7e0da022eb91c603abb7edf3747",
-}
 
 
 def fetch_employee_salaries(data_home=None):
@@ -90,20 +65,10 @@ def fetch_road_safety(data_home=None):
     -------
     TODO
     """
-    return load_dataset(
-        data_id=ROAD_SAFETY_ID,
-        data_home=data_directory,
-        target_column="Sex_of_Driver",
-        return_X_y=return_X_y,
-    )
+    return load_simple_dataset("road_safety", data_home)
 
 
-def fetch_midwest_survey(
-    *,
-    load_dataframe=True,
-    data_directory=None,
-    return_X_y=False,
-):
+def fetch_midwest_survey(data_home=None):
     """Fetches the midwest survey dataset (classification), available at https://openml.org/d/42805
 
     Description of the dataset:
@@ -113,20 +78,10 @@ def fetch_midwest_survey(
     -------
     TODO
     """
-    return fetch_openml_skb(
-        data_id=MIDWEST_SURVEY_ID,
-        data_home=data_directory,
-        target_column="Census_Region",
-        return_X_y=return_X_y,
-    )
+    return load_simple_dataset("midwest_survey", data_home)
 
 
-def fetch_open_payments(
-    *,
-    load_dataframe=True,
-    data_directory=None,
-    return_X_y=False,
-):
+def fetch_open_payments(data_home=None):
     """Fetches the open payments dataset (classification), available at https://openml.org/d/42738
 
     Description of the dataset:
@@ -137,20 +92,10 @@ def fetch_open_payments(
     -------
     TODO
     """
-    return fetch_openml_skb(
-        data_id=OPEN_PAYMENTS_ID,
-        data_home=data_directory,
-        target_column="status",
-        return_X_y=return_X_y,
-    )
+    return load_simple_dataset("open_payments", data_home)
 
 
-def fetch_traffic_violations(
-    *,
-    load_dataframe=True,
-    data_directory=None,
-    return_X_y=False,
-):
+def fetch_traffic_violations(data_home=None):
     """Fetches the traffic violations dataset (classification), available at https://openml.org/d/42132
 
     Description of the dataset:
@@ -163,20 +108,10 @@ def fetch_traffic_violations(
     -------
     TODO
     """
-    return fetch_openml_skb(
-        data_id=TRAFFIC_VIOLATIONS_ID,
-        data_home=data_directory,
-        target_columns="violation_type",
-        return_X_y=return_X_y,
-    )
+    return load_simple_dataset("traffic_violations", data_home)
 
 
-def fetch_drug_directory(
-    *,
-    load_dataframe=True,
-    data_directory=None,
-    return_X_y=False,
-):
+def fetch_drug_directory(data_home=None):
     """Fetches the drug directory dataset (classification), available at https://openml.org/d/43044
 
     Description of the dataset:
@@ -187,15 +122,10 @@ def fetch_drug_directory(
     -------
     TODO
     """
-    return fetch_openml_skb(
-        data_id=DRUG_DIRECTORY_ID,
-        data_home=data_directory,
-        target_column="PRODUCTTYPENAME",
-        return_X_y=return_X_y,
-    )
+    return load_simple_dataset("drug_directory", data_home)
 
 
-def fetch_credit_fraud(load_dataframe=True, data_directory=None):
+def fetch_credit_fraud(data_home=None):
     """Fetch the credit fraud dataset from figshare.
 
     This is an imbalanced binary classification use-case. This dataset consists in
@@ -230,25 +160,10 @@ def fetch_credit_fraud(load_dataframe=True, data_directory=None):
         - path_product : str
         - path_baskets : str
     """
-    dataset_name_to_id = {
-        "products": "49176205",
-        "baskets": "49176202",
-    }
-    bunch = Bunch()
-    for dataset_name, figshare_id in dataset_name_to_id.items():
-        dataset = fetch_figshare(
-            figshare_id,
-            load_dataframe=load_dataframe,
-            data_directory=data_directory,
-        )
-        bunch[dataset_name] = dataset.X
-        bunch[f"source_{dataset_name}"] = dataset.source
-        bunch[f"path_{dataset_name}"] = dataset.path
-
-    return bunch
+    return _load_dataset_files("credit_fraud", data_home)
 
 
-def fetch_toxicity(load_dataframe=True, data_directory=None):
+def fetch_toxicity(data_home=None):
     """Fetch the toxicity dataset from figshare.
 
     This is a balanced binary classification use-case, where the single table
@@ -277,9 +192,20 @@ def fetch_toxicity(load_dataframe=True, data_directory=None):
         - y: pd.Series
         - path: Path
     """
-    return fetch_figshare(
-        figshare_id="49823901",
-        load_dataframe=load_dataframe,
-        data_directory=data_directory,
-        target="is_toxic",
-    )
+    return load_simple_dataset("toxicity", data_home)
+
+
+def fetch_movie_lens(data_home=None):
+    pass
+
+
+def fetch_flight_weather(data_home=None):
+    pass
+
+
+def fetch_world_bank(data_home=None):
+    pass
+
+
+def fetch_bike_sharing(data_home=None):
+    pass
