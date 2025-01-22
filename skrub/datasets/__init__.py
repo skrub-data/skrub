@@ -5,7 +5,6 @@ from ._fetching import (
     fetch_medical_charge,
     fetch_midwest_survey,
     fetch_open_payments,
-    fetch_road_safety,
     fetch_toxicity,
     fetch_traffic_violations,
 )
@@ -24,7 +23,6 @@ __all__ = [
     "fetch_medical_charge",
     "fetch_midwest_survey",
     "fetch_open_payments",
-    "fetch_road_safety",
     "fetch_traffic_violations",
     # "fetch_world_bank_indicator",
     "fetch_credit_fraud",

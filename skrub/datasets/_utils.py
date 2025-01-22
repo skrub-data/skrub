@@ -316,7 +316,6 @@ def _stream_download(
             temp_file_path.unlink()
         except Exception:
             pass
-        raise
 
 
 def _sha256(path):
