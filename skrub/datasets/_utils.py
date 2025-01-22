@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 import shutil
 import tempfile
 import time
@@ -294,7 +295,7 @@ def _stream_download(
     temp_file, temp_file_path = tempfile.mkstemp(
         prefix=archive_path.stem + ".part_", dir=dataset_dir
     )
-    temp_file.close()
+    os.close(temp_file)
 
     try:
         temp_file_path = Path(temp_file_path)
