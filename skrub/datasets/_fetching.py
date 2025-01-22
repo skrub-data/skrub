@@ -190,4 +190,8 @@ def fetch_country_happiness(data_home=None):
 
 
 def fetch_bike_sharing(data_home=None):
-    pass
+    return load_simple_dataset("bike_sharing", data_home)
+
+
+def fetch_videogame_sales(data_home=None):
+    return load_simple_dataset("videogame_sales", data_home)

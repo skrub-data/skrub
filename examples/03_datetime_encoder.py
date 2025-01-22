@@ -51,10 +51,10 @@ from pprint import pprint
 
 import pandas as pd
 
-data = pd.read_csv(
-    "https://raw.githubusercontent.com/skrub-data/datasets/master"
-    "/data/bike-sharing-dataset.csv"
-)
+from skrub import datasets
+
+data = datasets.fetch_bike_sharing().bike_sharing
+
 # Extract our input data (X) and the target column (y)
 y = data["cnt"]
 X = data[["date", "holiday", "temp", "hum", "windspeed", "weathersit"]]

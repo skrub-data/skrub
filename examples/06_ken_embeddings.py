@@ -44,18 +44,16 @@ improve our results.
 # Let's retrieve the dataset:
 import pandas as pd
 
-X = pd.read_csv(
-    "https://raw.githubusercontent.com/William2064888/vgsales.csv/main/vgsales.csv",
-    sep=";",
-    on_bad_lines="skip",
-)
-# Shuffle the data
-X = X.sample(frac=1, random_state=11, ignore_index=True)
+from skrub import datasets
+
+data = datasets.fetch_videogame_sales()
+
+X = data.X
 X.head(3)
 
 ###############################################################################
 # Our goal will be to predict the sales amount (y, our target column):
-y = X["Global_Sales"]
+y = data.y
 y
 
 
@@ -81,9 +79,9 @@ plt.show()
 # Before moving further, let's carry out some basic preprocessing:
 
 # Get a mask of the rows with missing values in "Publisher" and "Global_Sales"
-mask = X.isna()["Publisher"] | X.isna()["Global_Sales"]
+mask = X.isna()["Publisher"] | y.isna()
 # And remove them
-X.dropna(subset=["Publisher", "Global_Sales"], inplace=True)
+X = X[~mask]
 y = y[~mask]
 
 ###############################################################################
