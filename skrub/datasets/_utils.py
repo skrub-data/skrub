@@ -168,7 +168,7 @@ def get_data_dir(name=None, data_home=None):
 def load_simple_dataset(dataset_name, data_home=None):
     """TODO"""
     bunch = _load_dataset_files(dataset_name, data_home)
-    bunch["X"] = bunch.pop(dataset_name)
+    bunch["X"] = bunch[dataset_name]
     if (target := bunch.metadata.get("target", None)) is not None:
         bunch["y"] = bunch["X"][target]
         bunch["X"] = bunch["X"].drop(columns=target)
@@ -259,7 +259,8 @@ def _download_archive(
     for idx in range(1, retry + 1):
         for target_url in metadata["urls"]:
             print(
-                f"Downloading {dataset_name!r} from {target_url} (retry {idx}/{retry})"
+                f"Downloading {dataset_name!r} from {target_url} (attempt"
+                f" {idx}/{retry})"
             )
             try:
                 _stream_download(
