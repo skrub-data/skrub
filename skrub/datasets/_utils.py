@@ -323,9 +323,6 @@ def _sha256(path):
     sha256hash = hashlib.sha256()
     chunk_size = 8192
     with open(path, "rb") as f:
-        while True:
-            buffer = f.read(chunk_size)
-            if not buffer:
-                break
+        while buffer := f.read(chunk_size):
             sha256hash.update(buffer)
     return sha256hash.hexdigest()

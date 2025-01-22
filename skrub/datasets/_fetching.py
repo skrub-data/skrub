@@ -182,11 +182,11 @@ def fetch_movie_lens(data_home=None):
 
 
 def fetch_flight_delays(data_home=None):
-    return _load_dataset_files("flight_delays", data_home=data_home)
+    return _load_dataset_files("flight_delays", data_home)
 
 
 def fetch_country_happiness(data_home=None):
-    return _load_dataset_files
+    return _load_dataset_files("country_happiness", data_home)
 
 
 def fetch_bike_sharing(data_home=None):
