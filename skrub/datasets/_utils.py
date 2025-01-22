@@ -231,13 +231,13 @@ def _extract_archive(dataset_dir, archive_path):
     except (Exception, KeyboardInterrupt):
         try:
             archive_path.unlink()
-        except (Exception, KeyboardInterrupt):
+        except Exception:
             pass
         raise
     finally:
         try:
             shutil.rmtree(temp_dir)
-        except (Exception, KeyboardInterrupt):
+        except Exception:
             pass
 
 
