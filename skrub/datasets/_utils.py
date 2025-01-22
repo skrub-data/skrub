@@ -292,6 +292,8 @@ def _stream_download(
     dataset_dir = archive_path.parent
     dataset_dir.mkdir(exist_ok=True)
 
+    # We don't use `NamedTemporaryFile` because we need to rename the temporary
+    # file in the try-block.
     temp_file, temp_file_path = tempfile.mkstemp(
         prefix=archive_path.stem + ".part_", dir=dataset_dir
     )
