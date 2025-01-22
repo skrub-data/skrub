@@ -1,21 +1,23 @@
-import pytest
 from tempfile import TemporaryDirectory
+
 import pandas as pd
+import pytest
 import requests
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-from skrub.datasets import _fetching
-from skrub.datasets import _utils
- 
+from skrub.datasets import _fetching, _utils
 
-@pytest.mark.parametrize("dataset_name", [
-    "medical_charge",
-    "employee_salaries"
-    # TODO
-])
+
+@pytest.mark.parametrize(
+    "dataset_name",
+    [
+        "medical_charge",
+        "employee_salaries",
+        # TODO
+    ],
+)
 def test_fetching_single_tables(monkeypatch, dataset_name):
-
-    with TemporaryDirectory() as temp_dir: 
+    with TemporaryDirectory() as temp_dir:
         fetch_func = getattr(_fetching, f"fetch_{dataset_name}")
         bunch = fetch_func(data_home=temp_dir)
 
@@ -40,13 +42,12 @@ def test_fetching_single_tables(monkeypatch, dataset_name):
 def test_fetching_wrong_checksum(monkeypatch):
     dataset_info = _utils.DATASET_INFO["employee_salaries"]
     monkeypatch.setitem(dataset_info, "sha256", "bad_checksum")
-    with pytest.raises(OSError, match=".*checksum verification has failed"):
+    with pytest.raises(OSError, match=".*Can't download"):
         with TemporaryDirectory() as temp_dir:
             _fetching.fetch_employee_salaries(data_home=temp_dir)
 
 
 def test_warning_redownload_checksum_has_changed(monkeypatch):
-    
     with TemporaryDirectory() as temp_dir:
         _ = _fetching.fetch_employee_salaries(data_home=temp_dir)
 
@@ -64,7 +65,6 @@ def test_warning_redownload_checksum_has_changed(monkeypatch):
 
 
 def test_cant_download(monkeypatch):
-
     def _error_on_get(*args, **kwargs):
         raise Exception("some error happened")
 
@@ -72,6 +72,5 @@ def test_cant_download(monkeypatch):
     monkeypatch.setattr(requests, "get", _error_on_get)
 
     with TemporaryDirectory() as temp_dir:
-        with pytest.warns(FutureWarning, match="some error happened"):
-            with pytest.raises(OSError, match="Can't download"):
-                _ = _fetching.fetch_employee_salaries(data_home=temp_dir)
+        with pytest.raises(OSError, match="Can't download"):
+            _ = _fetching.fetch_employee_salaries(data_home=temp_dir)

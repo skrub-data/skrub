@@ -201,7 +201,10 @@ def _load_dataset_files(dataset_name, data_home):
                 f"({checksum}) differs from expected ({expected_checksum}): "
                 f"re-downloading from {metadata['urls']} ."
             )
-            shutil.rmtree(datafiles_dir)
+            try:
+                shutil.rmtree(datafiles_dir)
+            except FileNotFoundError:
+                pass
             archive_path.unlink()
 
     if not datafiles_dir.exists():
@@ -287,23 +290,14 @@ def _stream_download(
 ):
     dataset_dir = archive_path.parent
     dataset_dir.mkdir(exist_ok=True)
-    # We create a temporary file dedicated to this particular download to avoid
-    # conflicts with parallel downloads. If the download is successful, the
-    # temporary file is atomically renamed to the final file path (with
-    # `shutil.move`). We therefore pass `delete=False` to `NamedTemporaryFile`.
-    # Otherwise, garbage collecting temp_file would raise an error when
-    # attempting to delete a file that was already renamed. If the download
-    # fails, the temporary file is removed manually in the except block.
-    temp_file = tempfile.NamedTemporaryFile(
-        mode="wb",
-        prefix=archive_path.stem + ".part_",
-        dir=dataset_dir,
-        delete=False,
+
+    temp_file, temp_file_path = tempfile.mkstemp(
+        prefix=archive_path.stem + ".part_", dir=dataset_dir
     )
     temp_file.close()
 
     try:
-        temp_file_path = Path(temp_file.name)
+        temp_file_path = Path(temp_file_path)
         with open(temp_file_path, "wb") as tf:
             response = requests.get(target_url, timeout=timeout, stream=True)
             for chunk in response.iter_content(chunk_size):

@@ -9,8 +9,6 @@ from ._utils import _load_dataset_files, load_simple_dataset
 # Ignore lines too long, first docstring lines can't be cut
 # flake8: noqa: E501
 
-MOVIELENS_URL = "https://files.grouplens.org/datasets/movielens/{zip_directory}.zip"
-
 
 def fetch_employee_salaries(data_home=None):
     """Fetches the employee salaries dataset (regression), available at \
