@@ -311,7 +311,10 @@ def _stream_download(
         temp_file_path.rename(archive_path)
 
     except (Exception, KeyboardInterrupt):
-        shutil.rmtree(dataset_dir)
+        try:
+            temp_file_path.unlink()
+        except Exception:
+            pass
         raise
 
 

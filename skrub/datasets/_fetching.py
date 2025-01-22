@@ -50,22 +50,6 @@ def fetch_medical_charge(data_home=None):
     return load_simple_dataset("medical_charge", data_home)
 
 
-def fetch_road_safety(data_home=None):
-    """Fetches the road safety dataset (classification), available at https://openml.org/d/42803
-
-    Description of the dataset:
-        Data reported to the police about the circumstances of personal injury
-        road accidents in Great Britain from 1979, and the maker and model
-        information of vehicles involved in the respective accident.
-        This version includes data up to 2015.
-
-    Returns
-    -------
-    TODO
-    """
-    return load_simple_dataset("road_safety", data_home)
-
-
 def fetch_midwest_survey(data_home=None):
     """Fetches the midwest survey dataset (classification), available at https://openml.org/d/42805
 
@@ -194,15 +178,15 @@ def fetch_toxicity(data_home=None):
 
 
 def fetch_movie_lens(data_home=None):
-    pass
+    return _load_dataset_files("movielens", data_home)
 
 
-def fetch_flight_weather(data_home=None):
-    pass
+def fetch_flight_delays(data_home=None):
+    return _load_dataset_files("flight_delays", data_home=data_home)
 
 
-def fetch_world_bank(data_home=None):
-    pass
+def fetch_country_happiness(data_home=None):
+    return _load_dataset_files
 
 
 def fetch_bike_sharing(data_home=None):
