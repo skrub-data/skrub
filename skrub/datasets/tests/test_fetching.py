@@ -10,7 +10,7 @@ from skrub.datasets import _fetching, _utils
 
 def _get_dataset_names():
     ignore = ["road_safety"]
-    return set(_utils.DATASET_INFO) - set(ignore)
+    return list(set(_utils.DATASET_INFO) - set(ignore))
 
 
 def _get_table_names_from_bunch(bunch):
