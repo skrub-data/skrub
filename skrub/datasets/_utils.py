@@ -166,7 +166,37 @@ def get_data_dir(name=None, data_home=None):
 
 
 def load_simple_dataset(dataset_name, data_home=None):
-    """TODO"""
+    """Load a dataframe and its metadata based on its dataset_name.
+
+    The data will be downloaded if not found locally.
+    For e.g. the credit_fraud dataset, the filesystem will look like:
+
+    <data_home>/
+        fraud/
+            fraud.zip
+            fraud/
+                baskets.csv
+                products.csv
+                metadata.json
+
+    Parameters
+    ----------
+    dataset_name : str
+        The name of the dataset to load. The name must be a key of `DATASET_INFO`.
+
+    data_home : path, default=None
+        The directory where to download and unpack a zip file. If None, 'skrub_data'
+        is used.
+
+    Returns
+    -------
+    bunch : sklearn.utils.Bunch
+        A dictionary-like object with the following keys:
+        - <dataset_name> : pd.DataFrame, the dataframe
+        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
+        - y : pd.DataFrame, target labels
+        - metadata : a dictionary containing the name, description, source and target
+    """
     bunch = _load_dataset_files(dataset_name, data_home)
     bunch["X"] = bunch[dataset_name]
     if (target := bunch.metadata.get("target", None)) is not None:
@@ -176,16 +206,6 @@ def load_simple_dataset(dataset_name, data_home=None):
 
 
 def _load_dataset_files(dataset_name, data_home):
-    """
-    TODO
-    skrub_data/
-        fraud/
-            fraud.tar.gz
-            fraud/
-                baskets.csv
-                products.csv
-                metadata.json
-    """
     data_home = get_data_home(data_home)
     dataset_dir = data_home / dataset_name
     datafiles_dir = dataset_dir / dataset_name

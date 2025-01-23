@@ -56,7 +56,6 @@ doc = [
     "sphinx-gallery",
     "sphinxext-opengraph",
     "statsmodels",
-    "pyarrow",
 ]
 lint = [
     "black==23.3.0",
@@ -64,7 +63,6 @@ lint = [
     "pre-commit",
 ]
 optional = [
-    "pyarrow",
     "polars",
 ]
 transformers = [
@@ -118,7 +116,6 @@ ruff = "==0.4.8"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
-pyarrow = "*"
 polars = "*"
 
 [tool.pixi.feature.transformers]
@@ -154,7 +151,6 @@ matplotlib = "==3.4.3"
 requests = "==2.25.0"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
-pyarrow = "==15.0.2"
 polars = "==0.20.15"
 
 [tool.pixi.feature.py309.dependencies]
