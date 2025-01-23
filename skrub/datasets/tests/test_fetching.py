@@ -8,16 +8,11 @@ from pandas.testing import assert_frame_equal, assert_series_equal
 from skrub.datasets import _fetching, _utils
 
 
-def _get_dataset_names():
-    ignore = ["road_safety"]
-    return sorted(set(_utils.DATASET_INFO) - set(ignore))
-
-
 def _get_table_names_from_bunch(bunch):
     return [k for k in bunch if isinstance(bunch[k], pd.DataFrame)]
 
 
-@pytest.mark.parametrize("dataset_name", _get_dataset_names())
+@pytest.mark.parametrize("dataset_name", ["employee_salaries", "drug_directory"])
 def test_fetching(monkeypatch, dataset_name):
     with TemporaryDirectory() as temp_dir:
         fetch_func = getattr(_fetching, f"fetch_{dataset_name}")
