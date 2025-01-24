@@ -2,7 +2,7 @@
 Fetching functions to retrieve example datasets from GitHub and OSF.
 """
 
-from ._utils import _load_dataset_files, load_simple_dataset
+from ._utils import load_dataset_files, load_simple_dataset
 
 
 def fetch_employee_salaries(data_home=None):
@@ -197,7 +197,7 @@ def fetch_credit_fraud(data_home=None):
           baskets
         - metadata : a dictionary containing the name, description, source and target
     """
-    return _load_dataset_files("credit_fraud", data_home)
+    return load_dataset_files("credit_fraud", data_home)
 
 
 def fetch_toxicity(data_home=None):
@@ -317,7 +317,7 @@ def fetch_movielens(data_home=None):
         - metadata : a dictionary containing the name source and description
     """
 
-    return _load_dataset_files("movielens", data_home)
+    return load_dataset_files("movielens", data_home)
 
 
 def fetch_flight_delays(data_home=None):
@@ -351,7 +351,7 @@ def fetch_flight_delays(data_home=None):
           longitude.
         - metadata : a dictionary containing the name  of the dataset.
     """
-    return _load_dataset_files("flight_delays", data_home)
+    return load_dataset_files("flight_delays", data_home)
 
 
 def fetch_country_happiness(data_home=None):
@@ -379,4 +379,4 @@ def fetch_country_happiness(data_home=None):
         - ``GDP_per_capita``, ``life_expectancy``, ``legal_rights_index``:
           corresponding tables from the World Bank.
     """
-    return _load_dataset_files("country_happiness", data_home)
+    return load_dataset_files("country_happiness", data_home)

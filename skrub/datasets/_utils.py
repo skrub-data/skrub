@@ -202,7 +202,7 @@ def load_simple_dataset(dataset_name, data_home=None):
         - metadata : a dictionary containing the name, description, source and target
           (description and source may be missing)
     """
-    bunch = _load_dataset_files(dataset_name, data_home)
+    bunch = load_dataset_files(dataset_name, data_home)
     bunch["X"] = bunch[dataset_name]
     if (target := bunch.metadata.get("target", None)) is not None:
         bunch["y"] = bunch["X"][target]
@@ -210,7 +210,7 @@ def load_simple_dataset(dataset_name, data_home=None):
     return bunch
 
 
-def _load_dataset_files(dataset_name, data_home):
+def load_dataset_files(dataset_name, data_home):
     data_home = get_data_home(data_home)
     dataset_dir = data_home / dataset_name
     datafiles_dir = dataset_dir / dataset_name
