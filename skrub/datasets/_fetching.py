@@ -259,7 +259,29 @@ def fetch_videogame_sales(data_home=None):
 
 
 def fetch_bike_sharing(data_home=None):
-    """TODO"""
+    """Fetch the bike sharing dataset (regression) available at \
+        https://github.com/skrub-data/skrub-data-files
+
+
+    This is a regression use-case, where the goal is to predict demand for a
+    bike-sharing service. The features are the dates and holiday and weather
+    information.
+
+    Parameters
+    ----------
+    data_home: str or path, default=None
+        The directory where to download and unzip the files.
+
+    Returns
+    -------
+    bunch : sklearn.utils.Bunch
+        A dictionary-like object with the following keys:
+        - bike_sharing : pd.DataFrame, the full dataframe
+        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
+        - y : pd.DataFrame, target labels
+        - metadata : a dictionary containing the name and target
+    """
+
     return load_simple_dataset("bike_sharing", data_home)
 
 
