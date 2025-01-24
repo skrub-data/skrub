@@ -79,7 +79,7 @@ plt.show()
 # Before moving further, let's carry out some basic preprocessing:
 
 # Get a mask of the rows with missing values in "Publisher" and "Global_Sales"
-mask = X.isna()["Publisher"] | y.isna()
+mask = X["Publisher"].isna() | y.isna()
 # And remove them
 X = X[~mask]
 y = y[~mask]
@@ -200,14 +200,18 @@ pipeline = make_pipeline(encoder, hgb)
 
 ###############################################################################
 # The |Pipeline| can now be readily applied to the dataframe for prediction:
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import KFold, cross_validate
 
 # We will save the results in a dictionary:
 all_r2_scores = dict()
 all_rmse_scores = dict()
 
+# The dataset is ordered by rank (most sales first so we need to shuffle before
+# splitting into cross-validation folds)
+cv = KFold(shuffle=True, random_state=0)
+
 cv_results = cross_validate(
-    pipeline, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
+    pipeline, X_full, y, scoring=["r2", "neg_root_mean_squared_error"], cv=cv
 )
 
 all_r2_scores["Base features"] = cv_results["test_r2"]
@@ -241,7 +245,7 @@ pipeline2 = make_pipeline(encoder2, hgb)
 ###############################################################################
 # Let's look at the results:
 cv_results = cross_validate(
-    pipeline2, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
+    pipeline2, X_full, y, scoring=["r2", "neg_root_mean_squared_error"], cv=cv
 )
 
 all_r2_scores["KEN features"] = cv_results["test_r2"]
@@ -285,7 +289,7 @@ pipeline3 = make_pipeline(encoder3, hgb)
 ###############################################################################
 # Let's look at the results:
 cv_results = cross_validate(
-    pipeline3, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
+    pipeline3, X_full, y, scoring=["r2", "neg_root_mean_squared_error"], cv=cv
 )
 
 all_r2_scores["Base + KEN features"] = cv_results["test_r2"]

@@ -185,6 +185,7 @@ def fetch_credit_fraud(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - baskets : pd.DataFrame, table containing baskets ID and target
         - product : pd.DataFrame, table containing features about products contained in
           baskets
