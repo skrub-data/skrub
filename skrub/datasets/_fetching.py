@@ -221,8 +221,41 @@ def fetch_toxicity(data_home=None):
 
 
 def fetch_videogame_sales(data_home=None):
-    """TODO"""
-    return load_simple_dataset("videogame_sales", data_home)
+    """Fetch the videogame sales dataset (regression) available at \
+        https://github.com/skrub-data/skrub-data-files
+
+
+    This is a regression use-case, where the single table contains information
+    about videogames such as the publisher and platform, and the goal is to
+    predict the number of sales worldwide.
+
+    .. warning::
+
+        The original dataset is ordered by decreasing number of sales. This
+        should be taken into account for cross-validation. Depending on the
+        desired setting, one might consider shuffling the rows or ordering by
+        publication year and splitting by year.
+
+    Parameters
+    ----------
+    data_home: str or path, default=None
+        The directory where to download and unzip the files.
+
+    Returns
+    -------
+    bunch : sklearn.utils.Bunch
+        A dictionary-like object with the following keys:
+        - videogame_sales : pd.DataFrame, the full dataframe
+        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
+        - y : pd.DataFrame, target labels
+        - metadata : a dictionary containing the name, source and target
+    """
+
+    result = load_simple_dataset("videogame_sales", data_home)
+    result["X"] = result["X"].drop(
+        columns=["Rank", "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales"]
+    )
+    return result
 
 
 def fetch_bike_sharing(data_home=None):
