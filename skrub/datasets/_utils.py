@@ -14,96 +14,99 @@ from sklearn.utils import Bunch
 DATASET_INFO = {
     "bike_sharing": {
         "urls": [
-            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/bike_sharing.zip"
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/bike_sharing.zip",
+            "https://osf.io/download/3z4qc",
         ],
         "sha256": "33745414801712034cf1d8615d7f086bba411ea8e44bfffefc0c6f23cb8afb83",
     },
     "country_happiness": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/country_happiness.zip",
-            "https://osf.io/download/6t75y/",
+            "https://osf.io/download/8a6wm",
         ],
         "sha256": "10b35da781a13a94dedcfeb43b291d16677b06a781e9b88a780f04ad173b422d",
     },
     "credit_fraud": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/credit_fraud.zip",
-            "https://osf.io/download/puwtz/",
+            "https://osf.io/download/y8qg5",
         ],
         "sha256": "ec40d370a275d4bd2637d4c617120e91e2e7946d23c93b1a1ea7df824ee1e514",
     },
     "drug_directory": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/drug_directory.zip",
-            "https://osf.io/download/97yxc/",
+            "https://osf.io/download/rtgk5",
         ],
         "sha256": "0c3885894baf02fc787109801ec2c34cc25cd4a31e0066a16941b74157474887",
     },
     "employee_salaries": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/employee_salaries.zip",
-            "https://osf.io/download/se2bn/",
+            "https://osf.io/download/c592f",
         ],
         "sha256": "4b4919f38d921014cb1fd24ad302f44bccc55d1eeeeb8482902b09d9b43576cb",
     },
     "flight_delays": {
         "urls": [
-            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/flight_delays.zip"
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/flight_delays.zip",
+            "https://osf.io/download/45xu3",
         ],
         "sha256": "f26ed72db5792dba3c6f0c32bdd83438e49b1e6e007a6e4e467f805207b2e4ab",
     },
     "medical_charge": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/medical_charge.zip",
-            "https://osf.io/download/5vwa8/",
+            "https://osf.io/download/g8cvw",
         ],
         "sha256": "4850651103b7c7580587aafaccc05ca7a31125767d4da662e87890346f984b93",
     },
     "midwest_survey": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/midwest_survey.zip",
-            "https://osf.io/download/2sbgx/",
+            "https://osf.io/download/aedqu",
         ],
         "sha256": "94d5005402e5e72c2d5ce62f4d3115742dd12190db85920159b2ed8f44df7fc2",
     },
     "movielens": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/movielens.zip",
-            "https://osf.io/download/937jn/",
+            "https://osf.io/download/z5yqv",
         ],
         "sha256": "d6b22c707f9a1605da5616ac1a601f4090467c1a02fa663195a42cf80f32fd57",
     },
     "open_payments": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/open_payments.zip",
-            "https://osf.io/download/w4576/",
+            "https://osf.io/download/a7p9w",
         ],
         "sha256": "ead65dcb8d45ec16ab30dd71025c3cfc5730128f85eeb19ce6f56670923f04ba",
     },
     "road_safety": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/road_safety.zip",
-            "https://osf.io/download/59eb8/",
+            "https://osf.io/download/bae6d",
         ],
         "sha256": "035df2a644ba2be52022aa9ca5f41790a24cbd9c76434c3e5224c8c218cf6f87",
     },
     "toxicity": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/toxicity.zip",
-            "https://osf.io/download/hmswc/",
+            "https://osf.io/download/zebm7",
         ],
         "sha256": "ee187c119925ea4cdb9abd7f0f3758159f042e71b172cafe5b784d79c7590ce3",
     },
     "traffic_violations": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/traffic_violations.zip",
-            "https://osf.io/download/xz5gk/",
+            "https://osf.io/download/av4cw",
         ],
         "sha256": "b52a145a34b1866b6deee7cbfd1c0b8d2af3bbd53fb5658b155f752ac7d85ce0",
     },
     "videogame_sales": {
         "urls": [
-            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/videogame_sales.zip"
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/videogame_sales.zip",
+            "https://osf.io/download/g2fw4",
         ],
         "sha256": "3e6d995af025b8a3a1dc64983aa9d53c3c6e72150644d42c58c8b86888c3dacd",
     },
