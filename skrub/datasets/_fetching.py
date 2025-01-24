@@ -23,6 +23,7 @@ def fetch_employee_salaries(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - employee_salaries : pd.DataFrame, the dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -54,6 +55,7 @@ def fetch_medical_charge(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - medical_charge : pd.DataFrame, the dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -78,6 +80,7 @@ def fetch_midwest_survey(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - midwest_survey : pd.DataFrame, the dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -103,6 +106,7 @@ def fetch_open_payments(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - open_payments : pd.DataFrame, the dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -130,6 +134,7 @@ def fetch_traffic_violations(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - traffic_violations : pd.DataFrame, the dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -155,6 +160,7 @@ def fetch_drug_directory(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - drug_directory : pd.DataFrame, the dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -212,6 +218,7 @@ def fetch_toxicity(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - toxicity : pd.DataFrame, the dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -245,6 +252,7 @@ def fetch_videogame_sales(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - videogame_sales : pd.DataFrame, the full dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -276,6 +284,7 @@ def fetch_bike_sharing(data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - bike_sharing : pd.DataFrame, the full dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
@@ -286,7 +295,28 @@ def fetch_bike_sharing(data_home=None):
 
 
 def fetch_movielens(data_home=None):
-    """TODO"""
+    """Fetch the movielens dataset (regression) available at \
+        https://github.com/skrub-data/skrub-data-files
+
+
+    This is a regression use-case, where the goal is to predict movie ratings.
+    More details are provided in the output's ``metadata['description']``.
+
+    Parameters
+    ----------
+    data_home: str or path, default=None
+        The directory where to download and unzip the files.
+
+    Returns
+    -------
+    bunch : sklearn.utils.Bunch
+        A dictionary-like object with the following keys:
+
+        - movies : pd.DataFrame, movie ID, title and genres
+        - ratings: pd.DataFrame, user ID, movie ID, rating
+        - metadata : a dictionary containing the name source and description
+    """
+
     return _load_dataset_files("movielens", data_home)
 
 

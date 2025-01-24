@@ -71,7 +71,7 @@ DATASET_INFO = {
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/movielens.zip",
             "https://osf.io/download/937jn/",
         ],
-        "sha256": "ca17946092588d42701ffe8cc1ba9bce4898c13b5d59754208e85ff027d76780",
+        "sha256": "d6b22c707f9a1605da5616ac1a601f4090467c1a02fa663195a42cf80f32fd57",
     },
     "open_payments": {
         "urls": [
