@@ -321,7 +321,36 @@ def fetch_movielens(data_home=None):
 
 
 def fetch_flight_delays(data_home=None):
-    """TODO"""
+    """Fetch the flight delays dataset (regression) available at \
+        https://github.com/skrub-data/skrub-data-files
+
+    This is a regression use-case, where the goal is to predict flight delays.
+
+    Parameters
+    ----------
+    data_home: str or path, default=None
+        The directory where to download and unzip the files.
+
+    Returns
+    -------
+    bunch : sklearn.utils.Bunch
+        A dictionary-like object with the following keys:
+
+        - flights: information about the flights, including departure and
+          arrival airports, and delay.
+        - airports: information about airports, such as city and coordinates.
+          The airport's ``iata`` can be matched to the flights' ``Origin`` and
+          ``Dest``.
+        - weather: weather data that could be used to help improve the delay
+          predictions. Note the weather data is not measured at the airports
+          directly but at weather stations, whose location and information is
+          provided in ``stations``.
+        - stations: information about the weather stations. ``weather`` and
+          ``stations`` can be joined on their ``ID`` columns. Weather stations
+          can only be matched to the nearest airport based on the latitude and
+          longitude.
+        - metadata : a dictionary containing the name  of the dataset.
+    """
     return _load_dataset_files("flight_delays", data_home)
 
 
