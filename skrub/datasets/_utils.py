@@ -192,10 +192,12 @@ def load_simple_dataset(dataset_name, data_home=None):
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
+
         - <dataset_name> : pd.DataFrame, the dataframe
         - X : pd.DataFrame, features, i.e. the dataframe without the target labels
         - y : pd.DataFrame, target labels
         - metadata : a dictionary containing the name, description, source and target
+          (description and source may be missing)
     """
     bunch = _load_dataset_files(dataset_name, data_home)
     bunch["X"] = bunch[dataset_name]
@@ -313,8 +315,8 @@ def _stream_download(
     dataset_dir = archive_path.parent
     dataset_dir.mkdir(exist_ok=True)
 
-    # We don't use `NamedTemporaryFile` because we need to rename the temporary
-    # file in the try-block.
+    # We don't use `NamedTemporaryFile` because if the download is successful we
+    # want to rename the temp file rather than removing it
     temp_file, temp_file_path = tempfile.mkstemp(
         prefix=archive_path.stem + ".part_", dir=dataset_dir
     )

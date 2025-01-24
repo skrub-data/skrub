@@ -19,7 +19,7 @@ Changes
 -------
 * New dataset fetching methods have been added: :func:`fetch_videogame_sales`,
   :func:`fetch_bike_sharing`, :func:`fetch_flight_delays`,
-  :func:`fetch_country_happiness`, and removed :func:`road_safety`.
+  :func:`fetch_country_happiness`, and removed :func:`fetch_road_safety`.
   :pr:`1218` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
 Bug fixes
