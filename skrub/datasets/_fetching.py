@@ -355,5 +355,28 @@ def fetch_flight_delays(data_home=None):
 
 
 def fetch_country_happiness(data_home=None):
-    """TODO"""
+    """Fetch the happiness index dataset (regression) available at \
+        https://github.com/skrub-data/skrub-data-files
+
+    This is a regression use-case, where the goal is to predict the happiness
+    index. The dataset contains data from the `2022 World Happiness Report
+    <https://worldhappiness.report/>`_, and from `the World Bank open data
+    platform <https://data.worldbank.org/>`_.
+
+
+
+    Parameters
+    ----------
+    data_home: str or path, default=None
+        The directory where to download and unzip the files.
+
+    Returns
+    -------
+    bunch : sklearn.utils.Bunch
+        A dictionary-like object with the following keys:
+
+        - ``happiness_report``: dataframe, data from the world happiness report
+        - ``GDP_per_capita``, ``life_expectancy``, ``legal_rights_index``:
+          corresponding tables from the World Bank.
+    """
     return _load_dataset_files("country_happiness", data_home)
