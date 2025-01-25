@@ -231,7 +231,6 @@ def fetch_videogame_sales(data_home=None):
     """Fetch the videogame sales dataset (regression) available at \
         https://github.com/skrub-data/skrub-data-files
 
-
     This is a regression use-case, where the single table contains information
     about videogames such as the publisher and platform, and the goal is to
     predict the number of sales worldwide.
@@ -270,7 +269,6 @@ def fetch_bike_sharing(data_home=None):
     """Fetch the bike sharing dataset (regression) available at \
         https://github.com/skrub-data/skrub-data-files
 
-
     This is a regression use-case, where the goal is to predict demand for a
     bike-sharing service. The features are the dates and holiday and weather
     information.
@@ -297,7 +295,6 @@ def fetch_bike_sharing(data_home=None):
 def fetch_movielens(data_home=None):
     """Fetch the movielens dataset (regression) available at \
         https://github.com/skrub-data/skrub-data-files
-
 
     This is a regression use-case, where the goal is to predict movie ratings.
     More details are provided in the output's ``metadata['description']``.
@@ -362,8 +359,6 @@ def fetch_country_happiness(data_home=None):
     index. The dataset contains data from the `2022 World Happiness Report
     <https://worldhappiness.report/>`_, and from `the World Bank open data
     platform <https://data.worldbank.org/>`_.
-
-
 
     Parameters
     ----------
