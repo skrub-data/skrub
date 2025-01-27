@@ -6,8 +6,8 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
-===================
+Release 0.5.0
+=============
 
 Skrub is a very recent package.
 It is currently undergoing fast development and backward compatibility is not ensured.
