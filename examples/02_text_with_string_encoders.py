@@ -295,6 +295,7 @@ def plot_performance_tradeoff(results):
             c="k",
             capsize=2,
         )
+        ax.set_xscale('log')
 
         ax.set_xlabel("Time to fit (seconds)")
         ax.set_ylabel("ROC AUC")
@@ -306,8 +307,8 @@ def plot_performance_tradeoff(results):
         xytext=(8.5, 0.90),
         arrowprops=dict(arrowstyle="->", mutation_scale=15),
     )
-    ax.text(8, 0.86, "Best time / \nperformance trade-off")
-    ax.legend(bbox_to_anchor=(1, 0.3))
+    ax.text(5.8, 0.86, "Best time / \nperformance trade-off")
+    ax.legend(bbox_to_anchor=(1.02, 0.3))
     plt.show()
 
 
