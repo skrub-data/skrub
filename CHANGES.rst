@@ -6,6 +6,15 @@ Release history
 
 .. currentmodule:: skrub
 
+Ongoing development
+===================
+
+New features
+------------
+
+Changes
+-------
+
 Release 0.5.1
 =============
 
