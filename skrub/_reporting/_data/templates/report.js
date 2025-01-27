@@ -1,4 +1,5 @@
 if (customElements.get('skrub-table-report') === undefined) {
+    console.log("coucou");
 
     class Exchange {
         constructor() {
@@ -77,6 +78,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         init() {
+            console.log("init")
             this.shadowRoot.querySelectorAll("[data-manager]").forEach((elem) => {
                 for (let className of elem.dataset.manager.split(/\s+/)) {
                     const cls = SkrubTableReport.managerClasses.get(
@@ -93,7 +95,30 @@ if (customElements.get('skrub-table-report') === undefined) {
                 this.exchange.add(new HideOn(elem, this.exchange));
             });
 
-            adjustAllSvgViewBoxes(this.shadowRoot.getElementById('report'));
+            const report = this.shadowRoot.getElementById("report");
+            report.classList.add(this.detectTheme());
+            adjustAllSvgViewBoxes(report);
+        }
+
+        detectTheme() {
+            const shadowRootBody = document.querySelector('body');
+
+            // Check VSCode theme
+            if (shadowRootBody.getAttribute('data-vscode-theme-kind') === 'vscode-dark') {
+                return 'dark';
+            } else if (shadowRootBody.getAttribute('data-vscode-theme-kind') === 'vscode-light') {
+                return 'light';
+            }
+
+            // Check Jupyter theme
+            if (shadowRootBody.getAttribute('data-jp-theme-light') === 'false') {
+                return 'dark';
+            } else if (shadowRootBody.getAttribute('data-jp-theme-light') === 'true') {
+                return 'light';
+            }
+
+            // Fallback to system preference
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
     }
     customElements.define("skrub-table-report", SkrubTableReport);
@@ -386,7 +411,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             while (!stop(i, j)) {
                 const cell = this.elem.querySelector(`[data-spans__${i}__${j}]`);
                 if (cell !== null && cell.id !== startCellId && !cell.hasAttribute(
-                        "data-excluded-by-column-filter") && cell.dataset.role !==
+                    "data-excluded-by-column-filter") && cell.dataset.role !==
                     "padding" && cell.dataset.role !== "ellipsis") {
                     return cell.id;
                 }
@@ -398,24 +423,24 @@ if (customElements.get('skrub-table-report') === undefined) {
         findCellLeft(startCellId, i, j) {
             return this.findNextCell(startCellId, i, j, (i, j) => [i, j - 1], (i,
                 j) => (j < this
-                .startJ));
+                    .startJ));
         }
         findCellRight(startCellId, i, j) {
             return this.findNextCell(startCellId, i, j, (i, j) => [i, j + 1], (i,
                 j) => (this
-                .stopJ <= j));
+                    .stopJ <= j));
         }
 
         findCellUp(startCellId, i, j) {
             return this.findNextCell(startCellId, i, j, (i, j) => [i - 1, j], (i,
                 j) => (i < this
-                .startI));
+                    .startI));
         }
 
         findCellDown(startCellId, i, j) {
             return this.findNextCell(startCellId, i, j, (i, j) => [i + 1, j], (i,
                 j) => (this
-                .stopI <= i));
+                    .stopI <= i));
         }
 
         /*
@@ -590,7 +615,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             let valA = this.getVal(rowA, tableColIdx);
             let valB = this.getVal(rowB, tableColIdx);
             // NaNs go at the bottom regardless of sorting order
-            if (typeof(valA) === "number" && typeof(valB) === "number") {
+            if (typeof (valA) === "number" && typeof (valB) === "number") {
                 if (isNaN(valA) && !isNaN(valB)) {
                     return 1;
                 }
@@ -1010,8 +1035,8 @@ if (customElements.get('skrub-table-report') === undefined) {
     make it look like a regular KeyDown event. */
     function unwrapSkrubKeyDown(e) {
         return {
-            preventDefault: () => {},
-            stopPropagation: () => {},
+            preventDefault: () => { },
+            stopPropagation: () => { },
             target: e.target,
             ...e.detail
         };
