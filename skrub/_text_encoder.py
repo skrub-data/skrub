@@ -148,7 +148,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     GapEncoder :
         Encode string columns by constructing latent topics.
     StringEncoder
-        Fast n-gram encoding of string columns
+        Fast n-gram encoding of string columns.
     SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 

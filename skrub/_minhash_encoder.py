@@ -79,7 +79,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
     SimilarityEncoder
         Encode string columns as a numeric array with n-gram string similarity.
     StringEncoder
-        Fast n-gram encoding of string columns
+        Fast n-gram encoding of string columns.
     deduplicate
         Deduplicate data by hierarchically clustering similar strings.
 
