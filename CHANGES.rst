@@ -9,9 +9,6 @@ Release history
 Release 0.5.0
 =============
 
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
-
 New features
 ------------
 * The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
