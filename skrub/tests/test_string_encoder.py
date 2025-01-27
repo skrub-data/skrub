@@ -8,8 +8,8 @@ from sklearn.feature_extraction.text import (
 )
 from sklearn.pipeline import Pipeline
 
+from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
-from skrub._string_encoder import StringEncoder
 
 
 @pytest.fixture
@@ -189,3 +189,29 @@ def test_n_components(df_module):
     assert not hasattr(encoder_30, "tsvd_")
     assert sbd.shape(X_out)[1] == 30
     assert encoder_30.n_components_ == 30
+
+
+@pytest.mark.parametrize("vectorizer", ["tfidf", "hashing"])
+def test_missing_values(df_module, vectorizer):
+    col = df_module.make_column("col", ["one two", None, "", "two three"])
+    encoder = StringEncoder(n_components=2, vectorizer=vectorizer)
+    out = encoder.fit_transform(col)
+    for c in sbd.to_column_list(out):
+        assert c[1] == 0.0
+        assert c[2] == 0.0
+    out = encoder.transform(col)
+    for c in sbd.to_column_list(out):
+        assert c[1] == 0.0
+        assert c[2] == 0.0
+    tv = TableVectorizer(
+        low_cardinality=StringEncoder(n_components=2, vectorizer=vectorizer)
+    )
+    df = df_module.make_dataframe({"col": col})
+    out = tv.fit_transform(df)
+    for c in sbd.to_column_list(out):
+        assert c[1] == 0.0
+        assert c[2] == 0.0
+    out = tv.transform(df)
+    for c in sbd.to_column_list(out):
+        assert c[1] == 0.0
+        assert c[2] == 0.0
