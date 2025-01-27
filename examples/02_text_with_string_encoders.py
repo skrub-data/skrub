@@ -295,7 +295,7 @@ def plot_performance_tradeoff(results):
             c="k",
             capsize=2,
         )
-        ax.set_xscale('log')
+        ax.set_xscale("log")
 
         ax.set_xlabel("Time to fit (seconds)")
         ax.set_ylabel("ROC AUC")
