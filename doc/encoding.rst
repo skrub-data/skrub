@@ -10,10 +10,14 @@ Encoding or vectorizing creates numerical features from the data,
 converting dataframes, strings, dates... Different encoders are suited
 for different types of data.
 
+String entries: categories and open-ended entries
+===================================================
+
 Summary
 .......
-:class:`StringEncoder` should be used in most cases when working with high-cardinality
-features, as it provides good performance on both categorical features (e.g,,
+
+:class:`StringEncoder` is a good default when working with high-cardinality
+string features, as it provides good performance on both categorical features (e.g,,
 work titles, city names etc.) and free-flowing text (reviews, comments etc.),
 while being very efficient and quick to fit.
 
@@ -79,8 +83,9 @@ Depending on the task and dataset, this approach may lead to significant improve
 in the quality of predictions, albeit with potential increases in memory usage
 and computation time in the case of :class:`TextEncoder`.
 
-Vectorizing text
-----------------
+:class:`StringEncoder`: Vectorizing text
+-----------------------------------------
+
 A lightweight solution for handling diverse strings is to first apply a
 `tf-idf vectorization <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_, then
 follow it with a dimensionality reduction algorithm such as
@@ -94,8 +99,9 @@ number of times each word appears in all documents (where a document in this cas
 is a string in the column to encode), and then reduces the size of the sparse
 matrix to a limited number of features for the training operation.
 
-Using language models
----------------------
+:class:`TextEncoder`: Using pretrained language models
+-------------------------------------------------------
+
 Skrub integrates language models as scikit-learn transformers, allowing them
 to be easily plugged into :class:`TableVectorizer` and
 :class:`~sklearn.pipeline.Pipeline`.
@@ -131,7 +137,7 @@ like any other pre-trained model. For more information, see the
 
 
 Encoding dates
-..............
+===============
 
 The :class:`DatetimeEncoder` encodes date and time: it represent them as
 time in seconds since a fixed date, but also added features useful to
