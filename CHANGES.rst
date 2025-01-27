@@ -6,11 +6,8 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
-===================
-
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
+Release 0.5.0
+=============
 
 New features
 ------------
@@ -24,12 +21,6 @@ Changes
   :func:`fetch_bike_sharing`, :func:`fetch_flight_delays`,
   :func:`fetch_country_happiness`, and removed :func:`fetch_road_safety`.
   :pr:`1218` by :user:`Vincent Maladiere <Vincent-Maladiere>`
-
-Bug fixes
----------
-
-Maintenance
------------
 
 Release 0.4.1
 =============
