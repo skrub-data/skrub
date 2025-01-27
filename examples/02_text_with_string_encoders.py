@@ -17,6 +17,9 @@ available in skrub.
 .. |TextEncoder| replace::
      :class:`~skrub.TextEncoder`
 
+.. |StringEncoder| replace::
+     :class:`~skrub.StringEncoder`
+
 .. |TableReport| replace::
      :class:`~skrub.TableReport`
 
@@ -58,7 +61,7 @@ TableReport(X)
 
 # %%
 # GapEncoder
-# ----------
+# ^^^^^^^^^^
 # First, let's vectorize our text column using the |GapEncoder|, one of the
 # `high cardinality categorical encoders <https://inria.hal.science/hal-02171256v4>`_
 # provided by skrub.
@@ -132,7 +135,7 @@ plot_gap_feature_importance(X_trans.head())
 # We set ``n_components`` to 30; however, to achieve the best performance, we would
 # need to find the optimal value for this hyperparameter using either |GridSearchCV|
 # or |RandomizedSearchCV|. We skip this part to keep the computation time for this
-# example small.
+# small example.
 #
 # Recall that the ROC AUC is a metric that quantifies the ranking power of estimators,
 # where a random estimator scores 0.5, and an oracle —providing perfect predictions—
@@ -174,18 +177,18 @@ plot_box_results(results)
 
 # %%
 # MinHashEncoder
-# --------------
+# ^^^^^^^^^^^^^^
 # We now compare these results with the |MinHashEncoder|, which is faster
 # and produces vectors better suited for tree-based estimators like
 # |HistGradientBoostingClassifier|. To do this, we can simply replace
 # the |GapEncoder| with the |MinHashEncoder| in the previous pipeline
 # using ``set_params()``.
-from sklearn.base import clone
 
 from skrub import MinHashEncoder
 
-minhash_pipe = clone(gap_pipe).set_params(
-    **{"tablevectorizer__high_cardinality": MinHashEncoder(n_components=30)}
+minhash_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=MinHashEncoder(n_components=30)),
+    HistGradientBoostingClassifier(),
 )
 minhash_results = cross_validate(minhash_pipe, X, y, scoring="roc_auc")
 results.append(("MinHashEncoder", minhash_results))
@@ -197,7 +200,7 @@ plot_box_results(results)
 # power than those from the |GapEncoder| on this dataset.
 #
 # TextEncoder
-# -----------
+# ^^^^^^^^^^^
 # Let's now shift our focus to pre-trained deep learning encoders. Our previous
 # encoders are syntactic models that we trained directly on the toxicity dataset.
 # To generate more powerful vector representations for free-form text and diverse
@@ -213,13 +216,39 @@ text_encoder = TextEncoder(
     "sentence-transformers/paraphrase-albert-small-v2",
     device="cpu",
 )
-text_encoder_pipe = clone(gap_pipe).set_params(
-    **{"tablevectorizer__high_cardinality": text_encoder}
+
+text_encoder_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=text_encoder),
+    HistGradientBoostingClassifier(),
 )
 text_encoder_results = cross_validate(text_encoder_pipe, X, y, scoring="roc_auc")
 results.append(("TextEncoder", text_encoder_results))
 
 plot_box_results(results)
+
+# %%
+# SringEncoder
+# ^^^^^^^^^^^^
+# |TextEncoder| embeddings are very strong, but they are also quite expensive to
+# use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
+# which works by first performing a tf-idf (computing vectors of rescaled word
+# counts of the text `wiki <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_), and then
+# following it with TruncatedSVD to reduce the number of dimensions to, in this
+# case, 30.
+from skrub import StringEncoder
+
+string_encoder = StringEncoder(ngram_range=(3, 4), analyzer="char_wb")
+
+string_encoder_pipe = make_pipeline(
+    TableVectorizer(high_cardinality=string_encoder),
+    HistGradientBoostingClassifier(),
+)
+
+string_encoder_results = cross_validate(string_encoder_pipe, X, y, scoring="roc_auc")
+results.append(("StringEncoder", string_encoder_results))
+
+plot_box_results(results)
+
 
 # %%
 # The performance of the |TextEncoder| is significantly stronger than that of
@@ -232,7 +261,7 @@ plot_box_results(results)
 
 def plot_performance_tradeoff(results):
     fig, ax = plt.subplots(figsize=(5, 4), dpi=200)
-    markers = ["s", "o", "^"]
+    markers = ["s", "o", "^", "x"]
     for idx, (name, result) in enumerate(results):
         ax.scatter(
             result["fit_time"],
@@ -293,8 +322,12 @@ plot_performance_tradeoff(results)
 # During the subsequent cross-validation iterations, the model is simply copied,
 # which reduces computation time for the remaining folds.
 #
+# Interestingly, |StringEncoder| has a performance remarkably similar to that of
+# |GapEncoder|, while being significantly faster.
+#
 # Conclusion
 # ----------
 # In conclusion, |TextEncoder| provides powerful vectorization for text, but at
 # the cost of longer computation times and the need for additional dependencies,
-# such as torch.
+# such as torch. |StringEncoder| represents a simpler alternative that can provide
+# good performance at a fraction of the cost of more complex methods.

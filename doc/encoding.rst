@@ -10,10 +10,22 @@ Encoding or vectorizing creates numerical features from the data,
 converting dataframes, strings, dates... Different encoders are suited
 for different types of data.
 
-.. _dirty_categories:
+Summary
+.......
+:class:`StringEncoder` should be used in most cases when working with high-cardinality
+features, as it provides good performance on both categorical features (e.g,,
+work titles, city names etc.) and free-flowing text (reviews, comments etc.),
+while being very efficient and quick to fit.
 
-Encoding string columns
--------------------------
+:class:`GapEncoder` provides better performance on dirty categories, while
+:class:`TextEncoder` works better on free-flowing text or when external context helps. However, both encoders
+are much slower to execute, and in the case of ``TextEncoder``, additional
+dependencies are needed.
+
+:class:`MinHashEncoder` may scale better in case of large datasets, but its
+performance is in general not as good as that of the other methods.
+
+.. _dirty_categories:
 
 Non-normalized entries and dirty categories
 ............................................
@@ -59,11 +71,32 @@ Text with diverse entries
 
 When strings in a column are not dirty categories, but rather diverse
 entries of text (names, open-ended or free-flowing text) it is useful to
-use language models of various sizes to represent string columns as embeddings.
-Depending on the task and dataset, this approach may lead to significant improvements
-in the quality of predictions, albeit with potential increases in memory usage and computation time.
+use methods that can address the variety of terms that can appear. Skrub provides
+two encoders to handle these to represent string columns as embeddings,
+:class:`TextEncoder` and :class:`StringEncoder`.
 
-Skrub integrates these language models as scikit-learn transformers, allowing them
+Depending on the task and dataset, this approach may lead to significant improvements
+in the quality of predictions, albeit with potential increases in memory usage
+and computation time in the case of :class:`TextEncoder`.
+
+Vectorizing text
+----------------
+A lightweight solution for handling diverse strings is to first apply a
+`tf-idf vectorization <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_, then
+follow it with a dimensionality reduction algorithm such as
+`TruncatedSVD <https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html>`_
+to limit the number of features: the :class:`StringEncoder` implements this
+operation. Since tf-idf produces sparse vectors as outputs, applying TruncatedSVD
+also allows to concatenate them to dataframes, which would not be possible otherwise.
+
+In simpler terms, :class:`StringEncoder` builds a sparse matrix that counts the
+number of times each word appears in all documents (where a document in this case
+is a string in the column to encode), and then reduces the size of the sparse
+matrix to a limited number of features for the training operation.
+
+Using language models
+---------------------
+Skrub integrates language models as scikit-learn transformers, allowing them
 to be easily plugged into :class:`TableVectorizer` and
 :class:`~sklearn.pipeline.Pipeline`.
 
@@ -98,7 +131,7 @@ like any other pre-trained model. For more information, see the
 
 
 Encoding dates
----------------
+..............
 
 The :class:`DatetimeEncoder` encodes date and time: it represent them as
 time in seconds since a fixed date, but also added features useful to
