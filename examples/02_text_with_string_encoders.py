@@ -239,10 +239,6 @@ from skrub import StringEncoder
 
 string_encoder = StringEncoder(ngram_range=(3, 4), analyzer="char_wb")
 
-# string_encoder_pipe = clone(gap_pipe).set_params(
-#     **{"tablevectorizer__high_cardinality": string_encoder}
-# )
-
 string_encoder_pipe = make_pipeline(
     TableVectorizer(high_cardinality=string_encoder),
     HistGradientBoostingClassifier(),
