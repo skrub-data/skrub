@@ -133,6 +133,7 @@ class StringEncoder(SingleColumnTransformer):
                 f" 'hashing', got {self.vectorizer!r}"
             )
 
+        X = sbd.fill_nulls(X, "")
         X_out = self.vectorizer_.fit_transform(X)
 
         if (min_shape := min(X_out.shape)) >= self.n_components:
@@ -176,6 +177,7 @@ class StringEncoder(SingleColumnTransformer):
             The embedding representation of the input.
         """
 
+        X = sbd.fill_nulls(X, "")
         X_out = self.vectorizer_.transform(X)
         if hasattr(self, "tsvd_"):
             result = self.tsvd_.transform(X_out)
