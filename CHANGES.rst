@@ -9,9 +9,6 @@ Release history
 Ongoing development
 ===================
 
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
-
 New features
 ------------
 
@@ -20,6 +17,22 @@ New features
 
 Changes
 -------
+
+Release 0.5.1
+=============
+
+New features
+------------
+* The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
+  decomposition and provides a cheaper alternative to :class:`GapEncoder`.
+  :pr:`1159` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Changes
+-------
+* New dataset fetching methods have been added: :func:`fetch_videogame_sales`,
+  :func:`fetch_bike_sharing`, :func:`fetch_flight_delays`,
+  :func:`fetch_country_happiness`, and removed :func:`fetch_road_safety`.
+  :pr:`1218` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
 Bug fixes
 ---------
@@ -32,6 +45,9 @@ Release 0.4.1
 
 Changes
 -------
+* :class: `TableReport` has `write_html` method
+  :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
+
 * A new parameter ``verbose`` has been added to the :class:`TableReport` to toggle on or off the
   printing of progress information when a report is being generated.
   :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.

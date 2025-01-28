@@ -132,6 +132,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         Encode string columns as a numeric array with n-gram string similarity.
     TextEncoder :
         Encode string columns with a pretrained language model.
+    StringEncoder
+        Fast n-gram encoding of string columns.
     deduplicate :
         Deduplicate data by hierarchically clustering similar strings.
 

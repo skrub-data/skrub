@@ -77,7 +77,6 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
 
         init() {
-            console.log("init")
             this.shadowRoot.querySelectorAll("[data-manager]").forEach((elem) => {
                 for (let className of elem.dataset.manager.split(/\s+/)) {
                     const cls = SkrubTableReport.managerClasses.get(
