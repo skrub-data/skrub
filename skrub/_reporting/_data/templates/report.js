@@ -1,5 +1,4 @@
 if (customElements.get('skrub-table-report') === undefined) {
-    console.log("coucou");
 
     class Exchange {
         constructor() {
