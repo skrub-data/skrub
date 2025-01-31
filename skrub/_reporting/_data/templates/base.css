@@ -49,6 +49,9 @@ button > * {
 select {
     background: var(--color-background-button-primary);
     color: var(--color-text-primary);
+    box-shadow: none;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border-primary);
 }
 
 input[type="checkbox"] {
