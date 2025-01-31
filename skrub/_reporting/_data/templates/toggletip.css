@@ -11,6 +11,7 @@
     height: var(--height-button);
     width: var(--height-button);
     background-color: var(--color-background-info);
+    text-shadow: 0 0 1px color-mix(in srgb, var(--color-background-info) 20%, black);
     font-family: var(--font-family-monospace);
     font-weight: bold;
     color: var(--color-text-info);
@@ -25,8 +26,8 @@
 .toggletip > .toggletip-info {
     box-sizing: border-box;
     position: absolute;
-    top: calc(0.9 * var(--height-button));
-    left: calc(0.4 * var(--height-button));
+    top: calc(1.3 * var(--height-button));
+    left: calc(0.8 * var(--height-button));
     width: calc(min(50ch, 100% - var(--height-button)));
     min-width: min-content;
     padding: var(--spacing-l);
@@ -34,15 +35,14 @@
     border: var(--border-m) solid var(--color-background-info);
     border-radius: var(--radius);
     z-index: 2;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--animation-duration) var(--animation-easing);
+    visibility: hidden;
+    transition: visibility 0ms 400ms;
 }
 
 .toggletip:hover > .toggletip-info,
 .toggletip:has(button:is(:focus, :active, :hover)) > .toggletip-info {
-    opacity: 1;
-    pointer-events: all;
+    visibility: visible;
+    transition-delay: 0ms;
 }
 
 .toggletip button:is(:focus, :active) {
