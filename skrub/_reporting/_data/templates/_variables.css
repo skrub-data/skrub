@@ -23,6 +23,10 @@
     --font-family-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo,
         Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
 
+    /* buttons */
+    --button-size-s: calc(1.8 * var(--base-size));
+    --button-size-m: calc(2.0 * var(--base-size));
+
     /* spacings */
     --spacing-xs: calc(0.125 * var(--base-size));
     --spacing-s: calc(0.25 * var(--base-size));
@@ -74,7 +78,7 @@
     /* borders */
     --color-border-primary: #aaa;
     --color-border-secondary: #bfbfbf;
-    --color-border-highlight: #eafaea;
+    --color-border-highlight: #9fce9f;
 
     /* shadows */
     --color-shadow: hsl(0, 0%, 63%);

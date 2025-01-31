@@ -123,7 +123,7 @@
     position: relative;
     background-color: var(--color-background-highlight-primary);
     border-block-end: var(--border-s) solid var(--color-border-highlight);
-    padding-right: 36px;
+    padding-right: calc(var(--button-size-s) + var(--spacing-m));
 }
 
 .columns-in-sample-tab .card {
@@ -133,8 +133,8 @@
 /* Button for closing the card / deselecting the column in the table */
 
 .card .close-card-button {
-    height: 32px;
-    width: 32px;
+    height: var(--button-size-s);
+    width: var(--button-size-s);
 
     padding: var(--spacing-s);
     border: none;
@@ -142,8 +142,8 @@
     background-color: var(--color-background-button-secondary);
 
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: var(--spacing-s);
+    right: var(--spacing-s);
 
     transition: background-color var(--animation-duration)
         var(--animation-easing);

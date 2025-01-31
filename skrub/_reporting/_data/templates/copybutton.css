@@ -14,10 +14,13 @@
 .box {
     display: flex;
     justify-content: space-between;
-    align-items: start;
+    align-items: stretch;
     border: var(--border-s) solid var(--color-border-primary);
     padding: 0;
-    max-width: 100%;
+    min-width: var(--box-min-width);
+    max-width: var(--box-max-width);
+    min-height: var(--box-min-height);
+    max-height: var(--box-max-height);
 }
 
 .box pre {
@@ -29,11 +32,14 @@
 }
 
 .copybutton {
-    margin: var(--spacing-s);
+    margin: var(--spacing-xs);
     padding: var(--spacing-s);
+    min-width: var(--button-size-s);
+    max-width: var(--button-size-s);
+    max-height: var(--button-size-s);
+    border-radius: 0;
     border: none;
     position: relative;
-    min-width: 24px;
 }
 
 .copybutton-left {
@@ -81,4 +87,9 @@
 
 [data-shows-placeholder] {
     color: var(--color-background-secondary);
+}
+
+.table-bar .box {
+    flex-grow: 1;
+    max-width: var(--table-box-max-width);
 }

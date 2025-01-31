@@ -59,6 +59,7 @@
 .table-with-selectable-cells th[data-role="padding"] {
     background-color: var(--color-background-primary);
     border: none;
+    transition: none;
 }
 
 .table-with-selectable-cells th[data-role="columns-level-name"] {

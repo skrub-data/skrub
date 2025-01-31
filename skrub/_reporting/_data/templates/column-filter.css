@@ -11,6 +11,6 @@
 .column-filter > select {
     max-width: 16ch;
     text-overflow: ellipsis;
-    padding: var(--spacing-s);
+    padding: 0 var(--spacing-s) 0 var(--spacing-s);
     font-size: var(--font-size-s);
 }

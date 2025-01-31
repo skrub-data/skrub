@@ -264,6 +264,10 @@ dd {
     padding-top: var(--spacing-s);
 }
 
+#report svg {
+    max-width: 100%;
+}
+
 .report-header {
     font-size: var(--font-size-l);
     padding-block-start: var(--spacing-s);
