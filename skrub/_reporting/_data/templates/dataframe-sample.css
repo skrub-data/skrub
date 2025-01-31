@@ -62,7 +62,7 @@
     transition: none;
 }
 
-.table-with-selectable-cells th[data-role="columns-level-name"] {
+#report .table-with-selectable-cells th[data-role="columns-level-name"] {
     text-align: right;
     padding-right: calc(calc(2 * var(--spacing-s)) + var(--arrow-width));
     position: relative;
@@ -76,7 +76,7 @@
     bottom: 0;
     left: 100%;
     right: calc(-1 * var(--arrow-width));
-    transform: translateX(calc(-1 * var(--spacing-s)));
+    transform: translateX(calc(-1 * var(--spacing-s) - var(--arrow-width)));
     display: flex;
     user-select: none;
 }
