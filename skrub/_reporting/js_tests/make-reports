@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------
     #
     # This is only for checking visually that they display correctly, in
-    # particular the (ellided) strings in the matplotlib axis labels.
+    # particular the (elided) strings in the matplotlib axis labels.
     # See https://github.com/skrub-data/skrub/pull/1097
     #
 

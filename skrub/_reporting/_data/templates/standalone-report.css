@@ -1,7 +1,15 @@
 :root {
-    --fontStack-sansSerif: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji",
+        "Segoe UI Emoji";
 }
 
 body {
-    font-family: var(--fontStack-sansSerif);
+    font-family: var(--font-family-sans);
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #202020;
+    }
 }
