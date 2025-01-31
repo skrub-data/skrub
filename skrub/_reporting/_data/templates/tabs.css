@@ -42,13 +42,9 @@ button.tab {
     padding: var(--spacing-m);
     padding-top: var(--spacing-s);
     padding-bottom: calc(var(--spacing-s) + var(--border-s));
-    font-size: var(--spacing-l);
+    font-size: var(--font-size-m);
     background-color: transparent;
     color: var(--color-text-secondary);
-}
-
-button.tab[data-has-warning] {
-    color: var(--color-text-critical);
 }
 
 .tab:hover {
@@ -57,7 +53,7 @@ button.tab[data-has-warning] {
 
 .tab[data-is-selected] {
     border-color: var(--color-border-primary);
-    border-bottom: var(--border-s) solid var(--color-background-primary);
+    background-color: var(--color-background-primary);
     color: var(--color-text-primary);
 }
 
@@ -70,6 +66,14 @@ button.tab[data-has-warning] {
     width: var(--font-size-m);
     height: var(--font-size-m);
     margin: var(--spacing-xs);
+}
+
+button.tab[data-has-warning] {
+    color: var(--color-text-critical);
+}
+
+button.tab[data-has-warning]:not(:hover):not([data-is-selected]) {
+    color: color-mix(in srgb, var(--color-text-critical) 75%, var(--color-background-primary));
 }
 
 .tab-list .tab[data-has-warning] .warning-sign {
