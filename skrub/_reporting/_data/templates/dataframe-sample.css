@@ -6,7 +6,7 @@
 }
 
 .table-with-selectable-cells {
-    margin: var(--spacing-m);
+    margin: var(--border-m);
     border: none;
 }
 

@@ -7,3 +7,9 @@
 body {
     font-family: var(--font-family-sans);
 }
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #202020;
+    }
+}
