@@ -1,5 +1,5 @@
 .summary-stats-table {
-  margin: var(--spacing-m);
+  margin: var(--border-m);
 
   /* "collapse" prevents reliably showing the right border of the sticky
        column when it overlaps others */
