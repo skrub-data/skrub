@@ -25,8 +25,7 @@
 {% endmacro %}
 
 {% macro th1(name, low, high, is_numeric) %}
-{{ th(name, "from columns with " + low + " to columns with " + high, "from columns with " + high + " to columns with " +
-low, is_numeric) }}
+{{ th(name, "from columns with " + low + " to columns with " + high, "from columns with " + high + " to columns with " + low, is_numeric) }}
 {% endmacro %}
 
 <article class="wrapper relative margin-t-s" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"

@@ -37,7 +37,8 @@
   max-width: calc(min(30ch, var(--left-overlap) + 40vw));
 
   border-right: var(--border-s) solid var(--color-border-secondary);
-  box-shadow: 2px 0 0 0 var(--color-shadow);
+  /* shadow not visible unless part of the table is actually hidden */
+  box-shadow: 0 0 0 0 var(--color-shadow);
   transition: box-shadow var(--animation-duration) var(--animation-easing);
 }
 
@@ -61,41 +62,44 @@
 }
 
 #report th.sort-button-group-wrapper {
-  --btn-width: 22px;
-
+  --btn-width: var(--button-size-m);
+  --btn-group-width: calc(var(--btn-width) * 2);
   position: relative;
-  padding: var(--spacing-s) calc((var(--btn-width) * 2) + var(--spacing-m)) 0 var(--spacing-s);
-  text-align: left;
+  padding-top: var(--spacing-s);
+  padding-bottom: var(--spacing-s);
+  padding-right: calc(var(--spacing-m) + var(--btn-group-width));
 }
 
 .sort-button-group {
-  display: flex;
-  position: absolute;
-  top: 0;
-  right: 0;
+    position: absolute;
+    top: 0;
+    bottom: var(--border-s);
+    right: calc(-1 * var(--btn-group-width));
+    left: 100%;
+    transform: translateX(calc(-1 * var(--btn-group-width)));
+    display: flex;
+    gap: 0;
+    padding: 0;
 }
 
 .sort-button {
   box-sizing: border-box;
   height: 100%;
+  flex-grow: 1;
   margin: 0;
-  padding: 0;
+  padding: var(--spacing-s);
   border-radius: 0;
   border: var(--border-s) solid var(--color-border-primary);
   background-color: var(--color-background-button-primary);
   color: var(--color-text-secondary);
-  transition: background-color var(--animation-duration) var(--animation-easing);
-}
-
-.sort-button > svg {
-  --inner-size: calc(var(--btn-width) - (var(--border-s) * 3));
-
-  height: var(--inner-size);
-  width: var(--inner-size);
 }
 
 .sort-button-group > .sort-button:focus-visible {
   z-index: 2;
+}
+
+.sort-button-group > .sort-button ~ .sort-button {
+    margin-left: calc(-1 * var(--border-s));
 }
 
 .sort-button:hover {
@@ -104,4 +108,9 @@
 
 .sort-button:active {
   background-color: var(--color-background-button-primary-active);
+}
+
+.sort-button[data-is-active]{
+    background: var(--color-background-button-secondary-active);
+    color: var(--color-text-primary);
 }
