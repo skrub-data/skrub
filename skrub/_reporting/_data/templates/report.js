@@ -94,30 +94,10 @@ if (customElements.get('skrub-table-report') === undefined) {
             });
 
             const report = this.shadowRoot.getElementById("report");
-            report.classList.add(this.detectTheme());
+            report.classList.add(detectTheme());
             adjustAllSvgViewBoxes(report);
         }
 
-        detectTheme() {
-            const shadowRootBody = document.querySelector('body');
-
-            // Check VSCode theme
-            if (shadowRootBody.getAttribute('data-vscode-theme-kind') === 'vscode-dark') {
-                return 'dark';
-            } else if (shadowRootBody.getAttribute('data-vscode-theme-kind') === 'vscode-light') {
-                return 'light';
-            }
-
-            // Check Jupyter theme
-            if (shadowRootBody.getAttribute('data-jp-theme-light') === 'false') {
-                return 'dark';
-            } else if (shadowRootBody.getAttribute('data-jp-theme-light') === 'true') {
-                return 'light';
-            }
-
-            // Fallback to system preference
-            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
     }
     customElements.define("skrub-table-report", SkrubTableReport);
 
@@ -793,6 +773,27 @@ if (customElements.get('skrub-table-report') === undefined) {
         }
     }
     SkrubTableReport.register(CopyButton);
+
+    function detectTheme() {
+        const shadowRootBody = document.querySelector('body');
+
+        // Check VSCode theme
+        if (shadowRootBody.getAttribute('data-vscode-theme-kind') === 'vscode-dark') {
+            return 'dark';
+        } else if (shadowRootBody.getAttribute('data-vscode-theme-kind') === 'vscode-light') {
+            return 'light';
+        }
+
+        // Check Jupyter theme
+        if (shadowRootBody.getAttribute('data-jp-theme-light') === 'false') {
+            return 'dark';
+        } else if (shadowRootBody.getAttribute('data-jp-theme-light') === 'true') {
+            return 'light';
+        }
+
+        // Fallback to system preference
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
 
     /*
       In the matplotlib svg plots, the labels are stored as text (we want the
