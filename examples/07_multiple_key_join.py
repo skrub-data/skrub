@@ -45,10 +45,11 @@ pool of tables are combined for machine learning.
 
 import pandas as pd
 
-from skrub.datasets import fetch_figshare
+from skrub.datasets import fetch_flight_delays
 
+dataset = fetch_flight_delays()
 seed = 1
-flights = fetch_figshare("41771418").X
+flights = dataset.flights
 
 # Sampling for faster computation.
 flights = flights.sample(5_000, random_state=seed, ignore_index=True)
@@ -75,7 +76,7 @@ plt.show()
 #     - The ``airports`` dataset, with information such as their name
 #       and location (longitude, latitude).
 
-airports = fetch_figshare("41710257").X
+airports = dataset.airports
 airports.head()
 
 ########################################################################
@@ -85,7 +86,7 @@ airports.head()
 #       Both tables are from the Global Historical Climatology Network.
 #       Here, we consider only weather measurements from 2008.
 
-weather = fetch_figshare("41771457").X
+weather = dataset.weather
 # Sampling for faster computation.
 weather = weather.sample(10_000, random_state=seed, ignore_index=True)
 weather.head()
@@ -94,7 +95,7 @@ weather.head()
 #     - The ``stations`` dataset. Provides location of all the weather
 #       measurement stations in the US.
 
-stations = fetch_figshare("41710524").X
+stations = dataset.stations
 stations.head()
 
 ###############################################################################
