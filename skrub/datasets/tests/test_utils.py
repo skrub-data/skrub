@@ -1,4 +1,5 @@
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
@@ -36,7 +37,7 @@ def test_get_data_home_without_parameter(monkeypatch, tmp_path):
     dirpath = home / "skrub_data"
 
     with monkeypatch.context() as mp:
-        mp.setenv("HOME", str(home))
+        mp.setenv("USERPROFILE" if sys.platform == "win32" else "HOME", str(home))
 
         assert get_data_home() == dirpath
         assert dirpath.exists()
