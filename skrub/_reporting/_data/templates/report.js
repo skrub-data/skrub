@@ -94,7 +94,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             });
 
             const report = this.shadowRoot.getElementById("report");
-            report.classList.add(detectTheme());
+            report.classList.add(detectTheme(`${this.id}-wrapper`));
             adjustAllSvgViewBoxes(report);
         }
 
@@ -774,7 +774,7 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(CopyButton);
 
-    function detectTheme() {
+    function detectTheme(parentId) {
         const shadowRootBody = document.querySelector('body');
 
         // Check VSCode theme
@@ -789,6 +789,16 @@ if (customElements.get('skrub-table-report') === undefined) {
             return 'dark';
         } else if (shadowRootBody.getAttribute('data-jp-theme-light') === 'true') {
             return 'light';
+        }
+
+        // Guess based on parent element's color
+        const parentElem = document.getElementById(parentId);
+        const color = window.getComputedStyle(parentElem, null).getPropertyValue('color');
+        const match = color.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/i);
+        if(match){
+            const [r, g, b] = [match[1], match[2], match[3]];
+            const value = Math.max(r, g, b);
+            return value > 127 ? 'dark' : 'light';
         }
 
         // Fallback to system preference
