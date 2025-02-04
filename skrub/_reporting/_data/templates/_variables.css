@@ -74,6 +74,8 @@
     --color-text-info: white;
     --color-text-warning: #ff6600;
     --color-text-critical: #dd0000;
+    --color-text-link: #0000ee;
+    --color-text-visited: #551a8b;
 
     /* borders */
     --color-border-primary: #aaa;
@@ -110,6 +112,8 @@
     --color-text-info: white;
     --color-text-warning: #e76f51;
     --color-text-critical: #e63946;
+    --color-text-link: #8c8cff;
+    --color-text-visited: #ffadff;
 
     /* borders */
     --color-border-primary: #666;
