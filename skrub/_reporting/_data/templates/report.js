@@ -94,7 +94,7 @@ if (customElements.get('skrub-table-report') === undefined) {
             });
 
             const report = this.shadowRoot.getElementById("report");
-            report.classList.add(detectTheme());
+            report.classList.add(detectTheme(`${this.id}-wrapper`));
             adjustAllSvgViewBoxes(report);
         }
 
@@ -774,9 +774,11 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(CopyButton);
 
-    function detectTheme() {
+    function detectTheme(refElementId) {
+
         const shadowRootBody = document.querySelector('body');
 
+        // Check VSCode theme
         const themeKindAttr = shadowRootBody.getAttribute('data-vscode-theme-kind');
         const themeNameAttr = shadowRootBody.getAttribute('data-vscode-theme-name');
 
@@ -784,7 +786,6 @@ if (customElements.get('skrub-table-report') === undefined) {
             const themeKind = themeKindAttr.toLowerCase();
             const themeName = themeNameAttr.toLowerCase();
 
-            // Check VSCode theme
             if (themeKind.includes("dark") || themeName.includes("dark")) {
                 return "dark";
             }
@@ -798,6 +799,27 @@ if (customElements.get('skrub-table-report') === undefined) {
             return 'dark';
         } else if (shadowRootBody.getAttribute('data-jp-theme-light') === 'true') {
             return 'light';
+        }
+
+        // Guess based on a reference element's color
+        const refElement = document.getElementById(refElementId);
+        const color = window.getComputedStyle(refElement, null).getPropertyValue('color');
+        const match = color.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/i);
+        if(match){
+            const [r, g, b] = [match[1], match[2], match[3]];
+
+            // https://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
+            const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+
+            if (luma > 180) {
+                // If the text is very bright we have a dark theme
+                return 'dark';
+            }
+            if (luma < 75 ) {
+                // If the text is very dark we have a light theme
+                return 'light';
+            }
+            // Otherwise fall back to the next heuristic.
         }
 
         // Fallback to system preference
