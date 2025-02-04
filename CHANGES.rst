@@ -15,6 +15,9 @@ New features
 - The :class:`TableReport` now switch it's visual theme between light and dark according to the user preferences.
   :pr:`1201` by :user:`rouk1 <rouk1>`.
 
+- Adding a new way to control the location of the data directory, using envar `SKRUB_DATA_DIRECTORY`.
+  :pr:`1215` by :user:`Thomas S. <thomass-dev>`
+
 Changes
 -------
 
