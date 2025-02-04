@@ -777,11 +777,20 @@ if (customElements.get('skrub-table-report') === undefined) {
     function detectTheme() {
         const shadowRootBody = document.querySelector('body');
 
-        // Check VSCode theme
-        if (shadowRootBody.getAttribute('data-vscode-theme-kind') === 'vscode-dark') {
-            return 'dark';
-        } else if (shadowRootBody.getAttribute('data-vscode-theme-kind') === 'vscode-light') {
-            return 'light';
+        const themeKindAttr = shadowRootBody.getAttribute('data-vscode-theme-kind');
+        const themeNameAttr = shadowRootBody.getAttribute('data-vscode-theme-name');
+
+        if (themeKindAttr && themeNameAttr) {
+            const themeKind = themeKindAttr.toLowerCase();
+            const themeName = themeNameAttr.toLowerCase();
+
+            // Check VSCode theme
+            if (themeKind.includes("dark") || themeName.includes("dark")) {
+                return "dark";
+            }
+            if (themeKind.includes("light") || themeName.includes("light")) {
+                return "light";
+            }
         }
 
         // Check Jupyter theme
