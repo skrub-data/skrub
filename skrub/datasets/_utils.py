@@ -11,6 +11,7 @@ import pandas as pd
 import requests
 from sklearn.utils import Bunch
 
+DATA_HOME_ENVAR_NAME = "SKRUB_DATA_DIRECTORY"
 DATASET_INFO = {
     "bike_sharing": {
         "urls": [
@@ -122,6 +123,9 @@ def get_data_home(data_home=None):
     By default the data directory is set to a folder named 'skrub_data' in the
     user home folder.
 
+    You can even customize the default data directory by setting in your environment
+    the `SKRUB_DATA_DIRECTORY` variable to an *absolute directory path*.
+
     Alternatively, it can be set programmatically by giving an explicit folder
     path. The '~' symbol is expanded to the user home folder.
 
@@ -138,12 +142,26 @@ def get_data_home(data_home=None):
     data_home : pathlib.Path
         The validated path to the skrub data directory.
     """
-    if data_home is None:
-        data_home = Path("~").expanduser() / "skrub_data"
-    else:
+    if data_home is not None:
         data_home = Path(data_home)
-    data_home = data_home.resolve()
+
+        # Replace any "~" by the user's home directory
+        # https://docs.python.org/3/library/pathlib.html#pathlib.Path.expanduser
+        data_home = data_home.expanduser()
+
+        # Resolve relative path to absolute path
+        # https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve
+        data_home = data_home.resolve()
+    else:
+        data_home_envar = os.environ.get(DATA_HOME_ENVAR_NAME)
+
+        if data_home_envar and (path := Path(data_home_envar)).is_absolute():
+            data_home = path
+        else:
+            data_home = Path.home() / "skrub_data"
+
     data_home.mkdir(parents=True, exist_ok=True)
+
     return data_home
 
 
