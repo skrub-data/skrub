@@ -82,7 +82,7 @@ print("original dtype:", X["date"].dtypes, "\n\nconverted dtype:", date.dtypes)
 # During the instantiation of the |DatetimeEncoder|, we specify that we want
 # to extract the day of the week, and that we don't want to extract anything
 # finer than hours. This is because we don't want to extract minutes, seconds
-# and lower units, as they are unimportant.
+# and lower units, as they are unimportant here.
 
 from skrub import DatetimeEncoder
 
@@ -229,7 +229,7 @@ plt.show()
 ###############################################################################
 from sklearn.inspection import permutation_importance
 
-# In this case, we don't use a pipeline, because we want to compute the
+# In this case, we don't use the whole pipeline, because we want to compute the
 # importance of the features created by the DatetimeEncoder
 X_test_transform = pipeline[:-1].transform(X_test)
 
