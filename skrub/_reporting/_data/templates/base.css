@@ -22,6 +22,14 @@
     max-width: max-content;
 }
 
+a:link {
+    color: var(--color-text-link);
+}
+
+a:visited {
+    color: var(--color-text-visited);
+}
+
 h1 {
     font-size: var(--font-size-xl);
 }
