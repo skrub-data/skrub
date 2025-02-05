@@ -277,7 +277,9 @@ baskets = skrub.var("baskets", placeholder=baskets_df).skb.mark_as_x()
 # similarly for the targets:
 
 # %%
-fraud_flags = skrub.var("fraud_flags", placeholder=dataset.baskets["fraud_flag"])
+fraud_flags = skrub.var(
+    "fraud_flags", placeholder=dataset.baskets["fraud_flag"]
+).skb.mark_as_y()
 
 # %%
 # Applying scikit-learn estimators
