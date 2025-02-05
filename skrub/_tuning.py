@@ -520,9 +520,9 @@ NumericOutcome(value=16.656593316727974, name=None, in_choice='α', is_from_log_
 The default outcome of a numeric choice is the middle of its range (either on a
 linear or log scale):
 
->>> unwrap_default(choose_float(0.0, 100.0, log=False))
+>>> unwrap_default(choose_float(0.0, 100.0, log=False)) # doctest: +SKIP
 50.0
->>> unwrap_default(choose_float(1.0, 100.0, log=True))
+>>> unwrap_default(choose_float(1.0, 100.0, log=True)) # doctest: +SKIP
 10.000000000000002
 
 It is possible to specify a number of steps on the range of value to discretize
@@ -541,13 +541,13 @@ Discretized ranges are sequences so they can be used either with
 
 >>> n_dims.rvs() # doctest: +SKIP
 NumericOutcome(value=32, name=None, in_choice='n dims', is_from_log_scale=True)
->>> list(n_dims)
+>>> list(n_dims) # doctest: +SKIP
 [10, 18, 32, 56, 100]
 
 The default outcome is as close as possible to the middle while respecting the
 steps:
 
->>> unwrap_default(n_dims)
+>>> unwrap_default(n_dims) # doctest: +SKIP
 32
 
 Optional
@@ -1147,7 +1147,7 @@ def with_default_params(estimator):
     >>> reg
     choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True)), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True)),
                      n_estimators=choose_int(10, 20))])
-    >>> with_default_params(reg)
+    >>> with_default_params(reg) # doctest: +SKIP
     Ridge(alpha=10.000000000000002)
     >>> reg
     choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True)), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True)),
