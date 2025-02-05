@@ -42,4 +42,5 @@ def create_expression_report():
         / "_static"
         / "credit_fraud_report",
         overwrite=True,
+        open=False,
     )
