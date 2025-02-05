@@ -33,6 +33,7 @@ dependencies = [
     "jinja2>=3.1.2",
     "matplotlib>=3.4.3",
     "requests>=2.25.0",
+    "pydot",
 ]
 
 [tool.setuptools.dynamic]
@@ -50,6 +51,7 @@ doc = [
     "jupyterlite-pyodide-kernel",
     "numpydoc",
     "pydata-sphinx-theme",
+    "plotly",
     "seaborn",
     "sphinx",
     "sphinx-copybutton",
@@ -97,6 +99,7 @@ scikit-learn = ">=1.2.1"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.4.3"
+pydot = "*"
 requests = ">=2.25.0"
 
 [tool.pixi.feature.doc.dependencies]
@@ -105,6 +108,7 @@ jupyterlite-pyodide-kernel = "*"
 matplotlib = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
+plotly = "*"
 seaborn = "*"
 sphinx = "*"
 sphinx-copybutton = "*"

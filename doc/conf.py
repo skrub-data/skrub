@@ -24,6 +24,7 @@ from datetime import datetime
 
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
+from expression_report import create_expression_report
 from table_report import generate_demo
 
 generate_demo()
@@ -560,3 +561,5 @@ linkcode_resolve = make_linkcode_resolve(
 # -- Sphinx-Copybutton configuration -----------------------------------------
 copybutton_prompt_text = r">>> |\.\.\. |\$ "
 copybutton_prompt_is_regexp = True
+
+create_expression_report()

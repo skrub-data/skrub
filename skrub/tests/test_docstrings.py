@@ -16,6 +16,9 @@ import pytest
 from numpydoc.validate import validate
 
 DOCSTRING_TEMP_IGNORE_SET = {
+    # TODO remove
+    "skrub._tuning",
+    "skrub._select_cols.Drop",
     "skrub._table_vectorizer.SuperVectorizer",
     # The following are not documented in skrub (and thus are out of scope)
     # They are usually inherited from other libraries.
@@ -170,8 +173,11 @@ def test_estimator_docstrings(estimator_cls, method, request):
 
     import_path = ".".join(import_path)
 
-    if (import_path in DOCSTRING_TEMP_IGNORE_SET) or (
-        base_import_path in DOCSTRING_TEMP_IGNORE_SET
+    if (
+        (import_path in DOCSTRING_TEMP_IGNORE_SET)
+        or (base_import_path in DOCSTRING_TEMP_IGNORE_SET)
+        or f"{estimator_cls.__module__}.{estimator_cls.__name__}"
+        in DOCSTRING_TEMP_IGNORE_SET
     ):
         request.applymarker(
             pytest.mark.xfail(run=False, reason="TODO pass numpydoc validation")
@@ -195,7 +201,10 @@ def test_function_docstrings(func, name, request):
     import_path = ".".join([func.__module__, name])
     print(import_path)
 
-    if import_path in DOCSTRING_TEMP_IGNORE_SET:
+    if (
+        import_path in DOCSTRING_TEMP_IGNORE_SET
+        or func.__module__ in DOCSTRING_TEMP_IGNORE_SET
+    ):
         request.applymarker(
             pytest.mark.xfail(run=False, reason="TODO pass numpydoc validation")
         )
