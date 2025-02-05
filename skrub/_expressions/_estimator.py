@@ -115,6 +115,13 @@ class CompatibleExprEstimator(ExprEstimator):
             return "transformer"
 
     @property
+    def __sklearn_tags__(self):
+        try:
+            return unwrap_default(self.expr._skrub_impl.estimator).__sklearn_tags__
+        except AttributeError:
+            attribute_error(self, "__sklearn_tags__")
+
+    @property
     def classes_(self):
         try:
             estimator = self.expr._skrub_impl.estimator_
