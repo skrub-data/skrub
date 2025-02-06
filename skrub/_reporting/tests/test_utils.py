@@ -1,15 +1,17 @@
+import datetime
 import json
 
 import numpy as np
 import pytest
 
+from skrub import _dataframe as sbd
 from skrub._reporting import _utils
 
 
 @pytest.mark.parametrize(
     "s_in, s_out",
     [
-        (1, 1),
+        (1, "1"),
         ("aa", "aa"),
         ("a\na", "a a"),
         ("a" * 70, "a" * 30 + "…\u200e"),
@@ -51,6 +53,16 @@ def test_ellide_string(s_in, s_out):
 def test_ellide_string_empty():
     # useless corner case to make codecov happy
     assert _utils.ellide_string(" a", 1) == "…"
+
+
+def test_ellide_non_string():
+    # non-regression for #1195: objects in columns must be converted to strings
+    # before elliding and plotting
+    class A:
+        def __repr__(self):
+            return "one\ntwo\nthree"
+
+    assert _utils.ellide_string(A()) == "one two three"
 
 
 @pytest.mark.parametrize(
@@ -112,3 +124,21 @@ def test_svg_to_img_src():
         "DAgMCAxIDAgLjcwOGwtNCA0YS41LjUgMCAwIDEtLjcwOC0uNzA4TDE"
         "zLjI5MyA4LjVIMS41QS41LjUgMCAwIDEgMSA4Ii8+PC9zdmc+"
     )
+
+
+@pytest.mark.parametrize(
+    "kwargs,value,unit",
+    [
+        ({"seconds": 2e-6}, 2, "microsecond"),
+        ({"seconds": 0.5}, 500, "millisecond"),
+        ({"seconds": 5}, 5, "second"),
+        ({"hours": 5}, 5, "hour"),
+        ({"days": 5}, 5, "day"),
+        ({"days": 500}, 1.3689, "year"),
+    ],
+)
+def test_duration_to_numeric(df_module, kwargs, value, unit):
+    s = df_module.make_column("", [datetime.timedelta(**kwargs)])
+    chosen_value, chosen_unit = _utils.duration_to_numeric(s)
+    assert sbd.to_list(chosen_value)[0] == pytest.approx(value, 0.001)
+    assert chosen_unit == unit

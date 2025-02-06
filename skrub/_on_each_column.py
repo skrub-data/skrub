@@ -38,7 +38,7 @@ class RejectColumn(ValueError):
     >>> df = pd.DataFrame(dict(a=['2020-02-02'], b=[12.5]))
     >>> ToDatetime().fit_transform(df['a'])
     0   2020-02-02
-    Name: a, dtype: datetime64[ns]
+    Name: a, dtype: datetime64[...]
     >>> ToDatetime().fit_transform(df['b'])
     Traceback (most recent call last):
         ...
@@ -250,7 +250,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         ``cols``) are passed through.
 
     rename_columns : str, default='{}'
-        Format string applied to all transformation ouput column names. For
+        Format string applied to all transformation output column names. For
         example pass ``'transformed_{}'`` to prepend ``'transformed_'`` to all
         output column names. The default value does not modify the names.
         Renaming is not applied to columns not selected by ``cols``.
@@ -340,7 +340,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     dtype: object
     >>> ToDatetime().fit_transform(df["birthday"])
     0   2024-01-29
-    Name: birthday, dtype: datetime64[ns]
+    Name: birthday, dtype: datetime64[...]
     >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
@@ -373,7 +373,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     datetime column.
 
     >>> transformed.dtypes
-    birthday    datetime64[ns]
+    birthday    datetime64[...]
     city                object
     dtype: object
     >>> to_datetime.transformers_

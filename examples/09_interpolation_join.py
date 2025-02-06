@@ -35,14 +35,18 @@ and locations in the flights table.
 # stations’ latitude and longitude. We subsample these large tables for the example to
 # run faster.
 
-from skrub.datasets import fetch_figshare
+import pandas as pd
 
-weather = fetch_figshare("41771457").X
+from skrub.datasets import fetch_flight_delays
+
+dataset = fetch_flight_delays()
+weather = dataset.weather
 weather = weather.sample(100_000, random_state=0, ignore_index=True)
-stations = fetch_figshare("41710524").X
+stations = dataset.stations
 weather = stations.merge(weather, on="ID")[
     ["LATITUDE", "LONGITUDE", "YEAR/MONTH/DAY", "TMAX", "PRCP", "SNOW"]
 ]
+weather["YEAR/MONTH/DAY"] = pd.to_datetime(weather["YEAR/MONTH/DAY"])
 
 ######################################################################
 # The ``'TMAX'`` is in tenths of degree Celsius -- a ``'TMAX'`` of 297 means the maximum
@@ -124,9 +128,11 @@ aux_table = aux_table.drop(["PRCP", "SNOW"], axis=1)
 # ``'Origin'`` which refers to the departure airport’s IATA code. We use only a subset
 # to speed up the example.
 
-flights = fetch_figshare("41771418").X[["Year_Month_DayofMonth", "Origin", "ArrDelay"]]
+flights = dataset.flights
+flights["Year_Month_DayofMonth"] = pd.to_datetime(flights["Year_Month_DayofMonth"])
+flights = flights[["Year_Month_DayofMonth", "Origin", "ArrDelay"]]
 flights = flights.sample(20_000, random_state=0, ignore_index=True)
-airports = fetch_figshare("41710257").X[["iata", "airport", "state", "lat", "long"]]
+airports = dataset.airports[["iata", "airport", "state", "lat", "long"]]
 flights = flights.merge(airports, left_on="Origin", right_on="iata")
 # printing the first row is more readable than the head() when we have many columns
 flights.iloc[0]

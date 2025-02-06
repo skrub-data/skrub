@@ -46,6 +46,7 @@ Encoding a column
    DatetimeEncoder
    ToCategorical
    ToDatetime
+   StringEncoder
 
 .. autosummary::
    :toctree: generated/
@@ -53,6 +54,20 @@ Encoding a column
    :nosignatures:
 
    to_datetime
+
+Deep Learning
+-------------
+
+These encoders require installing additional dependencies around torch.
+See the "deep learning dependencies" section in the :ref:`installation_instructions`
+guide for more details.
+
+.. autosummary::
+   :toctree: generated/
+   :template: base.rst
+   :nosignatures:
+
+   TextEncoder
 
 
 .. _building_a_pipeline_ref:
@@ -124,17 +139,21 @@ Downloading a dataset
    :template: base.rst
    :nosignatures:
 
-   fetch_employee_salaries
-   fetch_medical_charge
-   fetch_midwest_survey
-   fetch_open_payments
-   fetch_road_safety
-   fetch_traffic_violations
-   fetch_drug_directory
-   fetch_world_bank_indicator
-   fetch_movielens
+   fetch_bike_sharing
+   fetch_country_happiness
    fetch_credit_fraud
+   fetch_drug_directory
+   fetch_employee_salaries
+   fetch_flight_delays
+   fetch_ken_embeddings
    fetch_ken_table_aliases
    fetch_ken_types
-   fetch_ken_embeddings
+   fetch_medical_charge
+   fetch_midwest_survey
+   fetch_movielens
+   fetch_open_payments
+   fetch_toxicity
+   fetch_traffic_violations
+   fetch_videogame_sales
+   get_data_dir
    make_deduplication_data

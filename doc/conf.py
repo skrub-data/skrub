@@ -175,11 +175,6 @@ html_theme_options = {
     "header_links_before_dropdown": 4,
     "icon_links": [
         {
-            "name": "Twitter",
-            "url": "https://twitter.com/skrub_data",
-            "icon": "fa-brands fa-twitter",
-        },
-        {
             "name": "GitHub",
             "url": "https://github.com/skrub-data/skrub/",
             "icon": "fa-brands fa-github",
@@ -188,6 +183,16 @@ html_theme_options = {
             "name": "Discord",
             "url": "https://discord.gg/ABaPnm7fDC",
             "icon": "fa-brands fa-discord",
+        },
+        {
+            "name": "Bluesky",
+            "url": "https://bsky.app/profile/skrub-data.bsky.social",
+            "icon": "fa-brands fa-bluesky",
+        },
+        {
+            "name": "X (ex-Twitter)",
+            "url": "https://x.com/skrub_data",
+            "icon": "fa-brands fa-x-twitter",
         },
     ],
     # alternative way to set twitter and github header icons
@@ -199,9 +204,6 @@ html_theme_options = {
     "navbar_align": "left",
     # "navbar_center": ["version-switcher", "navbar-nav"],
     "navbar_center": ["navbar-nav"],
-    "announcement": (
-        "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html"
-    ),
     # "show_nav_level": 2,
     # "navbar_start": ["navbar-logo"],
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
@@ -343,6 +345,7 @@ intersphinx_mapping = {
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable", None),
     "polars": ("https://docs.pola.rs/py-polars/html", None),
     "seaborn": ("http://seaborn.pydata.org", None),
+    "sentence_transformers": ("https://sbert.net/", None),
 }
 
 

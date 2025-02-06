@@ -1,19 +1,19 @@
 {% macro th(name, ascending, descending, is_numeric) %}
-<th class="sort-button-group-wrapper  {{ 'ellided' if name == 'Column name' }}" scope="col">
+<th class="sort-button-group-wrapper  {{ 'elided' if name == 'Column name' }}" scope="col">
     {% if name %}
-    <span class="margin-r-m">{{ name }}</span>
+    <span>{{ name }}</span>
     {% endif %}
     <div class="sort-button-group">
-        <button class="sort-button" type="button" data-role="sort-button"
-            data-direction="ascending" title="Sort {{ ascending }}">
+        <button class="sort-button" type="button" data-role="sort-button" data-direction="ascending"
+            title="Sort {{ ascending }}">
             {% if is_numeric %}
             {% include "icons/sort-numeric-down.svg" %}
             {% else %}
             {% include "icons/sort-alpha-down.svg" %}
             {% endif %}
         </button>
-        <button class="sort-button" type="button" data-role="sort-button"
-            data-direction="descending" title="Sort {{ descending }}">
+        <button class="sort-button" type="button" data-role="sort-button" data-direction="descending"
+            title="Sort {{ descending }}">
             {% if is_numeric %}
             {% include "icons/sort-numeric-down-alt.svg" %}
             {% else %}
@@ -30,11 +30,8 @@
 
 <article class="wrapper relative margin-t-s" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
-    <div class="horizontal-scroll"
-         data-manager="StickyColTableScroller"
-         data-sticky-col="2">
-        <table class="pure-table pure-table-bordered summary-stats-table"
-            data-manager="SortableTable">
+    <div class="horizontal-scroll" data-manager="StickyColTableScroller" data-sticky-col="2">
+        <table class="pure-table pure-table-bordered summary-stats-table" data-manager="SortableTable">
             <thead>
                 <tr>
                     {{ th("Column", "from first column to last column", "from last column to first column", True) }}
@@ -52,14 +49,12 @@
             <tbody>
                 {% for column in summary.columns %}
                 <tr data-manager="FilterableColumn" data-column-name="{{ column.name }}"
-                    data-column-idx="{{ column.idx }}"
-                    data-dataframe-column-idx="{{ column.idx }}">
+                    data-column-idx="{{ column.idx }}" data-dataframe-column-idx="{{ column.idx }}">
                     <td data-value="{{ loop.index0 }}" data-numeric>{{ loop.index0 }}
                     </td>
-                    <td class="ellided">{{ column.name }}</td>
+                    <td class="elided">{{ column.name }}</td>
                     <td>{{ column.dtype }}</td>
-                    <td class="{{ column.nulls_level }}"
-                        data-value="{{ column.null_count }}" data-numeric>
+                    <td class="{{ column.nulls_level }}" data-value="{{ column.null_count }}" data-numeric>
                         {{ column.null_count }} ({{ column.null_proportion | format_percent }})
                     </td>
 

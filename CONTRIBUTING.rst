@@ -124,14 +124,52 @@ See the relevant sections above on how to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Follow the steps in the :ref:`installation_instructions` > "From Source" section to
-set up your environment.
+To contribute, you will first have to run through some steps:
 
-When starting to work on a new issue, it's recommended to create a new branch:
+- Set up your environment by forking the repository (`Github doc on
+  forking and
+  cloning <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`__).
+- Create and activate a new virtual environment:
 
-.. code:: console
+  - With `venv <https://docs.python.org/3/library/venv.html>`__, create
+    the env with ``python -m venv env_skrub`` and then activate it with
+    ``source env_skrub/bin/activate``.
+  - With
+    `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__,
+    create the env with ``conda new -n env_skrub`` and activate it with
+    ``conda activate env_skrub``.
+  - While at the root of your local copy of skrub and within the new
+    env, install the required development dependencies by running
+    ``pip install --editable ".[dev, lint, test, doc]"``.
 
-   git switch -c branch_name
+- Run ``pre-commit install`` to activate some checks that will run every
+  time you do a ``git commit`` (mostly, formatting checks).
+
+If you want to make sure that everything runs properly, you can run all
+the tests with the command ``pytest -s skrub/tests``; note that this may
+take a long time. Some tests may raise warnings such as:
+
+.. code:: sh
+
+  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
+    warnings.warn(
+
+This is expected, and you may proceed with the next steps without worrying about them. However, no tests should fail at this point: if they do fail, then let us know.
+
+Now that the development environment is ready, you may start working on
+the new issue by creating a new branch:
+
+.. code:: sh
+
+   git checkout -b my-branch-name-eg-fix-issue-123
+   # make some changes
+   git add ./the/file-i-changed
+   git commit -m "my message"
+   git push --set-upstream origin my-branch-name-eg-fix-issue-123
+
+At this point, if you visit again the `pull requests
+page <https://github.com/skrub-data/skrub/pulls>`__ github should show a
+banner asking if you want to open a pull request from your new branch.
 
 
 .. _implementation guidelines:
@@ -155,6 +193,105 @@ When contributing, keep these project goals in mind:
     - The public API refers to all components available for import and use by library users. Anything that doesn't begin with an underscore is considered part of the public API.
 
 
+Testing the code
+~~~~~~~~~~~~~~~~
+
+Tests for files in a given folder should be located in a sub-folder
+named ``tests``: tests for Skrub objects are located in ``skrub/tests/``,
+tests for the dataframe API are in ``skrub/_dataframe/tests/`` and so on.
+
+Tests should check all functionalities of the code that you are going to
+add. If needed, additional tests should be added to verify that other
+objects behave correctly.
+
+Consider an example: your contribution is for the
+``AmazingTransformer``, whose code is in
+``skrub/_amazing_transformer.py``. The ``AmazingTransformer`` is added
+as one of the default transformers for ``TableVectorizer``.
+
+As such, you should add a new file testing the functionality of
+``AmazingTransformer`` in ``skrub/tests/test_amazing_transformer.py``,
+and update the file ``skrub/tests/test_table_vectorizer.py`` so that it
+takes into account the new transformer.
+
+Additionally, you might have updated the internal dataframe API in
+``skrub/_dataframe/_common.py`` with a new function,
+``amazing_function``. In this case, you should also update
+``skrub/_dataframe/tests/test_common.py`` to add a test for the
+``amazing_function``.
+
+Run each updated test file using ``pytest``
+([pytest docs](https://docs.pytest.org/en/stable/)):
+
+.. code:: sh
+
+   pytest -vsl skrub/tests/test_amazing_transformer.py \
+   skrub/_dataframe/tests/test_common.py \
+   skrub/_dataframe/tests/test_table_vectorizer.py
+
+The ``-vsl`` flag provides more information when running the tests.
+
+It is also possible to run a specific test, or set of tests using the
+commands ``pytest the_file.py::the_test``, or
+``pytest the_file.py -k 'test_name_pattern'``. This is helpful to avoid
+having to run all the tests.
+
+If you work on Windows, you might have some issues with the working
+directory if you use ``pytest``, while ``python -m pytest ...`` should
+be more robust.
+
+Once you are satisfied with your changes, you can run all the tests to make sure
+that your change did not break code elsewhere:
+
+.. code:: sh
+
+    pytest -s skrub/tests
+
+Finally, sync your changes with the remote repository and wait for CI to run.
+
+Checking coverage on the local machine
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Checking coverage is one of the operations that is performed after
+submitting the code. As this operation may take a long time online, it
+is possible to check whether the code coverage is high enough on your
+local machine.
+
+Run your tests with the ``--cov`` and ``--cov-report`` arguments:
+
+.. code:: sh
+
+   pytest -vsl skrub/tests/test_amazing_transformer.py --cov=skrub --cov-report=html
+
+This will create the folder ``htmlcov``: by opening
+``htmlcov/index.html`` it is possible to check what lines are covered in
+each file.
+
+Updating doctests
+~~~~~~~~~~~~~~~~~
+
+If you alter the default behavior of an object, then this might affect
+the docstrings. Check for possible problems by running
+
+.. code:: sh
+
+   pytest skrub/path/to/file
+
+
+Formatting and pre-commit checks
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Formatting the code well helps with code development and maintenance,
+which why is skrub requires that all commits follow a specific set of
+formatting rules to ensure code quality.
+
+Luckily, these checks are performed automatically by the ``pre-commit``
+tool (`pre-commit docs <https://pre-commit.com>`__) before any commit
+can be pushed. Something worth noting is that if the ``pre-commit``
+hooks format some files, the commit will be canceled: you will have to
+stage the changes made by ``pre-commit`` and commit again.
+
+
 Submitting your code
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -163,17 +300,10 @@ a PR by clicking the "Compare & pull request" button on GitHub,
 targeting the skrub repository.
 
 
-Integration
-^^^^^^^^^^^
-
-Community consensus is key in the integration process. Expect a minimum
-of 1 to 3 reviews depending on the size of the change before we consider
-merging the PR.
-
-Please be mindful that maintainers are volunteers, so review times may vary.
-
 Continuous Integration (CI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+After creating your PR, CI tools will run proceed to run all the tests on all
+configurations supported by skrub.
 
 - **Github Actions**:
   Used for testing skrub across various platforms (Linux, macOS, Windows)
@@ -198,6 +328,32 @@ actions are taken.
 
 Note that by default the documentation is built, but only the examples that are
 directly modified by the pull request are executed.
+
+CI is testing all possible configurations supported by skrub, so tests may fail
+with configurations different from what you are developing with. If this is the
+case,  it is possible to run the tests in the environment that is failing by
+using pixi. For example if the env is ``ci-py309-min-optional-deps``, it is
+possible to replicate it using the following command:
+
+.. code:: sh
+
+   pixi run -e ci-py309-min-optional-deps  pytest skrub/tests/path/to/test
+
+This command downloads the specific environment on the machine, so you can test
+it locally and apply fixes, or have a clearer idea of where the code is failing
+to discuss with the maintainers.
+
+Finally, if the remote repository was changed, you might need to run
+  ``pre-commit run --all-files`` to make sure that the formatting is
+  correct.
+
+Integration
+^^^^^^^^^^^
+
+Community consensus is key in the integration process. Expect a minimum
+of 1 to 3 reviews depending on the size of the change before we consider
+merging the PR.
+
 
 Building the documentation
 --------------------------

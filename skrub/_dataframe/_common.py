@@ -77,8 +77,10 @@ __all__ = [
     "is_pandas_object",
     "is_any_date",
     "to_datetime",
+    "is_duration",
     "is_categorical",
     "to_categorical",
+    "is_all_null",
     #
     # Inspecting, selecting and modifying values
     #
@@ -105,7 +107,11 @@ __all__ = [
     "slice",
     "replace",
     "with_columns",
+    "abs",
+    "total_seconds",
 ]
+
+pandas_version = parse_version(parse_version(pd.__version__).base_version)
 
 #
 # Inspecting containers' type and module
@@ -331,7 +337,8 @@ def _concat_horizontal_pandas(*dataframes):
     init_index = dataframes[0].index
     dataframes = [df.reset_index(drop=True) for df in dataframes]
     dataframes = _join_utils.make_column_names_unique(*dataframes)
-    result = pd.concat(dataframes, axis=1, copy=False)
+    kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
+    result = pd.concat(dataframes, axis=1, **kwargs)
     result.index = init_index
     return result
 
@@ -851,6 +858,21 @@ def _to_datetime_polars(col, format, strict=True):
 
 
 @dispatch
+def is_duration(col):
+    raise NotImplementedError()
+
+
+@is_duration.specialize("pandas", argument_type="Column")
+def _is_duration_pandas(col):
+    return pd.api.types.is_timedelta64_dtype(col)
+
+
+@is_duration.specialize("polars", argument_type="Column")
+def _is_duration_polars(col):
+    return col.dtype == pl.Duration
+
+
+@dispatch
 def is_categorical(col):
     raise NotImplementedError()
 
@@ -881,6 +903,28 @@ def _to_categorical_polars(col):
         return col
     col = to_string(col)
     return _cast_polars(col, pl.Categorical())
+
+
+@dispatch
+def is_all_null(col):
+    raise NotImplementedError()
+
+
+@is_all_null.specialize("pandas", argument_type="Column")
+def _is_all_null_pandas(col):
+    return all(is_null(col))
+
+
+@is_all_null.specialize("polars", argument_type="Column")
+def _is_all_null_polars(col):
+    # Column type is Null
+    if col.dtype == pl.Null:
+        return True
+    # Column type is not Null, but all values are nulls: more efficient
+    if col.null_count() == col.len():
+        return True
+    # Column type is not Null, not all values are null (check if NaN etc.): slower
+    return all(is_null(col))
 
 
 #
@@ -1245,3 +1289,33 @@ def with_columns(df, **new_cols):
     cols = {col_name: col(df, col_name) for col_name in column_names(df)}
     cols.update({n: make_column_like(df, c, n) for n, c in new_cols.items()})
     return make_dataframe_like(df, cols)
+
+
+@dispatch
+def abs(col):
+    raise NotImplementedError()
+
+
+@abs.specialize("pandas", argument_type="Column")
+def _abs_pandas(col):
+    return col.abs()
+
+
+@abs.specialize("polars", argument_type="Column")
+def _abs_polars(col):
+    return col.abs()
+
+
+@dispatch
+def total_seconds(col):
+    raise NotImplementedError()
+
+
+@total_seconds.specialize("pandas")
+def _total_seconds_pandas(col):
+    return col.dt.total_seconds()
+
+
+@total_seconds.specialize("polars")
+def _total_seconds_polars(col):
+    return col.dt.total_microseconds().cast(float) * 1e-6

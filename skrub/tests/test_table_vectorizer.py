@@ -164,6 +164,28 @@ def _get_datetimes_dataframe():
     )
 
 
+def _get_missing_values_dataframe(categorical_dtype="object"):
+    """
+    Creates a simple DataFrame with some columns that contain only missing values.
+    We'll use different types of missing values (np.nan, pd.NA, None)
+    to test how the vectorizer handles full null columns with mixed null values.
+    """
+    return pd.DataFrame(
+        {
+            "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
+            "all_null": pd.Series(
+                [None, None, None, None, None], dtype=categorical_dtype
+            ),
+            "all_nan": pd.Series(
+                [np.nan, np.nan, np.nan, np.nan, np.nan], dtype="Float64"
+            ),
+            "mixed_nulls": pd.Series(
+                [np.nan, None, pd.NA, "NULL", "NA"], dtype=categorical_dtype
+            ),
+        }
+    )
+
+
 def test_fit_default_transform():
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer()
@@ -213,11 +235,11 @@ X_tuples = [
     (
         X,
         {
-            "pd_datetime": "datetime64[ns]",
-            "np_datetime": "datetime64[ns]",
-            "dmy-": "datetime64[ns]",
-            "ymd/": "datetime64[ns]",
-            "ymd/_hms:": "datetime64[ns]",
+            "pd_datetime": "datetime",
+            "np_datetime": "datetime",
+            "dmy-": "datetime",
+            "ymd/": "datetime",
+            "ymd/_hms:": "datetime",
         },
     ),
     # Test other types detection
@@ -263,7 +285,10 @@ def test_auto_cast(X, dict_expected_types):
     vectorizer = passthrough_vectorizer()
     X_trans = vectorizer.fit_transform(X)
     for col in X_trans.columns:
-        assert dict_expected_types[col] == X_trans[col].dtype
+        if dict_expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            assert dict_expected_types[col] == X_trans[col].dtype
 
 
 def test_auto_cast_missing_categories():
@@ -506,8 +531,10 @@ def test_changing_types(X_train, X_test, expected_X_out):
     """
     table_vec = TableVectorizer(
         # only extract the total seconds
-        datetime=DatetimeEncoder(resolution=None)
+        datetime=DatetimeEncoder(resolution=None),
+        drop_null_fraction=None,
     )
+
     table_vec.fit(X_train)
     X_out = table_vec.transform(X_test)
     assert (X_out.isna() == expected_X_out.isna()).all().all()
@@ -734,3 +761,18 @@ def test_supervised_encoder(df_module):
     y = np.random.default_rng(0).normal(size=sbd.shape(X)[0])
     tv = TableVectorizer(low_cardinality=TargetEncoder())
     tv.fit_transform(X, y)
+
+
+def test_drop_null_column():
+    """Check that all null columns are dropped, and no more."""
+    # Don't drop null columns
+    X = _get_missing_values_dataframe()
+    tv = TableVectorizer(drop_null_fraction=None)
+    transformed = tv.fit_transform(X)
+
+    assert sbd.shape(transformed) == sbd.shape(X)
+
+    # Drop null columns
+    tv = TableVectorizer(drop_null_fraction=1.0)
+    transformed = tv.fit_transform(X)
+    assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)

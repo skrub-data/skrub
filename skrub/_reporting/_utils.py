@@ -43,8 +43,8 @@ def quantiles(column):
 
 def ellide_string(s, max_len=30):
     """Shorten a string so it can be used as a plot axis title or label."""
-    if not isinstance(s, str):
-        return s
+    s = str(s)
+
     # normalize whitespace
     s = re.sub(r"\s+", " ", s)
     if len(s) <= max_len:
@@ -112,3 +112,22 @@ class JSONEncoder(json.JSONEncoder):
             if isinstance(value, np.floating):
                 return float(value)
             raise
+
+
+def duration_to_numeric(col):
+    seconds = sbd.total_seconds(col)
+    q = sbd.quantile(sbd.abs(seconds), 0.9)
+    HOUR = 3600
+    DAY = HOUR * 24
+    YEAR = DAY * 365.2425
+    if q < 1e-3:
+        return seconds * 1e6, "microsecond"
+    if q < 1.0:
+        return seconds * 1e3, "millisecond"
+    if q < HOUR:
+        return seconds, "second"
+    if q < DAY:
+        return seconds / HOUR, "hour"
+    if q < YEAR:
+        return seconds / DAY, "day"
+    return seconds / YEAR, "year"

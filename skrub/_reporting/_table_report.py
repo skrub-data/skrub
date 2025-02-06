@@ -1,5 +1,7 @@
+import codecs
 import functools
 import json
+from pathlib import Path
 
 from ._html import to_html
 from ._serve import open_in_browser
@@ -35,6 +37,11 @@ class TableReport:
         mapping with the keys ``display_name`` (the name shown in the menu,
         e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
         See the end of the "Examples" section below for details.
+    verbose : int, default = 1
+        Whether to print progress information while the report is being generated.
+
+        * verbose = 1 prints how many columns have been processed so far.
+        * verbose = 0 silences the output.
 
     See Also
     --------
@@ -65,7 +72,7 @@ class TableReport:
     >>> report
     <TableReport: use .open() to display>
 
-    (Note that above we only see the string represention, not the report itself,
+    (Note that above we only see the string representation, not the report itself,
     because we are not in a notebook.)
 
     Whether you are using a notebook or not, you can always open the report as a
@@ -108,16 +115,19 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
+        verbose=1,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
+            "verbose": verbose,
         }
         self.title = title
         self.column_filters = column_filters
         self.dataframe = dataframe
+        self.verbose = verbose
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
@@ -188,6 +198,44 @@ class TableReport:
 
     def _repr_html_(self):
         return self._repr_mimebundle_()["text/html"]
+
+    def write_html(self, file):
+        """Store the report into an HTML file.
+
+        Parameters
+        ----------
+        file : str, pathlib.Path or file object
+            The file object or path of the file to store the HTML output.
+        """
+        html = self.html()
+        if isinstance(file, (str, Path)):
+            with open(file, "w", encoding="utf8") as stream:
+                stream.write(html)
+            return
+
+        try:
+            # We don't have information about the write mode of the provided
+            # file-object. We start by writing bytes into it.
+            file.write(html.encode("utf-8"))
+            return
+        except TypeError:
+            # We end-up here if the file-object was open in text mode
+            # Let's give it another chance in this mode.
+            pass
+
+        if (encoding := getattr(file, "encoding", None)) is not None:
+            try:
+                encoding_name = codecs.lookup(encoding).name
+            except LookupError:  # pragma: no cover
+                encoding_name = None
+            if encoding_name != "utf-8":
+                raise ValueError(
+                    "If `file` is a text file it should use utf-8 encoding; got:"
+                    f" {encoding!r}"
+                )
+        # We write into the file-object expecting it to be in text mode at this
+        # stage and with a UTF-8 encoding.
+        file.write(html)
 
     def open(self):
         """Open the HTML report in a web browser."""

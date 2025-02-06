@@ -27,7 +27,7 @@ def monitor(
     """Decorator used to monitor the execution of a function.
 
     The decorated function should return either:
-    - ``None``, when the goal is only to monitor time of exection and/or memory
+    - ``None``, when the goal is only to monitor time of execution and/or memory
       (parameters ``time`` and/or ``memory`` should be ``True`` (the default));
     - a mapping (dict), which will be added to the results. The keys are going
       to be the columns of the resulting pandas DataFrame.
@@ -79,7 +79,7 @@ def monitor(
         execution without the memory monitoring.
     hot_load : str, optional
         Name of the file to hot-load (meaning, recovering partial results
-        from a previous run that was interupted).
+        from a previous run that was interrupted).
         The name of the file is random (created at runtime), and printed before
         the run. Grab it from the stdout of your interrupted run.
     repeat : int, default=1
