@@ -258,7 +258,9 @@ html_static_path = ["_static"]
 html_css_files = [
     "css/custom.css",
 ]
-html_js_files = []
+html_js_files = [
+    "scripts/sg_plotly_resize.js",
+]
 
 
 # Project logo, to place at the top of the sidebar.
