@@ -220,17 +220,17 @@ with_total
 # That's not very helpful.
 #
 # To help us visualize intermediate results and make development more
-# interactive, we can provide a placeholder value for each variable. Skrub will
+# interactive, we can provide a value value for each variable. Skrub will
 # use it to compute previews of the results. This helps inspect what the
 # results will look like, catch errors early, and provide better tab-completion
 # on attribute and item names.
 #
 # Instead of writing ``products = skrub.var("products")`` as before, let us
-# start over, this time passing a placeholder value to make our expression a
+# start over, this time passing a value value to make our expression a
 # little bit more helpful:
 
 # %%
-products = skrub.var("products", placeholder=products_df)
+products = skrub.var("products", value=products_df)
 with_total = products.assign(
     total_price=products["Nbr_of_prod_purchas"] * products["cash_price"]
 )
@@ -264,7 +264,7 @@ baskets_df = dataset.baskets[["ID"]]  # just a regular dataframe
 
 # mark_as_x() means
 # 'this is the feature matrix you need to split during cross-validation'
-baskets = skrub.var("baskets", placeholder=baskets_df).skb.mark_as_x()
+baskets = skrub.var("baskets", value=baskets_df).skb.mark_as_x()
 
 # Note: a slightly shorter way is to use the shorthand `skrub.X`:
 #
@@ -279,7 +279,7 @@ baskets = skrub.var("baskets", placeholder=baskets_df).skb.mark_as_x()
 
 # %%
 fraud_flags = skrub.var(
-    "fraud_flags", placeholder=dataset.baskets["fraud_flag"]
+    "fraud_flags", value=dataset.baskets["fraud_flag"]
 ).skb.mark_as_y()
 
 # %%

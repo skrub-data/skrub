@@ -326,7 +326,7 @@ class _Cloner(_ExprTraversal):
         impl = expr._skrub_impl
         clone_impl = impl.__class__(**evaluated_attributes)
         if isinstance(clone_impl, Var) and self.drop_preview_data:
-            clone_impl.placeholder = _Constants.NO_VALUE
+            clone_impl.value = _Constants.NO_VALUE
         clone_impl.is_X = impl.is_X
         clone_impl.is_y = impl.is_y
         clone_impl._creation_stack_lines = impl._creation_stack_lines

@@ -215,7 +215,7 @@ def _with_preview_evaluation(f):
                 func_name = f"{f.__name__}()"
             msg = "\n".join(traceback.format_exception_only(e)).rstrip("\n")
             raise RuntimeError(
-                f"Preview evaluation of {func_name!r} failed.\n"
+                f"Evaluation of {func_name!r} failed.\n"
                 f"You can see the full traceback above. The error message was:\n{msg}"
             ) from e
 
@@ -390,7 +390,7 @@ class Expr:
         preview = self._skrub_impl.preview_if_available()
         if preview is _Constants.NO_VALUE:
             return result
-        return f"{result}\nPreview:\n――――――――\n{preview!r}"
+        return f"{result}\nValue:\n――――――\n{preview!r}"
 
     def _repr_html_(self):
         report = self.skb.get_report()
@@ -400,7 +400,7 @@ class Expr:
             # TODO: expose "summary" in TableReport?
             report = report.replace(
                 '<div id="report">',
-                f'<div id="report">\n<pre>{title}\nPreview:\n</pre>',
+                f'<div id="report">\n<pre>{title}\nValue:\n</pre>',
             )
         return report
 
@@ -506,6 +506,10 @@ class SkrubNamespace:
     def preview(self):
         return self.get_value()
 
+    @property
+    def value(self):
+        return self.get_value()
+
     @_with_preview_evaluation
     def freeze_after_fit(self):
         return Expr(FreezeAfterFit(self._expr))
@@ -539,7 +543,7 @@ class SkrubNamespace:
             if isinstance(impl, Var):
                 _check_duplicate(n)
                 var_names[impl.name] = n
-                data[impl.name] = impl.placeholder
+                data[impl.name] = impl.value
         return data
 
     def get_report(self, mode="preview", environment=None, **report_kwargs):
@@ -666,45 +670,45 @@ def _check_name(name):
 
 
 class Var(ExprImpl):
-    _fields = ["name", "placeholder"]
+    _fields = ["name", "value"]
 
     def compute(self, e, mode, environment):
         if mode == "preview":
             # still use value from the environment if provided, fallback on
-            # placeholder otherwise.
+            # value otherwise.
             if e.name in environment:
                 return environment[e.name]
-            if e.placeholder is _Constants.NO_VALUE:
+            if e.value is _Constants.NO_VALUE:
                 raise UninitializedVariable(
-                    f"No placeholder value has been provided for {e.name!r}"
+                    f"No value value has been provided for {e.name!r}"
                 )
-            return e.placeholder
+            return e.value
         if e.name not in environment:
             raise UninitializedVariable(f"No value has been provided for {e.name!r}")
         return environment[e.name]
 
     def preview_if_available(self):
-        return self.placeholder
+        return self.value
 
     def __repr__(self):
         return f"<Var {self.name!r}>"
 
 
-def var(name, placeholder=_Constants.NO_VALUE):
+def var(name, value=_Constants.NO_VALUE):
     if name is None:
         raise TypeError(
             "'name' for a variable cannot be None, please provide a string."
         )
     _check_name(name)
-    return Expr(Var(name, placeholder=placeholder))
+    return Expr(Var(name, value=value))
 
 
-def X(placeholder=_Constants.NO_VALUE):
-    return Expr(Var("X", placeholder=placeholder)).skb.mark_as_x()
+def X(value=_Constants.NO_VALUE):
+    return Expr(Var("X", value=value)).skb.mark_as_x()
 
 
-def y(placeholder=_Constants.NO_VALUE):
-    return Expr(Var("y", placeholder=placeholder)).skb.mark_as_y()
+def y(value=_Constants.NO_VALUE):
+    return Expr(Var("y", value=value)).skb.mark_as_y()
 
 
 class Value(ExprImpl):
