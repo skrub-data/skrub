@@ -222,8 +222,8 @@ class _Evaluator(_ExprTraversal):
                 raise
             stack = expr._skrub_impl.creation_stack_last_line()
             msg = (
-                f"Evaluation of node {expr} failed. See above for full traceback. "
-                f"This node was defined here:\n{stack}"
+                f"Evaluation of node {expr._skrub_impl} failed. See above for full"
+                f" traceback. This node was defined here:\n{stack}"
             )
             if hasattr(e, "add_note"):
                 e.add_note(msg)
