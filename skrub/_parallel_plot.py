@@ -33,7 +33,7 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
             color=cv_results["mean_test_score"],
             colorscale=colorscale,
             showscale=True,
-            colorbar=dict(title=dict(text="mean_test_score")),
+            colorbar=dict(title=dict(text="score")),
         ),
         dimensions=prepared_columns,
     )
@@ -44,7 +44,12 @@ def _prepare_column(col, is_log_scale):
         return _prepare_obj_column(col)
     if is_log_scale or col.isna().any():
         return _prepare_numeric_column(col, is_log_scale)
-    return {"label": col.name, "values": col.to_numpy()}
+    label = {
+        "mean_test_score": "score",
+        "mean_fit_time": "fit time",
+        "mean_score_time": "score time",
+    }.get(col.name, col.name)
+    return {"label": label, "values": col.to_numpy()}
 
 
 def _prepare_obj_column(col):

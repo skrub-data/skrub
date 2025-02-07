@@ -1,28 +1,35 @@
 """
-Tuning hyperparameters and more
-===============================
+Tuning pipelines
+================
 
 Our machine-learning pipeline typically contains some values or choices which
 may influence its prediction performance, such as hyperparameters (e.g. the
-regularization parameter ``alpha`` of a ``Ridge``, the ``learning_rate`` of a
-``HistGradientBoostingRegressor``), which estimator to use (e.g. ``Ridge`` or
-``HistGradientBoostingRegressor``), or which steps to include (e.g. should we a
-table to bring additional information or not).
+regularization parameter ``alpha`` of a ``RidgeClassifier``, the
+``learning_rate`` of a ``HistGradientBoostingClassifier``), which estimator to
+use (e.g. ``RidgeClassifier`` or ``HistGradientBoostingClassifier``), or which
+steps to include (e.g. should we join a table to bring additional information or
+not).
 
-We want to tune those choices by trying several possible outcomes and keeping
-those that give the best performance on a validation set.
+We want to tune those choices by trying several options and keeping those that
+give the best performance on a validation set.
 
-Skrub provides a convenient way to specify the range of possible values, by
-inserting it directly in place of the actual value.
-For example we can write ``Ridge(alpha=skrub.choose_from([0.1, 1.0, 10.0]))``
-instead of ``Ridge(alpha=1.0)``. Skrub then inspects our pipeline to discover
-all the places where we used objects like ``skrub.choose_from`` and builds a
-grid of hyperparameters for us.
+Skrub `expressions <10_expressions.html>`_ provide a convenient way to specify
+the range of possible values, by inserting it directly in place of the actual
+value. For example we can write ``RidgeClassifier(alpha=skrub.choose_from([0.1,
+1.0, 10.0]))`` instead of ``RidgeClassifier(alpha=1.0)``. Skrub then inspects
+our pipeline to discover all the places where we used objects like
+``skrub.choose_from()`` and builds a grid of hyperparameters for us.
+
 """
 
 # %%
-# Here is a simple pipeline for the "toxicity" dataset (see TODO for
-# an introduction on ``skrub.X`` and ``skrub.y`` used below):
+# We will illustrate hyperparameter tuning on the "toxicity" dataset. This
+#  dataset contains 1,000 tweets and the task is to predict if they were
+#  flagged as being toxic or not.
+#
+# We start from a very simple pipeline without any hyperparameters. See `the
+# previous example <10_expressions.html>`_ for an explanation of ``skrub.X``
+# and ``skrub.y`` used below.
 
 # %%
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -47,23 +54,22 @@ pred = X.skb.apply(skrub.MinHashEncoder()).skb.apply(
 pred.skb.cross_validate(n_jobs=4)["test_score"]
 
 # %%
-# We can set the number of components extracted by the minhash encoder. When we
-# directly use a scikit-learn hyperparameter-tuner like ``GridSearchCV`` or
+# We can set the number of components extracted by the ``MinHashEncoder``. When
+# we directly use a scikit-learn hyperparameter-tuner like ``GridSearchCV`` or
 # ``RandomizedSearchCV``, we specify a grid of hyperparameters separately from
 # the estimator, with something similar to
 # ``GridSearchCV(my_pipeline, param_grid={"encoder__n_components: [5, 10, 20]"})``.
-#
 # With skrub, instead we use special skrub objects such as
 # ``skrub.choose_from(...)`` and insert them directly where the actual value
 # would normally go. Skrub then takes care of constructing the
 # ``GridSearchCV``'s parameter grid for us.
 #
-# Several options are available:
+# Several utilities are available:
 #
-# - ``choose_from`` to select from a discrete set of values
-# - ``choose_float`` and ``choose_int`` to sample numbers in the given range
-# - ``choose_bool`` to select between ``True`` and ``False``
-# - ``optional`` to select between something and ``None`` typically to make a
+# - ``choose_from`` to choose from a discrete set of values
+# - ``choose_float`` and ``choose_int`` to sample numbers in a given range
+# - ``choose_bool`` to choose between ``True`` and ``False``
+# - ``optional`` to choose between something and ``None``; typically to make a
 #   transformation step optional such as
 #   ``X.skb.apply(skrub.optional(StandardScaler()))``
 #
@@ -86,13 +92,13 @@ pred = X.skb.apply(classifier, y=y)
 # %%
 # We can then obtain an estimator that performs the hyperparameter search with
 # ``.skb.get_grid_search()`` or ``.skb.get_randomized_search()``. They accept
-# the same arguments as their scikit-learn counterparts (eg ``n_jobs``). Also,
-# like ``.skb.get_estimator()``, they accept a ``fitted`` argument and if it is
-# ``True`` the search is fitted on the data we provided when initializing our
-# pipeline's variables.
+# the same arguments as their scikit-learn counterparts (e.g. ``scoring`` and
+# ``n_jobs``). Also, like ``.skb.get_estimator()``, they accept a ``fitted``
+# argument and if it is ``True`` the search is fitted on the data we provided
+# when initializing our pipeline's variables.
 
 search = pred.skb.get_randomized_search(n_iter=8, n_jobs=4, fitted=True)
-search.get_cv_results_table()
+print(search.get_cv_results_table())
 
 # %%
 # We can get a parallel coordinate plot.
@@ -110,7 +116,7 @@ search.plot_parallel_coord()
 # used to choose between different estimators, or in place of any value used in
 # our pipeline.
 #
-# For example, here we pass a choice to pandas DataFrame's `assign` method.
+# For example, here we pass a choice to pandas DataFrame's ``assign`` method.
 # We want to add a feature that captures the length of the text, but we are not
 # sure if it is better to count length in characters or in words. We do not
 # want to add both because it would be redundant. We can add a column to the
@@ -123,7 +129,7 @@ X, y = skrub.X(dataset.X), skrub.y(dataset.y)
 X = X.assign(
     length=skrub.choose_from(
         {"words": X["text"].str.count(r"\b\w+\b"), "chars": X["text"].str.len()},
-        name="length definition",
+        name="length",
     )
 )
 X
@@ -169,9 +175,10 @@ search = pred.skb.get_randomized_search(n_iter=16, n_jobs=4, fitted=True)
 search.plot_parallel_coord()
 
 # %%
-# In the parallel plot above, we see that the StringEncoder is much better, the
-# number of components should not be too low, and the definition of length we
-# choose has little influence.
+# In the parallel plot above, we see that the ``StringEncoder`` with
+# ``HistGradientBoostingClassifier`` is much better, the number of components
+# should not be too low, and the definition of length we choose has little
+# influence.
 
 # %%
 # Advanced usage
@@ -250,21 +257,16 @@ X.skb.eval({"add_length": True})
 # %%
 X, y = skrub.X(dataset.X), skrub.y(dataset.y)
 
-add_length = skrub.choose_bool("add_length")
-
 
 @skrub.deferred
-def with_added_length():
+def extract_features(df, add_length):
     if add_length:
-        return X.assign(length=X["text"].str.len())
-    return X
+        return df.assign(length=df["text"].str.len())
+    return df
 
 
-X = with_added_length()
+X = extract_features(X, skrub.choose_bool("add_length"))
 X = X.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
-
-# Note: we can manually set the outcome of a choice when evaluating an
-# expression (or fitting an estimator)
 
 X.skb.eval({"add_length": False})
 
