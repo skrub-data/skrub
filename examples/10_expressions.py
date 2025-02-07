@@ -476,3 +476,8 @@ loaded.predict({"baskets": new_baskets, "products": new_products})
 #     predictions = baskets.skb.apply(HistGradientBoostingClassifier(), y=fraud_flags)
 #
 #     predictions.skb.cross_validate(scoring="roc_auc", n_jobs=4)
+
+# %%
+
+# undo the display config we set at the beginning of the script
+skrub.unpatch_display()

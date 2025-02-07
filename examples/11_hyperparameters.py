@@ -24,12 +24,10 @@ our pipeline to discover all the places where we used objects like
 
 # %%
 # We will illustrate hyperparameter tuning on the "toxicity" dataset. This
-#  dataset contains 1,000 tweets and the task is to predict if they were
+#  dataset contains 1,000 texts and the task is to predict if they were
 #  flagged as being toxic or not.
 #
-# We start from a very simple pipeline without any hyperparameters. See `the
-# previous example <10_expressions.html>`_ for an explanation of ``skrub.X``
-# and ``skrub.y`` used below.
+# We start from a very simple pipeline without any hyperparameters.
 
 # %%
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -37,13 +35,24 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 import skrub
 import skrub.datasets
 
-dataset = skrub.datasets.fetch_toxicity()
+data = skrub.datasets.fetch_toxicity().toxicity
 
-X = skrub.X(dataset.X)
+# This dataset is sorted -- all toxic tweets appear first, so we shuffle it
+data = data.sample(frac=1.0, random_state=1)
+
+texts = data[["text"]]
+labels = data["is_toxic"]
+
+# %%
+# See `the previous example <10_expressions.html>`_ for an explanation of
+# ``skrub.X`` and ``skrub.y`` used below.
+
+# %%
+X = skrub.X(texts)
 X
 
 # %%
-y = skrub.y(dataset.y)
+y = skrub.y(labels)
 y
 
 # %%
@@ -77,7 +86,7 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 # results and plots or to override their outcome.
 
 # %%
-X, y = skrub.X(dataset.X), skrub.y(dataset.y)
+X, y = skrub.X(texts), skrub.y(labels)
 
 encoder = skrub.MinHashEncoder(
     n_components=skrub.choose_int(5, 50, log=True, name="N components")
@@ -97,8 +106,8 @@ pred = X.skb.apply(classifier, y=y)
 # argument and if it is ``True`` the search is fitted on the data we provided
 # when initializing our pipeline's variables.
 
-search = pred.skb.get_randomized_search(n_iter=8, n_jobs=4, fitted=True)
-print(search.get_cv_results_table())
+search = pred.skb.get_randomized_search(n_iter=8, n_jobs=4, random_state=1, fitted=True)
+search.get_cv_results_table()
 
 # %%
 # We can get a parallel coordinate plot.
@@ -124,7 +133,7 @@ search.plot_parallel_coord()
 # in words:
 
 # %%
-X, y = skrub.X(dataset.X), skrub.y(dataset.y)
+X, y = skrub.X(texts), skrub.y(labels)
 
 X = X.assign(
     length=skrub.choose_from(
@@ -171,14 +180,15 @@ pred = X.skb.apply(classifier, y=y)
 print(pred.skb.describe_param_grid())
 
 # %%
-search = pred.skb.get_randomized_search(n_iter=16, n_jobs=4, fitted=True)
+search = pred.skb.get_randomized_search(
+    n_iter=16, n_jobs=4, random_state=1, fitted=True
+)
 search.plot_parallel_coord()
 
 # %%
-# In the parallel plot above, we see that the ``StringEncoder`` with
-# ``HistGradientBoostingClassifier`` is much better, the number of components
-# should not be too low, and the definition of length we choose has little
-# influence.
+# In the parallel plot above, we see for example that the ``StringEncoder``
+# performs much better than the ``MinHashEncoder`` for this dataset.
+
 
 # %%
 # Advanced usage
@@ -200,7 +210,7 @@ search.plot_parallel_coord()
 # %%
 from sklearn.preprocessing import StandardScaler
 
-X, y = skrub.X(dataset.X), skrub.y(dataset.y)
+X, y = skrub.X(texts), skrub.y(labels)
 
 X = X.skb.apply(skrub.MinHashEncoder())
 
@@ -231,7 +241,7 @@ print(pred.skb.describe_param_grid())
 # into an expression, so that we can keep chaining more operations onto it.
 
 # %%
-X, y = skrub.X(dataset.X), skrub.y(dataset.y)
+X, y = skrub.X(texts), skrub.y(labels)
 
 add_length = skrub.choose_bool("add_length")
 X = add_length.if_else(X.assign(length=X["text"].str.len()), X).as_expr()
@@ -255,7 +265,7 @@ X.skb.eval({"add_length": True})
 # written:
 
 # %%
-X, y = skrub.X(dataset.X), skrub.y(dataset.y)
+X, y = skrub.X(texts), skrub.y(labels)
 
 
 @skrub.deferred
