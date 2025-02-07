@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 
+import numpy as np
 import pandas as pd
+from sklearn.preprocessing import SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
 try:
@@ -58,6 +60,9 @@ def _get_dt_feature_pandas(col, feature):
         return ((col - epoch) / pd.Timedelta("1s")).astype("float32")
     if feature == "weekday":
         return col.dt.day_of_week + 1
+    if feature == "ordinal_day":
+        return col.dt.day_of_year
+
     assert feature in _TIME_LEVELS
     return getattr(col.dt, feature)
 
@@ -66,7 +71,7 @@ def _get_dt_feature_pandas(col, feature):
 def _get_dt_feature_polars(col, feature):
     if feature == "total_seconds":
         return (col.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
-    assert feature in _TIME_LEVELS + ["weekday"]
+    assert feature in _TIME_LEVELS + ["weekday", "ordinal_day"]
     return getattr(col.dt, feature)()
 
 
@@ -256,10 +261,19 @@ class DatetimeEncoder(SingleColumnTransformer):
     timezone used during ``fit`` and that we get the same result for "hour".
     """  # noqa: E501
 
-    def __init__(self, resolution="hour", add_weekday=False, add_total_seconds=True):
+    def __init__(
+        self,
+        resolution="hour",
+        add_weekday=False,
+        add_total_seconds=True,
+        add_ordinal_day=False,
+        add_periodic: str | list[str] | None = None,
+    ):
         self.resolution = resolution
         self.add_weekday = add_weekday
         self.add_total_seconds = add_total_seconds
+        self.add_ordinal_day = add_ordinal_day
+        self.add_periodic = add_periodic
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -294,6 +308,20 @@ class DatetimeEncoder(SingleColumnTransformer):
             self.extracted_features_.append("total_seconds")
         if self.add_weekday:
             self.extracted_features_.append("weekday")
+        if self.add_ordinal_day:
+            self.extracted_features_.append("ordinal_day")
+
+        # Adding transformers for periodic encoding
+        self._required_transformers = {}
+
+        for _case in self.add_periodic:
+            if _case == "day":
+                _t = PeriodicEncoder(kind="spline", period=24)
+                self._required_transformers[_case] = _t
+            if _case == "year":
+                # TODO: In theory we should check that the year is leap
+                _t = PeriodicEncoder(kind="circular", period=366)
+                self._required_transformers[_case] = _t
         return self.transform(column)
 
     def transform(self, column):
@@ -316,7 +344,19 @@ class DatetimeEncoder(SingleColumnTransformer):
             extracted = _get_dt_feature(column, feature).rename(f"{name}_{feature}")
             extracted = sbd.to_float32(extracted)
             all_extracted.append(extracted)
-        return sbd.make_dataframe_like(column, all_extracted)
+
+        _new_features = []
+        for _case, t in self._required_transformers.items():
+            if _case == "day":
+                _feat = _get_dt_feature(column, "day")
+                _feat = sbd.rename(_feat, "day")
+                _new_features.append(t.fit_transform(_feat))
+
+        X_out = sbd.make_dataframe_like(column, all_extracted)
+
+        X_out = sbd.concat_horizontal(X_out, *_new_features)
+
+        return X_out
 
     def _check_params(self):
         allowed = _TIME_LEVELS + [None]
@@ -325,6 +365,20 @@ class DatetimeEncoder(SingleColumnTransformer):
                 f"'resolution' options are {allowed}, got {self.resolution!r}."
             )
 
+        if isinstance(self.add_periodic, list):
+            if not all([_ in ["day", "year"] for _ in self.add_periodic]):
+                raise ValueError(f"Unsupported value found in {self.add_periodic}.")
+
+        if isinstance(self.add_periodic, str):
+            if self.add_periodic not in ["day", "year"]:
+                raise ValueError(
+                    f"Unsupported value {self.add_periodic} for add_periodic"
+                )
+            self.add_periodic = [self.add_periodic]
+
+        if self.add_periodic is None:
+            self.add_periodic = []
+
     def _more_tags(self):
         return {"preserves_dtype": []}
 
@@ -332,3 +386,59 @@ class DatetimeEncoder(SingleColumnTransformer):
         tags = super().__sklearn_tags__()
         tags.transformer_tags = TransformerTags(preserves_dtype=[])
         return tags
+
+
+class PeriodicEncoder(SingleColumnTransformer):
+    def __init__(self, kind: str = "spline", period=24, n_splines=None, degree=3):
+        self.kind = kind
+
+        # SplineTransformer arguments
+        self.period = period
+        self.n_splines = n_splines
+        self.degree = degree
+
+    def fit_transform(self, X, y=None):
+        del y
+
+        if self.kind == "spline":
+            self.transformer_ = self._periodic_spline_transformer(
+                period=self.period, n_splines=self.n_splines, degree=self.degree
+            )
+        else:
+            pass
+
+        X_out = self.transformer_.fit_transform(sbd.to_numpy(X).reshape(-1, 1))
+
+        self.is_fitted = True
+        self.n_components_ = X_out.shape[1]
+
+        name = sbd.name(X)
+        self.all_outputs_ = [
+            f"{name}_{self.kind}_{idx}" for idx in range(self.n_components_)
+        ]
+
+        return self._post_process(X, X_out)
+
+    def transform(self, X):
+        X_out = self.transformer_.transform(X)
+
+        return self._post_process(X, X_out)
+
+    def _post_process(self, X, result):
+        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result.T)))
+        result = sbd.copy_index(X, result)
+
+        return result
+
+    # This comes from https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html#periodic-spline-features
+    def _periodic_spline_transformer(self, period, n_splines=None, degree=3):
+        if n_splines is None:
+            n_splines = period
+        n_knots = n_splines + 1  # periodic and include_bias is True
+        return SplineTransformer(
+            degree=degree,
+            n_knots=n_knots,
+            knots=np.linspace(0, period, n_knots).reshape(n_knots, 1),
+            extrapolation="periodic",
+            include_bias=True,
+        )

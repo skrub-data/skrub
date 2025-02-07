@@ -6,7 +6,7 @@ from pathlib import Path as _Path
 from ._agg_joiner import AggJoiner, AggTarget
 from ._check_dependencies import check_dependencies
 from ._column_associations import column_associations
-from ._datetime_encoder import DatetimeEncoder
+from ._datetime_encoder import DatetimeEncoder, PeriodicEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
@@ -56,4 +56,5 @@ __all__ = [
     "TextEncoder",
     "StringEncoder",
     "column_associations",
+    "PeriodicEncoder",
 ]
