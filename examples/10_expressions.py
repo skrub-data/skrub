@@ -43,7 +43,8 @@ which estimators to use.
 Skrub can help us tackle these challenges. In this example, we show a pipeline
 to handle a dataset with 2 tables. Despite being very simple, this pipeline
 would be difficult to implement, validate and deploy correctly without skrub.
-We leave out hyperparameter tuning, which is covered in the next example.
+We leave out hyperparameter tuning, which is covered in the
+`next example <11_hyperparameters.html>`_.
 """
 
 # %%
@@ -137,7 +138,7 @@ dataset.products
 # is error-prone, and we cannot tune any choices (like the choice of the
 # aggregation function).
 #
-# To cope with these difficulties, skrub provides a alternative way to build
+# To cope with these difficulties, skrub provides an alternative way to build
 # more flexible pipelines.
 
 # %%
