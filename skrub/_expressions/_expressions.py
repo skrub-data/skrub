@@ -442,18 +442,20 @@ for op_name in _UNARY_OPS:
     setattr(Expr, op_name, _make_unary_op(op_name))
 
 
-def _wrap_estimator(estimator, cols, X):
+def _wrap_estimator(estimator, cols, allow_reject, X):
     if estimator in [None, "passthrough"]:
         estimator = _PassThrough()
     if isinstance(estimator, Choice):
-        return estimator.map_values(lambda v: _wrap_estimator(v, cols, X))
+        return estimator.map_values(
+            lambda v: _wrap_estimator(v, cols, allow_reject=allow_reject, X=X)
+        )
     if hasattr(estimator, "transform"):
         if not sbd.is_dataframe(X):
             if isinstance(cols, type(s.all())):
                 return estimator
             # TODO better msg
             raise ValueError("Input should be a dataframe if cols is not all()")
-        return wrap_transformer(estimator, cols)
+        return wrap_transformer(estimator, cols, allow_reject=allow_reject)
     if isinstance(cols, type(s.all())):
         return estimator
     # TODO better msg
@@ -464,16 +466,18 @@ class SkrubNamespace:
     def __init__(self, expr):
         self._expr = expr
 
-    def _apply(self, estimator, y=None, cols=s.all(), name=None):
-        expr = Expr(Apply(estimator, cols, self._expr, y))
+    def _apply(self, estimator, y=None, cols=s.all(), allow_reject=False, name=None):
+        expr = Expr(Apply(estimator, cols, self._expr, y, allow_reject))
         if name is not None:
             expr = expr.skb.set_name(name)
         return expr
 
     # TODO add a cond param to apply rather than having _tuning.optional?
     @_with_preview_evaluation
-    def apply(self, estimator, y=None, cols=s.all(), name=None):
-        return self._apply(estimator=estimator, y=y, cols=cols, name=name)
+    def apply(self, estimator, y=None, cols=s.all(), allow_reject=False, name=None):
+        return self._apply(
+            estimator=estimator, y=y, cols=cols, allow_reject=allow_reject, name=name
+        )
 
     @_with_preview_evaluation
     def applied_estimator(self):
@@ -776,18 +780,20 @@ class _PassThrough(BaseEstimator):
 
 
 class Apply(ExprImpl):
-    _fields = ["estimator", "cols", "X", "y"]
+    _fields = ["estimator", "cols", "X", "y", "allow_reject"]
 
     def fields_required_for_eval(self, mode):
         if "fit" in mode or mode in ["score", "preview"]:
             return self._fields
-        return ["estimator", "cols", "X"]
+        return ["estimator", "X"]
 
     def compute(self, e, mode, environment):
         method_name = "fit_transform" if mode == "preview" else mode
 
         if "fit" in method_name:
-            self.estimator_ = _wrap_estimator(e.estimator, e.cols, e.X)
+            self.estimator_ = _wrap_estimator(
+                e.estimator, e.cols, allow_reject=e.allow_reject, X=e.X
+            )
 
         if "transform" in method_name and not hasattr(self.estimator_, "transform"):
             if "fit" in method_name:

@@ -81,7 +81,6 @@ __all__ = [
     "SelectCols",
     "DropCols",
     "Drop",
-    "selectors",
     "Recipe",
     "choose_from",
     "optional",
