@@ -16,7 +16,7 @@ from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._tuning import Choice
 from .._utils import random_string
-from ._evaluation import choices, clear_results, evaluate, graph, param_grid
+from ._evaluation import choices, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
 from ._utils import simple_repr
 
@@ -101,12 +101,17 @@ def _node_status(expr_graph, mode):
 
 
 def full_report(
-    expr, environment=None, mode="preview", open=True, output_dir=None, overwrite=False
+    expr,
+    environment=None,
+    mode="preview",
+    clear=True,
+    open=True,
+    output_dir=None,
+    overwrite=False,
 ):
     output_dir = _get_output_dir(output_dir, overwrite)
-    clear_results(expr)
     try:
-        evaluate(expr, mode=mode, environment=environment)
+        evaluate(expr, mode=mode, environment=environment, clear=clear)
     except Exception:
         pass
     g = graph(expr)

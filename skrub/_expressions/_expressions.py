@@ -390,7 +390,7 @@ class Expr:
         preview = self._skrub_impl.preview_if_available()
         if preview is _Constants.NO_VALUE:
             return result
-        return f"{result}\nValue:\n――――――\n{preview!r}"
+        return f"{result}\nResult:\n―――――――\n{preview!r}"
 
     def _repr_html_(self):
         report = self.skb.get_report()
@@ -400,7 +400,7 @@ class Expr:
             # TODO: expose "summary" in TableReport?
             report = report.replace(
                 '<div id="report">',
-                f'<div id="report">\n<pre>{title}\nValue:\n</pre>',
+                f'<div id="report">\n<pre>{title}\nResult:\n</pre>',
             )
         return report
 
@@ -492,23 +492,18 @@ class SkrubNamespace:
 
         return clone(self._expr)
 
-    def get_value(self, environment=None, mode="preview"):
+    def eval(self, environment=None):
         # TODO switch position of environment and mode in _evaluation.evaluate etc.
         from ._evaluation import evaluate
 
-        return evaluate(self._expr, mode=mode, environment=environment, clear=True)
+        if environment is None:
+            mode = "preview"
+            clear = False
+        else:
+            mode = "fit_transform"
+            clear = True
 
-    def eval(self, environment=None, mode="preview"):
-        """alias for get_value -- TODO choose & keep only 1 of the 2."""
-        return self.get_value(environment=environment, mode=mode)
-
-    @property
-    def preview(self):
-        return self.get_value()
-
-    @property
-    def value(self):
-        return self.get_value()
+        return evaluate(self._expr, mode=mode, environment=environment, clear=clear)
 
     @_with_preview_evaluation
     def freeze_after_fit(self):
@@ -571,17 +566,24 @@ class SkrubNamespace:
     def full_report(
         self,
         environment=None,
-        mode="preview",
         open=True,
         output_dir=None,
         overwrite=False,
     ):
         from ._inspection import full_report
 
+        if environment is None:
+            mode = "preview"
+            clear = False
+        else:
+            mode = "fit_transform"
+            clear = True
+
         return full_report(
             self._expr,
             environment=environment,
             mode=mode,
+            clear=clear,
             open=open,
             output_dir=output_dir,
             overwrite=overwrite,
@@ -649,11 +651,6 @@ class SkrubNamespace:
         self._expr._skrub_impl.description = description
         return self._expr
 
-    def clear_results(self):
-        from ._evaluation import clear_results
-
-        clear_results(self._expr)
-
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
@@ -674,18 +671,17 @@ class Var(ExprImpl):
 
     def compute(self, e, mode, environment):
         if mode == "preview":
-            # still use value from the environment if provided, fallback on
-            # value otherwise.
-            if e.name in environment:
-                return environment[e.name]
+            assert not environment
             if e.value is _Constants.NO_VALUE:
                 raise UninitializedVariable(
                     f"No value value has been provided for {e.name!r}"
                 )
             return e.value
-        if e.name not in environment:
+        if e.name in environment:
+            return environment[e.name]
+        if e.value is _Constants.NO_VALUE:
             raise UninitializedVariable(f"No value has been provided for {e.name!r}")
-        return environment[e.name]
+        return e.value
 
     def preview_if_available(self):
         return self.value

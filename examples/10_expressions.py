@@ -240,11 +240,11 @@ with_total
 # The display of our expression now includes a preview of the result, making
 # debugging easier.
 #
-# We can also access this preview result directly:
+# We can also access this result directly:
 
 # %%
-preview_result = with_total.skb.preview
-print(type(preview_result))
+result = with_total.skb.eval()
+print(type(result))
 
 # %%
 # Identifying X and y

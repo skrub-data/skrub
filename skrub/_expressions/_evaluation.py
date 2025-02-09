@@ -235,14 +235,14 @@ class _Evaluator(_ExprTraversal):
 
 def evaluate(expr, mode="preview", environment=None, callback=None, clear=False):
     if clear:
-        clear_results(expr)
+        clear_results(expr, mode=mode)
     try:
         return _Evaluator(mode=mode, environment=environment, callback=callback).run(
             expr
         )
     finally:
         if clear:
-            clear_results(expr)
+            clear_results(expr, mode=mode)
 
 
 class _Reachable(_Evaluator):
@@ -393,10 +393,14 @@ def nodes(expr):
     return list(graph(expr)["nodes"].values())
 
 
-def clear_results(expr):
+def clear_results(expr, mode=None):
     for n in nodes(expr):
-        n._skrub_impl.results = {}
-        n._skrub_impl.errors = {}
+        if mode is None:
+            n._skrub_impl.results = {}
+            n._skrub_impl.errors = {}
+        else:
+            n._skrub_impl.results.pop(mode, None)
+            n._skrub_impl.errors.pop(mode, None)
 
 
 def _find_node(expr, predicate):
