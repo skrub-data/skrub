@@ -476,6 +476,16 @@ class SkrubNamespace:
         return self._apply(estimator=estimator, y=y, cols=cols, name=name)
 
     @_with_preview_evaluation
+    def applied_estimator(self):
+        if not isinstance(self._expr._skrub_impl, Apply):
+            # TODO: make it a AttributeError when accessing .applied_estimator instead
+            raise TypeError(
+                "`applied_estimator` is only defined "
+                "for expressions created with `.skb.apply()`"
+            )
+        return Expr(AppliedEstimator(self._expr))
+
+    @_with_preview_evaluation
     def select(self, cols, name=None):
         return self._apply(SelectCols(cols), name=name)
 
@@ -820,6 +830,15 @@ class Apply(ExprImpl):
         if estimator.__class__.__name__ in ["OnEachColumn", "OnSubFrame"]:
             estimator = estimator.transformer
         return f"<{self.__class__.__name__} {estimator.__class__.__name__}>"
+
+
+class AppliedEstimator(ExprImpl):
+    "Retrieve the estimator fitted in an apply step"
+
+    _fields = ["parent"]
+
+    def compute(self, e, mode, environment):
+        return self.parent._skrub_impl.estimator_
 
 
 class GetAttr(ExprImpl):
