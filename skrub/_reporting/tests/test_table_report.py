@@ -198,3 +198,21 @@ def test_verbosity_parameter(df_module, capsys):
     report_3 = TableReport(df, verbose=1)
     report_3.html()
     assert capsys.readouterr().out != ""
+
+
+def test_write_to_stderr(df_module, capsys):
+    df = df_module.make_dataframe(
+        dict(
+            a=[1, 2, 3, 4],
+            b=["one", "two", "three", "four"],
+            c=[11.1, 11.2, 11.3, 11.4],
+        )
+    )
+
+    report = TableReport(df)
+    report.html()
+
+    captured = capsys.readouterr()
+
+    assert "Processing column" not in captured.out
+    assert "Processing column" in captured.err
