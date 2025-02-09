@@ -214,5 +214,7 @@ def test_write_to_stderr(df_module, capsys):
 
     captured = capsys.readouterr()
 
-    assert "Processing column" not in captured.out
-    assert "Processing column" in captured.err
+    pattern = re.compile(r"Processing column\s+\d+\s*/\s*\d+")
+
+    assert not re.search(pattern, captured.out)
+    assert re.search(pattern, captured.err)
