@@ -16,7 +16,7 @@ from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._tuning import Choice
 from .._utils import random_string
-from ._evaluation import choices, evaluate, graph, param_grid
+from ._evaluation import choices, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
 from ._utils import simple_repr
 
@@ -109,11 +109,39 @@ def full_report(
     output_dir=None,
     overwrite=False,
 ):
+    if clear:
+        clear_results(expr, mode)
+    try:
+        return _do_full_report(
+            expr,
+            environment=environment,
+            mode=mode,
+            open=open,
+            output_dir=output_dir,
+            overwrite=overwrite,
+        )
+    finally:
+        if clear:
+            clear_results(expr, mode)
+
+
+def _do_full_report(
+    expr,
+    environment=None,
+    mode="preview",
+    open=True,
+    output_dir=None,
+    overwrite=False,
+):
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
-        evaluate(expr, mode=mode, environment=environment, clear=clear)
-    except Exception:
-        pass
+        # TODO dump report in callback instead of evaluating full expression
+        # first, so that we can clear intermediate results
+        result = evaluate(expr, mode=mode, environment=environment, clear=False)
+        evaluate_error = None
+    except Exception as e:
+        result = None
+        evaluate_error = e
     g = graph(expr)
     node_status = _node_status(g, mode)
     node_rindex = {id(node): k for k, node in g["nodes"].items()}
@@ -137,10 +165,11 @@ def full_report(
         if mode in node._skrub_impl.results:
             report = node.skb.get_report(mode=mode, environment=environment)
         elif mode in node._skrub_impl.errors:
-            error = "\n".join(traceback.format_exception(node._skrub_impl.errors[mode]))
-            error_msg = "\n".join(
-                traceback.format_exception_only(node._skrub_impl.errors[mode])
-            )
+            e = node._skrub_impl.errors[mode]
+            error = "".join(traceback.format_exception(e))
+            error_msg = "".join(traceback.format_exception_only(e))
+            if hasattr(e, "__notes__"):
+                error_msg = error_msg.removesuffix("\n".join(e.__notes__) + "\n")
         if isinstance(report, TableReport):
             print(f"Generating report for node {i}")
             report = report.html_snippet()
@@ -185,10 +214,12 @@ def full_report(
         out = output_dir / f"node_{i}.html"
         out.write_text(node_page, "utf-8")
 
+    index_file = index_file.resolve()
+    output = {"result": result, "error": evaluate_error, "report_path": index_file}
     if not open:
-        return
-    webbrowser.open(f"file://{index_file.resolve()}")
-    return index_file
+        return output
+    webbrowser.open(f"file://{index_file}")
+    return output
 
 
 class _SVG(bytes):

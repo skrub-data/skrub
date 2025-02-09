@@ -39,6 +39,7 @@ def _check_env(environment, caller_name):
             f" values, for example: {caller_name}({{'X': df, 'other_table_name':"
             " other_df, ...})"
         )
+    # TODO: check that environment contains no expressions or choices?
 
 
 class ExprEstimator(BaseEstimator):
@@ -54,6 +55,7 @@ class ExprEstimator(BaseEstimator):
         return self
 
     def fit_transform(self, environment):
+        # TODO: not needed, can be handled by _eval_in_mode?
         _check_env(environment, "fit_transform")
         callback = partial(_prune_cache, self.expr, "fit_transform")
         env = environment | {"_callback": callback}
@@ -64,6 +66,14 @@ class ExprEstimator(BaseEstimator):
         callback = partial(_prune_cache, self.expr, mode)
         env = environment | {"_callback": callback}
         return evaluate(self.expr, mode, env, clear=True)
+
+    def report(self, mode, environment, **full_report_kwargs):
+        from ._inspection import full_report
+
+        full_report_kwargs["clear"] = True
+        return full_report(
+            self.expr, environment=environment, mode=mode, **full_report_kwargs
+        )
 
     def __getattr__(self, name):
         if name not in self.expr._skrub_impl.supports_modes():

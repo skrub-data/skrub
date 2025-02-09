@@ -394,6 +394,7 @@ def nodes(expr):
 
 
 def clear_results(expr, mode=None):
+    # TODO: create a context manager for clearing results
     for n in nodes(expr):
         if mode is None:
             n._skrub_impl.results = {}
