@@ -272,10 +272,10 @@ class DatetimeEncoder(SingleColumnTransformer):
         add_total_seconds=True,
         add_day_of_year=False,
         add_periodic=False,
-        year_encoding="spline",
-        month_encoding="spline",
-        weekday_encoding="spline",
-        hour_encoding="spline",
+        year_encoding="circular",
+        month_encoding="circular",
+        weekday_encoding="circular",
+        hour_encoding="circular",
     ):
         self.resolution = resolution
         self.add_weekday = add_weekday
@@ -345,7 +345,9 @@ class DatetimeEncoder(SingleColumnTransformer):
                     if _enc not in ["circular", "spline"]:
                         raise ValueError(f"Unsupported option {_enc} for {_enc_name}")
                     if _enc == "circular":
-                        self._required_transformers[_enc_case] = CircularEncoder()
+                        self._required_transformers[_enc_case] = CircularEncoder(
+                            period=_DEFAULT_ENCODING_PERIODS[_enc_case]
+                        )
                     elif _enc == "spline":
                         self._required_transformers[_enc_case] = SplineEncoder(
                             period=_DEFAULT_ENCODING_PERIODS[_enc_case]
@@ -490,15 +492,26 @@ class CircularEncoder(SingleColumnTransformer):
             self._cos_transformer.fit_transform(X),
         ]
 
-        X_out = sbd.concat_horizontal(_new_features)
+        self.is_fitted = True
+        self.n_components_ = 2
 
-        return X_out
+        name = sbd.name(X)
+        self.all_outputs_ = [
+            f"{name}_circular_{idx}" for idx in range(self.n_components_)
+        ]
+
+        return self._post_process(X, _new_features)
 
     def transform(self, X):
-        pass
+        _new_features = [
+            self._sin_transformer.transform(X),
+            self._cos_transformer.transform(X),
+        ]
+
+        return self._post_process(X, _new_features)
 
     def _post_process(self, X, result):
-        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result.T)))
+        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result)))
         result = sbd.copy_index(X, result)
 
         return result
