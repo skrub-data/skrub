@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import SplineTransformer
+from sklearn.preprocessing import FunctionTransformer, SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
 try:
@@ -27,6 +27,8 @@ _TIME_LEVELS = [
     "microsecond",
     "nanosecond",
 ]
+
+_DEFAULT_SPLINE_PERIODS = {"year": 4, "month": 30, "weekday": 7, "hour": 24}
 
 
 @dispatch
@@ -60,7 +62,7 @@ def _get_dt_feature_pandas(col, feature):
         return ((col - epoch) / pd.Timedelta("1s")).astype("float32")
     if feature == "weekday":
         return col.dt.day_of_week + 1
-    if feature == "ordinal_day":
+    if feature == "day_of_year":
         return col.dt.day_of_year
 
     assert feature in _TIME_LEVELS
@@ -71,7 +73,9 @@ def _get_dt_feature_pandas(col, feature):
 def _get_dt_feature_polars(col, feature):
     if feature == "total_seconds":
         return (col.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
-    assert feature in _TIME_LEVELS + ["weekday", "ordinal_day"]
+    if feature == "day_of_year":
+        return getattr(col.dt, "ordinal_day")()
+    assert feature in _TIME_LEVELS + ["weekday"]
     return getattr(col.dt, feature)()
 
 
@@ -266,14 +270,23 @@ class DatetimeEncoder(SingleColumnTransformer):
         resolution="hour",
         add_weekday=False,
         add_total_seconds=True,
-        add_ordinal_day=False,
-        add_periodic: str | list[str] | None = None,
+        add_day_of_year=False,
+        add_periodic=False,
+        year_encoding="spline",
+        month_encoding="spline",
+        weekday_encoding="spline",
+        hour_encoding="spline",
     ):
         self.resolution = resolution
         self.add_weekday = add_weekday
         self.add_total_seconds = add_total_seconds
-        self.add_ordinal_day = add_ordinal_day
+        self.add_day_of_year = add_day_of_year
         self.add_periodic = add_periodic
+
+        self.year_encoding = year_encoding
+        self.month_encoding = month_encoding
+        self.weekday_encoding = weekday_encoding
+        self.hour_encoding = hour_encoding
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -286,7 +299,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         y : None
             Ignored.
 
-        Returns
+        ReturnsHistGradientBoostingRegressor()
         -------
         transformed : DataFrame
             The extracted features.
@@ -308,20 +321,42 @@ class DatetimeEncoder(SingleColumnTransformer):
             self.extracted_features_.append("total_seconds")
         if self.add_weekday:
             self.extracted_features_.append("weekday")
-        if self.add_ordinal_day:
-            self.extracted_features_.append("ordinal_day")
+        if self.add_day_of_year:
+            self.extracted_features_.append("day_of_year")
 
         # Adding transformers for periodic encoding
         self._required_transformers = {}
 
-        for _case in self.add_periodic:
-            if _case == "day":
-                _t = PeriodicEncoder(kind="spline", period=24)
-                self._required_transformers[_case] = _t
-            if _case == "year":
-                # TODO: In theory we should check that the year is leap
-                _t = PeriodicEncoder(kind="circular", period=366)
-                self._required_transformers[_case] = _t
+        # Iterating over all attributes that end with _encoding to use the default
+        # parameters
+        if self.add_periodic:
+            _enc_attr = [attr for attr in self.__dict__ if attr.endswith("_encoding")]
+            for _enc_name in _enc_attr:
+                _enc = self.__getattribute__(_enc_name)
+                _enc_case = _enc_name.split("_")[0]
+
+                # The user provided a specific instance of the encoder for this case
+                if isinstance(_enc, (SplineEncoder, CircularEncoder)):
+                    self._required_transformers[_enc_case] = _enc
+                else:
+                    # This encoder has been disabled
+                    if _enc is None:
+                        continue
+                    if _enc not in ["circular", "spline"]:
+                        raise ValueError(f"Unsupported option {_enc} for {_enc_name}")
+                    if _enc == "circular":
+                        self._required_transformers[_enc_case] = CircularEncoder()
+                    elif _enc == "spline":
+                        self._required_transformers[_enc_case] = SplineEncoder(
+                            period=_DEFAULT_SPLINE_PERIODS[_enc_case]
+                        )
+
+            for _case, t in self._required_transformers.items():
+                _feat = _get_dt_feature(column, _case)
+                _feat_name = sbd.name(_feat) + "_" + _case
+                _feat = sbd.rename(_feat, _feat_name)
+                t.fit(_feat)
+
         return self.transform(column)
 
     def transform(self, column):
@@ -347,10 +382,8 @@ class DatetimeEncoder(SingleColumnTransformer):
 
         _new_features = []
         for _case, t in self._required_transformers.items():
-            if _case == "day":
-                _feat = _get_dt_feature(column, "day")
-                _feat = sbd.rename(_feat, "day")
-                _new_features.append(t.fit_transform(_feat))
+            _feat = _get_dt_feature(column, _case)
+            _new_features.append(t.transform(_feat))
 
         X_out = sbd.make_dataframe_like(column, all_extracted)
 
@@ -388,11 +421,8 @@ class DatetimeEncoder(SingleColumnTransformer):
         return tags
 
 
-class PeriodicEncoder(SingleColumnTransformer):
-    def __init__(self, kind: str = "spline", period=24, n_splines=None, degree=3):
-        self.kind = kind
-
-        # SplineTransformer arguments
+class SplineEncoder(SingleColumnTransformer):
+    def __init__(self, period=24, n_splines=None, degree=3):
         self.period = period
         self.n_splines = n_splines
         self.degree = degree
@@ -400,12 +430,9 @@ class PeriodicEncoder(SingleColumnTransformer):
     def fit_transform(self, X, y=None):
         del y
 
-        if self.kind == "spline":
-            self.transformer_ = self._periodic_spline_transformer(
-                period=self.period, n_splines=self.n_splines, degree=self.degree
-            )
-        else:
-            pass
+        self.transformer_ = self._periodic_spline_transformer(
+            period=self.period, n_splines=self.n_splines, degree=self.degree
+        )
 
         X_out = self.transformer_.fit_transform(sbd.to_numpy(X).reshape(-1, 1))
 
@@ -414,13 +441,13 @@ class PeriodicEncoder(SingleColumnTransformer):
 
         name = sbd.name(X)
         self.all_outputs_ = [
-            f"{name}_{self.kind}_{idx}" for idx in range(self.n_components_)
+            f"{name}_spline_{idx}" for idx in range(self.n_components_)
         ]
 
         return self._post_process(X, X_out)
 
     def transform(self, X):
-        X_out = self.transformer_.transform(X)
+        X_out = self.transformer_.transform(sbd.to_numpy(X).reshape(-1, 1))
 
         return self._post_process(X, X_out)
 
@@ -442,3 +469,36 @@ class PeriodicEncoder(SingleColumnTransformer):
             extrapolation="periodic",
             include_bias=True,
         )
+
+
+class CircularEncoder(SingleColumnTransformer):
+    def __init__(self, period=24):
+        self.period = period
+
+    def fit_transform(self, X, y):
+        del y
+
+        self._sin_transformer = FunctionTransformer(
+            lambda x: np.sin(x / self.period * 2 * np.pi)
+        )
+        self._cos_transformer = FunctionTransformer(
+            lambda x: np.cos(x / self.period * 2 * np.pi)
+        )
+
+        _new_features = [
+            self._sin_transformer.fit_transform(X),
+            self._cos_transformer.fit_transform(X),
+        ]
+
+        X_out = sbd.concat_horizontal(_new_features)
+
+        return X_out
+
+    def transform(self, X):
+        pass
+
+    def _post_process(self, X, result):
+        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result.T)))
+        result = sbd.copy_index(X, result)
+
+        return result
