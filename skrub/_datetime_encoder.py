@@ -28,7 +28,7 @@ _TIME_LEVELS = [
     "nanosecond",
 ]
 
-_DEFAULT_SPLINE_PERIODS = {"year": 4, "month": 30, "weekday": 7, "hour": 24}
+_DEFAULT_ENCODING_PERIODS = {"year": 4, "month": 30, "weekday": 7, "hour": 24}
 
 
 @dispatch
@@ -348,7 +348,7 @@ class DatetimeEncoder(SingleColumnTransformer):
                         self._required_transformers[_enc_case] = CircularEncoder()
                     elif _enc == "spline":
                         self._required_transformers[_enc_case] = SplineEncoder(
-                            period=_DEFAULT_SPLINE_PERIODS[_enc_case]
+                            period=_DEFAULT_ENCODING_PERIODS[_enc_case]
                         )
 
             for _case, t in self._required_transformers.items():
