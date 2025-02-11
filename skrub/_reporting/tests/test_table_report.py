@@ -189,15 +189,15 @@ def test_verbosity_parameter(df_module, capsys):
 
     report = TableReport(df)
     report.html()
-    assert capsys.readouterr().out != ""
+    assert capsys.readouterr().err != ""
 
     report_2 = TableReport(df, verbose=0)
     report_2.html()
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().err == ""
 
     report_3 = TableReport(df, verbose=1)
     report_3.html()
-    assert capsys.readouterr().out != ""
+    assert capsys.readouterr().err != ""
 
 
 def test_write_to_stderr(df_module, capsys):
