@@ -100,7 +100,7 @@ def summarize_dataframe(
             )
         )
     if verbose > 0:
-        print(flush=True)
+        print(flush=True, file=sys.stderr)
 
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
