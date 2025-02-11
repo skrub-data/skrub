@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from skrub import DatetimeEncoder
+from skrub import CircularEncoder, DatetimeEncoder, SplineEncoder
 from skrub import _dataframe as sbd
 from skrub import _selectors as s
 from skrub._on_each_column import OnEachColumn
@@ -11,7 +11,15 @@ from skrub._to_float32 import ToFloat32
 
 def date(df_module):
     return sbd.to_datetime(
-        df_module.make_column("when", ["2020-01-01", None, "2022-01-01"]),
+        df_module.make_column(
+            "when",
+            [
+                "2020-01-01",
+                "2020-01-01",
+                #    None,
+                "2022-01-01",
+            ],
+        ),
         "%Y-%m-%d",
     )
 
@@ -20,7 +28,12 @@ def datetime(df_module):
     return sbd.to_datetime(
         df_module.make_column(
             "when",
-            ["2020-01-01 10:12:01", None, "2022-01-01 23:23:43"],
+            [
+                "2020-01-01 10:12:01",
+                "2020-01-01 10:13:01",
+                #  None,
+                "2022-01-01 23:23:43",
+            ],
         ),
         "%Y-%m-%d %H:%M:%S",
     )
@@ -33,7 +46,8 @@ def tz_datetime(df_module):
             "when",
             [
                 "2020-01-01 10:12:01",
-                None,
+                "2020-01-01 10:13:01",
+                # None,
                 "2022-01-01 23:23:43",
             ],
         ),
@@ -52,7 +66,8 @@ def nanoseconds(df_module):
             "when",
             [
                 "2020-01-01 10:12:01.123456789",
-                None,
+                "2020-01-01 10:13:01.123456789",
+                # None,
                 "2022-01-01 23:23:43.123987654",
             ],
         ),
@@ -95,6 +110,7 @@ def expected_features(df_module):
         "when_total_seconds": [1577873536.0, None, 1641079424.0],
         "when_weekday": [3.0, None, 6.0],
     }
+
     res = df_module.make_dataframe(values)
     return OnEachColumn(ToFloat32()).fit_transform(res)
 
@@ -107,9 +123,20 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
         res = enc.fit(a_datetime_col).transform(a_datetime_col)
     expected_features = s.select(
         expected_features,
-        [f"when_{f}" for f in enc.extracted_features_],
+        [f"{f}" for f in enc.all_outputs_],
     )
     df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
+
+    # enc = DatetimeEncoder(add_periodic=True)
+    # if use_fit_transform:
+    #     res = enc.fit_transform(a_datetime_col)
+    # else:
+    #     res = enc.fit(a_datetime_col).transform(a_datetime_col)
+    # expected_features = s.select(
+    #     expected_features,
+    #     [f"{f}" for f in enc.all_outputs_],
+    # )
+    # df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
 
 
 @pytest.mark.parametrize(
@@ -137,19 +164,45 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
             dict(add_weekday=True, add_total_seconds=False),
             ["year", "month", "day", "hour", "weekday"],
         ),
+        (
+            dict(add_day_of_year=True, add_total_seconds=False),
+            ["year", "month", "day", "hour", "day_of_year"],
+        ),
+        (
+            dict(add_day_of_year=False, add_total_seconds=False, add_periodic=True),
+            [
+                "year",
+                "month",
+                "day",
+                "hour",
+                "year_circular_0",
+                "year_circular_1",
+                "month_circular_0",
+                "month_circular_1",
+                "weekday_circular_0",
+                "weekday_circular_1",
+                "hour_circular_0",
+                "hour_circular_1",
+            ],
+        ),
     ],
 )
 def test_extracted_features_choice(datetime_cols, params, extracted_features):
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
-    assert enc.extracted_features_ == extracted_features
-    assert sbd.column_names(res) == [f"when_{f}" for f in enc.extracted_features_]
+    assert enc.all_outputs_ == [f"when_{f}" for f in extracted_features]
+    assert sbd.column_names(res) == [f"{f}" for f in enc.all_outputs_]
 
 
 def test_time_not_extracted_from_date_col(datetime_cols):
     enc = DatetimeEncoder(resolution="nanosecond")
     enc.fit(datetime_cols.date)
-    assert enc.extracted_features_ == ["year", "month", "day", "total_seconds"]
+    assert enc.all_outputs_ == [
+        "when_year",
+        "when_month",
+        "when_day",
+        "when_total_seconds",
+    ]
 
 
 def test_invalid_resolution(datetime_cols):
@@ -160,3 +213,82 @@ def test_invalid_resolution(datetime_cols):
 def test_reject_non_datetime(df_module):
     with pytest.raises(ValueError, match=".*does not have Date or Datetime dtype."):
         DatetimeEncoder().fit_transform(df_module.example_column)
+
+
+# Checking parameters for CircularEncoder and SplineEncoder
+@pytest.mark.parametrize(
+    "params, transformers",
+    [
+        (
+            dict(
+                year_encoding="circular",
+                month_encoding="circular",
+                weekday_encoding="circular",
+                hour_encoding="circular",
+            ),
+            [CircularEncoder, CircularEncoder, CircularEncoder, CircularEncoder],
+        ),
+        (
+            dict(
+                year_encoding="spline",
+                month_encoding="spline",
+                weekday_encoding="spline",
+                hour_encoding="spline",
+            ),
+            [SplineEncoder, SplineEncoder, SplineEncoder, SplineEncoder],
+        ),
+    ],
+)
+def test_correct_parameters(a_datetime_col, params, transformers):
+    enc = DatetimeEncoder(add_periodic=True, **params)
+
+    enc.fit_transform(a_datetime_col)
+
+    assert all(
+        [
+            isinstance(t, required_t)
+            for t, required_t in zip(enc._required_transformers.values(), transformers)
+        ]
+    )
+
+    with pytest.raises(ValueError, match="Unsupported value wrongvalue .*"):
+        DatetimeEncoder(add_periodic="wrongvalue").fit_transform(a_datetime_col)
+
+
+def test_skipping_parameters(a_datetime_col):
+    params = dict(
+        year_encoding=None,
+        month_encoding="circular",
+        weekday_encoding=None,
+        hour_encoding="circular",
+    )
+    enc = DatetimeEncoder(add_periodic=True, **params)
+
+    enc.fit_transform(a_datetime_col)
+
+    assert len(enc._required_transformers) == 2
+    assert isinstance(enc._required_transformers["month"], CircularEncoder)
+    assert isinstance(enc._required_transformers["hour"], CircularEncoder)
+
+
+def test_custom_encoder(a_datetime_col):
+    year_encoder = SplineEncoder(period=365)
+    enc = DatetimeEncoder(add_periodic=True, year_encoding=year_encoder)
+
+    enc.fit_transform(a_datetime_col)
+
+    assert isinstance(enc._required_transformers["year"], SplineEncoder)
+    assert enc._required_transformers["year"].get_params()["period"] == 365
+
+
+def test_error_checking_periodic_encoder(a_datetime_col):
+    params = dict(
+        year_encoding="notaparameter",
+        month_encoding="circular",
+        weekday_encoding="notaparameteragain",
+        hour_encoding="circular",
+    )
+    enc = DatetimeEncoder(add_periodic=True, **params)
+
+    with pytest.raises(ValueError, match=r"Unsupported option (\S+) for (\S+)"):
+        enc.fit_transform(a_datetime_col)

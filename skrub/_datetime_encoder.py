@@ -327,6 +327,11 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Adding transformers for periodic encoding
         self._required_transformers = {}
 
+        col_name = sbd.name(column)
+        self.all_outputs_ = [
+            f"{col_name}_{_feat}" for _feat in self.extracted_features_
+        ]
+
         # Iterating over all attributes that end with _encoding to use the default
         # parameters
         if self.add_periodic:
@@ -342,8 +347,6 @@ class DatetimeEncoder(SingleColumnTransformer):
                     # This encoder has been disabled
                     if _enc is None:
                         continue
-                    if _enc not in ["circular", "spline"]:
-                        raise ValueError(f"Unsupported option {_enc} for {_enc_name}")
                     if _enc == "circular":
                         self._required_transformers[_enc_case] = CircularEncoder(
                             period=_DEFAULT_ENCODING_PERIODS[_enc_case]
@@ -352,12 +355,15 @@ class DatetimeEncoder(SingleColumnTransformer):
                         self._required_transformers[_enc_case] = SplineEncoder(
                             period=_DEFAULT_ENCODING_PERIODS[_enc_case]
                         )
+                    else:
+                        raise ValueError(f"Unsupported option {_enc} for {_enc_name}")
 
             for _case, t in self._required_transformers.items():
                 _feat = _get_dt_feature(column, _case)
                 _feat_name = sbd.name(_feat) + "_" + _case
                 _feat = sbd.rename(_feat, _feat_name)
                 t.fit(_feat)
+                self.all_outputs_ += t.all_outputs_
 
         return self.transform(column)
 
@@ -400,19 +406,10 @@ class DatetimeEncoder(SingleColumnTransformer):
                 f"'resolution' options are {allowed}, got {self.resolution!r}."
             )
 
-        if isinstance(self.add_periodic, list):
-            if not all([_ in ["day", "year"] for _ in self.add_periodic]):
-                raise ValueError(f"Unsupported value found in {self.add_periodic}.")
-
-        if isinstance(self.add_periodic, str):
-            if self.add_periodic not in ["day", "year"]:
-                raise ValueError(
-                    f"Unsupported value {self.add_periodic} for add_periodic"
-                )
-            self.add_periodic = [self.add_periodic]
-
-        if self.add_periodic is None:
-            self.add_periodic = []
+        if self.add_periodic not in [True, False]:
+            raise ValueError(
+                f"Unsupported value {self.add_periodic} for argument add_periodic."
+            )
 
     def _more_tags(self):
         return {"preserves_dtype": []}
