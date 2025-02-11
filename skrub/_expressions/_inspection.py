@@ -9,6 +9,7 @@ import webbrowser
 from pathlib import Path
 
 import jinja2
+from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
 from .. import datasets
@@ -191,7 +192,13 @@ def _do_full_report(
             for n in g["children"].get(i, [])
         ]
         if isinstance(node._skrub_impl, Apply):
-            estimator_html_repr = node._skrub_impl.estimator_._repr_html_()
+            estimator = getattr(
+                node._skrub_impl, "estimator_", node._skrub_impl.estimator
+            )
+            if isinstance(estimator, BaseEstimator):
+                estimator_html_repr = estimator._repr_html_()
+            else:
+                estimator_html_repr = None
         else:
             estimator_html_repr = None
         node_page = jinja_env.get_template("node.html").render(
