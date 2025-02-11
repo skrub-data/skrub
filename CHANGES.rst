@@ -21,6 +21,9 @@ New features
 Changes
 -------
 
+- Progress messages when generating a ``TableReport`` are now written to stderr instead of stdout.
+  :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
+
 Release 0.5.1
 =============
 

@@ -36,16 +36,16 @@ def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
         capsys.readouterr()
         patch_display(verbose=0)
         df._repr_html_()
-        assert capsys.readouterr().out == ""
+        assert capsys.readouterr().err == ""
 
         capsys.readouterr()
         patch_display()
         df._repr_html_()
-        assert capsys.readouterr().out != ""
+        assert capsys.readouterr().err != ""
 
         capsys.readouterr()
         patch_display(verbose=1)
         df._repr_html_()
-        assert capsys.readouterr().out != ""
+        assert capsys.readouterr().err != ""
     finally:
         unpatch_display()
