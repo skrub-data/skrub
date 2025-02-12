@@ -513,6 +513,8 @@ class SkrubNamespace:
         how="auto",
         allow_reject=False,
     ):
+        # TODO later we could also expose `wrap_transformer`'s `keep_original`
+        # and `rename_cols` params
         return self._apply(
             estimator=estimator,
             y=y,

@@ -7,6 +7,10 @@ html {
     box-sizing: border-box;
 }
 
+pre, code {
+    font-size: 1rem;
+}
+
 #graph-nav text {
     transform: translateY(2px);
 }
