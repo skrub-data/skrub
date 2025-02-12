@@ -20,7 +20,7 @@ from .._tuning import Choice, unwrap_chosen_or_default
 from .._wrap_transformer import wrap_transformer
 from ._utils import FITTED_PREDICTOR_METHODS, _CloudPickle, attribute_error
 
-__all__ = ["var", "value", "deferred", "if_else"]
+__all__ = ["var", "X", "y", "as_expr", "deferred", "deferred_optional", "if_else"]
 
 # Explicitly excluded from getattr because they break either pickling or the
 # repl autocompletion
@@ -301,7 +301,6 @@ class Expr:
         preview = self._skrub_impl.preview_if_available()
         if preview is not _Constants.NO_VALUE:
             names.extend(dir(preview))
-        # TODO: unique & sort?
         return names
 
     def _ipython_key_completions_(self):
@@ -778,7 +777,7 @@ class Value(ExprImpl):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"
 
 
-def value(value):
+def as_expr(value):
     return Expr(Value(value))
 
 

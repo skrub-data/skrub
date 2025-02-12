@@ -631,9 +631,9 @@ class BaseChoice:
     """
 
     def as_expr(self):
-        from ._expressions import value
+        from ._expressions import as_expr
 
-        return value(self)
+        return as_expr(self)
 
 
 @dataclasses.dataclass
@@ -761,9 +761,9 @@ class Match:
         )
 
     def as_expr(self):
-        from ._expressions import value
+        from ._expressions import as_expr
 
-        return value(self)
+        return as_expr(self)
 
 
 def choose_from(outcomes, name=None):

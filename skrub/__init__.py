@@ -10,16 +10,7 @@ from ._check_dependencies import check_dependencies
 from ._column_associations import column_associations
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
-from ._expressions import (
-    X,
-    cross_validate,
-    deferred,
-    deferred_optional,
-    if_else,
-    value,
-    var,
-    y,
-)
+from ._expressions import X, as_expr, deferred, deferred_optional, if_else, var, y
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._interpolation_joiner import InterpolationJoiner
@@ -53,10 +44,9 @@ __all__ = [
     "var",
     "X",
     "y",
-    "value",
+    "as_expr",
     "deferred",
     "deferred_optional",
-    "cross_validate",
     "if_else",
     "TableReport",
     "patch_display",
