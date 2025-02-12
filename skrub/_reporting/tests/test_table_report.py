@@ -189,12 +189,32 @@ def test_verbosity_parameter(df_module, capsys):
 
     report = TableReport(df)
     report.html()
-    assert capsys.readouterr().out != ""
+    assert capsys.readouterr().err != ""
 
     report_2 = TableReport(df, verbose=0)
     report_2.html()
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().err == ""
 
     report_3 = TableReport(df, verbose=1)
     report_3.html()
-    assert capsys.readouterr().out != ""
+    assert capsys.readouterr().err != ""
+
+
+def test_write_to_stderr(df_module, capsys):
+    df = df_module.make_dataframe(
+        dict(
+            a=[1, 2, 3, 4],
+            b=["one", "two", "three", "four"],
+            c=[11.1, 11.2, 11.3, 11.4],
+        )
+    )
+
+    report = TableReport(df)
+    report.html()
+
+    captured = capsys.readouterr()
+
+    pattern = re.compile(r"Processing column\s+\d+\s*/\s*\d+")
+
+    assert not re.search(pattern, captured.out)
+    assert re.search(pattern, captured.err)
