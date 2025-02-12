@@ -164,13 +164,21 @@ dataset.products
 # handle a ``"products"`` table. So we create a ``"products"`` variable:
 
 # %%
-products = skrub.var("products")
+products = skrub.var("products", dataset.products)
 
 # %%
+# The variable is given a ``name`` (``"products"``) and a ``value`` (here, the
+# dataframe ``dataset.products``). The provided ``value`` is used to compute
+# results as we build up the pipeline, and as a source of data for running
+# cross-validation and hyperparameter selection (shown later). ``value`` is
+# optional: we can also build our pipeline without actually running any
+# computations and execute it later.
+#
 # We can then apply transformations to ``products`` to start building up our
-# pipeline. Because we know that when we run the pipeline, a pandas DataFrame
-# will be provided as the ``"products"`` input, we manipulate ``products`` as
-# we would manipulate a pandas dataframe.
+# pipeline. All method and attribute access is transparently forwarded to the
+# variable's ``value``. Here, ``value`` is a pandas DataFrame so we manipulate
+# ``products`` as we would manipulate a DataFrame. Note that a variable's
+# ``value`` can be any type of object.
 #
 # For example, we can write:
 
@@ -181,70 +189,36 @@ with_total = products.assign(
 with_total
 
 # %%
-# Expressions have a ``.skb`` attribute through which we access the
-# functionality provided by skrub. For example, we can display the graph of
-# computations contained in an expression.
+# Note the added "total_price" column in the result above.
+#
+# So we manipulate our variable as we would manipulate an actual dataframe. The
+# difference is that all operations are being recorded and added to our
+# pipeline.
+#
+# Another difference is that expressions have a ``.skb`` attribute through
+# which we access the functionality provided by skrub. For example, we can
+# display the graph of computations contained in an expression.
 
 # %%
 with_total.skb.draw_graph()
 
 # %%
-# We can evaluate an expression by providing bindings for the variables it contains.
-# In this case we will use the ``"products"`` table from the dataset we downloaded.
+# We can evaluate an expression to obtain the result.
 
 # %%
-products_df = dataset.products
-products_df  # This is just a regular Pandas DataFrame
+with_total.skb.eval()
 
 # %%
-
-# We pass the dataframe as a value for our 'products' variable
-with_total.skb.eval({"products": products_df})
+# We can also pass new bindings for the variables contained in the expression
+# to ``eval()``, to get the result for some new inputs.
 
 # %%
-# Note the added "total_price" column in the result above. (We show it here for
+with_total.skb.eval({"products": dataset.products.iloc[:3]})
+
+# %%
+# (We show it here for
 # didactic purposes but in practice you will rarely need to call ``eval``
 # yourself)
-
-# %%
-# Eager previews
-# --------------
-#
-# So far, before calling ``eval``, it is hard to tell if we made a mistake in
-# our computation or what the result will look like:
-
-# %%
-with_total
-
-# %%
-# That's not very helpful.
-#
-# To help us visualize intermediate results and make development more
-# interactive, we can provide a value value for each variable. Skrub will
-# use it to compute previews of the results. This helps inspect what the
-# results will look like, catch errors early, and provide better tab-completion
-# on attribute and item names.
-#
-# Instead of writing ``products = skrub.var("products")`` as before, let us
-# start over, this time passing a value value to make our expression a
-# little bit more helpful:
-
-# %%
-products = skrub.var("products", value=products_df)
-with_total = products.assign(
-    total_price=products["Nbr_of_prod_purchas"] * products["cash_price"]
-)
-with_total
-
-# %%
-# The display of our expression now includes a preview of the result, making
-# debugging easier.
-#
-# We can also access this result directly:
-
-# %%
-result = with_total.skb.eval()
-print(type(result))
 
 # %%
 # Identifying X and y
@@ -264,7 +238,7 @@ baskets_df = dataset.baskets[["ID"]]  # just a regular dataframe
 
 # mark_as_x() means
 # 'this is the feature matrix you need to split during cross-validation'
-baskets = skrub.var("baskets", value=baskets_df).skb.mark_as_x()
+baskets = skrub.var("baskets", baskets_df).skb.mark_as_x()
 
 # Note: a slightly shorter way is to use the shorthand `skrub.X`:
 #
@@ -278,9 +252,7 @@ baskets = skrub.var("baskets", value=baskets_df).skb.mark_as_x()
 # similarly for the targets:
 
 # %%
-fraud_flags = skrub.var(
-    "fraud_flags", value=dataset.baskets["fraud_flag"]
-).skb.mark_as_y()
+fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
 
 # %%
 # Applying scikit-learn estimators
@@ -477,6 +449,22 @@ loaded.predict({"baskets": new_baskets, "products": new_products})
 #     predictions = baskets.skb.apply(HistGradientBoostingClassifier(), y=fraud_flags)
 #
 #     predictions.skb.cross_validate(scoring="roc_auc", n_jobs=4)
+
+# %%
+
+# Advanced usage
+# --------------
+#
+# TODO
+#
+# Expressions without a value
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# ``skrub.deferred``
+# ~~~~~~~~~~~~~~~~~~
+#
+# ...
+# ~~~
 
 # %%
 
