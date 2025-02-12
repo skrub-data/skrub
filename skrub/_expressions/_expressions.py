@@ -442,41 +442,83 @@ for op_name in _UNARY_OPS:
     setattr(Expr, op_name, _make_unary_op(op_name))
 
 
-def _wrap_estimator(estimator, cols, allow_reject, X):
+def _check_wrap_params(cols, how, allow_reject, reason):
+    msg = None
+    if not isinstance(cols, type(s.all())):
+        msg = f"`cols` must be `all()` (the default) when {reason}"
+    elif how not in ["auto", "full_frame"]:
+        msg = f"`how` must be 'auto' (the default) or 'full_frame' when {reason}"
+    elif allow_reject:
+        msg = f"`allow_reject` must be False (the default) when {reason}"
+    if msg is not None:
+        raise ValueError(msg)
+
+
+def _wrap_estimator(estimator, cols, how, allow_reject, X):
+    def _check(reason):
+        _check_wrap_params(cols, how, allow_reject, reason)
+
     if estimator in [None, "passthrough"]:
         estimator = _PassThrough()
     if isinstance(estimator, Choice):
         return estimator.map_values(
-            lambda v: _wrap_estimator(v, cols, allow_reject=allow_reject, X=X)
+            lambda v: _wrap_estimator(v, cols, how=how, allow_reject=allow_reject, X=X)
         )
-    if hasattr(estimator, "transform"):
-        if not sbd.is_dataframe(X):
-            if isinstance(cols, type(s.all())):
-                return estimator
-            # TODO better msg
-            raise ValueError("Input should be a dataframe if cols is not all()")
-        return wrap_transformer(estimator, cols, allow_reject=allow_reject)
-    if isinstance(cols, type(s.all())):
+    if how == "full_frame":
+        _check("`how` is 'full_frame'")
         return estimator
-    # TODO better msg
-    raise ValueError("cols should only be provided if the estimator is a transformer")
+    if not hasattr(estimator, "transform"):
+        _check("`estimator` is a predictor (not a transformer)")
+        return estimator
+    if not sbd.is_dataframe(X):
+        _check("the input is not a DataFrame")
+        return estimator
+    columnwise = {"auto": "auto", "columnwise": True, "sub_frame": False}[how]
+    return wrap_transformer(
+        estimator, cols, allow_reject=allow_reject, columnwise=columnwise
+    )
 
 
 class SkrubNamespace:
     def __init__(self, expr):
         self._expr = expr
 
-    def _apply(self, estimator, y=None, cols=s.all(), allow_reject=False, name=None):
-        expr = Expr(Apply(estimator, cols, self._expr, y, allow_reject))
-        if name is not None:
-            expr = expr.skb.set_name(name)
+    def _apply(
+        self,
+        estimator,
+        y=None,
+        cols=s.all(),
+        how="auto",
+        allow_reject=False,
+    ):
+        expr = Expr(
+            Apply(
+                estimator=estimator,
+                cols=cols,
+                X=self._expr,
+                y=y,
+                how=how,
+                allow_reject=allow_reject,
+            )
+        )
         return expr
 
-    # TODO add a cond param to apply rather than having _tuning.optional?
     @_with_preview_evaluation
-    def apply(self, estimator, y=None, cols=s.all(), allow_reject=False, name=None):
+    def apply(
+        self,
+        estimator,
+        *,
+        y=None,
+        cols=s.all(),
+        how="auto",
+        allow_reject=False,
+    ):
         return self._apply(
-            estimator=estimator, y=y, cols=cols, allow_reject=allow_reject, name=name
+            estimator=estimator,
+            y=y,
+            cols=cols,
+            how=how,
+            allow_reject=allow_reject,
         )
 
     @_with_preview_evaluation
@@ -490,12 +532,12 @@ class SkrubNamespace:
         return Expr(AppliedEstimator(self._expr))
 
     @_with_preview_evaluation
-    def select(self, cols, name=None):
-        return self._apply(SelectCols(cols), name=name)
+    def select(self, cols):
+        return self._apply(SelectCols(cols), how="full_frame")
 
     @_with_preview_evaluation
-    def drop(self, cols, name=None):
-        return self._apply(DropCols(cols), name=name)
+    def drop(self, cols):
+        return self._apply(DropCols(cols), how="full_frame")
 
     @_with_preview_evaluation
     def concat_horizontal(self, others):
@@ -762,8 +804,6 @@ class FreezeAfterFit(ExprImpl):
 
     def compute(self, e, mode, environment):
         if mode == "preview" or "fit" in mode:
-            # TODO: have separate fitted attributes for preview?
-            # (same question for Apply)
             self.value_ = e.parent
         return self.value_
 
@@ -780,7 +820,7 @@ class _PassThrough(BaseEstimator):
 
 
 class Apply(ExprImpl):
-    _fields = ["estimator", "cols", "X", "y", "allow_reject"]
+    _fields = ["estimator", "cols", "X", "y", "how", "allow_reject"]
 
     def fields_required_for_eval(self, mode):
         if "fit" in mode or mode in ["score", "preview"]:
@@ -792,7 +832,11 @@ class Apply(ExprImpl):
 
         if "fit" in method_name:
             self.estimator_ = _wrap_estimator(
-                e.estimator, e.cols, allow_reject=e.allow_reject, X=e.X
+                estimator=e.estimator,
+                cols=e.cols,
+                how=e.how,
+                allow_reject=e.allow_reject,
+                X=e.X,
             )
 
         if "transform" in method_name and not hasattr(self.estimator_, "transform"):
