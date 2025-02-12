@@ -1015,53 +1015,53 @@ class CallMethod(ExprImpl):
 def deferred(func):
     from ._evaluation import needs_eval
 
-    if not hasattr(func, "__code__"):
-
-        @_with_check_call_return_value
-        @_with_preview_evaluation
-        @functools.wraps(func)
-        def inner(*args, **kwargs):
-            return Expr(
-                Call(
-                    func,
-                    args,
-                    kwargs,
-                    globals={},
-                    closure=(),
-                    defaults=(),
-                    kwdefaults={},
-                )
+    @_with_check_call_return_value
+    @_with_preview_evaluation
+    @functools.wraps(func)
+    def deferred_func(*args, **kwargs):
+        return Expr(
+            Call(
+                func,
+                args,
+                kwargs,
+                globals={},
+                closure=(),
+                defaults=(),
+                kwdefaults={},
             )
+        )
 
-        return inner
+    if not hasattr(func, "__code__"):
+        return deferred_func
+
+    globals_names = [
+        i.argval
+        for i in dis.get_instructions(func.__code__)
+        if i.opname == "LOAD_GLOBAL"
+    ]
+    f_globals = {
+        name: func.__globals__[name]
+        for name in globals_names
+        if name in func.__globals__
+        and not isinstance(
+            func.__globals__[name],
+            (
+                types.FunctionType,
+                types.BuiltinFunctionType,
+                type,
+                types.ModuleType,
+            ),
+        )
+        and needs_eval(func.__globals__[name])
+    }
+    closure = tuple(c.cell_contents for c in func.__closure__ or ())
+    if not f_globals and not needs_eval(closure):
+        return deferred_func
 
     @_with_check_call_return_value
     @_with_preview_evaluation
     @functools.wraps(func)
-    def inner(*args, **kwargs):
-        globals_names = [
-            i.argval
-            for i in dis.get_instructions(func.__code__)
-            if i.opname == "LOAD_GLOBAL"
-        ]
-        f_globals = {
-            name: func.__globals__[name]
-            for name in globals_names
-            if name in func.__globals__
-            # TODO rather than exclude modules, types & functions, check if contains
-            # an expression and include only then?
-            and not isinstance(
-                func.__globals__[name],
-                (
-                    types.FunctionType,
-                    types.BuiltinFunctionType,
-                    type,
-                    types.ModuleType,
-                ),
-            )
-            and needs_eval(func.__globals__[name])
-        }
-        closure = tuple(c.cell_contents for c in func.__closure__ or ())
+    def deferred_func(*args, **kwargs):
         return Expr(
             Call(
                 func,
@@ -1074,7 +1074,7 @@ def deferred(func):
             )
         )
 
-    return inner
+    return deferred_func
 
 
 def deferred_optional(func, cond):
