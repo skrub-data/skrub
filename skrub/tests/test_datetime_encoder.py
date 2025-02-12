@@ -119,7 +119,7 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
         res = enc.fit(a_datetime_col).transform(a_datetime_col)
     expected_features = s.select(
         expected_features,
-        [f"{f}" for f in enc.all_outputs_],
+        [f"{f}" for f in enc.extracted_features_],
     )
     df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
 
@@ -175,14 +175,14 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
 def test_extracted_features_choice(datetime_cols, params, extracted_features):
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
-    assert enc.all_outputs_ == [f"when_{f}" for f in extracted_features]
-    assert sbd.column_names(res) == [f"{f}" for f in enc.all_outputs_]
+    assert enc.extracted_features_ == [f"when_{f}" for f in extracted_features]
+    assert sbd.column_names(res) == [f"{f}" for f in enc.extracted_features_]
 
 
 def test_time_not_extracted_from_date_col(datetime_cols):
     enc = DatetimeEncoder(resolution="nanosecond")
     enc.fit(datetime_cols.date)
-    assert enc.all_outputs_ == [
+    assert enc.extracted_features_ == [
         "when_year",
         "when_month",
         "when_day",
