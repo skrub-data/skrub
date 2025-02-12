@@ -392,16 +392,17 @@ class Expr:
         return f"{result}\nResult:\n―――――――\n{preview!r}"
 
     def _repr_html_(self):
+        title = html.escape(repr(self._skrub_impl))
+        graph = self.skb.draw_graph().decode("utf-8")
+        if "preview" not in self._skrub_impl.results:
+            return f"<h3>{title}</h3>\n{graph}"
+        prefix = (
+            f"<details><summary>{title}</summary>{graph}</details><pre>Result:</pre>"
+        )
         report = self.skb.get_report()
         if hasattr(report, "_repr_html_"):
             report = report._repr_html_()
-            title = html.escape(repr(self._skrub_impl))
-            # TODO: expose "summary" in TableReport?
-            report = report.replace(
-                '<div id="report">',
-                f'<div id="report">\n<pre>{title}\nResult:\n</pre>',
-            )
-        return report
+        return f"{prefix}\n{report}"
 
 
 def _make_bin_op(op_name):
