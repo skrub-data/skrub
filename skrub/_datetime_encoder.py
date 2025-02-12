@@ -299,7 +299,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         y : None
             Ignored.
 
-        ReturnsHistGradientBoostingRegressor()
+        Returns
         -------
         transformed : DataFrame
             The extracted features.
