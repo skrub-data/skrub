@@ -1055,7 +1055,9 @@ def deferred(func):
         and needs_eval(func.__globals__[name])
     }
     closure = tuple(c.cell_contents for c in func.__closure__ or ())
-    if not f_globals and not needs_eval(closure):
+    if not f_globals and not needs_eval(
+        (closure, func.__defaults__, func.__kwdefaults__)
+    ):
         return deferred_func
 
     @_with_check_call_return_value
