@@ -15,8 +15,7 @@ def date(df_module):
             "when",
             [
                 "2020-01-01",
-                "2020-01-01",
-                #    None,
+                None,
                 "2022-01-01",
             ],
         ),
@@ -30,8 +29,7 @@ def datetime(df_module):
             "when",
             [
                 "2020-01-01 10:12:01",
-                "2020-01-01 10:13:01",
-                #  None,
+                None,
                 "2022-01-01 23:23:43",
             ],
         ),
@@ -46,8 +44,7 @@ def tz_datetime(df_module):
             "when",
             [
                 "2020-01-01 10:12:01",
-                "2020-01-01 10:13:01",
-                # None,
+                None,
                 "2022-01-01 23:23:43",
             ],
         ),
@@ -66,8 +63,7 @@ def nanoseconds(df_module):
             "when",
             [
                 "2020-01-01 10:12:01.123456789",
-                "2020-01-01 10:13:01.123456789",
-                # None,
+                None,
                 "2022-01-01 23:23:43.123987654",
             ],
         ),
@@ -126,17 +122,6 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
         [f"{f}" for f in enc.all_outputs_],
     )
     df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
-
-    # enc = DatetimeEncoder(add_periodic=True)
-    # if use_fit_transform:
-    #     res = enc.fit_transform(a_datetime_col)
-    # else:
-    #     res = enc.fit(a_datetime_col).transform(a_datetime_col)
-    # expected_features = s.select(
-    #     expected_features,
-    #     [f"{f}" for f in enc.all_outputs_],
-    # )
-    # df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
 
 
 @pytest.mark.parametrize(

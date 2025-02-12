@@ -332,6 +332,9 @@ class DatetimeEncoder(SingleColumnTransformer):
             f"{col_name}_{_feat}" for _feat in self.extracted_features_
         ]
 
+        self.nulls = ~sbd.is_null(column)
+        column = self._fill_nulls(column)
+
         # Iterating over all attributes that end with _encoding to use the default
         # parameters
         if self.add_periodic:
@@ -344,8 +347,8 @@ class DatetimeEncoder(SingleColumnTransformer):
                 if isinstance(_enc, (SplineEncoder, CircularEncoder)):
                     self._required_transformers[_enc_case] = _enc
                 else:
-                    # This encoder has been disabled
                     if _enc is None:
+                        # This encoder has been disabled
                         continue
                     if _enc == "circular":
                         self._required_transformers[_enc_case] = CircularEncoder(
@@ -382,6 +385,11 @@ class DatetimeEncoder(SingleColumnTransformer):
         """
         check_is_fitted(self, "extracted_features_")
         name = sbd.name(column)
+
+        # Replacing filled values back with nulls
+        # _null_mask = None
+        _null_mask = sbd.all_null_like(column, dtype="Float32")
+
         all_extracted = []
         for feature in self.extracted_features_:
             extracted = _get_dt_feature(column, feature).rename(f"{name}_{feature}")
@@ -391,13 +399,21 @@ class DatetimeEncoder(SingleColumnTransformer):
         _new_features = []
         for _case, t in self._required_transformers.items():
             _feat = _get_dt_feature(column, _case)
-            _new_features.append(t.transform(_feat))
+            _transformed = t.transform(_feat)
+
+            _new_features.append(_transformed)
 
         X_out = sbd.make_dataframe_like(column, all_extracted)
-
         X_out = sbd.concat_horizontal(X_out, *_new_features)
 
+        X_out = sbd.where_row(X_out, self.nulls, _null_mask)
+
         return X_out
+
+    def _fill_nulls(self, column):
+        _fill_value = column[0]
+
+        return sbd.fill_nulls(column, _fill_value)
 
     def _check_params(self):
         allowed = _TIME_LEVELS + [None]
