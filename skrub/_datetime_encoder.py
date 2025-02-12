@@ -387,8 +387,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         name = sbd.name(column)
 
         # Replacing filled values back with nulls
-        # _null_mask = None
-        _null_mask = sbd.all_null_like(column, dtype="Float32")
+        _null_mask = sbd.all_null_like(sbd.to_float32(column))
 
         all_extracted = []
         for feature in self.extracted_features_:
