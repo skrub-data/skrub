@@ -1013,6 +1013,8 @@ class CallMethod(ExprImpl):
 
 
 def deferred(func):
+    from ._evaluation import needs_eval
+
     if not hasattr(func, "__code__"):
 
         @_with_check_call_return_value
@@ -1057,6 +1059,7 @@ def deferred(func):
                     types.ModuleType,
                 ),
             )
+            and needs_eval(func.__globals__[name])
         }
         closure = tuple(c.cell_contents for c in func.__closure__ or ())
         return Expr(

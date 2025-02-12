@@ -573,3 +573,23 @@ def set_params(expr, params):
             target.chosen_outcome_idx = v
         else:
             target.chosen_outcome = v
+
+
+class _FoundNodeNeedingEval(Exception):
+    pass
+
+
+class _NeedsEval(_ExprTraversal):
+    def handle_expr(self, e, *_):
+        raise _FoundNodeNeedingEval(e)
+
+    def handle_choice(self, choice):
+        raise _FoundNodeNeedingEval(choice)
+
+
+def needs_eval(obj):
+    try:
+        _NeedsEval().run(obj)
+    except _FoundNodeNeedingEval:
+        return True
+    return False
