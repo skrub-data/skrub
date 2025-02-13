@@ -881,7 +881,12 @@ class Apply(ExprImpl):
         estimator = unwrap_chosen_or_default(self.estimator)
         if estimator.__class__.__name__ in ["OnEachColumn", "OnSubFrame"]:
             estimator = estimator.transformer
-        return f"<{self.__class__.__name__} {estimator.__class__.__name__}>"
+        # can be 'passthrough'
+        if isinstance(estimator, str):
+            name = repr(estimator)
+        else:
+            name = estimator.__class__.__name__
+        return f"<{self.__class__.__name__} {name}>"
 
 
 class AppliedEstimator(ExprImpl):
