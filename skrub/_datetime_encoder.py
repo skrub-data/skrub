@@ -402,8 +402,8 @@ class DatetimeEncoder(SingleColumnTransformer):
             f"{col_name}_{_feat}" for _feat in self._partial_features
         ]
 
-        self.nulls = ~sbd.is_null(column)
-        column = self._fill_nulls(column)
+        # Finding the non-null values (to keep as is when censoring)
+        self.not_nulls = ~sbd.is_null(column)
 
         # Iterating over all attributes that end with _encoding to use the default
         # parameters
@@ -435,7 +435,8 @@ class DatetimeEncoder(SingleColumnTransformer):
                 _feat = _get_dt_feature(column, _case)
                 _feat_name = sbd.name(_feat) + "_" + _case
                 _feat = sbd.rename(_feat, _feat_name)
-                t.fit(_feat)
+                # Filling null values for periodc encoder
+                t.fit(self._fill_nulls(_feat))
                 self.extracted_features_ += t.all_outputs_
 
         return self.transform(column)
@@ -456,6 +457,8 @@ class DatetimeEncoder(SingleColumnTransformer):
         check_is_fitted(self, "extracted_features_")
         name = sbd.name(column)
 
+        # Checking again which values are null if calling only transform
+        self.not_nulls = ~sbd.is_null(column)
         # Replacing filled values back with nulls
         _null_mask = sbd.all_null_like(sbd.to_float32(column))
 
@@ -468,18 +471,22 @@ class DatetimeEncoder(SingleColumnTransformer):
         _new_features = []
         for _case, t in self._required_transformers.items():
             _feat = _get_dt_feature(column, _case)
-            _transformed = t.transform(_feat)
+            # filling nulls only to the feature passed to the periodic encoder
+            _transformed = t.transform(self._fill_nulls(_feat))
 
             _new_features.append(_transformed)
 
         X_out = sbd.make_dataframe_like(column, all_extracted)
         X_out = sbd.concat_horizontal(X_out, *_new_features)
 
-        X_out = sbd.where_row(X_out, self.nulls, _null_mask)
+        # Censoring all the null features
+        X_out = sbd.where_row(X_out, self.not_nulls, _null_mask)
 
         return X_out
 
     def _fill_nulls(self, column):
+        # Fill all null values in the column with the first value in the column.
+        # This is an arbitrary value
         _fill_value = column[0]
 
         return sbd.fill_nulls(column, _fill_value)
