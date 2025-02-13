@@ -14,13 +14,14 @@ from ._evaluation import (
     find_X,
     find_y,
     get_params,
+    needs_eval,
     nodes,
     param_grid,
     reachable,
     set_params,
 )
 from ._evaluation import clone as clone_expr
-from ._expressions import Apply
+from ._expressions import Apply, Expr
 from ._utils import FITTED_PREDICTOR_METHODS, X_NAME, Y_NAME, attribute_error
 
 
@@ -39,7 +40,20 @@ def _check_env(environment, caller_name):
             f" values, for example: {caller_name}({{'X': df, 'other_table_name':"
             " other_df, ...})"
         )
-    # TODO: check that environment contains no expressions or choices?
+    env_contains_expr, found_node = needs_eval(environment, return_node=True)
+    if env_contains_expr:
+        if isinstance(found_node, Expr):
+            description = f"a skrub expression: {found_node._skrub_impl!r}"
+        else:
+            description = f"a skrub choice: {found_node}"
+        raise TypeError(
+            f"The `environment` dict passed to {caller_name!r} "
+            f"contains {description}. This argument should only "
+            "contain actual values on which to run the computation."
+        )
+    # TODO: check env keys to fail early?
+    #     - all keys in env should correspond to a node in the expression
+    #     - all variables that don't have a value should have a binding in env
 
 
 class ExprEstimator(BaseEstimator):

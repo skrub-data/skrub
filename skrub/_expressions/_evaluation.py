@@ -575,21 +575,27 @@ def set_params(expr, params):
             target.chosen_outcome = v
 
 
-class _FoundNodeNeedingEval(Exception):
-    pass
+class _FoundNode(Exception):
+    def __init__(self, node):
+        self.node = node
 
 
 class _NeedsEval(_ExprTraversal):
     def handle_expr(self, e, *_):
-        raise _FoundNodeNeedingEval(e)
+        raise _FoundNode(e)
 
     def handle_choice(self, choice):
-        raise _FoundNodeNeedingEval(choice)
+        raise _FoundNode(choice)
 
 
-def needs_eval(obj):
+def needs_eval(obj, return_node=False):
     try:
         _NeedsEval().run(obj)
-    except _FoundNodeNeedingEval:
-        return True
+    except _FoundNode as e:
+        if return_node:
+            return True, e.node
+        else:
+            return True
+    if return_node:
+        return False, None
     return False
