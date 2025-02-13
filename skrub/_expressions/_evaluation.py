@@ -49,37 +49,52 @@ def _as_gen(f):
     return g
 
 
+class _Gen:
+    def __init__(self, obj, gen):
+        self.obj_id = id(obj)
+        self.gen = gen
+
+
 class _ExprTraversal:
     def run(self, expr):
         stack = [expr]
         last_result = None
+
+        def handle(handler):
+            top = stack.pop()
+            gen = handler(top)
+            stack.append(_Gen(top, gen))
+
         while stack:
             top = stack[-1]
             try:
-                if inspect.isgenerator(top):
-                    stack.append(top.send(last_result))
+                if isinstance(top, _Gen):
+                    new_top = top.gen.send(last_result)
+                    if id(new_top) in [g.obj_id for g in stack if isinstance(g, _Gen)]:
+                        raise RuntimeError("circular reference")
+                    stack.append(new_top)
                     last_result = None
                 elif isinstance(top, Expr):
                     if isinstance(top._skrub_impl, IfElse):
-                        stack.append(self.handle_if_else(stack.pop()))
+                        handle(self.handle_if_else)
                     else:
-                        stack.append(self.handle_expr(stack.pop()))
+                        handle(self.handle_expr)
                 elif isinstance(top, _BUILTIN_MAP):
-                    stack.append(self.handle_mapping(stack.pop()))
+                    handle(self.handle_mapping)
                 elif isinstance(top, _BUILTIN_SEQ):
-                    stack.append(self.handle_seq(stack.pop()))
+                    handle(self.handle_seq)
                 elif isinstance(top, slice):
-                    stack.append(self.handle_slice(stack.pop()))
+                    handle(self.handle_slice)
                 elif isinstance(top, _tuning.BaseChoice):
-                    stack.append(self.handle_choice(stack.pop()))
+                    handle(self.handle_choice)
                 elif isinstance(top, _tuning.Outcome):
-                    stack.append(self.handle_outcome(stack.pop()))
+                    handle(self.handle_outcome)
                 elif isinstance(top, _tuning.Match):
-                    stack.append(self.handle_choice_match(stack.pop()))
+                    handle(self.handle_choice_match)
                 elif isinstance(top, BaseEstimator):
-                    stack.append(self.handle_estimator(stack.pop()))
+                    handle(self.handle_estimator)
                 else:
-                    stack.append(self.handle_value(stack.pop()))
+                    handle(self.handle_value)
             except StopIteration as e:
                 last_result = e.value
                 stack.pop()
