@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
-from sklearn.preprocessing import FunctionTransformer, SplineTransformer
+from sklearn.preprocessing import SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
 try:
@@ -29,7 +29,7 @@ _TIME_LEVELS = [
     "nanosecond",
 ]
 
-_DEFAULT_ENCODING_PERIODS = {"year": 4, "month": 30, "weekday": 7, "hour": 24}
+_DEFAULT_ENCODING_PERIODS = {"year": 366, "month": 30, "weekday": 7, "hour": 24}
 
 
 @dispatch
@@ -408,28 +408,28 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Iterating over all attributes that end with _encoding to use the default
         # parameters
         if self.add_periodic:
-            _enc_attr = [attr for attr in self.__dict__ if attr.endswith("_encoding")]
-            for _enc_name in _enc_attr:
-                _enc = self.__getattribute__(_enc_name)
-                _enc_case = _enc_name.split("_")[0]
+            enc_attr = [attr for attr in self.__dict__ if attr.endswith("_encoding")]
+            for enc_name in enc_attr:
+                enc = self.__getattribute__(enc_name)
+                enc_case = enc_name.split("_")[0]
 
                 # The user provided a specific instance of the encoder for this case
-                if isinstance(_enc, (SplineEncoder, CircularEncoder)):
-                    self._required_transformers[_enc_case] = clone(_enc)
+                if isinstance(enc, (SplineEncoder, CircularEncoder)):
+                    self._required_transformers[enc_case] = clone(enc)
                 else:
-                    if _enc is None:
+                    if enc is None:
                         # This encoder has been disabled
                         continue
-                    if _enc == "circular":
-                        self._required_transformers[_enc_case] = CircularEncoder(
-                            period=_DEFAULT_ENCODING_PERIODS[_enc_case]
+                    if enc == "circular":
+                        self._required_transformers[enc_case] = CircularEncoder(
+                            period=_DEFAULT_ENCODING_PERIODS[enc_case]
                         )
-                    elif _enc == "spline":
-                        self._required_transformers[_enc_case] = SplineEncoder(
-                            period=_DEFAULT_ENCODING_PERIODS[_enc_case]
+                    elif enc == "spline":
+                        self._required_transformers[enc_case] = SplineEncoder(
+                            period=_DEFAULT_ENCODING_PERIODS[enc_case]
                         )
                     else:
-                        raise ValueError(f"Unsupported option {_enc} for {_enc_name}")
+                        raise ValueError(f"Unsupported option {enc} for {enc_name}")
 
             for _case, t in self._required_transformers.items():
                 _feat = _get_dt_feature(column, _case)
@@ -533,7 +533,7 @@ class SplineEncoder(SingleColumnTransformer):
         integer.
     """
 
-    def __init__(self, period=24, n_splines=None, degree=3):
+    def __init__(self, period, n_splines=None, degree=3):
         self.period = period
         self.n_splines = n_splines
         self.degree = degree
@@ -557,9 +557,7 @@ class SplineEncoder(SingleColumnTransformer):
 
         del y
 
-        self.transformer_ = self._periodic_spline_transformer(
-            period=self.period, n_splines=self.n_splines, degree=self.degree
-        )
+        self.transformer_ = self._periodic_spline_transformer()
 
         X_out = self.transformer_.fit_transform(sbd.to_numpy(X).reshape(-1, 1))
 
@@ -597,15 +595,14 @@ class SplineEncoder(SingleColumnTransformer):
 
         return result
 
-    # This comes from https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html#periodic-spline-features
-    def _periodic_spline_transformer(self, period, n_splines=None, degree=3):
-        if n_splines is None:
-            n_splines = period
-        n_knots = n_splines + 1  # periodic and include_bias is True
+    def _periodic_spline_transformer(self):
+        if self.n_splines is None:
+            self.n_splines = self.period
+        n_knots = self.n_splines + 1  # periodic and include_bias is True
         return SplineTransformer(
-            degree=degree,
+            degree=self.degree,
             n_knots=n_knots,
-            knots=np.linspace(0, period, n_knots).reshape(n_knots, 1),
+            knots=np.linspace(0, self.period, n_knots).reshape(n_knots, 1),
             extrapolation="periodic",
             include_bias=True,
         )
@@ -623,7 +620,7 @@ class CircularEncoder(SingleColumnTransformer):
         Period to be used as basis of the trigonometric function.
     """
 
-    def __init__(self, period=24):
+    def __init__(self, period):
         self.period = period
 
     def fit_transform(self, X, y):
@@ -645,19 +642,11 @@ class CircularEncoder(SingleColumnTransformer):
 
         del y
 
-        self._sin_transformer = FunctionTransformer(
-            lambda x: np.sin(x / self.period * 2 * np.pi)
-        )
-        self._cos_transformer = FunctionTransformer(
-            lambda x: np.cos(x / self.period * 2 * np.pi)
-        )
-
         _new_features = [
-            self._sin_transformer.fit_transform(X),
-            self._cos_transformer.fit_transform(X),
+            np.sin(X / self.period * 2 * np.pi),
+            np.cos(X / self.period * 2 * np.pi),
         ]
 
-        self.is_fitted = True
         self.n_components_ = 2
 
         name = sbd.name(X)
@@ -682,8 +671,8 @@ class CircularEncoder(SingleColumnTransformer):
         """
 
         _new_features = [
-            self._sin_transformer.transform(X),
-            self._cos_transformer.transform(X),
+            np.sin(X / self.period * 2 * np.pi),
+            np.cos(X / self.period * 2 * np.pi),
         ]
 
         return self._post_process(X, _new_features)
