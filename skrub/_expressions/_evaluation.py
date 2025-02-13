@@ -49,10 +49,14 @@ def _as_gen(f):
     return g
 
 
-class _Gen:
-    def __init__(self, obj, gen):
-        self.obj_id = id(obj)
-        self.gen = gen
+class _Computation:
+    def __init__(self, target, generator):
+        self.target_id = id(target)
+        self.generator = generator
+
+
+class CircularReferenceError(ValueError):
+    pass
 
 
 class _ExprTraversal:
@@ -60,41 +64,46 @@ class _ExprTraversal:
         stack = [expr]
         last_result = None
 
-        def handle(handler):
+        def push(handler):
             top = stack.pop()
-            gen = handler(top)
-            stack.append(_Gen(top, gen))
+            generator = handler(top)
+            stack.append(_Computation(top, generator))
 
         while stack:
             top = stack[-1]
             try:
-                if isinstance(top, _Gen):
-                    new_top = top.gen.send(last_result)
-                    if id(new_top) in [g.obj_id for g in stack if isinstance(g, _Gen)]:
-                        raise RuntimeError("circular reference")
+                if isinstance(top, _Computation):
+                    new_top = top.generator.send(last_result)
+                    if id(new_top) in {
+                        c.target_id for c in stack if isinstance(c, _Computation)
+                    }:
+                        raise CircularReferenceError(
+                            "Skrub expressions cannot contain circular references. "
+                            f"A circular reference was found in this object: {new_top}"
+                        )
                     stack.append(new_top)
                     last_result = None
                 elif isinstance(top, Expr):
                     if isinstance(top._skrub_impl, IfElse):
-                        handle(self.handle_if_else)
+                        push(self.handle_if_else)
                     else:
-                        handle(self.handle_expr)
+                        push(self.handle_expr)
                 elif isinstance(top, _BUILTIN_MAP):
-                    handle(self.handle_mapping)
+                    push(self.handle_mapping)
                 elif isinstance(top, _BUILTIN_SEQ):
-                    handle(self.handle_seq)
+                    push(self.handle_seq)
                 elif isinstance(top, slice):
-                    handle(self.handle_slice)
+                    push(self.handle_slice)
                 elif isinstance(top, _tuning.BaseChoice):
-                    handle(self.handle_choice)
+                    push(self.handle_choice)
                 elif isinstance(top, _tuning.Outcome):
-                    handle(self.handle_outcome)
+                    push(self.handle_outcome)
                 elif isinstance(top, _tuning.Match):
-                    handle(self.handle_choice_match)
+                    push(self.handle_choice_match)
                 elif isinstance(top, BaseEstimator):
-                    handle(self.handle_estimator)
+                    push(self.handle_estimator)
                 else:
-                    handle(self.handle_value)
+                    push(self.handle_value)
             except StopIteration as e:
                 last_result = e.value
                 stack.pop()
@@ -611,6 +620,9 @@ def needs_eval(obj, return_node=False):
             return True, e.node
         else:
             return True
+    except CircularReferenceError:
+        # Hope for the best
+        pass
     if return_node:
         return False, None
     return False
