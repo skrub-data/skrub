@@ -125,19 +125,19 @@ class DatetimeEncoder(SingleColumnTransformer):
         trigonometric (circular) encoding of features. Spline encoding and
         custom encoders are also supported.
 
-    year_encoding : str, ``CircularEncoder``, ``SplineEncoder`` or None, default="circular"
+    year_encoding : str, :class:``~CircularEncoder``, :class:``~SplineEncoder`` or None, default="circular"
         Select the strategy used to encode days in a year. By default, use a
         CircularEncoder with period=365. If None, no encoding is performed.
 
-    month_encoding : str, ``CircularEncoder``, ``SplineEncoder`` or None, default="circular"
+    month_encoding : str, :class:``~CircularEncoder``, :class:``~SplineEncoder`` or None, default="circular"
         Select the strategy used to encode days in a month. By default, use a
         CircularEncoder with period=30. If None, no encoding is performed.
 
-    weekday_encoding : str, ``CircularEncoder``, ``SplineEncoder`` or None, default="circular"
+    weekday_encoding : str, :class:``~CircularEncoder``, :class:``~SplineEncoder`` or None, default="circular"
         Select the strategy used to encode days in a week. By default, use a
         CircularEncoder with period=7. If None, no encoding is performed.
 
-    hour_encoding : str, ``CircularEncoder``, ``SplineEncoder`` or None, default="circular"
+    hour_encoding : str, :class:``~CircularEncoder``, :class:``~SplineEncoder`` or None, default="circular"
         Select the strategy used to encode hours in a day. By default, use a
         CircularEncoder with period=24. If None, no encoding is performed.
 
