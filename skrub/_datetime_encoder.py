@@ -623,7 +623,7 @@ class CircularEncoder(SingleColumnTransformer):
     def __init__(self, period):
         self.period = period
 
-    def fit_transform(self, X, y):
+    def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
 
         Parameters
