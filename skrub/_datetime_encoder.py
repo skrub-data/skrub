@@ -75,7 +75,7 @@ def _get_dt_feature_polars(col, feature):
     if feature == "total_seconds":
         return (col.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
     if feature == "day_of_year":
-        return getattr(col.dt, "ordinal_day")()
+        return col.dt.ordinal_day()
     assert feature in _TIME_LEVELS + ["weekday"]
     return getattr(col.dt, feature)()
 
