@@ -15,6 +15,7 @@ from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
 from .. import _selectors as s
+from .._reporting._utils import strip_xml_declaration
 from .._select_cols import DropCols, SelectCols
 from .._tuning import Choice, unwrap_chosen_or_default
 from .._wrap_transformer import wrap_transformer
@@ -393,16 +394,19 @@ class Expr:
 
     def _repr_html_(self):
         title = html.escape(repr(self._skrub_impl))
+        title = f"<samp>{title}</samp>"
         graph = self.skb.draw_graph().decode("utf-8")
+        graph = strip_xml_declaration(graph)
         if "preview" not in self._skrub_impl.results:
-            return f"<h3>{title}</h3>\n{graph}"
+            return f"<div><h3>{title}</h3>\n{graph}</div>"
         prefix = (
-            f"<details><summary>{title}</summary>{graph}</details><pre>Result:</pre>"
+            f"<details>\n<summary>{title}</summary>\n{graph}<br /><br />\n</details>"
+            "\n<samp>Result:</samp>"
         )
         report = self.skb.get_report()
         if hasattr(report, "_repr_html_"):
             report = report._repr_html_()
-        return f"{prefix}\n{report}"
+        return f"<div>\n{prefix}\n{report}\n</div>"
 
 
 def _make_bin_op(op_name):

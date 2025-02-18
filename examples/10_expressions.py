@@ -200,9 +200,7 @@ with_total
 # well).
 #
 # We can see a graphical representation of that computation by clicking the
-#
 # ``▶ <CallMethod 'assign'>``
-#
 # dropdown above, or with the ``.skb.draw_graph()`` method:
 
 # %%
@@ -245,7 +243,11 @@ with_total["item"].str.split(expand=True).rename(columns="item_{}".format)
 # ``DataFrame``, it can be anything we want:
 
 # %%
-(skrub.var("left", "hello") + " " + skrub.var("right", "world") + "!").title()
+e = (skrub.var("left", "hello") + ", " + skrub.var("right", "world") + "!").title()
+e
+
+# %%
+e.skb.eval({"right": "skrub"})
 
 # %%
 # (``title()`` is a method of Python strings for converting them to title case.)
@@ -270,7 +272,7 @@ with_total["item"].str.split(expand=True).rename(columns="item_{}".format)
 baskets_df = dataset.baskets[["ID"]]  # just a regular dataframe
 
 # mark_as_x() means
-# 'this is the feature matrix you need to split during cross-validation'
+# 'this is the feature matrix which needs to be split during cross-validation'
 baskets = skrub.var("baskets", baskets_df).skb.mark_as_x()
 
 # Note: a slightly shorter way is to use the shorthand `skrub.X`:
@@ -484,17 +486,3 @@ loaded.predict({"baskets": new_baskets, "products": new_products})
 #     predictions.skb.cross_validate(scoring="roc_auc", n_jobs=4)
 
 # %%
-
-# Advanced usage
-# --------------
-#
-# TODO
-#
-# Expressions without a value
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# ``skrub.deferred``
-# ~~~~~~~~~~~~~~~~~~
-#
-# ...
-# ~~~
