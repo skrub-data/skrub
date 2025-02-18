@@ -46,6 +46,8 @@ def progress_bar(
 
 
 def _get_score_name(scorers):
+    scorers = getattr(scorers, "_scorer", scorers)
+
     if hasattr(scorers, "_score_func"):
         return scorers._score_func.__name__
 
