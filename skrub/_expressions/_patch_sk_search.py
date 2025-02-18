@@ -5,9 +5,7 @@ from itertools import product
 import numpy as np
 from joblib import Parallel, delayed
 from sklearn.base import BaseEstimator, clone, is_classifier
-from sklearn.metrics._scorer import (
-    _MultimetricScorer,
-)
+from sklearn.metrics._scorer import _MultimetricScorer
 from sklearn.model_selection._search import BaseSearchCV
 from sklearn.model_selection._split import check_cv
 from sklearn.model_selection._validation import (
