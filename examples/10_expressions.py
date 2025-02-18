@@ -64,11 +64,8 @@ We leave out hyperparameter tuning, which is covered in the
 import skrub
 import skrub.datasets
 
-# Use a richer representation of dataframes in the displayed output.
-skrub.patch_display()
-
 dataset = skrub.datasets.fetch_credit_fraud()
-dataset.baskets
+skrub.TableReport(dataset.baskets)
 
 # %%
 # Each basket contains one or more products. We have a ``products`` table
@@ -79,7 +76,7 @@ dataset.baskets
 # basket through the ``"basket_ID"`` column.
 
 # %%
-dataset.products
+skrub.TableReport(dataset.products)
 
 # %%
 # A data-processing challenge
@@ -147,11 +144,12 @@ dataset.products
 #
 # The way we build a machine-learning pipeline in skrub is somewhat different
 # from scikit-learn. We do not create the complete pipeline ourselves by
-# providing a list of transformation steps. Rather, we manipulate objects that
-# represent intermediate results in our computation. They record the different
-# operations we perform on them (such as applying operators or calling
-# methods), which allows to later retrieve the whole sequence of operations as
-# a scikit-learn estimator that can be fitted and applied to unseen data.
+# providing an explicit list of transformation steps. Rather, we manipulate
+# objects that represent intermediate results in our computation. They record
+# the different operations we perform on them (such as applying operators or
+# calling methods), which allows to later retrieve the whole sequence of
+# operations as a scikit-learn estimator that can be fitted and applied to
+# unseen data.
 #
 # Because those objects encapsulate a computation, which can be evaluated to
 # produce a result, we refer to them as "expressions". The simplest expressions
@@ -170,15 +168,13 @@ products = skrub.var("products", dataset.products)
 # The variable is given a ``name`` (``"products"``) and a ``value`` (here, the
 # dataframe ``dataset.products``). The provided ``value`` is used to compute
 # results as we build up the pipeline, and as a source of data for running
-# cross-validation and hyperparameter selection (shown later). ``value`` is
-# optional: we can also build our pipeline without actually running any
-# computations and execute it later.
+# cross-validation and hyperparameter selection (shown later).
+#
+# (passing a ``value`` is recommended but optional: we can also build our
+# pipeline without actually running any computations and execute it later.)
 #
 # We can then apply transformations to ``products`` to start building up our
-# pipeline. All method and attribute access is transparently forwarded to the
-# variable's ``value``. Here, ``value`` is a pandas DataFrame so we manipulate
-# ``products`` as we would manipulate a DataFrame. Note that a variable's
-# ``value`` can be any type of object.
+# pipeline.
 #
 # For example, we can write:
 
@@ -191,19 +187,30 @@ with_total
 # %%
 # Note the added "total_price" column in the result above.
 #
-# So we manipulate our variable as we would manipulate an actual dataframe. The
-# difference is that all operations are being recorded and added to our
-# pipeline.
+# The ``with_total`` object above is a new expression, which encapsulates the
+# computation of a new dataframe in which a ``"total_price"`` column has been
+# added to the ``"products"`` input.
 #
-# Another difference is that expressions have a ``.skb`` attribute through
-# which we access the functionality provided by skrub. For example, we can
-# display the graph of computations contained in an expression.
+# When we display ``with_total``, we see the result of that computation on the
+# data we provided: a pandas DataFrame. But ``with_total`` itself is *not* a
+# pandas DataFrame: it is a skrub expression, which stores the computation
+# steps needed to produce the result DataFrame. This is essential and enables
+# us to later apply those same transformations to some new, unseen data (eg,
+# next week's e-commerce transactions, for which we will need predictions as
+# well).
+#
+# We can see a graphical representation of that computation by clicking the
+#
+# ``▶ <CallMethod 'assign'>``
+#
+# dropdown above, or with the ``.skb.draw_graph()`` method:
 
 # %%
 with_total.skb.draw_graph()
 
 # %%
-# We can evaluate an expression to obtain the result.
+# If we want to access the actual ``DataFrame``, ie the result of evaluating the
+# ``with_total`` expression, we can use:
 
 # %%
 with_total.skb.eval()
@@ -219,10 +226,36 @@ with_total.skb.eval({"products": dataset.products.iloc[:3]})
 # (We show it here for
 # didactic purposes but in practice you will rarely need to call ``eval``
 # yourself)
+#
+# As we see in the examples above, skrub expressions provide a lot of their
+# functionality through the ``.skb`` attribute.
+#
+# Any other attribute we access will be retrieved from the expression's value,
+# so we can use the usual interface of the object we are computing. For example
+# here ``with_total`` evaluates to a pandas ``DataFrame`` so we can add more
+# computation steps by manipulating it just like we would manipulate a pandas
+# ``DataFrame``:
+
+# %%
+with_total["item"].str.split(expand=True).rename(columns="item_{}".format)
+
+# %%
+# Note that the result of ``with_total['item']`` is not a ``DataFrame`` but a
+# ``Series``. More generally, the value of an expression does not have to be a
+# ``DataFrame``, it can be anything we want:
+
+# %%
+(skrub.var("left", "hello") + " " + skrub.var("right", "world") + "!").title()
+
+# %%
+# (``title()`` is a method of Python strings for converting them to title case.)
 
 # %%
 # Identifying X and y
 # -------------------
+#
+# Now we have introduced skrub expressions we can get back to our credit fraud
+# pipeline.
 #
 # In addition to the products, our dataset also contains the design matrix
 # (which at first, only contains basket IDs) and the fraud flags, so we need to
@@ -465,8 +498,3 @@ loaded.predict({"baskets": new_baskets, "products": new_products})
 #
 # ...
 # ~~~
-
-# %%
-
-# undo the display config we set at the beginning of the script
-skrub.unpatch_display()
