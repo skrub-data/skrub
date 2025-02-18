@@ -533,7 +533,7 @@ class SplineEncoder(SingleColumnTransformer):
         integer.
     """
 
-    def __init__(self, period, n_splines=None, degree=3):
+    def __init__(self, period=24, n_splines=None, degree=3):
         self.period = period
         self.n_splines = n_splines
         self.degree = degree
@@ -620,7 +620,7 @@ class CircularEncoder(SingleColumnTransformer):
         Period to be used as basis of the trigonometric function.
     """
 
-    def __init__(self, period):
+    def __init__(self, period=24):
         self.period = period
 
     def fit_transform(self, X, y=None):
