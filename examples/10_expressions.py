@@ -275,14 +275,6 @@ baskets_df = dataset.baskets[["ID"]]  # just a regular dataframe
 # 'this is the feature matrix which needs to be split during cross-validation'
 baskets = skrub.var("baskets", baskets_df).skb.mark_as_x()
 
-# Note: a slightly shorter way is to use the shorthand `skrub.X`:
-#
-# baskets = skrub.X(baskets_df)
-#
-# is equivalent to:
-#
-# baskets = skrub.var("X", baskets_df).skb.mark_as_x()
-
 # %%
 # similarly for the targets:
 
