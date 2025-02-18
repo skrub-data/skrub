@@ -485,9 +485,9 @@ class DatetimeEncoder(SingleColumnTransformer):
         return X_out
 
     def _fill_nulls(self, column):
-        # Fill all null values in the column with the first value in the column.
-        # This is an arbitrary value
-        _fill_value = sbd.head(column, 1)
+        # Fill all null values in the column with an arbitrary value
+        # This value will be replaced by nulls at the end of the transformation
+        _fill_value = 0
 
         return sbd.fill_nulls(column, _fill_value)
 
