@@ -204,7 +204,7 @@ predictions
 
 # %%
 search = predictions.skb.get_randomized_search(
-    scoring="roc_auc", n_iter=16, n_jobs=4, random_state=0, fitted=True
+    scoring="roc_auc", n_iter=8, n_jobs=4, random_state=0, fitted=True
 )
 search.get_cv_results_table()
 
