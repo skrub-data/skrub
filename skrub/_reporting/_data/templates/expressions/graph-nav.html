@@ -1,0 +1,10 @@
+<!-- <div class="nav-legend-current-node">
+     Current node
+     </div>
+-->
+<div id="graph-nav" data-current-node-id="node_{{ node_nb }}" data-node-status='{{ node_status | tojson }}'>
+    {{ svg | safe }}
+</div>
+<script>
+ {% include "expression-report.js" %}
+</script>

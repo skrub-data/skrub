@@ -1,0 +1,104 @@
+html {
+    font-family: sans-serif;
+    --current-node-color: #15ed8f;
+}
+
+* *::before, *::after {
+    box-sizing: border-box;
+}
+
+pre, code {
+    font-size: 1rem;
+}
+
+#graph-nav text {
+    transform: translateY(2px);
+}
+
+.expression-node-wrapper {
+    overflow-x: auto;
+}
+
+.mini-nav > ul {
+    display: grid;
+    grid-template-columns: 10ch 10ch 10ch;
+    list-style-type: none;
+}
+
+.expression-node {
+    display: flex;
+    height: calc(100vh - 24px - 24px);
+}
+
+.expression-node > * {
+    padding: 1rem;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.expression-node > nav.main-nav {
+    padding-top: 24px;
+    border-right: 2px solid #ccc;
+    flex-shrink: 0;
+}
+
+.node-details {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.node-details[data-has-error]{
+    background: #ffcccc;
+}
+
+.node-details[data-is-skipped]{
+    background: #eee;
+}
+
+.node-creation-stack {
+    font-size: 1rem;
+}
+
+.main-nav:not([data-is-open]){
+    display: none;
+}
+
+.main-nav[data-is-open] + .node-details {
+    min-width: min(95%, 25rem);
+}
+
+.nav-legend-current-node {
+    display: flex;
+    background: var(--current-node-color);
+    border: 4px solid black;
+    font-size: 1.2rem;
+    padding: 3px;
+}
+
+.nav-legend-current-node + * {
+    margin-top: 2rem;
+}
+
+.current-node polygon {
+
+    fill: var(--current-node-color);
+    stroke-width: 3;
+}
+
+.icon-button {
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    padding: 2px;
+    width: 24px;
+    height: 24px;
+}
+
+.error-node polygon {
+    stroke: red;
+    stroke-width: 3;
+}
+
+.skipped-node polygon {
+    stroke-dasharray: 4;
+}
