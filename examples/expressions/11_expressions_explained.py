@@ -79,7 +79,7 @@ lengths_m.skb.eval({"mm": np.array([100.0, 200.0, 300.0, 400.0, 500.0])})
 # What if we want to apply a function to our expression?
 # The following raises an error::
 #
-#     clipped_lengths = np.minimum(lengths_m, 0.3) # noqa
+#     clipped_lengths = np.minimum(lengths_m, 0.3)
 #
 # Produces:
 #

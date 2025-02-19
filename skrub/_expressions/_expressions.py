@@ -397,7 +397,7 @@ class Expr:
         title = f"<samp>{title}</samp>"
         graph = self.skb.draw_graph().decode("utf-8")
         graph = strip_xml_declaration(graph)
-        if "preview" not in self._skrub_impl.results:
+        if self._skrub_impl.preview_if_available() is _Constants.NO_VALUE:
             return f"<div><h3>{title}</h3>\n{graph}</div>"
         prefix = (
             f"<details>\n<summary>{title}</summary>\n{graph}<br /><br />\n</details>"
