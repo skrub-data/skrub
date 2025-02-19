@@ -18,10 +18,10 @@ Handling this with scikit-learn's ``FunctionTransformer``, ``Pipeline``,
 ``ColumnTransformer`` and ``FeatureUnion`` quickly becomes verbose and
 difficult to maintain.
 
-**Iterative development:** declaring all the steps in a pipeline before fitting
-it to see the result results in a slow development cycle in which errors are
-discovered late. We want a more interactive process where we immediately obtain
-previews of the intermediate results (or errors).
+**Iterative development:** we want to build a pipeline step by step, while
+inspecting the intermediate results so that the feedback loop is short and
+errors are discovered early. This is possible with a scikit-learn ``Pipeline``
+but can be made easier.
 
 **Hyperparameter tuning:** many choices such as estimators, hyperparameters,
 even the architecture of the pipeline can be informed by validation scores.
