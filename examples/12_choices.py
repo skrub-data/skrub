@@ -15,8 +15,15 @@ give the best performance on a validation set.
 
 Skrub `expressions <10_expressions.html>`_ provide a convenient way to specify
 the range of possible values, by inserting it directly in place of the actual
-value. For example we can write ``RidgeClassifier(alpha=skrub.choose_from([0.1,
-1.0, 10.0]))`` instead of ``RidgeClassifier(alpha=1.0)``. Skrub then inspects
+value. For example we can write:
+
+ ``RidgeClassifier(alpha=skrub.choose_from([0.1, 1.0, 10.0], name='α'))``
+
+instead of:
+
+``RidgeClassifier(alpha=1.0)``.
+
+Skrub then inspects
 our pipeline to discover all the places where we used objects like
 ``skrub.choose_from()`` and builds a grid of hyperparameters for us.
 
@@ -146,7 +153,8 @@ X
 # %%
 # Note: ``choose_from`` can be given a dictionary, when we want to provide
 # names for the individual outcomes, or a list, when names are not needed:
-# ``choose_from([1, 100])``, ``choose_from({'small': 1, 'big': 100})``.
+# ``choose_from([1, 100], name='N')``,
+# ``choose_from({'small': 1, 'big': 100}, name='N')``.
 #
 # Choices can be nested arbitrarily. For example, here we want to choose
 # between 2 possible encoder types: the ``MinHashEncoder`` or the
@@ -243,7 +251,7 @@ print(pred.skb.describe_param_grid())
 # %%
 X, y = skrub.X(texts), skrub.y(labels)
 
-add_length = skrub.choose_bool("add_length")
+add_length = skrub.choose_bool(name="add_length")
 X = add_length.if_else(X.assign(length=X["text"].str.len()), X).as_expr()
 X = X.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
 
@@ -275,7 +283,7 @@ def extract_features(df, add_length):
     return df
 
 
-X = extract_features(X, skrub.choose_bool("add_length"))
+X = extract_features(X, skrub.choose_bool(name="add_length"))
 X = X.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
 
 X.skb.eval({"add_length": False})

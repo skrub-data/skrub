@@ -2,13 +2,15 @@
 Hyperparameter grids
 ====================
 
+TODO: this is outdated
+
 This module provides the functionality that allows specifying ranges of
 hyperparameters directly inside the estimators when adding steps to a
 skrub expression. They are the low-level building blocks that allow users to
 write code like:
 
->>> X.apply(choose_from([PCA(), SelectKBest()]), y=y)  # doctest: +SKIP
->>> X.apply(Ridge(alpha=choose_float(0.01, 100.0, log=True)), y=y)  # doctest: +SKIP
+>>> X.apply(choose_from([PCA(), SelectKBest()], name='dim_reduc'), y=y)  # doctest: +SKIP
+>>> X.apply(Ridge(alpha=choose_float(0.01, 100.0, log=True, name='α')), y=y)  # doctest: +SKIP
 
 The main components are classes that represent ranges of hyperparameters, such
 as ``Choice``, and the ``expand_grid`` function, which inspects a pipeline
@@ -766,24 +768,19 @@ class Match:
         return as_expr(self)
 
 
-def choose_from(outcomes, name=None):
+def choose_from(outcomes, *, name):
     """Construct a choice among several possible outcomes.
 
     Outcomes can be provided in a list:
 
     >>> from skrub import choose_from
-    >>> choose_from([1, 2])
-    choose_from([1, 2])
+    >>> choose_from([1, 2], name='the number')
+    choose_from([1, 2], name='the number')
 
     They can also be provided in a dictionary to give a name to each outcome:
 
-    >>> choose_from({'one': 1, 'two': 2})
-    choose_from({'one': 1, 'two': 2})
-
-    The choice itself can also be given a name:
-
-    >>> choose_from({'one': 1, 'two': 2}, name='my favorite number')
-    choose_from({'one': 1, 'two': 2}, name='my favorite number')
+    >>> choose_from({'one': 1, 'two': 2}, name='the number')
+    choose_from({'one': 1, 'two': 2}, name='the number')
     """
     if isinstance(outcomes, typing.Mapping):
         prepared_outcomes = [Outcome(val, key) for key, val in outcomes.items()]
@@ -798,10 +795,10 @@ def unwrap(obj):
     If the input is a plain value, it is returned unchanged.
 
     >>> from skrub._tuning import choose_from, unwrap
-    >>> choice = choose_from([1, 2])
+    >>> choice = choose_from([1, 2], name='N')
     >>> outcome = choice.default()
     >>> outcome
-    Outcome(value=1, name=None, in_choice=None)
+    Outcome(value=1, name=None, in_choice='N')
     >>> unwrap(outcome)
     1
     >>> unwrap(1)
@@ -819,11 +816,11 @@ def unwrap_default(obj):
     For other inputs, behaves like ``unwrap``.
 
     >>> from skrub._tuning import choose_from, unwrap_default
-    >>> choice = choose_from([1, 2])
+    >>> choice = choose_from([1, 2], name='N')
     >>> choice
-    choose_from([1, 2])
+    choose_from([1, 2], name='N')
     >>> choice.default()
-    Outcome(value=1, name=None, in_choice=None)
+    Outcome(value=1, name=None, in_choice='N')
     >>> unwrap_default(choice)
     1
     >>> unwrap_default(choice.default())
@@ -856,7 +853,7 @@ class Optional(Choice):
         return f"optional({args})"
 
 
-def optional(value, name=None):
+def optional(value, *, name):
     """Construct a choice between a value and ``None``.
 
     This is useful for optional steps in a pipeline. If we want to try our
@@ -865,7 +862,7 @@ def optional(value, name=None):
 
     >>> from sklearn.decomposition import PCA
     >>> from skrub import optional
-    >>> optional(PCA(), name="use dim reduction")
+    >>> optional(PCA(), name='use dim reduction')
     optional(PCA(), name='use dim reduction')
 
     The constructed parameter grid will include a version of the pipeline with
@@ -882,7 +879,7 @@ class BoolChoice(Choice):
         return self.match({True: if_true, False: if_false})
 
 
-def choose_bool(name=None):
+def choose_bool(*, name):
     """Construct a choice between False and True."""
     return BoolChoice([Outcome(True), Outcome(False)], name=name)
 
@@ -1037,7 +1034,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
         return iter(self.grid)
 
 
-def choose_float(low, high, log=False, n_steps=None, name=None):
+def choose_float(low, high, *, log=False, n_steps=None, name):
     """Construct a choice of floating-point numbers from a numeric range."""
     if n_steps is None:
         return NumericChoice(low, high, log=log, to_int=False, name=name)
@@ -1046,7 +1043,7 @@ def choose_float(low, high, log=False, n_steps=None, name=None):
     )
 
 
-def choose_int(low, high, log=False, n_steps=None, name=None):
+def choose_int(low, high, *, log=False, n_steps=None, name):
     """Construct a choice of integers from a numeric range."""
     if n_steps is None:
         return NumericChoice(low, high, log=log, to_int=True, name=name)
@@ -1058,6 +1055,9 @@ def choose_int(low, high, log=False, n_steps=None, name=None):
 #
 # ``expand_grid``
 # ===============
+#
+# TODO: ``expand_grid`` is made redundant by functionality for
+# evaluating expressions and must be removed
 #
 # Now that we have the representations for different kinds of choices and
 # functions to construct them, the rest of this module provides the
