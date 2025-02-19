@@ -17,8 +17,8 @@ from .. import _dataframe as sbd
 from .. import _selectors as s
 from .._reporting._utils import strip_xml_declaration
 from .._select_cols import DropCols, SelectCols
-from .._tuning import Choice, unwrap_chosen_or_default
 from .._wrap_transformer import wrap_transformer
+from ._choosing import Choice, unwrap_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, _CloudPickle, attribute_error
 
 __all__ = ["var", "X", "y", "as_expr", "deferred", "deferred_optional", "if_else"]
@@ -1091,7 +1091,7 @@ def deferred(func):
 
 
 def deferred_optional(func, cond):
-    from .._tuning import choose_bool
+    from ._choosing import choose_bool
 
     if isinstance(cond, str):
         cond = choose_bool(cond)

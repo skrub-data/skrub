@@ -10,7 +10,20 @@ from ._check_dependencies import check_dependencies
 from ._column_associations import column_associations
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
-from ._expressions import X, as_expr, deferred, deferred_optional, if_else, var, y
+from ._expressions import (
+    X,
+    as_expr,
+    choose_bool,
+    choose_float,
+    choose_from,
+    choose_int,
+    deferred,
+    deferred_optional,
+    if_else,
+    optional,
+    var,
+    y,
+)
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._interpolation_joiner import InterpolationJoiner
@@ -26,13 +39,6 @@ from ._tabular_learner import tabular_learner
 from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
-from ._tuning import (
-    choose_bool,
-    choose_float,
-    choose_from,
-    choose_int,
-    optional,
-)
 
 check_dependencies()
 

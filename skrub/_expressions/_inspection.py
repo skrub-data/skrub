@@ -15,8 +15,8 @@ from .. import _dataframe as sbd
 from .. import datasets
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
-from .._tuning import Choice
 from .._utils import random_string
+from ._choosing import Choice
 from ._evaluation import choices, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
 from ._utils import simple_repr

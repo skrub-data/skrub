@@ -6,7 +6,7 @@ from sklearn.base import BaseEstimator, clone
 
 from .. import _join_utils
 from .._parallel_plot import DEFAULT_COLORSCALE, plot_parallel_coord
-from .._tuning import Choice, unwrap, unwrap_default
+from ._choosing import Choice, unwrap, unwrap_default
 from ._evaluation import (
     choices,
     evaluate,

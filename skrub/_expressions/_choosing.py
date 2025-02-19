@@ -112,59 +112,57 @@ Let us rebuild the previous grid using ``choose_from``. To make things more
 interesting we also add a ``LinearSVR`` as an alternative to the ``Ridge``.
 
 >>> from sklearn.svm import LinearSVR
->>> from skrub._tuning import choose_from
+>>> from skrub import choose_from
 
 >>> grid = {
-...     "dim_reduction": choose_from([PCA(), SelectKBest(f_regression)]),
-...     "regressor": choose_from([Ridge(), LinearSVR()]),
+...     "dim_reduction": choose_from([PCA(), SelectKBest(f_regression)], name='reduc'),
+...     "regressor": choose_from([Ridge(), LinearSVR()], name='regressor'),
 ... }
 
 We can also add hyperparameter ranges. The key point here is that choices can be
 nested, rather than manually extracting them with names such as
 ``regressor__alpha`` and building a flat list of subgrids.
 
->>> n_dim = choose_from([10, 20, 30])
+>>> n_dim = choose_from([10, 20, 30], name='N')
 >>> pca = PCA(n_components=n_dim)
 >>> kbest = SelectKBest(f_regression, k=n_dim)
 
->>> ridge = Ridge(alpha=choose_from([0.1, 1.0, 10.0]))
->>> svr = LinearSVR(C=choose_from([0.1, 1.0]))
+>>> ridge = Ridge(alpha=choose_from([0.1, 1.0, 10.0], name='α'))
+>>> svr = LinearSVR(C=choose_from([0.1, 1.0], name='C'))
 
 >>> grid = {
-...     "dim_reduction": choose_from([pca, kbest]),
-...     "regressor": choose_from([ridge, svr]),
+...     "dim_reduction": choose_from([pca, kbest], name='dim_reduc'),
+...     "regressor": choose_from([ridge, svr], name='regressor'),
 ... }
 >>> grid
-{'dim_reduction': choose_from([PCA(n_components=choose_from([10, 20, 30])), SelectKBest(k=choose_from([10, 20, 30]),
-            score_func=<function f_regression at 0x...>)]), 'regressor': choose_from([Ridge(alpha=choose_from([0.1, 1.0, 10.0])), LinearSVR(C=choose_from([0.1, 1.0]))])}
+{'dim_reduction': choose_from([PCA(n_components=choose_from([10, 20, 30], name='N')), SelectKBest(k=choose_from([10, 20, 30], name='N'),
+            score_func=<function f_regression at 0x...>)], name='dim_reduc'), 'regressor': choose_from([Ridge(alpha=choose_from([0.1, 1.0, 10.0], name='α')), LinearSVR(C=choose_from([0.1, 1.0], name='C'))], name='regressor')}
 
 Now we have a few nested choices that do not have any meaning for scikit-learn.
 In order to obtain a grid that can be used with ``GridSearchCV``, we need to
 extract the necessary information with ``expand_grid``.
 
->>> from skrub._tuning import expand_grid
+>>> from skrub._expressions._choosing import expand_grid
 >>> from pprint import pprint
 
 >>> expanded = expand_grid(grid)
 >>> pprint(expanded)
-[{'dim_reduction': choose_from([PCA(n_components=<dim_reduction__n_components>)]),
-  'dim_reduction__n_components': choose_from([10, 20, 30]),
-  'regressor': choose_from([Ridge(alpha=<regressor__alpha>)]),
-  'regressor__alpha': choose_from([0.1, 1.0, 10.0])},
- {'dim_reduction': choose_from([PCA(n_components=<dim_reduction__n_components>)]),
-  'dim_reduction__n_components': choose_from([10, 20, 30]),
-  'regressor': choose_from([LinearSVR(C=<regressor__C>)]),
-  'regressor__C': choose_from([0.1, 1.0])},
- {'dim_reduction': choose_from([SelectKBest(k=<dim_reduction__k>,
-            score_func=<function f_regression at 0x...>)]),
-  'dim_reduction__k': choose_from([10, 20, 30]),
-  'regressor': choose_from([Ridge(alpha=<regressor__alpha>)]),
-  'regressor__alpha': choose_from([0.1, 1.0, 10.0])},
- {'dim_reduction': choose_from([SelectKBest(k=<dim_reduction__k>,
-            score_func=<function f_regression at 0x...>)]),
-  'dim_reduction__k': choose_from([10, 20, 30]),
-  'regressor': choose_from([LinearSVR(C=<regressor__C>)]),
-  'regressor__C': choose_from([0.1, 1.0])}]
+[{'dim_reduction': choose_from([PCA(n_components=<N>)], name='dim_reduc'),
+  'dim_reduction__n_components': choose_from([10, 20, 30], name='N'),
+  'regressor': choose_from([Ridge(alpha=<α>)], name='regressor'),
+  'regressor__alpha': choose_from([0.1, 1.0, 10.0], name='α')},
+ {'dim_reduction': choose_from([PCA(n_components=<N>)], name='dim_reduc'),
+  'dim_reduction__n_components': choose_from([10, 20, 30], name='N'),
+  'regressor': choose_from([LinearSVR(C=<C>)], name='regressor'),
+  'regressor__C': choose_from([0.1, 1.0], name='C')},
+ {'dim_reduction': choose_from([SelectKBest(k=<N>, score_func=<function f_regression at 0x...>)], name='dim_reduc'),
+  'dim_reduction__k': choose_from([10, 20, 30], name='N'),
+  'regressor': choose_from([Ridge(alpha=<α>)], name='regressor'),
+  'regressor__alpha': choose_from([0.1, 1.0, 10.0], name='α')},
+ {'dim_reduction': choose_from([SelectKBest(k=<N>, score_func=<function f_regression at 0x...>)], name='dim_reduc'),
+  'dim_reduction__k': choose_from([10, 20, 30], name='N'),
+  'regressor': choose_from([LinearSVR(C=<C>)], name='regressor'),
+  'regressor__C': choose_from([0.1, 1.0], name='C')}]
 
 ``expand_grid`` has constructed a hyperparameter grid with 4 subgrids which can
 be fed to ``GridSearchCV`` or ``RandomizedSearchCV``. (The ``choose_from``
@@ -173,47 +171,45 @@ objects implement the interface of a sequence so they look like lists to
 
 To inspect a grid a bit more easily we have the convenience function ``grid_description``.
 
->>> from skrub._tuning import grid_description
+>>> from skrub._expressions._choosing import grid_description
 
 >>> print(grid_description(expanded))
-- 'dim_reduction': PCA(n_components=<dim_reduction__n_components>)
-  'dim_reduction__n_components':
+- 'dim_reduc': PCA(n_components=<N>)
+  'N':
       - 10
       - 20
       - 30
-  'regressor': Ridge(alpha=<regressor__alpha>)
-  'regressor__alpha':
+  'regressor': Ridge(alpha=<α>)
+  'α':
       - 0.1
       - 1.0
       - 10.0
-- 'dim_reduction': PCA(n_components=<dim_reduction__n_components>)
-  'dim_reduction__n_components':
+- 'dim_reduc': PCA(n_components=<N>)
+  'N':
       - 10
       - 20
       - 30
-  'regressor': LinearSVR(C=<regressor__C>)
-  'regressor__C':
+  'regressor': LinearSVR(C=<C>)
+  'C':
       - 0.1
       - 1.0
-- 'dim_reduction': SelectKBest(k=<dim_reduction__k>,
-                               score_func=<function f_regression at 0x...>)
-  'dim_reduction__k':
+- 'dim_reduc': SelectKBest(k=<N>, score_func=<function f_regression at 0x...>)
+  'N':
       - 10
       - 20
       - 30
-  'regressor': Ridge(alpha=<regressor__alpha>)
-  'regressor__alpha':
+  'regressor': Ridge(alpha=<α>)
+  'α':
       - 0.1
       - 1.0
       - 10.0
-- 'dim_reduction': SelectKBest(k=<dim_reduction__k>,
-                               score_func=<function f_regression at 0x...>)
-  'dim_reduction__k':
+- 'dim_reduc': SelectKBest(k=<N>, score_func=<function f_regression at 0x...>)
+  'N':
       - 10
       - 20
       - 30
-  'regressor': LinearSVR(C=<regressor__C>)
-  'regressor__C':
+  'regressor': LinearSVR(C=<C>)
+  'C':
       - 0.1
       - 1.0
 
@@ -239,15 +235,15 @@ than a list to ``choose_from``. The dictionary keys are the names of the
 corresponding values:
 
 >>> grid = {
-...     "dim_reduction": choose_from({"pca": pca, "kbest": kbest}),
-...     "regressor": choose_from({"ridge": ridge, "svr": svr}),
+...     "dim_reduction": choose_from({"pca": pca, "kbest": kbest}, name='dim_reduc'),
+...     "regressor": choose_from({"ridge": ridge, "svr": svr}, name='regressor'),
 ... }
 >>> expanded = expand_grid(grid)
 
 Let us display the new grid:
 
 >>> print(grid_description(expanded))
-- 'dim_reduction': 'pca'
+- 'dim_reduc': 'pca'
   'n dimensions':
       - 10
       - 20
@@ -257,7 +253,7 @@ Let us display the new grid:
       - 0.1
       - 1.0
       - 10.0
-- 'dim_reduction': 'pca'
+- 'dim_reduc': 'pca'
   'n dimensions':
       - 10
       - 20
@@ -266,7 +262,7 @@ Let us display the new grid:
   'C':
       - 0.1
       - 1.0
-- 'dim_reduction': 'kbest'
+- 'dim_reduc': 'kbest'
   'n dimensions':
       - 10
       - 20
@@ -276,7 +272,7 @@ Let us display the new grid:
       - 0.1
       - 1.0
       - 10.0
-- 'dim_reduction': 'kbest'
+- 'dim_reduc': 'kbest'
   'n dimensions':
       - 10
       - 20
@@ -302,12 +298,14 @@ to ridge and the SVR.
 ...     n_estimators=choose_from([10, 20], name="n bagged estimators")
 ... )
 >>> grid = {
-...     "dim_reduction": choose_from({"pca": pca, "kbest": kbest}),
-...     "regressor": choose_from({"ridge": ridge, "svr": svr, "bagging": bagging}),
+...     "dim_reduction": choose_from({"pca": pca, "kbest": kbest}, name="dim_reduc"),
+...     "regressor": choose_from(
+...         {"ridge": ridge, "svr": svr, "bagging": bagging}, name="regressor"
+...     ),
 ... }
 >>> expanded = expand_grid(grid)
 >>> print(grid_description(expanded))
-- 'dim_reduction': 'pca'
+- 'dim_reduc': 'pca'
   'n dimensions':
       - 10
       - 20
@@ -317,7 +315,7 @@ to ridge and the SVR.
       - 0.1
       - 1.0
       - 10.0
-- 'dim_reduction': 'pca'
+- 'dim_reduc': 'pca'
   'n dimensions':
       - 10
       - 20
@@ -326,7 +324,7 @@ to ridge and the SVR.
   'C':
       - 0.1
       - 1.0
-- 'dim_reduction': 'pca'
+- 'dim_reduc': 'pca'
   'n dimensions':
       - 10
       - 20
@@ -340,7 +338,7 @@ to ridge and the SVR.
   'n bagged estimators':
       - 10
       - 20
-- 'dim_reduction': 'pca'
+- 'dim_reduc': 'pca'
   'n dimensions':
       - 10
       - 20
@@ -353,7 +351,7 @@ to ridge and the SVR.
   'n bagged estimators':
       - 10
       - 20
-- 'dim_reduction': 'kbest'
+- 'dim_reduc': 'kbest'
   'n dimensions':
       - 10
       - 20
@@ -363,7 +361,7 @@ to ridge and the SVR.
       - 0.1
       - 1.0
       - 10.0
-- 'dim_reduction': 'kbest'
+- 'dim_reduc': 'kbest'
   'n dimensions':
       - 10
       - 20
@@ -372,7 +370,7 @@ to ridge and the SVR.
   'C':
       - 0.1
       - 1.0
-- 'dim_reduction': 'kbest'
+- 'dim_reduc': 'kbest'
   'n dimensions':
       - 10
       - 20
@@ -386,7 +384,7 @@ to ridge and the SVR.
   'n bagged estimators':
       - 10
       - 20
-- 'dim_reduction': 'kbest'
+- 'dim_reduc': 'kbest'
   'n dimensions':
       - 10
       - 20
@@ -415,13 +413,13 @@ all those kinds of ranges.
 
 The simplest kind is the enumerated choice we have seen before.
 
->>> dim_reduction = choose_from([PCA(), SelectKBest()])
+>>> dim_reduction = choose_from([PCA(), SelectKBest()], name='dim_reduc')
 >>> dim_reduction
-choose_from([PCA(), SelectKBest()])
+choose_from([PCA(), SelectKBest()], name='dim_reduc')
 >>> type(dim_reduction)
-<class 'skrub._tuning.Choice'>
+<class 'skrub._expressions._choosing.Choice'>
 >>> dim_reduction.outcomes
-[Outcome(value=PCA(), name=None, in_choice=None), Outcome(value=SelectKBest(), name=None, in_choice=None)]
+[Outcome(value=PCA(), name=None, in_choice='dim_reduc'), Outcome(value=SelectKBest(), name=None, in_choice='dim_reduc')]
 
 ``name`` and ``in_choice`` in the outcomes record the labels given to the
 outcome itself and the ``Choice`` that contains it, which we have not specified
@@ -437,6 +435,7 @@ choose_from({'pca': PCA(), 'kbest': SelectKBest()}, name='dim reduction')
 The helper ``unwrap`` extracts the value from its argument if it is an outcome,
 otherwise returns the argument:
 
+>>> from skrub._expressions._choosing import unwrap
 >>> unwrap(dim_reduction.outcomes[0])
 PCA()
 >>> unwrap(PCA())
@@ -462,7 +461,7 @@ Note: in the future, we may want to allow providing an explicit default
 We can use the ``unwrap_default`` helper to get the default outcome and extract
 its ``value``:
 
->>> from skrub._tuning import unwrap_default
+>>> from skrub._expressions._choosing import unwrap_default
 >>> unwrap_default(dim_reduction)
 PCA()
 
@@ -480,14 +479,13 @@ on a log or linear scale. It can produce either floats and ints. It exposes a
 with scikit-learn's ``RandomizedSearchCV``. It can be constructed with
 ``choose_int`` or ``choose_float``.
 
->>> from skrub._tuning import choose_int, choose_float
+>>> from skrub._expressions._choosing import choose_int, choose_float
 >>> n_dims = choose_int(10, 100, name='n dims')
 >>> n_dims
 choose_int(10, 100, name='n dims')
 >>> type(n_dims)
-<class 'skrub._tuning.NumericChoice'>
+<class 'skrub._expressions._choosing.NumericChoice'>
 >>> n_dims.rvs() # doctest: +SKIP
-NumericOutcome(value=98, name=None, in_choice='n dims', is_from_log_scale=False)
 
 If we would rather use a log scale:
 
@@ -495,7 +493,6 @@ If we would rather use a log scale:
 >>> n_dims
 choose_int(10, 100, log=True, name='n dims')
 >>> n_dims.rvs() # doctest: +SKIP
-NumericOutcome(value=80, name=None, in_choice='n dims', is_from_log_scale=True)
 
 As we can see, the outcomes record whether they came from a log scale, which is
 useful to set the scales of axes in the plots where they are displayed.
@@ -503,11 +500,12 @@ useful to set the scales of axes in the plots where they are displayed.
 We can illustrate the difference between log and linear scale by drawing a
 larger sample:
 
->>> n = choose_int(0, 100, log=False)
+>>> n = choose_int(0, 100, log=False, name='N')
 >>> q = [0, 25, 50, 75, 100]
+>>> import numpy as np
 >>> np.percentile([unwrap(v) for v in n.rvs(1000, random_state=0)], q)
 array([ 0., 24., 48., 73., 99.])
->>> n = choose_int(1, 100, log=True)
+>>> n = choose_int(1, 100, log=True, name='N')
 >>> np.percentile([unwrap(v) for v in n.rvs(1000, random_state=0)], q)
 array([ 1.,  3.,  9., 29., 99.])
 
@@ -517,15 +515,12 @@ If we need floating-point numbers rather than ints we use ``choose_float``:
 >>> alpha
 choose_float(0.01, 100, log=True, name='α')
 >>> alpha.rvs() # doctest: +SKIP
-NumericOutcome(value=16.656593316727974, name=None, in_choice='α', is_from_log_scale=True)
 
 The default outcome of a numeric choice is the middle of its range (either on a
 linear or log scale):
 
 >>> unwrap_default(choose_float(0.0, 100.0, log=False)) # doctest: +SKIP
-50.0
 >>> unwrap_default(choose_float(1.0, 100.0, log=True)) # doctest: +SKIP
-10.000000000000002
 
 It is possible to specify a number of steps on the range of value to discretize
 it. Too big a step size loses the benefits of a randomized search. However,
@@ -536,21 +531,18 @@ same values. If we set a number of steps, we get a ``DiscretizedNumericChoice``.
 >>> n_dims
 choose_int(10, 100, log=True, n_steps=5, name='n dims')
 >>> type(n_dims)
-<class 'skrub._tuning.DiscretizedNumericChoice'>
+<class 'skrub._expressions._choosing.DiscretizedNumericChoice'>
 
 Discretized ranges are sequences so they can be used either with
 ``RandomizedSearchCV`` or ``GridSearchCV``.
 
 >>> n_dims.rvs() # doctest: +SKIP
-NumericOutcome(value=32, name=None, in_choice='n dims', is_from_log_scale=True)
 >>> list(n_dims) # doctest: +SKIP
-[10, 18, 32, 56, 100]
 
 The default outcome is as close as possible to the middle while respecting the
 steps:
 
 >>> unwrap_default(n_dims) # doctest: +SKIP
-32
 
 Optional
 --------
@@ -558,12 +550,12 @@ Optional
 Finally, it is common to choose between something and nothing. The last type of
 choice is a shorthand for a choice between a given value and ``None``:
 
->>> from skrub._tuning import optional
+>>> from skrub._expressions._choosing import optional
 >>> feature_selection = optional(SelectKBest(), name='feature selection')
 >>> feature_selection
 optional(SelectKBest(), name='feature selection')
 >>> type(feature_selection)
-<class 'skrub._tuning.Optional'>
+<class 'skrub._expressions._choosing.Optional'>
 >>> list(feature_selection)
 [Outcome(value=SelectKBest(), name='true', in_choice='feature selection'), Outcome(value=None, name='false', in_choice='feature selection')]
 >>> unwrap_default(feature_selection)
@@ -580,7 +572,7 @@ from scipy import stats
 from sklearn.base import clone
 from sklearn.utils import check_random_state
 
-from . import _utils
+from .. import _utils
 
 #
 # Choices and Outcomes
@@ -664,7 +656,7 @@ class Choice(Sequence, BaseChoice):
         This function is used to split choices as necessary when constructing a
         hyperparameter grid.
 
-        >>> from skrub._tuning import choose_from
+        >>> from skrub import choose_from
         >>> choice = choose_from([1, 2, 3], name='number')
         >>> choice
         choose_from([1, 2, 3], name='number')
@@ -691,7 +683,7 @@ class Choice(Sequence, BaseChoice):
         image through ``func``. The choice name and outcome names are
         preserved.
 
-        >>> from skrub._tuning import choose_from
+        >>> from skrub import choose_from
         >>> choice = choose_from(
         ...     {"a": "outcome a", "b": "outcome b"}, name="the choice"
         ... )
@@ -794,7 +786,7 @@ def unwrap(obj):
 
     If the input is a plain value, it is returned unchanged.
 
-    >>> from skrub._tuning import choose_from, unwrap
+    >>> from skrub._expressions._choosing import choose_from, unwrap
     >>> choice = choose_from([1, 2], name='N')
     >>> outcome = choice.default()
     >>> outcome
@@ -815,7 +807,7 @@ def unwrap_default(obj):
     If the input is a Choice, the default outcome is used.
     For other inputs, behaves like ``unwrap``.
 
-    >>> from skrub._tuning import choose_from, unwrap_default
+    >>> from skrub._expressions._choosing import choose_from, unwrap_default
     >>> choice = choose_from([1, 2], name='N')
     >>> choice
     choose_from([1, 2], name='N')
@@ -1076,16 +1068,18 @@ class PlaceHolder:
 
     For example the ``PlaceHolder`` repr is ``<α>`` in this grid:
 
-    >>> from skrub._tuning import expand_grid, grid_description, choose_from
+    >>> from skrub._expressions._choosing import expand_grid, grid_description
+    >>> from skrub import choose_from
     >>> from sklearn.linear_model import Ridge, Lasso
     >>> alpha = choose_from([10, 100], name="α")
-    >>> grid = {'regressor': choose_from([Lasso(alpha=alpha), Ridge(alpha=alpha)])}
+    >>> grid = {'regressor': choose_from([Lasso(alpha=alpha),
+    ...    Ridge(alpha=alpha)], name='reg')}
     >>> print(grid_description(expand_grid(grid)))
-    - 'regressor': Lasso(alpha=<α>)
+    - 'reg': Lasso(alpha=<α>)
       'α':
           - 10
           - 100
-    - 'regressor': Ridge(alpha=<α>)
+    - 'reg': Ridge(alpha=<α>)
       'α':
           - 10
           - 100
@@ -1106,15 +1100,17 @@ def _find_param_choices(obj):
     (attributes) that are ``BaseChoice``s in the input estimator (or its nested
     sub-estimators).
 
-    >>> from skrub._tuning import _find_param_choices, choose_float, choose_int
+    >>> from skrub._expressions._choosing import _find_param_choices
+    >>> from skrub import choose_float, choose_int
     >>> from sklearn.ensemble import BaggingRegressor
     >>> from sklearn.linear_model import Ridge
 
     >>> reg = BaggingRegressor(
-    ...     Ridge(alpha=choose_float(1.0, 10.0)), n_estimators=choose_int(10, 30)
+    ...     Ridge(alpha=choose_float(1.0, 10.0, name='a')),
+    ...     n_estimators=choose_int(10, 30, name='n')
     ... )
     >>> _find_param_choices(reg)
-    {'estimator__alpha': choose_float(1.0, 10.0), 'n_estimators': choose_int(10, 30)}
+    {'estimator__alpha': choose_float(1.0, 10.0, name='a'), 'n_estimators': choose_int(10, 30, name='n')}
     """  # noqa: E501
     if not hasattr(obj, "get_params"):
         return []
@@ -1135,24 +1131,22 @@ def with_default_params(estimator):
 
     The input itself is not modified, a new object is returned.
 
-    >>> from skrub._tuning import choose_float, choose_int, choose_from
-    >>> from skrub._tuning import with_default_params
+    >>> from skrub import choose_float, choose_int, choose_from
+    >>> from skrub._expressions._choosing import with_default_params
 
     >>> from sklearn.ensemble import BaggingRegressor
     >>> from sklearn.linear_model import Ridge
 
-    >>> ridge = Ridge(alpha=choose_float(1.0, 100.0, log=True))
-    >>> bag = BaggingRegressor(ridge, n_estimators=choose_int(10, 20))
-    >>> reg = choose_from([ridge, bag])
+    >>> ridge = Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α'))
+    >>> bag = BaggingRegressor(ridge, n_estimators=choose_int(10, 20, name='N'))
+    >>> reg = choose_from([ridge, bag], name='regressor')
     >>> reg
-    choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True)), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True)),
-                     n_estimators=choose_int(10, 20))])
+    choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α')), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α')),
+                     n_estimators=choose_int(10, 20, name='N'))], name='regressor')
     >>> with_default_params(reg) # doctest: +SKIP
-    Ridge(alpha=10.000000000000002)
     >>> reg
-    choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True)), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True)),
-                     n_estimators=choose_int(10, 20))])
-    >>>
+    choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α')), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α')),
+                     n_estimators=choose_int(10, 20, name='N'))], name='regressor')
     """  # noqa: E501
     estimator = unwrap_default(estimator)
     if not hasattr(estimator, "set_params"):
@@ -1311,7 +1305,7 @@ def _check_name_collisions(subgrid):
     >>> from sklearn.linear_model import Ridge
     >>> from sklearn.feature_selection import SelectKBest
     >>> from sklearn.decomposition import PCA
-    >>> from skrub._tuning import expand_grid, choose_from
+    >>> from skrub._expressions._choosing import expand_grid, choose_from
 
     >>> grid = {
     ...     "kbest": SelectKBest(k=choose_from([10, 20], name="my param")),
@@ -1336,7 +1330,7 @@ def _check_name_collisions(subgrid):
     ...         [
     ...             SelectKBest(k=choose_from([10, 20], name="my param")),
     ...             PCA(n_components=choose_from([30, 40], name="my param")),
-    ...         ]
+    ...         ], name='reduce_dim'
     ...     )
     ... }
 
@@ -1348,7 +1342,7 @@ def _check_name_collisions(subgrid):
     to ``n_components``. So we can expand the grid without errors:
 
     >>> expand_grid(grid)
-    [{'reduce_dim': choose_from([SelectKBest(k=<my param>)]), 'reduce_dim__k': choose_from([10, 20], name='my param')}, {'reduce_dim': choose_from([PCA(n_components=<my param>)]), 'reduce_dim__n_components': choose_from([30, 40], name='my param')}]
+    [{'reduce_dim': choose_from([SelectKBest(k=<my param>)], name='reduce_dim'), 'reduce_dim__k': choose_from([10, 20], name='my param')}, {'reduce_dim': choose_from([PCA(n_components=<my param>)], name='reduce_dim'), 'reduce_dim__n_components': choose_from([30, 40], name='my param')}]
     """  # noqa: E501
     all_names = {}
     for param_id, param in subgrid.items():

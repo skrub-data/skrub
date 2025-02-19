@@ -9,7 +9,7 @@ from types import SimpleNamespace
 from sklearn.base import BaseEstimator
 from sklearn.base import clone as skl_clone
 
-from .. import _tuning
+from . import _choosing
 from ._expressions import (
     _BUILTIN_MAP,
     _BUILTIN_SEQ,
@@ -94,11 +94,11 @@ class _ExprTraversal:
                     push(self.handle_seq)
                 elif isinstance(top, slice):
                     push(self.handle_slice)
-                elif isinstance(top, _tuning.BaseChoice):
+                elif isinstance(top, _choosing.BaseChoice):
                     push(self.handle_choice)
-                elif isinstance(top, _tuning.Outcome):
+                elif isinstance(top, _choosing.Outcome):
                     push(self.handle_outcome)
-                elif isinstance(top, _tuning.Match):
+                elif isinstance(top, _choosing.Match):
                     push(self.handle_choice_match)
                 elif isinstance(top, BaseEstimator):
                     push(self.handle_estimator)
@@ -132,20 +132,20 @@ class _ExprTraversal:
         return estimator
 
     def handle_choice(self, choice):
-        if not isinstance(choice, _tuning.Choice):
+        if not isinstance(choice, _choosing.Choice):
             # choice is a BaseNumericChoice
             return choice
         new_outcomes = yield choice.outcomes
-        return _tuning._with_fields(choice, outcomes=new_outcomes)
+        return _choosing._with_fields(choice, outcomes=new_outcomes)
 
     def handle_outcome(self, outcome):
         value = yield outcome.value
-        return _tuning._with_fields(outcome, value=value)
+        return _choosing._with_fields(outcome, value=value)
 
     def handle_choice_match(self, choice_match):
         choice = yield choice_match.choice
         mapping = yield choice_match.outcome_mapping
-        return _tuning._with_fields(
+        return _choosing._with_fields(
             choice_match, choice=choice, outcome_mapping=mapping
         )
 
@@ -221,12 +221,12 @@ class _Evaluator(_ExprTraversal):
         if choice.name is not None and choice.name in self.environment:
             return self.environment[choice.name]
         if self.mode == "preview":
-            return (yield _tuning.unwrap_default(choice))
+            return (yield _choosing.unwrap_default(choice))
         outcome = choice.chosen_outcome_or_default()
         return (yield outcome)
 
     def handle_outcome(self, outcome):
-        return (yield _tuning.unwrap(outcome))
+        return (yield _choosing.unwrap(outcome))
 
     def handle_choice_match(self, choice_match):
         outcome = yield choice_match.choice
@@ -331,8 +331,8 @@ class _Cloner(_ExprTraversal):
         if id(choice) in self._replace:
             return self._replace[id(choice)]
         new_choice = yield from super().handle_choice(choice)
-        if not isinstance(new_choice, _tuning.Choice):
-            new_choice = _tuning._with_fields(choice)
+        if not isinstance(new_choice, _choosing.Choice):
+            new_choice = _choosing._with_fields(choice)
         self._replace[id(choice)] = new_choice
         return new_choice
 
@@ -529,12 +529,12 @@ def _expand_grid(graph, grid):
         # if the choice is used in X or y, it is clamped to a single value
         choice = graph["choices"][choice_id]
         if choice_id in graph["x_y_choices"]:
-            if isinstance(choice, _tuning.Choice):
+            if isinstance(choice, _choosing.Choice):
                 return [choice.chosen_outcome_idx or 0]
             else:
                 return [choice.default()]
         else:
-            if isinstance(choice, _tuning.Choice):
+            if isinstance(choice, _choosing.Choice):
                 return list(range(len(choice.outcomes)))
             else:
                 return choice
@@ -543,7 +543,7 @@ def _expand_grid(graph, grid):
         # if any of the outcomes in a choice contains another choice. in this
         # case it needs to be on a separate subgrid.
         choice = graph["choices"][choice_id]
-        if not isinstance(choice, _tuning.Choice):
+        if not isinstance(choice, _choosing.Choice):
             return False
         for outcome in choice.outcomes:
             if graph["parents"].get(id(outcome), None):
@@ -582,7 +582,7 @@ def get_params(expr):
     expr_choices = choices(expr)
     params = {}
     for k, v in expr_choices.items():
-        if isinstance(v, _tuning.Choice):
+        if isinstance(v, _choosing.Choice):
             params[k] = getattr(v, "chosen_outcome_idx", None)
         else:
             params[k] = getattr(v, "chosen_outcome", None)
@@ -593,7 +593,7 @@ def set_params(expr, params):
     expr_choices = choices(expr)
     for k, v in params.items():
         target = expr_choices[k]
-        if isinstance(target, _tuning.Choice):
+        if isinstance(target, _choosing.Choice):
             target.chosen_outcome_idx = v
         else:
             target.chosen_outcome = v
