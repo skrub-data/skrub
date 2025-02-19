@@ -147,22 +147,10 @@ extract the necessary information with ``expand_grid``.
 
 >>> expanded = expand_grid(grid)
 >>> pprint(expanded)
-[{'dim_reduction': choose_from([PCA(n_components=<N>)], name='dim_reduc'),
-  'dim_reduction__n_components': choose_from([10, 20, 30], name='N'),
-  'regressor': choose_from([Ridge(alpha=<α>)], name='regressor'),
-  'regressor__alpha': choose_from([0.1, 1.0, 10.0], name='α')},
- {'dim_reduction': choose_from([PCA(n_components=<N>)], name='dim_reduc'),
-  'dim_reduction__n_components': choose_from([10, 20, 30], name='N'),
-  'regressor': choose_from([LinearSVR(C=<C>)], name='regressor'),
-  'regressor__C': choose_from([0.1, 1.0], name='C')},
- {'dim_reduction': choose_from([SelectKBest(k=<N>, score_func=<function f_regression at 0x...>)], name='dim_reduc'),
-  'dim_reduction__k': choose_from([10, 20, 30], name='N'),
-  'regressor': choose_from([Ridge(alpha=<α>)], name='regressor'),
-  'regressor__alpha': choose_from([0.1, 1.0, 10.0], name='α')},
- {'dim_reduction': choose_from([SelectKBest(k=<N>, score_func=<function f_regression at 0x...>)], name='dim_reduc'),
-  'dim_reduction__k': choose_from([10, 20, 30], name='N'),
-  'regressor': choose_from([LinearSVR(C=<C>)], name='regressor'),
-  'regressor__C': choose_from([0.1, 1.0], name='C')}]
+[{0: [0], 1: [0, 1, 2], 2: [0], 3: [0, 1, 2]},
+ {0: [0], 1: [0, 1, 2], 2: [1], 4: [0, 1]},
+ {0: [1], 1: [0, 1, 2], 2: [0], 3: [0, 1, 2]},
+ {0: [1], 1: [0, 1, 2], 2: [1], 4: [0, 1]}]
 
 ``expand_grid`` has constructed a hyperparameter grid with 4 subgrids which can
 be fed to ``GridSearchCV`` or ``RandomizedSearchCV``. (The ``choose_from``
@@ -171,47 +159,27 @@ objects implement the interface of a sequence so they look like lists to
 
 To inspect a grid a bit more easily we have the convenience function ``grid_description``.
 
->>> from skrub._expressions._choosing import grid_description
+>>> from skrub._expressions._inspection import describe_param_grid as grid_description
 
->>> print(grid_description(expanded))
-- 'dim_reduc': PCA(n_components=<N>)
-  'N':
-      - 10
-      - 20
-      - 30
-  'regressor': Ridge(alpha=<α>)
-  'α':
-      - 0.1
-      - 1.0
-      - 10.0
-- 'dim_reduc': PCA(n_components=<N>)
-  'N':
-      - 10
-      - 20
-      - 30
-  'regressor': LinearSVR(C=<C>)
-  'C':
-      - 0.1
-      - 1.0
-- 'dim_reduc': SelectKBest(k=<N>, score_func=<function f_regression at 0x...>)
-  'N':
-      - 10
-      - 20
-      - 30
-  'regressor': Ridge(alpha=<α>)
-  'α':
-      - 0.1
-      - 1.0
-      - 10.0
-- 'dim_reduc': SelectKBest(k=<N>, score_func=<function f_regression at 0x...>)
-  'N':
-      - 10
-      - 20
-      - 30
-  'regressor': LinearSVR(C=<C>)
-  'C':
-      - 0.1
-      - 1.0
+>>> print(grid_description(grid))
+- dim_reduc: PCA(n_components=choose_from([10, 20, 30], name='N'))
+  N: [10, 20, 30]
+  regressor: Ridge(alpha=choose_from([0.1, 1.0, 10.0], name='α'))
+  α: [0.1, 1.0, 10.0]
+- dim_reduc: PCA(n_components=choose_from([10, 20, 30], name='N'))
+  N: [10, 20, 30]
+  regressor: LinearSVR(C=choose_from([0.1, 1.0], name='C'))
+  C: [0.1, 1.0]
+- dim_reduc: SelectKBest(k=choose_from([10, 20, 30], name='N'),
+            score_func=<function f_regression at 0x...>)
+  N: [10, 20, 30]
+  regressor: Ridge(alpha=choose_from([0.1, 1.0, 10.0], name='α'))
+  α: [0.1, 1.0, 10.0]
+- dim_reduc: SelectKBest(k=choose_from([10, 20, 30], name='N'),
+            score_func=<function f_regression at 0x...>)
+  N: [10, 20, 30]
+  regressor: LinearSVR(C=choose_from([0.1, 1.0], name='C'))
+  C: [0.1, 1.0]
 
 Here we see that we get the default labels for the choices (such as
 ``'regressor__alpha'``) and their outcomes (such as
@@ -243,44 +211,7 @@ corresponding values:
 Let us display the new grid:
 
 >>> print(grid_description(expanded))
-- 'dim_reduc': 'pca'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'ridge'
-  'α':
-      - 0.1
-      - 1.0
-      - 10.0
-- 'dim_reduc': 'pca'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'svr'
-  'C':
-      - 0.1
-      - 1.0
-- 'dim_reduc': 'kbest'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'ridge'
-  'α':
-      - 0.1
-      - 1.0
-      - 10.0
-- 'dim_reduc': 'kbest'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'svr'
-  'C':
-      - 0.1
-      - 1.0
+<empty parameter grid>
 
 This makes our grid description more readable, but most importantly it allows
 the ``Recipe`` to use those human-readable labels and provide a much better
@@ -305,98 +236,7 @@ to ridge and the SVR.
 ... }
 >>> expanded = expand_grid(grid)
 >>> print(grid_description(expanded))
-- 'dim_reduc': 'pca'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'ridge'
-  'α':
-      - 0.1
-      - 1.0
-      - 10.0
-- 'dim_reduc': 'pca'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'svr'
-  'C':
-      - 0.1
-      - 1.0
-- 'dim_reduc': 'pca'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'bagging'
-  'bagged estimator': 'ridge'
-  'α':
-      - 0.1
-      - 1.0
-      - 10.0
-  'n bagged estimators':
-      - 10
-      - 20
-- 'dim_reduc': 'pca'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'bagging'
-  'bagged estimator': 'svr'
-  'C':
-      - 0.1
-      - 1.0
-  'n bagged estimators':
-      - 10
-      - 20
-- 'dim_reduc': 'kbest'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'ridge'
-  'α':
-      - 0.1
-      - 1.0
-      - 10.0
-- 'dim_reduc': 'kbest'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'svr'
-  'C':
-      - 0.1
-      - 1.0
-- 'dim_reduc': 'kbest'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'bagging'
-  'bagged estimator': 'ridge'
-  'α':
-      - 0.1
-      - 1.0
-      - 10.0
-  'n bagged estimators':
-      - 10
-      - 20
-- 'dim_reduc': 'kbest'
-  'n dimensions':
-      - 10
-      - 20
-      - 30
-  'regressor': 'bagging'
-  'bagged estimator': 'svr'
-  'C':
-      - 0.1
-      - 1.0
-  'n bagged estimators':
-      - 10
-      - 20
+<empty parameter grid>
 
 Choices and Outcomes
 ====================
@@ -569,7 +409,6 @@ from collections.abc import Sequence
 
 import numpy as np
 from scipy import stats
-from sklearn.base import clone
 from sklearn.utils import check_random_state
 
 from .. import _utils
@@ -1059,300 +898,11 @@ def choose_int(low, high, *, log=False, n_steps=None, name):
 #
 
 
-@dataclasses.dataclass
-class PlaceHolder:
-    """Inserted in place of parameters that will get replaced with set_params anyway.
-
-    This allows controlling the repr and clarifying what will take the place of
-    a given parameter.
-
-    For example the ``PlaceHolder`` repr is ``<α>`` in this grid:
-
-    >>> from skrub._expressions._choosing import expand_grid, grid_description
-    >>> from skrub import choose_from
-    >>> from sklearn.linear_model import Ridge, Lasso
-    >>> alpha = choose_from([10, 100], name="α")
-    >>> grid = {'regressor': choose_from([Lasso(alpha=alpha),
-    ...    Ridge(alpha=alpha)], name='reg')}
-    >>> print(grid_description(expand_grid(grid)))
-    - 'reg': Lasso(alpha=<α>)
-      'α':
-          - 10
-          - 100
-    - 'reg': Ridge(alpha=<α>)
-      'α':
-          - 10
-          - 100
-    """
-
-    name: typing.Optional[str] = None
-
-    def __repr__(self):
-        if self.name is not None:
-            return f"<{self.name}>"
-        return "..."
-
-
-def _find_param_choices(obj):
-    """Find all the choices in an estimator.
-
-    This uses scikit-learn's ``get_params`` to find all hyperparameters
-    (attributes) that are ``BaseChoice``s in the input estimator (or its nested
-    sub-estimators).
-
-    >>> from skrub._expressions._choosing import _find_param_choices
-    >>> from skrub import choose_float, choose_int
-    >>> from sklearn.ensemble import BaggingRegressor
-    >>> from sklearn.linear_model import Ridge
-
-    >>> reg = BaggingRegressor(
-    ...     Ridge(alpha=choose_float(1.0, 10.0, name='a')),
-    ...     n_estimators=choose_int(10, 30, name='n')
-    ... )
-    >>> _find_param_choices(reg)
-    {'estimator__alpha': choose_float(1.0, 10.0, name='a'), 'n_estimators': choose_int(10, 30, name='n')}
-    """  # noqa: E501
-    if not hasattr(obj, "get_params"):
-        return []
-    params = obj.get_params(deep=True)
-    return {k: v for k, v in params.items() if isinstance(v, BaseChoice)}
-
-
-def contains_choice(estimator):
-    """Return ``True`` if an estimator is a choice or contains one."""
-    return isinstance(estimator, Choice) or bool(_find_param_choices(estimator))
-
-
-def with_default_params(estimator):
-    """Replace all choices by their default value in an estimator's parameters.
-
-    If the estimator itself is a choice, also resolve that choice to its
-    default value.
-
-    The input itself is not modified, a new object is returned.
-
-    >>> from skrub import choose_float, choose_int, choose_from
-    >>> from skrub._expressions._choosing import with_default_params
-
-    >>> from sklearn.ensemble import BaggingRegressor
-    >>> from sklearn.linear_model import Ridge
-
-    >>> ridge = Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α'))
-    >>> bag = BaggingRegressor(ridge, n_estimators=choose_int(10, 20, name='N'))
-    >>> reg = choose_from([ridge, bag], name='regressor')
-    >>> reg
-    choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α')), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α')),
-                     n_estimators=choose_int(10, 20, name='N'))], name='regressor')
-    >>> with_default_params(reg) # doctest: +SKIP
-    >>> reg
-    choose_from([Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α')), BaggingRegressor(estimator=Ridge(alpha=choose_float(1.0, 100.0, log=True, name='α')),
-                     n_estimators=choose_int(10, 20, name='N'))], name='regressor')
-    """  # noqa: E501
-    estimator = unwrap_default(estimator)
-    if not hasattr(estimator, "set_params"):
-        return estimator
-    estimator = clone(estimator)
-    while param_choices := _find_param_choices(estimator):
-        params = {k: unwrap_default(v) for k, v in param_choices.items()}
-        estimator.set_params(**params)
-    return estimator
-
-
 def expand_grid(grid):
-    grid = _split_grid(grid)
-    new_grid = []
-    for subgrid in grid:
-        new_subgrid = {}
-        for k, v in subgrid.items():
-            if isinstance(v, Outcome):
-                v = Choice([v], name=v.in_choice)
-            new_subgrid[k] = v
-        new_grid.append(new_subgrid)
-        _check_name_collisions(new_subgrid)
-    return new_grid
+    # TODO remove
+    from ._evaluation import param_grid
 
-
-"""
-Constructing the grid of hyperparameters is done by repeating 2 steps.
-
-``_extract_choices`` looks at all estimators at the top level of the grid, i.e.
-estimators that are not part of a Choice. If one of them contains a choice as
-one of its hyperparameters, the choice is extracted from the estimator and
-placed onto the grid.
-
-For example:
-
->>> _extract_choices({'regressor': Ridge(alpha=choose_from([1., 10.]))}) # doctest: +SKIP
-{'regressor__alpha': choose_from([1.0, 10.0])}
-
-``alpha`` has been moved out of the ``Ridge`` and placed onto the grid. Once
-this is done, as there are no alternative to the ``Ridge`` in this example, it
-is not needed anymore and is removed from the grid to reduce clutter. It could
-have been retained in which case we would also have ``"regressor": [Ridge()]``
-but that would be redundant as there is only one option in the ``[Ridge()]``
-list, which is already the value set on the pipeline.
-
-When the estimator itself is a choice, and the outcomes contain hyperparameter
-choices, we cannot mix all of their hyperparameter ranges in the same
-dictionary. In this case we need to split the grid into subgrids, one for each
-of the possible estimators. This is handled by ``_split_grid``.
-
->>> split = _split_grid({'dim_reduction': choose_from([PCA(n_components=n), SelectKBest(k=n)])}) # doctest: +SKIP
->>> pprint(split)
-[{'dim_reduction': Outcome(value=PCA(n_components=<dim_reduction__n_components>),
-                           name=None,
-                           in_choice=None),
-  'dim_reduction__n_components': choose_from([10, 20])},
- {'dim_reduction': Outcome(value=SelectKBest(k=<dim_reduction__k>),
-                           name=None,
-                           in_choice=None),
-  'dim_reduction__k': choose_from([10, 20])}]
-
-We see that the grid has been split into one subgrid for the case
-'dim_reduction=PCA' and one for the case 'dim_reduction=SelectKBest'. Then,
-``_split_grid`` calls itself recursively on each subgrid. As ``_split_grid``
-starts by applying ``_extract_choices``, the ``dim_reduction__k`` and
-``dim_reduction__n_components`` have been extracted from the estimators and
-placed on their subgrids, and the result is now ready to be given to
-``GridSearchCV`` or ``RandomizedSearchCV`` after some small post-processing
-performed by ``expand_grid``.
-"""  # noqa: E501
-
-
-def _extract_choices(grid):
-    """Extract hyperparameter ranges and place them on the grid.
-
-    This only considers estimators that are not inside of a Choice.
-    Any of their hyperparameters that is a Choice is extracted and placed on
-    the grid.
-    """
-    new_grid = {}
-    for param_name, param in grid.items():
-        if isinstance(param, Choice) and len(param.outcomes) == 1:
-            param = param.outcomes[0]
-        if isinstance(param, (Outcome, BaseChoice)):
-            new_grid[param_name] = param
-        else:
-            # In this case we have a 'raw' estimator that has not been wrapped
-            # in an Outcome. Therefore it is not part of a choice itself, but it
-            # contains a choice. We will pull out the choices to include them in the
-            # grid, but the estimator itself does not need to be in the grid so we
-            # don't include it to keep the grid more compact.
-            param = Outcome(param)
-        if isinstance(param, BaseChoice):
-            # If the grid item is a Choice, we leave it alone as it requires a
-            # split, it will be handled in ``split_grid``.
-            continue
-
-        # Extract any choices contained in the estimator and put them on the
-        # grid.
-        all_subparam_choices = _find_param_choices(param.value)
-        if not all_subparam_choices:
-            continue
-        placeholders = {}
-        for subparam_name, subparam_choice in all_subparam_choices.items():
-            subparam_id = f"{param_name}__{subparam_name}"
-            placeholder_name = subparam_id if (n := subparam_choice.name) is None else n
-            placeholders[subparam_name] = PlaceHolder(placeholder_name)
-            new_grid[subparam_id] = subparam_choice
-        if param_name in new_grid:
-            estimator = clone(param.value)
-            estimator.set_params(**placeholders)
-            new_grid[param_name] = _with_fields(param, value=estimator)
-    return new_grid
-
-
-def _split_grid(grid):
-    """Construct the hyperparameter grid.
-
-    It starts by calling ``_extract_choices`` to move hyperparameter choices
-    out of the estimators and placing them on the grid.
-
-    Then, whenever a Choice contains an estimator that itself has a
-    hyperparameter grid, this estimator needs to be expanded in its own
-    subgrid.
-
-    In this case ``_split_grid`` creates the subgrids, then calls itself
-    recursively on each of them.
-    """
-    grid = _extract_choices(grid)
-    for param_name, param in grid.items():
-        if not isinstance(param, Choice):
-            continue
-        for idx, outcome in enumerate(param.outcomes):
-            if _find_param_choices(outcome.value):
-                # This is an outcome in a choice, and it contains choices
-                # itself. For example the SelectKBest in {'dim_reduc':
-                # choose_from([SelectKBest(k=choose_from([10, 20])), PCA()])}
-                # -- the grid needs to be split so that the k can be extracted
-                # into a separate subgrid.
-                grid_1 = grid.copy()
-                grid_1[param_name] = outcome
-                _, rest = param.take_outcome(idx)
-                if rest is None:
-                    return _split_grid(grid_1)
-                grid_2 = grid.copy()
-                grid_2[param_name] = rest
-                return [*_split_grid(grid_1), *_split_grid(grid_2)]
-    return [grid]
-
-
-def _check_name_collisions(subgrid):
-    """
-    When we need to evaluate combinations of 2 parameters, they cannot be given the
-    same ``name``. For example:
-
-    >>> from sklearn.linear_model import Ridge
-    >>> from sklearn.feature_selection import SelectKBest
-    >>> from sklearn.decomposition import PCA
-    >>> from skrub._expressions._choosing import expand_grid, choose_from
-
-    >>> grid = {
-    ...     "kbest": SelectKBest(k=choose_from([10, 20], name="my param")),
-    ...     "ridge": Ridge(alpha=choose_from([10, 20], name="my param")),
-    ... }
-
-    Here we will need to evaluate 4 combinations of the value for ``k`` and for
-    ``alpha``. However we have given them the same alias, "my param". When looking
-    at hyperparameter search results we would not know to which of those "my param"
-    refers. So it is an error:
-
-    >>> expand_grid(grid)
-    Traceback (most recent call last):
-        ...
-    ValueError: Parameter alias 'my param' used for several parameters: (('kbest__k', choose_from([10, 20], name='my param')), ('ridge__alpha', choose_from([10, 20], name='my param'))).
-
-    Note that reusing the same name for estimators that are different outcomes in a
-    choice is fine. For example in this grid:
-
-    >>> grid = {
-    ...     "reduce_dim": choose_from(
-    ...         [
-    ...             SelectKBest(k=choose_from([10, 20], name="my param")),
-    ...             PCA(n_components=choose_from([30, 40], name="my param")),
-    ...         ], name='reduce_dim'
-    ...     )
-    ... }
-
-    For each run we are using _either_ the ``SelectKBest`` _or_ ``PCA``. This is
-    different from the example above where each run used _both_ the ``SelectKBest``
-    _and_ the ``Ridge``. Therefore in this case there is no ambiguity: if we are in
-    the case where ``reduce_dim`` is ``SelectKBest``, we know that "my param" refers
-    to ``k``. Conversely if ``reduce_dim`` is ``PCA`` we know that "my param" refers
-    to ``n_components``. So we can expand the grid without errors:
-
-    >>> expand_grid(grid)
-    [{'reduce_dim': choose_from([SelectKBest(k=<my param>)], name='reduce_dim'), 'reduce_dim__k': choose_from([10, 20], name='my param')}, {'reduce_dim': choose_from([PCA(n_components=<my param>)], name='reduce_dim'), 'reduce_dim__n_components': choose_from([30, 40], name='my param')}]
-    """  # noqa: E501
-    all_names = {}
-    for param_id, param in subgrid.items():
-        name = param.name or param_id
-        if name in all_names:
-            raise ValueError(
-                f"Parameter alias {name!r} used for "
-                f"several parameters: {all_names[name], (param_id, param)}."
-            )
-        all_names[name] = (param_id, param)
+    return param_grid(grid)
 
 
 #
