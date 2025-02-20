@@ -704,7 +704,8 @@ def optional(value, *, name):
 
 class BoolChoice(Choice):
     def __repr__(self):
-        return "choose_bool()"
+        args = _utils.repr_args((), {"name": self.name}, defaults={"name": None})
+        return f"choose_bool({args})"
 
     def if_else(self, if_true, if_false):
         return self.match({True: if_true, False: if_false})
