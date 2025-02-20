@@ -406,12 +406,12 @@ class Expr:
         return f"{result}\nResult:\n―――――――\n{preview!r}"
 
     def _repr_html_(self):
-        title = html.escape(repr(self._skrub_impl))
-        title = f"<samp>{title}</samp>"
         graph = self.skb.draw_graph().decode("utf-8")
         graph = strip_xml_declaration(graph)
         if self._skrub_impl.preview_if_available() is _Constants.NO_VALUE:
-            return f"<div><h3>{title}</h3>\n{graph}</div>"
+            return f"<div>{graph}</div>"
+        title = html.escape(repr(self._skrub_impl))
+        title = f"<samp>{title}</samp>"
         prefix = (
             f"<details>\n<summary>{title}</summary>\n{graph}<br /><br />\n</details>"
             "\n<samp>Result:</samp>"
