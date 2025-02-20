@@ -199,21 +199,13 @@ def _check_expr(f):
 
     @functools.wraps(f)
     def _check_preview(*args, **kwargs):
-        from ._evaluation import evaluate, find_duplicate_names
+        from ._evaluation import evaluate, find_conflicts
 
         expr = f(*args, **kwargs)
 
-        duplicates = find_duplicate_names(expr)
-        if duplicates is not None:
-            name = duplicates["name"]
-            first, second = duplicates["nodes"]
-            raise ValueError(
-                f"Choice and node names must be unique. The name {name!r} was used "
-                "for 2 different objects:\n"
-                f"first object using the name {name!r}:\n{first!r}\n"
-                f"second object using the name {name!r}:\n{second!r}"
-            )
-
+        conflicts = find_conflicts(expr)
+        if conflicts is not None:
+            raise ValueError(conflicts["message"])
         try:
             expr.skb.get_data()
         except UninitializedVariable:
@@ -707,12 +699,12 @@ class SkrubNamespace:
 
         return cross_validate(self.get_estimator(), environment, **kwargs)
 
+    @_check_expr
     def mark_as_x(self):
-        # TODO copy instead?
-        # TODO check that at most 1 node is marked as X and y
         self._expr._skrub_impl.is_X = True
         return self._expr
 
+    @_check_expr
     def mark_as_y(self):
         self._expr._skrub_impl.is_y = True
         return self._expr

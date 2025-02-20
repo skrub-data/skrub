@@ -625,40 +625,82 @@ def needs_eval(obj, return_node=False):
     return needs
 
 
-class _FindDuplicateNames(_ExprTraversal):
+class _FindConflicts(_ExprTraversal):
+    """Find duplicate names or if 2 nodes are marked as X or y."""
+
     def __init__(self):
         self._names = {}
+        self._x = {}
+        self._y = {}
 
     def handle_expr(self, e, *args, **kwargs):
-        self._add(e, getattr(e._skrub_impl, "name", None))
+        self._add(
+            e,
+            getattr(e._skrub_impl, "name", None),
+            e._skrub_impl.is_X,
+            e._skrub_impl.is_y,
+        )
         yield from super().handle_expr(e, *args, **kwargs)
 
     def handle_choice(self, choice):
         self._add(choice, getattr(choice, "name", None))
         yield from super().handle_choice(choice)
 
-    def _add(self, obj, name):
-        if name is None:
+    def _conflict_error_message(self, conflict):
+        first, second = conflict["nodes"]
+        if conflict["reason"] == "is_X":
+            return (
+                "Only one node can be marked with `mark_as_x()`. "
+                "2 different objects were marked as X:\n"
+                f"first object that used `.mark_as_x()`:\n{first!r}\n"
+                f"second object that used `.mark_as_x()`:\n{second!r}"
+            )
+        if conflict["reason"] == "is_y":
+            return (
+                "Only one node can be marked with `mark_as_y()`. "
+                "2 different objects were marked as y:\n"
+                f"first object that used `.mark_as_y()`:\n{first!r}\n"
+                f"second object that used `.mark_as_y()`:\n{second!r}"
+            )
+        if conflict["reason"] == "name":
+            name = conflict["name"]
+            return (
+                f"Choice and node names must be unique. The name {name!r} was used "
+                "for 2 different objects:\n"
+                f"first object using the name {name!r}:\n{first!r}\n"
+                f"second object using the name {name!r}:\n{second!r}"
+            )
+
+    def _add_to_dict(self, d, key, val, reason):
+        if key is None:
             return
-        other = self._names.get(name, None)
+        other = d.get(key, None)
         if other is None:
-            self._names[name] = obj
+            d[key] = val
             return
-        if other is obj:
+        if other is val:
             return
-        duplicates = {"name": name, "nodes": (other, obj)}
-        raise _Found(duplicates)
+        conflict = {"name": key, "nodes": (other, val), "reason": reason}
+        conflict["message"] = self._conflict_error_message(conflict)
+        raise _Found(conflict)
+
+    def _add(self, obj, name, is_X, is_y):
+        if is_X:
+            self._add_to_dict(self._x, "X", obj, "is_X")
+        if is_y:
+            self._add_to_dict(self._y, "y", obj, "is_y")
+        self._add_to_dict(self._names, name, obj, "name")
 
 
-def find_duplicate_names(expr):
+def find_conflicts(expr):
     """
-    We use a function that returns the duplicates, rather than raises an
+    We use a function that returns the conflicts, rather than raises an
     exception, because we want the exception to be raised higher in the call
     stack (in ``_expressions._check_expr``) so that the user sees the line in
     their code that created a problematic expression easily in the traceback.
     """
     try:
-        _FindDuplicateNames().run(expr)
+        _FindConflicts().run(expr)
     except _Found as e:
         return e.value
     return None
