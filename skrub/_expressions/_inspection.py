@@ -51,7 +51,9 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
         # TODO say in page that it was a column not df
         # maybe this should be handled by tablereport? or we should have a
         # seriesreport with just 1 card?
-        result = sbd.make_dataframe_like(result, [result])
+        result_df = sbd.make_dataframe_like(result, [result])
+        result_df = sbd.copy_index(result, result_df)
+        result = result_df
     if sbd.is_dataframe(result):
         report = TableReport(result, **report_kwargs)
     else:

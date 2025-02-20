@@ -321,7 +321,6 @@ def add_total(df):
 
 add_total(orders)
 
-
 # %%
 # - show `.skb.full_report()`
 #
