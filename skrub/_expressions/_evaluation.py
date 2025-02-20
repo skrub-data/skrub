@@ -651,6 +651,12 @@ class _FindDuplicateNames(_ExprTraversal):
 
 
 def find_duplicate_names(expr):
+    """
+    We use a function that returns the duplicates, rather than raises an
+    exception, because we want the exception to be raised higher in the call
+    stack (in ``_expressions._check_expr``) so that the user sees the line in
+    their code that created a problematic expression easily in the traceback.
+    """
     try:
         _FindDuplicateNames().run(expr)
     except _Found as e:

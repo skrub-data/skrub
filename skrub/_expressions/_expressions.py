@@ -187,12 +187,14 @@ class ExprImpl:
         return f"<{self.__class__.__name__}>"
 
 
-def _with_preview_evaluation(f):
-    """Evaluate the preview of an expression after it is created.
+def _check_expr(f):
+    """Check an expression and evaluate the preview.
 
-    We decorate the functions that create it rather than do it in Expr.__init__
-    to shorten the traceback when it fails, and so that we only do it when a
-    user calls one of the factory functions.
+    We decorate the functions that create expressions rather than do it in
+    ``__init__`` to make tracebacks as short as possible: the second frame in
+    the stack trace is the one in user code that created the problematic
+    expression. If the check was done in ``__init__`` it might be buried
+    several calls deep, making it harder to understand those errors.
     """
 
     @functools.wraps(f)
@@ -242,7 +244,7 @@ def _get_preview(obj):
     return obj
 
 
-def _with_check_call_return_value(f):
+def _check_call(f):
     @functools.wraps(f)
     def _check_call_return_value(*args, **kwargs):
         expr = f(*args, **kwargs)
@@ -275,7 +277,7 @@ class Expr:
 
         return clone(self)
 
-    @_with_preview_evaluation
+    @_check_expr
     def __getattr__(self, name):
         if name in [
             "_skrub_impl",
@@ -290,12 +292,12 @@ class Expr:
             attribute_error(self, name)
         return Expr(GetAttr(self, name))
 
-    @_with_preview_evaluation
+    @_check_expr
     def __getitem__(self, key):
         return Expr(GetItem(self, key))
 
-    @_with_check_call_return_value
-    @_with_preview_evaluation
+    @_check_call
+    @_check_expr
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
         if isinstance(impl, GetAttr):
@@ -304,7 +306,7 @@ class Expr:
             Call(self, args, kwargs, globals={}, closure=(), defaults=(), kwdefaults={})
         )
 
-    @_with_preview_evaluation
+    @_check_expr
     def __len__(self):
         return Expr(GetAttr(self, "__len__"))()
 
@@ -425,7 +427,7 @@ def _make_bin_op(op_name):
         return Expr(BinOp(self, right, getattr(operator, op_name)))
 
     op.__name__ = op_name
-    return _with_preview_evaluation(op)
+    return _check_expr(op)
 
 
 for op_name in _BIN_OPS:
@@ -437,7 +439,7 @@ def _make_r_bin_op(op_name):
         return Expr(BinOp(left, self, getattr(operator, op_name)))
 
     op.__name__ = f"__r{op_name.strip('_')}__"
-    return _with_preview_evaluation(op)
+    return _check_expr(op)
 
 
 for op_name in _BIN_OPS:
@@ -450,7 +452,7 @@ def _make_unary_op(op_name):
         return Expr(UnaryOp(self, getattr(operator, op_name)))
 
     op.__name__ = op_name
-    return _with_preview_evaluation(op)
+    return _check_expr(op)
 
 
 for op_name in _UNARY_OPS:
@@ -518,7 +520,7 @@ class SkrubNamespace:
         )
         return expr
 
-    @_with_preview_evaluation
+    @_check_expr
     def apply(
         self,
         estimator,
@@ -538,7 +540,7 @@ class SkrubNamespace:
             allow_reject=allow_reject,
         )
 
-    @_with_preview_evaluation
+    @_check_expr
     def applied_estimator(self):
         if not isinstance(self._expr._skrub_impl, Apply):
             # TODO: make it a AttributeError when accessing .applied_estimator instead
@@ -548,15 +550,15 @@ class SkrubNamespace:
             )
         return Expr(AppliedEstimator(self._expr))
 
-    @_with_preview_evaluation
+    @_check_expr
     def select(self, cols):
         return self._apply(SelectCols(cols), how="full_frame")
 
-    @_with_preview_evaluation
+    @_check_expr
     def drop(self, cols):
         return self._apply(DropCols(cols), how="full_frame")
 
-    @_with_preview_evaluation
+    @_check_expr
     def concat_horizontal(self, others):
         return Expr(ConcatHorizontal(self._expr, others))
 
@@ -578,7 +580,7 @@ class SkrubNamespace:
 
         return evaluate(self._expr, mode=mode, environment=environment, clear=clear)
 
-    @_with_preview_evaluation
+    @_check_expr
     def freeze_after_fit(self):
         return Expr(FreezeAfterFit(self._expr))
 
@@ -715,7 +717,7 @@ class SkrubNamespace:
         self._expr._skrub_impl.is_y = True
         return self._expr
 
-    @_with_preview_evaluation
+    @_check_expr
     def set_name(self, name):
         _check_name(name)
         self._expr._skrub_impl.name = name
@@ -794,7 +796,7 @@ class Value(ExprImpl):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"
 
 
-@_with_preview_evaluation
+@_check_expr
 def as_expr(value):
     return Expr(Value(value))
 
@@ -809,7 +811,7 @@ class IfElse(ExprImpl):
         return f"<{self.__class__.__name__} {cond} ? {if_true} : {if_false}>"
 
 
-@_with_preview_evaluation
+@_check_expr
 def if_else(condition, value_if_true, value_if_false):
     return Expr(IfElse(condition, value_if_true, value_if_false))
 
@@ -1040,8 +1042,8 @@ class CallMethod(ExprImpl):
 def deferred(func):
     from ._evaluation import needs_eval
 
-    @_with_check_call_return_value
-    @_with_preview_evaluation
+    @_check_call
+    @_check_expr
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
         return Expr(
@@ -1085,8 +1087,8 @@ def deferred(func):
     ):
         return deferred_func
 
-    @_with_check_call_return_value
-    @_with_preview_evaluation
+    @_check_call
+    @_check_expr
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
         return Expr(
