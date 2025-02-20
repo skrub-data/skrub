@@ -648,7 +648,7 @@ class _FindConflicts(_ExprTraversal):
         yield from super().handle_expr(e, *args, **kwargs)
 
     def handle_choice(self, choice):
-        self._add(choice, getattr(choice, "name", None))
+        self._add(choice, getattr(choice, "name", None), False, False)
         yield from super().handle_choice(choice)
 
     def _conflict_error_message(self, conflict):
