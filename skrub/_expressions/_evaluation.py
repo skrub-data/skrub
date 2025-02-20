@@ -603,15 +603,20 @@ def find_node(obj, predicate=None):
 
 
 def find_X(expr):
-    return find_node(expr, lambda e: e._skrub_impl.is_X)
+    return find_node(expr, lambda e: isinstance(e, Expr) and e._skrub_impl.is_X)
 
 
 def find_y(expr):
-    return find_node(expr, lambda e: e._skrub_impl.is_y)
+    return find_node(expr, lambda e: isinstance(e, Expr) and e._skrub_impl.is_y)
 
 
 def find_node_by_name(expr, name):
-    return find_node(expr, lambda e: e._skrub_impl.name == name)
+    def pred(obj):
+        if isinstance(obj, Expr):
+            return obj._skrub_impl.name == name
+        return getattr(obj, "name", None) == name
+
+    return find_node(expr, pred)
 
 
 def needs_eval(obj, return_node=False):
