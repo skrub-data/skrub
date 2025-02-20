@@ -428,25 +428,6 @@ def clear_results(expr, mode=None):
             n._skrub_impl.errors.pop(mode, None)
 
 
-def _find_node(expr, predicate):
-    for node in nodes(expr):
-        if predicate(node):
-            return node
-    return None
-
-
-def find_X(expr):
-    return _find_node(expr, lambda e: e._skrub_impl.is_X)
-
-
-def find_y(expr):
-    return _find_node(expr, lambda e: e._skrub_impl.is_y)
-
-
-def find_node_by_name(expr, name):
-    return _find_node(expr, lambda e: e._skrub_impl.name == name)
-
-
 class _ChoiceGraph(_ExprTraversal):
     def run(self, expr):
         self._choices = {}
@@ -604,25 +585,47 @@ class _FoundNode(Exception):
         self.node = node
 
 
-class _NeedsEval(_ExprTraversal):
-    def handle_expr(self, e, *_):
-        raise _FoundNode(e)
+class _FindNode(_ExprTraversal):
+    def __init__(self, predicate=None):
+        self.predicate = predicate
+
+    def handle_expr(self, e, *args, **kwargs):
+        if self.predicate is None or self.predicate(e):
+            raise _FoundNode(e)
+        yield from super().handle_expr(e, *args, **kwargs)
 
     def handle_choice(self, choice):
-        raise _FoundNode(choice)
+        if self.predicate is None or self.predicate(choice):
+            raise _FoundNode(choice)
+        yield from super().handle_choice(choice)
+
+
+def find_node(obj, predicate):
+    try:
+        _FindNode(predicate).run(obj)
+    except _FoundNode as e:
+        return e.node
+    return None
+
+
+def find_X(expr):
+    return find_node(expr, lambda e: e._skrub_impl.is_X)
+
+
+def find_y(expr):
+    return find_node(expr, lambda e: e._skrub_impl.is_y)
+
+
+def find_node_by_name(expr, name):
+    return find_node(expr, lambda e: e._skrub_impl.name == name)
 
 
 def needs_eval(obj, return_node=False):
     try:
-        _NeedsEval().run(obj)
-    except _FoundNode as e:
-        if return_node:
-            return True, e.node
-        else:
-            return True
+        node = find_node(obj)
     except CircularReferenceError:
-        # Hope for the best
-        pass
+        node = None
+    needs = node is not None
     if return_node:
-        return False, None
-    return False
+        return needs, node
+    return needs
