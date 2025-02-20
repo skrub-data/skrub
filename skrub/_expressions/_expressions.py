@@ -197,9 +197,20 @@ def _with_preview_evaluation(f):
 
     @functools.wraps(f)
     def _check_preview(*args, **kwargs):
-        from ._evaluation import evaluate
+        from ._evaluation import evaluate, find_duplicate_names
 
         expr = f(*args, **kwargs)
+
+        duplicates = find_duplicate_names(expr)
+        if duplicates is not None:
+            name = duplicates["name"]
+            first, second = duplicates["nodes"]
+            raise ValueError(
+                f"Choice and node names must be unique. The name {name!r} was used "
+                "for 2 different objects:\n"
+                f"first object using the name {name!r}:\n{first!r}\n"
+                f"second object using the name {name!r}:\n{second!r}"
+            )
 
         try:
             expr.skb.get_data()
@@ -704,6 +715,7 @@ class SkrubNamespace:
         self._expr._skrub_impl.is_y = True
         return self._expr
 
+    @_with_preview_evaluation
     def set_name(self, name):
         _check_name(name)
         self._expr._skrub_impl.name = name
@@ -782,6 +794,7 @@ class Value(ExprImpl):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"
 
 
+@_with_preview_evaluation
 def as_expr(value):
     return Expr(Value(value))
 
@@ -796,6 +809,7 @@ class IfElse(ExprImpl):
         return f"<{self.__class__.__name__} {cond} ? {if_true} : {if_false}>"
 
 
+@_with_preview_evaluation
 def if_else(condition, value_if_true, value_if_false):
     return Expr(IfElse(condition, value_if_true, value_if_false))
 

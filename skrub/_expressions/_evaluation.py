@@ -123,7 +123,7 @@ class _ExprTraversal:
         return self.compute_result(expr, evaluated_attributes)
 
     def compute_result(self, expr, evaluated_attributes):
-        raise NotImplementedError()
+        return expr
 
     def handle_estimator(self, estimator):
         params = yield estimator.get_params()
@@ -405,9 +405,6 @@ class _Graph(_ExprTraversal):
         self._nodes[id(expr)] = expr
         return result
 
-    def compute_result(self, expr, evaluated_attributes):
-        return expr
-
 
 def graph(expr):
     return _Graph().run(expr)
@@ -464,9 +461,6 @@ class _ChoiceGraph(_ExprTraversal):
             yield choice_match.outcome_mapping[value]
             self._current_outcome.pop()
         return choice_match
-
-    def compute_result(self, expr, evaluated_attributes):
-        return expr
 
 
 def choices(expr):
@@ -580,9 +574,9 @@ def set_params(expr, params):
             target.chosen_outcome = v
 
 
-class _FoundNode(Exception):
-    def __init__(self, node):
-        self.node = node
+class _Found(Exception):
+    def __init__(self, value):
+        self.value = value
 
 
 class _FindNode(_ExprTraversal):
@@ -591,20 +585,20 @@ class _FindNode(_ExprTraversal):
 
     def handle_expr(self, e, *args, **kwargs):
         if self.predicate is None or self.predicate(e):
-            raise _FoundNode(e)
+            raise _Found(e)
         yield from super().handle_expr(e, *args, **kwargs)
 
     def handle_choice(self, choice):
         if self.predicate is None or self.predicate(choice):
-            raise _FoundNode(choice)
+            raise _Found(choice)
         yield from super().handle_choice(choice)
 
 
 def find_node(obj, predicate):
     try:
         _FindNode(predicate).run(obj)
-    except _FoundNode as e:
-        return e.node
+    except _Found as e:
+        return e.value
     return None
 
 
@@ -629,3 +623,36 @@ def needs_eval(obj, return_node=False):
     if return_node:
         return needs, node
     return needs
+
+
+class _FindDuplicateNames(_ExprTraversal):
+    def __init__(self):
+        self._names = {}
+
+    def handle_expr(self, e, *args, **kwargs):
+        self._add(e, getattr(e._skrub_impl, "name", None))
+        yield from super().handle_expr(e, *args, **kwargs)
+
+    def handle_choice(self, choice):
+        self._add(choice, getattr(choice, "name", None))
+        yield from super().handle_choice(choice)
+
+    def _add(self, obj, name):
+        if name is None:
+            return
+        other = self._names.get(name, None)
+        if other is None:
+            self._names[name] = obj
+            return
+        if other is obj:
+            return
+        duplicates = {"name": name, "nodes": (other, obj)}
+        raise _Found(duplicates)
+
+
+def find_duplicate_names(expr):
+    try:
+        _FindDuplicateNames().run(expr)
+    except _Found as e:
+        return e.value
+    return None
