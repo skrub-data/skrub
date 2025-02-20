@@ -594,7 +594,7 @@ class _FindNode(_ExprTraversal):
         yield from super().handle_choice(choice)
 
 
-def find_node(obj, predicate):
+def find_node(obj, predicate=None):
     try:
         _FindNode(predicate).run(obj)
     except _Found as e:
