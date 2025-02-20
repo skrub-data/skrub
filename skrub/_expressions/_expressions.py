@@ -207,10 +207,6 @@ def _check_expr(f):
         if conflicts is not None:
             raise ValueError(conflicts["message"])
         try:
-            expr.skb.get_data()
-        except UninitializedVariable:
-            pass
-        try:
             evaluate(expr, mode="preview", environment=None)
         except UninitializedVariable:
             pass
@@ -579,32 +575,11 @@ class SkrubNamespace:
     def get_data(self):
         from ._evaluation import nodes
 
-        var_names = {}
         data = {}
-
-        def _check_duplicate(node):
-            impl = node._skrub_impl
-            if (prev := var_names.get(impl.name, None)) is None:
-                return
-            if prev is node:
-                return
-            first_stack = prev._skrub_impl.creation_stack_last_line
-            second_stack = impl.creation_stack_last_line
-            msg = (
-                f"The variable name {impl.name!r} has been used several times "
-                "in this expression to refer to different quantities:\n"
-                f"{impl.name!r} used here:\n"
-                f"{first_stack}\n"
-                f"{impl.name!r} used again here:\n"
-                f"{second_stack}"
-            )
-            raise ValueError(msg)
 
         for n in nodes(self._expr):
             impl = n._skrub_impl
-            if isinstance(impl, Var):
-                _check_duplicate(n)
-                var_names[impl.name] = n
+            if isinstance(impl, Var) and impl.value is not _Constants.NO_VALUE:
                 data[impl.name] = impl.value
         return data
 
