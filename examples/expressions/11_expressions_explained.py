@@ -345,7 +345,7 @@ price < 0
 
 
 # %%
-# If we defer the execution of ``log`` we get an function that adds the call to
+# If we defer the execution of ``check`` we get an function that adds the call to
 # the pipeline and returns expression instead:
 
 # %%
@@ -373,7 +373,7 @@ price = skrub.var("price", -3.0)
 # inputs that we feed through it. So we must still use ``deferred``. The
 # difference, now that we provided a value, is that besides creating an
 # expression and returning it, skrub also immediately evaluates it on the
-# example data and _shows_ the result.
+# example data and *shows* the result.
 
 # %%
 skrub.deferred(check)(price)
