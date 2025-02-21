@@ -95,6 +95,9 @@ c = a + b
 c
 
 # %%
+# In the display above, you can still see the diagram representing the pipeline
+# by clicking on the dropdown ``▶ <BinOp: add>``.
+#
 # It is important to understand that seeing results for the values we provided
 # does *not* change the fact that we are building a pipeline that we want to
 # reuse, not just computing the result for a fixed input. Think of the
@@ -135,6 +138,9 @@ c.skb.eval({"a": 3, "b": 2})
 # More operations (e.g. applying a scikit-learn estimator) are available
 # through the special ``skb`` attribute, as we will see later.
 #
+# Basic operations
+# ~~~~~~~~~~~~~~~~
+#
 # Suppose we want our pipeline to process dataframes that look like this:
 
 # %%
@@ -143,8 +149,8 @@ import pandas as pd
 orders_df = pd.DataFrame(
     {
         "item": ["pen", "cup", "pen", "fork"],
-        "price": [1.5, None, 1.5, 2.1],
-        "qty": [1, 1, 2, 3],
+        "price": [1.5, None, 1.5, 2.2],
+        "qty": [1, 1, 2, 4],
     }
 )
 orders_df
@@ -184,8 +190,11 @@ orders["price"] * orders["qty"]
 orders.assign(total=orders["price"] * orders["qty"])
 
 # %%
+# Applying machine-learning estimators
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
 # As mentioned above, in addition to those usual operations, the expressions
-# have an additional special attribute: ``.skb`` gives access to the
+# have a special attribute: ``.skb`` gives access to the
 # functionality provided by skrub. A particularly important one is
 # ``.skb.apply()`` which allows applying scikit-learn estimators.
 
@@ -215,45 +224,22 @@ vectorized_orders
 estimator = vectorized_orders.skb.get_estimator(fitted=True)
 
 # %%
-new_orders = pd.DataFrame({"item": ["fork"], "price": [2.1], "qty": [7]})
+new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
 estimator.transform({"orders": new_orders})
-
-# %%
-# What if we want to apply a function to our expression?
-# Suppose we want to use the pandas module-level ``isna``
-# The following raises an error::
-#
-#     pd.isna(orders['price'])
-#
-# .. code-block:: none
-#
-#     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly use its Boolean value now.
-
-# %%
-# Indeed ``orders['price']`` is not a pandas Series, it is a skrub expression that will
-# produce a pandas Series when evaluated. So we need to defer the call to
-# ``pd.isna`` until we have an actual argument to give it.
-#
-# (Of course here an alternative would be to use the Series' `.isna()` method)
-
-# %%
-null_price = skrub.deferred(pd.isna)(orders["price"])
-null_price
 
 # %%
 # Delayed evaluation
 # ------------------
 #
-# What we saw above is important to understand: expressions represent a
-# computation that has not yet been executed, and will be executed when we
-# trigger it, for example by calling ``eval()`` or getting the estimator and
-# calling ``fit()``.
+# It is important to understand that expressions represent a computation that
+# has not yet been executed, and will be executed when we trigger it, for
+# example by calling ``eval()`` or getting the estimator and calling ``fit()``.
 #
 # This means that we cannot use usual Python control flow statements with
 # expressions, because those would execute immediately.
 
 # %%
-# We cannot do this::
+# For example, we cannot do this::
 #
 #     for column in orders.columns:
 #         pass
@@ -262,11 +248,31 @@ null_price
 #
 #     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.
 #
+# We get an error because the ``for`` statement tries to iterate immediately
+# over the columns. However, ``orders.columns`` is not an actual list of
+# columns: it is a skrub expression that will produce a list of columns, later,
+# when we run the pipeline.
+#
+# This remains true even if we have provided a value for ``orders`` and we can
+# see a result for that value:
 
 # %%
-# The solution is to use ``skrub.deferred``
+orders.columns
+
+# %%
+# The "result" we see is an *example* result that the pipeline produces for the
+# data we provided. But we want to fit our pipeline and apply it many times to
+# different datasets, for which it will return a new object every time. So even
+# if we see a preview of the pipeline's output on the data we provided,
+# ``orders.columns`` still represents a future computation that remains to be
+# evaluated.
 #
-# bad::
+# So we must delay the execution of the ``for`` statement until the pipeline
+# actually runs and ``orders.columns`` has been evaluated.
+#
+# We can do this by wrapping it in a function and using ``skrub.deferred``
+# Suppose we want to convert the columns to upper case, and our first attempt
+# runs into the problem we just described::
 #
 #     COLUMNS = [c.upper() for c in orders.columns]
 #
@@ -275,7 +281,12 @@ null_price
 #     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.
 
 # %%
-# good:
+# We define a function that contains the control flow statement we need. Then,
+# we apply the ``skrub.deferred`` decorator to it. What this does is to defer
+# the calls to our function. Now when we call it, instead of running
+# immediately, it returns a skrub expression that wraps the function call. The
+# original function is actually called when we evaluate the expression, by
+# running the pipeline.
 
 
 # %%
@@ -288,9 +299,118 @@ def with_upper_columns(df):
 with_upper_columns(orders)
 
 # %%
+# If you unfold the dropdown ``▶ <Call 'with_upper_columns'>`` above, you can
+# see that a call to our function has been added to the pipeline.
+#
+# When the pipeline runs, ``orders`` will be evaluated first and the result (an
+# actual dataframe) will be passed as the ``df`` argument to our function.
+
+# %%
+# Here is another example of using ``skrub.deferred``.
+
+
+# %%
+def check(price):
+    if price < 0:
+        print("warning! negative price:", price)
+    else:
+        print("good price:", price)
+    return price
+
+
+check(2.5)
+
+# %%
+# We could not use ``check`` directly on an expression:
+
+# %%
+price = skrub.var("price")
+price
+
+# %%
+price < 0
+
+# %%
+# .. code-block::
+#
+#     check(price)
+#
+# .. code-block:: none
+#
+#     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly use its Boolean value now.
+#
+# It is the same kind of error: the ``if`` statement tries to convert
+# ``price < 0`` to a Python Boolean but it is a skrub expression that needs to be
+# evaluated first.
+
+
+# %%
+# If we defer the execution of ``log`` we get an function that adds the call to
+# the pipeline and returns expression instead:
+
+# %%
+expr = skrub.deferred(check)(price)
+expr
+
+# %%
+expr.skb.eval({"price": 2.5})
+
+# %%
+expr.skb.eval({"price": -3.0})
+
+# %%
+# Providing a value when we initialize the variable ``"price"`` does *not*
+# change the nature of the expression; even if it provides a preview it is
+# still a computation that can be evaluated many times on different inputs.
+
+# %%
+price = skrub.var("price", -3.0)
+
+# %%
+# We still cannot call ``check(price)`` directly, for the same reasons.
+# If ``check`` ran immediately, we would be checking our example price -3.0,
+# rather than adding the check to our pipeline so that it is applied to all
+# inputs that we feed through it. So we must still use ``deferred``. The
+# difference, now that we provided a value, is that besides creating an
+# expression and returning it, skrub also immediately evaluates it on the
+# example data and _shows_ the result.
+
+# %%
+skrub.deferred(check)(price)
+
+# %%
+# ``skrub.deferred`` is useful for our own functions but also when we need to
+# call module-level functions from a library. Suppose we want to add a binary
+# feature indicating missing values in the ``"price"`` column. We could do this
+# with the Series' method ``orders['price'].isna()`` but let us imagine it does
+# not exist or we prefer to use the module-level ``pd.isna``. Calling it
+# directly on our expression raises an error::
+#
+#     pd.isna(orders['price'])
+#
+# .. code-block:: none
+#
+#     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly use its Boolean value now.
+#
+# This is the same error as above: somewhere inside of ``isna``, there is an
+# ``if`` statement that errors because we passed an expression rather than a
+# Series. Here again the solution is to use ``deferred``.
+
+# %%
+null_price = skrub.deferred(pd.isna)(orders["price"])
+null_price
+
+# %%
+orders.assign(missing_price=skrub.deferred(pd.isna)(orders["price"]))
+
+
+# %%
 # Also note that for the same reason (we are building a pipeline, not
 # immediately computing a single result), any transformation that we have must
 # not modify its input, but leave it unchanged and return a new value.
+#
+# Think of the transformers in a scikit-learn pipeline: each computes a new
+# result without modifying its input.
 
 # %%
 # This would raise an error::
@@ -311,6 +431,7 @@ with_upper_columns(orders)
 #
 # When we do need assignments or in-place transformations, we can put them in a
 # ``deferred`` function. But remember to make a (shallow) copy and return the new value.
+#
 
 
 # %%
@@ -322,6 +443,69 @@ def add_total(df):
 
 
 add_total(orders)
+
+# %%
+# Finally, other occasions where we use ``deferred`` are:
+#
+# - we have many nodes in our graph, and we want to collapse a sequence of
+#   steps into a single function call, that will appear as a single node
+# - we have steps that need to be deferred until the pipeline runs, because
+#   they depend on the runtime environment or on objects that cannot be pickled
+#   together with the rest of the pipeline -- for example opening and reading a
+#   file.
+#
+
+# %%
+# A full pipeline
+# ---------------
+#
+
+# %%
+import skrub.datasets
+
+dataset = skrub.datasets.fetch_credit_fraud()
+
+products = skrub.var("products", dataset.products)
+baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_x()
+fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
+
+# %%
+from skrub import selectors as s
+
+vectorizer = skrub.TableVectorizer(high_cardinality=skrub.StringEncoder(n_components=8))
+vectorized_products = products.skb.apply(vectorizer, cols=s.all() - "basket_ID")
+
+
+# %%
+
+# Note: using deferred or even defining a function is completely optional here,
+# we only do it to simplify the computation graph by collapsing all those
+# operations into a single function call.
+
+
+@skrub.deferred
+def join_baskets_products(baskets, vectorized_products):
+    aggregated_products = (
+        vectorized_products.groupby("basket_ID").agg("mean").reset_index()
+    )
+    joined = baskets.merge(
+        aggregated_products, left_on="ID", right_on="basket_ID"
+    ).drop(columns=["ID", "basket_ID"])
+    return joined
+
+
+features = join_baskets_products(baskets, vectorized_products)
+features
+
+# %%
+from sklearn.ensemble import HistGradientBoostingClassifier
+
+predictions = features.skb.apply(HistGradientBoostingClassifier(), y=fraud_flags)
+predictions
+
+# %%
+predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
+
 
 # %%
 # - show `.skb.full_report()`
