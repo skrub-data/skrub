@@ -197,7 +197,13 @@ predictions = baskets.skb.apply(hgb, y=fraud_flags)
 predictions
 
 # %%
-# TODO link to to full report
+# We can ask for a report of the pipeline and inspect the results at every step::
+#
+#     predictions.skb.full_report()
+#
+# This produces a folder on disk rather than displaying inline in a notebook so
+# we do not run it here. But you can
+# `see the output <../../_static/credit_fraud_report/index.html>`_.
 
 # %%
 # Perform hyperparameter search or cross-validation

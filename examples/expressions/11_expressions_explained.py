@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """
 Skrub expressions
 =================
@@ -146,6 +147,7 @@ orders_df = pd.DataFrame(
         "qty": [1, 1, 2, 3],
     }
 )
+orders_df
 
 # %%
 # We can create a skrub variable to represent that input to the pipeline
@@ -223,9 +225,9 @@ estimator.transform({"orders": new_orders})
 #
 #     pd.isna(orders['price'])
 #
-# Produces:
+# .. code-block:: none
 #
-# ``TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly use its Boolean value now.`` # noqa: E501
+#     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly use its Boolean value now.
 
 # %%
 # Indeed ``orders['price']`` is not a pandas Series, it is a skrub expression that will
@@ -256,9 +258,9 @@ null_price
 #     for column in orders.columns:
 #         pass
 #
-# This would result in:
+# .. code-block:: none
 #
-# ``TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.`` # noqa: E501
+#     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.
 #
 
 # %%
@@ -268,9 +270,9 @@ null_price
 #
 #     COLUMNS = [c.upper() for c in orders.columns]
 #
-# This would result in:
+# .. code-block:: none
 #
-# ``TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.`` # noqa: E501
+#     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.
 
 # %%
 # good:
@@ -295,9 +297,9 @@ with_upper_columns(orders)
 #
 #     orders['total'] = orders['price'] * orders['qty']
 #
-# prints::
+# .. code-block:: none
 #
-#     TypeError: Do not modify an expression in-place. Instead, use a function that returns a new value.This is necessary to allow chaining several steps in a sequence of transformations. # noqa
+#     TypeError: Do not modify an expression in-place. Instead, use a function that returns a new value.This is necessary to allow chaining several steps in a sequence of transformations.
 #     For example if df is a pandas DataFrame:
 #     df = df.assign(new_col=...) instead of df['new_col'] = ...
 #

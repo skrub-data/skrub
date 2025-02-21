@@ -17,14 +17,20 @@ def create_expression_report():
     ).skb.mark_as_y()
 
     products = products[products["basket_ID"].isin(baskets["ID"])]
-
-    product_vectorizer = skrub.TableVectorizer(
-        high_cardinality=skrub.StringEncoder(n_components=5)
+    products = products.assign(
+        total_price=products["Nbr_of_prod_purchas"] * products["cash_price"]
     )
-
-    vectorized_products = products.skb.apply(
-        product_vectorizer, cols=s.all() - "basket_ID"
+    n = skrub.choose_int(5, 15, log=True, name="n_components")
+    encoder = skrub.choose_from(
+        {
+            "MinHash": skrub.MinHashEncoder(n_components=n),
+            "LSA": skrub.StringEncoder(n_components=n),
+        },
+        name="encoder",
     )
+    vectorizer = skrub.TableVectorizer(high_cardinality=encoder)
+
+    vectorized_products = products.skb.apply(vectorizer, cols=s.all() - "basket_ID")
 
     aggregated_products = (
         vectorized_products.groupby("basket_ID").agg("mean").reset_index()
@@ -33,7 +39,10 @@ def create_expression_report():
         aggregated_products, left_on="ID", right_on="basket_ID"
     ).drop(columns=["ID", "basket_ID"])
 
-    predictions = baskets.skb.apply(HistGradientBoostingClassifier(), y=fraud_flags)
+    hgb = HistGradientBoostingClassifier(
+        learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="learning_rate")
+    )
+    predictions = baskets.skb.apply(hgb, y=fraud_flags)
 
     predictions.skb.full_report(
         output_dir=Path(__file__).parent
