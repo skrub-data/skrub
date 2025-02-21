@@ -30,9 +30,9 @@ The next example will cover hyperparameter search.
 # ----------------
 #
 # Skrub expressions exist to build machine-learning pipelines that contain
-# scikit-learn estimators. However note that they can process any kind of data.
+# scikit-learn estimators. However, they can process any kind of data.
 # To start with a very simple example and give a summary of the different steps
-# let us build a pipeline that adds 2 numbers.
+# let us build a pipeline that just adds 2 numbers.
 
 
 # %%
@@ -445,7 +445,7 @@ def add_total(df):
 add_total(orders)
 
 # %%
-# Finally, other occasions where we use ``deferred`` are:
+# Finally, other occasions where we may need to use ``deferred`` are:
 #
 # - we have many nodes in our graph, and we want to collapse a sequence of
 #   steps into a single function call, that will appear as a single node
@@ -456,18 +456,247 @@ add_total(orders)
 #
 
 # %%
+# Supervised estimators and cross-validation
+# ------------------------------------------
+#
+# We can use ``.skb.apply()`` to add scikit-learn transformers to the pipeline,
+# but also to add a supervised learner like ``HistGradientBoostingClassifier``
+# or ``LogisticRegression``.
+#
+# When we have built a full pipeline, we want to run cross-validation to
+# measure its performance. We may also want to tune hyperparameters (shown in
+# the next example).
+#
+# Skrub can run the cross-validation for us. In order to do so, it needs to
+# split the dataset into training and testing sets. For this to happen, we need
+# to tell skrub which items in our pipeline constitute the feature matrix ``X``
+# and the targets (labels, outputs) ``y``.
+#
+# Indeed, a skrub pipeline can accept inputs that are not yet neatly organized
+# into correctly-aligned ``X`` and ``y`` matrices. There may be some steps
+# (such as loading data, performing joins or aggregations, separating features
+# and targets from a single source) that need to be performed in order to
+# construct the design matrix the targets. This makes skrub pipelines flexible
+# and powerful. In this setting, in order to be able to split the data and
+# perform cross-validation, we need to explicitly mark the intermediate results
+# that should be considered as ``X`` and ``y`` and used to define
+# cross-validation splits.
+#
+# In the simplest case where we have ``X`` and ``y`` available right from the
+# start, we can indicate that simply by creating the input variables with
+# ``skrub.X()`` and ``skrub.y()`` instead of ``skrub.var()``.
+
+# %%
+from sklearn.ensemble import HistGradientBoostingRegressor
+
+import skrub.datasets
+
+dataset = skrub.datasets.fetch_employee_salaries()
+
+employees = skrub.X(dataset.X)
+salaries = skrub.y(dataset.y)
+
+vectorizer = skrub.TableVectorizer(
+    high_cardinality=skrub.MinHashEncoder(n_components=8)
+)
+predictions = employees.skb.apply(vectorizer).skb.apply(
+    HistGradientBoostingRegressor(), y=salaries
+)
+predictions
+
+# %%
+# Note how ``apply`` works for supervised estimators: we pass the targets
+# (another skrub expression) as the argument for the parameter ``y``.
+#
+# We can now use another method from the special ``.skb`` attribute:
+# ``cross_validate()``. It accepts the same parameters (except for ``X``, ``y``
+# and ``estimator``) and returns the same output as
+# ``sklearn.model_selection.cross_validate``.
+
+# %%
+predictions.skb.cross_validate()
+
+# %%
+# When the situation is more complex and we need some data processing to
+# construct ``X`` and ``y``, we can still do that as part of the skrub pipeline
+# and keep those transformations neatly bundled with the actual learning. We
+# just need to tell skrub which intermediate results constitute ``X`` and
+# ``y``. For example, suppose we get all the data as a single dataframe and we
+# need to separate the target column from the rest. This is a very simple, toy
+# example but more complex situations are handled in the same way.
+#
+# To indicate which intermediate results to split, we call ``.skb.mark_as_x()``
+# and ``.skb.mark_as_y()`` on the appropriate objects:
+
+# %%
+full_data = skrub.var("data", dataset.employee_salaries)
+
+employees = full_data.drop(columns="current_annual_salary").skb.mark_as_x()
+salaries = full_data["current_annual_salary"].skb.mark_as_y()
+
+vectorizer = skrub.TableVectorizer(
+    high_cardinality=skrub.MinHashEncoder(n_components=8)
+)
+predictions = employees.skb.apply(vectorizer).skb.apply(
+    HistGradientBoostingRegressor(), y=salaries
+)
+predictions
+
+# %%
+# If you unfold the dropdown to see the computation graph, you will see the
+# inner nodes that have been marked as ``X`` and ``y``. To evaluate the
+# pipeline, skrub first runs all the prior steps until it has computed ``X``
+# and ``y``. Then, it splits those (with the usual scikit-learn
+# cross-validation tools, as is done in ``sklearn.cross_validate``) and runs
+# the rest of the pipeline inside of the cross-validation loop.
+
+# %%
+predictions.skb.cross_validate()
+
+# %%
+# Start your pipeline by constructing ``X`` and ``y``.
+# Naturally, the construction of ``X`` and ``y`` has to run before splitting
+# into cross-validation folds; it happens outside of the cross-validation loop.
+#
+# This means that any step we perform in this part of the pipeline has access
+# to the full data (training and test sets). We should not use estimators that
+# learn from the data before reaching the cross-validation loop, or we might
+# obtain optimistic scores due to data leakage. Moreover, no choices or
+# hyperparameters can be tuned in this part of the pipeline (tuning is
+# discussed in more detail in the next example).
+#
+# Therefore, we should build ``X`` and ``y`` at the very start of the pipeline
+# and use ``mark_as_x()`` and ``mark_as_y()`` as soon as possible -- as soon as
+# we have separate ``X`` and ``y`` tables that are aligned and have one row per
+# sample. In particular we should use ``mark_as_x()`` before doing any feature
+# extraction and selection.
+#
+# Coming back to the previous example we could have written:
+
+# %%
+full_data = skrub.var("data", dataset.employee_salaries)
+
+employees = full_data.drop(columns="current_annual_salary")
+salaries = full_data["current_annual_salary"].skb.mark_as_y()
+
+vectorizer = skrub.TableVectorizer(
+    high_cardinality=skrub.MinHashEncoder(n_components=8)
+)
+features = employees.skb.apply(vectorizer).skb.mark_as_x()
+predictions = features.skb.apply(HistGradientBoostingRegressor(), y=salaries)
+
+predictions
+
+# %%
+# Note that ``.mark_as_x()`` has been moved down, until after the vectorizer is
+# applied. Our pipeline can still run, but cross-validation now works
+# differently: first the whole table is vectorized, _then_ the resulting
+# feature matrix (and the targets) is split into cross-validation folds. Thus
+# the vectorizer sees the full dataset. It is not much of an issue with the
+# ``MinHashEncoder`` which does not learn anything, but if we used for example
+# the ``GapEncoder`` it would use the testing data to learn its latent
+# representations and might cause some overfitting. If we had some supervised
+# transformations (that use the targets) such as feature selection with
+# ``SelectKBest()`` before ``mark_as_x()``, the overfitting could be severe.
+#
+# Skrub will still let us apply transformers before reaching ``mark_as_x``
+# because sometimes we know our transformer is stateless (eg the
+# ``MinHashEncoder``, or the ``TextEncoder`` with ``n_components=None``) and it
+# is faster to apply it once to the whole dataset than to recompute the
+# transformation inside each cross-validation fold. But in general we should be
+# careful and remember to separate features and targets and then use
+# ``mark_as_x()`` as soon as possible.
+
+
+# %%
 # A full pipeline
 # ---------------
 #
+# Now we know enough about skrub expressions to create a full pipeline for a
+# realistic example and evaluate its performance.
+#
+# We finally come back to the credit fraud dataset from the previous example.
 
 # %%
 import skrub.datasets
 
 dataset = skrub.datasets.fetch_credit_fraud()
 
-products = skrub.var("products", dataset.products)
+# %%
+# The ``baskets`` are orders on a e-commerce website
+
+# %%
 baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_x()
+baskets
+
+# %%
+# Each is associated with a fraud flag
+
+# %%
 fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
+fraud_flags
+
+# %%
+# And each basket contains one or several products. The ``"basket_ID"`` column
+# in the ``"products"`` refers to the ``"ID"`` column in the ``"baskets"``
+# table. Given the information we have about a basket, we want to predict if
+# its purchase was fraudulent.
+
+# %%
+products = skrub.var("products", dataset.products)
+products
+
+# %%
+# Just out of curiosity, we can check the products for a few fraudulent
+# baskets, to see if we can spot whether they have something in common.
+#
+# Note this is just for exploration, we will not add those computations to our
+# prediction pipeline.
+
+# %%
+fraudulent_ids = baskets[fraud_flags == 1]["ID"]
+products[products["basket_ID"].isin(fraudulent_ids)].sort_values("basket_ID")
+
+
+# %%
+# The ``"baskets"`` table itself contains no
+# information: we have to bring in features extracted from the corresponding
+# products. To do so, we must first vectorize the products lines, so that we
+# can aggregate the extracted numeric features, and attach the resulting vector
+# to the corresponding ``"basket_ID"`` and thus the corresponding fraud flag.
+#
+# We do the vectorization with a ``TableVectorizer``. When we run the
+# cross-validation, the ``"baskets"`` table (which we marked as X) will be
+# split in train and test sets. To fit our ``TableVectorizer``, we want to use
+# only products that belong to a basket in the train set, not one in the test
+# set. So we do a semi-join to exclude any products that do not belong to a
+# basket that can be found in the ``"baskets"`` table currently being processed
+# by the pipeline.
+
+# %%
+
+# Note: using deferred or even defining a function is completely optional here,
+# because the computation it contains involves no control flow or assignments.
+# we only do it to simplify the computation graph by collapsing several
+# operations into a single function call.
+
+
+@skrub.deferred
+def filter_products(products, baskets):
+    return products[products["basket_ID"].isin(baskets["ID"])]
+
+
+products = filter_products(products, baskets)
+
+# %%
+# We saw before that a transformer can be restricted to a subset of columns in
+# a dataframe. The ``cols`` argument can be a column name, a list of column
+# names, or a skrub selector. Those selectors are similar to Polars or Ibis
+# selectors: they can be used to select columns by name (including glob and
+# regex patterns), dtype or other criteria, and they can be combined with the
+# same operators as Python sets. Here we want to vectorize all columns in the
+# ``"products"`` table, _except_ the ``"basket_ID"`` column which we will need
+# for joining.
 
 # %%
 from skrub import selectors as s
@@ -477,10 +706,13 @@ vectorized_products = products.skb.apply(vectorizer, cols=s.all() - "basket_ID")
 
 
 # %%
+# Now that we vectorized the product rows, we can aggregate them by basket ID
+# before joining on the ``"baskets"`` table.
 
-# Note: using deferred or even defining a function is completely optional here,
-# we only do it to simplify the computation graph by collapsing all those
-# operations into a single function call.
+# %%
+
+# Here also deferred is optional and is used to simplify the display of the
+# computation graph.
 
 
 @skrub.deferred
@@ -498,25 +730,74 @@ features = join_baskets_products(baskets, vectorized_products)
 features
 
 # %%
+# Now we can add the supervised learner, the final step in our pipeline.
+
+# %%
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 predictions = features.skb.apply(HistGradientBoostingClassifier(), y=fraud_flags)
 predictions
 
 # %%
-predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
+# We can evaluate our pipeline.
+
+# %%
+cv_results = predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
+cv_results
+
+# %%
+cv_results["test_score"]
 
 
 # %%
-# - show `.skb.full_report()`
-#
-# Cross-validation
-# ----------------
-#
-# - explain ``.skb.mark_as_x()``, ``.skb.mark_as_y()``, ``skrub.X()``, ``skrub.y()``
-# - show ``.skb.cross_validate()``
-# - show ``.skb.get_estimator()`` again
-#
+# If we are happy with the cross-validation scores, we also probably want to
+# fit the pipeline on the data we have, and store it so we can apply it later,
+# say to next week's transactions.
+
+# %%
+estimator = predictions.skb.get_estimator(fitted=True)
+estimator
+
+# %%
+# Normally we would save it in the file; here we simulate that by pickling the
+# model into a string so that our example notebook does not need to access the
+# filesystem.
+
+# %%
+import pickle
+
+saved_model = pickle.dumps(estimator)
+
+# %%
+# Let us say we got some new data. (This is not truly new data, we just grabbed
+# an example basket from the original data, just for illustration.)
+
+# %%
+new_baskets = pd.DataFrame({"ID": [21243]})
+new_products = pd.DataFrame(
+    {
+        "basket_ID": [21243, 21243],
+        "item": ["COMPUTER PERIPHERALS ACCESSORIES", "FULFILMENT CHARGE"],
+        "cash_price": [299, 7],
+        "make": ["SAMSUNG", "RETAILER"],
+        "model": ["SAMSUNG GALAXY WATCH 3 BLUETOOTH 41MM STAINLESS ST", "RETAILER"],
+        "goods_code": ["238905679", "FULFILMENT"],
+        "Nbr_of_prod_purchas": [1, 1],
+    }
+)
+new_products
+
+# %%
+# We can now load the model and make a prediction
+
+# %%
+loaded_model = pickle.loads(saved_model)
+loaded_model.predict({"baskets": new_baskets, "products": new_products})
+
+# %%
+# The query basket is classified as not fraudulent.
+
+# %%
 # Conclusion
 # ----------
 #
@@ -527,5 +808,5 @@ predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
 #
 # - naming nodes, passing the value for any node with the inputs
 # - ``.skb.applied_estimator``
-# - ``.skb.concat_horizontal``, ``.skb.drop`` and ``.skb.select``, skrub selectors
+# - ``.skb.concat_horizontal``, ``.skb.drop`` and ``.skb.select``, more skrub selectors
 # - ``.skb.freeze_after_fit`` (niche / very advanced)
