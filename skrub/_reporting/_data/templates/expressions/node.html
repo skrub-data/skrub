@@ -21,6 +21,9 @@
             <div class="node-details" {{ "data-has-error" if error is not none }}
                 {{ "data-is-skipped" if (error is none) and (report is none) }}>
                 <h1>{{ node_nb }}: {{ node_repr }}</h1>
+                {% if node_name %}
+                <h2><samp>Name: {{ node_name }}</samp></h2>
+                {% endif %}
                 <nav class="mini-nav">
                     <ul>
                         <li>
@@ -39,6 +42,12 @@
                     </ul>
                 </nav>
                 <div>
+                    {% if node_description %}
+                    <h3>Description:</h3>
+                    <p>
+                        {{ node_description }}
+                    </p>
+                    {% endif %}
 
                     <h3>This step used:</h3>
                     <ul>

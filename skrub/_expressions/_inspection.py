@@ -215,6 +215,8 @@ def _do_full_report(
                 error_msg=error_msg,
                 node_creation_stack_description=node._skrub_impl.creation_stack_description(),
                 node_description=node._skrub_impl.description,
+                node_name=node._skrub_impl.name,
+                node_type=node._skrub_impl.__class__.__name__,
                 svg=svg,
                 node_status=node_status,
                 estimator_html_repr=estimator_html_repr,
@@ -252,6 +254,11 @@ def _add_style(kwargs, *new_styles):
 
 def _node_kwargs(expr, url=None):
     label = html.escape(simple_repr(expr))
+    if (
+        not isinstance(expr._skrub_impl, Var)
+        and (name := expr._skrub_impl.name) is not None
+    ):
+        label = f"{label}\n{name!r}"
     kwargs = {
         "shape": "box",
         "fontsize": 12,
@@ -271,6 +278,7 @@ def _node_kwargs(expr, url=None):
         kwargs["fillcolor"] = "#fad9c6"
     if url is not None and (computed_url := url(expr)) is not None:
         kwargs["URL"] = computed_url
+        label = label.replace("\n", "<br />")
         label = f'<<FONT COLOR="#1a0dab"><B>{label}</B></FONT>>'
     kwargs["label"] = label
     tooltip = html.escape(expr._skrub_impl.creation_stack_last_line())

@@ -398,11 +398,22 @@ class Expr:
         graph = strip_xml_declaration(graph)
         if self._skrub_impl.preview_if_available() is _Constants.NO_VALUE:
             return f"<div>{graph}</div>"
-        title = html.escape(repr(self._skrub_impl))
-        title = f"<samp>{title}</samp>"
+        if (name := self._skrub_impl.name) is not None:
+            name_line = (
+                f"<strong><samp>Name: {html.escape(repr(name))}</samp></strong><br />\n"
+            )
+        else:
+            name_line = ""
+        title = (
+            f"<strong><samp>{html.escape(repr(self._skrub_impl))}</samp></strong><br"
+            " />\n"
+        )
+        summary = "<samp>Show graph</samp>"
         prefix = (
-            f"<details>\n<summary>{title}</summary>\n{graph}<br /><br />\n</details>"
-            "\n<samp>Result:</samp>"
+            f"{title}{name_line}"
+            f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
+            f"{graph}<br /><br />\n</details>\n"
+            "<strong><samp>Result:</samp></strong>"
         )
         report = self.skb.get_report()
         if hasattr(report, "_repr_html_"):
@@ -690,7 +701,7 @@ class SkrubNamespace:
         self._expr._skrub_impl.name = name
         return self._expr
 
-    def describe(self, description):
+    def set_description(self, description):
         self._expr._skrub_impl.description = description
         return self._expr
 
