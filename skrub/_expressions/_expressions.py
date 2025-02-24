@@ -1111,6 +1111,19 @@ class ConcatHorizontal(ExprImpl):
     _fields = ["first", "others"]
 
     def compute(self, e, mode, environment):
+        if not sbd.is_dataframe(e.first):
+            raise TypeError("`concat_horizontal` can only be used with dataframes.")
+        if not all(sbd.is_dataframe(o) for o in e.others):
+            msg = (
+                "`concat_horizontal` should be passed a list of dataframes: "
+                "`table_0.skb.concat_horizontal([table_1, ...])`."
+            )
+            if sbd.is_dataframe(e.others):
+                msg = (
+                    f"{msg}\nIf you have a single dataframe, wrap it in a list: "
+                    "`concat_horizontal([table_1])` not `concat_horizontal(table_1)`"
+                )
+            raise TypeError(msg)
         result = sbd.concat_horizontal(e.first, *e.others)
         if mode == "preview" or "fit" in mode:
             self.all_outputs_ = sbd.column_names(result)
