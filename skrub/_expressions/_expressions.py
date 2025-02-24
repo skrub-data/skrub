@@ -6,6 +6,7 @@ import inspect
 import itertools
 import operator
 import pathlib
+import pickle
 import reprlib
 import textwrap
 import traceback
@@ -187,6 +188,21 @@ class ExprImpl:
         return f"<{self.__class__.__name__}>"
 
 
+def _check_can_be_pickled(obj):
+    try:
+        dumped = pickle.dumps(obj)
+        pickle.loads(dumped)
+    except Exception as e:
+        msg = "The check to verify that the pipeline can be serialized failed."
+        if "recursion" in str(e).lower():
+            msg = (
+                f"{msg} Is a step in the pipeline holding a reference to "
+                "the full pipeline itself? For example a global variable "
+                "in a `@skrub.deferred` function?"
+            )
+        raise pickle.PicklingError(msg) from e
+
+
 def _check_expr(f):
     """Check an expression and evaluate the preview.
 
@@ -206,6 +222,12 @@ def _check_expr(f):
         conflicts = find_conflicts(expr)
         if conflicts is not None:
             raise ValueError(conflicts["message"])
+        # Note: if checking pickling for every step is expensive we could also
+        # do it in `get_estimator()` only, ie before any cross-val or
+        # grid-search. or we could have some more elaborate check (possibly
+        # with false negatives) where we pickle nodes separately and we only
+        # check new nodes that haven't yet been checked.
+        _check_can_be_pickled(expr)
         try:
             evaluate(expr, mode="preview", environment=None)
         except UninitializedVariable:
@@ -658,6 +680,12 @@ class SkrubNamespace:
         from ._estimator import ExprEstimator
 
         estimator = ExprEstimator(self._get_clone())
+        # We need to check here even if intermediate steps have been checked,
+        # because there might be in the expression some calls to functions that
+        # are pickled by value by cloudpickle and that reference global
+        # variables, and those global variables may have changed since the
+        # expression was created.
+        _check_can_be_pickled(estimator)
         if not fitted:
             return estimator
         return estimator.fit(self.get_data())
