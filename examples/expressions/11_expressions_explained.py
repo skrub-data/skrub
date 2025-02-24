@@ -96,7 +96,7 @@ c
 
 # %%
 # In the display above, you can still see the diagram representing the pipeline
-# by clicking on the dropdown ``▶ <BinOp: add>``.
+# by clicking on the dropdown ``▶ Show graph``.
 #
 # It is important to understand that seeing results for the values we provided
 # does *not* change the fact that we are building a pipeline that we want to
@@ -299,7 +299,7 @@ def with_upper_columns(df):
 with_upper_columns(orders)
 
 # %%
-# If you unfold the dropdown ``▶ <Call 'with_upper_columns'>`` above, you can
+# If you unfold the dropdown ``▶ Show graph`` above, you can
 # see that a call to our function has been added to the pipeline.
 #
 # When the pipeline runs, ``orders`` will be evaluated first and the result (an
