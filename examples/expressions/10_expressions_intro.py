@@ -121,7 +121,7 @@ skrub.TableReport(dataset.products)
 #
 #
 # Again, as this transformation is not in a scikit-learn estimator, we have to
-# keep track of it ourselves so that we can later apply to unseen data, which
+# keep track of it ourselves so that we can later apply it to unseen data, which
 # is error-prone, and we cannot tune any choices (like the choice of the
 # aggregation function).
 #
@@ -132,12 +132,26 @@ skrub.TableReport(dataset.products)
 # A solution with skrub
 # ---------------------
 #
-# Here we just show the solution. Subsequent examples dive into the details.
-# TODO TODO TODO
+# Here we show how our credit fraud dataset can be handled with Skrub. We do
+# not explain all the details, in-depth explanations are left for the next
+# example. Our goal here is to motivate Skrub's way of building pipelines by
+# showing it can easily tackle a more complex dataset with several tables.
 #
+# The main difference with scikit-learn pipelines is that we do not provide an
+# explicit list of transformation steps. Rather, we manipulate skrub objects
+# that represent intermediate results, and the pipeline is built implicitly as
+# we perform operations (such as applying operators or calling functions) on
+# those objects.
 
 # %%
-# Declare inputs to the pipeline
+# Declare inputs to the pipeline. We create skrub "variables", which are given
+# a name and represent the inputs to our pipeline — here, the products,
+# baskets, and fraud flags. They are given a name and an (optional) initial
+# value, which is used to show previews of the pipeline's output, detect errors
+# early, and provide data for cross-validation and hyperparameter search.
+#
+# We then build the pipeline by applying transformations to those inputs.
+
 
 # %%
 products = skrub.var("products", dataset.products)
@@ -145,9 +159,20 @@ baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_x()
 fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
 
 # %%
-# Access to the dataframe's usual API; interactive preview of intermediate
-# results Note below we are using ``products`` and ``baskets`` as if they were
-# a pandas DataFrames
+# Above, `mark_as_x()` and `mark_as_y()` tell skrub that the baskets and flags
+# are respectively our design matrix and targets, ie the tables that should be
+# split into training and testing sets for cross-validation. Here they are
+# direct inputs to the pipeline but they don't have to be — any intermediate
+# result could be marked as X or y.
+#
+# Because our pipeline expects DataFrames for the products, baskets and fraud
+# flags, we manipulate those objects just like we would manipulate DataFrames.
+# All attribute accesses will be transparently forwarded to the actual input
+# DataFrames when we run the pipeline.
+#
+# For example let us filter products to keep only those that match one of the
+# baskets in the ``"baskets"`` table, then add a column containing the total
+# amount for each kind of product in a basket:
 
 # %%
 products = products[products["basket_ID"].isin(baskets["ID"])]
@@ -157,7 +182,27 @@ products = products.assign(
 products
 
 # %%
-# Easily specify a hyperparameter grid
+# Note we are getting previews of the output of intermediate results. For
+# example we can see the added ``"total_price"`` column in the output above.
+# The dropdown at the top allows us to check the structure of the pipeline and
+# all the steps it contains.
+#
+# With skrub we do not need to specify a grid of hyperparameters separately
+# from the pipeline. Instead, we can replace a parameter's value with a skrub
+# "choice" which indicates the range of values we would like to consider during
+# hyperparameter selection.
+#
+# Those choices can be nested arbitrarily. They are not restricted to
+# parameters of a scikit-learn estimator, but they can be anything: choosing
+# between different estimators, arguments to function calls, whole sections of
+# the pipeline etc.
+#
+# In-depth information about choices and hyperparameter/model selection is
+# provided in example (TODO add link).
+#
+# Here we build a skrub ``TableVectorizer`` that contains a couple of choices:
+# the type of encoder for high-cardinality categorical or string columns, and
+# the number of components it uses.
 
 # %%
 n = skrub.choose_int(5, 15, log=True, name="n_components")
@@ -171,7 +216,12 @@ encoder = skrub.choose_from(
 vectorizer = skrub.TableVectorizer(high_cardinality=encoder)
 
 # %%
-# Easily apply estimators to a subset of columns
+# A transformer does not have to apply to the full DataFrame; we can easily
+# restrict it to some columns. Skrub selectors allow specifying which columns
+# in a flexible way, selecting them by name, name pattern, dtype, or other
+# criteria. They can be combined with the same operators as Python sets. Here
+# for example we vectorize all columns except the ``"basket_ID"`` which we will
+# need for joining.
 
 # %%
 from skrub import selectors as s
@@ -179,13 +229,19 @@ from skrub import selectors as s
 vectorized_products = products.skb.apply(vectorizer, cols=s.all() - "basket_ID")
 
 # %%
-# Data-wrangling and multiple-table operations as part of the pipeline
+# Having access to the underlying dataframe's API, we can easily perform the
+# data-wrangling we need, including joins or other operations that involve
+# multiple tables. All those transformations are being implicitly added as
+# steps in our machine-learning pipeline.
 
 # %%
 aggregated_products = vectorized_products.groupby("basket_ID").agg("mean").reset_index()
 baskets = baskets.merge(aggregated_products, left_on="ID", right_on="basket_ID").drop(
     columns=["ID", "basket_ID"]
 )
+
+# %%
+# Finally, we add a supervised estimator and our pipeline is complete.
 
 # %%
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -197,7 +253,8 @@ predictions = baskets.skb.apply(hgb, y=fraud_flags)
 predictions
 
 # %%
-# We can ask for a report of the pipeline and inspect the results at every step::
+# We can ask for a full report of the pipeline and inspect the results at every
+# step::
 #
 #     predictions.skb.full_report()
 #
@@ -206,7 +263,12 @@ predictions
 # `see the output <../../_static/credit_fraud_report/index.html>`_.
 
 # %%
-# Perform hyperparameter search or cross-validation
+# From the choices we inserted at different locations in our pipeline, skrub
+# can build a grid of hyperparameters and run the hyperparameter search for us,
+# backed by scikit-learn's ``GridSearchCV`` or ``RandomizedSearchCV``.
+#
+# The names we provided help provide a summary of the results that is easy to
+# read.
 
 # %%
 search = predictions.skb.get_randomized_search(
@@ -215,4 +277,23 @@ search = predictions.skb.get_randomized_search(
 search.get_cv_results_table()
 
 # %%
+# We can also ask skrub to display a parallel coordinates plot of the results.
+# In this plot, each line corresponds to a combination of hyperparameter
+# (choice) values. It goes through the corresponding test score, and training
+# and scoring computation durations. The other columns show the hyperparameter
+# values. By clicking and dragging the mouse on any column, we can restrict the
+# set of lines we see. This allows quickly inspecting which hyperparameters are
+# most important, which values perform best, and trade-offs between the quality
+# of predictions and computation time.
+#
+# TODO: Gif of how to use the plot.
+
+# %%
 search.plot_parallel_coord()
+
+# Conclusion
+# ----------
+#
+# If after reading this example you are curious to know more and learn how to
+# build your own complex, multi-table pipelines with easy hyperparameter
+# tuning, please see the next examples for an in-depth tutorial.
