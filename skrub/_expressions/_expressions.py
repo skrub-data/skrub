@@ -489,6 +489,13 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
+    non_string = [c for c in sbd.column_names(X) if not isinstance(c, str)]
+    if non_string:
+        _check(
+            "column names are not strings. The following column names "
+            f"are not strings: {non_string}"
+        )
+        return estimator
     columnwise = {"auto": "auto", "columnwise": True, "sub_frame": False}[how]
     return wrap_transformer(
         estimator, cols, allow_reject=allow_reject, columnwise=columnwise
