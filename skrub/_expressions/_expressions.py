@@ -781,6 +781,89 @@ class Var(ExprImpl):
 
 
 def var(name, value=_Constants.NO_VALUE):
+    """Create a skrub variable.
+
+    Variables represent inputs to a machine-learning pipeline. They can be
+    combined with other variables, constants, operators, function calls etc. to
+    build up complex expressions, which implicitly define the pipeline.
+
+    See the example gallery for more information about skrub pipelines.
+
+    Parameters
+    ----------
+    name : str
+        The name for this input. It corresponds to a key in the dictionary that
+        is passed to the pipeline's ``fit()`` method (see Examples below).
+        Names must be unique within a pipeline and must not start with
+        ``"_skrub_"``
+    value : object, optional
+        Optionally, an initial value can be given to the variable. When it is
+        available, it is used to provide a preview of the pipeline's results,
+        to detect errors in the pipeline early, and to provide better help and
+        tab-completion in interactive Python shells.
+
+    Returns
+    -------
+    A skrub variable
+
+    Examples
+    --------
+    Variables without a value:
+
+    >>> import skrub
+    >>> a = skrub.var('a')
+    >>> a
+    <Var 'a'>
+    >>> b = skrub.var('b')
+    >>> c = a + b
+    >>> c
+    <BinOp: add>
+    >>> print(c.skb.describe_steps())
+    VAR 'a'
+    VAR 'b'
+    BINOP: add
+
+    The names of variables correspond to keys in the inputs:
+
+    >>> c.skb.eval({'a': 10, 'b': 6})
+    16
+
+    And also to keys to the inputs to the pipeline:
+    >>> estimator = c.skb.get_estimator()
+    >>> estimator.fit_transform({'a': 5, 'b': 4})
+    9
+
+    When providing a value, we see what the pipeline produces for the values we
+    provided:
+
+    >>> a = skrub.var('a', 2)
+    >>> b = skrub.var('b', 3)
+    >>> b
+    <Var 'b'>
+    Result:
+    ―――――――
+    3
+    >>> c = a + b
+    >>> c
+    <BinOp: add>
+    Result:
+    ―――――――
+    5
+
+    The values are also used as defaults for ``eval()``:
+
+    >>> c.skb.eval()
+    5
+
+    But we can still override them. And inputs must be provided explicitly when
+    using the estimator returned by `.skb.get_estimator()`.
+
+    >>> c.skb.eval({'a': 10, 'b': 6})
+    16
+
+    Much more information about skrub variables is provided in the examples
+    gallery.
+    """
     if name is None:
         raise TypeError(
             "'name' for a variable cannot be None, please provide a string."
@@ -790,6 +873,27 @@ def var(name, value=_Constants.NO_VALUE):
 
 
 def X(value=_Constants.NO_VALUE):
+    """Create a skrub variable and mark it as being ``X``.
+
+    This is just a convenient shortcut for::
+
+        skrub.var("X", value).skb.mark_as_x()
+
+    Marking a variable as ``X`` tells skrub that this is the input that defines
+    cross-validation splits. Please refer to the examples gallery for more
+    information.
+
+    Parameters
+    ----------
+    value : object
+        The value passed to ``skrub.var()``, which is used for previews of the
+        pipeline's outputs, cross-validation etc. as described in the
+        documentation for ``skrub.var()`` and the examples gallery.
+
+    Returns
+    -------
+    A skrub variable
+    """
     return Expr(Var("X", value=value)).skb.mark_as_x()
 
 
