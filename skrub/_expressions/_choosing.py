@@ -857,13 +857,13 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
     # compatible with ``GridSearchCV`` (in addition to ``RandomizedSearchCV``).
 
     def __getitem__(self, item):
-        return self.grid[item]
+        return self._wrap_outcome(self.grid[item])
 
     def __len__(self):
         return len(self.grid)
 
     def __iter__(self):
-        return iter(self.grid)
+        return iter(map(self._wrap_outcome, self.grid))
 
 
 def choose_float(low, high, *, log=False, n_steps=None, name):
