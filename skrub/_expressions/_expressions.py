@@ -17,6 +17,7 @@ from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
 from .. import _selectors as s
+from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._select_cols import DropCols, SelectCols
 from .._wrap_transformer import wrap_transformer
@@ -512,13 +513,6 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    non_string = [c for c in sbd.column_names(X) if not isinstance(c, str)]
-    if non_string:
-        _check(
-            "column names are not strings. The following column names "
-            f"are not strings: {non_string}"
-        )
-        return estimator
     columnwise = {"auto": "auto", "columnwise": True, "sub_frame": False}[how]
     return wrap_transformer(
         estimator, cols, allow_reject=allow_reject, columnwise=columnwise
@@ -864,6 +858,15 @@ class _PassThrough(BaseEstimator):
         return X
 
 
+def _check_column_names(X, how):
+    if how == "full_frame":
+        return X
+    # TODO: maybe also forbid duplicates? use a reduced version of
+    # CheckInputDataFrame? (CheckInputDataFrame does too much eg it transforms
+    # numpy arrays to dataframes)
+    return cast_column_names_to_strings(X)
+
+
 class Apply(ExprImpl):
     _fields = ["estimator", "cols", "X", "y", "how", "allow_reject"]
 
@@ -875,42 +878,44 @@ class Apply(ExprImpl):
     def compute(self, e, mode, environment):
         method_name = "fit_transform" if mode == "preview" else mode
 
+        X = _check_column_names(e.X, how=e.how)
+
         if "fit" in method_name:
             self.estimator_ = _wrap_estimator(
                 estimator=e.estimator,
                 cols=e.cols,
                 how=e.how,
                 allow_reject=e.allow_reject,
-                X=e.X,
+                X=X,
             )
 
         if "transform" in method_name and not hasattr(self.estimator_, "transform"):
             if "fit" in method_name:
-                self.estimator_.fit(e.X, e.y)
+                self.estimator_.fit(X, e.y)
                 if sbd.is_column(e.y):
                     self._all_outputs = [sbd.name(e.y)]
                 elif sbd.is_dataframe(e.y):
                     self._all_outputs = sbd.column_names(e.y)
                 else:
                     self._all_outputs = None
-            pred = self.estimator_.predict(e.X)
-            if not sbd.is_dataframe(e.X):
+            pred = self.estimator_.predict(X)
+            if not sbd.is_dataframe(X):
                 return pred
             if len(pred.shape) == 1:
                 self._all_outputs = ["y"]
-                result = sbd.make_dataframe_like(e.X, {self._all_outputs[0]: pred})
+                result = sbd.make_dataframe_like(X, {self._all_outputs[0]: pred})
             else:
                 self._all_outputs = [f"y{i}" for i in range(pred.shape[1])]
                 result = sbd.make_dataframe_like(
-                    e.X, dict(zip(self._all_outputs, pred.T))
+                    X, dict(zip(self._all_outputs, pred.T))
                 )
-            return sbd.copy_index(e.X, result)
+            return sbd.copy_index(X, result)
 
         if "fit" in method_name or method_name == "score":
             y = (e.y,)
         else:
             y = ()
-        return getattr(self.estimator_, method_name)(e.X, *y)
+        return getattr(self.estimator_, method_name)(X, *y)
 
     def supports_modes(self):
         modes = ["preview", "fit_transform", "transform"]
