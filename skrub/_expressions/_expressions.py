@@ -161,10 +161,7 @@ class ExprImpl:
                 self.name = None
             self.description = None
 
-        __init__.__signature__ = sig
-
         cls.__init__ = __init__
-        cls._init_signature = sig
 
     def creation_stack_description(self):
         if self._creation_stack_lines is None:
