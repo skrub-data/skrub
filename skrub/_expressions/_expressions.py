@@ -11,6 +11,7 @@ import reprlib
 import textwrap
 import traceback
 import types
+import typing
 
 from sklearn.base import BaseEstimator
 
@@ -694,6 +695,15 @@ class SkrubNamespace:
         from sklearn.model_selection import GridSearchCV
 
         from ._estimator import ParamSearch
+        from ._evaluation import choices
+
+        for c in choices(self._expr).values():
+            if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
+                raise ValueError(
+                    "Cannot use grid search with continuous numeric ranges. "
+                    "Please use `get_randomized_search` or provide a number "
+                    f"of steps for this range: {c}"
+                )
 
         search = ParamSearch(self._get_clone(), GridSearchCV(None, None, **kwargs))
         if not fitted:
