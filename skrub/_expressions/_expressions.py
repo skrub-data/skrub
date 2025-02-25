@@ -215,7 +215,7 @@ def _check_expr(f):
     """
 
     @functools.wraps(f)
-    def _check_preview(*args, **kwargs):
+    def _checked_call(*args, **kwargs):
         from ._evaluation import evaluate, find_conflicts
 
         expr = f(*args, **kwargs)
@@ -246,7 +246,7 @@ def _check_expr(f):
 
         return expr
 
-    return _check_preview
+    return _checked_call
 
 
 def _get_preview(obj):
@@ -1050,7 +1050,22 @@ class CallMethod(ExprImpl):
     _fields = ["obj", "method_name", "args", "kwargs"]
 
     def compute(self, e, mode, environment):
-        return getattr(e.obj, e.method_name)(*e.args, **e.kwargs)
+        try:
+            return getattr(e.obj, e.method_name)(*e.args, **e.kwargs)
+        except (TypeError, AssertionError) as err:
+            # Better error message if we used the pandas DataFrame's `apply()`
+            # but we meant `.skb.apply()`
+            if (
+                e.method_name == "apply"
+                and e.args
+                and isinstance(e.args[0], BaseEstimator)
+            ):
+                raise TypeError(
+                    f"Calling `.apply()` with an estimator: `{e.args[0]!r}` "
+                    "failed with the error above. Did you mean `.skb.apply()`?"
+                ) from err
+            else:
+                raise
 
     def get_func_name(self):
         return self.method_name
