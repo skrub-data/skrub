@@ -855,9 +855,10 @@ class _PassThrough(BaseEstimator):
         return X
 
 
-def _check_column_names(X, how):
-    if how == "full_frame":
-        return X
+def _check_column_names(X):
+    # NOTE: could allow int column names when how='full_frame', prob. not worth
+    # the added complexity.
+    #
     # TODO: maybe also forbid duplicates? use a reduced version of
     # CheckInputDataFrame? (CheckInputDataFrame does too much eg it transforms
     # numpy arrays to dataframes)
@@ -875,7 +876,7 @@ class Apply(ExprImpl):
     def compute(self, e, mode, environment):
         method_name = "fit_transform" if mode == "preview" else mode
 
-        X = _check_column_names(e.X, how=e.how)
+        X = _check_column_names(e.X)
 
         if "fit" in method_name:
             self.estimator_ = _wrap_estimator(
