@@ -169,7 +169,7 @@ def fetch_drug_directory(data_home=None):
     return load_simple_dataset("drug_directory", data_home)
 
 
-def fetch_credit_fraud(data_home=None):
+def fetch_credit_fraud(data_home=None, split="train"):
     """Fetch the credit fraud dataset (classification) available at \
         https://github.com/skrub-data/skrub-data-files
 
@@ -187,6 +187,9 @@ def fetch_credit_fraud(data_home=None):
     data_home: str or path, default=None
         The directory where to download and unzip the files.
 
+    split: str, default="train"
+        The split to load. Can be either "train", "test", or "all".
+
     Returns
     -------
     bunch : sklearn.utils.Bunch
@@ -197,7 +200,15 @@ def fetch_credit_fraud(data_home=None):
           baskets
         - metadata : a dictionary containing the name, description, source and target
     """
-    return load_dataset_files("credit_fraud", data_home)
+    dataset = load_dataset_files("credit_fraud", data_home)
+    id_split = 76543 #  obtained by a quantile: dataset.baskets['ID'].quantile(.66)
+    if split == "train":
+        dataset["baskets"] = dataset["baskets"].query("ID <= @id_split")
+        dataset["products"] = dataset["products"].query("basket_ID <= @id_split")
+    elif split == "test":
+        dataset["baskets"] = dataset["baskets"].query("ID > @id_split")
+        dataset["products"] = dataset["products"].query("basket_ID > @id_split")
+    return dataset
 
 
 def fetch_toxicity(data_home=None):
