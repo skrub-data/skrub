@@ -182,12 +182,15 @@ class StringEncoder(SingleColumnTransformer):
             The embedding representation of the input.
         """
 
-        X = sbd.fill_nulls(X, "")
-        X_out = self.vectorizer_.transform(X)
+        X_filled = sbd.fill_nulls(X, "")
+        X_out = self.vectorizer_.transform(X_filled).astype("float32")
+        del X_filled  # optimizes memory: we no longer need X
         if hasattr(self, "tsvd_"):
             result = self.tsvd_.transform(X_out)
         else:
             result = X_out[:, : self.n_components].toarray()
+            result = result.copy()
+        del X_out  # optimize memory: we no longer need X_out
 
         return self._post_process(X, result)
 

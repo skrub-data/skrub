@@ -1,4 +1,5 @@
 import pytest
+from numpy.testing import assert_almost_equal
 from sklearn.base import clone
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import (
@@ -37,6 +38,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
         ]
     )
     check = pipe.fit_transform(sbd.to_numpy(encode_column))
+    check = check.astype("float32")  # StringEncoder is float32
 
     names = [f"col1_{idx}" for idx in range(2)]
 
@@ -197,21 +199,21 @@ def test_missing_values(df_module, vectorizer):
     encoder = StringEncoder(n_components=2, vectorizer=vectorizer)
     out = encoder.fit_transform(col)
     for c in sbd.to_column_list(out):
-        assert c[1] == 0.0
-        assert c[2] == 0.0
+        assert_almost_equal(c[1], 0.0)
+        assert_almost_equal(c[2], 0.0)
     out = encoder.transform(col)
     for c in sbd.to_column_list(out):
-        assert c[1] == 0.0
-        assert c[2] == 0.0
+        assert_almost_equal(c[1], 0.0)
+        assert_almost_equal(c[2], 0.0)
     tv = TableVectorizer(
         low_cardinality=StringEncoder(n_components=2, vectorizer=vectorizer)
     )
     df = df_module.make_dataframe({"col": col})
     out = tv.fit_transform(df)
     for c in sbd.to_column_list(out):
-        assert c[1] == 0.0
-        assert c[2] == 0.0
+        assert_almost_equal(c[1], 0.0)
+        assert_almost_equal(c[2], 0.0)
     out = tv.transform(df)
     for c in sbd.to_column_list(out):
-        assert c[1] == 0.0
-        assert c[2] == 0.0
+        assert_almost_equal(c[1], 0.0)
+        assert_almost_equal(c[2], 0.0)
