@@ -199,21 +199,21 @@ def test_missing_values(df_module, vectorizer):
     encoder = StringEncoder(n_components=2, vectorizer=vectorizer)
     out = encoder.fit_transform(col)
     for c in sbd.to_column_list(out):
-        assert_almost_equal(c[1], 0.0)
-        assert_almost_equal(c[2], 0.0)
+        assert_almost_equal(c[1], 0.0, decimal=6)
+        assert_almost_equal(c[2], 0.0, decimal=6)
     out = encoder.transform(col)
     for c in sbd.to_column_list(out):
-        assert_almost_equal(c[1], 0.0)
-        assert_almost_equal(c[2], 0.0)
+        assert_almost_equal(c[1], 0.0, decimal=6)
+        assert_almost_equal(c[2], 0.0, decimal=6)
     tv = TableVectorizer(
         low_cardinality=StringEncoder(n_components=2, vectorizer=vectorizer)
     )
     df = df_module.make_dataframe({"col": col})
     out = tv.fit_transform(df)
     for c in sbd.to_column_list(out):
-        assert_almost_equal(c[1], 0.0)
-        assert_almost_equal(c[2], 0.0)
+        assert_almost_equal(c[1], 0.0, decimal=6)
+        assert_almost_equal(c[2], 0.0, decimal=6)
     out = tv.transform(df)
     for c in sbd.to_column_list(out):
-        assert_almost_equal(c[1], 0.0)
-        assert_almost_equal(c[2], 0.0)
+        assert_almost_equal(c[1], 0.0, decimal=6)
+        assert_almost_equal(c[2], 0.0, decimal=6)

@@ -137,11 +137,13 @@ class StringEncoder(SingleColumnTransformer):
         X_out = self.vectorizer_.fit_transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
 
-        if (min_shape := min(X_out.shape)) >= self.n_components:
+        if (min_shape := min(X_out.shape)) > self.n_components:
             self.tsvd_ = TruncatedSVD(
                 n_components=self.n_components, algorithm="arpack"
             )
             result = self.tsvd_.fit_transform(X_out)
+        elif X_out.shape[1] == self.n_components:
+            result = X_out.toarray()
         else:
             warnings.warn(
                 f"The matrix shape is {(X_out.shape)}, and its minimum is "
