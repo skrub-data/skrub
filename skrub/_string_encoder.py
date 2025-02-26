@@ -157,7 +157,7 @@ class StringEncoder(SingleColumnTransformer):
             # Therefore, self.n_components_ below stores the resulting
             # number of dimensions of result.
             result = X_out[:, : self.n_components].toarray()
-            result = result.copy()
+            result = result.copy()  # To avoid a reference to X_out
         del X_out  # optimize memory: we no longer need X_out
 
         self._is_fitted = True
