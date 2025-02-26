@@ -769,9 +769,7 @@ class Var(ExprImpl):
             return e.value
         if e.name in environment:
             return environment[e.name]
-        if e.value is _Constants.NO_VALUE:
-            raise UninitializedVariable(f"No value has been provided for {e.name!r}")
-        return e.value
+        raise UninitializedVariable(f"No value has been provided for {e.name!r}")
 
     def preview_if_available(self):
         return self.value
