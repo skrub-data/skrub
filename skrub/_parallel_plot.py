@@ -6,7 +6,9 @@ __all__ = ["get_parallel_coord_data", "plot_parallel_coord", "DEFAULT_COLORSCALE
 DEFAULT_COLORSCALE = "bluered"
 
 
-def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
+def plot_parallel_coord(
+    cv_results, metadata, colorscale=DEFAULT_COLORSCALE, add_jitter=True
+):
     try:
         import plotly.graph_objects as go
     except ImportError:
@@ -18,16 +20,24 @@ def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
                 cv_results,
                 metadata,
                 colorscale=colorscale,
+                add_jitter=add_jitter,
             )
         )
     )
 
 
-def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
+def get_parallel_coord_data(
+    cv_results, metadata, colorscale=DEFAULT_COLORSCALE, add_jitter=True
+):
     prepared_columns = [
         _prepare_column(cv_results[col_name], col_name in metadata["log_scale_columns"])
         for col_name in cv_results.columns
     ]
+    if add_jitter:
+        prepared_columns = [
+            _add_jitter(column) if column["label"] != "score" else column
+            for column in prepared_columns
+        ]
     return dict(
         line=dict(
             color=cv_results["mean_test_score"],
@@ -38,6 +48,14 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
         dimensions=prepared_columns,
         labelangle=45,
     )
+
+
+def _add_jitter(column):
+    vals = column["values"]
+    min_val, max_val = np.min(vals), np.max(vals)
+    eps = (max_val - min_val) / 100
+    column["values"] += np.random.uniform(low=-eps, high=eps, size=vals.shape[0])
+    return column
 
 
 def _prepare_column(col, is_log_scale):
