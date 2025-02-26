@@ -193,6 +193,14 @@ def test_n_components(df_module):
     assert encoder_30.n_components_ == 30
 
 
+def test_n_components_equal_voc_size(df_module):
+    x = df_module.make_column("x", ["aab", "bba"])
+    encoder = StringEncoder(n_components=2, ngram_range=(1, 1))
+    out = encoder.fit_transform(x)
+    assert sbd.column_names(out) == ["x_0", "x_1"]
+    assert not hasattr(encoder, "tsvd_")
+
+
 @pytest.mark.parametrize("vectorizer", ["tfidf", "hashing"])
 def test_missing_values(df_module, vectorizer):
     col = df_module.make_column("col", ["one two", None, "", "two three"])
