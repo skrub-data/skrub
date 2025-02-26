@@ -27,7 +27,7 @@ class StringEncoder(SingleColumnTransformer):
     n_components : int, default=30
         Number of components to be used for the singular value decomposition (SVD).
         Must be a positive integer.
-    vectorizer : str, "tfidf" or "hashing"
+    vectorizer : str, "tfidf" or "hashing", default="tfidf"
         Vectorizer to apply to the strings, either `tfidf` or `hashing` for
         scikit-learn TfidfVectorizer or HashingVectorizer respectively.
 
@@ -133,11 +133,13 @@ class StringEncoder(SingleColumnTransformer):
                 f" 'hashing', got {self.vectorizer!r}"
             )
 
-        X = sbd.fill_nulls(X, "")
-        X_out = self.vectorizer_.fit_transform(X)
+        X_filled = sbd.fill_nulls(X, "")
+        X_out = self.vectorizer_.fit_transform(X_filled).astype('float32')
+        del X_filled # optimizes memory: we no longer need X
 
         if (min_shape := min(X_out.shape)) >= self.n_components:
-            self.tsvd_ = TruncatedSVD(n_components=self.n_components)
+            self.tsvd_ = TruncatedSVD(n_components=self.n_components,
+                                      algorithm='arpack')
             result = self.tsvd_.fit_transform(X_out)
         else:
             warnings.warn(
@@ -152,6 +154,8 @@ class StringEncoder(SingleColumnTransformer):
             # Therefore, self.n_components_ below stores the resulting
             # number of dimensions of result.
             result = X_out[:, : self.n_components].toarray()
+            result = result.copy()
+        del X_out # optimize memory: we no longer need X_out
 
         self._is_fitted = True
         self.n_components_ = result.shape[1]
