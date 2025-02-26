@@ -25,7 +25,7 @@ Changes
   :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
 
 - Optimize the :class:`StringEncoder`: significant memory reduction and 1.5x speed-up.
-  :pr:`1243` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+  :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
 Release 0.5.1
 =============

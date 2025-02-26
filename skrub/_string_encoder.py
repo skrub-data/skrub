@@ -134,12 +134,13 @@ class StringEncoder(SingleColumnTransformer):
             )
 
         X_filled = sbd.fill_nulls(X, "")
-        X_out = self.vectorizer_.fit_transform(X_filled).astype('float32')
-        del X_filled # optimizes memory: we no longer need X
+        X_out = self.vectorizer_.fit_transform(X_filled).astype("float32")
+        del X_filled  # optimizes memory: we no longer need X
 
         if (min_shape := min(X_out.shape)) >= self.n_components:
-            self.tsvd_ = TruncatedSVD(n_components=self.n_components,
-                                      algorithm='arpack')
+            self.tsvd_ = TruncatedSVD(
+                n_components=self.n_components, algorithm="arpack"
+            )
             result = self.tsvd_.fit_transform(X_out)
         else:
             warnings.warn(
@@ -155,7 +156,7 @@ class StringEncoder(SingleColumnTransformer):
             # number of dimensions of result.
             result = X_out[:, : self.n_components].toarray()
             result = result.copy()
-        del X_out # optimize memory: we no longer need X_out
+        del X_out  # optimize memory: we no longer need X_out
 
         self._is_fitted = True
         self.n_components_ = result.shape[1]
