@@ -1221,6 +1221,72 @@ class CallMethod(ExprImpl):
 
 
 def deferred(func):
+    """Wrap function calls in an expression.
+
+    When this decorator is applied, the resulting function returns expressions.
+    The returned expression wraps the call to the original function, and the
+    call is actually executed when the expression is evaluated.
+
+    This allows including a call to any function as a step in a pipeline,
+    rather than executing it immediately.
+
+    See the examples gallery for an in-depth explanation of skrub expressions
+    and ``deferred``.
+
+    Parameters
+    ----------
+    func : function
+        The function to wrap
+
+    Returns
+    -------
+    A new function
+        When called, rather than applying the original function immediately, it
+        returns an expression. Evaluating the expression applies the original
+        function.
+
+    Examples
+    --------
+    >>> def tokenize(text):
+    ...     words = text.split()
+    ...     return [w for w in words if w not in ['the', 'of']]
+    >>> tokenize('the first day of the week')
+    ['first', 'day', 'week']
+
+    >>> import skrub
+    >>> text = skrub.var('text')
+
+    Calling ``tokenize`` on a skrub expression raises an exception:
+    ``tokenize`` tries to iterate immediately over the tokens to remove stop
+    words, but the text will only be known when we run the pipeline.
+
+    >>> tokens = tokenize(text)
+    Traceback (most recent call last):
+        ...
+    TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.
+
+    We can defer the call to ``tokenize`` until we are evaluating the
+    expression:
+
+    >>> tokens = skrub.deferred(tokenize)(text)
+    >>> tokens
+    <Call 'tokenize'>
+    >>> tokens.skb.eval({'text': 'the first month of the year'})
+    ['first', 'month', 'year']
+
+    Like any decorator ``deferred`` can be called explicitly as shown above or
+    used with the ``@`` syntax:
+
+    >>> @skrub.deferred
+    ... def log(x):
+    ...     print('INFO x =', x)
+    ...     return x
+    >>> x = skrub.var('x')
+    >>> e = log(x)
+    >>> e.skb.eval({'x': 3})
+    INFO x = 3
+    3
+    """  # noqa : E501
     from ._evaluation import needs_eval
 
     @_check_call
