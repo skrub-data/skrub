@@ -1272,11 +1272,20 @@ class ConcatHorizontal(ExprImpl):
 
     def compute(self, e, mode, environment):
         if not sbd.is_dataframe(e.first):
-            raise TypeError("`concat_horizontal` can only be used with dataframes.")
-        if not all(sbd.is_dataframe(o) for o in e.others):
+            raise TypeError(
+                "`concat_horizontal` can only be used with dataframes. "
+                "`.skb.concat_horizontal` was accessed on an object of type "
+                f"{e.first.__class__.__name__!r}"
+            )
+        non_df = next(
+            (i for i, o in enumerate(e.others) if not sbd.is_dataframe(o)), None
+        )
+        if non_df is not None:
             msg = (
                 "`concat_horizontal` should be passed a list of dataframes: "
-                "`table_0.skb.concat_horizontal([table_1, ...])`."
+                "`table_0.skb.concat_horizontal([table_1, ...])`. "
+                f"An object of type {e.others[non_df].__class__.__name__!r} "
+                f"was found at index {non_df}."
             )
             if sbd.is_dataframe(e.others):
                 msg = (
