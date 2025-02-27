@@ -759,7 +759,9 @@ def _check_name(name):
     if name is None:
         return
     if not isinstance(name, str):
-        raise TypeError(f"'name' must be a string or None, got: {name!r}")
+        raise TypeError(
+            f"'name' must be a string or None, got object of type: {type(name)}"
+        )
     if name.startswith("_skrub_"):
         raise ValueError(
             f"names starting with '_skrub_' are reserved for skrub use, got: {name!r}."
