@@ -928,6 +928,49 @@ class Value(ExprImpl):
 
 @_check_expr
 def as_expr(value):
+    """Create an expression that evaluates to the given value.
+
+    This wraps any object in an expression. When the expression is evaluated,
+    the result is the provided value. This has a similar role as ``deferred``,
+    but for any object rather than for functions.
+
+    Parameters
+    ----------
+    value : object
+        The result of evaluating the expression
+
+    Returns
+    -------
+    An expression that evaluates to the given value
+
+    Examples
+    --------
+    >>> import skrub
+    >>> data_source = skrub.var('source')
+    >>> data_path = skrub.as_expr(
+    ...     {"local": "data.parquet", "remote": "remote/data.parquet"}
+    ... )[data_source]
+    >>> data_path.skb.eval({'source': 'remote'})
+    'remote/data.parquet'
+
+    Turning the dictionary into an expression defers the lookup of
+    ``data_source`` until it has been evaluated when the pipeline runs.
+
+    The example above is somewhat contrived, but ``as_expr`` is often useful
+    with choices.
+
+    >>> x1 = skrub.var('x1')
+    >>> x2 = skrub.var('x2')
+    >>> features = skrub.choose_from({'x1': x1, 'x2': x2}, name='features')
+    >>> skrub.as_expr(features).skb.apply(skrub.TableVectorizer())
+    <Apply TableVectorizer>
+
+    In fact, this can even be shortened slightly by using the choice's method
+    ``as_expr``:
+
+    >>> features.as_expr().skb.apply(skrub.TableVectorizer())
+    <Apply TableVectorizer>
+    """
     return Expr(Value(value))
 
 
