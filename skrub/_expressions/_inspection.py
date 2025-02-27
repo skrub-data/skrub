@@ -2,7 +2,6 @@ import datetime
 import html
 import io
 import re
-import reprlib
 import shutil
 import traceback
 import webbrowser
@@ -15,7 +14,7 @@ from .. import _dataframe as sbd
 from .. import datasets
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
-from .._utils import random_string
+from .._utils import Repr, random_string
 from ._choosing import Choice
 from ._evaluation import choices, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
@@ -60,7 +59,7 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
         try:
             report = result._repr_html_()
         except Exception:
-            res_repr = reprlib.Repr()
+            res_repr = Repr()
             res_repr.maxstring = 1000
             res_repr.maxother = 10_000
             report = _get_template("simple-repr.html").render(

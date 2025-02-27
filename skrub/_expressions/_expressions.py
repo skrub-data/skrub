@@ -7,7 +7,6 @@ import itertools
 import operator
 import pathlib
 import pickle
-import reprlib
 import textwrap
 import traceback
 import types
@@ -20,6 +19,7 @@ from .. import _selectors as s
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._select_cols import DropCols, SelectCols
+from .._utils import short_repr
 from .._wrap_transformer import wrap_transformer
 from ._choosing import Choice, unwrap_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, _CloudPickle, attribute_error
@@ -414,6 +414,19 @@ class Expr:
             return result
         return f"{result}\nResult:\n―――――――\n{preview!r}"
 
+    def __skrub_short_repr__(self):
+        return repr(self._skrub_impl)
+
+    def __format__(self, format_spec):
+        if format_spec == "":
+            return self.__skrub_short_repr__()
+        if format_spec == "preview":
+            return repr(self)
+        raise ValueError(
+            f"Invalid format specifier {format_spec!r} "
+            f"for object of type {self.__class__.__name__!r}"
+        )
+
     def _repr_html_(self):
         graph = self.skb.draw_graph().decode("utf-8")
         graph = strip_xml_declaration(graph)
@@ -425,10 +438,7 @@ class Expr:
             )
         else:
             name_line = ""
-        title = (
-            f"<strong><samp>{html.escape(repr(self._skrub_impl))}</samp></strong><br"
-            " />\n"
-        )
+        title = f"<strong><samp>{html.escape(short_repr(self))}</samp></strong><br />\n"
         summary = "<samp>Show graph</samp>"
         prefix = (
             f"{title}{name_line}"
@@ -1065,26 +1075,10 @@ class GetAttr(ExprImpl):
         attribute_error(e.parent, e.attr_name, comment)
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} {self.attr_name!r}>"
+        return f"<{self.__class__.__name__} {short_repr(self.attr_name)}>"
 
     def pretty_repr(self):
         return f".{_get_preview(self.attr_name)}"
-
-
-def _get_repr_formatter():
-    r = reprlib.Repr()
-    r.maxlevel = 2
-    r.maxtuple = 2
-    r.maxlist = 2
-    r.maxarray = 3
-    r.maxdict = 2
-    r.maxset = 2
-    r.maxfrozenset = 2
-    r.maxdeque = 2
-    r.maxstring = 30
-    r.maxlong = 10
-    r.maxother = 30
-    return r
 
 
 class GetItem(ExprImpl):
@@ -1094,10 +1088,7 @@ class GetItem(ExprImpl):
         return e.parent[e.key]
 
     def __repr__(self):
-        if isinstance(self.key, Expr):
-            return f"<{self.__class__.__name__} ...>"
-        r = _get_repr_formatter()
-        return f"<{self.__class__.__name__} {r.repr(self.key)}>"
+        return f"<{self.__class__.__name__} {short_repr(self.key)}>"
 
     def pretty_repr(self):
         return f"[{_get_preview(self.key)!r}]"

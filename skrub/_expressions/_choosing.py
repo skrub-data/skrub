@@ -135,8 +135,7 @@ nested, rather than manually extracting them with names such as
 ...     "regressor": choose_from([ridge, svr], name='regressor'),
 ... }
 >>> grid
-{'dim_reduction': choose_from([PCA(n_components=choose_from([10, 20, 30], name='N')), SelectKBest(k=choose_from([10, 20, 30], name='N'),
-            score_func=<function f_regression at 0x...>)], name='dim_reduc'), 'regressor': choose_from([Ridge(alpha=choose_from([0.1, 1.0, 10.0], name='α')), LinearSVR(C=choose_from([0.1, 1.0], name='C'))], name='regressor')}
+{'dim_reduction': choose_from([PCA(...), SelectKBest(...)], name='dim_reduc'), 'regressor': choose_from([Ridge(...), LinearSVR(C=choose_from([0.1, 1.0], name='C'))], name='regressor')}
 
 Now we have a few nested choices that do not have any meaning for scikit-learn.
 In order to obtain a grid that can be used with ``GridSearchCV``, we need to
