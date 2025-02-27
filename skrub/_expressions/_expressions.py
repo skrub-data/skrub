@@ -1286,6 +1286,71 @@ def deferred(func):
     >>> e.skb.eval({'x': 3})
     INFO x = 3
     3
+
+    Advanced examples
+    -----------------
+    As we saw in the last example above, the arguments passed to the function,
+    if they are expressions, are evaluated before calling it. This is also the
+    case for global variables, default arguments and free variables.
+
+    >>> a = skrub.var('a')
+    >>> b = skrub.var('b')
+    >>> c = skrub.var('c')
+
+    >>> @skrub.deferred
+    ... def f(x, y=b):
+    ...     z = c
+    ...     print(f'{x=}, {y=}, {z=}')
+    ...     return x + y + z
+
+    >>> result = f(a)
+    >>> result
+    <Call 'f'>
+    >>> result.skb.eval({'a': 100, 'b': 20, 'c': 3})
+    x=100, y=20, z=3
+    123
+
+    Another example with a closure:
+
+    >>> import numpy as np
+
+    >>> def make_transformer(mode, period):
+    ...
+    ...     @skrub.deferred
+    ...     def transform(x):
+    ...         if mode == "identity":
+    ...             return x[:, None]
+    ...         assert mode == "trigo", mode
+    ...         x = x / period * 2 * np.pi
+    ...         return np.asarray([np.sin(x), np.cos(x)]).T.round(2)
+    ...
+    ...     return transform
+
+
+    >>> hour = skrub.var("hour")
+    >>> hour_encoding = skrub.choose_from(["identity", "trigo"], name="hour_encoding")
+    >>> transformer = make_transformer(hour_encoding, 24)
+    >>> out = transformer(hour)
+
+    The free variable ``mode`` is evaluated before calling the deferred (inner)
+    function so ``transform`` works as expected:
+
+    >>> out.skb.eval({"hour": np.arange(0, 25, 4)})
+    array([[ 0],
+           [ 4],
+           [ 8],
+           [12],
+           [16],
+           [20],
+           [24]])
+    >>> out.skb.eval({"hour": np.arange(0, 25, 4), "hour_encoding": "trigo"})
+    array([[ 0.  ,  1.  ],
+           [ 0.87,  0.5 ],
+           [ 0.87, -0.5 ],
+           [ 0.  , -1.  ],
+           [-0.87, -0.5 ],
+           [-0.87,  0.5 ],
+           [-0.  ,  1.  ]])
     """  # noqa : E501
     from ._evaluation import needs_eval
 
