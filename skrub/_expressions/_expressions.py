@@ -560,6 +560,125 @@ class SkrubNamespace:
         how="auto",
         allow_reject=False,
     ):
+        """
+        Apply a scikit-learn estimator to a dataframe or numpy array.
+
+        Parameters
+        ----------
+        estimator : scikit-learn estimator
+            The transformer or predictor to apply.
+
+        y : dataframe, column or numpy array, optional
+            The prediction targets when ``estimator`` is a supervised estimator.
+
+        cols : string, list of strings or skrub selector, optional
+            The columns to transform, when ``estimator`` is a transformer. Can
+            be a column name, list of column names, or a skrub selector.
+
+        how : "auto", "columnwise", "subframe" or "full_frame", optional
+            The mode in which it is applied. In the vast majority of cases the
+            default "auto" is appropriate. "columnwise" means a separate clone
+            of the transformer is applied to each column. "subframe" means it
+            is applied to a subset of the columns, passed as a single
+            dataframe. "full_frame" means the whole input dataframe is passed
+            directly to the provided ``estimator``.
+
+        allow_reject : bool, optional
+            Whether the transformer can refuse to transform columns for which
+            it does not apply, in which case they are passed through unchanged.
+            This can be useful to avoid specifying exactly which columns should
+            be transformed. For example if we apply ``skrub.ToDatetime()`` to
+            all columns with ``allow_reject=True``, string columns that can be
+            parsed as dates will be converted and all other columns will be
+            passed through. If we use ``allow_reject=False`` (the default), an
+            error would be raised if the dataframe contains columns for which
+            ``ToDatetime`` does not apply (eg a column of numbers).
+
+        Returns
+        -------
+        result
+            The transformed dataframe when ``estimator`` is a transformer, and
+            the fitted ``estimator``'s predictions if it is a supervised
+            predictor.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> x = skrub.X(skrub.toy_orders().X)
+        >>> x
+        <Var 'X'>
+        Result:
+        ―――――――
+           ID product  quantity        date
+        0   1     pen         2  2020-04-03
+        1   2     cup         3  2020-04-04
+        2   3     cup         5  2020-04-04
+        3   4   spoon         1  2020-04-05
+
+        >>> datetime_encoder = skrub.DatetimeEncoder(add_total_seconds=False)
+        >>> x.skb.apply(skrub.TableVectorizer(datetime=datetime_encoder))
+        <Apply TableVectorizer>
+        Result:
+        ―――――――
+            ID  product_cup  product_pen  ...  date_year  date_month  date_day
+        0  1.0          0.0          1.0  ...     2020.0         4.0       3.0
+        1  2.0          1.0          0.0  ...     2020.0         4.0       4.0
+        2  3.0          1.0          0.0  ...     2020.0         4.0       4.0
+        3  4.0          0.0          0.0  ...     2020.0         4.0       5.0
+
+        Transform only the ``'product'`` column:
+
+        >>> x.skb.apply(skrub.StringEncoder(n_components=2), cols='product') # doctest: +SKIP
+        <Apply StringEncoder>
+        Result:
+        ―――――――
+           ID     product_0     product_1  quantity        date
+        0   1 -2.560113e-16  1.000000e+00         2  2020-04-03
+        1   2  1.000000e+00  7.447602e-17         3  2020-04-04
+        2   3  1.000000e+00  7.447602e-17         5  2020-04-04
+        3   4 -3.955170e-16 -8.326673e-17         1  2020-04-05
+
+        More complex selection of the columns to transform, here all numeric
+        columns except the ``'ID'``:
+
+        >>> from sklearn.preprocessing import StandardScaler
+        >>> from skrub import selectors as s
+
+        >>> x.skb.apply(StandardScaler(), cols=s.numeric() - "ID")
+        <Apply StandardScaler>
+        Result:
+        ―――――――
+           ID product        date  quantity
+        0   1     pen  2020-04-03 -0.507093
+        1   2     cup  2020-04-04  0.169031
+        2   3     cup  2020-04-04  1.521278
+        3   4   spoon  2020-04-05 -1.183216
+
+        For supervised estimators, pass the targets as the argument for ``y``:
+
+        >>> from sklearn.dummy import DummyClassifier
+        >>> y = skrub.y(skrub.toy_orders().y)
+        >>> y
+        <Var 'y'>
+        Result:
+        ―――――――
+        0    False
+        1    False
+        2     True
+        3    False
+        Name: delayed, dtype: bool
+
+        >>> x.skb.apply(skrub.TableVectorizer()).skb.apply(DummyClassifier(), y=y)
+        <Apply DummyClassifier>
+        Result:
+        ―――――――
+               y
+        0  False
+        1  False
+        2  False
+        3  False
+        """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
         # and `rename_cols` params
         return self._apply(

@@ -2,12 +2,14 @@
 Functions that generate example data.
 
 """
+
 from __future__ import annotations
 
 import string
 
 import numpy as np
-from sklearn.utils import check_random_state
+import pandas as pd
+from sklearn.utils import Bunch, check_random_state
 
 
 def make_deduplication_data(
@@ -59,3 +61,16 @@ def make_deduplication_data(
         # go back to 1d array of strings
         data.append(np.ascontiguousarray(str_as_list).view(f"U{len_ex}").ravel())
     return np.concatenate(data).tolist()
+
+
+def toy_orders():
+    X = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4],
+            "product": ["pen", "cup", "cup", "spoon"],
+            "quantity": [2, 3, 5, 1],
+            "date": ["2020-04-03", "2020-04-04", "2020-04-04", "2020-04-05"],
+        }
+    )
+    y = pd.Series([False, False, True, False], name="delayed")
+    return Bunch(X=X, y=y)
