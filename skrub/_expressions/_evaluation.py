@@ -725,7 +725,7 @@ class _FindArg(_ExprTraversal):
     def handle_value(self, value):
         if self.predicate(value):
             raise _Found(value)
-        yield from super().handle_value(value)
+        return (yield from super().handle_value(value))
 
 
 def find_arg(expr, predicate, skip_types=(Var, Value)):
