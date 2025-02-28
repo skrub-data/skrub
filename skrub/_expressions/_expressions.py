@@ -691,6 +691,60 @@ class SkrubNamespace:
 
     @_check_expr
     def applied_estimator(self):
+        """Retrieve the estimator applied in the previous step, as an expression.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> orders_df = skrub.toy_orders().X
+        >>> features = skrub.X(orders_df).skb.apply(skrub.TableVectorizer())
+        >>> fitted_vectorizer = features.skb.applied_estimator()
+        >>> fitted_vectorizer
+        <AppliedEstimator>
+        Result:
+        ―――――――
+        OnSubFrame(transformer=TableVectorizer())
+
+        Note that in order to restrict transformers to a subset of columns,
+        they will be wrapped in a meta-estimator ``OnSubFrame`` or
+        ``OnEachColumn`` depending if the transformer is applied to each column
+        separately or not. The actual transformer can be retrieved through the
+        ``transformer_`` attribute of ``OnSubFrame`` or ``transformers_``
+        attribute of ``OnEachColumn`` (a dictionary mapping column names to the
+        corresponding transformer).
+
+        >>> fitted_vectorizer.transformer_
+        <GetAttr 'transformer_'>
+        Result:
+        ―――――――
+        TableVectorizer()
+
+        >>> fitted_vectorizer.transformer_.column_to_kind_
+        <GetAttr 'column_to_kind_'>
+        Result:
+        ―――――――
+        {'ID': 'numeric', 'quantity': 'numeric', 'date': 'datetime', 'product': 'low_cardinality'}
+
+        Here is an example of an estimator applied column-wise:
+
+        >>> orders_df['description'] = [f'describe {p}' for p in orders_df['product']]
+        >>> from skrub import selectors as s
+        >>> out = skrub.X(orders_df).skb.apply(
+        ...     skrub.StringEncoder(n_components=2), cols=s.string() - "date"
+        ... )
+        >>> fitted_vectorizer = out.skb.applied_estimator()
+        >>> fitted_vectorizer
+        <AppliedEstimator>
+        Result:
+        ―――――――
+        OnEachColumn(cols=(string() - cols('date')),
+                     transformer=StringEncoder(n_components=2))
+        >>> fitted_vectorizer.transformers_
+        <GetAttr 'transformers_'>
+        Result:
+        ―――――――
+        {'product': StringEncoder(n_components=2), 'description': StringEncoder(n_components=2)}
+        """  # noqa: E501
         if not isinstance(self._expr._skrub_impl, Apply):
             # TODO: make it a AttributeError when accessing .applied_estimator instead
             raise TypeError(
@@ -701,14 +755,158 @@ class SkrubNamespace:
 
     @_check_expr
     def select(self, cols):
+        """Select a subset of columns.
+
+        ``cols`` can be a column name or a list of column names, but also a
+        skrub selector. Importantly, the exact list of columns that match the
+        selector is stored during ``fit`` and then this same list of columns is
+        selected during ``transform``.
+
+        Parameters
+        ----------
+        cols : string, list of strings, or skrub selector
+            The columns to select
+
+        Returns
+        -------
+        dataframe with only the selected columns
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from skrub import selectors as s
+        >>> X = skrub.X(skrub.toy_orders().X)
+        >>> X
+        <Var 'X'>
+        Result:
+        ―――――――
+           ID product  quantity        date
+        0   1     pen         2  2020-04-03
+        1   2     cup         3  2020-04-04
+        2   3     cup         5  2020-04-04
+        3   4   spoon         1  2020-04-05
+        >>> X.skb.select(['product', 'quantity'])
+        <Apply SelectCols>
+        Result:
+        ―――――――
+          product  quantity
+        0     pen         2
+        1     cup         3
+        2     cup         5
+        3   spoon         1
+        >>> X.skb.select(s.string())
+        <Apply SelectCols>
+        Result:
+        ―――――――
+          product        date
+        0     pen  2020-04-03
+        1     cup  2020-04-04
+        2     cup  2020-04-04
+        3   spoon  2020-04-05
+        """
         return self._apply(SelectCols(cols), how="full_frame")
 
     @_check_expr
     def drop(self, cols):
+        """Drop some columns.
+
+        ``cols`` can be a column name or a list of column names, but also a
+        skrub selector. Importantly, the exact list of columns that match the
+        selector is stored during ``fit`` and then this same list of columns is
+        dropped during ``transform``.
+
+        Parameters
+        ----------
+        cols : string, list of strings, or skrub selector
+            The columns to select
+
+        Returns
+        -------
+        dataframe without the dropped columns
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from skrub import selectors as s
+        >>> X = skrub.X(skrub.toy_orders().X)
+        >>> X
+        <Var 'X'>
+        Result:
+        ―――――――
+           ID product  quantity        date
+        0   1     pen         2  2020-04-03
+        1   2     cup         3  2020-04-04
+        2   3     cup         5  2020-04-04
+        3   4   spoon         1  2020-04-05
+        >>> X.skb.drop(['ID', 'date'])
+        <Apply DropCols>
+        Result:
+        ―――――――
+          product  quantity
+        0     pen         2
+        1     cup         3
+        2     cup         5
+        3   spoon         1
+        >>> X.skb.drop(s.string())
+        <Apply DropCols>
+        Result:
+        ―――――――
+           ID  quantity
+        0   1         2
+        1   2         3
+        2   3         5
+        3   4         1
+        """
         return self._apply(DropCols(cols), how="full_frame")
 
     @_check_expr
     def concat_horizontal(self, others):
+        """Concatenate dataframes horizontally.
+
+        Parameters
+        ----------
+        others : list of dataframes
+            The dataframes to stack horizontally with ``self``
+
+        Returns
+        -------
+        dataframe
+            The combined dataframes.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import skrub
+        >>> a = skrub.var('a', pd.DataFrame({'a1': [0], 'a2': [1]}))
+        >>> b = skrub.var('b', pd.DataFrame({'b1': [2], 'b2': [3]}))
+        >>> c = skrub.var('c', pd.DataFrame({'c1': [4], 'c2': [5]}))
+        >>> a
+        <Var 'a'>
+        Result:
+        ―――――――
+           a1  a2
+        0   0   1
+        >>> a.skb.concat_horizontal([b, c])
+        <ConcatHorizontal: 3 dataframes>
+        Result:
+        ―――――――
+           a1  a2  b1  b2  c1  c2
+        0   0   1   2   3   4   5
+
+        Note that even if we want to concatenate a single dataframe we must
+        still put it in a list:
+
+        >>> a.skb.concat_horizontal([b])
+        <ConcatHorizontal: 2 dataframes>
+        Result:
+        ―――――――
+           a1  a2  b1  b2
+        0   0   1   2   3
+        >>> a.skb.concat_horizontal(b)
+        Traceback (most recent call last):
+            ...
+        If you have a single dataframe, wrap it in a list: `concat_horizontal([table_1])` not `concat_horizontal(table_1)`
+        """  # noqa: E501
         return Expr(ConcatHorizontal(self._expr, others))
 
     def clone(self):
@@ -717,6 +915,45 @@ class SkrubNamespace:
         return clone(self._expr)
 
     def eval(self, environment=None):
+        """Evaluate the expression.
+
+        This returns the result produced by evaluating the expression, ie
+        running the corresponding pipeline. The result is **always** the output
+        of the pipeline's ``fit_transform`` -- the pipeline is refitted to the
+        provided data.
+
+        If no data is provided, the values passed when creating the variables
+        in the expression are used.
+
+        Parameters
+        ----------
+        environment : dict or None, optional
+            If ``None``, the initial values of the variables contained in the
+            expression are used. If a dict, it must map the name of each
+            variable to a corresponding value.
+
+        Returns
+        -------
+        result
+            The result of running the computation, ie of executing the
+            pipeline's ``fit_transform`` on the provided data.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a', 10)
+        >>> b = skrub.var('b', 5)
+        >>> c = a + b
+        >>> c
+        <BinOp: add>
+        Result:
+        ―――――――
+        15
+        >>> c.skb.eval()
+        15
+        >>> c.skb.eval({'a': 1, 'b': 2})
+        3
+        """
         # TODO switch position of environment and mode in _evaluation.evaluate etc.
         from ._evaluation import evaluate
 
@@ -734,6 +971,23 @@ class SkrubNamespace:
         return Expr(FreezeAfterFit(self._expr))
 
     def get_data(self):
+        """Collect the values of the variables contained in the expression.
+
+        Returns
+        -------
+        dict mapping variable names to their values
+            Variables for which no value was given do not appear in the result.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a', 0)
+        >>> b = skrub.var('b', 1)
+        >>> c = skrub.var('c') # note no value
+        >>> e = a + b + c
+        >>> e.skb.get_data()
+        {'a': 0, 'b': 1}
+        """
         from ._evaluation import nodes
 
         data = {}
@@ -1563,15 +1817,16 @@ class ConcatHorizontal(ExprImpl):
                 "`.skb.concat_horizontal` was accessed on an object of type "
                 f"{e.first.__class__.__name__!r}"
             )
-        non_df = next(
-            (i for i, o in enumerate(e.others) if not sbd.is_dataframe(o)), None
+        idx, non_df = next(
+            ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
+            (None, None),
         )
         if non_df is not None:
             msg = (
                 "`concat_horizontal` should be passed a list of dataframes: "
                 "`table_0.skb.concat_horizontal([table_1, ...])`. "
-                f"An object of type {e.others[non_df].__class__.__name__!r} "
-                f"was found at index {non_df}."
+                f"An object of type {non_df.__class__.__name__!r} "
+                f"was found at index {idx}."
             )
             if sbd.is_dataframe(e.others):
                 msg = (
