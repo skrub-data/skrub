@@ -902,10 +902,6 @@ class SkrubNamespace:
         ―――――――
            a1  a2  b1  b2
         0   0   1   2   3
-        >>> a.skb.concat_horizontal(b)
-        Traceback (most recent call last):
-            ...
-        If you have a single dataframe, wrap it in a list: `concat_horizontal([table_1])` not `concat_horizontal(table_1)`
         """  # noqa: E501
         return Expr(ConcatHorizontal(self._expr, others))
 
@@ -1817,23 +1813,23 @@ class ConcatHorizontal(ExprImpl):
                 "`.skb.concat_horizontal` was accessed on an object of type "
                 f"{e.first.__class__.__name__!r}"
             )
+        if sbd.is_dataframe(e.others):
+            raise TypeError(
+                "`concat_horizontal` should be passed a list of dataframes."
+                "If you have a single dataframe, wrap it in a list: "
+                "`concat_horizontal([table_1])` not `concat_horizontal(table_1)`"
+            )
         idx, non_df = next(
             ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
             (None, None),
         )
         if non_df is not None:
-            msg = (
+            raise TypeError(
                 "`concat_horizontal` should be passed a list of dataframes: "
                 "`table_0.skb.concat_horizontal([table_1, ...])`. "
                 f"An object of type {non_df.__class__.__name__!r} "
                 f"was found at index {idx}."
             )
-            if sbd.is_dataframe(e.others):
-                msg = (
-                    f"{msg}\nIf you have a single dataframe, wrap it in a list: "
-                    "`concat_horizontal([table_1])` not `concat_horizontal(table_1)`"
-                )
-            raise TypeError(msg)
         result = sbd.concat_horizontal(e.first, *e.others)
         if mode == "preview" or "fit" in mode:
             self.all_outputs_ = sbd.column_names(result)
