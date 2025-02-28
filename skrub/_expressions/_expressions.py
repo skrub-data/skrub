@@ -405,6 +405,8 @@ class Expr:
 
     @property
     def skb(self):
+        if isinstance(self._skrub_impl, Apply):
+            return ApplyNamespace(self)
         return SkrubNamespace(self)
 
     def __repr__(self):
@@ -688,70 +690,6 @@ class SkrubNamespace:
             how=how,
             allow_reject=allow_reject,
         )
-
-    @_check_expr
-    def applied_estimator(self):
-        """Retrieve the estimator applied in the previous step, as an expression.
-
-        Examples
-        --------
-        >>> import skrub
-        >>> orders_df = skrub.toy_orders().X
-        >>> features = skrub.X(orders_df).skb.apply(skrub.TableVectorizer())
-        >>> fitted_vectorizer = features.skb.applied_estimator()
-        >>> fitted_vectorizer
-        <AppliedEstimator>
-        Result:
-        ―――――――
-        OnSubFrame(transformer=TableVectorizer())
-
-        Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``OnSubFrame`` or
-        ``OnEachColumn`` depending if the transformer is applied to each column
-        separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``OnSubFrame`` or ``transformers_``
-        attribute of ``OnEachColumn`` (a dictionary mapping column names to the
-        corresponding transformer).
-
-        >>> fitted_vectorizer.transformer_
-        <GetAttr 'transformer_'>
-        Result:
-        ―――――――
-        TableVectorizer()
-
-        >>> fitted_vectorizer.transformer_.column_to_kind_
-        <GetAttr 'column_to_kind_'>
-        Result:
-        ―――――――
-        {'ID': 'numeric', 'quantity': 'numeric', 'date': 'datetime', 'product': 'low_cardinality'}
-
-        Here is an example of an estimator applied column-wise:
-
-        >>> orders_df['description'] = [f'describe {p}' for p in orders_df['product']]
-        >>> from skrub import selectors as s
-        >>> out = skrub.X(orders_df).skb.apply(
-        ...     skrub.StringEncoder(n_components=2), cols=s.string() - "date"
-        ... )
-        >>> fitted_vectorizer = out.skb.applied_estimator()
-        >>> fitted_vectorizer
-        <AppliedEstimator>
-        Result:
-        ―――――――
-        OnEachColumn(cols=(string() - cols('date')),
-                     transformer=StringEncoder(n_components=2))
-        >>> fitted_vectorizer.transformers_
-        <GetAttr 'transformers_'>
-        Result:
-        ―――――――
-        {'product': StringEncoder(n_components=2), 'description': StringEncoder(n_components=2)}
-        """  # noqa: E501
-        if not isinstance(self._expr._skrub_impl, Apply):
-            # TODO: make it a AttributeError when accessing .applied_estimator instead
-            raise TypeError(
-                "`applied_estimator` is only defined "
-                "for expressions created with `.skb.apply()`"
-            )
-        return Expr(AppliedEstimator(self._expr))
 
     @_check_expr
     def select(self, cols):
@@ -1122,6 +1060,66 @@ class SkrubNamespace:
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
+
+
+class ApplyNamespace(SkrubNamespace):
+    @_check_expr
+    def applied_estimator(self):
+        """Retrieve the estimator applied in the previous step, as an expression.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> orders_df = skrub.toy_orders().X
+        >>> features = skrub.X(orders_df).skb.apply(skrub.TableVectorizer())
+        >>> fitted_vectorizer = features.skb.applied_estimator()
+        >>> fitted_vectorizer
+        <AppliedEstimator>
+        Result:
+        ―――――――
+        OnSubFrame(transformer=TableVectorizer())
+
+        Note that in order to restrict transformers to a subset of columns,
+        they will be wrapped in a meta-estimator ``OnSubFrame`` or
+        ``OnEachColumn`` depending if the transformer is applied to each column
+        separately or not. The actual transformer can be retrieved through the
+        ``transformer_`` attribute of ``OnSubFrame`` or ``transformers_``
+        attribute of ``OnEachColumn`` (a dictionary mapping column names to the
+        corresponding transformer).
+
+        >>> fitted_vectorizer.transformer_
+        <GetAttr 'transformer_'>
+        Result:
+        ―――――――
+        TableVectorizer()
+
+        >>> fitted_vectorizer.transformer_.column_to_kind_
+        <GetAttr 'column_to_kind_'>
+        Result:
+        ―――――――
+        {'ID': 'numeric', 'quantity': 'numeric', 'date': 'datetime', 'product': 'low_cardinality'}
+
+        Here is an example of an estimator applied column-wise:
+
+        >>> orders_df['description'] = [f'describe {p}' for p in orders_df['product']]
+        >>> from skrub import selectors as s
+        >>> out = skrub.X(orders_df).skb.apply(
+        ...     skrub.StringEncoder(n_components=2), cols=s.string() - "date"
+        ... )
+        >>> fitted_vectorizer = out.skb.applied_estimator()
+        >>> fitted_vectorizer
+        <AppliedEstimator>
+        Result:
+        ―――――――
+        OnEachColumn(cols=(string() - cols('date')),
+                     transformer=StringEncoder(n_components=2))
+        >>> fitted_vectorizer.transformers_
+        <GetAttr 'transformers_'>
+        Result:
+        ―――――――
+        {'product': StringEncoder(n_components=2), 'description': StringEncoder(n_components=2)}
+        """  # noqa: E501
+        return Expr(AppliedEstimator(self._expr))
 
 
 def _check_name(name):
