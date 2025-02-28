@@ -56,6 +56,17 @@ _EXCLUDED_JUPYTER_ATTR = [
     "__custom_documentations__",
 ]
 
+_EXCLUDED_PANDAS_ATTR = [
+    # used internally by pandas to check an argument is actually a dataframe.
+    # by raising an attributeerror when it is accessed we fail early when an
+    # expression is used where a DataFrame is expected eg
+    # pd.DataFrame(...).merge(skrub.X(), ...)
+    #
+    # polars already fails with a good error message in that situation so it
+    # doesn't need special handling for polars dataframes.
+    "_typ",
+]
+
 # TODO: compare with
 # https://github.com/GrahamDumpleton/wrapt/blob/develop/src/wrapt/wrappers.py#L70
 # and see which methods we are missing
@@ -293,6 +304,7 @@ class Expr:
             "get_params",
             *_EXCLUDED_STANDARD_ATTR,
             *_EXCLUDED_JUPYTER_ATTR,
+            *_EXCLUDED_PANDAS_ATTR,
         ]:
             attribute_error(self, name)
         # besides the explicitly excluded attributes, returning a GetAttr for
