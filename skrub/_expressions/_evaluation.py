@@ -15,6 +15,7 @@ from ._expressions import (
     _BUILTIN_SEQ,
     Expr,
     IfElse,
+    Value,
     Var,
     _Constants,
 )
@@ -706,6 +707,30 @@ def find_conflicts(expr):
     """
     try:
         _FindConflicts().run(expr)
+    except _Found as e:
+        return e.value
+    return None
+
+
+class _FindArg(_ExprTraversal):
+    def __init__(self, predicate, skip_types=(Var, Value)):
+        self.predicate = predicate
+        self.skip_types = skip_types
+
+    def handle_expr(self, expr, **kwargs):
+        if isinstance(expr._skrub_impl, self.skip_types):
+            return expr
+        return (yield from super().handle_expr(expr, **kwargs))
+
+    def handle_value(self, value):
+        if self.predicate(value):
+            raise _Found(value)
+        yield from super().handle_value(value)
+
+
+def find_arg(expr, predicate, skip_types=(Var, Value)):
+    try:
+        _FindArg(predicate, skip_types=skip_types).run(expr)
     except _Found as e:
         return e.value
     return None

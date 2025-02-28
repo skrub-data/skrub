@@ -213,6 +213,25 @@ def _check_can_be_pickled(obj):
         raise pickle.PicklingError(msg) from e
 
 
+def _find_dataframe(expr, func_name):
+    # If a dataframe is found in an expression that is likely a mistake.
+    # Eg skrub.X().join(actual_df, ...) instead of skrub.X().join(skrub.var('Z'), ...)
+    from ._evaluation import find_arg
+
+    df = find_arg(expr, lambda o: sbd.is_dataframe(o))
+    if df is not None:
+        return {
+            "message": (
+                f"You passed an actual DataFrame (shown below) to `{func_name}`. "
+                "Did you mean to pass a skrub expression instead? "
+                "Note: if you did intend to pass a DataFrame you can wrap it "
+                "with `skrub.as_expr(df)` to avoid this error. "
+                f"Here is the dataframe:\n{df}"
+            )
+        }
+    return None
+
+
 def _check_expr(f):
     """Check an expression and evaluate the preview.
 
@@ -229,9 +248,17 @@ def _check_expr(f):
 
         expr = f(*args, **kwargs)
 
+        try:
+            func_name = expr._skrub_impl.pretty_repr()
+        except Exception:
+            func_name = f"{f.__name__}()"
+
         conflicts = find_conflicts(expr)
         if conflicts is not None:
             raise ValueError(conflicts["message"])
+        if (found_df := _find_dataframe(expr, func_name)) is not None:
+            raise TypeError(found_df["message"])
+
         # Note: if checking pickling for every step is expensive we could also
         # do it in `get_estimator()` only, ie before any cross-val or
         # grid-search. or we could have some more elaborate check (possibly
@@ -243,10 +270,6 @@ def _check_expr(f):
         except UninitializedVariable:
             pass
         except Exception as e:
-            try:
-                func_name = expr._skrub_impl.pretty_repr()
-            except Exception:
-                func_name = f"{f.__name__}()"
             msg = "\n".join(traceback.format_exception_only(e)).rstrip("\n")
             raise RuntimeError(
                 f"Evaluation of {func_name!r} failed.\n"
