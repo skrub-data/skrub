@@ -64,6 +64,13 @@ def make_deduplication_data(
 
 
 def toy_orders():
+    """Create a toy dataframe and corresponding targets for examples.
+
+    Returns
+    -------
+    bunch
+        A dictionary-like object with the keys X and y.
+    """
     X = pd.DataFrame(
         {
             "ID": [1, 2, 3, 4],
