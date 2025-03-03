@@ -179,7 +179,7 @@ class ScorerWrapper:
         self._scorer = scorer
         self._environment = environment
 
-    def __call__(self, estimator, X, y, *args, **kwargs):
+    def __call__(self, estimator, X, *y, **kwargs):
         all_method_names = FITTED_PREDICTOR_METHODS
         for method_name in all_method_names:
             try:
@@ -193,7 +193,7 @@ class ScorerWrapper:
 
             setattr(estimator, method_name, wrapped)
         try:
-            return self._scorer(estimator, X, y, *args, **kwargs)
+            return self._scorer(estimator, X, *y, **kwargs)
         finally:
             for method_name in all_method_names:
                 # TODO: maybe before patching check if some of the methods are
