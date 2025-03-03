@@ -1322,6 +1322,68 @@ class SkrubNamespace:
         )
 
     def get_estimator(self, fitted=False):
+        """Get a scikit-learn-like estimator for this expression.
+
+        Please see the examples gallery for full information about expressions
+        and the estimators they generate.
+
+        Provides an estimator with a ``fit()`` method so we can fit it to some
+        training data and then apply it to unseen data by calling
+        ``transform()`` or ``predict()``.
+
+        An important difference is that those methods accept a dictionary of
+        inputs rather than ``X`` and ``y`` arguments (see examples below).
+
+        We can pass ``fitted=True`` to get an estimator fitted to the data
+        provided as the values in ``skrub.var("name", value=...)`` and
+        ``skrub.X(value)``.
+
+        Parameters
+        ----------
+        fitted : bool (default=False)
+            If true, the returned estimator is fitted to the data provided when
+            initializing variables in the expression.
+
+        Returns
+        -------
+        estimator
+            An estimator with an interface similar to scikit-learn's, except
+            that its methods accept a dictionary of named inputs rather than
+            ``X`` and ``y`` arguments.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+        >>> orders_df = skrub.toy_orders().orders
+        >>> orders = skrub.var('orders', orders_df)
+        >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_x()
+        >>> y = orders['delayed'].skb.mark_as_y()
+        >>> pred = X.skb.apply(skrub.TableVectorizer()).skb.apply(
+        ...     DummyClassifier(), y=y
+        ... )
+        >>> pred
+        <Apply DummyClassifier>
+        Result:
+        ―――――――
+               y
+        0  False
+        1  False
+        2  False
+        3  False
+        >>> estimator = pred.skb.get_estimator(fitted=True)
+        >>> new_orders_df = skrub.toy_orders(split='test').X
+        >>> new_orders_df
+           ID product  quantity        date
+        0   5     cup         5  2020-04-11
+        1   6    fork         2  2020-04-12
+        >>> estimator.predict({'orders': new_orders_df})
+        array([False, False])
+
+        Note that the ``'orders'`` key in the dictionary passed to ``predict``
+        corresponds to the name ``'orders'`` in ``skrub.var('orders',
+        orders_df)`` above.
+        """
         from ._estimator import ExprEstimator
 
         estimator = ExprEstimator(self.clone())

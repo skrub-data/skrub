@@ -206,7 +206,8 @@ def fetch_credit_fraud(data_home=None, split="train"):
     if split == "train":
         dataset["baskets"] = dataset["baskets"].query("ID <= @id_split")
         dataset["products"] = dataset["products"].query("basket_ID <= @id_split")
-    elif split == "test":
+    else:
+        assert split == "test", split
         dataset["baskets"] = dataset["baskets"].query("ID > @id_split")
         dataset["products"] = dataset["products"].query("basket_ID > @id_split")
     return dataset
