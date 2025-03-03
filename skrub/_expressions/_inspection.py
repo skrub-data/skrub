@@ -165,7 +165,7 @@ def _do_full_report(
     for i, node in g["nodes"].items():
         report, error, error_msg = None, None, None
         if mode in node._skrub_impl.results:
-            report = node.skb.get_report(mode=mode, environment=environment)
+            report = node_report(node, mode=mode, environment=environment)
         elif mode in node._skrub_impl.errors:
             e = node._skrub_impl.errors[mode]
             error = "".join(traceback.format_exception(e))

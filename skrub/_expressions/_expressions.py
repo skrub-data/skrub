@@ -465,6 +465,8 @@ class Expr:
         )
 
     def _repr_html_(self):
+        from ._inspection import node_report
+
         graph = self.skb.draw_graph().decode("utf-8")
         graph = strip_xml_declaration(graph)
         if self._skrub_impl.preview_if_available() is _Constants.NO_VALUE:
@@ -483,7 +485,7 @@ class Expr:
             f"{graph}<br /><br />\n</details>\n"
             "<strong><samp>Result:</samp></strong>"
         )
-        report = self.skb.get_report()
+        report = node_report(self)
         if hasattr(report, "_repr_html_"):
             report = report._repr_html_()
         return f"<div>\n{prefix}\n{report}\n</div>"
@@ -574,6 +576,8 @@ def _expr_values_provided(expr, environment):
 
 
 class SkrubNamespace:
+    """The expressions' ``.skb`` attribute."""
+
     def __init__(self, expr):
         self._expr = expr
 
@@ -888,10 +892,63 @@ class SkrubNamespace:
         """  # noqa: E501
         return Expr(ConcatHorizontal(self._expr, others))
 
-    def clone(self):
+    def clone(self, drop_values=True):
+        """Get an independent clone of the expression.
+
+        Parameters
+        ----------
+        drop_values : bool, default=True
+            Whether to drop the initial values passed to ``skrub.var()``.
+            This is convenient for example to serialize expressions without
+            creating large files.
+
+        Returns
+        -------
+        clone
+            A new expression which does not share its state (such as fitted
+            estimators) or cache with the original, and possibly without the
+            variables' values.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> c = skrub.var('a', 0) + skrub.var('b', 1)
+        >>> c
+        <BinOp: add>
+        Result:
+        ―――――――
+        1
+        >>> c.skb.get_data()
+        {'a': 0, 'b': 1}
+        >>> clone = c.skb.clone()
+        >>> clone
+        <BinOp: add>
+        >>> clone.skb.get_data()
+        {}
+
+        We can ask to keep the variables'values:
+
+        >>> clone = c.skb.clone(drop_values=False)
+        >>> clone.skb.get_data()
+        {'a': 0, 'b': 1}
+
+        Note that in that case the cache used for previews is still cleared. So
+        if we want the preview we need to prime the new expression by
+        evaluating it once (either directly or by adding more steps to it):
+
+        >>> clone
+        <BinOp: add>
+        >>> clone.skb.eval()
+        1
+        >>> clone
+        <BinOp: add>
+        Result:
+        ―――――――
+        1
+        """
         from ._evaluation import clone
 
-        return clone(self._expr)
+        return clone(self._expr, drop_preview_data=drop_values)
 
     def eval(self, environment=None):
         """Evaluate the expression.
@@ -953,6 +1010,51 @@ class SkrubNamespace:
 
     @_check_expr
     def freeze_after_fit(self):
+        """Freeze the result during pipeline fitting.
+
+        Note this is an advanced functionality, and the need for it is usually
+        an indication that we need to define a custom scikit-learn transformer
+        that we can use with ``.skb.apply()``.
+
+        When we use ``freeze_after_fit()``, the result of the expression is
+        computed during ``fit()``, and then reused (not recomputed) during
+        ``transform()`` or ``predict()``.
+
+        Returns
+        -------
+        The expression whose value does not change after ``fit()``
+
+        Examples
+        --------
+        >>> import skrub
+        >>> X_df = skrub.toy_orders().X
+        >>> X_df
+           ID product  quantity        date
+        0   1     pen         2  2020-04-03
+        1   2     cup         3  2020-04-04
+        2   3     cup         5  2020-04-04
+        3   4   spoon         1  2020-04-05
+        >>> n_products = skrub.X()['product'].nunique()
+        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer.fit_transform({'X': X_df})
+        3
+
+        If we take only the first 2 rows ``nunique()`` (a stateless function)
+        returns ``2``:
+
+        >>> transformer.transform({'X': X_df.iloc[:2]})
+        2
+
+        If instead of recomputing it we want the number of products to be
+        remembered during ``fit`` and reused during ``transform``:
+
+        >>> n_products = skrub.X()['product'].nunique().skb.freeze_after_fit()
+        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer.fit_transform({'X': X_df})
+        3
+        >>> transformer.transform({'X': X_df.iloc[:2]})
+        3
+        """
         return Expr(FreezeAfterFit(self._expr))
 
     def get_data(self):
@@ -983,24 +1085,141 @@ class SkrubNamespace:
                 data[impl.name] = impl.value
         return data
 
-    def get_report(self, mode="preview", environment=None, **report_kwargs):
-        from ._inspection import node_report
-
-        return node_report(
-            self._expr, mode=mode, environment=environment, **report_kwargs
-        )
-
     def draw_graph(self):
+        """Get an SVG string representing the computation graph.
+
+        In addition to the usual ``str`` methods, the result has an ``open()``
+        method which displays it in a web browser window.
+
+        Returns
+        -------
+        str
+           SVG drawing of the computation graph.
+        """
         from ._inspection import draw_expr_graph
 
         return draw_expr_graph(self._expr)
 
     def describe_steps(self):
+        """Get a text representation of the computation graph.
+
+        Usually the graphical representation provided by ``draw_graph`` or
+        ``full_report`` is more useful. This is a fallback for inspecting the
+        computation graph when only text output is available.
+
+        Returns
+        -------
+        str
+            A string representing the different computation steps, one on each
+            line.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a')
+        >>> b = skrub.var('b')
+        >>> c = a + b
+        >>> d = c * c
+        >>> print(d.skb.describe_steps())
+        VAR 'a'
+        VAR 'b'
+        BINOP: add
+        ( VAR 'a' )*
+        ( VAR 'b' )*
+        ( BINOP: add )*
+        BINOP: mul
+        * Cached, not recomputed
+
+        The above should be read from top to bottom as instructions for a
+        simple stack machine: load the variable 'a', load the variable 'b',
+        compute the addition leaving the result of (a + b) on the stack, then
+        repeat this operation (but the second time no computation actually runs
+        because the result of evaluating ``c`` has been cached in-memory), and
+        finally evaluate the multiplication.
+        """
         from ._evaluation import describe_steps
 
         return describe_steps(self._expr)
 
     def describe_param_grid(self):
+        """Describe the hyper-parameters extracted from choices in the expression.
+
+        Expressions can contain choices, ranges of possible values to be tuned
+        by hyperparameter search. This function provides a description of the
+        grid (set of combinations) of hyperparameters extracted from the
+        expression.
+
+        Please refer to the examples gallery for a full explanation of choices
+        and hyper-parameter tuning.
+
+        Returns
+        -------
+        str
+            A textual description of the different choices contained in this
+            expression.
+
+        Examples
+        --------
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> from sklearn.decomposition import PCA
+        >>> from sklearn.feature_selection import SelectKBest
+
+        >>> import skrub
+
+        >>> X = skrub.X()
+        >>> y = skrub.y()
+
+        >>> dim_reduction = skrub.choose_from(
+        ...     {
+        ...         "PCA": PCA(
+        ...             n_components=skrub.choose_int(
+        ...                 5, 100, log=True, name="n_components"
+        ...             )
+        ...         ),
+        ...         "SelectKBest": SelectKBest(
+        ...             k=skrub.choose_int(5, 100, log=True, name="k")
+        ...         ),
+        ...     },
+        ...     name="dim_reduction",
+        ... )
+        >>> selected = X.skb.apply(dim_reduction)
+        >>> classifier = skrub.choose_from(
+        ...     {
+        ...         "logreg": LogisticRegression(
+        ...             C=skrub.choose_float(0.001, 100, log=True, name="C")
+        ...         ),
+        ...         "rf": RandomForestClassifier(
+        ...             n_estimators=skrub.choose_int(20, 400, name="N 🌴")
+        ...         ),
+        ...     },
+        ...     name="classifier",
+        ... )
+        >>> pred = selected.skb.apply(classifier, y=y)
+        >>> print(pred.skb.describe_param_grid())
+        - classifier: 'logreg'
+          C: choose_float(0.001, 100, log=True, name='C')
+          dim_reduction: 'PCA'
+          n_components: choose_int(5, 100, log=True, name='n_components')
+        - classifier: 'logreg'
+          C: choose_float(0.001, 100, log=True, name='C')
+          dim_reduction: 'SelectKBest'
+          k: choose_int(5, 100, log=True, name='k')
+        - classifier: 'rf'
+          N 🌴: choose_int(20, 400, name='N 🌴')
+          dim_reduction: 'PCA'
+          n_components: choose_int(5, 100, log=True, name='n_components')
+        - classifier: 'rf'
+          N 🌴: choose_int(20, 400, name='N 🌴')
+          dim_reduction: 'SelectKBest'
+          k: choose_int(5, 100, log=True, name='k')
+
+        Sampling a configuration for this pipeline starts by selecting an entry
+        (marked by ``-``) in the list above, then a value for each of the
+        hyperparameters listed (used) in that entry. For example note that the
+        configurations that use the random forest do not list the
+        hyperparameter ``C`` which is used only by the logistic regression.
+        """
         from ._inspection import describe_param_grid
 
         return describe_param_grid(self._expr)
@@ -1031,15 +1250,10 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def _get_clone(self):
-        from ._evaluation import clone
-
-        return clone(self._expr, drop_preview_data=True)
-
     def get_estimator(self, fitted=False):
         from ._estimator import ExprEstimator
 
-        estimator = ExprEstimator(self._get_clone())
+        estimator = ExprEstimator(self.clone())
         # We need to check here even if intermediate steps have been checked,
         # because there might be in the expression some calls to functions that
         # are pickled by value by cloudpickle and that reference global
@@ -1160,7 +1374,7 @@ class ApplyNamespace(SkrubNamespace):
                     f"of steps for this range: {c}"
                 )
 
-        search = ParamSearch(self._get_clone(), GridSearchCV(None, None, **kwargs))
+        search = ParamSearch(self.clone(), GridSearchCV(None, None, **kwargs))
         if not fitted:
             return search
         return search.fit(self.get_data())
@@ -1170,9 +1384,7 @@ class ApplyNamespace(SkrubNamespace):
 
         from ._estimator import ParamSearch
 
-        search = ParamSearch(
-            self._get_clone(), RandomizedSearchCV(None, None, **kwargs)
-        )
+        search = ParamSearch(self.clone(), RandomizedSearchCV(None, None, **kwargs))
         if not fitted:
             return search
         return search.fit(self.get_data())

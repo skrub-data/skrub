@@ -20,7 +20,6 @@ from ._evaluation import (
     reachable,
     set_params,
 )
-from ._evaluation import clone as clone_expr
 from ._expressions import Apply, Expr
 from ._utils import FITTED_PREDICTOR_METHODS, X_NAME, Y_NAME, attribute_error
 
@@ -61,7 +60,7 @@ class ExprEstimator(BaseEstimator):
         self.expr = expr
 
     def _sklearn_compatible_estimator(self):
-        return CompatibleExprEstimator(clone_expr(self.expr))
+        return CompatibleExprEstimator(self.expr.skb.clone())
 
     def fit(self, environment):
         _check_env(environment, "fit")
@@ -219,9 +218,9 @@ def _with_metadata_routing(func):
 def cross_validate(expr_estimator, environment, scoring=None, **cv_params):
     expr = expr_estimator.expr
     X_y = _find_X_y(expr)
-    X = evaluate(clone_expr(X_y["X"]), "fit_transform", environment)
+    X = evaluate(X_y["X"].skb.clone(), "fit_transform", environment)
     if "y" in X_y:
-        y = evaluate(clone_expr(X_y["y"]), "fit_transform", environment)
+        y = evaluate(X_y["y"].skb.clone(), "fit_transform", environment)
     else:
         y = None
 
@@ -274,17 +273,17 @@ class ParamSearch(BaseEstimator):
         self.search = search
 
     def _sklearn_compatible_estimator(self):
-        return CompatibleParamSearch(clone_expr(self.expr), clone(self.search))
+        return CompatibleParamSearch(self.expr.skb.clone(), clone(self.search))
 
     @_with_metadata_routing
     def fit(self, environment):
         X_y = _find_X_y(self.expr)
-        X = evaluate(clone_expr(X_y["X"]), "fit_transform", environment)
+        X = evaluate(X_y["X"].skb.clone(), "fit_transform", environment)
         if "y" in X_y:
-            y = evaluate(clone_expr(X_y["y"]), "fit_transform", environment)
+            y = evaluate(X_y["y"].skb.clone(), "fit_transform", environment)
         else:
             y = None
-        self.estimator_ = CompatibleExprEstimator(clone_expr(self.expr))
+        self.estimator_ = CompatibleExprEstimator(self.expr.skb.clone())
         self.search_ = clone(self.search)
         self.estimator_.set_fit_request(environment=True)
         self.search_.estimator = self.estimator_
