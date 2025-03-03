@@ -1231,6 +1231,77 @@ class SkrubNamespace:
         output_dir=None,
         overwrite=False,
     ):
+        """Generate a full report of the expression's evaluation.
+
+        This creates a report showing the computation graph, and for each
+        intermediate computation, some information (such as the line of code
+        where it was defined) and a display of the intermediate result (or
+        error).
+
+        The pipeline is run doing a ``fit_transform``. If ``environment`` is
+        provided, it is used as the bindings for the variables in the
+        expression, and otherwise, the variables' ``value``s are used.
+
+        At the moment, this creates a directory on the filesystem containing
+        HTML files. The report can be displayed by visiting the contained
+        ``index.html`` in a webbrowser, or passing ``open=True`` (the default)
+        to this method.
+
+        Parameters
+        ----------
+        environment : dict or None (default=None)
+            Bindings for variables and choices contained in the expression. If
+            not provided, the variables' ``value`` and the choices default
+            value are used.
+
+        open : bool (default=True)
+            Whether to open the report in a webbrowser once computed.
+
+        output_dir : str or Path or None (default=None)
+            Directory where to store the report. If ``None``, a timestamped
+            subdirectory will be created in the skrub data directory.
+
+        overwrite : bool (default=False)
+            What to do if the output directory already exists. If
+            ``overwrite``, replace it, otherwise raise an exception.
+
+        Returns
+        -------
+        dict
+            The results of evaluating the expression. The keys are
+            ``'result'``, ``'error'`` and ``'report_path'``. If the execution
+            raised an exception, it is contained in ``'error'`` and
+            ``'result'`` is ``None``. Otherwise the result produced by the
+            evaluation is in ``'result'`` and ``'error'`` is ``None``. Either
+            way a report is stored at the location indicated by
+            ``'report_path'``.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> c = skrub.var('a', 1) / skrub.var('b', 2)
+        >>> report = c.skb.full_report(open=False)
+        >>> report['result']
+        0.5
+        >>> report['error']
+        >>> report['report_path']
+        PosixPath('.../skrub_data/execution_reports/full_expr_report_.../index.html')
+
+        We pass data:
+
+        >>> report = c.skb.full_report({'a': 33, 'b': 11 }, open=False)
+        >>> report['result']
+        3.0
+
+        And if there was an error:
+
+        >>> report = c.skb.full_report({'a': 1, 'b': 0},open=False)
+        >>> report['result']
+        >>> report['error']
+        ZeroDivisionError('division by zero')
+        >>> report['report_path']
+        PosixPath('.../skrub_data/execution_reports/full_expr_report_.../index.html')
+        """  # noqa : E501
         from ._inspection import full_report
 
         if environment is None:
