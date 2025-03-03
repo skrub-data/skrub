@@ -195,7 +195,7 @@ class _Evaluator(_ExprTraversal):
 
     def handle_expr(self, expr):
         impl = expr._skrub_impl
-        if impl.is_X and X_NAME in self.environment:
+        if impl.is_x and X_NAME in self.environment:
             return self.environment[X_NAME]
         if impl.is_y and Y_NAME in self.environment:
             return self.environment[Y_NAME]
@@ -352,7 +352,7 @@ class _Cloner(_ExprTraversal):
         clone_impl = impl.__class__(**evaluated_attributes)
         if isinstance(clone_impl, Var) and self.drop_preview_data:
             clone_impl.value = _Constants.NO_VALUE
-        clone_impl.is_X = impl.is_X
+        clone_impl.is_x = impl.is_x
         clone_impl.is_y = impl.is_y
         clone_impl._creation_stack_lines = impl._creation_stack_lines
         clone_impl.name = impl.name
@@ -604,7 +604,7 @@ def find_node(obj, predicate=None):
 
 
 def find_X(expr):
-    return find_node(expr, lambda e: isinstance(e, Expr) and e._skrub_impl.is_X)
+    return find_node(expr, lambda e: isinstance(e, Expr) and e._skrub_impl.is_x)
 
 
 def find_y(expr):
@@ -643,7 +643,7 @@ class _FindConflicts(_ExprTraversal):
         self._add(
             e,
             getattr(e._skrub_impl, "name", None),
-            e._skrub_impl.is_X,
+            e._skrub_impl.is_x,
             e._skrub_impl.is_y,
         )
         yield from super().handle_expr(e, *args, **kwargs)
@@ -654,7 +654,7 @@ class _FindConflicts(_ExprTraversal):
 
     def _conflict_error_message(self, conflict):
         first, second = conflict["nodes"]
-        if conflict["reason"] == "is_X":
+        if conflict["reason"] == "is_x":
             return (
                 "Only one node can be marked with `mark_as_x()`. "
                 "2 different objects were marked as X:\n"
@@ -690,9 +690,9 @@ class _FindConflicts(_ExprTraversal):
         conflict["message"] = self._conflict_error_message(conflict)
         raise _Found(conflict)
 
-    def _add(self, obj, name, is_X, is_y):
-        if is_X:
-            self._add_to_dict(self._x, "X", obj, "is_X")
+    def _add(self, obj, name, is_x, is_y):
+        if is_x:
+            self._add_to_dict(self._x, "X", obj, "is_x")
         if is_y:
             self._add_to_dict(self._y, "y", obj, "is_y")
         self._add_to_dict(self._names, name, obj, "name")

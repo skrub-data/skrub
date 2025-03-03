@@ -267,7 +267,7 @@ def _node_kwargs(expr, url=None):
         "fontname": "sans-serif",
         "color": "black",
     }
-    if expr._skrub_impl.is_X:
+    if expr._skrub_impl.is_x:
         label = f"X: {label}"
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#c6d5f0"

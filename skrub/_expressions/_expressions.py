@@ -166,7 +166,7 @@ class ExprImpl:
                 self._creation_stack_lines = _format_expr_creation_stack()
             except Exception:
                 self._creation_stack_lines = None
-            self.is_X = False
+            self.is_x = False
             self.is_y = False
             if "name" not in self.__dict__:
                 self.name = None
@@ -1399,13 +1399,138 @@ class SkrubNamespace:
 
     @_check_expr
     def mark_as_x(self):
-        self._expr._skrub_impl.is_X = True
+        """Mark this expression as being the ``X`` table.
+
+        This is used for cross-validation and hyperparameter selection: the
+        nodes marked with ``.skb.mark_as_x()`` and ``.skb.mark_as_y()`` define
+        the cross-validation splits.
+
+        During cross-validation, all the previous steps are first executed,
+        until X and y have been materialized. Then, those are split into
+        training and testing sets. The following steps in the expression are
+        fitted on the train data, and applied to test data, within each split.
+
+        This means that any step that comes before ``mark_as_x()`` or
+        ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
+        full dataset and cannot benefit from hyperparameter tuning. So we
+        should be careful to start our pipeline by building X and y, and to use
+        ``mark_as_x()`` and ``mark_as_y()`` as soon as possible.
+
+        ``skrub.X(value)`` can be used as a shorthand for
+        ``skrub.var('X', value).skb.mark_as_x()``.
+
+        Please see the examples gallery for more information.
+
+        Note: this marks the expression in-place and also returns it.
+
+        Returns
+        -------
+        The input expression, which has been marked as being ``X``
+
+        Examples
+        --------
+        >>> import skrub
+        >>> orders = skrub.var('orders', skrub.toy_orders().orders)
+        >>> features = orders.drop(columns='delayed', errors='ignore')
+        >>> features.skb.is_x()
+        False
+        >>> X = features.skb.mark_as_x()
+
+        Note they are actually the same object
+
+        >>> X is features
+        True
+        >>> X.skb.is_x()
+        True
+
+        >>> y = orders['delayed'].skb.mark_as_y()
+        >>> y.skb.is_y()
+        True
+
+        Now if we run cross-validation:
+
+        >>> from sklearn.dummy import DummyClassifier
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> pred.skb.cross_validate(cv=2)['test_score']
+        array([1. , 0.5])
+
+        First (outside of the cross-validation loop) ``X`` and ``y`` are
+        computed. Then, they are split into training and test sets. Then the
+        rest of the pipeline (in this case the last step, the
+        ``DummyClassifier``) is evaluated on those splits.
+        """
+        self._expr._skrub_impl.is_x = True
         return self._expr
+
+    def is_x(self):
+        """Whether this expression has been marked with ``.skb.mark_as_x()``."""
+        return self._expr._skrub_impl.is_x
 
     @_check_expr
     def mark_as_y(self):
+        """Mark this expression as being the ``X`` table.
+
+        This is used for cross-validation and hyperparameter selection: the
+        nodes marked with ``.skb.mark_as_x()`` and ``.skb.mark_as_y()`` define
+        the cross-validation splits.
+
+        During cross-validation, all the previous steps are first executed,
+        until X and y have been materialized. Then, those are split into
+        training and testing sets. The following steps in the expression are
+        fitted on the train data, and applied to test data, within each split.
+
+        This means that any step that comes before ``mark_as_x()`` or
+        ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
+        full dataset and cannot benefit from hyperparameter tuning. So we
+        should be careful to start our pipeline by building X and y, and to use
+        ``mark_as_x()`` and ``mark_as_y()`` as soon as possible.
+
+        ``skrub.y(value)`` can be used as a shorthand for
+        ``skrub.var('y', value).skb.mark_as_y()``.
+
+        Please see the examples gallery for more information.
+
+        Note: this marks the expression in-place and also returns it.
+
+        Returns
+        -------
+        The input expression, which has been marked as being ``y``
+
+        Examples
+        --------
+        >>> import skrub
+        >>> orders = skrub.var('orders', skrub.toy_orders().orders)
+        >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_x()
+        >>> delayed = orders['delayed']
+        >>> delayed.skb.is_y()
+        False
+        >>> y = delayed.skb.mark_as_y()
+
+        Note they are actually the same object
+
+        >>> y is delayed
+        True
+        >>> y.skb.is_y()
+        True
+
+        Now if we run cross-validation:
+
+        >>> from sklearn.dummy import DummyClassifier
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> pred.skb.cross_validate(cv=2)['test_score']
+        array([1. , 0.5])
+
+        First (outside of the cross-validation loop) ``X`` and ``y`` are
+        computed. Then, they are split into training and test sets. Then the
+        rest of the pipeline (in this case the last step, the
+        ``DummyClassifier``) is evaluated on those splits.
+        """
         self._expr._skrub_impl.is_y = True
         return self._expr
+
+    def is_y(self):
+        """Whether this expression has been marked with ``.skb.mark_as_y()``."""
+        return self._expr._skrub_impl.is_y
 
     @_check_expr
     def set_name(self, name):
@@ -1413,15 +1538,26 @@ class SkrubNamespace:
         self._expr._skrub_impl.name = name
         return self._expr
 
+    def get_name(self):
+        return self._expr._skrub_impl.name
+
     def set_description(self, description):
         self._expr._skrub_impl.description = description
         return self._expr
+
+    def get_description(self):
+        return self._expr._skrub_impl.description
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
     def __getattr__(self, name):
-        if hasattr(ApplyNamespace, name):
+        if name in [
+            "cross_validate",
+            "get_grid_search",
+            "get_randomized_search",
+            "applied_estimator",
+        ]:
             attribute_error(
                 self,
                 name,
