@@ -1050,45 +1050,6 @@ class SkrubNamespace:
             return estimator
         return estimator.fit(self.get_data())
 
-    def get_grid_search(self, *, fitted=False, **kwargs):
-        from sklearn.model_selection import GridSearchCV
-
-        from ._estimator import ParamSearch
-        from ._evaluation import choices
-
-        for c in choices(self._expr).values():
-            if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
-                raise ValueError(
-                    "Cannot use grid search with continuous numeric ranges. "
-                    "Please use `get_randomized_search` or provide a number "
-                    f"of steps for this range: {c}"
-                )
-
-        search = ParamSearch(self._get_clone(), GridSearchCV(None, None, **kwargs))
-        if not fitted:
-            return search
-        return search.fit(self.get_data())
-
-    def get_randomized_search(self, *, fitted=False, **kwargs):
-        from sklearn.model_selection import RandomizedSearchCV
-
-        from ._estimator import ParamSearch
-
-        search = ParamSearch(
-            self._get_clone(), RandomizedSearchCV(None, None, **kwargs)
-        )
-        if not fitted:
-            return search
-        return search.fit(self.get_data())
-
-    def cross_validate(self, environment=None, **kwargs):
-        from ._estimator import cross_validate
-
-        if environment is None:
-            environment = self.get_data()
-
-        return cross_validate(self.get_estimator(), environment, **kwargs)
-
     @_check_expr
     def mark_as_x(self):
         self._expr._skrub_impl.is_X = True
@@ -1111,6 +1072,19 @@ class SkrubNamespace:
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
+
+    def __getattr__(self, name):
+        if hasattr(ApplyNamespace, name):
+            attribute_error(
+                self,
+                name,
+                (
+                    f"`.skb.{name}` only exists when the last step "
+                    "is a scikit-learn estimator (when the expression was "
+                    "created with `.skb.apply(...)`)"
+                ),
+            )
+        attribute_error(self, name)
 
 
 class ApplyNamespace(SkrubNamespace):
@@ -1172,6 +1146,45 @@ class ApplyNamespace(SkrubNamespace):
         """  # noqa: E501
         return Expr(AppliedEstimator(self._expr))
 
+    def get_grid_search(self, *, fitted=False, **kwargs):
+        from sklearn.model_selection import GridSearchCV
+
+        from ._estimator import ParamSearch
+        from ._evaluation import choices
+
+        for c in choices(self._expr).values():
+            if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
+                raise ValueError(
+                    "Cannot use grid search with continuous numeric ranges. "
+                    "Please use `get_randomized_search` or provide a number "
+                    f"of steps for this range: {c}"
+                )
+
+        search = ParamSearch(self._get_clone(), GridSearchCV(None, None, **kwargs))
+        if not fitted:
+            return search
+        return search.fit(self.get_data())
+
+    def get_randomized_search(self, *, fitted=False, **kwargs):
+        from sklearn.model_selection import RandomizedSearchCV
+
+        from ._estimator import ParamSearch
+
+        search = ParamSearch(
+            self._get_clone(), RandomizedSearchCV(None, None, **kwargs)
+        )
+        if not fitted:
+            return search
+        return search.fit(self.get_data())
+
+    def cross_validate(self, environment=None, **kwargs):
+        from ._estimator import cross_validate
+
+        if environment is None:
+            environment = self.get_data()
+
+        return cross_validate(self.get_estimator(), environment, **kwargs)
+
 
 def _check_name(name):
     if name is None:
@@ -1199,9 +1212,12 @@ class Var(ExprImpl):
             return e.value
         if e.name in environment:
             return environment[e.name]
-        if not environment["_skrub_use_var_values"] or e.value is _Constants.NO_VALUE:
-            raise UninitializedVariable(f"No value has been provided for {e.name!r}")
-        return e.value
+        if (
+            environment.get("_skrub_use_var_values", False)
+            and e.value is not _Constants.NO_VALUE
+        ):
+            return e.value
+        raise UninitializedVariable(f"No value has been provided for {e.name!r}")
 
     def preview_if_available(self):
         return self.value
