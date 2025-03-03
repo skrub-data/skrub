@@ -563,6 +563,16 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     )
 
 
+def _expr_values_provided(expr, environment):
+    from ._evaluation import nodes
+
+    all_nodes = nodes(expr)
+    names = {node._skrub_impl.name for node in all_nodes}
+    names.discard(None)
+    intersection = names.intersection(environment.keys())
+    return bool(intersection)
+
+
 class SkrubNamespace:
     def __init__(self, expr):
         self._expr = expr
@@ -932,6 +942,12 @@ class SkrubNamespace:
         else:
             mode = "fit_transform"
             clear = True
+            environment = {
+                **environment,
+                "_skrub_use_var_values": not _expr_values_provided(
+                    self._expr, environment
+                ),
+            }
 
         return evaluate(self._expr, mode=mode, environment=environment, clear=clear)
 
@@ -1183,7 +1199,7 @@ class Var(ExprImpl):
             return e.value
         if e.name in environment:
             return environment[e.name]
-        if e.value is _Constants.NO_VALUE:
+        if not environment["_skrub_use_var_values"] or e.value is _Constants.NO_VALUE:
             raise UninitializedVariable(f"No value has been provided for {e.name!r}")
         return e.value
 
