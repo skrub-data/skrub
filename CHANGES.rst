@@ -12,11 +12,14 @@ Ongoing development
 New features
 ------------
 
-- The :class:`TableReport` now switch it's visual theme between light and dark according to the user preferences.
+- The :class:`TableReport` now switches its visual theme between light and dark according to the user preferences.
   :pr:`1201` by :user:`rouk1 <rouk1>`.
 
 - Adding a new way to control the location of the data directory, using envar `SKRUB_DATA_DIRECTORY`.
   :pr:`1215` by :user:`Thomas S. <thomass-dev>`
+
+- The :class:`DatetimeEncoder` now supports periodic encoding of the features using circular (sine/cosine) and spline
+  transformers. :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Changes
 -------
