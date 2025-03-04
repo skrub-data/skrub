@@ -1558,6 +1558,52 @@ class SkrubNamespace:
 
     @_check_expr
     def set_name(self, name):
+        """Give a name to this expression.
+
+        Returns a modified copy
+        The name is displayed in the graph and reports so this can be useful to
+        mark relevant parts of the pipeline.
+
+        Moreover, the evaluation of this step can be bypassed and the result
+        provided directly by providing a value for this name to ``eval()``,
+        ``transform()``, ``predict()`` etc. (see examples)
+
+        Parameters
+        ----------
+        name : str
+            The name for this step. Must be unique within a pipeline. Cannot
+            start with ``_skrub_``.
+
+        Returns
+        -------
+        A new expression with the given name.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a', 1)
+        >>> b = skrub.var('b', 2)
+        >>> c = (a + b).skb.set_name('c')
+        >>> c.skb.name
+        'c'
+        >>> d = c * 10
+        >>> d
+        <BinOp: mul>
+        Result:
+        ―――――――
+        30
+        >>> d.skb.eval()
+        30
+        >>> d.skb.eval({'a': 10, 'b': 5})
+        150
+
+        We can override the result of ``c``. When we do, the operands ``a`` and
+        ``b`` are not evaluated: evaluating ``c`` just returns the value we
+        passed.
+
+        >>> d.skb.eval({'c': -1}) # -1 * 10
+        -10
+        """
         new = self._expr._skrub_impl.__copy__()
         new.name = name
         return Expr(new)
@@ -1567,6 +1613,37 @@ class SkrubNamespace:
         return self._expr._skrub_impl.name
 
     def set_description(self, description):
+        """Give a description to this expression.
+
+        Returns a modified copy.
+
+        The description can help document our pipeline. It is displayed in the
+        execution report and can be retrieved from the ``.skb.description``
+        attribute.
+
+        Parameters
+        ----------
+        description : str
+            The description
+
+        Returns
+        -------
+        A new expression with the provided description.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a', 1)
+        >>> b = skrub.var('b', 2)
+        >>> c = (a + b).skb.set_description('the addition of a and b')
+        >>> c
+        <BinOp: add>
+        Result:
+        ―――――――
+        3
+        >>> c.skb.description
+        'the addition of a and b'
+        """
         new = self._expr._skrub_impl.__copy__()
         new.description = description
         return Expr(new)
