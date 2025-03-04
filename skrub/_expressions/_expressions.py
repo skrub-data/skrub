@@ -7,6 +7,7 @@ import itertools
 import operator
 import pathlib
 import pickle
+import re
 import textwrap
 import traceback
 import types
@@ -462,6 +463,11 @@ class Expr:
 
     def __repr__(self):
         result = repr(self._skrub_impl)
+        if (
+            not isinstance(self._skrub_impl, Var)
+            and (name := self.skb.name) is not None
+        ):
+            result = re.sub(r"^(<|)", rf"\1{name} | ", result)
         preview = self._skrub_impl.preview_if_available()
         if preview is _Constants.NO_VALUE:
             return result
@@ -1584,6 +1590,11 @@ class SkrubNamespace:
         >>> a = skrub.var('a', 1)
         >>> b = skrub.var('b', 2)
         >>> c = (a + b).skb.set_name('c')
+        >>> c
+        <c | BinOp: add>
+        Result:
+        ―――――――
+        3
         >>> c.skb.name
         'c'
         >>> d = c * 10
