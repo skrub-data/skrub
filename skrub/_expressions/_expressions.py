@@ -1391,8 +1391,8 @@ class SkrubNamespace:
         >>> new_orders_df = skrub.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
-        0   5     cup         5  2020-04-11
-        1   6    fork         2  2020-04-12
+        4   5     cup         5  2020-04-11
+        5   6    fork         2  2020-04-12
         >>> estimator.predict({'orders': new_orders_df})
         array([False, False])
 
@@ -1657,6 +1657,72 @@ class ApplyNamespace(SkrubNamespace):
         return Expr(AppliedEstimator(self._expr))
 
     def get_grid_search(self, *, fitted=False, **kwargs):
+        """Find the best parameters with grid search.
+
+        This function returns an object similar to scikit-learn's
+        ``GridSearchCV``. The main difference is that methods such as ``fit()``
+        and ``predict()`` accept a dictionary of inputs rather than ``X`` and
+        ``y``. Please refer to the examples gallery for an in-depth
+        explanation.
+
+        If the expression contains some numeric ranges (``choose_float``,
+        ``choose_int``), either discretize them by providing the ``n_steps``
+        argument or use ``get_randomized_search`` instead of
+        ``get_grid_search``.
+
+        Parameters
+        ----------
+        fitted : bool (default=False)
+            If ``True``, the gridsearch is fitted on the data provided when
+            initializing variables in this expression (the data returned by
+            ``.skb.get_data()``).
+
+        kwargs : dict
+            All other named arguments are forwarded to
+            ``sklearn.search.GridSearchCV``.
+
+        Returns
+        -------
+        ParamSearch
+            An object implementing the hyperparameter search. Besides the usual
+            ``fit``, ``predict``, methods of interest are
+            ``get_cv_results_table()`` and ``plot_parallel_coord``.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> X_a, y_a = make_classification(random_state=0)
+        >>> X, y = skrub.X(X_a), skrub.y(y_a)
+        >>> logistic = LogisticRegression(C=skrub.choose_from([0.1, 10.0], name="C"))
+        >>> rf = RandomForestClassifier(
+        ...     n_estimators=skrub.choose_from([3, 30], name="N 🌴"),
+        ...     random_state=0,
+        ... )
+        >>> classifier = skrub.choose_from(
+        ...     {"logistic": logistic, "rf": rf, "dummy": DummyClassifier()}, name="classifier"
+        ... )
+        >>> pred = X.skb.apply(classifier, y=y)
+        >>> print(pred.skb.describe_param_grid())
+        - classifier: 'logistic'
+          C: [0.1, 10.0]
+        - classifier: 'rf'
+          N 🌴: [3, 30]
+        - classifier: 'dummy'
+
+        >>> search = pred.skb.get_grid_search(fitted=True)
+        >>> search.get_cv_results_table()
+           mean_test_score classifier     C   N 🌴
+        0             0.89         rf   NaN  30.0
+        1             0.84   logistic   0.1   NaN
+        2             0.80   logistic  10.0   NaN
+        3             0.65         rf   NaN   3.0
+        4             0.50      dummy   NaN   NaN
+        """  # noqa: E501
         from sklearn.model_selection import GridSearchCV
 
         from ._estimator import ParamSearch
@@ -1676,6 +1742,73 @@ class ApplyNamespace(SkrubNamespace):
         return search.fit(self.get_data())
 
     def get_randomized_search(self, *, fitted=False, **kwargs):
+        """Find the best parameters with grid search.
+
+        This function returns an object similar to scikit-learn's
+        ``RandomizedSearchCV``. The main difference is that methods such as ``fit()``
+        and ``predict()`` accept a dictionary of inputs rather than ``X`` and
+        ``y``. Please refer to the examples gallery for an in-depth
+        explanation.
+
+        Parameters
+        ----------
+        fitted : bool (default=False)
+            If ``True``, the randomized search is fitted on the data provided when
+            initializing variables in this expression (the data returned by
+            ``.skb.get_data()``).
+
+        kwargs : dict
+            All other named arguments are forwarded to
+            ``sklearn.search.RandomizedSearchCV``.
+
+        Returns
+        -------
+        ParamSearch
+            An object implementing the hyperparameter search. Besides the usual
+            ``fit``, ``predict``, methods of interest are
+            ``get_cv_results_table()`` and ``plot_parallel_coord``.
+
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> X_a, y_a = make_classification(random_state=0)
+        >>> X, y = skrub.X(X_a), skrub.y(y_a)
+        >>> logistic = LogisticRegression(C=skrub.choose_float(0.1, 10.0, log=True, name="C"))
+        >>> rf = RandomForestClassifier(
+        ...     n_estimators=skrub.choose_int(3, 30, log=True, name="N 🌴"),
+        ...     random_state=0,
+        ... )
+        >>> classifier = skrub.choose_from(
+        ...     {"logistic": logistic, "rf": rf, "dummy": DummyClassifier()}, name="classifier"
+        ... )
+        >>> pred = X.skb.apply(classifier, y=y)
+        >>> print(pred.skb.describe_param_grid())
+        - classifier: 'logistic'
+          C: choose_float(0.1, 10.0, log=True, name='C')
+        - classifier: 'rf'
+          N 🌴: choose_int(3, 30, log=True, name='N 🌴')
+        - classifier: 'dummy'
+
+        >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
+        >>> search.get_cv_results_table()
+           mean_test_score classifier         C   N 🌴
+        0             0.92         rf       NaN  12.0
+        1             0.90         rf       NaN  18.0
+        2             0.83   logistic  0.393613   NaN
+        3             0.82   logistic  0.610337   NaN
+        4             0.80   logistic  1.605191   NaN
+        5             0.80   logistic  1.533519   NaN
+        6             0.79   logistic  8.459127   NaN
+        7             0.50      dummy       NaN   NaN
+        8             0.50      dummy       NaN   NaN
+        9             0.50      dummy       NaN   NaN
+        """  # noqa: E501
         from sklearn.model_selection import RandomizedSearchCV
 
         from ._estimator import ParamSearch
