@@ -174,6 +174,22 @@ class ExprImpl:
 
         cls.__init__ = __init__
 
+    def __replace__(self, **fields):
+        kwargs = {k: getattr(self, k) for k in self._fields} | fields
+        new = self.__class__(**kwargs)
+        new._creation_stack_lines = self._creation_stack_lines
+        new.is_X = self.is_X
+        new.is_y = self.is_y
+        new.name = self.name
+        new.description = self.description
+        return new
+
+    def __copy__(self):
+        new = self.__replace__()
+        new.results = self.results.copy()
+        new.errors = self.errors.copy()
+        return new
+
     def creation_stack_description(self):
         if self._creation_stack_lines is None:
             return ""
@@ -1401,6 +1417,8 @@ class SkrubNamespace:
     def mark_as_X(self):
         """Mark this expression as being the ``X`` table.
 
+        Returns a copy; the original expression is left unchanged.
+
         This is used for cross-validation and hyperparameter selection: the
         nodes marked with ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` define
         the cross-validation splits.
@@ -1432,19 +1450,19 @@ class SkrubNamespace:
         >>> import skrub
         >>> orders = skrub.var('orders', skrub.toy_orders().orders)
         >>> features = orders.drop(columns='delayed', errors='ignore')
-        >>> features.skb.is_X()
+        >>> features.skb.is_X
         False
         >>> X = features.skb.mark_as_X()
-
-        Note they are actually the same object
-
-        >>> X is features
+        >>> X.skb.is_X
         True
-        >>> X.skb.is_X()
-        True
+
+        Note the original is left unchanged
+
+        >>> features.skb.is_X
+        False
 
         >>> y = orders['delayed'].skb.mark_as_y()
-        >>> y.skb.is_y()
+        >>> y.skb.is_y
         True
 
         Now if we run cross-validation:
@@ -1459,9 +1477,11 @@ class SkrubNamespace:
         rest of the pipeline (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
         """
-        self._expr._skrub_impl.is_X = True
-        return self._expr
+        new = self._expr._skrub_impl.__copy__()
+        new.is_X = True
+        return Expr(new)
 
+    @property
     def is_X(self):
         """Whether this expression has been marked with ``.skb.mark_as_X()``."""
         return self._expr._skrub_impl.is_X
@@ -1469,6 +1489,8 @@ class SkrubNamespace:
     @_check_expr
     def mark_as_y(self):
         """Mark this expression as being the ``X`` table.
+
+        Returns a copy; the original expression is left unchanged.
 
         This is used for cross-validation and hyperparameter selection: the
         nodes marked with ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` define
@@ -1502,16 +1524,16 @@ class SkrubNamespace:
         >>> orders = skrub.var('orders', skrub.toy_orders().orders)
         >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_X()
         >>> delayed = orders['delayed']
-        >>> delayed.skb.is_y()
+        >>> delayed.skb.is_y
         False
         >>> y = delayed.skb.mark_as_y()
-
-        Note they are actually the same object
-
-        >>> y is delayed
+        >>> y.skb.is_y
         True
-        >>> y.skb.is_y()
-        True
+
+        Note the original is left unchanged
+
+        >>> delayed.skb.is_y
+        False
 
         Now if we run cross-validation:
 
@@ -1525,27 +1547,32 @@ class SkrubNamespace:
         rest of the pipeline (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
         """
-        self._expr._skrub_impl.is_y = True
-        return self._expr
+        new = self._expr._skrub_impl.__copy__()
+        new.is_y = True
+        return Expr(new)
 
+    @property
     def is_y(self):
         """Whether this expression has been marked with ``.skb.mark_as_y()``."""
         return self._expr._skrub_impl.is_y
 
     @_check_expr
     def set_name(self, name):
-        _check_name(name)
-        self._expr._skrub_impl.name = name
-        return self._expr
+        new = self._expr._skrub_impl.__copy__()
+        new.name = name
+        return Expr(new)
 
-    def get_name(self):
+    @property
+    def name(self):
         return self._expr._skrub_impl.name
 
     def set_description(self, description):
-        self._expr._skrub_impl.description = description
-        return self._expr
+        new = self._expr._skrub_impl.__copy__()
+        new.description = description
+        return Expr(new)
 
-    def get_description(self):
+    @property
+    def description(self):
         return self._expr._skrub_impl.description
 
     def __repr__(self):

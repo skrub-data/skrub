@@ -349,14 +349,10 @@ class _Cloner(_ExprTraversal):
         if id(expr) in self._replace:
             return self._replace[id(expr)]
         impl = expr._skrub_impl
-        clone_impl = impl.__class__(**evaluated_attributes)
-        if isinstance(clone_impl, Var) and self.drop_preview_data:
-            clone_impl.value = _Constants.NO_VALUE
-        clone_impl.is_X = impl.is_X
-        clone_impl.is_y = impl.is_y
-        clone_impl._creation_stack_lines = impl._creation_stack_lines
-        clone_impl.name = impl.name
-        clone = Expr(clone_impl)
+        new_impl = impl.__replace__(**evaluated_attributes)
+        if isinstance(new_impl, Var) and self.drop_preview_data:
+            new_impl.value = _Constants.NO_VALUE
+        clone = Expr(new_impl)
         self._replace[id(expr)] = clone
         return clone
 
