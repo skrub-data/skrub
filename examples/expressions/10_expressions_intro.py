@@ -155,11 +155,11 @@ skrub.TableReport(dataset.products)
 
 # %%
 products = skrub.var("products", dataset.products)
-baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_x()
+baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_X()
 fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
 
 # %%
-# Above, `mark_as_x()` and `mark_as_y()` tell skrub that the baskets and flags
+# Above, `mark_as_X()` and `mark_as_y()` tell skrub that the baskets and flags
 # are respectively our design matrix and targets, ie the tables that should be
 # split into training and testing sets for cross-validation. Here they are
 # direct inputs to the pipeline but they don't have to be — any intermediate

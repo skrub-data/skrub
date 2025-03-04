@@ -11,7 +11,7 @@ def create_expression_report():
     dataset = skrub.datasets.fetch_credit_fraud()
 
     products = skrub.var("products", dataset.products)
-    baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_x()
+    baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_X()
     fraud_flags = skrub.var(
         "fraud_flags", dataset.baskets["fraud_flag"]
     ).skb.mark_as_y()

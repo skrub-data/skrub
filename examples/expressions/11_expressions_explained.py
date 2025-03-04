@@ -525,13 +525,13 @@ predictions.skb.cross_validate()
 # need to separate the target column from the rest. This is a very simple, toy
 # example but more complex situations are handled in the same way.
 #
-# To indicate which intermediate results to split, we call ``.skb.mark_as_x()``
+# To indicate which intermediate results to split, we call ``.skb.mark_as_X()``
 # and ``.skb.mark_as_y()`` on the appropriate objects:
 
 # %%
 full_data = skrub.var("data", dataset.employee_salaries)
 
-employees = full_data.drop(columns="current_annual_salary").skb.mark_as_x()
+employees = full_data.drop(columns="current_annual_salary").skb.mark_as_X()
 salaries = full_data["current_annual_salary"].skb.mark_as_y()
 
 vectorizer = skrub.TableVectorizer(
@@ -566,9 +566,9 @@ predictions.skb.cross_validate()
 # discussed in more detail in the next example).
 #
 # Therefore, we should build ``X`` and ``y`` at the very start of the pipeline
-# and use ``mark_as_x()`` and ``mark_as_y()`` as soon as possible -- as soon as
+# and use ``mark_as_X()`` and ``mark_as_y()`` as soon as possible -- as soon as
 # we have separate ``X`` and ``y`` tables that are aligned and have one row per
-# sample. In particular we should use ``mark_as_x()`` before doing any feature
+# sample. In particular we should use ``mark_as_X()`` before doing any feature
 # extraction and selection.
 #
 # Coming back to the previous example we could have written:
@@ -582,13 +582,13 @@ salaries = full_data["current_annual_salary"].skb.mark_as_y()
 vectorizer = skrub.TableVectorizer(
     high_cardinality=skrub.MinHashEncoder(n_components=8)
 )
-features = employees.skb.apply(vectorizer).skb.mark_as_x()
+features = employees.skb.apply(vectorizer).skb.mark_as_X()
 predictions = features.skb.apply(HistGradientBoostingRegressor(), y=salaries)
 
 predictions
 
 # %%
-# Note that ``.mark_as_x()`` has been moved down, until after the vectorizer is
+# Note that ``.mark_as_X()`` has been moved down, until after the vectorizer is
 # applied. Our pipeline can still run, but cross-validation now works
 # differently: first the whole table is vectorized, _then_ the resulting
 # feature matrix (and the targets) is split into cross-validation folds. Thus
@@ -597,15 +597,15 @@ predictions
 # the ``GapEncoder`` it would use the testing data to learn its latent
 # representations and might cause some overfitting. If we had some supervised
 # transformations (that use the targets) such as feature selection with
-# ``SelectKBest()`` before ``mark_as_x()``, the overfitting could be severe.
+# ``SelectKBest()`` before ``mark_as_X()``, the overfitting could be severe.
 #
-# Skrub will still let us apply transformers before reaching ``mark_as_x``
+# Skrub will still let us apply transformers before reaching ``mark_as_X``
 # because sometimes we know our transformer is stateless (eg the
 # ``MinHashEncoder``, or the ``TextEncoder`` with ``n_components=None``) and it
 # is faster to apply it once to the whole dataset than to recompute the
 # transformation inside each cross-validation fold. But in general we should be
 # careful and remember to separate features and targets and then use
-# ``mark_as_x()`` as soon as possible.
+# ``mark_as_X()`` as soon as possible.
 
 
 # %%
@@ -626,7 +626,7 @@ dataset = skrub.datasets.fetch_credit_fraud()
 # The ``baskets`` are orders on a e-commerce website
 
 # %%
-baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_x()
+baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_X()
 baskets
 
 # %%

@@ -242,7 +242,7 @@ def cross_validate(expr_estimator, environment, scoring=None, **cv_params):
 def _find_X_y(expr):
     x_node = find_X(expr)
     if x_node is None:
-        raise ValueError('expr should have a node marked with "mark_as_x()"')
+        raise ValueError('expr should have a node marked with "mark_as_X()"')
     result = {"X": x_node}
     if (y_node := find_y(expr)) is not None:
         result["y"] = y_node

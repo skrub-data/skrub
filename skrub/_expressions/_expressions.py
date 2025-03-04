@@ -166,7 +166,7 @@ class ExprImpl:
                 self._creation_stack_lines = _format_expr_creation_stack()
             except Exception:
                 self._creation_stack_lines = None
-            self.is_x = False
+            self.is_X = False
             self.is_y = False
             if "name" not in self.__dict__:
                 self.name = None
@@ -1357,7 +1357,7 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> orders_df = skrub.toy_orders().orders
         >>> orders = skrub.var('orders', orders_df)
-        >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_x()
+        >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_X()
         >>> y = orders['delayed'].skb.mark_as_y()
         >>> pred = X.skb.apply(skrub.TableVectorizer()).skb.apply(
         ...     DummyClassifier(), y=y
@@ -1398,11 +1398,11 @@ class SkrubNamespace:
         return estimator.fit(self.get_data())
 
     @_check_expr
-    def mark_as_x(self):
+    def mark_as_X(self):
         """Mark this expression as being the ``X`` table.
 
         This is used for cross-validation and hyperparameter selection: the
-        nodes marked with ``.skb.mark_as_x()`` and ``.skb.mark_as_y()`` define
+        nodes marked with ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` define
         the cross-validation splits.
 
         During cross-validation, all the previous steps are first executed,
@@ -1410,14 +1410,14 @@ class SkrubNamespace:
         training and testing sets. The following steps in the expression are
         fitted on the train data, and applied to test data, within each split.
 
-        This means that any step that comes before ``mark_as_x()`` or
+        This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
         full dataset and cannot benefit from hyperparameter tuning. So we
         should be careful to start our pipeline by building X and y, and to use
-        ``mark_as_x()`` and ``mark_as_y()`` as soon as possible.
+        ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
 
         ``skrub.X(value)`` can be used as a shorthand for
-        ``skrub.var('X', value).skb.mark_as_x()``.
+        ``skrub.var('X', value).skb.mark_as_X()``.
 
         Please see the examples gallery for more information.
 
@@ -1432,15 +1432,15 @@ class SkrubNamespace:
         >>> import skrub
         >>> orders = skrub.var('orders', skrub.toy_orders().orders)
         >>> features = orders.drop(columns='delayed', errors='ignore')
-        >>> features.skb.is_x()
+        >>> features.skb.is_X()
         False
-        >>> X = features.skb.mark_as_x()
+        >>> X = features.skb.mark_as_X()
 
         Note they are actually the same object
 
         >>> X is features
         True
-        >>> X.skb.is_x()
+        >>> X.skb.is_X()
         True
 
         >>> y = orders['delayed'].skb.mark_as_y()
@@ -1459,19 +1459,19 @@ class SkrubNamespace:
         rest of the pipeline (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
         """
-        self._expr._skrub_impl.is_x = True
+        self._expr._skrub_impl.is_X = True
         return self._expr
 
-    def is_x(self):
-        """Whether this expression has been marked with ``.skb.mark_as_x()``."""
-        return self._expr._skrub_impl.is_x
+    def is_X(self):
+        """Whether this expression has been marked with ``.skb.mark_as_X()``."""
+        return self._expr._skrub_impl.is_X
 
     @_check_expr
     def mark_as_y(self):
         """Mark this expression as being the ``X`` table.
 
         This is used for cross-validation and hyperparameter selection: the
-        nodes marked with ``.skb.mark_as_x()`` and ``.skb.mark_as_y()`` define
+        nodes marked with ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` define
         the cross-validation splits.
 
         During cross-validation, all the previous steps are first executed,
@@ -1479,11 +1479,11 @@ class SkrubNamespace:
         training and testing sets. The following steps in the expression are
         fitted on the train data, and applied to test data, within each split.
 
-        This means that any step that comes before ``mark_as_x()`` or
+        This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
         full dataset and cannot benefit from hyperparameter tuning. So we
         should be careful to start our pipeline by building X and y, and to use
-        ``mark_as_x()`` and ``mark_as_y()`` as soon as possible.
+        ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
 
         ``skrub.y(value)`` can be used as a shorthand for
         ``skrub.var('y', value).skb.mark_as_y()``.
@@ -1500,7 +1500,7 @@ class SkrubNamespace:
         --------
         >>> import skrub
         >>> orders = skrub.var('orders', skrub.toy_orders().orders)
-        >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_x()
+        >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_X()
         >>> delayed = orders['delayed']
         >>> delayed.skb.is_y()
         False
@@ -1804,7 +1804,7 @@ def X(value=_Constants.NO_VALUE):
 
     This is just a convenient shortcut for::
 
-        skrub.var("X", value).skb.mark_as_x()
+        skrub.var("X", value).skb.mark_as_X()
 
     Marking a variable as ``X`` tells skrub that this is the input that defines
     cross-validation splits. Please refer to the examples gallery for more
@@ -1821,7 +1821,7 @@ def X(value=_Constants.NO_VALUE):
     -------
     A skrub variable
     """
-    return Expr(Var("X", value=value)).skb.mark_as_x()
+    return Expr(Var("X", value=value)).skb.mark_as_X()
 
 
 def y(value=_Constants.NO_VALUE):
