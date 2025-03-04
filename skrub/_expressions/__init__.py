@@ -5,7 +5,7 @@ from ._choosing import (
     choose_int,
     optional,
 )
-from ._expressions import X, as_expr, deferred, deferred_optional, if_else, var, y
+from ._expressions import X, as_expr, deferred, deferred_optional, var, y
 
 __all__ = [
     "var",
@@ -14,7 +14,6 @@ __all__ = [
     "as_expr",
     "deferred",
     "deferred_optional",
-    "if_else",
     #
     "choose_bool",
     "choose_float",

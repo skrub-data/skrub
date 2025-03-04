@@ -25,7 +25,7 @@ from .._wrap_transformer import wrap_transformer
 from ._choosing import Choice, unwrap_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, _CloudPickle, attribute_error
 
-__all__ = ["var", "X", "y", "as_expr", "deferred", "deferred_optional", "if_else"]
+__all__ = ["var", "X", "y", "as_expr", "deferred", "deferred_optional"]
 
 # Explicitly excluded from getattr because they break either pickling or the
 # repl autocompletion
@@ -761,6 +761,61 @@ class SkrubNamespace:
             how=how,
             allow_reject=allow_reject,
         )
+
+    @_check_expr
+    def if_else(self, value_if_true, value_if_false):
+        """Create a conditional expression.
+
+        If ``self`` evaluates to ``True``, the result will be
+        ``value_if_true``, otherwise ``value_if_false``.
+
+        The branch which is not selected is not evaluated.
+
+        Parameters
+        ----------
+        value_if_true
+            The value to return if ``self`` is true.
+
+        value_if_false
+            The value to return if ``self`` is false.
+
+        Returns
+        -------
+        Conditional expression
+
+        Examples
+        --------
+        >>> import skrub
+        >>> import numpy as np
+        >>> a = skrub.var('a')
+        >>> shuffle_a = skrub.var('shuffle_a')
+
+        >>> @skrub.deferred
+        ... def shuffled(values):
+        ...     print('shuffling')
+        ...     return np.random.default_rng(0).permutation(values)
+
+        >>> @skrub.deferred
+        ... def copy(values):
+        ...     print('copying')
+        ...     return values.copy()
+
+
+        >>> b = shuffle_a.skb.if_else(shuffled(a), copy(a))
+        >>> b
+        <IfElse <Var 'shuffle_a'> ? <Call 'shuffled'> : <Call 'copy'>>
+
+        Note that only one of the 2 branches is evaluated:
+
+        >>> b.skb.eval({'a': np.arange(3), 'shuffle_a': True})
+        shuffling
+        array([2, 0, 1])
+        >>> b.skb.eval({'a': np.arange(3), 'shuffle_a': False})
+        copying
+        array([0, 1, 2])
+
+        """
+        return Expr(IfElse(self._expr, value_if_true, value_if_false))
 
     @_check_expr
     def select(self, cols):
@@ -1615,6 +1670,8 @@ class SkrubNamespace:
         >>> d.skb.eval({'c': -1}) # -1 * 10
         -10
         """
+        if name is None and isinstance(self._expr._skrub_impl, Var):
+            raise TypeError("The name of a skrub variable cannot be None.")
         new = self._expr._skrub_impl.__copy__()
         new.name = name
         return Expr(new)
@@ -2054,8 +2111,53 @@ def X(value=_Constants.NO_VALUE):
 
         skrub.var("X", value).skb.mark_as_X()
 
-    Marking a variable as ``X`` tells skrub that this is the input that defines
-    cross-validation splits. Please refer to the examples gallery for more
+    Marking a variable as ``X`` tells skrub that this is the design matrix that
+    must be split into training and testing sets for cross-validation. Please
+    refer to the examples gallery for more information.
+
+    Parameters
+    ----------
+    value : object
+        The value passed to ``skrub.var()``, which is used for previews of the
+        pipeline's outputs, cross-validation etc. as described in the
+        documentation for ``skrub.var()`` and the examples gallery.
+
+    Returns
+    -------
+    A skrub variable
+
+    Examples
+    --------
+    >>> import skrub
+    >>> df = skrub.toy_orders().orders_
+    >>> X = skrub.X(df)
+    >>> X
+    <Var 'X'>
+    Result:
+    ―――――――
+       ID product  quantity        date
+    0   1     pen         2  2020-04-03
+    1   2     cup         3  2020-04-04
+    2   3     cup         5  2020-04-04
+    3   4   spoon         1  2020-04-05
+    >>> X.skb.name
+    'X'
+    >>> X.skb.is_X
+    True
+    """
+    return Expr(Var("X", value=value)).skb.mark_as_X()
+
+
+def y(value=_Constants.NO_VALUE):
+    """Create a skrub variable and mark it as being ``y``.
+
+    This is just a convenient shortcut for::
+
+        skrub.var("y", value).skb.mark_as_y()
+
+    Marking a variable as ``y`` tells skrub that this is the column or table of
+    targets that must be split into training and testing sets for
+    cross-validation. Please refer to the examples gallery for more
     information.
 
     Parameters
@@ -2068,11 +2170,26 @@ def X(value=_Constants.NO_VALUE):
     Returns
     -------
     A skrub variable
+
+    Examples
+    --------
+    >>> import skrub
+    >>> col = skrub.toy_orders().delayed
+    >>> y = skrub.y(col)
+    >>> y
+    <Var 'y'>
+    Result:
+    ―――――――
+    0    False
+    1    False
+    2     True
+    3    False
+    Name: delayed, dtype: bool
+    >>> y.skb.name
+    'y'
+    >>> y.skb.is_y
+    True
     """
-    return Expr(Var("X", value=value)).skb.mark_as_X()
-
-
-def y(value=_Constants.NO_VALUE):
     return Expr(Var("y", value=value)).skb.mark_as_y()
 
 
@@ -2141,15 +2258,10 @@ class IfElse(ExprImpl):
     _fields = ["condition", "value_if_true", "value_if_false"]
 
     def __repr__(self):
-        cond = self.condition.__class__.__name__
-        if_true = self.value_if_true.__class__.__name__
-        if_false = self.value_if_false.__class__.__name__
+        cond, if_true, if_false = map(
+            short_repr, (self.condition, self.value_if_true, self.value_if_false)
+        )
         return f"<{self.__class__.__name__} {cond} ? {if_true} : {if_false}>"
-
-
-@_check_expr
-def if_else(condition, value_if_true, value_if_false):
-    return Expr(IfElse(condition, value_if_true, value_if_false))
 
 
 class FreezeAfterFit(ExprImpl):

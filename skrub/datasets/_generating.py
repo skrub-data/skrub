@@ -98,4 +98,4 @@ def toy_orders(split="train"):
         X, y = X.iloc[4:], y.iloc[4:]
     else:
         assert split == "all", split
-    return Bunch(X=X, y=y, orders=X.assign(delayed=y))
+    return Bunch(X=X, y=y, orders=X.assign(delayed=y), orders_=X, delayed=y)
