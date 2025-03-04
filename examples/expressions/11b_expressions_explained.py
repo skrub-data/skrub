@@ -57,7 +57,7 @@ loans = skrub.var("loans")
 loans
 
 # %%
-# Let's a value to make this example more interactive.
+# Let's set a value to make this example more interactive.
 import pandas as pd
 
 loans_df = pd.DataFrame(
