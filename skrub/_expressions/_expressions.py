@@ -249,6 +249,23 @@ def _find_dataframe(expr, func_name):
     return None
 
 
+def _bad_match_key(expr):
+    from ._evaluation import needs_eval
+
+    impl = expr._skrub_impl
+    if not isinstance(impl, Match):
+        return None
+    contains_expr, found = needs_eval(list(impl.targets.keys()), return_node=True)
+    if not contains_expr:
+        return None
+    return {
+        "message": (
+            "`.skb.match()` keys must be actual values, not expressions nor choices. "
+            f"Found: {short_repr(found)}"
+        )
+    }
+
+
 def _check_expr(f):
     """Check an expression and evaluate the preview.
 
@@ -275,6 +292,9 @@ def _check_expr(f):
             raise ValueError(conflicts["message"])
         if (found_df := _find_dataframe(expr, func_name)) is not None:
             raise TypeError(found_df["message"])
+
+        if (bad_key := _bad_match_key(expr)) is not None:
+            raise TypeError(bad_key["message"])
 
         # Note: if checking pickling for every step is expensive we could also
         # do it in `get_estimator()` only, ie before any cross-val or
@@ -769,7 +789,9 @@ class SkrubNamespace:
         If ``self`` evaluates to ``True``, the result will be
         ``value_if_true``, otherwise ``value_if_false``.
 
-        The branch which is not selected is not evaluated.
+        The branch which is not selected is not evaluated, which is the main
+        advantage compared to wrapping the conditional statement in a
+        `@skrub.deferred` function.
 
         Parameters
         ----------
@@ -813,9 +835,67 @@ class SkrubNamespace:
         >>> b.skb.eval({'a': np.arange(3), 'shuffle_a': False})
         copying
         array([0, 1, 2])
-
         """
         return Expr(IfElse(self._expr, value_if_true, value_if_false))
+
+    @_check_expr
+    def match(self, targets, default=_Constants.NO_VALUE):
+        """Select based on the value of an expression.
+
+        First, ``self`` is evaluated. Then, the result is compared to the keys
+        in the mapping ``targets``. If a key matches, the corresponding value
+        is evaluated and the result is returned. If there is no match and
+        ``default`` has been provided, ``default`` is evaluated and returned.
+        If there is no match and no default a ``KeyError`` is raised.
+
+        Therefore, only one of the branches or the default is evaluated which
+        is the main advantage compared to placing the selection inside a
+        ``@skrub.deferred`` function.
+
+        Parameters
+        ----------
+        targets : dict
+            A dictionary providing which result to select. The keys must be
+            actual values, they **cannot** be expressions. The values can be
+            expressions or any object.
+
+        default : object, optional
+            If provided, the match falls back to the default when none of the
+            targets have matched.
+
+        Returns
+        -------
+        The value corresponding to the matching key or the default
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var("a")
+        >>> mode = skrub.var("mode")
+
+        >>> @skrub.deferred
+        ... def mul(value, factor):
+        ...     result = value * factor
+        ...     print(f"{value} * {factor} = {result}")
+        ...     return result
+
+        >>> b = mode.skb.match(
+        ...     {"one": mul(a, 1.0), "two": mul(a, 2.0), "three": mul(a, 3.0)},
+        ...     default=mul(a, -1.0),
+        ... )
+        >>> b.skb.eval({"a": 10.0, "mode": "two"})
+        10.0 * 2.0 = 20.0
+        20.0
+        >>> b.skb.eval({"a": 10.0, "mode": "three"})
+        10.0 * 3.0 = 30.0
+        30.0
+        >>> b.skb.eval({"a": 10.0, "mode": "twenty"})
+        10.0 * -1.0 = -10.0
+        -10.0
+
+        Note that only one of the multiplications gets evaluated.
+        """
+        return Expr(Match(self._expr, targets, default))
 
     @_check_expr
     def select(self, cols):
@@ -1509,7 +1589,7 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-        >>> orders = skrub.var('orders', skrub.toy_orders().orders)
+        >>> orders = skrub.var('orders', skrub.toy_orders(split='all').orders)
         >>> features = orders.drop(columns='delayed', errors='ignore')
         >>> features.skb.is_X
         False
@@ -1531,7 +1611,7 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([1. , 0.5])
+        array([0.66666667, 0.66666667])
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
@@ -1582,7 +1662,7 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-        >>> orders = skrub.var('orders', skrub.toy_orders().orders)
+        >>> orders = skrub.var('orders', skrub.toy_orders(split='all').orders)
         >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_X()
         >>> delayed = orders['delayed']
         >>> delayed.skb.is_y
@@ -1601,7 +1681,7 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([1. , 0.5])
+        array([0.66666667, 0.66666667])
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
@@ -2262,6 +2342,16 @@ class IfElse(ExprImpl):
             short_repr, (self.condition, self.value_if_true, self.value_if_false)
         )
         return f"<{self.__class__.__name__} {cond} ? {if_true} : {if_false}>"
+
+
+class Match(ExprImpl):
+    _fields = ["query", "targets", "default"]
+
+    def has_default(self):
+        return self.default is not _Constants.NO_VALUE
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__} {short_repr(self.query)}>"
 
 
 class FreezeAfterFit(ExprImpl):

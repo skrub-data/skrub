@@ -15,6 +15,7 @@ from ._expressions import (
     _BUILTIN_SEQ,
     Expr,
     IfElse,
+    Match,
     Value,
     Var,
     _Constants,
@@ -87,6 +88,8 @@ class _ExprTraversal:
                 elif isinstance(top, Expr):
                     if isinstance(top._skrub_impl, IfElse):
                         push(self.handle_if_else)
+                    elif isinstance(top._skrub_impl, Match):
+                        push(self.handle_match)
                     else:
                         push(self.handle_expr)
                 elif isinstance(top, _BUILTIN_MAP):
@@ -111,6 +114,9 @@ class _ExprTraversal:
         return last_result
 
     def handle_if_else(self, expr):
+        return (yield from self.handle_expr(expr))
+
+    def handle_match(self, expr):
         return (yield from self.handle_expr(expr))
 
     def handle_expr(self, expr, attributes_to_evaluate=None):
@@ -192,6 +198,15 @@ class _Evaluator(_ExprTraversal):
             return (yield expr._skrub_impl.value_if_true)
         else:
             return (yield expr._skrub_impl.value_if_false)
+
+    def handle_match(self, expr):
+        impl = expr._skrub_impl
+        query = yield impl.query
+        if impl.has_default():
+            target = impl.targets.get(query, impl.default)
+        else:
+            target = impl.targets[query]
+        return (yield target)
 
     def handle_expr(self, expr):
         impl = expr._skrub_impl
