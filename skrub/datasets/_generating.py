@@ -66,30 +66,36 @@ def make_deduplication_data(
 def toy_orders(split="train"):
     """Create a toy dataframe and corresponding targets for examples.
 
+    Parameters
+    ----------
+    split : str, default="train"
+        The split to load. Can be either "train", "test", or "all".
+
     Returns
     -------
     bunch
         A dictionary-like object with the keys 'X', 'y' and 'orders'.
     """
+    X = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5, 6],
+            "product": ["pen", "cup", "cup", "spoon", "cup", "fork"],
+            "quantity": [2, 3, 5, 1, 5, 2],
+            "date": [
+                "2020-04-03",
+                "2020-04-04",
+                "2020-04-04",
+                "2020-04-05",
+                "2020-04-11",
+                "2020-04-12",
+            ],
+        }
+    )
+    y = pd.Series([False, False, True, False, True, False], name="delayed")
     if split == "train":
-        X = pd.DataFrame(
-            {
-                "ID": [1, 2, 3, 4],
-                "product": ["pen", "cup", "cup", "spoon"],
-                "quantity": [2, 3, 5, 1],
-                "date": ["2020-04-03", "2020-04-04", "2020-04-04", "2020-04-05"],
-            }
-        )
-        y = pd.Series([False, False, True, False], name="delayed")
+        X, y = X.iloc[:4], y.iloc[:4]
+    elif split == "test":
+        X, y = X.iloc[4:], y.iloc[4:]
     else:
-        assert split == "test", split
-        X = pd.DataFrame(
-            {
-                "ID": [5, 6],
-                "product": ["cup", "fork"],
-                "quantity": [5, 2],
-                "date": ["2020-04-11", "2020-04-12"],
-            }
-        )
-        y = pd.Series([True, False], name="delayed")
+        assert split == "all", split
     return Bunch(X=X, y=y, orders=X.assign(delayed=y))

@@ -184,10 +184,10 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or path, default=None
         The directory where to download and unzip the files.
 
-    split: str, default="train"
+    split : str, default="train"
         The split to load. Can be either "train", "test", or "all".
 
     Returns
@@ -206,10 +206,11 @@ def fetch_credit_fraud(data_home=None, split="train"):
     if split == "train":
         dataset["baskets"] = dataset["baskets"].query("ID <= @id_split")
         dataset["products"] = dataset["products"].query("basket_ID <= @id_split")
-    else:
-        assert split == "test", split
+    elif split == "test":
         dataset["baskets"] = dataset["baskets"].query("ID > @id_split")
         dataset["products"] = dataset["products"].query("basket_ID > @id_split")
+    else:
+        assert split == "all", split
     return dataset
 
 
