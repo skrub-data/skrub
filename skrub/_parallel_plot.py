@@ -54,7 +54,9 @@ def _add_jitter(column):
     vals = column["values"]
     min_val, max_val = np.min(vals), np.max(vals)
     eps = (max_val - min_val) / 100
-    column["values"] += np.random.uniform(low=-eps, high=eps, size=vals.shape[0])
+    column["values"] = column["values"] + np.random.uniform(
+        low=-eps, high=eps, size=vals.shape[0]
+    )
     return column
 
 
