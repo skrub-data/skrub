@@ -114,7 +114,7 @@ pred = X.skb.apply(classifier, y=y)
 # when initializing our pipeline's variables.
 
 search = pred.skb.get_randomized_search(n_iter=8, n_jobs=4, random_state=1, fitted=True)
-search.get_cv_results_table()
+search.results_
 
 # %%
 # We can get a parallel coordinate plot.
@@ -122,7 +122,7 @@ search.get_cv_results_table()
 # TODO explain parallel coord
 
 # %%
-search.plot_parallel_coord()
+search.plot_results()
 
 # %%
 # Choices can appear in many places
@@ -191,7 +191,7 @@ print(pred.skb.describe_param_grid())
 search = pred.skb.get_randomized_search(
     n_iter=16, n_jobs=4, random_state=1, fitted=True
 )
-search.plot_parallel_coord()
+search.plot_results()
 
 # %%
 # In the parallel plot above, we see for example that the ``StringEncoder``

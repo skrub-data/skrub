@@ -1452,7 +1452,7 @@ class SkrubNamespace:
 
         And if there was an error:
 
-        >>> report = c.skb.full_report({'a': 1, 'b': 0},open=False)
+        >>> report = c.skb.full_report({'a': 1, 'b': 0}, open=False)
         >>> report['result']
         >>> report['error']
         ZeroDivisionError('division by zero')
@@ -1910,8 +1910,8 @@ class ApplyNamespace(SkrubNamespace):
         -------
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
-            ``fit``, ``predict``, methods of interest are
-            ``get_cv_results_table()`` and ``plot_parallel_coord``.
+            ``fit``, ``predict``, attributes of interest are
+            ``results_`` and ``plot_results()``.
 
         Examples
         --------
@@ -1940,7 +1940,7 @@ class ApplyNamespace(SkrubNamespace):
         - classifier: 'dummy'
 
         >>> search = pred.skb.get_grid_search(fitted=True)
-        >>> search.get_cv_results_table()
+        >>> search.results_
            mean_test_score classifier     C   N 🌴
         0             0.89         rf   NaN  30.0
         1             0.84   logistic   0.1   NaN
@@ -1990,8 +1990,8 @@ class ApplyNamespace(SkrubNamespace):
         -------
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
-            ``fit``, ``predict``, methods of interest are
-            ``get_cv_results_table()`` and ``plot_parallel_coord``.
+            ``fit``, ``predict``, attributes of interest are
+            ``results_`` and ``plot_results()``.
 
 
         Examples
@@ -2021,7 +2021,7 @@ class ApplyNamespace(SkrubNamespace):
         - classifier: 'dummy'
 
         >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
-        >>> search.get_cv_results_table()
+        >>> search.results_
            mean_test_score classifier         C   N 🌴
         0             0.92         rf       NaN  12.0
         1             0.90         rf       NaN  18.0

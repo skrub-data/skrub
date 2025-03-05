@@ -274,7 +274,7 @@ predictions
 search = predictions.skb.get_randomized_search(
     scoring="roc_auc", n_iter=8, n_jobs=4, random_state=0, fitted=True
 )
-search.get_cv_results_table()
+search.results_
 
 # %%
 # We can also ask skrub to display a parallel coordinates plot of the results.
@@ -289,7 +289,7 @@ search.get_cv_results_table()
 # TODO: Gif of how to use the plot.
 
 # %%
-search.plot_parallel_coord()
+search.plot_results()
 
 # Conclusion
 # ----------

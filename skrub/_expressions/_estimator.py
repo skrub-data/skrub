@@ -334,7 +334,11 @@ class ParamSearch(BaseEstimator):
             attribute_error(self, "best_estimator_")
         return ExprEstimator(self.search_.best_estimator_.expr)
 
-    def get_cv_results_table(self, return_metadata=False, detailed=False):
+    @property
+    def results_(self):
+        return self._get_cv_results_table()
+
+    def _get_cv_results_table(self, return_metadata=False, detailed=False):
         import pandas as pd
 
         expr_choices = choices(self.estimator_.expr)
@@ -385,8 +389,8 @@ class ParamSearch(BaseEstimator):
         table = table.sort_values("mean_test_score", ascending=False, ignore_index=True)
         return (table, metadata) if return_metadata else table
 
-    def plot_parallel_coord(self, colorscale=DEFAULT_COLORSCALE, min_score=None):
-        cv_results, metadata = self.get_cv_results_table(
+    def plot_results(self, *, colorscale=DEFAULT_COLORSCALE, min_score=None):
+        cv_results, metadata = self._get_cv_results_table(
             return_metadata=True, detailed=True
         )
         cv_results = cv_results.drop(
