@@ -402,6 +402,7 @@ SelectKBest()
 """  # noqa: E501
 
 import dataclasses
+import functools
 import io
 import typing
 from collections.abc import Sequence
@@ -455,6 +456,18 @@ class Outcome:
         return repr(self.value)
 
 
+def _wrap_getitem(getitem):
+    @functools.wraps(getitem)
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            if key == self.keys()[0]:
+                return self
+            raise KeyError(key)
+        return getitem(self, key)
+
+    return __getitem__
+
+
 class BaseChoice:
     """A base class for all kinds of choices (enumerated, numeric range, ...)
 
@@ -466,6 +479,17 @@ class BaseChoice:
         from ._expressions import as_expr
 
         return as_expr(self)
+
+    def keys(self):
+        return [self.name.rsplit("__", maxsplit=1)[-1]]
+
+    def __init_subclass__(cls):
+        if (cls_getitem := cls.__dict__.get("__getitem__", None)) is not None:
+            setattr(cls, "__getitem__", _wrap_getitem(cls_getitem))
+
+    @_wrap_getitem
+    def __getitem__(self, key):
+        raise TypeError(f"key must be {self.keys()[0]!r}")
 
 
 @dataclasses.dataclass
