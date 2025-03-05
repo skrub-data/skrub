@@ -1,5 +1,7 @@
 import collections
 import importlib
+import itertools
+import reprlib
 import secrets
 from typing import Iterable
 
@@ -176,11 +178,59 @@ def renaming_func(renaming):
     return renaming
 
 
+class Repr(reprlib.Repr):
+    def repr_dict(self, x, level):
+        # (probably for historical reasons) reprlib sorts dict keys, destroying
+        # the actual order of the dictionary which is misleading.
+        # We adapt the stdlib implementation:
+        # https://github.com/python/cpython/blob/630dc2bd6422715f848b76d7950919daa8c44b99/Lib/reprlib.py#L156 # noqa
+        # to remove the sorting
+        n = len(x)
+        if n == 0:
+            return "{}"
+        if level <= 0:
+            return "{" + self.fillvalue + "}"
+        newlevel = level - 1
+        repr1 = self.repr1
+        pieces = []
+        for key in itertools.islice(x, self.maxdict):
+            keyrepr = repr1(key, newlevel)
+            valrepr = repr1(x[key], newlevel)
+            pieces.append("%s: %s" % (keyrepr, valrepr))
+        if n > self.maxdict:
+            pieces.append(self.fillvalue)
+
+        # in stdlib this line is:
+        # s = self._join(pieces, level)
+        # but we do not use indentation
+        # so we can just ', '.join to avoid using a private method
+        s = ", ".join(pieces)
+
+        return "{%s}" % (s,)
+
+
+class _ShortRepr(Repr):
+    def repr_instance(self, instance, level):
+        if hasattr(instance, "__skrub_short_repr__"):
+            return instance.__skrub_short_repr__()
+
+        r = repr(instance)
+        if "\n" in r or len(r) > 50:
+            return f"{instance.__class__.__name__}(...)"
+        return super().repr_instance(instance, level)
+
+
+def short_repr(obj):
+    r = _ShortRepr()
+    r.maxother = 50
+    return r.repr(obj)
+
+
 def repr_args(args, kwargs, defaults={}):
     return ", ".join(
-        [repr(a) for a in args]
+        [short_repr(a) for a in args]
         + [
-            f"{k}={v!r}"
+            f"{k}={short_repr(v)}"
             for k, v in kwargs.items()
             if k not in defaults or defaults[k] != v
         ]
