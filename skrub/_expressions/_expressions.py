@@ -2030,8 +2030,8 @@ class ApplyNamespace(SkrubNamespace):
         1             0.90         rf       NaN  18.0
         2             0.83   logistic  0.393613   NaN
         3             0.82   logistic  0.610337   NaN
-        4             0.80   logistic  1.605191   NaN
-        5             0.80   logistic  1.533519   NaN
+        4             0.80   logistic  1.533519   NaN
+        5             0.80   logistic  1.605191   NaN
         6             0.79   logistic  8.459127   NaN
         7             0.50      dummy       NaN   NaN
         8             0.50      dummy       NaN   NaN

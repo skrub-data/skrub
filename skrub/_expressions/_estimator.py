@@ -377,7 +377,9 @@ class ParamSearch(BaseEstimator):
             for k in result_keys[1:]:
                 if k in self.cv_results_:
                     table.insert(table.shape[1], k, self.cv_results_[k])
-        table = table.sort_values("mean_test_score", ascending=False, ignore_index=True)
+        table = table.sort_values(
+            "mean_test_score", ascending=False, ignore_index=True, kind="stable"
+        )
         return (table, metadata) if return_metadata else table
 
     def plot_results(self, *, colorscale=DEFAULT_COLORSCALE, min_score=None):
