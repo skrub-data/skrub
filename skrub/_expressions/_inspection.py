@@ -3,7 +3,6 @@ import html
 import io
 import re
 import shutil
-import traceback
 import webbrowser
 from pathlib import Path
 
@@ -15,10 +14,10 @@ from .. import datasets
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._utils import Repr, random_string
+from . import _utils
 from ._choosing import Choice
 from ._evaluation import choices, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
-from ._utils import simple_repr
 
 # TODO after merging the expressions do some refactoring and move this stuff to
 # _reporting. better to do it later to avoid conflicts with independent changes
@@ -168,8 +167,8 @@ def _do_full_report(
             report = node_report(node, mode=mode, environment=environment)
         elif mode in node._skrub_impl.errors:
             e = node._skrub_impl.errors[mode]
-            error = "".join(traceback.format_exception(e))
-            error_msg = "".join(traceback.format_exception_only(e))
+            error = "".join(_utils.format_exception(e))
+            error_msg = "".join(_utils.format_exception_only(e))
             if hasattr(e, "__notes__"):
                 error_msg = error_msg.removesuffix("\n".join(e.__notes__) + "\n")
         if isinstance(report, TableReport):
@@ -179,7 +178,7 @@ def _do_full_report(
         node_parents = [
             {
                 "id": n,
-                "description": simple_repr(g["nodes"][n]),
+                "description": _utils.simple_repr(g["nodes"][n]),
                 "url": node_name_to_url(n),
             }
             for n in g["parents"].get(i, [])
@@ -187,7 +186,7 @@ def _do_full_report(
         node_children = [
             {
                 "id": n,
-                "description": simple_repr(g["nodes"][n]),
+                "description": _utils.simple_repr(g["nodes"][n]),
                 "url": node_name_to_url(n),
             }
             for n in g["children"].get(i, [])
@@ -208,7 +207,7 @@ def _do_full_report(
                 node_nb=i,
                 node_parents=node_parents,
                 node_children=node_children,
-                node_repr=simple_repr(node),
+                node_repr=_utils.simple_repr(node),
                 report=report,
                 error=error,
                 error_msg=error_msg,
@@ -252,7 +251,7 @@ def _add_style(kwargs, *new_styles):
 
 
 def _node_kwargs(expr, url=None):
-    label = html.escape(simple_repr(expr))
+    label = html.escape(_utils.simple_repr(expr))
     if (
         not isinstance(expr._skrub_impl, Var)
         and (name := expr._skrub_impl.name) is not None

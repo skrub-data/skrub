@@ -1,3 +1,5 @@
+import traceback
+
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)
 X_NAME = "_skrub_X"
@@ -37,3 +39,13 @@ class _CloudPickle:
         for k in self._cloudpickle_attributes:
             state[k] = cloudpickle.loads(state[k])
         self.__dict__ = state
+
+
+def format_exception(e):
+    """compatibility for python < 3.10"""
+    return traceback.format_exception(type(e), e, e.__traceback__)
+
+
+def format_exception_only(e):
+    """compatibility for python < 3.10"""
+    return traceback.format_exception_only(type(e), e)

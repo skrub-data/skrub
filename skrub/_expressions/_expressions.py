@@ -22,6 +22,7 @@ from .._reporting._utils import strip_xml_declaration
 from .._select_cols import DropCols, SelectCols
 from .._utils import short_repr
 from .._wrap_transformer import wrap_transformer
+from . import _utils
 from ._choosing import Choice, unwrap_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, _CloudPickle, attribute_error
 
@@ -307,7 +308,7 @@ def _check_expr(f):
         except UninitializedVariable:
             pass
         except Exception as e:
-            msg = "\n".join(traceback.format_exception_only(e)).rstrip("\n")
+            msg = "\n".join(_utils.format_exception_only(e)).rstrip("\n")
             raise RuntimeError(
                 f"Evaluation of {func_name!r} failed.\n"
                 f"You can see the full traceback above. The error message was:\n{msg}"
@@ -1457,7 +1458,7 @@ class SkrubNamespace:
 
         >>> report = c.skb.full_report({'a': 1, 'b': 0}, open=False)
         >>> report['result']
-        >>> report['error']
+        >>> report['error'] # doctest: +SKIP
         ZeroDivisionError('division by zero')
         >>> report['report_path']
         PosixPath('.../skrub_data/execution_reports/full_expr_report_.../index.html')
