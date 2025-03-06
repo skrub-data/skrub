@@ -1436,32 +1436,6 @@ class SkrubNamespace:
             evaluation is in ``'result'`` and ``'error'`` is ``None``. Either
             way a report is stored at the location indicated by
             ``'report_path'``.
-
-        Examples
-        --------
-        >>> import skrub
-        >>> c = skrub.var('a', 1) / skrub.var('b', 2)
-        >>> report = c.skb.full_report(open=False)
-        >>> report['result']
-        0.5
-        >>> report['error']
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_expr_report_.../index.html')
-
-        We pass data:
-
-        >>> report = c.skb.full_report({'a': 33, 'b': 11 }, open=False)
-        >>> report['result']
-        3.0
-
-        And if there was an error:
-
-        >>> report = c.skb.full_report({'a': 1, 'b': 0}, open=False)
-        >>> report['result']
-        >>> report['error'] # doctest: +SKIP
-        ZeroDivisionError('division by zero')
-        >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_expr_report_.../index.html')
         """  # noqa : E501
         from ._inspection import full_report
 
