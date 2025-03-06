@@ -357,6 +357,9 @@ class Expr:
 
         return clone(self)
 
+    def __deepcopy__(self, memo):
+        return self.__sklearn_clone__()
+
     @_check_expr
     def __getattr__(self, name):
         if name in [

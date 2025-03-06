@@ -1,4 +1,3 @@
-import inspect
 from functools import partial
 
 from sklearn import model_selection
@@ -60,12 +59,20 @@ def _check_env(environment, caller_name):
     # evaluation and those do not need a value.
 
 
+class _SharedDict(dict):
+    def __deepcopy__(self, memo):
+        return self
+
+    def __sklearn_clone__(self):
+        return self
+
+
 class ExprEstimator(BaseEstimator):
     def __init__(self, expr):
         self.expr = expr
 
     def __skrub_to_sklearn_compatible__(self, environment):
-        return CompatibleExprEstimator(self.expr.skb.clone(), environment)
+        return CompatibleExprEstimator(self.expr.skb.clone(), _SharedDict(environment))
 
     def fit(self, environment):
         _check_env(environment, "fit")
@@ -104,7 +111,7 @@ class ExprEstimator(BaseEstimator):
         return f
 
     def get_params(self, deep=True):
-        params = {"expr": self.expr}
+        params = super().get_params(deep=deep)
         if not deep:
             return params
         params.update({f"expr__{k}": v for k, v in get_params(self.expr).items()})
@@ -135,17 +142,12 @@ class ExprEstimator(BaseEstimator):
 
 
 class _SklearnCompatibleMixin:
-    def __sklearn_clone__(self):
-        params = list(inspect.signature(self.__init__).parameters)
-        kwargs = {p: clone(getattr(self, p)) for p in params if p != "environment"}
-        return self.__class__(**kwargs, environment=self.environment)
-
     def __skrub_clear_environment__(self):
         self.environment = None
 
     def _pick_env(self, environment):
         assert (self.environment is None) ^ (environment is None)
-        return self.environment if environment is None else environment
+        return dict(self.environment) if environment is None else environment
 
 
 def _to_sklearn_compatible(estimator, environment):
@@ -265,7 +267,7 @@ class ParamSearch(BaseEstimator):
 
     def __skrub_to_sklearn_compatible__(self, environment):
         return CompatibleParamSearch(
-            self.expr.skb.clone(), clone(self.search), environment
+            self.expr.skb.clone(), clone(self.search), _SharedDict(environment)
         )
 
     def fit(self, environment):
