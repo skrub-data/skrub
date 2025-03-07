@@ -2043,6 +2043,45 @@ class ApplyNamespace(SkrubNamespace):
         return search.fit(self.get_data())
 
     def cross_validate(self, environment=None, **kwargs):
+        """Cross-validate the expression.
+
+        This generates the estimator (with default hyperparameters) and runs
+        scikit-learn cross-validation.
+
+        Parameters
+        ----------
+        environment : dict or None
+            Bindings for variables contained in the expression. If not
+            provided, the ``value``s passed when initializing ``var()`` are
+            used.
+
+        kwargs : dict
+            All other named arguments are forwarded to
+            ``sklearn.model_selection.cross_validate``.
+
+        Returns
+        -------
+        dict
+            Cross-validation results.
+
+        Examples
+        --------
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> import skrub
+
+        >>> X_a, y_a = make_classification()
+        >>> X, y = skrub.X(X_a), skrub.y(y_a)
+        >>> pred = X.skb.apply(LogisticRegression(), y=y)
+        >>> pred.skb.cross_validate(cv=2)['test_score']
+        array([0.9, 0.9])
+
+        Passing some data:
+
+        >>> data = {'X': X_a, 'y': y_a}
+        >>> pred.skb.cross_validate(data)['test_score']
+        array([0.9 , 0.95, 0.85, 0.9 , 0.95])
+        """
         from ._estimator import cross_validate
 
         if environment is None:
