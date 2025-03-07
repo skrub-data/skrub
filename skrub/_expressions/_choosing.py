@@ -477,6 +477,10 @@ class BaseChoice:
     """
 
     def as_expr(self):
+        """Wrap the choice in an expression.
+
+        ``choice.as_expr()`` is a convenience shorthand for ``skrub.as_expr(choice)``.
+        """
         from ._expressions import as_expr
 
         return as_expr(self)
@@ -673,7 +677,16 @@ class Choice(Sequence, BaseChoice):
         gradient boosting. For example we do not have entries with a value for
         both ``C`` and ``minhash__n_components`` because the logistic
         regression and the minhash are never used together.
-        """
+
+        The keys in the provided mapping must correspond to the possible
+        outcomes of the choice. However, some can be omitted when a default is
+        provided.
+
+        >>> learner_kind.match({'logistic': 'linear', 'hgb': 'tree'}).outcome_mapping
+        {'logistic': 'linear', 'hgb': 'tree'}
+        >>> learner_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
+        {'logistic': 'linear', 'hgb': 'unknown'}
+        """  # noqa : E501
         values = [unwrap(outcome) for outcome in self.outcomes]
         _check_match_keys(
             values, outcome_mapping.keys(), default is not Constants.NO_VALUE
@@ -713,10 +726,48 @@ class Choice(Sequence, BaseChoice):
 
 @dataclasses.dataclass
 class Match:
+    """Represent the output of a choice ``.match()``"""
+
     choice: Choice
     outcome_mapping: dict
 
     def match(self, outcome_mapping, default=Constants.NO_VALUE):
+        """Select a value depending on the result of this match.
+
+        This allows chaining matches. See the docstring of ``Choice.match`` for
+        details about match.
+
+        Parameters
+        ----------
+        outcome_mapping : dict
+            Maps possible outcome to the desired result. The keys must all be
+            one of the possible outcomes for this ``Match``. If no ``default`` is
+            provided, there must be an entry in ``outcome_mapping`` for each
+            possible outcome.
+
+        default : object, optional
+            The value to use for outcomes not found in ``outcome_mapping``.
+
+        Returns
+        -------
+        Match
+            An object which evaluates to the image of the match through
+            ``outcome_mapping``.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> learner_kind = skrub.choose_from(["logistic", "random_forest", "hgb"], name="learner")
+        >>> is_linear = learner_kind.match({"logistic": True}, default=False)
+        >>> is_linear.outcome_mapping
+        {'logistic': True, 'random_forest': False, 'hgb': False}
+
+        >>> from sklearn.preprocessing import StandardScaler
+        >>> scaler = is_linear.match({True: StandardScaler(), False: 'passthrough'})
+        >>> scaler.outcome_mapping
+        {'logistic': StandardScaler(), 'random_forest': 'passthrough', 'hgb': 'passthrough'}
+        """  # noqa: E501
         _check_match_keys(
             self.outcome_mapping.values(),
             outcome_mapping.keys(),
@@ -728,6 +779,10 @@ class Match:
         return self.choice.match(mapping)
 
     def as_expr(self):
+        """Wrap the match in an expression.
+
+        ``match.as_expr()`` is a convenience shorthand for ``skrub.as_expr(match)``.
+        """
         from ._expressions import as_expr
 
         return as_expr(self)
@@ -842,6 +897,27 @@ class BoolChoice(Choice):
         return f"choose_bool({args})"
 
     def if_else(self, if_true, if_false):
+        """Select a value depending on this choice.
+
+        This is a convenience shorthand for using ``match``:
+        ``boolchoice.if_else(a, b)`` is like
+        ``boolchoice.match({True: a, False: b})``.
+
+        See the documentation of ``Choice.match()`` for details.
+
+        Parameters
+        ----------
+        if_true : object
+            Result when this choice selects True.
+
+        if_false : object
+            Result when this choice selects False
+
+        Returns
+        -------
+        Match
+            The result corresponding to the value of this choice.
+        """
         return self.match({True: if_true, False: if_false})
 
 
@@ -1018,23 +1094,7 @@ def choose_int(low, high, *, log=False, n_steps=None, name):
     )
 
 
-#
-# ``expand_grid``
-# ===============
-#
-# TODO: ``expand_grid`` is made redundant by functionality for
-# evaluating expressions and must be removed
-#
-# Now that we have the representations for different kinds of choices and
-# functions to construct them, the rest of this module provides the
-# implementation of ``expand_grid``, which turns estimators containing choices
-# into a grid of hyperparameters that can be understood by ``GridSearchCV`` and
-# ``RandomizedSearchCV``.
-#
-
-
 def expand_grid(grid):
-    # TODO remove
     from ._evaluation import param_grid
 
     return param_grid(grid)
