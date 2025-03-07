@@ -4,7 +4,6 @@ from sklearn import model_selection
 from sklearn.base import BaseEstimator, clone
 
 from .. import _join_utils
-from .._parallel_plot import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._choosing import Choice, unwrap, unwrap_default
 from ._evaluation import (
     choices,
@@ -20,6 +19,7 @@ from ._evaluation import (
     set_params,
 )
 from ._expressions import Apply, Expr
+from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._utils import X_NAME, Y_NAME, attribute_error
 
 
