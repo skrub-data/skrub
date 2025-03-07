@@ -214,7 +214,51 @@ class CompatibleExprEstimator(_SklearnCompatibleMixin, ExprEstimator):
         return evaluate(self.expr, mode, xy_environment, clear=True)
 
 
-def cross_validate(expr_estimator, environment, scoring=None, **cv_params):
+def cross_validate(expr_estimator, environment, **cv_params):
+    """Cross-validate an estimator built from an expression.
+
+    This runs cross-validation from an estimator that was built from a skrub
+    expression with ``.skb.get_estimator()``, ``.skb.get_grid_search()`` or
+    ``.skb.get_randomized_search()``.
+
+    It is useful to run nested cross-validation of a grid search or randomized
+    search.
+
+    Parameters
+    ----------
+    expr_estimator : estimator
+        An estimator generated from a skrub expression.
+
+    environment : dict or None
+        Bindings for variables contained in the expression. If not
+        provided, the ``value``s passed when initializing ``var()`` are
+        used.
+
+    cv_params : dict
+        All other named arguments are forwarded to
+        ``sklearn.model_selection.cross_validate``.
+
+    Returns
+    -------
+    dict
+        Cross-validation results.
+
+    Examples
+    --------
+    >>> from sklearn.datasets import make_classification
+    >>> from sklearn.linear_model import LogisticRegression
+    >>> import skrub
+
+    >>> X_a, y_a = make_classification(random_state=0)
+    >>> X, y = skrub.X(X_a), skrub.y(y_a)
+    >>> log_reg = LogisticRegression(
+    ...     **skrub.choose_float(0.01, 1.0, log=True, name="C")
+    ... )
+    >>> pred = X.skb.apply(log_reg, y=y)
+    >>> search = pred.skb.get_randomized_search(random_state=0)
+    >>> skrub.cross_validate(search, pred.skb.get_data())['test_score']
+    array([0.75, 0.95, 0.85, 0.85, 0.85])
+    """
     expr = expr_estimator.expr
     X_y = _find_X_y(expr)
     X = evaluate(X_y["X"].skb.clone(), "fit_transform", environment)
@@ -229,7 +273,6 @@ def cross_validate(expr_estimator, environment, scoring=None, **cv_params):
         estimator,
         X,
         y,
-        scoring=scoring,
         **cv_params,
     )
     if (estimators := result.get("estimator", None)) is None:

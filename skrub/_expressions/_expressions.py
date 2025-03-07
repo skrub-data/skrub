@@ -2070,17 +2070,17 @@ class ApplyNamespace(SkrubNamespace):
         >>> from sklearn.linear_model import LogisticRegression
         >>> import skrub
 
-        >>> X_a, y_a = make_classification()
+        >>> X_a, y_a = make_classification(random_state=0)
         >>> X, y = skrub.X(X_a), skrub.y(y_a)
         >>> pred = X.skb.apply(LogisticRegression(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.9, 0.9])
+        array([0.84, 0.78])
 
         Passing some data:
 
         >>> data = {'X': X_a, 'y': y_a}
         >>> pred.skb.cross_validate(data)['test_score']
-        array([0.9 , 0.95, 0.85, 0.9 , 0.95])
+        array([0.75, 0.9 , 0.85, 0.65, 0.9 ])
         """
         from ._estimator import cross_validate
 

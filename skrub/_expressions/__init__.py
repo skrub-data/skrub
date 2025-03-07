@@ -5,6 +5,7 @@ from ._choosing import (
     choose_int,
     optional,
 )
+from ._estimator import cross_validate
 from ._expressions import X, as_expr, deferred, deferred_optional, var, y
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "as_expr",
     "deferred",
     "deferred_optional",
+    "cross_validate",
     #
     "choose_bool",
     "choose_float",
