@@ -412,6 +412,7 @@ from scipy import stats
 from sklearn.utils import check_random_state
 
 from .. import _utils
+from ._utils import Constants
 
 #
 # Choices and Outcomes
@@ -492,6 +493,27 @@ class BaseChoice:
         raise TypeError(f"key must be {self.keys()[0]!r}")
 
 
+def _check_match_keys(outcome_values, mapping_keys, has_default):
+    try:
+        extra_keys = set(mapping_keys).difference(outcome_values)
+        extra_outcomes = set(outcome_values).difference(mapping_keys)
+    except TypeError as e:
+        raise TypeError(f"To use `match()`, all choice outcomes must be hashable. {e}")
+    if extra_keys:
+        raise ValueError(
+            "The following keys were found in the mapping provided to `match()` but"
+            f" are not possible choice outcomes: {extra_keys!r}"
+        )
+    if has_default:
+        return
+    if extra_outcomes:
+        raise ValueError(
+            "The following outcomes do not have a corresponding key in the mapping"
+            f" provided to `match()`: {extra_outcomes!r}. Please provide an entry for"
+            " each possible outcome, or a default."
+        )
+
+
 @dataclasses.dataclass
 class Choice(Sequence, BaseChoice):
     """A choice among an enumerated set of outcomes."""
@@ -568,17 +590,18 @@ class Choice(Sequence, BaseChoice):
             return self.outcomes[self.chosen_outcome_idx]
         return self.default()
 
-    def match(self, outcome_mapping):
+    def match(self, outcome_mapping, default=Constants.NO_VALUE):
         values = [unwrap(outcome) for outcome in self.outcomes]
-        same = True
-        try:
-            if set(values) != set(outcome_mapping.keys()):
-                same = False
-        except TypeError:
-            same = False
-        if not same:
-            raise ValueError("outcome mapping must provide a result for each outcome.")
-        return Match(self, outcome_mapping)
+        _check_match_keys(
+            values, outcome_mapping.keys(), default is not Constants.NO_VALUE
+        )
+        if default is Constants.NO_VALUE:
+            complete_mapping = outcome_mapping
+        else:
+            complete_mapping = {
+                outcome: outcome_mapping.get(outcome, default) for outcome in values
+            }
+        return Match(self, complete_mapping)
 
     def __repr__(self):
         if self.outcomes[0].name is None:
@@ -610,11 +633,16 @@ class Match:
     choice: Choice
     outcome_mapping: dict
 
-    def match(self, outcome_mapping):
-        return Match(
-            self.choice,
-            {k: outcome_mapping[v] for k, v in self.outcome_mapping.items()},
+    def match(self, outcome_mapping, default=Constants.NO_VALUE):
+        _check_match_keys(
+            self.outcome_mapping.values(),
+            outcome_mapping.keys(),
+            default is not Constants.NO_VALUE,
         )
+        mapping = {
+            k: outcome_mapping.get(v, default) for k, v in self.outcome_mapping.items()
+        }
+        return self.choice.match(mapping)
 
     def as_expr(self):
         from ._expressions import as_expr

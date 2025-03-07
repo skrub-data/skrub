@@ -18,9 +18,8 @@ from ._expressions import (
     Match,
     Value,
     Var,
-    _Constants,
 )
-from ._utils import X_NAME, Y_NAME, simple_repr
+from ._utils import X_NAME, Y_NAME, Constants, simple_repr
 
 __all__ = [
     "evaluate",
@@ -366,7 +365,7 @@ class _Cloner(_ExprTraversal):
         impl = expr._skrub_impl
         new_impl = impl.__replace__(**evaluated_attributes)
         if isinstance(new_impl, Var) and self.drop_preview_data:
-            new_impl.value = _Constants.NO_VALUE
+            new_impl.value = Constants.NO_VALUE
         clone = Expr(new_impl)
         self._replace[id(expr)] = clone
         return clone

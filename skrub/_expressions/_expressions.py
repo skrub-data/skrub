@@ -1,5 +1,4 @@
 import dis
-import enum
 import functools
 import html
 import inspect
@@ -24,7 +23,7 @@ from .._utils import short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import Choice, unwrap_chosen_or_default
-from ._utils import FITTED_PREDICTOR_METHODS, _CloudPickle, attribute_error
+from ._utils import FITTED_PREDICTOR_METHODS, Constants, _CloudPickle, attribute_error
 
 __all__ = ["var", "X", "y", "as_expr", "deferred", "deferred_optional"]
 
@@ -111,10 +110,6 @@ _UNARY_OPS = [
 _BUILTIN_SEQ = (list, tuple, set, frozenset)
 
 _BUILTIN_MAP = (dict,)
-
-
-class _Constants(enum.Enum):
-    NO_VALUE = enum.auto()
 
 
 class UninitializedVariable(KeyError):
@@ -204,7 +199,7 @@ class ExprImpl:
         return textwrap.indent(line, "    ").rstrip("\n")
 
     def preview_if_available(self):
-        return self.results.get("preview", _Constants.NO_VALUE)
+        return self.results.get("preview", Constants.NO_VALUE)
 
     def supports_modes(self):
         return ["preview", "fit_transform", "transform"]
@@ -398,13 +393,13 @@ class Expr:
     def __dir__(self):
         names = ["skb"]
         preview = self._skrub_impl.preview_if_available()
-        if preview is not _Constants.NO_VALUE:
+        if preview is not Constants.NO_VALUE:
             names.extend(dir(preview))
         return names
 
     def _ipython_key_completions_(self):
         preview = self._skrub_impl.preview_if_available()
-        if preview is _Constants.NO_VALUE:
+        if preview is Constants.NO_VALUE:
             return []
         try:
             return preview._ipython_key_completions_()
@@ -426,7 +421,7 @@ class Expr:
     @property
     def __doc__(self):
         preview = self._skrub_impl.preview_if_available()
-        if preview is _Constants.NO_VALUE:
+        if preview is Constants.NO_VALUE:
             attribute_error(self, "__doc__")
         doc = getattr(preview, "__doc__", None)
         if doc is None:
@@ -493,7 +488,7 @@ class Expr:
         ):
             result = re.sub(r"^(<|)", rf"\1{name} | ", result)
         preview = self._skrub_impl.preview_if_available()
-        if preview is _Constants.NO_VALUE:
+        if preview is Constants.NO_VALUE:
             return result
         return f"{result}\nResult:\n―――――――\n{preview!r}"
 
@@ -515,7 +510,7 @@ class Expr:
 
         graph = self.skb.draw_graph().decode("utf-8")
         graph = strip_xml_declaration(graph)
-        if self._skrub_impl.preview_if_available() is _Constants.NO_VALUE:
+        if self._skrub_impl.preview_if_available() is Constants.NO_VALUE:
             return f"<div>{graph}</div>"
         if (name := self._skrub_impl.name) is not None:
             name_line = (
@@ -843,7 +838,7 @@ class SkrubNamespace:
         return Expr(IfElse(self._expr, value_if_true, value_if_false))
 
     @_check_expr
-    def match(self, targets, default=_Constants.NO_VALUE):
+    def match(self, targets, default=Constants.NO_VALUE):
         """Select based on the value of an expression.
 
         First, ``self`` is evaluated. Then, the result is compared to the keys
@@ -1242,7 +1237,7 @@ class SkrubNamespace:
 
         for n in nodes(self._expr):
             impl = n._skrub_impl
-            if isinstance(impl, Var) and impl.value is not _Constants.NO_VALUE:
+            if isinstance(impl, Var) and impl.value is not Constants.NO_VALUE:
                 data[impl.name] = impl.value
         return data
 
@@ -2049,7 +2044,7 @@ class Var(ExprImpl):
     def compute(self, e, mode, environment):
         if mode == "preview":
             assert not environment
-            if e.value is _Constants.NO_VALUE:
+            if e.value is Constants.NO_VALUE:
                 raise UninitializedVariable(
                     f"No value value has been provided for {e.name!r}"
                 )
@@ -2058,7 +2053,7 @@ class Var(ExprImpl):
             return environment[e.name]
         if (
             environment.get("_skrub_use_var_values", False)
-            and e.value is not _Constants.NO_VALUE
+            and e.value is not Constants.NO_VALUE
         ):
             return e.value
         raise UninitializedVariable(f"No value has been provided for {e.name!r}")
@@ -2070,7 +2065,7 @@ class Var(ExprImpl):
         return f"<Var {self.name!r}>"
 
 
-def var(name, value=_Constants.NO_VALUE):
+def var(name, value=Constants.NO_VALUE):
     """Create a skrub variable.
 
     Variables represent inputs to a machine-learning pipeline. They can be
@@ -2162,7 +2157,7 @@ def var(name, value=_Constants.NO_VALUE):
     return Expr(Var(name, value=value))
 
 
-def X(value=_Constants.NO_VALUE):
+def X(value=Constants.NO_VALUE):
     """Create a skrub variable and mark it as being ``X``.
 
     This is just a convenient shortcut for::
@@ -2206,7 +2201,7 @@ def X(value=_Constants.NO_VALUE):
     return Expr(Var("X", value=value)).skb.mark_as_X()
 
 
-def y(value=_Constants.NO_VALUE):
+def y(value=Constants.NO_VALUE):
     """Create a skrub variable and mark it as being ``y``.
 
     This is just a convenient shortcut for::
@@ -2326,7 +2321,7 @@ class Match(ExprImpl):
     _fields = ["query", "targets", "default"]
 
     def has_default(self):
-        return self.default is not _Constants.NO_VALUE
+        return self.default is not Constants.NO_VALUE
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {short_repr(self.query)}>"

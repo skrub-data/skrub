@@ -1,9 +1,14 @@
+import enum
 import traceback
 
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)
 X_NAME = "_skrub_X"
 Y_NAME = "_skrub_y"
+
+
+class Constants(enum.Enum):
+    NO_VALUE = enum.auto()
 
 
 def simple_repr(expr, open_tag="", close_tag=""):
