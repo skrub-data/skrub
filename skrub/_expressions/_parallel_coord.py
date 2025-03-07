@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
@@ -12,7 +14,7 @@ def plot_parallel_coord(
     try:
         import plotly.graph_objects as go
     except ImportError:
-        print("please install plotly.")
+        warnings.warn("Please install plotly to display parallel coordinate plots.")
         return None
     return go.Figure(
         data=go.Parcoords(

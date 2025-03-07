@@ -3,6 +3,7 @@ import html
 import io
 import re
 import shutil
+import warnings
 import webbrowser
 from pathlib import Path
 
@@ -292,8 +293,27 @@ def _dot_id(n):
     return f"node_{n}"
 
 
+def _svg_error_message():
+    warnings.warn("Please install graphviz and pydot to display computation graphs.")
+    svg = """
+<svg width="350" height="80" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="white" />
+  <text x="10" y="30" font-family="sans-serif" font-size="20" fill="black">
+    Please install graphviz and pydot
+    <tspan x="10" dy="25">to display the computation graph.</tspan>
+  </text>
+</svg>
+    """.encode("utf-8")
+    return _SVG(svg)
+
+
 def draw_expr_graph(expr, url=None, direction="TB"):
-    import pydot
+    # TODO if pydot or graphviz not available fallback on some other plotting
+    # solution eg a vendored copy of mermaid? outputting html instead of svg
+    try:
+        import pydot
+    except ImportError:
+        return _svg_error_message()
 
     g = graph(expr)
     dot_graph = pydot.Dot(rankdir=direction)
@@ -306,7 +326,10 @@ def draw_expr_graph(expr, url=None, direction="TB"):
         for p in parents:
             dot_graph.add_edge(pydot.Edge(_dot_id(p), _dot_id(c)))
 
-    svg = dot_graph.create_svg()
+    try:
+        svg = dot_graph.create_svg()
+    except Exception:
+        return _svg_error_message()
     svg = re.sub(b"<title>.*?</title>", b"", svg)
     return _SVG(svg)
 
