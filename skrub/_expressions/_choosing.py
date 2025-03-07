@@ -591,6 +591,89 @@ class Choice(Sequence, BaseChoice):
         return self.default()
 
     def match(self, outcome_mapping, default=Constants.NO_VALUE):
+        """Select a value depending on the outcome of the choice.
+
+        This allows inserting several inter-dependent hyper-parameters in a
+        pipeline, which all depend on the outcome of the same choice. See the
+        examples below.
+
+        Parameters
+        ----------
+        outcome_mapping : dict
+            Maps possible outcome to the desired result. The keys must all be
+            one of the possible outcomes for the choice. If no ``default`` is
+            provided, there must be an entry in ``outcome_mapping`` for each
+            possible choice outcome.
+
+        default : object, optional
+            The value to use for outcomes not found in ``outcome_mapping``.
+
+        Returns
+        -------
+        Match
+            An object which evaluates to the image of the choice through
+            ``outcome_mapping``.
+
+        Examples
+        --------
+        Suppose we want to encode strings differently depending on the
+        supervised estimator we use. the ``MinHashEncoder`` can be a good
+        choice when the downstream learner is a tree-based model, but not when
+        it is a linear model. So we have 2 choices in our pipeline, the
+        encoding and the learner, but they are not independent: not all
+        combinations make sense.
+
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.ensemble import HistGradientBoostingClassifier
+        >>> from sklearn.feature_selection import SelectKBest
+        >>> import skrub
+
+        >>> learner_kind = skrub.choose_from(["logistic", "hgb"], name="learner")
+        >>> encoder = learner_kind.match(
+        ...     {
+        ...         "logistic": skrub.StringEncoder(
+        ...             **skrub.choose_int(5, 20, name="string__n_components")
+        ...         ),
+        ...         "hgb": skrub.MinHashEncoder(
+        ...             **skrub.choose_int(10, 30, name="minhash__n_components")
+        ...         ),
+        ...     }
+        ... )
+        >>> vectorizer = skrub.TableVectorizer(high_cardinality=encoder)
+        >>> predictor = learner_kind.match(
+        ...     {
+        ...         "logistic": LogisticRegression(
+        ...             **skrub.choose_float(0.01, 10.0, log=True, name="C")
+        ...         ),
+        ...         "hgb": HistGradientBoostingClassifier(
+        ...             **skrub.choose_float(0.01, 0.9, log=True, name="learning_rate")
+        ...         ),
+        ...     }
+        ... )
+        >>> selector = SelectKBest(**skrub.choose_int(15, 25, name='k'))
+        >>> X, y = skrub.X(), skrub.y()
+        >>> pred = (
+        ...     X.skb.apply(vectorizer)
+        ...     .skb.apply(selector, y=y)
+        ...     .skb.apply(predictor, y=y)
+        ... )
+
+        >>> print(pred.skb.describe_param_grid())
+        - k: choose_int(15, 25, name='k')
+          learner: 'logistic'
+          C: choose_float(0.01, 10.0, log=True, name='C')
+          string__n_components: choose_int(5, 20, name='string__n_components')
+        - k: choose_int(15, 25, name='k')
+          learner: 'hgb'
+          learning_rate: choose_float(0.01, 0.9, log=True, name='learning_rate')
+          minhash__n_components: choose_int(10, 30, name='minhash__n_components')
+
+        In the grid above, we see that we have 2 different families of
+        configurations: one for the logistic regression and one for the
+        gradient boosting. For example we do not have entries with a value for
+        both ``C`` and ``minhash__n_components`` because the logistic
+        regression and the minhash are never used together.
+        """
         values = [unwrap(outcome) for outcome in self.outcomes]
         _check_match_keys(
             values, outcome_mapping.keys(), default is not Constants.NO_VALUE
