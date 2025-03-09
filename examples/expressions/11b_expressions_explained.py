@@ -206,16 +206,56 @@ print(loans.max(axis=0))
 
 
 # %%
-# Nonetheless, to access the values of the underlying object and use a for-loop, you
-# need to define a **deferred (or delayed) function**. The ``skrub.deferred``
-# decorator will encapsulate your code as a node of the graph and run it lazily.
-# This is also true for if/else conditions.
+# To understand this concept, think of adding steps to a data processing pipeline.
+# Skrub variables without assigned values act as placeholders. They delay actual
+# computation until real values are provided.
+#
+# .. image:: ../../_static/skrub_3d_1.svg
+#   :width: 300
+#
+# |
+#
+# You can define pipeline steps only if they are not conditional on specific data
+# values. This is because the data might change each time the pipeline runs.
+# For example, the previous for-loop running on the dataframe columns
+# fails because skrub expressions don't contain actual data; they merely describe a
+# sequence of operations.
+#
+# |
+#
+# .. image:: ../../_static/skrub_3d_2.svg
+#   :width: 300
+#
+# |
+#
+# Instead, we need to bring this for-loop logic into a ``print_max`` function, and
+# decorate it using ``@skrub.deferred``. This decoration turns ``print_max`` into
+# a step in the pipeline graph. The function then gets actual data values only when
+# the pipeline runs.
+#
+# .. image:: ../../_static/skrub_3d_3.svg
+#   :width: 300
+#
 @skrub.deferred
 def print_max(loans):
     for col in loans.columns:
         print(loans[col].max())
     return loans
 
+
+# %%
+# |
+#
+# If you instantiate skrub variables with values, the pipeline executes immediately
+# after each step. This approach combines lazy pipeline creation with eager evaluation,
+# allowing you to preview results and work interactively.
+# Without assigning values, the pipeline runs only when explicitly executed
+# with ``skb.eval()`` or when fitting models or cross-validation.
+#
+# |
+#
+# .. image:: ../../_static/skrub_3d_4.svg
+#   :width: 600
 
 loans = print_max(loans)
 
