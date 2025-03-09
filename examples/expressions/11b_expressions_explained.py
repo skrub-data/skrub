@@ -21,15 +21,19 @@ and estimators together in a single trainable object, they empower you to:
     :width: 500
 
 Skrub expressions can build a pipeline on multiple tables, akin to an execution graph
-or a DAG. This generalization allows a greater flexibility and broaden the scope of the
+or a DAG. This generalization allows a greater flexibility and extends
 cross-validation to the earliest stages of data wrangling. Skrub expressions also
 ease the definition of simple pipelines and of their hyper-parameter spaces.
 
 .. image:: ../../_static/skrub_expressions.svg
 
-Notably, after marking which steps corresponds to the design matrix ``X``, skrub
-expressions are able to cross validate all subsequent operations and search their best
-user-defined hyper-parameters.
+This schema is based on the baskets fraud use-case we saw in the previous example.
+Our goal is to find the best hyper-parameters for our transformer and estimator.
+
+As often with real-world modeling, we have to derive the design matrix ``X`` and the
+target ``y`` from multiple tables. If we mark which steps results in ``X`` or ``y``,
+skrub expressions are able to cross-validate all subsequent steps (including
+"transformer 1" and "estimator") and search their best user-defined hyper-parameters.
 
 You can output a fully fledge estimator from this compute graph, or a
 grid search/randomized search cv.
@@ -40,8 +44,8 @@ Skrub expressions are lazy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When you define an operation on a skrub variable, skrub expressions build an execution
-graph in the background to be used on new data. This mechanism is akin to the execution
-planner built automatically in lazy mode with Spark or Polars for example.
+graph in the background to be used on new data. This mechanism is similar to the
+execution planner built automatically in lazy mode with Spark or Polars for example.
 
 Let's see this on a simple example.
 """
@@ -137,7 +141,24 @@ prediction = loans_preprocessed.skb.apply(
 prediction
 
 # %%
-# Notice how ``X`` and ``y`` are identified in the graph.
+# Remember that the ``prediction`` output is **only a preview of the results**.
+# This means that although we ran each step to check the correctness of the expressions,
+# we didn't return a fitted object. Now that we have completed this graph, we can turn
+# it into an estimator and fit it, before serializing it.
+
+estimator = prediction.skb.get_estimator()
+estimator.fit(environment={"loans": loans_df, "currency_rate": 2.0})
+print(estimator.predict_proba({"loans": loans_df.head(1), "currency_rate": 2.0}))
+
+# %%
+# .. code-block:: python
+#
+#   import pickle
+#
+#   with open("my_estimator.pkl", "wb") as f:
+#       pickle.dump(estimator, f)
+#
+# Also notice how ``X`` and ``y`` are identified in the graph.
 prediction.skb.draw_graph()
 
 # %%
@@ -149,23 +170,7 @@ prediction.skb.draw_graph()
 # Here, we would only be able to search hyper-parameters in the ``OneHotEncoder``
 # and ``LogisticRegression`` steps, but not in operations before marking ``X``.
 #
-# Now that we have completed this graph, we can turn it into an estimator and fit it,
-# before serializing it.
-
-estimator = prediction.skb.get_estimator()
-estimator.fit(environment={"loans": loans_df, "currency_rate": 2.0})
-print(estimator.predict_proba({"loans": loans_df.head(1), "currency_rate": 2.0}))
-
-# %%
-#
-# .. code-block:: python
-#
-#   import pickle
-#
-#   with open("my_estimator.pkl", "wb") as f:
-#       pickle.dump(estimator, f)
-#
-# We can also cross-validate and run hyper-parameter tuning:
+# We can cross-validate and run hyper-parameter tuning via:
 
 randomized_search_cv = prediction.skb.get_randomized_search(cv=2, n_iter=2, fitted=True)
 randomized_search_cv.get_cv_results_table()
