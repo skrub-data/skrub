@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 
 import numpy as np
 import pandas as pd
-from sklearn.base import clone
 from sklearn.preprocessing import SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
@@ -30,6 +29,7 @@ _TIME_LEVELS = [
 ]
 
 _DEFAULT_ENCODING_PERIODS = {"year": 366, "month": 30, "weekday": 7, "hour": 24}
+_DEFAULT_ENCODING_SPLINES = {"year": 12, "month": 30, "weekday": 7, "hour": 24}
 
 
 @dispatch
@@ -120,26 +120,9 @@ class DatetimeEncoder(SingleColumnTransformer):
         366 in the case of leap years). January 1st will be day 1, December 31st
         will be day 365 on non-leap years.
 
-    add_periodic : bool, default=False
-        Add periodic features with different granularities. By default, use
-        trigonometric (circular) encoding of features. Spline encoding and
-        custom encoders are also supported.
-
-    year_encoding : str, :class:``~CircularEncoder``, :class:``~SplineEncoder`` or None, default="circular"
-        Select the strategy used to encode days in a year. By default, use a
-        CircularEncoder with period=365. If None, no encoding is performed.
-
-    month_encoding : str, :class:``~CircularEncoder``, :class:``~SplineEncoder`` or None, default="circular"
-        Select the strategy used to encode days in a month. By default, use a
-        CircularEncoder with period=30. If None, no encoding is performed.
-
-    weekday_encoding : str, :class:``~CircularEncoder``, :class:``~SplineEncoder`` or None, default="circular"
-        Select the strategy used to encode days in a week. By default, use a
-        CircularEncoder with period=7. If None, no encoding is performed.
-
-    hour_encoding : str, :class:``~CircularEncoder``, :class:``~SplineEncoder`` or None, default="circular"
-        Select the strategy used to encode hours in a day. By default, use a
-        CircularEncoder with period=24. If None, no encoding is performed.
+    periodic_encoding : str or None, default=None
+        Add periodic features with different granularities. Add periodic features
+        using either trigonometric (``circular``) or ``spline`` encoding.
 
     Attributes
     ----------
@@ -293,10 +276,12 @@ class DatetimeEncoder(SingleColumnTransformer):
     Here we can see the input to ``transform`` has been converted back to the
     timezone used during ``fit`` and that we get the same result for "hour".
 
-    The DatetimeEncoder can also create new features based on periodic representations
+    The DatetimeEncoder can also create new features based on either trigonometric
+    functions or splines by setting ``periodic_encoder="circular"`` or ``periodic_encoder="spline"``
+    respectively.
     (https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html).
 
-    >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(add_periodic=True))
+    >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
     >>> encoder.fit_transform(login)
        login_year  login_month  ...  login_hour_circular_0  login_hour_circular_1
     0      2024.0          5.0  ...           1.224647e-16              -1.000000
@@ -309,30 +294,6 @@ class DatetimeEncoder(SingleColumnTransformer):
     'login_year_circular_0', 'login_year_circular_1', 'login_month_circular_0',
     'login_month_circular_1', 'login_weekday_circular_0', 'login_weekday_circular_1',
     'login_hour_circular_0', 'login_hour_circular_1']
-
-    It is possible to use spline encoders by setting the ``spline`` parameter, and
-    specific encoders may be disabled by setting their value to ``None``:
-    >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(add_periodic=True, \
-        year_encoding=None, month_encoding=None, weekday_encoding="spline", hour_encoding=None \
-        ))
-    >>> _ = encoder.fit_transform(login)
-    >>> encoder[-1].extracted_features_
-    ['login_year', 'login_month', 'login_day', 'login_hour', 'login_total_seconds',
-    'login_weekday_spline_0', 'login_weekday_spline_1', 'login_weekday_spline_2',
-    'login_weekday_spline_3', 'login_weekday_spline_4', 'login_weekday_spline_5',
-    'login_weekday_spline_6']
-
-    Finally, it is possible to change the period of the encoders by creating a new
-    ``SplineEncoder`` or ``CircularEncoder`` with the desired parameters:
-    >>> from skrub import SplineEncoder
-    >>> se = SplineEncoder(period=3)
-    >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(add_periodic=True, \
-        year_encoding=None, month_encoding=None, weekday_encoding=None, hour_encoding=se \
-        ))
-    >>> _ = encoder.fit_transform(login)
-    >>> encoder[-1].extracted_features_
-    ['login_year', 'login_month', 'login_day', 'login_hour', 'login_total_seconds',
-    'login_hour_spline_0', 'login_hour_spline_1', 'login_hour_spline_2']
     """  # noqa: E501
 
     def __init__(
@@ -341,22 +302,13 @@ class DatetimeEncoder(SingleColumnTransformer):
         add_weekday=False,
         add_total_seconds=True,
         add_day_of_year=False,
-        add_periodic=False,
-        year_encoding="circular",
-        month_encoding="circular",
-        weekday_encoding="circular",
-        hour_encoding="circular",
+        periodic_encoding=None,
     ):
         self.resolution = resolution
         self.add_weekday = add_weekday
         self.add_total_seconds = add_total_seconds
         self.add_day_of_year = add_day_of_year
-        self.add_periodic = add_periodic
-
-        self.year_encoding = year_encoding
-        self.month_encoding = month_encoding
-        self.weekday_encoding = weekday_encoding
-        self.hour_encoding = hour_encoding
+        self.periodic_encoding = periodic_encoding
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -407,29 +359,18 @@ class DatetimeEncoder(SingleColumnTransformer):
 
         # Iterating over all attributes that end with _encoding to use the default
         # parameters
-        if self.add_periodic:
-            enc_attr = [attr for attr in self.__dict__ if attr.endswith("_encoding")]
-            for enc_name in enc_attr:
-                enc = self.__getattribute__(enc_name)
-                enc_case = enc_name.split("_")[0]
-
-                # The user provided a specific instance of the encoder for this case
-                if isinstance(enc, (SplineEncoder, CircularEncoder)):
-                    self._required_transformers[enc_case] = clone(enc)
-                else:
-                    if enc is None:
-                        # This encoder has been disabled
-                        continue
-                    if enc == "circular":
-                        self._required_transformers[enc_case] = CircularEncoder(
-                            period=_DEFAULT_ENCODING_PERIODS[enc_case]
-                        )
-                    elif enc == "spline":
-                        self._required_transformers[enc_case] = SplineEncoder(
-                            period=_DEFAULT_ENCODING_PERIODS[enc_case]
-                        )
-                    else:
-                        raise ValueError(f"Unsupported option {enc} for {enc_name}")
+        if self.periodic_encoding is not None:
+            enc_attr = ["year", "month", "weekday", "hour"]
+            for enc_feature in enc_attr:
+                if self.periodic_encoding == "circular":
+                    self._required_transformers[enc_feature] = _CircularEncoder(
+                        period=_DEFAULT_ENCODING_PERIODS[enc_feature]
+                    )
+                elif self.periodic_encoding == "spline":
+                    self._required_transformers[enc_feature] = _SplineEncoder(
+                        period=_DEFAULT_ENCODING_PERIODS[enc_feature],
+                        n_splines=_DEFAULT_ENCODING_SPLINES[enc_feature],
+                    )
 
             for _case, t in self._required_transformers.items():
                 _feat = _get_dt_feature(column, _case)
@@ -498,9 +439,9 @@ class DatetimeEncoder(SingleColumnTransformer):
                 f"'resolution' options are {allowed}, got {self.resolution!r}."
             )
 
-        if self.add_periodic not in [True, False]:
+        if self.periodic_encoding not in [None, "circular", "spline"]:
             raise ValueError(
-                f"Unsupported value {self.add_periodic} for argument add_periodic."
+                f"Unsupported value {self.periodic_encoding} for periodic_encoding."
             )
 
     def _more_tags(self):
@@ -512,7 +453,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         return tags
 
 
-class SplineEncoder(SingleColumnTransformer):
+class _SplineEncoder(SingleColumnTransformer):
     """Generate univariate B-spline bases for features.
 
     This encoder will apply the scikit-learn SplineTransformer to the given
@@ -608,7 +549,7 @@ class SplineEncoder(SingleColumnTransformer):
         )
 
 
-class CircularEncoder(SingleColumnTransformer):
+class _CircularEncoder(SingleColumnTransformer):
     """Generate trigonometric features for the given feature.
 
     This encoder will generate two features corresponding to the sine and cosine

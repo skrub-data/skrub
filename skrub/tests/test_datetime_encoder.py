@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from skrub import CircularEncoder, DatetimeEncoder, SplineEncoder
+from skrub import DatetimeEncoder, _CircularEncoder, _SplineEncoder
 from skrub import _dataframe as sbd
 from skrub import _selectors as s
 from skrub._on_each_column import OnEachColumn
@@ -154,7 +154,11 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
             ["year", "month", "day", "hour", "day_of_year"],
         ),
         (
-            dict(add_day_of_year=False, add_total_seconds=False, add_periodic=True),
+            dict(
+                add_day_of_year=False,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+            ),
             [
                 "year",
                 "month",
@@ -206,26 +210,20 @@ def test_reject_non_datetime(df_module):
     [
         (
             dict(
-                year_encoding="circular",
-                month_encoding="circular",
-                weekday_encoding="circular",
-                hour_encoding="circular",
+                periodic_encoding="circular",
             ),
-            [CircularEncoder, CircularEncoder, CircularEncoder, CircularEncoder],
+            [_CircularEncoder, _CircularEncoder, _CircularEncoder, _CircularEncoder],
         ),
         (
             dict(
-                year_encoding="spline",
-                month_encoding="spline",
-                weekday_encoding="spline",
-                hour_encoding="spline",
+                periodic_encoding="spline",
             ),
-            [SplineEncoder, SplineEncoder, SplineEncoder, SplineEncoder],
+            [_SplineEncoder, _SplineEncoder, _SplineEncoder, _SplineEncoder],
         ),
     ],
 )
 def test_correct_parameters(a_datetime_col, params, transformers):
-    enc = DatetimeEncoder(add_periodic=True, **params)
+    enc = DatetimeEncoder(**params)
 
     enc.fit_transform(a_datetime_col)
 
@@ -237,43 +235,11 @@ def test_correct_parameters(a_datetime_col, params, transformers):
     )
 
     with pytest.raises(ValueError, match="Unsupported value wrongvalue .*"):
-        DatetimeEncoder(add_periodic="wrongvalue").fit_transform(a_datetime_col)
-
-
-def test_skipping_parameters(a_datetime_col):
-    params = dict(
-        year_encoding=None,
-        month_encoding="circular",
-        weekday_encoding=None,
-        hour_encoding="circular",
-    )
-    enc = DatetimeEncoder(add_periodic=True, **params)
-
-    enc.fit_transform(a_datetime_col)
-
-    assert len(enc._required_transformers) == 2
-    assert isinstance(enc._required_transformers["month"], CircularEncoder)
-    assert isinstance(enc._required_transformers["hour"], CircularEncoder)
-
-
-def test_custom_encoder(a_datetime_col):
-    year_encoder = SplineEncoder(period=365)
-    enc = DatetimeEncoder(add_periodic=True, year_encoding=year_encoder)
-
-    enc.fit_transform(a_datetime_col)
-
-    assert isinstance(enc._required_transformers["year"], SplineEncoder)
-    assert enc._required_transformers["year"].get_params()["period"] == 365
+        DatetimeEncoder(periodic_encoding="wrongvalue").fit_transform(a_datetime_col)
 
 
 def test_error_checking_periodic_encoder(a_datetime_col):
-    params = dict(
-        year_encoding="notaparameter",
-        month_encoding="circular",
-        weekday_encoding="notaparameteragain",
-        hour_encoding="circular",
-    )
-    enc = DatetimeEncoder(add_periodic=True, **params)
+    enc = DatetimeEncoder(periodic_encoding="notaparameter")
 
-    with pytest.raises(ValueError, match=r"Unsupported option (\S+) for (\S+)"):
+    with pytest.raises(ValueError, match=r"Unsupported value (\S+) for (\S+)"):
         enc.fit_transform(a_datetime_col)
