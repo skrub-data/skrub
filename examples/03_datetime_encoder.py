@@ -32,8 +32,8 @@ It is used by default in the |TableVectorizer|.
 .. |make_column_transformer| replace::
     :class:`~sklearn.compose.make_column_transformer`
 
-.. |HGBR| replace::
-    :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
+.. |RidgeCV| replace::
+    :class:`~sklearn.linear_model.RidgeCV`
 
 .. |ToDatetime| replace::
     :class:`~skrub.ToDatetime`
@@ -129,19 +129,38 @@ pprint(table_vec_weekday.get_feature_names_out())
 pprint(table_vec_weekday.transformers_)
 
 ###############################################################################
+# The |DatetimeEncoder| can generate additional periodic features using either
+# B-Splines (|SplineTransformer|) or trigonometric functions. To do so, set the
+# ``periodic encoding`` parameter ``circular`` or ``spline``. In this
+# example, we use ``spline``.
+
+table_vec_periodic = TableVectorizer(
+    datetime=DatetimeEncoder(
+        periodic_encoding="spline",
+    )
+).fit(X)
+
+###############################################################################
 # Prediction with datetime features
 # ---------------------------------
 #
 # For prediction tasks, we recommend using the |TableVectorizer| inside a
 # pipeline, combined with a model that can use the features extracted by the
 # |DatetimeEncoder|.
-# Here we'll use a |HGBR| as our learner.
+# Here we'll use a |RidgeCV| model as our learner.
 #
-from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import RidgeCV
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
-pipeline = make_pipeline(table_vec, HistGradientBoostingRegressor())
-pipeline_weekday = make_pipeline(table_vec_weekday, HistGradientBoostingRegressor())
+pipeline = make_pipeline(table_vec, StandardScaler(), SimpleImputer(), RidgeCV())
+pipeline_weekday = make_pipeline(
+    table_vec_weekday, StandardScaler(), SimpleImputer(), RidgeCV()
+)
+pipeline_periodic = make_pipeline(
+    table_vec_periodic, StandardScaler(), SimpleImputer(), RidgeCV()
+)
 
 ###############################################################################
 # Evaluating the model
