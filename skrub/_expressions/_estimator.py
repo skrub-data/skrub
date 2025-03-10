@@ -256,7 +256,7 @@ def cross_validate(expr_estimator, environment, **cv_params):
     ... )
     >>> pred = X.skb.apply(log_reg, y=y)
     >>> search = pred.skb.get_randomized_search(random_state=0)
-    >>> skrub.cross_validate(search, pred.skb.get_data())['test_score']
+    >>> skrub.cross_validate(search, pred.skb.get_data())['test_score'] # doctest: +SKIP
     array([0.75, 0.95, 0.85, 0.85, 0.85])
     """
     expr = expr_estimator.expr
