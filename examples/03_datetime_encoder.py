@@ -203,10 +203,16 @@ y_pred = pipeline.predict(X_test)
 pipeline_weekday.fit(X_train, y_train)
 y_pred_weekday = pipeline_weekday.predict(X_test)
 
+pipeline_periodic.fit(X_train, y_train)
+y_pred_periodic = pipeline_periodic.predict(X_test)
+
+X_plot = pd.to_datetime(X.tail(96)["date"]).values
+X_test_plot = pd.to_datetime(X_test.tail(96)["date"]).values
+
 fig, ax = plt.subplots(figsize=(12, 3))
 fig.suptitle("Predictions with tree models")
 ax.plot(
-    X.tail(96)["date"],
+    X_plot,
     y.tail(96).values,
     "x-",
     alpha=0.2,
@@ -214,17 +220,37 @@ ax.plot(
     color="black",
 )
 ax.plot(
-    X_test.tail(96)["date"],
+    X_test_plot,
     y_pred[-96:],
     "x-",
-    label="DatetimeEncoder() + HGBR prediction",
+    label="DatetimeEncoder() + RidgeCV prediction",
 )
 ax.plot(
-    X_test.tail(96)["date"],
+    X_test_plot,
     y_pred_weekday[-96:],
     "x-",
-    label="DatetimeEncoder(add_weekday=True) + HGBR prediction",
+    label="DatetimeEncoder(add_weekday=True) + RidgeCV prediction",
 )
+
+ax.plot(
+    X_test_plot,
+    y_pred_periodic[-96:],
+    "x-",
+    label='DatetimeEncoder(periodic_encoding="spline") + RidgeCV prediction',
+)
+
+
+ax.xaxis.set_major_locator(mdates.DayLocator())
+ax.xaxis.set_minor_locator(
+    mdates.HourLocator(
+        [0, 6, 12, 18],
+    )
+)
+
+# Major formatter: format date as "YYYY-MM-DD"
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+# # Minor formatter: format time as "HH:MM"
+ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
 
 ax.tick_params(axis="x", labelsize=7, labelrotation=75)
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
