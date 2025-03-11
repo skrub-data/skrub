@@ -398,7 +398,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Checking again which values are null if calling only transform
         not_nulls = ~sbd.is_null(column)
         # Replacing filled values back with nulls
-        _null_mask = sbd.copy_index(column, sbd.all_null_like(sbd.to_float32(column)))
+        null_mask = sbd.copy_index(column, sbd.all_null_like(sbd.to_float32(column)))
 
         all_extracted = []
         for feature in self._partial_features:
@@ -414,20 +414,21 @@ class DatetimeEncoder(SingleColumnTransformer):
 
             _new_features.append(_transformed)
 
-        X_out = sbd.make_dataframe_like(column, all_extracted)
+        # Setting the index back to that of the input column (pandas shenanigans)
+        X_out = sbd.copy_index(column, sbd.make_dataframe_like(column, all_extracted))
         X_out = sbd.concat_horizontal(X_out, *_new_features)
 
         # Censoring all the null features
-        X_out = sbd.where_row(X_out, not_nulls, _null_mask)
+        X_out = sbd.where_row(X_out, not_nulls, null_mask)
 
         return X_out
 
     def _fill_nulls(self, column):
         # Fill all null values in the column with an arbitrary value
         # This value will be replaced by nulls at the end of the transformation
-        _fill_value = 0
+        fill_value = 0
 
-        return sbd.fill_nulls(column, _fill_value)
+        return sbd.fill_nulls(column, fill_value)
 
     def _check_params(self):
         allowed = _TIME_LEVELS + [None]
@@ -580,7 +581,7 @@ class _CircularEncoder(SingleColumnTransformer):
 
         del y
 
-        _new_features = [
+        new_features = [
             np.sin(X / self.period * 2 * np.pi),
             np.cos(X / self.period * 2 * np.pi),
         ]
@@ -592,7 +593,7 @@ class _CircularEncoder(SingleColumnTransformer):
             f"{name}_circular_{idx}" for idx in range(self.n_components_)
         ]
 
-        return self._post_process(X, _new_features)
+        return self._post_process(X, new_features)
 
     def transform(self, X):
         """Transform a column.
@@ -608,12 +609,12 @@ class _CircularEncoder(SingleColumnTransformer):
             The extracted features.
         """
 
-        _new_features = [
+        new_features = [
             np.sin(X / self.period * 2 * np.pi),
             np.cos(X / self.period * 2 * np.pi),
         ]
 
-        return self._post_process(X, _new_features)
+        return self._post_process(X, new_features)
 
     def _post_process(self, X, result):
         result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result)))
