@@ -38,7 +38,7 @@ It is used by default in the |TableVectorizer|.
 .. |ToDatetime| replace::
     :class:`~skrub.ToDatetime`
 """
-
+# %%
 ###############################################################################
 # A problem with relevant datetime features
 # -----------------------------------------
@@ -133,10 +133,11 @@ pprint(table_vec_weekday.transformers_)
 # B-Splines (|SplineTransformer|) or trigonometric functions. To do so, set the
 # ``periodic encoding`` parameter ``circular`` or ``spline``. In this
 # example, we use ``spline``.
+# We can also add the day in the year with the parameter ``add_day_of_year``.
 
 table_vec_periodic = TableVectorizer(
     datetime=DatetimeEncoder(
-        periodic_encoding="spline",
+        add_weekday=True, periodic_encoding="spline", add_day_of_year=True
     )
 ).fit(X)
 
@@ -149,18 +150,12 @@ table_vec_periodic = TableVectorizer(
 # |DatetimeEncoder|.
 # Here we'll use a |RidgeCV| model as our learner.
 #
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import RidgeCV
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
 
-pipeline = make_pipeline(table_vec, StandardScaler(), SimpleImputer(), RidgeCV())
-pipeline_weekday = make_pipeline(
-    table_vec_weekday, StandardScaler(), SimpleImputer(), RidgeCV()
-)
-pipeline_periodic = make_pipeline(
-    table_vec_periodic, StandardScaler(), SimpleImputer(), RidgeCV()
-)
+pipeline = make_pipeline(table_vec, HistGradientBoostingRegressor())
+pipeline_weekday = make_pipeline(table_vec_weekday, HistGradientBoostingRegressor())
+pipeline_periodic = make_pipeline(table_vec_periodic, HistGradientBoostingRegressor())
 
 ###############################################################################
 # Evaluating the model
@@ -174,13 +169,28 @@ pipeline_periodic = make_pipeline(
 # which ensures that the test set is always in the future.
 from sklearn.model_selection import TimeSeriesSplit, cross_val_score
 
-cross_val_score(
+score_base = cross_val_score(
     pipeline,
     X,
     y,
-    scoring="neg_mean_squared_error",
+    scoring="neg_root_mean_squared_error",
     cv=TimeSeriesSplit(n_splits=5),
 )
+
+score_periodic = cross_val_score(
+    pipeline_periodic,
+    X,
+    y,
+    scoring="neg_root_mean_squared_error",
+    cv=TimeSeriesSplit(n_splits=5),
+)
+
+print(f"Base transformer - Mean RMSE : {-score_base.mean():.2f}")
+print(f"Transformer with periodic features - Mean RMSE : {-score_periodic.mean():.2f}")
+
+###############################################################################
+# As expected, introducing new features improved the RMSE by a noticeable amount.
+
 
 ###############################################################################
 # Plotting the prediction
@@ -223,20 +233,20 @@ ax.plot(
     X_test_plot,
     y_pred[-96:],
     "x-",
-    label="DatetimeEncoder() + RidgeCV prediction",
+    label="DatetimeEncoder() + HGBDT prediction",
 )
 ax.plot(
     X_test_plot,
     y_pred_weekday[-96:],
     "x-",
-    label="DatetimeEncoder(add_weekday=True) + RidgeCV prediction",
+    label="DatetimeEncoder(add_weekday=True) + HGBDT prediction",
 )
 
 ax.plot(
     X_test_plot,
     y_pred_periodic[-96:],
     "x-",
-    label='DatetimeEncoder(periodic_encoding="spline") + RidgeCV prediction',
+    label='DatetimeEncoder(periodic_encoding="spline") + HGBDT prediction',
 )
 
 
@@ -276,10 +286,10 @@ from sklearn.inspection import permutation_importance
 
 # In this case, we don't use the whole pipeline, because we want to compute the
 # importance of the features created by the DatetimeEncoder
-X_test_transform = pipeline[:-1].transform(X_test)
+X_test_transform = pipeline_weekday[:-1].transform(X_test)
 
 result = permutation_importance(
-    pipeline[-1], X_test_transform, y_test, n_repeats=10, random_state=0
+    pipeline_weekday[-1], X_test_transform, y_test, n_repeats=10, random_state=0
 )
 
 result = pd.DataFrame(
@@ -301,8 +311,8 @@ plt.tight_layout()
 plt.show()
 
 # %%
-# We can see that the hour of the day, the temperature and the humidity
-# are the most important features, which seems reasonable.
+# We can see that the hour of the day, the temperature, the day of the week
+# and the humidity are the most important features, which seems reasonable.
 #
 # Conclusion
 # ----------
@@ -311,3 +321,5 @@ plt.show()
 # features from a datetime column.
 # Also check out the |TableVectorizer|, which automatically recognizes
 # and transforms datetime columns by default.
+
+# %%
