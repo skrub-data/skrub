@@ -324,6 +324,8 @@ def check_expr(f):
 def _get_preview(obj):
     if isinstance(obj, Expr) and "preview" in obj._skrub_impl.results:
         return obj._skrub_impl.results["preview"]
+    if isinstance(obj, Expr) and isinstance(obj._skrub_impl, (Var, Value)):
+        return obj._skrub_impl.value
     return obj
 
 
@@ -438,12 +440,12 @@ class Expr:
     def __setitem__(self, key, value):
         msg = (
             "Do not modify an expression in-place. "
-            "Instead, use a function that returns a new value."
+            "Instead, use a function that returns a new value. "
             "This is necessary to allow chaining "
             "several steps in a sequence of transformations."
         )
-        obj = self._skrub_impl.results.get("preview", None)
-        if sbd.is_pandas(obj) and sbd.is_dataframe(obj):
+        obj = _get_preview(self)
+        if sbd.is_dataframe(obj) and sbd.is_pandas(obj):
             msg += (
                 "\nFor example if df is a pandas DataFrame:\n"
                 "df = df.assign(new_col=...) instead of df['new_col'] = ... "
@@ -455,7 +457,7 @@ class Expr:
             return super().__setattr__(name, value)
         raise TypeError(
             "Do not modify an expression in-place. "
-            "Instead, use a function that returns a new value."
+            "Instead, use a function that returns a new value. "
             "This is necessary to allow chaining "
             "several steps in a sequence of transformations."
         )

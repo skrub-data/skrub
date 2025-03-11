@@ -6,6 +6,61 @@ from sklearn.linear_model import LogisticRegression
 import skrub
 from skrub._utils import PassThrough
 
+#
+# Using eager statements on expressions
+#
+
+
+def test_for():
+    a = skrub.var("a", [1, 2, 3])
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly iterate over it"
+    ):
+        for item in a:
+            pass
+
+
+def test_if():
+    a = skrub.var("a", True)
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly use its Boolean value"
+    ):
+        if a:
+            pass
+
+
+def test_contains():
+    a = skrub.var("a", [1, 2, 3])
+    with pytest.raises(
+        TypeError, match=".*it is not possible to eagerly perform membership tests"
+    ):
+        2 in a
+
+
+def test_setitem():
+    a = skrub.var("a", {})
+    with pytest.raises(TypeError, match="Do not modify an expression in-place"):
+        a["one"] = 1
+    a = skrub.var("a", skrub.toy_orders().orders)
+    with pytest.raises(
+        TypeError, match=r"(?s)Do not modify an expression in-place.*df = df\.assign"
+    ):
+        a["one"] = 1
+
+
+def test_setattr():
+    class A:
+        pass
+
+    a = skrub.var("a", A())
+    with pytest.raises(TypeError, match="Do not modify an expression in-place"):
+        a.b = 0
+
+
+#
+# Misc errors
+#
+
 
 def test_concat_horizontal_numpy():
     a = skrub.var("a", skrub.toy_orders().orders)
