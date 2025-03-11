@@ -1,5 +1,7 @@
 import numpy as np
+import pandas as pd
 import pytest
+from sklearn.linear_model import LogisticRegression
 
 import skrub
 from skrub._utils import PassThrough
@@ -107,3 +109,23 @@ def test_get_search_without_learner():
         ),
     ):
         skrub.X().skb.get_grid_search()
+
+
+def test_get_grid_search_with_continuous_ranges():
+    with pytest.raises(
+        ValueError, match="Cannot use grid search with continuous numeric ranges"
+    ):
+        skrub.X().skb.apply(
+            LogisticRegression(**skrub.choose_float(0.01, 10.0, log=True, name="C")),
+            y=skrub.y(),
+        ).skb.get_grid_search()
+
+
+#
+# warnings
+#
+
+
+def test_int_column_names():
+    with pytest.warns(match="Some dataframe column names are not strings"):
+        skrub.X(pd.DataFrame({0: [1, 2]})).skb.apply("passthrough")
