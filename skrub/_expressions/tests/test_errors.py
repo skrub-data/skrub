@@ -58,6 +58,21 @@ def test_setattr():
 
 
 #
+# Check that evaluation failures are caught during preview if possible
+#
+
+
+def test_preview_failure():
+    # ok: we don't have data so cannot evaluate
+    skrub.X() / 0
+    # catch the zero division early
+    with pytest.raises(
+        Exception, match=r"(?s)'__truediv__\(\)' failed.*ZeroDivisionError"
+    ):
+        skrub.X(1) / 0
+
+
+#
 # Misc errors
 #
 
