@@ -77,6 +77,17 @@ def test_preview_failure():
 #
 
 
+def test_attribute_errors():
+    # general case
+    with pytest.raises(
+        Exception, match=r"(?s)Evaluation of '\.something' failed.*AttributeError"
+    ):
+        skrub.X(0).something
+    # added suggestion when the name exists in the .skb namespace
+    with pytest.raises(Exception, match=r"(?s).*Did you mean '\.skb\.apply"):
+        skrub.X(0).apply
+
+
 def test_concat_horizontal_numpy():
     a = skrub.var("a", skrub.toy_orders().orders)
     b = skrub.var("b", np.eye(3))
