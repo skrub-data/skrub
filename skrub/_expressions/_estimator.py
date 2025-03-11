@@ -1,5 +1,6 @@
 from functools import partial
 
+import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, clone
 
@@ -373,8 +374,6 @@ class ParamSearch(BaseEstimator):
         return self._get_cv_results_table()
 
     def _get_cv_results_table(self, return_metadata=False, detailed=False):
-        import pandas as pd
-
         expr_choices = choices(self.estimator_.expr)
 
         all_rows = []

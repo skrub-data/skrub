@@ -1,6 +1,8 @@
 import enum
 import traceback
 
+from joblib.externals import cloudpickle
+
 FITTED_PREDICTOR_METHODS = ("predict", "predict_proba", "decision_function", "score")
 FITTED_ESTIMATOR_METHODS = FITTED_PREDICTOR_METHODS + ("transform",)
 X_NAME = "_skrub_X"
@@ -26,8 +28,6 @@ def attribute_error(obj, name, comment=None):
 
 class _CloudPickle:
     def __getstate__(self):
-        from joblib.externals import cloudpickle
-
         try:
             state = dict(super().__getstate__())
         except AttributeError:
@@ -39,8 +39,6 @@ class _CloudPickle:
         return state
 
     def __setstate__(self, state):
-        from joblib.externals import cloudpickle
-
         for k in self._cloudpickle_attributes:
             state[k] = cloudpickle.loads(state[k])
         self.__dict__ = state
