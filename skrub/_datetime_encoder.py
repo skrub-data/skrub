@@ -29,7 +29,7 @@ _TIME_LEVELS = [
 ]
 
 _DEFAULT_ENCODING_PERIODS = {"year": 366, "month": 30, "weekday": 7, "hour": 24}
-_DEFAULT_ENCODING_SPLINES = {"year": 12, "month": 30, "weekday": 7, "hour": 24}
+_DEFAULT_ENCODING_SPLINES = {"year": 12, "month": 4, "weekday": 7, "hour": 24}
 
 
 @dispatch
@@ -354,9 +354,6 @@ class DatetimeEncoder(SingleColumnTransformer):
             f"{col_name}_{_feat}" for _feat in self._partial_features
         ]
 
-        # Finding the non-null values (to keep as is when censoring)
-        self.not_nulls = ~sbd.is_null(column)
-
         # Iterating over all attributes that end with _encoding to use the default
         # parameters
         if self.periodic_encoding is not None:
@@ -399,9 +396,9 @@ class DatetimeEncoder(SingleColumnTransformer):
         name = sbd.name(column)
 
         # Checking again which values are null if calling only transform
-        self.not_nulls = ~sbd.is_null(column)
+        not_nulls = ~sbd.is_null(column)
         # Replacing filled values back with nulls
-        _null_mask = sbd.all_null_like(sbd.to_float32(column))
+        _null_mask = sbd.copy_index(column, sbd.all_null_like(sbd.to_float32(column)))
 
         all_extracted = []
         for feature in self._partial_features:
@@ -421,7 +418,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         X_out = sbd.concat_horizontal(X_out, *_new_features)
 
         # Censoring all the null features
-        X_out = sbd.where_row(X_out, self.not_nulls, _null_mask)
+        X_out = sbd.where_row(X_out, not_nulls, _null_mask)
 
         return X_out
 
