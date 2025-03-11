@@ -17,7 +17,7 @@ from .. import _dataframe as sbd
 from .. import _selectors as s
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
-from .._utils import short_repr
+from .._utils import PassThrough, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import Choice, unwrap_chosen_or_default
@@ -595,7 +595,7 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
         _check_wrap_params(cols, how, allow_reject, reason)
 
     if estimator in [None, "passthrough"]:
-        estimator = _PassThrough()
+        estimator = PassThrough()
     if isinstance(estimator, Choice):
         return estimator.map_values(
             lambda v: _wrap_estimator(v, cols, how=how, allow_reject=allow_reject, X=X)
@@ -615,12 +615,17 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     )
 
 
-def _check_name(name):
+def check_name(name, is_var):
+    if is_var and name is None:
+        raise TypeError(
+            "The `name` of a `skrub.var()` must be a string, it cannot be None."
+        )
     if name is None:
         return
+    description = "a string" if is_var else "a string or None"
     if not isinstance(name, str):
         raise TypeError(
-            f"'name' must be a string or None, got object of type: {type(name)}"
+            f"`name` must be {description}, got object of type: {type(name)}"
         )
     if name.startswith("_skrub_"):
         raise ValueError(
@@ -739,11 +744,7 @@ def var(name, value=Constants.NO_VALUE):
     Much more information about skrub variables is provided in the examples
     gallery.
     """
-    if name is None:
-        raise TypeError(
-            "'name' for a variable cannot be None, please provide a string."
-        )
-    _check_name(name)
+    check_name(name, is_var=True)
     return Expr(Var(name, value=value))
 
 
@@ -931,17 +932,6 @@ class FreezeAfterFit(ExprImpl):
         return self.value_
 
 
-class _PassThrough(BaseEstimator):
-    def fit(self):
-        return self
-
-    def fit_transform(self, X, y=None):
-        return X
-
-    def transform(self, X):
-        return X
-
-
 def _check_column_names(X):
     # NOTE: could allow int column names when how='full_frame', prob. not worth
     # the added complexity.
@@ -1123,20 +1113,21 @@ class CallMethod(ExprImpl):
     def compute(self, e, mode, environment):
         try:
             return getattr(e.obj, e.method_name)(*e.args, **e.kwargs)
-        except (TypeError, AssertionError) as err:
+        except Exception as err:
             # Better error message if we used the pandas DataFrame's `apply()`
             # but we meant `.skb.apply()`
-            if (
-                e.method_name == "apply"
-                and e.args
-                and isinstance(e.args[0], BaseEstimator)
-            ):
-                raise TypeError(
-                    f"Calling `.apply()` with an estimator: `{e.args[0]!r}` "
-                    "failed with the error above. Did you mean `.skb.apply()`?"
-                ) from err
-            else:
-                raise
+            if e.method_name == "apply" and e.args:
+                if isinstance(e.args[0], BaseEstimator):
+                    raise TypeError(
+                        f"Calling `.apply()` with an estimator: `{e.args[0]!r}` "
+                        "failed with the error above. Did you mean `.skb.apply()`?"
+                    ) from err
+                if e.args[0] in [None, "passthrough"]:
+                    raise TypeError(
+                        f"Calling `.apply()` with the argument: `{e.args[0]!r}` "
+                        "failed with the error above. Did you mean `.skb.apply()`?"
+                    ) from err
+            raise
 
     def get_func_name(self):
         return self.method_name
@@ -1374,7 +1365,7 @@ class ConcatHorizontal(ExprImpl):
             )
         if sbd.is_dataframe(e.others):
             raise TypeError(
-                "`concat_horizontal` should be passed a list of dataframes."
+                "`concat_horizontal` should be passed a list of dataframes. "
                 "If you have a single dataframe, wrap it in a list: "
                 "`concat_horizontal([table_1])` not `concat_horizontal(table_1)`"
             )

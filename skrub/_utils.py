@@ -7,7 +7,7 @@ from typing import Iterable
 
 import numpy as np
 import sklearn
-from sklearn.base import clone
+from sklearn.base import BaseEstimator, clone
 from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
 
@@ -324,3 +324,14 @@ def check_output(
             " for details."
         )
     raise TypeError(message)
+
+
+class PassThrough(BaseEstimator):
+    def fit(self):
+        return self
+
+    def fit_transform(self, X, y=None):
+        return X
+
+    def transform(self, X):
+        return X

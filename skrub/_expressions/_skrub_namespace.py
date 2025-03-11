@@ -23,6 +23,7 @@ from ._expressions import (
     Var,
     check_can_be_pickled,
     check_expr,
+    check_name,
 )
 from ._inspection import (
     describe_param_grid,
@@ -1169,8 +1170,7 @@ class SkrubNamespace:
         >>> d.skb.eval({'c': -1}) # -1 * 10
         -10
         """
-        if name is None and isinstance(self._expr._skrub_impl, Var):
-            raise TypeError("The name of a skrub variable cannot be None.")
+        check_name(name, isinstance(self._expr._skrub_impl, Var))
         new = self._expr._skrub_impl.__copy__()
         new.name = name
         return Expr(new)
