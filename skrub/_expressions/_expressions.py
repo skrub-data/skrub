@@ -29,7 +29,6 @@ __all__ = [
     "y",
     "as_expr",
     "deferred",
-    "deferred_optional",
     "check_expr",
     "check_can_be_pickled",
 ]
@@ -1319,22 +1318,6 @@ def deferred(func):
         )
 
     return deferred_func
-
-
-def deferred_optional(func, cond):
-    from ._choosing import choose_bool
-
-    if isinstance(cond, str):
-        cond = choose_bool(cond)
-
-    deferred_func = deferred(func)
-
-    def f(*args, **kwargs):
-        return cond.match(
-            {True: deferred_func(*args, **kwargs), False: args[0]}
-        ).as_expr()
-
-    return f
 
 
 class ConcatHorizontal(ExprImpl):
