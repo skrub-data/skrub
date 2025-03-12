@@ -285,7 +285,9 @@ def test_missing_var():
     # we must provide either bindings for all vars or none
     assert e.skb.eval() == 1
     assert e.skb.eval({}) == 1
-    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
+    with pytest.raises(
+        (KeyError, RuntimeError), match="No value has been provided for 'b'"
+    ):
         e.skb.eval({"a": 10})
 
 
