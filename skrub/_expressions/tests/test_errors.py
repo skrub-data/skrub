@@ -286,7 +286,10 @@ def test_missing_var():
     assert e.skb.eval() == 1
     assert e.skb.eval({}) == 1
     with pytest.raises(
-        (KeyError, RuntimeError), match="No value has been provided for 'b'"
+        (KeyError, RuntimeError),
+        match=(
+            "(Evaluation of node <Var 'b'> failed|No value has been provided for 'b')"
+        ),
     ):
         e.skb.eval({"a": 10})
 
