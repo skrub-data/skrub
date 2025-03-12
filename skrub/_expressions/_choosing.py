@@ -476,6 +476,8 @@ class BaseChoice:
     recognizable with ``isinstance`` checks.
     """
 
+    __hash__ = None
+
     def as_expr(self):
         """Wrap the choice in an expression.
 
@@ -730,6 +732,8 @@ class Match:
 
     choice: Choice
     outcome_mapping: dict
+
+    __hash__ = None
 
     def match(self, outcome_mapping, default=Constants.NO_VALUE):
         """Select a value depending on the result of this match.

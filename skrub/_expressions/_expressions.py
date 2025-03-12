@@ -252,23 +252,6 @@ def _find_dataframe(expr, func_name):
     return None
 
 
-def _bad_match_key(expr):
-    from ._evaluation import needs_eval
-
-    impl = expr._skrub_impl
-    if not isinstance(impl, Match):
-        return None
-    contains_expr, found = needs_eval(list(impl.targets.keys()), return_node=True)
-    if not contains_expr:
-        return None
-    return {
-        "message": (
-            "`.skb.match()` keys must be actual values, not expressions nor choices. "
-            f"Found: {short_repr(found)}"
-        )
-    }
-
-
 def check_expr(f):
     """Check an expression and evaluate the preview.
 
@@ -295,9 +278,6 @@ def check_expr(f):
             raise ValueError(conflicts["message"])
         if (found_df := _find_dataframe(expr, func_name)) is not None:
             raise TypeError(found_df["message"])
-
-        if (bad_key := _bad_match_key(expr)) is not None:
-            raise TypeError(bad_key["message"])
 
         # Note: if checking pickling for every step is expensive we could also
         # do it in `get_estimator()` only, ie before any cross-val or
@@ -354,6 +334,8 @@ def _check_call(f):
 
 
 class Expr:
+    __hash__ = None
+
     def __init__(self, impl):
         self._skrub_impl = impl
 
@@ -1092,7 +1074,7 @@ class Call(_CloudPickle, ExprImpl):
             if isinstance(impl, GetAttr):
                 name = impl.attr_name
             elif isinstance(impl, GetItem):
-                name = impl.key
+                name = f"{{ ... }}[{short_repr(impl.key)}]"
             elif isinstance(impl, Var):
                 name = impl.name
             else:

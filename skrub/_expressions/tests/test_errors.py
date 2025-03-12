@@ -1,3 +1,5 @@
+import pickle
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -73,6 +75,38 @@ def test_preview_failure():
 
 
 #
+# pickling
+#
+
+
+class NoPickle:
+    def __deepcopy__(self, mem):
+        return self
+
+    def __getstate__(self):
+        raise pickle.PicklingError("cannot pickle NoPickle")
+
+
+def test_pickling_preview_failure():
+    with pytest.raises(
+        pickle.PicklingError,
+        match="The check to verify that the pipeline can be serialized failed",
+    ):
+        skrub.X([]) + [NoPickle()]
+
+
+def test_pickling_estimator_failure():
+    a = []
+    e = skrub.X([]) + a
+    a.append(NoPickle())
+    with pytest.raises(
+        pickle.PicklingError,
+        match="The check to verify that the pipeline can be serialized failed",
+    ):
+        e.skb.get_estimator()
+
+
+#
 # Misc errors
 #
 
@@ -109,6 +143,14 @@ def test_apply_instead_of_skb_apply():
         a.apply("passthrough")
     with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
         a.apply(PassThrough())
+
+
+def test_method_call_failure():
+    with pytest.raises(
+        Exception,
+        match=r"(?s)Evaluation of '.upper\(\)' failed.*takes no arguments \(1 given\)",
+    ):
+        skrub.var("a", "hello").upper(0)
 
 
 def test_duplicate_choice_name():
@@ -161,6 +203,8 @@ def test_bad_names():
     ):
         # less likely to happen but for the sake of completeness
         (skrub.var("a") + 2).skb.set_name(0)
+    with pytest.raises(ValueError, match="names starting with '_skrub_'"):
+        skrub.var("_skrub_X")
 
 
 def test_pass_df_instead_of_expr():
@@ -200,6 +244,49 @@ def test_get_grid_search_with_continuous_ranges():
             LogisticRegression(**skrub.choose_float(0.01, 10.0, log=True, name="C")),
             y=skrub.y(),
         ).skb.get_grid_search()
+
+
+def test_expr_with_circular_ref():
+    # expressions are not allowed to contain circular references as it would
+    # complicate the implementation and there is probably no use case. We want
+    # to get an understandable error and not an infinite loop or memory error.
+    e = {}
+    e["a"] = [0, {"b": e}]
+    with pytest.raises(
+        ValueError, match="expressions cannot contain circular references"
+    ):
+        skrub.as_expr(e).skb.eval()
+
+
+@pytest.mark.parametrize(
+    "attribute", ["__copy__", "__float__", "__int__", "__reversed__"]
+)
+def test_bad_attr(attribute):
+    with pytest.raises(AttributeError):
+        getattr(skrub.X(), attribute)
+
+
+def test_unhashable():
+    with pytest.raises(TypeError, match="unhashable type"):
+        {skrub.X()}
+    with pytest.raises(TypeError, match="unhashable type"):
+        {skrub.choose_bool(name="b")}
+    with pytest.raises(TypeError, match="unhashable type"):
+        {skrub.choose_bool(name="b").if_else(0, 1)}
+
+
+#
+# Bad arguments passed to eval()
+#
+
+
+def test_missing_var():
+    e = skrub.var("a", 0) + skrub.var("b", 1)
+    # we must provide either bindings for all vars or none
+    assert e.skb.eval() == 1
+    assert e.skb.eval({}) == 1
+    with pytest.raises(KeyError, match="No value has been provided for 'b'"):
+        e.skb.eval({"a": 10})
 
 
 #

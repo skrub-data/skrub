@@ -24,14 +24,33 @@ def test_doc(a):
     assert "Encode the string using the codec" in a.encode.__doc__
 
 
+class _A:
+    pass
+
+
+def test_missing_doc():
+    with pytest.raises(AttributeError):
+        skrub.X().__doc__
+
+    with pytest.raises(AttributeError):
+        skrub.X(_A()).__doc__
+
+
 @pytest.mark.parametrize("a", example_strings())
 def test_signature(a):
     assert "encoding" in inspect.signature(a.encode).parameters
 
 
+def test_missing_signature():
+    with pytest.raises(AttributeError):
+        skrub.X(0).__signature__
+
+
 def test_key_completions():
     a = skrub.var("a", {"one": 1}) | skrub.var("b", {"two": 2})
     assert a._ipython_key_completions_() == ["one", "two"]
+    assert skrub.X()._ipython_key_completions_() == []
+    assert skrub.X(0)._ipython_key_completions_() == []
 
 
 def test_repr_html():
@@ -41,6 +60,9 @@ def test_repr_html():
     a = skrub.var("thename", skrub.toy_orders().orders)
     r = a._repr_html_()
     assert "thename" in r and "table-report" in r
+    assert "thename" in skrub.var("thename")._repr_html_()
+    # example without a name
+    assert "add" in (skrub.var("thename", 0) + 2)._repr_html_()
 
 
 def test_repr():
@@ -60,4 +82,118 @@ def test_repr():
     Result:
     ―――――――
     'one two'
+    >>> skrub.as_expr({'a': 0})
+    <Value dict>
+    Result:
+    ―――――――
+    {'a': 0}
+    >>> skrub.var('a', 1).skb.match({1: 10, 2: 20})
+    <Match <Var 'a'>>
+    >>> from sklearn.preprocessing import StandardScaler, RobustScaler
+    >>> skrub.X().skb.apply(StandardScaler())
+    <Apply StandardScaler>
+    >>> skrub.X().skb.apply('passthrough')
+    <Apply 'passthrough'>
+    >>> skrub.X().skb.apply(None)
+    <Apply passthrough>
+    >>> skrub.X().skb.apply(skrub.optional(StandardScaler(), name='scale'))
+    <Apply StandardScaler>
+    >>> skrub.X().skb.apply(
+    ...     skrub.choose_from([RobustScaler(), StandardScaler()], name='scale'))
+    <Apply RobustScaler>
+    >>> skrub.as_expr({'a': 0})['a']
+    <GetItem 'a'>
+    Result:
+    ―――――――
+    0
+    >>> skrub.as_expr({'a': 0, 'b': 1})[skrub.choose_from(['a', 'b'], name='c')]
+    <GetItem choose_from(['a', 'b'], name='c')>
+    Result:
+    ―――――――
+    0
+    >>> skrub.as_expr({'a': 0, 'b': 1})[skrub.var('key', 'b')]
+    <GetItem <Var 'key'>>
+    Result:
+    ―――――――
+    1
+    >>> skrub.as_expr('hello').upper()
+    <CallMethod 'upper'>
+    Result:
+    ―――――――
+    'HELLO'
+    >>> a = skrub.var('a', 'hello')
+    >>> b = skrub.var('b', 1)
+    >>> skrub.as_expr({0: a.upper, 1: a.title})[b]()
+    <Call "{ ... }[<Var 'b'>]">
+    Result:
+    ―――――――
+    'Hello'
+    >>> skrub.var('f', str.upper)('abc')
+    <Call 'f'>
+    Result:
+    ―――――――
+    'ABC'
+
+    Weird (unnecessary) use of deferred to trigger a case where calling a
+    method has not been translated to a CallMethod
+
+    >>> skrub.deferred(skrub.var('a', 'hello').upper)()
+    <Call 'upper'>
+    Result:
+    ―――――――
+    'HELLO'
+
+    In cases that are hard to figure out we fall back on a less informative
+    default
+
+    >>> skrub.choose_from([str.upper, str.title], name='f').as_expr()('abc')
+    <Call 'Value'>
+    Result:
+    ―――――――
+    'ABC'
+    >>> skrub.as_expr(str.upper)('abc')
+    <Call 'Value'>
+    Result:
+    ―――――――
+    'ABC'
+
+    >>> a = skrub.var('a')
+    >>> b = skrub.var('b')
+    >>> c = skrub.var('c', 0)
+    >>> a + b
+    <BinOp: add>
+    >>> - a
+    <UnaryOp: neg>
+    >>> 2 + a
+    <BinOp: add>
+    >>> c + c
+    <BinOp: add>
+    Result:
+    ―――――――
+    0
+    >>> - c
+    <UnaryOp: neg>
+    Result:
+    ―――――――
+    0
+    >>> 2 - c
+    <BinOp: sub>
+    Result:
+    ―――――――
+    2
+
+    >>> X = skrub.X()
+    >>> X.skb.concat_horizontal([X, X])
+    <ConcatHorizontal: 3 dataframes>
+
+    When we do not know the length of the list of dataframes to concatenate
+
+    >>> X.skb.concat_horizontal(skrub.as_expr([X, X]))
+    <ConcatHorizontal>
     """
+
+
+def test_format():
+    assert f"{skrub.X()}" == "<Var 'X'>"
+    with pytest.raises(ValueError, match="Invalid format specifier"):
+        f"{skrub.X(0.2):.2f}"

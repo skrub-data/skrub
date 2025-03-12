@@ -169,7 +169,15 @@ class _ExprTraversal:
     def handle_mapping(self, mapping):
         new_mapping = {}
         for k, v in mapping.items():
-            new_mapping[(yield k)] = yield v
+            # note evaluating the keys is not needed because expressions,
+            # choices and matches are not hashable so we do not need to
+            # (yield k).
+            #
+            # In theory, because scikit-learn estimators are (unfortunately)
+            # hashable an estimator containing a choice could be a key but that
+            # wouldn't make sense and evaluating couldn't help in any case
+            # because estimators are hashed and compared by id.
+            new_mapping[k] = yield v
         return type(mapping)(new_mapping)
 
     def handle_slice(self, s):
