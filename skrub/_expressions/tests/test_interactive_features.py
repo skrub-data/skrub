@@ -56,6 +56,8 @@ def test_key_completions():
 def test_repr_html():
     a = skrub.var("thename", "thevalue")
     r = a._repr_html_()
+    if "Please install" in r:
+        pytest.skip("graphviz not installed")
     assert "thename" in r and "thevalue" in r
     a = skrub.var("thename", skrub.toy_orders().orders)
     r = a._repr_html_()
