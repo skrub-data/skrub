@@ -192,6 +192,13 @@ def test_repr():
 
     >>> X.skb.concat_horizontal(skrub.as_expr([X, X]))
     <ConcatHorizontal>
+
+    if we end up applying a OnEachColumn, seeing the inner transformer is more
+    informative.
+
+    >>> from skrub._wrap_transformer import wrap_transformer
+    >>> skrub.X().skb.apply(wrap_transformer(skrub.DatetimeEncoder(), ['a', 'b']))
+    <Apply DatetimeEncoder>
     """
 
 

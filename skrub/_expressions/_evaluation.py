@@ -299,10 +299,9 @@ def evaluate(expr, mode="preview", environment=None, callback=None, clear=False)
             clear_results(expr, mode=mode)
 
 
-class _Reachable(_Evaluator):
+class _Reachable(_ExprTraversal):
     def __init__(self, mode):
         self.mode = mode
-        self.callback = None
 
     def run(self, expr):
         self._reachable = {}
@@ -311,11 +310,13 @@ class _Reachable(_Evaluator):
 
     def handle_expr(self, expr):
         self._reachable[id(expr)] = expr
+        if self.mode in expr._skrub_impl.results:
+            return expr
         return (yield from super().handle_expr(expr))
 
 
 def reachable(expr, mode):
-    return _Reachable(mode).run(expr)
+    return _Reachable(mode=mode).run(expr)
 
 
 class _Printer(_ExprTraversal):

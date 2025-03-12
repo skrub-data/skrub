@@ -1170,6 +1170,14 @@ class SkrubNamespace:
 
         >>> d.skb.eval({'c': -1}) # -1 * 10
         -10
+
+        For expressions that are not variables, the name can be set back to the
+        default ``None``:
+
+        >>> e = c.skb.set_name(None)
+        >>> e.skb.name
+        >>> c.skb.name
+        'c'
         """
         check_name(name, isinstance(self._expr._skrub_impl, Var))
         new = self._expr._skrub_impl.__copy__()

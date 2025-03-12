@@ -134,3 +134,14 @@ def test_match():
     assert d.skb.eval({"a": "missing key", "e": 4}) == 4
     # no value for 'e'
     assert d.skb.eval({"a": "left", "b": 10}) == 10
+
+
+def test_predictor_as_transformer():
+    pred = skrub.X().skb.apply(LogisticRegression(), y=skrub.y()) * 7
+    assert pred.skb.eval({"X": [[10], [-10]], "y": [0, 1]})[1] == 7.0
+
+
+def test_get_estimator():
+    e = (skrub.var("a", 0) + skrub.var("b", 1)).skb.get_estimator()
+    assert e.fit_transform({"a": 10, "b": 2}) == 12
+    assert e.transform({"a": 100, "b": 30}) == 130
