@@ -11,8 +11,6 @@ from sklearn.base import clone as skl_clone
 
 from . import _choosing
 from ._expressions import (
-    _BUILTIN_MAP,
-    _BUILTIN_SEQ,
     Expr,
     IfElse,
     Match,
@@ -35,6 +33,10 @@ __all__ = [
     "get_params",
     "set_params",
 ]
+
+_BUILTIN_SEQ = (list, tuple, set, frozenset)
+
+_BUILTIN_MAP = (dict,)
 
 
 def _as_gen(f):
@@ -160,6 +162,11 @@ class _ExprTraversal:
         return value
 
     def handle_seq(self, seq):
+        # Note set and frozenset cannot contain directly expressions and
+        # choices which are not hashable but they could in theory contain an
+        # estimator that contains a choice (scikit-learn estimators are
+        # hashable regardless of their params) so we evaluate items for those
+        # collections as well.
         new_seq = []
         for item in seq:
             value = yield item

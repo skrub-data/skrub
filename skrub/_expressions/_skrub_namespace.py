@@ -33,10 +33,11 @@ from ._inspection import (
 from ._utils import Constants, attribute_error
 
 
-def _expr_values_provided(expr, environment):
+def _var_values_provided(expr, environment):
     all_nodes = nodes(expr)
-    names = {node._skrub_impl.name for node in all_nodes}
-    names.discard(None)
+    names = {
+        node._skrub_impl.name for node in all_nodes if isinstance(node._skrub_impl, Var)
+    }
     intersection = names.intersection(environment.keys())
     return bool(intersection)
 
@@ -581,7 +582,7 @@ class SkrubNamespace:
             clear = True
             environment = {
                 **environment,
-                "_skrub_use_var_values": not _expr_values_provided(
+                "_skrub_use_var_values": not _var_values_provided(
                     self._expr, environment
                 ),
             }

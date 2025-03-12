@@ -113,10 +113,6 @@ _UNARY_OPS = [
     "__pos__",
 ]
 
-_BUILTIN_SEQ = (list, tuple, set, frozenset)
-
-_BUILTIN_MAP = (dict,)
-
 
 class UninitializedVariable(KeyError):
     """
@@ -129,6 +125,7 @@ def _remove_shell_frames(stack):
         (pathlib.Path("IPython", "core", "interactiveshell.py"), "run_code"),
         (pathlib.Path("IPython", "utils", "py3compat.py"), "execfile"),
         (pathlib.Path("sphinx", "config.py"), "eval_config_file"),
+        (pathlib.Path("_pytest", "python.py"), "pytest_pyfunc_call"),
         ("code.py", "runcode"),
     ]
     for i, f in enumerate(stack):
