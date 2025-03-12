@@ -130,7 +130,9 @@ def _remove_shell_frames(stack):
     ]
     for i, f in enumerate(stack):
         for file_path, func_name in shells:
-            if pathlib.Path(f.filename).match(file_path) and f.name == func_name:
+            # in python 3.9 Path.match(Path(...)) raises an exception, argument
+            # must be a string
+            if pathlib.Path(f.filename).match(str(file_path)) and f.name == func_name:
                 return stack[i + 1 :]
     return stack
 
