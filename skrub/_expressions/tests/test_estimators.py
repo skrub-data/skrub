@@ -1,5 +1,6 @@
 import copy
 import io
+from unittest.mock import Mock
 
 import numpy as np
 import pandas as pd
@@ -76,17 +77,24 @@ def get_expression_and_data(data_kind):
 
 @pytest.fixture(params=["simple", "unprocessed"])
 def _expression_and_data(request):
-    return get_expression_and_data(request.param)
+    data_kind = request.param
+    expr, data = get_expression_and_data(data_kind)
+    return {"data_kind": data_kind, "expression": expr, "data": data}
 
 
 @pytest.fixture
 def expression(_expression_and_data):
-    return _expression_and_data[0]
+    return _expression_and_data["expression"]
 
 
 @pytest.fixture
 def data(_expression_and_data):
-    return _expression_and_data[1]
+    return _expression_and_data["data"]
+
+
+@pytest.fixture
+def data_kind(_expression_and_data):
+    return _expression_and_data["data_kind"]
 
 
 @pytest.fixture(params=[None, 1, 2])
@@ -129,11 +137,20 @@ def test_grid_search(expression, data, n_jobs):
     assert 0.75 < search.results_["mean_test_score"].iloc[0] < 0.9
 
 
-def test_nested_cv(expression, data, n_jobs):
+def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     search = expression.skb.get_randomized_search(
         n_iter=3, n_jobs=n_jobs, random_state=0
     )
+    mock = Mock(side_effect=pd.read_csv)
+    monkeypatch.setattr(pd, "read_csv", mock)
+
     score = skrub.cross_validate(search, data, n_jobs=n_jobs)["test_score"]
+
+    # when data is loaded from csv we check that the caching results in
+    # read_csv being called exactly twice (we have 2 different 'files' to
+    # load).
+    assert mock.call_count == (2 if data_kind == "unprocessed" else 0)
+
     assert len(score) == 5
     assert 0.75 < score.mean() < 0.9
 
