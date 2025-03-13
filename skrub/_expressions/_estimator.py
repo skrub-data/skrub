@@ -1,5 +1,3 @@
-from functools import partial
-
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, clone
@@ -14,21 +12,12 @@ from ._evaluation import (
     find_y,
     get_params,
     needs_eval,
-    nodes,
     param_grid,
-    reachable,
     set_params,
 )
 from ._expressions import Apply, Expr
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._utils import X_NAME, Y_NAME, attribute_error
-
-
-def _prune_cache(expr, mode, *args, **kwargs):
-    reachable_nodes = reachable(expr, mode)
-    for node in nodes(expr):
-        if id(node) not in reachable_nodes:
-            node._skrub_impl.results.pop(mode, None)
 
 
 def _check_env(environment, caller_name):
@@ -83,15 +72,11 @@ class ExprEstimator(BaseEstimator):
     def fit_transform(self, environment):
         # TODO: not needed, can be handled by _eval_in_mode?
         _check_env(environment, "fit_transform")
-        callback = partial(_prune_cache, self.expr, "fit_transform")
-        return evaluate(
-            self.expr, "fit_transform", environment, clear=True, callback=callback
-        )
+        return evaluate(self.expr, "fit_transform", environment, clear=True)
 
     def _eval_in_mode(self, mode, environment):
         _check_env(environment, mode)
-        callback = partial(_prune_cache, self.expr, mode)
-        return evaluate(self.expr, mode, environment, clear=True, callback=callback)
+        return evaluate(self.expr, mode, environment, clear=True)
 
     def report(self, mode, environment, **full_report_kwargs):
         from ._inspection import full_report
@@ -194,14 +179,11 @@ class CompatibleExprEstimator(_SklearnCompatibleMixin, ExprEstimator):
 
     def fit_transform(self, X, y=None, environment=None):
         environment = self._pick_env(environment)
-        callback = partial(_prune_cache, self.expr, "fit_transform")
         xy_environment = {X_NAME: X}
         if y is not None:
             xy_environment[Y_NAME] = y
         xy_environment = {**environment, **xy_environment}
-        return evaluate(
-            self.expr, "fit_transform", xy_environment, clear=True, callback=callback
-        )
+        return evaluate(self.expr, "fit_transform", xy_environment, clear=True)
 
     def fit(self, X, y=None, environment=None):
         _ = self.fit_transform(X, y=y, environment=environment)
@@ -209,12 +191,11 @@ class CompatibleExprEstimator(_SklearnCompatibleMixin, ExprEstimator):
 
     def _eval_in_mode(self, mode, X, y=None, environment=None):
         environment = self._pick_env(environment)
-        callback = partial(_prune_cache, self.expr, mode)
         xy_environment = {X_NAME: X}
         if y is not None:
             xy_environment[Y_NAME] = y
         xy_environment = {**environment, **xy_environment}
-        return evaluate(self.expr, mode, xy_environment, clear=True, callback=callback)
+        return evaluate(self.expr, mode, xy_environment, clear=True)
 
 
 def cross_validate(expr_estimator, environment, **cv_params):
@@ -264,9 +245,19 @@ def cross_validate(expr_estimator, environment, **cv_params):
     """
     expr = expr_estimator.expr
     X_y = _find_X_y(expr)
-    X = evaluate(X_y["X"].skb.clone(), "fit_transform", environment)
+    X = evaluate(
+        X_y["X"].skb.clone(),
+        mode="fit_transform",
+        environment=environment,
+        clear=False,
+    )
     if "y" in X_y:
-        y = evaluate(X_y["y"].skb.clone(), "fit_transform", environment)
+        y = evaluate(
+            X_y["y"].skb.clone(),
+            mode="fit_transform",
+            environment=environment,
+            clear=False,
+        )
     else:
         y = None
 
@@ -318,9 +309,19 @@ class ParamSearch(BaseEstimator):
 
     def fit(self, environment):
         X_y = _find_X_y(self.expr)
-        X = evaluate(X_y["X"].skb.clone(), "fit_transform", environment)
+        X = evaluate(
+            X_y["X"].skb.clone(),
+            mode="fit_transform",
+            environment=environment,
+            clear=False,
+        )
         if "y" in X_y:
-            y = evaluate(X_y["y"].skb.clone(), "fit_transform", environment)
+            y = evaluate(
+                X_y["y"].skb.clone(),
+                mode="fit_transform",
+                environment=environment,
+                clear=False,
+            )
         else:
             y = None
         self.estimator_ = CompatibleExprEstimator(self.expr.skb.clone(), environment)

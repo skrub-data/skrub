@@ -29,7 +29,6 @@ __all__ = [
     "nodes",
     "clear_results",
     "describe_steps",
-    "reachable",
     "get_params",
     "set_params",
 ]
@@ -287,9 +286,12 @@ class _Evaluator(_ExprTraversal):
             raise RuntimeError(msg) from e
 
 
-def evaluate(expr, mode="preview", environment=None, callback=None, clear=False):
+def evaluate(expr, mode="preview", environment=None, clear=False):
     if clear:
+        callback = _cache_pruner(expr, mode)
         clear_results(expr, mode=mode)
+    else:
+        callback = None
     try:
         return _Evaluator(mode=mode, environment=environment, callback=callback).run(
             expr
@@ -315,8 +317,16 @@ class _Reachable(_ExprTraversal):
         return (yield from super().handle_expr(expr))
 
 
-def reachable(expr, mode):
-    return _Reachable(mode=mode).run(expr)
+def _cache_pruner(expr, mode):
+    all_nodes = nodes(expr)
+
+    def prune(*args, **kwargs):
+        reachable_nodes = _Reachable(mode).run(expr)
+        for node in all_nodes:
+            if id(node) not in reachable_nodes:
+                node._skrub_impl.results.pop(mode, None)
+
+    return prune
 
 
 class _Printer(_ExprTraversal):
