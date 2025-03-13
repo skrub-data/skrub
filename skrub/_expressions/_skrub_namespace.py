@@ -1430,7 +1430,7 @@ class ApplyNamespace(SkrubNamespace):
 
         >>> X_a, y_a = make_classification(random_state=0)
         >>> X, y = skrub.X(X_a), skrub.y(y_a)
-        >>> selector = SelectKBest(k=skrub.choose_int(4, 80, log=True, name='k'))
+        >>> selector = SelectKBest(k=skrub.choose_int(4, 20, log=True, name='k'))
         >>> logistic = LogisticRegression(C=skrub.choose_float(0.1, 10.0, log=True, name="C"))
         >>> rf = RandomForestClassifier(
         ...     n_estimators=skrub.choose_int(3, 30, log=True, name="N 🌴"),
@@ -1441,28 +1441,28 @@ class ApplyNamespace(SkrubNamespace):
         ... )
         >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_param_grid())
-        - k: choose_int(4, 80, log=True, name='k')
+        - k: choose_int(4, 20, log=True, name='k')
           classifier: 'logistic'
           C: choose_float(0.1, 10.0, log=True, name='C')
-        - k: choose_int(4, 80, log=True, name='k')
+        - k: choose_int(4, 20, log=True, name='k')
           classifier: 'rf'
           N 🌴: choose_int(3, 30, log=True, name='N 🌴')
-        - k: choose_int(4, 80, log=True, name='k')
+        - k: choose_int(4, 20, log=True, name='k')
           classifier: 'dummy'
 
         >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
         >>> search.results_
            mean_test_score classifier         C   k   N 🌴
-        0             0.93         rf       NaN   5  18.0
-        1             0.90         rf       NaN  10  20.0
-        2             0.87         rf       NaN  12  12.0
-        3             0.84   logistic  0.109758  48   NaN
-        4             0.82   logistic  0.584633  42   NaN
-        5             0.80   logistic  1.533519  50   NaN
-        6             0.79   logistic  9.062263  43   NaN
+        0             0.93         rf       NaN   6  20.0
+        1             0.92         rf       NaN   4  18.0
+        2             0.90         rf       NaN   7  12.0
+        3             0.84   logistic  0.109758  15   NaN
+        4             0.82   logistic  0.584633  14   NaN
+        5             0.82   logistic  9.062263  14   NaN
+        6             0.80   logistic  1.533519  15   NaN
         7             0.50      dummy       NaN   4   NaN
-        8             0.50      dummy       NaN  21   NaN
-        9             0.50      dummy       NaN   6   NaN
+        8             0.50      dummy       NaN   9   NaN
+        9             0.50      dummy       NaN   5   NaN
         """  # noqa: E501
 
         search = ParamSearch(self.clone(), RandomizedSearchCV(None, None, **kwargs))
