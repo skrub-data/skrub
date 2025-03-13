@@ -183,6 +183,20 @@ def test_duplicate_choice_name():
         skrub.X() + skrub.var("X")
 
 
+def test_duplicate_X():
+    with pytest.raises(
+        ValueError, match=r"Only one node can be marked with `mark_as_X\(\)`"
+    ):
+        skrub.X() + skrub.var("a").skb.mark_as_X()
+
+
+def test_duplicate_y():
+    with pytest.raises(
+        ValueError, match=r"Only one node can be marked with `mark_as_y\(\)`"
+    ):
+        skrub.y() + skrub.var("a").skb.mark_as_y()
+
+
 def test_bad_names():
     with pytest.raises(
         TypeError, match=r"The `name` of a `skrub.var\(\)` must be a string"
