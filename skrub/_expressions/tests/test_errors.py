@@ -308,6 +308,39 @@ def test_missing_var():
         e.skb.eval({"a": 10})
 
 
+def test_X_y_instead_of_environment():
+    with pytest.raises(
+        TypeError,
+        match=r"The `environment` passed to `eval\(\)` should be None or a dictionary",
+    ):
+        skrub.X().skb.eval(0)
+    with pytest.raises(
+        TypeError, match="`environment` should be a dictionary of input values"
+    ):
+        skrub.X().skb.get_estimator().fit_transform(0)
+    with pytest.raises(TypeError):
+        skrub.X().skb.eval(X=0)
+    with pytest.raises(TypeError):
+        skrub.X().skb.get_estimator().fit_transform(X=0)
+
+
+def test_expr_or_choice_in_environment():
+    X = skrub.X()
+    with pytest.raises(
+        TypeError,
+        match="The `environment` dict contains a skrub expression: <Var 'X'>",
+    ):
+        # likely mistake: passing an expression instead of an actual value.
+        X.skb.eval({"X": X})
+
+    alpha = skrub.choose_from([1.0, 2.0], name="alpha")
+    with pytest.raises(
+        TypeError,
+        match="The `environment` dict contains a skrub choice: choose_from",
+    ):
+        (X + alpha).skb.eval({"X": 0, "alpha": alpha})
+
+
 #
 # warnings
 #

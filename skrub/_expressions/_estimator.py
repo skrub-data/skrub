@@ -11,42 +11,12 @@ from ._evaluation import (
     find_X,
     find_y,
     get_params,
-    needs_eval,
     param_grid,
     set_params,
 )
-from ._expressions import Apply, Expr
+from ._expressions import Apply
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._utils import X_NAME, Y_NAME, attribute_error
-
-
-def _check_env(environment, caller_name):
-    """Helper to detect the mistake eg fit(X) instead of fit({'X': X})"""
-    if not isinstance(environment, dict):
-        raise TypeError(
-            f"The first argument to {caller_name!r} should be a dictionary of input"
-            f" values, for example: {caller_name}({{'X': df, 'other_table_name':"
-            " other_df, ...})"
-        )
-    env_contains_expr, found_node = needs_eval(environment, return_node=True)
-    if env_contains_expr:
-        if isinstance(found_node, Expr):
-            description = f"a skrub expression: {found_node._skrub_impl!r}"
-        else:
-            description = f"a skrub choice: {found_node}"
-        raise TypeError(
-            f"The `environment` dict passed to {caller_name!r} "
-            f"contains {description}. This argument should only "
-            "contain actual values on which to run the computation."
-        )
-    # TODO: here we could check that there are no extra keys in `environment`,
-    #       ie all keys in `environment` correspond to a name in the expression.
-    #
-    # Note: we cannot check that all variables in the expression have a
-    # matching key in the `environment`, because depending on the mode,
-    # choices, and result of dynamic conditional expressions such as
-    # `.skb.if_else()` some variables in the expression may not be required for
-    # evaluation and those do not need a value.
 
 
 class _SharedDict(dict):
@@ -65,17 +35,14 @@ class ExprEstimator(BaseEstimator):
         return CompatibleExprEstimator(self.expr.skb.clone(), _SharedDict(environment))
 
     def fit(self, environment):
-        _check_env(environment, "fit")
         _ = self.fit_transform(environment)
         return self
 
     def fit_transform(self, environment):
         # TODO: not needed, can be handled by _eval_in_mode?
-        _check_env(environment, "fit_transform")
         return evaluate(self.expr, "fit_transform", environment, clear=True)
 
     def _eval_in_mode(self, mode, environment):
-        _check_env(environment, mode)
         return evaluate(self.expr, mode, environment, clear=True)
 
     def report(self, mode, environment, **full_report_kwargs):

@@ -2,6 +2,7 @@ import copy
 import functools
 import inspect
 import types
+import typing
 import warnings
 from collections import defaultdict
 from types import SimpleNamespace
@@ -286,7 +287,54 @@ class _Evaluator(_ExprTraversal):
             raise RuntimeError(msg) from e
 
 
+def _check_environment(environment):
+    if environment is None:
+        return
+    if not isinstance(environment, typing.Mapping):
+        raise TypeError(
+            "`environment` should be a dictionary of input values, for example: "
+            "{'X': features_df, 'other_table_name': other_df, ...}. "
+            f"Got object of type: '{type(environment)}'"
+        )
+    env_contains_expr, found_node = needs_eval(environment, return_node=True)
+    if env_contains_expr:
+        if isinstance(found_node, Expr):
+            description = f"a skrub expression: {found_node._skrub_impl!r}"
+        else:
+            description = f"a skrub choice: {found_node}"
+        raise TypeError(
+            "The `environment` dict "
+            f"contains {description}. This argument should only "
+            "contain actual values on which to run the computation."
+        )
+    # Notes about checking the env keys:
+    #
+    # - env ⊂ variables: in some cases we could check that there are no extra
+    #   keys in `environment`, ie all keys in `environment` correspond to a
+    #   name in the expression. However in other cases we naturally end up
+    #   using a bigger environment than what is needed. For example we want tu
+    #   evaluate a sub-expression (such as the `mark_as_X()` node), and to do
+    #   it we use the environment that was passed to evaluate the full
+    #   expression. So if we want such a verification it should be a separate
+    #   check done at a higher level (eg in the estimators' `fit`, `predict`
+    #   etc.) where we know we are not working with a sub-expression.
+    #
+    # - variables ⊂ env: we cannot check that all variables in the expression
+    #   have a matching key in the `environment`, because depending on the
+    #   mode, choices, and result of dynamic conditional expressions such as
+    #   `.skb.if_else()` some variables in the expression may not be required
+    #   for evaluation and those do not need a value and are allowed to be
+    #   missing from the environment. For example if we are doing `predict` the
+    #   variables used for the computation of `y` do not need to be provided in
+    #   the environment because no `y` is computed or used during `predict`.
+
+
+# TODO switch position of (mode, environment) -> (environment, mode) to be
+# consistent with .skb.eval() in evaluate's params
+
+
 def evaluate(expr, mode="preview", environment=None, clear=False):
+    _check_environment(environment)
     if clear:
         callback = _cache_pruner(expr, mode)
         clear_results(expr, mode=mode)

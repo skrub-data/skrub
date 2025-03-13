@@ -571,9 +571,11 @@ class SkrubNamespace:
         >>> c.skb.eval({'a': 1, 'b': 2})
         3
         """
-        # TODO switch position of environment and mode in _evaluation.evaluate
-        # etc.
-
+        if environment is not None and not isinstance(environment, typing.Mapping):
+            raise TypeError(
+                "The `environment` passed to `eval()` should be None or a dictionary, "
+                f"got: '{type(environment)}'"
+            )
         if environment is None:
             mode = "preview"
             clear = False

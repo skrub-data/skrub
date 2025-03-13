@@ -1,3 +1,6 @@
+import copy
+
+from sklearn.base import clone
 from sklearn.datasets import make_classification
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
@@ -6,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 import skrub
+from skrub._expressions._estimator import _SharedDict
 
 
 def get_classifier(c_steps=None):
@@ -60,3 +64,14 @@ def test_nested_cv():
     score = skrub.cross_validate(search, {"X": X, "y": y})["test_score"]
     assert len(score) == 5
     assert 0.8 < score.mean() < 0.9
+
+
+#
+# misc utils from the _estimator module
+#
+
+
+def test_shared_dict():
+    d = _SharedDict({"a": 0})
+    assert clone(d) is d
+    assert copy.deepcopy(d) is d
