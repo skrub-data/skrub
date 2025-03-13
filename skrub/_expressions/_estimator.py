@@ -1,3 +1,5 @@
+import collections
+
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, clone
@@ -19,7 +21,7 @@ from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._utils import X_NAME, Y_NAME, attribute_error
 
 
-class _SharedDict(dict):
+class _SharedDict(collections.UserDict):
     def __deepcopy__(self, memo):
         return self
 
@@ -291,7 +293,9 @@ class ParamSearch(BaseEstimator):
             )
         else:
             y = None
-        self.estimator_ = CompatibleExprEstimator(self.expr.skb.clone(), environment)
+        self.estimator_ = CompatibleExprEstimator(
+            self.expr.skb.clone(), _SharedDict(environment)
+        )
         self.search_ = clone(self.search)
         self.search_.estimator = self.estimator_
         param_grid = self._get_param_grid()

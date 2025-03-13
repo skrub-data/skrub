@@ -155,6 +155,62 @@ def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     assert 0.75 < score.mean() < 0.9
 
 
+@skrub.deferred
+def _count_passthrough(value, counter, name):
+    counter["count"] = counter.get("count", 0) + 1
+    return value
+
+
+@skrub.deferred
+def _load_data():
+    X, y = make_classification(random_state=0)
+    return {"features": X, "target": y}
+
+
+def test_caching():
+    data = _load_data()
+    data = _count_passthrough(data, skrub.var("load_counter"), "load")
+    X = data["features"].skb.mark_as_X()
+    y = data["target"].skb.mark_as_y()
+    X = X.skb.apply(StandardScaler())
+    X = _count_passthrough(X, skrub.var("scale_counter"), "scale")
+    X = (
+        X + X + X
+    )  # without caching the _count_passthrough above would be computed 3 times per run
+    pred = X.skb.apply(
+        LogisticRegression(**skrub.choose_float(0.1, 1.0, name="C")), y=y
+    )
+    cv, search_iter, search_cv = 4, 3, 2
+    search = pred.skb.get_randomized_search(n_iter=search_iter, cv=search_cv)
+    data = {"load_counter": {}, "scale_counter": {}}
+    skrub.cross_validate(search, data, cv=cv)
+    assert data["load_counter"]["count"] == 1
+    assert data["scale_counter"]["count"] == (
+        # for each train-test split in outer loop
+        cv
+        * (
+            # outer loop test
+            1
+            + (
+                # refit best model
+                1
+                # for each hyper parameter
+                + search_cv
+                * (
+                    # for each train-test split in inner loop
+                    search_iter
+                    * (
+                        # train
+                        1
+                        # test
+                        + 1
+                    )
+                )
+            )
+        )
+    )
+
+
 #
 # misc utils from the _estimator module
 #
