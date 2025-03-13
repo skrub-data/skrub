@@ -16,11 +16,6 @@ import skrub
 from skrub._expressions._estimator import _SharedDict
 
 
-def get_data():
-    X, y = make_classification(random_state=0)
-    return {"X": X, "y": y}
-
-
 @skrub.deferred
 def _read_csv(csv_str):
     return pd.read_csv(io.BytesIO(csv_str), encoding="utf-8")
@@ -32,7 +27,29 @@ def _to_csv(df):
     return buf.getvalue()
 
 
-def get_unprocessed_data():
+def _make_classifier(X, y):
+    return (
+        X.skb.apply(SelectKBest(), y=y)
+        .skb.apply(StandardScaler())
+        .skb.apply(
+            LogisticRegression(
+                **skrub.choose_float(0.01, 1.0, log=True, n_steps=4, name="C")
+            ),
+            y=y,
+        )
+    )
+
+
+def _simple_data():
+    X, y = make_classification(random_state=0)
+    return {"X": X, "y": y}
+
+
+def _simple_data_classifier():
+    return _make_classifier(skrub.X(), skrub.y())
+
+
+def _unprocessed_data():
     X, y = make_classification(random_state=0)
     X = pd.DataFrame(X, columns=[f"c_{i}" for i in range(X.shape[1])]).assign(
         ID=np.arange(X.shape[0])
@@ -41,45 +58,45 @@ def get_unprocessed_data():
     return {"X": _to_csv(X), "y": _to_csv(y)}
 
 
-def _make_classifier(X, y, *, discrete_grid):
-    c_steps = 2 if discrete_grid else None
-    return (
-        X.skb.apply(SelectKBest(), y=y)
-        .skb.apply(StandardScaler())
-        .skb.apply(
-            LogisticRegression(
-                **skrub.choose_float(0.01, 1.0, log=True, n_steps=c_steps, name="C")
-            ),
-            y=y,
-        )
-    )
-
-
-def get_classifier(discrete_grid=False):
-    return _make_classifier(skrub.X(), skrub.y(), discrete_grid=discrete_grid)
-
-
-def get_classifier_for_unprocessed_data(discrete_grid=False):
+def _unprocessed_data_classifier():
     X, y = skrub.var("X"), skrub.var("y")
     X = _read_csv(X)
     y = _read_csv(y)
     y = X.merge(y, on="ID", how="left")["target"].skb.mark_as_y()
     X = X.drop(columns="ID").skb.mark_as_X()
-    return _make_classifier(X, y, discrete_grid=discrete_grid)
+    return _make_classifier(X, y)
 
 
-def get_classifier_and_data(processed=True, discrete_grid=False):
-    if processed:
-        return get_classifier(discrete_grid=discrete_grid), get_data()
-    return (
-        get_classifier_for_unprocessed_data(discrete_grid=discrete_grid),
-        get_unprocessed_data(),
-    )
+def get_expression_and_data(data_kind):
+    assert data_kind in ["simple", "unprocessed"]
+    if data_kind == "simple":
+        return _simple_data_classifier(), _simple_data()
+    return _unprocessed_data_classifier(), _unprocessed_data()
+
+
+@pytest.fixture(params=["simple", "unprocessed"])
+def _expression_and_data(request):
+    return get_expression_and_data(request.param)
+
+
+@pytest.fixture
+def expression(_expression_and_data):
+    return _expression_and_data[0]
+
+
+@pytest.fixture
+def data(_expression_and_data):
+    return _expression_and_data[1]
+
+
+@pytest.fixture(params=[None, 1, 2])
+def n_jobs(request):
+    return request.param
 
 
 def test_fit_predict():
-    pred, data = get_classifier_and_data()
-    estimator = pred.skb.get_estimator()
+    expression, data = get_expression_and_data("simple")
+    estimator = expression.skb.get_estimator()
     X_train, X_test, y_train, y_test = train_test_split(
         data["X"], data["y"], shuffle=False
     )
@@ -92,27 +109,31 @@ def test_fit_predict():
     assert 0.75 < accuracy_score(y_test, predicted)
 
 
-@pytest.mark.parametrize("processed", [True, False])
-def test_cross_validate(processed):
-    pred, data = get_classifier_and_data(processed=processed)
-    score = pred.skb.cross_validate(data)["test_score"]
+def test_cross_validate(expression, data, n_jobs):
+    score = expression.skb.cross_validate(data, n_jobs=n_jobs)["test_score"]
     assert len(score) == 5
     assert 0.75 < score.mean() < 0.9
 
 
-@pytest.mark.parametrize("processed", [True, False])
-def test_search(processed):
-    pred, data = get_classifier_and_data(processed=processed)
-    search = pred.skb.get_randomized_search(n_iter=3, random_state=0)
+def test_randomized_search(expression, data, n_jobs):
+    search = expression.skb.get_randomized_search(
+        n_iter=3, n_jobs=n_jobs, random_state=0
+    )
     search.fit(data)
     assert 0.75 < search.results_["mean_test_score"].iloc[0] < 0.9
 
 
-@pytest.mark.parametrize("processed", [True, False])
-def test_nested_cv(processed):
-    pred, data = get_classifier_and_data(processed=processed)
-    search = pred.skb.get_randomized_search(n_iter=3, random_state=0)
-    score = skrub.cross_validate(search, data)["test_score"]
+def test_grid_search(expression, data, n_jobs):
+    search = expression.skb.get_grid_search(n_jobs=n_jobs)
+    search.fit(data)
+    assert 0.75 < search.results_["mean_test_score"].iloc[0] < 0.9
+
+
+def test_nested_cv(expression, data, n_jobs):
+    search = expression.skb.get_randomized_search(
+        n_iter=3, n_jobs=n_jobs, random_state=0
+    )
+    score = skrub.cross_validate(search, data, n_jobs=n_jobs)["test_score"]
     assert len(score) == 5
     assert 0.75 < score.mean() < 0.9
 
