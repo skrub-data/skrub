@@ -211,16 +211,16 @@ def cross_validate(expr_estimator, environment, **cv_params):
     array([0.75, 0.95, 0.85, 0.85, 0.85])
     """
     expr = expr_estimator.expr
-    X_y = _find_X_y(expr)
+    X_y = _find_X_y(expr.skb.clone())
     X = evaluate(
-        X_y["X"].skb.clone(),
+        X_y["X"],
         mode="fit_transform",
         environment=environment,
         clear=False,
     )
     if "y" in X_y:
         y = evaluate(
-            X_y["y"].skb.clone(),
+            X_y["y"],
             mode="fit_transform",
             environment=environment,
             clear=False,
@@ -275,16 +275,16 @@ class ParamSearch(BaseEstimator):
         )
 
     def fit(self, environment):
-        X_y = _find_X_y(self.expr)
+        X_y = _find_X_y(self.expr.skb.clone())
         X = evaluate(
-            X_y["X"].skb.clone(),
+            X_y["X"],
             mode="fit_transform",
             environment=environment,
             clear=False,
         )
         if "y" in X_y:
             y = evaluate(
-                X_y["y"].skb.clone(),
+                X_y["y"],
                 mode="fit_transform",
                 environment=environment,
                 clear=False,
