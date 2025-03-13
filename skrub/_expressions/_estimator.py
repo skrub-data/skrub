@@ -1,5 +1,3 @@
-import collections
-
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, clone
@@ -21,7 +19,7 @@ from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._utils import X_NAME, Y_NAME, attribute_error
 
 
-class _SharedDict(collections.UserDict):
+class _SharedDict(dict):
     def __deepcopy__(self, memo):
         return self
 
