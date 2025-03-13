@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 import pandas as pd
 import pytest
+from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
 import skrub
@@ -195,6 +196,25 @@ def test_duplicate_y():
         ValueError, match=r"Only one node can be marked with `mark_as_y\(\)`"
     ):
         skrub.y() + skrub.var("a").skb.mark_as_y()
+
+
+def test_missing_X_or_y():
+    X_a, y_a = make_classification(random_state=0)
+    env = {"X": X_a, "y": y_a}
+
+    X, y = skrub.var("X"), skrub.var("y")
+    with pytest.raises(
+        ValueError, match=r'expr should have a node marked with "mark_as_X\(\)"'
+    ):
+        X.skb.apply(LogisticRegression(), y=y.skb.mark_as_y()).skb.cross_validate(env)
+    with pytest.raises(
+        ValueError, match=r'expr should have a node marked with "mark_as_y\(\)"'
+    ):
+        X.skb.mark_as_X().skb.apply(LogisticRegression(), y=y).skb.cross_validate(env)
+    # now both are correctly marked:
+    X.skb.mark_as_X().skb.apply(
+        LogisticRegression(), y=y.skb.mark_as_y()
+    ).skb.cross_validate(env)
 
 
 def test_bad_names():
