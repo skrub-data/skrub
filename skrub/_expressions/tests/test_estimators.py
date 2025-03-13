@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 from sklearn.base import clone
 from sklearn.datasets import make_classification
+from sklearn.dummy import DummyClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
@@ -15,6 +16,10 @@ from sklearn.preprocessing import StandardScaler
 
 import skrub
 from skrub._expressions._estimator import _SharedDict
+
+#
+# testing utils
+#
 
 
 @skrub.deferred
@@ -100,6 +105,11 @@ def data_kind(_expression_and_data):
 @pytest.fixture(params=[None, 1, 2])
 def n_jobs(request):
     return request.param
+
+
+#
+# fit, predict, param search & (possibly nested) cross-validation
+#
 
 
 def test_fit_predict():
@@ -220,3 +230,65 @@ def test_shared_dict():
     d = _SharedDict({"a": 0})
     assert clone(d, safe=False) is d
     assert copy.deepcopy(d) is d
+
+
+#
+# methods & attributes of the estimators
+#
+
+
+def test_get_params():
+    e = (skrub.X() + skrub.choose_from([100, 200], name="a")).skb.apply(
+        skrub.choose_from(
+            {
+                "dummy": DummyClassifier(),
+                "logistic": LogisticRegression(
+                    **skrub.choose_float(0.01, 1.0, log=True, name="C"),
+                    **skrub.choose_from(["l1", "l2"], name="penalty"),
+                ),
+            },
+            name="classifier",
+        ),
+        y=skrub.y(),
+    )
+    estimator = e.skb.get_estimator()
+    params = {
+        "expr",
+        "expr__0",
+        "expr__1",
+        "expr__2",
+        "expr__3",
+    }
+    assert estimator.get_params(deep=True).keys() == params
+    assert estimator.get_params(deep=False).keys() == {"expr"}
+
+
+def test_set_expr_in_params():
+    e1 = skrub.var("a") + skrub.var("b")
+    e2 = skrub.var("a") - skrub.var("b")
+    estimator = e1.skb.get_estimator()
+    data = {"a": 10, "b": 20}
+    assert estimator.fit_transform(data) == 30
+    estimator.set_params(expr=e2)
+    assert estimator.fit_transform(data) == -10
+
+
+def test_find_fitted_estimator():
+    estimator = (
+        (skrub.X() * 1.0)
+        .skb.set_name("mul")
+        .skb.apply(StandardScaler())
+        .skb.set_name("scaler")
+        .skb.apply(LogisticRegression(), y=skrub.y())
+        .skb.set_name("predictor")
+        .skb.get_estimator()
+    )
+    assert estimator.find_fitted_estimator("xyz") is None
+    with pytest.raises(TypeError, match="Node 'X' does not represent"):
+        estimator.find_fitted_estimator("X")
+    with pytest.raises(ValueError, match="Node 'scaler' has not been fitted"):
+        estimator.find_fitted_estimator("scaler")
+    data = _simple_data()
+    estimator.fit(data)
+    assert isinstance(estimator.find_fitted_estimator("scaler"), StandardScaler)
+    assert isinstance(estimator.find_fitted_estimator("predictor"), LogisticRegression)

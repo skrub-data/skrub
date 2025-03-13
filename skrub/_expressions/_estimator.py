@@ -77,14 +77,15 @@ class ExprEstimator(BaseEstimator):
         set_params(self.expr, {int(k.lstrip("expr__")): v for k, v in params.items()})
         return self
 
-    def sub_estimator(self, name):
+    def find_fitted_estimator(self, name):
         node = find_node_by_name(self.expr, name)
         if node is None:
             return None
         impl = node._skrub_impl
         if not isinstance(impl, Apply):
             raise TypeError(
-                f"node {name!r} does not represent a sub-estimator: {node!r}"
+                f"Node {name!r} does not represent "
+                f"the application of an estimator: {node!r}"
             )
         if not hasattr(impl, "estimator_"):
             raise ValueError(
