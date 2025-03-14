@@ -31,8 +31,8 @@ class ExprEstimator(BaseEstimator):
     def __init__(self, expr):
         self.expr = expr
 
-    def __skrub_to_sklearn_compatible__(self, environment):
-        return CompatibleExprEstimator(self.expr, _SharedDict(environment))
+    def __skrub_to_Xy_estimator__(self, environment):
+        return XyExprEstimator(self.expr, _SharedDict(environment))
 
     def fit(self, environment):
         _ = self.fit_transform(environment)
@@ -95,33 +95,29 @@ class ExprEstimator(BaseEstimator):
         return node._skrub_impl.estimator_
 
 
-class _SklearnCompatibleMixin:
-    def __skrub_clear_environment__(self):
-        self.environment = None
-
-    def _pick_env(self, environment):
-        assert (self.environment is None) ^ (environment is None)
-        return dict(self.environment) if environment is None else environment
+def _to_Xy_estimator(estimator, environment):
+    return estimator.__skrub_to_Xy_estimator__(environment)
 
 
-def _to_sklearn_compatible(estimator, environment):
-    try:
-        return estimator.__skrub_to_sklearn_compatible__(environment)
-    except AttributeError:
-        return clone(estimator)
+def _to_env_estimator(estimator):
+    return estimator.__skrub_to_env_estimator__()
 
 
-def _clear_environment(estimator):
-    try:
-        estimator.__skrub_clear_environment__()
-    except AttributeError:
-        pass
+class _XyEstimatorMixin:
+    def _get_env(self, X, y):
+        xy_environment = {X_NAME: X}
+        if y is not None:
+            xy_environment[Y_NAME] = y
+        return {**self.environment, **xy_environment}
 
 
-class CompatibleExprEstimator(_SklearnCompatibleMixin, ExprEstimator):
+class XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
     def __init__(self, expr, environment):
         self.expr = expr
         self.environment = environment
+
+    def __skrub_to_env_estimator__(self):
+        return ExprEstimator(self.expr)
 
     @property
     def _estimator_type(self):
@@ -145,25 +141,15 @@ class CompatibleExprEstimator(_SklearnCompatibleMixin, ExprEstimator):
             attribute_error(self, "classes_")
         return estimator.classes_
 
-    def fit_transform(self, X, y=None, environment=None):
-        environment = self._pick_env(environment)
-        xy_environment = {X_NAME: X}
-        if y is not None:
-            xy_environment[Y_NAME] = y
-        xy_environment = {**environment, **xy_environment}
-        return evaluate(self.expr, "fit_transform", xy_environment, clear=True)
+    def fit_transform(self, X, y=None):
+        return evaluate(self.expr, "fit_transform", self._get_env(X, y), clear=True)
 
-    def fit(self, X, y=None, environment=None):
-        _ = self.fit_transform(X, y=y, environment=environment)
+    def fit(self, X, y=None):
+        _ = self.fit_transform(X, y=y)
         return self
 
-    def _eval_in_mode(self, mode, X, y=None, environment=None):
-        environment = self._pick_env(environment)
-        xy_environment = {X_NAME: X}
-        if y is not None:
-            xy_environment[Y_NAME] = y
-        xy_environment = {**environment, **xy_environment}
-        return evaluate(self.expr, mode, xy_environment, clear=True)
+    def _eval_in_mode(self, mode, X, y=None):
+        return evaluate(self.expr, mode, self._get_env(X, y), clear=True)
 
 
 def cross_validate(expr_estimator, environment, **cv_params):
@@ -211,26 +197,8 @@ def cross_validate(expr_estimator, environment, **cv_params):
     >>> skrub.cross_validate(search, pred.skb.get_data())['test_score'] # doctest: +SKIP
     array([0.75, 0.95, 0.85, 0.85, 0.85])
     """
-    expr = expr_estimator.expr
-    X_y = _find_X_y(expr.skb.clone())
-    X = evaluate(
-        X_y["X"],
-        mode="fit_transform",
-        environment=environment,
-        clear=False,
-    )
-    if "y" in X_y:
-        y = evaluate(
-            X_y["y"],
-            mode="fit_transform",
-            environment=environment,
-            clear=False,
-        )
-    else:
-        y = None
-
-    estimator = _to_sklearn_compatible(expr_estimator, environment)
-
+    estimator = _to_Xy_estimator(expr_estimator, environment)
+    X, y = _compute_X_y(expr_estimator.expr, environment)
     result = model_selection.cross_validate(
         estimator,
         X,
@@ -239,8 +207,7 @@ def cross_validate(expr_estimator, environment, **cv_params):
     )
     if (estimators := result.get("estimator", None)) is None:
         return result
-    for e in estimators:
-        _clear_environment(e)
+    result["estimator"] = [_to_env_estimator(e) for e in estimators]
     return result
 
 
@@ -260,6 +227,26 @@ def _find_X_y(expr):
     return result
 
 
+def _compute_X_y(expr, environment):
+    X_y = _find_X_y(expr.skb.clone())
+    X = evaluate(
+        X_y["X"],
+        mode="fit_transform",
+        environment=environment,
+        clear=False,
+    )
+    if "y" in X_y:
+        y = evaluate(
+            X_y["y"],
+            mode="fit_transform",
+            environment=environment,
+            clear=False,
+        )
+    else:
+        y = None
+    return X, y
+
+
 # TODO with ParameterGrid and ParameterSampler we can generate the list of
 # candidates so we can provide more than just a score, eg full predictions for
 # each sampled param combination.
@@ -270,47 +257,27 @@ class ParamSearch(BaseEstimator):
         self.expr = expr
         self.search = search
 
-    def __skrub_to_sklearn_compatible__(self, environment):
-        return CompatibleParamSearch(self.expr, self.search, _SharedDict(environment))
+    def __skrub_to_Xy_estimator__(self, environment):
+        return XyParamSearch(self.expr, self.search, _SharedDict(environment))
 
     def fit(self, environment):
-        X_y = _find_X_y(self.expr.skb.clone())
-        X = evaluate(
-            X_y["X"],
-            mode="fit_transform",
-            environment=environment,
-            clear=False,
-        )
-        if "y" in X_y:
-            y = evaluate(
-                X_y["y"],
-                mode="fit_transform",
-                environment=environment,
-                clear=False,
-            )
-        else:
-            y = None
-        self.estimator_ = CompatibleExprEstimator(
-            self.expr.skb.clone(), _SharedDict(environment)
-        )
-        self.search_ = clone(self.search)
-        self.search_.estimator = self.estimator_
+        estimator = XyExprEstimator(self.expr, _SharedDict(environment))
+        search = clone(self.search)
+        search.estimator = estimator
         param_grid = self._get_param_grid()
-        if hasattr(self.search_, "param_grid"):
-            self.search_.param_grid = param_grid
+        if hasattr(search, "param_grid"):
+            search.param_grid = param_grid
         else:
-            assert hasattr(self.search_, "param_distributions")
-            self.search_.param_distributions = param_grid
-        try:
-            self.search_.fit(X, y)
-        finally:
-            # TODO copy useful attributes and stop storing self.search_ instead
-            _clear_environment(self.estimator_)
-            _clear_environment(self.search_.best_estimator_)
+            assert hasattr(search, "param_distributions")
+            search.param_distributions = param_grid
+        X, y = _compute_X_y(self.expr, environment)
+        search.fit(X, y)
+        self.best_estimator_ = _to_env_estimator(search.best_estimator_)
+        self.cv_results_ = search.cv_results_
         return self
 
     def _get_param_grid(self):
-        grid = param_grid(self.estimator_.expr)
+        grid = param_grid(self.expr)
         new_grid = []
         for subgrid in grid:
             subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
@@ -318,10 +285,8 @@ class ParamSearch(BaseEstimator):
         return new_grid
 
     def __getattr__(self, name):
-        if name == "search_":
-            attribute_error(self, name)
         if name not in self.expr._skrub_impl.supports_modes():
-            return getattr(self.search_, name)
+            attribute_error(self, name)
 
         def f(*args, **kwargs):
             return self._call_predictor_method(name, *args, **kwargs)
@@ -335,17 +300,11 @@ class ParamSearch(BaseEstimator):
         return getattr(self.best_estimator_, name)(environment)
 
     @property
-    def best_estimator_(self):
-        if not hasattr(self, "search_"):
-            attribute_error(self, "best_estimator_")
-        return ExprEstimator(self.search_.best_estimator_.expr)
-
-    @property
     def results_(self):
         return self._get_cv_results_table()
 
     def _get_cv_results_table(self, return_metadata=False, detailed=False):
-        expr_choices = choices(self.estimator_.expr)
+        expr_choices = choices(self.best_estimator_.expr)
 
         all_rows = []
         param_names = set()
@@ -425,11 +384,18 @@ def _get_all_param_names(grid):
     return list(names)
 
 
-class CompatibleParamSearch(_SklearnCompatibleMixin, ParamSearch):
+class XyParamSearch(_XyEstimatorMixin, ParamSearch):
     def __init__(self, expr, search, environment):
         self.expr = expr
         self.search = search
         self.environment = environment
+
+    def __skrub_to_env_estimator__(self):
+        env_estimator = ParamSearch(self.expr, self.search)
+        if hasattr(self, "best_estimator_"):
+            env_estimator.best_estimator_ = self.best_estimator_
+            env_estimator.cv_results_ = self.cv_results_
+        return env_estimator
 
     @property
     def _estimator_type(self):
@@ -446,19 +412,11 @@ class CompatibleParamSearch(_SklearnCompatibleMixin, ParamSearch):
             attribute_error(self, "classes_")
         return estimator.classes_
 
-    def fit(self, X, y=None, environment=None):
-        environment = self._pick_env(environment)
-        xy_environment = {X_NAME: X}
-        if y is not None:
-            xy_environment[Y_NAME] = y
-        xy_environment = {**environment, **xy_environment}
-        super().fit(xy_environment)
+    def fit(self, X, y=None):
+        super().fit(self._get_env(X, y))
         return self
 
-    def _call_predictor_method(self, name, X, y=None, environment=None):
-        environment = self._pick_env(environment)
-        if not hasattr(self, "search_"):
+    def _call_predictor_method(self, name, X, y=None):
+        if not hasattr(self, "best_estimator_"):
             raise ValueError("Search not fitted")
-        return getattr(self.search_.best_estimator_, name)(
-            X, y=y, environment=environment
-        )
+        return getattr(self.best_estimator_, name)(self._get_env(X, y))
