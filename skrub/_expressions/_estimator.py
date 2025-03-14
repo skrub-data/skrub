@@ -198,7 +198,7 @@ def cross_validate(expr_estimator, environment, **cv_params):
     array([0.75, 0.95, 0.85, 0.85, 0.85])
     """
     estimator = _to_Xy_estimator(expr_estimator, environment)
-    X, y = _compute_X_y(expr_estimator.expr, environment)
+    X, y = _compute_Xy(expr_estimator.expr, environment)
     result = model_selection.cross_validate(
         estimator,
         X,
@@ -211,7 +211,7 @@ def cross_validate(expr_estimator, environment, **cv_params):
     return result
 
 
-def _find_X_y(expr):
+def _find_Xy(expr):
     x_node = find_X(expr)
     if x_node is None:
         raise ValueError('expr should have a node marked with "mark_as_X()"')
@@ -227,17 +227,17 @@ def _find_X_y(expr):
     return result
 
 
-def _compute_X_y(expr, environment):
-    X_y = _find_X_y(expr.skb.clone())
+def _compute_Xy(expr, environment):
+    Xy = _find_Xy(expr.skb.clone())
     X = evaluate(
-        X_y["X"],
+        Xy["X"],
         mode="fit_transform",
         environment=environment,
         clear=False,
     )
-    if "y" in X_y:
+    if "y" in Xy:
         y = evaluate(
-            X_y["y"],
+            Xy["y"],
             mode="fit_transform",
             environment=environment,
             clear=False,
@@ -270,7 +270,7 @@ class ParamSearch(BaseEstimator):
         else:
             assert hasattr(search, "param_distributions")
             search.param_distributions = param_grid
-        X, y = _compute_X_y(self.expr, environment)
+        X, y = _compute_Xy(self.expr, environment)
         search.fit(X, y)
         self.best_estimator_ = _to_env_estimator(search.best_estimator_)
         self.cv_results_ = search.cv_results_
