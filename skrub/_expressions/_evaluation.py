@@ -271,7 +271,7 @@ class _Evaluator(_ExprTraversal):
                 environment=self.environment,
             )
         except Exception as e:
-            expr._skrub_impl.errors[mode] = e
+            expr._skrub_impl.errors[self.mode] = e
             if mode == "preview":
                 raise
             stack = expr._skrub_impl.creation_stack_last_line()

@@ -5,14 +5,18 @@ from unittest.mock import Mock
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.testing import assert_allclose
 from sklearn.base import clone
 from sklearn.datasets import make_classification
-from sklearn.dummy import DummyClassifier
+from sklearn.decomposition import PCA
+from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.exceptions import NotFittedError
 from sklearn.feature_selection import SelectKBest
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, cross_validate, train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.utils.validation import check_is_fitted
 
 import skrub
 from skrub._expressions._estimator import _SharedDict
@@ -20,6 +24,14 @@ from skrub._expressions._estimator import _SharedDict
 #
 # testing utils
 #
+
+
+def is_fitted(estimator):
+    try:
+        check_is_fitted(estimator)
+        return True
+    except NotFittedError:
+        return False
 
 
 @skrub.deferred
@@ -118,33 +130,63 @@ def test_fit_predict():
     X_train, X_test, y_train, y_test = train_test_split(
         data["X"], data["y"], shuffle=False
     )
+    with pytest.raises(NotFittedError):
+        estimator.predict({})
     estimator.fit({"X": X_train, "y": y_train})
 
     # Note that y is missing from the environment here. It is not needed for
     # predict (or transform, score etc.)
+    assert estimator.decision_function({"X": X_test}).shape == (25,)
     predicted = estimator.predict({"X": X_test})
 
-    assert 0.75 < accuracy_score(y_test, predicted)
+    assert accuracy_score(y_test, predicted) == pytest.approx(0.84, abs=0.05)
 
 
 def test_cross_validate(expression, data, n_jobs):
-    score = expression.skb.cross_validate(data, n_jobs=n_jobs)["test_score"]
+    results = expression.skb.cross_validate(data, n_jobs=n_jobs, return_estimator=True)
+    estimators = results["estimator"]
+    assert len(estimators) == 5
+    for e in estimators:
+        assert e.__class__.__name__ == "ExprEstimator"
+        assert is_fitted(e)
+    score = results["test_score"]
     assert len(score) == 5
-    assert 0.75 < score.mean() < 0.9
+
+    assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
 def test_randomized_search(expression, data, n_jobs):
     search = expression.skb.get_randomized_search(
         n_iter=3, n_jobs=n_jobs, random_state=0
     )
+    with pytest.raises(NotFittedError):
+        search.predict(data)
+    assert not hasattr(search, "results_")
+    assert not hasattr(search, "detailed_results_")
     search.fit(data)
-    assert 0.75 < search.results_["mean_test_score"].iloc[0] < 0.9
+    assert list(search.results_.columns) == ["mean_test_score", "C"]
+    assert list(search.detailed_results_.columns) == [
+        "mean_test_score",
+        "C",
+        "std_test_score",
+        "mean_fit_time",
+        "std_fit_time",
+        "mean_score_time",
+        "std_score_time",
+    ]
+    assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
+    assert search.decision_function(data).shape == (100,)
+    train_score = search.score(data)
+    assert train_score == pytest.approx(0.94)
 
 
 def test_grid_search(expression, data, n_jobs):
     search = expression.skb.get_grid_search(n_jobs=n_jobs)
     search.fit(data)
-    assert 0.75 < search.results_["mean_test_score"].iloc[0] < 0.9
+    search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
+    assert search.decision_function(data).shape == (100,)
+    train_score = search.score(data)
+    assert train_score == pytest.approx(0.94)
 
 
 def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
@@ -154,7 +196,14 @@ def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     mock = Mock(side_effect=pd.read_csv)
     monkeypatch.setattr(pd, "read_csv", mock)
 
-    score = skrub.cross_validate(search, data, n_jobs=n_jobs)["test_score"]
+    results = skrub.cross_validate(search, data, n_jobs=n_jobs, return_estimator=True)
+    assert not is_fitted(search)
+    score = results["test_score"]
+    estimators = results["estimator"]
+    assert len(estimators) == 5
+    for e in estimators:
+        assert is_fitted(e)
+        assert e.__class__.__name__ == "ParamSearch"
 
     # when data is loaded from csv we check that the caching results in
     # read_csv being called exactly twice (we have 2 different 'files' to
@@ -162,7 +211,79 @@ def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     assert mock.call_count == (2 if data_kind == "unprocessed" else 0)
 
     assert len(score) == 5
-    assert 0.75 < score.mean() < 0.9
+    assert score.mean() == pytest.approx(0.84, abs=0.05)
+
+
+def test_unsupervised():
+    X = np.random.default_rng(0).normal(size=(30, 20))
+    expr = skrub.X(X).skb.apply(PCA(**skrub.choose_from([4, 8], name="n_components")))
+    expr_scores = skrub.cross_validate(expr.skb.get_grid_search(), expr.skb.get_data())[
+        "test_score"
+    ]
+    sklearn_search = GridSearchCV(PCA(), {"n_components": [4, 8]})
+    sklearn_scores = cross_validate(sklearn_search, X)["test_score"]
+    assert_allclose(sklearn_scores, expr_scores)
+
+
+def test_multiclass():
+    X, y = make_classification(n_classes=5, n_informative=10, random_state=0)
+    expr = skrub.X(X).skb.apply(
+        LogisticRegression(**skrub.choose_from([0.001, 0.1], name="C"), random_state=0),
+        y=skrub.y(y),
+    )
+    expr_scores = skrub.cross_validate(expr.skb.get_grid_search(), expr.skb.get_data())[
+        "test_score"
+    ]
+    sklearn_search = GridSearchCV(
+        LogisticRegression(random_state=0), {"C": [0.001, 0.1]}
+    )
+    sklearn_scores = cross_validate(sklearn_search, X, y)["test_score"]
+    assert_allclose(sklearn_scores, expr_scores)
+
+
+def test_multimetric():
+    X, y = make_classification(random_state=0)
+    scoring = ["accuracy", "roc_auc"]
+    expr_search = (
+        skrub.X(X)
+        .skb.apply(
+            LogisticRegression(**skrub.choose_from([0.001, 0.1], name="C")),
+            y=skrub.y(y),
+        )
+        .skb.get_grid_search(fitted=True, scoring=scoring, refit="roc_auc")
+    )
+    assert list(expr_search.results_.columns) == [
+        "mean_test_roc_auc",
+        "mean_test_accuracy",
+        "C",
+    ]
+    assert list(expr_search.detailed_results_.columns) == [
+        "mean_test_roc_auc",
+        "mean_test_accuracy",
+        "C",
+        "std_test_roc_auc",
+        "std_test_accuracy",
+        "mean_fit_time",
+        "std_fit_time",
+        "mean_score_time",
+        "std_score_time",
+    ]
+
+    sklearn_results = (
+        GridSearchCV(
+            LogisticRegression(), {"C": [0.001, 0.1]}, scoring=scoring, refit="roc_auc"
+        )
+        .fit(X, y)
+        .cv_results_
+    )
+    for metric in scoring:
+        col = f"mean_test_{metric}"
+        assert np.allclose(sklearn_results[col], expr_search.results_[col].values)
+
+
+#
+# caching
+#
 
 
 @skrub.deferred
@@ -233,6 +354,48 @@ def test_shared_dict():
 
 
 #
+# reporting & plotting
+#
+
+
+def test_plot_results():
+    expr, data = get_expression_and_data("simple")
+    search = expr.skb.get_randomized_search(n_iter=2, cv=2, random_state=0)
+    with pytest.raises(NotFittedError):
+        search.plot_results()
+    search.fit(data)
+    with pytest.raises(ValueError, match="No results to plot"):
+        search.plot_results(min_score=2.0)
+    for min_score in [None, 0.1]:
+        try:
+            import plotly  # noqa: F401
+
+            plotly_installed = True
+        except ImportError:
+            plotly_installed = False
+        fig = search.plot_results(min_score=min_score)
+        assert (fig is None) == (not plotly_installed)
+
+
+def test_report(tmp_path):
+    expr, data = get_expression_and_data("simple")
+    est = expr.skb.get_estimator()
+    with pytest.raises(NotFittedError):
+        est.report(mode="score", environment=data)
+    est.fit(data)
+    report = est.report(
+        mode="score",
+        environment=data,
+        output_dir=tmp_path / "report",
+        overwrite=True,
+        open=False,
+    )
+    assert report["result"] == pytest.approx(0.94, abs=0.1)
+    assert report["error"] is None
+    assert report["report_path"].is_relative_to(tmp_path)
+
+
+#
 # methods & attributes of the estimators
 #
 
@@ -292,3 +455,55 @@ def test_find_fitted_estimator():
     estimator.fit(data)
     assert isinstance(estimator.find_fitted_estimator("scaler"), StandardScaler)
     assert isinstance(estimator.find_fitted_estimator("predictor"), LogisticRegression)
+
+
+#
+# methods of private types for compatibility with GridSearchCV, cross_validate etc.
+#
+
+
+# In old scikit-learn versions it uses attributes like _estimator_type, in
+# recent versions the __sklearn_tags__
+
+
+@pytest.mark.parametrize(
+    "estimator_type, expected",
+    [
+        (LogisticRegression, "classifier"),
+        (DummyClassifier, "classifier"),
+        (Ridge, "regressor"),
+        (DummyRegressor, "regressor"),
+        (SelectKBest, "transformer"),
+    ],
+)
+def test_estimator_type(estimator_type, expected):
+    estimator = estimator_type()
+    e = skrub.X().skb.apply(
+        skrub.choose_from([estimator, estimator], name="_"), y=skrub.y()
+    )
+    for est in [
+        e.skb.get_estimator(),
+        e.skb.get_grid_search(),
+        e.skb.get_randomized_search(n_iter=2),
+    ]:
+        Xy_est = est.__skrub_to_Xy_estimator__({})
+        assert Xy_est._estimator_type == expected
+        if hasattr(estimator_type, "__sklearn_tags__"):
+            # scikit-learn >= 1.6
+            assert Xy_est.__sklearn_tags__() == estimator.__sklearn_tags__()
+        else:
+            assert not hasattr(Xy_est, "__sklearn_tags__")
+
+
+def test_classes():
+    expression, data = get_expression_and_data("simple")
+    logreg = LogisticRegression().fit(data["X"], data["y"])
+    for est in [
+        expression.skb.get_estimator(),
+        expression.skb.get_grid_search(),
+        expression.skb.get_randomized_search(n_iter=2),
+    ]:
+        Xy_est = est.__skrub_to_Xy_estimator__({})
+        assert not hasattr(Xy_est, "classes_")
+        Xy_est.fit(data["X"], data["y"])
+        assert (Xy_est.classes_ == logreg.classes_).all()

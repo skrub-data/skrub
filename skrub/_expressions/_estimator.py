@@ -1,6 +1,8 @@
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, clone
+from sklearn.exceptions import NotFittedError
+from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
 from ._choosing import Choice, unwrap, unwrap_default
@@ -18,6 +20,19 @@ from ._expressions import Apply
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._utils import X_NAME, Y_NAME, attribute_error
 
+_FITTING_METHODS = ["fit", "fit_transform"]
+_SEARCH_FITTED_ATTRIBUTES = [
+    "cv_results_",
+    "best_estimator_",
+    "best_score_",
+    "best_params_",
+    "best_index_",
+    "scorer_",
+    "n_splits_",
+    "refit_time_",
+    "multimetric_",
+]
+
 
 class _SharedDict(dict):
     def __deepcopy__(self, memo):
@@ -27,27 +42,53 @@ class _SharedDict(dict):
         return self
 
 
+def _copy_attr(source, target, attributes):
+    for a in attributes:
+        try:
+            setattr(target, a, getattr(source, a))
+        except AttributeError:
+            pass
+
+
 class ExprEstimator(BaseEstimator):
     def __init__(self, expr):
         self.expr = expr
 
     def __skrub_to_Xy_estimator__(self, environment):
-        return XyExprEstimator(self.expr, _SharedDict(environment))
+        new = _XyExprEstimator(self.expr, _SharedDict(environment))
+        _copy_attr(self, new, ["_is_fitted"])
+        return new
+
+    def _set_is_fitted(self, mode):
+        if mode in _FITTING_METHODS:
+            self._is_fitted = True
+
+    def __sklearn_is_fitted__(self):
+        return getattr(self, "_is_fitted", False)
 
     def fit(self, environment):
         _ = self.fit_transform(environment)
         return self
 
     def _eval_in_mode(self, mode, environment):
-        return evaluate(self.expr, mode, environment, clear=True)
+        if mode not in _FITTING_METHODS:
+            check_is_fitted(self)
+        result = evaluate(self.expr, mode, environment, clear=True)
+        self._set_is_fitted(mode)
+        return result
 
-    def report(self, mode, environment, **full_report_kwargs):
+    def report(self, *, environment, mode, **full_report_kwargs):
         from ._inspection import full_report
 
+        if mode not in _FITTING_METHODS:
+            check_is_fitted(self)
+
         full_report_kwargs["clear"] = True
-        return full_report(
+        result = full_report(
             self.expr, environment=environment, mode=mode, **full_report_kwargs
         )
+        self._set_is_fitted(mode)
+        return result
 
     def __getattr__(self, name):
         if name not in self.expr._skrub_impl.supports_modes():
@@ -107,13 +148,15 @@ class _XyEstimatorMixin:
         return {**self.environment, **xy_environment}
 
 
-class XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
+class _XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
     def __init__(self, expr, environment):
         self.expr = expr
         self.environment = environment
 
     def __skrub_to_env_estimator__(self):
-        return ExprEstimator(self.expr)
+        new = ExprEstimator(self.expr)
+        _copy_attr(self, new, ["_is_fitted"])
+        return new
 
     @property
     def _estimator_type(self):
@@ -122,10 +165,9 @@ class XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
         except AttributeError:
             return "transformer"
 
-    @property
     def __sklearn_tags__(self):
         try:
-            return unwrap_default(self.expr._skrub_impl.estimator).__sklearn_tags__
+            return unwrap_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
         except AttributeError:
             attribute_error(self, "__sklearn_tags__")
 
@@ -142,7 +184,9 @@ class XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
         return self
 
     def _eval_in_mode(self, mode, X, y=None):
-        return evaluate(self.expr, mode, self._get_env(X, y), clear=True)
+        result = evaluate(self.expr, mode, self._get_env(X, y), clear=True)
+        self._set_is_fitted(mode)
+        return result
 
 
 def _find_Xy(expr):
@@ -251,10 +295,12 @@ class ParamSearch(BaseEstimator):
         self.search = search
 
     def __skrub_to_Xy_estimator__(self, environment):
-        return XyParamSearch(self.expr, self.search, _SharedDict(environment))
+        new = _XyParamSearch(self.expr, self.search, _SharedDict(environment))
+        _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
+        return new
 
     def fit(self, environment):
-        estimator = XyExprEstimator(self.expr, _SharedDict(environment))
+        estimator = _XyExprEstimator(self.expr, _SharedDict(environment))
         search = clone(self.search)
         search.estimator = estimator
         param_grid = self._get_param_grid()
@@ -265,8 +311,8 @@ class ParamSearch(BaseEstimator):
             search.param_distributions = param_grid
         X, y = _compute_Xy(self.expr, environment)
         search.fit(X, y)
+        _copy_attr(search, self, _SEARCH_FITTED_ATTRIBUTES)
         self.best_estimator_ = _to_env_estimator(search.best_estimator_)
-        self.cv_results_ = search.cv_results_
         return self
 
     def _get_param_grid(self):
@@ -288,15 +334,25 @@ class ParamSearch(BaseEstimator):
         return f
 
     def _call_predictor_method(self, name, environment):
-        if not hasattr(self, "search_"):
-            raise ValueError("Search not fitted")
+        check_is_fitted(self, "best_estimator_")
         return getattr(self.best_estimator_, name)(environment)
 
     @property
     def results_(self):
-        return self._get_cv_results_table()
+        try:
+            return self._get_cv_results_table()
+        except NotFittedError:
+            attribute_error(self, "results_")
+
+    @property
+    def detailed_results_(self):
+        try:
+            return self._get_cv_results_table(detailed=True)
+        except NotFittedError:
+            attribute_error(self, "results_")
 
     def _get_cv_results_table(self, return_metadata=False, detailed=False):
+        check_is_fitted(self, "best_estimator_")
         expr_choices = choices(self.best_estimator_.expr)
 
         all_rows = []
@@ -317,19 +373,24 @@ class ParamSearch(BaseEstimator):
             all_rows.append(row)
 
         metadata = {"log_scale_columns": list(log_scale_columns)}
-        # all_ordered_param_names = _get_all_param_names(self._get_param_grid())
-        # ordered_param_names = [n for n in all_ordered_param_names if n in param_names]
-        # table = pd.DataFrame(all_rows, columns=ordered_param_names)
         table = pd.DataFrame(all_rows)
+        if isinstance(self.scorer_, dict):
+            metric_names = list(self.scorer_.keys())
+            if isinstance(self.search.refit, str):
+                metric_names.insert(
+                    0, metric_names.pop(metric_names.index(self.search.refit))
+                )
+        else:
+            metric_names = ["score"]
         result_keys = [
-            "mean_test_score",
-            "std_test_score",
+            *(f"mean_test_{n}" for n in metric_names),
+            *(f"std_test_{n}" for n in metric_names),
             "mean_fit_time",
             "std_fit_time",
             "mean_score_time",
             "std_score_time",
-            "mean_train_score",
-            "std_train_score",
+            *(f"mean_train_{n}" for n in metric_names),
+            *(f"std_train_{n}" for n in metric_names),
         ]
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
@@ -337,13 +398,14 @@ class ParamSearch(BaseEstimator):
         metadata["log_scale_columns"] = [
             renaming[c] for c in metadata["log_scale_columns"]
         ]
-        table.insert(0, "mean_test_score", self.cv_results_["mean_test_score"])
+        for k in result_keys[: len(metric_names)][::-1]:
+            table.insert(0, k, self.cv_results_[k])
         if detailed:
-            for k in result_keys[1:]:
+            for k in result_keys[len(metric_names) :]:
                 if k in self.cv_results_:
                     table.insert(table.shape[1], k, self.cv_results_[k])
         table = table.sort_values(
-            "mean_test_score", ascending=False, ignore_index=True, kind="stable"
+            list(table.columns)[0], ascending=False, ignore_index=True, kind="stable"
         )
         return (table, metadata) if return_metadata else table
 
@@ -364,31 +426,21 @@ class ParamSearch(BaseEstimator):
         )
         if min_score is not None:
             cv_results = cv_results[cv_results["mean_test_score"] >= min_score]
+        if not cv_results.shape[0]:
+            raise ValueError("No results to plot")
         return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
 
 
-def _get_all_param_names(grid):
-    names = {}
-    for subgrid in grid:
-        for k, v in subgrid.items():
-            if v.name is not None:
-                k = v.name
-            names[k] = None
-    return list(names)
-
-
-class XyParamSearch(_XyEstimatorMixin, ParamSearch):
+class _XyParamSearch(_XyEstimatorMixin, ParamSearch):
     def __init__(self, expr, search, environment):
         self.expr = expr
         self.search = search
         self.environment = environment
 
     def __skrub_to_env_estimator__(self):
-        env_estimator = ParamSearch(self.expr, self.search)
-        if hasattr(self, "best_estimator_"):
-            env_estimator.best_estimator_ = self.best_estimator_
-            env_estimator.cv_results_ = self.cv_results_
-        return env_estimator
+        new = ParamSearch(self.expr, self.search)
+        _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
+        return new
 
     @property
     def _estimator_type(self):
@@ -396,6 +448,12 @@ class XyParamSearch(_XyEstimatorMixin, ParamSearch):
             return unwrap_default(self.expr._skrub_impl.estimator)._estimator_type
         except AttributeError:
             return "transformer"
+
+    def __sklearn_tags__(self):
+        try:
+            return unwrap_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
+        except AttributeError:
+            attribute_error(self, "__sklearn_tags__")
 
     @property
     def classes_(self):
@@ -410,6 +468,4 @@ class XyParamSearch(_XyEstimatorMixin, ParamSearch):
         return self
 
     def _call_predictor_method(self, name, X, y=None):
-        if not hasattr(self, "best_estimator_"):
-            raise ValueError("Search not fitted")
         return getattr(self.best_estimator_, name)(self._get_env(X, y))
