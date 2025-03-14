@@ -32,16 +32,10 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 # --------------------------------
 #
 # We import the happiness score table first:
-import pandas as pd
+from skrub import datasets
 
-df = pd.read_csv(
-    (
-        "https://raw.githubusercontent.com/skrub-data/datasets/"
-        "master/data/Happiness_report_2022.csv"
-    ),
-    thousands=",",
-)
-df.drop(df.tail(1).index, inplace=True)
+happiness_data = datasets.fetch_country_happiness()
+df = happiness_data.happiness_report
 
 ###############################################################################
 # Let's look at the table:
@@ -66,23 +60,20 @@ df = df[["Country", "Happiness score"]]
 # complete our covariates (X table).
 #
 # Interesting tables can be found on `the World Bank open data platform
-# <https://data.worldbank.org/>`_, for which we have a downloading
-# function:
-from skrub.datasets import fetch_world_bank_indicator
-
-###############################################################################
+# <https://data.worldbank.org/>`_, which are also available in the dataset
 # We extract the table containing GDP per capita by country:
-gdp_per_capita = fetch_world_bank_indicator(indicator_id="NY.GDP.PCAP.CD").X
+
+gdp_per_capita = happiness_data.GDP_per_capita
 gdp_per_capita.head(3)
 
 ###############################################################################
 # Then another table, with life expectancy by country:
-life_exp = fetch_world_bank_indicator("SP.DYN.LE00.IN").X
+life_exp = happiness_data.life_expectancy
 life_exp.head(3)
 
 ###############################################################################
 # And a table with legal rights strength by country:
-legal_rights = fetch_world_bank_indicator("IC.LGL.CRED.XQ").X
+legal_rights = happiness_data.legal_rights_index
 legal_rights.head(3)
 
 ###############################################################################

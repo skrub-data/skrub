@@ -9,22 +9,85 @@ Release history
 Ongoing development
 ===================
 
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
-
 New features
 ------------
 
+- The :class:`TableReport` now switch it's visual theme between light and dark according to the user preferences.
+  :pr:`1201` by :user:`rouk1 <rouk1>`.
+
+- Adding a new way to control the location of the data directory, using envar `SKRUB_DATA_DIRECTORY`.
+  :pr:`1215` by :user:`Thomas S. <thomass-dev>`
 
 Changes
 -------
-* A new parameter `verbose` has been added to the :class:`TableReport` to toggle on or off the
-  printing of progress information when a report is being generated.
-  :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
+
+- Progress messages when generating a ``TableReport`` are now written to stderr instead of stdout.
+  :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
+
+- Optimize the :class:`StringEncoder`: significant memory reduction and 1.5x speed-up.
+  :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+Release 0.5.1
+=============
+
+New features
+------------
+* The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
+  decomposition and provides a cheaper alternative to :class:`GapEncoder`.
+  :pr:`1159` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Changes
+-------
+* New dataset fetching methods have been added: :func:`fetch_videogame_sales`,
+  :func:`fetch_bike_sharing`, :func:`fetch_flight_delays`,
+  :func:`fetch_country_happiness`, and removed :func:`fetch_road_safety`.
+  :pr:`1218` by :user:`Vincent Maladiere <Vincent-Maladiere>`
 
 Bug fixes
 ---------
 
+Maintenance
+-----------
+
+Release 0.4.1
+=============
+
+Changes
+-------
+* :class: `TableReport` has `write_html` method
+  :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
+
+* A new parameter ``verbose`` has been added to the :class:`TableReport` to toggle on or off the
+  printing of progress information when a report is being generated.
+  :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
+
+* A parameter ``verbose`` has been added to the :func:`patch_display` to toggle on or off the
+  printing of progress information when a table report is being generated.
+  :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
+
+* :func:`tabular_learner` accepts the alias ``"regression"`` for the option
+  ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+  :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
+
+Bug fixes
+---------
+* Generating a ``TableReport`` could have an effect on the matplotib
+  configuration which could cause plots not to display inline in jupyter
+  notebooks any more. This has been fixed in skrub in :pr:`1172` by
+  :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
+  `here <https://github.com/matplotlib/matplotlib/issues/25041>`_.
+
+* The labels on bar plots in the ``TableReport`` for columns of object dtypes
+  that have a repr spanning multiple lines could be unreadable. This has been
+  fixed in :pr:`1196` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Improve the performance of :func:`deduplicate` by removing some unnecessary
+  computations. :pr:`1193` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Maintenance
+-----------
+* Make ``skrub`` compatible with scikit-learn 1.6.
+  :pr:`1169` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.4.0
 =============

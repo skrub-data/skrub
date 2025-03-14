@@ -26,7 +26,7 @@ data-spans__{{ i }}__{{ j }}
         >
             {% for table_part in summary["sample_table"]["parts"] %}
             {% if table_part["name"] == "ellipsis" %}
-            <tbody class="ellided-table-part">
+            <tbody class="elided-table-part">
                 <tr>
                     {% for i in range(summary["sample_table"]["start_j"], summary["sample_table"]["stop_j"])%}
                     <td
@@ -47,7 +47,7 @@ data-spans__{{ i }}__{{ j }}
                 {% set is_padding = cell["role"] == "padding" %}
                 <{{ cell['elem'] }}
                 id="{{ random_string() }}"
-                class="table-cell ellided-short {{ 'clickable' if not is_padding }}"
+                class="table-cell elided-short {{ 'clickable' if not is_padding }}"
                 {% if 'role' in cell %}
                 data-role="{{ cell['role'] }}"
                 {% endif %}

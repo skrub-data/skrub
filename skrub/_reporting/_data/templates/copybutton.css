@@ -15,7 +15,7 @@
     display: flex;
     justify-content: space-between;
     align-items: stretch;
-    border: var(--border-s) solid var(--darkg);
+    border: var(--border-s) solid var(--color-border-primary);
     padding: 0;
     min-width: var(--box-min-width);
     max-width: var(--box-max-width);
@@ -25,18 +25,19 @@
 
 .box pre {
     overflow-x: auto;
-    padding: var(--space-s);
-    padding-left: var(--space-m);
+    padding: var(--spacing-s);
+    padding-left: var(--spacing-m);
     flex-grow: 1;
     white-space: pre;
 }
 
 .copybutton {
-    margin: var(--border-s);
-    min-width: var(--button-s);
-    max-width: var(--button-s);
-    max-height: var(--button-s);
-    padding: var(--space-s);
+    margin: var(--spacing-xs);
+    padding: var(--spacing-s);
+    min-width: var(--button-size-s);
+    max-width: var(--button-size-s);
+    max-height: var(--button-size-s);
+    border-radius: 0;
     border: none;
     position: relative;
 }
@@ -46,15 +47,15 @@
 }
 
 .copybutton {
-    background: #e0e0e0;
+    background: var(--color-background-button-primary);
 }
 
 .copybutton:hover {
-    background: #eee;
+    background: var(--color-background-button-primary-hover);
 }
 
 .copybutton:active {
-    background: #cccccc;
+    background: var(--color-background-button-primary-active);
 }
 
 .copybutton:not([data-show-checkmark]) > :not(:first-child) {
@@ -66,24 +67,26 @@
 }
 
 .copied-message {
-    font-size: var(--text-s);
-    background-color: black;
-    color: white;
-    padding: var(--space-s);
+    font-size: var(--font-size-s);
+    font-weight: bold;
+    background-color: var(--color-background-primary);
+    color: var(--color-text-primary);
+    padding: var(--spacing-s);
     border-radius: var(--radius);
     position: absolute;
-    top: var(--space-xs);
+    top: var(--spacing-xs);
     margin: 0;
-    right: calc(100% + var(--space-s));
+    right: calc(100% + var(--spacing-s));
+    filter: invert(1);
 }
 
 .copybutton-left .copied-message {
-    left: calc(100% + var(--space-s));
+    left: calc(100% + var(--spacing-s));
     right: auto;
 }
 
 [data-shows-placeholder] {
-    color: #777777;
+    color: var(--color-background-secondary);
 }
 
 .table-bar .box {
