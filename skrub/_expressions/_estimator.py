@@ -165,11 +165,10 @@ class _XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
         except AttributeError:
             return "transformer"
 
-    def __sklearn_tags__(self):
-        try:
+    if hasattr(BaseEstimator, "__sklearn_tags__"):
+
+        def __sklearn_tags__(self):
             return unwrap_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
-        except AttributeError:
-            attribute_error(self, "__sklearn_tags__")
 
     @property
     def classes_(self):
@@ -449,11 +448,10 @@ class _XyParamSearch(_XyEstimatorMixin, ParamSearch):
         except AttributeError:
             return "transformer"
 
-    def __sklearn_tags__(self):
-        try:
+    if hasattr(BaseEstimator, "__sklearn_tags__"):
+
+        def __sklearn_tags__(self):
             return unwrap_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
-        except AttributeError:
-            attribute_error(self, "__sklearn_tags__")
 
     @property
     def classes_(self):
