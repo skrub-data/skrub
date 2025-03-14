@@ -32,7 +32,7 @@ class ExprEstimator(BaseEstimator):
         self.expr = expr
 
     def __skrub_to_sklearn_compatible__(self, environment):
-        return CompatibleExprEstimator(self.expr.skb.clone(), _SharedDict(environment))
+        return CompatibleExprEstimator(self.expr, _SharedDict(environment))
 
     def fit(self, environment):
         _ = self.fit_transform(environment)
@@ -271,9 +271,7 @@ class ParamSearch(BaseEstimator):
         self.search = search
 
     def __skrub_to_sklearn_compatible__(self, environment):
-        return CompatibleParamSearch(
-            self.expr.skb.clone(), clone(self.search), _SharedDict(environment)
-        )
+        return CompatibleParamSearch(self.expr, self.search, _SharedDict(environment))
 
     def fit(self, environment):
         X_y = _find_X_y(self.expr.skb.clone())
