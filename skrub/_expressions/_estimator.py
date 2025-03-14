@@ -38,10 +38,6 @@ class ExprEstimator(BaseEstimator):
         _ = self.fit_transform(environment)
         return self
 
-    def fit_transform(self, environment):
-        # TODO: not needed, can be handled by _eval_in_mode?
-        return evaluate(self.expr, "fit_transform", environment, clear=True)
-
     def _eval_in_mode(self, mode, environment):
         return evaluate(self.expr, mode, environment, clear=True)
 
@@ -140,9 +136,6 @@ class XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
         except AttributeError:
             attribute_error(self, "classes_")
         return estimator.classes_
-
-    def fit_transform(self, X, y=None):
-        return evaluate(self.expr, "fit_transform", self._get_env(X, y), clear=True)
 
     def fit(self, X, y=None):
         _ = self.fit_transform(X, y=y)
