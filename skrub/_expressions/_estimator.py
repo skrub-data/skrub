@@ -145,6 +145,42 @@ class XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
         return evaluate(self.expr, mode, self._get_env(X, y), clear=True)
 
 
+def _find_Xy(expr):
+    x_node = find_X(expr)
+    if x_node is None:
+        raise ValueError('expr should have a node marked with "mark_as_X()"')
+    result = {"X": x_node}
+    if (y_node := find_y(expr)) is not None:
+        result["y"] = y_node
+    else:
+        impl = expr._skrub_impl
+        if getattr(impl, "y", None) is not None:
+            # the final estimator requests a y so some node must have been
+            # marked as y
+            raise ValueError('expr should have a node marked with "mark_as_y()"')
+    return result
+
+
+def _compute_Xy(expr, environment):
+    Xy = _find_Xy(expr.skb.clone())
+    X = evaluate(
+        Xy["X"],
+        mode="fit_transform",
+        environment=environment,
+        clear=False,
+    )
+    if "y" in Xy:
+        y = evaluate(
+            Xy["y"],
+            mode="fit_transform",
+            environment=environment,
+            clear=False,
+        )
+    else:
+        y = None
+    return X, y
+
+
 def cross_validate(expr_estimator, environment, **cv_params):
     """Cross-validate an estimator built from an expression.
 
@@ -202,42 +238,6 @@ def cross_validate(expr_estimator, environment, **cv_params):
         return result
     result["estimator"] = [_to_env_estimator(e) for e in estimators]
     return result
-
-
-def _find_Xy(expr):
-    x_node = find_X(expr)
-    if x_node is None:
-        raise ValueError('expr should have a node marked with "mark_as_X()"')
-    result = {"X": x_node}
-    if (y_node := find_y(expr)) is not None:
-        result["y"] = y_node
-    else:
-        impl = expr._skrub_impl
-        if getattr(impl, "y", None) is not None:
-            # the final estimator requests a y so some node must have been
-            # marked as y
-            raise ValueError('expr should have a node marked with "mark_as_y()"')
-    return result
-
-
-def _compute_Xy(expr, environment):
-    Xy = _find_Xy(expr.skb.clone())
-    X = evaluate(
-        Xy["X"],
-        mode="fit_transform",
-        environment=environment,
-        clear=False,
-    )
-    if "y" in Xy:
-        y = evaluate(
-            Xy["y"],
-            mode="fit_transform",
-            environment=environment,
-            clear=False,
-        )
-    else:
-        y = None
-    return X, y
 
 
 # TODO with ParameterGrid and ParameterSampler we can generate the list of
