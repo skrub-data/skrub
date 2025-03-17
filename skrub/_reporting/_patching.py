@@ -11,7 +11,7 @@ def _stashed_name(method_name):
     return f"_skrub_{method_name}"
 
 
-def _patch(cls, method_name, verbose):
+def _patch(cls, method_name, verbose, max_plot_columns):
     if (original_method := getattr(cls, method_name, None)) is None:
         return
     stashed_name = _stashed_name(method_name)
@@ -20,7 +20,10 @@ def _patch(cls, method_name, verbose):
     setattr(
         cls,
         method_name,
-        lambda df: getattr(TableReport(df, verbose=verbose), method_name)(),
+        lambda df: getattr(
+            TableReport(df, verbose=verbose, max_plot_columns=max_plot_columns),
+            method_name,
+        )(),
     )
 
 
@@ -52,7 +55,7 @@ def _get_to_patch(pandas, polars):
     return to_patch
 
 
-def patch_display(pandas=True, polars=True, verbose=1):
+def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=None):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
 
     This function replaces the HTML displays (what is shown when an object is
@@ -72,6 +75,10 @@ def patch_display(pandas=True, polars=True, verbose=1):
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
+    max_plot_columns : int, default=None
+        Maximum number of columns for which histogram plots should be generated.
+        If the number of columns in the dataframe is greater than this value,
+        the plots will not be generated. If None, all columns will be plotted.
 
     See Also
     --------
@@ -82,7 +89,10 @@ def patch_display(pandas=True, polars=True, verbose=1):
         Directly create a report from a dataframe.
     """
     _change_display(
-        _patch, _get_to_patch(pandas=pandas, polars=polars), verbose=verbose
+        _patch,
+        _get_to_patch(pandas=pandas, polars=polars),
+        verbose=verbose,
+        max_plot_columns=max_plot_columns,
     )
 
 
