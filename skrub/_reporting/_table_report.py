@@ -42,6 +42,10 @@ class TableReport:
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
+    max_plot_columns : int, default=None
+        Maximum number of columns for which histogram plots should be generated.
+        If the number of columns in the dataframe is greater than this value,
+        the plots will not be generated. If None, all columns will be plotted.
 
     See Also
     --------
@@ -115,6 +119,7 @@ class TableReport:
         title=None,
         column_filters=None,
         verbose=1,
+        max_plot_columns=None,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
@@ -127,6 +132,7 @@ class TableReport:
         self.column_filters = column_filters
         self.dataframe = dataframe
         self.verbose = verbose
+        self.max_plot_columns = max_plot_columns
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
@@ -145,9 +151,14 @@ class TableReport:
 
     @property
     def _any_summary(self):
-        if "_summary_with_plots" in self.__dict__:
-            return self._summary_with_plots
-        return self._summary_without_plots
+        if self.max_plot_columns is None:
+            summary = self._summary_with_plots
+        elif self.max_plot_columns <= self.dataframe.shape[1]:
+            summary = self._summary_with_plots
+        else:
+            summary = self._summary_without_plots
+
+        return summary
 
     def html(self):
         """Get the report as a full HTML page.
@@ -158,7 +169,7 @@ class TableReport:
             The HTML page.
         """
         return to_html(
-            self._summary_with_plots,
+            self._any_summary,
             standalone=True,
             column_filters=self.column_filters,
         )
@@ -172,7 +183,7 @@ class TableReport:
             The HTML snippet.
         """
         return to_html(
-            self._summary_with_plots,
+            self._any_summary,
             standalone=False,
             column_filters=self.column_filters,
         )
