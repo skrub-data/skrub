@@ -18,8 +18,9 @@ New features
 - Adding a new way to control the location of the data directory, using envar `SKRUB_DATA_DIRECTORY`.
   :pr:`1215` by :user:`Thomas S. <thomass-dev>`
 
-- The :class:`DatetimeEncoder` now supports periodic encoding of the features using circular (sine/cosine) and spline
-  transformers. :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The :class:`DatetimeEncoder` now supports periodic encoding of datetime features
+  with trigonometric functions and B-splines transformers.
+  :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Changes
 -------
