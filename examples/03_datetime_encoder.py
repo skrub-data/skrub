@@ -133,10 +133,10 @@ pprint(table_vec_weekday.transformers_)
 # Feature engineering for linear models
 # ....................................................................
 # 
-# The |DatetimeEncoder| can generate additional periodic features using either
-# B-Splines (|SplineTransformer|) or trigonometric functions. To do so, set the
-# ``periodic encoding`` parameter ``circular`` or ``spline``. In this
-# example, we use ``spline``.
+# The |DatetimeEncoder| can generate additional periodic features. These are
+# particularly useful for linear models. This is controlled by ``periodic encoding``
+# parameter which can be  ``circular`` or ``spline``, for trigonometric functions
+# or B-Splines . In this example, we use ``spline``.
 # We can also add the day in the year with the parameter ``add_day_of_year``.
 
 table_vec_periodic = TableVectorizer(
