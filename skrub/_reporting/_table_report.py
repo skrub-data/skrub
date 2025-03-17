@@ -153,7 +153,7 @@ class TableReport:
     def _any_summary(self):
         if self.max_plot_columns is None:
             summary = self._summary_with_plots
-        elif self.max_plot_columns <= self.dataframe.shape[1]:
+        elif self.max_plot_columns >= self.dataframe.shape[1]:
             summary = self._summary_with_plots
         else:
             summary = self._summary_without_plots
