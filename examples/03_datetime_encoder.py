@@ -129,6 +129,10 @@ pprint(table_vec_weekday.get_feature_names_out())
 pprint(table_vec_weekday.transformers_)
 
 ###############################################################################
+# 
+# Feature engineering for linear models
+# ....................................................................
+# 
 # The |DatetimeEncoder| can generate additional periodic features using either
 # B-Splines (|SplineTransformer|) or trigonometric functions. To do so, set the
 # ``periodic encoding`` parameter ``circular`` or ``spline``. In this
