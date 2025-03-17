@@ -8,9 +8,7 @@ __all__ = ["get_parallel_coord_data", "plot_parallel_coord", "DEFAULT_COLORSCALE
 DEFAULT_COLORSCALE = "bluered"
 
 
-def plot_parallel_coord(
-    cv_results, metadata, colorscale=DEFAULT_COLORSCALE, add_jitter=True
-):
+def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
     try:
         import plotly.graph_objects as go
     except ImportError:
@@ -22,24 +20,20 @@ def plot_parallel_coord(
                 cv_results,
                 metadata,
                 colorscale=colorscale,
-                add_jitter=add_jitter,
             )
         )
     )
 
 
-def get_parallel_coord_data(
-    cv_results, metadata, colorscale=DEFAULT_COLORSCALE, add_jitter=True
-):
+def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
     prepared_columns = [
         _prepare_column(cv_results[col_name], col_name in metadata["log_scale_columns"])
         for col_name in cv_results.columns
     ]
-    if add_jitter:
-        prepared_columns = [
-            _add_jitter(column) if column["label"] != "score" else column
-            for column in prepared_columns
-        ]
+    prepared_columns = [
+        _add_jitter(column) if column["label"] != "score" else column
+        for column in prepared_columns
+    ]
     return dict(
         line=dict(
             color=cv_results["mean_test_score"],
@@ -55,10 +49,13 @@ def get_parallel_coord_data(
 def _add_jitter(column):
     vals = column["values"]
     min_val, max_val = np.min(vals), np.max(vals)
-    eps = (max_val - min_val) / 100
-    column["values"] = column["values"] + np.random.uniform(
-        low=-eps, high=eps, size=vals.shape[0]
-    )
+    eps = (max_val - min_val) / 200
+    try:
+        column["values"] = column["values"] + np.random.uniform(
+            low=-eps, high=eps, size=vals.shape[0]
+        )
+    except Exception:
+        breakpoint()
     return column
 
 
@@ -76,13 +73,23 @@ def _prepare_column(col, is_log_scale):
 
 
 def _prepare_obj_column(col):
+    is_null = col.isna().values
     encoder = OrdinalEncoder()
-    encoded_col = encoder.fit_transform(pd.DataFrame({col.name: col})).ravel()
+    encoded_not_null = encoder.fit_transform(
+        col.dropna().astype(str).values[:, None]
+    ).ravel()
+    encoded = np.full(col.shape, -1.0)
+    encoded[~is_null] = encoded_not_null
+    categories = encoder.categories_[0]
+    vals = list(range(len(categories)))
+    if is_null.any():
+        categories = ["Null"] + list(categories)
+        vals = [-1.0, *vals]
     return {
         "label": col.name,
-        "values": encoded_col,
-        "tickvals": np.arange(len(encoder.categories_[0])),
-        "ticktext": encoder.categories_[0],
+        "values": encoded,
+        "tickvals": vals,
+        "ticktext": categories,
     }
 
 
