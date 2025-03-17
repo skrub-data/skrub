@@ -242,15 +242,6 @@ class _SVG(bytes):
         )
 
 
-def _add_style(kwargs, *new_styles):
-    if "style" in kwargs:
-        style = [s.strip() for s in kwargs["style"].split(",")]
-    else:
-        style = []
-    style = ",".join([*style, *new_styles])
-    kwargs["style"] = style
-
-
 def _node_kwargs(expr, url=None):
     label = html.escape(_utils.simple_repr(expr))
     if (

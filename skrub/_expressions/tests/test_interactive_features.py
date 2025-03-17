@@ -62,6 +62,8 @@ def test_repr_html():
     a = skrub.var("thename", skrub.toy_orders().orders)
     r = a._repr_html_()
     assert "thename" in r and "table-report" in r
+    r = a["quantity"]._repr_html_()
+    assert "quantity" in r and "table-report" in r and "product" not in r
     assert "thename" in skrub.var("thename")._repr_html_()
     # example without a name
     assert "add" in (skrub.var("thename", 0) + 2)._repr_html_()
