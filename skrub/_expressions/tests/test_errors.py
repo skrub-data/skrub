@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
+from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 import skrub
 from skrub._utils import PassThrough
@@ -108,50 +110,8 @@ def test_pickling_estimator_failure():
 
 
 #
-# Misc errors
+# Choices, X and y
 #
-
-
-def test_attribute_errors():
-    # general case
-    with pytest.raises(
-        Exception, match=r"(?s)Evaluation of '\.something' failed.*AttributeError"
-    ):
-        skrub.X(0).something
-    # added suggestion when the name exists in the .skb namespace
-    with pytest.raises(Exception, match=r"(?s).*Did you mean '\.skb\.apply"):
-        skrub.X(0).apply
-
-
-def test_concat_horizontal_numpy():
-    a = skrub.var("a", skrub.toy_orders().orders)
-    b = skrub.var("b", np.eye(3))
-    with pytest.raises(Exception, match=".*can only be used with dataframes"):
-        b.skb.concat_horizontal([a])
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat_horizontal([b])
-
-
-def test_concat_horizontal_needs_wrapping_in_list():
-    a = skrub.var("a", skrub.toy_orders().orders)
-    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat_horizontal(a)
-
-
-def test_apply_instead_of_skb_apply():
-    a = skrub.var("a", skrub.toy_orders().orders)
-    with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
-        a.apply("passthrough")
-    with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
-        a.apply(PassThrough())
-
-
-def test_method_call_failure():
-    with pytest.raises(
-        Exception,
-        match=r"(?s)Evaluation of '.upper\(\)' failed.*takes no arguments \(1 given\)",
-    ):
-        skrub.var("a", "hello").upper(0)
 
 
 def test_duplicate_choice_name():
@@ -215,6 +175,140 @@ def test_missing_X_or_y():
     X.skb.mark_as_X().skb.apply(
         LogisticRegression(), y=y.skb.mark_as_y()
     ).skb.cross_validate(env)
+
+
+def test_warn_if_choice_before_X_or_y():
+    X_a, y_a = make_classification(random_state=0)
+
+    # A choice appears before X
+    with pytest.warns(
+        UserWarning,
+        match=r"The following choices are used in the construction of X or y"
+        r".*\[choose_bool\(name='with_mean'\)\]",
+    ):
+        skrub.var("X", X_a).skb.apply(
+            StandardScaler(**skrub.choose_bool(name="with_mean"))
+        ).skb.mark_as_X().skb.apply(
+            DummyClassifier(
+                **skrub.choose_from(["prior", "most_frequent"], name="strategy")
+            ),
+            y=(skrub.y(y_a) + skrub.choose_from([1, -1], name="z")),
+        )
+    # A choice appears before y
+    with pytest.warns(
+        UserWarning,
+        match=r"The following choices are used in the construction of X or y"
+        r".*\[choose_from\(\[1, -1\], name='z'\)\]",
+    ):
+        skrub.X(X_a).skb.apply(
+            StandardScaler(**skrub.choose_bool(name="with_mean"))
+        ).skb.apply(
+            DummyClassifier(
+                **skrub.choose_from(["prior", "most_frequent"], name="strategy")
+            ),
+            y=(
+                skrub.var("y", y_a) + skrub.choose_from([1, -1], name="z")
+            ).skb.mark_as_y(),
+        )
+
+
+#
+# Bad arguments passed to eval()
+#
+
+
+def test_missing_var():
+    e = skrub.var("a", 0) + skrub.var("b", 1)
+    # we must provide either bindings for all vars or none
+    assert e.skb.eval() == 1
+    assert e.skb.eval({}) == 1
+    with pytest.raises(
+        (KeyError, RuntimeError),
+        match=(
+            "(Evaluation of node <Var 'b'> failed|No value has been provided for 'b')"
+        ),
+    ):
+        e.skb.eval({"a": 10})
+
+
+def test_X_y_instead_of_environment():
+    with pytest.raises(
+        TypeError,
+        match=r"The `environment` passed to `eval\(\)` should be None or a dictionary",
+    ):
+        skrub.X().skb.eval(0)
+    with pytest.raises(
+        TypeError, match="`environment` should be a dictionary of input values"
+    ):
+        skrub.X().skb.get_estimator().fit_transform(0)
+    with pytest.raises(TypeError):
+        skrub.X().skb.eval(X=0)
+    with pytest.raises(TypeError):
+        skrub.X().skb.get_estimator().fit_transform(X=0)
+
+
+def test_expr_or_choice_in_environment():
+    X = skrub.X()
+    with pytest.raises(
+        TypeError,
+        match="The `environment` dict contains a skrub expression: <Var 'X'>",
+    ):
+        # likely mistake: passing an expression instead of an actual value.
+        X.skb.eval({"X": X})
+
+    alpha = skrub.choose_from([1.0, 2.0], name="alpha")
+    with pytest.raises(
+        TypeError,
+        match="The `environment` dict contains a skrub choice: choose_from",
+    ):
+        (X + alpha).skb.eval({"X": 0, "alpha": alpha})
+
+
+#
+# Misc errors
+#
+
+
+def test_attribute_errors():
+    # general case
+    with pytest.raises(
+        Exception, match=r"(?s)Evaluation of '\.something' failed.*AttributeError"
+    ):
+        skrub.X(0).something
+    # added suggestion when the name exists in the .skb namespace
+    with pytest.raises(Exception, match=r"(?s).*Did you mean '\.skb\.apply"):
+        skrub.X(0).apply
+
+
+def test_concat_horizontal_numpy():
+    a = skrub.var("a", skrub.toy_orders().orders)
+    b = skrub.var("b", np.eye(3))
+    with pytest.raises(Exception, match=".*can only be used with dataframes"):
+        b.skb.concat_horizontal([a])
+    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+        a.skb.concat_horizontal([b])
+
+
+def test_concat_horizontal_needs_wrapping_in_list():
+    a = skrub.var("a", skrub.toy_orders().orders)
+    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+        a.skb.concat_horizontal(a)
+
+
+def test_apply_instead_of_skb_apply():
+    a = skrub.var("a", skrub.toy_orders().orders)
+    with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
+        a.apply("passthrough")
+    with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
+        a.apply(PassThrough())
+
+
+def test_method_call_failure():
+    with pytest.raises(
+        Exception,
+        match=r"(?s)Evaluation of '.upper\(\)' failed.*takes no arguments \(1 given\)",
+    ):
+        skrub.var("a", "hello").upper(0)
 
 
 def test_bad_names():
@@ -307,63 +401,6 @@ def test_unhashable():
         {skrub.choose_bool(name="b")}
     with pytest.raises(TypeError, match="unhashable type"):
         {skrub.choose_bool(name="b").if_else(0, 1)}
-
-
-#
-# Bad arguments passed to eval()
-#
-
-
-def test_missing_var():
-    e = skrub.var("a", 0) + skrub.var("b", 1)
-    # we must provide either bindings for all vars or none
-    assert e.skb.eval() == 1
-    assert e.skb.eval({}) == 1
-    with pytest.raises(
-        (KeyError, RuntimeError),
-        match=(
-            "(Evaluation of node <Var 'b'> failed|No value has been provided for 'b')"
-        ),
-    ):
-        e.skb.eval({"a": 10})
-
-
-def test_X_y_instead_of_environment():
-    with pytest.raises(
-        TypeError,
-        match=r"The `environment` passed to `eval\(\)` should be None or a dictionary",
-    ):
-        skrub.X().skb.eval(0)
-    with pytest.raises(
-        TypeError, match="`environment` should be a dictionary of input values"
-    ):
-        skrub.X().skb.get_estimator().fit_transform(0)
-    with pytest.raises(TypeError):
-        skrub.X().skb.eval(X=0)
-    with pytest.raises(TypeError):
-        skrub.X().skb.get_estimator().fit_transform(X=0)
-
-
-def test_expr_or_choice_in_environment():
-    X = skrub.X()
-    with pytest.raises(
-        TypeError,
-        match="The `environment` dict contains a skrub expression: <Var 'X'>",
-    ):
-        # likely mistake: passing an expression instead of an actual value.
-        X.skb.eval({"X": X})
-
-    alpha = skrub.choose_from([1.0, 2.0], name="alpha")
-    with pytest.raises(
-        TypeError,
-        match="The `environment` dict contains a skrub choice: choose_from",
-    ):
-        (X + alpha).skb.eval({"X": 0, "alpha": alpha})
-
-
-#
-# warnings
-#
 
 
 def test_int_column_names():

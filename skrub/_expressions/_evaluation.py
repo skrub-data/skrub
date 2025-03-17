@@ -32,6 +32,7 @@ __all__ = [
     "describe_steps",
     "get_params",
     "set_params",
+    "check_choices_before_Xy",
 ]
 
 _BUILTIN_SEQ = (list, tuple, set, frozenset)
@@ -378,9 +379,6 @@ def _cache_pruner(expr, mode):
 
 
 class _Printer(_ExprTraversal):
-    def __init__(self, highlight=False):
-        self.highlight = highlight
-
     def run(self, expr):
         self._seen = set()
         self._lines = []
@@ -392,10 +390,7 @@ class _Printer(_ExprTraversal):
 
     def compute_result(self, expr, evaluated_attributes):
         is_seen = id(expr) in self._seen
-        open_tag, close_tag = "", ""
-        if not is_seen and self.highlight:
-            open_tag, close_tag = "\033[1m", "\033[0m"
-        line = simple_repr(expr, open_tag, close_tag)
+        line = simple_repr(expr)
         if is_seen:
             line = f"( {line} )*"
             self._cache_used = True
@@ -403,8 +398,8 @@ class _Printer(_ExprTraversal):
         self._seen.add(id(expr))
 
 
-def describe_steps(expr, highlight=False):
-    return _Printer(highlight=highlight).run(expr)
+def describe_steps(expr):
+    return _Printer().run(expr)
 
 
 class _Cloner(_ExprTraversal):
@@ -514,20 +509,24 @@ class _ChoiceGraph(_ExprTraversal):
     def run(self, expr):
         self._choices = {}
         self._outcomes = {}
-        self._parents = defaultdict(set)
+
+        # we don't really care about the values of those dicts but we use dicts
+        # rather than sets to preserve insertion order.
+        self._parents = defaultdict(dict)
+
         self._current_outcome = [None]
         _ = super().run(expr)
         short = {v: i for i, v in enumerate(self._choices.keys())}
         self._short_ids = short
         choices = {short[k]: v for k, v in self._choices.items()}
-        parents = {k: [short[p] for p in v] for k, v in self._parents.items()}
+        parents = {k: [short[p] for p in v.keys()] for k, v in self._parents.items()}
         # - choices: choice's short id (1, 2, ...) to BaseChoice instance
         # - parents: outcome's id (id(outcome)) to list of its parent choices' short ids
         return {"choices": choices, "parents": parents}
 
     def handle_choice(self, choice):
         # unlike during evaluation here we need pre-ordering
-        self._parents[self._current_outcome[-1]].add(id(choice))
+        self._parents[self._current_outcome[-1]][id(choice)] = choice
         self._choices[id(choice)] = choice
         yield from super().handle_choice(choice)
         return choice
@@ -559,26 +558,31 @@ def choice_graph(expr):
     # choices cannot be tuned (they are needed before the cv loop starts) so
     # they will be clamped to a single value (the chosen outcome if that has been
     # set otherwise the default)
-    x_y_choices = set()
+    Xy_choices = set()
     for node in [find_X(expr), find_y(expr)]:
         if node is not None:
             node_graph = _ChoiceGraph().run(node)
-            x_y_choices.update(
+            Xy_choices.update(
                 {
                     # convert from python id to short id
                     full_builder._short_ids[id(c)]
                     for c in node_graph["choices"].values()
                 }
             )
-    if x_y_choices:
+    if Xy_choices:
         warnings.warn(
             "The following choices are used in the construction of X or y, "
             "so their value cannot be tuned because they are needed outside "
             "of the cross-validation loop. They will be clamped to their "
-            f"default value: {[full_graph['choices'][k] for k in x_y_choices]}"
+            f"default value: {[full_graph['choices'][k] for k in Xy_choices]}"
         )
-    full_graph["x_y_choices"] = x_y_choices
+    full_graph["Xy_choices"] = Xy_choices
     return full_graph
+
+
+def check_choices_before_Xy(expr):
+    """Emit a warning if there are hyperparameters upstream of X or y."""
+    choice_graph(expr)
 
 
 def _expand_grid(graph, grid):
@@ -588,7 +592,7 @@ def _expand_grid(graph, grid):
         # of possible outcome indices.
         # if the choice is used in X or y, it is clamped to a single value
         choice = graph["choices"][choice_id]
-        if choice_id in graph["x_y_choices"]:
+        if choice_id in graph["Xy_choices"]:
             if isinstance(choice, _choosing.Choice):
                 return [choice.chosen_outcome_idx or 0]
             else:

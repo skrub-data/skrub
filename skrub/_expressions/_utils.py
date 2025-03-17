@@ -13,10 +13,10 @@ class Constants(enum.Enum):
     NO_VALUE = enum.auto()
 
 
-def simple_repr(expr, open_tag="", close_tag=""):
+def simple_repr(expr):
     text = repr(expr).splitlines()[0].removeprefix("<").removesuffix(">")
     start, sep, rest = text.partition(" ")
-    return f"{open_tag}{start.upper()}{close_tag}{sep}{rest}"
+    return f"{start.upper()}{sep}{rest}"
 
 
 def attribute_error(obj, name, comment=None):

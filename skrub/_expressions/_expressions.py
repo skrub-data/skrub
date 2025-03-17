@@ -262,7 +262,7 @@ def check_expr(f):
 
     @functools.wraps(f)
     def _checked_call(*args, **kwargs):
-        from ._evaluation import evaluate, find_conflicts
+        from ._evaluation import check_choices_before_Xy, evaluate, find_conflicts
 
         expr = f(*args, **kwargs)
 
@@ -283,6 +283,7 @@ def check_expr(f):
         # with false negatives) where we pickle nodes separately and we only
         # check new nodes that haven't yet been checked.
         check_can_be_pickled(expr)
+        check_choices_before_Xy(expr)
         try:
             evaluate(expr, mode="preview", environment=None)
         except UninitializedVariable:
