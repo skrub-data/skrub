@@ -192,10 +192,10 @@ class _ExprTraversal:
 
 
 class _Evaluator(_ExprTraversal):
-    def __init__(self, mode="preview", environment=None, callback=None):
+    def __init__(self, mode="preview", environment=None, callbacks=()):
         self.mode = mode
         self.environment = {} if environment is None else environment
-        self.callback = callback
+        self.callbacks = callbacks
 
     def _pick_mode(self, expr):
         if expr is not self._expr and self.mode != "preview":
@@ -243,8 +243,8 @@ class _Evaluator(_ExprTraversal):
             expr, impl.fields_required_for_eval(self._pick_mode(expr))
         )
         impl.results[self.mode] = result
-        if self.callback is not None:
-            self.callback(expr, result)
+        for cb in self.callbacks:
+            cb(expr, result)
         return result
 
     def handle_choice(self, choice):
@@ -333,15 +333,15 @@ def _check_environment(environment):
 # consistent with .skb.eval() in evaluate's params
 
 
-def evaluate(expr, mode="preview", environment=None, clear=False):
+def evaluate(expr, mode="preview", environment=None, clear=False, callbacks=()):
     _check_environment(environment)
     if clear:
-        callback = _cache_pruner(expr, mode)
+        callbacks = (_cache_pruner(expr, mode),) + tuple(callbacks)
         clear_results(expr, mode=mode)
     else:
-        callback = None
+        callbacks = ()
     try:
-        return _Evaluator(mode=mode, environment=environment, callback=callback).run(
+        return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
             expr
         )
     finally:
