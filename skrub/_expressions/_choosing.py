@@ -1,6 +1,5 @@
 import dataclasses
 import functools
-import io
 import typing
 from collections.abc import Sequence
 
@@ -684,55 +683,3 @@ def choose_int(low, high, *, log=False, n_steps=None, name):
     return DiscretizedNumericChoice(
         low, high, log=log, to_int=True, n_steps=n_steps, name=name
     )
-
-
-def expand_grid(grid):
-    from ._evaluation import param_grid
-
-    return param_grid(grid)
-
-
-#
-# A few helpers to display parameter grids or nodes in a parameter grid
-#
-
-
-def write_indented(prefix, text, ostream):
-    istream = io.StringIO(text)
-    ostream.write(prefix)
-    ostream.write(next(istream))
-    for line in istream:
-        ostream.write(" " * len(prefix))
-        ostream.write(line)
-    return ostream.getvalue()
-
-
-def grid_description(grid):
-    buf = io.StringIO()
-    for subgrid in grid:
-        prefix = "- "
-        for k, v in subgrid.items():
-            if v.name is not None:
-                k = v.name
-            if isinstance(v, BaseNumericChoice):
-                # no need to repeat the name (already in the key) hence name(None)
-                write_indented(
-                    f"{prefix}{k!r}: ", f"{_with_fields(v, name=None)}\n", buf
-                )
-            elif len(v.outcomes) == 1:
-                write_indented(f"{prefix}{k!r}: ", f"{v.outcomes[0]}\n", buf)
-            else:
-                buf.write(f"{prefix}{k!r}:\n")
-                for outcome in v.outcomes:
-                    write_indented("      - ", f"{outcome}\n", buf)
-            prefix = "  "
-    return buf.getvalue()
-
-
-def params_description(grid_entry):
-    buf = io.StringIO()
-    for param_id, param in grid_entry.items():
-        choice_name = param.in_choice or param_id
-        value = param.name or param.value
-        write_indented(f"{choice_name!r}: ", f"{value!r}\n", buf)
-    return buf.getvalue()

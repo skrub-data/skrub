@@ -14,9 +14,9 @@ from .. import _dataframe as sbd
 from .. import datasets
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
-from .._utils import Repr, random_string
+from .._utils import Repr, random_string, short_repr
 from . import _utils
-from ._choosing import Choice
+from ._choosing import BaseNumericChoice
 from ._evaluation import choices, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
 
@@ -332,16 +332,36 @@ def describe_param_grid(expr):
     buf = io.StringIO()
     for subgrid in grid:
         prefix = "- "
+        pad_prefix = "  "
+        indent = "    "
         for k, v in subgrid.items():
+            assert isinstance(v, (BaseNumericChoice, list))
             choice = expr_choices[k]
-            name = choice.name or repr(choice)
-            if isinstance(choice, Choice) and isinstance(v, list):
-                if len(v) == 1:
-                    v = choice.outcomes[v[0]]
+            name = choice.name
+            if isinstance(choice, BaseNumericChoice):
+                buf.write(f"{prefix}{name}: {v}\n")
+            elif len(v) == 1:
+                outcome = choice.outcomes[v[0]]
+                if (outcome_name := outcome.name) is not None:
+                    buf.write(
+                        f"{prefix}{name}:\n"
+                        f"{pad_prefix}{indent}{outcome_name}: "
+                        f"{short_repr(outcome.value)}\n"
+                    )
                 else:
-                    v = f'[{", ".join(map(str, (choice.outcomes[idx] for idx in v)))}]'
-                buf.write(f"{prefix}{name}: {v}\n")
+                    buf.write(f"{prefix}{name}: {short_repr(outcome.value)}\n")
             else:
-                buf.write(f"{prefix}{name}: {v}\n")
-            prefix = "  "
-    return buf.getvalue() or "<empty parameter grid>"
+                assert len(v)
+                if choice.outcomes[v[0]].name is not None:
+                    buf.write(f"{prefix}{name}:\n")
+                    for outcome_idx in v:
+                        outcome = choice.outcomes[outcome_idx]
+                        buf.write(
+                            f"{pad_prefix}{indent}{outcome.name}: "
+                            f"{short_repr(outcome.value)}\n"
+                        )
+                else:
+                    outcomes = [choice.outcomes[idx].value for idx in v]
+                    buf.write(f"{prefix}{name}: {short_repr(outcomes)}\n")
+            prefix = pad_prefix
+    return buf.getvalue() or "<empty parameter grid>\n"
