@@ -76,7 +76,7 @@ def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=None):
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
     max_plot_columns : int, default=None
-        Maximum number of columns for which histogram plots should be generated.
+        Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
 
