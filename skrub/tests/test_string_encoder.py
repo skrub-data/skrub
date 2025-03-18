@@ -1,4 +1,5 @@
 import pytest
+from numpy.testing import assert_almost_equal
 from sklearn.base import clone
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import (
@@ -19,6 +20,7 @@ def encode_column(df_module):
         "this document is the second document",
         "and this is the third one",
         "is this the first document",
+        None,
     ]
 
     return df_module.make_column("col1", corpus)
@@ -36,7 +38,8 @@ def test_tfidf_vectorizer(encode_column, df_module):
             ("tsvd", TruncatedSVD(n_components=n_components)),
         ]
     )
-    check = pipe.fit_transform(sbd.to_numpy(encode_column))
+    check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
+    check = check.astype("float32")  # StringEncoder is float32
 
     names = [f"col1_{idx}" for idx in range(2)]
 
@@ -77,8 +80,7 @@ def test_hashing_vectorizer(encode_column, df_module):
             ("tsvd", TruncatedSVD(n_components=n_components)),
         ]
     )
-    check = pipe.fit_transform(sbd.to_numpy(encode_column))
-
+    check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
     names = [f"col1_{idx}" for idx in range(2)]
 
     check_df = df_module.make_dataframe(dict(zip(names, check.T)))
@@ -191,27 +193,35 @@ def test_n_components(df_module):
     assert encoder_30.n_components_ == 30
 
 
+def test_n_components_equal_voc_size(df_module):
+    x = df_module.make_column("x", ["aab", "bba"])
+    encoder = StringEncoder(n_components=2, ngram_range=(1, 1), analyzer="char")
+    out = encoder.fit_transform(x)
+    assert sbd.column_names(out) == ["x_0", "x_1"]
+    assert not hasattr(encoder, "tsvd_")
+
+
 @pytest.mark.parametrize("vectorizer", ["tfidf", "hashing"])
 def test_missing_values(df_module, vectorizer):
     col = df_module.make_column("col", ["one two", None, "", "two three"])
     encoder = StringEncoder(n_components=2, vectorizer=vectorizer)
     out = encoder.fit_transform(col)
     for c in sbd.to_column_list(out):
-        assert c[1] == 0.0
-        assert c[2] == 0.0
+        assert_almost_equal(c[1], 0.0, decimal=6)
+        assert_almost_equal(c[2], 0.0, decimal=6)
     out = encoder.transform(col)
     for c in sbd.to_column_list(out):
-        assert c[1] == 0.0
-        assert c[2] == 0.0
+        assert_almost_equal(c[1], 0.0, decimal=6)
+        assert_almost_equal(c[2], 0.0, decimal=6)
     tv = TableVectorizer(
         low_cardinality=StringEncoder(n_components=2, vectorizer=vectorizer)
     )
     df = df_module.make_dataframe({"col": col})
     out = tv.fit_transform(df)
     for c in sbd.to_column_list(out):
-        assert c[1] == 0.0
-        assert c[2] == 0.0
+        assert_almost_equal(c[1], 0.0, decimal=6)
+        assert_almost_equal(c[2], 0.0, decimal=6)
     out = tv.transform(df)
     for c in sbd.to_column_list(out):
-        assert c[1] == 0.0
-        assert c[2] == 0.0
+        assert_almost_equal(c[1], 0.0, decimal=6)
+        assert_almost_equal(c[2], 0.0, decimal=6)
