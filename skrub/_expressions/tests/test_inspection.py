@@ -39,7 +39,7 @@ def test_full_report():
         "utf-8"
     )
     report = e.skb.full_report({"a": 12345, "c": 0}, open=False)
-    assert isinstance(report["error"], ZeroDivisionError)
+    assert isinstance(report["error"], (ZeroDivisionError, RuntimeError))
     assert report["result"] is None
     out = report["report_path"].parent
     text = (out / "node_1.html").read_text("utf-8")

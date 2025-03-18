@@ -12,7 +12,7 @@ def test_parallel_coord():
 
     c2 = skrub.choose_int(1, 100, log=True, name="c2")
     c3 = skrub.choose_float(0.0, 1.0, name="c3")
-    c4 = skrub.choose_from({"aone": 101, "two": 102}, name="c4")
+    c4 = skrub.choose_from({"A": 101, "z": 102}, name="c4")
     c5 = skrub.choose_bool(name="c5")
     c6 = skrub.choose_from([2, 3, 4, 5], name="c6").match({2: c2, 3: c3, 4: c4, 5: c5})
 
@@ -30,4 +30,17 @@ def test_parallel_coord():
     assert dim["label"] == "c0"
     assert list(dim["ticktext"]) == ["a", "b"]
     assert list(dim["tickvals"]) == [0, 1]
-    # TODO: check other dimensions
+    next(data)
+    next(data)
+    next(data)
+    dim = next(data)
+    assert dim["label"] == "c5"
+    assert list(dim["ticktext"]) == ["Null", "False", "True"]
+    assert list(dim["tickvals"]) == [-1.0, 0, 1]
+    next(data)
+    dim = next(data)
+    assert dim["label"] == "c4"
+    assert list(dim["ticktext"]) == ["Null", "A", "z"]
+    assert list(dim["tickvals"]) == [-1.0, 0, 1]
+    dim = next(data)
+    assert dim["label"] == "fit time"

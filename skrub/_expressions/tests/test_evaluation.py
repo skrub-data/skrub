@@ -194,9 +194,9 @@ def test_param_grid_choice_before_X():
                 2: [0, 1],
             }
         ]
-        assert c.skb.describe_param_grid() == """\
+        assert c.skb.describe_param_grid().replace("np.float64(0.5)", "0.5") == """\
 - c0: 10
-  c1: [NumericOutcome(value=np.float64(0.5), \
+  c1: [NumericOutcome(value=0.5, \
 name=None, in_choice='c1', is_from_log_scale=False)]
   c2: [12, 22]
 """
