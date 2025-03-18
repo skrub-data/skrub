@@ -69,7 +69,7 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
 
 
 def _get_output_dir(output_dir, overwrite):
-    now = datetime.datetime.now().isoformat()
+    now = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
     if output_dir is None:
         output_dir = (
             datasets.get_data_dir()
