@@ -218,3 +218,29 @@ def test_write_to_stderr(df_module, capsys):
 
     assert not re.search(pattern, captured.out)
     assert re.search(pattern, captured.err)
+
+
+def test_max_plot_columns_parameter(df_module):
+    df = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+
+    report = TableReport(df)
+    for col in report._any_summary["columns"]:
+        assert len(col["plot_names"]) > 0
+
+    report_2 = TableReport(df, max_plot_columns=5)
+    for col in report_2._any_summary["columns"]:
+        assert len(col["plot_names"]) > 0
+
+    report_3 = TableReport(df, max_plot_columns=10)
+    for col in report_3._any_summary["columns"]:
+        assert len(col["plot_names"]) > 0
+
+    report_4 = TableReport(df, max_plot_columns=0)
+    for col in report_4._any_summary["columns"]:
+        assert len(col["plot_names"]) == 0
+
+    report_5 = TableReport(df, max_plot_columns=3)
+    for col in report_5._any_summary["columns"]:
+        assert len(col["plot_names"]) == 0
