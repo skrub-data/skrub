@@ -17,6 +17,12 @@ def example_strings():
 def test_dir(a):
     assert "lower" in dir(a)
     assert "badattr" not in dir(a)
+    assert "skb" in dir(a)
+
+
+def test_dir_no_preview():
+    a = skrub.var("a")
+    assert "skb" in dir(a)
 
 
 @pytest.mark.parametrize("a", example_strings())

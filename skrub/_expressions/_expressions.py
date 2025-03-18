@@ -10,6 +10,7 @@ import re
 import textwrap
 import traceback
 import types
+import warnings
 
 from sklearn.base import BaseEstimator
 
@@ -310,6 +311,20 @@ def _get_preview(obj):
 
 
 def _check_call(f):
+    """Warn about function calls returning None
+
+    We use this check because it is quite likely that the function was called
+    for a side-effect and returns no meaningful value, which might indicate a
+    mistake related to eager vs lazy evaluation similar to the one we catch by
+    defining ``__setattr__ ``: ``mydict['a'] = 0``, ``mylist.append(0)``.
+
+    We warn rather than raise an error because in some cases it might be
+    legitimate for a function in the pipeline to return None (if the None is
+    the reused in the next step) so there may be false positives. Also there
+    will be many false negatives (eg ``pop()``) so it might be better to just
+    remove this check.
+    """
+
     @functools.wraps(f)
     def _check_call_return_value(*args, **kwargs):
         expr = f(*args, **kwargs)
@@ -328,7 +343,7 @@ def _check_call(f):
             "that modify objects in-place but rather functions that leave "
             "their argument unchanged and return a new object."
         )
-        raise TypeError(msg)
+        warnings.warn(msg)
 
     return _check_call_return_value
 
@@ -339,13 +354,13 @@ class Expr:
     def __init__(self, impl):
         self._skrub_impl = impl
 
-    def __sklearn_clone__(self):
+    def __deepcopy__(self, memo):
         from ._evaluation import clone
 
         return clone(self)
 
-    def __deepcopy__(self, memo):
-        return self.__sklearn_clone__()
+    def __sklearn_clone__(self):
+        return self.__deepcopy__({})
 
     @check_expr
     def __getattr__(self, name):

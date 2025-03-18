@@ -1,3 +1,5 @@
+import copy
+
 import pytest
 from sklearn.linear_model import LogisticRegression
 
@@ -145,3 +147,21 @@ def test_get_estimator():
     e = (skrub.var("a", 0) + skrub.var("b", 1)).skb.get_estimator()
     assert e.fit_transform({"a": 10, "b": 2}) == 12
     assert e.transform({"a": 100, "b": 30}) == 130
+
+
+@pytest.mark.parametrize("how", ["deepcopy", "sklearn", "skb"])
+def test_cloning_and_preview_data(how):
+    e = skrub.var("a", 0) + skrub.var("b", 1)
+    if how == "deepcopy":
+        clone = copy.deepcopy(e)
+    elif how == "sklearn":
+        clone = e.__sklearn_clone__()
+    else:
+        clone = e.skb.clone()
+    assert clone._skrub_impl.results == {}
+    if how == "skb":
+        with pytest.raises(Exception, match="No value value has been provided for 'a'"):
+            clone.skb.eval()
+    else:
+        assert clone.skb.eval() == 1
+    assert clone.skb.eval({"a": 10, "b": 2}) == 12
