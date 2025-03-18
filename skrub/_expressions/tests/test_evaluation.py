@@ -79,6 +79,23 @@ def test_caching():
     assert d._skrub_impl.results == {}
 
 
+def test_caching_in_special_expressions():
+    # expressions that need to skip evaluation of some branches based on a
+    # condition like if_else and match are somewhat special cases so we check
+    # here that their cache gets populated correctly as well.
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = skrub.var("c")
+    d = a.skb.if_else(b, c)
+    e = d.skb.match({"B": "BE"}, default="CE")
+    _evaluation.evaluate(e, mode="fit_transform", environment={"a": True, "b": "B"})
+    assert a._skrub_impl.results == {"fit_transform": True}
+    assert b._skrub_impl.results == {"fit_transform": "B"}
+    assert c._skrub_impl.results == {}
+    assert d._skrub_impl.results == {"fit_transform": "B"}
+    assert e._skrub_impl.results == {"fit_transform": "BE"}
+
+
 def test_needs_eval():
     # needs_eval() is used to check if a collection contains some skrub
     # expression or choice. problems with cyclical references are handled

@@ -88,12 +88,7 @@ class _ExprTraversal:
                     stack.append(new_top)
                     last_result = None
                 elif isinstance(top, Expr):
-                    if isinstance(top._skrub_impl, IfElse):
-                        push(self.handle_if_else)
-                    elif isinstance(top._skrub_impl, Match):
-                        push(self.handle_match)
-                    else:
-                        push(self.handle_expr)
+                    push(self.handle_expr)
                 elif isinstance(top, _BUILTIN_MAP):
                     push(self.handle_mapping)
                 elif isinstance(top, _BUILTIN_SEQ):
@@ -114,12 +109,6 @@ class _ExprTraversal:
                 last_result = e.value
                 stack.pop()
         return last_result
-
-    def handle_if_else(self, expr):
-        return (yield from self.handle_expr(expr))
-
-    def handle_match(self, expr):
-        return (yield from self.handle_expr(expr))
 
     def handle_expr(self, expr, attributes_to_evaluate=None):
         impl = expr._skrub_impl
@@ -198,32 +187,20 @@ class _Evaluator(_ExprTraversal):
         self.environment = {} if environment is None else environment
         self.callbacks = callbacks
 
+    def run(self, expr):
+        self._expr = expr
+        return super().run(expr)
+
     def _pick_mode(self, expr):
         if expr is not self._expr and self.mode != "preview":
             return "fit_transform" if "fit" in self.mode else "transform"
         return self.mode
 
-    def run(self, expr):
-        self._expr = expr
-        return super().run(expr)
+    def _fetch(self, expr):
+        """Fetch the result from the cache or environment if possible.
 
-    def handle_if_else(self, expr):
-        cond = yield expr._skrub_impl.condition
-        if cond:
-            return (yield expr._skrub_impl.value_if_true)
-        else:
-            return (yield expr._skrub_impl.value_if_false)
-
-    def handle_match(self, expr):
-        impl = expr._skrub_impl
-        query = yield impl.query
-        if impl.has_default():
-            target = impl.targets.get(query, impl.default)
-        else:
-            target = impl.targets[query]
-        return (yield target)
-
-    def handle_expr(self, expr):
+        Raises a KeyError otherwise
+        """
         impl = expr._skrub_impl
         if impl.is_X and X_NAME in self.environment:
             return self.environment[X_NAME]
@@ -238,15 +215,52 @@ class _Evaluator(_ExprTraversal):
             and impl.name in self.environment
         ):
             return self.environment[impl.name]
-        if self.mode in impl.results:
-            return impl.results[self.mode]
-        result = yield from super().handle_expr(
-            expr, impl.fields_required_for_eval(self._pick_mode(expr))
-        )
-        impl.results[self.mode] = result
+        return impl.results[self.mode]
+
+    def _store(self, expr, result):
+        """Store a result in the cache."""
+        expr._skrub_impl.results[self.mode] = result
+
+    def handle_expr(self, expr):
+        try:
+            return self._fetch(expr)
+        except KeyError:
+            pass
+        impl = expr._skrub_impl
+        if isinstance(impl, IfElse):
+            result = yield from self._handle_if_else(expr)
+        elif isinstance(impl, Match):
+            result = yield from self._handle_match(expr)
+        else:
+            result = yield from self._handle_expr_default(expr)
+        self._store(expr, result)
         for cb in self.callbacks:
             cb(expr, result)
         return result
+
+    def _handle_if_else(self, expr):
+        impl = expr._skrub_impl
+        cond = yield impl.condition
+        if cond:
+            return (yield impl.value_if_true)
+        else:
+            return (yield impl.value_if_false)
+
+    def _handle_match(self, expr):
+        impl = expr._skrub_impl
+        query = yield impl.query
+        if impl.has_default():
+            target = impl.targets.get(query, impl.default)
+        else:
+            target = impl.targets[query]
+        return (yield target)
+
+    def _handle_expr_default(self, expr):
+        return (
+            yield from super().handle_expr(
+                expr, expr._skrub_impl.fields_required_for_eval(self._pick_mode(expr))
+            )
+        )
 
     def handle_choice(self, choice):
         if choice.name is not None and choice.name in self.environment:

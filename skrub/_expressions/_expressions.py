@@ -31,6 +31,7 @@ __all__ = [
     "deferred",
     "check_expr",
     "check_can_be_pickled",
+    "eval_mode",
 ]
 
 # Explicitly excluded from getattr because they break either pickling or the
@@ -1384,3 +1385,48 @@ class UnaryOp(ExprImpl):
         return (
             f"<{self.__class__.__name__}: {self.op.__name__.lstrip('__').rstrip('__')}>"
         )
+
+
+class EvalMode(ExprImpl):
+    _fields = []
+
+    def compute(self, e, mode, environment):
+        return mode
+
+
+@check_expr
+def eval_mode():
+    """Return the mode in which the expression is currently being evaluated.
+
+    This can be:
+
+      - 'preview': when the previews are being eagerly computed when the
+        expression is defined or when we call ``.skb.eval()`` without
+        arguments.
+      - otherwise, the method we called on the estimator such as ``'predict'``
+        or ``'fit_transform'``.
+
+    Examples
+    --------
+    >>> import skrub
+
+    >>> mode = skrub.eval_mode()
+    >>> mode.skb.eval()
+    'preview'
+    >>> estimator = mode.skb.get_estimator()
+    >>> estimator.fit_transform({})
+    'fit_transform'
+    >>> estimator.transform({})
+    'transform'
+
+    ``eval_mode()`` can be particularly useful to have a different behavior in
+    preview mode in order to speed-up previews during debugging:
+
+    >>> n_components = skrub.eval_mode().skb.match({'preview': 2}, default=20)
+    >>> n_components
+    <Match <EvalMode>>
+    Result:
+    ―――――――
+    2
+    """
+    return Expr(EvalMode())

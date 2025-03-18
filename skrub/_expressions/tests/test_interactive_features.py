@@ -93,6 +93,9 @@ def test_repr():
     {'a': 0}
     >>> skrub.var('a', 1).skb.match({1: 10, 2: 20})
     <Match <Var 'a'>>
+    Result:
+    ―――――――
+    10
     >>> from sklearn.preprocessing import StandardScaler, RobustScaler
     >>> skrub.X().skb.apply(StandardScaler())
     <Apply StandardScaler>
