@@ -770,14 +770,14 @@ class _FindConflicts(_ExprTraversal):
                 f"first object that used `.mark_as_y()`:\n{first}\n"
                 f"second object that used `.mark_as_y()`:\n{second}"
             )
-        if conflict["reason"] == "name":
-            name = conflict["name"]
-            return (
-                f"Choice and node names must be unique. The name {name!r} was used "
-                "for 2 different objects:\n"
-                f"first object using the name {name!r}:\n{first}\n"
-                f"second object using the name {name!r}:\n{second}"
-            )
+        assert conflict["reason"] == "name", conflict["reason"]
+        name = conflict["name"]
+        return (
+            f"Choice and node names must be unique. The name {name!r} was used "
+            "for 2 different objects:\n"
+            f"first object using the name {name!r}:\n{first}\n"
+            f"second object using the name {name!r}:\n{second}"
+        )
 
     def _add_to_dict(self, d, key, val, reason):
         if key is None:
