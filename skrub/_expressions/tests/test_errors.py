@@ -83,28 +83,45 @@ def test_preview_failure():
 
 
 class NoPickle:
+    _msg = "cannot pickle NoPickle"
+
     def __deepcopy__(self, mem):
         return self
 
     def __getstate__(self):
-        raise pickle.PicklingError("cannot pickle NoPickle")
+        raise pickle.PicklingError(self._msg)
 
 
-def test_pickling_preview_failure():
+class NoPickleRecursion(NoPickle):
+    _msg = "cannot pickle NoPickleRecursion something about recursion"
+
+
+def _pickle_msg_pattern(cls):
+    pattern = r"The check to verify that the pipeline can be serialized failed\."
+    if cls is not NoPickleRecursion:
+        return pattern
+    return (
+        pattern + " Is a step in the pipeline holding a reference to the full pipeline"
+    )
+
+
+@pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
+def test_pickling_preview_failure(cls):
     with pytest.raises(
         pickle.PicklingError,
-        match="The check to verify that the pipeline can be serialized failed",
+        match=_pickle_msg_pattern(cls),
     ):
-        skrub.X([]) + [NoPickle()]
+        skrub.X([]) + [cls()]
 
 
-def test_pickling_estimator_failure():
+@pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
+def test_pickling_estimator_failure(cls):
     a = []
     e = skrub.X([]) + a
-    a.append(NoPickle())
+    a.append(cls())
     with pytest.raises(
         pickle.PicklingError,
-        match="The check to verify that the pipeline can be serialized failed",
+        match=_pickle_msg_pattern(cls),
     ):
         e.skb.get_estimator()
 

@@ -382,17 +382,26 @@ def test_report(tmp_path):
     est = expr.skb.get_estimator()
     with pytest.raises(NotFittedError):
         est.report(mode="score", environment=data)
-    est.fit(data)
-    report = est.report(
+    fit_report = est.report(
+        mode="fit",
+        environment=data,
+        output_dir=tmp_path / "report",
+        overwrite=True,
+        open=False,
+    )
+    assert isinstance(fit_report["result"], LogisticRegression)
+    assert fit_report["error"] is None
+    assert fit_report["report_path"].is_relative_to(tmp_path)
+    score_report = est.report(
         mode="score",
         environment=data,
         output_dir=tmp_path / "report",
         overwrite=True,
         open=False,
     )
-    assert report["result"] == pytest.approx(0.94, abs=0.1)
-    assert report["error"] is None
-    assert report["report_path"].is_relative_to(tmp_path)
+    assert score_report["result"] == pytest.approx(0.94, abs=0.1)
+    assert score_report["error"] is None
+    assert score_report["report_path"].is_relative_to(tmp_path)
 
 
 #
