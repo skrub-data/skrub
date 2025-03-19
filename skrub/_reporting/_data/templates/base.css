@@ -166,6 +166,10 @@ dd {
     margin-top: var(--spacing-m);
 }
 
+.padding-b-m {
+    padding-bottom: var(--spacing-m);
+}
+
 .horizontal-scroll {
     overflow-x: auto;
 }
@@ -254,10 +258,6 @@ article.wrapper {
 
 .clickable {
     cursor: pointer;
-}
-
-.float-left {
-    float: left;
 }
 
 :is(.ok, .warning, .critical) {

@@ -4,13 +4,6 @@
 /* Collection of column summary cards (as shown in the "column summaries" tab) */
 /* --------------------------------------------------------------------------- */
 
-/* Used as a container to enable horizontal scroll of the column
- * summaries*/
-.horizontal-scroll {
-    overflow-x: scroll;
-    padding-bottom: 10pt; /* For the scrollbar and drop shadows of the card*/
-}
-
 /* The cards next to each other and horizontal scrolling. */
 .column-summary-group {
     display: flex;
