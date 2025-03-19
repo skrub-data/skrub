@@ -3,6 +3,7 @@ import functools
 import json
 from pathlib import Path
 
+from .. import _dataframe as sbd
 from ._html import to_html
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
