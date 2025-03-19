@@ -354,7 +354,6 @@ class ParamSearch(BaseEstimator):
         expr_choices = choices(self.best_estimator_.expr)
 
         all_rows = []
-        param_names = set()
         log_scale_columns = set()
         for params in self.cv_results_["params"]:
             row = {}
@@ -367,10 +366,9 @@ class ParamSearch(BaseEstimator):
                         value = choice.outcomes[param]
                 else:
                     value = param
+                    if choice.log:
+                        log_scale_columns.add(choice.name)
                 row[choice.name] = value
-                param_names.add(choice.name)
-                if getattr(param, "is_from_log_scale", False):
-                    log_scale_columns.add(choice.name)
             all_rows.append(row)
 
         metadata = {"log_scale_columns": list(log_scale_columns)}
