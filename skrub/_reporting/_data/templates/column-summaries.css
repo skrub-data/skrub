@@ -4,9 +4,18 @@
 /* Collection of column summary cards (as shown in the "column summaries" tab) */
 /* --------------------------------------------------------------------------- */
 
+/* Used as a container to enable horizontal scroll of the column
+ * summaries*/
+.horizontal-scroll {
+    overflow-x: scroll;
+    padding-bottom: 10pt; /* For the scrollbar and drop shadows of the card*/
+}
+
+/* The cards next to each other and horizontal scrolling. */
 .column-summary-group {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
     gap: var(--spacing-l);
     min-width: min-content;
     max-width: max-content;
@@ -18,21 +27,13 @@
     margin-top: var(--spacing-l);
 }
 
-.column-summary-group > .card {
-    margin: 0;
+/* A bit of space between the bar and the buttons */
+.column-selection-buttons {
+    padding-left: 10pt;
 }
 
-/* On small screens, the cards are on top of each other and all have the
-   same width. On wide screens, the cards can be next to
-   each other and wrap horizontally. */
-
-@media screen and (min-width: 60rem) {
-    .column-summary-group {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: var(--spacing-l);
-    }
+.column-summary-group > .card {
+    margin: 0;
 }
 
 /* Individual column summary cards */
@@ -156,3 +157,5 @@
 .card .close-card-button:active {
     background-color: var(--color-background-button-secondary-active);
 }
+
+

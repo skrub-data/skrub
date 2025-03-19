@@ -91,5 +91,4 @@ button.tab[data-has-warning]:not(:hover):not([data-is-selected]) {
 .report-bottom-border {
     width: calc(100% - 2 * var(--radius));
     border-bottom: var(--border-s) solid var(--color-border-secondary);
-    margin: var(--spacing-m) auto 0 auto;
 }

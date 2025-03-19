@@ -184,6 +184,11 @@ dd {
     padding-block-end: var(--spacing-m);
 }
 
+/* Special-case the article (container) */
+article.wrapper {
+    padding-bottom: 0pt;
+}
+
 .flow > * + * {
     margin-top: var(--spacing-m);
 }
@@ -249,6 +254,10 @@ dd {
 
 .clickable {
     cursor: pointer;
+}
+
+.float-left {
+    float: left;
 }
 
 :is(.ok, .warning, .critical) {

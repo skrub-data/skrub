@@ -2,7 +2,7 @@
 
 <article class="wrapper margin-t-s flow" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
-    <div class="flex">
+    <div class="float-left">
         <div class="box">
             <pre id="selected-columns-display" data-manager="SelectedColumnsDisplay"></pre>
             {{ buttons.copybutton("selected-columns-display") }}
@@ -20,11 +20,13 @@
         <button type="button" data-test="select-all-columns" data-manager="SelectAllVisibleColumns">Select all</button>
         <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
     </div>
-    <div class="column-summary-group">
-        {% for column in summary.columns %}
-        {% set col_id="col_{}".format(column["idx"]) %}
-        {% include "column-summary.html" %}
-        {% endfor %}
+    <div class="horizontal-scroll">
+	<div class="column-summary-group">
+	    {% for column in summary.columns %}
+	    {% set col_id="col_{}".format(column["idx"]) %}
+	    {% include "column-summary.html" %}
+	    {% endfor %}
+	</div>
     </div>
 </article>
 

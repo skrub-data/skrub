@@ -21,6 +21,10 @@ New features
 Changes
 -------
 
+- The "distribution" tab of the ``TableReport`` now stacks cards horizontally to avoid adding
+  vertical space.
+  :pr:`1258` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
 - Progress messages when generating a ``TableReport`` are now written to stderr instead of stdout.
   :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
 
