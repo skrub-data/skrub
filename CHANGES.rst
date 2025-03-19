@@ -27,6 +27,13 @@ Changes
 - Optimize the :class:`StringEncoder`: significant memory reduction and 1.5x speed-up.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
+Bug fixes
+---------
+
+- The :meth:`TableVectorizer.get_feature_names_out` method now works when used in a
+  scikit-learn pipeline by exposing the `input_features` parameter.
+  :pr:`1258` by :user:`Guillaume Lemaitre <glemaitre>`.
+
 Release 0.5.1
 =============
 

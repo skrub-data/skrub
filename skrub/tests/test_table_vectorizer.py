@@ -10,8 +10,9 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_
 from pandas.testing import assert_frame_equal
 from scipy.sparse import csr_matrix
 from sklearn.base import clone
+from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils._testing import skip_if_no_parallel
 from sklearn.utils.fixes import parse_version
 
@@ -341,9 +342,27 @@ def test_get_feature_names_out():
         "cat2_60K+",
     ]
     X = _get_clean_dataframe()
+    rng = np.random.default_rng(42)
+    y = rng.integers(0, 2, size=X.shape[0])
     vectorizer = TableVectorizer().fit(X)
     assert_array_equal(
         vectorizer.get_feature_names_out(),
+        expected_features,
+    )
+
+    # make sure that `get_feature_names` works when `TableVectorizer` is used in a
+    # scikit-learn pipeline
+    # non-regression test for https://github.com/skrub-data/skrub/issues/1256
+    pipeline = make_pipeline(TableVectorizer(), StandardScaler(), Ridge()).fit(X, y)
+    assert_array_equal(
+        pipeline[:-1].get_feature_names_out(),
+        expected_features,
+    )
+    # Input features are ignored when `TableVectorizer` is used in a pipeline
+    assert_array_equal(
+        pipeline[:-1].get_feature_names_out(
+            input_features=[f"col_{i}" for i in range(X.shape[1])]
+        ),
         expected_features,
     )
 
