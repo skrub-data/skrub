@@ -122,35 +122,6 @@ class Choice(Sequence, BaseChoice):
             _with_fields(out, in_choice=self.name) for out in self.outcomes
         ]
 
-    def take_outcome(self, idx):
-        """
-        Remove an outcome from the choice.
-
-        This does not modify the choice in-place. It returns a tuple containing
-        the taken outcome and a new, reduced choice which does not contain the
-        taken outcome.
-
-        This function is used to split choices as necessary when constructing a
-        hyperparameter grid.
-
-        >>> from skrub import choose_from
-        >>> choice = choose_from([1, 2, 3], name='number')
-        >>> choice
-        choose_from([1, 2, 3], name='number')
-        >>> choice.take_outcome(1)
-        (Outcome(value=2, name=None, in_choice='number'), choose_from([1, 3], name='number'))
-        >>> choice
-        choose_from([1, 2, 3], name='number')
-        """  # noqa : E501
-        out = self.outcomes[idx]
-        rest = self.outcomes[:idx] + self.outcomes[idx + 1 :]
-        if not rest:
-            return out, None
-        chosen_kwargs = {}
-        if idx == self.chosen_outcome_idx:
-            chosen_kwargs = {"chosen_outcome_idx": None}
-        return out, _with_fields(self, outcomes=rest, **chosen_kwargs)
-
     def map_values(self, func):
         """
         Apply ``func`` to each of the outcomes' value.
