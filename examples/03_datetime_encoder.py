@@ -93,7 +93,8 @@ print("original dtype:", X["date"].dtypes, "\n\nconverted dtype:", date.dtypes)
 
 from skrub import DatetimeEncoder
 
-date_enc = DatetimeEncoder(resolution="hour").fit_transform(date)
+# DatetimeEncoder has "hour" as default resolution
+date_enc = DatetimeEncoder().fit_transform(date)
 
 print(date, "\n\nHas been encoded as:\n\n", date_enc)
 
@@ -162,16 +163,21 @@ table_vec_periodic = TableVectorizer(
 # |DatetimeEncoder|.
 # Here we'll use a |RidgeCV| model as our learner. We also fill null values with
 # |SimpleImputer| and then rescale numeric features with |StandardScaler|.
+# To test the effect of different datetime encodings on the linear model, we train
+# three separate pipelines.
 
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import RidgeCV
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
+# Base pipeline with default DatetimeEncoder parameters
 pipeline = make_pipeline(table_vec, StandardScaler(), SimpleImputer(), RidgeCV())
+# Datetime encoder with weekday feature
 pipeline_weekday = make_pipeline(
     table_vec_weekday, StandardScaler(), SimpleImputer(), RidgeCV()
 )
+# Datetime encoder with periodic features
 pipeline_periodic = make_pipeline(
     table_vec_periodic, StandardScaler(), SimpleImputer(), RidgeCV()
 )
