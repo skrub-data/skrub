@@ -24,7 +24,12 @@ Changes
 - Progress messages when generating a ``TableReport`` are now written to stderr instead of stdout.
   :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
 
-- Optimize the :class:`StringEncoder`: significant memory reduction and 1.5x speed-up.
+- Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
+  :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+Bug fixes
+---------
+- :class:`StringEncoder` now works correctly in presence of null values.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
 Release 0.5.1
