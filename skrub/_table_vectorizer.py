@@ -676,8 +676,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         tags.input_tags.allow_nan = True
         return tags
 
-    def get_feature_names_out(self):
+    def get_feature_names_out(self, input_features=None):
         """Return the column names of the output of ``transform`` as a list of strings.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
 
         Returns
         -------
