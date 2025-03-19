@@ -120,7 +120,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         366 in the case of leap years). January 1st will be day 1, December 31st
         will be day 365 on non-leap years.
 
-    periodic_encoding : str or None, default=None
+    periodic_encoding : 'circular', 'spline', or None, default=None
         Add periodic features with different granularities. Add periodic features
         using either trigonometric (``circular``) or ``spline`` encoding.
 
