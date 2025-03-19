@@ -35,10 +35,10 @@ It is used by default in the |TableVectorizer|.
 .. |RidgeCV| replace::
     :class:`~sklearn.linear_model.RidgeCV`
 
-.. |SimpleImputer| replace:
+.. |SimpleImputer| replace::
     :class:`~sklearn.impute.SimpleImputer`
 
-.. |StandardScaler| replace:
+.. |StandardScaler| replace::
     :class:`~sklearn.preprocessing.StandardScaler`
 
 .. |ToDatetime| replace::
