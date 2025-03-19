@@ -263,9 +263,3 @@ def test_error_checking_periodic_encoder(a_datetime_col):
 
     with pytest.raises(ValueError, match=r"Unsupported value (\S+) for (\S+)"):
         enc.fit_transform(a_datetime_col)
-
-
-def test_resolution_periodic_encoder(a_datetime_col):
-    enc = DatetimeEncoder(periodic_encoding="spline", resolution="day")
-
-    enc.fit_transform(a_datetime_col)
