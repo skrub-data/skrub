@@ -1,7 +1,7 @@
 import pytest
 
 import skrub
-from skrub._expressions import _choosing, _evaluation
+from skrub._expressions import _evaluation
 
 
 def test_caching():
@@ -203,18 +203,13 @@ def test_param_grid_choice_before_X():
         assert _evaluation.param_grid(c) == [
             {
                 0: [0],
-                1: [
-                    _choosing.NumericOutcome(
-                        value=0.5, name=None, in_choice="c1", is_from_log_scale=False
-                    )
-                ],
+                1: [0.5],
                 2: [0, 1],
             }
         ]
         assert c.skb.describe_param_grid().replace("np.float64(0.5)", "0.5") == """\
 - c0: 10
-  c1: [NumericOutcome(value=0.5, \
-name=None, in_choice='c1', is_from_log_scale=False)]
+  c1: [0.5]
   c2: [12, 22]
 """
 

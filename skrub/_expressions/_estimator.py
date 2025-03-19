@@ -5,7 +5,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
-from ._choosing import Choice, unwrap, unwrap_default
+from ._choosing import Choice, unwrap_default
 from ._evaluation import (
     choices,
     evaluate,
@@ -108,7 +108,6 @@ class ExprEstimator(BaseEstimator):
         return params
 
     def set_params(self, **params):
-        params = {k: unwrap(v) for k, v in params.items()}
         if "expr" in params:
             self.expr = params.pop("expr")
         set_params(self.expr, {int(k.lstrip("expr__")): v for k, v in params.items()})
@@ -362,13 +361,16 @@ class ParamSearch(BaseEstimator):
             for param_id, param in params.items():
                 choice = expr_choices[int(param_id.lstrip("expr__"))]
                 if isinstance(choice, Choice):
-                    param = choice.outcomes[param]
-                choice_name = param.in_choice or param_id
-                value = param.name or param.value
-                row[choice_name] = value
-                param_names.add(choice_name)
+                    if choice.outcome_names is not None:
+                        value = choice.outcome_names[param]
+                    else:
+                        value = choice.outcomes[param]
+                else:
+                    value = param
+                row[choice.name] = value
+                param_names.add(choice.name)
                 if getattr(param, "is_from_log_scale", False):
-                    log_scale_columns.add(choice_name)
+                    log_scale_columns.add(choice.name)
             all_rows.append(row)
 
         metadata = {"log_scale_columns": list(log_scale_columns)}

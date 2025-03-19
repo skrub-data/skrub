@@ -340,17 +340,15 @@ def describe_param_grid(expr):
             if isinstance(choice, BaseNumericChoice):
                 buf.write(f"{v}\n")
             elif len(v) == 1:
-                outcome = choice.outcomes[v[0]]
-                if outcome.name is not None:
-                    buf.write(f"{outcome.name!r}\n")
+                if choice.outcome_names is not None:
+                    buf.write(f"{choice.outcome_names[v[0]]!r}\n")
                 else:
-                    buf.write(f"{short_repr(outcome.value)}\n")
+                    buf.write(f"{short_repr(choice.outcomes[v[0]])}\n")
             else:
                 assert len(v)
-                outcomes = [choice.outcomes[idx] for idx in v]
-                if outcomes[0].name is not None:
-                    buf.write(f"{[o.name for o in outcomes]!r}\n")
+                if choice.outcome_names is not None:
+                    buf.write(f"{[choice.outcome_names[idx] for idx in v]!r}\n")
                 else:
-                    buf.write(f"{short_repr([o.value for o in outcomes])}\n")
+                    buf.write(f"{short_repr([choice.outcomes[idx] for idx in v])}\n")
             prefix = "  "
     return buf.getvalue() or "<empty parameter grid>\n"

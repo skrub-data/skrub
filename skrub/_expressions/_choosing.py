@@ -20,30 +20,6 @@ def _with_fields(obj, **fields):
     )
 
 
-@dataclasses.dataclass
-class Outcome:
-    """The outcome of a choice.
-
-    Represents one of the different options that constitute a choice. It
-    records its value, an optional name for the outcome (such as "ridge" and
-    "lasso" in
-
-    ``choose_from({"ridge": Ridge(), "lasso": Lasso()}, name="regressor")``)
-
-    and optionally the name of the choice it belongs to (such as "regressor" in
-    the example above).
-    """
-
-    value: typing.Any
-    name: typing.Optional[str] = None
-    in_choice: typing.Optional[str] = None
-
-    def __str__(self):
-        if self.name is not None:
-            return repr(self.name)
-        return repr(self.value)
-
-
 def _wrap_getitem(getitem):
     @functools.wraps(getitem)
     def __getitem__(self, key):
@@ -108,19 +84,26 @@ def _check_match_keys(outcome_values, mapping_keys, has_default):
 
 
 @dataclasses.dataclass
-class Choice(Sequence, BaseChoice):
+class Choice(BaseChoice):
     """A choice among an enumerated set of outcomes."""
 
     outcomes: list[typing.Any]
-    name: typing.Optional[str] = None
+    outcome_names: typing.Optional[list[str]] = None
+    name: str = None
     chosen_outcome_idx: typing.Optional[int] = None
 
     def __post_init__(self):
         if not self.outcomes:
             raise TypeError("Choice should be given at least one outcome.")
-        self.outcomes = [
-            _with_fields(out, in_choice=self.name) for out in self.outcomes
-        ]
+        if self.outcome_names is None:
+            return
+        if len(self.outcome_names) != len(self.outcomes):
+            raise ValueError("lengths of `outcome_names` and `outcomes` do not match")
+        for name in self.outcome_names:
+            if not isinstance(name, str):
+                raise TypeError(f"outcome names should be str, got: {type(name)}")
+        if len(set(self.outcome_names)) != len(self.outcome_names):
+            raise ValueError("Outcome names should be unique")
 
     def map_values(self, func):
         """
@@ -142,7 +125,7 @@ class Choice(Sequence, BaseChoice):
         >>> choice
         choose_from({'a': 'outcome a', 'b': 'outcome b'}, name='the choice')
         """
-        outcomes = [_with_fields(out, value=func(out.value)) for out in self.outcomes]
+        outcomes = [func(out) for out in self.outcomes]
         return _with_fields(self, outcomes=outcomes)
 
     def default(self):
@@ -247,41 +230,25 @@ class Choice(Sequence, BaseChoice):
         >>> learner_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
         {'logistic': 'linear', 'hgb': 'unknown'}
         """  # noqa : E501
-        values = [unwrap(outcome) for outcome in self.outcomes]
         _check_match_keys(
-            values, outcome_mapping.keys(), default is not Constants.NO_VALUE
+            self.outcomes, outcome_mapping.keys(), default is not Constants.NO_VALUE
         )
         if default is Constants.NO_VALUE:
             complete_mapping = outcome_mapping
         else:
             complete_mapping = {
-                outcome: outcome_mapping.get(outcome, default) for outcome in values
+                outcome: outcome_mapping.get(outcome, default)
+                for outcome in self.outcomes
             }
         return Match(self, complete_mapping)
 
     def __repr__(self):
-        if self.outcomes[0].name is None:
-            args = [out.value for out in self.outcomes]
+        if self.outcome_names is None:
+            arg = self.outcomes
         else:
-            args = {out.name: out.value for out in self.outcomes}
-        args_r = _utils.repr_args(
-            (args,),
-            {"name": self.name},
-            defaults={"name": None},
-        )
+            arg = {name: out for name, out in zip(self.outcome_names, self.outcomes)}
+        args_r = _utils.repr_args((arg,), {"name": self.name})
         return f"choose_from({args_r})"
-
-    # The following methods provide the interface of a Sequence so that a
-    # hyperparameter grid given to ``GridSearchCV`` can contain a ``Choice``.
-
-    def __getitem__(self, item):
-        return self.outcomes[item]
-
-    def __len__(self):
-        return len(self.outcomes)
-
-    def __iter__(self):
-        return iter(self.outcomes)
 
 
 @dataclasses.dataclass
@@ -365,44 +332,24 @@ def choose_from(outcomes, *, name):
     choose_from({'one': 1, 'two': 2}, name='the number')
     """
     if isinstance(outcomes, typing.Mapping):
-        prepared_outcomes = [Outcome(val, key) for key, val in outcomes.items()]
+        outcome_names, outcomes = list(outcomes.keys()), list(outcomes.values())
     else:
-        prepared_outcomes = [Outcome(val) for val in outcomes]
-    return Choice(prepared_outcomes, name=name)
-
-
-def unwrap(obj):
-    """Extract the value from an Outcome or a plain value.
-
-    If the input is a plain value, it is returned unchanged.
-
-    >>> from skrub._expressions._choosing import choose_from, unwrap
-    >>> choice = choose_from([1, 2], name='N')
-    >>> outcome = choice.default()
-    >>> outcome
-    Outcome(value=1, name=None, in_choice='N')
-    >>> unwrap(outcome)
-    1
-    >>> unwrap(1)
-    1
-    """
-    if isinstance(obj, Outcome):
-        return obj.value
-    return obj
+        outcome_names = None
+    return Choice(outcomes, outcome_names=outcome_names, name=name)
 
 
 def unwrap_default(obj):
-    """Extract a value from a Choice, Outcome or plain value.
+    """Extract a value from a Choice, Match, or plain value.
 
     If the input is a Choice, the default outcome is used.
-    For other inputs, behaves like ``unwrap``.
+    Otherwise returns the input.
 
     >>> from skrub._expressions._choosing import choose_from, unwrap_default
     >>> choice = choose_from([1, 2], name='N')
     >>> choice
     choose_from([1, 2], name='N')
     >>> choice.default()
-    Outcome(value=1, name=None, in_choice='N')
+    1
     >>> unwrap_default(choice)
     1
     >>> unwrap_default(choice.default())
@@ -413,16 +360,16 @@ def unwrap_default(obj):
     if isinstance(obj, Match):
         return obj.outcome_mapping[unwrap_default(obj.choice)]
     if isinstance(obj, BaseChoice):
-        return obj.default().value
-    return unwrap(obj)
+        return obj.default()
+    return obj
 
 
 def unwrap_chosen_or_default(obj):
     if isinstance(obj, Match):
         return obj.outcome_mapping[unwrap_chosen_or_default(obj.choice)]
     if isinstance(obj, BaseChoice):
-        return obj.chosen_outcome_or_default().value
-    return unwrap(obj)
+        return obj.chosen_outcome_or_default()
+    return obj
 
 
 class Optional(Choice):
@@ -450,12 +397,13 @@ def optional(value, *, name):
     The constructed parameter grid will include a version of the pipeline with
     the PCA and one without.
     """
-    return Optional([Outcome(value, "true"), Outcome(None, "false")], name=name)
+    # TODO remove outcome names
+    return Optional([value, None], outcome_names=["true", "false"], name=name)
 
 
 class BoolChoice(Choice):
     def __repr__(self):
-        args = _utils.repr_args((), {"name": self.name}, defaults={"name": None})
+        args = _utils.repr_args((), {"name": self.name})
         return f"choose_bool({args})"
 
     def if_else(self, if_true, if_false):
@@ -485,7 +433,7 @@ class BoolChoice(Choice):
 
 def choose_bool(*, name):
     """Construct a choice between False and True."""
-    return BoolChoice([Outcome(True), Outcome(False)], name=name)
+    return BoolChoice([True, False], name=name)
 
 
 def _check_bounds(low, high, log):
@@ -497,22 +445,6 @@ def _check_bounds(low, high, log):
         raise ValueError(f"To use log space 'low' must be > 0, got low={low}")
 
 
-@dataclasses.dataclass
-class NumericOutcome(Outcome):
-    """An outcome in a choice from a numeric range.
-
-    In addition to the attributes of ``Outcome``, this records whether the
-    choice is made on a log scale (``is_from_log_scale``). This is useful to
-    choose the scale of the plot axis on which those values are displayed for
-    example in the parallel coordinate plots.
-    """
-
-    value: typing.Union[int, float]
-    is_from_log_scale: bool = False
-    name: typing.Optional[str] = None
-    in_choice: typing.Optional[str] = None
-
-
 def _repr_numeric_choice(choice):
     args = _utils.repr_args(
         (choice.low, choice.high),
@@ -521,7 +453,7 @@ def _repr_numeric_choice(choice):
             "n_steps": getattr(choice, "n_steps", None),
             "name": choice.name,
         },
-        defaults={"log": False, "n_steps": None, "name": None},
+        defaults={"log": False, "n_steps": None},
     )
     if choice.to_int:
         return f"choose_int({args})"
@@ -529,14 +461,7 @@ def _repr_numeric_choice(choice):
 
 
 class BaseNumericChoice(BaseChoice):
-    """Base class to help identify numeric choices with ``isinstance``.
-
-    It also provides a helper to wrap a (randomly sampled) number in a
-    ``NumericOutcome``.
-    """
-
-    def _wrap_outcome(self, value):
-        return NumericOutcome(value, is_from_log_scale=self.log, in_choice=self.name)
+    """Base class for numeric choices."""
 
     def chosen_outcome_or_default(self):
         if self.chosen_outcome is not None:
@@ -566,9 +491,7 @@ class NumericChoice(BaseNumericChoice):
         value = self._distrib.rvs(size=size, random_state=random_state)
         if self.to_int:
             value = value.astype(int)
-        if size is None:
-            return self._wrap_outcome(value)
-        return [self._wrap_outcome(v) for v in value]
+        return value
 
     def default(self):
         low, high = self.low, self.high
@@ -579,7 +502,7 @@ class NumericChoice(BaseNumericChoice):
             midpoint = np.exp(midpoint)
         if self.to_int:
             midpoint = np.round(midpoint).astype(int)
-        return self._wrap_outcome(midpoint)
+        return midpoint
 
     def __repr__(self):
         return _repr_numeric_choice(self)
@@ -613,14 +536,10 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
 
     def rvs(self, size=None, random_state=None):
         random_state = check_random_state(random_state)
-        value = random_state.choice(self.grid, size=size)
-        if size is None:
-            return self._wrap_outcome(value)
-        return [self._wrap_outcome(v) for v in value]
+        return random_state.choice(self.grid, size=size)
 
     def default(self):
-        value = self.grid[(len(self.grid) - 1) // 2]
-        return self._wrap_outcome(value)
+        return self.grid[(len(self.grid) - 1) // 2]
 
     def __repr__(self):
         return _repr_numeric_choice(self)
@@ -629,13 +548,13 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
     # compatible with ``GridSearchCV`` (in addition to ``RandomizedSearchCV``).
 
     def __getitem__(self, item):
-        return self._wrap_outcome(self.grid[item])
+        return self.grid[item]
 
     def __len__(self):
         return len(self.grid)
 
     def __iter__(self):
-        return iter(map(self._wrap_outcome, self.grid))
+        return iter(self.grid)
 
 
 def choose_float(low, high, *, log=False, n_steps=None, name):

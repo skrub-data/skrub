@@ -97,8 +97,6 @@ class _ExprTraversal:
                     push(self.handle_slice)
                 elif isinstance(top, _choosing.BaseChoice):
                     push(self.handle_choice)
-                elif isinstance(top, _choosing.Outcome):
-                    push(self.handle_outcome)
                 elif isinstance(top, _choosing.Match):
                     push(self.handle_choice_match)
                 elif isinstance(top, BaseEstimator):
@@ -135,10 +133,6 @@ class _ExprTraversal:
             return choice
         new_outcomes = yield choice.outcomes
         return _choosing._with_fields(choice, outcomes=new_outcomes)
-
-    def handle_outcome(self, outcome):
-        value = yield outcome.value
-        return _choosing._with_fields(outcome, value=value)
 
     def handle_choice_match(self, choice_match):
         choice = yield choice_match.choice
@@ -269,9 +263,6 @@ class _Evaluator(_ExprTraversal):
             return (yield _choosing.unwrap_default(choice))
         outcome = choice.chosen_outcome_or_default()
         return (yield outcome)
-
-    def handle_outcome(self, outcome):
-        return (yield _choosing.unwrap(outcome))
 
     def handle_choice_match(self, choice_match):
         outcome = yield choice_match.choice
@@ -542,21 +533,19 @@ class _ChoiceGraph(_ExprTraversal):
         # unlike during evaluation here we need pre-ordering
         self._parents[self._current_outcome[-1]][id(choice)] = choice
         self._choices[id(choice)] = choice
-        yield from super().handle_choice(choice)
+        if not isinstance(choice, _choosing.Choice):
+            return choice
+        for out in choice.outcomes:
+            self._current_outcome.append(id(out))
+            yield out
+            self._current_outcome.pop()
         return choice
-
-    def handle_outcome(self, outcome):
-        self._current_outcome.append(id(outcome))
-        yield from super().handle_outcome(outcome)
-        self._current_outcome.pop()
-        return outcome
 
     def handle_choice_match(self, choice_match):
         yield choice_match.choice
         for outcome in choice_match.choice.outcomes:
-            value = outcome.value
             self._current_outcome.append(id(outcome))
-            yield choice_match.outcome_mapping[value]
+            yield choice_match.outcome_mapping[outcome]
             self._current_outcome.pop()
         return choice_match
 
