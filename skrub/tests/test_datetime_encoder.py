@@ -175,6 +175,25 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
                 "hour_circular_1",
             ],
         ),
+        (
+            dict(
+                add_day_of_year=False,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+                resolution="day",
+            ),
+            [
+                "year",
+                "month",
+                "day",
+                "year_circular_0",
+                "year_circular_1",
+                "month_circular_0",
+                "month_circular_1",
+                "weekday_circular_0",
+                "weekday_circular_1",
+            ],
+        ),
     ],
 )
 def test_extracted_features_choice(datetime_cols, params, extracted_features):
@@ -244,3 +263,9 @@ def test_error_checking_periodic_encoder(a_datetime_col):
 
     with pytest.raises(ValueError, match=r"Unsupported value (\S+) for (\S+)"):
         enc.fit_transform(a_datetime_col)
+
+
+def test_resolution_periodic_encoder(a_datetime_col):
+    enc = DatetimeEncoder(periodic_encoding="spline", resolution="day")
+
+    enc.fit_transform(a_datetime_col)

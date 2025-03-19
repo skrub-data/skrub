@@ -357,7 +357,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Iterating over all attributes that end with _encoding to use the default
         # parameters
         if self.periodic_encoding is not None:
-            enc_attr = ["year", "month", "weekday", "hour"]
+            enc_attr = ["year", "month", "weekday", "hour"][: idx_level + 1]
             for enc_feature in enc_attr:
                 if self.periodic_encoding == "circular":
                     self._required_transformers[enc_feature] = _CircularEncoder(
