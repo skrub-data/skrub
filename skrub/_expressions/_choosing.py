@@ -33,11 +33,7 @@ def _wrap_getitem(getitem):
 
 
 class BaseChoice:
-    """A base class for all kinds of choices (enumerated, numeric range, ...)
-
-    The main reason they all derive from this base class is to make them easily
-    recognizable with ``isinstance`` checks.
-    """
+    """Base class for all choices (enumerated or numeric range)."""
 
     __hash__ = None
 
@@ -49,6 +45,18 @@ class BaseChoice:
         from ._expressions import as_expr
 
         return as_expr(self)
+
+    # We provide the interface that enables dict unpacking with `**choice`:
+    # `keys()` and `__getitem__`. This is to offer syntactic sugar to avoid
+    # repeating the choice name when it is the same as a parameter name (a
+    # common case when the choice is an estimator's parameter).
+    #
+    # Discretized numeric choices are also sequences so that they can be stuck
+    # directly into a GridSearchCV's param grid (as well as
+    # RandomizedSearchCV's). To avoid interfering with that, if the subclass
+    # already defines a __getitem__ we wrap it to add handling of the special
+    # case where the key is a str (the parameter name), and don't modify its
+    # behavior when the key is an int.
 
     def keys(self):
         return [self.name.rsplit("__", maxsplit=1)[-1]]
@@ -83,25 +91,36 @@ def _check_match_keys(outcome_values, mapping_keys, has_default):
         )
 
 
+def _check_name(name):
+    if not isinstance(name, str):
+        raise TypeError(
+            f"choice `name` must be a `str`, got object of type: {type(name)}"
+        )
+
+
 @dataclasses.dataclass
 class Choice(BaseChoice):
     """A choice among an enumerated set of outcomes."""
 
     outcomes: list[typing.Any]
-    outcome_names: typing.Optional[list[str]] = None
-    name: str = None
+    outcome_names: typing.Optional[list[str]]
+    name: str
     chosen_outcome_idx: typing.Optional[int] = None
 
     def __post_init__(self):
+        _check_name(self.name)
         if not self.outcomes:
-            raise TypeError("Choice should be given at least one outcome.")
+            raise ValueError("Choice should be given at least one outcome.")
         if self.outcome_names is None:
             return
         if len(self.outcome_names) != len(self.outcomes):
             raise ValueError("lengths of `outcome_names` and `outcomes` do not match")
         for name in self.outcome_names:
             if not isinstance(name, str):
-                raise TypeError(f"outcome names should be str, got: {type(name)}")
+                raise TypeError(
+                    "Outcome names (keys in the dict passed to `choose_from`) "
+                    f"should be of type `str`, got: {type(name)}"
+                )
         if len(set(self.outcome_names)) != len(self.outcome_names):
             raise ValueError("Outcome names should be unique")
 
@@ -433,7 +452,7 @@ class BoolChoice(Choice):
 
 def choose_bool(*, name):
     """Construct a choice between False and True."""
-    return BoolChoice([True, False], name=name)
+    return BoolChoice([True, False], outcome_names=None, name=name)
 
 
 def _check_bounds(low, high, log):
@@ -477,10 +496,11 @@ class NumericChoice(BaseNumericChoice):
     high: float
     log: bool
     to_int: bool
-    name: str = None
+    name: str
     chosen_outcome: typing.Optional[typing.Union[int, float]] = None
 
     def __post_init__(self):
+        _check_name(self.name)
         _check_bounds(self.low, self.high, self.log)
         if self.log:
             self._distrib = stats.loguniform(self.low, self.high)
@@ -517,10 +537,11 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
     n_steps: int
     log: bool
     to_int: bool
-    name: str = None
+    name: str
     chosen_outcome: typing.Optional[typing.Union[int, float]] = None
 
     def __post_init__(self):
+        _check_name(self.name)
         _check_bounds(self.low, self.high, self.log)
         if self.n_steps < 1:
             raise ValueError(f"n_steps must be >= 1, got: {self.n_steps}")
@@ -532,7 +553,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
         if self.log:
             self.grid = np.exp(self.grid)
         if self.to_int:
-            self.grid = np.round(self.grid).astype(int)
+            self.grid = np.unique(np.round(self.grid).astype(int))
 
     def rvs(self, size=None, random_state=None):
         random_state = check_random_state(random_state)

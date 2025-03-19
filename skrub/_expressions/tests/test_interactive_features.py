@@ -210,6 +210,9 @@ def test_repr():
     >>> from skrub._wrap_transformer import wrap_transformer
     >>> skrub.X().skb.apply(wrap_transformer(skrub.DatetimeEncoder(), ['a', 'b']))
     <Apply DatetimeEncoder>
+
+    >>> skrub.choose_float(0.0, 10.0, n_steps=6, name='f')
+    choose_float(0.0, 10.0, n_steps=6, name='f')
     """
 
 
