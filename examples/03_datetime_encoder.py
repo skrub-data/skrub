@@ -217,8 +217,8 @@ print(f"Transformer with weekday -  Mean RMSE : {-score_weekday.mean():.2f}")
 print(f"Transformer with periodic features - Mean RMSE : {-score_periodic.mean():.2f}")
 
 ###############################################################################
-# As expected, introducing the periodic features improved the RMSE by a
-# noticeable amount.
+# As expected for linear models, introducing the periodic features improved
+# the RMSE by a noticeable amount.
 
 ###############################################################################
 # Plotting the prediction
