@@ -777,29 +777,21 @@ class SkrubNamespace:
         ... )
         >>> pred = selected.skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_param_grid())
-        - classifier:
-              logreg: LogisticRegression(...)
+        - classifier: 'logreg'
           C: choose_float(0.001, 100, log=True, name='C')
-          dim_reduction:
-              PCA: PCA(...)
+          dim_reduction: 'PCA'
           n_components: choose_int(5, 100, log=True, name='n_components')
-        - classifier:
-              logreg: LogisticRegression(...)
+        - classifier: 'logreg'
           C: choose_float(0.001, 100, log=True, name='C')
-          dim_reduction:
-              SelectKBest: SelectKBest(...)
+          dim_reduction: 'SelectKBest'
           k: choose_int(5, 100, log=True, name='k')
-        - classifier:
-              rf: RandomForestClassifier(...)
+        - classifier: 'rf'
           N 🌴: choose_int(20, 400, name='N 🌴')
-          dim_reduction:
-              PCA: PCA(...)
+          dim_reduction: 'PCA'
           n_components: choose_int(5, 100, log=True, name='n_components')
-        - classifier:
-              rf: RandomForestClassifier(...)
+        - classifier: 'rf'
           N 🌴: choose_int(20, 400, name='N 🌴')
-          dim_reduction:
-              SelectKBest: SelectKBest(...)
+          dim_reduction: 'SelectKBest'
           k: choose_int(5, 100, log=True, name='k')
 
         Sampling a configuration for this pipeline starts by selecting an entry
@@ -1371,14 +1363,11 @@ class ApplyNamespace(SkrubNamespace):
         ... )
         >>> pred = X.skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_param_grid())
-        - classifier:
-              logistic: LogisticRegression(...)
+        - classifier: 'logistic'
           C: [0.1, 10.0]
-        - classifier:
-              rf: RandomForestClassifier(...)
+        - classifier: 'rf'
           N 🌴: [3, 30]
-        - classifier:
-              dummy: DummyClassifier()
+        - classifier: 'dummy'
 
         >>> search = pred.skb.get_grid_search(fitted=True)
         >>> search.results_
@@ -1453,16 +1442,13 @@ class ApplyNamespace(SkrubNamespace):
         >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_param_grid())
         - k: choose_int(4, 20, log=True, name='k')
-          classifier:
-              logistic: LogisticRegression(...)
+          classifier: 'logistic'
           C: choose_float(0.1, 10.0, log=True, name='C')
         - k: choose_int(4, 20, log=True, name='k')
-          classifier:
-              rf: RandomForestClassifier(...)
+          classifier: 'rf'
           N 🌴: choose_int(3, 30, log=True, name='N 🌴')
         - k: choose_int(4, 20, log=True, name='k')
-          classifier:
-              dummy: DummyClassifier()
+          classifier: 'dummy'
 
         >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
         >>> search.results_

@@ -332,36 +332,25 @@ def describe_param_grid(expr):
     buf = io.StringIO()
     for subgrid in grid:
         prefix = "- "
-        pad_prefix = "  "
-        indent = "    "
         for k, v in subgrid.items():
             assert isinstance(v, (BaseNumericChoice, list))
             choice = expr_choices[k]
             name = choice.name
+            buf.write(f"{prefix}{name}: ")
             if isinstance(choice, BaseNumericChoice):
-                buf.write(f"{prefix}{name}: {v}\n")
+                buf.write(f"{v}\n")
             elif len(v) == 1:
                 outcome = choice.outcomes[v[0]]
-                if (outcome_name := outcome.name) is not None:
-                    buf.write(
-                        f"{prefix}{name}:\n"
-                        f"{pad_prefix}{indent}{outcome_name}: "
-                        f"{short_repr(outcome.value)}\n"
-                    )
+                if outcome.name is not None:
+                    buf.write(f"{outcome.name!r}\n")
                 else:
-                    buf.write(f"{prefix}{name}: {short_repr(outcome.value)}\n")
+                    buf.write(f"{short_repr(outcome.value)}\n")
             else:
                 assert len(v)
-                if choice.outcomes[v[0]].name is not None:
-                    buf.write(f"{prefix}{name}:\n")
-                    for outcome_idx in v:
-                        outcome = choice.outcomes[outcome_idx]
-                        buf.write(
-                            f"{pad_prefix}{indent}{outcome.name}: "
-                            f"{short_repr(outcome.value)}\n"
-                        )
+                outcomes = [choice.outcomes[idx] for idx in v]
+                if outcomes[0].name is not None:
+                    buf.write(f"{[o.name for o in outcomes]!r}\n")
                 else:
-                    outcomes = [choice.outcomes[idx].value for idx in v]
-                    buf.write(f"{prefix}{name}: {short_repr(outcomes)}\n")
-            prefix = pad_prefix
+                    buf.write(f"{short_repr([o.value for o in outcomes])}\n")
+            prefix = "  "
     return buf.getvalue() or "<empty parameter grid>\n"
