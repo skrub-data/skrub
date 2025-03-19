@@ -260,7 +260,7 @@ class _Evaluator(_ExprTraversal):
         if choice.name is not None and choice.name in self.environment:
             return self.environment[choice.name]
         if self.mode == "preview":
-            return (yield _choosing.unwrap_default(choice))
+            return (yield _choosing.get_default(choice))
         outcome = choice.chosen_outcome_or_default()
         return (yield outcome)
 

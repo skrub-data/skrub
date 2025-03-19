@@ -21,7 +21,7 @@ from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
-from ._choosing import Choice, unwrap_chosen_or_default
+from ._choosing import Choice, get_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, Constants, _CloudPickle, attribute_error
 
 __all__ = [
@@ -995,12 +995,12 @@ class Apply(ExprImpl):
         modes = ["preview", "fit_transform", "transform"]
         for name in FITTED_PREDICTOR_METHODS:
             # TODO forbid estimator being lazy?
-            if hasattr(unwrap_chosen_or_default(self.estimator), name):
+            if hasattr(get_chosen_or_default(self.estimator), name):
                 modes.append(name)
         return modes
 
     def __repr__(self):
-        estimator = unwrap_chosen_or_default(self.estimator)
+        estimator = get_chosen_or_default(self.estimator)
         if estimator.__class__.__name__ in ["OnEachColumn", "OnSubFrame"]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'

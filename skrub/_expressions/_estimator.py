@@ -5,7 +5,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
-from ._choosing import Choice, unwrap_default
+from ._choosing import Choice, get_default
 from ._evaluation import (
     choices,
     evaluate,
@@ -160,14 +160,14 @@ class _XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
     @property
     def _estimator_type(self):
         try:
-            return unwrap_default(self.expr._skrub_impl.estimator)._estimator_type
+            return get_default(self.expr._skrub_impl.estimator)._estimator_type
         except AttributeError:
             return "transformer"
 
     if hasattr(BaseEstimator, "__sklearn_tags__"):
 
         def __sklearn_tags__(self):
-            return unwrap_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
+            return get_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
 
     @property
     def classes_(self):
@@ -444,14 +444,14 @@ class _XyParamSearch(_XyEstimatorMixin, ParamSearch):
     @property
     def _estimator_type(self):
         try:
-            return unwrap_default(self.expr._skrub_impl.estimator)._estimator_type
+            return get_default(self.expr._skrub_impl.estimator)._estimator_type
         except AttributeError:
             return "transformer"
 
     if hasattr(BaseEstimator, "__sklearn_tags__"):
 
         def __sklearn_tags__(self):
-            return unwrap_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
+            return get_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
 
     @property
     def classes_(self):

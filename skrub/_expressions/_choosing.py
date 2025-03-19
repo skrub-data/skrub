@@ -338,35 +338,35 @@ def choose_from(outcomes, *, name):
     return Choice(outcomes, outcome_names=outcome_names, name=name)
 
 
-def unwrap_default(obj):
+def get_default(obj):
     """Extract a value from a Choice, Match, or plain value.
 
     If the input is a Choice, the default outcome is used.
     Otherwise returns the input.
 
-    >>> from skrub._expressions._choosing import choose_from, unwrap_default
+    >>> from skrub._expressions._choosing import choose_from, get_default
     >>> choice = choose_from([1, 2], name='N')
     >>> choice
     choose_from([1, 2], name='N')
     >>> choice.default()
     1
-    >>> unwrap_default(choice)
+    >>> get_default(choice)
     1
-    >>> unwrap_default(choice.default())
+    >>> get_default(choice.default())
     1
-    >>> unwrap_default(1)
+    >>> get_default(1)
     1
     """
     if isinstance(obj, Match):
-        return obj.outcome_mapping[unwrap_default(obj.choice)]
+        return obj.outcome_mapping[get_default(obj.choice)]
     if isinstance(obj, BaseChoice):
         return obj.default()
     return obj
 
 
-def unwrap_chosen_or_default(obj):
+def get_chosen_or_default(obj):
     if isinstance(obj, Match):
-        return obj.outcome_mapping[unwrap_chosen_or_default(obj.choice)]
+        return obj.outcome_mapping[get_chosen_or_default(obj.choice)]
     if isinstance(obj, BaseChoice):
         return obj.chosen_outcome_or_default()
     return obj
@@ -377,7 +377,7 @@ class Optional(Choice):
 
     def __repr__(self):
         args = _utils.repr_args(
-            (unwrap_default(self),), {"name": self.name}, defaults={"name": None}
+            (get_default(self),), {"name": self.name}, defaults={"name": None}
         )
         return f"optional({args})"
 
