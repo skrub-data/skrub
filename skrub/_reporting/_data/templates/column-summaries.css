@@ -10,8 +10,7 @@
     flex-direction: row;
     flex-wrap: nowrap;
     gap: var(--spacing-l);
-    min-width: min-content;
-    max-width: max-content;
+    width: max-content;
 }
 
 /* Increase the gap between buttons & columns to make it clearer the buttons are
