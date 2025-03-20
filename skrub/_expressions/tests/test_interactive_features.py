@@ -213,6 +213,9 @@ def test_repr():
 
     >>> skrub.choose_float(0.0, 10.0, n_steps=6, name='f')
     choose_float(0.0, 10.0, n_steps=6, name='f')
+
+    >>> skrub.X().skb
+    <SkrubNamespace>
     """
 
 
