@@ -28,8 +28,20 @@ _TIME_LEVELS = [
     "nanosecond",
 ]
 
-_DEFAULT_ENCODING_PERIODS = {"year": 366, "month": 30, "weekday": 7, "hour": 24}
-_DEFAULT_ENCODING_SPLINES = {"year": 12, "month": 4, "weekday": 7, "hour": 24}
+_DEFAULT_ENCODING_PERIODS = {
+    "day_of_year": 366,
+    "month": 12,
+    "day": 30,
+    "hour": 24,
+    "weekday": 7,
+}
+_DEFAULT_ENCODING_SPLINES = {
+    "day_of_year": 12,
+    "month": 12,
+    "day": 30,
+    "hour": 24,
+    "weekday": 7,
+}
 
 
 @dispatch
@@ -128,9 +140,10 @@ class DatetimeEncoder(SingleColumnTransformer):
     ----------
     extracted_features_ : list of strings
         The features that are extracted, a subset of ["year", …, "nanosecond",
-        "weekday", "total_seconds"]. If ``add_periodic=True``, the extracted
-        features will also be added. Given a feature named ``date``, new features
-        will be named ``date_year_circular_0``, ``date_year_circular_1`` etc.
+        "weekday", "total_seconds"]. If ``periodic_encoding`` is set to either
+        ``circular`` or ``spline, the extracted periodic features will also be
+        added. Given a feature named ``date``, new features will be named
+        ``date_year_circular_0``, ``date_year_circular_1`` etc.
 
     See Also
     --------
@@ -202,6 +215,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     0         2024.0             4.0          14.0            1.713053e+09
     1         2024.0             5.0          15.0            1.715731e+09
     >>> encoder.extracted_features_
+    ['year', 'month', 'day', 'total_seconds']
+    >>> encoder.all_outputs_
     ['birthday_year', 'birthday_month', 'birthday_day', 'birthday_total_seconds']
 
     (The number of seconds since Epoch can still be extracted but not "hour",
@@ -283,17 +298,15 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
     >>> encoder.fit_transform(login)
-       login_year  login_month  ...  login_hour_circular_0  login_hour_circular_1
-    0      2024.0          5.0  ...           1.224647e-16              -1.000000
-    1         NaN          NaN  ...                    NaN                    NaN
-    2      2024.0          5.0  ...          -2.588190e-01              -0.965926
+       login_year  ...  login_hour_circular_1
+    0      2024.0  ...              -1.000000
+    1         NaN  ...                    NaN
+    2      2024.0  ...              -0.965926
 
-    Added features can be explored using ``DatetimeEncoder.extracted_features_``:
-    >>> encoder[-1].extracted_features_
-    ['login_year', 'login_month', 'login_day', 'login_hour', 'login_total_seconds',
-    'login_year_circular_0', 'login_year_circular_1', 'login_month_circular_0',
-    'login_month_circular_1', 'login_weekday_circular_0', 'login_weekday_circular_1',
-    'login_hour_circular_0', 'login_hour_circular_1']
+    Added features can be explored using ``DatetimeEncoder.all_outputs_``:
+    >>> encoder[-1].all_outputs_
+        ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
+        'login_day_circular_0', 'login_day_circular_1', 'login_hour_circular_0', 'login_hour_circular_1']
     """  # noqa: E501
 
     def __init__(
@@ -346,19 +359,15 @@ class DatetimeEncoder(SingleColumnTransformer):
         if self.add_day_of_year:
             self._partial_features.append("day_of_year")
 
+        self.extracted_features_ = [f"{feat}" for feat in self._partial_features]
+
         # Adding transformers for periodic encoding
         self._required_transformers = {}
-
-        col_name = sbd.name(column)
-        self.extracted_features_ = [
-            f"{col_name}_{_feat}" for _feat in self._partial_features
-        ]
-
-        # Iterating over all attributes that end with _encoding to use the default
-        # parameters
         if self.periodic_encoding is not None:
-            enc_attr = ["year", "month", "weekday", "hour"][: idx_level + 1]
-            for enc_feature in enc_attr:
+            encoding_level = list(_DEFAULT_ENCODING_PERIODS.keys())[: idx_level + 1]
+            if self.add_weekday:
+                encoding_level += ["weekday"]
+            for enc_feature in encoding_level:
                 if self.periodic_encoding == "circular":
                     self._required_transformers[enc_feature] = _CircularEncoder(
                         period=_DEFAULT_ENCODING_PERIODS[enc_feature]
@@ -369,14 +378,12 @@ class DatetimeEncoder(SingleColumnTransformer):
                         n_splines=_DEFAULT_ENCODING_SPLINES[enc_feature],
                     )
 
-            for _case, t in self._required_transformers.items():
-                _feat = _get_dt_feature(column, _case)
-                _feat_name = sbd.name(_feat) + "_" + _case
-                _feat = sbd.rename(_feat, _feat_name)
+            for enc_feature, transformer in self._required_transformers.items():
+                feat_to_encode = _get_dt_feature(column, enc_feature)
+                feat_name = sbd.name(feat_to_encode) + "_" + enc_feature
+                feat_to_encode = sbd.rename(feat_to_encode, feat_name)
                 # Filling null values for periodc encoder
-                t.fit(self._fill_nulls(_feat))
-                self.extracted_features_ += t.all_outputs_
-
+                transformer.fit(self._fill_nulls(feat_to_encode))
         return self.transform(column)
 
     def transform(self, column):
@@ -401,23 +408,24 @@ class DatetimeEncoder(SingleColumnTransformer):
         null_mask = sbd.copy_index(column, sbd.all_null_like(sbd.to_float32(column)))
 
         all_extracted = []
+        new_features = []
         for feature in self._partial_features:
-            extracted = _get_dt_feature(column, feature).rename(f"{name}_{feature}")
-            extracted = sbd.to_float32(extracted)
-            all_extracted.append(extracted)
-
-        _new_features = []
-        for _case, t in self._required_transformers.items():
-            _feat = _get_dt_feature(column, _case)
-            # filling nulls only to the feature passed to the periodic encoder
-            _transformed = t.transform(self._fill_nulls(_feat))
-
-            _new_features.append(_transformed)
+            if feature not in self._required_transformers:
+                extracted = _get_dt_feature(column, feature).rename(f"{name}_{feature}")
+                extracted = sbd.to_float32(extracted)
+                all_extracted.append(extracted)
+            else:
+                transformer = self._required_transformers[feature]
+                feat = _get_dt_feature(column, feature)
+                # filling nulls only to the feature passed to the periodic encoder
+                transformed = transformer.transform(self._fill_nulls(feat))
+                new_features.append(transformed)
 
         # Setting the index back to that of the input column (pandas shenanigans)
         X_out = sbd.copy_index(column, sbd.make_dataframe_like(column, all_extracted))
-        X_out = sbd.concat_horizontal(X_out, *_new_features)
+        X_out = sbd.concat_horizontal(X_out, *new_features)
 
+        self.all_outputs_ = sbd.column_names(X_out)
         # Censoring all the null features
         X_out = sbd.where_row(X_out, not_nulls, null_mask)
 

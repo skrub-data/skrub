@@ -120,7 +120,7 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
         res = enc.fit(a_datetime_col).transform(a_datetime_col)
     expected_features = s.select(
         expected_features,
-        [f"{f}" for f in enc.extracted_features_],
+        [f"{f}" for f in enc.all_outputs_],
     )
     df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
 
@@ -165,14 +165,6 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
                 "month",
                 "day",
                 "hour",
-                "year_circular_0",
-                "year_circular_1",
-                "month_circular_0",
-                "month_circular_1",
-                "weekday_circular_0",
-                "weekday_circular_1",
-                "hour_circular_0",
-                "hour_circular_1",
             ],
         ),
         (
@@ -186,31 +178,95 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
                 "year",
                 "month",
                 "day",
-                "year_circular_0",
-                "year_circular_1",
-                "month_circular_0",
-                "month_circular_1",
-                "weekday_circular_0",
-                "weekday_circular_1",
             ],
+        ),
+        (
+            dict(
+                add_day_of_year=True,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+                resolution="day",
+            ),
+            ["year", "month", "day", "day_of_year"],
         ),
     ],
 )
 def test_extracted_features_choice(datetime_cols, params, extracted_features):
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
-    assert enc.extracted_features_ == [f"when_{f}" for f in extracted_features]
-    assert sbd.column_names(res) == [f"{f}" for f in enc.extracted_features_]
+    assert enc.extracted_features_ == [f"{f}" for f in extracted_features]
+    assert sbd.column_names(res) == [f"{f}" for f in enc.all_outputs_]
+
+
+@pytest.mark.parametrize(
+    "params, all_outputs",
+    [
+        (dict(), ["year", "month", "day", "hour", "total_seconds"]),
+        (
+            dict(
+                add_day_of_year=False,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+            ),
+            [
+                "year",
+                "month_circular_0",
+                "month_circular_1",
+                "day_circular_0",
+                "day_circular_1",
+                "hour_circular_0",
+                "hour_circular_1",
+            ],
+        ),
+        (
+            dict(
+                add_day_of_year=False,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+                resolution="day",
+            ),
+            [
+                "year",
+                "month_circular_0",
+                "month_circular_1",
+                "day_circular_0",
+                "day_circular_1",
+            ],
+        ),
+        (
+            dict(
+                add_day_of_year=True,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+                resolution="day",
+            ),
+            [
+                "year",
+                "month_circular_0",
+                "month_circular_1",
+                "day_circular_0",
+                "day_circular_1",
+                "day_of_year_circular_0",
+                "day_of_year_circular_1",
+            ],
+        ),
+    ],
+)
+def test_all_outputs_choice(datetime_cols, params, all_outputs):
+    enc = DatetimeEncoder(**params)
+    res = enc.fit_transform(datetime_cols.datetime)
+    assert enc.all_outputs_ == [f"when_{f}" for f in all_outputs]
+    assert sbd.column_names(res) == [f"{f}" for f in enc.all_outputs_]
 
 
 def test_time_not_extracted_from_date_col(datetime_cols):
     enc = DatetimeEncoder(resolution="nanosecond")
     enc.fit(datetime_cols.date)
     assert enc.extracted_features_ == [
-        "when_year",
-        "when_month",
-        "when_day",
-        "when_total_seconds",
+        "year",
+        "month",
+        "day",
+        "total_seconds",
     ]
 
 
