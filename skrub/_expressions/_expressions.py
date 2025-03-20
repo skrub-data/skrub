@@ -194,6 +194,9 @@ class ExprImpl:
         new.errors = self.errors.copy()
         return new
 
+    def compute(self, e, mode, environment):
+        raise NotImplementedError()
+
     def creation_stack_description(self):
         if self._creation_stack_lines is None:
             return ""

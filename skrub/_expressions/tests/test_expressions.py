@@ -4,6 +4,7 @@ import pytest
 from sklearn.linear_model import LogisticRegression
 
 import skrub
+from skrub._expressions import _expressions
 
 
 def test_simple_expression():
@@ -165,3 +166,14 @@ def test_cloning_and_preview_data(how):
     else:
         assert clone.skb.eval() == 1
     assert clone.skb.eval({"a": 10, "b": 2}) == 12
+
+
+def test_expr_impl():
+    # misc bits to make codecove happy
+    class A(_expressions.ExprImpl):
+        _fields = ()
+
+    a = _expressions.Expr(A())
+    assert repr(a) == "<A>"
+    with pytest.raises(NotImplementedError):
+        a.skb.eval()
