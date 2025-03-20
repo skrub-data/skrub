@@ -310,7 +310,7 @@ def _get_preview(obj):
     return obj
 
 
-def _check_call(f):
+def _check_return_value(f):
     """Warn about function calls returning None
 
     We use this check because it is quite likely that the function was called
@@ -333,10 +333,7 @@ def _check_call(f):
         result = expr._skrub_impl.results["preview"]
         if result is not None:
             return expr
-        try:
-            func_name = expr._skrub_impl.pretty_repr()
-        except Exception:
-            func_name = expr._skrub_impl.get_func_name()
+        func_name = expr._skrub_impl.pretty_repr()
         msg = (
             f"Calling {func_name!r} returned None. "
             "To enable chaining steps in a pipeline, do not use functions "
@@ -382,7 +379,7 @@ class Expr:
     def __getitem__(self, key):
         return Expr(GetItem(self, key))
 
-    @_check_call
+    @_check_return_value
     @check_expr
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
@@ -1134,7 +1131,7 @@ class CallMethod(ExprImpl):
         return self.method_name
 
     def __repr__(self):
-        return f"<{self.__class__.__name__} {self.method_name!r}>"
+        return f"<{self.__class__.__name__} {self.get_func_name()!r}>"
 
     def pretty_repr(self):
         return f".{_get_preview(self.method_name)}()"
@@ -1274,7 +1271,7 @@ def deferred(func):
     """  # noqa : E501
     from ._evaluation import needs_eval
 
-    @_check_call
+    @_check_return_value
     @check_expr
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
@@ -1319,7 +1316,7 @@ def deferred(func):
     ):
         return deferred_func
 
-    @_check_call
+    @_check_return_value
     @check_expr
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):

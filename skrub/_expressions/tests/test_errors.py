@@ -324,6 +324,8 @@ def test_apply_instead_of_skb_apply():
         a.apply("passthrough")
     with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
         a.apply(PassThrough())
+    with pytest.raises(Exception, match=r"Evaluation of '.apply\(\)' failed\."):
+        a.apply(int)
 
 
 def test_method_call_failure():

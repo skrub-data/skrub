@@ -38,7 +38,7 @@ def test_deferred_callables_repr():
 
     >>> a = skrub.var('a', 10)
     >>> skrub.deferred(F())(a)
-    <Call '<F object at 0x71f27df29010>'>
+    <Call '<...F object at 0x...>'>
     Result:
     ―――――――
     20
@@ -48,8 +48,59 @@ def test_deferred_callables_repr():
     ―――――――
     20
     >>> skrub.deferred(functools.partial(lambda x: x * 2))(a)
-    <Call 'functools.partial(<function <lambda> at 0x71f24dfe79c0>)'>
+    <Call 'functools.partial(<function <lambda> at 0x...>)'>
     Result:
     ―――――――
     20
     """
+
+
+def test_deferred_default_value():
+    b = skrub.var("b")
+
+    @skrub.deferred
+    def f(a, b=b):
+        return a + b
+
+    a = skrub.var("a")
+    c = f(a)
+    assert c.skb.eval({"a": 1, "b": 2}) == 3
+
+
+_B = skrub.var("b")
+
+
+def test_deferred_global():
+    @skrub.deferred
+    def f(a):
+        return a + _B
+
+    a = skrub.var("a")
+    c = f(a)
+    assert c.skb.eval({"a": 1, "b": 2}) == 3
+
+
+def test_deferred_closure():
+    def g():
+        b = skrub.var("b")
+
+        @skrub.deferred
+        def f(a):
+            return a + b
+
+        return f
+
+    f = g()
+    a = skrub.var("a")
+    c = f(a)
+    assert c.skb.eval({"a": 1, "b": 2}) == 3
+
+
+def test_deferred_builtin():
+    a = skrub.deferred(int)("12")
+    assert a.skb.eval() == 12
+
+
+def test_deferred_method():
+    a = skrub.deferred(str.lower)("ABC")
+    assert a.skb.eval() == "abc"
