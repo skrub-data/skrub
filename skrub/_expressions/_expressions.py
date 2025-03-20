@@ -21,7 +21,7 @@ from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
-from ._choosing import Choice, get_chosen_or_default
+from ._choosing import get_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, Constants, _CloudPickle, attribute_error
 
 __all__ = [
@@ -595,10 +595,6 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
 
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
-    if isinstance(estimator, Choice):
-        return estimator.map_values(
-            lambda v: _wrap_estimator(v, cols, how=how, allow_reject=allow_reject, X=X)
-        )
     if how == "full_frame":
         _check("`how` is 'full_frame'")
         return estimator
@@ -973,16 +969,18 @@ class Apply(ExprImpl):
                 else:
                     self._all_outputs = None
             pred = self.estimator_.predict(X)
-            if not sbd.is_dataframe(X):
+            if not sbd.is_dataframe(X) and self._all_outputs is None:
                 return pred
             if len(pred.shape) == 1:
-                self._all_outputs = ["y"]
-                result = sbd.make_dataframe_like(X, {self._all_outputs[0]: pred})
+                col_name = "y" if self._all_outputs is None else self._all_outputs[0]
+                result = sbd.make_dataframe_like(X, {col_name: pred})
             else:
-                self._all_outputs = [f"y{i}" for i in range(pred.shape[1])]
-                result = sbd.make_dataframe_like(
-                    X, dict(zip(self._all_outputs, pred.T))
+                col_names = (
+                    [f"y{i}" for i in range(pred.shape[1])]
+                    if self._all_outputs is None
+                    else self._all_outputs
                 )
+                result = sbd.make_dataframe_like(X, dict(zip(col_names, pred.T)))
             return sbd.copy_index(X, result)
 
         if "fit" in method_name or method_name == "score":

@@ -1,8 +1,12 @@
 import copy
 
+import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
+from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification
+from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression
 
 import skrub
@@ -148,6 +152,15 @@ def test_predictor_as_transformer():
     assert pred.skb.eval({"X": [[10], [-10]], "y": [0, 1]})[1] == 7.0
 
 
+def test_predictor_as_df_transformer():
+    X = pd.DataFrame({"a": [1, 2, 3], "b": [10, 20, 30]})
+    pred = skrub.X().skb.apply(DummyRegressor(), y=skrub.y())
+    estimator = pred.skb.get_estimator()
+    expected = pd.DataFrame({"a": [2.0, 2.0, 2.0], "b": [20.0, 20.0, 20.0]})
+    assert_frame_equal(estimator.fit_transform({"X": X, "y": X}), expected)
+    assert_frame_equal(estimator.transform({"X": X, "y": X}), expected)
+
+
 def test_get_estimator():
     e = (skrub.var("a", 0) + skrub.var("b", 1)).skb.get_estimator()
     assert e.fit_transform({"a": 10, "b": 2}) == 12
@@ -220,3 +233,26 @@ def test_apply_bad_params(why_full_frame, bad_param):
 
     with pytest.raises((ValueError, RuntimeError), match=""):
         X.skb.apply(estimator, y=y, how=how, allow_reject=allow_reject, cols=cols)
+
+
+class Mul(BaseEstimator):
+    def __init__(self, factor=1):
+        self.factor = factor
+
+    def fit(self, X, y=None):
+        return self
+
+    def fit_transform(self, X, y=None):
+        return X * self.factor
+
+    def transform(self, X):
+        return X * self.factor
+
+
+def test_apply_choice_on_cols():
+    X_df = pd.DataFrame({"a": [0, 1, 2], "b": [3, 4, 5]})
+    e = skrub.as_expr(X_df).skb.apply(
+        skrub.choose_from([Mul(10), Mul(100)], name="t"), cols=["b"]
+    )
+    out = e.skb.eval()
+    assert (out.values == np.arange(6).reshape(2, -1).T * [1, 10]).all()

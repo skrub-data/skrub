@@ -191,11 +191,11 @@ class SkrubNamespace:
         <Apply DummyClassifier>
         Result:
         ―――――――
-               y
-        0  False
-        1  False
-        2  False
-        3  False
+           delayed
+        0    False
+        1    False
+        2    False
+        3    False
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
         # and `rename_cols` params
@@ -947,11 +947,11 @@ class SkrubNamespace:
         <Apply DummyClassifier>
         Result:
         ―――――――
-               y
-        0  False
-        1  False
-        2  False
-        3  False
+           delayed
+        0    False
+        1    False
+        2    False
+        3    False
         >>> estimator = pred.skb.get_estimator(fitted=True)
         >>> new_orders_df = skrub.toy_orders(split='test').X
         >>> new_orders_df
