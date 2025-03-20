@@ -263,7 +263,7 @@ def check_expr(f):
     """
 
     @functools.wraps(f)
-    def _checked_call(*args, **kwargs):
+    def checked_call(*args, **kwargs):
         from ._evaluation import check_choices_before_Xy, evaluate, find_conflicts
 
         expr = f(*args, **kwargs)
@@ -299,7 +299,7 @@ def check_expr(f):
 
         return expr
 
-    return _checked_call
+    return checked_call
 
 
 def _get_preview(obj):
@@ -326,7 +326,7 @@ def _check_call(f):
     """
 
     @functools.wraps(f)
-    def _check_call_return_value(*args, **kwargs):
+    def check_call_return_value(*args, **kwargs):
         expr = f(*args, **kwargs)
         if "preview" not in expr._skrub_impl.results:
             return expr
@@ -345,7 +345,7 @@ def _check_call(f):
         )
         warnings.warn(msg)
 
-    return _check_call_return_value
+    return check_call_return_value
 
 
 class Expr:
@@ -1083,7 +1083,7 @@ class Call(_CloudPickle, ExprImpl):
 
     def get_func_name(self):
         if not hasattr(self.func, "_skrub_impl"):
-            name = self.func.__name__
+            name = getattr(self.func, "__name__", repr(self.func))
         else:
             impl = self.func._skrub_impl
             if isinstance(impl, GetAttr):
@@ -1101,7 +1101,9 @@ class Call(_CloudPickle, ExprImpl):
         return f"<{self.__class__.__name__} {name!r}>"
 
     def pretty_repr(self):
-        return f"{_get_preview(self.func).__name__}()"
+        preview = _get_preview(self.func)
+        name = getattr(preview, "__name__", repr(preview))
+        return f"{name}()"
 
 
 class CallMethod(ExprImpl):

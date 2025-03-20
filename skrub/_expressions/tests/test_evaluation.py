@@ -150,6 +150,15 @@ def test_clone_preserves_structure():
 #
 
 
+def test_empty_param_grid():
+    """
+    >>> import skrub
+    >>> print(skrub.X().skb.describe_param_grid())
+    <empty parameter grid>
+    """
+    assert _evaluation.param_grid(None) == [{}]
+
+
 def test_param_grid_nested_choices():
     c0 = skrub.choose_from([10, 20], name="c0")
     c1 = skrub.choose_from([11, 21], name="c1")

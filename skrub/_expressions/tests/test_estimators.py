@@ -281,6 +281,19 @@ def test_multimetric():
         assert np.allclose(sklearn_results[col], expr_search.results_[col].values)
 
 
+def test_no_refit(expression, data):
+    search = expression.skb.get_randomized_search(
+        random_state=0, cv=2, refit=False
+    ).fit(data)
+    assert search.best_params_["expr__0"] == pytest.approx(0.01)
+    assert search.results_.shape == (10, 2)
+    with pytest.raises(
+        AttributeError,
+        match="This parameter search was initialized with `refit=False`",
+    ):
+        search.predict(data)
+
+
 #
 # caching
 #

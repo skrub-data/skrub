@@ -165,6 +165,7 @@ class _XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
             return "transformer"
 
     if hasattr(BaseEstimator, "__sklearn_tags__"):
+        # scikit-learn >= 1.6
 
         def __sklearn_tags__(self):
             return get_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
@@ -297,6 +298,14 @@ class ParamSearch(BaseEstimator):
         _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
         return new
 
+    def _get_param_grid(self):
+        grid = param_grid(self.expr)
+        new_grid = []
+        for subgrid in grid:
+            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
+            new_grid.append(subgrid)
+        return new_grid
+
     def fit(self, environment):
         estimator = _XyExprEstimator(self.expr, _SharedDict(environment))
         search = clone(self.search)
@@ -310,16 +319,12 @@ class ParamSearch(BaseEstimator):
         X, y = _compute_Xy(self.expr, environment)
         search.fit(X, y)
         _copy_attr(search, self, _SEARCH_FITTED_ATTRIBUTES)
-        self.best_estimator_ = _to_env_estimator(search.best_estimator_)
+        try:
+            self.best_estimator_ = _to_env_estimator(search.best_estimator_)
+        except AttributeError:
+            # refit is set to False, there is no best_estimator_
+            pass
         return self
-
-    def _get_param_grid(self):
-        grid = param_grid(self.expr)
-        new_grid = []
-        for subgrid in grid:
-            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
-            new_grid.append(subgrid)
-        return new_grid
 
     def __getattr__(self, name):
         if name not in self.expr._skrub_impl.supports_modes():
@@ -332,7 +337,14 @@ class ParamSearch(BaseEstimator):
         return f
 
     def _call_predictor_method(self, name, environment):
-        check_is_fitted(self, "best_estimator_")
+        check_is_fitted(self, "cv_results_")
+        if not hasattr(self, "best_estimator_"):
+            raise AttributeError(
+                "This parameter search was initialized with `refit=False`. "
+                f"{name} is available only after refitting on the best parameters. "
+                "Please pass another value to `refit` or fit an estimator manually "
+                "using the `best_params_` or `cv_results_` attributes."
+            )
         return getattr(self.best_estimator_, name)(environment)
 
     @property
@@ -350,8 +362,8 @@ class ParamSearch(BaseEstimator):
             attribute_error(self, "results_")
 
     def _get_cv_results_table(self, return_metadata=False, detailed=False):
-        check_is_fitted(self, "best_estimator_")
-        expr_choices = choices(self.best_estimator_.expr)
+        check_is_fitted(self, "cv_results_")
+        expr_choices = choices(self.expr)
 
         all_rows = []
         log_scale_columns = set()
@@ -449,6 +461,7 @@ class _XyParamSearch(_XyEstimatorMixin, ParamSearch):
             return "transformer"
 
     if hasattr(BaseEstimator, "__sklearn_tags__"):
+        # scikit-learn >= 1.6
 
         def __sklearn_tags__(self):
             return get_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
