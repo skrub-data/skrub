@@ -1,10 +1,14 @@
 import copy
 
+import pandas as pd
 import pytest
+from sklearn.datasets import make_classification
 from sklearn.linear_model import LogisticRegression
 
 import skrub
+from skrub import selectors as s
 from skrub._expressions import _expressions
+from skrub._utils import PassThrough
 
 
 def test_simple_expression():
@@ -177,3 +181,42 @@ def test_expr_impl():
     assert repr(a) == "<A>"
     with pytest.raises(NotImplementedError):
         a.skb.eval()
+
+
+@pytest.mark.parametrize("why_full_frame", ["numpy", "predictor", "how"])
+@pytest.mark.parametrize("bad_param", ["cols", "how", "allow_reject"])
+def test_apply_bad_params(why_full_frame, bad_param):
+    # When the estimator is a predictor or the input is a numpy array (not a
+    # dataframe) (or how='full_frame') the estimator can only be applied to the
+    # full input without wrapping in OnEachColumn or OnSubFrame. In this case
+    # if the user passed a parameter that would require wrapping, such as
+    # passing a value for `cols` that is not `all()`, or passing
+    # how='columnwise' or allow_reject=True, we get an error.
+
+    if why_full_frame == bad_param == "how":
+        return
+    X_a, y_a = make_classification(random_state=0)
+    X_df = pd.DataFrame(X_a, columns=[f"col_{i}" for i in range(X_a.shape[1])])
+
+    X = skrub.X(X_a) if why_full_frame == "numpy" else skrub.X(X_df)
+    if why_full_frame == "predictor":
+        estimator = LogisticRegression()
+        y = skrub.y(y_a)
+    else:
+        estimator = PassThrough()
+        y = None
+    how = "full_frame" if why_full_frame == "how" else "auto"
+    # X is a numpy array: how must be full_frame and selecting columns is not
+    # allowed.
+    if bad_param == "cols":
+        if why_full_frame == "numpy":
+            cols = [0, 1]
+        else:
+            cols = ["col_0", "col_1"]
+    else:
+        cols = s.all()
+    how = "columnwise" if bad_param == "how" else how
+    allow_reject = True if bad_param == "allow_reject" else False
+
+    with pytest.raises((ValueError, RuntimeError), match=""):
+        X.skb.apply(estimator, y=y, how=how, allow_reject=allow_reject, cols=cols)
