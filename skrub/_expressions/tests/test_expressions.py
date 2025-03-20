@@ -256,3 +256,14 @@ def test_apply_choice_on_cols():
     )
     out = e.skb.eval()
     assert (out.values == np.arange(6).reshape(2, -1).T * [1, 10]).all()
+
+
+def test_concat_horizontal_duplicate_cols():
+    X_df = pd.DataFrame({"a": [0, 1, 2], "b": [3, 4, 5]})
+    X = skrub.X()
+    e = X.skb.concat_horizontal([X])
+    estimator = e.skb.get_estimator()
+    out_1 = estimator.fit_transform({"X": X_df})
+    out_2 = estimator.transform({"X": X_df})
+    assert len(set(out_1.columns)) == len(out_1.columns) == 4
+    assert list(out_1.columns) == list(out_2.columns)
