@@ -109,3 +109,62 @@ def test_get_chosen_or_default():
     c.chosen_outcome = 12.0
     assert _choosing.get_chosen_or_default(c) == 12.0
     assert _choosing.get_default(c) == 15.0
+
+
+def test_match():
+    assert not hasattr(skrub.choose_int(0, 10, n_steps=6, name="N"), "match")
+    c = skrub.choose_from(["a", "b", "c"], name="c")
+
+    # m and mm without default
+    m = c.match({"a": 10, "b": 20, "c": 30})
+    assert m.outcome_mapping == {"a": 10, "b": 20, "c": 30}
+    mm = m.match({10: "ten", 20: "twenty", 30: "thirty"})
+    assert mm.choice is c
+    assert mm.outcome_mapping == {"a": "ten", "b": "twenty", "c": "thirty"}
+
+    # m without default, mm with default
+    m = c.match({"a": 10, "b": 20, "c": 30})
+    assert m.outcome_mapping == {"a": 10, "b": 20, "c": 30}
+    mm = m.match({10: "ten", 20: "twenty"}, default="?")
+    assert mm.choice is c
+    assert mm.outcome_mapping == {"a": "ten", "b": "twenty", "c": "?"}
+
+    # mm without default, m with default
+    m = c.match({"a": 10, "b": 20}, default="?")
+    assert m.outcome_mapping == {"a": 10, "b": 20, "c": "?"}
+    mm = m.match({10: "ten", 20: "twenty", "?": "??"})
+    assert mm.choice is c
+    assert mm.outcome_mapping == {"a": "ten", "b": "twenty", "c": "??"}
+
+    # both with default
+    m = c.match({"a": 10, "b": 20}, default="?")
+    assert m.outcome_mapping == {"a": 10, "b": 20, "c": "?"}
+    mm = m.match({10: "ten", 20: "twenty"}, default="??")
+    assert mm.choice is c
+    assert mm.outcome_mapping == {"a": "ten", "b": "twenty", "c": "??"}
+
+
+@pytest.mark.parametrize("test_class", ["choice", "match"])
+def test_bad_match_mappings(test_class):
+    c = skrub.choose_from(["a", "b", "c"], name="c")
+    if test_class == "match":
+        c = c.match({"a": "a", "b": "b", "c": "c"})
+    with pytest.raises(
+        ValueError,
+        match="The following outcomes do not have a corresponding key "
+        r"in the mapping provided to `match\(\)`: \{'c'\}",
+    ):
+        c.match({"a": 10, "b": 20})
+    with pytest.raises(
+        ValueError,
+        match="The following keys were found in the mapping provided "
+        r"to `match\(\)` but are not possible choice outcomes: \{'d'\}",
+    ):
+        c.match({"a": 10, "b": 20, "c": 30, "d": 40})
+    c = skrub.choose_from([skrub.X(), skrub.X() + 10], name="c")
+    with pytest.raises(
+        TypeError,
+        match=r"To use `match\(\)`, all choice outcomes must be hashable. "
+        "unhashable type: 'Expr'",
+    ):
+        c.match({1: "one", 11: "eleven"})
