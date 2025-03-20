@@ -361,10 +361,14 @@ class DatetimeEncoder(SingleColumnTransformer):
 
         self.extracted_features_ = [f"{feat}" for feat in self._partial_features]
 
+        col_name = sbd.name(column)
+
         # Adding transformers for periodic encoding
         self._required_transformers = {}
         if self.periodic_encoding is not None:
-            encoding_level = list(_DEFAULT_ENCODING_PERIODS.keys())[: idx_level + 1]
+            encoding_level = list(_DEFAULT_ENCODING_PERIODS.keys())[1 : idx_level + 1]
+            if self.add_day_of_year:
+                encoding_level = encoding_level + ["day_of_year"]
             if self.add_weekday:
                 encoding_level += ["weekday"]
             for enc_feature in encoding_level:
@@ -377,6 +381,11 @@ class DatetimeEncoder(SingleColumnTransformer):
                         period=_DEFAULT_ENCODING_PERIODS[enc_feature],
                         n_splines=_DEFAULT_ENCODING_SPLINES[enc_feature],
                     )
+            self.all_outputs_ = [
+                f"{col_name}_{f}"
+                for f in self._partial_features
+                if f not in encoding_level
+            ]
 
             for enc_feature, transformer in self._required_transformers.items():
                 feat_to_encode = _get_dt_feature(column, enc_feature)
@@ -384,6 +393,10 @@ class DatetimeEncoder(SingleColumnTransformer):
                 feat_to_encode = sbd.rename(feat_to_encode, feat_name)
                 # Filling null values for periodc encoder
                 transformer.fit(self._fill_nulls(feat_to_encode))
+                self.all_outputs_ += transformer.all_outputs_
+        else:
+            self.all_outputs_ = [f"{col_name}_{f}" for f in self._partial_features]
+
         return self.transform(column)
 
     def transform(self, column):
@@ -425,7 +438,6 @@ class DatetimeEncoder(SingleColumnTransformer):
         X_out = sbd.copy_index(column, sbd.make_dataframe_like(column, all_extracted))
         X_out = sbd.concat_horizontal(X_out, *new_features)
 
-        self.all_outputs_ = sbd.column_names(X_out)
         # Censoring all the null features
         X_out = sbd.where_row(X_out, not_nulls, null_mask)
 
