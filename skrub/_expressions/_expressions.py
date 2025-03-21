@@ -943,7 +943,7 @@ class Apply(ExprImpl):
     def fields_required_for_eval(self, mode):
         if "fit" in mode or mode in ["score", "preview"]:
             return self._fields
-        return ["estimator", "X"]
+        return ["X"]
 
     def compute(self, e, mode, environment):
         method_name = "fit_transform" if mode == "preview" else mode
