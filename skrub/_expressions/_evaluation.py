@@ -513,7 +513,6 @@ def clear_results(expr, mode=None):
 class _ChoiceGraph(_ExprTraversal):
     def run(self, expr):
         self._choices = {}
-        self._outcomes = {}
 
         # we don't really care about the values of those dicts but we use dicts
         # rather than sets to preserve insertion order.
@@ -521,12 +520,26 @@ class _ChoiceGraph(_ExprTraversal):
 
         self._current_outcome = [None]
         _ = super().run(expr)
-        short = {v: i for i, v in enumerate(self._choices.keys())}
+        short = {choice_id: i for i, choice_id in enumerate(self._choices.keys())}
         self._short_ids = short
-        choices = {short[k]: v for k, v in self._choices.items()}
-        parents = {k: [short[p] for p in v.keys()] for k, v in self._parents.items()}
-        # - choices: choice's short id (1, 2, ...) to BaseChoice instance
-        # - parents: outcome's id (id(outcome)) to list of its parent choices' short ids
+        choices = {
+            short[choice_id]: choice for choice_id, choice in self._choices.items()
+        }
+        parents = {}
+        for outcome_key, outcome_parents in self._parents.items():
+            if outcome_key is None:
+                new_key = None
+            else:
+                choice_id, outcome_idx = outcome_key
+                new_key = short[choice_id], outcome_idx
+            new_outcome_parents = [
+                short[parent_id] for parent_id in outcome_parents.keys()
+            ]
+            parents[new_key] = new_outcome_parents
+        # - choices:
+        #     choice's short id (1, 2, ...) to BaseChoice instance
+        # - parents:
+        #     (choice short id, outcome index) to list of parent choices' short ids
         return {"choices": choices, "parents": parents}
 
     def handle_choice(self, choice):
@@ -535,16 +548,16 @@ class _ChoiceGraph(_ExprTraversal):
         self._choices[id(choice)] = choice
         if not isinstance(choice, _choosing.Choice):
             return choice
-        for out in choice.outcomes:
-            self._current_outcome.append(id(out))
-            yield out
+        for outcome_idx, outcome in enumerate(choice.outcomes):
+            self._current_outcome.append((id(choice), outcome_idx))
+            yield outcome
             self._current_outcome.pop()
         return choice
 
     def handle_choice_match(self, choice_match):
         yield choice_match.choice
-        for outcome in choice_match.choice.outcomes:
-            self._current_outcome.append(id(outcome))
+        for outcome_idx, outcome in enumerate(choice_match.choice.outcomes):
+            self._current_outcome.append((id(choice_match.choice), outcome_idx))
             yield choice_match.outcome_mapping[outcome]
             self._current_outcome.pop()
         return choice_match
@@ -612,8 +625,8 @@ def _expand_grid(graph, grid):
         choice = graph["choices"][choice_id]
         if not isinstance(choice, _choosing.Choice):
             return False
-        for outcome in choice.outcomes:
-            if graph["parents"].get(id(outcome), None):
+        for outcome_idx in choice_range(choice_id):
+            if graph["parents"].get((choice_id, outcome_idx), None):
                 return True
         return False
 
@@ -630,10 +643,11 @@ def _expand_grid(graph, grid):
     choice_id = remaining[0]
     subgrids = []
     for outcome_idx in choice_range(choice_id):
-        outcome = graph["choices"][choice_id].outcomes[outcome_idx]
         new_subgrid = grid.copy()
         graph = graph.copy()
-        graph["parents"][None] = graph["parents"].get(id(outcome), []) + remaining[1:]
+        graph["parents"][None] = (
+            graph["parents"].get((choice_id, outcome_idx), []) + remaining[1:]
+        )
         new_subgrid[choice_id] = [outcome_idx]
         new_subgrid = _expand_grid(graph, new_subgrid)
         subgrids.extend(new_subgrid)

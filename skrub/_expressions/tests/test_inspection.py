@@ -101,14 +101,7 @@ def test_describe_param_grid():
       C: choose_float(0.001, 100, log=True, name='C')
       scaling: True
       scaling_kind: 'robust'
-      robust_scaler__with_centering: True
-    - dim_reduction: ['PCA', 'SelectKBest']
-      impute: ['true', 'false']
-      classifier: 'logreg'
-      C: choose_float(0.001, 100, log=True, name='C')
-      scaling: True
-      scaling_kind: 'robust'
-      robust_scaler__with_centering: False
+      robust_scaler__with_centering: [True, False]
     - dim_reduction: ['PCA', 'SelectKBest']
       impute: ['true', 'false']
       classifier: 'logreg'
@@ -126,14 +119,7 @@ def test_describe_param_grid():
       N 🌴: choose_int(20, 400, name='N 🌴')
       scaling: True
       scaling_kind: 'robust'
-      robust_scaler__with_centering: True
-    - dim_reduction: ['PCA', 'SelectKBest']
-      impute: ['true', 'false']
-      classifier: 'rf'
-      N 🌴: choose_int(20, 400, name='N 🌴')
-      scaling: True
-      scaling_kind: 'robust'
-      robust_scaler__with_centering: False
+      robust_scaler__with_centering: [True, False]
     - dim_reduction: ['PCA', 'SelectKBest']
       impute: ['true', 'false']
       classifier: 'rf'
