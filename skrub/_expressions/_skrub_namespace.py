@@ -75,6 +75,7 @@ class SkrubNamespace:
         *,
         y=None,
         cols=s.all(),
+        exclude_cols=None,
         how="auto",
         allow_reject=False,
     ):
@@ -90,8 +91,12 @@ class SkrubNamespace:
             The prediction targets when ``estimator`` is a supervised estimator.
 
         cols : string, list of strings or skrub selector, optional
-            The columns to transform, when ``estimator`` is a transformer. Can
-            be a column name, list of column names, or a skrub selector.
+            The columns to transform, when ``estimator`` is a transformer.
+
+        exclude_cols : string, list of strings or skrub selector, optional
+            When ``estimator`` is a transformer, columns to which it should
+            _not_ be applied. The columns that are matched by ``cols`` AND not
+            matched by ``exclude_cols`` are transformed.
 
         how : "auto", "columnwise", "subframe" or "full_frame", optional
             The mode in which it is applied. In the vast majority of cases the
@@ -157,6 +162,20 @@ class SkrubNamespace:
         2   3  1.000000e+00  7.447602e-17         5  2020-04-04
         3   4 -3.955170e-16 -8.326673e-17         1  2020-04-05
 
+        Transform all but the ``'ID'`` and ``'quantity'`` columns:
+
+        >>> x.skb.apply(
+        ...     skrub.StringEncoder(n_components=2), exclude_cols=["ID", "quantity"]
+        ... ) # doctest: +SKIP
+        <Apply StringEncoder>
+        Result:
+        ―――――――
+           ID     product_0     product_1  quantity    date_0    date_1
+        0   1  9.775252e-08  7.830415e-01         2  0.766318 -0.406667
+        1   2  9.999999e-01  0.000000e+00         3  0.943929  0.330148
+        2   3  9.999998e-01 -1.490116e-08         5  0.943929  0.330149
+        3   4  9.910963e-08 -6.219692e-01         1  0.766318 -0.406668
+
         More complex selection of the columns to transform, here all numeric
         columns except the ``'ID'``:
 
@@ -199,6 +218,8 @@ class SkrubNamespace:
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
         # and `rename_cols` params
+        if exclude_cols is not None:
+            cols = s.make_selector(cols) - exclude_cols
         return self._apply(
             estimator=estimator,
             y=y,

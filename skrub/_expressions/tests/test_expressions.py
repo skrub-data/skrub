@@ -249,13 +249,22 @@ class Mul(BaseEstimator):
         return X * self.factor
 
 
-def test_apply_choice_on_cols():
+@pytest.mark.parametrize("use_choice", [False, True])
+def test_apply_on_cols(use_choice):
     X_df = pd.DataFrame({"a": [0, 1, 2], "b": [3, 4, 5]})
-    e = skrub.as_expr(X_df).skb.apply(
-        skrub.choose_from([Mul(10), Mul(100)], name="t"), cols=["b"]
-    )
+
+    if use_choice:
+        transformer = skrub.choose_from([Mul(10), Mul(100)], name="t")
+    else:
+        transformer = Mul(10)
+    e = skrub.as_expr(X_df).skb.apply(transformer, cols=["b"])
     out = e.skb.eval()
-    assert (out.values == np.arange(6).reshape(2, -1).T * [1, 10]).all()
+    expected = np.arange(6).reshape(2, -1).T * [1, 10]
+    assert (out.values == expected).all()
+
+    e = skrub.as_expr(X_df).skb.apply(transformer, exclude_cols=["a"])
+    out = e.skb.eval()
+    assert (out.values == expected).all()
 
 
 def test_concat_horizontal_duplicate_cols():

@@ -694,15 +694,14 @@ products = filter_products(products, baskets)
 # names, or a skrub selector. Those selectors are similar to Polars or Ibis
 # selectors: they can be used to select columns by name (including glob and
 # regex patterns), dtype or other criteria, and they can be combined with the
-# same operators as Python sets. Here we want to vectorize all columns in the
-# ``"products"`` table, _except_ the ``"basket_ID"`` column which we will need
-# for joining.
+# same operators as Python sets. Here we have a very simple selection to make:
+# we want to vectorize all columns in the ``"products"`` table, _except_ the
+# ``"basket_ID"`` column which we will need for joining. So we can just use the
+# ``exclude_cols`` parameter.
 
 # %%
-from skrub import selectors as s
-
 vectorizer = skrub.TableVectorizer(high_cardinality=skrub.StringEncoder(n_components=8))
-vectorized_products = products.skb.apply(vectorizer, cols=s.all() - "basket_ID")
+vectorized_products = products.skb.apply(vectorizer, exclude_cols="basket_ID")
 
 
 # %%

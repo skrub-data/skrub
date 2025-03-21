@@ -217,16 +217,15 @@ vectorizer = skrub.TableVectorizer(high_cardinality=encoder)
 
 # %%
 # A transformer does not have to apply to the full DataFrame; we can easily
-# restrict it to some columns. Skrub selectors allow specifying which columns
-# in a flexible way, selecting them by name, name pattern, dtype, or other
-# criteria. They can be combined with the same operators as Python sets. Here
-# for example we vectorize all columns except the ``"basket_ID"`` which we will
-# need for joining.
+# restrict it to some columns, using the ``cols`` or ``exclude_cols``
+# parameters. Skrub selectors allow specifying which columns in a flexible way,
+# selecting them by name, name pattern, dtype, or other criteria. They can be
+# combined with the same operators as Python sets. Here for example we
+# vectorize all columns except the ``"basket_ID"`` which we will need for
+# joining.
 
 # %%
-from skrub import selectors as s
-
-vectorized_products = products.skb.apply(vectorizer, cols=s.all() - "basket_ID")
+vectorized_products = products.skb.apply(vectorizer, exclude_cols="basket_ID")
 
 # %%
 # Having access to the underlying dataframe's API, we can easily perform the
