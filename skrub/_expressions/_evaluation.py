@@ -599,7 +599,7 @@ def _expand_grid(graph, grid):
             if isinstance(choice, _choosing.Choice):
                 return [choice.chosen_outcome_idx or 0]
             else:
-                return [choice.default()]
+                return [choice.default() if (o := choice.chosen_outcome) is None else o]
         else:
             if isinstance(choice, _choosing.Choice):
                 return list(range(len(choice.outcomes)))
