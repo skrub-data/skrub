@@ -39,7 +39,7 @@ _DEFAULT_ENCODING_SPLINES = {
     "day_of_year": 12,
     "month": 12,
     "day": 4,
-    "hour": 24,
+    "hour": 12,
     "weekday": 7,
 }
 
