@@ -97,6 +97,7 @@ __all__ = [
     "unique",
     "filter",
     "where",
+    "where_row",
     "sample",
     "head",
     "slice",
@@ -1180,6 +1181,23 @@ def _where_pandas(col, mask, other):
 @where.specialize("polars", argument_type="Column")
 def _where_polars(col, mask, other):
     return col.zip_with(mask, pl.Series(other))
+
+
+@dispatch
+def where_row(obj, mask, other):
+    raise NotImplementedError()
+
+
+@where_row.specialize("pandas")
+def _where_row_pandas(obj, mask, other):
+    return obj.apply(pd.Series.where, cond=mask, other=other)
+
+
+@where_row.specialize("polars")
+def _where_row_polars(obj, mask, other):
+    return obj.with_columns(
+        pl.when(pl.Series(mask)).then(pl.all()).otherwise(pl.Series(other))
+    )
 
 
 @dispatch
