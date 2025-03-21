@@ -12,11 +12,15 @@ Ongoing development
 New features
 ------------
 
-- The :class:`TableReport` now switch it's visual theme between light and dark according to the user preferences.
+- The :class:`TableReport` now switches its visual theme between light and dark according to the user preferences.
   :pr:`1201` by :user:`rouk1 <rouk1>`.
 
 - Adding a new way to control the location of the data directory, using envar `SKRUB_DATA_DIRECTORY`.
   :pr:`1215` by :user:`Thomas S. <thomass-dev>`
+
+- The :class:`DatetimeEncoder` now supports periodic encoding of datetime features
+  with trigonometric functions and B-splines transformers.
+  :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Changes
 -------
@@ -31,6 +35,13 @@ Bug fixes
 ---------
 - :class:`StringEncoder` now works correctly in presence of null values.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+Bug fixes
+---------
+
+- The :meth:`TableVectorizer.get_feature_names_out` method now works when used in a
+  scikit-learn pipeline by exposing the `input_features` parameter.
+  :pr:`1258` by :user:`Guillaume Lemaitre <glemaitre>`.
 
 Release 0.5.1
 =============
