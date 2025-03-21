@@ -1190,7 +1190,7 @@ def where_row(obj, mask, other):
 
 @where_row.specialize("pandas")
 def _where_row_pandas(obj, mask, other):
-    return obj.apply(pd.Series.where, **{"cond": mask, "other": other})
+    return obj.apply(pd.Series.where, cond=mask, other=other)
 
 
 @where_row.specialize("polars")
