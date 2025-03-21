@@ -1,6 +1,14 @@
 /* The table showing the first few and last rows of the dataframe */
 /* -------------------------------------------------------------- */
 
+td, th {
+    width: var(--spacing-xl);
+}
+
+tr {
+    height: var(--font-size-xs);
+}
+
 .table-with-selectable-cells {
     --arrow-width: var(--base-size);
 }

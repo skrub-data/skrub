@@ -131,3 +131,9 @@ def duration_to_numeric(col):
     if q < YEAR:
         return seconds / DAY, "day"
     return seconds / YEAR, "year"
+
+
+def strip_xml_declaration(svg):
+    svg = re.sub(r"<\?xml.*?\?>", "", svg, flags=re.DOTALL)
+    svg = re.sub(r"<!DOCTYPE.*?>", "", svg, flags=re.DOTALL)
+    return svg
