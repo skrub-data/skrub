@@ -166,6 +166,10 @@ dd {
     margin-top: var(--spacing-m);
 }
 
+.padding-b-m {
+    padding-bottom: var(--spacing-m);
+}
+
 .horizontal-scroll {
     overflow-x: auto;
 }
@@ -184,7 +188,10 @@ dd {
     padding-block-end: var(--spacing-m);
 }
 
-.flow > * + * {
+/* Special-case the article (container) */
+article.wrapper {
+    padding-bottom: 0pt;
+}.flow > * + * {
     margin-top: var(--spacing-m);
 }
 
