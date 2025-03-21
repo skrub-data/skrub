@@ -1,7 +1,15 @@
+import builtins
+import sys
+import webbrowser
+from unittest.mock import Mock
+
 import pytest
+from sklearn.dummy import DummyClassifier
+from sklearn.feature_selection import SelectKBest
 
 import skrub
 from skrub import datasets
+from skrub._expressions import _inspection
 
 
 def test_output_dir(tmp_path):
@@ -46,6 +54,63 @@ def test_full_report():
     assert "12346" in text and "this is b" in text
     assert "ZeroDivisionError" in (out / "node_3.html").read_text("utf-8")
     assert "This step did not run" in (out / "node_4.html").read_text("utf-8")
+
+
+def test_full_report_failed_apply():
+    # Somewhat contrived example for the corner case where an Apply does not
+    # have an easily identifiable estimator.
+    orders = skrub.toy_orders()
+    e = (
+        skrub.X()
+        .skb.apply(SelectKBest())  # error! missing y
+        .skb.apply(
+            # never reached so there is no fitted estimator
+            skrub.choose_from([DummyClassifier(), DummyClassifier()], name="classif"),
+            y=skrub.y(),
+        )
+    )
+    report = e.skb.full_report({"X": orders.X, "y": orders.y}, open=False)
+    assert report["error"] is not None
+
+
+def test_full_report_open(monkeypatch):
+    mock = Mock()
+    monkeypatch.setattr(webbrowser, "open", mock)
+    skrub.as_expr(0).skb.full_report()
+    mock.assert_called_once()
+
+
+def test_draw_graph():
+    assert b"<svg" in skrub.as_expr(0).skb.draw_graph()
+    assert "<svg" in skrub.as_expr(0).skb.draw_graph()._repr_html_()
+
+
+def test_no_pydot(monkeypatch):
+    monkeypatch.delitem(sys.modules, "pydot", raising=False)
+    builtin_import = builtins.__import__
+
+    def _import(name, *args, **kwargs):
+        if name == "pydot":
+            raise ImportError(name)
+        return builtin_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _import)
+    with pytest.warns(UserWarning, match="Please install"):
+        assert b"Please install" in skrub.as_expr(0).skb.draw_graph()
+
+
+def test_no_graphviz(monkeypatch):
+    pydot = pytest.importorskip("pydot")
+    monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
+    with pytest.warns(UserWarning, match="Please install"):
+        assert b"Please install" in skrub.as_expr(0).skb.draw_graph()
+
+
+def test_draw_graph_open(monkeypatch):
+    mock = Mock()
+    monkeypatch.setattr(_inspection, "open_in_browser", mock)
+    skrub.as_expr(0).skb.draw_graph().open()
+    mock.assert_called_once()
 
 
 def test_describe_param_grid():

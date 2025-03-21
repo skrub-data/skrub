@@ -294,6 +294,14 @@ def test_no_refit(expression, data):
         search.predict(data)
 
 
+def test_multimetric_no_refit(expression, data):
+    search = expression.skb.get_randomized_search(
+        random_state=0, cv=2, refit=False, scoring=["accuracy", "roc_auc"]
+    ).fit(data)
+    assert not hasattr(search, "best_params_")
+    assert search.results_.shape == (10, 3)
+
+
 #
 # caching
 #
