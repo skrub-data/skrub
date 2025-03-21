@@ -191,9 +191,7 @@ dd {
 /* Special-case the article (container) */
 article.wrapper {
     padding-bottom: 0pt;
-}
-
-.flow > * + * {
+}.flow > * + * {
     margin-top: var(--spacing-m);
 }
 

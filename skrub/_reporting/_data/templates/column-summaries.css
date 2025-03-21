@@ -19,11 +19,6 @@
     margin-top: var(--spacing-l);
 }
 
-/* A bit of space between the bar and the buttons */
-.column-selection-buttons {
-    padding-left: 10pt;
-}
-
 .column-summary-group > .card {
     margin: 0;
 }
@@ -37,6 +32,7 @@
     border-radius: var(--radius);
     min-width: min-content;
     border: 1px solid var(--color-border-secondary);
+    background-color: var(--color-background-card);
 }
 
 .card-header {
@@ -49,7 +45,7 @@
 
     padding: var(--spacing-m);
     margin-block-end: var(--spacing-m);
-    background-color: var(--color-background-tertiary);
+    background-color: var(--color-background-card-header);
     border-block-end: var(--border-s) solid var(--color-border-secondary);
 }
 
@@ -121,6 +117,7 @@
 
 .columns-in-sample-tab .card {
     border-color: var(--color-border-highlight);
+    background-color: color-mix( in srgb, var(--color-background-highlight-primary), var(--color-background-primary) );
 }
 
 /* Button for closing the card / deselecting the column in the table */
