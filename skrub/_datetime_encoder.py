@@ -38,7 +38,7 @@ _DEFAULT_ENCODING_PERIODS = {
 _DEFAULT_ENCODING_SPLINES = {
     "day_of_year": 12,
     "month": 12,
-    "day": 30,
+    "day": 4,
     "hour": 24,
     "weekday": 7,
 }
@@ -346,48 +346,46 @@ class DatetimeEncoder(SingleColumnTransformer):
                 f"Column {sbd.name(column)!r} does not have Date or Datetime dtype."
             )
         if self.resolution is None:
-            self._partial_features = []
+            self.extracted_features_ = []
         else:
             idx_level = _TIME_LEVELS.index(self.resolution)
             if _is_date(column):
                 idx_level = min(idx_level, _TIME_LEVELS.index("day"))
-            self._partial_features = _TIME_LEVELS[: idx_level + 1]
+            self.extracted_features_ = _TIME_LEVELS[: idx_level + 1]
         if self.add_total_seconds:
-            self._partial_features.append("total_seconds")
+            self.extracted_features_.append("total_seconds")
         if self.add_weekday:
-            self._partial_features.append("weekday")
+            self.extracted_features_.append("weekday")
         if self.add_day_of_year:
-            self._partial_features.append("day_of_year")
-
-        self.extracted_features_ = [f"{feat}" for feat in self._partial_features]
+            self.extracted_features_.append("day_of_year")
 
         col_name = sbd.name(column)
 
         # Adding transformers for periodic encoding
-        self._required_transformers = {}
+        self._periodic_encoders = {}
         if self.periodic_encoding is not None:
-            encoding_level = list(_DEFAULT_ENCODING_PERIODS.keys())[1 : idx_level + 1]
-            if self.add_day_of_year:
-                encoding_level = encoding_level + ["day_of_year"]
+            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[1 : idx_level + 1]
             if self.add_weekday:
-                encoding_level += ["weekday"]
-            for enc_feature in encoding_level:
+                encoding_levels += ["weekday"]
+            if self.add_day_of_year:
+                encoding_levels = encoding_levels + ["day_of_year"]
+            for enc_feature in encoding_levels:
                 if self.periodic_encoding == "circular":
-                    self._required_transformers[enc_feature] = _CircularEncoder(
+                    self._periodic_encoders[enc_feature] = _CircularEncoder(
                         period=_DEFAULT_ENCODING_PERIODS[enc_feature]
                     )
                 elif self.periodic_encoding == "spline":
-                    self._required_transformers[enc_feature] = _SplineEncoder(
+                    self._periodic_encoders[enc_feature] = _SplineEncoder(
                         period=_DEFAULT_ENCODING_PERIODS[enc_feature],
                         n_splines=_DEFAULT_ENCODING_SPLINES[enc_feature],
                     )
             self.all_outputs_ = [
                 f"{col_name}_{f}"
-                for f in self._partial_features
-                if f not in encoding_level
+                for f in self.extracted_features_
+                if f not in encoding_levels
             ]
 
-            for enc_feature, transformer in self._required_transformers.items():
+            for enc_feature, transformer in self._periodic_encoders.items():
                 feat_to_encode = _get_dt_feature(column, enc_feature)
                 feat_name = sbd.name(feat_to_encode) + "_" + enc_feature
                 feat_to_encode = sbd.rename(feat_to_encode, feat_name)
@@ -395,7 +393,7 @@ class DatetimeEncoder(SingleColumnTransformer):
                 transformer.fit(self._fill_nulls(feat_to_encode))
                 self.all_outputs_ += transformer.all_outputs_
         else:
-            self.all_outputs_ = [f"{col_name}_{f}" for f in self._partial_features]
+            self.all_outputs_ = [f"{col_name}_{f}" for f in self.extracted_features_]
 
         return self.transform(column)
 
@@ -422,13 +420,13 @@ class DatetimeEncoder(SingleColumnTransformer):
 
         all_extracted = []
         new_features = []
-        for feature in self._partial_features:
-            if feature not in self._required_transformers:
+        for feature in self.extracted_features_:
+            if feature not in self._periodic_encoders:
                 extracted = _get_dt_feature(column, feature).rename(f"{name}_{feature}")
                 extracted = sbd.to_float32(extracted)
                 all_extracted.append(extracted)
             else:
-                transformer = self._required_transformers[feature]
+                transformer = self._periodic_encoders[feature]
                 feat = _get_dt_feature(column, feature)
                 # filling nulls only to the feature passed to the periodic encoder
                 transformed = transformer.transform(self._fill_nulls(feat))

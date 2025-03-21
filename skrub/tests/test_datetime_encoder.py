@@ -155,6 +155,19 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
             ["year", "month", "day", "hour", "day_of_year"],
         ),
         (
+            dict(add_day_of_year=True, add_total_seconds=False, add_weekday=True),
+            ["year", "month", "day", "hour", "weekday", "day_of_year"],
+        ),
+        (
+            dict(
+                add_day_of_year=True,
+                add_weekday=True,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+            ),
+            ["year", "month", "day", "hour", "weekday", "day_of_year"],
+        ),
+        (
             dict(
                 add_day_of_year=False,
                 add_total_seconds=False,
@@ -250,6 +263,26 @@ def test_extracted_features_choice(datetime_cols, params, extracted_features):
                 "day_of_year_circular_1",
             ],
         ),
+        (
+            dict(
+                add_day_of_year=True,
+                add_weekday=True,
+                add_total_seconds=False,
+                periodic_encoding="circular",
+                resolution="day",
+            ),
+            [
+                "year",
+                "month_circular_0",
+                "month_circular_1",
+                "day_circular_0",
+                "day_circular_1",
+                "weekday_circular_0",
+                "weekday_circular_1",
+                "day_of_year_circular_0",
+                "day_of_year_circular_1",
+            ],
+        ),
     ],
 )
 def test_all_outputs_choice(datetime_cols, params, all_outputs):
@@ -306,7 +339,7 @@ def test_correct_parameters(a_datetime_col, params, transformers):
     assert all(
         [
             isinstance(t, required_t)
-            for t, required_t in zip(enc._required_transformers.values(), transformers)
+            for t, required_t in zip(enc._periodic_encoders.values(), transformers)
         ]
     )
 
