@@ -94,6 +94,18 @@ def test_describe_param_grid():
     ...     name="classifier",
     ... )
     >>> pred = scaled.skb.apply(classifier, y=y)
+
+    those need to be split into separate subgrids:
+
+    - scaling or not because the nested choice scaling kind is only used if
+      scaling is true
+    - scaling kind because the robust scaler has a nested choice with_centering
+    - the classifier because the random forest and logistic regression have
+      nested choices (their hyperparameters)
+
+    so we end up with 2 (rf or logreg) x 3 (no scaling, robust, standard) = 6
+    subgrids.
+
     >>> print(pred.skb.describe_param_grid())
     - dim_reduction: ['PCA', 'SelectKBest']
       impute: ['true', 'false']
