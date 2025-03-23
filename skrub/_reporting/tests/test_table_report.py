@@ -226,21 +226,21 @@ def test_max_plot_columns_parameter(df_module):
     )
 
     report = TableReport(df)
-    for col in report._any_summary["columns"]:
+    for col in report.get_summary()["columns"]:
         assert len(col["plot_names"]) > 0
 
     report_2 = TableReport(df, max_plot_columns=5)
-    for col in report_2._any_summary["columns"]:
+    for col in report_2.get_summary()["columns"]:
         assert len(col["plot_names"]) > 0
 
     report_3 = TableReport(df, max_plot_columns=10)
-    for col in report_3._any_summary["columns"]:
+    for col in report_3.get_summary()["columns"]:
         assert len(col["plot_names"]) > 0
 
     report_4 = TableReport(df, max_plot_columns=0)
-    for col in report_4._any_summary["columns"]:
+    for col in report_4.get_summary()["columns"]:
         assert len(col["plot_names"]) == 0
 
     report_5 = TableReport(df, max_plot_columns=3)
-    for col in report_5._any_summary["columns"]:
+    for col in report_5.get_summary()["columns"]:
         assert len(col["plot_names"]) == 0

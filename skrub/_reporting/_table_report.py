@@ -150,8 +150,7 @@ class TableReport:
             self.dataframe, with_plots=False, title=self.title, **self._summary_kwargs
         )
 
-    @property
-    def _any_summary(self):
+    def get_summary(self):
         if self.max_plot_columns is None:
             summary = self._summary_with_plots
         elif self.max_plot_columns >= sbd.shape(self.dataframe)[1]:
@@ -170,7 +169,7 @@ class TableReport:
             The HTML page.
         """
         return to_html(
-            self._any_summary,
+            self.get_summary(),
             standalone=True,
             column_filters=self.column_filters,
         )
@@ -184,7 +183,7 @@ class TableReport:
             The HTML snippet.
         """
         return to_html(
-            self._any_summary,
+            self.get_summary(),
             standalone=False,
             column_filters=self.column_filters,
         )
