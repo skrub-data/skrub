@@ -44,9 +44,9 @@ def test_report(air_quality):
     assert "<skrub-table-report" in snippet
     data = json.loads(report.json())
     assert data["title"] == "the title"
-    assert report._any_summary["title"] == "the title"
+    assert report.get_summary()["title"] == "the title"
     del report._summary_with_plots
-    assert report._any_summary["title"] == "the title"
+    assert report.get_summary()["title"] == "the title"
     snippet = report._repr_mimebundle_()["text/html"]
     report_id = get_report_id(snippet)
     all_report_ids.append(report_id)
