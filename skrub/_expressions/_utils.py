@@ -9,8 +9,17 @@ X_NAME = "_skrub_X"
 Y_NAME = "_skrub_y"
 
 
-class Constants(enum.Enum):
-    NO_VALUE = enum.auto()
+class Sentinels(enum.Enum):
+    NULL = enum.auto()
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name
+
+
+NULL = Sentinels.NULL
 
 
 def simple_repr(expr):

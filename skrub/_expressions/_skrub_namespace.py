@@ -30,7 +30,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
-from ._utils import Constants, attribute_error
+from ._utils import NULL, attribute_error
 
 
 def _var_values_provided(expr, environment):
@@ -285,7 +285,7 @@ class SkrubNamespace:
         return Expr(IfElse(self._expr, value_if_true, value_if_false))
 
     @check_expr
-    def match(self, targets, default=Constants.NO_VALUE):
+    def match(self, targets, default=NULL):
         """Select based on the value of an expression.
 
         First, ``self`` is evaluated. Then, the result is compared to the keys
@@ -684,7 +684,7 @@ class SkrubNamespace:
 
         for n in nodes(self._expr):
             impl = n._skrub_impl
-            if isinstance(impl, Var) and impl.value is not Constants.NO_VALUE:
+            if isinstance(impl, Var) and impl.value is not NULL:
                 data[impl.name] = impl.value
         return data
 

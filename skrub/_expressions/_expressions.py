@@ -22,7 +22,7 @@ from .._utils import PassThrough, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import get_chosen_or_default
-from ._utils import FITTED_PREDICTOR_METHODS, Constants, _CloudPickle, attribute_error
+from ._utils import FITTED_PREDICTOR_METHODS, NULL, _CloudPickle, attribute_error
 
 __all__ = [
     "var",
@@ -209,7 +209,7 @@ class ExprImpl:
         return textwrap.indent(line, "    ").rstrip("\n")
 
     def preview_if_available(self):
-        return self.results.get("preview", Constants.NO_VALUE)
+        return self.results.get("preview", NULL)
 
     def supports_modes(self):
         return ["preview", "fit_transform", "transform"]
@@ -399,13 +399,13 @@ class Expr:
     def __dir__(self):
         names = ["skb"]
         preview = self._skrub_impl.preview_if_available()
-        if preview is not Constants.NO_VALUE:
+        if preview is not NULL:
             names.extend(dir(preview))
         return names
 
     def _ipython_key_completions_(self):
         preview = self._skrub_impl.preview_if_available()
-        if preview is Constants.NO_VALUE:
+        if preview is NULL:
             return []
         try:
             return preview._ipython_key_completions_()
@@ -427,7 +427,7 @@ class Expr:
     @property
     def __doc__(self):
         preview = self._skrub_impl.preview_if_available()
-        if preview is Constants.NO_VALUE:
+        if preview is NULL:
             attribute_error(self, "__doc__")
         doc = getattr(preview, "__doc__", None)
         if doc is None:
@@ -496,7 +496,7 @@ class Expr:
         ):
             result = re.sub(r"^(<|)", rf"\1{name} | ", result)
         preview = self._skrub_impl.preview_if_available()
-        if preview is Constants.NO_VALUE:
+        if preview is NULL:
             return result
         return f"{result}\nResult:\n―――――――\n{preview!r}"
 
@@ -518,7 +518,7 @@ class Expr:
 
         graph = self.skb.draw_graph().decode("utf-8")
         graph = strip_xml_declaration(graph)
-        if self._skrub_impl.preview_if_available() is Constants.NO_VALUE:
+        if self._skrub_impl.preview_if_available() is NULL:
             return f"<div>{graph}</div>"
         if (name := self._skrub_impl.name) is not None:
             name_line = (
@@ -634,17 +634,14 @@ class Var(ExprImpl):
     def compute(self, e, mode, environment):
         if mode == "preview":
             assert not environment
-            if e.value is Constants.NO_VALUE:
+            if e.value is NULL:
                 raise UninitializedVariable(
                     f"No value value has been provided for {e.name!r}"
                 )
             return e.value
         if e.name in environment:
             return environment[e.name]
-        if (
-            environment.get("_skrub_use_var_values", False)
-            and e.value is not Constants.NO_VALUE
-        ):
+        if environment.get("_skrub_use_var_values", False) and e.value is not NULL:
             return e.value
         raise UninitializedVariable(f"No value has been provided for {e.name!r}")
 
@@ -655,7 +652,7 @@ class Var(ExprImpl):
         return f"<Var {self.name!r}>"
 
 
-def var(name, value=Constants.NO_VALUE):
+def var(name, value=NULL):
     """Create a skrub variable.
 
     Variables represent inputs to a machine-learning pipeline. They can be
@@ -743,7 +740,7 @@ def var(name, value=Constants.NO_VALUE):
     return Expr(Var(name, value=value))
 
 
-def X(value=Constants.NO_VALUE):
+def X(value=NULL):
     """Create a skrub variable and mark it as being ``X``.
 
     This is just a convenient shortcut for::
@@ -787,7 +784,7 @@ def X(value=Constants.NO_VALUE):
     return Expr(Var("X", value=value)).skb.mark_as_X()
 
 
-def y(value=Constants.NO_VALUE):
+def y(value=NULL):
     """Create a skrub variable and mark it as being ``y``.
 
     This is just a convenient shortcut for::
@@ -907,7 +904,7 @@ class Match(ExprImpl):
     _fields = ["query", "targets", "default"]
 
     def has_default(self):
-        return self.default is not Constants.NO_VALUE
+        return self.default is not NULL
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {short_repr(self.query)}>"

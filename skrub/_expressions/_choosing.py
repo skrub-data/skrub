@@ -8,7 +8,7 @@ from scipy import stats
 from sklearn.utils import check_random_state
 
 from .. import _utils
-from ._utils import Constants
+from ._utils import NULL
 
 
 def _with_fields(obj, **fields):
@@ -156,7 +156,7 @@ class Choice(BaseChoice):
             return self.outcomes[self.chosen_outcome_idx]
         return self.default()
 
-    def match(self, outcome_mapping, default=Constants.NO_VALUE):
+    def match(self, outcome_mapping, default=NULL):
         """Select a value depending on the outcome of the choice.
 
         This allows inserting several inter-dependent hyper-parameters in a
@@ -249,10 +249,8 @@ class Choice(BaseChoice):
         >>> learner_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
         {'logistic': 'linear', 'hgb': 'unknown'}
         """  # noqa : E501
-        _check_match_keys(
-            self.outcomes, outcome_mapping.keys(), default is not Constants.NO_VALUE
-        )
-        if default is Constants.NO_VALUE:
+        _check_match_keys(self.outcomes, outcome_mapping.keys(), default is not NULL)
+        if default is NULL:
             complete_mapping = outcome_mapping
         else:
             complete_mapping = {
@@ -279,7 +277,7 @@ class Match:
 
     __hash__ = None
 
-    def match(self, outcome_mapping, default=Constants.NO_VALUE):
+    def match(self, outcome_mapping, default=NULL):
         """Select a value depending on the result of this match.
 
         This allows chaining matches. See the docstring of ``Choice.match`` for
@@ -319,7 +317,7 @@ class Match:
         _check_match_keys(
             self.outcome_mapping.values(),
             outcome_mapping.keys(),
-            default is not Constants.NO_VALUE,
+            default is not NULL,
         )
         mapping = {
             k: outcome_mapping.get(v, default) for k, v in self.outcome_mapping.items()
