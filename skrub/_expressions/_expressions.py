@@ -387,7 +387,7 @@ class Expr:
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
         if isinstance(impl, GetAttr):
-            return Expr(CallMethod(impl.parent, impl.attr_name, args, kwargs))
+            return Expr(CallMethod(impl.source_object, impl.attr_name, args, kwargs))
         return Expr(
             Call(self, args, kwargs, globals={}, closure=(), defaults=(), kwdefaults={})
         )
@@ -914,7 +914,7 @@ class Match(ExprImpl):
 
 
 class FreezeAfterFit(ExprImpl):
-    _fields = ["parent"]
+    _fields = ["target"]
 
     def fields_required_for_eval(self, mode):
         if "fit" in mode or mode == "preview":
@@ -923,7 +923,7 @@ class FreezeAfterFit(ExprImpl):
 
     def compute(self, e, mode, environment):
         if mode == "preview" or "fit" in mode:
-            self.value_ = e.parent
+            self.value_ = e.target
         return self.value_
 
 
@@ -1014,25 +1014,27 @@ class Apply(ExprImpl):
 class AppliedEstimator(ExprImpl):
     "Retrieve the estimator fitted in an apply step"
 
-    _fields = ["parent"]
+    _fields = ["target"]
 
     def compute(self, e, mode, environment):
-        return self.parent._skrub_impl.estimator_
+        return self.target._skrub_impl.estimator_
 
 
 class GetAttr(ExprImpl):
-    _fields = ["parent", "attr_name"]
+    _fields = ["source_object", "attr_name"]
 
     def compute(self, e, mode, environment):
         try:
-            return getattr(e.parent, e.attr_name)
+            return getattr(e.source_object, e.attr_name)
         except AttributeError:
             pass
-        if isinstance(self.parent, Expr) and hasattr(self.parent.skb, e.attr_name):
+        if isinstance(self.source_object, Expr) and hasattr(
+            self.source_object.skb, e.attr_name
+        ):
             comment = f"Did you mean '.skb.{e.attr_name}'?"
         else:
             comment = None
-        attribute_error(e.parent, e.attr_name, comment)
+        attribute_error(e.source_object, e.attr_name, comment)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {short_repr(self.attr_name)}>"
@@ -1042,10 +1044,10 @@ class GetAttr(ExprImpl):
 
 
 class GetItem(ExprImpl):
-    _fields = ["parent", "key"]
+    _fields = ["container", "key"]
 
     def compute(self, e, mode, environment):
-        return e.parent[e.key]
+        return e.container[e.key]
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {short_repr(self.key)}>"
