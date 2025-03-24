@@ -513,13 +513,11 @@ def clear_results(expr, mode=None):
 class _ChoiceGraph(_ExprTraversal):
     def run(self, expr):
         self._choices = {}
-
-        # we don't really care about the values of those dicts but we use dicts
-        # rather than sets to preserve insertion order.
-        self._parents = defaultdict(dict)
-
+        self._parents = defaultdict(list)
         self._current_outcome = [None]
+
         _ = super().run(expr)
+
         short = {choice_id: i for i, choice_id in enumerate(self._choices.keys())}
         self._short_ids = short
         choices = {
@@ -533,7 +531,7 @@ class _ChoiceGraph(_ExprTraversal):
                 choice_id, outcome_idx = outcome_key
                 new_key = short[choice_id], outcome_idx
             new_outcome_parents = [
-                short[parent_id] for parent_id in outcome_parents.keys()
+                short[parent_id] for parent_id in _unique(outcome_parents)
             ]
             parents[new_key] = new_outcome_parents
         # - choices:
@@ -544,7 +542,7 @@ class _ChoiceGraph(_ExprTraversal):
 
     def handle_choice(self, choice):
         # unlike during evaluation here we need pre-ordering
-        self._parents[self._current_outcome[-1]][id(choice)] = choice
+        self._parents[self._current_outcome[-1]].append(id(choice))
         self._choices[id(choice)] = choice
         if not isinstance(choice, _choosing.Choice):
             return choice
