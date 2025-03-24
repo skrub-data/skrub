@@ -302,6 +302,59 @@ def test_multimetric_no_refit(expression, data):
     assert search.results_.shape == (10, 3)
 
 
+@pytest.mark.parametrize("with_y", [False, True])
+def test_train_test_split(with_y):
+    n = skrub.var("n", 8)
+    X = skrub.deferred(list)(skrub.deferred(range)(n)).skb.mark_as_X()
+    y = skrub.deferred(list)(skrub.deferred(range)(n, 2 * n)).skb.mark_as_y()
+    transformed = X[::-1]
+    e = transformed + y if with_y else transformed
+    split = e.skb.train_test_split(shuffle=False)
+    if with_y:
+        assert split == {
+            "train": {
+                "n": 8,
+                "_skrub_X": [0, 1, 2, 3, 4, 5],
+                "_skrub_y": [8, 9, 10, 11, 12, 13],
+            },
+            "test": {"n": 8, "_skrub_X": [6, 7], "_skrub_y": [14, 15]},
+            "X_train": [0, 1, 2, 3, 4, 5],
+            "X_test": [6, 7],
+            "y_train": [8, 9, 10, 11, 12, 13],
+            "y_test": [14, 15],
+        }
+    else:
+        assert split == {
+            "train": {"n": 8, "_skrub_X": [0, 1, 2, 3, 4, 5]},
+            "test": {"n": 8, "_skrub_X": [6, 7]},
+            "X_train": [0, 1, 2, 3, 4, 5],
+            "X_test": [6, 7],
+        }
+    split = e.skb.train_test_split({"n": 4}, shuffle=False)
+    if with_y:
+        assert split == {
+            "train": {"n": 4, "_skrub_X": [0, 1, 2], "_skrub_y": [4, 5, 6]},
+            "test": {"n": 4, "_skrub_X": [3], "_skrub_y": [7]},
+            "X_train": [0, 1, 2],
+            "X_test": [3],
+            "y_train": [4, 5, 6],
+            "y_test": [7],
+        }
+        assert e.skb.eval(split["train"]) == [2, 1, 0, 4, 5, 6]
+        assert e.skb.eval(split["test"]) == [3, 7]
+        assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0, 8, 9, 10, 11, 12, 13, 14, 15]
+    else:
+        assert split == {
+            "train": {"n": 4, "_skrub_X": [0, 1, 2]},
+            "test": {"n": 4, "_skrub_X": [3]},
+            "X_train": [0, 1, 2],
+            "X_test": [3],
+        }
+        assert e.skb.eval(split["train"]) == [2, 1, 0]
+        assert e.skb.eval(split["test"]) == [3]
+        assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
+
+
 #
 # caching
 #

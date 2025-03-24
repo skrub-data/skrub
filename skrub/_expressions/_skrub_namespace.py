@@ -1,10 +1,10 @@
 import typing
 
-from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
-from ._estimator import ExprEstimator, ParamSearch, cross_validate
+from ._estimator import ExprEstimator, ParamSearch, cross_validate, train_test_split
 from ._evaluation import (
     choices,
     clone,
@@ -998,6 +998,78 @@ class SkrubNamespace:
             return estimator
         return estimator.fit(self.get_data())
 
+    def train_test_split(
+        self,
+        environment=None,
+        splitter=model_selection.train_test_split,
+        **splitter_kwargs,
+    ):
+        """Split an environment into a training an testing environments.
+
+        Parameters
+        ----------
+        environment : dict, optional
+            The environment (dict mapping variable names to values) containing the
+            full data. If ``None`` (the default), the data is retrieved from the
+            expression.
+
+        splitter : function, optional
+            The function used to split X and y once they have been computed. By
+            default, ``sklearn.train_test_split`` is used.
+
+        splitter_kwargs
+            Additional named arguments to pass to the splitter.
+
+        Returns
+        -------
+        dict
+            The return value is slightly different than scikit-learn's. Rather than
+            a tuple, it returns a dictionary with the following keys:
+
+            - train: a dictionary containing the training environment
+            - test: a dictionary containing the test environment
+            - X_train: the value of the variable marked with ``skb.mark_as_x()`` in
+              the train environment
+            - X_test: the value of the variable marked with ``skb.mark_as_x()`` in
+              the test environment
+            - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
+              the train environment, if there is one (may not be the case for
+              unsupervised learning).
+            - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
+              the test environment, if there is one (may not be the case for
+              unsupervised learning).
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+        >>> from sklearn.metrics import accuracy_score
+
+        >>> orders = skrub.var("orders", skrub.toy_orders().orders)
+        >>> X = orders.skb.drop("delayed").skb.mark_as_X()
+        >>> y = orders["delayed"].skb.mark_as_y()
+        >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
+        ...     DummyClassifier(), y=y
+        ... )
+
+        >>> split = delayed.skb.train_test_split(random_state=0)
+        >>> split.keys()
+        dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
+        >>> estimator = delayed.skb.get_estimator()
+        >>> estimator.fit(split["train"])
+        ExprEstimator(expr=<Apply DummyClassifier>)
+        >>> estimator.score(split["test"])
+        0.0
+        >>> predictions = estimator.predict(split["test"])
+        >>> accuracy_score(split["y_test"], predictions)
+        0.0
+        """
+        if environment is None:
+            environment = self.get_data()
+        return train_test_split(
+            self._expr, environment, splitter=splitter, **splitter_kwargs
+        )
+
     @check_expr
     def mark_as_X(self):
         """Mark this expression as being the ``X`` table.
@@ -1407,7 +1479,9 @@ class ApplyNamespace(SkrubNamespace):
                     f"of steps for this range: {c}"
                 )
 
-        search = ParamSearch(self.clone(), GridSearchCV(None, None, **kwargs))
+        search = ParamSearch(
+            self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
+        )
         if not fitted:
             return search
         return search.fit(self.get_data())
@@ -1486,7 +1560,9 @@ class ApplyNamespace(SkrubNamespace):
         9             0.50      dummy       NaN   5   NaN
         """  # noqa: E501
 
-        search = ParamSearch(self.clone(), RandomizedSearchCV(None, None, **kwargs))
+        search = ParamSearch(
+            self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
+        )
         if not fitted:
             return search
         return search.fit(self.get_data())

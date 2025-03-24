@@ -239,10 +239,8 @@ def cross_validate(expr_estimator, environment, **cv_params):
     expr_estimator : estimator
         An estimator generated from a skrub expression.
 
-    environment : dict or None
-        Bindings for variables contained in the expression. If not
-        provided, the ``value``s passed when initializing ``var()`` are
-        used.
+    environment : dict
+        Bindings for variables contained in the expression.
 
     cv_params : dict
         All other named arguments are forwarded to
@@ -280,6 +278,92 @@ def cross_validate(expr_estimator, environment, **cv_params):
     if (estimators := result.get("estimator", None)) is None:
         return result
     result["estimator"] = [_to_env_estimator(e) for e in estimators]
+    return result
+
+
+def train_test_split(
+    expr, environment, splitter=model_selection.train_test_split, **splitter_kwargs
+):
+    """Split an environment into a training an testing environments.
+
+    Parameters
+    ----------
+    expr : skrub expression
+        The expression to be evaluated in the environment.
+
+    environment : dict
+        The environment (dict mapping variable names to values) containing the
+        full data.
+
+    splitter : function, optional
+        The function used to split X and y once they have been computed. By
+        default, ``sklearn.train_test_split`` is used.
+
+    splitter_kwargs
+        Additional named arguments to pass to the splitter.
+
+    Returns
+    -------
+    dict
+        The return value is slightly different than scikit-learn's. Rather than
+        a tuple, it returns a dictionary with the following keys:
+
+        - train: a dictionary containing the training environment
+        - test: a dictionary containing the test environment
+        - X_train: the value of the variable marked with ``skb.mark_as_x()`` in
+          the train environment
+        - X_test: the value of the variable marked with ``skb.mark_as_x()`` in
+          the test environment
+        - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
+          the train environment, if there is one (may not be the case for
+          unsupervised learning).
+        - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
+          the test environment, if there is one (may not be the case for
+          unsupervised learning).
+
+    Examples
+    --------
+    >>> import skrub
+    >>> from sklearn.dummy import DummyClassifier
+    >>> from sklearn.metrics import accuracy_score
+
+    >>> orders = skrub.var("orders", skrub.toy_orders().orders)
+    >>> X = orders.skb.drop("delayed").skb.mark_as_X()
+    >>> y = orders["delayed"].skb.mark_as_y()
+    >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
+    ...     DummyClassifier(), y=y
+    ... )
+
+    >>> split = skrub.train_test_split(delayed, delayed.skb.get_data(), random_state=0)
+    >>> split.keys()
+    dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
+    >>> estimator = delayed.skb.get_estimator()
+    >>> estimator.fit(split["train"])
+    ExprEstimator(expr=<Apply DummyClassifier>)
+    >>> estimator.score(split["test"])
+    0.0
+    >>> predictions = estimator.predict(split["test"])
+    >>> accuracy_score(split["y_test"], predictions)
+    0.0
+    """
+    X, y = _compute_Xy(expr, environment)
+    if y is None:
+        X_train, X_test = splitter(X, **splitter_kwargs)
+    else:
+        X_train, X_test, y_train, y_test = splitter(X, y, **splitter_kwargs)
+    train_env = {**environment, X_NAME: X_train}
+    test_env = {**environment, X_NAME: X_test}
+    result = {
+        "train": train_env,
+        "test": test_env,
+        "X_train": X_train,
+        "X_test": X_test,
+    }
+    if y is not None:
+        train_env[Y_NAME] = y_train
+        test_env[Y_NAME] = y_test
+        result["y_train"] = y_train
+        result["y_test"] = y_test
     return result
 
 
