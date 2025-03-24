@@ -456,34 +456,34 @@ def _unique(seq):
 def _simplify_graph(graph):
     short = {v: i for i, v in enumerate(graph["nodes"].keys())}
     new_nodes = {short[k]: v for k, v in graph["nodes"].items()}
-    new_parents = {
-        short[k]: [short[p] for p in _unique(v)] for k, v in graph["parents"].items()
-    }
     new_children = {
         short[k]: [short[c] for c in _unique(v)] for k, v in graph["children"].items()
     }
-    return {"nodes": new_nodes, "parents": new_parents, "children": new_children}
+    new_parents = {
+        short[k]: [short[p] for p in _unique(v)] for k, v in graph["parents"].items()
+    }
+    return {"nodes": new_nodes, "children": new_children, "parents": new_parents}
 
 
 class _Graph(_ExprTraversal):
     def run(self, expr):
         self._nodes = {}
-        self._parents = defaultdict(list)
         self._children = defaultdict(list)
+        self._parents = defaultdict(list)
         self._current_expr = []
         _ = super().run(expr)
         graph = {
             "nodes": self._nodes,
-            "parents": dict(self._parents),
             "children": dict(self._children),
+            "parents": dict(self._parents),
         }
         return _simplify_graph(graph)
 
     def handle_expr(self, expr):
         if self._current_expr:
-            parent, child = id(expr), id(self._current_expr[-1])
-            self._parents[child].append(parent)
+            child, parent = id(expr), id(self._current_expr[-1])
             self._children[parent].append(child)
+            self._parents[child].append(parent)
         self._current_expr.append(expr)
         result = yield from super().handle_expr(expr)
         self._current_expr.pop()
@@ -513,7 +513,7 @@ def clear_results(expr, mode=None):
 class _ChoiceGraph(_ExprTraversal):
     def run(self, expr):
         self._choices = {}
-        self._parents = defaultdict(list)
+        self._children = defaultdict(list)
         self._current_outcome = [None]
 
         _ = super().run(expr)
@@ -523,26 +523,26 @@ class _ChoiceGraph(_ExprTraversal):
         choices = {
             short[choice_id]: choice for choice_id, choice in self._choices.items()
         }
-        parents = {}
-        for outcome_key, outcome_parents in self._parents.items():
+        children = {}
+        for outcome_key, outcome_children in self._children.items():
             if outcome_key is None:
                 new_key = None
             else:
                 choice_id, outcome_idx = outcome_key
                 new_key = short[choice_id], outcome_idx
-            new_outcome_parents = [
-                short[parent_id] for parent_id in _unique(outcome_parents)
+            new_outcome_children = [
+                short[child_id] for child_id in _unique(outcome_children)
             ]
-            parents[new_key] = new_outcome_parents
+            children[new_key] = new_outcome_children
         # - choices:
         #     choice's short id (1, 2, ...) to BaseChoice instance
-        # - parents:
-        #     (choice short id, outcome index) to list of parent choices' short ids
-        return {"choices": choices, "parents": parents}
+        # - children:
+        #     (choice short id, outcome index) to list of child choices' short ids
+        return {"choices": choices, "children": children}
 
     def handle_choice(self, choice):
         # unlike during evaluation here we need pre-ordering
-        self._parents[self._current_outcome[-1]].append(id(choice))
+        self._children[self._current_outcome[-1]].append(id(choice))
         self._choices[id(choice)] = choice
         if not isinstance(choice, _choosing.Choice):
             return choice
@@ -617,25 +617,25 @@ def _expand_grid(graph, grid):
             else:
                 return choice
 
-    def has_parents(choice_id):
+    def has_children(choice_id):
         # if any of the outcomes in a choice contains another choice. in this
         # case it needs to be on a separate subgrid.
         choice = graph["choices"][choice_id]
         if not isinstance(choice, _choosing.Choice):
             return False
         for outcome_idx in choice_range(choice_id):
-            if graph["parents"].get((choice_id, outcome_idx), None):
+            if graph["children"].get((choice_id, outcome_idx), None):
                 return True
         return False
 
     # extract
-    if None not in graph["parents"]:
+    if None not in graph["children"]:
         return [grid]
-    for choice_id in graph["parents"][None]:
-        if not has_parents(choice_id):
+    for choice_id in graph["children"][None]:
+        if not has_children(choice_id):
             grid[choice_id] = choice_range(choice_id)
     # split
-    remaining = [c_id for c_id in graph["parents"][None] if c_id not in grid]
+    remaining = [c_id for c_id in graph["children"][None] if c_id not in grid]
     if not remaining:
         return [grid]
     choice_id = remaining[0]
@@ -643,8 +643,8 @@ def _expand_grid(graph, grid):
     for outcome_idx in choice_range(choice_id):
         new_subgrid = grid.copy()
         graph = graph.copy()
-        graph["parents"][None] = (
-            graph["parents"].get((choice_id, outcome_idx), []) + remaining[1:]
+        graph["children"][None] = (
+            graph["children"].get((choice_id, outcome_idx), []) + remaining[1:]
         )
         new_subgrid[choice_id] = [outcome_idx]
         new_subgrid = _expand_grid(graph, new_subgrid)

@@ -175,15 +175,6 @@ def _do_full_report(
         if isinstance(report, TableReport):
             print(f"Generating report for node {i}")
             report = report.html_snippet()
-        node_parents = g["parents"].get(i, [])
-        node_parents = [
-            {
-                "id": n,
-                "description": _utils.simple_repr(g["nodes"][n]),
-                "url": node_name_to_url(n),
-            }
-            for n in g["parents"].get(i, [])
-        ]
         node_children = [
             {
                 "id": n,
@@ -191,6 +182,14 @@ def _do_full_report(
                 "url": node_name_to_url(n),
             }
             for n in g["children"].get(i, [])
+        ]
+        node_parents = [
+            {
+                "id": n,
+                "description": _utils.simple_repr(g["nodes"][n]),
+                "url": node_name_to_url(n),
+            }
+            for n in g["parents"].get(i, [])
         ]
         if isinstance(node._skrub_impl, Apply):
             estimator = getattr(
@@ -206,8 +205,8 @@ def _do_full_report(
             dict(
                 total_n_nodes=len(g["nodes"]),
                 node_nb=i,
-                node_parents=node_parents,
                 node_children=node_children,
+                node_parents=node_parents,
                 node_repr=_utils.simple_repr(node),
                 report=report,
                 error=error,
@@ -313,9 +312,9 @@ def draw_expr_graph(expr, url=None, direction="TB"):
         kwargs["id"] = _dot_id(node_id)
         node = pydot.Node(_dot_id(node_id), **kwargs)
         dot_graph.add_node(node)
-    for c, parents in g["parents"].items():
-        for p in parents:
-            dot_graph.add_edge(pydot.Edge(_dot_id(p), _dot_id(c)))
+    for c, children in g["children"].items():
+        for child in children:
+            dot_graph.add_edge(pydot.Edge(_dot_id(child), _dot_id(c)))
 
     try:
         svg = dot_graph.create_svg()
