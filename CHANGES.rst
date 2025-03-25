@@ -27,9 +27,19 @@ Changes
 - Optimize the :class:`StringEncoder`: significant memory reduction and 1.5x speed-up.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
+
 - A new parameter ``max_plot_columns`` has been added to the :class:`TableReport` and :func:`patch_display`
   to skip column plots when the number of columns exceeds the specified value.
   :pr:`1255` by :user:`Priscilla Baah<priscilla-b>`.
+
+=======
+Bug fixes
+---------
+
+- The :meth:`TableVectorizer.get_feature_names_out` method now works when used in a
+  scikit-learn pipeline by exposing the `input_features` parameter.
+  :pr:`1258` by :user:`Guillaume Lemaitre <glemaitre>`.
+
 
 Release 0.5.1
 =============
