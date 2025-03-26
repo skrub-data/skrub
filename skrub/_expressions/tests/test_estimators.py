@@ -15,7 +15,7 @@ from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV, cross_validate, train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
@@ -529,7 +529,8 @@ def test_find_fitted_estimator():
         .skb.set_name("predictor")
         .skb.get_estimator()
     )
-    assert estimator.find_fitted_estimator("xyz") is None
+    with pytest.raises(KeyError, match="'xyz'"):
+        estimator.find_fitted_estimator("xyz")
     with pytest.raises(TypeError, match="Node 'X' does not represent"):
         estimator.find_fitted_estimator("X")
     with pytest.raises(ValueError, match="Node 'scaler' has not been fitted"):
@@ -538,6 +539,29 @@ def test_find_fitted_estimator():
     estimator.fit(data)
     assert isinstance(estimator.find_fitted_estimator("scaler"), StandardScaler)
     assert isinstance(estimator.find_fitted_estimator("predictor"), LogisticRegression)
+
+
+def test_sub_estimator():
+    estimator = (
+        skrub.X()
+        .skb.apply(MinMaxScaler())
+        .skb.set_name("scaling")
+        .skb.apply(LogisticRegression(), y=skrub.y())
+        .skb.get_estimator()
+    )
+    X = np.array([10.0, 5.0, 0.0])[:, None]
+    y = np.array([1, 0, 1])
+    estimator.fit({"X": X, "y": y})
+    sub_estimator = estimator.sub_estimator("scaling")
+    assert np.allclose(
+        sub_estimator.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
+    )
+    X = np.array([100.0, 50.0, -10.0])[:, None]
+    assert np.allclose(
+        sub_estimator.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
+    )
+    with pytest.raises(KeyError, match="'xyz'"):
+        estimator.sub_estimator("xyz")
 
 
 #

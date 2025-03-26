@@ -116,7 +116,7 @@ class ExprEstimator(BaseEstimator):
     def find_fitted_estimator(self, name):
         node = find_node_by_name(self.expr, name)
         if node is None:
-            return None
+            raise KeyError(name)
         impl = node._skrub_impl
         if not isinstance(impl, Apply):
             raise TypeError(
@@ -124,11 +124,19 @@ class ExprEstimator(BaseEstimator):
                 f"the application of an estimator: {node!r}"
             )
         if not hasattr(impl, "estimator_"):
-            raise ValueError(
+            raise NotFittedError(
                 f"Node {name!r} has not been fitted. Call fit() on the estimator "
                 "before attempting to retrieve fitted sub-estimators."
             )
         return node._skrub_impl.estimator_
+
+    def sub_estimator(self, name):
+        node = find_node_by_name(self.expr, name)
+        if node is None:
+            raise KeyError(name)
+        new = self.__class__(node)
+        _copy_attr(self, new, ["_is_fitted"])
+        return new
 
 
 def _to_Xy_estimator(estimator, environment):
