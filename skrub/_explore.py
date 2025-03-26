@@ -3,6 +3,7 @@ from pathlib import Path
 
 try:
     import polars as pl
+    import polars.selectors as cs
 
     POLARS_INSTALLED = True
 except ImportError:
@@ -75,11 +76,12 @@ def _get_stats_polars(df):
         "n_columns": df.shape[1],
     }
 
-    object_cols = df.select_dtypes(str).columns
+    # get column types using polars selectors
+    object_cols = df.select(cs.string()).columns
     stats["n_object_columns"] = len(object_cols)
-    float_cols = df.select_dtypes(float).columns
+    float_cols = df.select(cs.float()).columns
     stats["n_float_columns"] = len(float_cols)
-    numerical_cols = df.select_dtypes([float, int]).columns
+    numerical_cols = df.select(cs.numeric()).columns
     stats["n_numerical_columns"] = len(numerical_cols)
 
     return stats
@@ -106,9 +108,11 @@ def handle_csv(path_to_file, engine):
     delimiter = detect_csv_delimiter(path_to_file)
     # try to parse with delimiter
     if engine == "polars":
-        df = pl.read_csv(path_to_file, separator=delimiter)
-
-        statistics = _get_stats_polars(df)
+        try:
+            df = pl.read_csv(path_to_file, separator=delimiter, ignore_errors=True)
+            statistics = _get_stats_polars(df)
+        except pl.exceptions.ComputeError:
+            statistics = {}
     else:
         df = pd.read_csv(path_to_file, delimiter=delimiter)
         statistics = _get_stats_pandas(df)
@@ -117,11 +121,17 @@ def handle_csv(path_to_file, engine):
 
 def handle_parquet(path_to_file, engine):
     if engine == "polars":
-        df = pl.scan_parquet(path_to_file)
-        statistics = _get_stats_polars(df)
+        try:
+            df = pl.read_parquet(path_to_file)
+            statistics = _get_stats_polars(df)
+        except pl.exceptions.ComputeError:
+            statistics = {}
     else:
-        df = pd.read_parquet(path_to_file)
-        statistics = _get_stats_pandas(df)
+        try:
+            df = pd.read_parquet(path_to_file)
+            statistics = _get_stats_pandas(df)
+        except ValueError:
+            statistics = {}
     return statistics
 
 
@@ -132,6 +142,9 @@ def handle_json(path_to_file):
 
 
 def evaluate_file(path_to_file, engine="polars"):
+    if engine == "polars" and not POLARS_INSTALLED:
+        raise RuntimeError("Importing polars failed.")
+
     path_to_file = Path(path_to_file)
     file_info = {
         "is_symlink": False,
@@ -142,6 +155,8 @@ def evaluate_file(path_to_file, engine="polars"):
         "extension": "",
         "binary": False,
         "file_size": 0,
+        "file_stats": {},
+        "failed_parse": False,
     }
 
     file_info["absolute_path"] = str(path_to_file)
@@ -165,9 +180,14 @@ def evaluate_file(path_to_file, engine="polars"):
             file_stats = handle_csv(path_to_file, engine)
         else:
             # extension is not recognized, do something
-            file_stats = ""
+            file_stats = {}
 
         file_info["file_stats"] = file_stats
+        if not file_stats:
+            file_info["failed_parse"] = True
+        else:
+            file_info["failed_parse"] = False
+
     return file_info
 
 
