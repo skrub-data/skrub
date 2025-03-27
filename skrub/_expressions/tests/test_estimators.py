@@ -20,6 +20,7 @@ from sklearn.utils.validation import check_is_fitted
 
 import skrub
 from skrub._expressions._estimator import _SharedDict
+from skrub._expressions._inspection import _has_graphviz
 
 #
 # testing utils
@@ -433,6 +434,7 @@ def test_shared_dict():
 
 
 def test_plot_results():
+    pytest.importorskip("plotly")
     expr, data = get_expression_and_data("simple")
     search = expr.skb.get_randomized_search(n_iter=2, cv=2, random_state=0)
     with pytest.raises(NotFittedError):
@@ -451,6 +453,7 @@ def test_plot_results():
         assert (fig is None) == (not plotly_installed)
 
 
+@pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     expr, data = get_expression_and_data("simple")
     est = expr.skb.get_estimator()

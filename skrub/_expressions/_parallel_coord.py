@@ -7,7 +7,10 @@ DEFAULT_COLORSCALE = "bluered"
 
 
 def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
-    import plotly.graph_objects as go
+    try:
+        import plotly.graph_objects as go
+    except ImportError:
+        raise ImportError("Please install plotly to display parallel coordinate plots.")
 
     return go.Figure(
         data=go.Parcoords(

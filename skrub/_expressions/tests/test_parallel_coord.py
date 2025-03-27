@@ -22,8 +22,10 @@ def test_parallel_coord():
     search = pred.skb.get_randomized_search(random_state=0, n_iter=30).fit(
         {"X": X_a, "y": y_a}
     )
-    fig = search.plot_results()
+
     pytest.importorskip("plotly")
+
+    fig = search.plot_results()
     data = iter(fig.data[0]["dimensions"])
     dim = next(data)
     assert dim["label"] == "score"

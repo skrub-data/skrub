@@ -12,6 +12,7 @@ from skrub import datasets
 from skrub._expressions import _inspection
 
 
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_output_dir(tmp_path):
     e = skrub.X()
     assert e.skb.full_report(open=False)["report_path"].is_relative_to(
@@ -31,6 +32,7 @@ def test_output_dir(tmp_path):
     )
 
 
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_full_report():
     # smoke test for the full report
     # TODO we should have a private function that returns the JSON data so we
@@ -56,6 +58,7 @@ def test_full_report():
     assert "This step did not run" in (out / "node_4.html").read_text("utf-8")
 
 
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_full_report_failed_apply():
     # Somewhat contrived example for the corner case where an Apply does not
     # have an easily identifiable estimator.
@@ -73,6 +76,7 @@ def test_full_report_failed_apply():
     assert report["error"] is not None
 
 
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_full_report_open(monkeypatch):
     mock = Mock()
     monkeypatch.setattr(webbrowser, "open", mock)
@@ -80,6 +84,7 @@ def test_full_report_open(monkeypatch):
     mock.assert_called_once()
 
 
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_draw_graph():
     assert b"<svg" in skrub.as_expr(0).skb.draw_graph().svg
     assert "<svg" in skrub.as_expr(0).skb.draw_graph()._repr_html_()
@@ -106,6 +111,7 @@ def test_no_graphviz(monkeypatch):
         skrub.as_expr(0).skb.draw_graph()
 
 
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_draw_graph_open(monkeypatch):
     mock = Mock()
     monkeypatch.setattr(_inspection, "open_in_browser", mock)
