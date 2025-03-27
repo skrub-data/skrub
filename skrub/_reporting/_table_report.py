@@ -151,6 +151,11 @@ class TableReport:
         )
 
     def get_summary(self):
+        """Get the report data in a dictionary format.
+
+        Returns:
+            dict: The dictionary data.
+        """
         if self.max_plot_columns is None:
             summary = self._summary_with_plots
         elif self.max_plot_columns >= sbd.shape(self.dataframe)[1]:
