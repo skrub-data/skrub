@@ -81,7 +81,7 @@ def test_full_report_open(monkeypatch):
 
 
 def test_draw_graph():
-    assert b"<svg" in skrub.as_expr(0).skb.draw_graph()
+    assert b"<svg" in skrub.as_expr(0).skb.draw_graph().svg
     assert "<svg" in skrub.as_expr(0).skb.draw_graph()._repr_html_()
 
 
@@ -95,15 +95,15 @@ def test_no_pydot(monkeypatch):
         return builtin_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", _import)
-    with pytest.warns(UserWarning, match="Please install"):
-        assert b"Please install" in skrub.as_expr(0).skb.draw_graph()
+    with pytest.raises(ImportError, match="Please install pydot"):
+        skrub.as_expr(0).skb.draw_graph()
 
 
 def test_no_graphviz(monkeypatch):
     pydot = pytest.importorskip("pydot")
     monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
-    with pytest.warns(UserWarning, match="Please install"):
-        assert b"Please install" in skrub.as_expr(0).skb.draw_graph()
+    with pytest.raises(ImportError, match="Please install pydot and graphviz"):
+        skrub.as_expr(0).skb.draw_graph()
 
 
 def test_draw_graph_open(monkeypatch):

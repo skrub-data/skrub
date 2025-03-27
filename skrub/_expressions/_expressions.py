@@ -516,8 +516,13 @@ class Expr:
     def _repr_html_(self):
         from ._inspection import node_report
 
-        graph = self.skb.draw_graph().decode("utf-8")
-        graph = strip_xml_declaration(graph)
+        try:
+            graph = self.skb.draw_graph().svg.decode("utf-8")
+            graph = strip_xml_declaration(graph)
+        except Exception:
+            graph = (
+                "Please install Pydot and GraphViz to display the computation graph."
+            )
         if self._skrub_impl.preview_if_available() is NULL:
             return f"<div>{graph}</div>"
         if (name := self._skrub_impl.name) is not None:

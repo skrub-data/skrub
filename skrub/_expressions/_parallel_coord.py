@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
@@ -9,11 +7,8 @@ DEFAULT_COLORSCALE = "bluered"
 
 
 def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
-    try:
-        import plotly.graph_objects as go
-    except ImportError:
-        warnings.warn("Please install plotly to display parallel coordinate plots.")
-        return None
+    import plotly.graph_objects as go
+
     return go.Figure(
         data=go.Parcoords(
             **get_parallel_coord_data(

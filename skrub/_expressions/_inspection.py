@@ -3,7 +3,6 @@ import html
 import io
 import re
 import shutil
-import warnings
 import webbrowser
 from pathlib import Path
 
@@ -135,6 +134,7 @@ def _do_full_report(
     output_dir=None,
     overwrite=False,
 ):
+    _check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
         # TODO dump report in callback instead of evaluating full expression
@@ -154,7 +154,7 @@ def _do_full_report(
     def make_url(node):
         return node_name_to_url(node_rindex[id(node)])
 
-    svg = draw_expr_graph(expr, url=make_url).decode("utf-8")
+    svg = draw_expr_graph(expr, url=make_url).svg.decode("utf-8")
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
         {"svg": svg, "node_status": node_status}
@@ -231,14 +231,32 @@ def _do_full_report(
     return output
 
 
-class _SVG(bytes):
+class GraphDrawing:
+    def __init__(self, graph):
+        self.graph = graph
+
+    @property
+    def svg(self):
+        svg = self.graph.create_svg()
+        return re.sub(b"<title>.*?</title>", b"", svg)
+
+    @property
+    def png(self):
+        return self.graph.create_png()
+
     def _repr_html_(self):
-        return self.decode("utf-8")
+        return self.svg.decode("utf-8")
 
     def open(self):
         open_in_browser(
-            _get_template("graph.html").render({"svg": self.decode("utf-8")})
+            _get_template("graph.html").render({"svg": self.svg.decode("utf-8")})
         )
+
+    def _repr_png_(self):
+        return self.png
+
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: use .open() to display>"
 
 
 def _node_kwargs(expr, url=None):
@@ -283,27 +301,30 @@ def _dot_id(n):
     return f"node_{n}"
 
 
-def _svg_error_message():
-    warnings.warn("Please install graphviz and pydot to display computation graphs.")
-    svg = """
-<svg width="350" height="80" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="white" />
-  <text x="10" y="30" font-family="sans-serif" font-size="20" fill="black">
-    Please install graphviz and pydot
-    <tspan x="10" dy="25">to display the computation graph.</tspan>
-  </text>
-</svg>
-    """.encode("utf-8")
-    return _SVG(svg)
+def _has_graphviz():
+    try:
+        import pydot
+
+        g = pydot.Dot()
+        g.add_node(pydot.Node("node 0"))
+        g.create_svg()
+        return True
+    except Exception:
+        return False
+
+
+def _check_graphviz():
+    if _has_graphviz():
+        return
+    raise ImportError("Please install pydot and graphviz to draw expression graphs.")
 
 
 def draw_expr_graph(expr, url=None, direction="TB"):
     # TODO if pydot or graphviz not available fallback on some other plotting
     # solution eg a vendored copy of mermaid? outputting html instead of svg
-    try:
-        import pydot
-    except ImportError:
-        return _svg_error_message()
+    _check_graphviz()
+
+    import pydot
 
     g = graph(expr)
     dot_graph = pydot.Dot(rankdir=direction)
@@ -316,12 +337,7 @@ def draw_expr_graph(expr, url=None, direction="TB"):
         for child in children:
             dot_graph.add_edge(pydot.Edge(_dot_id(child), _dot_id(c)))
 
-    try:
-        svg = dot_graph.create_svg()
-    except Exception:
-        return _svg_error_message()
-    svg = re.sub(b"<title>.*?</title>", b"", svg)
-    return _SVG(svg)
+    return GraphDrawing(dot_graph)
 
 
 def describe_param_grid(expr):
