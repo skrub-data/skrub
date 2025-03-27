@@ -58,8 +58,8 @@
     --color-background-highlight-primary: #d6f5d6;
     --color-background-active: #ffffaa;
     --color-background-info: #0f4e9b;
-    --color-background-card: #fffdfa;
-    --color-background-card-header: #ffebc5;
+    --color-background-card: #fcfffc;
+    --color-background-card-header: #d6f5d6;
 
     /* buttons */
     --color-background-button-primary: #e0e0e0;
@@ -82,7 +82,7 @@
     /* borders */
     --color-border-primary: #aaa;
     --color-border-secondary: #bfbfbf;
-    --color-border-highlight: #9fce9f;
+    --color-border-card: #9fce9f;
 
     /* shadows */
     --color-shadow: hsl(0, 0%, 63%);
@@ -96,10 +96,10 @@
     --color-background-tertiary: #2b2b2b;
     --color-background-quaternary: #353535;
     --color-background-highlight-primary: #512ca4;
-    --color-background-active: #2a9d8f;
+    --color-background-active: #1A6154;
     --color-background-info: #0f4e9b;
-    --color-background-card: #2a2238;
-    --color-background-card-header: #483b60;
+    --color-background-card-header: #392662;
+    --color-background-card: #2c2833;
 
     /* buttons */
     --color-background-button-primary: #212121;
@@ -112,17 +112,17 @@
     /* texts */
     --color-text-primary: white;
     --color-text-secondary: #d4d4d4;
-    --color-text-success: #2a9d8f;
+    --color-text-success: #6ED8CC;
     --color-text-info: white;
-    --color-text-warning: #e76f51;
-    --color-text-critical: #e63946;
+    --color-text-warning: #E8B254;
+    --color-text-critical: #F4A4A4;
     --color-text-link: #8c8cff;
     --color-text-visited: #ffadff;
 
     /* borders */
     --color-border-primary: #666;
     --color-border-secondary: #444;
-    --color-border-highlight: #264653;
+    --color-border-card: #6549a1;
 
     /* shadows */
     --color-shadow: #0f0f0f;

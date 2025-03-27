@@ -31,7 +31,7 @@
     margin: var(--spacing-l);
     border-radius: var(--radius);
     min-width: min-content;
-    border: 1px solid var(--color-border-secondary);
+    border: 1px solid var(--color-border-card);
     background-color: var(--color-background-card);
 }
 
@@ -46,7 +46,7 @@
     padding: var(--spacing-m);
     margin-block-end: var(--spacing-m);
     background-color: var(--color-background-card-header);
-    border-block-end: var(--border-s) solid var(--color-border-secondary);
+    border-block-end: var(--border-s) solid var(--color-border-card);
 }
 
 .card-header > * {
@@ -110,15 +110,9 @@
 
 .columns-in-sample-tab .card-header {
     position: relative;
-    background-color: var(--color-background-highlight-primary);
-    border-block-end: var(--border-s) solid var(--color-border-highlight);
     padding-right: calc(var(--button-size-s) + var(--spacing-m));
 }
 
-.columns-in-sample-tab .card {
-    border-color: var(--color-border-highlight);
-    background-color: color-mix( in srgb, var(--color-background-highlight-primary), var(--color-background-primary) );
-}
 
 /* Button for closing the card / deselecting the column in the table */
 
