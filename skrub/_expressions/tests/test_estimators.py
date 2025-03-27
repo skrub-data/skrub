@@ -614,3 +614,22 @@ def test_classes():
         assert not hasattr(Xy_est, "classes_")
         Xy_est.fit(data["X"], data["y"])
         assert (Xy_est.classes_ == logreg.classes_).all()
+
+
+def test_support_modes():
+    _, data = get_expression_and_data("simple")
+    choice = skrub.choose_from(["dummy", "logistic"], name="c")
+    classif = choice.match(
+        {"dummy": DummyClassifier(), "logistic": LogisticRegression()}
+    )
+    e = skrub.X().skb.apply(classif, y=skrub.y())
+    estimator = e.skb.get_estimator()
+
+    # as in grid-search, before fitting the estimator's capabilities are read
+    # from the default estimator and after fitting from the fitted estimator
+    assert hasattr(estimator, "predict")
+    assert hasattr(estimator, "predict_proba")
+    assert not hasattr(estimator, "decision_function")
+    estimator.fit(data | {"c": "logistic"})
+    assert hasattr(estimator, "decision_function")
+    assert estimator.decision_function(data).shape == data["y"].shape

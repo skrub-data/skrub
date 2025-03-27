@@ -938,8 +938,10 @@ class Apply(ExprImpl):
     _fields = ["estimator", "cols", "X", "y", "how", "allow_reject"]
 
     def fields_required_for_eval(self, mode):
-        if "fit" in mode or mode in ["score", "preview"]:
+        if "fit" in mode or mode == "preview":
             return self._fields
+        if mode == "score":
+            return ["X", "y"]
         return ["X"]
 
     def compute(self, e, mode, environment):
@@ -988,9 +990,13 @@ class Apply(ExprImpl):
 
     def supports_modes(self):
         modes = ["preview", "fit_transform", "transform"]
+        try:
+            estimator = self.estimator_
+        except AttributeError:
+            estimator = get_chosen_or_default(self.estimator)
         for name in FITTED_PREDICTOR_METHODS:
             # TODO forbid estimator being lazy?
-            if hasattr(get_chosen_or_default(self.estimator), name):
+            if hasattr(estimator, name):
                 modes.append(name)
         return modes
 
