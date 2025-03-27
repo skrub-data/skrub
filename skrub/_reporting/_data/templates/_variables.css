@@ -24,6 +24,7 @@
         Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
 
     /* buttons */
+    --button-size-xs: calc(1.6 * var(--base-size));
     --button-size-s: calc(1.8 * var(--base-size));
     --button-size-m: calc(2.0 * var(--base-size));
 
@@ -66,6 +67,7 @@
     --color-background-button-secondary: transparent;
     --color-background-button-secondary-hover: #84e184;
     --color-background-button-secondary-active: #eafaea;
+    --color-background-button-tertiary-hover: #0c3e7c;
 
     /* texts */
     --color-text-primary: black;
@@ -104,6 +106,7 @@
     --color-background-button-secondary: transparent;
     --color-background-button-secondary-hover: #457b9d;
     --color-background-button-secondary-active: #1d3557;
+    --color-background-button-tertiary-hover: #0c3e7c;
 
     /* texts */
     --color-text-primary: white;

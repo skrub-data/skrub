@@ -300,3 +300,40 @@ dd {
     padding: var(--spacing-m);
     border-radius: var(--radius);
 }
+
+.alert-info-dismissable {
+    position: relative;
+    padding: var(--spacing-m);
+    background-color: var(--color-background-info);
+    border-color: var(--color-border-info);
+    color: var(--color-text-info);
+    border-radius: var(--radius);
+    margin-bottom: var(--spacing-m);
+}
+
+.alert-dismiss-button {
+    height: var(--button-size-xs);
+    width: var(--button-size-xs);
+
+    padding: var(--spacing-s);
+    border: none;
+    border-radius: var(--radius);
+    background-color: var(--color-background-button-secondary);
+
+    transition: background-color var(--animation-duration)
+        var(--animation-easing);
+}
+
+.alert-dismiss-button:hover {
+    background-color: var(--color-background-button-tertiary-hover);
+}
+
+.alert-dismiss-button:active {
+    background-color: var(--color-background-button-secondary-active);
+}
+
+.alert-dismiss-button svg {
+    fill: var(--color-text-info);
+    stroke: var(--color-text-info);
+    stroke-width: var(--border-s);
+}

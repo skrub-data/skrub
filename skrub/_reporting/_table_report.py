@@ -158,6 +158,13 @@ class TableReport:
         else:
             summary = self._summary_without_plots
 
+        # Add a flag to indicate if the plots were automatically skipped because
+        # there are too many columns
+        # Will be accessed in the HTML template to display a message to the user
+        summary["plots_auto_skipped"] = (
+            summary["plots_skipped"] and self.max_plot_columns == 30
+        )
+
         return summary
 
     def html(self):
