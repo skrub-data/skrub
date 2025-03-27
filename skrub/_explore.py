@@ -104,7 +104,7 @@ def _detect_csv_delimiter(path_to_file):
         sniffer = csv.Sniffer()
 
         try:
-            delimiter = sniffer.sniff(sample).delimiter
+            delimiter = sniffer.sniff(sample, delimiters=list(",;^|\t")).delimiter
             return delimiter
         except csv.Error:
             print("Could not detect the delimiter automatically.")
@@ -112,7 +112,7 @@ def _detect_csv_delimiter(path_to_file):
             return None
 
 
-def test_parse_csv(path_to_file, engine):
+def try_parse_csv(path_to_file, engine):
     # sniff delimiter
     delimiter = _detect_csv_delimiter(path_to_file)
     # try to parse with delimiter
@@ -132,7 +132,7 @@ def test_parse_csv(path_to_file, engine):
     return parse_status
 
 
-def test_parse_parquet(path_to_file, engine):
+def try_parse_parquet(path_to_file, engine):
     if engine == "polars":
         try:
             _ = pl.read_parquet(path_to_file)
@@ -221,9 +221,9 @@ def evaluate_file(path_to_file, engine="polars"):
 
         if ext == ".parquet":
             # handle parquet
-            parse_status = test_parse_parquet(path_to_file, engine)
+            parse_status = try_parse_parquet(path_to_file, engine)
         elif ext == ".csv":
-            parse_status = test_parse_csv(path_to_file, engine)
+            parse_status = try_parse_csv(path_to_file, engine)
         else:
             parse_status = ParseStatus.FAILED
 
