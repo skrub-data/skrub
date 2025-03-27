@@ -237,12 +237,12 @@ class GraphDrawing:
 
     @property
     def svg(self):
-        svg = self.graph.create_svg()
+        svg = self.graph.create_svg(encoding="utf-8")
         return re.sub(b"<title>.*?</title>", b"", svg)
 
     @property
     def png(self):
-        return self.graph.create_png()
+        return self.graph.create_png(encoding="utf-8")
 
     def _repr_html_(self):
         return self.svg.decode("utf-8")

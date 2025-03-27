@@ -68,6 +68,7 @@ lint = [
 optional = [
     "pyarrow",
     "polars",
+    "plotly",
 ]
 transformers = [
     "sentence-transformers",
@@ -125,6 +126,7 @@ pre-commit = "*"
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
 polars = "*"
+plotly = "*"
 
 [tool.pixi.feature.transformers]
 # pytorch is not anymore released on osx-64 platform
@@ -162,6 +164,7 @@ requests = "==2.25.0"
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
 polars = "==0.20.15"
+plotly = "*"
 
 [tool.pixi.feature.py309.dependencies]
 python = "~=3.9.0"
