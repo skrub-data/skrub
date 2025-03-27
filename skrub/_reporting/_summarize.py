@@ -105,6 +105,7 @@ def summarize_dataframe(
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
+    summary["plots_skipped"] = all(not c["plot_names"] for c in summary["columns"])
     if n_rows and n_columns:
         _add_associations(df, summary)
     else:

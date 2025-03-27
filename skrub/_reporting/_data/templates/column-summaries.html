@@ -20,7 +20,19 @@
         <button type="button" data-test="select-all-columns" data-manager="SelectAllVisibleColumns">Select all</button>
         <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
     </div>
-    <div class="column-summary-group">
+
+    {% if summary.plots_auto_skipped %}
+    <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between"
+        data-manager="AlertDismissable">
+        <div class="alert-content shrinkable-text">
+            Plotting was skipped because the dataframe has many columns.
+            See TableReport's <code>max_plot_columns</code> parameter.
+        </div>
+        {{buttons.dismissbutton()}}
+    </div>
+    {% endif %}
+
+    <div class="column-summary-group flex">
         {% for column in summary.columns %}
         {% set col_id="col_{}".format(column["idx"]) %}
         {% include "column-summary.html" %}
