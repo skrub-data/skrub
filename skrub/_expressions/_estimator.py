@@ -234,6 +234,72 @@ class ExprEstimator(BaseEstimator):
         return node._skrub_impl.estimator_
 
     def sub_estimator(self, name):
+        """Extract the part of the pipeline that leads up to the given step.
+
+        This is similar to slicing a scikit-learn pipeline. It can be useful
+        for example to drive the hyperparameter selection with a supervised
+        task but then extract only the part of the pipeline that performs
+        feature extraction.
+
+        The target step must have been given a name with ``.skb.set_name()``.
+
+        Parameters
+        ----------
+        name : str
+            The name of the intermediate step we want to extract.
+
+        Returns
+        -------
+        ExprEstimator
+            An estimator that performs all the transformations leading up to
+            (and including) the required step.
+
+        Examples
+        --------
+        >>> from sklearn.dummy import DummyClassifier
+        >>> import skrub
+
+        >>> orders = skrub.toy_orders()
+        >>> X, y = skrub.X(), skrub.y()
+        >>> pred = (
+        ...     X.skb.apply(
+        ...         skrub.TableVectorizer(datetime=skrub.DatetimeEncoder(add_total_seconds=False))
+        ...     )
+        ...     .skb.set_name("vectorizer")
+        ...     .skb.apply(DummyClassifier(), y=y)
+        ... )
+        >>> estimator = pred.skb.get_estimator()
+        >>> estimator.fit({"X": orders.X, "y": orders.y})
+        ExprEstimator(expr=<Apply DummyClassifier>)
+        >>> estimator.predict({"X": orders.X})
+        array([False, False, False, False])
+
+        Truncate the pipeline after vectorization:
+
+        >>> vectorizer = estimator.sub_estimator("vectorizer")
+        >>> vectorizer
+        ExprEstimator(expr=<vectorizer | Apply TableVectorizer>)
+        >>> vectorizer.transform({"X": orders.X})
+            ID  product_cup  product_pen  ...  date_year  date_month  date_day
+        0  1.0          0.0          1.0  ...     2020.0         4.0       3.0
+        1  2.0          1.0          0.0  ...     2020.0         4.0       4.0
+        2  3.0          1.0          0.0  ...     2020.0         4.0       4.0
+        3  4.0          0.0          0.0  ...     2020.0         4.0       5.0
+
+        Note this differs from ``find_fitted_estimator`` which extracts the inner
+        scikit-learn estimator that has been fitted inside of a single step.
+
+        This contains the full transformation up to the given step:
+
+        >>> estimator.sub_estimator("vectorizer")
+        ExprEstimator(expr=<vectorizer | Apply TableVectorizer>)
+
+        This contains only the inner ``TableVectorizer`` that was fitted inside of the
+        ``"vectorizer"`` step:
+
+        >>> estimator.find_fitted_estimator("vectorizer")
+        OnSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
+        """  # noqa: E501
         node = find_node_by_name(self.expr, name)
         if node is None:
             raise KeyError(name)
