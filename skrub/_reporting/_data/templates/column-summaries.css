@@ -4,35 +4,17 @@
 /* Collection of column summary cards (as shown in the "column summaries" tab) */
 /* --------------------------------------------------------------------------- */
 
+/* The cards next to each other and horizontal scrolling. */
 .column-summary-group {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
     gap: var(--spacing-l);
-    min-width: min-content;
-    max-width: max-content;
-}
-
-/* Increase the gap between buttons & columns to make it clearer the buttons are
-   associated with the bar above them. */
-.column-selection-buttons + .column-summary-group {
-    margin-top: var(--spacing-l);
+    width: max-content;
 }
 
 .column-summary-group > .card {
     margin: 0;
-}
-
-/* On small screens, the cards are on top of each other and all have the
-   same width. On wide screens, the cards can be next to
-   each other and wrap horizontally. */
-
-@media screen and (min-width: 60rem) {
-    .column-summary-group {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: var(--spacing-l);
-    }
 }
 
 /* Individual column summary cards */
@@ -43,7 +25,8 @@
     margin: var(--spacing-l);
     border-radius: var(--radius);
     min-width: min-content;
-    border: 1px solid var(--color-border-secondary);
+    border: 1px solid var(--color-border-card);
+    background-color: var(--color-background-card);
 }
 
 .card-header {
@@ -56,8 +39,8 @@
 
     padding: var(--spacing-m);
     margin-block-end: var(--spacing-m);
-    background-color: var(--color-background-tertiary);
-    border-block-end: var(--border-s) solid var(--color-border-secondary);
+    background-color: var(--color-background-card-header);
+    border-block-end: var(--border-s) solid var(--color-border-card);
 }
 
 .card-header > * {
@@ -121,14 +104,9 @@
 
 .columns-in-sample-tab .card-header {
     position: relative;
-    background-color: var(--color-background-highlight-primary);
-    border-block-end: var(--border-s) solid var(--color-border-highlight);
     padding-right: calc(var(--button-size-s) + var(--spacing-m));
 }
 
-.columns-in-sample-tab .card {
-    border-color: var(--color-border-highlight);
-}
 
 /* Button for closing the card / deselecting the column in the table */
 
