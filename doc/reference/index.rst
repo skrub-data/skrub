@@ -91,6 +91,30 @@ Building a pipeline
 
    tabular_learner
 
+.. _expressions_ref:
+
+Powerful and interactive pipelines with skrub expressions
+=========================================================
+
+.. autosummary::
+   :toctree: generated/
+   :template: base.rst
+   :nosignatures:
+
+   var
+   X
+   y
+   as_expr
+   deferred
+   cross_validate
+   train_test_split
+   eval_mode
+   choose_bool
+   choose_float
+   choose_from
+   choose_int
+   optional
+
 
 .. _generating_a_report_ref:
 

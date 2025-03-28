@@ -5,6 +5,7 @@ import pytest
 import requests
 from pandas.testing import assert_frame_equal, assert_series_equal
 
+import skrub.datasets
 from skrub.datasets import _fetching, _utils
 
 
@@ -36,6 +37,19 @@ def test_fetching(monkeypatch, dataset_name):
         else:
             assert_frame_equal(bunch.y, local_bunch.y)
     assert bunch["metadata"] == local_bunch["metadata"]
+
+
+def test_fetch_credit_fraud():
+    data = skrub.datasets.fetch_credit_fraud()
+    assert data.baskets.shape == (61241, 2)
+    data = skrub.datasets.fetch_credit_fraud(split="train")
+    assert data.baskets.shape == (61241, 2)
+    data = skrub.datasets.fetch_credit_fraud(split="test")
+    assert data.baskets.shape == (31549, 2)
+    data = skrub.datasets.fetch_credit_fraud(split="all")
+    assert data.baskets.shape == (92790, 2)
+    with pytest.raises(ValueError, match=".*got: None"):
+        skrub.datasets.fetch_credit_fraud(split=None)
 
 
 def test_fetching_wrong_checksum(monkeypatch):
