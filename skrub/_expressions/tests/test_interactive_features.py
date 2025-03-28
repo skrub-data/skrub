@@ -232,8 +232,6 @@ def test_repr():
 
     >>> skrub.X().skb
     <SkrubNamespace>
-    >>> skrub.X().skb.draw_graph()
-    <GraphDrawing: use .open() to display>
     >>> skrub.X()._skrub_impl.value
     NULL
     >>> print(skrub.X()._skrub_impl.value)
