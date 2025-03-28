@@ -5,6 +5,33 @@ from sklearn.dummy import DummyClassifier
 import skrub
 
 
+def _has_plotly():
+    try:
+        import plotly  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+def test_no_plotly():
+    if _has_plotly():
+        return
+
+    X_a, y_a = make_classification(n_samples=20, n_features=4, n_informative=2)
+    X, y = skrub.X(X_a), skrub.y(y_a)
+    pred = X.skb.apply(
+        DummyClassifier(
+            **skrub.choose_from(["most_frequent", "prior"], name="strategy")
+        ),
+        y=y,
+    )
+    search = pred.skb.get_randomized_search(fitted=True)
+    assert search.results_.shape == (2, 2)
+    with pytest.raises(ImportError, match="Please install plotly"):
+        search.plot_results()
+
+
 def test_parallel_coord():
     X_a, y_a = make_classification(n_samples=20, n_features=4, n_informative=2)
     c0 = skrub.choose_from({"a": 0, "b": 1}, name="c0")

@@ -86,8 +86,12 @@ def test_full_report_open(monkeypatch):
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_draw_graph():
-    assert b"<svg" in skrub.as_expr(0).skb.draw_graph().svg
-    assert "<svg" in skrub.as_expr(0).skb.draw_graph()._repr_html_()
+    g = skrub.as_expr(0).skb.draw_graph()
+    assert repr(g) == "<GraphDrawing: use .open() to display>"
+    assert b"<svg" in g.svg
+    assert "<svg" in g._repr_html_()
+    assert g.png.startswith(b"\x89PNG")
+    assert g._repr_png_().startswith(b"\x89PNG")
 
 
 def test_no_pydot(monkeypatch):
