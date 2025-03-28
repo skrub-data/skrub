@@ -706,6 +706,7 @@ def var(name, value=NULL):
     16
 
     And also to keys to the inputs to the pipeline:
+
     >>> estimator = c.skb.get_estimator()
     >>> estimator.fit_transform({'a': 5, 'b': 4})
     9
@@ -733,7 +734,7 @@ def var(name, value=NULL):
     5
 
     But we can still override them. And inputs must be provided explicitly when
-    using the estimator returned by `.skb.get_estimator()`.
+    using the estimator returned by ``.skb.get_estimator()``.
 
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
@@ -1425,11 +1426,11 @@ def eval_mode():
 
     This can be:
 
-      - 'preview': when the previews are being eagerly computed when the
-        expression is defined or when we call ``.skb.eval()`` without
-        arguments.
-      - otherwise, the method we called on the estimator such as ``'predict'``
-        or ``'fit_transform'``.
+    - 'preview': when the previews are being eagerly computed when the
+      expression is defined or when we call ``.skb.eval()`` without
+      arguments.
+    - otherwise, the method we called on the estimator such as ``'predict'``
+      or ``'fit_transform'``.
 
     Examples
     --------
