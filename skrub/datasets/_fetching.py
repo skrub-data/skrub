@@ -200,6 +200,10 @@ def fetch_credit_fraud(data_home=None, split="train"):
           baskets
         - metadata : a dictionary containing the name, description, source and target
     """
+    if split not in ["train", "test", "all"]:
+        raise ValueError(
+            f"`split` must be one of ['train', 'test', 'all'], got: {split!r}."
+        )
     dataset = load_dataset_files("credit_fraud", data_home)
     #  obtained by a quantile: dataset.baskets['ID'].quantile(.66)
     id_split = 76543  # noqa
@@ -209,8 +213,6 @@ def fetch_credit_fraud(data_home=None, split="train"):
     elif split == "test":
         dataset["baskets"] = dataset["baskets"].query("ID > @id_split")
         dataset["products"] = dataset["products"].query("basket_ID > @id_split")
-    else:
-        assert split == "all", split
     return dataset
 
 
