@@ -13,12 +13,6 @@
     width: max-content;
 }
 
-/* Increase the gap between buttons & columns to make it clearer the buttons are
-   associated with the bar above them. */
-.column-selection-buttons + .column-summary-group {
-    margin-top: var(--spacing-l);
-}
-
 .column-summary-group > .card {
     margin: 0;
 }
