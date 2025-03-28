@@ -127,7 +127,7 @@ transformed_df
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import OneHotEncoder
 
-X = loans[["total_requested", "type"]].skb.mark_as_x()
+X = loans[["total_requested", "type"]].skb.mark_as_X()
 y = loans["is_accepted"].skb.mark_as_y()
 
 loans_preprocessed = X.skb.apply(
@@ -173,7 +173,7 @@ prediction.skb.draw_graph()
 # We can cross-validate and run hyper-parameter tuning via:
 
 randomized_search_cv = prediction.skb.get_randomized_search(cv=2, n_iter=2, fitted=True)
-randomized_search_cv.get_cv_results_table()
+randomized_search_cv.results_
 
 # %%
 # We can even run nested cross-validation on grid-search to avoid getting
