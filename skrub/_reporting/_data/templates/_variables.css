@@ -86,7 +86,7 @@
 
     /* shadows */
     --color-shadow: hsl(0, 0%, 63%);
-    --color-shadow-keyboard: rgb(255, 255, 255, 0.5);
+    --color-shadow-keyboard: var(--color-border-secondary);
 }
 
 #report.dark {
@@ -126,5 +126,5 @@
 
     /* shadows */
     --color-shadow: #0f0f0f;
-    --color-shadow-keyboard: rgb(255, 255, 255, 0.5);
+    --color-shadow-keyboard: var(--color-border-secondary);
 }
