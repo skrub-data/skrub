@@ -214,8 +214,30 @@ def test_repr():
     >>> skrub.choose_float(0.0, 10.0, n_steps=6, name='f')
     choose_float(0.0, 10.0, n_steps=6, name='f')
 
+    >>> a = skrub.var('a', 0)
+    >>> a
+    <Var 'a'>
+    Result:
+    ―――――――
+    0
+
+    The shortened representation is used to show ``a`` in the match's repr:
+    >>> a.skb.match({0: 10, 1: 11})
+    <Match <Var 'a'>>
+    Result:
+    ―――――――
+    10
+
+    Misc objects that the user is less likely to see
+
     >>> skrub.X().skb
     <SkrubNamespace>
+    >>> skrub.X().skb.draw_graph()
+    <GraphDrawing: use .open() to display>
+    >>> skrub.X()._skrub_impl.value
+    NULL
+    >>> print(skrub.X()._skrub_impl.value)
+    NULL
     """
 
 

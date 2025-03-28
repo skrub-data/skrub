@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import skrub
 from skrub import _dataframe as sbd
+from skrub import _utils
 from skrub._utils import LRUDict, import_optional_dependency, unique_strings
 
 
@@ -49,3 +51,23 @@ def test_import_optional_dependency():
     # smoke test for an available dependency
     sklearn_module = import_optional_dependency("sklearn")
     assert ismodule(sklearn_module)
+
+
+def test_short_repr():
+    assert _utils.short_repr({}) == "{}"
+    d = {3: 3, 2: 2}
+    assert _utils.short_repr(d) == "{3: 3, 2: 2}"
+    d = {i: i for i in range(100)}
+    assert _utils.short_repr(d) == "{0: 0, 1: 1, 2: 2, 3: 3, ...}"
+    d = {}
+    for i in range(10):
+        d = {0: d}
+    assert _utils.short_repr(d) == "{0: {0: {0: {0: {0: {0: {...}}}}}}}"
+    df = skrub.toy_orders().X
+    assert _utils.short_repr(df) == "DataFrame(...)"
+
+    class A:
+        def __skrub_short_repr__(self):
+            return "short"
+
+    assert _utils.short_repr(A()) == "short"
