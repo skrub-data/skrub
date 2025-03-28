@@ -179,6 +179,8 @@ def renaming_func(renaming):
 
 
 class Repr(reprlib.Repr):
+    fillvalue = "..."
+
     def repr_dict(self, x, level):
         # (probably for historical reasons) reprlib sorts dict keys, destroying
         # the actual order of the dictionary which is misleading.
