@@ -327,7 +327,7 @@ def check_output(
 
 
 class PassThrough(BaseEstimator):
-    def fit(self):
+    def fit(self, X, y=None):
         return self
 
     def fit_transform(self, X, y=None):

@@ -71,3 +71,13 @@ def test_short_repr():
             return "short"
 
     assert _utils.short_repr(A()) == "short"
+
+
+def test_passthrough():
+    p = _utils.PassThrough()
+    X = [1, 2, 3]
+    assert p.fit(X) is p
+    assert p.fit_transform(X) is X
+    assert p.transform(X) is X
+    X = [4, 5, 6]
+    assert p.transform(X) is X
