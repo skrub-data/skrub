@@ -2,29 +2,31 @@
 
 <article class="wrapper margin-t-s flow" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
     data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
-    <div class="flex">
+    <div class="flex flex-wrap">
         <div class="box">
             <pre id="selected-columns-display" data-manager="SelectedColumnsDisplay"></pre>
             {{ buttons.copybutton("selected-columns-display") }}
         </div>
+	<div class="flex flex-wrap toggletip-wrapper column-selection-buttons">
+	    <div class="toggletip" data-manager="Toggletip">
+		<button type="button"><span>i</span></button>
+		<div class="toggletip-info box-shadow">
+		    To construct a list of column names that you can easily copy-paste
+		    (in the box), select some columns using the checkboxes next
+		    to the column names or the "Select all" button.
+		</div>
+	    </div>
+	    <button type="button" data-test="select-all-columns" data-manager="SelectAllVisibleColumns">Select all</button>
+	    <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
+	</div>
     </div>
-    <div class="flex flex-wrap toggletip-wrapper column-selection-buttons">
-        <div class="toggletip" data-manager="Toggletip">
-            <button type="button"><span>i</span></button>
-            <div class="toggletip-info box-shadow">
-                To construct a list of column names that you can easily copy-paste
-                (in the box above), select some columns using the checkboxes next
-                to the column names or the "Select all" button.
-            </div>
-        </div>
-        <button type="button" data-test="select-all-columns" data-manager="SelectAllVisibleColumns">Select all</button>
-        <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
-    </div>
-    <div class="column-summary-group">
-        {% for column in summary.columns %}
-        {% set col_id="col_{}".format(column["idx"]) %}
-        {% include "column-summary.html" %}
-        {% endfor %}
+    <div class="horizontal-scroll padding-b-s">
+	<div class="column-summary-group">
+	    {% for column in summary.columns %}
+	    {% set col_id="col_{}".format(column["idx"]) %}
+	    {% include "column-summary.html" %}
+	    {% endfor %}
+	</div>
     </div>
 </article>
 
