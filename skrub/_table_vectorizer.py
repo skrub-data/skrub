@@ -750,9 +750,20 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
         cols = s.all() - self._specific_columns
 
-        self._preprocessors = _get_preprocessors(
-            cols=cols, drop_null_fraction=self.drop_null_fraction, n_jobs=self.n_jobs
-        )
+        self._preprocessors = [CheckInputDataFrame()]
+
+        transformer_list = [CleanNullStrings()]
+        transformer_list.append(DropIfTooManyNulls(self.drop_null_fraction))
+
+        transformer_list += [
+            ToDatetime(),
+            ToFloat32(),
+            CleanCategories(),
+            ToStr(),
+        ]
+
+        for transformer in transformer_list:
+            add_step(self._preprocessors, transformer, cols, allow_reject=True)
 
         self._encoders = []
         self._named_encoders = {}
