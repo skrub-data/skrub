@@ -63,7 +63,6 @@ def column_associations(df):
     * `pandas.DataFrame.corr
     <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html>`_
 
-
     Examples
     --------
     >>> import numpy as np
@@ -278,7 +277,11 @@ def _compute_pearson(df):
     data = {}
     n_samples = sbd.shape(df)[0]
     for col in sbd.to_column_list(df):
-        data[col.name] = col if sbd.is_numeric(col) else np.full(n_samples, np.nan)
+        data[col.name] = (
+            col
+            if (sbd.is_numeric(col) or sbd.is_bool(col))
+            else np.full(n_samples, np.nan)
+        )
     df = sbd.make_dataframe_like(df, data)
 
     # sbd.pearson_corr filters numeric columns.
