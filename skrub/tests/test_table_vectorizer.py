@@ -20,7 +20,8 @@ from skrub import _dataframe as sbd
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
-from skrub._table_vectorizer import Skrubber, TableVectorizer
+from skrub._table_vectorizer import Skrubber, TableVectorizer, _get_preprocessors
+from skrub._to_float32 import ToFloat32
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
@@ -185,6 +186,19 @@ def _get_missing_values_dataframe(categorical_dtype="object"):
             ),
         }
     )
+
+
+def test_get_preprocessors():
+    X = _get_clean_dataframe()
+    steps = _get_preprocessors(
+        cols=X.columns, drop_null_fraction=1.0, n_jobs=1, add_tofloat32=True
+    )
+    assert any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
+
+    steps = _get_preprocessors(
+        cols=X.columns, drop_null_fraction=1.0, n_jobs=1, add_tofloat32=False
+    )
+    assert not any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
 
 
 def test_fit_default_transform():
@@ -362,6 +376,23 @@ def test_skrubber_dtypes(X, dict_expected_types):
                     assert sbd.is_float(X_trans[col])
                 else:
                     assert dict_expected_types[col] == X_trans[col].dtype
+
+
+def test_convert_float32():
+    """
+    Test that the TableVectorizer converts float64 to float32
+    when using the default parameters.
+    """
+    X = _get_clean_dataframe()
+    vectorizer = TableVectorizer()
+    out = vectorizer.fit_transform(X)
+    assert out.dtypes["float"] == "float32"
+    assert out.dtypes["int"] == "float32"
+
+    vectorizer = Skrubber()
+    out = vectorizer.fit_transform(X)
+    assert sbd.is_float(out["float"])
+    assert sbd.is_integer(out["int"])
 
 
 def test_auto_cast_missing_categories():
