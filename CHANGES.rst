@@ -22,6 +22,10 @@ New features
   with trigonometric functions and B-splines transformers.
   :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The :class:`TableReport` now also compute Pearson's correlation for numeric values.
+  :pr:`1203` by :user:`Reshama Shaikh <reshamas>` and
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 Changes
 -------
 
