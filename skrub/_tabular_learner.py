@@ -162,7 +162,8 @@ def tabular_learner(estimator, *, n_jobs=None):
     >>> from sklearn.linear_model import LogisticRegression
     >>> model = tabular_learner(LogisticRegression())
     >>> model.fit(X, y)
-    Pipeline(steps=[('tablevectorizer', TableVectorizer()),
+    Pipeline(steps=[('tablevectorizer',
+                    TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
                     ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
@@ -181,7 +182,8 @@ def tabular_learner(estimator, *, n_jobs=None):
     The parameters of the :obj:`TableVectorizer` depend on the provided ``estimator``.
 
     >>> tabular_learner(LogisticRegression())
-    Pipeline(steps=[('tablevectorizer', TableVectorizer()),
+    Pipeline(steps=[('tablevectorizer',
+                    TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
                     ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
