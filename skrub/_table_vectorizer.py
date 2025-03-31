@@ -112,55 +112,6 @@ def _check_transformer(transformer):
     return clone(transformer)
 
 
-def _get_preprocessors(*, cols, drop_null_fraction, n_jobs):
-    steps = [CheckInputDataFrame()]
-    for transformer in [
-        CleanNullStrings(),
-        DropIfTooManyNulls(drop_null_fraction),
-        ToDatetime(),
-        ToFloat32(),
-        CleanCategories(),
-        ToStr(),
-    ]:
-        steps.append(
-            wrap_transformer(
-                transformer,
-                cols,
-                allow_reject=True,
-                n_jobs=n_jobs,
-                columnwise=True,
-            )
-        )
-    return steps
-
-
-class Skrubber(TransformerMixin, BaseEstimator):
-    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
-        self.drop_null_fraction = drop_null_fraction
-        self.n_jobs = n_jobs
-
-    def fit_transform(self, X, y=None):
-        all_steps = _get_preprocessors(
-            cols=s.all(),
-            drop_null_fraction=self.drop_null_fraction,
-            n_jobs=self.n_jobs,
-        )
-        self._pipeline = make_pipeline(*all_steps)
-        result = self._pipeline.fit_transform(X)
-        self.all_processing_steps_ = {col: [] for col in all_steps}
-        for step in all_steps:
-            for col, transformer in step.transformers_.items():
-                self.all_processing_steps_[col].append(transformer)
-        return result
-
-    def transform(self, X):
-        return self._pipeline.transform(X)
-
-    def fit(self, X, y=None):
-        self.fit_transform(X)
-        return self
-
-
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
@@ -597,9 +548,20 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
         cols = s.all() - self._specific_columns
 
-        self._preprocessors = _get_preprocessors(
-            cols=cols, drop_null_fraction=self.drop_null_fraction, n_jobs=self.n_jobs
-        )
+        self._preprocessors = [CheckInputDataFrame()]
+
+        transformer_list = [CleanNullStrings()]
+        transformer_list.append(DropIfTooManyNulls(self.drop_null_fraction))
+
+        transformer_list += [
+            ToDatetime(),
+            ToFloat32(),
+            CleanCategories(),
+            ToStr(),
+        ]
+
+        for transformer in transformer_list:
+            add_step(self._preprocessors, transformer, cols, allow_reject=True)
 
         self._encoders = []
         self._named_encoders = {}
