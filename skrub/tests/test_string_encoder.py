@@ -65,6 +65,13 @@ def test_tfidf_vectorizer(encode_column, df_module):
 
     df_module.assert_frame_equal(result, result_transform)
 
+    for idx in range(len(check_df.columns)):
+        col1 = sbd.col_by_idx(check_df, idx)
+        col2 = sbd.col_by_idx(check_df, idx)
+
+        for c1, c2 in zip(col1, col2):
+            assert_almost_equal(c1, c2, decimal=6)
+
 
 def test_hashing_vectorizer(encode_column, df_module):
     # Testing is less strict because HashingVectorizer is not deterministic.
