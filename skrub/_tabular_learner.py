@@ -2,10 +2,12 @@ import sklearn
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
+from sklearn.linear_model._base import LinearClassifierMixin, LinearModel
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
+from ._datetime_encoder import DatetimeEncoder
 from ._minhash_encoder import MinHashEncoder
 from ._sklearn_compat import get_tags
 from ._table_vectorizer import TableVectorizer
@@ -20,6 +22,10 @@ _TREE_ENSEMBLE_CLASSES = (
     ensemble.HistGradientBoostingRegressor,
     ensemble.RandomForestClassifier,
     ensemble.RandomForestRegressor,
+)
+_LINEAR_MODEL_CLASSES = (
+    LinearClassifierMixin,
+    LinearModel,
 )
 
 
@@ -270,6 +276,8 @@ def tabular_learner(estimator, *, n_jobs=None):
             ),
             high_cardinality=MinHashEncoder(),
         )
+    elif isinstance(estimator, _LINEAR_MODEL_CLASSES):
+        vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
     steps = [vectorizer]
     if not get_tags(estimator).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
