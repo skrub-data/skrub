@@ -112,6 +112,193 @@ def _check_transformer(transformer):
     return clone(transformer)
 
 
+def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
+    steps = [CheckInputDataFrame()]
+    transformers = [
+        CleanNullStrings(),
+        DropIfTooManyNulls(drop_null_fraction),
+        ToDatetime(),
+    ]
+    if add_tofloat32:
+        transformers.append(ToFloat32())
+    transformers += [
+        CleanCategories(),
+        ToStr(),
+    ]
+
+    for transformer in transformers:
+        steps.append(
+            wrap_transformer(
+                transformer,
+                cols,
+                allow_reject=True,
+                n_jobs=n_jobs,
+                columnwise=True,
+            )
+        )
+    return steps
+
+
+class Skrubber(TransformerMixin, BaseEstimator):
+    """
+    A transformer preprocesses each column of a dataframe.
+
+    The ``Skrubber`` detects numbers or dates that are represented as strings.
+    By default, columns that contain only null values are dropped.
+
+    Parameters
+    ----------
+    drop_null_fraction : float or None, default=1.0
+        Fraction of null above which the column is dropped. If `drop_null_fraction`
+        is set to ``1.0``, the column is dropped if it contains only
+        nulls or NaNs (this is the default behavior). If `drop_null_fraction` is a
+        number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
+        is strictly larger than `drop_null_fraction`. If `drop_null_fraction` is
+        ``None``, this selection is disabled: no columns are dropped based on the
+        number of null values they contain.
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel.
+        ``None`` means 1 unless in a joblib ``parallel_backend`` context.
+        ``-1`` means using all processors.
+
+    Attributes
+    ----------
+    all_processing_steps_ : dict
+        Maps the name of each column to a list of all the processing steps that were
+        applied to it. Those steps may include some pre-processing transformations such
+        as converting strings to datetimes or numbers, the main transformer (e.g. the
+        :class:`~skrub.DatetimeEncoder`), and a post-processing step casting the main
+        transformer's output to :obj:`numpy.float32`. See the "Examples" section below
+        for details.
+
+    Examples
+    --------
+    >>> from skrub import Skrubber
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     'A': ['one', 'two', 'two', 'three'],
+    ...     'B': ['02/02/2024', '23/02/2024', '12/03/2024', '13/03/2024'],
+    ...     'C': ['1.5', 'N/A', '12.2', 'N/A'],
+    ...     'D': [1.5, 2.0, 2.5, 3.0],
+    ... })
+    >>> df
+        A           B     C    D
+    0    one  02/02/2024   1.5  1.5
+    1    two  23/02/2024   N/A  2.0
+    2    two  12/03/2024  12.2  2.5
+    3  three  13/03/2024   N/A  3.0
+    >>> df.dtypes
+    A    object
+    B    object
+    C    object
+    D   float64
+    dtype: object
+
+    The Skrubber object will not change the dtypes of the columns. It will parse
+    and replace null values with a null format suitable for the dtype of the
+    column.
+    >>> vectorizer = Skrubber()
+    >>> vectorizer.fit_transform(df)
+        A          B     C    D
+    0    one 2024-02-02   1.5  1.5
+    1    two 2024-02-23   NaN  2.0
+    2    two 2024-03-12  12.2  2.5
+    3  three 2024-03-13   NaN  3.0
+
+    >>> vectorizer.fit_transform(df).dtypes
+
+    A            object
+    B    datetime64[ns]
+    C            object
+    D           float64
+
+    We can inspect all the processing steps that were applied to a given column:
+    >>> vectorizer.all_processing_steps_['A']
+    [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
+    >>> vectorizer.all_processing_steps_['B']
+    [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime()]
+    >>> vectorizer.all_processing_steps_['C']
+    [CleanNullStrings(), DropIfTooManyNulls(), ToStr())]
+    >>> vectorizer.all_processing_steps_['D']
+    [DropIfTooManyNulls()]
+    """
+
+    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
+        self.drop_null_fraction = drop_null_fraction
+        self.n_jobs = n_jobs
+
+    def fit_transform(self, X, y=None):
+        """Fit transformer and transform dataframe.
+
+        Parameters
+        ----------
+        X : dataframe of shape (n_samples, n_features)
+            Input data to transform.
+
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, \
+                default=None
+            Target values for supervised learning (None for unsupervised
+            transformations).
+
+        Returns
+        -------
+        dataframe
+            The transformed input.
+        """
+        all_steps = _get_preprocessors(
+            cols=s.all(),
+            drop_null_fraction=self.drop_null_fraction,
+            n_jobs=self.n_jobs,
+            add_tofloat32=False,
+        )
+        self._pipeline = make_pipeline(*all_steps)
+        result = self._pipeline.fit_transform(X)
+        input_names = all_steps[0].feature_names_out_
+        to_steps = {col: [] for col in input_names}
+        self.all_processing_steps_ = {col: [] for col in to_steps}
+        for step in all_steps[1:]:
+            for col, transformer in step.transformers_.items():
+                self.all_processing_steps_[col].append(transformer)
+        return result
+
+    def transform(self, X):
+        """Transform dataframe.
+
+        Parameters
+        ----------
+        X : dataframe of shape (n_samples, n_features)
+            Input data to transform.
+
+        Returns
+        -------
+        dataframe
+            The transformed input.
+        """
+        return self._pipeline.transform(X)
+
+    def fit(self, X, y=None):
+        """Fit transformer.
+
+        Parameters
+        ----------
+        X : dataframe of shape (n_samples, n_features)
+            Input data to transform.
+
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs) or None, \
+                default=None
+            Target values for supervised learning (None for unsupervised
+            transformations).
+
+        Returns
+        -------
+        self : TableVectorizer
+            The fitted estimator.
+        """
+        self.fit_transform(X, y=y)
+        return self
+
+
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
@@ -548,20 +735,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
         cols = s.all() - self._specific_columns
 
-        self._preprocessors = [CheckInputDataFrame()]
-
-        transformer_list = [CleanNullStrings()]
-        transformer_list.append(DropIfTooManyNulls(self.drop_null_fraction))
-
-        transformer_list += [
-            ToDatetime(),
-            ToFloat32(),
-            CleanCategories(),
-            ToStr(),
-        ]
-
-        for transformer in transformer_list:
-            add_step(self._preprocessors, transformer, cols, allow_reject=True)
+        self._preprocessors = _get_preprocessors(
+            cols=cols, drop_null_fraction=self.drop_null_fraction, n_jobs=self.n_jobs
+        )
 
         self._encoders = []
         self._named_encoders = {}

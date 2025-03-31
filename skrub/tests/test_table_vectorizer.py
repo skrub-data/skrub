@@ -20,7 +20,7 @@ from skrub import _dataframe as sbd
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
-from skrub._table_vectorizer import TableVectorizer
+from skrub._table_vectorizer import Skrubber, TableVectorizer
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
@@ -290,6 +290,78 @@ def test_auto_cast(X, dict_expected_types):
             assert sbd.is_any_date(X_trans[col])
         else:
             assert dict_expected_types[col] == X_trans[col].dtype
+
+
+# Skrubber does not cast to float32
+X_tuples = [
+    (
+        X,
+        {
+            "pd_datetime": "datetime",
+            "np_datetime": "datetime",
+            "dmy-": "datetime",
+            "ymd/": "datetime",
+            "ymd/_hms:": "datetime",
+        },
+    ),
+    # Test other types detection
+    (
+        _get_clean_dataframe(),
+        {
+            "int": "int",
+            "float": "float",
+            "str1": "O",
+            "str2": "O",
+            "cat1": "category",
+            "cat2": "category",
+        },
+    ),
+    (
+        _get_dirty_dataframe("category"),
+        {
+            "int": "int",
+            "float": "float",
+            "str1": "category",
+            "str2": "category",
+            "cat1": "category",
+            "cat2": "category",
+        },
+    ),
+]
+
+
+def skrubber():
+    return Skrubber()
+
+
+@pytest.mark.parametrize("X, dict_expected_types", X_tuples)
+def test_skrubber_dtypes(X, dict_expected_types):
+    vectorizer = skrubber()
+    X_trans = vectorizer.fit_transform(X)
+    for col in X_trans.columns:
+        if dict_expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            for col, dtype in dict_expected_types.items():
+                if dtype == "int":
+                    assert sbd.is_integer(X_trans[col])
+                elif dtype == "float":
+                    assert sbd.is_float(X_trans[col])
+                else:
+                    assert dict_expected_types[col] == X_trans[col].dtype
+
+    X_trans = vectorizer.fit(X).transform(X)
+    for col in X_trans.columns:
+        if dict_expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            for col, dtype in dict_expected_types.items():
+                if dtype == "int":
+                    assert sbd.is_integer(X_trans[col])
+                elif dtype == "float":
+                    assert sbd.is_float(X_trans[col])
+                else:
+                    assert dict_expected_types[col] == X_trans[col].dtype
 
 
 def test_auto_cast_missing_categories():
