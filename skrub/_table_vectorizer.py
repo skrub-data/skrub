@@ -146,6 +146,14 @@ class Skrubber(TransformerMixin, BaseEstimator):
     The ``Skrubber`` detects numbers or dates that are represented as strings.
     By default, columns that contain only null values are dropped.
 
+    Differently from the ``TableVectorizer``, the ``Skrubber`` does not convert
+    numeric datatypes to float32, and thus does not ensure a consistent dtype for
+    null values.
+
+    The ``Skrubber`` object should only be used for preliminary observations on
+    the data, while the ``TableVectorizer`` should instead be used to transform the
+    data.
+
     Parameters
     ----------
     drop_null_fraction : float or None, default=1.0
