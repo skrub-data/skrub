@@ -653,6 +653,16 @@ def test_mean(df_module):
     )
 
 
+def test_corr(df_module):
+    df = df_module.example_dataframe
+    corr = ns.pearson_corr(df)
+
+    # Create a numpy array from our dataframe and compute Pearson's correlation.
+    # Then, turn the numpy array back into a dataframe for comparison.
+    expected_corr = s.select(df, ns.column_names(corr)).corr()
+    df_module.assert_frame_equal(corr, expected_corr)
+
+
 @pytest.mark.parametrize(
     "descending, expected_vals",
     [

@@ -11,6 +11,7 @@ from skrub import _join_utils
 
 try:
     import polars as pl
+    import polars.selectors as cs
 except ImportError:
     pass
 
@@ -86,6 +87,7 @@ __all__ = [
     "max",
     "std",
     "mean",
+    "pearson_corr",
     "sort",
     "value_counts",
     "quantile",
@@ -991,6 +993,21 @@ def _mean_pandas_col(col):
 @mean.specialize("polars", argument_type="Column")
 def _mean_polars_col(col):
     return col.mean()
+
+
+@dispatch
+def pearson_corr(df):
+    raise NotImplementedError()
+
+
+@pearson_corr.specialize("pandas", argument_type="DataFrame")
+def _pearson_corr_pandas(df):
+    return df.corr(method="pearson", numeric_only=True)
+
+
+@pearson_corr.specialize("polars", argument_type="DataFrame")
+def _pearson_corr_polars(df):
+    return df.select(cs.numeric()).corr()
 
 
 @dispatch

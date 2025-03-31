@@ -1,11 +1,12 @@
 """Detect which columns have strong statistical associations."""
+
 import warnings
 
 import numpy as np
-import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer, OneHotEncoder
 
 from . import _dataframe as sbd
+from . import _join_utils
 
 _N_BINS = 10
 _CATEGORICAL_THRESHOLD = 30
@@ -90,19 +91,28 @@ def column_associations(df):
     >>> pd.reset_option('display.max_columns')
     >>> pd.reset_option('display.precision')
     """
-    cramer_v_table = _stack_symmetric_associations(_cramer_v_matrix(df), df)
-    pearson_c_table = _compute_pearsons(df)
-    stats = pd.merge(
-        cramer_v_table,
-        pearson_c_table,
-        left_on=["left_column_name", "right_column_name"],
-        right_on=["left", "right"],
-        how="left",
-    ).drop(columns=["left", "right"])
-    return stats
+    cramer_v_table = _stack_symmetric_associations(
+        _cramer_v_matrix(df),
+        df,
+        metric_name="cramer_v",
+    )
+    pearson_c_table = _stack_symmetric_associations(
+        _compute_pearson(df),
+        df,
+        metric_name="pearson_corr",
+    )
+    on = [
+        "left_column_name",
+        "right_column_name",
+        "left_column_idx",
+        "right_column_idx",
+    ]
+    return _join_utils.left_join(
+        cramer_v_table, pearson_c_table, right_on=on, left_on=on
+    )
 
 
-def _stack_symmetric_associations(associations, df):
+def _stack_symmetric_associations(associations, df, metric_name):
     """Turn a symmetric matrix of V statistics into a list of (col, col, value).
 
     The input is the symmetric matrix where entry i, j contains the V statistic
@@ -131,7 +141,7 @@ def _stack_symmetric_associations(associations, df):
         "left_column_idx": left_indices,
         "right_column_name": right_column_names,
         "right_column_idx": right_indices,
-        "cramer_v": associations,
+        metric_name: associations,
     }
     return sbd.make_dataframe_like(df, result)
 
@@ -256,21 +266,23 @@ def _compute_cramer(table, n_samples):
     return stat
 
 
-def _compute_pearsons(df):
-    """Compute the Pearson correlation coefficient statistic given a
-    contingency table / pandas dataframe.
-
-    The input is the table computed by ``_contingency_table`` with shape
-    (n cols, n cols, n bins, n bins).
+def _compute_pearson(df):
+    """Compute the Pearson correlation coefficient for all pairs of columns.
 
     This returns the symmetric matrix with shape (n cols, n cols) where entry
     i, j contains the statistic for column i x column j.
 
     """
-    correlations = df.corr(method="pearson", min_periods=1, numeric_only=True)
-    stat = (
-        correlations.stack()
-        .reset_index()
-        .set_axis(["left", "right", "pearson"], axis=1)
-    )
-    return stat
+    # Replace categorical columns with np.nan to get a correlation matrix of shape
+    # (n_cols, n_cols).
+    data = {}
+    for col in sbd.to_column_list(df):
+        data[col.name] = col if sbd.is_numeric(col) else np.nan
+    df = sbd.make_dataframe_like(df, data)
+
+    # sbd.pearson_corr filters numeric columns.
+    out = []
+    for col in sbd.to_column_list(sbd.pearson_corr(df)):
+        out.append(sbd.to_numpy(col)[:, None])
+
+    return np.hstack(out)
