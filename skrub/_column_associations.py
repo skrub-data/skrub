@@ -276,8 +276,9 @@ def _compute_pearson(df):
     # Replace categorical columns with np.nan to get a correlation matrix of shape
     # (n_cols, n_cols).
     data = {}
+    n_samples = sbd.shape(df)[0]
     for col in sbd.to_column_list(df):
-        data[col.name] = col if sbd.is_numeric(col) else np.nan
+        data[col.name] = col if sbd.is_numeric(col) else np.full(n_samples, np.nan)
     df = sbd.make_dataframe_like(df, data)
 
     # sbd.pearson_corr filters numeric columns.
