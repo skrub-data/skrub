@@ -500,13 +500,11 @@ def test_to_datetime(df_module):
     s = df_module.make_column("", ["01/02/2020", "02/01/2021", "bad"])
     with pytest.raises(ValueError):
         ns.to_datetime(s, "%m/%d/%Y", True)
-    df_module.assert_column_equal(
-        ns.to_datetime(s, "%m/%d/%Y", False),
-        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None]),
+    assert ns.to_list(ns.to_datetime(s, "%m/%d/%Y", False)) == ns.to_list(
+        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None])
     )
-    df_module.assert_column_equal(
-        ns.to_datetime(s, "%d/%m/%Y", False),
-        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None]),
+    assert ns.to_list(ns.to_datetime(s, "%d/%m/%Y", False)) == ns.to_list(
+        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None])
     )
     dt_col = ns.col(df_module.example_dataframe, "datetime-col")
     assert ns.to_datetime(dt_col, None) is dt_col
@@ -787,6 +785,24 @@ def test_where(df_module):
     )
     df_module.assert_column_equal(
         out, ns.pandas_convert_dtypes(df_module.make_column("", [0, 11, 2]))
+    )
+
+
+def test_where_row(df_module):
+    df = df_module.make_dataframe({"col1": [1, 2, 3], "col2": [1000, 2000, 3000]})
+    out = ns.where_row(
+        df,
+        df_module.make_column("", [False, True, False]),  # mask
+        df_module.make_column(
+            "", [None, None, None]
+        ),  # values to put in on the entire row
+    )
+    right = df_module.make_dataframe(
+        {"col1": [None, 2, None], "col2": [None, 2000, None]}
+    )
+    df_module.assert_frame_equal(
+        ns.pandas_convert_dtypes(out),
+        ns.pandas_convert_dtypes(right),
     )
 
 

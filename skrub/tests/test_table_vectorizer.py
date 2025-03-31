@@ -10,8 +10,9 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_
 from pandas.testing import assert_frame_equal
 from scipy.sparse import csr_matrix
 from sklearn.base import clone
+from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils._testing import skip_if_no_parallel
 from sklearn.utils.fixes import parse_version
 
@@ -235,11 +236,11 @@ X_tuples = [
     (
         X,
         {
-            "pd_datetime": "datetime64[ns]",
-            "np_datetime": "datetime64[ns]",
-            "dmy-": "datetime64[ns]",
-            "ymd/": "datetime64[ns]",
-            "ymd/_hms:": "datetime64[ns]",
+            "pd_datetime": "datetime",
+            "np_datetime": "datetime",
+            "dmy-": "datetime",
+            "ymd/": "datetime",
+            "ymd/_hms:": "datetime",
         },
     ),
     # Test other types detection
@@ -285,7 +286,10 @@ def test_auto_cast(X, dict_expected_types):
     vectorizer = passthrough_vectorizer()
     X_trans = vectorizer.fit_transform(X)
     for col in X_trans.columns:
-        assert dict_expected_types[col] == X_trans[col].dtype
+        if dict_expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            assert dict_expected_types[col] == X_trans[col].dtype
 
 
 def test_auto_cast_missing_categories():
@@ -338,9 +342,27 @@ def test_get_feature_names_out():
         "cat2_60K+",
     ]
     X = _get_clean_dataframe()
+    rng = np.random.default_rng(42)
+    y = rng.integers(0, 2, size=X.shape[0])
     vectorizer = TableVectorizer().fit(X)
     assert_array_equal(
         vectorizer.get_feature_names_out(),
+        expected_features,
+    )
+
+    # make sure that `get_feature_names` works when `TableVectorizer` is used in a
+    # scikit-learn pipeline
+    # non-regression test for https://github.com/skrub-data/skrub/issues/1256
+    pipeline = make_pipeline(TableVectorizer(), StandardScaler(), Ridge()).fit(X, y)
+    assert_array_equal(
+        pipeline[:-1].get_feature_names_out(),
+        expected_features,
+    )
+    # Input features are ignored when `TableVectorizer` is used in a pipeline
+    assert_array_equal(
+        pipeline[:-1].get_feature_names_out(
+            input_features=[f"col_{i}" for i in range(X.shape[1])]
+        ),
         expected_features,
     )
 

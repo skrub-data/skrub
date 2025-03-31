@@ -2,86 +2,68 @@
 /* -------------------------------- */
 
 :host {
-    --base-size: 1em;
-
-    --text-xs: calc(0.8 * var(--base-size));
-    --text-s: calc(0.9 * var(--base-size));
-    --text-m: var(--base-size);
-    --text-l: calc(1.2 * var(--base-size));
-    --text-xl: calc(1.5 * var(--base-size));
-
-    --space-xs: calc(0.125 * var(--base-size));
-    --space-s: calc(0.25 * var(--base-size));
-    --space-m: calc(0.5 * var(--base-size));
-    --space-l: calc(1.0 * var(--base-size));
-    --space-xl: calc(1.2 * var(--base-size));
-    --space-xxl: calc(1.5 * var(--base-size));
-
-    --border-s: 1px;
-    --border-m: 2px;
-
-    --checkbox-size: var(--text-s);
-    --button-s: calc(1.8 * var(--base-size));
-    --button-m: calc(2.0 * var(--base-size));
-
-    --max-content-width: calc(45 * var(--base-size));
-    --radius: var(--space-s);
-    --line-height: 1.5;
-
-    --lightgreen: #eafaea;
-    --mediumgreen: #d6f5d6;
-    --darkgreen: 	#c1f0c1;
-    --verydarkgreen: #84e184;
-    --shadowgreen: #9fce9f;
-
-    --lightyellow: #ffffaa;
-
-    --darkg: #555555;
-    --mediumg: #d0d0d0;
-    --lightg: #f0f0f0;
-
-    --darkred: #a32929;
-    --red: #dd0000;
-
-    --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
-}
-
-:host {
-    font-size: var(--text-m);
+    font-size: var(--font-size-m);
     line-height: var(--line-height);
     -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
-/* The report is in a shadow DOM so outside selectors don't reach it but properties */
-/* can still be inherited from a parent element. We make sure it has black text on */
-/* a white background otherwise eg a dark mode in the page could make parts of it */
-/* unreadable. */
-
 #report {
-    background: white;
-    color: black;
-    color-scheme: only light;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    color-scheme: light dark;
     border-radius: var(--radius, 0);
     max-width: max-content;
 }
 
+a:link {
+    color: var(--color-text-link);
+}
 
+a:visited {
+    color: var(--color-text-visited);
+}
 
 h1 {
-    font-size: var(--text-xl);
+    font-size: var(--font-size-xl);
+}
+
+button {
+    background: var(--color-background-button-primary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius);
+    padding: var(--spacing-s) var(--spacing-m);
+}
+
+button:hover {
+    background: var(--color-background-button-primary-hover);
+}
+
+button:active {
+    background: var(--color-background-button-primary-active);
 }
 
 button > * {
     pointer-events: none;
 }
 
+select {
+    background: var(--color-background-button-primary);
+    color: var(--color-text-primary);
+    box-shadow: none;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border-primary);
+}
+
 input[type="checkbox"] {
-    height: var(--checkbox-size);
-    width: var(--checkbox-size);
+    width: var(--font-size-s);
 }
 
 /* pure.css / Normalize.css overrides the default firefox blue ring around focussed */
@@ -90,7 +72,6 @@ input[type="checkbox"] {
 #report :focus-visible {
     outline: revert;
 }
-
 
 :is(select, summary, button) {
     cursor: pointer;
@@ -101,7 +82,7 @@ summary > * {
 }
 
 p {
-    margin: var(--space-m) 0;
+    margin: var(--spacing-m) 0;
 }
 
 code {
@@ -112,17 +93,18 @@ pre {
     margin: 0;
 }
 
-code, pre {
-    font-family: var(--fontStack-monospace);
-    font-size: var(--text-s);
+code,
+pre {
+    font-family: var(--font-family-monospace);
+    font-size: var(--font-size-s);
 }
 
 table {
-    font-size: var(--text-m);
+    font-size: var(--font-size-m);
 }
 
 #report :is(td, th) {
-    padding: var(--space-s) var(--space-m);
+    padding: var(--spacing-s) var(--spacing-m);
     white-space: nowrap;
 }
 
@@ -132,7 +114,7 @@ table {
 dl {
     display: grid;
     grid-template-columns: max-content auto;
-    column-gap: var(--space-m);
+    column-gap: var(--spacing-m);
     margin: 0;
 }
 
@@ -155,11 +137,11 @@ dd {
 /* Generic utility classes */
 /* ----------------------- */
 
-:is([data-hidden], [data-excluded-by-column-filter]){
+:is([data-hidden], [data-excluded-by-column-filter]) {
     display: none !important;
 }
 
-[data-not-visible]{
+[data-not-visible] {
     visibility: hidden;
 }
 
@@ -168,20 +150,24 @@ dd {
 }
 
 .margin-r-m {
-    margin-inline-end: var(--space-m);
+    margin-inline-end: var(--spacing-m);
 }
 
 .margin-v-m {
-    margin-block-start: var(--space-m);
-    margin-block-end: var(--space-m);
+    margin-block-start: var(--spacing-m);
+    margin-block-end: var(--spacing-m);
 }
 
 .margin-t-s {
-    margin-top: var(--space-s);
+    margin-top: var(--spacing-s);
 }
 
 .margin-t-m {
-    margin-top: var(--space-m);
+    margin-top: var(--spacing-m);
+}
+
+.padding-b-s {
+    padding-bottom: var(--spacing-s);
 }
 
 .horizontal-scroll {
@@ -197,17 +183,22 @@ dd {
 }
 
 .wrapper {
-    padding-inline-start: var(--space-l);
-    padding-inline-end: var(--space-l);
-    padding-block-end: var(--space-m);
+    padding-inline-start: var(--spacing-l);
+    padding-inline-end: var(--spacing-l);
+    padding-block-end: var(--spacing-m);
+}
+
+/* Special-case the article (container) */
+article.wrapper {
+    padding-block-end: 0;
 }
 
 .flow > * + * {
-    margin-top: var(--space-m);
+    margin-top: var(--spacing-m);
 }
 
 .text {
-    max-width: var(--max-content-width);
+    max-width: 100%;
 }
 
 .shrink {
@@ -220,18 +211,18 @@ dd {
 }
 
 .shrinkable-text {
-    flex-basis: 20rem;
+    flex-basis: 20em;
     flex-grow: 1;
 }
 
 .flex {
     display: flex;
-    gap: var(--space-m);
+    gap: var(--spacing-m);
     align-items: center;
 }
 
 .gap-l {
-    gap: var(--space-xl);
+    gap: var(--spacing-xl);
 }
 
 .flex-reverse {
@@ -251,14 +242,14 @@ dd {
     margin: 0;
 }
 
-#report .ellided {
+#report .elided {
     max-width: 70ch;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-#report .ellided-short {
+#report .elided-short {
     max-width: 30ch;
     overflow: hidden;
     white-space: nowrap;
@@ -274,33 +265,29 @@ dd {
 }
 
 .ok {
-    color: green;
+    color: var(--color-text-success);
 }
 
 .warning {
-    color: #ff6600;
+    color: var(--color-text-warning);
 }
 
 .critical {
-    color: var(--red);
+    color: var(--color-text-critical);
 }
 
 .box-shadow {
-    --shadow-color: 0deg 0% 63%;
-
-    box-shadow:
-    0.3px 0.5px 0.7px hsl(var(--shadow-color) / 0.36),
-    0.8px 1.6px 2px -0.8px hsl(var(--shadow-color) / 0.36),
-    2.1px 4.1px 5.2px -1.7px hsl(var(--shadow-color) / 0.36),
-    5px 10px 12.6px -2.5px hsl(var(--shadow-color) / 0.36);
+    box-shadow: 0.3px 0.5px 0.7px var(--color-shadow),
+        0.8px 1.6px 2px -0.8px var(--color-shadow),
+        2.1px 4.1px 5.2px -1.7px var(--color-shadow),
+        5px 10px 12.6px -2.5px var(--color-shadow);
 }
 
 /* Misc tweaks */
 /* ----------- */
 
-
 #report {
-    padding-top: var(--space-s);
+    padding-top: var(--spacing-s);
 }
 
 #report svg {
@@ -308,10 +295,9 @@ dd {
 }
 
 .report-header {
-    --max-content-width: 100em;
-    font-size: var(--text-l);
-    padding-block-start: var(--space-s);
-    padding-block-end: var(--space-s);
+    font-size: var(--font-size-l);
+    padding-block-start: var(--spacing-s);
+    padding-block-end: var(--spacing-s);
 }
 
 .report-header > h1 {
@@ -319,7 +305,7 @@ dd {
 }
 
 .important-note {
-    background-color: var(--lightgreen);
-    padding: var(--space-m);
+    background-color: var(--color-background-highlight-primary);
+    padding: var(--spacing-m);
     border-radius: var(--radius);
 }

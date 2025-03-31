@@ -1,5 +1,7 @@
+import codecs
 import functools
 import json
+from pathlib import Path
 
 from ._html import to_html
 from ._serve import open_in_browser
@@ -81,7 +83,6 @@ class TableReport:
     For a full, standalone web page:
 
     >>> report.html()
-    Processing...
     '<!DOCTYPE html>\n<html lang="en-US">\n\n<head>\n    <meta charset="utf-8"...'
 
     For an HTML fragment that can be inserted into a page:
@@ -196,6 +197,44 @@ class TableReport:
 
     def _repr_html_(self):
         return self._repr_mimebundle_()["text/html"]
+
+    def write_html(self, file):
+        """Store the report into an HTML file.
+
+        Parameters
+        ----------
+        file : str, pathlib.Path or file object
+            The file object or path of the file to store the HTML output.
+        """
+        html = self.html()
+        if isinstance(file, (str, Path)):
+            with open(file, "w", encoding="utf8") as stream:
+                stream.write(html)
+            return
+
+        try:
+            # We don't have information about the write mode of the provided
+            # file-object. We start by writing bytes into it.
+            file.write(html.encode("utf-8"))
+            return
+        except TypeError:
+            # We end-up here if the file-object was open in text mode
+            # Let's give it another chance in this mode.
+            pass
+
+        if (encoding := getattr(file, "encoding", None)) is not None:
+            try:
+                encoding_name = codecs.lookup(encoding).name
+            except LookupError:  # pragma: no cover
+                encoding_name = None
+            if encoding_name != "utf-8":
+                raise ValueError(
+                    "If `file` is a text file it should use utf-8 encoding; got:"
+                    f" {encoding!r}"
+                )
+        # We write into the file-object expecting it to be in text mode at this
+        # stage and with a UTF-8 encoding.
+        file.write(html)
 
     def open(self):
         """Open the HTML report in a web browser."""

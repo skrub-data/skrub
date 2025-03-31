@@ -99,6 +99,7 @@ __all__ = [
     "unique",
     "filter",
     "where",
+    "where_row",
     "sample",
     "head",
     "slice",
@@ -107,6 +108,8 @@ __all__ = [
     "abs",
     "total_seconds",
 ]
+
+pandas_version = parse_version(parse_version(pd.__version__).base_version)
 
 #
 # Inspecting containers' type and module
@@ -332,7 +335,8 @@ def _concat_horizontal_pandas(*dataframes):
     init_index = dataframes[0].index
     dataframes = [df.reset_index(drop=True) for df in dataframes]
     dataframes = _join_utils.make_column_names_unique(*dataframes)
-    result = pd.concat(dataframes, axis=1, copy=False)
+    kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
+    result = pd.concat(dataframes, axis=1, **kwargs)
     result.index = init_index
     return result
 
@@ -1194,6 +1198,23 @@ def _where_pandas(col, mask, other):
 @where.specialize("polars", argument_type="Column")
 def _where_polars(col, mask, other):
     return col.zip_with(mask, pl.Series(other))
+
+
+@dispatch
+def where_row(obj, mask, other):
+    raise NotImplementedError()
+
+
+@where_row.specialize("pandas")
+def _where_row_pandas(obj, mask, other):
+    return obj.apply(pd.Series.where, cond=mask, other=other)
+
+
+@where_row.specialize("polars")
+def _where_row_polars(obj, mask, other):
+    return obj.with_columns(
+        pl.when(pl.Series(mask)).then(pl.all()).otherwise(pl.Series(other))
+    )
 
 
 @dispatch
