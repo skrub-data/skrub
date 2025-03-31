@@ -141,18 +141,13 @@ def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
 
 class Skrubber(TransformerMixin, BaseEstimator):
     """
-    A transformer preprocesses each column of a dataframe.
+    A light transformer that preprocesses each column of a dataframe.
 
     The ``Skrubber`` detects numbers or dates that are represented as strings.
-    By default, columns that contain only null values are dropped.
-
-    Differently from the ``TableVectorizer``, the ``Skrubber`` does not convert
+    By default, columns that contain only null values are dropped. Differently
+    from the ``TableVectorizer``, the ``Skrubber`` does not convert
     numeric datatypes to float32, and thus does not ensure a consistent dtype for
     null values.
-
-    The ``Skrubber`` object should only be used for preliminary observations on
-    the data, while the ``TableVectorizer`` should instead be used to transform the
-    data.
 
     Parameters
     ----------
@@ -179,6 +174,12 @@ class Skrubber(TransformerMixin, BaseEstimator):
         :class:`~skrub.DatetimeEncoder`), and a post-processing step casting the main
         transformer's output to :obj:`numpy.float32`. See the "Examples" section below
         for details.
+
+    Notes
+    -----
+    The ``Skrubber`` object should only be used for preliminary observations on
+    the data, while the ``TableVectorizer`` should instead be used to transform the
+    data.
 
     Examples
     --------
@@ -215,11 +216,11 @@ class Skrubber(TransformerMixin, BaseEstimator):
     3  three 2024-03-13   NaN  3.0
 
     >>> vectorizer.fit_transform(df).dtypes
-
     A            object
     B    datetime64[ns]
     C            object
     D           float64
+    dtype: object
 
     We can inspect all the processing steps that were applied to a given column:
     >>> vectorizer.all_processing_steps_['A']
@@ -227,9 +228,15 @@ class Skrubber(TransformerMixin, BaseEstimator):
     >>> vectorizer.all_processing_steps_['B']
     [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime()]
     >>> vectorizer.all_processing_steps_['C']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToStr())]
+    [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
     >>> vectorizer.all_processing_steps_['D']
     [DropIfTooManyNulls()]
+
+    See Also:
+    --------
+    TableVectorizer :
+        Process columns of a dataframe and convert them to a numeric (vectorized)
+        representation.
     """
 
     def __init__(self, drop_null_fraction=1.0, n_jobs=1):
