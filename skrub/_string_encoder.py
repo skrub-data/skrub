@@ -138,9 +138,7 @@ class StringEncoder(SingleColumnTransformer):
         del X_filled  # optimizes memory: we no longer need X
 
         if (min_shape := min(X_out.shape)) > self.n_components:
-            self.tsvd_ = TruncatedSVD(
-                n_components=self.n_components, algorithm="arpack"
-            )
+            self.tsvd_ = TruncatedSVD(n_components=self.n_components)
             result = self.tsvd_.fit_transform(X_out)
         elif X_out.shape[1] == self.n_components:
             result = X_out.toarray()
