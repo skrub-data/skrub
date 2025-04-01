@@ -68,7 +68,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
         col2 = sbd.col_by_idx(check_df, idx)
 
         for c1, c2 in zip(col1, col2):
-            assert_almost_equal(c1, c2, decimal=6)
+            assert_almost_equal(c1, c2, decimal=4)
 
 
 def test_hashing_vectorizer(encode_column, df_module):

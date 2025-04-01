@@ -22,7 +22,7 @@ New features
   with trigonometric functions and B-splines transformers.
   :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
 
-- The :class:`Skrubber` is now available. This transformer is a lightweight pre-processor that
+- The :class:`SimpleCleaner` is now available. This transformer is a lightweight pre-processor that
   applies some of the transformations applied by the :class:`TableVectorizer`, with a simpler
   interface. :pr:`1266` by :user:`Jerome Dockes <jeromedockes>` and :user:`Riccardo Cappuzzo<rcap107>`.
 

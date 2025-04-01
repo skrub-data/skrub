@@ -43,14 +43,14 @@ employees_df, salaries = dataset.X, dataset.y
 # Generating an interactive report for a dataframe
 # -------------------------------------------------
 #
-# The :class:`~skrub.Skrubber` allows to clean the
+# The :class:`~skrub.SimpleCleaner` allows to clean the
 # dataframe, parsing nulls, dates, and dropping columns with too many nulls.
 # To quickly get an overview of a dataframe's contents, use the
 # :class:`~skrub.TableReport`.
 # %%
-from skrub import Skrubber, TableReport
+from skrub import SimpleCleaner, TableReport
 
-employees_df = Skrubber().fit_transform(employees_df)
+employees_df = SimpleCleaner().fit_transform(employees_df)
 TableReport(employees_df)
 
 # %%

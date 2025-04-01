@@ -139,15 +139,17 @@ def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
     return steps
 
 
-class Skrubber(TransformerMixin, BaseEstimator):
+class SimpleCleaner(TransformerMixin, BaseEstimator):
     """
     A light transformer that preprocesses each column of a dataframe.
 
-    The ``Skrubber`` detects numbers or dates that are represented as strings.
+    The ``SimpleCleaner`` detects dates that are represented as strings, and runs
+    some consistency checks on the column names. It also replaces null values
+    (e.g. NaN, N/A, None) with a null format suitable for the dtype of the column.
     By default, columns that contain only null values are dropped. Differently
-    from the ``TableVectorizer``, the ``Skrubber`` does not convert
-    numeric datatypes to float32, and thus does not ensure a consistent dtype for
-    null values.
+    from the ``TableVectorizer``, the ``SimpleCleaner`` does not convert
+    numeric datatypes to float32, and thus does not ensure that null values have
+    dtype consistent across columns.
 
     Parameters
     ----------
@@ -169,21 +171,18 @@ class Skrubber(TransformerMixin, BaseEstimator):
     ----------
     all_processing_steps_ : dict
         Maps the name of each column to a list of all the processing steps that were
-        applied to it. Those steps may include some pre-processing transformations such
-        as converting strings to datetimes or numbers, the main transformer (e.g. the
-        :class:`~skrub.DatetimeEncoder`), and a post-processing step casting the main
-        transformer's output to :obj:`numpy.float32`. See the "Examples" section below
-        for details.
-
+        applied to it.
     Notes
     -----
-    The ``Skrubber`` object should only be used for preliminary observations on
+    The ``SimpleCleaner`` object should only be used for preliminary observations on
     the data, while the ``TableVectorizer`` should instead be used to transform the
-    data.
+    data. This is because the ``SimpleCleaner`` does not convert null values to a
+    consistent representation, which can lead to issues when the data is passed to
+    downstream models.
 
     Examples
     --------
-    >>> from skrub import Skrubber
+    >>> from skrub import SimpleCleaner
     >>> import pandas as pd
     >>> df = pd.DataFrame({
     ...     'A': ['one', 'two', 'two', 'three'],
@@ -204,18 +203,17 @@ class Skrubber(TransformerMixin, BaseEstimator):
     D   float64
     dtype: object
 
-    The Skrubber object will not change the dtypes of the columns. It will parse
-    and replace null values with a null format suitable for the dtype of the
-    column.
-    >>> vectorizer = Skrubber()
-    >>> vectorizer.fit_transform(df)
+    The SimpleCleaner will parse datetime columns and convert nulls to dtypes
+    suitable to those of the column (e.g., ``np.NaN`` for numerical columns).
+    >>> cleaner = SimpleCleaner()
+    >>> cleaner.fit_transform(df)
         A          B     C    D
     0    one 2024-02-02   1.5  1.5
     1    two 2024-02-23   NaN  2.0
     2    two 2024-03-12  12.2  2.5
     3  three 2024-03-13   NaN  3.0
 
-    >>> vectorizer.fit_transform(df).dtypes
+    >>> cleaner.fit_transform(df).dtypes
     A            object
     B    datetime64[ns]
     C            object
@@ -223,13 +221,13 @@ class Skrubber(TransformerMixin, BaseEstimator):
     dtype: object
 
     We can inspect all the processing steps that were applied to a given column:
-    >>> vectorizer.all_processing_steps_['A']
+    >>> cleaner.all_processing_steps_['A']
     [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
-    >>> vectorizer.all_processing_steps_['B']
+    >>> cleaner.all_processing_steps_['B']
     [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime()]
-    >>> vectorizer.all_processing_steps_['C']
+    >>> cleaner.all_processing_steps_['C']
     [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
-    >>> vectorizer.all_processing_steps_['D']
+    >>> cleaner.all_processing_steps_['D']
     [DropIfTooManyNulls()]
 
     See Also:
@@ -307,7 +305,7 @@ class Skrubber(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : TableVectorizer
+        self : SimpleCleaner
             The fitted estimator.
         """
         self.fit_transform(X, y=y)
