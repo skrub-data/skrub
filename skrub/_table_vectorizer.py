@@ -143,13 +143,7 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
     """
     A light transformer that preprocesses each column of a dataframe.
 
-    The ``SimpleCleaner`` detects dates that are represented as strings, and runs
-    some consistency checks on the column names. It also replaces null values
-    (e.g. NaN, N/A, None) with a null format suitable for the dtype of the column.
-    By default, columns that contain only null values are dropped. Differently
-    from the ``TableVectorizer``, the ``SimpleCleaner`` does not convert
-    numeric datatypes to float32, and thus does not ensure that null values have
-    dtype consistent across columns.
+    The ``SimpleCleaner`` performs some consistency checks and basic preprocessing such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing dates. See the "Notes" section for a full list.
 
     Parameters
     ----------
