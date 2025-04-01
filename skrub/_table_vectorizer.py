@@ -190,7 +190,7 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
 
     - ``ToStr()``: convert columns to strings, unless they are numerical or datetime.
 
-    The ``SimpleCleaner`` object should only be used for preliminary observations on
+    The ``SimpleCleaner`` object should only be used for preliminary sanitizing of
     the data, while the ``TableVectorizer`` should instead be used to transform the
     data. This is because the ``SimpleCleaner`` does not convert null values to a
     consistent representation, which can lead to issues when the data is passed to
