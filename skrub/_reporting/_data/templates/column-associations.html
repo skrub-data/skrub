@@ -8,7 +8,7 @@
                 <th scope="col">Column 1</th>
                 <th scope="col">Column 2</th>
                 <th scope="col"><a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a></th>
-                <th scope="col">Pearson's Correlation</a></th>
+                <th scope="col"><a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson's Correlation</a></th>
             </tr>
         </thead>
         <tbody>
@@ -23,7 +23,11 @@
                     >
                     {{ association["cramer_v"] | format_number }}
                 </td>
-                <td> {{ association["pearson_corr"] | format_number }} </td>
+                <td>
+                    {%- if not (association["pearson_corr"] | is_null) -%}
+                    {{ association["pearson_corr"] | format_number }}
+                    {%- endif -%}
+                </td>
             </tr>
         {% endfor %}
         </tbody>

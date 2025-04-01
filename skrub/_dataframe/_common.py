@@ -11,7 +11,6 @@ from skrub import _join_utils
 
 try:
     import polars as pl
-    import polars.selectors as cs
 except ImportError:
     pass
 
@@ -1011,7 +1010,7 @@ def _pearson_corr_pandas(df):
 
 @pearson_corr.specialize("polars", argument_type="DataFrame")
 def _pearson_corr_polars(df):
-    return df.select(cs.numeric()).corr()
+    return pl.from_pandas(_pearson_corr_pandas(df.to_pandas()))
 
 
 @dispatch

@@ -21,7 +21,7 @@ def column_associations(df):
     The result is returned as a dataframe with columns:
 
     ``['left_column_name', 'left_column_idx', 'right_column_name',
-    'right_column_idx', 'cramer_v', 'pearson']``
+    'right_column_idx', 'cramer_v', 'pearson_corr']``
 
     As the function is commutative, each pair of columns appears only once
     (either ``col_1``, ``col_2`` or ``col_2``, ``col_1`` but not both).
@@ -36,7 +36,8 @@ def column_associations(df):
 
     To compute the Pearson's Correlation Coefficient, only numeric columns are
     considered. The correlation is computed using the Pearson method used in
-    pandas.
+    pandas or polars, depending on the dataframe. In both case, lines containing NaNs
+    are dropped
 
     Parameters
     ----------
@@ -86,32 +87,33 @@ def column_associations(df):
     >>> # Compute the associations
     >>> associations = skrub.column_associations(df)
     >>> associations # doctest: +SKIP
+       left_column_name  left_column_idx right_column_name  right_column_idx  cramer_v  pearson_corr
+    0              c_1                1               c_4                 4    0.8215        0.1597
+    1              c_0                0               c_1                 1    0.8215        0.1123
+    2              c_0                0               c_3                 3    0.7551        0.3212
+    3              c_1                1               c_3                 3    0.6837       -0.1887
+    4              c_0                0               c_4                 4    0.6837       -0.3202
+    5              c_3                3               c_4                 4    0.6053       -0.0150
+    6              c_2                2               c_3                 3    0.6053        0.1757
+    7              c_0                0               c_2                 2    0.6053       -0.0578
+    8              c_2                2               c_4                 4    0.5169       -0.2885
+    9              c_1                1               c_2                 2    0.4122       -0.4986
     >>> pd.reset_option('display.width')
     >>> pd.reset_option('display.max_columns')
     >>> pd.reset_option('display.precision')
-    """
+    """  # noqa: E501
     cramer_v_table = _stack_symmetric_associations(
         _cramer_v_matrix(df),
         df,
-        metric_name="cramer_v",
     )
-    pearson_c_table = _stack_symmetric_associations(
-        _compute_pearson(df),
-        df,
-        metric_name="pearson_corr",
-    )
-    on = [
-        "left_column_name",
-        "right_column_name",
-        "left_column_idx",
-        "right_column_idx",
-    ]
+    pearson_c_table = _compute_pearson(df)
+    on = ["left_column_name", "right_column_name"]
     return _join_utils.left_join(
         cramer_v_table, pearson_c_table, right_on=on, left_on=on
     )
 
 
-def _stack_symmetric_associations(associations, df, metric_name):
+def _stack_symmetric_associations(associations, df):
     """Turn a symmetric matrix of V statistics into a list of (col, col, value).
 
     The input is the symmetric matrix where entry i, j contains the V statistic
@@ -140,7 +142,7 @@ def _stack_symmetric_associations(associations, df, metric_name):
         "left_column_idx": left_indices,
         "right_column_name": right_column_names,
         "right_column_idx": right_indices,
-        metric_name: associations,
+        "cramer_v": associations,
     }
     return sbd.make_dataframe_like(df, result)
 
@@ -266,27 +268,39 @@ def _compute_cramer(table, n_samples):
 
 
 def _compute_pearson(df):
-    """Compute the Pearson correlation coefficient for all pairs of columns.
+    """Compute the Pearson's correlation coefficient for all pairs of columns.
 
-    This returns the symmetric matrix with shape (n cols, n cols) where entry
-    i, j contains the statistic for column i x column j.
-
+    This returns the Pearson's correlation as a dataframe in the long format, of shape
+    (n samples * n samples, 3), whose module is the same as the input.
     """
-    # Replace categorical columns with np.nan to get a correlation matrix of shape
-    # (n_cols, n_cols).
-    data = {}
-    n_samples = sbd.shape(df)[0]
-    for col in sbd.to_column_list(df):
-        data[col.name] = (
-            col
-            if (sbd.is_numeric(col) or sbd.is_bool(col))
-            else np.full(n_samples, np.nan)
-        )
-    df = sbd.make_dataframe_like(df, data)
+    corr = sbd.pearson_corr(df)
+    return _melt(
+        corr,
+        left_col="left_column_name",
+        right_col="right_column_name",
+        val="pearson_corr",
+    )
 
-    # sbd.pearson_corr filters numeric columns.
-    out = []
-    for col in sbd.to_column_list(sbd.pearson_corr(df)):
-        out.append(sbd.to_numpy(col)[:, None])
 
-    return np.hstack(out)
+@sbd._common.dispatch
+def _melt(df):
+    NotImplementedError()
+
+
+@_melt.specialize("pandas", argument_type="DataFrame")
+def _melt_pandas(df, left_col, right_col, val):
+    # Deal with multi-level index and columns
+    if df.index.nlevels() > 1:
+        df.index = df.index.to_flat_index().astype(str)
+    if df.columns.nlevels() > 1:
+        df.columns = df.columns.to_flat_index().astype(str)
+    return df.melt(ignore_index=False, var_name=right_col, value_name=val).reset_index(
+        names=left_col
+    )
+
+
+@_melt.specialize("polars", argument_type="DataFrame")
+def _melt_polars(df, left_col, right_col, val):
+    return df.transpose(
+        include_header=True, header_name=left_col, column_names=df.columns
+    ).unpivot(index=left_col, variable_name=right_col, value_name=val)
