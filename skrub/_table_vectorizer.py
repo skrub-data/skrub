@@ -143,7 +143,9 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
     """
     A light transformer that preprocesses each column of a dataframe.
 
-    The ``SimpleCleaner`` performs some consistency checks and basic preprocessing such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing dates. See the "Notes" section for a full list.
+    The ``SimpleCleaner`` performs some consistency checks and basic preprocessing
+    such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
+    dates. See the "Notes" section for a full list.
 
     Parameters
     ----------
@@ -182,13 +184,14 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
     - ``CleanCategories()``: process categorical columns depending on the dataframe
     library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
-    - ``ToStr()``: convert columns to strings, unless they are numerical, categorical, or datetime.
+    - ``ToStr()``: convert columns to strings, unless they are numerical,
+    categorical, or datetime.
 
     The ``SimpleCleaner`` object should only be used for preliminary sanitizing of
-    the data, while the ``TableVectorizer`` should instead be used to transform the
-    data. This is because the ``SimpleCleaner`` does not convert null values to a
-    consistent representation, which can lead to issues when the data is passed to
-    downstream models.
+    the data because it does not perform any transformations on numeric columns.
+    On the other hand, the ``TableVectorizer`` converts numeric columns to float32
+    and ensures that null values are represented with NaNs, which can be handled
+    correctly by downstream scikit-learn estimators.
 
     Examples
     --------
