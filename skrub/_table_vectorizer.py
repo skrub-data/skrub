@@ -177,7 +177,7 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
     - ``DropIfTooManyNulls()``: drop the column if it contains too many null values.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
-    ``datetime64``.
+    actual datetimes with the correct dtype.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
     library (Pandas or Polars) to force consistent typing and avoid issues downstream.
