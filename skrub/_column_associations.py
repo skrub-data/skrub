@@ -279,8 +279,8 @@ def _compute_pearson(df):
         return sbd.make_dataframe_like(
             df,
             {
-                "left_column_name": np.array([], dtype="object"),
-                "right_column_name": np.array([], dtype="object"),
+                "left_column_name": np.array([], dtype="str"),
+                "right_column_name": np.array([], dtype="str"),
                 "pearson_corr": np.array([], dtype="float64"),
             },
         )
