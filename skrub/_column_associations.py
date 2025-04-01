@@ -284,8 +284,8 @@ def _compute_pearson(df):
 
 
 @sbd._common.dispatch
-def _melt(df):
-    NotImplementedError()
+def _melt(df, left_col, right_col, val):
+    raise NotImplementedError()
 
 
 @_melt.specialize("pandas", argument_type="DataFrame")
