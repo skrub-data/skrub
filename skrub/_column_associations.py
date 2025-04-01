@@ -275,6 +275,15 @@ def _compute_pearson(df):
     (n samples * n samples, 3), whose module is the same as the input.
     """
     corr = sbd.pearson_corr(df)
+    if sbd.shape(corr)[0] == 0:
+        return sbd.make_dataframe_like(
+            {
+                "left_column_name": [],
+                "right_column_name": [],
+                "pearson_corr": [],
+            },
+            df,
+        )
     return _melt(
         corr,
         left_col="left_column_name",
@@ -309,6 +318,6 @@ def _melt_polars(df, left_col, right_col, val):
     import polars as pl
 
     if parse_version(pl.__version__) < parse_version("1.0"):
-        return df.melt(index=left_col, variable_name=right_col, value_name=val)
+        return df.melt(id_vars=left_col, variable_name=right_col, value_name=val)
     else:
         return df.unpivot(index=left_col, variable_name=right_col, value_name=val)
