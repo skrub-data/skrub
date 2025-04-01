@@ -172,16 +172,22 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
     all_processing_steps_ : dict
         Maps the name of each column to a list of all the processing steps that were
         applied to it.
+
     Notes
     -----
     The ``SimpleCleaner`` performs the following set of transformations on each column:
+
     - ``CleanNullStrings()``: replace strings used to represent null values
     with actual null values.
+
     - ``DropIfTooManyNulls()``: drop the column if it contains too many null values.
+
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
     ``datetime64``.
+
     - ``CleanCategories()``: process categorical columns depending on the dataframe
     library (Pandas or Polars) to force consistent typing and avoid issues downstream.
+
     - ``ToStr()``: convert columns to strings, unless they are numerical or datetime.
 
     The ``SimpleCleaner`` object should only be used for preliminary observations on
