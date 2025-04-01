@@ -281,8 +281,7 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
         input_names = all_steps[0].feature_names_out_
-        to_steps = {col: [] for col in input_names}
-        self.all_processing_steps_ = {col: [] for col in to_steps}
+        self.all_processing_steps_ = {col: [] for col in input_names}
         for step in all_steps[1:]:
             for col, transformer in step.transformers_.items():
                 self.all_processing_steps_[col].append(transformer)
