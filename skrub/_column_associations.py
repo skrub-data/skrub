@@ -4,6 +4,7 @@ import warnings
 
 import numpy as np
 from sklearn.preprocessing import KBinsDiscretizer, OneHotEncoder
+from sklearn.utils.fixes import parse_version
 
 from . import _dataframe as sbd
 from . import _join_utils
@@ -301,6 +302,13 @@ def _melt_pandas(df, left_col, right_col, val):
 
 @_melt.specialize("polars", argument_type="DataFrame")
 def _melt_polars(df, left_col, right_col, val):
-    return df.transpose(
+    df = df.transpose(
         include_header=True, header_name=left_col, column_names=df.columns
-    ).unpivot(index=left_col, variable_name=right_col, value_name=val)
+    )
+    # TODO: remove when polars optional min-dep > 1.0
+    import polars as pl
+
+    if parse_version(pl.__version__) < parse_version("1.0"):
+        return df.melt(index=left_col, variable_name=right_col, value_name=val)
+    else:
+        return df.unpivot(index=left_col, variable_name=right_col, value_name=val)
