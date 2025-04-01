@@ -184,7 +184,7 @@ def tabular_learner(estimator, *, n_jobs=None):
                     ('logisticregression', LogisticRegression())])
 
     We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get
-    the default configuration of the :obj:`TableVectorizer` which is intended
+    a configuration of the :obj:`TableVectorizer` which is intended
     to work well for a wide variety of downstream estimators. Moreover, as the
     :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing
     values, an imputation step is added. Finally, as many models require the
@@ -217,6 +217,8 @@ def tabular_learner(estimator, *, n_jobs=None):
       makes sure that those features have a categorical dtype so that the
       :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` recognizes them
       as such.
+
+    - There is no spline encoding of datetimes.
 
     - There is no missing-value imputation because the classifier has its own
       (better) mechanism for dealing with missing values.
