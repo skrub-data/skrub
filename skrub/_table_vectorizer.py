@@ -174,6 +174,16 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
         applied to it.
     Notes
     -----
+    The ``SimpleCleaner`` performs the following set of transformations on each column:
+    - ``CleanNullStrings()``: replace strings used to represent null values
+    with actual null values.
+    - ``DropIfTooManyNulls()``: drop the column if it contains too many null values.
+    - ``ToDatetime()``: parse datetimes represented as strings and return them as
+    ``datetime64``.
+    - ``CleanCategories()``: process categorical columns depending on the dataframe
+    library (Pandas or Polars) to force consistent typing and avoid issues downstream.
+    - ``ToStr()``: convert columns to strings, unless they are numerical or datetime.
+
     The ``SimpleCleaner`` object should only be used for preliminary observations on
     the data, while the ``TableVectorizer`` should instead be used to transform the
     data. This is because the ``SimpleCleaner`` does not convert null values to a
