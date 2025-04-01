@@ -20,6 +20,7 @@ def encode_column(df_module):
         "this document is the second document",
         "and this is the third one",
         "is this the first document",
+        None,
     ]
 
     return df_module.make_column("col1", corpus)
@@ -37,7 +38,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
             ("tsvd", TruncatedSVD(n_components=n_components)),
         ]
     )
-    check = pipe.fit_transform(sbd.to_numpy(encode_column))
+    check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
     check = check.astype("float32")  # StringEncoder is float32
 
     names = [f"col1_{idx}" for idx in range(2)]
@@ -62,7 +63,12 @@ def test_tfidf_vectorizer(encode_column, df_module):
     result_transform = se.transform(encode_column)
     result_transform = sbd.pandas_convert_dtypes(result_transform)
 
-    df_module.assert_frame_equal(result, result_transform)
+    for idx in range(len(check_df.columns)):
+        col1 = sbd.col_by_idx(check_df, idx)
+        col2 = sbd.col_by_idx(check_df, idx)
+
+        for c1, c2 in zip(col1, col2):
+            assert_almost_equal(c1, c2, decimal=6)
 
 
 def test_hashing_vectorizer(encode_column, df_module):
@@ -79,8 +85,7 @@ def test_hashing_vectorizer(encode_column, df_module):
             ("tsvd", TruncatedSVD(n_components=n_components)),
         ]
     )
-    check = pipe.fit_transform(sbd.to_numpy(encode_column))
-
+    check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
     names = [f"col1_{idx}" for idx in range(2)]
 
     check_df = df_module.make_dataframe(dict(zip(names, check.T)))

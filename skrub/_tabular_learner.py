@@ -6,6 +6,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
+from ._datetime_encoder import DatetimeEncoder
 from ._minhash_encoder import MinHashEncoder
 from ._sklearn_compat import get_tags
 from ._table_vectorizer import TableVectorizer
@@ -156,7 +157,8 @@ def tabular_learner(estimator, *, n_jobs=None):
     >>> from sklearn.linear_model import LogisticRegression
     >>> model = tabular_learner(LogisticRegression())
     >>> model.fit(X, y)
-    Pipeline(steps=[('tablevectorizer', TableVectorizer()),
+    Pipeline(steps=[('tablevectorizer',
+                    TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
                     ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
@@ -175,13 +177,14 @@ def tabular_learner(estimator, *, n_jobs=None):
     The parameters of the :obj:`TableVectorizer` depend on the provided ``estimator``.
 
     >>> tabular_learner(LogisticRegression())
-    Pipeline(steps=[('tablevectorizer', TableVectorizer()),
+    Pipeline(steps=[('tablevectorizer',
+                    TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
                     ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
 
     We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get
-    the default configuration of the :obj:`TableVectorizer` which is intended
+    a configuration of the :obj:`TableVectorizer` which is intended
     to work well for a wide variety of downstream estimators. Moreover, as the
     :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing
     values, an imputation step is added. Finally, as many models require the
@@ -214,6 +217,8 @@ def tabular_learner(estimator, *, n_jobs=None):
       makes sure that those features have a categorical dtype so that the
       :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` recognizes them
       as such.
+
+    - There is no spline encoding of datetimes.
 
     - There is no missing-value imputation because the classifier has its own
       (better) mechanism for dealing with missing values.
@@ -270,6 +275,8 @@ def tabular_learner(estimator, *, n_jobs=None):
             ),
             high_cardinality=MinHashEncoder(),
         )
+    else:
+        vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
     steps = [vectorizer]
     if not get_tags(estimator).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))

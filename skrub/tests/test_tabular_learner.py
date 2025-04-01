@@ -57,6 +57,7 @@ def test_linear_learner():
     assert isinstance(tv.low_cardinality, OneHotEncoder)
     assert isinstance(imputer, SimpleImputer)
     assert isinstance(scaler, StandardScaler)
+    assert tv.datetime.periodic_encoding == "spline"
 
 
 def test_tree_learner():
@@ -70,6 +71,7 @@ def test_tree_learner():
     assert learner is original_learner
     assert isinstance(tv.high_cardinality, MinHashEncoder)
     assert isinstance(tv.low_cardinality, OrdinalEncoder)
+    assert tv.datetime.periodic_encoding is None
 
 
 def test_from_dtype():

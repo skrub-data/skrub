@@ -26,6 +26,10 @@ New features
   :pr:`1203` by :user:`Reshama Shaikh <reshamas>` and
   :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- The :class:`SimpleCleaner` is now available. This transformer is a lightweight pre-processor that
+  applies some of the transformations applied by the :class:`TableVectorizer`, with a simpler
+  interface. :pr:`1266` by :user:`Riccardo Cappuzzo<rcap107>` and :user:`Jerome Dockes <jeromedockes>` .
+
 Changes
 -------
 
@@ -36,8 +40,18 @@ Changes
 - Progress messages when generating a ``TableReport`` are now written to stderr instead of stdout.
   :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
 
-- Optimize the :class:`StringEncoder`: significant memory reduction and 1.5x speed-up.
+- Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+Bug fixes
+---------
+- :class:`StringEncoder` now works correctly in presence of null values.
+  :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+- The estimator returned by :func:`tabular_learner` now uses spline encoding of
+  datetime features when the supervised learner is not a model based on decision
+  trees such as random forests or gradient boosting. :pr:`1264` by
+  :user:`Guillaume Lemaitre <glemaitre>`.
 
 Bug fixes
 ---------
