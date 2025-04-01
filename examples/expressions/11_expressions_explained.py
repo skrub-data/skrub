@@ -3,40 +3,25 @@
 Skrub expressions
 =================
 
-The way we build a machine-learning pipeline in skrub is somewhat different
-from scikit-learn. We do not create the complete pipeline ourselves by
-providing an explicit list of transformation steps. Rather, we manipulate
-objects that represent intermediate results in our computation. They record the
-different operations we perform on them (such as applying operators or calling
-methods), which allows to later retrieve the whole sequence of operations as a
-scikit-learn estimator that can be fitted and applied to unseen data.
+Skrub provides special objects that represent intermediate results in a
+computation. They record the different operations we perform on them (such as
+applying operators or calling methods), which allows to later retrieve the
+whole computation graph as a machine-learning estimator that can be fitted and
+applied to unseen data.
 
-Because those objects encapsulate a computation, which can be evaluated to
-produce a result, we refer to them as "expressions".
+Because those Skrub objects encapsulate a computation, which can be evaluated
+to produce a result, we call them "expressions".
 
-The simplest expressions are variables, which represent inputs to our pipeline
-such as a ``"products"`` or a ``"customers"`` table. Those can be combined with
-operators and function calls to build up more complex expressions. The pipeline
-is being built implicitly when we apply those operations
-
-We had a quick preview of skrub expressions in the previous example.
-In this one we explain how they work in detail.
-The next example will cover hyperparameter search.
-
+The simplest expressions are variables, which represent inputs to our
+machine-learning estimator such as a ``"products"`` or a ``"customers"`` table.
+Those variables can be combined with operators and function calls to build up
+more complex expressions. The estimator is being constructed implicitly when we
+apply those operations, rather than by providing an explicit list of
+transformations.
 """
 
 # %%
-# General workflow
-# ----------------
-#
-# Skrub expressions exist to build machine-learning pipelines that contain
-# scikit-learn estimators. However, they can process any kind of data.
-# To start with a very simple example and give a summary of the different steps
-# let us build a pipeline that just adds 2 numbers.
-
-
-# %%
-# Declare inputs with ``skrub.var``
+# We start by declaring inputs with ``skrub.var``.
 
 # %%
 import skrub
@@ -45,15 +30,14 @@ a = skrub.var("a")
 b = skrub.var("b")
 
 # %%
-# Apply transformations, composing more complex expressions
+# We then apply transformations, composing more complex expressions.
 
 # %%
 c = a + b
 c
 
 # %%
-# We can evaluate the expression. (``eval()`` is not very often used in
-# practice but we use it in the example for explaining how expressions work.)
+# We can evaluate the expression.
 
 # %%
 c.skb.eval({"a": 10, "b": 6})
@@ -62,11 +46,45 @@ c.skb.eval({"a": 10, "b": 6})
 c.skb.eval({"a": 2, "b": 3})
 
 # %%
-# Get a scikit-learn estimator that can be fitted and applied to data
+# As shown above, the special ``.skb`` attribute provides access to skrub
+# functionality to interact with the expression object itself. Access to any other
+# attribute is simply added as a new operation in the computation
+# graph:
+
+# %%
+d = c.capitalize()
+d
+
+# %%
+d.skb.eval({"a": "hello, ", "b": "world!"})
+
+# %%
+# Finally, we can get an estimator that can be fitted and applied to data.
 
 # %%
 estimator = c.skb.get_estimator()
 estimator.fit_transform({"a": 10, "b": 7})
+
+
+# %%
+# Handling multiple inputs
+# ------------------------
+#
+# One advantage of the approach outlined above is that we can build models that
+# handle and transform multiple tables (and other kinds of inputs).
+#
+# Scikit-learn pipelines represent a linear sequence of transformations on one
+# table with a fixed number of rows.
+#
+# .. image:: ../../_static/sklearn_pipeline.svg
+#     :width: 500
+#
+# Skrub expressions, on the other hand, can manipulate any number of variables.
+# The transformation they perform is not a linear sequence but any Directed
+# Acyclic Graph of computations.
+#
+# .. image:: ../../_static/skrub_expressions.svg
+
 
 # %%
 # Previews of the results
@@ -83,7 +101,7 @@ estimator.fit_transform({"a": 10, "b": 7})
 # the development more interactive, allows catching errors early, and can
 # provide better help and tab-completion in an interactive Python shell.
 #
-# Moreover, those values can be used to obtain a fitted pipeline or
+# Moreover, those values can be used to obtain a fitted estimator or
 # cross-validation scores as we will see.
 #
 # Instead of simply ``var("a")`` as before, we can write:
@@ -95,15 +113,13 @@ c = a + b
 c
 
 # %%
-# In the display above, you can still see the diagram representing the pipeline
-# by clicking on the dropdown ``▶ Show graph``.
+# In the display above, you can still see the graph by clicking on the dropdown
+# ``▶ Show graph``.
 #
-# It is important to understand that seeing results for the values we provided
-# does *not* change the fact that we are building a pipeline that we want to
-# reuse, not just computing the result for a fixed input. Think of the
-# displayed result as a preview of the pipeline's output on one example
-# dataset. Providing values does not otherwise change the behavior of the
-# expressions.
+# Seeing results for the values we provided does *not* change the fact that we
+# are building a computation graph that we want to reuse, not just computing
+# the result for a fixed input. We can think of the displayed result as a
+# preview of the output on one example dataset.
 
 # %%
 c.skb.eval({"a": 3, "b": 2})
@@ -111,29 +127,29 @@ c.skb.eval({"a": 3, "b": 2})
 
 # %%
 # In what follows we will always provide values for our variables. When
-# building your own pipeline we recommend you do so as well, because running
-# the pipeline on example data every step of the way makes development much
+# building your own estimator we recommend you do so as well, because running
+# the estimator on example data every step of the way makes development much
 # easier by catching errors as soon as the operation is added, rather than
-# later when fitting the pipeline.
+# later when fitting the full estimator.
 
 # %%
 # Composing expressions
 # ---------------------
 #
-# The simplest expressions are variables created with ``skrub.var`` (or plain
-# python objects). Complex expressions are constructed by applying functions or
-# operators to other expressions.
+# The simplest expressions are variables created with ``skrub.var``. Complex
+# expressions are constructed by applying functions or operators to other
+# expressions.
 #
 # So what operations are allowed? Remember that when we apply an operation to
-# an expression, it is implicitly added as a step in our pipeline. When we call
-# ``.fit()`` (or ``.transform()``, ``.predict()`` etc) on the pipeline, those
-# operations are replayed on the actual data provided to ``fit()``.
+# an expression, it is implicitly added as a step in our computation. When we
+# run the computation, those operations are replayed on the actual data we
+# provide.
 #
-# So we can use any operation that is valid for the data we will pass to
-# ``fit()`` (with some caveats detailed below). If we know we will pass a
+# So we can use any operation that is valid for the types we will pass to run
+# the computation (with some caveats detailed below). If we know we will pass a
 # pandas DataFrame as the ``"products"`` table, we can use any of the methods
 # of pandas DataFrames. If instead we know we will pass a numpy array, we use
-# the methods of numpy arrays.
+# the methods of numpy arrays, etc.
 #
 # More operations (e.g. applying a scikit-learn estimator) are available
 # through the special ``skb`` attribute, as we will see later.
@@ -141,7 +157,7 @@ c.skb.eval({"a": 3, "b": 2})
 # Basic operations
 # ~~~~~~~~~~~~~~~~
 #
-# Suppose we want our pipeline to process dataframes that look like this:
+# Suppose we want to process dataframes that look like this:
 
 # %%
 import pandas as pd
@@ -156,14 +172,14 @@ orders_df = pd.DataFrame(
 orders_df
 
 # %%
-# We can create a skrub variable to represent that input to the pipeline
+# We can create a skrub variable to represent that input
 
 # %%
 orders = skrub.var("orders", orders_df)
 orders
 
 # %%
-# Because we know we will feed a DataFrame to the pipeline, we manipulate
+# Because we know we will feed a DataFrame to the computation, we manipulate
 # ``products`` as if it were a DataFrame.
 #
 # Accessing attributes:
@@ -209,7 +225,7 @@ orders.skb.apply(skrub.StringEncoder(n_components=3), cols="item")
 
 # %%
 # Again, the crucial part is that when applying such operations, the return
-# value encapsulates the whole pipeline that produces the result we see. We are
+# value encapsulates the whole computation that produces the result we see. We are
 # not interested in a single result for the example values we provided, but in
 # the ability to retrieve a machine-learning estimator that we can fit and then
 # apply to unseen data.
@@ -228,15 +244,16 @@ new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
 estimator.transform({"orders": new_orders})
 
 # %%
-# Delayed evaluation
+# Deferred evaluation
 # ------------------
 #
-# It is important to understand that expressions represent a computation that
-# has not yet been executed, and will be executed when we trigger it, for
-# example by calling ``eval()`` or getting the estimator and calling ``fit()``.
+# Expressions represent a computation that has not yet been executed, and will
+# be executed when we trigger it, for example by calling ``eval()`` or getting
+# the estimator and calling ``fit()``.
 #
-# This means that we cannot use usual Python control flow statements with
-# expressions, because those would execute immediately.
+# This means that we cannot use usual Python control flow statements such as
+# ``if``, ``for``, ``with`` etc. with expressions, because those constructs would
+# execute immediately.
 
 # %%
 # For example, we cannot do this::
@@ -251,7 +268,10 @@ estimator.transform({"orders": new_orders})
 # We get an error because the ``for`` statement tries to iterate immediately
 # over the columns. However, ``orders.columns`` is not an actual list of
 # columns: it is a skrub expression that will produce a list of columns, later,
-# when we run the pipeline.
+# when we run the computation.
+#
+# .. image:: ../../_static/skrub_3d_2.svg
+#   :width: 200
 #
 # This remains true even if we have provided a value for ``orders`` and we can
 # see a result for that value:
@@ -260,14 +280,14 @@ estimator.transform({"orders": new_orders})
 orders.columns
 
 # %%
-# The "result" we see is an *example* result that the pipeline produces for the
-# data we provided. But we want to fit our pipeline and apply it many times to
-# different datasets, for which it will return a new object every time. So even
-# if we see a preview of the pipeline's output on the data we provided,
+# The "result" we see is an *example* result that the computation produces for
+# the data we provided. But we want to fit our estimator and apply it many
+# times to different datasets, for which it will return a new object every
+# time. So even if we see a preview of the output on the data we provided,
 # ``orders.columns`` still represents a future computation that remains to be
 # evaluated.
 #
-# So we must delay the execution of the ``for`` statement until the pipeline
+# So we must delay the execution of the ``for`` statement until the computation
 # actually runs and ``orders.columns`` has been evaluated.
 #
 # We can do this by wrapping it in a function and using ``skrub.deferred``
@@ -285,8 +305,7 @@ orders.columns
 # we apply the ``skrub.deferred`` decorator to it. What this does is to defer
 # the calls to our function. Now when we call it, instead of running
 # immediately, it returns a skrub expression that wraps the function call. The
-# original function is actually called when we evaluate the expression, by
-# running the pipeline.
+# original function is actually called when we evaluate the expression.
 
 
 # %%
@@ -300,112 +319,28 @@ with_upper_columns(orders)
 
 # %%
 # If you unfold the dropdown ``▶ Show graph`` above, you can
-# see that a call to our function has been added to the pipeline.
+# see that a call to our function has been added to the computation graph.
 #
-# When the pipeline runs, ``orders`` will be evaluated first and the result (an
+# .. image:: ../../_static/skrub_3d_3.svg
+#   :width: 200
+#
+# When the computation runs, ``orders`` will be evaluated first and the result (an
 # actual dataframe) will be passed as the ``df`` argument to our function.
-
-# %%
-# Here is another example of using ``skrub.deferred``.
-
-
-# %%
-def check(price):
-    if price < 0:
-        print("warning! negative price:", price)
-    else:
-        print("good price:", price)
-    return price
-
-
-check(2.5)
-
-# %%
-# We could not use ``check`` directly on an expression:
-
-# %%
-price = skrub.var("price")
-price
-
-# %%
-price < 0
-
-# %%
-# .. code-block::
 #
-#     check(price)
-#
-# .. code-block:: none
-#
-#     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly use its Boolean value now.
-#
-# It is the same kind of error: the ``if`` statement tries to convert
-# ``price < 0`` to a Python Boolean but it is a skrub expression that needs to be
-# evaluated first.
-
-
-# %%
-# If we defer the execution of ``check`` we get an function that adds the call to
-# the pipeline and returns expression instead:
-
-# %%
-expr = skrub.deferred(check)(price)
-expr
-
-# %%
-expr.skb.eval({"price": 2.5})
-
-# %%
-expr.skb.eval({"price": -3.0})
-
-# %%
-# Providing a value when we initialize the variable ``"price"`` does *not*
-# change the nature of the expression; even if it provides a preview it is
-# still a computation that can be evaluated many times on different inputs.
-
-# %%
-price = skrub.var("price", -3.0)
-
-# %%
-# We still cannot call ``check(price)`` directly, for the same reasons.
-# If ``check`` ran immediately, we would be checking our example price -3.0,
-# rather than adding the check to our pipeline so that it is applied to all
-# inputs that we feed through it. So we must still use ``deferred``. The
-# difference, now that we provided a value, is that besides creating an
-# expression and returning it, skrub also immediately evaluates it on the
-# example data and *shows* the result.
-
-# %%
-skrub.deferred(check)(price)
+# .. image:: ../../_static/skrub_3d_4.svg
+#   :width: 400
 
 # %%
 # ``skrub.deferred`` is useful for our own functions but also when we need to
-# call module-level functions from a library. Suppose we want to add a binary
-# feature indicating missing values in the ``"price"`` column. We could do this
-# with the Series' method ``orders['price'].isna()`` but let us imagine it does
-# not exist or we prefer to use the module-level ``pd.isna``. Calling it
-# directly on our expression raises an error::
-#
-#     pd.isna(orders['price'])
-#
-# .. code-block:: none
-#
-#     TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly use its Boolean value now.
-#
-# This is the same error as above: somewhere inside of ``isna``, there is an
-# ``if`` statement that errors because we passed an expression rather than a
-# Series. Here again the solution is to use ``deferred``.
+# call module-level functions from a library. For example to delay loading of a
+# csv file we could use something like:
 
 # %%
-null_price = skrub.deferred(pd.isna)(orders["price"])
-null_price
+csv_path = skrub.var("csv_path")
+data = skrub.deferred(pd.read_csv)(csv_path)
 
 # %%
-orders.assign(missing_price=skrub.deferred(pd.isna)(orders["price"]))
-
-
-# %%
-# Also note that for the same reason (we are building a pipeline, not
+# Also note that for the same reason (we are building a computation graph, not
 # immediately computing a single result), any transformation that we have must
 # not modify its input, but leave it unchanged and return a new value.
 #
@@ -449,21 +384,20 @@ add_total(orders)
 #
 # - we have many nodes in our graph, and we want to collapse a sequence of
 #   steps into a single function call, that will appear as a single node
-# - we have steps that need to be deferred until the pipeline runs, because
-#   they depend on the runtime environment or on objects that cannot be pickled
-#   together with the rest of the pipeline -- for example opening and reading a
-#   file.
-#
+# - we have steps that need to be deferred until the full computation runs,
+#   because they depend on the runtime environment or on objects that cannot be
+#   pickled together with the rest of the computation graph -- for example
+#   opening and reading a file.
 
 # %%
 # Supervised estimators and cross-validation
 # ------------------------------------------
 #
-# We can use ``.skb.apply()`` to add scikit-learn transformers to the pipeline,
+# We can use ``.skb.apply()`` to add scikit-learn transformers to the computation,
 # but also to add a supervised learner like ``HistGradientBoostingClassifier``
 # or ``LogisticRegression``.
 #
-# When we have built a full pipeline, we want to run cross-validation to
+# When we have built a full estimator, we want to run cross-validation to
 # measure its performance. We may also want to tune hyperparameters (shown in
 # the next example).
 #
@@ -472,19 +406,14 @@ add_total(orders)
 # to tell skrub which items in our pipeline constitute the feature matrix ``X``
 # and the targets (labels, outputs) ``y``.
 #
-# Indeed, a skrub pipeline can accept inputs that are not yet neatly organized
-# into correctly-aligned ``X`` and ``y`` matrices. There may be some steps
-# (such as loading data, performing joins or aggregations, separating features
-# and targets from a single source) that need to be performed in order to
-# construct the design matrix the targets. This makes skrub pipelines flexible
-# and powerful. In this setting, in order to be able to split the data and
-# perform cross-validation, we need to explicitly mark the intermediate results
-# that should be considered as ``X`` and ``y`` and used to define
-# cross-validation splits.
+# Indeed, an estimator built from a skrub expression can accept inputs that are
+# not yet neatly organized into correctly-aligned ``X`` and ``y`` matrices.
+# There may be some steps (such as loading data, performing joins or
+# aggregations, separating features and targets from a single source) that need
+# to be performed in order to construct the design matrix the targets.
 #
-# In the simplest case where we have ``X`` and ``y`` available right from the
-# start, we can indicate that simply by creating the input variables with
-# ``skrub.X()`` and ``skrub.y()`` instead of ``skrub.var()``.
+# To indicate which intermediate results to split, we call ``.skb.mark_as_X()``
+# and ``.skb.mark_as_y()`` on the appropriate objects:
 
 # %%
 from sklearn.ensemble import HistGradientBoostingRegressor
@@ -493,42 +422,6 @@ import skrub.datasets
 
 dataset = skrub.datasets.fetch_employee_salaries()
 
-employees = skrub.X(dataset.X)
-salaries = skrub.y(dataset.y)
-
-vectorizer = skrub.TableVectorizer(
-    high_cardinality=skrub.MinHashEncoder(n_components=8)
-)
-predictions = employees.skb.apply(vectorizer).skb.apply(
-    HistGradientBoostingRegressor(), y=salaries
-)
-predictions
-
-# %%
-# Note how ``apply`` works for supervised estimators: we pass the targets
-# (another skrub expression) as the argument for the parameter ``y``.
-#
-# We can now use another method from the special ``.skb`` attribute:
-# ``cross_validate()``. It accepts the same parameters (except for ``X``, ``y``
-# and ``estimator``) and returns the same output as
-# ``sklearn.model_selection.cross_validate``.
-
-# %%
-predictions.skb.cross_validate()
-
-# %%
-# When the situation is more complex and we need some data processing to
-# construct ``X`` and ``y``, we can still do that as part of the skrub pipeline
-# and keep those transformations neatly bundled with the actual learning. We
-# just need to tell skrub which intermediate results constitute ``X`` and
-# ``y``. For example, suppose we get all the data as a single dataframe and we
-# need to separate the target column from the rest. This is a very simple, toy
-# example but more complex situations are handled in the same way.
-#
-# To indicate which intermediate results to split, we call ``.skb.mark_as_X()``
-# and ``.skb.mark_as_y()`` on the appropriate objects:
-
-# %%
 full_data = skrub.var("data", dataset.employee_salaries)
 
 employees = full_data.drop(columns="current_annual_salary").skb.mark_as_X()
@@ -543,76 +436,55 @@ predictions = employees.skb.apply(vectorizer).skb.apply(
 predictions
 
 # %%
+# Note how ``apply`` works for supervised estimators: we pass the targets
+# (another skrub expression) as the argument for the parameter ``y``.
+#
 # If you unfold the dropdown to see the computation graph, you will see the
-# inner nodes that have been marked as ``X`` and ``y``. To evaluate the
-# pipeline, skrub first runs all the prior steps until it has computed ``X``
-# and ``y``. Then, it splits those (with the usual scikit-learn
+# inner nodes that have been marked as ``X`` and ``y``. To perform
+# cross-validation, skrub first runs all the prior steps until it has computed
+# ``X`` and ``y``. Then, it splits those (with the usual scikit-learn
 # cross-validation tools, as is done in ``sklearn.cross_validate``) and runs
-# the rest of the pipeline inside of the cross-validation loop.
+# the rest of the computation inside of the cross-validation loop.
+#
 
 # %%
 predictions.skb.cross_validate()
 
+
 # %%
-# Start your pipeline by constructing ``X`` and ``y``.
-# Naturally, the construction of ``X`` and ``y`` has to run before splitting
+# In the simplest case where we have ``X`` and ``y`` available right from the
+# start, we can indicate that simply by creating the input variables with
+# ``skrub.X()`` and ``skrub.y()`` instead of ``skrub.var()``: ``skrub.X()`` is
+# the same as ``skrub.var("X").skb.mark_as_X()``.
+
+# %%
+# The construction of ``X`` and ``y`` has to run before splitting
 # into cross-validation folds; it happens outside of the cross-validation loop.
 #
-# This means that any step we perform in this part of the pipeline has access
-# to the full data (training and test sets). We should not use estimators that
-# learn from the data before reaching the cross-validation loop, or we might
-# obtain optimistic scores due to data leakage. Moreover, no choices or
-# hyperparameters can be tuned in this part of the pipeline (tuning is
-# discussed in more detail in the next example).
+# This means that any step we perform in this part of the computation has
+# access to the full data (training and test sets). We should not use
+# estimators that learn from the data before reaching the cross-validation
+# loop, or we might obtain optimistic scores due to data leakage. Moreover, no
+# choices or hyperparameters can be tuned in this part of the computation
+# (tuning is discussed in more detail in the next example).
 #
-# Therefore, we should build ``X`` and ``y`` at the very start of the pipeline
-# and use ``mark_as_X()`` and ``mark_as_y()`` as soon as possible -- as soon as
-# we have separate ``X`` and ``y`` tables that are aligned and have one row per
-# sample. In particular we should use ``mark_as_X()`` before doing any feature
-# extraction and selection.
+# Therefore, we should build ``X`` and ``y`` at the very start of the
+# computation and use ``mark_as_X()`` and ``mark_as_y()`` as soon as possible
+# -- as soon as we have separate ``X`` and ``y`` tables that are aligned and
+# have one row per sample. In particular we should use ``mark_as_X()`` before
+# doing any feature extraction and selection.
 #
-# Coming back to the previous example we could have written:
-
-# %%
-full_data = skrub.var("data", dataset.employee_salaries)
-
-employees = full_data.drop(columns="current_annual_salary")
-salaries = full_data["current_annual_salary"].skb.mark_as_y()
-
-vectorizer = skrub.TableVectorizer(
-    high_cardinality=skrub.MinHashEncoder(n_components=8)
-)
-features = employees.skb.apply(vectorizer).skb.mark_as_X()
-predictions = features.skb.apply(HistGradientBoostingRegressor(), y=salaries)
-
-predictions
-
-# %%
-# Note that ``.mark_as_X()`` has been moved down, until after the vectorizer is
-# applied. Our pipeline can still run, but cross-validation now works
-# differently: first the whole table is vectorized, _then_ the resulting
-# feature matrix (and the targets) is split into cross-validation folds. Thus
-# the vectorizer sees the full dataset. It is not much of an issue with the
-# ``MinHashEncoder`` which does not learn anything, but if we used for example
-# the ``GapEncoder`` it would use the testing data to learn its latent
-# representations and might cause some overfitting. If we had some supervised
-# transformations (that use the targets) such as feature selection with
-# ``SelectKBest()`` before ``mark_as_X()``, the overfitting could be severe.
-#
-# Skrub will still let us apply transformers before reaching ``mark_as_X``
-# because sometimes we know our transformer is stateless (eg the
-# ``MinHashEncoder``, or the ``TextEncoder`` with ``n_components=None``) and it
-# is faster to apply it once to the whole dataset than to recompute the
-# transformation inside each cross-validation fold. But in general we should be
-# careful and remember to separate features and targets and then use
-# ``mark_as_X()`` as soon as possible.
+# Skrub will let us apply transformers before reaching ``mark_as_X`` because
+# there are special cases where we know it is safe and faster to do so, but in
+# general we should be careful and remember to separate features and targets
+# and then use ``mark_as_X()`` as soon as possible.
 
 
 # %%
-# A full pipeline
-# ---------------
+# A full example
+# --------------
 #
-# Now we know enough about skrub expressions to create a full pipeline for a
+# Now we know enough about skrub expressions to create a full estimator for a
 # realistic example and evaluate its performance.
 #
 # We finally come back to the credit fraud dataset from the previous example.
@@ -647,18 +519,6 @@ products = skrub.var("products", dataset.products)
 products
 
 # %%
-# Just out of curiosity, we can check the products for a few fraudulent
-# baskets, to see if we can spot whether they have something in common.
-#
-# Note this is just for exploration, we will not add those computations to our
-# prediction pipeline.
-
-# %%
-fraudulent_ids = baskets[fraud_flags == 1]["ID"]
-products[products["basket_ID"].isin(fraudulent_ids)].sort_values("basket_ID")
-
-
-# %%
 # The ``"baskets"`` table itself contains no
 # information: we have to bring in features extracted from the corresponding
 # products. To do so, we must first vectorize the products lines, so that we
@@ -670,8 +530,8 @@ products[products["basket_ID"].isin(fraudulent_ids)].sort_values("basket_ID")
 # split in train and test sets. To fit our ``TableVectorizer``, we want to use
 # only products that belong to a basket in the train set, not one in the test
 # set. So we do a semi-join to exclude any products that do not belong to a
-# basket that can be found in the ``"baskets"`` table currently being processed
-# by the pipeline.
+# basket that can be found in the ``"baskets"`` table currently being
+# processed.
 
 # %%
 
@@ -729,7 +589,7 @@ features = join_baskets_products(baskets, vectorized_products)
 features
 
 # %%
-# Now we can add the supervised learner, the final step in our pipeline.
+# Now we can add the supervised learner, the final step in our computation graph.
 
 # %%
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -738,7 +598,7 @@ predictions = features.skb.apply(HistGradientBoostingClassifier(), y=fraud_flags
 predictions
 
 # %%
-# We can evaluate our pipeline.
+# We can evaluate our estimator.
 
 # %%
 cv_results = predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
@@ -750,7 +610,7 @@ cv_results["test_score"]
 
 # %%
 # If we are happy with the cross-validation scores, we also probably want to
-# fit the pipeline on the data we have, and store it so we can apply it later,
+# fit the estimator on the data we have, and store it so we can apply it later,
 # say to next week's transactions.
 
 # %%

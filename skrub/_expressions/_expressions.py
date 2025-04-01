@@ -523,11 +523,13 @@ class Expr:
             graph = (
                 "Please install Pydot and GraphViz to display the computation graph."
             )
-        if self._skrub_impl.preview_if_available() is NULL:
+        impl = self._skrub_impl
+        if impl.preview_if_available() is NULL:
             return f"<div>{graph}</div>"
-        if (name := self._skrub_impl.name) is not None:
+        if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
-                f"<strong><samp>Name: {html.escape(repr(name))}</samp></strong><br />\n"
+                f"<strong><samp>Name: {html.escape(repr(impl.name))}</samp></strong><br"
+                " />\n"
             )
         else:
             name_line = ""
