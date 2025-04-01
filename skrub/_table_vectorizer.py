@@ -182,7 +182,7 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
     - ``CleanCategories()``: process categorical columns depending on the dataframe
     library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
-    - ``ToStr()``: convert columns to strings, unless they are numerical or datetime.
+    - ``ToStr()``: convert columns to strings, unless they are numerical, categorical, or datetime.
 
     The ``SimpleCleaner`` object should only be used for preliminary sanitizing of
     the data, while the ``TableVectorizer`` should instead be used to transform the
