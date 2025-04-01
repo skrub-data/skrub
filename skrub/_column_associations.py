@@ -301,9 +301,9 @@ def _melt(df, left_col, right_col, val):
 def _melt_pandas(df, left_col, right_col, val):
     # Deal with multi-level index and columns
     if df.index.nlevels > 1:
-        df.index = df.index.to_flat_index().astype(str)
+        df.index = df.index.to_flat_index().astype("string")
     if df.columns.nlevels > 1:
-        df.columns = df.columns.to_flat_index().astype(str)
+        df.columns = df.columns.to_flat_index().astype("string")
     return df.melt(ignore_index=False, var_name=right_col, value_name=val).reset_index(
         names=left_col
     )
