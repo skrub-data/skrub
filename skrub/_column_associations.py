@@ -277,12 +277,12 @@ def _compute_pearson(df):
     corr = sbd.pearson_corr(df)
     if sbd.shape(corr)[0] == 0:
         return sbd.make_dataframe_like(
-            {
-                "left_column_name": [],
-                "right_column_name": [],
-                "pearson_corr": [],
-            },
             df,
+            {
+                "left_column_name": np.array([], dtype="object"),
+                "right_column_name": np.array([], dtype="object"),
+                "pearson_corr": np.array([], dtype="float64"),
+            },
         )
     return _melt(
         corr,
