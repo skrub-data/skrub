@@ -49,7 +49,7 @@ based on the type of the final estimator.
    * - Date preprocessor
      - :class:`DatetimeEncoder`
      - :class:`DatetimeEncoder`
-     - :class:`DatetimeEncoder`
+     - :class:`DatetimeEncoder` with spline encoding
    * - Missing value strategy
      - Native support :sup:`(2)`
      - Native support
