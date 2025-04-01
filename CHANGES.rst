@@ -44,6 +44,11 @@ Bug fixes
 - :class:`StringEncoder` now works correctly in presence of null values.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
+- The estimator returned by :func:`tabular_learner` now uses spline encoding of
+  datetime features when the supervised learner is not a model based on decision
+  trees such as random forests or gradient boosting. :pr:`1264` by
+  :user:`Guillaume Lemaitre <glemaitre>`.
+
 Bug fixes
 ---------
 
