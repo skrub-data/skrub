@@ -112,6 +112,218 @@ def _check_transformer(transformer):
     return clone(transformer)
 
 
+def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
+    steps = [CheckInputDataFrame()]
+    transformers = [
+        CleanNullStrings(),
+        DropIfTooManyNulls(drop_null_fraction),
+        ToDatetime(),
+    ]
+    if add_tofloat32:
+        transformers.append(ToFloat32())
+    transformers += [
+        CleanCategories(),
+        ToStr(),
+    ]
+
+    for transformer in transformers:
+        steps.append(
+            wrap_transformer(
+                transformer,
+                cols,
+                allow_reject=True,
+                n_jobs=n_jobs,
+                columnwise=True,
+            )
+        )
+    return steps
+
+
+class SimpleCleaner(TransformerMixin, BaseEstimator):
+    """
+    A light transformer that preprocesses each column of a dataframe.
+
+    The ``SimpleCleaner`` performs some consistency checks and basic preprocessing
+    such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
+    dates. See the "Notes" section for a full list.
+
+    Parameters
+    ----------
+    drop_null_fraction : float or None, default=1.0
+        Fraction of null above which the column is dropped. If `drop_null_fraction`
+        is set to ``1.0``, the column is dropped if it contains only
+        nulls or NaNs (this is the default behavior). If `drop_null_fraction` is a
+        number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
+        is strictly larger than `drop_null_fraction`. If `drop_null_fraction` is
+        ``None``, this selection is disabled: no columns are dropped based on the
+        number of null values they contain.
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel.
+        ``None`` means 1 unless in a joblib ``parallel_backend`` context.
+        ``-1`` means using all processors.
+
+    Attributes
+    ----------
+    all_processing_steps_ : dict
+        Maps the name of each column to a list of all the processing steps that were
+        applied to it.
+
+    Notes
+    -----
+    The ``SimpleCleaner`` performs the following set of transformations on each column:
+
+    - ``CleanNullStrings()``: replace strings used to represent null values
+    with actual null values.
+
+    - ``DropIfTooManyNulls()``: drop the column if it contains too many null values.
+
+    - ``ToDatetime()``: parse datetimes represented as strings and return them as
+    actual datetimes with the correct dtype.
+
+    - ``CleanCategories()``: process categorical columns depending on the dataframe
+    library (Pandas or Polars) to force consistent typing and avoid issues downstream.
+
+    - ``ToStr()``: convert columns to strings, unless they are numerical,
+    categorical, or datetime.
+
+    The ``SimpleCleaner`` object should only be used for preliminary sanitizing of
+    the data because it does not perform any transformations on numeric columns.
+    On the other hand, the ``TableVectorizer`` converts numeric columns to float32
+    and ensures that null values are represented with NaNs, which can be handled
+    correctly by downstream scikit-learn estimators.
+
+    Examples
+    --------
+    >>> from skrub import SimpleCleaner
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     'A': ['one', 'two', 'two', 'three'],
+    ...     'B': ['02/02/2024', '23/02/2024', '12/03/2024', '13/03/2024'],
+    ...     'C': ['1.5', 'N/A', '12.2', 'N/A'],
+    ...     'D': [1.5, 2.0, 2.5, 3.0],
+    ... })
+    >>> df
+        A           B     C    D
+    0    one  02/02/2024   1.5  1.5
+    1    two  23/02/2024   N/A  2.0
+    2    two  12/03/2024  12.2  2.5
+    3  three  13/03/2024   N/A  3.0
+    >>> df.dtypes
+    A    object
+    B    object
+    C    object
+    D   float64
+    dtype: object
+
+    The SimpleCleaner will parse datetime columns and convert nulls to dtypes
+    suitable to those of the column (e.g., ``np.NaN`` for numerical columns).
+    >>> cleaner = SimpleCleaner()
+    >>> cleaner.fit_transform(df)
+        A          B     C    D
+    0    one 2024-02-02   1.5  1.5
+    1    two 2024-02-23   NaN  2.0
+    2    two 2024-03-12  12.2  2.5
+    3  three 2024-03-13   NaN  3.0
+
+    >>> cleaner.fit_transform(df).dtypes
+    A            object
+    B    datetime64[ns]
+    C            object
+    D           float64
+    dtype: object
+
+    We can inspect all the processing steps that were applied to a given column:
+    >>> cleaner.all_processing_steps_['A']
+    [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
+    >>> cleaner.all_processing_steps_['B']
+    [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime()]
+    >>> cleaner.all_processing_steps_['C']
+    [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
+    >>> cleaner.all_processing_steps_['D']
+    [DropIfTooManyNulls()]
+
+    See Also:
+    --------
+    TableVectorizer :
+        Process columns of a dataframe and convert them to a numeric (vectorized)
+        representation.
+    """
+
+    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
+        self.drop_null_fraction = drop_null_fraction
+        self.n_jobs = n_jobs
+
+    def fit_transform(self, X, y=None):
+        """Fit transformer and transform dataframe.
+
+        Parameters
+        ----------
+        X : dataframe of shape (n_samples, n_features)
+            Input data to transform.
+
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, \
+                default=None
+            Target values for supervised learning (None for unsupervised
+            transformations).
+
+        Returns
+        -------
+        dataframe
+            The transformed input.
+        """
+        all_steps = _get_preprocessors(
+            cols=s.all(),
+            drop_null_fraction=self.drop_null_fraction,
+            n_jobs=self.n_jobs,
+            add_tofloat32=False,
+        )
+        self._pipeline = make_pipeline(*all_steps)
+        result = self._pipeline.fit_transform(X)
+        input_names = all_steps[0].feature_names_out_
+        self.all_processing_steps_ = {col: [] for col in input_names}
+        for step in all_steps[1:]:
+            for col, transformer in step.transformers_.items():
+                self.all_processing_steps_[col].append(transformer)
+        return result
+
+    def transform(self, X):
+        """Transform dataframe.
+
+        Parameters
+        ----------
+        X : dataframe of shape (n_samples, n_features)
+            Input data to transform.
+
+        Returns
+        -------
+        dataframe
+            The transformed input.
+        """
+        return self._pipeline.transform(X)
+
+    def fit(self, X, y=None):
+        """Fit transformer.
+
+        Parameters
+        ----------
+        X : dataframe of shape (n_samples, n_features)
+            Input data to transform.
+
+        y : array-like, shape (n_samples,) or (n_samples, n_outputs) or None, \
+                default=None
+            Target values for supervised learning (None for unsupervised
+            transformations).
+
+        Returns
+        -------
+        self : SimpleCleaner
+            The fitted estimator.
+        """
+        self.fit_transform(X, y=y)
+        return self
+
+
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
