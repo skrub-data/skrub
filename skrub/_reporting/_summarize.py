@@ -66,6 +66,7 @@ def summarize_dataframe(
         "n_columns": n_columns,
         "columns": [],
         "dataframe_is_empty": not n_rows or not n_columns,
+        "plots_skipped": not with_plots,
         "sample_table": _sample_table.make_table(
             df,
             max_top_slice_size=max_top_slice_size,
@@ -105,7 +106,6 @@ def summarize_dataframe(
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
-    summary["plots_skipped"] = all(not c["plot_names"] for c in summary["columns"])
     if n_rows and n_columns:
         _add_associations(df, summary)
     else:

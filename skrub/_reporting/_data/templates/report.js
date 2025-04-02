@@ -778,11 +778,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         constructor(elem, exchange) {
             super(elem, exchange);
             this.elem.querySelector("[data-role='dismiss-button']")
-                .addEventListener("click", (e) => this.hide(e));
-        }
-
-        hide(event) {
-            this.elem.style.display = "none";
+                .addEventListener("click", (e) => this.hide());
         }
 
     }

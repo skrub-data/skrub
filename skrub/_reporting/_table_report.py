@@ -150,27 +150,13 @@ class TableReport:
             self.dataframe, with_plots=False, title=self.title, **self._summary_kwargs
         )
 
-    def get_summary(self):
-        """Get the report data in a dictionary format.
-
-        Returns
-        -------
-        dict :
-            The dictionary data.
-        """
+    def _get_summary(self):
         if self.max_plot_columns is None:
             summary = self._summary_with_plots
         elif self.max_plot_columns >= sbd.shape(self.dataframe)[1]:
             summary = self._summary_with_plots
         else:
             summary = self._summary_without_plots
-
-        # Add a flag to indicate if the plots were automatically skipped because
-        # there are too many columns
-        # Will be accessed in the HTML template to display a message to the user
-        summary["plots_auto_skipped"] = (
-            summary["plots_skipped"] and self.max_plot_columns == 30
-        )
 
         return summary
 
@@ -183,7 +169,7 @@ class TableReport:
             The HTML page.
         """
         return to_html(
-            self.get_summary(),
+            self._get_summary(),
             standalone=True,
             column_filters=self.column_filters,
         )
@@ -197,7 +183,7 @@ class TableReport:
             The HTML snippet.
         """
         return to_html(
-            self.get_summary(),
+            self._get_summary(),
             standalone=False,
             column_filters=self.column_filters,
         )
