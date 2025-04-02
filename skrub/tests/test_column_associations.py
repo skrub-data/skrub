@@ -21,6 +21,9 @@ def test_column_associations(df_module):
     assert sbd.to_list(sbd.col(asso, "cramer_v")) == pytest.approx(
         [1.0, 0.6546536, 0.6546536]
     )
+    assert sbd.to_list(sbd.col(asso, "pearson_corr")) == pytest.approx(
+        [-1.0, -0.13484, 0.13484]
+    )
 
 
 def test_infinite(df_module):
