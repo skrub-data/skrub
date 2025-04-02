@@ -1,7 +1,8 @@
 {% import "buttons.html" as buttons %}
 
 <article class="wrapper margin-t-s flow" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
-    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
+    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED"
+    {% if summary.plots_skipped %}data-plots-skipped{% endif %}>
     <div class="flex">
         <div class="box">
             <pre id="selected-columns-display" data-manager="SelectedColumnsDisplay"></pre>
@@ -21,7 +22,7 @@
         <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
     </div>
 
-    {% if summary.plots_auto_skipped %}
+    {% if summary.plots_skipped %}
     <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between"
         data-manager="AlertDismissable">
         <div class="alert-content shrinkable-text">

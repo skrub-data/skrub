@@ -55,7 +55,7 @@ def _get_to_patch(pandas, polars):
     return to_patch
 
 
-def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=None):
+def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=30):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
 
     This function replaces the HTML displays (what is shown when an object is
@@ -75,7 +75,7 @@ def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=None):
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
-    max_plot_columns : int, default=None
+    max_plot_columns : int, default=30
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
