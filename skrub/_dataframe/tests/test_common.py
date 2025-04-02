@@ -651,6 +651,16 @@ def test_mean(df_module):
     )
 
 
+def test_corr(df_module):
+    df = df_module.example_dataframe
+
+    # Make sure we use Pandas to compute Pearson's correlation.
+    expected_corr = ns.to_pandas(df).corr(numeric_only=True)
+    corr = ns.copy_index(expected_corr, ns.to_pandas(ns.pearson_corr(df)))
+
+    pd.testing.assert_frame_equal(corr, expected_corr)
+
+
 @pytest.mark.parametrize(
     "descending, expected_vals",
     [
@@ -775,6 +785,24 @@ def test_where(df_module):
     )
     df_module.assert_column_equal(
         out, ns.pandas_convert_dtypes(df_module.make_column("", [0, 11, 2]))
+    )
+
+
+def test_where_row(df_module):
+    df = df_module.make_dataframe({"col1": [1, 2, 3], "col2": [1000, 2000, 3000]})
+    out = ns.where_row(
+        df,
+        df_module.make_column("", [False, True, False]),  # mask
+        df_module.make_column(
+            "", [None, None, None]
+        ),  # values to put in on the entire row
+    )
+    right = df_module.make_dataframe(
+        {"col1": [None, 2, None], "col2": [None, 2000, None]}
+    )
+    df_module.assert_frame_equal(
+        ns.pandas_convert_dtypes(out),
+        ns.pandas_convert_dtypes(right),
     )
 
 

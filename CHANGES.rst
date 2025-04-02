@@ -12,19 +12,40 @@ Ongoing development
 New features
 ------------
 
-- The :class:`TableReport` now switch it's visual theme between light and dark according to the user preferences.
+- The :class:`TableReport` now switches its visual theme between light and dark according to the user preferences.
   :pr:`1201` by :user:`rouk1 <rouk1>`.
 
 - Adding a new way to control the location of the data directory, using envar `SKRUB_DATA_DIRECTORY`.
   :pr:`1215` by :user:`Thomas S. <thomass-dev>`
 
+- The :class:`DatetimeEncoder` now supports periodic encoding of datetime features
+  with trigonometric functions and B-splines transformers.
+  :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The :class:`TableReport` now also compute Pearson's correlation for numeric values.
+  :pr:`1203` by :user:`Reshama Shaikh <reshamas>` and
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- The :class:`SimpleCleaner` is now available. This transformer is a lightweight pre-processor that
+  applies some of the transformations applied by the :class:`TableVectorizer`, with a simpler
+  interface. :pr:`1266` by :user:`Riccardo Cappuzzo<rcap107>` and :user:`Jerome Dockes <jeromedockes>` .
+
 Changes
 -------
+
+- The estimator returned by :func:`tabular_learner` now uses spline encoding of
+  datetime features when the supervised learner is not a model based on decision
+  trees such as random forests or gradient boosting. :pr:`1264` by
+  :user:`Guillaume Lemaitre <glemaitre>`.
+
+- The "distribution" tab of the ``TableReport`` now stacks cards horizontally to avoid adding
+  vertical space.
+  :pr:`1259` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
 - Progress messages when generating a ``TableReport`` are now written to stderr instead of stdout.
   :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
 
-- Optimize the :class:`StringEncoder`: significant memory reduction and 1.5x speed-up.
+- Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
 
@@ -35,6 +56,8 @@ Changes
 =======
 Bug fixes
 ---------
+- :class:`StringEncoder` now works correctly in presence of null values.
+  :pr:`1224` by :user:`Jérôme Dockès <jeromedockes>`.
 
 - The :meth:`TableVectorizer.get_feature_names_out` method now works when used in a
   scikit-learn pipeline by exposing the `input_features` parameter.

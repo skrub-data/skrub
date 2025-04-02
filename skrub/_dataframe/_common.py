@@ -86,6 +86,7 @@ __all__ = [
     "max",
     "std",
     "mean",
+    "pearson_corr",
     "sort",
     "value_counts",
     "quantile",
@@ -97,6 +98,7 @@ __all__ = [
     "unique",
     "filter",
     "where",
+    "where_row",
     "sample",
     "head",
     "slice",
@@ -997,6 +999,21 @@ def _mean_polars_col(col):
 
 
 @dispatch
+def pearson_corr(df):
+    raise NotImplementedError()
+
+
+@pearson_corr.specialize("pandas", argument_type="DataFrame")
+def _pearson_corr_pandas(df):
+    return df.corr(method="pearson", numeric_only=True)
+
+
+@pearson_corr.specialize("polars", argument_type="DataFrame")
+def _pearson_corr_polars(df):
+    return pl.from_pandas(_pearson_corr_pandas(df.to_pandas()))
+
+
+@dispatch
 def value_counts(column):
     raise NotImplementedError()
 
@@ -1180,6 +1197,23 @@ def _where_pandas(col, mask, other):
 @where.specialize("polars", argument_type="Column")
 def _where_polars(col, mask, other):
     return col.zip_with(mask, pl.Series(other))
+
+
+@dispatch
+def where_row(obj, mask, other):
+    raise NotImplementedError()
+
+
+@where_row.specialize("pandas")
+def _where_row_pandas(obj, mask, other):
+    return obj.apply(pd.Series.where, cond=mask, other=other)
+
+
+@where_row.specialize("polars")
+def _where_row_polars(obj, mask, other):
+    return obj.with_columns(
+        pl.when(pl.Series(mask)).then(pl.all()).otherwise(pl.Series(other))
+    )
 
 
 @dispatch
