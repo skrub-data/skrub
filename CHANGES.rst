@@ -12,6 +12,20 @@ Ongoing development
 New features
 ------------
 
+Changes
+-------
+
+Bug fixes
+---------
+
+
+
+Release 0.5.2
+=============
+
+New features
+------------
+
 - The :class:`TableReport` now switches its visual theme between light and dark according to the user preferences.
   :pr:`1201` by :user:`rouk1 <rouk1>`.
 
