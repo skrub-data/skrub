@@ -21,7 +21,7 @@
 	    <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
 	</div>
     </div>
-                
+
     {% if summary.plots_skipped %}
     <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between"
         data-manager="AlertDismissable">
@@ -32,7 +32,7 @@
         {{buttons.dismissbutton()}}
     </div>
     {% endif %}
-  
+
     <div class="horizontal-scroll padding-b-s">
 	<div class="column-summary-group">
 	    {% for column in summary.columns %}
