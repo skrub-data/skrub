@@ -33,6 +33,11 @@ New features
 Changes
 -------
 
+- The estimator returned by :func:`tabular_learner` now uses spline encoding of
+  datetime features when the supervised learner is not a model based on decision
+  trees such as random forests or gradient boosting. :pr:`1264` by
+  :user:`Guillaume Lemaitre <glemaitre>`.
+
 - The "distribution" tab of the ``TableReport`` now stacks cards horizontally to avoid adding
   vertical space.
   :pr:`1259` by :user:`Gaël Varoquaux <gaelvaroquaux>`
@@ -46,15 +51,7 @@ Changes
 Bug fixes
 ---------
 - :class:`StringEncoder` now works correctly in presence of null values.
-  :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
-
-- The estimator returned by :func:`tabular_learner` now uses spline encoding of
-  datetime features when the supervised learner is not a model based on decision
-  trees such as random forests or gradient boosting. :pr:`1264` by
-  :user:`Guillaume Lemaitre <glemaitre>`.
-
-Bug fixes
----------
+  :pr:`1224` by :user:`Jérôme Dockès <jeromedockes>`.
 
 - The :meth:`TableVectorizer.get_feature_names_out` method now works when used in a
   scikit-learn pipeline by exposing the `input_features` parameter.
