@@ -44,9 +44,9 @@ def test_report(air_quality):
     assert "<skrub-table-report" in snippet
     data = json.loads(report.json())
     assert data["title"] == "the title"
-    assert report.get_summary()["title"] == "the title"
+    assert report._get_summary()["title"] == "the title"
     del report._summary_with_plots
-    assert report.get_summary()["title"] == "the title"
+    assert report._get_summary()["title"] == "the title"
     snippet = report._repr_mimebundle_()["text/html"]
     report_id = get_report_id(snippet)
     all_report_ids.append(report_id)
@@ -222,25 +222,31 @@ def test_write_to_stderr(df_module, capsys):
 
 def test_max_plot_columns_parameter(df_module):
     df = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+        {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
     )
+    summary = TableReport(df)._get_summary()
+    assert not summary["plots_skipped"]
 
-    report = TableReport(df)
-    for col in report.get_summary()["columns"]:
-        assert len(col["plot_names"]) > 0
+    df2 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(30)}
+    )
+    summary = TableReport(df2)._get_summary()
+    assert not summary["plots_skipped"]
 
-    report_2 = TableReport(df, max_plot_columns=5)
-    for col in report_2.get_summary()["columns"]:
-        assert len(col["plot_names"]) > 0
+    df3 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df3)._get_summary()
+    assert summary["plots_skipped"]
 
-    report_3 = TableReport(df, max_plot_columns=10)
-    for col in report_3.get_summary()["columns"]:
-        assert len(col["plot_names"]) > 0
+    df4 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    summary = TableReport(df4, max_plot_columns=10)._get_summary()
+    assert summary["plots_skipped"]
 
-    report_4 = TableReport(df, max_plot_columns=0)
-    for col in report_4.get_summary()["columns"]:
-        assert len(col["plot_names"]) == 0
-
-    report_5 = TableReport(df, max_plot_columns=3)
-    for col in report_5.get_summary()["columns"]:
-        assert len(col["plot_names"]) == 0
+    df5 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    summary = TableReport(df5, max_plot_columns=15)._get_summary()
+    assert not summary["plots_skipped"]
