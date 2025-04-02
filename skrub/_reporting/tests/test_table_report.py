@@ -250,3 +250,9 @@ def test_max_plot_columns_parameter(df_module):
     )
     summary = TableReport(df5, max_plot_columns=15)._get_summary()
     assert not summary["plots_skipped"]
+
+    df6 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    summary = TableReport(df6, max_plot_columns=None)._get_summary()
+    assert not summary["plots_skipped"]

@@ -81,3 +81,9 @@ def test_max_plot_columns_parameter(df_module):
     )
     patch_display(max_plot_columns=15)
     assert "data-plots-skipped" not in df5._repr_html_()
+
+    df6 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    patch_display(max_plot_columns=None)
+    assert "data-plots-skipped" not in df6._repr_html_()
