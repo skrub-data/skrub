@@ -6,9 +6,10 @@ from ._choosing import (
     optional,
 )
 from ._estimator import cross_validate, train_test_split
-from ._expressions import X, as_expr, deferred, eval_mode, var, y
+from ._expressions import Expr, X, as_expr, deferred, eval_mode, var, y
 
 __all__ = [
+    "Expr",
     "var",
     "X",
     "y",

@@ -11,6 +11,7 @@ from ._column_associations import column_associations
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._expressions import (
+    Expr,
     X,
     as_expr,
     choose_bool,
@@ -49,6 +50,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
+    "Expr",
     "var",
     "X",
     "y",
