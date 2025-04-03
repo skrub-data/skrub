@@ -13,7 +13,7 @@ from ._fetching import (
     fetch_traffic_violations,
     fetch_videogame_sales,
 )
-from ._generating import make_deduplication_data
+from ._generating import make_deduplication_data, toy_orders
 from ._ken_embeddings import (
     fetch_ken_embeddings,
     fetch_ken_table_aliases,
@@ -40,4 +40,5 @@ __all__ = [
     "fetch_videogame_sales",
     "get_data_dir",
     "make_deduplication_data",
+    "toy_orders",
 ]
