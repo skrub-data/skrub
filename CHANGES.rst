@@ -14,6 +14,8 @@ New features
 
 Changes
 -------
+- The :class:`SimpleCleaner` has been renamed to `Cleaner`. Use of the name `SimpleCleaner` is deprecated and will result in an error in some future release of skrub.
+:pr:`1275` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bug fixes
 ---------
@@ -40,10 +42,10 @@ New features
   :pr:`1203` by :user:`Reshama Shaikh <reshamas>` and
   :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
-- The :class:`SimpleCleaner` is now available. This transformer is a lightweight pre-processor that
-  applies some of the transformations applied by the :class:`TableVectorizer`, with a simpler
+- ⚠ The :class:`SimpleCleaner` was renamed to :class:`Cleaner` in 0.5.3.
+  The :class:`SimpleCleaner` is now available. This transformer is a lightweight
+  pre-processor that applies some of the transformations applied by the :class:`TableVectorizer`, with a simpler
   interface. :pr:`1266` by :user:`Riccardo Cappuzzo<rcap107>` and :user:`Jerome Dockes <jeromedockes>` .
-
 Changes
 -------
 
