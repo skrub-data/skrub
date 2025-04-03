@@ -66,6 +66,7 @@ def summarize_dataframe(
         "n_columns": n_columns,
         "columns": [],
         "dataframe_is_empty": not n_rows or not n_columns,
+        "plots_skipped": not with_plots,
         "sample_table": _sample_table.make_table(
             df,
             max_top_slice_size=max_top_slice_size,
