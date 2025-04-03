@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+from ._block_normalizer import BlockNormalizerL2
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
@@ -258,6 +259,10 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 # number of dimensions of X_out.
                 X_out = X_out[:, : self.n_components]
 
+        normalizer = BlockNormalizerL2()
+        X_out = normalizer.fit_transform(X_out)
+        self.normalizer_ = normalizer
+
         self.n_components_ = X_out.shape[1]
 
         cols = self.get_feature_names_out()
@@ -293,6 +298,8 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             X_out = self.pca_.transform(X_out)
         elif self.n_components is not None:
             X_out = X_out[:, : self.n_components]
+
+        X_out = self.normalizer_.transform(X_out)
 
         cols = self.get_feature_names_out()
         X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))

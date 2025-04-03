@@ -1,6 +1,7 @@
 """
 Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -18,6 +19,7 @@ from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
+from ._block_normalizer import BlockNormalizerL2
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._utils import unique_strings
 
@@ -430,6 +432,10 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             raise ValueError("analyzer should be one of ['word', 'char', 'char_wb'].")
 
     def fit(self, X, y=None):
+        _ = self.fit_transform(X)
+        return self
+
+    def fit_transform(self, X, y=None):
         """
         Fit the GapEncoder on `X`.
 
@@ -467,7 +473,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         unq_X, unq_V, lookup = self._init_vars(X, is_null)
         n_batch = (len(X) - 1) // self.batch_size + 1
         n_samples = len(X)
-        del X
+
         # Get activations unq_H
         unq_H = self._get_H(unq_X)
         converged = False
@@ -516,7 +522,15 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
-        return self
+
+        # Transform and normalize the output.
+        result = self._transform(X, is_null)
+
+        normalizer = BlockNormalizerL2()
+        result = normalizer.fit_transform(result)
+        self.normalizer_ = normalizer
+
+        return self._post_process(X, result)
 
     def get_feature_names_out(self, n_labels=3):
         """
@@ -723,10 +737,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._check_input_type(X, err_type=ValueError)
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
-        names = self.get_feature_names_out()
-        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
-        result = sbd.copy_index(X, result)
-        return result
+        result = self.normalizer_.transform(result)
+        return self._post_process(X, result)
 
     def _check_input_type(self, X, err_type=RejectColumn):
         if sbd.is_categorical(X) or sbd.is_string(X):
@@ -763,6 +775,12 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         result = self._get_H(X)
         # Restore H
         self.H_dict_ = pre_trans_H_dict_
+        return result
+
+    def _post_process(self, X, result):
+        names = self.get_feature_names_out()
+        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
+        result = sbd.copy_index(X, result)
         return result
 
 
