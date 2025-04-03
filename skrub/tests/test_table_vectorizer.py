@@ -20,7 +20,7 @@ from skrub import _dataframe as sbd
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
-from skrub._table_vectorizer import SimpleCleaner, TableVectorizer, _get_preprocessors
+from skrub._table_vectorizer import Cleaner, TableVectorizer, _get_preprocessors
 from skrub._to_float32 import ToFloat32
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -306,7 +306,7 @@ def test_auto_cast(X, dict_expected_types):
             assert dict_expected_types[col] == X_trans[col].dtype
 
 
-# SimpleCleaner does not cast to float32
+# Cleaner does not cast to float32
 X_tuples = [
     (
         X,
@@ -345,8 +345,8 @@ X_tuples = [
 
 
 @pytest.mark.parametrize("X, dict_expected_types", X_tuples)
-def test_SimpleCleaner_dtypes(X, dict_expected_types):
-    vectorizer = SimpleCleaner()
+def test_Cleaner_dtypes(X, dict_expected_types):
+    vectorizer = Cleaner()
     X_trans = vectorizer.fit_transform(X)
     for col in X_trans.columns:
         if dict_expected_types[col] == "datetime":
@@ -385,7 +385,7 @@ def test_convert_float32():
     assert out.dtypes["float"] == "float32"
     assert out.dtypes["int"] == "float32"
 
-    vectorizer = SimpleCleaner()
+    vectorizer = Cleaner()
     out = vectorizer.fit_transform(X)
     assert sbd.is_float(out["float"])
     assert sbd.is_integer(out["int"])

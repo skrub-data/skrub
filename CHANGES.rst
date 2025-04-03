@@ -14,7 +14,7 @@ New features
 
 Changes
 -------
-
+- The :class:`SimpleCleaner` has been renamed `Cleaner`.
 Bug fixes
 ---------
 
