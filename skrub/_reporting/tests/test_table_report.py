@@ -44,9 +44,9 @@ def test_report(air_quality):
     assert "<skrub-table-report" in snippet
     data = json.loads(report.json())
     assert data["title"] == "the title"
-    assert report._any_summary["title"] == "the title"
+    assert report._get_summary()["title"] == "the title"
     del report._summary_with_plots
-    assert report._any_summary["title"] == "the title"
+    assert report._get_summary()["title"] == "the title"
     snippet = report._repr_mimebundle_()["text/html"]
     report_id = get_report_id(snippet)
     all_report_ids.append(report_id)
@@ -218,3 +218,41 @@ def test_write_to_stderr(df_module, capsys):
 
     assert not re.search(pattern, captured.out)
     assert re.search(pattern, captured.err)
+
+
+def test_max_plot_columns_parameter(df_module):
+    df = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
+    )
+    summary = TableReport(df)._get_summary()
+    assert not summary["plots_skipped"]
+
+    df2 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(30)}
+    )
+    summary = TableReport(df2)._get_summary()
+    assert not summary["plots_skipped"]
+
+    df3 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df3)._get_summary()
+    assert summary["plots_skipped"]
+
+    df4 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    summary = TableReport(df4, max_plot_columns=10)._get_summary()
+    assert summary["plots_skipped"]
+
+    df5 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    summary = TableReport(df5, max_plot_columns=15)._get_summary()
+    assert not summary["plots_skipped"]
+
+    df6 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    summary = TableReport(df6, max_plot_columns=None)._get_summary()
+    assert not summary["plots_skipped"]
