@@ -73,7 +73,7 @@ button.tab[data-has-warning] {
 }
 
 button.tab[data-has-warning]:not(:hover):not([data-is-selected]) {
-    color: color-mix(in srgb, var(--color-text-critical) 75%, var(--color-background-primary));
+    color: color-mix(in srgb, var(--color-text-critical) 75%, var(--color-text-primary));
 }
 
 .tab-list .tab[data-has-warning] .warning-sign {
@@ -91,5 +91,5 @@ button.tab[data-has-warning]:not(:hover):not([data-is-selected]) {
 .report-bottom-border {
     width: calc(100% - 2 * var(--radius));
     border-bottom: var(--border-s) solid var(--color-border-secondary);
-    margin: var(--spacing-m) auto 0 auto;
+    margin: var(--spacing-s) auto 0 auto;
 }

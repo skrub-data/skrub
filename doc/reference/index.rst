@@ -81,6 +81,7 @@ Building a pipeline
    :nosignatures:
 
    TableVectorizer
+   Cleaner
    SelectCols
    DropCols
 

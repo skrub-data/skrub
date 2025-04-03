@@ -36,7 +36,7 @@ from ._reporting import TableReport, patch_display, unpatch_display
 from ._select_cols import Drop, DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._string_encoder import StringEncoder
-from ._table_vectorizer import TableVectorizer
+from ._table_vectorizer import Cleaner, TableVectorizer
 from ._tabular_learner import tabular_learner
 from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
@@ -70,6 +70,7 @@ __all__ = [
     "MinHashEncoder",
     "SimilarityEncoder",
     "TableVectorizer",
+    "Cleaner",
     "deduplicate",
     "compute_ngram_distance",
     "ToCategorical",

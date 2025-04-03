@@ -329,8 +329,10 @@ plt.figure(figsize=(12, 9))
 plt.barh(
     y=labels,
     width=avg_importances[top_indices],
-    yerr=std_importances[top_indices],
+    xerr=std_importances[top_indices],
+    ecolor="k",
     color="b",
+    alpha=0.5,
 )
 plt.yticks(fontsize=15)
 plt.title("Feature importances")
