@@ -14,7 +14,7 @@ New features
 
 Changes
 -------
-- The :class:`SimpleCleaner` has been deprecated and will be renamed to `Cleaner`.
+- The :class:`SimpleCleaner` has been renamed to `Cleaner`. Use of the name `SimpleCleaner` is deprecated and will result in an error in some future release of skrub.
 :pr:`1275` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bug fixes
