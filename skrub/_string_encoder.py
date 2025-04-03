@@ -9,6 +9,7 @@ from sklearn.feature_extraction.text import (
 from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
+from ._block_normalizer import BlockNormalizerL2
 from ._on_each_column import SingleColumnTransformer
 
 
@@ -158,6 +159,10 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()  # To avoid a reference to X_out
         del X_out  # optimize memory: we no longer need X_out
 
+        normalizer = BlockNormalizerL2()
+        result = normalizer.fit_transform(result)
+        self.normalizer_ = normalizer
+
         self._is_fitted = True
         self.n_components_ = result.shape[1]
 
@@ -191,6 +196,8 @@ class StringEncoder(SingleColumnTransformer):
             result = X_out[:, : self.n_components].toarray()
             result = result.copy()
         del X_out  # optimize memory: we no longer need X_out
+
+        result = self.normalizer_.transform(result)
 
         return self._post_process(X, result)
 
