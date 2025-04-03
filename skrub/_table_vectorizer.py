@@ -1,4 +1,5 @@
 import reprlib
+import warnings
 from collections import UserDict
 from typing import Iterable
 
@@ -139,11 +140,11 @@ def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
     return steps
 
 
-class SimpleCleaner(TransformerMixin, BaseEstimator):
+class Cleaner(TransformerMixin, BaseEstimator):
     """
     A light transformer that preprocesses each column of a dataframe.
 
-    The ``SimpleCleaner`` performs some consistency checks and basic preprocessing
+    The ``Cleaner`` performs some consistency checks and basic preprocessing
     such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
     dates. See the "Notes" section for a full list.
 
@@ -171,7 +172,7 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
 
     Notes
     -----
-    The ``SimpleCleaner`` performs the following set of transformations on each column:
+    The ``Cleaner`` performs the following set of transformations on each column:
 
     - ``CleanNullStrings()``: replace strings used to represent null values
     with actual null values.
@@ -187,7 +188,7 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
     - ``ToStr()``: convert columns to strings, unless they are numerical,
     categorical, or datetime.
 
-    The ``SimpleCleaner`` object should only be used for preliminary sanitizing of
+    The ``Cleaner`` object should only be used for preliminary sanitizing of
     the data because it does not perform any transformations on numeric columns.
     On the other hand, the ``TableVectorizer`` converts numeric columns to float32
     and ensures that null values are represented with NaNs, which can be handled
@@ -195,7 +196,7 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    >>> from skrub import SimpleCleaner
+    >>> from skrub import Cleaner
     >>> import pandas as pd
     >>> df = pd.DataFrame({
     ...     'A': ['one', 'two', 'two', 'three'],
@@ -216,9 +217,9 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
     D   float64
     dtype: object
 
-    The SimpleCleaner will parse datetime columns and convert nulls to dtypes
+    The Cleaner will parse datetime columns and convert nulls to dtypes
     suitable to those of the column (e.g., ``np.NaN`` for numerical columns).
-    >>> cleaner = SimpleCleaner()
+    >>> cleaner = Cleaner()
     >>> cleaner.fit_transform(df)
         A          B     C    D
     0    one 2024-02-02   1.5  1.5
@@ -317,11 +318,23 @@ class SimpleCleaner(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        self : SimpleCleaner
+        self : Cleaner
             The fitted estimator.
         """
         self.fit_transform(X, y=y)
         return self
+
+
+class SimpleCleaner(Cleaner):
+    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
+        super().__init__(drop_null_fraction=drop_null_fraction, n_jobs=n_jobs)
+        warnings.warn(
+            (
+                "SimpleCleaner was renamed to Cleaner and will be removed in the "
+                "next release."
+            ),
+            category=DeprecationWarning,
+        )
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
