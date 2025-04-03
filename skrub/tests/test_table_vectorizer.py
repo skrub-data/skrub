@@ -20,7 +20,12 @@ from skrub import _dataframe as sbd
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
-from skrub._table_vectorizer import Cleaner, TableVectorizer, _get_preprocessors
+from skrub._table_vectorizer import (
+    Cleaner,
+    SimpleCleaner,
+    TableVectorizer,
+    _get_preprocessors,
+)
 from skrub._to_float32 import ToFloat32
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -345,7 +350,7 @@ X_tuples = [
 
 
 @pytest.mark.parametrize("X, dict_expected_types", X_tuples)
-def test_Cleaner_dtypes(X, dict_expected_types):
+def test_cleaner_dtypes(X, dict_expected_types):
     vectorizer = Cleaner()
     X_trans = vectorizer.fit_transform(X)
     for col in X_trans.columns:
@@ -372,6 +377,13 @@ def test_Cleaner_dtypes(X, dict_expected_types):
                     assert sbd.is_float(X_trans[col])
                 else:
                     assert dict_expected_types[col] == X_trans[col].dtype
+
+
+def test_simplecleaner_warning():
+    with pytest.warns(DeprecationWarning, match="SimpleCleaner was renamed to Cleaner"):
+        X = _get_clean_dataframe()
+        vectorizer = SimpleCleaner()
+        vectorizer.fit(X)
 
 
 def test_convert_float32():

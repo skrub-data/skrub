@@ -14,7 +14,9 @@ New features
 
 Changes
 -------
-- The :class:`SimpleCleaner` has been renamed `Cleaner`.
+- The :class:`SimpleCleaner` has been deprecated and will be renamed to `Cleaner`.
+:pr:`1275` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Bug fixes
 ---------
 

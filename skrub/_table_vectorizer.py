@@ -1,4 +1,5 @@
 import reprlib
+import warnings
 from collections import UserDict
 from typing import Iterable
 
@@ -322,6 +323,18 @@ class Cleaner(TransformerMixin, BaseEstimator):
         """
         self.fit_transform(X, y=y)
         return self
+
+
+class SimpleCleaner(Cleaner):
+    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
+        super().__init__(drop_null_fraction=drop_null_fraction, n_jobs=n_jobs)
+        warnings.warn(
+            (
+                "SimpleCleaner was renamed to Cleaner and will be removed in the "
+                "next release."
+            ),
+            category=DeprecationWarning,
+        )
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
