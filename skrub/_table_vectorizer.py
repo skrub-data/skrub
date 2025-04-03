@@ -205,7 +205,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     ...     'D': [1.5, 2.0, 2.5, 3.0],
     ... })
     >>> df
-        A           B     C    D
+           A           B     C    D
     0    one  02/02/2024   1.5  1.5
     1    two  23/02/2024   N/A  2.0
     2    two  12/03/2024  12.2  2.5
@@ -219,9 +219,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     The Cleaner will parse datetime columns and convert nulls to dtypes
     suitable to those of the column (e.g., ``np.NaN`` for numerical columns).
+
     >>> cleaner = Cleaner()
     >>> cleaner.fit_transform(df)
-        A          B     C    D
+           A          B     C    D
     0    one 2024-02-02   1.5  1.5
     1    two 2024-02-23   NaN  2.0
     2    two 2024-03-12  12.2  2.5
@@ -235,6 +236,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     dtype: object
 
     We can inspect all the processing steps that were applied to a given column:
+
     >>> cleaner.all_processing_steps_['A']
     [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
     >>> cleaner.all_processing_steps_['B']
