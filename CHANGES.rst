@@ -9,6 +9,20 @@ Release history
 Ongoing development
 ===================
 
+New features
+------------
+
+
+Changes
+-------
+
+Bug fixes
+-------
+
+
+Release 0.5.3
+===================
+
 Changes
 -------
 
