@@ -31,7 +31,7 @@ our pipeline to discover all the places where we used objects like
 
 # %%
 # We will illustrate hyperparameter tuning on the "toxicity" dataset. This
-#  dataset contains 1,000 texts and the task is to predict if they were
+#  dataset contains 1,000 texts and the task is to predict if they are
 #  flagged as being toxic or not.
 #
 # We start from a very simple pipeline without any hyperparameters.
@@ -51,8 +51,11 @@ texts = data[["text"]]
 labels = data["is_toxic"]
 
 # %%
-# See `the previous example <10_expressions.html>`_ for an explanation of
-# ``skrub.X`` and ``skrub.y`` used below.
+# We mark the ``texts`` column as the input and the ``labels`` column as the target.
+# See `the previous example <10_expressions.html>`_ for a more detailed explanation
+# of ``skrub.X`` and ``skrub.y``.
+# We then encode the text with a ``MinHashEncoder`` and fit a
+# ``HistGradientBoostingClassifier`` on the resulting features.
 
 # %%
 X = skrub.X(texts)
@@ -70,13 +73,15 @@ pred = X.skb.apply(skrub.MinHashEncoder()).skb.apply(
 pred.skb.cross_validate(n_jobs=4)["test_score"]
 
 # %%
-# We can set the number of components extracted by the ``MinHashEncoder``. When
-# we directly use a scikit-learn hyperparameter-tuner like ``GridSearchCV`` or
-# ``RandomizedSearchCV``, we specify a grid of hyperparameters separately from
-# the estimator, with something similar to
+# For the sake of the example, we will focus on the number of ``MinHashEncoder``
+# components and the ``learning_rate`` of the ``HistGradientBoostingClassifier``
+# to illustrate the ``skrub.choose_from(...)`` objects.
+# When we use a scikit-learn hyperparameter-tuner like ``GridSearchCV`` or
+# ``RandomizedSearchCV``, we need to specify a grid of hyperparameters separately
+# from the estimator, with something similar to
 # ``GridSearchCV(my_pipeline, param_grid={"encoder__n_components: [5, 10, 20]"})``.
-# With skrub, instead we use special skrub objects such as
-# ``skrub.choose_from(...)`` and insert them directly where the actual value
+# Instead, with skrub we can use
+# ``skrub.choose_from(...)`` directly where the actual value
 # would normally go. Skrub then takes care of constructing the
 # ``GridSearchCV``'s parameter grid for us.
 #
@@ -91,9 +96,11 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 #
 # Choices can be given a name which is used to display hyperparameter search
 # results and plots or to override their outcome.
-
+#
+# Note that ``skrub.choose_float()`` and ``skrub.choose_int()`` can be given a
+# ``log`` argument to sample in log scale.
 # %%
-X, y = skrub.X(texts), skrub.y(labels)
+# X, y = skrub.X(texts), skrub.y(labels)
 
 encoder = skrub.MinHashEncoder(
     n_components=skrub.choose_int(5, 50, log=True, name="N components")
@@ -117,9 +124,19 @@ search = pred.skb.get_randomized_search(n_iter=8, n_jobs=4, random_state=1, fitt
 search.results_
 
 # %%
-# We can get a parallel coordinate plot.
-# In the plot below, each line represents a combination of hyperparameters.
-# TODO explain parallel coord
+# If the plotly library is installed, we can visualize the results of the
+# hyperparameter search with ``.plot_results()``.
+# In the plot below, each line represents a combination of hyperparameters (in
+# this case, only ``N components`` and ``learning rate``), and each column of
+# points represents either a hyperparameter, or the score of a given
+# combination of hyperparameters.
+# The color of the line represents the score of the combination of hyperparameters.
+# The plot is interactive, and it is  possible to select only a subset of the
+# hyperparameters to visualize by dragging the mouse over each column to select
+# the desired range.
+# This is particularly useful when there are many combinations of hyperparameters,
+# and we are interested in understanding which hyperparameters have the largest
+# impact on the score.
 
 # %%
 search.plot_results()
@@ -128,7 +145,7 @@ search.plot_results()
 # Choices can appear in many places
 # ---------------------------------
 #
-# Choices can not only be used for estimator hyperparameters. They can also be
+# Choices are not limited to selecting estimator hyperparameters. They can also be
 # used to choose between different estimators, or in place of any value used in
 # our pipeline.
 #
@@ -151,7 +168,7 @@ X = X.assign(
 X
 
 # %%
-# Note: ``choose_from`` can be given a dictionary, when we want to provide
+# ``choose_from`` can be given a dictionary if we want to provide
 # names for the individual outcomes, or a list, when names are not needed:
 # ``choose_from([1, 100], name='N')``,
 # ``choose_from({'small': 1, 'big': 100}, name='N')``.
@@ -174,7 +191,10 @@ encoder = skrub.choose_from(
 X = X.skb.apply(encoder, cols="text")
 
 # %%
-# similarly we may want to choose between the HGB and a ridge classifier
+# In a similar vein, we might want to choose between a HGB classifier and a Ridge
+# classifier, each with its own set of hyperparameters.
+# We can then define a choice for the classifier and a choice for the
+# hyperparameters of each classifier.
 
 # %%
 from sklearn.linear_model import RidgeClassifier
@@ -194,9 +214,12 @@ search = pred.skb.get_randomized_search(
 search.plot_results()
 
 # %%
-# In the parallel plot above, we see for example that the ``StringEncoder``
-# performs much better than the ``MinHashEncoder`` for this dataset.
-
+# Now that we have a more complex pipeline, we can draw more conclusions from the
+# parallel coordinate plot. For example, we can see that the
+# ``HistGradientBoostingClassifier``
+# performs better than the ``RidgeClassifier`` in most cases, that the ``StringEncoder``
+# outperforms the ``MinHashEncoder``, and that the choice of the additional ``length``
+# feature does not have a significant impact on the score.
 
 # %%
 # Advanced usage
@@ -208,7 +231,7 @@ search.plot_results()
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Sometimes not all combinations (cross-product) of hyperparameter values make
-# sense, rather those choices are linked. For example, our downstream estimator
+# sense, and instead choices may be linked. For example, our downstream estimator
 # can be a ``RidgeClassifier`` or ``HistGradientBoostingClassifier``, and
 # standard scaling should be applied only when it is a ``Ridge``.
 #
@@ -247,7 +270,10 @@ print(pred.skb.describe_param_grid())
 #
 # We can turn a choice (or the result of a choice ``match()`` or ``if_else``)
 # into an expression, so that we can keep chaining more operations onto it.
-
+# Here, we create a ``.choose_bool()`` object to choose whether to add the length
+# of the text as a feature or not. Then, ``if_else()`` will assign the length
+# of the text to a new column ``length`` if the choice is ``True``, or do nothing
+# if the choice is ``False``.
 # %%
 X, y = skrub.X(texts), skrub.y(labels)
 
@@ -270,8 +296,7 @@ X.skb.eval({"add_length": True})
 # When ``match`` or ``if_else`` are not enough and we need to apply arbitrary,
 # eager logic based on a choice we can resort to using ``skrub.deferred``. For
 # example the choice of adding the text length or not could also have been
-# written:
-
+# written as:
 # %%
 X, y = skrub.X(texts), skrub.y(labels)
 
@@ -290,3 +315,12 @@ X.skb.eval({"add_length": False})
 
 # %%
 X.skb.eval({"add_length": True})
+
+# %%
+# Concluding, we have seen how to use skrub's ``choose_from`` objects to tune
+# hyperparameters, choose optional configurations, add features, and nest choices.
+# We then looked at how the different choices affect the pipeline and the prediction
+# scores.
+#
+# Thanks to the ``choose_from`` objects, Skrub expressions ease the process of
+# hyperparameter tuning.
