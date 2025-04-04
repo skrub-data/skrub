@@ -774,6 +774,18 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(CopyButton);
 
+    class AlertDismissable extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.querySelector("[data-role='dismiss-button']")
+                .addEventListener("click", (e) => this.hide());
+        }
+
+    }
+
+    SkrubTableReport.register(AlertDismissable);
+
+
     function detectTheme(refElementId) {
 
         const shadowRootBody = document.querySelector('body');

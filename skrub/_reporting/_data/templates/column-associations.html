@@ -1,13 +1,14 @@
 <article class="margin-t-s flex-reverse wrapper gap-l">
     {% if summary["top_associations"] %}
 
-    <div class="horizontal-scroll">
+    <div class="horizontal-scroll padding-b-s">
     <table class="pure-table">
         <thead>
             <tr>
                 <th scope="col">Column 1</th>
                 <th scope="col">Column 2</th>
                 <th scope="col"><a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a></th>
+                <th scope="col"><a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson's Correlation</a></th>
             </tr>
         </thead>
         <tbody>
@@ -21,6 +22,11 @@
                     {%- endif -%}
                     >
                     {{ association["cramer_v"] | format_number }}
+                </td>
+                <td>
+                    {%- if not (association["pearson_corr"] | is_null) -%}
+                    {{ association["pearson_corr"] | format_number }}
+                    {%- endif -%}
                 </td>
             </tr>
         {% endfor %}
