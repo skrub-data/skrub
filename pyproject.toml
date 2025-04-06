@@ -57,6 +57,7 @@ doc = [
     "sphinx-copybutton",
     "sphinx-gallery",
     "sphinxext-opengraph",
+    "sphinx-autosummary-accessors",
     "statsmodels",
     "pyarrow",
 ]
@@ -116,6 +117,7 @@ sphinx = "*"
 sphinx-copybutton = "*"
 sphinx-gallery = "*"
 sphinxext-opengraph = "*"
+sphinx-autosummary-accessors = "*"
 statsmodels = "*"
 
 [tool.pixi.feature.lint.dependencies]
