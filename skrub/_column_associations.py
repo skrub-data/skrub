@@ -61,9 +61,10 @@ def column_associations(df):
     between two variables, giving a value between -1 and +1 (inclusive).
 
     * `Pearson's Correlation Coefficient
-    <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_
+      <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_
+
     * `pandas.DataFrame.corr
-    <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html>`_
+      <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.corr.html>`_
 
     Examples
     --------
