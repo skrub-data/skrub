@@ -52,6 +52,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 __all__ = [
     "Expr",
     "var",
+    "Expr",
     "X",
     "y",
     "as_expr",

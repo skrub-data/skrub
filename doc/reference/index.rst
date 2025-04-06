@@ -6,6 +6,7 @@ API
 
 This page lists all available functions and classes of `skrub`.
 
+
 .. _joining_dataframes_ref:
 
 Joining dataframes
@@ -92,30 +93,17 @@ Building a pipeline
 
    tabular_learner
 
-.. _expressions_ref:
 
-Powerful and interactive pipelines with skrub expressions
-=========================================================
+The ``tabular_learner`` provides a pre-defined, default pipeline for datasets that contain a simple table.
+For more control or in order to build pipelines for more datasets, use the skrub expressions.
 
-.. autosummary::
-   :toctree: generated/
-   :template: base.rst
-   :nosignatures:
+Skrub Expressions
+-----------------
 
-   var
-   X
-   y
-   as_expr
-   deferred
-   cross_validate
-   train_test_split
-   eval_mode
-   choose_bool
-   choose_float
-   choose_from
-   choose_int
-   optional
+.. toctree::
+   :maxdepth: 1
 
+   expressions
 
 .. _generating_a_report_ref:
 

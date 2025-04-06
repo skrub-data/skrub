@@ -92,8 +92,9 @@ except ImportError:
     )
     with_jupyterlite = False
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+import sphinx_autosummary_accessors
+
+extensions.append("sphinx_autosummary_accessors")
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -146,7 +147,7 @@ todo_include_todos = False
 autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = ['_templates']
+templates_path = ["_templates", sphinx_autosummary_accessors.templates_path]
 
 autodoc_default_flags = ["members", "inherited-members"]
 
@@ -536,8 +537,6 @@ numpydoc_xref_aliases = {
     "deduplicate": "skrub.deduplicate",
     "to_datetime": "skrub.to_datetime",
     "TableVectorizer": "skrub.TableVectorizer",
-    "DatasetInfoOnly": "skrub.datasets._fetching.DatasetInfoOnly",
-    "DatasetAll": "skrub.datasets._fetching.DatasetAll",
     "_replace_false_missing": "skrub._table_vectorizer._replace_false_missing",
 }
 numpydoc_xref_ignore = "all"
