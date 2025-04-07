@@ -53,6 +53,11 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
             The data used to compute the norm.
         y : None
             Unused. Here for compatibility with scikit-learn.
+
+        Returns
+        -------
+        BlockNormalizerL2
+            The fitted BlockNormalizerL2 instance (self).
         """
         self._check_all_numeric(X)
 

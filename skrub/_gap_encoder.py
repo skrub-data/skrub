@@ -435,12 +435,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             raise ValueError("analyzer should be one of ['word', 'char', 'char_wb'].")
 
     def fit(self, X, y=None):
-        _ = self.fit_transform(X)
-        return self
-
-    def fit_transform(self, X, y=None):
-        """
-        Fit the GapEncoder on `X`.
+        """Fit the GapEncoder and transform a column.
 
         Parameters
         ----------
@@ -451,8 +446,27 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         Returns
         -------
-        GapEncoderColumn
-            The fitted GapEncoderColumn instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
+        """
+        _ = self.fit_transform(X)
+        return self
+
+    def fit_transform(self, X, y=None):
+        """
+        Fit the GapEncoder on a column.
+
+        Parameters
+        ----------
+        X : Column, shape (n_samples, )
+            The string data to fit the model on.
+        y : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        X_out : Pandas or Polars DataFrame, of shape (n_samples, n_components)
+            The embedding representation of the input.
         """
         self._check_analyzer()
         self._check_input_type(X)
@@ -641,8 +655,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         Returns
         -------
-        GapEncoderColumn
-            The fitted GapEncoderColumn instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
         self._check_analyzer()
         self._check_input_type(X)
