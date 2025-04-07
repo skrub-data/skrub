@@ -12,6 +12,11 @@ Ongoing development
 New features
 ------------
 
+- The :class:`BlockNormalizerL2` is now available to perform global L2 normalization.
+  Normalization has been enabled by default through the parameter `block_normalize` in
+  the :class:`GapEncoder`, :class:`StringEncoder` and :class:`TextEncoder`.
+  :pr:`1274` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 Changes
 -------
 

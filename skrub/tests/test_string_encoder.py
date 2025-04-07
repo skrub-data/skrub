@@ -50,6 +50,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
         vectorizer="tfidf",
         ngram_range=ngram_range,
         analyzer=analyzer,
+        block_normalize=False,
     )
     result = se.fit_transform(encode_column)
 

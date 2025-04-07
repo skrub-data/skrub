@@ -18,6 +18,7 @@ from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
+from ._block_normalizer import BlockNormalizerL2
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._utils import unique_strings
 
@@ -114,6 +115,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         set ``max_no_improvement=None``.
     verbose : int, default=0
         Verbosity level. The higher, the more granular the logging.
+    block_normalize : bool, default=True
+        If set to true, normalize the output using :class:`BlockNormalizerL2`.
 
     Attributes
     ----------
@@ -147,14 +150,14 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     --------
     >>> import pandas as pd
     >>> from skrub import GapEncoder
-    >>> enc = GapEncoder(n_components=2, random_state=0)
+    >>> enc = GapEncoder(n_components=2, random_state=0, block_normalize=False)
 
     Let's encode the following non-normalized data:
 
     >>> X = pd.Series(['Paris, FR', 'Paris', 'London, UK', 'Paris, France',
     ...                'london', 'London, England', 'London', 'Pqris'], name='city')
     >>> enc.fit(X)
-    GapEncoder(n_components=2, random_state=0)
+    GapEncoder(block_normalize=False, n_components=2, random_state=0)
 
     The GapEncoder has found the following two topics:
 
@@ -201,6 +204,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         max_iter_e_step=1,
         max_no_improvement=5,
         verbose=0,
+        block_normalize=True,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -220,6 +224,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.max_iter_e_step = max_iter_e_step
         self.max_no_improvement = max_no_improvement
         self.verbose = verbose
+        self.block_normalize = block_normalize
 
     def _init_vars(self, X, is_null):
         """
@@ -430,8 +435,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             raise ValueError("analyzer should be one of ['word', 'char', 'char_wb'].")
 
     def fit(self, X, y=None):
-        """
-        Fit the GapEncoder on `X`.
+        """Fit the GapEncoder and transform a column.
 
         Parameters
         ----------
@@ -442,8 +446,27 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         Returns
         -------
-        GapEncoderColumn
-            The fitted GapEncoderColumn instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
+        """
+        _ = self.fit_transform(X)
+        return self
+
+    def fit_transform(self, X, y=None):
+        """
+        Fit the GapEncoder on a column.
+
+        Parameters
+        ----------
+        X : Column, shape (n_samples, )
+            The string data to fit the model on.
+        y : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        X_out : Pandas or Polars DataFrame, of shape (n_samples, n_components)
+            The embedding representation of the input.
         """
         self._check_analyzer()
         self._check_input_type(X)
@@ -456,7 +479,16 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._input_name = sbd.name(X)
         self._random_state = check_random_state(self.random_state)
         is_null = sbd.to_numpy(sbd.is_null(X))
-        X = sbd.to_numpy(X)
+        result = self._fit_transform(sbd.to_numpy(X), is_null)
+
+        if self.block_normalize:
+            normalizer = BlockNormalizerL2()
+            result = normalizer.fit_transform(result)
+            self.normalizer_ = normalizer
+
+        return self._post_process(X, result)
+
+    def _fit_transform(self, X, is_null):
         # Copy parameter rho
         self.rho_ = self.rho
         # Attributes to monitor the convergence
@@ -467,7 +499,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         unq_X, unq_V, lookup = self._init_vars(X, is_null)
         n_batch = (len(X) - 1) // self.batch_size + 1
         n_samples = len(X)
-        del X
+
         # Get activations unq_H
         unq_H = self._get_H(unq_X)
         converged = False
@@ -516,7 +548,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
-        return self
+
+        # Transform and normalize the output.
+        return self._transform(X, is_null)
 
     def get_feature_names_out(self, n_labels=3):
         """
@@ -621,8 +655,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         Returns
         -------
-        GapEncoderColumn
-            The fitted GapEncoderColumn instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
         self._check_analyzer()
         self._check_input_type(X)
@@ -723,10 +757,12 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._check_input_type(X, err_type=ValueError)
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
-        names = self.get_feature_names_out()
-        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
-        result = sbd.copy_index(X, result)
-        return result
+
+        # XXX: support block normalization for partial fit?
+        if self.block_normalize and hasattr(self, "normalizer_"):
+            result = self.normalizer_.transform(result)
+
+        return self._post_process(X, result)
 
     def _check_input_type(self, X, err_type=RejectColumn):
         if sbd.is_categorical(X) or sbd.is_string(X):
@@ -763,6 +799,12 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         result = self._get_H(X)
         # Restore H
         self.H_dict_ = pre_trans_H_dict_
+        return result
+
+    def _post_process(self, X, result):
+        names = self.get_feature_names_out()
+        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
+        result = sbd.copy_index(X, result)
         return result
 
 

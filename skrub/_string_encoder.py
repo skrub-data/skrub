@@ -9,6 +9,7 @@ from sklearn.feature_extraction.text import (
 from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
+from ._block_normalizer import BlockNormalizerL2
 from ._on_each_column import SingleColumnTransformer
 
 
@@ -42,6 +43,9 @@ class StringEncoder(SingleColumnTransformer):
         Option ``char_wb`` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
 
+    block_normalize : bool, default=True
+        If set to true, normalize the output using :class:`BlockNormalizerL2`.
+
     See Also
     --------
     MinHashEncoder :
@@ -58,7 +62,7 @@ class StringEncoder(SingleColumnTransformer):
 
     We will encode the comments using 2 components:
 
-    >>> enc = StringEncoder(n_components=2)
+    >>> enc = StringEncoder(n_components=2, block_normalize=False)
     >>> X = pd.Series([
     ...   "The professor snatched a good interview out of the jaws of these questions.",
     ...   "Bookmarking this to watch later.",
@@ -78,11 +82,13 @@ class StringEncoder(SingleColumnTransformer):
         vectorizer="tfidf",
         ngram_range=(3, 4),
         analyzer="char_wb",
+        block_normalize=True,
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
         self.ngram_range = ngram_range
         self.analyzer = analyzer
+        self.block_normalize = block_normalize
 
     def get_feature_names_out(self):
         """Get output feature names for transformation.
@@ -158,6 +164,11 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()  # To avoid a reference to X_out
         del X_out  # optimize memory: we no longer need X_out
 
+        if self.block_normalize:
+            normalizer = BlockNormalizerL2()
+            result = normalizer.fit_transform(result)
+            self.normalizer_ = normalizer
+
         self._is_fitted = True
         self.n_components_ = result.shape[1]
 
@@ -191,6 +202,9 @@ class StringEncoder(SingleColumnTransformer):
             result = X_out[:, : self.n_components].toarray()
             result = result.copy()
         del X_out  # optimize memory: we no longer need X_out
+
+        if self.block_normalize:
+            result = self.normalizer_.transform(result)
 
         return self._post_process(X, result)
 

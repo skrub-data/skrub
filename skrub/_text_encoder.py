@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+from ._block_normalizer import BlockNormalizerL2
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
@@ -128,6 +129,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         Verbose level, controls whether to show a progress bar or not during
         ``transform``.
 
+    block_normalize : bool, default=True
+        If set to true, normalize the output using :class:`BlockNormalizerL2`.
+
     Attributes
     ----------
     input_name_ : str
@@ -166,7 +170,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
     Let's encode video comments using only 2 embedding dimensions:
 
-    >>> enc = TextEncoder(model_name='intfloat/e5-small-v2', n_components=2)
+    >>> enc = TextEncoder(
+    ...    model_name='intfloat/e5-small-v2', n_components=2, block_normalize=False
+    ... )
     >>> X = pd.Series([
     ...   "The professor snatched a good interview out of the jaws of these questions.",
     ...   "Bookmarking this to watch later.",
@@ -194,6 +200,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         store_weights_in_pickle=False,
         random_state=None,
         verbose=False,
+        block_normalize=True,
     ):
         self.model_name = model_name
         self.n_components = n_components
@@ -204,6 +211,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         self.store_weights_in_pickle = store_weights_in_pickle
         self.random_state = random_state
         self.verbose = verbose
+        self.block_normalize = block_normalize
 
     def fit_transform(self, column, y=None):
         """Fit the TextEncoder from ``column``.
@@ -258,6 +266,11 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 # number of dimensions of X_out.
                 X_out = X_out[:, : self.n_components]
 
+        if self.block_normalize:
+            normalizer = BlockNormalizerL2()
+            X_out = normalizer.fit_transform(X_out)
+            self.normalizer_ = normalizer
+
         self.n_components_ = X_out.shape[1]
 
         cols = self.get_feature_names_out()
@@ -293,6 +306,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             X_out = self.pca_.transform(X_out)
         elif self.n_components is not None:
             X_out = X_out[:, : self.n_components]
+
+        if self.block_normalize:
+            X_out = self.normalizer_.transform(X_out)
 
         cols = self.get_feature_names_out()
         X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))
