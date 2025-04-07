@@ -11,8 +11,7 @@ from ._sklearn_compat import validate_data
 
 
 class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
-    r"""Fit the average L2 norm on the training data and apply the normalization to \
-    the testing data.
+    r"""Fit the average L2 norm and apply the normalization.
 
     Compute the average L2 norm (a scalar) from a numerical DataFrame or a 2D NumPy
     array, and use this norm to normalize the input element-wise. This computation
@@ -80,6 +79,7 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         Returns
         -------
         X_out : numpy array of shape (n_samples, n_features)
+            The normalized data.
         """
         check_is_fitted(self, "avg_norm_")
         X = validate_data(
