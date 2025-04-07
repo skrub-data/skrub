@@ -149,7 +149,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     --------
     >>> import pandas as pd
     >>> from skrub import GapEncoder
-    >>> enc = GapEncoder(n_components=2, random_state=0)
+    >>> enc = GapEncoder(n_components=2, random_state=0, block_normalize=False)
 
     Let's encode the following non-normalized data:
 
@@ -203,6 +203,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         max_iter_e_step=1,
         max_no_improvement=5,
         verbose=0,
+        block_normalize=True,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -222,6 +223,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.max_iter_e_step = max_iter_e_step
         self.max_no_improvement = max_no_improvement
         self.verbose = verbose
+        self.block_normalize = block_normalize
 
     def _init_vars(self, X, is_null):
         """
@@ -462,7 +464,16 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._input_name = sbd.name(X)
         self._random_state = check_random_state(self.random_state)
         is_null = sbd.to_numpy(sbd.is_null(X))
-        X = sbd.to_numpy(X)
+        result = self._fit_transform(sbd.to_numpy(X), is_null)
+
+        if self.block_normalize:
+            normalizer = BlockNormalizerL2()
+            result = normalizer.fit_transform(result)
+            self.normalizer_ = normalizer
+
+        return self._post_process(X, result)
+
+    def _fit_transform(self, X, is_null):
         # Copy parameter rho
         self.rho_ = self.rho
         # Attributes to monitor the convergence
@@ -524,13 +535,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.H_dict_.update(zip(unq_X, unq_H))
 
         # Transform and normalize the output.
-        result = self._transform(X, is_null)
-
-        normalizer = BlockNormalizerL2()
-        result = normalizer.fit_transform(result)
-        self.normalizer_ = normalizer
-
-        return self._post_process(X, result)
+        return self._transform(X, is_null)
 
     def get_feature_names_out(self, n_labels=3):
         """
@@ -737,7 +742,11 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._check_input_type(X, err_type=ValueError)
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
-        result = self.normalizer_.transform(result)
+
+        # XXX: support block normalization for partial fit?
+        if self.block_normalize and hasattr(self, "normalizer_"):
+            result = self.normalizer_.transform(result)
+
         return self._post_process(X, result)
 
     def _check_input_type(self, X, err_type=RejectColumn):

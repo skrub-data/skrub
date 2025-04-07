@@ -20,7 +20,7 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         # Compute column-wise norm by filtering out nonfinite values.
         X = self._validate_data(X=X, accept_sparse=False, force_all_finite=False)
 
-        self.avg_norm_ = avg_norm(X)
+        self.avg_norm_ = _avg_norm(X)
 
         return X / self.avg_norm_
 
@@ -39,16 +39,15 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
                     raise ValueError(msg.format(col=col.name, dtype=sbd.dtype(col)))
 
 
-def avg_norm(X):
-    n_features = X.shape[1]
-    norm = 0
+def _avg_norm(X):
+    # Sanity check: replace inf values with nan
     mask_finite = np.isfinite(X)
-    for jdx in range(n_features):
-        m = mask_finite[:, jdx]
-        x = X[:, jdx][m]
-        norm += ((x - x.mean()) ** 2).sum(axis=None)
-    n_sample_finite = mask_finite.sum() / n_features
-    norm /= n_sample_finite
+    X[~mask_finite] = np.nan
+
+    # Only divide each column by the number finite values instead of the number
+    # of samples.
+    squared_diff = (X - np.nanmean(X, axis=0)) ** 2
+    norm = np.nansum(squared_diff / mask_finite.sum(axis=0))
 
     # Avoid division by very small or zero values.
     if norm < 10 * np.finfo(norm.dtype).eps:

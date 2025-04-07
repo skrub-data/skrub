@@ -1,9 +1,11 @@
 """
 skrub: Prepping tables for machine learning.
 """
+
 from pathlib import Path as _Path
 
 from ._agg_joiner import AggJoiner, AggTarget
+from ._block_normalizer import BlockNormalizerL2
 from ._check_dependencies import check_dependencies
 from ._column_associations import column_associations
 from ._datetime_encoder import DatetimeEncoder
@@ -57,4 +59,5 @@ __all__ = [
     "TextEncoder",
     "StringEncoder",
     "column_associations",
+    "BlockNormalizerL2",
 ]
