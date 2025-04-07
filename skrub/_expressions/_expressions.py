@@ -384,6 +384,18 @@ class Skb:
 
 
 class Expr:
+    """
+    Representation of an expression that can be used to build ML estimators.
+
+    Please refer to the example gallery for an introduction to skrub
+    expressions.
+
+    This is usually not instantiated manually, but through one of the functions
+    :func:`var`, :func:`as_expr`, :func:`X` or :func:`y`, by applying a
+    :func:`deferred` function, or by calling a method or applying an operator
+    to an existing expression.
+    """
+
     __hash__ = None
 
     def __init__(self, impl):
