@@ -1138,9 +1138,7 @@ class Call(_CloudPickle, ExprImpl):
             name = getattr(self.func, "__name__", repr(self.func))
         else:
             impl = self.func._skrub_impl
-            if isinstance(impl, GetAttr):
-                name = impl.attr_name
-            elif isinstance(impl, GetItem):
+            if isinstance(impl, GetItem):
                 name = f"{{ ... }}[{short_repr(impl.key)}]"
             elif isinstance(impl, Var):
                 name = impl.name
