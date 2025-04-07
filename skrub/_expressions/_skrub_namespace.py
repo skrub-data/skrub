@@ -24,6 +24,7 @@ from ._expressions import (
     check_can_be_pickled,
     check_expr,
     check_name,
+    deferred,
 )
 from ._inspection import (
     describe_param_grid,
@@ -227,6 +228,58 @@ class SkrubNamespace:
             how=how,
             allow_reject=allow_reject,
         )
+
+    def apply_func(self, func):
+        """Apply the given function.
+
+        This is a convenience function; ``X.skb.apply_func(func)`` is
+        equivalent to ``skrub.deferred(func)(X)``.
+
+        Parameters
+        ----------
+        func : function
+            The function to apply to the expression.
+
+        Returns
+        -------
+        expression
+            The expression that evaluates to the result of applying ``func`` to
+            ``self``.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> def count_words(text):
+        ...     return len(text.split())
+
+        >>> text = skrub.var("text", "Hello, world!")
+        >>> text
+        <Var 'text'>
+        Result:
+        ―――――――
+        'Hello, world!'
+
+        >>> count = text.skb.apply_func(count_words)
+        >>> count
+        <Call 'count_words'>
+        Result:
+        ―――――――
+        2
+        >>> count.skb.eval({"text": "one two three four"})
+        4
+
+        This is the same as
+
+        >>> skrub.deferred(count_words)(text)
+        <Call 'count_words'>
+        Result:
+        ―――――――
+        2
+        """
+        if not getattr(func, "_skrub_is_deferred", False):
+            func = deferred(func)
+        return func(self._expr)
 
     @check_expr
     def if_else(self, value_if_true, value_if_false):
@@ -1350,6 +1403,11 @@ class ApplyNamespace(SkrubNamespace):
     def applied_estimator(self):
         """Retrieve the estimator applied in the previous step, as an expression.
 
+        Notes
+        -----
+        This method is only available for expressions created with
+        ``.skb.apply()``.
+
         Examples
         --------
         >>> import skrub
@@ -1436,6 +1494,11 @@ class ApplyNamespace(SkrubNamespace):
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
 
+        Notes
+        -----
+        This method is only available for expressions created with
+        ``.skb.apply()``.
+
         Examples
         --------
         >>> import skrub
@@ -1513,6 +1576,10 @@ class ApplyNamespace(SkrubNamespace):
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
 
+        Notes
+        -----
+        This method is only available for expressions created with
+        ``.skb.apply()``.
 
         Examples
         --------
@@ -1588,6 +1655,11 @@ class ApplyNamespace(SkrubNamespace):
         -------
         dict
             Cross-validation results.
+
+        Notes
+        -----
+        This method is only available for expressions created with
+        ``.skb.apply()``.
 
         Examples
         --------

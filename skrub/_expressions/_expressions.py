@@ -348,7 +348,54 @@ def _check_return_value(f):
     return check_call_return_value
 
 
+class Skb:
+    """Descriptor for the .skb attribute."""
+
+    # We have to define a descriptor rather than simply using ``@property`` so
+    # that sphinx autodoc can find the ``SkrubNamespace`` and get the
+    # docstrings for its methods.
+    #
+    # When the attribute is looked up on the class, instead of returning the
+    # descriptor itself (as is usually done), we return the ApplyNamespace
+    # class. This class contains all the methods & attributes that can be
+    # accessed through ``.skb``, so sphinx can inspect it to find the
+    # docstrings: ``skrub.Expr.skb`` is ``ApplyNamespace`` and
+    # ``skrub.Expr.skb.get_grid_search`` exists. Without the custom descriptor
+    # ``skrub.Expr.skb`` would be a property object (with attributes
+    # ``deleter``, ``setter``, etc., not ``get_grid_search``).
+    #
+    # This is the approach used by pandas for its "accessors" such as
+    # ``pd.DataFrame.dt``.
+
+    def __get__(self, instance, owner=None):
+        from . import _skrub_namespace
+
+        if instance is None:
+            # attribute lookup through the class (how sphinx autodoc inspects
+            # it).
+            return _skrub_namespace.ApplyNamespace
+
+        if isinstance(instance._skrub_impl, Apply):
+            # Apply expressions have a few more attributes than the others
+            # (``.skb.applied_estimator``, ``.skb.get_grid_search``, ...)
+            return _skrub_namespace.ApplyNamespace(instance)
+
+        return _skrub_namespace.SkrubNamespace(instance)
+
+
 class Expr:
+    """
+    Representation of an expression that can be used to build ML estimators.
+
+    Please refer to the example gallery for an introduction to skrub
+    expressions.
+
+    This is usually not instantiated manually, but through one of the functions
+    :func:`var`, :func:`as_expr`, :func:`X` or :func:`y`, by applying a
+    :func:`deferred` function, or by calling a method or applying an operator
+    to an existing expression.
+    """
+
     __hash__ = None
 
     def __init__(self, impl):
@@ -480,13 +527,7 @@ class Expr:
             "perform membership tests now."
         )
 
-    @property
-    def skb(self):
-        from . import _skrub_namespace
-
-        if isinstance(self._skrub_impl, Apply):
-            return _skrub_namespace.ApplyNamespace(self)
-        return _skrub_namespace.SkrubNamespace(self)
+    skb = Skb()
 
     def __repr__(self):
         result = repr(self._skrub_impl)
@@ -523,11 +564,13 @@ class Expr:
             graph = (
                 "Please install Pydot and GraphViz to display the computation graph."
             )
-        if self._skrub_impl.preview_if_available() is NULL:
+        impl = self._skrub_impl
+        if impl.preview_if_available() is NULL:
             return f"<div>{graph}</div>"
-        if (name := self._skrub_impl.name) is not None:
+        if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
-                f"<strong><samp>Name: {html.escape(repr(name))}</samp></strong><br />\n"
+                f"<strong><samp>Name: {html.escape(repr(impl.name))}</samp></strong><br"
+                " />\n"
             )
         else:
             name_line = ""
@@ -1299,6 +1342,8 @@ def deferred(func):
             )
         )
 
+    deferred_func._skrub_is_deferred = True
+
     if not hasattr(func, "__code__"):
         return deferred_func
 
@@ -1343,6 +1388,8 @@ def deferred(func):
                 kwdefaults=func.__kwdefaults__,
             )
         )
+
+    deferred_func._skrub_is_deferred = True
 
     return deferred_func
 

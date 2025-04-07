@@ -8,7 +8,7 @@ standard scikit-learn tools such as the ``Pipeline`` and ``ColumnTransformer``.
 
 **Multiple tables:** we have several tables of different shapes (for example,
 we may have "Customers", "Orders" and "Products" tables). But scikit-learn
-estimators a single design matrix ``X`` and array of targets ``y`` with one row
+estimators expect a single design matrix ``X`` and array of targets ``y`` with one row
 per observation.
 
 **DataFrame wrangling:** we need to easily perform typical dataframe operations
@@ -238,6 +238,9 @@ predictions
 # From the choices we inserted at different locations in our pipeline, skrub
 # can build a grid of hyperparameters and run the hyperparameter search for us,
 # backed by scikit-learn's ``GridSearchCV`` or ``RandomizedSearchCV``.
+
+# %%
+print(predictions.skb.describe_param_grid())
 
 # %%
 search = predictions.skb.get_randomized_search(

@@ -8,6 +8,12 @@ from skrub import selectors as s
 
 
 def create_expression_report():
+    output_dir = (
+        Path(__file__).parent / "_build" / "html" / "_static" / "credit_fraud_report"
+    )
+    if output_dir.exists():
+        return
+
     dataset = skrub.datasets.fetch_credit_fraud()
 
     products = skrub.var("products", dataset.products)
@@ -45,11 +51,7 @@ def create_expression_report():
     predictions = baskets.skb.apply(hgb, y=fraud_flags)
 
     predictions.skb.full_report(
-        output_dir=Path(__file__).parent
-        / "_build"
-        / "html"
-        / "_static"
-        / "credit_fraud_report",
+        output_dir=output_dir,
         overwrite=True,
         open=False,
     )
