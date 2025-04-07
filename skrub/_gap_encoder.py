@@ -157,7 +157,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     >>> X = pd.Series(['Paris, FR', 'Paris', 'London, UK', 'Paris, France',
     ...                'london', 'London, England', 'London', 'Pqris'], name='city')
     >>> enc.fit(X)
-    GapEncoder(n_components=2, random_state=0)
+    GapEncoder(block_normalize=False, n_components=2, random_state=0)
 
     The GapEncoder has found the following two topics:
 

@@ -2,8 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-import skrub as skb
-from skrub import BlockNormalizerL2
+from skrub import BlockNormalizerL2, GapEncoder, StringEncoder
 from skrub._block_normalizer import _avg_norm
 
 
@@ -46,9 +45,8 @@ def test_dataframe(df_module):
 @pytest.mark.parametrize(
     "encoder",
     [
-        skb.StringEncoder(block_normalize=True, n_components=2),
-        skb.TextEncoder(block_normalize=True, n_components=2),
-        skb.GapEncoder(block_normalize=True, n_components=2),
+        StringEncoder(block_normalize=True, n_components=2),
+        GapEncoder(block_normalize=True, n_components=2),
     ],
 )
 def test_encoders(df_module, encoder):

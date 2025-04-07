@@ -7,10 +7,11 @@ from sklearn.base import (
 )
 
 from . import _dataframe as sbd
+from ._sklearn_compat import validate_data
 
 
 class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
-    r"""Fit the average L2 norm on the training data and apply the normalization to
+    r"""Fit the average L2 norm on the training data and apply the normalization to \
     the testing data.
 
     Compute the average L2 norm (a scalar) from a numerical DataFrame or a 2D NumPy
@@ -62,7 +63,7 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         self._check_all_numeric(X)
 
         # Compute column-wise norm by filtering out nonfinite values.
-        X = self._validate_data(X=X, accept_sparse=False, force_all_finite=False)
+        X = validate_data(self, X=X, accept_sparse=False, force_all_finite=False)
 
         self.avg_norm_ = _avg_norm(X)
 
@@ -75,10 +76,14 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         ----------
         X : array-like, of shape (n_samples, n_features)
             The data to normalize.
+
+        Returns
+        -------
+        X_out : numpy array of shape (n_samples, n_features)
         """
         check_is_fitted(self, "avg_norm_")
-        X = self._validate_data(
-            X=X, reset=False, accept_sparse=False, force_all_finite=False
+        X = validate_data(
+            self, X=X, reset=False, accept_sparse=False, force_all_finite=False
         )
         return X / self.avg_norm_
 
