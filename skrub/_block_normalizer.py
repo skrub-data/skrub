@@ -34,23 +34,15 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
     .. math::
 
-        ||X||_B = \sqrt{\sum_{j=1}^D \Big( \frac{1}{N_j} \sum_{i=1}^N (X_{ij} -
-        \bar{X_j})^2 \Big)} \in \mathbb{R}
+        ||X||_B = \sqrt{\sum_{j=1}^D \sigma^2(X_j)} \in \mathbb{R}
 
     where:
 
-    * :math:`N` is the number of samples
-    * :math:`N_j` is the number of finite elements in the column :math:`j`
+    * :math:`\sigma^2(X_j)` is the population variance of the column :math:`j`
     * :math:`D` is the number of features
-    * :math:`\bar{X_j}` is the mean of the column :math:`j`
 
-    When all values are finite, the previous equation simplifies to:
-
-    .. math::
-
-        ||X||_B = \sqrt{\frac{1}{N} \sum_{i,j} (X_{ij} - \bar{X_j})^2}
-
-    Finally, we normalize each element as:
+    When :math:`D = 1`, this norm is the population standard deviation of the column.
+    We then normalize each elements as:
 
     .. math::
 
@@ -119,17 +111,10 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
 
 def _avg_norm(X):
-    # Sanity check: replace inf values with nan
-    mask_finite = np.isfinite(X)
-    X[~mask_finite] = np.nan
-
-    # Only divide each column by the number finite values instead of the number
-    # of samples.
-    squared_diff = (X - np.nanmean(X, axis=0)) ** 2
-    norm = np.nansum(squared_diff / mask_finite.sum(axis=0))
+    norm = np.sqrt(X.var(axis=0).sum())
 
     # Avoid division by very small or zero values.
     if norm < 10 * np.finfo(norm.dtype).eps:
         norm = 1
 
-    return np.sqrt(norm)
+    return norm
