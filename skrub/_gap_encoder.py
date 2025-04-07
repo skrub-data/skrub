@@ -115,6 +115,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         set ``max_no_improvement=None``.
     verbose : int, default=0
         Verbosity level. The higher, the more granular the logging.
+    block_normalize : bool, default=True
+        If set to true, normalize the output using :class:`BlockNormalizerL2`.
 
     Attributes
     ----------

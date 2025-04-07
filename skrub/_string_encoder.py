@@ -43,6 +43,9 @@ class StringEncoder(SingleColumnTransformer):
         Option ``char_wb`` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
 
+    block_normalize : bool, default=True
+        If set to true, normalize the output using :class:`BlockNormalizerL2`.
+
     See Also
     --------
     MinHashEncoder :

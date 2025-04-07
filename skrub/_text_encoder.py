@@ -129,6 +129,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         Verbose level, controls whether to show a progress bar or not during
         ``transform``.
 
+    block_normalize : bool, default=True
+        If set to true, normalize the output using :class:`BlockNormalizerL2`.
+
     Attributes
     ----------
     input_name_ : str
