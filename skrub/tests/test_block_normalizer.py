@@ -55,3 +55,11 @@ def test_encoders(df_module, encoder):
     X = df_module.example_dataframe["str-col"]
     X_t = encoder.fit_transform(X)
     assert _avg_norm(np.array(X_t)) == pytest.approx(1)
+
+
+def test_non_num_values(df_module):
+    with pytest.raises(ValueError, match="only accept numeric columns"):
+        BlockNormalizerL2().fit_transform(df_module.example_dataframe)
+
+    with pytest.raises(ValueError, match="only accept numeric values"):
+        BlockNormalizerL2().fit_transform(np.array([[1, "a"]]))

@@ -32,11 +32,21 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         return X / self.avg_norm_
 
     def _check_all_numeric(self, X):
-        msg = "BlockNormalizer only accept numeric columns, but {col} is {dtype}."
         if hasattr(X, "__dataframe__"):
+            msg = "BlockNormalizer only accept numeric columns, but {col} is {dtype}."
             for col in sbd.to_column_list(X):
                 if not (sbd.is_numeric(col) or sbd.is_bool(col)):
                     raise ValueError(msg.format(col=col.name, dtype=sbd.dtype(col)))
+        elif isinstance(X, np.ndarray):
+            msg = (
+                "BlockNormalizer only accept numeric values, but the array has "
+                "at least one non numeric value."
+            )
+            # "object" dtypes raises an error with isnumeric.
+            try:
+                X.astype("float32")
+            except ValueError as e:
+                raise ValueError(msg) from e
 
 
 def _avg_norm(X):
