@@ -229,8 +229,8 @@ class SkrubNamespace:
             allow_reject=allow_reject,
         )
 
-    def apply_func(self, func):
-        """Apply the given function.
+    def apply_func(self, func, *args, **kwargs):
+        r"""Apply the given function.
 
         This is a convenience function; ``X.skb.apply_func(func)`` is
         equivalent to ``skrub.deferred(func)(X)``.
@@ -240,18 +240,24 @@ class SkrubNamespace:
         func : function
             The function to apply to the expression.
 
+        args
+            additional positional arguments passed to ``func``.
+
+        kwargs
+            named arguments passed to ``func``.
+
         Returns
         -------
         expression
-            The expression that evaluates to the result of applying ``func`` to
-            ``self``.
+            The expression that evaluates to the result of calling ``func`` as
+            ``func(self, *args, **kwargs)``.
 
         Examples
         --------
         >>> import skrub
 
-        >>> def count_words(text):
-        ...     return len(text.split())
+        >>> def count_words(text, sep=None):
+        ...     return len(text.split(sep))
 
         >>> text = skrub.var("text", "Hello, world!")
         >>> text
@@ -269,7 +275,15 @@ class SkrubNamespace:
         >>> count.skb.eval({"text": "one two three four"})
         4
 
-        This is the same as
+        We can pass extra arguments:
+
+        >>> text.skb.apply_func(count_words, sep="\n")
+        <Call 'count_words'>
+        Result:
+        ―――――――
+        1
+
+        Using ``.skb.apply_func`` is the same as using ``deferred``, for example:
 
         >>> skrub.deferred(count_words)(text)
         <Call 'count_words'>
@@ -279,7 +293,7 @@ class SkrubNamespace:
         """
         if not getattr(func, "_skrub_is_deferred", False):
             func = deferred(func)
-        return func(self._expr)
+        return func(self._expr, *args, **kwargs)
 
     @check_expr
     def if_else(self, value_if_true, value_if_false):
