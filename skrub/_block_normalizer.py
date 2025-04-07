@@ -42,12 +42,11 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     * :math:`D` is the number of features
 
     When :math:`D = 1`, this norm is the population standard deviation of the column.
-    We then normalize each elements as:
+    We then normalize each element as:
 
     .. math::
 
         \forall i,j, \quad \tilde{X}_{ij} = \frac{X_{ij}}{||X||_B}
-
     """
 
     def fit(self, X, y=None):
@@ -111,7 +110,11 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
 
 def _avg_norm(X):
-    norm = np.sqrt(X.var(axis=0).sum())
+    # Sanity check: replace inf values with nan
+    mask_finite = np.isfinite(X)
+    X[~mask_finite] = np.nan
+
+    norm = np.sqrt(np.nanvar(X, ddof=0, axis=0).sum())
 
     # Avoid division by very small or zero values.
     if norm < 10 * np.finfo(norm.dtype).eps:
