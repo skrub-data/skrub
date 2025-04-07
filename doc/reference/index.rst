@@ -124,7 +124,7 @@ For more control or in order to build pipelines for more datasets, use the skrub
 
 .. autosummary::
    :toctree: generated/
-   :template: base.rst
+   :template: expr_class.rst
    :nosignatures:
 
    Expr

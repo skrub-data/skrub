@@ -35,11 +35,16 @@ class _A:
 
 
 def test_missing_doc():
-    with pytest.raises(AttributeError):
-        skrub.X().__doc__
+    from skrub._expressions._expressions import _EXPR_INSTANCE_DOC
 
-    with pytest.raises(AttributeError):
-        skrub.X(_A()).__doc__
+    assert skrub.X().__doc__ == _EXPR_INSTANCE_DOC
+    assert skrub.X(_A()).__doc__ == _EXPR_INSTANCE_DOC
+
+
+def test_expr_class_doc():
+    from skrub._expressions._expressions import _EXPR_CLASS_DOC, Expr
+
+    assert Expr.__doc__ == _EXPR_CLASS_DOC
 
 
 @pytest.mark.parametrize("a", example_strings())

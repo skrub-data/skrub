@@ -348,7 +348,7 @@ def _check_return_value(f):
     return check_call_return_value
 
 
-class Skb:
+class _Skb:
     """Descriptor for the .skb attribute."""
 
     # We have to define a descriptor rather than simply using ``@property`` so
@@ -383,20 +383,58 @@ class Skb:
         return _skrub_namespace.SkrubNamespace(instance)
 
 
+_EXPR_CLASS_DOC = """
+Representation of a computation that can be used to build ML estimators.
+
+Please refer to the example gallery for an introduction to skrub
+expressions.
+
+This class is usually not instantiated manually, but through one of the functions
+:func:`var`, :func:`as_expr`, :func:`X` or :func:`y`, by applying a
+:func:`deferred` function, or by calling a method or applying an operator
+to an existing expression.
+"""
+
+_EXPR_INSTANCE_DOC = """Skrub expression.
+
+This object represents a computation and can be used to build machine-learning
+estimators.
+
+Please refer to the example gallery for an introduction to skrub
+expressions.
+"""
+
+
+class _ExprDoc:
+    """Descriptor for the expressions' docstring."""
+
+    # The docstring of expression instances is dynamic and shows the docstring of
+    # the preview's result if possible, so that if we do
+
+    # ``help(skrub.var('a', [1, 2]))``
+
+    # we get the help for lists. However when the docstring is looked
+    # up on the class, we want to return some information about the ``Expr``
+    # class itself to be displayed in the sphinx documentation.
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return _EXPR_CLASS_DOC
+        preview = instance._skrub_impl.preview_if_available()
+        if preview is NULL:
+            return _EXPR_INSTANCE_DOC
+        doc = getattr(preview, "__doc__", None)
+        if doc is None:
+            return _EXPR_INSTANCE_DOC
+        return f"""Skrub expression.\nDocstring of the preview:\n{doc}"""
+
+
 class Expr:
-    """
-    Representation of an expression that can be used to build ML estimators.
-
-    Please refer to the example gallery for an introduction to skrub
-    expressions.
-
-    This is usually not instantiated manually, but through one of the functions
-    :func:`var`, :func:`as_expr`, :func:`X` or :func:`y`, by applying a
-    :func:`deferred` function, or by calling a method or applying an operator
-    to an existing expression.
-    """
-
     __hash__ = None
+
+    __doc__ = _ExprDoc()
+
+    skb = _Skb()
 
     def __init__(self, impl):
         self._skrub_impl = impl
@@ -471,16 +509,6 @@ class Expr:
             return inspect.signature(preview)
         attribute_error(self, "__signature__")
 
-    @property
-    def __doc__(self):
-        preview = self._skrub_impl.preview_if_available()
-        if preview is NULL:
-            attribute_error(self, "__doc__")
-        doc = getattr(preview, "__doc__", None)
-        if doc is None:
-            attribute_error(self, "__doc__")
-        return f"""Skrub expression.\nDocstring of the preview:\n{doc}"""
-
     def __setitem__(self, key, value):
         msg = (
             "Do not modify an expression in-place. "
@@ -526,8 +554,6 @@ class Expr:
             "when your pipeline runs. So it is not possible to eagerly "
             "perform membership tests now."
         )
-
-    skb = Skb()
 
     def __repr__(self):
         result = repr(self._skrub_impl)
