@@ -49,3 +49,41 @@ def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
         assert capsys.readouterr().err != ""
     finally:
         unpatch_display()
+
+
+def test_max_plot_columns_parameter(df_module):
+    df = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
+    )
+    patch_display()
+    assert "data-plots-skipped" not in df._repr_html_()
+
+    df2 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(30)}
+    )
+    patch_display()
+    assert "data-plots-skipped" not in df2._repr_html_()
+
+    df3 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    patch_display()
+    assert "data-plots-skipped" in df3._repr_html_()
+
+    df4 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    patch_display(max_plot_columns=10)
+    assert "data-plots-skipped" in df4._repr_html_()
+
+    df5 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
+    )
+    patch_display(max_plot_columns=15)
+    assert "data-plots-skipped" not in df5._repr_html_()
+
+    df6 = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
+    )
+    patch_display(max_plot_columns=None)
+    assert "data-plots-skipped" not in df6._repr_html_()
