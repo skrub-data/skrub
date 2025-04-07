@@ -16,7 +16,7 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     Compute the average L2 norm (a scalar) from a numerical DataFrame or a 2D NumPy
     array, and use this norm to normalize the input element-wise. This computation
     is robust to non-finite values such as ``np.inf`` or ``np.nan``, but raises an
-    error if string values are present
+    error if string values are present.
 
     We define this norm as:
 
