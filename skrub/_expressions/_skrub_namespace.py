@@ -1350,6 +1350,11 @@ class ApplyNamespace(SkrubNamespace):
     def applied_estimator(self):
         """Retrieve the estimator applied in the previous step, as an expression.
 
+        Notes
+        -----
+        This method is only available for expressions created with
+        ``.skb.apply()``.
+
         Examples
         --------
         >>> import skrub
@@ -1436,6 +1441,11 @@ class ApplyNamespace(SkrubNamespace):
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
 
+        Notes
+        -----
+        This method is only available for expressions created with
+        ``.skb.apply()``.
+
         Examples
         --------
         >>> import skrub
@@ -1513,6 +1523,10 @@ class ApplyNamespace(SkrubNamespace):
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
 
+        Notes
+        -----
+        This method is only available for expressions created with
+        ``.skb.apply()``.
 
         Examples
         --------
@@ -1588,6 +1602,11 @@ class ApplyNamespace(SkrubNamespace):
         -------
         dict
             Cross-validation results.
+
+        Notes
+        -----
+        This method is only available for expressions created with
+        ``.skb.apply()``.
 
         Examples
         --------
