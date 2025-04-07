@@ -88,7 +88,6 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
                 "BlockNormalizer only accept numeric values, but the array has "
                 "at least one non numeric value."
             )
-            # "object" dtypes raises an error with isnumeric.
             try:
                 X.astype("float32")
             except ValueError as e:
