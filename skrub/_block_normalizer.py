@@ -10,11 +10,63 @@ from . import _dataframe as sbd
 
 
 class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
-    def fit(self, X):
-        _ = self.fit_transform(X)
+    r"""Fit the average L2 norm on the training data and apply the normalization to
+    the testing data.
+
+    Compute the average L2 norm (a scalar) from a numerical DataFrame or a 2D NumPy
+    array, and use this norm to normalize the input element-wise. This computation
+    is robust to non-finite values such as ``np.inf`` or ``np.nan``, but raises an
+    error if string values are present
+
+    We define this norm as:
+
+    .. math::
+
+        \mathrm{norm} = \sum_{j=1}^D \Big( \frac{1}{N_j} \sum_{i=1}^N (X_{ij} -
+        \bar{X_j})^2 \Big)
+
+    where:
+
+    * :math:`N` is the number of samples
+    * :math:`N_j` is the number of finite elements in the column :math:`j`
+    * :math:`D` is the number of features
+    * :math:`\bar{X_j}` is the mean of the column :math:`j`
+
+    When all values are finite, the previous equation simplifies to:
+
+    .. math::
+
+        \mathrm{norm} = \frac{1}{N} \sum_{i,j} (X_{ij} - \bar{X_j})^2
+
+    Attributes
+    ----------
+    avg_norm_ : float
+        The average l2 norm, computed on the training set.
+    """
+
+    def fit(self, X, y=None):
+        """Fit the normalizer.
+
+        Parameters
+        ----------
+        X : array-like, of shape (n_samples, n_features)
+            The data used to compute the norm.
+        y : None
+            Unused. Here for compatibility with scikit-learn.
+        """
+        _ = self.fit_transform(X, y=None)
         return self
 
     def fit_transform(self, X):
+        """Fit the normalizer, then normalize.
+
+        Parameters
+        ----------
+        X : array-like, of shape (n_samples, n_features)
+            The data used to compute the norm and normalize.
+        y : None
+            Unused. Here for compatibility with scikit-learn.
+        """
         self._check_all_numeric(X)
 
         # Compute column-wise norm by filtering out nonfinite values.
@@ -25,6 +77,13 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         return X / self.avg_norm_
 
     def transform(self, X):
+        """Normalize the data.
+
+        Parameters
+        ----------
+        X : array-like, of shape (n_samples, n_features)
+            The data to normalize.
+        """
         check_is_fitted(self, "avg_norm_")
         X = self._validate_data(
             X=X, reset=False, accept_sparse=False, force_all_finite=False
