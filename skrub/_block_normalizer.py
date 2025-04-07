@@ -22,8 +22,8 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
     .. math::
 
-        \mathrm{norm} = \sum_{j=1}^D \Big( \frac{1}{N_j} \sum_{i=1}^N (X_{ij} -
-        \bar{X_j})^2 \Big)
+        ||X||_B = \sqrt{\sum_{j=1}^D \Big( \frac{1}{N_j} \sum_{i=1}^N (X_{ij} -
+        \bar{X_j})^2 \Big)}
 
     where:
 
@@ -36,7 +36,13 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
     .. math::
 
-        \mathrm{norm} = \frac{1}{N} \sum_{i,j} (X_{ij} - \bar{X_j})^2
+        ||X||_B = \sqrt{\frac{1}{N} \sum_{i,j} (X_{ij} - \bar{X_j})^2}
+
+    Finally, we normalize each element as:
+
+    .. math::
+
+        \forall i,j, \quad \tilde{X}_{ij} = \frac{X_{ij}}{||X||_B}
 
     Attributes
     ----------
@@ -46,7 +52,7 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     See Also
     --------
     :class:`~sklearn.preprocessing.Normalizer` :
-        Performs row-wise normalization
+        Performs row-wise normalization.
     """
 
     def fit(self, X, y=None):
