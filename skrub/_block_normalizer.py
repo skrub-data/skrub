@@ -42,6 +42,11 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     ----------
     avg_norm_ : float
         The average l2 norm, computed on the training set.
+
+    See Also
+    --------
+    :class:`~sklearn.preprocessing.Normalizer` :
+        Performs row-wise normalization
     """
 
     def fit(self, X, y=None):
