@@ -1,7 +1,6 @@
 """
 skrub: Prepping tables for machine learning.
 """
-
 from pathlib import Path as _Path
 
 from ._agg_joiner import AggJoiner, AggTarget
