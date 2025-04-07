@@ -18,12 +18,24 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     is robust to non-finite values such as ``np.inf`` or ``np.nan``, but raises an
     error if string values are present.
 
+    Attributes
+    ----------
+    avg_norm_ : float
+        The average l2 norm, computed on the training set.
+
+    See Also
+    --------
+    :class:`~sklearn.preprocessing.Normalizer` :
+        Performs row-wise normalization.
+
+    Notes
+    -----
     We define this norm as:
 
     .. math::
 
         ||X||_B = \sqrt{\sum_{j=1}^D \Big( \frac{1}{N_j} \sum_{i=1}^N (X_{ij} -
-        \bar{X_j})^2 \Big)}
+        \bar{X_j})^2 \Big)} \in \mathbb{R}
 
     where:
 
@@ -44,15 +56,6 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         \forall i,j, \quad \tilde{X}_{ij} = \frac{X_{ij}}{||X||_B}
 
-    Attributes
-    ----------
-    avg_norm_ : float
-        The average l2 norm, computed on the training set.
-
-    See Also
-    --------
-    :class:`~sklearn.preprocessing.Normalizer` :
-        Performs row-wise normalization.
     """
 
     def fit(self, X, y=None):
