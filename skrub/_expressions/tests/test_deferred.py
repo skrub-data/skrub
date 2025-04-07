@@ -56,6 +56,21 @@ def test_deferred_callables_repr():
     Result:
     ―――――――
     20
+    >>> a.skb.apply_func(F())
+    <Call '<...F object at 0x...>'>
+    Result:
+    ―――――――
+    20
+    >>> a.skb.apply_func(lambda x: x * 2)
+    <Call '<lambda>'>
+    Result:
+    ―――――――
+    20
+    >>> a.skb.apply_func(functools.partial(lambda x: x * 2))
+    <Call 'functools.partial(<function <lambda> at 0x...>)'>
+    Result:
+    ―――――――
+    20
     """
 
 
@@ -128,3 +143,24 @@ def test_deferred_method(use_apply_func):
     else:
         a = skrub.deferred(str.lower)("ABC")
     assert a.skb.eval() == "abc"
+
+
+def test_deferred_idempotent():
+    @skrub.deferred
+    def add_one(x):
+        return x + 1
+
+    a = skrub.var("a", 0)
+    b = a.skb.apply_func(skrub.deferred(add_one))
+    result = b.skb.eval()
+    assert isinstance(result, int)
+    assert result == 1
+
+
+def test_deferred_expr():
+    # applying deferred when func is already an expression
+    a = skrub.var("a", "hello")
+    b = skrub.deferred(a.upper)()
+    result = b.skb.eval()
+    assert isinstance(result, str)
+    assert result == "HELLO"

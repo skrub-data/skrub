@@ -147,15 +147,6 @@ def test_repr():
     ―――――――
     'ABC'
 
-    Weird (unnecessary) use of deferred to trigger a case where calling a
-    method has not been translated to a CallMethod
-
-    >>> skrub.deferred(skrub.var('a', 'hello').upper)()
-    <Call 'upper'>
-    Result:
-    ―――――――
-    'HELLO'
-
     In cases that are hard to figure out we fall back on a less informative
     default
 

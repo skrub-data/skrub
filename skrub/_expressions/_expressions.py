@@ -1326,6 +1326,9 @@ def deferred(func):
     """  # noqa : E501
     from ._evaluation import needs_eval
 
+    if isinstance(func, Expr) or getattr(func, "_skrub_is_deferred", False):
+        return func
+
     @_check_return_value
     @check_expr
     @functools.wraps(func)

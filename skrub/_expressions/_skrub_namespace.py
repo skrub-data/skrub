@@ -291,9 +291,7 @@ class SkrubNamespace:
         ―――――――
         2
         """
-        if not getattr(func, "_skrub_is_deferred", False):
-            func = deferred(func)
-        return func(self._expr, *args, **kwargs)
+        return deferred(func)(self._expr, *args, **kwargs)
 
     @check_expr
     def if_else(self, value_if_true, value_if_false):
