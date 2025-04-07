@@ -63,7 +63,7 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         self._check_all_numeric(X)
 
         # Compute column-wise norm by filtering out nonfinite values.
-        X = validate_data(self, X=X, accept_sparse=False, force_all_finite=False)
+        X = validate_data(self, X=X, accept_sparse=False, ensure_all_finite=False)
 
         self.avg_norm_ = _avg_norm(X)
 
@@ -83,7 +83,7 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self, "avg_norm_")
         X = validate_data(
-            self, X=X, reset=False, accept_sparse=False, force_all_finite=False
+            self, X=X, reset=False, accept_sparse=False, ensure_all_finite=False
         )
         return X / self.avg_norm_
 
