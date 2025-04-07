@@ -54,19 +54,6 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         y : None
             Unused. Here for compatibility with scikit-learn.
         """
-        _ = self.fit_transform(X, y=None)
-        return self
-
-    def fit_transform(self, X):
-        """Fit the normalizer, then normalize.
-
-        Parameters
-        ----------
-        X : array-like, of shape (n_samples, n_features)
-            The data used to compute the norm and normalize.
-        y : None
-            Unused. Here for compatibility with scikit-learn.
-        """
         self._check_all_numeric(X)
 
         # Compute column-wise norm by filtering out nonfinite values.
@@ -74,7 +61,7 @@ class BlockNormalizerL2(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         self.avg_norm_ = _avg_norm(X)
 
-        return X / self.avg_norm_
+        return self
 
     def transform(self, X):
         """Normalize the data.
