@@ -1342,6 +1342,8 @@ def deferred(func):
             )
         )
 
+    deferred_func._skrub_is_deferred = True
+
     if not hasattr(func, "__code__"):
         return deferred_func
 
@@ -1386,6 +1388,8 @@ def deferred(func):
                 kwdefaults=func.__kwdefaults__,
             )
         )
+
+    deferred_func._skrub_is_deferred = True
 
     return deferred_func
 
