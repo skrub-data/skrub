@@ -301,6 +301,10 @@ def test_attribute_errors():
     # added suggestion when the name exists in the .skb namespace
     with pytest.raises(Exception, match=r"(?s).*Did you mean '\.skb\.apply"):
         skrub.X(0).apply
+    with pytest.raises(
+        AttributeError, match=r"`.skb.applied_estimator` only exists when"
+    ):
+        skrub.X().skb.applied_estimator()
 
 
 def test_concat_horizontal_numpy():
