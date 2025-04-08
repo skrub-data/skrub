@@ -91,20 +91,25 @@ estimator.fit_transform({"a": 10, "b": 7})
 # -----------------------
 #
 # As we saw above, we can call ``eval()`` with a dictionary of bindings for the
-# variables in our expression in order to compute the result. However, seeing
-# the result of what we have built so far is something we want to do very
-# often. So skrub helps us avoid needing to call ``eval()`` repeatedly.
+# variables in our expression in order to compute the result of the pipeline.
+# However, this is an operation that we want to do very often during development:
+# to avoid having to call ``eval()`` repeatedly, skrub provides a way to
+# preview the result of the expression as we work on it.
 #
-# When creating a variable, we can pass a value in addition to its name. When
-# those values are available, whenever we create a new expression, skrub
-# computes the result on the provided values and can show it to us. This makes
+# When we create a variable, we can pass a value in addition to its name. If a value
+# is provided, skrub will use it to compute the result of the expression on the
+# value. This makes
 # the development more interactive, allows catching errors early, and can
 # provide better help and tab-completion in an interactive Python shell.
 #
 # Moreover, those values can be used to obtain a fitted estimator or
 # cross-validation scores as we will see.
 #
-# Instead of simply ``var("a")`` as before, we can write:
+# Note that example values are immutable throughout the pipeline. This means that
+# to change the value of a variable, we need to create the pipeline again with
+# the new value.
+#
+# To provide an example value to ``var("a")``, we can write:
 
 # %%
 a = skrub.var("a", 10)  # note the value 10
@@ -182,13 +187,13 @@ orders
 # Because we know we will feed a DataFrame to the computation, we manipulate
 # ``products`` as if it were a DataFrame.
 #
-# Accessing attributes:
+# We can access its attributes:
 
 # %%
 orders.columns
 
 # %%
-# Accessing items, indexing, slicing:
+# Access the "items" column, indexing, slicing:
 
 # %%
 orders["item"].iloc[1:]
@@ -206,19 +211,37 @@ orders["price"] * orders["qty"]
 orders.assign(total=orders["price"] * orders["qty"])
 
 # %%
+# It is important to note that the original ``orders`` pipeline is not modified
+# by the previous cells. Instead, in each cell a new expression is created that
+# represents the result of the operation.
+#
+# This is similar to how pandas and polars
+# DataFrames work: when we call a method on a DataFrame, it returns a new
+# DataFrame that represents the result of the operation, rather than modifying
+# the original DataFrame in place. However, while in pandas it is possible to
+# work on a DataFrame in place, skrub does not allow this.
+#
+# We can check this by looking at the graph of ``orders`` (which remains unmodified),
+# and ``new_orders`` (which instead contains the new steps):
+orders
+# %%
+new_orders = orders.assign(total=orders["price"] * orders["qty"])
+new_orders
+
+# %%
 # Applying machine-learning estimators
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # As mentioned above, in addition to those usual operations, the expressions
-# have a special attribute: ``.skb`` gives access to the
-# functionality provided by skrub. A particularly important one is
-# ``.skb.apply()`` which allows applying scikit-learn estimators.
+# have a special attribute: ``.skb``, which gives access to the methods and objects
+# provided by skrub. A particularly important one is
+# ``.skb.apply()``, which allows to scikit-learn estimators to the pipeline.
 
 # %%
 orders.skb.apply(skrub.TableVectorizer())
 
 # %%
-# It is also possible to apply a transformer to only some columns:
+# It is also possible to apply a transformer to a subset of the columns:
 
 # %%
 orders.skb.apply(skrub.StringEncoder(n_components=3), cols="item")
@@ -236,10 +259,13 @@ vectorized_orders = orders.assign(total=orders["price"] * orders["qty"]).skb.app
 )
 vectorized_orders
 
+# We can use ``.skb.get_estimator(fitted=True)`` to retrieve the estimator and
+# fit it on the data we provided.
 # %%
 estimator = vectorized_orders.skb.get_estimator(fitted=True)
 
 # %%
+# We can now use the fitted estimator to transform new data.
 new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
 estimator.transform({"orders": new_orders})
 
@@ -290,7 +316,7 @@ orders.columns
 # So we must delay the execution of the ``for`` statement until the computation
 # actually runs and ``orders.columns`` has been evaluated.
 #
-# We can do this by wrapping it in a function and using ``skrub.deferred``
+# We can do this by wrapping it in a function and using ``skrub.deferred``.
 # Suppose we want to convert the columns to upper case, and our first attempt
 # runs into the problem we just described::
 #
@@ -302,7 +328,7 @@ orders.columns
 
 # %%
 # We define a function that contains the control flow statement we need. Then,
-# we apply the ``skrub.deferred`` decorator to it. What this does is to defer
+# we apply the ``skrub.deferred`` decorator to it. What this does is deferring
 # the calls to our function. Now when we call it, instead of running
 # immediately, it returns a skrub expression that wraps the function call. The
 # original function is actually called when we evaluate the expression.
@@ -380,7 +406,7 @@ def add_total(df):
 add_total(orders)
 
 # %%
-# Finally, other occasions where we may need to use ``deferred`` are:
+# Finally, there are other occasions where we may need to use ``deferred``:
 #
 # - we have many nodes in our graph, and we want to collapse a sequence of
 #   steps into a single function call, that will appear as a single node
@@ -636,11 +662,17 @@ new_baskets = pd.DataFrame({"ID": [21243]})
 new_products = pd.DataFrame(
     {
         "basket_ID": [21243, 21243],
-        "item": ["COMPUTER PERIPHERALS ACCESSORIES", "FULFILMENT CHARGE"],
+        "item": [
+            "COMPUTER PERIPHERALS ACCESSORIES",
+            "FULFILMENT CHARGE",  # codespell:ignore
+        ],
         "cash_price": [299, 7],
         "make": ["SAMSUNG", "RETAILER"],
-        "model": ["SAMSUNG GALAXY WATCH 3 BLUETOOTH 41MM STAINLESS ST", "RETAILER"],
-        "goods_code": ["238905679", "FULFILMENT"],
+        "model": [
+            "SAMSUNG GALAXY WATCH 3 BLUETOOTH 41MM STAINLESS ST",
+            "RETAILER",
+        ],
+        "goods_code": ["238905679", "FULFILMENT"],  # codespell:ignore
         "Nbr_of_prod_purchas": [1, 1],
     }
 )
