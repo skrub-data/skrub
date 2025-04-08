@@ -26,7 +26,6 @@ and ``.skb.mark_as_y()`` on the appropriate objects:
 """
 
 # %%
-import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 import skrub.datasets
@@ -251,22 +250,11 @@ saved_model = pickle.dumps(estimator)
 # Let us say we got some new data, and we want to use the model we just saved
 # to make predictions on it.
 #
-# (Note that this is for the sake of the example, so we just grabbed an example
-# basket from the original data.)
 
 # %%
-new_baskets = pd.DataFrame({"ID": [21243]})
-new_products = pd.DataFrame(
-    {
-        "basket_ID": [21243, 21243],
-        "item": ["COMPUTER PERIPHERALS ACCESSORIES", "FULFILLMENT CHARGE"],
-        "cash_price": [299, 7],
-        "make": ["SAMSUNG", "RETAILER"],
-        "model": ["SAMSUNG GALAXY WATCH 3 BLUETOOTH 41MM STAINLESS ST", "RETAILER"],
-        "goods_code": ["238905679", "FULFILLMENT"],
-        "Nbr_of_prod_purchas": [1, 1],
-    }
-)
+new_data = skrub.datasets.fetch_credit_fraud(split="test")
+new_baskets = new_data.baskets[["ID"]]
+new_products = new_data.products
 new_products
 
 # %%
@@ -281,9 +269,6 @@ new_products
 # %%
 loaded_model = pickle.loads(saved_model)
 loaded_model.predict({"baskets": new_baskets, "products": new_products})
-
-# %%
-# The query basket is classified as not fraudulent.
 
 # %%
 # Conclusion
