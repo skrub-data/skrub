@@ -56,6 +56,7 @@ class SkrubNamespace:
         cols=s.all(),
         how="auto",
         allow_reject=False,
+        unsupervised=False,
     ):
         expr = Expr(
             Apply(
@@ -65,6 +66,7 @@ class SkrubNamespace:
                 y=y,
                 how=how,
                 allow_reject=allow_reject,
+                unsupervised=unsupervised,
             )
         )
         return expr
@@ -79,6 +81,7 @@ class SkrubNamespace:
         exclude_cols=None,
         how="auto",
         allow_reject=False,
+        unsupervised=False,
     ):
         """
         Apply a scikit-learn estimator to a dataframe or numpy array.
@@ -117,6 +120,14 @@ class SkrubNamespace:
             passed through. If we use ``allow_reject=False`` (the default), an
             error would be raised if the dataframe contains columns for which
             ``ToDatetime`` does not apply (eg a column of numbers).
+
+        unsupervised : bool, optional
+            Use this to indicate that ``y`` is required for scoring but not
+            fitting, as is the case for clustering algorithms. If ``y`` is not
+            required at all (for example when applying an unsupervised
+            transformer, or when we are not interested in scoring with
+            ground-truth labels), simply leave the default ``y=None`` and there
+            is no need to pass a value for ``unsupervised``.
 
         Returns
         -------
@@ -216,17 +227,38 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
+
+        Sometimes we want to pass a value for ``y`` because it is required for
+        scoring and cross-validation, but it is not needed for fitting the
+        estimator. In this case pass ``unsupervised=True``.
+
+        >>> from sklearn.datasets import make_blobs
+        >>> from sklearn.cluster import KMeans
+
+        >>> X, y = make_blobs(n_samples=10, random_state=0)
+        >>> e = skrub.X(X).skb.apply(
+        ...     KMeans(n_clusters=2, random_state=0), y=skrub.y(y), unsupervised=True
+        ... )
+        >>> e.skb.cross_validate()["test_score"]
+        array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
+                -4.85785541])
+        >>> est = e.skb.get_estimator().fit({"X": X})
+        >>> est.predict({"X": X})
+        array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
         # and `rename_cols` params
         if exclude_cols is not None:
             cols = s.make_selector(cols) - exclude_cols
+        # unsupervised should be an actual bool
+        unsupervised = bool(unsupervised)
         return self._apply(
             estimator=estimator,
             y=y,
             cols=cols,
             how=how,
             allow_reject=allow_reject,
+            unsupervised=unsupervised,
         )
 
     def apply_func(self, func, *args, **kwargs):

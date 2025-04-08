@@ -7,7 +7,8 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
 from sklearn.base import BaseEstimator, clone
-from sklearn.datasets import make_classification
+from sklearn.cluster import KMeans
+from sklearn.datasets import make_blobs, make_classification
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.exceptions import NotFittedError
@@ -215,7 +216,7 @@ def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
-def test_unsupervised():
+def test_unsupervised_no_y():
     X = np.random.default_rng(0).normal(size=(30, 20))
     expr = skrub.X(X).skb.apply(PCA(**skrub.choose_from([4, 8], name="n_components")))
     expr_scores = skrub.cross_validate(expr.skb.get_grid_search(), expr.skb.get_data())[
@@ -224,6 +225,22 @@ def test_unsupervised():
     sklearn_search = GridSearchCV(PCA(), {"n_components": [4, 8]})
     sklearn_scores = cross_validate(sklearn_search, X)["test_score"]
     assert_allclose(sklearn_scores, expr_scores)
+
+
+def test_unsupervised():
+    X, y = make_blobs(n_samples=10, random_state=0)
+    k_means = KMeans(n_clusters=2, random_state=0)
+    e = skrub.X(X).skb.apply(k_means, y=skrub.y(y), unsupervised=True)
+    expr_scores = e.skb.cross_validate()["test_score"]
+    sklearn_scores = cross_validate(k_means, X, y)["test_score"]
+    assert_allclose(sklearn_scores, expr_scores)
+    expr_k_means = e.skb.get_estimator()
+    expr_k_means.fit({"X": X})
+    k_means.fit(X)
+    assert (k_means.predict(X) == expr_k_means.predict({"X": X})).all()
+    assert_allclose(k_means.score(X, y), expr_k_means.score({"X": X, "y": y}))
+    with pytest.raises(KeyError):
+        expr_k_means.score({"X": X})
 
 
 def test_no_apply_step():

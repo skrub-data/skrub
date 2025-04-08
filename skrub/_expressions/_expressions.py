@@ -1007,11 +1007,16 @@ def _check_column_names(X):
 
 
 class Apply(ExprImpl):
-    _fields = ["estimator", "cols", "X", "y", "how", "allow_reject"]
+    _fields = ["estimator", "cols", "X", "y", "how", "allow_reject", "unsupervised"]
+
+    # TODO can we avoid the need for an explicit unsupervised parameter by
+    # inspecting sklearn tags?
 
     def fields_required_for_eval(self, mode):
         if "fit" in mode or mode == "preview":
-            return self._fields
+            if not self.unsupervised:
+                return self._fields
+            return [f for f in self._fields if f != "y"]
         if mode == "score":
             return ["X", "y"]
         return ["X"]
@@ -1056,7 +1061,9 @@ class Apply(ExprImpl):
                 result = sbd.make_dataframe_like(X, dict(zip(col_names, pred.T)))
             return sbd.copy_index(X, result)
 
-        if "fit" in method_name or method_name == "score":
+        if "fit" in method_name:
+            y = () if self.unsupervised else (e.y,)
+        elif method_name == "score":
             y = (e.y,)
         else:
             y = ()
