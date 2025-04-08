@@ -12,6 +12,7 @@ from sklearn.base import clone as skl_clone
 
 from . import _choosing
 from ._expressions import (
+    Apply,
     Expr,
     IfElse,
     Match,
@@ -185,11 +186,6 @@ class _Evaluator(_ExprTraversal):
         self._expr = expr
         return super().run(expr)
 
-    def _pick_mode(self, expr):
-        if expr is not self._expr and self.mode != "preview":
-            return "fit_transform" if "fit" in self.mode else "transform"
-        return self.mode
-
     def _fetch(self, expr):
         """Fetch the result from the cache or environment if possible.
 
@@ -252,7 +248,7 @@ class _Evaluator(_ExprTraversal):
     def _handle_expr_default(self, expr):
         return (
             yield from super().handle_expr(
-                expr, expr._skrub_impl.fields_required_for_eval(self._pick_mode(expr))
+                expr, expr._skrub_impl.fields_required_for_eval(self.mode)
             )
         )
 
@@ -269,16 +265,15 @@ class _Evaluator(_ExprTraversal):
         return (yield choice_match.outcome_mapping[outcome])
 
     def compute_result(self, expr, evaluated_attributes):
-        mode = self._pick_mode(expr)
         try:
             return expr._skrub_impl.compute(
                 SimpleNamespace(**evaluated_attributes),
-                mode=mode,
+                mode=self.mode,
                 environment=self.environment,
             )
         except Exception as e:
             expr._skrub_impl.errors[self.mode] = e
-            if mode == "preview":
+            if self.mode == "preview":
                 raise
             stack = expr._skrub_impl.creation_stack_last_line()
             msg = (
@@ -340,6 +335,8 @@ def _check_environment(environment):
 
 
 def evaluate(expr, mode="preview", environment=None, clear=False, callbacks=()):
+    requested_mode = mode
+    mode = "fit_transform" if requested_mode == "fit" else requested_mode
     _check_environment(environment)
     if clear:
         callbacks = (_cache_pruner(expr, mode),) + tuple(callbacks)
@@ -347,9 +344,10 @@ def evaluate(expr, mode="preview", environment=None, clear=False, callbacks=()):
     else:
         callbacks = ()
     try:
-        return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
-            expr
-        )
+        result = _Evaluator(
+            mode=mode, environment=environment, callbacks=callbacks
+        ).run(expr)
+        return expr if requested_mode == "fit" else result
     finally:
         if clear:
             clear_results(expr, mode=mode)
@@ -837,3 +835,28 @@ def find_arg(expr, predicate, skip_types=(Var, Value)):
     except _Found as e:
         return e.value
     return None
+
+
+class _FindFirstApply(_ExprTraversal):
+    def handle_choice(self, choice):
+        return (yield choice.chosen_outcome_or_default())
+
+    def handle_expr(self, expr, **kwargs):
+        if isinstance(expr._skrub_impl, Apply):
+            raise _Found(expr)
+        return (yield from super().handle_expr(expr, **kwargs))
+
+
+def find_first_apply(expr):
+    try:
+        _FindFirstApply().run(expr)
+    except _Found as first:
+        return first.value
+    return None
+
+
+def supported_modes(expr):
+    first = find_first_apply(expr)
+    if first is None:
+        return ["preview", "fit_transform", "transform"]
+    return first._skrub_impl.supported_modes()

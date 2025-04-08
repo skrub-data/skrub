@@ -378,17 +378,6 @@ def test_pass_df_instead_of_expr():
         df.join(skrub.var("a"), on="ID")
 
 
-def test_get_search_without_learner():
-    with pytest.raises(
-        AttributeError,
-        match=(
-            "`.skb.get_grid_search` only exists when the last step is a scikit-learn"
-            " estimator"
-        ),
-    ):
-        skrub.X().skb.get_grid_search()
-
-
 def test_get_grid_search_with_continuous_ranges():
     with pytest.raises(
         ValueError, match="Cannot use grid search with continuous numeric ranges"

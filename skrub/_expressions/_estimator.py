@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn import model_selection
-from sklearn.base import BaseEstimator, clone
+from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
@@ -9,12 +9,14 @@ from ._choosing import Choice, get_default
 from ._evaluation import (
     choices,
     evaluate,
+    find_first_apply,
     find_node_by_name,
     find_X,
     find_y,
     get_params,
     param_grid,
     set_params,
+    supported_modes,
 )
 from ._expressions import Apply
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
@@ -32,6 +34,13 @@ _SEARCH_FITTED_ATTRIBUTES = [
     "refit_time_",
     "multimetric_",
 ]
+
+
+def _default_sklearn_tags():
+    class _DummyTransformer(TransformerMixin, BaseEstimator):
+        pass
+
+    return _DummyTransformer().__sklearn_tags__()
 
 
 class _SharedDict(dict):
@@ -87,11 +96,13 @@ class ExprEstimator(BaseEstimator):
         result = full_report(
             self.expr, environment=environment, mode=mode, **full_report_kwargs
         )
+        if mode == "fit" and result["result"] is not None:
+            result["result"] = self
         self._set_is_fitted(mode)
         return result
 
     def __getattr__(self, name):
-        if name not in self.expr._skrub_impl.supports_modes():
+        if name not in supported_modes(self.expr):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
@@ -316,12 +327,49 @@ def _to_env_estimator(estimator):
     return estimator.__skrub_to_env_estimator__()
 
 
+def _get_classes(expr):
+    first = find_first_apply(expr.expr)
+    if first is None:
+        attribute_error(expr, "classes_")
+    try:
+        estimator = first._skrub_impl.estimator_
+    except AttributeError:
+        attribute_error(expr, "classes_")
+    return estimator.classes_
+
+
 class _XyEstimatorMixin:
     def _get_env(self, X, y):
         xy_environment = {X_NAME: X}
         if y is not None:
             xy_environment[Y_NAME] = y
         return {**self.environment, **xy_environment}
+
+    @property
+    def _estimator_type(self):
+        first = find_first_apply(self.expr)
+        if first is None:
+            return "transformer"
+        try:
+            return get_default(first._skrub_impl.estimator)._estimator_type
+        except AttributeError:
+            return "transformer"
+
+    if hasattr(BaseEstimator, "__sklearn_tags__"):
+        # scikit-learn >= 1.6
+
+        def __sklearn_tags__(self):
+            first = find_first_apply(self.expr)
+            if first is None:
+                return _default_sklearn_tags()
+            return get_default(first._skrub_impl.estimator).__sklearn_tags__()
+
+    @property
+    def classes_(self):
+        try:
+            return _get_classes(self.expr)
+        except AttributeError:
+            attribute_error(self, "classes_")
 
 
 class _XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
@@ -333,27 +381,6 @@ class _XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
         new = ExprEstimator(self.expr)
         _copy_attr(self, new, ["_is_fitted"])
         return new
-
-    @property
-    def _estimator_type(self):
-        try:
-            return get_default(self.expr._skrub_impl.estimator)._estimator_type
-        except AttributeError:
-            return "transformer"
-
-    if hasattr(BaseEstimator, "__sklearn_tags__"):
-        # scikit-learn >= 1.6
-
-        def __sklearn_tags__(self):
-            return get_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
-
-    @property
-    def classes_(self):
-        try:
-            estimator = self.expr._skrub_impl.estimator_
-        except AttributeError:
-            attribute_error(self, "classes_")
-        return estimator.classes_
 
     def fit(self, X, y=None):
         _ = self.fit_transform(X, y=y)
@@ -373,9 +400,11 @@ def _find_Xy(expr):
     if (y_node := find_y(expr)) is not None:
         result["y"] = y_node
     else:
-        impl = expr._skrub_impl
-        if getattr(impl, "y", None) is not None:
-            # the final estimator requests a y so some node must have been
+        first = find_first_apply(expr)
+        if first is None:
+            return result
+        if getattr(first._skrub_impl, "y", None) is not None:
+            # the estimator requests a y so some node must have been
             # marked as y
             raise ValueError('expr should have a node marked with "mark_as_y()"')
     return result
@@ -588,7 +617,7 @@ class ParamSearch(BaseEstimator):
         return self
 
     def __getattr__(self, name):
-        if name not in self.expr._skrub_impl.supports_modes():
+        if name not in supported_modes(self.expr):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
@@ -715,25 +744,13 @@ class _XyParamSearch(_XyEstimatorMixin, ParamSearch):
         return new
 
     @property
-    def _estimator_type(self):
-        try:
-            return get_default(self.expr._skrub_impl.estimator)._estimator_type
-        except AttributeError:
-            return "transformer"
-
-    if hasattr(BaseEstimator, "__sklearn_tags__"):
-        # scikit-learn >= 1.6
-
-        def __sklearn_tags__(self):
-            return get_default(self.expr._skrub_impl.estimator).__sklearn_tags__()
-
-    @property
     def classes_(self):
+        if not hasattr(self, "best_estimator_"):
+            attribute_error(self, "classes_")
         try:
-            estimator = self.best_estimator_.expr._skrub_impl.estimator_
+            return _get_classes(self.best_estimator_.expr)
         except AttributeError:
             attribute_error(self, "classes_")
-        return estimator.classes_
 
     def fit(self, X, y=None):
         super().fit(self._get_env(X, y))

@@ -1135,6 +1135,214 @@ class SkrubNamespace:
             self._expr, environment, splitter=splitter, **splitter_kwargs
         )
 
+    def get_grid_search(self, *, fitted=False, **kwargs):
+        """Find the best parameters with grid search.
+
+        This function returns an object similar to scikit-learn's
+        ``GridSearchCV``. The main difference is that methods such as ``fit()``
+        and ``predict()`` accept a dictionary of inputs rather than ``X`` and
+        ``y``. Please refer to the examples gallery for an in-depth
+        explanation.
+
+        If the expression contains some numeric ranges (``choose_float``,
+        ``choose_int``), either discretize them by providing the ``n_steps``
+        argument or use ``get_randomized_search`` instead of
+        ``get_grid_search``.
+
+        Parameters
+        ----------
+        fitted : bool (default=False)
+            If ``True``, the gridsearch is fitted on the data provided when
+            initializing variables in this expression (the data returned by
+            ``.skb.get_data()``).
+
+        kwargs : dict
+            All other named arguments are forwarded to
+            ``sklearn.search.GridSearchCV``.
+
+        Returns
+        -------
+        ParamSearch
+            An object implementing the hyperparameter search. Besides the usual
+            ``fit``, ``predict``, attributes of interest are
+            ``results_`` and ``plot_results()``.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> X_a, y_a = make_classification(random_state=0)
+        >>> X, y = skrub.X(X_a), skrub.y(y_a)
+        >>> logistic = LogisticRegression(C=skrub.choose_from([0.1, 10.0], name="C"))
+        >>> rf = RandomForestClassifier(
+        ...     n_estimators=skrub.choose_from([3, 30], name="N 🌴"),
+        ...     random_state=0,
+        ... )
+        >>> classifier = skrub.choose_from(
+        ...     {"logistic": logistic, "rf": rf, "dummy": DummyClassifier()}, name="classifier"
+        ... )
+        >>> pred = X.skb.apply(classifier, y=y)
+        >>> print(pred.skb.describe_param_grid())
+        - classifier: 'logistic'
+          C: [0.1, 10.0]
+        - classifier: 'rf'
+          N 🌴: [3, 30]
+        - classifier: 'dummy'
+
+        >>> search = pred.skb.get_grid_search(fitted=True)
+        >>> search.results_
+           mean_test_score classifier     C   N 🌴
+        0             0.89         rf   NaN  30.0
+        1             0.84   logistic   0.1   NaN
+        2             0.80   logistic  10.0   NaN
+        3             0.65         rf   NaN   3.0
+        4             0.50      dummy   NaN   NaN
+        """  # noqa: E501
+        for c in choices(self._expr).values():
+            if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
+                raise ValueError(
+                    "Cannot use grid search with continuous numeric ranges. "
+                    "Please use `get_randomized_search` or provide a number "
+                    f"of steps for this range: {c}"
+                )
+
+        search = ParamSearch(
+            self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
+        )
+        if not fitted:
+            return search
+        return search.fit(self.get_data())
+
+    def get_randomized_search(self, *, fitted=False, **kwargs):
+        """Find the best parameters with grid search.
+
+        This function returns an object similar to scikit-learn's
+        ``RandomizedSearchCV``. The main difference is that methods such as ``fit()``
+        and ``predict()`` accept a dictionary of inputs rather than ``X`` and
+        ``y``. Please refer to the examples gallery for an in-depth
+        explanation.
+
+        Parameters
+        ----------
+        fitted : bool (default=False)
+            If ``True``, the randomized search is fitted on the data provided when
+            initializing variables in this expression (the data returned by
+            ``.skb.get_data()``).
+
+        kwargs : dict
+            All other named arguments are forwarded to
+            ``sklearn.search.RandomizedSearchCV``.
+
+        Returns
+        -------
+        ParamSearch
+            An object implementing the hyperparameter search. Besides the usual
+            ``fit``, ``predict``, attributes of interest are
+            ``results_`` and ``plot_results()``.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.feature_selection import SelectKBest
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> X_a, y_a = make_classification(random_state=0)
+        >>> X, y = skrub.X(X_a), skrub.y(y_a)
+        >>> selector = SelectKBest(k=skrub.choose_int(4, 20, log=True, name='k'))
+        >>> logistic = LogisticRegression(C=skrub.choose_float(0.1, 10.0, log=True, name="C"))
+        >>> rf = RandomForestClassifier(
+        ...     n_estimators=skrub.choose_int(3, 30, log=True, name="N 🌴"),
+        ...     random_state=0,
+        ... )
+        >>> classifier = skrub.choose_from(
+        ...     {"logistic": logistic, "rf": rf, "dummy": DummyClassifier()}, name="classifier"
+        ... )
+        >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
+        >>> print(pred.skb.describe_param_grid())
+        - k: choose_int(4, 20, log=True, name='k')
+          classifier: 'logistic'
+          C: choose_float(0.1, 10.0, log=True, name='C')
+        - k: choose_int(4, 20, log=True, name='k')
+          classifier: 'rf'
+          N 🌴: choose_int(3, 30, log=True, name='N 🌴')
+        - k: choose_int(4, 20, log=True, name='k')
+          classifier: 'dummy'
+
+        >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
+        >>> search.results_
+           mean_test_score classifier         C   k   N 🌴
+        0             0.93         rf       NaN   6  20.0
+        1             0.92         rf       NaN   4  18.0
+        2             0.90         rf       NaN   7  12.0
+        3             0.84   logistic  0.109758  15   NaN
+        4             0.82   logistic  0.584633  14   NaN
+        5             0.82   logistic  9.062263  14   NaN
+        6             0.80   logistic  1.533519  15   NaN
+        7             0.50      dummy       NaN   4   NaN
+        8             0.50      dummy       NaN   9   NaN
+        9             0.50      dummy       NaN   5   NaN
+        """  # noqa: E501
+
+        search = ParamSearch(
+            self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
+        )
+        if not fitted:
+            return search
+        return search.fit(self.get_data())
+
+    def cross_validate(self, environment=None, **kwargs):
+        """Cross-validate the expression.
+
+        This generates the estimator (with default hyperparameters) and runs
+        scikit-learn cross-validation.
+
+        Parameters
+        ----------
+        environment : dict or None
+            Bindings for variables contained in the expression. If not
+            provided, the ``value``s passed when initializing ``var()`` are
+            used.
+
+        kwargs : dict
+            All other named arguments are forwarded to
+            ``sklearn.model_selection.cross_validate``.
+
+        Returns
+        -------
+        dict
+            Cross-validation results.
+
+        Examples
+        --------
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> import skrub
+
+        >>> X_a, y_a = make_classification(random_state=0)
+        >>> X, y = skrub.X(X_a), skrub.y(y_a)
+        >>> pred = X.skb.apply(LogisticRegression(), y=y)
+        >>> pred.skb.cross_validate(cv=2)['test_score']
+        array([0.84, 0.78])
+
+        Passing some data:
+
+        >>> data = {'X': X_a, 'y': y_a}
+        >>> pred.skb.cross_validate(data)['test_score']
+        array([0.75, 0.9 , 0.85, 0.65, 0.9 ])
+        """
+
+        if environment is None:
+            environment = self.get_data()
+
+        return cross_validate(self.get_estimator(), environment, **kwargs)
+
     @check_expr
     def mark_as_X(self):
         """Mark this expression as being the ``X`` table.
@@ -1392,12 +1600,7 @@ class SkrubNamespace:
         return f"<{self.__class__.__name__}>"
 
     def __getattr__(self, name):
-        if name in [
-            "cross_validate",
-            "get_grid_search",
-            "get_randomized_search",
-            "applied_estimator",
-        ]:
+        if name in ["applied_estimator"]:
             attribute_error(
                 self,
                 name,
@@ -1473,226 +1676,3 @@ class ApplyNamespace(SkrubNamespace):
         {'product': StringEncoder(n_components=2), 'description': StringEncoder(n_components=2)}
         """  # noqa: E501
         return Expr(AppliedEstimator(self._expr))
-
-    def get_grid_search(self, *, fitted=False, **kwargs):
-        """Find the best parameters with grid search.
-
-        This function returns an object similar to scikit-learn's
-        ``GridSearchCV``. The main difference is that methods such as ``fit()``
-        and ``predict()`` accept a dictionary of inputs rather than ``X`` and
-        ``y``. Please refer to the examples gallery for an in-depth
-        explanation.
-
-        If the expression contains some numeric ranges (``choose_float``,
-        ``choose_int``), either discretize them by providing the ``n_steps``
-        argument or use ``get_randomized_search`` instead of
-        ``get_grid_search``.
-
-        Parameters
-        ----------
-        fitted : bool (default=False)
-            If ``True``, the gridsearch is fitted on the data provided when
-            initializing variables in this expression (the data returned by
-            ``.skb.get_data()``).
-
-        kwargs : dict
-            All other named arguments are forwarded to
-            ``sklearn.search.GridSearchCV``.
-
-        Returns
-        -------
-        ParamSearch
-            An object implementing the hyperparameter search. Besides the usual
-            ``fit``, ``predict``, attributes of interest are
-            ``results_`` and ``plot_results()``.
-
-        Notes
-        -----
-        This method is only available for expressions created with
-        ``.skb.apply()``.
-
-        Examples
-        --------
-        >>> import skrub
-        >>> from sklearn.datasets import make_classification
-        >>> from sklearn.linear_model import LogisticRegression
-        >>> from sklearn.ensemble import RandomForestClassifier
-        >>> from sklearn.dummy import DummyClassifier
-
-        >>> X_a, y_a = make_classification(random_state=0)
-        >>> X, y = skrub.X(X_a), skrub.y(y_a)
-        >>> logistic = LogisticRegression(C=skrub.choose_from([0.1, 10.0], name="C"))
-        >>> rf = RandomForestClassifier(
-        ...     n_estimators=skrub.choose_from([3, 30], name="N 🌴"),
-        ...     random_state=0,
-        ... )
-        >>> classifier = skrub.choose_from(
-        ...     {"logistic": logistic, "rf": rf, "dummy": DummyClassifier()}, name="classifier"
-        ... )
-        >>> pred = X.skb.apply(classifier, y=y)
-        >>> print(pred.skb.describe_param_grid())
-        - classifier: 'logistic'
-          C: [0.1, 10.0]
-        - classifier: 'rf'
-          N 🌴: [3, 30]
-        - classifier: 'dummy'
-
-        >>> search = pred.skb.get_grid_search(fitted=True)
-        >>> search.results_
-           mean_test_score classifier     C   N 🌴
-        0             0.89         rf   NaN  30.0
-        1             0.84   logistic   0.1   NaN
-        2             0.80   logistic  10.0   NaN
-        3             0.65         rf   NaN   3.0
-        4             0.50      dummy   NaN   NaN
-        """  # noqa: E501
-        for c in choices(self._expr).values():
-            if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
-                raise ValueError(
-                    "Cannot use grid search with continuous numeric ranges. "
-                    "Please use `get_randomized_search` or provide a number "
-                    f"of steps for this range: {c}"
-                )
-
-        search = ParamSearch(
-            self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
-        )
-        if not fitted:
-            return search
-        return search.fit(self.get_data())
-
-    def get_randomized_search(self, *, fitted=False, **kwargs):
-        """Find the best parameters with grid search.
-
-        This function returns an object similar to scikit-learn's
-        ``RandomizedSearchCV``. The main difference is that methods such as ``fit()``
-        and ``predict()`` accept a dictionary of inputs rather than ``X`` and
-        ``y``. Please refer to the examples gallery for an in-depth
-        explanation.
-
-        Parameters
-        ----------
-        fitted : bool (default=False)
-            If ``True``, the randomized search is fitted on the data provided when
-            initializing variables in this expression (the data returned by
-            ``.skb.get_data()``).
-
-        kwargs : dict
-            All other named arguments are forwarded to
-            ``sklearn.search.RandomizedSearchCV``.
-
-        Returns
-        -------
-        ParamSearch
-            An object implementing the hyperparameter search. Besides the usual
-            ``fit``, ``predict``, attributes of interest are
-            ``results_`` and ``plot_results()``.
-
-        Notes
-        -----
-        This method is only available for expressions created with
-        ``.skb.apply()``.
-
-        Examples
-        --------
-        >>> import skrub
-        >>> from sklearn.datasets import make_classification
-        >>> from sklearn.linear_model import LogisticRegression
-        >>> from sklearn.feature_selection import SelectKBest
-        >>> from sklearn.ensemble import RandomForestClassifier
-        >>> from sklearn.dummy import DummyClassifier
-
-        >>> X_a, y_a = make_classification(random_state=0)
-        >>> X, y = skrub.X(X_a), skrub.y(y_a)
-        >>> selector = SelectKBest(k=skrub.choose_int(4, 20, log=True, name='k'))
-        >>> logistic = LogisticRegression(C=skrub.choose_float(0.1, 10.0, log=True, name="C"))
-        >>> rf = RandomForestClassifier(
-        ...     n_estimators=skrub.choose_int(3, 30, log=True, name="N 🌴"),
-        ...     random_state=0,
-        ... )
-        >>> classifier = skrub.choose_from(
-        ...     {"logistic": logistic, "rf": rf, "dummy": DummyClassifier()}, name="classifier"
-        ... )
-        >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
-        >>> print(pred.skb.describe_param_grid())
-        - k: choose_int(4, 20, log=True, name='k')
-          classifier: 'logistic'
-          C: choose_float(0.1, 10.0, log=True, name='C')
-        - k: choose_int(4, 20, log=True, name='k')
-          classifier: 'rf'
-          N 🌴: choose_int(3, 30, log=True, name='N 🌴')
-        - k: choose_int(4, 20, log=True, name='k')
-          classifier: 'dummy'
-
-        >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
-        >>> search.results_
-           mean_test_score classifier         C   k   N 🌴
-        0             0.93         rf       NaN   6  20.0
-        1             0.92         rf       NaN   4  18.0
-        2             0.90         rf       NaN   7  12.0
-        3             0.84   logistic  0.109758  15   NaN
-        4             0.82   logistic  0.584633  14   NaN
-        5             0.82   logistic  9.062263  14   NaN
-        6             0.80   logistic  1.533519  15   NaN
-        7             0.50      dummy       NaN   4   NaN
-        8             0.50      dummy       NaN   9   NaN
-        9             0.50      dummy       NaN   5   NaN
-        """  # noqa: E501
-
-        search = ParamSearch(
-            self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
-        )
-        if not fitted:
-            return search
-        return search.fit(self.get_data())
-
-    def cross_validate(self, environment=None, **kwargs):
-        """Cross-validate the expression.
-
-        This generates the estimator (with default hyperparameters) and runs
-        scikit-learn cross-validation.
-
-        Parameters
-        ----------
-        environment : dict or None
-            Bindings for variables contained in the expression. If not
-            provided, the ``value``s passed when initializing ``var()`` are
-            used.
-
-        kwargs : dict
-            All other named arguments are forwarded to
-            ``sklearn.model_selection.cross_validate``.
-
-        Returns
-        -------
-        dict
-            Cross-validation results.
-
-        Notes
-        -----
-        This method is only available for expressions created with
-        ``.skb.apply()``.
-
-        Examples
-        --------
-        >>> from sklearn.datasets import make_classification
-        >>> from sklearn.linear_model import LogisticRegression
-        >>> import skrub
-
-        >>> X_a, y_a = make_classification(random_state=0)
-        >>> X, y = skrub.X(X_a), skrub.y(y_a)
-        >>> pred = X.skb.apply(LogisticRegression(), y=y)
-        >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.84, 0.78])
-
-        Passing some data:
-
-        >>> data = {'X': X_a, 'y': y_a}
-        >>> pred.skb.cross_validate(data)['test_score']
-        array([0.75, 0.9 , 0.85, 0.65, 0.9 ])
-        """
-
-        if environment is None:
-            environment = self.get_data()
-
-        return cross_validate(self.get_estimator(), environment, **kwargs)

@@ -211,9 +211,6 @@ class ExprImpl:
     def preview_if_available(self):
         return self.results.get("preview", NULL)
 
-    def supports_modes(self):
-        return ["preview", "fit_transform", "transform"]
-
     def fields_required_for_eval(self, mode):
         return self._fields
 
@@ -1020,6 +1017,8 @@ class Apply(ExprImpl):
         return ["X"]
 
     def compute(self, e, mode, environment):
+        if mode not in self.supported_modes():
+            mode = "fit_transform" if "fit" in mode else "transform"
         method_name = "fit_transform" if mode == "preview" else mode
 
         X = _check_column_names(e.X)
@@ -1063,7 +1062,7 @@ class Apply(ExprImpl):
             y = ()
         return getattr(self.estimator_, method_name)(X, *y)
 
-    def supports_modes(self):
+    def supported_modes(self):
         modes = ["preview", "fit_transform", "transform"]
         try:
             estimator = self.estimator_

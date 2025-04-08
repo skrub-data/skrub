@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_allclose
-from sklearn.base import clone
+from sklearn.base import BaseEstimator, clone
 from sklearn.datasets import make_classification
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyClassifier, DummyRegressor
@@ -226,6 +226,14 @@ def test_unsupervised():
     assert_allclose(sklearn_scores, expr_scores)
 
 
+def test_no_apply_step():
+    assert list(
+        skrub.X().skb.cross_validate(
+            {"X": np.ones((10, 2))}, cv=2, scoring=lambda e, X: 0
+        )["test_score"]
+    ) == [0, 0]
+
+
 def test_multiclass():
     X, y = make_classification(n_classes=5, n_informative=10, random_state=0)
     expr = skrub.X(X).skb.apply(
@@ -301,6 +309,25 @@ def test_multimetric_no_refit(expression, data):
     ).fit(data)
     assert not hasattr(search, "best_params_")
     assert search.results_.shape == (10, 3)
+
+
+def test_when_last_step_is_not_apply(expression, data):
+    new_expr = skrub.choose_from(
+        [
+            expression.skb.apply_func(lambda x: x),
+            expression.skb.apply_func(lambda x: x),
+        ],
+        name="model",
+    ).as_expr()
+    search = new_expr.skb.get_randomized_search(
+        n_iter=3,
+        random_state=0,
+    ).fit(data)
+    assert search.results_.shape == (3, 3)
+    assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
+    assert search.decision_function(data).shape == (100,)
+    train_score = search.score(data)
+    assert train_score == pytest.approx(0.94)
 
 
 @pytest.mark.parametrize("with_y", [False, True])
@@ -466,7 +493,7 @@ def test_report(tmp_path):
         overwrite=True,
         open=False,
     )
-    assert isinstance(fit_report["result"], LogisticRegression)
+    assert fit_report["result"] is est
     assert fit_report["error"] is None
     assert fit_report["report_path"].is_relative_to(tmp_path)
     score_report = est.report(
@@ -584,13 +611,23 @@ def test_sub_estimator():
         (Ridge, "regressor"),
         (DummyRegressor, "regressor"),
         (SelectKBest, "transformer"),
+        (SelectKBest, "transformer"),
     ],
 )
-def test_estimator_type(estimator_type, expected):
+@pytest.mark.parametrize("bury_apply", [False, True])
+def test_estimator_type(estimator_type, expected, bury_apply):
     estimator = estimator_type()
     e = skrub.X().skb.apply(
         skrub.choose_from([estimator, estimator], name="_"), y=skrub.y()
     )
+    if bury_apply:
+        # add some choosing steps after the estimator so the root node is not
+        # an Apply node
+        e = (
+            skrub.choose_from(["a", "b"], name="model")
+            .match({"a": e, "b": e})
+            .as_expr()
+        )
     for est in [
         e.skb.get_estimator(),
         e.skb.get_grid_search(),
@@ -605,8 +642,35 @@ def test_estimator_type(estimator_type, expected):
             assert not hasattr(Xy_est, "__sklearn_tags__")
 
 
-def test_classes():
+def test_estimator_type_no_apply():
+    e = skrub.X()
+    for est in [
+        e.skb.get_estimator(),
+        e.skb.get_grid_search(),
+        e.skb.get_randomized_search(n_iter=2),
+    ]:
+        Xy_est = est.__skrub_to_Xy_estimator__({})
+        assert Xy_est._estimator_type == "transformer"
+        if hasattr(BaseEstimator, "__sklearn_tags__"):
+            # scikit-learn >= 1.6
+            assert Xy_est.__sklearn_tags__().transformer_tags is not None
+            assert Xy_est.__sklearn_tags__().classifier_tags is None
+        else:
+            assert not hasattr(Xy_est, "__sklearn_tags__")
+
+
+@pytest.mark.parametrize("bury_apply", [False, True])
+def test_classes(bury_apply):
     expression, data = get_expression_and_data("simple")
+    if bury_apply:
+        expression = (
+            skrub.choose_from(
+                {"a": expression.skb.apply_func(lambda x: x), "b": expression},
+                name="model",
+            )
+            .as_expr()
+            .skb.apply_func(lambda x: x)
+        )
     logreg = LogisticRegression().fit(data["X"], data["y"])
     for est in [
         expression.skb.get_estimator(),
@@ -619,13 +683,29 @@ def test_classes():
         assert (Xy_est.classes_ == logreg.classes_).all()
 
 
-def test_support_modes():
+def test_classes_no_apply():
+    expression = skrub.X() + skrub.choose_from([0.0, 1.0], name="_")
+    for est in [
+        expression.skb.get_estimator(),
+        expression.skb.get_grid_search(scoring=lambda e, X: 0),
+        expression.skb.get_randomized_search(n_iter=2, scoring=lambda e, X: 0),
+    ]:
+        Xy_est = est.__skrub_to_Xy_estimator__({})
+        assert not hasattr(Xy_est, "classes_")
+        Xy_est.fit(np.ones((10, 2)))
+        assert not hasattr(Xy_est, "classes_")
+
+
+@pytest.mark.parametrize("bury_apply", [False, True])
+def test_support_modes(bury_apply):
     _, data = get_expression_and_data("simple")
     choice = skrub.choose_from(["dummy", "logistic"], name="c")
     classif = choice.match(
         {"dummy": DummyClassifier(), "logistic": LogisticRegression()}
     )
     e = skrub.X().skb.apply(classif, y=skrub.y())
+    if bury_apply:
+        e = skrub.as_expr({"a": e})["a"]
     estimator = e.skb.get_estimator()
 
     # as in grid-search, before fitting the estimator's capabilities are read
@@ -636,3 +716,11 @@ def test_support_modes():
     estimator.fit(data | {"c": "logistic"})
     assert hasattr(estimator, "decision_function")
     assert estimator.decision_function(data).shape == data["y"].shape
+
+
+def test_support_modes_no_apply():
+    estimator = skrub.X().skb.get_estimator()
+    for a in ["predict", "predict_proba", "score", "decision_function"]:
+        assert not hasattr(estimator, a)
+    for a in ["fit", "transform", "fit_transform"]:
+        assert hasattr(estimator, a)
