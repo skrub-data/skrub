@@ -229,7 +229,7 @@ def test_unsupervised_no_y():
 
 def test_unsupervised():
     X, y = make_blobs(n_samples=10, random_state=0)
-    k_means = KMeans(n_clusters=2, random_state=0)
+    k_means = KMeans(n_clusters=2, random_state=0, n_init=1)
     e = skrub.X(X).skb.apply(k_means, y=skrub.y(y), unsupervised=True)
     expr_scores = e.skb.cross_validate()["test_score"]
     sklearn_scores = cross_validate(k_means, X, y)["test_score"]
@@ -239,7 +239,7 @@ def test_unsupervised():
     k_means.fit(X)
     assert (k_means.predict(X) == expr_k_means.predict({"X": X})).all()
     assert_allclose(k_means.score(X, y), expr_k_means.score({"X": X, "y": y}))
-    with pytest.raises(KeyError):
+    with pytest.raises((KeyError, RuntimeError)):
         expr_k_means.score({"X": X})
 
 

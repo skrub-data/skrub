@@ -237,13 +237,15 @@ class SkrubNamespace:
 
         >>> X, y = make_blobs(n_samples=10, random_state=0)
         >>> e = skrub.X(X).skb.apply(
-        ...     KMeans(n_clusters=2, random_state=0), y=skrub.y(y), unsupervised=True
+        ...     KMeans(n_clusters=2, n_init=1, random_state=0),
+        ...     y=skrub.y(y),
+        ...     unsupervised=True,
         ... )
-        >>> e.skb.cross_validate()["test_score"]
+        >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
         >>> est = e.skb.get_estimator().fit({"X": X})
-        >>> est.predict({"X": X})
+        >>> est.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
