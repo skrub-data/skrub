@@ -60,6 +60,13 @@ def _copy_attr(source, target, attributes):
 
 
 class ExprEstimator(BaseEstimator):
+    """Estimator that evaluates a skrub expression.
+
+    This class is not meant to be instantiated manually, ``ExprEstimator``
+    objects are created by calling :meth:`Expr.skb.get_estimator()` on an
+    expression.
+    """
+
     def __init__(self, expr):
         self.expr = expr
 
@@ -579,6 +586,13 @@ def train_test_split(
 
 
 class ParamSearch(BaseEstimator):
+    """Estimator that evaluates a skrub expression with hyperparameter tuning.
+
+    This class is not meant to be instantiated manually, ``ParamSearch``
+    objects are created by calling :meth:`Expr.skb.get_grid_search()` or
+    :meth:`Expr.skb.get_randomized_search()` on an expression.
+    """
+
     def __init__(self, expr, search):
         self.expr = expr
         self.search = search

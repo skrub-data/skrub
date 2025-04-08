@@ -169,6 +169,14 @@ For more control or in order to build pipelines for more datasets, use the skrub
    Expr.skb.is_y
    Expr.skb.name
 
+.. autosummary::
+   :toctree: generated/
+   :template: base.rst
+   :nosignatures:
+
+   ExprEstimator
+   ParamSearch
+
 .. _generating_a_report_ref:
 
 Generating an HTML report

@@ -991,6 +991,8 @@ class SkrubNamespace:
     def get_estimator(self, fitted=False):
         """Get a scikit-learn-like estimator for this expression.
 
+        Returns a :class:`ExprEstimator`.
+
         Please see the examples gallery for full information about expressions
         and the estimators they generate.
 
@@ -1138,11 +1140,11 @@ class SkrubNamespace:
     def get_grid_search(self, *, fitted=False, **kwargs):
         """Find the best parameters with grid search.
 
-        This function returns an object similar to scikit-learn's
-        ``GridSearchCV``. The main difference is that methods such as ``fit()``
-        and ``predict()`` accept a dictionary of inputs rather than ``X`` and
-        ``y``. Please refer to the examples gallery for an in-depth
-        explanation.
+        This function returns a :class:`ParamSearch`, an object similar to
+        scikit-learn's ``GridSearchCV``. The main difference is that methods
+        such as ``fit()`` and ``predict()`` accept a dictionary of inputs
+        rather than ``X`` and ``y``. Please refer to the examples gallery for
+        an in-depth explanation.
 
         If the expression contains some numeric ranges (``choose_float``,
         ``choose_int``), either discretize them by providing the ``n_steps``
@@ -1220,11 +1222,11 @@ class SkrubNamespace:
     def get_randomized_search(self, *, fitted=False, **kwargs):
         """Find the best parameters with grid search.
 
-        This function returns an object similar to scikit-learn's
-        ``RandomizedSearchCV``. The main difference is that methods such as ``fit()``
-        and ``predict()`` accept a dictionary of inputs rather than ``X`` and
-        ``y``. Please refer to the examples gallery for an in-depth
-        explanation.
+        This function returns a :class:`ParamSearch`, an object similar to
+        scikit-learn's ``RandomizedSearchCV``. The main difference is that
+        methods such as ``fit()`` and ``predict()`` accept a dictionary of
+        inputs rather than ``X`` and ``y``. Please refer to the examples
+        gallery for an in-depth explanation.
 
         Parameters
         ----------

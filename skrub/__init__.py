@@ -12,6 +12,8 @@ from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._expressions import (
     Expr,
+    ExprEstimator,
+    ParamSearch,
     X,
     as_expr,
     choose_bool,
@@ -52,7 +54,8 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 __all__ = [
     "Expr",
     "var",
-    "Expr",
+    "ExprEstimator",
+    "ParamSearch",
     "X",
     "y",
     "as_expr",
