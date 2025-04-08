@@ -134,7 +134,6 @@ For more control or in order to build pipelines for more datasets, use the skrub
    :template: autosummary/accessor_method.rst
    :nosignatures:
 
-   Expr.skb.applied_estimator
    Expr.skb.apply
    Expr.skb.clone
    Expr.skb.concat_horizontal
@@ -168,6 +167,7 @@ For more control or in order to build pipelines for more datasets, use the skrub
    Expr.skb.is_X
    Expr.skb.is_y
    Expr.skb.name
+   Expr.skb.applied_estimator
 
 .. autosummary::
    :toctree: generated/

@@ -78,6 +78,8 @@ def test_repr_html():
     assert "thename" in skrub.var("thename")._repr_html_()
     # example without a name
     assert "add" in (skrub.var("thename", 0) + 2)._repr_html_()
+    b = a.skb.apply_func(lambda x: x).skb.set_name("the name b")
+    assert "the name b" in b._repr_html_()
 
 
 def test_repr():

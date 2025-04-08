@@ -353,10 +353,10 @@ class _Skb:
     # docstrings for its methods.
     #
     # When the attribute is looked up on the class, instead of returning the
-    # descriptor itself (as is usually done), we return the ApplyNamespace
+    # descriptor itself (as is usually done), we return the SkrubNamespace
     # class. This class contains all the methods & attributes that can be
     # accessed through ``.skb``, so sphinx can inspect it to find the
-    # docstrings: ``skrub.Expr.skb`` is ``ApplyNamespace`` and
+    # docstrings: ``skrub.Expr.skb`` is ``SkrubNamespace`` and
     # ``skrub.Expr.skb.get_grid_search`` exists. Without the custom descriptor
     # ``skrub.Expr.skb`` would be a property object (with attributes
     # ``deleter``, ``setter``, etc., not ``get_grid_search``).
@@ -368,15 +368,9 @@ class _Skb:
         from . import _skrub_namespace
 
         if instance is None:
-            # attribute lookup through the class (how sphinx autodoc inspects
-            # it).
-            return _skrub_namespace.ApplyNamespace
-
-        if isinstance(instance._skrub_impl, Apply):
-            # Apply expressions have a few more attributes than the others
-            # (``.skb.applied_estimator``, ``.skb.get_grid_search``, ...)
-            return _skrub_namespace.ApplyNamespace(instance)
-
+            # attribute lookup through the class
+            # (how sphinx autodoc inspects it).
+            return _skrub_namespace.SkrubNamespace
         return _skrub_namespace.SkrubNamespace(instance)
 
 

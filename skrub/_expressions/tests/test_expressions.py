@@ -276,3 +276,9 @@ def test_concat_horizontal_duplicate_cols():
     out_2 = estimator.transform({"X": X_df})
     assert len(set(out_1.columns)) == len(out_1.columns) == 4
     assert list(out_1.columns) == list(out_2.columns)
+
+
+def test_class_skb():
+    from skrub._expressions._skrub_namespace import SkrubNamespace
+
+    assert skrub.Expr.skb is SkrubNamespace

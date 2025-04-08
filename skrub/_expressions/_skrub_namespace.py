@@ -46,6 +46,12 @@ def _var_values_provided(expr, environment):
 class SkrubNamespace:
     """The expressions' ``.skb`` attribute."""
 
+    # NOTE: if some expression types are given additional methods not
+    # available for all expressions (eg if some methods specific to
+    # ``.skb.apply()`` nodes are added), we can create new namespace classes
+    # derived from this one and return the appropriate one in
+    # ``_expressions._Skb.__get__``.
+
     def __init__(self, expr):
         self._expr = expr
 
@@ -1635,28 +1641,14 @@ class SkrubNamespace:
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
-    def __getattr__(self, name):
-        if name in ["applied_estimator"]:
-            attribute_error(
-                self,
-                name,
-                (
-                    f"`.skb.{name}` only exists when the last step "
-                    "is a scikit-learn estimator (when the expression was "
-                    "created with `.skb.apply(...)`)"
-                ),
-            )
-        attribute_error(self, name)
-
-
-class ApplyNamespace(SkrubNamespace):
+    @property
     @check_expr
     def applied_estimator(self):
         """Retrieve the estimator applied in the previous step, as an expression.
 
         Notes
         -----
-        This method is only available for expressions created with
+        This attribute only exists for expressions created with
         ``.skb.apply()``.
 
         Examples
@@ -1664,7 +1656,7 @@ class ApplyNamespace(SkrubNamespace):
         >>> import skrub
         >>> orders_df = skrub.toy_orders().X
         >>> features = skrub.X(orders_df).skb.apply(skrub.TableVectorizer())
-        >>> fitted_vectorizer = features.skb.applied_estimator()
+        >>> fitted_vectorizer = features.skb.applied_estimator
         >>> fitted_vectorizer
         <AppliedEstimator>
         Result:
@@ -1698,7 +1690,7 @@ class ApplyNamespace(SkrubNamespace):
         >>> out = skrub.X(orders_df).skb.apply(
         ...     skrub.StringEncoder(n_components=2), cols=s.string() - "date"
         ... )
-        >>> fitted_vectorizer = out.skb.applied_estimator()
+        >>> fitted_vectorizer = out.skb.applied_estimator
         >>> fitted_vectorizer
         <AppliedEstimator>
         Result:
@@ -1711,4 +1703,13 @@ class ApplyNamespace(SkrubNamespace):
         ―――――――
         {'product': StringEncoder(n_components=2), 'description': StringEncoder(n_components=2)}
         """  # noqa: E501
+        if not isinstance(self._expr._skrub_impl, Apply):
+            attribute_error(
+                self,
+                "applied_estimator",
+                (
+                    "`.skb.applied_estimator` only exists "
+                    "on expressions created with ``.skb.apply()``"
+                ),
+            )
         return Expr(AppliedEstimator(self._expr))
