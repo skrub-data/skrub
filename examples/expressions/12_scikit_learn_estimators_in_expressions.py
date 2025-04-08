@@ -1,28 +1,29 @@
-# %%
-# Supervised estimators and cross-validation
-# ------------------------------------------
-#
-# We can use ``.skb.apply()`` to add scikit-learn transformers to the computation,
-# but also to add a supervised learner like ``HistGradientBoostingClassifier``
-# or ``LogisticRegression``.
-#
-# When we have built a full estimator, we want to run cross-validation to
-# measure its performance. We may also want to tune hyperparameters (shown in
-# the next example).
-#
-# Skrub can run the cross-validation for us. In order to do so, it needs to
-# split the dataset into training and testing sets. For this to happen, we need
-# to tell skrub which items in our pipeline constitute the feature matrix ``X``
-# and the targets (labels, outputs) ``y``.
-#
-# Indeed, an estimator built from a skrub expression can accept inputs that are
-# not yet neatly organized into correctly-aligned ``X`` and ``y`` matrices.
-# There may be some steps (such as loading data, performing joins or
-# aggregations, separating features and targets from a single source) that need
-# to be performed in order to construct the design matrix the targets.
-#
-# To indicate which intermediate results to split, we call ``.skb.mark_as_X()``
-# and ``.skb.mark_as_y()`` on the appropriate objects:
+"""
+Supervised estimators and cross-validation
+------------------------------------------
+
+We can use ``.skb.apply()`` to add scikit-learn transformers to the computation,
+but also to add a supervised learner like ``HistGradientBoostingClassifier``
+or ``LogisticRegression``.
+
+When we have built a full estimator, we want to run cross-validation to
+measure its performance. We may also want to tune hyperparameters (shown in
+the next example).
+
+Skrub can run the cross-validation for us. In order to do so, it needs to
+split the dataset into training and testing sets. For this to happen, we need
+to tell skrub which items in our pipeline constitute the feature matrix ``X``
+and the targets (labels, outputs) ``y``.
+
+Indeed, an estimator built from a skrub expression can accept inputs that are
+not yet neatly organized into correctly-aligned ``X`` and ``y`` matrices.
+There may be some steps (such as loading data, performing joins or
+aggregations, separating features and targets from a single source) that need
+to be performed in order to construct the design matrix the targets.
+
+To indicate which intermediate results to split, we call ``.skb.mark_as_X()``
+and ``.skb.mark_as_y()`` on the appropriate objects:
+"""
 
 # %%
 import pandas as pd
@@ -80,7 +81,7 @@ predictions.skb.cross_validate()
 # estimators that learn from the data before reaching the cross-validation
 # loop, or we might obtain optimistic scores due to data leakage.
 # Join operations that involve aggregations are not safe either, because they
-# may involve information from the test set. # Finally, no
+# may involve information from the test set. Finally, no
 # choices or hyperparameters can be tuned in this part of the computation
 # (tuning is discussed in more detail in the next example).
 #

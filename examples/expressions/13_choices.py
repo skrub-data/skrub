@@ -100,7 +100,7 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 # Note that ``skrub.choose_float()`` and ``skrub.choose_int()`` can be given a
 # ``log`` argument to sample in log scale.
 # %%
-# X, y = skrub.X(texts), skrub.y(labels)
+X, y = skrub.X(texts), skrub.y(labels)
 
 encoder = skrub.MinHashEncoder(
     n_components=skrub.choose_int(5, 50, log=True, name="N components")
