@@ -653,6 +653,9 @@ class ParamSearch(BaseEstimator):
 
     @property
     def results_(self):
+        """
+        Cross-validation results containing parameters and scores in a dataframe.
+        """
         try:
             return self._get_cv_results_table()
         except NotFittedError:
@@ -660,6 +663,13 @@ class ParamSearch(BaseEstimator):
 
     @property
     def detailed_results_(self):
+        """
+        More detailed cross-validation results table.
+
+        Similar to ``results_`` but also contains the standard deviation of
+        scores across folds, the scores on training data, and the fit and
+        score durations.
+        """
         try:
             return self._get_cv_results_table(detailed=True)
         except NotFittedError:
@@ -725,6 +735,26 @@ class ParamSearch(BaseEstimator):
         return (table, metadata) if return_metadata else table
 
     def plot_results(self, *, colorscale=DEFAULT_COLORSCALE, min_score=None):
+        """Create a parallel coordinate plot of the cross-validation results.
+
+        Plotly must be installed to use this method.
+
+        Parameters
+        ----------
+        colorscale : str, optional
+            A colorscale name understood by plotly.
+
+        min_score : float, optional
+            Lines for models that have a score lower than ``min_score`` are not
+            displayed, and the color scale lower bound is adjusted accordingly.
+            This is useful when we are only interested in the models that
+            perform well, to make the plot less cluttered and to make better
+            use of the colorscale's range.
+
+        Returns
+        -------
+        Plotly Figure
+        """
         cv_results, metadata = self._get_cv_results_table(
             return_metadata=True, detailed=True
         )

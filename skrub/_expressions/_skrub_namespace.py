@@ -634,7 +634,7 @@ class SkrubNamespace:
         >>> clone.skb.get_data()
         {}
 
-        We can ask to keep the variables'values:
+        We can ask to keep the variable values:
 
         >>> clone = c.skb.clone(drop_values=False)
         >>> clone.skb.get_data()
@@ -801,8 +801,11 @@ class SkrubNamespace:
 
         Returns
         -------
-        str
-           SVG drawing of the computation graph.
+        GraphDrawing
+           Drawing of the computation graph. This objects has attributes
+           ``svg`` and ``png``, containing representations of the graph in
+           those formats (as ``bytes`` objects), and a method ``.open()`` to
+           display it in a browser window.
         """
 
         return draw_expr_graph(self._expr)
@@ -945,7 +948,8 @@ class SkrubNamespace:
 
         The pipeline is run doing a ``fit_transform``. If ``environment`` is
         provided, it is used as the bindings for the variables in the
-        expression, and otherwise, the variables' ``value``s are used.
+        expression, and otherwise, the ``value`` attributes of the variables
+        are used.
 
         At the moment, this creates a directory on the filesystem containing
         HTML files. The report can be displayed by visiting the contained
@@ -1544,7 +1548,7 @@ class SkrubNamespace:
         ----------
         name : str
             The name for this step. Must be unique within a pipeline. Cannot
-            start with ``_skrub_``.
+            start with ``"_skrub_"``.
 
         Returns
         -------
@@ -1596,6 +1600,12 @@ class SkrubNamespace:
 
     @property
     def name(self):
+        """A user-chosen name for the expression.
+
+        The name is used for display, to retrieve a specific node inside the
+        expression or to override its value. See :func:`Expr.skb.set_name` for
+        more information.
+        """
         return self._expr._skrub_impl.name
 
     def set_description(self, description):
@@ -1636,6 +1646,11 @@ class SkrubNamespace:
 
     @property
     def description(self):
+        """A user-defined description or comment about the expression.
+
+        This can be set with ``.skb.set_description()`` and is displayed in the
+        execution report.
+        """
         return self._expr._skrub_impl.description
 
     def __repr__(self):
