@@ -24,7 +24,8 @@ examples) and adding jitter to the parallel coordinate plots, :user:`Riccardo
 Cappuzzo<rcap107>` experimented with the expressions and improved the examples,
 :user:`Gaël Varoquaux <gaelvaroquaux>` , :user:`Guillaume Lemaitre <glemaitre>`,
 :user:`Adrin Jalali <adrinjalali>`, :user:`Olivier Grisel <ogrisel>` and others
-participated in defining the public API.
+participated through many discussions in defining the requirements and the
+public API.
 
 Changes
 -------
