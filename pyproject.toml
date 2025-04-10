@@ -5,9 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "skrub"
 dynamic = ["version", "readme"]
-description = "Prepping tables for machine learning"
+description = "Machine learning for dataframes"
 authors = [
-    { name="Patricio Cerda", email="patricio.cerda@inria.fr"},
+    {name = "Riccardo Cappuzzo"},
+    {name = "Jerome Dockes"},
+    {name = "Guillaume Lemaitre"},
+    {name = "Vincent Maladiere"},
+    {name = "Gael Varoquaux"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
