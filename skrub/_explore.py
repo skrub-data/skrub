@@ -1,5 +1,11 @@
 import csv
+import enum
 from pathlib import Path
+
+import pandas as pd
+
+from . import _dataframe as sbd
+from . import _selectors as s
 
 try:
     import polars as pl
@@ -8,10 +14,6 @@ try:
     POLARS_INSTALLED = True
 except ImportError:
     POLARS_INSTALLED = False
-
-import enum
-
-import pandas as pd
 
 
 class ParseStatus(enum.IntFlag):
@@ -44,7 +46,7 @@ def _is_binary(file_path):
         return True
 
 
-def load_table_paths(path_to_tables: str | Path) -> list:
+def load_table_paths(path_to_tables):
     """Given `path_to_tables`, load all tables in memory and return them as a
     list.
 
@@ -104,6 +106,7 @@ def _detect_csv_delimiter(path_to_file):
         sniffer = csv.Sniffer()
 
         try:
+            # TODO: add a better sniffer
             delimiter = sniffer.sniff(sample, delimiters=list(",;^|\t")).delimiter
             return delimiter
         except csv.Error:
@@ -115,7 +118,8 @@ def _detect_csv_delimiter(path_to_file):
 def try_parse_csv(path_to_file, engine):
     # sniff delimiter
     delimiter = _detect_csv_delimiter(path_to_file)
-    # try to parse with delimiter
+    if delimiter is None:
+        return ParseStatus.FAILED
     if engine == "polars":
         try:
             _ = pl.read_csv(path_to_file, separator=delimiter, ignore_errors=True)
@@ -123,7 +127,6 @@ def try_parse_csv(path_to_file, engine):
         except pl.exceptions.ComputeError:
             parse_status = ParseStatus.FAILED
     else:
-        # TODO: Implement pandas
         try:
             _ = pd.read_csv(path_to_file, delimiter=delimiter)
             parse_status = ParseStatus.SUCCESS
@@ -220,7 +223,6 @@ def evaluate_file(path_to_file, engine="polars"):
         file_info["binary"] = _is_binary(path_to_file)
 
         if ext == ".parquet":
-            # handle parquet
             parse_status = try_parse_parquet(path_to_file, engine)
         elif ext == ".csv":
             parse_status = try_parse_csv(path_to_file, engine)
@@ -263,32 +265,41 @@ def explore_folder(path_to_tables, engine="polars"):
     return stats
 
 
-def get_stats_on_tables(df_files: pl.DataFrame, engine="polars"):
+def _read_table(table_path, engine="polars"):
+    f_path = Path(table_path)
+    ext = f_path.suffix
+    if ext == ".csv":
+        if engine == "polars":
+            df = pl.read_csv(table_path["absolute_path"], ignore_errors=True)
+        else:
+            df = pd.read_csv(table_path["absolute_path"])
+    elif ext == ".parquet":
+        if engine == "polars":
+            df = pl.read_parquet(
+                table_path["absolute_path"],
+            )
+        else:
+            df = pd.read_parquet(table_path["absolute_path"])
+    else:
+        return None
+    return df
+
+
+def get_stats_on_tables(df_files, engine="polars"):
     if engine == "polars" and not POLARS_INSTALLED:
         raise RuntimeError("Importing polars failed.")
     if engine not in ["polars", "pandas"]:
         raise ValueError(f"Dataframe engine {engine} not supported.")
 
+    # Get the files that have been parsed correctly.
+    parsed_files = sbd.filter(df_files, sbd.to_bool(df_files["parse_status"]))
+
     stats = []
     # evaluate the statistics for every table
-    for f_row in df_files.filter(parse_status=0).iter_rows(named=True):
-        ext = f_row["extension"]
-        if ext == ".csv":
-            if engine == "polars":
-                df = pl.read_csv(f_row["absolute_path"], ignore_errors=True)
-            else:
-                df = pd.read_csv(f_row["absolute_path"])
-        elif ext == ".parquet":
-            if engine == "polars":
-                df = pl.read_parquet(
-                    f_row["absolute_path"],
-                )
-            else:
-                df = pd.read_parquet(f_row["absolute_path"])
-        else:
-            raise ValueError(f"Extension {ext} not supported.")
-
-        f_path = Path(f_row["absolute_path"])
+    for f_row in sbd.to_list(parsed_files):
+        f_path = Path(f_row)
+        df = _read_table(f_path, engine)
+        ext = f_path.suffix
         f_name = f_path.name
         f_parent = f_path.parent
         stats_this = {"file_name": f_name, "parent": f_parent, "extension": ext}
@@ -298,7 +309,7 @@ def get_stats_on_tables(df_files: pl.DataFrame, engine="polars"):
     return pl.DataFrame(stats)
 
 
-def find_candidates(table, path_to_tables):
+def find_candidates(table, path_to_tables, engine="polars"):
     """Given a dataframe and a path to a collection of tables, find tables in the
     collection that may be joined on the table and rank them by similarity.
 
@@ -309,4 +320,124 @@ def find_candidates(table, path_to_tables):
     path_to_tables : str or Path
         Location of the tables.
     """
-    pass
+    # TODO: I copypasted this, needs fixing
+    raise NotImplementedError()
+    # load list of tables
+    # find unique values for each table
+    # for table_path in path_to_tables:V
+    #     table = _read_table(table_path, engine)
+    #     _unique_values_candidates[table_path] = find_unique_values(table)
+
+    # # find unique values for the query columns
+    # unique_values_X = find_unique_values(X, query_columns)
+    # # measure containment
+    # containment_list = measure_containment_tables(
+    #     unique_values_X, _unique_values_candidates
+    # )
+    # # prepare ranking
+    # _ranking = prepare_ranking(containment_list, budget=budget)
+
+
+def find_unique_values(table, columns):
+    """Given a dataframe and either a list of columns or None, find the unique
+    values in each column in the list or all columns, then return the list of values
+    as a dictionary in the format {column_name: [list_of_values]}
+
+    Args:
+        table: Table to evaluate.
+        columns: List of columns to evaluate. If None,
+        consider all columns.
+
+    Returns:
+        A dict that contains the unique values found for each selected column.
+    """
+    column_names = sbd.column_names(table)
+    # select the columns of interest
+    if columns is not None:
+        # error checking columns
+        if len(columns) == 0:
+            raise ValueError("No columns provided.")
+        for col in columns:
+            if col not in column_names:
+                raise ValueError(
+                    f"Column {col} not found in table columns {column_names}."
+                )
+    else:
+        # Selecting only columns with strings
+        # TODO: string? categorical? both?
+        columns = s.string().expand(table)
+    unique_values = {}
+    # find the unique values
+    for col in columns:
+        unique_values[col] = sbd.to_numpy(sbd.unique(sbd.col(table, col)))
+    # return the dictionary of unique values
+    return unique_values
+
+
+def measure_containment_tables(unique_values_base, unique_values_candidate):
+    """Given `unique_values_base` and `unique_values_candidate`, measure the
+    containment for each pair.
+
+    The result will be returned as a dataframe with columns "query_column",
+    "cand_path", "cand_column", "containment".
+
+    Args:
+        unique_values_base (dict): Dictionary that contains the set of unique
+        values for each column in the base (query) table.
+        unique_values_candidate (dict): Dictionary that contains the set of
+        unique values for each column in the candidate table.
+
+    Returns:
+        A dataframe that contains each candidate and the corresponding containment.
+    """
+    containment_list = []
+    # TODO: this should absolutely get optimized
+    # for each value in unique_values_base, measure the containment for every
+    # value in unique_values_candidate
+    for path, dict_cand in unique_values_candidate.items():
+        for col_base, values_base in unique_values_base.items():
+            for col_cand, values_cand in dict_cand.items():
+                containment = measure_containment(values_base, values_cand)
+                if containment > 0:
+                    tup = (col_base, str(path), col_cand, containment)
+                    containment_list.append(tup)
+    return containment_list
+
+
+def measure_containment(unique_values_query, unique_values_candidate):
+    """Given `unique_values_query` and `unique_values_candidate`, measure the
+    Jaccard Containment of the query in the
+    candidate column. Return only the containment
+
+    Args:
+        unique_values_query (set): Set of unique values in the query.
+        unique_values_candidate (set): Set of unique values in the candidate
+        column.
+    """
+    # measure containment
+    set_query = set(unique_values_query)
+    containment = len(set_query.intersection(set(unique_values_candidate))) / len(
+        set_query
+    )
+    # return containment
+    return containment
+
+
+def prepare_ranking(containment_list, budget):
+    """Sort the containment list and cut all candidates past a certain budget.
+
+    Args:
+        containment_list (list[tuple]): List of candidates with format
+        (query_column, cand_table, cand_column, similarity).
+        budget (int): Number of candidates to keep from the list.
+    """
+
+    # Sort the list
+    containment_list = sorted(containment_list, key=lambda x: x[3], reverse=True)
+
+    # TODO: Somewhere here we might want to do some fancy filtering of the
+    # candidates in the ranking (with profiling)
+
+    # Return `budget` candidates
+    ranking = containment_list[:budget]
+    return ranking

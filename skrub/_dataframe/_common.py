@@ -71,6 +71,7 @@ __all__ = [
     "is_integer",
     "is_float",
     "to_float32",
+    "to_bool",
     "is_string",
     "to_string",
     "is_object",
@@ -742,6 +743,25 @@ def _to_float32_polars(col, strict=True):
     if col.dtype == pl.Float32:
         return col
     return col.cast(pl.Float32, strict=strict)
+
+
+@dispatch
+def to_bool(col, strict=True):
+    raise NotImplementedError()
+
+
+@to_bool.specialize("pandas", argument_type="Column")
+def _to_bool_pandas(col, strict=True):
+    if not pd.api.types.is_numeric_dtype(col):
+        col = pd.to_numeric(col, errors="raise" if strict else "coerce")
+    return col.astype(np.bool)
+
+
+@to_bool.specialize("polars", argument_type="Column")
+def _to_bool_polars(col, strict=True):
+    if col.dtype == pl.Boolean:
+        return col
+    return col.cast(pl.Boolean, strict=strict)
 
 
 @dispatch
