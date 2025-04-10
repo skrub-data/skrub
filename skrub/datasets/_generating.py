@@ -2,12 +2,14 @@
 Functions that generate example data.
 
 """
+
 from __future__ import annotations
 
 import string
 
 import numpy as np
-from sklearn.utils import check_random_state
+import pandas as pd
+from sklearn.utils import Bunch, check_random_state
 
 
 def make_deduplication_data(
@@ -59,3 +61,41 @@ def make_deduplication_data(
         # go back to 1d array of strings
         data.append(np.ascontiguousarray(str_as_list).view(f"U{len_ex}").ravel())
     return np.concatenate(data).tolist()
+
+
+def toy_orders(split="train"):
+    """Create a toy dataframe and corresponding targets for examples.
+
+    Parameters
+    ----------
+    split : str, default="train"
+        The split to load. Can be either "train", "test", or "all".
+
+    Returns
+    -------
+    bunch
+        A dictionary-like object with the keys 'X', 'y' and 'orders'.
+    """
+    X = pd.DataFrame(
+        {
+            "ID": [1, 2, 3, 4, 5, 6],
+            "product": ["pen", "cup", "cup", "spoon", "cup", "fork"],
+            "quantity": [2, 3, 5, 1, 5, 2],
+            "date": [
+                "2020-04-03",
+                "2020-04-04",
+                "2020-04-04",
+                "2020-04-05",
+                "2020-04-11",
+                "2020-04-12",
+            ],
+        }
+    )
+    y = pd.Series([False, False, True, False, True, False], name="delayed")
+    if split == "train":
+        X, y = X.iloc[:4], y.iloc[:4]
+    elif split == "test":
+        X, y = X.iloc[4:], y.iloc[4:]
+    else:
+        assert split == "all", split
+    return Bunch(X=X, y=y, orders=X.assign(delayed=y), orders_=X, delayed=y)

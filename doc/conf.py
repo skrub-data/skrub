@@ -24,6 +24,7 @@ from datetime import datetime
 
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
+from expression_report import create_expression_report
 from table_report import generate_demo
 
 generate_demo()
@@ -91,8 +92,9 @@ except ImportError:
     )
     with_jupyterlite = False
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+import sphinx_autosummary_accessors
+
+extensions.append("sphinx_autosummary_accessors")
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -145,7 +147,7 @@ todo_include_todos = False
 autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = ['_templates']
+templates_path = ["_templates", sphinx_autosummary_accessors.templates_path]
 
 autodoc_default_flags = ["members", "inherited-members"]
 
@@ -257,7 +259,9 @@ html_static_path = ["_static"]
 html_css_files = [
     "css/custom.css",
 ]
-html_js_files = []
+html_js_files = [
+    "scripts/sg_plotly_resize.js",
+]
 
 
 # Project logo, to place at the top of the sidebar.
@@ -533,8 +537,6 @@ numpydoc_xref_aliases = {
     "deduplicate": "skrub.deduplicate",
     "to_datetime": "skrub.to_datetime",
     "TableVectorizer": "skrub.TableVectorizer",
-    "DatasetInfoOnly": "skrub.datasets._fetching.DatasetInfoOnly",
-    "DatasetAll": "skrub.datasets._fetching.DatasetAll",
     "_replace_false_missing": "skrub._table_vectorizer._replace_false_missing",
 }
 numpydoc_xref_ignore = "all"
@@ -560,3 +562,5 @@ linkcode_resolve = make_linkcode_resolve(
 # -- Sphinx-Copybutton configuration -----------------------------------------
 copybutton_prompt_text = r">>> |\.\.\. |\$ "
 copybutton_prompt_is_regexp = True
+
+create_expression_report()

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>evaluation report</title>
+    <style>
+     {% include "expressions.css" %}
+    </style>
+</head>
+
+<body>
+    <button type="button" class="icon-button"
+        id="toggle-nav">{% include "icons/list.svg" %}</button>
+    <div class="expression-node-wrapper">
+        <div class="expression-node">
+            <nav class="main-nav" data-is-open>
+                {% include "graph-nav.html" %}
+            </nav>
+            <div class="node-details" {{ "data-has-error" if error is not none }}
+                {{ "data-is-skipped" if (error is none) and (report is none) }}>
+                <h1>{{ node_nb }}: {{ node_repr }}</h1>
+                {% if node_name %}
+                <h2><samp>Name: {{ node_name }}</samp></h2>
+                {% endif %}
+                <nav class="mini-nav">
+                    <ul>
+                        <li>
+                            {% if node_nb != 0 %}
+                            <a href="node_{{ node_nb - 1 }}.html">previous</a>
+                            {% endif %}
+                        </li>
+                        <li>
+                            {% if node_nb < total_n_nodes - 1 %}
+                            <a href="node_{{ node_nb + 1 }}.html">next</a>
+                            {% endif %}
+                        </li>
+                        <li>
+                            <a href='index.html'>top</a>
+                        </li>
+                    </ul>
+                </nav>
+                <div>
+                    {% if node_description %}
+                    <h3>Description:</h3>
+                    <p>
+                        {{ node_description }}
+                    </p>
+                    {% endif %}
+
+                    <h3>This step used:</h3>
+                    <ul>
+                        {% for parent in node_parents %}
+                        <li><a href="{{ parent['url'] }}">{{ parent['id'] }}:
+                                {{ parent['description'] }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h3>This step was used by:</h3>
+                    <ul>
+                        {% for child in node_children %}
+                        <li><a href="{{ child['url'] }}">{{ child['id'] }}:
+                                {{ child['description'] }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <h3>Where was this step created?</h3>
+                    <pre>
+                <code class="node-creation-stack">
+{{ node_creation_stack_description }}
+                </code>
+            </pre>
+                </div>
+                {% if estimator_html_repr %}
+                <div>
+                    <h3>Estimator fitted in this step:</h3>
+                    {{ estimator_html_repr | safe }}
+                </div>
+                {% endif %}
+
+                {% if  report is not none %}
+                <div>
+                    <h2>Output of this step</h2>
+                    {{ report | safe }}
+                </div>
+                {% elif error is not none %}
+                <div>
+                    <h2>This step failed: {{ error_msg }}</h2>
+                    <pre>
+                    <code>
+{{ error }}
+                    </code>
+                </pre>
+                </div>
+                {% else %}
+                <div>
+                    <h2> This step did not run. </h2>
+                    <p>
+                        This step was not executed because its result was supplied directly in the input data (thus short-circuiting its computation) or a previous step that it requires has failed.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

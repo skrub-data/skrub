@@ -20,6 +20,7 @@ to prepare data in a format that shallow or classic machine-learning models unde
 # .. note::
 #
 #    You can control the directory where the datasets are stored by:
+#
 #    - setting in your environment the ``SKRUB_DATA_DIRECTORY`` variable to an
 #      absolute directory path,
 #    - using the parameter ``data_directory`` in fetch functions, which takes
@@ -43,12 +44,15 @@ employees_df, salaries = dataset.X, dataset.y
 # Generating an interactive report for a dataframe
 # -------------------------------------------------
 #
+# The :class:`~skrub.Cleaner` allows to clean the
+# dataframe, parsing nulls, dates, and dropping columns with too many nulls.
 # To quickly get an overview of a dataframe's contents, use the
 # :class:`~skrub.TableReport`.
 
 # %%
-from skrub import TableReport
+from skrub import Cleaner, TableReport
 
+employees_df = Cleaner().fit_transform(employees_df)
 TableReport(employees_df)
 
 # %%

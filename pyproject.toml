@@ -5,9 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "skrub"
 dynamic = ["version", "readme"]
-description = "Prepping tables for machine learning"
+description = "Machine learning for dataframes"
 authors = [
-    { name="Patricio Cerda", email="patricio.cerda@inria.fr"},
+    {name = "Riccardo Cappuzzo"},
+    {name = "Jerome Dockes"},
+    {name = "Guillaume Lemaitre"},
+    {name = "Vincent Maladiere"},
+    {name = "Gael Varoquaux"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -33,6 +37,7 @@ dependencies = [
     "jinja2>=3.1.2",
     "matplotlib>=3.4.3",
     "requests>=2.25.0",
+    "pydot",
 ]
 
 [tool.setuptools.dynamic]
@@ -50,11 +55,13 @@ doc = [
     "jupyterlite-pyodide-kernel",
     "numpydoc",
     "pydata-sphinx-theme",
+    "plotly",
     "seaborn",
     "sphinx",
     "sphinx-copybutton",
     "sphinx-gallery",
     "sphinxext-opengraph",
+    "sphinx-autosummary-accessors",
     "statsmodels",
     "pyarrow",
 ]
@@ -66,6 +73,7 @@ lint = [
 optional = [
     "pyarrow",
     "polars",
+    "plotly",
 ]
 transformers = [
     "sentence-transformers",
@@ -97,19 +105,23 @@ scikit-learn = ">=1.2.1"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.4.3"
+pydot = "*"
 requests = ">=2.25.0"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
 jupyterlite-pyodide-kernel = "*"
 matplotlib = "*"
+pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
+plotly = "*"
 seaborn = "*"
 sphinx = "*"
 sphinx-copybutton = "*"
 sphinx-gallery = "*"
 sphinxext-opengraph = "*"
+sphinx-autosummary-accessors = ">=2025.3.1,<2026"
 statsmodels = "*"
 
 [tool.pixi.feature.lint.dependencies]
@@ -120,6 +132,7 @@ pre-commit = "*"
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
 polars = "*"
+plotly = "*"
 
 [tool.pixi.feature.transformers]
 # pytorch is not anymore released on osx-64 platform
@@ -151,17 +164,16 @@ scikit-learn = "==1.2.1"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.4.3"
+pydot = "*"
 requests = "==2.25.0"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
 polars = "==0.20.15"
+plotly = "*"
 
 [tool.pixi.feature.py309.dependencies]
 python = "~=3.9.0"
-
-[tool.pixi.feature.py310.dependencies]
-python = "~=3.10.0"
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
@@ -281,4 +293,4 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*'
 check-hidden = true
 # ignore-regex = ''
-ignore-words-list = 'ans,serie'
+ignore-words-list = 'ans,serie,fulfilment'

@@ -91,6 +91,7 @@ __all__ = [
     "max",
     "std",
     "mean",
+    "pearson_corr",
     "sort",
     "value_counts",
     "quantile",
@@ -1037,6 +1038,21 @@ def _mean_pandas_col(col):
 @mean.specialize("polars", argument_type="Column")
 def _mean_polars_col(col):
     return col.mean()
+
+
+@dispatch
+def pearson_corr(df):
+    raise NotImplementedError()
+
+
+@pearson_corr.specialize("pandas", argument_type="DataFrame")
+def _pearson_corr_pandas(df):
+    return df.corr(method="pearson", numeric_only=True)
+
+
+@pearson_corr.specialize("polars", argument_type="DataFrame")
+def _pearson_corr_polars(df):
+    return pl.from_pandas(_pearson_corr_pandas(df.to_pandas()))
 
 
 @dispatch
