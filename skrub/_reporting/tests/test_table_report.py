@@ -23,6 +23,7 @@ def test_report(air_quality):
         }
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
+    assert report.max_association_columns == 30
     html = report.html()
     assert "the title" in html
     assert "With nulls" in html
