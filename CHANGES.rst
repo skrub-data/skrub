@@ -30,6 +30,10 @@ requirements and the public API.
 Changes
 -------
 
+- A new parameter ``max_association_columns`` has been added to the
+  :class:`TableReport` to skip association computation when the number of columns
+  exceeds the specified value. :pr:`1304` by :user:`Victoria Shevchenko <victoris93>`.
+
 Bugfixes
 --------
 
