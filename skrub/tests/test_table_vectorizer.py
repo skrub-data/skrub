@@ -10,8 +10,9 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_
 from pandas.testing import assert_frame_equal
 from scipy.sparse import csr_matrix
 from sklearn.base import clone
+from sklearn.linear_model import Ridge
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
 from sklearn.utils._testing import skip_if_no_parallel
 from sklearn.utils.fixes import parse_version
 
@@ -19,7 +20,13 @@ from skrub import _dataframe as sbd
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
-from skrub._table_vectorizer import TableVectorizer
+from skrub._table_vectorizer import (
+    Cleaner,
+    SimpleCleaner,
+    TableVectorizer,
+    _get_preprocessors,
+)
+from skrub._to_float32 import ToFloat32
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
@@ -164,6 +171,41 @@ def _get_datetimes_dataframe():
     )
 
 
+def _get_missing_values_dataframe(categorical_dtype="object"):
+    """
+    Creates a simple DataFrame with some columns that contain only missing values.
+    We'll use different types of missing values (np.nan, pd.NA, None)
+    to test how the vectorizer handles full null columns with mixed null values.
+    """
+    return pd.DataFrame(
+        {
+            "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
+            "all_null": pd.Series(
+                [None, None, None, None, None], dtype=categorical_dtype
+            ),
+            "all_nan": pd.Series(
+                [np.nan, np.nan, np.nan, np.nan, np.nan], dtype="Float64"
+            ),
+            "mixed_nulls": pd.Series(
+                [np.nan, None, pd.NA, "NULL", "NA"], dtype=categorical_dtype
+            ),
+        }
+    )
+
+
+def test_get_preprocessors():
+    X = _get_clean_dataframe()
+    steps = _get_preprocessors(
+        cols=X.columns, drop_null_fraction=1.0, n_jobs=1, add_tofloat32=True
+    )
+    assert any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
+
+    steps = _get_preprocessors(
+        cols=X.columns, drop_null_fraction=1.0, n_jobs=1, add_tofloat32=False
+    )
+    assert not any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
+
+
 def test_fit_default_transform():
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer()
@@ -213,11 +255,11 @@ X_tuples = [
     (
         X,
         {
-            "pd_datetime": "datetime64[ns]",
-            "np_datetime": "datetime64[ns]",
-            "dmy-": "datetime64[ns]",
-            "ymd/": "datetime64[ns]",
-            "ymd/_hms:": "datetime64[ns]",
+            "pd_datetime": "datetime",
+            "np_datetime": "datetime",
+            "dmy-": "datetime",
+            "ymd/": "datetime",
+            "ymd/_hms:": "datetime",
         },
     ),
     # Test other types detection
@@ -263,7 +305,102 @@ def test_auto_cast(X, dict_expected_types):
     vectorizer = passthrough_vectorizer()
     X_trans = vectorizer.fit_transform(X)
     for col in X_trans.columns:
-        assert dict_expected_types[col] == X_trans[col].dtype
+        if dict_expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            assert dict_expected_types[col] == X_trans[col].dtype
+
+
+# Cleaner does not cast to float32
+X_tuples = [
+    (
+        X,
+        {
+            "pd_datetime": "datetime",
+            "np_datetime": "datetime",
+            "dmy-": "datetime",
+            "ymd/": "datetime",
+            "ymd/_hms:": "datetime",
+        },
+    ),
+    # Test other types detection
+    (
+        _get_clean_dataframe(),
+        {
+            "int": "int",
+            "float": "float",
+            "str1": "O",
+            "str2": "O",
+            "cat1": "category",
+            "cat2": "category",
+        },
+    ),
+    (
+        _get_dirty_dataframe("category"),
+        {
+            "int": "int",
+            "float": "float",
+            "str1": "category",
+            "str2": "category",
+            "cat1": "category",
+            "cat2": "category",
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize("X, dict_expected_types", X_tuples)
+def test_cleaner_dtypes(X, dict_expected_types):
+    vectorizer = Cleaner()
+    X_trans = vectorizer.fit_transform(X)
+    for col in X_trans.columns:
+        if dict_expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            for col, dtype in dict_expected_types.items():
+                if dtype == "int":
+                    assert sbd.is_integer(X_trans[col])
+                elif dtype == "float":
+                    assert sbd.is_float(X_trans[col])
+                else:
+                    assert dict_expected_types[col] == X_trans[col].dtype
+
+    X_trans = vectorizer.fit(X).transform(X)
+    for col in X_trans.columns:
+        if dict_expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            for col, dtype in dict_expected_types.items():
+                if dtype == "int":
+                    assert sbd.is_integer(X_trans[col])
+                elif dtype == "float":
+                    assert sbd.is_float(X_trans[col])
+                else:
+                    assert dict_expected_types[col] == X_trans[col].dtype
+
+
+def test_simplecleaner_warning():
+    with pytest.warns(DeprecationWarning, match="SimpleCleaner was renamed to Cleaner"):
+        X = _get_clean_dataframe()
+        vectorizer = SimpleCleaner()
+        vectorizer.fit(X)
+
+
+def test_convert_float32():
+    """
+    Test that the TableVectorizer converts float64 to float32
+    when using the default parameters.
+    """
+    X = _get_clean_dataframe()
+    vectorizer = TableVectorizer()
+    out = vectorizer.fit_transform(X)
+    assert out.dtypes["float"] == "float32"
+    assert out.dtypes["int"] == "float32"
+
+    vectorizer = Cleaner()
+    out = vectorizer.fit_transform(X)
+    assert sbd.is_float(out["float"])
+    assert sbd.is_integer(out["int"])
 
 
 def test_auto_cast_missing_categories():
@@ -316,9 +453,27 @@ def test_get_feature_names_out():
         "cat2_60K+",
     ]
     X = _get_clean_dataframe()
+    rng = np.random.default_rng(42)
+    y = rng.integers(0, 2, size=X.shape[0])
     vectorizer = TableVectorizer().fit(X)
     assert_array_equal(
         vectorizer.get_feature_names_out(),
+        expected_features,
+    )
+
+    # make sure that `get_feature_names` works when `TableVectorizer` is used in a
+    # scikit-learn pipeline
+    # non-regression test for https://github.com/skrub-data/skrub/issues/1256
+    pipeline = make_pipeline(TableVectorizer(), StandardScaler(), Ridge()).fit(X, y)
+    assert_array_equal(
+        pipeline[:-1].get_feature_names_out(),
+        expected_features,
+    )
+    # Input features are ignored when `TableVectorizer` is used in a pipeline
+    assert_array_equal(
+        pipeline[:-1].get_feature_names_out(
+            input_features=[f"col_{i}" for i in range(X.shape[1])]
+        ),
         expected_features,
     )
 
@@ -506,8 +661,10 @@ def test_changing_types(X_train, X_test, expected_X_out):
     """
     table_vec = TableVectorizer(
         # only extract the total seconds
-        datetime=DatetimeEncoder(resolution=None)
+        datetime=DatetimeEncoder(resolution=None),
+        drop_null_fraction=None,
     )
+
     table_vec.fit(X_train)
     X_out = table_vec.transform(X_test)
     assert (X_out.isna() == expected_X_out.isna()).all().all()
@@ -714,6 +871,18 @@ def test_bad_specific_cols():
         TableVectorizer(specific_transformers=[(None, [0])]).fit(None)
 
 
+def test_sk_visual_block():
+    X = _get_clean_dataframe()
+    vectorizer = TableVectorizer()
+    unfitted_repr = vectorizer._repr_html_()
+    assert "TableVectorizer" in unfitted_repr
+    vectorizer.fit(X)
+    assert (
+        "[&#x27;str1&#x27;, &#x27;str2&#x27;, &#x27;cat1&#x27;, &#x27;cat2&#x27;]"
+        in vectorizer._repr_html_()
+    )
+
+
 def test_supervised_encoder(df_module):
     TargetEncoder = pytest.importorskip("sklearn.preprocessing.TargetEncoder")
     # test that the vectorizer works correctly with encoders that need y (none
@@ -722,3 +891,18 @@ def test_supervised_encoder(df_module):
     y = np.random.default_rng(0).normal(size=sbd.shape(X)[0])
     tv = TableVectorizer(low_cardinality=TargetEncoder())
     tv.fit_transform(X, y)
+
+
+def test_drop_null_column():
+    """Check that all null columns are dropped, and no more."""
+    # Don't drop null columns
+    X = _get_missing_values_dataframe()
+    tv = TableVectorizer(drop_null_fraction=None)
+    transformed = tv.fit_transform(X)
+
+    assert sbd.shape(transformed) == sbd.shape(X)
+
+    # Drop null columns
+    tv = TableVectorizer(drop_null_fraction=1.0)
+    transformed = tv.fit_transform(X)
+    assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)

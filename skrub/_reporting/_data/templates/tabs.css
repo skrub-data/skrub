@@ -1,113 +1,95 @@
 /* The report's tab panels (dataframe sample, column summaries, column associations) */
 /* --------------------------------------------------------------------------------- */
 
-/*
-
-Vertical ordering:
-
-- the tooltip (when visible) is always on top. To be able to give it a different
-  z-index than the tab, we don't place it in the tab (which has a relative
-  position and creates a stacking context). Instead, we create a zero-height div
-  just below the tab, and of the same width, with a high z-index which serves as
-  the anchor for the tooltip.
-
-- Next comes the panel, the main content.
-
-- Next comes the active tab. It is tucked under the panel so that we can
-  have a big overlap between the 2 and be sure there is no gap, while
-  avoiding that the left and right borders of the tab show up on top of the
-  panel.
-
-- What appears to be the border of the panel needs to be cut below the active
-  tab (so it looks like the border goes around the tab). So it is actually a
-  separate div. The active tab has a higher z index than the border so it cuts
-  through it, inactive tabs have a lower z-index.
-
-- Finally inactive tabs slide under the border and the panel.
-
-*/
-
-
 /* The tabs (buttons that allow selecting the tab panel) */
 /* ----------------------------------------------------- */
 
 .tab-list-wrapper {
-    max-width: 125ch;
+    align-items: flex-start;
+    border-bottom: var(--border-s) solid var(--color-border-primary);
+
+    column-gap: calc(var(--spacing-xs));
+    row-gap: var(--spacing-s);
+}
+
+.tab-list-scroller {
+    overflow: auto hidden;
 }
 
 .tab-list {
     display: flex;
-    column-gap: var(--tiny);
-    padding-left: var(--tiny);
-    padding-right: var(--tiny);
+    column-gap: var(--spacing-m);
+    padding-left: var(--spacing-m);
+    padding-right: var(--spacing-m);
+    align-items: stretch;
+    margin-bottom: calc(-1 * var(--border-s));
 }
 
-.tab {
-    border: 1px solid transparent;
+.tab-list > * {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin-top: var(--border-m);
+}
+
+button.tab {
+    display: flex;
+    align-items: center;
+    column-gap: var(--spacing-s);
+    border: var(--border-s) solid transparent;
     border-bottom: none;
-    padding: var(--tiny);
-    font-size: var(--small);
-    background-color: var(--lightg);
     border-radius: var(--radius) var(--radius) 0 0;
-    position: relative;
-    margin-bottom: -10px;
-    padding-bottom: calc(10px + var(--tiny));
-    z-index: 1;
+    padding: var(--spacing-m);
+    padding-top: var(--spacing-s);
+    padding-bottom: calc(var(--spacing-s) + var(--border-s));
+    font-size: var(--font-size-m);
+    background-color: transparent;
+    color: var(--color-text-secondary);
 }
 
 .tab:hover {
-    background-color: var(--mediumg);
+    color: var(--color-text-primary);
 }
 
 .tab[data-is-selected] {
-    border-color: var(--darkg);
-    background-color: white;
-    z-index: 3;
+    border-color: var(--color-border-primary);
+    background-color: var(--color-background-primary);
+    color: var(--color-text-primary);
 }
 
 /* When a tab contains critical content we highlight the corresponding button so */
 /* the user is more likely to click on it. ATM this is just used for the */
 /* associations tab when some columns are very strongly associated. */
 
-.tab-list .tab[data-has-warning] {
-    color: red;
+.tab-list .tab .warning-sign {
+    display: none;
+    width: var(--font-size-m);
+    height: var(--font-size-m);
+    margin: var(--spacing-xs);
 }
 
-.tab-list .tab[data-has-warning]::before {
-    content: "⚠️ ";
+button.tab[data-has-warning] {
+    color: var(--color-text-critical);
 }
 
-.tab-list-border {
-    box-sizing: content-box;
-    height: 0;
-    border: none;
-    border-bottom: 1px solid var(--darkg);
-    position: relative;
-    z-index: 2;
+button.tab[data-has-warning]:not(:hover):not([data-is-selected]) {
+    color: color-mix(in srgb, var(--color-text-critical) 75%, var(--color-text-primary));
 }
 
-.tab-tooltip-anchor {
-    border: none;
-    padding: none;
-    margin: none;
-    width: 100%;
-    height: 0;
-    position: relative;
-    z-index: 10;
-}
-
-/* Show the tooltip when the tab is hovered (not just the tooltip anchor) */
-
-.tab:hover ~ * .tooltip-text {
-    display: block;
+.tab-list .tab[data-has-warning] .warning-sign {
+    display: inline-block;
 }
 
 /* The panels (the main content) */
 /* ----------------------------- */
 
 .tab-panel {
-    padding-top: var(--tiny);
-    position: relative;
-    z-index: 4;
-    background: white;
+    padding-top: var(--spacing-m);
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.report-bottom-border {
+    width: calc(100% - 2 * var(--radius));
+    border-bottom: var(--border-s) solid var(--color-border-secondary);
+    margin: var(--spacing-s) auto 0 auto;
 }

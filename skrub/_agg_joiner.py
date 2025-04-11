@@ -6,57 +6,173 @@ Both classes aggregate the auxiliary table first, then join this grouped
 table with the main table.
 """
 
+from itertools import product
+
 import numpy as np
+import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
-from skrub import _join_utils
-from skrub._dataframe._namespace import get_df_namespace, is_pandas, is_polars
-from skrub._dataframe._pandas import _parse_argument
-from skrub._utils import atleast_1d_or_none
+from skrub import _join_utils, _utils
+from skrub import _selectors as s
+from skrub._dispatch import dispatch
 
 from ._check_input import CheckInputDataFrame
 
-NUM_OPERATIONS = ["sum", "mean", "std", "min", "max", "hist", "value_counts"]
-CATEG_OPERATIONS = ["mode", "count", "value_counts"]
-ALL_OPS = NUM_OPERATIONS + CATEG_OPERATIONS
+try:
+    import polars as pl
+except ImportError:
+    pass
+
+SUPPORTED_OPS = ["count", "mode", "min", "max", "sum", "median", "mean", "std"]
+# summing strings works in pandas, not in polars
+NUM_ONLY_OPS = ["sum", "median", "mean", "std"]
 
 
-def split_num_categ_operations(operations):
-    """Separate aggregator operators input by their type.
+def aggregate(table, key, cols_to_agg, operations, suffix):
+    """Aggregate the `table` by `key` and compute statistics for `cols_to_agg`.
 
     Parameters
     ----------
-    operations : list of str
-        The input operators names.
+    table : DataFrame of shape (n_samples, n_features)
+        The input dataframe to aggregate.
+
+    key : list of str
+        The columns used as keys to aggregate on.
+
+    cols_to_agg : iterable of str
+        The columns to aggregate.
+
+    operations : iterable of str
+        The reduction functions to apply on columns in ``cols_to_agg``
+        during the aggregation.
+
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type columns.
+
+    suffix : str
+        The suffix appended to output columns. Will only be applied
+        to columns created by the aggregations.
 
     Returns
     -------
-    num_operations, categ_operations : Tuple of list of str
-        List of operator names.
+    DataFrame of shape ``(n_aggregated_samples, k)``
+    where ``k = n_operations * n_cols_to_agg``
+        The aggregated output.
     """
-    num_operations, categ_operations = [], []
-    for operation in operations:
-        # hist(5) -> hist
-        op_root, _ = _parse_argument(operation)
-        if op_root in NUM_OPERATIONS:
-            num_operations.append(operation)
-        if op_root in CATEG_OPERATIONS:
-            categ_operations.append(operation)
-        if op_root not in ALL_OPS:
-            raise ValueError(f"operations options are {ALL_OPS}, got: {operation=!r}.")
+    table_to_agg = s.select(table, s.make_selector(key) | s.make_selector(cols_to_agg))
 
-    return num_operations, categ_operations
+    # Don't check the ID column, as it's not the one we aggregate on
+    table_to_check = s.select(table_to_agg, ~s.cols(*key))
+    not_numeric_cols = (~s.numeric()).expand(table_to_check)
+
+    num_only_op = list(set(operations).intersection(set(NUM_ONLY_OPS)))
+
+    if not_numeric_cols and num_only_op:
+        raise AttributeError(
+            f"The operations {NUM_ONLY_OPS} are restricted to numeric columns."
+            f" \nConsider removing the following columns: {not_numeric_cols} or the"
+            f" following operations: {num_only_op}."
+        )
+
+    aggregated = perform_groupby(table_to_agg, key, cols_to_agg, operations)
+
+    new_col_names = [
+        f"{col}{suffix}" if col not in key else col
+        for col in sbd.column_names(aggregated)
+    ]
+    aggregated = sbd.set_column_names(aggregated, new_col_names)
+
+    return aggregated
+
+
+@dispatch
+def perform_groupby(table, key, cols_to_agg, operations):
+    raise NotImplementedError()
+
+
+@perform_groupby.specialize("pandas", argument_type="DataFrame")
+def _perform_groupby_pandas(table, key, cols_to_agg, operations):
+    # Pandas does not allow the keyword "mode" for aggregating
+    # its ``DataFrameGroupBy`` objects, this is a workaround
+    pandas_aggfuncs = {
+        "mode": pd.Series.mode,
+    }
+    named_agg = {}
+    for col, operation in product(cols_to_agg, operations):
+        aggfunc = pandas_aggfuncs.get(operation, operation)
+        output_key = f"{col}_{operation}"
+        named_agg[output_key] = (col, aggfunc)
+
+    aggregated = table.groupby(key).agg(**named_agg).reset_index(drop=False)
+
+    return aggregated
+
+
+@perform_groupby.specialize("polars", argument_type="DataFrame")
+def _perform_groupby_polars(table, key, cols_to_agg, operations):
+    aggfuncs = []
+    for col, operation in product(cols_to_agg, operations):
+        polars_aggfuncs = {
+            "count": pl.col(col).count(),
+            "median": pl.col(col).median(),
+            "mean": pl.col(col).mean(),
+            "std": pl.col(col).std(),
+            "sum": pl.col(col).sum(),
+            "min": pl.col(col).min(),
+            "max": pl.col(col).max(),
+            "mode": pl.col(col).mode().first(),
+        }
+        output_key = f"{col}_{operation}"
+        aggfunc = polars_aggfuncs[operation].alias(output_key)
+        aggfuncs.append(aggfunc)
+
+    aggregated = table.group_by(key).agg(aggfuncs)
+
+    return aggregated
+
+
+def check_other_inputs(operations, suffix):
+    """Check operations and suffix inputs.
+
+    Parameters
+    ----------
+    operations : str or list of str
+        The operations to check.
+    suffix : str
+        The suffix to check.
+
+    Returns
+    -------
+    The checked inputs.
+    """
+    operations = np.atleast_1d(operations).tolist()
+    if not all([isinstance(op, str) for op in operations]) or operations == []:
+        raise ValueError(
+            "`operations` must be a string or an iterable of strings, got"
+            f" {operations}."
+        )
+
+    unsupported_ops = set(operations).difference(SUPPORTED_OPS)
+    if unsupported_ops:
+        raise ValueError(
+            f"`operations` options are {SUPPORTED_OPS}, but {unsupported_ops} are"
+            " not supported."
+        )
+
+    if not isinstance(suffix, str):
+        raise ValueError(f"'suffix' must be a string. Got {suffix}")
+
+    return operations, suffix
 
 
 class AggJoiner(TransformerMixin, BaseEstimator):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
     Apply numerical and categorical aggregation operations on the columns (i.e. `cols`)
-    to aggregate, selected by dtypes. See the list of supported operations
-    at the parameter `operations`.
+    to aggregate. See the list of supported operations at the parameter `operations`.
 
     If `cols` is not provided, `cols` are all columns from `aux_table`,
     except `aux_key`.
@@ -69,6 +185,13 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         Auxiliary dataframe to aggregate then join on the base table.
         The placeholder string "X" can be provided to perform
         self-aggregation on the input data.
+
+    operations : str or iterable of str
+        Aggregation operations to perform on the auxiliary table.
+
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type columns.
 
     key : str, default=None
         The column name to use for both `main_key` and `aux_key` when they
@@ -88,16 +211,7 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     cols : str or iterable of str, default=None
         Select the columns from the auxiliary dataframe to use as values during
         the aggregation operations.
-        If set to `None`, `cols` are all columns from `aux_table`, except `aux_key`.
-
-    operations : str or iterable of str, default=None
-        Aggregation operations to perform on the auxiliary table.
-
-        - numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-          "hist" and "value_counts" accept an integer argument to parametrize
-          the binning.
-        - categorical : {"mode", "count", "value_counts"}
-        - If set to `None` (the default), ["mean", "mode"] will be used.
+        By default, `cols` are all columns from `aux_table`, except `aux_key`.
 
     suffix : str, default=""
         Suffix to append to the `aux_table`'s column names. You can use it
@@ -130,122 +244,35 @@ class AggJoiner(TransformerMixin, BaseEstimator):
     ... })
     >>> agg_joiner = AggJoiner(
     ...     aux_table=aux,
+    ...     operations="mean",
     ...     main_key="airportId",
     ...     aux_key="from_airport",
-    ...     cols=["total_passengers", "company"],
-    ...     operations=["mean", "mode"],
+    ...     cols="total_passengers",
     ... )
     >>> agg_joiner.fit_transform(main)
-       airportId  airportName  company_mode  total_passengers_mean
-    0          1    Paris CDG            AF              103.33...
-    1          2       NY JFK            DL               80.00...
+       airportId  airportName  total_passengers_mean
+    0          1    Paris CDG              103.33...
+    1          2       NY JFK               80.00...
     """
 
     def __init__(
         self,
         aux_table,
+        operations,
         *,
         key=None,
         main_key=None,
         aux_key=None,
         cols=None,
-        operations=None,
         suffix="",
     ):
         self.aux_table = aux_table
+        self.operations = operations
         self.key = key
         self.main_key = main_key
         self.aux_key = aux_key
         self.cols = cols
-        self.operations = operations
         self.suffix = suffix
-
-    def _check_dataframes(self, X, aux_table):
-        """Check dataframes input types.
-
-            Raises an error if frames aren't both Pandas or Polars dataframes,
-            or if there is a Polars lazyframe.
-            Alternatively, allows `aux_table` to be "X".
-
-            Parameters
-            ----------
-            X : DataFrameLike
-                The main table to augment.
-            aux_table : DataFrameLike or "X"
-                The auxiliary table.
-
-        Returns
-        -------
-        X, aux_table: DataFrameLike
-            The validated main and auxiliary dataframes.
-        """
-        # Polars lazyframes will raise an error here.
-        if not hasattr(X, "__dataframe__"):
-            raise TypeError(f"'X' must be a dataframe, got {type(X)}.")
-        if isinstance(aux_table, str):
-            if aux_table == "X":
-                return X, X
-            raise ValueError("'aux_table' must be a dataframe or the string 'X'.")
-        elif not hasattr(aux_table, "__dataframe__"):
-            raise TypeError(
-                "'aux_table' must be a dataframe or the string 'X', got"
-                f" {type(aux_table)}. If you have more than one 'aux_table',"
-                " use the MultiAggJoiner instead."
-            )
-
-        if (is_pandas(X) and not is_pandas(aux_table)) or (
-            is_polars(X) and not is_polars(aux_table)
-        ):
-            raise TypeError(
-                "'X' and 'aux_table' must be of the same dataframe type, got"
-                f"{type(X)} and {type(aux_table)}"
-            )
-
-        return X, aux_table
-
-    def _check_inputs(self, X):
-        """Check inputs before fitting.
-
-        Parameters
-        ----------
-        X : DataFrameLike
-            Input data, based table on which to left join the
-            auxiliary table.
-        """
-        X, self._aux_table = self._check_dataframes(X, self.aux_table)
-
-        self._main_key, self._aux_key = _join_utils.check_key(
-            self.main_key, self.aux_key, self.key
-        )
-        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
-        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
-
-        # If no `cols` provided, all columns but `aux_key` are used.
-        if self.cols is None:
-            self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
-        elif isinstance(self.cols, str):
-            self._cols = [
-                self.cols,
-            ]
-        else:
-            self._cols = self.cols
-        _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
-
-        if self.operations is None:
-            self._operations = ["mean", "mode"]
-        elif isinstance(self.operations, str):
-            self._operations = [
-                self.operations,
-            ]
-        else:
-            self._operations = self.operations
-
-        self.num_operations, self.categ_operations = split_num_categ_operations(
-            self._operations
-        )
-
-        if not isinstance(self.suffix, str):
-            raise ValueError(f"'suffix' must be a string. Got {self.suffix}")
 
     def fit_transform(self, X, y=None):
         """Aggregate auxiliary table based on the main keys.
@@ -263,22 +290,46 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         DataFrame
             The augmented input.
         """
-        self._check_inputs(X)
+        if isinstance(self.aux_table, str) and self.aux_table == "X":
+            self._aux_table = X
+        elif not sbd.is_dataframe(self.aux_table):
+            raise ValueError(
+                "'aux_table' must be a dataframe or the string 'X', got"
+                f" {type(self.aux_table)}. If you have more than one 'aux_table',"
+                " use the MultiAggJoiner instead."
+            )
+        else:
+            self._aux_table = self.aux_table
+        self._aux_table = CheckInputDataFrame().fit_transform(self._aux_table)
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
 
-        skrub_px, _ = get_df_namespace(self._aux_table)
-        self.aux_table_ = skrub_px.aggregate(
+        self._main_key, self._aux_key = _join_utils.check_key(
+            self.main_key, self.aux_key, self.key
+        )
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
+
+        self._cols = _utils.atleast_1d_or_none(self.cols)
+        # If no `cols` provided, all columns but `aux_key` are used.
+        if self.cols is None:
+            self._cols = list(set(self._aux_table.columns) - set(self._aux_key))
+        _join_utils.check_missing_columns(self._aux_table, self._cols, "'aux_table'")
+
+        self._operations, self._suffix = check_other_inputs(
+            self.operations, self.suffix
+        )
+
+        self.aggregated_aux_table_ = aggregate(
             self._aux_table,
             self._aux_key,
             self._cols,
-            self.num_operations,
-            self.categ_operations,
-            suffix=self.suffix,
+            self._operations,
+            suffix=self._suffix,
         )
         result = _join_utils.left_join(
             X,
-            right=self.aux_table_,
+            right=self.aggregated_aux_table_,
             left_on=self._main_key,
             right_on=self._aux_key,
         )
@@ -317,13 +368,12 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         DataFrame
             The augmented input.
         """
-        check_is_fitted(self, "aux_table_")
-        X, _ = self._check_dataframes(X, self.aux_table_)
+        check_is_fitted(self, "aggregated_aux_table_")
         X = self._main_check_input.transform(X)
 
         result = _join_utils.left_join(
             X,
-            right=self.aux_table_,
+            right=self.aggregated_aux_table_,
             left_on=self._main_key,
             right_on=self._aux_key,
         )
@@ -331,9 +381,20 @@ class AggJoiner(TransformerMixin, BaseEstimator):
         result = sbd.set_column_names(result, self.all_outputs_)
         return result
 
+    def get_feature_names_out(self):
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        List of str
+            Transformed feature names.
+        """
+        check_is_fitted(self, "aggregated_aux_table_")
+        return self.all_outputs_
+
 
 class AggTarget(TransformerMixin, BaseEstimator):
-    """Aggregate a target ``y`` before joining its aggregation on a base dataframe.
+    """Aggregate a target `y` before joining its aggregation on a base dataframe.
 
     Accepts :obj:`pandas.DataFrame` or :class:`polars.DataFrame` inputs.
 
@@ -346,25 +407,19 @@ class AggTarget(TransformerMixin, BaseEstimator):
         If `main_key` refer to a single column, a single aggregation
         for this key will be generated and a single join will be performed.
 
-        Otherwise, if `main_key` is a list of keys, the target will be
-        aggregated using each key separately, then each aggregation of
-        the target will be joined on the main table.
+        If `main_key` is a list of keys, a multi-column aggregation will be performed
+        on the target.
 
-    operation : str or iterable of str, optional
+    operations : str or iterable of str
         Aggregation operations to perform on the target.
 
-        numerical : {"sum", "mean", "std", "min", "max", "hist", "value_counts"}
-            'hist' and 'value_counts' accept an integer argument to parametrize
-            the binning.
+        Supported operations are "count", "mode", "min", "max", "sum", "median",
+        "mean", "std". The operations "sum", "median", "mean", "std" are reserved
+        to numeric type targets.
 
-        categorical : {"mode", "count", "value_counts"}
-
-        If set to None (the default), ["mean", "mode"] will be used.
-
-    suffix : str, optional
+    suffix : str, default="_target"
         The suffix to append to the columns of the target table if the join
         results in duplicates columns.
-        If set to None, "_target" is used.
 
     See Also
     --------
@@ -390,30 +445,31 @@ class AggTarget(TransformerMixin, BaseEstimator):
     >>> y = np.array([1, 1, 0, 0, 1, 1])
     >>> agg_target = AggTarget(
     ...     main_key="company",
-    ...     operation=["mean", "max"],
+    ...     operations=["mean", "max"],
     ... )
     >>> agg_target.fit_transform(X, y)
-       flightId  from_airport  ...  y_0_max_target y_0_mean_target
-    0         1             1  ...               1        0.666667
-    1         2             1  ...               1        0.500000
-    2         3             1  ...               1        0.500000
-    3         4             2  ...               1        0.666667
-    4         5             2  ...               1        0.666667
-    5         6             2  ...               1        1.000000
+       flightId  from_airport  ...  y_0_mean_target  y_0_max_target
+    0         1             1  ...         0.666667               1
+    1         2             1  ...         0.500000               1
+    2         3             1  ...         0.500000               1
+    3         4             2  ...         0.666667               1
+    4         5             2  ...         0.666667               1
+    5         6             2  ...         1.000000               1
     """
 
     def __init__(
         self,
         main_key,
-        operation=None,
-        suffix=None,
+        operations,
+        *,
+        suffix="_target",
     ):
         self.main_key = main_key
-        self.operation = operation
+        self.operations = operations
         self.suffix = suffix
 
     def fit_transform(self, X, y):
-        """Aggregate the target ``y`` based on keys from ``X``.
+        """Aggregate the target `y` based on keys from `X`.
 
         Parameters
         ----------
@@ -421,52 +477,73 @@ class AggTarget(TransformerMixin, BaseEstimator):
             Must contains the columns names defined in `main_key`.
 
         y : DataFrameLike or SeriesLike or ArrayLike
-            `y` length must match `X` length, with matching indices.
+            `y` length must match `X` length.
             The target can be continuous or discrete, with multiple columns.
-
-            If the target is continuous, only numerical operations,
-            listed in `num_operations`, can be applied.
-
-            If the target is discrete, only categorical operations,
-            listed in `categ_operations`, can be applied.
-
-            Note that the target type is determined by
-            :func:`sklearn.utils.multiclass.type_of_target`.
 
         Returns
         -------
         Dataframe
             The augmented input.
         """
-        y_ = self.check_inputs(X, y)
         self._main_check_input = CheckInputDataFrame()
         X = self._main_check_input.fit_transform(X)
-        skrub_px, _ = get_df_namespace(X, y_)
+
+        self._main_key = np.atleast_1d(self.main_key).tolist()
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+
+        if sbd.is_dataframe(y):
+            y_ = y
+        # If `y` is a series, we convert it to a dataframe
+        elif sbd.is_column(y):
+            name = sbd.name(y) if sbd.name(y) else "y_0"
+            y_ = sbd.make_dataframe_like(y, {name: y})
+        elif isinstance(y, np.ndarray):
+            # 1d arrays need to be reshaped
+            if y.ndim == 1:
+                y = y.reshape(-1, 1)
+
+            cols = {f"y_{i}": y[:, i] for i in range(y.shape[1])}
+            y_ = sbd.make_dataframe_like(X, cols)
+        else:
+            raise TypeError(
+                f"`y` must be a dataframe, a series or a numpy array, got {y}."
+            )
+
+        # Check lengths
+        if sbd.shape(y_)[0] != sbd.shape(X)[0]:
+            raise ValueError(
+                f"X and y length must match, got {sbd.shape(X)[0]} and"
+                f" {sbd.shape(y_)[0]}."
+            )
+
+        self._cols = sbd.column_names(y_)
+
+        self._operations, self._suffix = check_other_inputs(
+            self.operations, self.suffix
+        )
 
         # Add the main key on the target
-        y_[self.main_key_] = X[self.main_key_]
+        y_ = sbd.with_columns(y_, **{k: sbd.col(X, k) for k in self._main_key})
 
-        num_operations, categ_operations = split_num_categ_operations(self.operation_)
-        self.y_ = skrub_px.aggregate(
+        self.aggregated_y_ = aggregate(
             y_,
-            key=self.main_key_,
-            cols_to_agg=self.cols_,
-            num_operations=num_operations,
-            categ_operations=categ_operations,
-            suffix=self.suffix_,
+            key=self._main_key,
+            cols_to_agg=self._cols,
+            operations=self._operations,
+            suffix=self._suffix,
         )
 
         result = _join_utils.left_join(
             X,
-            right=self.y_,
-            left_on=self.main_key_,
-            right_on=self.main_key_,
+            right=self.aggregated_y_,
+            left_on=self._main_key,
+            right_on=self._main_key,
         )
         self.all_outputs_ = sbd.column_names(result)
         return result
 
     def fit(self, X, y):
-        """Aggregate the target ``y`` based on keys from ``X``.
+        """Aggregate the target `y` based on keys from `X`.
 
         Parameters
         ----------
@@ -474,17 +551,8 @@ class AggTarget(TransformerMixin, BaseEstimator):
             Must contains the columns names defined in `main_key`.
 
         y : DataFrameLike or SeriesLike or ArrayLike
-            `y` length must match `X` length, with matching indices.
+            `y` length must match `X` length.
             The target can be continuous or discrete, with multiple columns.
-
-            If the target is continuous, only numerical operations,
-            listed in `num_operations`, can be applied.
-
-            If the target is discrete, only categorical operations,
-            listed in `categ_operations`, can be applied.
-
-            Note that the target type is determined by
-            :func:`sklearn.utils.multiclass.type_of_target`.
 
         Returns
         -------
@@ -495,96 +563,37 @@ class AggTarget(TransformerMixin, BaseEstimator):
         return self
 
     def transform(self, X):
-        """Left-join pre-aggregated table on `X`.
-
-        Parameters
-        ----------
-        X : DataFrameLike,
-            The input data to transform.
-
-        Returns
-        -------
-        X_transformed : DataFrameLike,
-            The augmented input.
-        """
-        check_is_fitted(self, "y_")
-        X = self._main_check_input.transform(X)
-
-        result = _join_utils.left_join(
-            X,
-            right=self.y_,
-            left_on=self.main_key_,
-            right_on=self.main_key_,
-        )
-        result = sbd.set_column_names(result, self.all_outputs_)
-        return result
-
-    def check_inputs(self, X, y):
-        """Perform a check on column names data type and suffixes.
+        """Left-join pre-aggregated target on `X`.
 
         Parameters
         ----------
         X : DataFrameLike
-            The raw input to check.
-        y : DataFrameLike or SeriesLike or ArrayLike
-            The raw target to check.
+            The input data to transform.
 
         Returns
         -------
-        y_ : DataFrameLike,
-            Transformation of the target.
+        X_transformed : DataFrameLike
+            The augmented input.
         """
-        if not hasattr(X, "__dataframe__"):
-            raise TypeError(f"X must be a dataframe, got {type(X)}")
+        check_is_fitted(self, "aggregated_y_")
+        X = self._main_check_input.transform(X)
 
-        self.main_key_ = atleast_1d_or_none(self.main_key)
+        result = _join_utils.left_join(
+            X,
+            right=self.aggregated_y_,
+            left_on=self._main_key,
+            right_on=self._main_key,
+        )
+        result = sbd.set_column_names(result, self.all_outputs_)
+        return result
 
-        self.suffix_ = "_target" if self.suffix is None else self.suffix
+    def get_feature_names_out(self):
+        """Get output feature names for transformation.
 
-        if not isinstance(self.suffix_, str):
-            raise ValueError(f"'suffix' must be a string, got {self.suffix_!r}")
-
-        _join_utils.check_missing_columns(X, self.main_key_, "'X' (the main table)")
-
-        # If y is not a dataframe, we convert it.
-        if hasattr(y, "__dataframe__"):
-            # Need to copy since we add columns in place
-            # during fit.
-            y_ = y.copy()
-        else:
-            y_ = np.atleast_2d(y)
-
-            # If y is Series or an array derived from a
-            # Series, we need to transpose it.
-            if len(y_) == 1 and len(y) != 1:
-                y_ = y_.T
-
-            _, px = get_df_namespace(X)
-            y_ = px.DataFrame(y_)
-
-            if hasattr(y, "name"):
-                # y is a Series
-                cols = [y.name]
-            else:
-                cols = [f"y_{col}" for col in y_.columns]
-            y_.columns = cols
-
-        # Check lengths
-        if y_.shape[0] != X.shape[0]:
-            raise ValueError(
-                f"X and y length must match, got {X.shape[0]} and {y_.shape[0]}."
-            )
-
-        self.cols_ = y_.columns
-
-        if self.operation is None:
-            y_type = type_of_target(y_)
-            if y_type in ["continuous", "continuous-multioutput"]:
-                operation = ["mean"]
-            else:
-                operation = ["mode"]
-        else:
-            operation = np.atleast_1d(self.operation).tolist()
-        self.operation_ = operation
-
-        return y_
+        Returns
+        -------
+        List of str
+            Transformed feature names.
+        """
+        check_is_fitted(self, "aggregated_y_")
+        return self.all_outputs_

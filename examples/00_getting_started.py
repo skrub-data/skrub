@@ -5,6 +5,7 @@ Getting Started
 This guide showcases the features of ``skrub``, an open-source package that aims at
 bridging the gap between tabular data sources and machine-learning models.
 
+
 Much of ``skrub`` revolves around vectorizing, assembling, and encoding tabular data,
 to prepare data in a format that shallow or classic machine-learning models understand.
 """
@@ -15,6 +16,19 @@ to prepare data in a format that shallow or classic machine-learning models unde
 #
 # The :obj:`~skrub.datasets` module allows us to download tabular datasets and
 # demonstrate ``skrub``'s features.
+#
+# .. note::
+#
+#    You can control the directory where the datasets are stored by:
+#
+#    - setting in your environment the ``SKRUB_DATA_DIRECTORY`` variable to an
+#      absolute directory path,
+#    - using the parameter ``data_directory`` in fetch functions, which takes
+#      precedence over the envar.
+#
+#    By default, the datasets are stored in a folder named "skrub_data" in the
+#    user home folder.
+
 
 # %%
 from skrub.datasets import fetch_employee_salaries
@@ -30,12 +44,15 @@ employees_df, salaries = dataset.X, dataset.y
 # Generating an interactive report for a dataframe
 # -------------------------------------------------
 #
+# The :class:`~skrub.Cleaner` allows to clean the
+# dataframe, parsing nulls, dates, and dropping columns with too many nulls.
 # To quickly get an overview of a dataframe's contents, use the
 # :class:`~skrub.TableReport`.
 
 # %%
-from skrub import TableReport
+from skrub import Cleaner, TableReport
 
+employees_df = Cleaner().fit_transform(employees_df)
 TableReport(employees_df)
 
 # %%
@@ -52,6 +69,20 @@ TableReport(employees_df)
 #    .. _example reports: https://skrub-data.org/skrub-reports/examples/
 #    .. _demo: https://skrub-data.org/skrub-reports/
 
+# %%
+# It is also possible to tell skrub to replace the default pandas & polars
+# displays with ``TableReport``.
+
+from skrub import patch_display, unpatch_display
+
+patch_display()
+
+employees_df
+
+# %%
+# The effect of ``patch_display`` can be undone with ``skrub.unpatch_display()``
+
+unpatch_display()
 
 # %%
 # Easily building a strong baseline for tabular machine learning
@@ -145,8 +176,8 @@ agg_joiner = AggJoiner(
     aux_table=flights,
     main_key="airport_id",
     aux_key="from_airport",
-    cols=["total_passengers", "company"],  # the cols to perform aggregation on
-    operations=["mean", "mode"],  # the operations to compute
+    cols=["total_passengers"],  # the cols to perform aggregation on
+    operations=["mean", "std"],  # the operations to compute
 )
 agg_joiner.fit_transform(airports)
 

@@ -22,6 +22,13 @@ import sys
 import warnings
 from datetime import datetime
 
+# Generate the table report html file for the homepage
+sys.path.append(os.path.relpath("."))
+from expression_report import create_expression_report
+from table_report import generate_demo
+
+generate_demo()
+
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
@@ -85,8 +92,9 @@ except ImportError:
     )
     with_jupyterlite = False
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+import sphinx_autosummary_accessors
+
+extensions.append("sphinx_autosummary_accessors")
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -139,7 +147,7 @@ todo_include_todos = False
 autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = ['_templates']
+templates_path = ["_templates", sphinx_autosummary_accessors.templates_path]
 
 autodoc_default_flags = ["members", "inherited-members"]
 
@@ -169,14 +177,24 @@ html_theme_options = {
     "header_links_before_dropdown": 4,
     "icon_links": [
         {
-            "name": "Twitter",
-            "url": "https://twitter.com/skrub_data",
-            "icon": "fa-brands fa-twitter",
-        },
-        {
             "name": "GitHub",
             "url": "https://github.com/skrub-data/skrub/",
             "icon": "fa-brands fa-github",
+        },
+        {
+            "name": "Discord",
+            "url": "https://discord.gg/ABaPnm7fDC",
+            "icon": "fa-brands fa-discord",
+        },
+        {
+            "name": "Bluesky",
+            "url": "https://bsky.app/profile/skrub-data.bsky.social",
+            "icon": "fa-brands fa-bluesky",
+        },
+        {
+            "name": "X (ex-Twitter)",
+            "url": "https://x.com/skrub_data",
+            "icon": "fa-brands fa-x-twitter",
         },
     ],
     # alternative way to set twitter and github header icons
@@ -188,9 +206,6 @@ html_theme_options = {
     "navbar_align": "left",
     # "navbar_center": ["version-switcher", "navbar-nav"],
     "navbar_center": ["navbar-nav"],
-    "announcement": (
-        "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/announcement.html"
-    ),
     # "show_nav_level": 2,
     # "navbar_start": ["navbar-logo"],
     "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
@@ -199,7 +214,13 @@ html_theme_options = {
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "footer_start": ["test.html", "test.html"],
-    # "secondary_sidebar_items": ["index.html"],  # Remove the source buttons
+    # When specified as a dictionary, the keys should follow glob-style patterns, as in
+    # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-exclude_patterns
+    # In particular, "**" specifies the default for all pages
+    # Use :html_theme.sidebar_secondary.remove: for file-wide removal
+    "secondary_sidebar_items": {
+        "**": ["page-toc", "sourcelink", "sg_download_links", "sg_launcher_links"]
+    },
     "switcher": {
         "json_url": (
             "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/version.json"
@@ -238,7 +259,9 @@ html_static_path = ["_static"]
 html_css_files = [
     "css/custom.css",
 ]
-html_js_files = []
+html_js_files = [
+    "scripts/sg_plotly_resize.js",
+]
 
 
 # Project logo, to place at the top of the sidebar.
@@ -324,8 +347,9 @@ intersphinx_mapping = {
     "mayavi": ("http://docs.enthought.com/mayavi/mayavi", None),
     "statsmodels": ("https://www.statsmodels.org/stable", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable", None),
-    "polars": ("https://pola-rs.github.io/polars/py-polars/html", None),
+    "polars": ("https://docs.pola.rs/py-polars/html", None),
     "seaborn": ("http://seaborn.pydata.org", None),
+    "sentence_transformers": ("https://sbert.net/", None),
 }
 
 
@@ -413,7 +437,7 @@ def notebook_modification_function(notebook_content, notebook_filename):
 
 sphinx_gallery_conf = {
     "doc_module": "skrub",
-    "backreferences_dir": os.path.join("generated"),
+    "backreferences_dir": os.path.join("reference/generated"),
     "reference_url": {
         # The module we locally document (so, skrub) uses None
         "skrub": None,
@@ -495,6 +519,7 @@ numpydoc_xref_aliases = {
     "Series": "pandas.Series",
     "pandas.Index": "pandas.Index",
     "read_csv": "pandas.read_csv",
+    "pandas.melt": "pandas.melt",
     "pandas.merge": "pandas.merge",
     # Skrub
     "fetch_ken_table_aliases": "skrub.datasets.fetch_ken_table_aliases",
@@ -512,8 +537,6 @@ numpydoc_xref_aliases = {
     "deduplicate": "skrub.deduplicate",
     "to_datetime": "skrub.to_datetime",
     "TableVectorizer": "skrub.TableVectorizer",
-    "DatasetInfoOnly": "skrub.datasets._fetching.DatasetInfoOnly",
-    "DatasetAll": "skrub.datasets._fetching.DatasetAll",
     "_replace_false_missing": "skrub._table_vectorizer._replace_false_missing",
 }
 numpydoc_xref_ignore = "all"
@@ -539,3 +562,5 @@ linkcode_resolve = make_linkcode_resolve(
 # -- Sphinx-Copybutton configuration -----------------------------------------
 copybutton_prompt_text = r">>> |\.\.\. |\$ "
 copybutton_prompt_is_regexp = True
+
+create_expression_report()

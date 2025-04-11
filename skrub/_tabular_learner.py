@@ -6,7 +6,9 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
+from ._datetime_encoder import DatetimeEncoder
 from ._minhash_encoder import MinHashEncoder
+from ._sklearn_compat import get_tags
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
@@ -27,11 +29,11 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Given a scikit-learn ``estimator``, this function creates a
     machine-learning pipeline that preprocesses tabular data to extract numeric
-    features and impute missing values if necessary, then applies the
+    features, impute missing values and scale the data if necessary, then applies the
     ``estimator``.
 
-    Instead of an actual estimator, ``estimator`` can also be the string
-    ``'regressor'`` or ``'classifier'`` to use a
+    Instead of an actual estimator, ``estimator`` can also be the special-cased strings
+    ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'`` to use a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or a
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default
     parameters.
@@ -61,14 +63,14 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Parameters
     ----------
-    estimator : {"regressor", "classifier"} or scikit-learn estimator
+    estimator : {"regressor", "regression", "classifier", "classification"} or scikit-learn estimator
         The estimator to use as the final step in the pipeline. Based on the type of
         estimator, the previous preprocessing steps and their respective parameters are
         chosen. The possible values are:
 
-        - ``'regressor'``: a :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`
+        - ``'regressor'`` or ``'regression'``: a :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`
           is used as the final step;
-        - ``'classifier'``: a :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
+        - ``'classifier'`` or ``'classification'``: a :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
           is used as the final step;
         - a scikit-learn estimator: the provided estimator is used as the final step.
 
@@ -106,24 +108,24 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     We can easily get a default pipeline for regression or classification:
 
-    >>> tabular_learner('regressor')                                    # doctest: +SKIP
+    >>> tabular_learner('regression')                                    # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality=MinHashEncoder(),
                                      low_cardinality=ToCategorical())),
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
 
-    When requesting a ``'regressor'``, the last step of the pipeline is set to a
+    When requesting a ``'regression'``, the last step of the pipeline is set to a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`.
 
-    >>> tabular_learner('classifier')                                   # doctest: +SKIP
+    >>> tabular_learner('classification')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality=MinHashEncoder(),
                                      low_cardinality=ToCategorical())),
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
 
-    When requesting a ``'classifier'``, the last step of the pipeline is set to a
+    When requesting a ``'classification'``, the last step of the pipeline is set to a
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`.
 
     This pipeline can be applied to rich tabular data:
@@ -155,7 +157,8 @@ def tabular_learner(estimator, *, n_jobs=None):
     >>> from sklearn.linear_model import LogisticRegression
     >>> model = tabular_learner(LogisticRegression())
     >>> model.fit(X, y)
-    Pipeline(steps=[('tablevectorizer', TableVectorizer()),
+    Pipeline(steps=[('tablevectorizer',
+                    TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
                     ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
@@ -174,13 +177,14 @@ def tabular_learner(estimator, *, n_jobs=None):
     The parameters of the :obj:`TableVectorizer` depend on the provided ``estimator``.
 
     >>> tabular_learner(LogisticRegression())
-    Pipeline(steps=[('tablevectorizer', TableVectorizer()),
+    Pipeline(steps=[('tablevectorizer',
+                    TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
                     ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
 
     We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get
-    the default configuration of the :obj:`TableVectorizer` which is intended
+    a configuration of the :obj:`TableVectorizer` which is intended
     to work well for a wide variety of downstream estimators. Moreover, as the
     :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing
     values, an imputation step is added. Finally, as many models require the
@@ -214,6 +218,8 @@ def tabular_learner(estimator, *, n_jobs=None):
       :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` recognizes them
       as such.
 
+    - There is no spline encoding of datetimes.
+
     - There is no missing-value imputation because the classifier has its own
       (better) mechanism for dealing with missing values.
 
@@ -227,18 +233,19 @@ def tabular_learner(estimator, *, n_jobs=None):
         cat_feat_kwargs = {"categorical_features": "from_dtype"}
 
     if isinstance(estimator, str):
-        if estimator == "classifier":
+        if estimator in ("classifier", "classification"):
             return tabular_learner(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
-        if estimator == "regressor":
+        if estimator in ("regressor", "regression"):
             return tabular_learner(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
         raise ValueError(
-            "If ``estimator`` is a string it should be 'regressor' or 'classifier'."
+            "If ``estimator`` is a string it should be 'regressor', 'regression',"
+            " 'classifier' or 'classification'."
         )
     if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
         raise TypeError(
@@ -262,13 +269,16 @@ def tabular_learner(estimator, *, n_jobs=None):
         )
     elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         vectorizer.set_params(
-            low_cardinality=OrdinalEncoder(),
+            low_cardinality=OrdinalEncoder(
+                handle_unknown="use_encoded_value",
+                unknown_value=-1,
+            ),
             high_cardinality=MinHashEncoder(),
         )
+    else:
+        vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))
     steps = [vectorizer]
-    if not hasattr(estimator, "_get_tags") or not estimator._get_tags().get(
-        "allow_nan", False
-    ):
+    if not get_tags(estimator).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
     if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         steps.append(StandardScaler())

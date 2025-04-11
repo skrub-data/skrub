@@ -1,11 +1,13 @@
 import collections
 import importlib
+import itertools
+import reprlib
 import secrets
 from typing import Iterable
 
 import numpy as np
 import sklearn
-from sklearn.base import clone
+from sklearn.base import BaseEstimator, clone
 from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
 
@@ -176,11 +178,61 @@ def renaming_func(renaming):
     return renaming
 
 
+class Repr(reprlib.Repr):
+    fillvalue = "..."
+
+    def repr_dict(self, x, level):
+        # (probably for historical reasons) reprlib sorts dict keys, destroying
+        # the actual order of the dictionary which is misleading.
+        # We adapt the stdlib implementation:
+        # https://github.com/python/cpython/blob/630dc2bd6422715f848b76d7950919daa8c44b99/Lib/reprlib.py#L156 # noqa
+        # to remove the sorting
+        n = len(x)
+        if n == 0:
+            return "{}"
+        if level <= 0:
+            return "{" + self.fillvalue + "}"
+        newlevel = level - 1
+        repr1 = self.repr1
+        pieces = []
+        for key in itertools.islice(x, self.maxdict):
+            keyrepr = repr1(key, newlevel)
+            valrepr = repr1(x[key], newlevel)
+            pieces.append("%s: %s" % (keyrepr, valrepr))
+        if n > self.maxdict:
+            pieces.append(self.fillvalue)
+
+        # in stdlib this line is:
+        # s = self._join(pieces, level)
+        # but we do not use indentation
+        # so we can just ', '.join to avoid using a private method
+        s = ", ".join(pieces)
+
+        return "{%s}" % (s,)
+
+
+class _ShortRepr(Repr):
+    def repr_instance(self, instance, level):
+        if hasattr(instance, "__skrub_short_repr__"):
+            return instance.__skrub_short_repr__()
+
+        r = repr(instance)
+        if "\n" in r or len(r) > 50:
+            return f"{instance.__class__.__name__}(...)"
+        return super().repr_instance(instance, level)
+
+
+def short_repr(obj):
+    r = _ShortRepr()
+    r.maxother = 50
+    return r.repr(obj)
+
+
 def repr_args(args, kwargs, defaults={}):
     return ", ".join(
-        [repr(a) for a in args]
+        [short_repr(a) for a in args]
         + [
-            f"{k}={v!r}"
+            f"{k}={short_repr(v)}"
             for k, v in kwargs.items()
             if k not in defaults or defaults[k] != v
         ]
@@ -191,11 +243,12 @@ def set_output(transformer, X):
     if not hasattr(transformer, "set_output"):
         return
     module_name = sbd.dataframe_module_name(X)
-    target_module = module_name
     if module_name == "polars" and parse_version(sklearn.__version__) < parse_version(
         "1.4"
     ):
         # TODO: remove when scikit-learn 1.3 support is dropped.
+        target_module = "pandas"
+    else:
         target_module = module_name
     try:
         transformer.set_output(transform=target_module)
@@ -273,3 +326,14 @@ def check_output(
             " for details."
         )
     raise TypeError(message)
+
+
+class PassThrough(BaseEstimator):
+    def fit(self, X, y=None):
+        return self
+
+    def fit_transform(self, X, y=None):
+        return X
+
+    def transform(self, X):
+        return X

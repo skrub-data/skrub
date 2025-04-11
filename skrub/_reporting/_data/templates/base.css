@@ -2,63 +2,76 @@
 /* -------------------------------- */
 
 :host {
-    --micro: 0.25rem;
-    --tiny: 0.5rem;
-    --small: 1.0rem;
-    --large: 1.2rem;
-    --huge: 1.5rem;
-    --max-content-width: 45rem;
-    --radius: 0.25rem;
-
-    --yellowish: #ffffaa;
-
-    --lightgreen: #eafaea;
-    --mediumgreen: #d6f5d6;
-    --darkgreen: 	#c1f0c1;
-    --verydarkgreen: #84e184;
-
-    --darkg: #555555;
-    --mediumg: #d0d0d0;
-    --lightg: #f0f0f0;
-
-    --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
-}
-
-:host {
-    font-size: 1rem;
-    line-height: 1.5;
+    font-size: var(--font-size-m);
+    line-height: var(--line-height);
     -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
 }
 
-
-/* The report is in a shadow DOM so outside selectors don't reach it but properties */
-/* can still be inherited from a parent element. We make sure it has black text on */
-/* a white background otherwise eg a dark mode in the page could make parts of it */
-/* unreadable. */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
 
 #report {
-    background: white;
-    color: black;
-    color-scheme: light;
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    color-scheme: light dark;
     border-radius: var(--radius, 0);
     max-width: max-content;
 }
 
+a:link {
+    color: var(--color-text-link);
+}
+
+a:visited {
+    color: var(--color-text-visited);
+}
+
 h1 {
-    font-size: var(--huge);
+    font-size: var(--font-size-xl);
+}
+
+button {
+    background: var(--color-background-button-primary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius);
+    padding: var(--spacing-s) var(--spacing-m);
+}
+
+button:hover {
+    background: var(--color-background-button-primary-hover);
+}
+
+button:active {
+    background: var(--color-background-button-primary-active);
 }
 
 button > * {
     pointer-events: none;
 }
 
+select {
+    background: var(--color-background-button-primary);
+    color: var(--color-text-primary);
+    box-shadow: none;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border-primary);
+}
+
+input[type="checkbox"] {
+    width: var(--font-size-s);
+}
+
 /* pure.css / Normalize.css overrides the default firefox blue ring around focussed */
 /* elements with something almost impossible to see, making it impossible to use */
 /* tab navigation. We revert it to the browser's appropriate default. */
-:focus-visible {
-    outline: revert !important;
+#report :focus-visible {
+    outline: revert;
 }
-
 
 :is(select, summary, button) {
     cursor: pointer;
@@ -69,8 +82,7 @@ summary > * {
 }
 
 p {
-    margin-block-start: var(--tiny);
-    margin-block-end: var(--tiny);
+    margin: var(--spacing-m) 0;
 }
 
 code {
@@ -81,13 +93,18 @@ pre {
     margin: 0;
 }
 
-code, pre {
-    font-family: var(--fontStack-monospace);
-    font-size: calc(0.9 * var(--small));
+code,
+pre {
+    font-family: var(--font-family-monospace);
+    font-size: var(--font-size-s);
 }
 
-:is(td, th) {
-    padding: var(--tiny);
+table {
+    font-size: var(--font-size-m);
+}
+
+#report :is(td, th) {
+    padding: var(--spacing-s) var(--spacing-m);
     white-space: nowrap;
 }
 
@@ -97,7 +114,7 @@ code, pre {
 dl {
     display: grid;
     grid-template-columns: max-content auto;
-    column-gap: var(--tiny);
+    column-gap: var(--spacing-m);
     margin: 0;
 }
 
@@ -120,11 +137,11 @@ dd {
 /* Generic utility classes */
 /* ----------------------- */
 
-:is([data-hidden], [data-excluded-by-column-filter]){
+:is([data-hidden], [data-excluded-by-column-filter]) {
     display: none !important;
 }
 
-[data-not-visible]{
+[data-not-visible] {
     visibility: hidden;
 }
 
@@ -132,17 +149,25 @@ dd {
     overflow-wrap: anywhere;
 }
 
-.margin-r-s {
-    margin-inline-end: var(--small);
+.margin-r-m {
+    margin-inline-end: var(--spacing-m);
 }
 
-.margin-r-t {
-    margin-inline-end: var(--tiny);
+.margin-v-m {
+    margin-block-start: var(--spacing-m);
+    margin-block-end: var(--spacing-m);
 }
 
-.margin-v-t {
-    margin-block-start: var(--tiny);
-    margin-block-end: var(--tiny);
+.margin-t-s {
+    margin-top: var(--spacing-s);
+}
+
+.margin-t-m {
+    margin-top: var(--spacing-m);
+}
+
+.padding-b-s {
+    padding-bottom: var(--spacing-s);
 }
 
 .horizontal-scroll {
@@ -158,22 +183,22 @@ dd {
 }
 
 .wrapper {
-    padding-inline-start: var(--small);
-    padding-inline-end: var(--small);
-    padding-block-end: var(--tiny);
+    padding-inline-start: var(--spacing-l);
+    padding-inline-end: var(--spacing-l);
+    padding-block-end: var(--spacing-m);
 }
 
-.wrapper-vert {
-    padding-block-end: var(--tiny);
+/* Special-case the article (container) */
+article.wrapper {
+    padding-block-end: 0;
 }
 
-.wrapper-vert-l {
-    padding-block-start: var(--large);
-    padding-block-end: var(--huge);
+.flow > * + * {
+    margin-top: var(--spacing-m);
 }
 
 .text {
-    max-width: var(--max-content-width);
+    max-width: 100%;
 }
 
 .shrink {
@@ -186,24 +211,23 @@ dd {
 }
 
 .shrinkable-text {
-    flex-basis: 20rem;
+    flex-basis: 20em;
     flex-grow: 1;
 }
 
 .flex {
     display: flex;
-    gap: var(--tiny);
+    gap: var(--spacing-m);
     align-items: center;
 }
 
 .gap-l {
-    gap: var(--large);
+    gap: var(--spacing-xl);
 }
 
 .flex-reverse {
     display: flex;
     flex-wrap: wrap-reverse;
-    row-gap: var(--tiny);
 }
 
 .space-between {
@@ -212,22 +236,20 @@ dd {
 
 .flex-wrap {
     flex-wrap: wrap;
-    padding-block-start: var(--tiny);
-    padding-block-end: var(--tiny);
 }
 
 .flex-wrap > * {
     margin: 0;
 }
 
-#report .ellided {
+#report .elided {
     max-width: 70ch;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-#report .ellided-short {
+#report .elided-short {
     max-width: 30ch;
     overflow: hidden;
     white-space: nowrap;
@@ -243,36 +265,84 @@ dd {
 }
 
 .ok {
-    color: green;
+    color: var(--color-text-success);
 }
 
 .warning {
-    color: #ff6600;
+    color: var(--color-text-warning);
 }
 
 .critical {
-    color: red;
+    color: var(--color-text-critical);
+}
+
+.box-shadow {
+    box-shadow: 0.3px 0.5px 0.7px var(--color-shadow),
+        0.8px 1.6px 2px -0.8px var(--color-shadow),
+        2.1px 4.1px 5.2px -1.7px var(--color-shadow),
+        5px 10px 12.6px -2.5px var(--color-shadow);
 }
 
 /* Misc tweaks */
 /* ----------- */
 
-
-.report-header {
-    --max-content-width: 100rem;
-    font-size: var(--large);
+#report {
+    padding-top: var(--spacing-s);
 }
 
-.announcement  {
-    font-size: var(--small);
-    padding-block-start: var(--small);
-    padding-block-end: var(--small);
+#report svg {
+    max-width: 100%;
+}
+
+.report-header {
+    font-size: var(--font-size-l);
+    padding-block-start: var(--spacing-s);
+    padding-block-end: var(--spacing-s);
+}
+
+.report-header > h1 {
+    margin: 0;
 }
 
 .important-note {
-    background-color: var(--lightgreen);
-    padding: var(--small);
+    background-color: var(--color-background-highlight-primary);
+    padding: var(--spacing-m);
     border-radius: var(--radius);
-    margin-top: var(--tiny);
-    margin-bottom: var(--small);
+}
+
+.alert-info-dismissable {
+    position: relative;
+    padding: var(--spacing-m);
+    background-color: var(--color-background-info);
+    border-color: var(--color-border-info);
+    color: var(--color-text-info);
+    border-radius: var(--radius);
+    margin-bottom: var(--spacing-m);
+}
+
+.alert-dismiss-button {
+    height: var(--button-size-xs);
+    width: var(--button-size-xs);
+
+    padding: var(--spacing-s);
+    border: none;
+    border-radius: var(--radius);
+    background-color: var(--color-background-button-secondary);
+
+    transition: background-color var(--animation-duration)
+        var(--animation-easing);
+}
+
+.alert-dismiss-button:hover {
+    background-color: var(--color-background-button-tertiary-hover);
+}
+
+.alert-dismiss-button:active {
+    background-color: var(--color-background-button-secondary-active);
+}
+
+.alert-dismiss-button svg {
+    fill: var(--color-text-info);
+    stroke: var(--color-text-info);
+    stroke-width: var(--border-s);
 }

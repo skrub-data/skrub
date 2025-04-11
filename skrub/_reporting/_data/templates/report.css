@@ -1,13 +1,12 @@
 {% include "pure-3.0.0/base-min.css" %}
-{% include "pure-3.0.0/tables-min.css" %}
 
+{% include "_variables.css" %}
 {% include "base.css" %}
+{% include "tables.css" %}
 {% include "copybutton.css" %}
 {% include "column-summaries.css" %}
 {% include "dataframe-sample.css" %}
+{% include "summary-statistics.css" %}
 {% include "tabs.css" %}
-{% include "tooltip.css" %}
-
-{% if is_inline_report %}
-{% include "inline-report.css" %}
-{% endif %}
+{% include "toggletip.css" %}
+{% include "column-filter.css" %}

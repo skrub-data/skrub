@@ -1,27 +1,45 @@
 {% import "buttons.html" as buttons %}
 
-<article class="wrapper"
-         data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
-         data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
-    <div class="flex wrapper-vert">
+<article class="wrapper margin-t-s flow" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
+    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED"
+    {% if summary.plots_skipped %}data-plots-skipped{% endif %}>
+    <div class="flex flex-wrap">
         <div class="box">
-        <pre id="selected-columns-display" data-manager="SelectedColumnsDisplay"></pre>
-        {{ buttons.copybutton("selected-columns-display") }}
+            <pre id="selected-columns-display" data-manager="SelectedColumnsDisplay"></pre>
+            {{ buttons.copybutton("selected-columns-display") }}
         </div>
+	<div class="flex flex-wrap toggletip-wrapper column-selection-buttons">
+	    <div class="toggletip" data-manager="Toggletip">
+		<button type="button"><span>i</span></button>
+		<div class="toggletip-info box-shadow">
+		    To construct a list of column names that you can easily copy-paste
+		    (in the box), select some columns using the checkboxes next
+		    to the column names or the "Select all" button.
+		</div>
+	    </div>
+	    <button type="button" data-test="select-all-columns" data-manager="SelectAllVisibleColumns">Select all</button>
+	    <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
+	</div>
     </div>
-    <button type="button"
-            class="margin-r-s"
-            data-test="deselect-all-columns"
-            data-manager="DeselectAllColumns">Deselect all</button>
-    <button type="button"
-            data-test="select-all-columns"
-            data-manager="SelectAllVisibleColumns">Select all</button>
 
-    <div class="column-summary-group">
-        {% for column in summary.columns %}
-        {% set col_id="col_{}".format(loop.index0) %}
-        {% include "column-summary.html" %}
-        {% endfor %}
+    {% if summary.plots_skipped %}
+    <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between"
+        data-manager="AlertDismissable">
+        <div class="alert-content shrinkable-text">
+            Plotting was skipped because the dataframe has many columns.
+            See TableReport's <code>max_plot_columns</code> parameter.
+        </div>
+        {{buttons.dismissbutton()}}
+    </div>
+    {% endif %}
+
+    <div class="horizontal-scroll padding-b-s">
+	<div class="column-summary-group">
+	    {% for column in summary.columns %}
+	    {% set col_id="col_{}".format(column["idx"]) %}
+	    {% include "column-summary.html" %}
+	    {% endfor %}
+	</div>
     </div>
 </article>
 

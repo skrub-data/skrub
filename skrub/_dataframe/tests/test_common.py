@@ -6,7 +6,7 @@ in ``skrub.conftest``. See the corresponding docstrings for details.
 import inspect
 import re
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import partial
 
 import numpy as np
@@ -228,12 +228,36 @@ def test_to_column_list(df_module, example_data_dict):
         ns.to_column_list(None)
 
 
+def test_to_column_list_duplicate_columns(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    df.columns = ["a", "a"]
+    col_list = ns.to_column_list(df)
+    assert ns.name(col_list[0]) == "a"
+    assert ns.to_list(col_list[0]) == [1, 2]
+    assert ns.name(col_list[1]) == "a"
+    assert ns.to_list(col_list[1]) == [3, 4]
+
+
 def test_collect(df_module):
     assert ns.collect(df_module.example_dataframe) is df_module.example_dataframe
     if df_module.name == "polars":
         df_module.assert_frame_equal(
             ns.collect(df_module.example_dataframe.lazy()), df_module.example_dataframe
         )
+
+
+def test_col(df_module):
+    assert ns.to_list(ns.col(df_module.example_dataframe, "float-col"))[0] == 4.5
+
+
+def test_col_by_idx(df_module):
+    assert ns.name(ns.col_by_idx(df_module.example_dataframe, 2)) == "float-col"
+
+
+def test_col_by_idx_duplicate_columns(pd_module):
+    df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
+    df.columns = ["a", "a"]
+    assert ns.to_list(ns.col_by_idx(df, 0)) == [1, 2]
 
 
 #
@@ -476,19 +500,25 @@ def test_to_datetime(df_module):
     s = df_module.make_column("", ["01/02/2020", "02/01/2021", "bad"])
     with pytest.raises(ValueError):
         ns.to_datetime(s, "%m/%d/%Y", True)
-    df_module.assert_column_equal(
-        ns.to_datetime(s, "%m/%d/%Y", False),
-        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None]),
+    assert ns.to_list(ns.to_datetime(s, "%m/%d/%Y", False)) == ns.to_list(
+        df_module.make_column("", [datetime(2020, 1, 2), datetime(2021, 2, 1), None])
     )
-    df_module.assert_column_equal(
-        ns.to_datetime(s, "%d/%m/%Y", False),
-        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None]),
+    assert ns.to_list(ns.to_datetime(s, "%d/%m/%Y", False)) == ns.to_list(
+        df_module.make_column("", [datetime(2020, 2, 1), datetime(2021, 1, 2), None])
     )
     dt_col = ns.col(df_module.example_dataframe, "datetime-col")
     assert ns.to_datetime(dt_col, None) is dt_col
     s = df_module.make_column("", ["2020-01-01 04:00:00+02:00"])
     dt = ns.to_datetime(s, "%Y-%m-%d %H:%M:%S%z")
     assert str(dt[0]) == "2020-01-01 02:00:00+00:00"
+
+
+def test_is_duration(df_module):
+    df = df_module.make_dataframe(
+        {"a": [timedelta(days=1)], "b": [datetime(2020, 3, 4)]}
+    )
+    assert ns.is_duration(ns.col(df, "a"))
+    assert not ns.is_duration(ns.col(df, "b"))
 
 
 def test_is_categorical(df_module):
@@ -531,6 +561,33 @@ def test_to_categorical(df_module):
 
         assert s.dtype == pd.CategoricalDtype(pd.Series(list("ab")).astype("string"))
         assert list(s.cat.categories) == list("ab")
+
+
+def test_is_all_null(df_module):
+    """Check that is_all_null is evaluating null counts correctly."""
+
+    # Check that all null columns are marked as "all null"
+    assert ns.is_all_null(df_module.make_column("all_null", [None, None, None]))
+    assert ns.is_all_null(df_module.make_column("all_nan", [np.nan, np.nan, np.nan]))
+    assert ns.is_all_null(
+        df_module.make_column("all_nan_or_null", [np.nan, np.nan, None])
+    )
+
+    # Check that the other columns are *not* marked as "all null"
+    assert not ns.is_all_null(
+        df_module.make_column("almost_all_null", ["almost", None, None])
+    )
+    assert not ns.is_all_null(
+        df_module.make_column("almost_all_nan", [2.5, None, None])
+    )
+
+
+def test_is_all_null_polars(pl_module):
+    """Special case for polars: column is full of nulls, but doesn't have dtype Null"""
+    col = pl_module.make_column("col", [1, None, None])
+    col = col[1:]
+
+    assert ns.is_all_null(col)
 
 
 # Inspecting, selecting and modifying values
@@ -583,8 +640,8 @@ def test_max(df_module):
 
 
 def test_std(df_module):
-    assert ns.std(df_module.example_column) == np.nanstd(
-        ns.to_numpy(df_module.example_column), ddof=1
+    assert float(ns.std(df_module.example_column)) == pytest.approx(
+        float(np.nanstd(ns.to_numpy(df_module.example_column), ddof=1))
     )
 
 
@@ -592,6 +649,16 @@ def test_mean(df_module):
     assert ns.mean(df_module.example_column) == np.nanmean(
         ns.to_numpy(df_module.example_column)
     )
+
+
+def test_corr(df_module):
+    df = df_module.example_dataframe
+
+    # Make sure we use Pandas to compute Pearson's correlation.
+    expected_corr = ns.to_pandas(df).corr(numeric_only=True)
+    corr = ns.copy_index(expected_corr, ns.to_pandas(ns.pearson_corr(df)))
+
+    pd.testing.assert_frame_equal(corr, expected_corr)
 
 
 @pytest.mark.parametrize(
@@ -721,6 +788,24 @@ def test_where(df_module):
     )
 
 
+def test_where_row(df_module):
+    df = df_module.make_dataframe({"col1": [1, 2, 3], "col2": [1000, 2000, 3000]})
+    out = ns.where_row(
+        df,
+        df_module.make_column("", [False, True, False]),  # mask
+        df_module.make_column(
+            "", [None, None, None]
+        ),  # values to put in on the entire row
+    )
+    right = df_module.make_dataframe(
+        {"col1": [None, 2, None], "col2": [None, 2000, None]}
+    )
+    df_module.assert_frame_equal(
+        ns.pandas_convert_dtypes(out),
+        ns.pandas_convert_dtypes(right),
+    )
+
+
 def test_sample(df_module):
     s = ns.pandas_convert_dtypes(df_module.make_column("", [0, 1, 2]))
     sample = ns.sample(s, 2)
@@ -794,3 +879,15 @@ def test_with_columns(df_module):
         out = ns.pandas_convert_dtypes(out)
     expected = df_module.make_dataframe({"a": [5, 6], "b": [3, 4]})
     df_module.assert_frame_equal(out, expected)
+
+
+def test_abs(df_module):
+    s = df_module.make_column("", [-1.0, 2.0, None])
+    df_module.assert_column_equal(
+        ns.abs(s), df_module.make_column("", [1.0, 2.0, None])
+    )
+
+
+def test_total_seconds(df_module):
+    s = df_module.make_column("", [timedelta(seconds=20), timedelta(hours=1)])
+    assert ns.to_list(ns.total_seconds(s)) == [20, 3600]

@@ -100,7 +100,7 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.fit_transform(pd.to_datetime(pd.Series(['2020-02-02'])))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert None with dtype 'datetime64[ns]' to strings.
+    skrub._on_each_column.RejectColumn: Refusing to convert None with dtype 'datetime64[...]' to strings.
 
     However, once a column has been accepted, the output of ``transform`` will
     always be strings:

@@ -1,0 +1,116 @@
+.summary-stats-table {
+  margin: var(--border-m);
+
+  /* "collapse" prevents reliably showing the right border of the sticky
+       column when it overlaps others */
+  border-collapse: separate;
+
+  /* Avoid a border twice as thick on the left of the table due to separate
+       border (there is already a left border on the table cells). */
+  border-left: none;
+}
+
+.relative {
+  position: relative;
+}
+#report .summary-stats-table thead th {
+  background-color: var(--color-background-quaternary);
+}
+/* pure.css puts the border on the left of each cell, but we want one on the
+   right of the second column which will overlap other columns. */
+#report .summary-stats-table tr > :is(th, td):nth-child(3) {
+  border-left: none;
+}
+
+/* Make the second column sticky and allow it to overlap others. */
+#report .summary-stats-table tr > :is(th, td):nth-child(2) {
+  /* We allow part of the column to be hidden to save space; seeing the end of
+       the column name should be enough to recognize to which column a row
+       belongs. */
+  --left-overlap: calc(4 * var(--base-size));
+
+  position: sticky;
+  left: calc(-1 * var(--left-overlap));
+  z-index: 10;
+
+  text-align: right;
+  max-width: calc(min(30ch, var(--left-overlap) + 40vw));
+
+  border-right: var(--border-s) solid var(--color-border-secondary);
+  /* shadow not visible unless part of the table is actually hidden */
+  box-shadow: 0 0 0 0 var(--color-shadow);
+  transition: box-shadow var(--animation-duration) var(--animation-easing);
+}
+
+/* Draw a larger & darker border when the 2nd column is overlapping others. */
+#report
+  [data-is-scrolling]
+  > .summary-stats-table
+  tr
+  > :is(th, td):nth-child(2) {
+  box-shadow: 2px 0 0 0 var(--color-shadow);
+  transition: box-shadow var(--animation-duration) var(--animation-easing);
+}
+
+/* Elements in the 2nd column should have an opaque background as they overlap
+   others. */
+#report .summary-stats-table tr > th:nth-child(2) {
+  background-color: var(--color-background-quaternary);
+}
+#report .summary-stats-table tr > td:nth-child(2) {
+  background-color: var(--color-background-primary);
+}
+
+#report th.sort-button-group-wrapper {
+  --btn-width: var(--button-size-m);
+  --btn-group-width: calc(var(--btn-width) * 2);
+  position: relative;
+  padding-top: var(--spacing-s);
+  padding-bottom: var(--spacing-s);
+  padding-right: calc(var(--spacing-m) + var(--btn-group-width));
+}
+
+.sort-button-group {
+    position: absolute;
+    top: 0;
+    bottom: var(--border-s);
+    right: calc(-1 * var(--btn-group-width));
+    left: 100%;
+    transform: translateX(calc(-1 * var(--btn-group-width)));
+    display: flex;
+    gap: 0;
+    padding: 0;
+}
+
+.sort-button {
+  box-sizing: border-box;
+  height: 100%;
+  flex-grow: 1;
+  margin: 0;
+  padding: var(--spacing-s);
+  border-radius: 0;
+  border: var(--border-s) solid var(--color-border-primary);
+  background-color: var(--color-background-button-primary);
+  color: var(--color-text-secondary);
+}
+
+.sort-button-group > .sort-button:focus-visible {
+  z-index: 2;
+}
+
+.sort-button-group > .sort-button ~ .sort-button {
+    margin-left: calc(-1 * var(--border-s));
+}
+
+.sort-button:hover {
+  background-color: var(--color-background-button-primary-hover);
+}
+
+.sort-button:active {
+  background-color: var(--color-background-button-primary-active);
+}
+
+.sort-button[data-is-active]{
+    background: var(--color-background-button-secondary-active);
+    color: var(--color-text-primary);
+}

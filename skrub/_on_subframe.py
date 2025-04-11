@@ -43,7 +43,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
         passed through.
 
     rename_columns : str, default='{}'
-        Format strings applied to all transformation ouput column names. For
+        Format strings applied to all transformation output column names. For
         example pass ``'transformed_{}'`` to prepend ``'transformed_'`` to all
         output column names. The default value does not modify the names.
         Renaming is not applied to columns not selected by ``cols``.

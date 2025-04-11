@@ -1,5 +1,8 @@
 import base64
 import json
+import numbers
+import re
+import unicodedata
 
 import numpy as np
 
@@ -26,51 +29,66 @@ def _to_dict_polars(df):
     return df.to_dict(as_series=False)
 
 
-def first_row_dict(dataframe):
-    first_row = sbd.slice(dataframe, 0, 1)
-    return {col_name: col[0] for col_name, col in to_dict(first_row).items()}
-
-
-def to_row_list(dataframe):
-    columns = to_dict(dataframe)
-    rows = []
-    for row_idx in range(sbd.shape(dataframe)[0]):
-        rows.append([col[row_idx] for col in columns.values()])
-    return {"header": list(columns.keys()), "data": rows}
-
-
 def top_k_value_counts(column, k):
     counts = sbd.value_counts(column)
     n_unique = sbd.shape(counts)[0]
     counts = sbd.sort(counts, by="count", descending=True)
     counts = sbd.slice(counts, k)
-    return n_unique, dict(zip(*to_dict(counts).values()))
+    return n_unique, list(zip(*to_dict(counts).values()))
 
 
 def quantiles(column):
     return {q: sbd.quantile(column, q) for q in [0.0, 0.25, 0.5, 0.75, 1.0]}
 
 
-def ellide_string(s, max_len=100):
-    if not isinstance(s, str):
-        return s
+def ellide_string(s, max_len=30):
+    """Shorten a string so it can be used as a plot axis title or label."""
+    s = str(s)
+
+    # normalize whitespace
+    s = re.sub(r"\s+", " ", s)
     if len(s) <= max_len:
         return s
-    if max_len < 30:
-        return s[:max_len] + "…"
-    shown_len = max_len - 30
-    truncated = len(s) - shown_len
-    return s[:shown_len] + f"[…{truncated} more chars]"
+    shown_text = s[:max_len].strip()
+    ellipsis = "…"
+    end = ""
 
+    # The ellipsis, like most punctuation, is a neutral character (it has no
+    # writing direction). As here it is the last character in the sentence, its
+    # direction will be that of the paragraph and it might be displayed on the
+    # wrong side of the text (eg on the right, at the beginning of the text
+    # rather than the end, if the text is written in a right-to-left script).
+    # As a simple heuristic to correct this, we force the ellipsis to have the
+    # same direction as the last character before the truncation. This is done
+    # by appending a mark (a zero-width space with the writing direction we
+    # want, so that the ellipsis is enclosed between 2 strong characters with
+    # the same direction and thus inherits that direction).
 
-def ellide_string_short(s):
-    return ellide_string(s, 29)
+    if shown_text:
+        direction = unicodedata.bidirectional(shown_text[-1])
+        if direction in [
+            "R",
+            "RLE",
+            "RLO",
+            "RLI",
+        ]:
+            # RIGHT-TO-LEFT MARK
+            end = "\u200f"
+        elif direction in ["AL"]:
+            # ARABIC LETTER MARK
+            end = "\u061c"
+        elif direction in ["L", "LRE", "LRO", "LRI"]:
+            # LEFT-TO-RIGHT MARK
+            end = "\u200e"
+    return shown_text + ellipsis + end
 
 
 def format_number(number):
-    if not isinstance(number, float):
-        return str(number)
-    return f"{number:#.3g}"
+    if isinstance(number, numbers.Integral):
+        return f"{number:,}"
+    if isinstance(number, numbers.Real):
+        return f"{number:#.3g}"
+    return str(number)
 
 
 def format_percent(proportion):
@@ -84,42 +102,6 @@ def svg_to_img_src(svg):
     return f"data:image/svg+xml;base64,{encoded_svg}"
 
 
-def _pandas_filter_equal_snippet(value, column_name):
-    if value is None:
-        return f"df.loc[df[{column_name!r}].isnull()]"
-    return f"df.loc[df[{column_name!r}] == {value!r}]"
-
-
-def _pandas_filter_isin_snippet(values, column_name):
-    return f"df.loc[df[{column_name!r}].isin({list(values)!r})]"
-
-
-def _polars_filter_equal_snippet(value, column_name):
-    if value is None:
-        return f"df.filter(pl.col({column_name!r}).is_null())"
-    return f"df.filter(pl.col({column_name!r}) == {value!r})"
-
-
-def _polars_filter_isin_snippet(values, column_name):
-    return f"df.filter(pl.col({column_name!r}).is_in({list(values)!r}))"
-
-
-def filter_equal_snippet(value, column_name, dataframe_module="polars"):
-    if dataframe_module == "polars":
-        return _polars_filter_equal_snippet(value, column_name)
-    if dataframe_module == "pandas":
-        return _pandas_filter_equal_snippet(value, column_name)
-    return f"Unknown dataframe library: {dataframe_module}"
-
-
-def filter_isin_snippet(values, column_name, dataframe_module="polars"):
-    if dataframe_module == "polars":
-        return _polars_filter_isin_snippet(values, column_name)
-    if dataframe_module == "pandas":
-        return _pandas_filter_isin_snippet(values, column_name)
-    return f"Unknown dataframe library: {dataframe_module}"
-
-
 class JSONEncoder(json.JSONEncoder):
     def default(self, value):
         try:
@@ -130,3 +112,28 @@ class JSONEncoder(json.JSONEncoder):
             if isinstance(value, np.floating):
                 return float(value)
             raise
+
+
+def duration_to_numeric(col):
+    seconds = sbd.total_seconds(col)
+    q = sbd.quantile(sbd.abs(seconds), 0.9)
+    HOUR = 3600
+    DAY = HOUR * 24
+    YEAR = DAY * 365.2425
+    if q < 1e-3:
+        return seconds * 1e6, "microsecond"
+    if q < 1.0:
+        return seconds * 1e3, "millisecond"
+    if q < HOUR:
+        return seconds, "second"
+    if q < DAY:
+        return seconds / HOUR, "hour"
+    if q < YEAR:
+        return seconds / DAY, "day"
+    return seconds / YEAR, "year"
+
+
+def strip_xml_declaration(svg):
+    svg = re.sub(r"<\?xml.*?\?>", "", svg, flags=re.DOTALL)
+    svg = re.sub(r"<!DOCTYPE.*?>", "", svg, flags=re.DOTALL)
+    return svg

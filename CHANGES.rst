@@ -9,19 +9,336 @@ Release history
 Ongoing development
 ===================
 
-Skrub is a very recent package.
-It is currently undergoing fast development and backward compatibility is not ensured.
+New features
+------------
+
+The skrub expressions are new mechanism for building machine-learning pipelines
+that handle multiple tables and easily describing their hyperparameter spaces.
+See :ref:`the examples <expressions_examples_ref>` for an introduction.
+:pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of work from other
+contributors is not directly visible on the pull request page: :user:`Vincent
+Maladiere <Vincent-Maladiere>` provided very important help by trying the
+expressions on many use-cases and datasets, providing feedback and suggesting
+improvements, improving the examples (including creating all the figures in the
+examples) and adding jitter to the parallel coordinate plots, :user:`Riccardo
+Cappuzzo<rcap107>` experimented with the expressions, suggested improvements and
+improved the examples, :user:`Gaël Varoquaux <gaelvaroquaux>` , :user:`Guillaume
+Lemaitre <glemaitre>`, :user:`Adrin Jalali <adrinjalali>`, :user:`Olivier Grisel
+<ogrisel>` and others participated through many discussions in defining the
+requirements and the public API.
+
+Changes
+-------
+
+Bugfixes
+--------
+
+
+Release 0.5.3
+=============
+
+Changes
+-------
+
+- The :class:`SimpleCleaner` has been renamed to :class:`Cleaner`. Use of the
+  name :class:`SimpleCleaner` is deprecated and will result in an error in some
+  future release of skrub. :pr:`1275` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- A new parameter ``max_plot_columns`` has been added to the
+  :class:`TableReport` and :func:`patch_display` to skip column plots when the
+  number of columns exceeds the specified value. :pr:`1255` by :user:`Priscilla
+  Baah<priscilla-b>`.
+
+
+Release 0.5.2
+=============
+
+New features
+------------
+
+- The :class:`TableReport` now switches its visual theme between light and dark according to the user preferences.
+  :pr:`1201` by :user:`rouk1 <rouk1>`.
+
+- Adding a new way to control the location of the data directory, using envar ``SKRUB_DATA_DIRECTORY``.
+  :pr:`1215` by :user:`Thomas S. <thomass-dev>`
+
+- The :class:`DatetimeEncoder` now supports periodic encoding of datetime features
+  with trigonometric functions and B-splines transformers.
+  :pr:`1235` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The :class:`TableReport` now also compute Pearson's correlation for numeric values.
+  :pr:`1203` by :user:`Reshama Shaikh <reshamas>` and
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- The :class:`SimpleCleaner` is now available (⚠️ it was renamed to
+  :class:`Cleaner` in skrub ``0.5.3``.). This transformer is a lightweight
+  pre-processor that applies some of the transformations applied by the
+  :class:`TableVectorizer`, with a simpler interface. :pr:`1266` by
+  :user:`Riccardo Cappuzzo<rcap107>` and :user:`Jerome Dockes <jeromedockes>` .
+
+Changes
+-------
+
+- The estimator returned by :func:`tabular_learner` now uses spline encoding of
+  datetime features when the supervised learner is not a model based on decision
+  trees such as random forests or gradient boosting. :pr:`1264` by
+  :user:`Guillaume Lemaitre <glemaitre>`.
+
+- The "distribution" tab of the ``TableReport`` now stacks cards horizontally to avoid adding
+  vertical space.
+  :pr:`1259` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+- Progress messages when generating a ``TableReport`` are now written to stderr instead of stdout.
+  :pr:`1236` by :user:`Priscilla Baah<priscilla-b>`
+
+- Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
+  :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
+=======
+Bug fixes
+---------
+- :class:`StringEncoder` now works correctly in presence of null values.
+  :pr:`1224` by :user:`Jérôme Dockès <jeromedockes>`.
+
+- The :meth:`TableVectorizer.get_feature_names_out` method now works when used in a
+  scikit-learn pipeline by exposing the `input_features` parameter.
+  :pr:`1258` by :user:`Guillaume Lemaitre <glemaitre>`.
+
+
+Release 0.5.1
+=============
+
+New features
+------------
+* The :class:`StringEncoder` encodes strings using tf-idf and truncated SVD
+  decomposition and provides a cheaper alternative to :class:`GapEncoder`.
+  :pr:`1159` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Changes
+-------
+* New dataset fetching methods have been added: :func:`fetch_videogame_sales`,
+  :func:`fetch_bike_sharing`, :func:`fetch_flight_delays`,
+  :func:`fetch_country_happiness`, and removed :func:`fetch_road_safety`.
+  :pr:`1218` by :user:`Vincent Maladiere <Vincent-Maladiere>`
+
+Bug fixes
+---------
+
+Maintenance
+-----------
+
+Release 0.4.1
+=============
+
+Changes
+-------
+* :class: `TableReport` has `write_html` method
+  :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
+
+* A new parameter ``verbose`` has been added to the :class:`TableReport` to toggle on or off the
+  printing of progress information when a report is being generated.
+  :pr:`1182` by :user:`Priscilla Baah<priscilla-b>`.
+
+* A parameter ``verbose`` has been added to the :func:`patch_display` to toggle on or off the
+  printing of progress information when a table report is being generated.
+  :pr:`1188` by :user:`Priscilla Baah<priscilla-b>`.
+
+* :func:`tabular_learner` accepts the alias ``"regression"`` for the option
+  ``"regressor"`` and ``"classification"`` for ``"classifier"``.
+  :pr:`1180` by :user:`Mojdeh Rastgoo <mrastgoo>`.
+
+Bug fixes
+---------
+* Generating a ``TableReport`` could have an effect on the matplotib
+  configuration which could cause plots not to display inline in jupyter
+  notebooks any more. This has been fixed in skrub in :pr:`1172` by
+  :user:`Jérôme Dockès <jeromedockes>` and the matplotlib issue can be tracked
+  `here <https://github.com/matplotlib/matplotlib/issues/25041>`_.
+
+* The labels on bar plots in the ``TableReport`` for columns of object dtypes
+  that have a repr spanning multiple lines could be unreadable. This has been
+  fixed in :pr:`1196` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* Improve the performance of :func:`deduplicate` by removing some unnecessary
+  computations. :pr:`1193` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Maintenance
+-----------
+* Make ``skrub`` compatible with scikit-learn 1.6.
+  :pr:`1169` by :user:`Guillaume Lemaitre <glemaitre>`.
+
+Release 0.4.0
+=============
+
+Highlights
+----------
+* The :class:`TextEncoder` can extract embeddings from a string column with  a deep
+  learning language model (possibly downloaded from the HuggingFace Hub).
+
+* Several improvements to the :class:`TableReport` such as better support for
+  other scripts than the latin alphabet in the bar plot labels, smaller report
+  sizes, clipping the outliers to better see the details of distributions in
+  histograms. See the full changelog for details.
+
+* The :class:`TableVectorizer` can now drop columns that contain a fraction of
+  null values above a user-chosen threshold.
+
+New features
+------------
+* The :class:`TextEncoder` is now available to encode string columns with
+  diverse entries.
+  It allows the representation of table entries as embeddings computed by a deep
+  learning language model. The weights of this model can be fetched locally
+  or from the HuggingFace Hub.
+  :pr:`1077` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+* The :func:`column_associations` function has been added. It computes a
+  pairwise measure of statistical dependence between all columns in a dataframe
+  (the same as shown in the :class:`TableReport`). :pr:`1109` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
+* The :func:`patch_display` function has been added. It changes the display of
+  pandas and polars dataframes in jupyter notebooks to replace them with a
+  :class:`TableReport`. This can be undone with :func:`unpatch_display`.
+  :pr:`1108` by :user:`Jérôme Dockès <jeromedockes>`
 
 Major changes
 -------------
+* :class:`AggJoiner`, :class:`AggTarget` and :class:`MultiAggJoiner` now require
+  the `operations` argument. They do not split columns by type anymore, but
+  apply `operations` on all selected cols. "median" is now supported, "hist" and
+  "value_counts" are no longer supported. :pr:`1116` by :user:`Théo Jolivet <TheooJ>`.
 
+* The :class:`AggTarget` no longer supports `y` inputs of type list. :pr:`1116`
+  by :user:`Théo Jolivet <TheooJ>`.
 
 Minor changes
 -------------
+
+* The column filter selection dropdown in the tablereport is smaller and its
+  label has been removed to save space. :pr:`1107` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+
+* The TableReport now uses the font size of its parent element when inserted
+  into another page. This makes it smaller in pages that use a smaller font size
+  than the browser default such as VSCode in some configurations. It also makes
+  it easier to control its size when inserting it in a web page by setting the
+  font size of its parent element. A few other small adjustments have also been
+  made to make it a bit more compact. :pr:`1098` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+
+* Display of labels in the plots of the TableReport, especially for other
+  scripts than the latin alphabet, has improved.
+
+  - before, some characters could be missing and replaced by empty boxes.
+  - before, when the text is truncated, the ellipsis "..." could appear on the
+    wrong side for right-to-left scripts.
+
+  Moreover, when the text contains line breaks it now appears all on one line.
+  Note this only affects the labels in the plots; the rest of the report did not
+  have these problems.
+  :pr:`1097` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`1138` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* In the TableReport it is now possible, before clicking any of the cells, to
+  reach the dataframe sample table and activate a cell with tab key navigation.
+  :pr:`1101` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The "Column name" column of the "summary statistics" table in the TableReport
+  is now always visible when scrolling the table. :pr:`1102` by :user:`Jérôme
+  Dockès <jeromedockes>`.
+
+* Added parameter `drop_null_fraction` to `TableVectorizer` to drop columns based
+  on whether they contain a fraction of nulls larger than the given threshold.
+  :pr:`1115` and :pr:`1149` by :user:`Riccardo Cappuzzo <rcap107>`.
+
+* The :class:`TableReport` now provides more helpful output for columns of dtype
+  TimeDelta / Duration. :pr:`1152` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The :class:`TableReport` now also reports the number of unique values for
+  numeric columns. :pr:`1154` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The :class:`TableReport`, when plotting histograms, now detects outliers and
+  clips the range of data shown in the histogram. This allows seeing more detail
+  in the shown distribution. :pr:`1157` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Bug fixes
+---------
+
+* The :class:`TableReport` could raise an exception when one of the columns
+  contained datetimes with time zones and missing values; this has been fixed in
+  :pr:`1114` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* In scikit-learn versions older than 1.4 the :class:`TableVectorizer` could
+  fail on polars dataframes when used with the default parameters. This has been
+  fixed in :pr:`1122` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The :class:`TableReport` would raise an exception when the input (pandas)
+  dataframe contained several columns with the same name. This has been fixed in
+  :pr:`1125` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The :class:`TableReport` would raise an exception when a column contained
+  infinite values. This has been fixed in :pr:`1150` by :user:`Jérôme Dockès
+  <jeromedockes>` and :pr:`1151` by Jérôme Dockès.
+
+Release 0.3.1
+=============
+
+Minor changes
+-------------
+
+* For tree-based models, :func:`tabular_learner` now adds
+  `handle_unknown='use_encoded_value'` to the `OrdinalEncoder`, to avoid
+  errors with new categories in the test set. This is consistent with the
+  setting of `OneHotEncoder` used by default in the
+  :class:`TableVectorizer`. :pr:`1078` by :user:`Gaël Varoquaux <gaelvaroquaux>`
+
 * The reports created by :class:`TableReport`, when inserted in an html page (or
   displayed in a notebook), now use the same font as the surrounding page.
   :pr:`1038` by :user:`Jérôme Dockès <jeromedockes>`.
 
+* The content of the dataframe corresponding to the currently selected table
+  cell in the TableReport can be copied without actually selecting the text (as
+  in a spreadsheet).
+  :pr:`1048` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The selection of content displayed in the TableReport's copy-paste boxes has
+  been removed. Now they always display the value of the selected item. When
+  copied, the repr of the selected item is copied to the clipboard.
+  :pr:`1058` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* A "stats" panel has been added to the TableReport, showing summary statistics
+  for all columns (number of missing values, mean, etc. -- similar to
+  ``pandas.info()`` ) in a table. It can be sorted by each column.
+  :pr:`1056` and :pr:`1068` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The credit fraud dataset is now available with the
+  :func:`fetch_credit_fraud function`.
+  :pr:`1053` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+* Added zero padding for column names in :class:`MinHashEncoder` to improve column ordering consistency.
+  :pr:`1069` by :user:`Shreekant Nandiyawar <Shree7676>`.
+
+* The selection in the TableReport's sample table can now be manipulated with
+  the keyboard. :pr:`1065` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* The ``TableReport`` now displays the pandas (multi-)index, and has a better
+  display & interaction of pandas columns when the columns are a MultiIndex.
+  :pr:`1083` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* It is possible to control the number of rows displayed by the TableReport in
+  the "sample" tab panel by specifying ``n_rows``.
+  :pr:`1083` by :user:`Jérôme Dockès <jeromedockes>`.
+
+* the `TableReport` used to raise an exception when the dataframe contained
+  unhashable types such as python lists. This has been fixed in :pr:`1087` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+
+* Display's columns name with the HTML representation of the fitted TableVectorizer.
+  This has been fixed in :pr:`1093` by :user:`Shreekant Nandiyawar <Shree7676>`.
+
+* AggTarget will now work even when y is a Series and not raise any error.
+  This has been fixed in :pr:`1094` by :user:`Shreekant Nandiyawar <Shree7676>`.
 
 Release 0.3.0
 =============
@@ -310,7 +627,7 @@ Minor changes
 * :class:`TableVectorizer` never output a sparse matrix by default. This can be changed by
   increasing the `sparse_threshold` parameter. :pr:`646` by :user:`Leo Grinsztajn <LeoGrin>`
 
-* :class:`TableVectorizer` doesn't fail anymore if an infered type doesn't work during transform.
+* :class:`TableVectorizer` doesn't fail anymore if an inferred type doesn't work during transform.
   The new entries not matching the type are replaced by missing values. :pr:`666` by :user:`Leo Grinsztajn <LeoGrin>`
 
 - Dataset fetcher :func:`datasets.fetch_employee_salaries` now has a parameter

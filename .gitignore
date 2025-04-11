@@ -66,6 +66,7 @@ doc/RELEASE_PROCESS.rst
 doc/CONTRIBUTING.rst
 doc/sg_execution_times.rst
 .DS_Store
+doc/_templates/demo_table_report_generated.html
 
 # Pkl files for benchmarks
 benchmarks/*.pkl
@@ -75,3 +76,8 @@ jupyterlite_contents
 
 # Pixi folder
 .pixi/
+
+# python virtual environment
+.venv
+venv
+env_skrub

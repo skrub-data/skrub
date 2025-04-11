@@ -1,0 +1,16 @@
+.column-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-m);
+    align-items: flex-end;
+    margin-bottom: var(--spacing-s);
+    margin-left: var(--spacing-m);
+    margin-right: var(--spacing-s);
+}
+
+.column-filter > select {
+    max-width: 16ch;
+    text-overflow: ellipsis;
+    padding: var(--spacing-xs) var(--spacing-s);
+    font-size: var(--font-size-s);
+}

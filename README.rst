@@ -32,7 +32,7 @@ The goal of skrub is to bridge the gap between tabular data sources and machine-
 
 skrub provides high-level tools for joining dataframes (``Joiner``, ``AggJoiner``, ...),
 encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeline
-(``TableVectorizer``, ``tabular_learner``, ...), and more.
+(``TableVectorizer``, ``tabular_learner``, ...), and exploring interactively your data (``TableReport``).
 
 >>> from skrub.datasets import fetch_employee_salaries
 >>> dataset = fetch_employee_salaries()
@@ -69,5 +69,8 @@ The best way to support the development of skrub is to spread the word!
 Also, if you already are a skrub user, we would love to hear about your use cases and challenges in the `Discussions <https://github.com/skrub-data/skrub/discussions>`_ section.
 
 To report a bug or suggest enhancements, please
-`open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_ and/or
-`submit a pull request <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.
+`open an issue <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>`_.
+
+If you want to contribute directly to the library, then check the
+`how to contribute <https://skrub-data.org/stable/CONTRIBUTING.html>`_ page on
+the website for more information.

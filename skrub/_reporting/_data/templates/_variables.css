@@ -1,0 +1,133 @@
+/**
+ * All variables are centralized here.
+ * This opens a possibility to create themes.
+ *
+ * A note on variable naming convention:
+ * Proposal here is to use a consistent pattern: --what-where-variation-interactivity
+ * `what` could be colors for now but may scale to sizes
+ * `where` defines in which css rules the variable should be used (background for background, text for font color, ...)
+ * `variation` values may be variable according to context a title may not have exactly the same color as a subtitle for example
+ * `interactivity` value on hover for example
+ */
+
+:host {
+    --base-size: 1em;
+
+    /* typography */
+    --font-size-xs: calc(0.8 * var(--base-size));
+    --font-size-s: calc(0.9 * var(--base-size));
+    --font-size-m: var(--base-size);
+    --font-size-l: calc(1.2 * var(--base-size));
+    --font-size-xl: calc(1.5 * var(--base-size));
+    --line-height: 1.5;
+    --font-family-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo,
+        Consolas, "DejaVu Sans Mono", Liberation Mono, monospace;
+
+    /* buttons */
+    --button-size-xs: calc(1.6 * var(--base-size));
+    --button-size-s: calc(1.8 * var(--base-size));
+    --button-size-m: calc(2.0 * var(--base-size));
+
+    /* spacings */
+    --spacing-xs: calc(0.125 * var(--base-size));
+    --spacing-s: calc(0.25 * var(--base-size));
+    --spacing-m: calc(0.5 * var(--base-size));
+    --spacing-l: calc(1 * var(--base-size));
+    --spacing-xl: calc(1.2 * var(--base-size));
+    --spacing-xxl: calc(1.5 * var(--base-size));
+
+    /* strokes & radii */
+    --border-s: 1px;
+    --border-m: 2px;
+    --radius: var(--spacing-s);
+
+    /* branding */
+    --color-branding-orange: #f89939;
+    --color-branding-blue: #3499cd;
+
+    /* animations */
+    --animation-duration: 0.3s;
+    --animation-easing: ease;
+}
+
+#report.light {
+    /* backgrounds */
+    --color-background-primary: white;
+    --color-background-secondary: #f0f0f0;
+    --color-background-tertiary: #fafafa;
+    --color-background-quaternary: #d2d2d2;
+    --color-background-highlight-primary: #d6f5d6;
+    --color-background-active: #ffffaa;
+    --color-background-info: #0f4e9b;
+    --color-background-card: #f5fff5;
+    --color-background-card-header: #d6f5d6;
+
+    /* buttons */
+    --color-background-button-primary: #e0e0e0;
+    --color-background-button-primary-hover: #eee;
+    --color-background-button-primary-active: #ccc;
+    --color-background-button-secondary: transparent;
+    --color-background-button-secondary-hover: #84e184;
+    --color-background-button-secondary-active: #eafaea;
+    --color-background-button-tertiary-hover: #0c3e7c;
+
+    /* texts */
+    --color-text-primary: black;
+    --color-text-secondary: #555;
+    --color-text-success: #006600;
+    --color-text-info: white;
+    --color-text-warning: #ff6600;
+    --color-text-critical: #dd0000;
+    --color-text-link: #0000ee;
+    --color-text-visited: #551a8b;
+
+    /* borders */
+    --color-border-primary: #aaa;
+    --color-border-secondary: #bfbfbf;
+    --color-border-card: #9fce9f;
+
+    /* shadows */
+    --color-shadow: hsl(0, 0%, 63%);
+    --color-shadow-keyboard: var(--color-border-secondary);
+}
+
+#report.dark {
+    /* backgrounds */
+    --color-background-primary: #202020;
+    --color-background-secondary: #242424;
+    --color-background-tertiary: #2b2b2b;
+    --color-background-quaternary: #353535;
+    --color-background-highlight-primary: #512ca4;
+    --color-background-active: #1A6154;
+    --color-background-info: #0f4e9b;
+    --color-background-card-header: #392662;
+    --color-background-card: #2c2833;
+
+    /* buttons */
+    --color-background-button-primary: #212121;
+    --color-background-button-primary-hover: #313131;
+    --color-background-button-primary-active: #353535;
+    --color-background-button-secondary: transparent;
+    --color-background-button-secondary-hover: #457b9d;
+    --color-background-button-secondary-active: #1d3557;
+    --color-background-button-tertiary-hover: #0c3e7c;
+
+    /* texts */
+    --color-text-primary: white;
+    --color-text-secondary: #d4d4d4;
+    --color-text-success: #6ED8CC;
+    --color-text-info: white;
+    --color-text-warning: #E8B254;
+    --color-text-critical: #F4A4A4;
+    --color-text-link: #8c8cff;
+    --color-text-visited: #ffadff;
+
+    /* borders */
+    --color-border-primary: #666;
+    --color-border-secondary: #444;
+    --color-border-card: #6549a1;
+
+    /* shadows */
+    --color-shadow: #0f0f0f;
+    --color-shadow-keyboard: var(--color-border-secondary);
+}

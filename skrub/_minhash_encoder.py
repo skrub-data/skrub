@@ -2,6 +2,7 @@
 Implements the MinHashEncoder, which encodes string categorical features by
 applying the MinHash method to n-gram decompositions of strings.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -77,6 +78,8 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         continuous encoding.
     SimilarityEncoder
         Encode string columns as a numeric array with n-gram string similarity.
+    StringEncoder
+        Fast n-gram encoding of string columns.
     deduplicate
         Deduplicate data by hierarchically clustering similar strings.
 
@@ -300,4 +303,8 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         """
 
         check_is_fitted(self)
-        return [f"{self._input_name}_{i}" for i in range(self.n_components)]
+        num_digits = len(str(self.n_components - 1))
+        return [
+            f"{self._input_name}_{str(i).zfill(num_digits)}"
+            for i in range(self.n_components)
+        ]

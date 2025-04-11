@@ -1,6 +1,7 @@
 """
 Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -26,7 +27,7 @@ from ._utils import unique_strings
 class GapEncoder(
     _SkrubHTMLDocumentationLinkMixin, TransformerMixin, SingleColumnTransformer
 ):
-    """Constructs latent topics with continuous encoding.
+    """Encode string columns by constructing latent topics.
 
     This encoder can be understood as a continuous encoding on a set of latent
     categories estimated from the data. The latent categories are built by
@@ -133,6 +134,10 @@ class GapEncoder(
         Encode string columns as a numeric array with the minhash method.
     SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
+    TextEncoder :
+        Encode string columns with a pretrained language model.
+    StringEncoder
+        Fast n-gram encoding of string columns.
     deduplicate :
         Deduplicate data by hierarchically clustering similar strings.
 
@@ -160,7 +165,7 @@ class GapEncoder(
     >>> enc.get_feature_names_out()
     ['city: england, london, uk', 'city: france, paris, pqris']
 
-    It got it right, reccuring topics are "London" and "England" on the
+    It got it right, reoccurring topics are "London" and "England" on the
     one side and "Paris" and "France" on the other.
 
     As this is a continuous encoding, we can look at the level of

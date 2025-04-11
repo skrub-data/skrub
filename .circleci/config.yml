@@ -16,7 +16,7 @@ jobs:
           key: saved-cache
       - run:
           command: ./build_tools/circle/build_doc.sh
-          no_output_timeout: 40m
+          no_output_timeout: 30m
       - store_artifacts:
           path: doc/_build/html
           destination: doc

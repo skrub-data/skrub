@@ -4,14 +4,14 @@
          {% include "report.css" %}
         </style>
         <div id="report">
+            {% if summary.title %}
             <div class="report-header wrapper text">
-                {% if summary.title %}
                 <h1>{{ summary.title }}</h1>
-                {% endif %}
             </div>
+            {% endif %}
 
             {% if summary.dataframe_is_empty  %}
-            <div class="text announcement wrapper">
+            <div class="text wrapper">
                 The dataframe is empty.
             </div>
             {% else %}
@@ -23,11 +23,8 @@
     <skrub-table-report class="report" id="{{ report_id }}">
     </skrub-table-report>
 
-    <script>
+    <script type="module">
      {% include "report.js" %}
-    </script>
-    <script>
-     setTimeout(() => {initReport("{{ report_id }}");});
     </script>
 </div>
 
