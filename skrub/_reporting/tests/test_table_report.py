@@ -23,6 +23,7 @@ def test_report(air_quality):
         }
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
+    assert report.max_association_columns == 30
     html = report.html()
     assert "the title" in html
     assert "With nulls" in html
@@ -45,7 +46,6 @@ def test_report(air_quality):
     data = json.loads(report.json())
     assert data["title"] == "the title"
     assert report._get_summary()["title"] == "the title"
-    del report._summary_with_plots
     assert report._get_summary()["title"] == "the title"
     snippet = report._repr_mimebundle_()["text/html"]
     report_id = get_report_id(snippet)

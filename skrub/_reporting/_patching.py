@@ -11,7 +11,7 @@ def _stashed_name(method_name):
     return f"_skrub_{method_name}"
 
 
-def _patch(cls, method_name, verbose, max_plot_columns):
+def _patch(cls, method_name, verbose, max_plot_columns, max_association_columns):
     if (original_method := getattr(cls, method_name, None)) is None:
         return
     stashed_name = _stashed_name(method_name)
@@ -21,7 +21,12 @@ def _patch(cls, method_name, verbose, max_plot_columns):
         cls,
         method_name,
         lambda df: getattr(
-            TableReport(df, verbose=verbose, max_plot_columns=max_plot_columns),
+            TableReport(
+                df,
+                verbose=verbose,
+                max_plot_columns=max_plot_columns,
+                max_association_columns=max_association_columns,
+            ),
             method_name,
         )(),
     )
@@ -55,7 +60,9 @@ def _get_to_patch(pandas, polars):
     return to_patch
 
 
-def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=30):
+def patch_display(
+    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
+):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
 
     This function replaces the HTML displays (what is shown when an object is
@@ -79,6 +86,11 @@ def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=30):
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
+    max_association_columns : int, default=30
+        Maximum number of columns for which associations should be computed.
+        If the number of columns in the dataframe is greater than this value,
+        the associations will not be computed. If None, the associations
+        for all columns will be computed.
 
     See Also
     --------
@@ -93,6 +105,7 @@ def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=30):
         _get_to_patch(pandas=pandas, polars=polars),
         verbose=verbose,
         max_plot_columns=max_plot_columns,
+        max_association_columns=max_association_columns,
     )
 
 
