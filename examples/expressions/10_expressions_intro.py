@@ -9,8 +9,8 @@ and for which a skrub pipeline is a solution:
 
 - **Multiple tables:** having several tables of different shapes (for example,
 "Customers", "Orders" and "Products" tables). Not suitable for scikit-learn
-estimators, expecting a single design matrix ``X`` and array of targets ``y`` with one row
-per observation.
+estimators, expecting a single design matrix ``X`` and array of targets ``y``
+with one row per observation.
 
 - **DataFrame wrangling:** performing typical dataframe operations
 such as projections, joins and aggregations leveraging the powerful APIs of
@@ -162,8 +162,8 @@ products
 # %%
 # We see previews of the output of intermediate results. For
 # example, the added ``"total_price"`` column is in the output above.
-# The "Show graph" dropdown at the top allows us to check the structure of the pipeline and
-# all the steps it contains.
+# The "Show graph" dropdown at the top allows us to check the
+# structure of the pipeline and all the steps it contains.
 #
 # With skrub, we do not need to specify a grid of hyperparameters separately
 # from the pipeline. Instead, we replace a parameter's value with a skrub
@@ -252,11 +252,11 @@ search.results_
 # %%
 # We can also display a parallel coordinates plot of the results.
 #
-# In a parallel coordinates plot, each line corresponds to a combination of hyperparameter
-# (choices) values, followed by the corresponding test scores, and training
-# and scoring computation durations. 
-# Different columns show the hyperparameter values. 
-# 
+# In a parallel coordinates plot, each line corresponds to a combination
+# of hyperparameter (choices) values, followed by the corresponding test
+# scores, and training and scoring computation durations.
+# Different columns show the hyperparameter values.
+#
 # By clicking and dragging the mouse on any column, we can restrict the
 # set of lines we see. This allows quickly inspecting which hyperparameters are
 # important, which values perform best, and potential trade-offs between the quality
