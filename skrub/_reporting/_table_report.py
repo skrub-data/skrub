@@ -121,6 +121,7 @@ class TableReport:
         column_filters=None,
         verbose=1,
         max_plot_columns=30,
+        max_association_columns=30,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
@@ -134,31 +135,38 @@ class TableReport:
         self.dataframe = dataframe
         self.verbose = verbose
         self.max_plot_columns = max_plot_columns
+        self.max_association_columns = max_association_columns
+        self.n_columns = sbd.shape(self.dataframe)[1]
+
+        if self.max_plot_columns is None:
+            self.max_plot_columns = self.n_columns
+        if self.max_association_columns is None:
+            self.max_association_columns = self.n_columns
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
 
     @functools.cached_property
-    def _summary_with_plots(self):
-        return summarize_dataframe(
-            self.dataframe, with_plots=True, title=self.title, **self._summary_kwargs
-        )
+    def _lightify_summary(self):
+        if self.max_plot_columns >= self.n_columns:
+            with_plots = True
+        else:
+            with_plots = False
+        if self.max_association_columns >= self.n_columns:
+            with_associations = True
+        else:
+            with_associations = False
 
-    @functools.cached_property
-    def _summary_without_plots(self):
         return summarize_dataframe(
-            self.dataframe, with_plots=False, title=self.title, **self._summary_kwargs
+            self.dataframe,
+            with_plots=with_plots,
+            with_associations=with_associations,
+            title=self.title,
+            **self._summary_kwargs,
         )
 
     def _get_summary(self):
-        if self.max_plot_columns is None:
-            summary = self._summary_with_plots
-        elif self.max_plot_columns >= sbd.shape(self.dataframe)[1]:
-            summary = self._summary_with_plots
-        else:
-            summary = self._summary_without_plots
-
-        return summary
+        return self._lightify_summary
 
     def html(self):
         """Get the report as a full HTML page.
@@ -197,9 +205,7 @@ class TableReport:
             The JSON data.
         """
         to_remove = ["dataframe", "sample_table"]
-        data = {
-            k: v for k, v in self._summary_without_plots.items() if k not in to_remove
-        }
+        data = {k: v for k, v in self._lightify_summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
 
     def _repr_mimebundle_(self, include=None, exclude=None):
