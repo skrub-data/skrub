@@ -735,45 +735,58 @@ class ParamSearch(BaseEstimator):
         return (table, metadata) if return_metadata else table
 
     def plot_results(self, *, colorscale=DEFAULT_COLORSCALE, min_score=None):
-        """Create a parallel coordinate plot of the cross-validation results.
+    """Create a parallel coordinate plot of the cross-validation results.
 
-        Plotly must be installed to use this method.
+    Plotly must be installed to use this method.
 
-        Parameters
-        ----------
-        colorscale : str, optional
-            A colorscale name understood by plotly.
+    Parameters
+    ----------
+    colorscale : str, optional
+        A colorscale name understood by plotly.
 
-        min_score : float, optional
-            Lines for models that have a score lower than ``min_score`` are not
-            displayed, and the color scale lower bound is adjusted accordingly.
-            This is useful when we are only interested in the models that
-            perform well, to make the plot less cluttered and to make better
-            use of the colorscale's range.
+    min_score : float, optional
+        Lines for models that have a score lower than ``min_score`` are not
+        displayed, and the color scale lower bound is adjusted accordingly.
+        This is useful when we are only interested in the models that
+        perform well, to make the plot less cluttered and to make better
+        use of the colorscale's range.
 
-        Returns
-        -------
-        Plotly Figure
-        """
-        cv_results, metadata = self._get_cv_results_table(
-            return_metadata=True, detailed=True
-        )
-        cv_results = cv_results.drop(
-            [
-                "std_test_score",
-                "std_fit_time",
-                "std_score_time",
-                "mean_train_score",
-                "std_train_score",
-            ],
-            axis="columns",
-            errors="ignore",
-        )
-        if min_score is not None:
-            cv_results = cv_results[cv_results["mean_test_score"] >= min_score]
-        if not cv_results.shape[0]:
-            raise ValueError("No results to plot")
-        return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
+    Returns
+    -------
+    Plotly Figure
+    """
+    cv_results, metadata = self._get_cv_results_table(
+        return_metadata=True, detailed=True
+    )
+
+    # Drop unnecessary columns
+    cv_results = cv_results.drop(
+        [
+            "std_test_score",
+            "std_fit_time",
+            "std_score_time",
+            "mean_train_score",
+            "std_train_score",
+        ],
+        axis="columns",
+        errors="ignore",
+    )
+
+    # Filter results based on min_score
+    if min_score is not None:
+        cv_results = cv_results[cv_results["mean_test_score"] >= min_score]
+    if not cv_results.shape[0]:
+        raise ValueError("No results to plot")
+
+    # Separate parameter columns and reported value columns
+    param_columns = metadata["log_scale_columns"]
+    report_columns = [col for col in cv_results.columns if col not in param_columns]
+
+    # Reorder columns: parameters first, then reported values
+    cv_results = cv_results[param_columns + report_columns]
+
+    # Create and return the plot
+    return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
 
 
 class _XyParamSearch(_XyEstimatorMixin, ParamSearch):
