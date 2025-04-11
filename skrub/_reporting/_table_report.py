@@ -47,6 +47,11 @@ class TableReport:
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
+    max_association_columns : int, default=30
+        Maximum number of columns for which associations should be computed.
+        If the number of columns in the dataframe is greater than this value,
+        the associations will not be computed. If None, the associations
+        for all columns will be computed.
 
     See Also
     --------
