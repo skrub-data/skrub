@@ -45,7 +45,6 @@ def test_report(air_quality):
     data = json.loads(report.json())
     assert data["title"] == "the title"
     assert report._get_summary()["title"] == "the title"
-    del report._summary_with_plots
     assert report._get_summary()["title"] == "the title"
     snippet = report._repr_mimebundle_()["text/html"]
     report_id = get_report_id(snippet)
