@@ -343,6 +343,7 @@ def fetch_ken_table_aliases():
     --------
     Let's see what are the current KEN subtables available
     for download:
+
     >>> sorted(fetch_ken_table_aliases())
     ['albums', 'all_entities', 'companies', 'games', 'movies', 'schools']
     """

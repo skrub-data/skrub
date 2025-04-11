@@ -24,5 +24,4 @@ coverage:
         threshold: 1%
 
 ignore:
-  - "skrub/_check_dependencies.py"
   - "**/setup.py"

@@ -31,8 +31,6 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "skrub._table_vectorizer.SuperVectorizer.fit",
     "skrub._table_vectorizer.SuperVectorizer.set_params",
     "skrub._table_vectorizer.SuperVectorizer.named_transformers_",
-    # The following are internal functions
-    "skrub._check_dependencies.check_dependencies",
 }
 
 

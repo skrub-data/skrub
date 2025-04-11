@@ -30,6 +30,9 @@ requirements and the public API.
 Changes
 -------
 
+- The `packaging` dependency was removed.
+  :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 Bugfixes
 --------
 
