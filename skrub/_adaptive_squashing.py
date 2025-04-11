@@ -194,17 +194,3 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
         result = sbd.copy_index(X, result)
 
         return result
-
-
-if __name__ == "__main__":
-    import numpy as np
-    import pandas as pd
-
-    from skrub import AdaptiveSquashingTransformer
-
-    tfm = AdaptiveSquashingTransformer()
-    X = pd.Series(
-        [-np.inf, -100.0, 0.0, 8.0, 9.0, 10.0, 20.0, 100.0, np.inf, np.nan],
-        name="improvement",
-    )
-    tfm.fit_transform(X)
