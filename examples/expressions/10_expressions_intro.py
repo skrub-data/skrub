@@ -2,33 +2,10 @@
 Building complex tabular pipelines
 ==================================
 
-Skrub provides an easy way to build complex, flexible machine-learning
-pipelines. It solves several problems that are not easily addressed with the
-standard scikit-learn tools such as the ``Pipeline`` and ``ColumnTransformer``.
-
-**Multiple tables:** we have several tables of different shapes (for example,
-we may have "Customers", "Orders" and "Products" tables). But scikit-learn
-estimators expect a single design matrix ``X`` and array of targets ``y`` with one row
-per observation.
-
-**DataFrame wrangling:** we need to easily perform typical dataframe operations
-such as projections, joins and aggregations leveraging the powerful APIs of
-``pandas`` or ``polars``.
-
-**Iterative development:** we want to build a pipeline step by step, while
-inspecting the intermediate results so that the feedback loop is short and
-errors are discovered early.
-
-**Hyperparameter tuning:** many choices such as estimators, hyperparameters,
-even the architecture of the pipeline can be informed by validation scores.
-Specifying the grid of hyperparameters separately from the model (as in
-``GridSearchCV``) is very difficult for complex pipelines.
-
-Skrub can help us tackle these challenges. In this example, we show a pipeline
-to handle a dataset with 2 tables. Despite being very simple, this pipeline
-would be difficult to implement, validate and deploy correctly without skrub.
-We show the script with minimal comments to motivate the tools that are
-explained in detail in subsequent examples.
+In this example, we show a pipeline to handle a dataset with 2 tables.
+Despite being very simple, this pipeline would be difficult to implement, validate
+and deploy correctly without skrub. We show the script with minimal comments to
+motivate the tools that are explained in detail in subsequent examples.
 
 """
 
