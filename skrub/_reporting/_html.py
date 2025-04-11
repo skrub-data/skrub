@@ -82,11 +82,12 @@ def _get_column_filters(summary):
             "columns": list(range(10)),
         }
 
-    if "high_association" in summary.keys():
+    if "top_associations" in summary.keys():
         filters["high_association"] = {
             "columns": _get_high_association_columns(summary),
             "display_name": _FILTER_NAMES["high_association"],
         }
+
     all_selectors = []
     for selector in [
         s.has_nulls(),
