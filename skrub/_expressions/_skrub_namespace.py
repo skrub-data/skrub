@@ -1,5 +1,6 @@
 import typing
 
+import pandas as pd
 from sklearn import model_selection
 
 from .. import selectors as s
@@ -1364,7 +1365,7 @@ class SkrubNamespace:
 
         Returns
         -------
-        dict
+        pandas.DataFrame
             Cross-validation results.
 
         Examples
@@ -1389,7 +1390,7 @@ class SkrubNamespace:
         if environment is None:
             environment = self.get_data()
 
-        return cross_validate(self.get_estimator(), environment, **kwargs)
+        return pd.DataFrame(cross_validate(self.get_estimator(), environment, **kwargs))
 
     @check_expr
     def mark_as_X(self):
