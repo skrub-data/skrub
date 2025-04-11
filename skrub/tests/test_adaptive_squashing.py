@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 
 from skrub import _dataframe as sbd
+from skrub._adaptive_squashing import AdaptiveSquashingTransformer
 from skrub._dataframe._common import _set_index
 from skrub._on_each_column import RejectColumn
-from skrub.adaptive_squashing import AdaptiveSquashingTransformer
 
 
 @pytest.mark.parametrize(
@@ -22,8 +22,12 @@ from skrub.adaptive_squashing import AdaptiveSquashingTransformer
 @pytest.mark.parametrize(
     "params",
     [
-        dict(squash_threshold=3.0, lower_quantile=0.25, upper_quantile=0.75),
-        dict(squash_threshold=5.0, lower_quantile=0.1, upper_quantile=0.6),
+        dict(
+            max_absolute_value=3.0, lower_quantile_alpha=0.25, upper_quantile_alpha=0.75
+        ),
+        dict(
+            max_absolute_value=5.0, lower_quantile_alpha=0.1, upper_quantile_alpha=0.6
+        ),
     ],
 )
 def test_adaptive_squashing_output(df_module, values, dtype, params):
@@ -68,7 +72,10 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             median = np.median(finite_values)
             quantiles = [
                 np.quantile(finite_values, q)
-                for q in [params["lower_quantile"], params["upper_quantile"]]
+                for q in [
+                    params["lower_quantile_alpha"],
+                    params["upper_quantile_alpha"],
+                ]
             ]
             if quantiles[1] == quantiles[0]:
                 min = np.min(finite_values)
@@ -84,19 +91,19 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             scale = 1.0
 
         for part in ["train", "test"]:
-            squash_threshold = params["squash_threshold"]
+            max_absolute_value = params["max_absolute_value"]
             values_np = X[part].astype(np.float32)
             result = np.copy(values_np)
             isfinite = np.isfinite(values_np)
             scaled_finite = scale * (values_np[isfinite] - median)
             result[isfinite] = scaled_finite / np.sqrt(
-                1 + (scaled_finite / squash_threshold) ** 2
+                1 + (scaled_finite / max_absolute_value) ** 2
             )
             isinf = np.isinf(values_np)
-            result[isinf] = np.sign(values_np[isinf]) * squash_threshold
+            result[isinf] = np.sign(values_np[isinf]) * max_absolute_value
 
-            if np.any(np.abs(result) > params["squash_threshold"] + 1e-8):
-                raise RuntimeError("Test target should not exceed squash_threshold")
+            if np.any(np.abs(result) > params["max_absolute_value"] + 1e-8):
+                raise RuntimeError("Test target should not exceed max_absolute_value")
 
             # todo: we test for name='train' in both cases here. Is this desired?
             result_df = sbd.to_float32(
@@ -110,31 +117,76 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
     [
         (
             "number",
-            dict(squash_threshold=None, lower_quantile=0.25, upper_quantile=0.75),
+            dict(
+                max_absolute_value=None,
+                lower_quantile_alpha=0.25,
+                upper_quantile_alpha=0.75,
+            ),
         ),
         (
             "positive",
-            dict(squash_threshold=0.0, lower_quantile=0.25, upper_quantile=0.75),
+            dict(
+                max_absolute_value=0.0,
+                lower_quantile_alpha=0.25,
+                upper_quantile_alpha=0.75,
+            ),
         ),
         (
             "finite",
-            dict(squash_threshold=np.inf, lower_quantile=0.25, upper_quantile=0.75),
+            dict(
+                max_absolute_value=np.inf,
+                lower_quantile_alpha=0.25,
+                upper_quantile_alpha=0.75,
+            ),
         ),
         (
             "number",
-            dict(squash_threshold=3.0, lower_quantile="0.25", upper_quantile=0.75),
+            dict(
+                max_absolute_value=3.0,
+                lower_quantile_alpha="0.25",
+                upper_quantile_alpha=0.75,
+            ),
         ),
         (
             "number",
-            dict(squash_threshold=3.0, lower_quantile=0.25, upper_quantile="0.75"),
+            dict(
+                max_absolute_value=3.0,
+                lower_quantile_alpha=0.25,
+                upper_quantile_alpha="0.75",
+            ),
         ),
         (
             "number",
-            dict(squash_threshold=3.0, lower_quantile=0.25, upper_quantile="0.75"),
+            dict(
+                max_absolute_value=3.0,
+                lower_quantile_alpha=0.25,
+                upper_quantile_alpha="0.75",
+            ),
         ),
-        ("need", dict(squash_threshold=3.0, lower_quantile=-0.2, upper_quantile=0.75)),
-        ("need", dict(squash_threshold=3.0, lower_quantile=0.25, upper_quantile=1.1)),
-        ("need", dict(squash_threshold=3.0, lower_quantile=0.8, upper_quantile=0.75)),
+        (
+            "need",
+            dict(
+                max_absolute_value=3.0,
+                lower_quantile_alpha=-0.2,
+                upper_quantile_alpha=0.75,
+            ),
+        ),
+        (
+            "need",
+            dict(
+                max_absolute_value=3.0,
+                lower_quantile_alpha=0.25,
+                upper_quantile_alpha=1.1,
+            ),
+        ),
+        (
+            "need",
+            dict(
+                max_absolute_value=3.0,
+                lower_quantile_alpha=0.8,
+                upper_quantile_alpha=0.75,
+            ),
+        ),
     ],
 )
 def test_adaptive_squashing_error_msgs(df_module, config):
