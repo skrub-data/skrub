@@ -208,9 +208,9 @@ vectorized_products = products.skb.apply(vectorizer, exclude_cols="basket_ID")
 
 # %%
 aggregated_products = vectorized_products.groupby("basket_ID").agg("mean").reset_index()
-baskets = baskets.merge(aggregated_products, left_on="ID", right_on="basket_ID").drop(
-    columns=["ID", "basket_ID"]
-)
+augmented_baskets = baskets.merge(
+    aggregated_products, left_on="ID", right_on="basket_ID"
+).drop(columns=["ID", "basket_ID"])
 
 # %%
 # Finally, we add a supervised estimator and our pipeline is complete.
@@ -221,7 +221,7 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 hgb = HistGradientBoostingClassifier(
     learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="learning_rate")
 )
-predictions = baskets.skb.apply(hgb, y=fraud_flags)
+predictions = augmented_baskets.skb.apply(hgb, y=fraud_flags)
 predictions
 
 # %%

@@ -34,6 +34,10 @@ Changes
   :class:`TableReport` to skip association computation when the number of columns
   exceeds the specified value. :pr:`1304` by :user:`Victoria Shevchenko <victoris93>`.
 
+- The `packaging` dependency was removed.
+  :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+
 Bugfixes
 --------
 
