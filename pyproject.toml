@@ -30,7 +30,6 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.23.5",
-    "packaging>=23.1",
     "pandas>=1.5.3",
     "scikit-learn>=1.2.1",
     "scipy>=1.9.3",
@@ -99,7 +98,6 @@ platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
 numpy = ">=1.23.5"
-packaging = ">=23.1"
 pandas = ">=1.5.3"
 scikit-learn = ">=1.2.1"
 scipy = ">=1.9.3"
