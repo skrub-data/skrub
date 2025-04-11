@@ -8,22 +8,22 @@ standard scikit-learn tools such as the ``Pipeline`` and ``ColumnTransformer``
 and for which a skrub pipeline is a solution:
 
 - **Multiple tables:** having several tables of different shapes (for example,
-"Customers", "Orders" and "Products" tables). Not suitable for scikit-learn
-estimators, expecting a single design matrix ``X`` and array of targets ``y``
-with one row per observation.
+  "Customers", "Orders" and "Products" tables). Not suitable for scikit-learn
+  estimators, expecting a single design matrix ``X`` and array of targets ``y``
+  with one row per observation.
 
 - **DataFrame wrangling:** performing typical dataframe operations
-such as projections, joins and aggregations leveraging the powerful APIs of
-``pandas`` or ``polars``.
+  such as projections, joins and aggregations leveraging the powerful APIs of
+  ``pandas`` or ``polars``.
 
 - **Iterative development:** building a pipeline step by step, while
-inspecting the intermediate results so that the feedback loop is short and
-errors are discovered early.
+  inspecting the intermediate results so that the feedback loop is short and
+  errors are discovered early.
 
 - **Hyperparameter tuning:** choices of estimators, hyperparameters,
-and even the architecture of the pipeline can be informed by validation scores.
-Specifying the grid of hyperparameters separately from the model (as in
-``GridSearchCV``) is difficult for complex pipelines.
+  and even the architecture of the pipeline can be informed by validation scores.
+  Specifying the grid of hyperparameters separately from the model (as in
+  ``GridSearchCV``) is difficult for complex pipelines.
 
 In this example, we show a pipeline to handle a dataset with 2 tables.
 Despite being very simple, this pipeline would be difficult to implement,
@@ -76,6 +76,7 @@ skrub.TableReport(dataset.products)
 #
 # .. image:: ../../_static/credit_fraud_diagram.svg
 #    :width: 300
+#
 #
 # First, as the ``products`` table contains strings and categories (such as
 # ``"SAMSUNG"``), we vectorize those entries to extract numeric
@@ -149,7 +150,7 @@ fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_a
 # dataframes when we run the pipeline.
 #
 # For instance, we filter products to keep only those that match one of the
-# baskets in the ``"baskets"`` table, and then add a column containing the total
+# baskets in the ``baskets`` table, and then add a column containing the total
 # amount for each kind of product in a basket:
 
 # %%
@@ -176,7 +177,7 @@ products
 # the pipeline etc.
 #
 # In-depth information about choices and hyperparameter/model selection is
-# provided in the :ref:`Tuning Pipelines example <example_tuning_pipelines>`,.
+# provided in the :ref:`Tuning Pipelines example <example_tuning_pipelines>`.
 #
 # We build a skrub ``TableVectorizer`` with different choices of:
 # the type of encoder for high-cardinality categorical or string columns, and
