@@ -7,7 +7,7 @@ pipelines. There are several problems that are not easily addressed with the
 standard scikit-learn tools such as the ``Pipeline`` and ``ColumnTransformer``
 and for which a skrub pipeline is a solution:
 
-- **Multiple tables:** having several tables of different shapes (for example,
+- **Multiple tables:** when there are several tables of different shapes (for example,
   "Customers", "Orders" and "Products" tables). Not suitable for scikit-learn
   estimators, expecting a single design matrix ``X`` and array of targets ``y``
   with one row per observation.
@@ -30,10 +30,6 @@ Despite being very simple, this pipeline would be difficult to implement,
 validate and deploy correctly without skrub.
 We show the script with minimal comments to motivate the tools that are
 explained in detail in subsequent examples.
-
-.. |Selectors| replace::
-     :class:`~skrub.selectors`
-
 """
 
 # %%
