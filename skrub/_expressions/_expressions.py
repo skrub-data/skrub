@@ -377,8 +377,8 @@ class _Skb:
 _EXPR_CLASS_DOC = """
 Representation of a computation that can be used to build ML estimators.
 
-Please refer to the example gallery for an introduction to skrub
-expressions.
+Please refer to the :ref:`documentation <expressions_documentation_ref>`
+for an introduction to skrub expressions.
 
 This class is usually not instantiated manually, but through one of the functions
 :func:`var`, :func:`as_expr`, :func:`X` or :func:`y`, by applying a
@@ -391,8 +391,8 @@ _EXPR_INSTANCE_DOC = """Skrub expression.
 This object represents a computation and can be used to build machine-learning
 estimators.
 
-Please refer to the example gallery for an introduction to skrub
-expressions.
+Please refer to the :ref:`documentation <expressions_documentation_ref>`
+for an introduction to skrub expressions.
 """
 
 
@@ -724,7 +724,8 @@ def var(name, value=NULL):
     combined with other variables, constants, operators, function calls etc. to
     build up complex expressions, which implicitly define the pipeline.
 
-    See the example gallery for more information about skrub pipelines.
+    See the :ref:`documentation <expressions_documentation_ref>` for more
+    information about skrub pipelines.
 
     Parameters
     ----------
@@ -815,7 +816,8 @@ def X(value=NULL):
 
     Marking a variable as ``X`` tells skrub that this is the design matrix that
     must be split into training and testing sets for cross-validation. Please
-    refer to the examples gallery for more information.
+    refer to the :ref:`documentation <expressions_documentation_ref>` gallery
+    for more information.
 
     Parameters
     ----------
@@ -859,8 +861,8 @@ def y(value=NULL):
 
     Marking a variable as ``y`` tells skrub that this is the column or table of
     targets that must be split into training and testing sets for
-    cross-validation. Please refer to the examples gallery for more
-    information.
+    cross-validation. Please refer to the
+    :ref:`documentation <expressions_documentation_ref>` for more information.
 
     Parameters
     ----------
