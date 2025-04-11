@@ -136,8 +136,8 @@ To contribute, you will first have to run through some steps:
     ``source env_skrub/bin/activate``.
   - With
     `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__,
-    create the env with ``conda create -n env_skrub`` and activate it with
-    ``conda activate env_skrub``.
+    create the env with ``conda create -n env_skrub python=3.12`` and activate it with
+`    ``conda activate env_skrub``.
   - While at the root of your local copy of skrub and within the new
     env, install the required development dependencies by running
     ``pip install --editable ".[dev, lint, test, doc]"``.
