@@ -266,7 +266,7 @@ search.results_
 search.plot_results()
 
 # %%
-# In conclusion, it seems here that using the LSA as an encoder brings better test scores,
+# It seems here that using the LSA as an encoder brings better test scores,
 # but at the expense of training and scoring time.
 #
 
