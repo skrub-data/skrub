@@ -56,7 +56,7 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
     >>> from skrub import AdaptiveSquashingTransformer
 
     >>> tfm = AdaptiveSquashingTransformer()
-    >>> X = pd.Series([-np.inf, -100.0, 0.0, 8.0, 9.0,
+    >>> X = pd.Series([-np.inf, -100.0, 0.0, 8.0, 9.0, \
     >>>                10.0, 20.0, 100.0, np.inf, np.nan], name='improvement')
     >>> tfm.fit_transform(X)
     0   -3.000000
