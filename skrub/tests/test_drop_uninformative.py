@@ -206,4 +206,6 @@ def test_drop_id(df_module, drop_id_column, params, column, result):
     if result == []:
         assert res == result
     else:
-        df_module.assert_column_equal(res, df_module.make_column(column, result))
+        df_module.assert_column_equal(
+            res, df_module.make_column(column, np.array(result))
+        )
