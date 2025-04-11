@@ -1,6 +1,7 @@
 """
 Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -19,10 +20,13 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._repr import _SkrubHTMLDocumentationLinkMixin
 from ._utils import unique_strings
 
 
-class GapEncoder(TransformerMixin, SingleColumnTransformer):
+class GapEncoder(
+    _SkrubHTMLDocumentationLinkMixin, TransformerMixin, SingleColumnTransformer
+):
     """Encode string columns by constructing latent topics.
 
     This encoder can be understood as a continuous encoding on a set of latent
