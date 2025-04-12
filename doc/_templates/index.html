@@ -120,7 +120,27 @@ still full-width (unlike the article) #}
   </div>
 
   <!-- Feature Section 4 -->
-  <div class="row mb-0 row-padding-between-features">
+  <div class="row mb-0 flex-md-row-reverse  row-padding-between-features">
+    <div class="col-md-5">
+      <h4 class="feature-title">Tune arbitrary data wrangling</h4>
+      <h5 class="feature-title">Inspect it, apply it to new data</h5>
+      <p class="feature-text">Chain an arbitrary set of operations to prepare,
+      transform, assemble <strong>multiple tables</strong> for machine
+      learning, and then <strong>tune the full pipeline,
+      inspect it</strong>, or apply it to new data.
+      </p>
+      <p class="feature-text">
+	Works with any computational or dataframe engine.
+      </p>
+      <div class="feature-img">
+	<div style="transform: scale(0.8); transform-origin: left top; height: 283pt">
+	{% include "../generated_for_index/pipeline.svg" %}
+	</div>
+      </div>
+      <p class="feature-text-see-also">
+        <a href="auto_examples/expressions/10_expressions_intro.html">Discover the skrub expressions →</a>
+      </p>
+    </div>
     <div class="col-md-7">
         <details>
           <summary>Given two input dataframes
@@ -141,26 +161,6 @@ class="pre">baskets_df</span></code>: <i>(expand for full code)</i></summary>
 	<div class="feature-img">
 	    {% include "../generated_for_index/parallel_coordinates.html" %}
 	</div>
-    </div>
-    <div class="col-md-5">
-      <h4 class="feature-title">Tune arbitrary data wrangling</h4>
-      <h5 class="feature-title">Inspect it, apply it to new data</h5>
-      <p class="feature-text">Chain an arbitrary set of operations to prepare,
-      transform, assemble <strong>multiple tables</strong> for machine
-      learning, and then <strong>tune the full pipeline,
-      inspect it</strong>, or apply it to new data.
-      </p>
-      <p class="feature-text">
-	Works with any computational or dataframe engine.
-      </p>
-      <div class="feature-img">
-	<div style="transform: scale(0.8); transform-origin: left top;">
-	{% include "../generated_for_index/pipeline.svg" %}
-	</div>
-      </div>
-      <p class="feature-text-see-also">
-        <a href="auto_examples/expressions/10_expressions_intro.html">Discover the skrub expressions →</a>
-      </p>
     </div>
   </div>
 
