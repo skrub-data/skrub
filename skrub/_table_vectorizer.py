@@ -141,8 +141,7 @@ def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
 
 
 class Cleaner(TransformerMixin, BaseEstimator):
-    """
-    Preprocesses each column with consistency checks and sanitization, eg
+    """Preprocesses each column with consistency checks and sanitization, eg
     of null values or dates. Full list in "Notes" section.
 
     Parameters
