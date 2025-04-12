@@ -21,6 +21,7 @@ import shutil
 import sys
 import warnings
 from datetime import datetime
+import runpy
 
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
@@ -28,6 +29,10 @@ from expression_report import create_expression_report
 from table_report import generate_demo
 
 generate_demo()
+
+# Generate the HTML snippets for the pipeline demo on the homepage:
+if not os.path.exists("generated_for_index/code_block_2.html"):
+    runpy.run_path("generate_pipeline_for_index.py")
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory

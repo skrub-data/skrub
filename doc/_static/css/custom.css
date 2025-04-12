@@ -134,6 +134,10 @@ div.card-body details[open] summary i {
     margin-top: 0px;
 }
 
+h5.feature-title {
+    font-size: 1.5rem;
+}
+
 .feature-text {
     font-family: var(--pst-font-family-base);
     font-size: 1.05rem; /* Regular font size for text */
@@ -160,6 +164,15 @@ div.card-body details[open] summary i {
 .code-margin {
     margin-top: 0.75em !important;
     margin-bottom: 0.75em !important;
+}
+
+div.feature-flex {
+    display: flex;
+}
+
+div.feature-flex div {
+    flex: 1 1 auto;
+    padding-bottom: 1ex;
 }
 
 .encoding-image {
