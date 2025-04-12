@@ -109,6 +109,8 @@ def _get_mixed_types_dataframe():
             "int_str": ["1", "2", 3, "3", 5],
             "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
             "int_float": [1, 2, 3.0, 3, 5.0],
+            "int_float_card_one": [5.0, 5, 5.0, 5, 5],
+            "float_str_card_one": ["2", 2.0, "2.0", "2.0", 2.0],
             "bool_str": ["True", False, True, "False", "True"],
         }
     )
@@ -577,6 +579,36 @@ def test_handle_unknown_category():
     "pipeline",
     [
         TableVectorizer(),
+        TableVectorizer(drop_cardinality_1=True),
+    ],
+)
+def test_cardinality_1_dropped(pipeline):
+    X = _get_mixed_types_dataframe()
+    X_trans = pipeline.fit_transform(X)
+    if pipeline.drop_cardinality_1:
+        expected_columns = [
+            "int_str",
+            "float_str",
+            "int_float",
+            "bool_str_True",
+        ]
+    else:
+        expected_columns = [
+            "int_str",
+            "float_str",
+            "int_float",
+            "int_float_card_one",
+            "float_str_card_one",
+            "bool_str_True",
+        ]
+
+    assert list(X_trans.columns) == expected_columns
+
+
+@pytest.mark.parametrize(
+    "pipeline",
+    [
+        TableVectorizer(),
         TableVectorizer(
             low_cardinality=MinHashEncoder(),
         ),
@@ -607,6 +639,8 @@ def test_mixed_types():
         "float_str": "PassThrough",
         "int_float": "PassThrough",
         "bool_str": "OneHotEncoder",
+        "int_float_card_one": "PassThrough",
+        "float_str_card_one": "PassThrough",
     }
     transformer_types = {
         k: v.__class__.__name__ for k, v in vectorizer.transformers_.items()
