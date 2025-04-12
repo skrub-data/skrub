@@ -81,19 +81,21 @@ def extract_code(lines):
         if line.startswith("# %%"):
             in_code_block = True
             if this_code_block:
-                code_blocks.append(''.join(this_code_block))
+                code_blocks.append("".join(this_code_block))
                 this_code_block = []
             continue
         if in_code_block:
             this_code_block.append(line)
     return code_blocks
+
+
 # Extract the code from the lines
 code_blocks = extract_code(lines)
 
 # Save syntax-highlighted code snippets as HTML
 from pygments import highlight
-from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
+from pygments.lexers import PythonLexer
 
 for n in [0, 2]:
     with open(OUTPUT_DIR / f"code_block_{n}.html", "w") as f:

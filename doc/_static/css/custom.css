@@ -175,6 +175,12 @@ div.feature-flex div {
     padding-bottom: 1ex;
 }
 
+div.feature-img {
+    border-radius: 1ex;
+    overflow: clip;
+    margin-top: 8px;
+}
+
 .encoding-image {
     width: 100%;
     aspect-ratio: 1.2;
