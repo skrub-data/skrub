@@ -17,11 +17,11 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import runpy
 import shutil
 import sys
 import warnings
 from datetime import datetime
-import runpy
 
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
