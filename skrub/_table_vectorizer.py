@@ -246,7 +246,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.all_processing_steps_['D']
     [DropIfTooManyNulls()]
 
-    See Also:
+    See Also
     --------
     TableVectorizer :
         Process columns of a dataframe and convert them to a numeric (vectorized)
