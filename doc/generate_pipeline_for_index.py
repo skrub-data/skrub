@@ -36,7 +36,7 @@ baskets_df.to_html(OUTPUT_DIR / "baskets.html", index=False, max_rows=4)
 # %%
 # Define the inputs of our skrub pipeline
 products = skrub.var("products", products_df)
-baskets = skrub.var('baskets', baskets_df)
+baskets = skrub.var("baskets", baskets_df)
 
 # Specify our "X" and "y" variables for machine learning
 basket_IDs = baskets[["basket_ID"]].skb.mark_as_X()
@@ -107,4 +107,3 @@ from pygments.lexers import PythonLexer
 for n in [0, 2]:
     with open(OUTPUT_DIR / f"code_block_{n}.html", "w") as f:
         f.write(highlight(code_blocks[n], PythonLexer(), HtmlFormatter()))
-
