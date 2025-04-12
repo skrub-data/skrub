@@ -235,6 +235,7 @@ exclude=[
     "doc/_build",
     "doc/auto_examples",
     "build",
+    "doc/generate_pipeline_for_index.py",
 ]
 
 [tool.ruff.lint]
