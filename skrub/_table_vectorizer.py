@@ -142,11 +142,9 @@ def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
 
 class Cleaner(TransformerMixin, BaseEstimator):
     """
-    A light transformer that preprocesses each column of a dataframe.
-
-    The ``Cleaner`` performs some consistency checks and basic preprocessing
-    such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
-    dates. See the "Notes" section for a full list.
+    Preprocesses each column of a dataframe with consistency checks and
+    sanitization, eg of null values or dates. See the "Notes" section
+    for a full list.
 
     Parameters
     ----------
@@ -193,6 +191,12 @@ class Cleaner(TransformerMixin, BaseEstimator):
     On the other hand, the ``TableVectorizer`` converts numeric columns to float32
     and ensures that null values are represented with NaNs, which can be handled
     correctly by downstream scikit-learn estimators.
+
+    See Also
+    --------
+    TableVectorizer :
+        Process columns of a dataframe and convert them to a numeric (vectorized)
+        representation.
 
     Examples
     --------
@@ -246,11 +250,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.all_processing_steps_['D']
     [DropIfTooManyNulls()]
 
-    See Also
-    --------
-    TableVectorizer :
-        Process columns of a dataframe and convert them to a numeric (vectorized)
-        representation.
     """
 
     def __init__(self, drop_null_fraction=1.0, n_jobs=1):
@@ -482,6 +481,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         A function that accepts a scikit-learn estimator and creates a pipeline
         combining a ``TableVectorizer``, optional missing value imputation and
         the provided estimator.
+
+    Cleaner :
+        Preprocesses each column of a dataframe with consistency checks and
+        sanitization, eg of null values or dates.
 
     Examples
     --------
