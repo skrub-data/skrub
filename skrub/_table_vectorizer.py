@@ -168,6 +168,12 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Maps the name of each column to a list of all the processing steps that were
         applied to it.
 
+    See Also
+    --------
+    TableVectorizer :
+        Process columns of a dataframe and convert them to a numeric (vectorized)
+        representation.
+
     Notes
     -----
     The ``Cleaner`` performs the following set of transformations on each column:
@@ -191,12 +197,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
     On the other hand, the ``TableVectorizer`` converts numeric columns to float32
     and ensures that null values are represented with NaNs, which can be handled
     correctly by downstream scikit-learn estimators.
-
-    See Also
-    --------
-    TableVectorizer :
-        Process columns of a dataframe and convert them to a numeric (vectorized)
-        representation.
 
     Examples
     --------
@@ -249,7 +249,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
     [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
     >>> cleaner.all_processing_steps_['D']
     [DropIfTooManyNulls()]
-
     """
 
     def __init__(self, drop_null_fraction=1.0, n_jobs=1):
