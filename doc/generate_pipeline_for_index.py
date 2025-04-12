@@ -5,7 +5,7 @@ The first and second "cells" of this script are the actual demo, for the index p
 
 The other cells are used to generate the HTML snippets for the index page.
 """
-# flake8: noqa
+# ruff: noqa
 
 # A print statement to show that the script is running
 print("Generating pipeline snippets for the skrub index page...")
