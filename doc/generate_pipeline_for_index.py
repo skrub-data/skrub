@@ -50,7 +50,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 predictions = features.skb.apply(ExtraTreesClassifier(n_jobs=-1), y=fraud_flags)
 
 # Now tune hyperparameters of our data pipeline
-search = predictions.skb.get_grid_search(fitted=True, scoring='roc_auc')
+search = predictions.skb.get_grid_search(fitted=True, scoring="roc_auc")
 search.plot_results()
 
 # %%
@@ -59,21 +59,26 @@ fig = search.plot_results()
 with open(OUTPUT_DIR / "parallel_coordinates.html", "w") as f:
     f.write(fig.to_html(full_html=False, include_plotlyjs="cdn"))
 
+
 # Save a graph of the pipeline
 graph = predictions.skb.draw_graph()
 with open(OUTPUT_DIR / "pipeline.svg", "wb") as f:
     f.write(graph.svg)
+
 
 # %%
 # Now save html snippets of this notebook
 
 # Retrieve the code of the current file
 import os
+
 this_file = os.path.abspath(__file__)
 print(this_file)
 # Read the file and split into lines
-with open(this_file, 'r') as f:
+with open(this_file, "r") as f:
     lines = f.readlines()
+
+
 # Extract the code from the lines
 def extract_code(lines):
     code_blocks = []
@@ -103,4 +108,3 @@ for n in [0, 2]:
     with open(OUTPUT_DIR / f"code_block_{n}.html", "w") as f:
         f.write(highlight(code_blocks[n], PythonLexer(), HtmlFormatter()))
 
-# %%
