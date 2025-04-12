@@ -175,18 +175,18 @@ class Cleaner(TransformerMixin, BaseEstimator):
     The ``Cleaner`` performs the following set of transformations on each column:
 
     - ``CleanNullStrings()``: replace strings used to represent null values
-    with actual null values.
+      with actual null values.
 
     - ``DropIfTooManyNulls()``: drop the column if it contains too many null values.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
-    actual datetimes with the correct dtype.
+      actual datetimes with the correct dtype.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
-    library (Pandas or Polars) to force consistent typing and avoid issues downstream.
+      library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
     - ``ToStr()``: convert columns to strings, unless they are numerical,
-    categorical, or datetime.
+      categorical, or datetime.
 
     The ``Cleaner`` object should only be used for preliminary sanitizing of
     the data because it does not perform any transformations on numeric columns.
