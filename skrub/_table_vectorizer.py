@@ -143,6 +143,10 @@ def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
 class Cleaner(TransformerMixin, BaseEstimator):
     """Column-wise consistency checks and sanitization, eg of null values or dates.
 
+    The ``Cleaner`` performs some consistency checks and basic preprocessing
+    such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
+    dates. See the "Notes" section for a full list.
+
     Parameters
     ----------
     drop_null_fraction : float or None, default=1.0
