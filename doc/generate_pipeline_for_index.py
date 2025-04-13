@@ -42,14 +42,14 @@ baskets = skrub.var("baskets", baskets_df)
 basket_IDs = baskets[["basket_ID"]].skb.mark_as_X()
 fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 
-# A simple data-preparation pipeline that merges the tables
+# A pandas-based data-preparation pipeline that merges the tables
 aggregated_products = products.groupby("basket_ID").agg(
     skrub.choose_from(("mean", "max", "count"), name="agg")).reset_index()
 features = basket_IDs.merge(aggregated_products, on="basket_ID")
 from sklearn.ensemble import ExtraTreesClassifier
 predictions = features.skb.apply(ExtraTreesClassifier(n_jobs=-1), y=fraud_flags)
 
-# Now tune hyperparameters of our data pipeline
+# Now use skrub to tune hyperparameters of the above pipeline
 search = predictions.skb.get_grid_search(fitted=True, scoring="roc_auc")
 search.plot_results()
 
