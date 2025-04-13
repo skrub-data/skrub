@@ -181,6 +181,30 @@ div.feature-img {
     margin-top: 8px;
 }
 
+/* For the pipeline svg */
+div.pipeline-img {
+    transform: scale(0.8);
+    transform-origin: left top;
+    height: 283pt
+}
+
+div.pipeline-img svg > g > polygon {
+    fill: transparent;
+}
+
+div.pipeline-img svg g a polygon[fill="none"] {
+    fill: white;
+}
+
+div.pipeline-img svg g.edge path {
+    stroke: var(--sg-text-color);
+}
+
+div.pipeline-img svg g.edge polygon {
+    stroke: var(--sg-text-color);
+    fill: var(--sg-text-color);
+}
+
 .encoding-image {
     width: 100%;
     aspect-ratio: 1.2;
