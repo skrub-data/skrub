@@ -5,7 +5,8 @@ The first and second "cells" of this script are the actual demo, for the index p
 
 The other cells are used to generate the HTML snippets for the index page.
 """
-# ruff: noqa
+# We want manual control over the formatting as those snippets are shown in the home page
+# fmt: off
 
 # A print statement to show that the script is running
 print("Generating pipeline snippets for the skrub index page...")
@@ -107,3 +108,6 @@ from pygments.lexers import PythonLexer
 for n in [0, 2]:
     with open(OUTPUT_DIR / f"code_block_{n}.html", "w") as f:
         f.write(highlight(code_blocks[n], PythonLexer(), HtmlFormatter()))
+
+
+# fmt: on
