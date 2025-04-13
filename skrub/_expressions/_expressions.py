@@ -1001,7 +1001,7 @@ def _check_column_names(X):
 
 
 class Apply(ExprImpl):
-    _fields = ["estimator", "cols", "X", "y", "how", "allow_reject", "unsupervised"]
+    _fields = ["X", "estimator", "y", "cols", "how", "allow_reject", "unsupervised"]
 
     # TODO can we avoid the need for an explicit unsupervised parameter by
     # inspecting sklearn tags?

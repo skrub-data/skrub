@@ -508,6 +508,30 @@ def clear_results(expr, mode=None):
             n._skrub_impl.errors.pop(mode, None)
 
 
+def _choice_display_names(choices):
+    used = set()
+    names = {}
+
+    def add(choice_ids):
+        for c_id in choice_ids:
+            stem = _choosing.get_display_name(choices[c_id])
+            if stem not in used:
+                used.add(stem)
+                names[c_id] = stem
+                continue
+            i = 1
+            while (numbered := f"{stem}_{i}") in used:
+                i += 1
+            used.add(numbered)
+            names[c_id] = numbered
+        return names
+
+    add(c_id for (c_id, c) in choices.items() if c.name is not None)
+    add(c_id for (c_id, c) in choices.items() if c.name is None)
+    # keep the same order as in choices
+    return {c_id: names[c_id] for c_id in choices.keys()}
+
+
 class _ChoiceGraph(_ExprTraversal):
     def run(self, expr):
         self._choices = {}
@@ -536,18 +560,22 @@ class _ChoiceGraph(_ExprTraversal):
         #     choice's short id (1, 2, ...) to BaseChoice instance
         # - children:
         #     (choice short id, outcome index) to list of child choices' short ids
-        return {"choices": choices, "children": children}
+        return {
+            "choices": choices,
+            "children": children,
+            "choice_display_names": _choice_display_names(choices),
+        }
 
     def handle_choice(self, choice):
-        # unlike during evaluation here we need pre-ordering
         self._children[self._current_outcome[-1]].append(id(choice))
-        self._choices[id(choice)] = choice
         if not isinstance(choice, _choosing.Choice):
+            self._choices[id(choice)] = choice
             return choice
         for outcome_idx, outcome in enumerate(choice.outcomes):
             self._current_outcome.append((id(choice), outcome_idx))
             yield outcome
             self._current_outcome.pop()
+        self._choices[id(choice)] = choice
         return choice
 
     def handle_choice_match(self, choice_match):
@@ -559,13 +587,11 @@ class _ChoiceGraph(_ExprTraversal):
         return choice_match
 
 
-def choices(expr):
-    return _ChoiceGraph().run(expr)["choices"]
-
-
-def choice_graph(expr):
+def choice_graph(expr, check_Xy=True):
     full_builder = _ChoiceGraph()
     full_graph = full_builder.run(expr)
+    if not check_Xy:
+        return full_graph
     # identify which choices are used before the nodes marked as X or y. Those
     # choices cannot be tuned (they are needed before the cv loop starts) so
     # they will be clamped to a single value (the chosen outcome if that has been
@@ -590,6 +616,10 @@ def choice_graph(expr):
         )
     full_graph["Xy_choices"] = Xy_choices
     return full_graph
+
+
+def choices(expr):
+    return choice_graph(expr, check_Xy=False)["choices"]
 
 
 def check_choices_before_Xy(expr):
