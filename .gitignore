@@ -60,6 +60,7 @@ skrub/datasets/data/*
 doc/_build
 doc/auto_examples
 doc/generated
+doc/generated_for_index
 doc/reference/generated
 doc/CHANGES.rst
 doc/RELEASE_PROCESS.rst
