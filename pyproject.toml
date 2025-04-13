@@ -236,7 +236,6 @@ exclude=[
     "doc/auto_examples",
     "build",
 ]
-extend-exclude = ["doc/generate_pipeline_for_index.py"]
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
