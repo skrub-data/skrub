@@ -209,6 +209,11 @@ def test_drop_id(df_module, drop_id_column, params, column, result):
     res = enc.fit_transform(drop_id_column[column])
     if result == []:
         assert res == result
+    elif sbd.is_numeric(res):
+        df_module.assert_column_equal(
+            res,
+            df_module.make_column(column, np.array(result)),
+        )
     else:
         df_module.assert_column_equal(
             res,
