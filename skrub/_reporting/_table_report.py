@@ -143,14 +143,6 @@ class TableReport:
         self.max_association_columns = max_association_columns
         self.n_columns = sbd.shape(self.dataframe)[1]
 
-        self.max_plot_columns_ = (
-            self.n_columns if max_plot_columns is None else max_plot_columns
-        )
-        self.max_association_columns_ = (
-            self.n_columns
-            if max_association_columns is None
-            else max_association_columns
-        )
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
