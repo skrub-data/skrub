@@ -46,7 +46,6 @@ It is used by default in the |TableVectorizer|.
 """
 
 # %%
-###############################################################################
 # A problem with relevant datetime features
 # -----------------------------------------
 #
