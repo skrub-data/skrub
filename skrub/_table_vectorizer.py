@@ -164,11 +164,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
         ``None``, this selection is disabled: no columns are dropped based on the
         number of null values they contain.
 
-    drop_constant: bool, default=True
+    drop_constant : bool, default=True
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
-    drop_ids: bool, default=False
+    drop_ids : bool, default=False
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
@@ -456,11 +456,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         this selection is disabled: no columns are dropped based on the number
         of null values they contain.
 
-    drop_constant: bool, default=True
+    drop_constant : bool, default=True
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
-    drop_ids: bool, default=False
+    drop_ids : bool, default=False
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
