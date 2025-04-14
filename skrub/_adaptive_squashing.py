@@ -16,15 +16,16 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
     Better by default: Strong pre-tuned MLPs and boosted trees on tabular data,
     Advances in Neural Information Processing Systems, 2024.
 
-    It will
-    1) center the median of the data to zero and multiply the data by a scaling factor
-     determined based on quantiles of the distribution.
-     This is similar to scikit-learn's QuantileTransformer
-     but with a min-max-scaling based handling
-     for edge cases in which the two quantiles are equal.
-    2) apply a soft-clipping function to limit the data
-     to the interval [-max_absolute_value, max_absolute_value]
-     in an injective way.
+    This transformer has two stages:
+    
+    1. Center the median of the data to zero and multiply the data by a scaling factor
+      determined based on quantiles of the distribution.
+      This is similar to scikit-learn's QuantileTransformer
+      but with a min-max-scaling based handling
+      for edge cases in which the two quantiles are equal.
+    2. Apply a soft-clipping function to limit the data
+      to the interval [-max_absolute_value, max_absolute_value]
+      in an injective way.
 
     Infinite values will be mapped to the corresponding boundaries of the interval.
     NaN values will be preserved.
