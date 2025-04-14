@@ -50,7 +50,7 @@ class _CloudPickle:
     def __setstate__(self, state):
         for k in self._cloudpickle_attributes:
             state[k] = cloudpickle.loads(state[k])
-        self.__dict__ = state
+        object.__setattr__(self, "__dict__", state)
 
 
 def format_exception(e):

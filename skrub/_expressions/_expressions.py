@@ -420,7 +420,8 @@ class _ExprDoc:
         return f"""Skrub expression.\nDocstring of the preview:\n{doc}"""
 
 
-class Expr:
+class Expr(_CloudPickle):
+    _cloudpickle_attributes = ["_skrub_impl"]
     __hash__ = None
 
     __doc__ = _ExprDoc()
@@ -1134,7 +1135,7 @@ class GetItem(ExprImpl):
         return f"[{_get_preview(self.key)!r}]"
 
 
-class Call(_CloudPickle, ExprImpl):
+class Call(ExprImpl):
     _fields = [
         "func",
         "args",
@@ -1144,7 +1145,6 @@ class Call(_CloudPickle, ExprImpl):
         "defaults",
         "kwdefaults",
     ]
-    _cloudpickle_attributes = ["func"]
 
     def compute(self, e, mode, environment):
         func = e.func
