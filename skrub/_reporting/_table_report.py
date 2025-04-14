@@ -143,26 +143,27 @@ class TableReport:
         self.max_association_columns = max_association_columns
         self.n_columns = sbd.shape(self.dataframe)[1]
 
-        if self.max_plot_columns is None:
-            self.max_plot_columns = self.n_columns
-        if self.max_association_columns is None:
-            self.max_association_columns = self.n_columns
+        self.max_plot_columns_ = (
+            self.n_columns if max_plot_columns is None else max_plot_columns
+        )
+        self.max_association_columns_ = (
+            self.n_columns
+            if max_association_columns is None
+            else max_association_columns
+        )
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
 
     @functools.cached_property
-    def _lightify_summary(self):
+    def _summary(self):
         return summarize_dataframe(
             self.dataframe,
-            with_plots=self.max_plot_columns >= self.n_columns,
-            with_associations=self.max_association_columns >= self.n_columns,
+            with_plots=self.max_plot_columns_ >= self.n_columns,
+            with_associations=self.max_association_columns_ >= self.n_columns,
             title=self.title,
             **self._summary_kwargs,
         )
-
-    def _get_summary(self):
-        return self._lightify_summary
 
     def html(self):
         """Get the report as a full HTML page.
@@ -173,7 +174,7 @@ class TableReport:
             The HTML page.
         """
         return to_html(
-            self._get_summary(),
+            self._summary,
             standalone=True,
             column_filters=self.column_filters,
         )
@@ -187,7 +188,7 @@ class TableReport:
             The HTML snippet.
         """
         return to_html(
-            self._get_summary(),
+            self._summary,
             standalone=False,
             column_filters=self.column_filters,
         )
@@ -201,7 +202,7 @@ class TableReport:
             The JSON data.
         """
         to_remove = ["dataframe", "sample_table"]
-        data = {k: v for k, v in self._lightify_summary.items() if k not in to_remove}
+        data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
 
     def _repr_mimebundle_(self, include=None, exclude=None):
