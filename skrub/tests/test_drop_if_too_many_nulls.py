@@ -118,3 +118,14 @@ def test_error_checking(drop_null_table):
 
     with pytest.raises(ValueError):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
+
+
+def test_drop_if_too_many_nulls_warning():
+    with pytest.warns(
+        DeprecationWarning,
+        match=(
+            "DropIfTooManyNulls will be deprecated in the next release. "
+            "Equivalent functionality is available in DropUninformative."
+        ),
+    ):
+        DropIfTooManyNulls()

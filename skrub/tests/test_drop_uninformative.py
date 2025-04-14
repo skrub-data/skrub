@@ -58,13 +58,17 @@ def drop_null_table(df_module):
         (dict(), "value_almost_null", ["almost", None, None]),
         (dict(), "value_mostly_not_nan", [2.5, 2.5, np.nan]),
         (dict(), "value_mostly_not_null", ["almost", "almost", None]),
-        (dict(threshold=0.5), "idx", [1, 2, 3]),
-        (dict(threshold=0.5), "value_nan", []),
-        (dict(threshold=0.5), "value_null", []),
-        (dict(threshold=0.5), "value_almost_nan", []),
-        (dict(threshold=0.5), "value_almost_null", []),
-        (dict(threshold=0.5), "value_mostly_not_nan", [2.5, 2.5, np.nan]),
-        (dict(threshold=0.5), "value_mostly_not_null", ["almost", "almost", None]),
+        (dict(null_fraction_threshold=0.5), "idx", [1, 2, 3]),
+        (dict(null_fraction_threshold=0.5), "value_nan", []),
+        (dict(null_fraction_threshold=0.5), "value_null", []),
+        (dict(null_fraction_threshold=0.5), "value_almost_nan", []),
+        (dict(null_fraction_threshold=0.5), "value_almost_null", []),
+        (dict(null_fraction_threshold=0.5), "value_mostly_not_nan", [2.5, 2.5, np.nan]),
+        (
+            dict(null_fraction_threshold=0.5),
+            "value_mostly_not_null",
+            ["almost", "almost", None],
+        ),
     ],
 )
 def test_drop_nulls(df_module, drop_null_table, params, column, result):
@@ -77,14 +81,14 @@ def test_drop_nulls(df_module, drop_null_table, params, column, result):
 
 
 def test_do_not_drop_nulls(df_module, drop_null_table):
-    enc = DropUninformative(threshold=None)
+    enc = DropUninformative(null_fraction_threshold=None)
     for col in drop_null_table.columns:
         res = enc.fit_transform(drop_null_table[col])
         df_module.assert_column_equal(res, drop_null_table[col])
 
 
 def test_error_checking(drop_null_table):
-    dn = DropUninformative(threshold=-1)
+    dn = DropUninformative(null_fraction_threshold=-1)
     with pytest.raises(ValueError):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
 
@@ -94,7 +98,7 @@ def test_error_checking(drop_null_table):
     dn = DropUninformative(column_is_id="wrong")
     with pytest.raises(ValueError, match="column_is_id"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
-    dn = DropUninformative(threshold="wrong")
+    dn = DropUninformative(null_fraction_threshold="wrong")
     with pytest.raises(ValueError, match="Threshold"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
 

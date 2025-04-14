@@ -27,7 +27,7 @@ class DropUninformative(SingleColumnTransformer):
     column_is_id: bool, default=False
         If True, drop the column if all values are distinct. Missing values count as
         one additional distinct value.
-    threshold: float or None, default=1.0
+    null_fraction_threshold: float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
 
@@ -37,11 +37,11 @@ class DropUninformative(SingleColumnTransformer):
         self,
         constant_column=True,
         column_is_id=False,
-        threshold=1.0,
+        null_fraction_threshold=1.0,
     ):
         self.constant_column = constant_column
         self.column_is_id = column_is_id
-        self.threshold = threshold
+        self.null_fraction_threshold = null_fraction_threshold
 
     def _check_params(self):
         if self.constant_column not in [True, False]:
@@ -54,23 +54,23 @@ class DropUninformative(SingleColumnTransformer):
                 f"column_is_id must be in [True, False], found {self.column_is_id}."
             )
 
-        if self.threshold is not None:
+        if self.null_fraction_threshold is not None:
             if (
-                not isinstance(self.threshold, numbers.Number)
-                or not 0.0 <= self.threshold <= 1.0
+                not isinstance(self.null_fraction_threshold, numbers.Number)
+                or not 0.0 <= self.null_fraction_threshold <= 1.0
             ):
                 raise ValueError(
-                    f"Threshold {self.threshold} is invalid. Threshold should be "
-                    "a number in the range [0, 1]."
+                    f"Threshold {self.null_fraction_threshold} is invalid. Threshold"
+                    " should be a number in the range [0, 1]."
                 )
 
     def _drop_if_too_many_nulls(self, column):
-        if self.threshold == 1.0:
+        if self.null_fraction_threshold == 1.0:
             return sbd.is_all_null(column)
         # No nulls found, or no threshold
-        if self.null_count == 0 or self.threshold is None:
+        if self.null_count == 0 or self.null_fraction_threshold is None:
             return False
-        return self.null_count / len(column) > self.threshold
+        return self.null_count / len(column) > self.null_fraction_threshold
 
     def _drop_if_constant(self, column):
         if self.constant_column:
