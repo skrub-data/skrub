@@ -147,8 +147,7 @@ def _get_preprocessors(
 
 
 class Cleaner(TransformerMixin, BaseEstimator):
-    """
-    A light transformer that preprocesses each column of a dataframe.
+    """Column-wise consistency checks and sanitization, eg of null values or dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
     such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
@@ -185,25 +184,31 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Maps the name of each column to a list of all the processing steps that were
         applied to it.
 
+    See Also
+    --------
+    TableVectorizer :
+        Process columns of a dataframe and convert them to a numeric (vectorized)
+        representation.
+
     Notes
     -----
     The ``Cleaner`` performs the following set of transformations on each column:
 
     - ``CleanNullStrings()``: replace strings used to represent null values
-    with actual null values.
+      with actual null values.
 
     - ``DropUninformative()``: drop the column if it contains too many null values,
     if it contains only one distinct value, or if all values are distinct (off by
     default).
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
-    actual datetimes with the correct dtype.
+      actual datetimes with the correct dtype.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
-    library (Pandas or Polars) to force consistent typing and avoid issues downstream.
+      library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
     - ``ToStr()``: convert columns to strings, unless they are numerical,
-    categorical, or datetime.
+      categorical, or datetime.
 
     The ``Cleaner`` object should only be used for preliminary sanitizing of
     the data because it does not perform any transformations on numeric columns.
@@ -514,6 +519,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         A function that accepts a scikit-learn estimator and creates a pipeline
         combining a ``TableVectorizer``, optional missing value imputation and
         the provided estimator.
+
+    Cleaner :
+        Preprocesses each column of a dataframe with consistency checks and
+        sanitization, eg of null values or dates.
 
     Examples
     --------

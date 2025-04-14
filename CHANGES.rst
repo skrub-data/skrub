@@ -35,6 +35,9 @@ values, and id-like columns. :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
 Changes
 -------
 
+- The `packaging` dependency was removed.
+  :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 Bugfixes
 --------
 
@@ -99,7 +102,6 @@ Changes
 - Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
-=======
 Bug fixes
 ---------
 - :class:`StringEncoder` now works correctly in presence of null values.
