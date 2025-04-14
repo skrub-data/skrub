@@ -149,6 +149,14 @@ class TableReport:
 
     @functools.cached_property
     def _summary(self):
+        with_plots = (
+            self.max_plot_columns is None or self.max_plot_columns >= self.n_columns
+        )
+        with_associations = (
+            self.max_association_columns is None
+            or self.max_association_columns >= self.n_columns
+        )
+
         return summarize_dataframe(
             self.dataframe,
             with_plots=with_plots,
