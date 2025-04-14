@@ -10,17 +10,12 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
     """Preprocess a numerical column by robust centering, scaling, \
     and soft clipping to a defined interval.
 
-    This class implements the robust scaling and smooth clipping transformation
-    proposed for tabular neural networks by
-    David Holzmüller, Léo Grinsztajn, and Ingo Steinwart,
-    Better by default: Strong pre-tuned MLPs and boosted trees on tabular data,
-    Advances in Neural Information Processing Systems, 2024.
-
     This transformer has two stages:
-    
-    1. Center the median of the data to zero and multiply the data by a scaling factor
+
+    1. Center the median of the data to zero
+      and multiply the data by a scaling factor
       determined based on quantiles of the distribution.
-      This is similar to scikit-learn's QuantileTransformer
+      This is similar to scikit-learn's RobustScaler
       but with a min-max-scaling based handling
       for edge cases in which the two quantiles are equal.
     2. Apply a soft-clipping function to limit the data
@@ -29,9 +24,6 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
 
     Infinite values will be mapped to the corresponding boundaries of the interval.
     NaN values will be preserved.
-
-    The output feature will be named ``{col_name}`` if the series has a name,
-    and ``adaptive_squashed`` if it does not.
 
     Parameters
     ----------
@@ -44,9 +36,28 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
         Value of the upper quantile that will be used
         to determine the scaling factor to rescale the data.
 
+    Notes
+    -----
+
+    The formula for the transform is
+
+    scaled = scale * (x - median)
+
+    result = scaled / sqrt(1 + (scaled/max_abs_value)^2)
+
+    where median is the median of the finite values in x,
+
+    scale = 1.0 / (upper_quantile - lower_quantile)
+
+    if the upper and lower quantiles are not equal, otherwise
+
+    scale = 2.0 / (max - min)
+
+    if the max and min are not equal, and scale=0 otherwise.
+
     References
     ----------
-    For a detailed description of the method, see
+    This method has been introduced as the robust scaling and smooth clipping transform in
     `Better by default: Strong pre-tuned MLPs and boosted trees on tabular data
     <https://arxiv.org/abs/2407.04491>`_ by Holzmüller, Grinsztajn, Steinwart (2024).
 
@@ -131,9 +142,6 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
         if not sbd.is_numeric(X):
             raise RejectColumn(f"Column {self.col_name_} is not numeric.")
 
-        if not self.col_name_:
-            self.col_name_ = "adaptive_squashed"
-
         eps = 1e-30  # todo: expose?
 
         values = sbd.to_numpy(X).astype(np.float32)
@@ -176,19 +184,18 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
             The scaled and squashed representation of the input.
         """
 
-        values_np = sbd.to_numpy(X).astype(np.float32)
-        result = np.copy(values_np)
+        values_np = sbd.to_numpy(X).astype(np.float32, copy=True)
         isfinite = np.isfinite(values_np)
         scaled_finite = self.scale_ * (values_np[isfinite] - self.median_)
-        result[isfinite] = scaled_finite / np.sqrt(
+        values_np[isfinite] = scaled_finite / np.sqrt(
             1 + (scaled_finite / self.max_absolute_value) ** 2
         )
         isinf = np.isinf(values_np)
-        result[isinf] = np.sign(values_np[isinf]) * self.max_absolute_value
+        values_np[isinf] = np.sign(values_np[isinf]) * self.max_absolute_value
 
         # this will use the column name of the column that was passed in fit_transform,
         # not the name of X
-        return self._post_process(X, result, self.col_name_)
+        return self._post_process(X, values_np, self.col_name_)
 
     def _post_process(self, X, result, name):
         result = sbd.make_column_like(X, result, name)

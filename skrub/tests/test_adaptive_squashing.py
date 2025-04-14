@@ -217,8 +217,8 @@ def test_adaptive_squashing_no_col_name(df_module):
         X = df_module.make_column(None, [-1.0, 0.0, 1.0])
         tfm = AdaptiveSquashingTransformer()
         X_out = tfm.fit_transform(X)
-        if sbd.name(X_out) is None:
-            raise RuntimeError("Column name None did not get converted")
+        if sbd.name(X_out) is not None:
+            raise RuntimeError("Column name None got converted")
 
 
 def test_adaptive_squashing_non_numeric(df_module):
