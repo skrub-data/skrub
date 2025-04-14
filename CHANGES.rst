@@ -27,7 +27,7 @@ Lemaitre <glemaitre>`, :user:`Adrin Jalali <adrinjalali>`, :user:`Olivier Grisel
 <ogrisel>` and others participated through many discussions in defining the
 requirements and the public API.
 
-- Adding the ``DropUninformative`` transformer, which uses different heuristics
+- Adding the :class:`DropUninformative` transformer, which uses different heuristics
 to detect columns that are considered not informative for the downstream task.
 The current implementation includes detection of constant columns, fully missing
 values, and id-like columns. :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
