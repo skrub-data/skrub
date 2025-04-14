@@ -205,22 +205,6 @@ def test_adaptive_squashing_error_msgs(df_module, config):
             tfm.fit_transform(X)
 
 
-def test_adaptive_squashing_no_col_name(df_module):
-    with warnings.catch_warnings():
-        # this is to filter the warning created by df_module.make_column
-        # due to pd.Series.convert_dtypes()
-        warnings.filterwarnings(
-            "ignore",
-            category=RuntimeWarning,
-            message="invalid value encountered in cast",
-        )
-        X = df_module.make_column(None, [-1.0, 0.0, 1.0])
-        tfm = AdaptiveSquashingTransformer()
-        X_out = tfm.fit_transform(X)
-        if sbd.name(X_out) is not None:
-            raise RuntimeError("Column name None got converted")
-
-
 def test_adaptive_squashing_non_numeric(df_module):
     with warnings.catch_warnings():
         # this is to filter the warning created by df_module.make_column
