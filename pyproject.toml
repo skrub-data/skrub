@@ -133,7 +133,6 @@ polars = "*"
 plotly = "*"
 
 [tool.pixi.feature.transformers]
-# pytorch is not anymore released on osx-64 platform
 platforms = ["linux-64", "osx-arm64", "win-64"]
 
 [tool.pixi.feature.transformers.dependencies]
