@@ -197,7 +197,7 @@ def drop_id_column(df_module):
         (dict(), "str", ["i1", "i2", "i3"]),
         (dict(), "str_with_nulls", ["i1", "i2", None]),
         (dict(), "variable", ["A", "B", "B"]),
-        (dict(column_is_id=True), "idx", []),
+        (dict(column_is_id=True), "idx", [1, 2, 3]),
         (dict(column_is_id=True), "idx_with_nulls", [1, 2, np.nan]),
         (dict(column_is_id=True), "str", []),
         (dict(column_is_id=True), "str_with_nulls", ["i1", "i2", None]),

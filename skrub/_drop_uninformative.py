@@ -26,7 +26,7 @@ class DropUninformative(SingleColumnTransformer):
         count as one additional distinct value.
     column_is_id: bool, default=False
         If True, drop the column if all values are distinct. Missing values count as
-        one additional distinct value.
+        one additional distinct value. Numeric columns are never dropped.
     null_fraction_threshold: float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
@@ -79,7 +79,7 @@ class DropUninformative(SingleColumnTransformer):
         return False
 
     def _drop_if_id(self, column):
-        if self.column_is_id:
+        if self.column_is_id and not sbd.is_numeric(column):
             n_unique = sbd.n_unique(column)
             if self.null_count > 0:
                 return False
