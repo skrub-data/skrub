@@ -38,6 +38,11 @@ Changes
 - The `packaging` dependency was removed.
   :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+- The :class:`DropIfTooManyNulls` transformer has been replaced by the
+  :class:`DropUninformative` transformer and will be removed in a future release.
+  :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+
 Bugfixes
 --------
 
