@@ -159,8 +159,8 @@ class TableReport:
     def _summary(self):
         return summarize_dataframe(
             self.dataframe,
-            with_plots=self.max_plot_columns_ >= self.n_columns,
-            with_associations=self.max_association_columns_ >= self.n_columns,
+            with_plots=with_plots,
+            with_associations=with_associations,
             title=self.title,
             **self._summary_kwargs,
         )
