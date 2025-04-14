@@ -153,19 +153,10 @@ class TableReport:
 
     @functools.cached_property
     def _lightify_summary(self):
-        if self.max_plot_columns >= self.n_columns:
-            with_plots = True
-        else:
-            with_plots = False
-        if self.max_association_columns >= self.n_columns:
-            with_associations = True
-        else:
-            with_associations = False
-
         return summarize_dataframe(
             self.dataframe,
-            with_plots=with_plots,
-            with_associations=with_associations,
+            with_plots=self.max_plot_columns >= self.n_columns,
+            with_associations=self.max_association_columns >= self.n_columns,
             title=self.title,
             **self._summary_kwargs,
         )
