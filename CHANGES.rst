@@ -97,7 +97,6 @@ Changes
 - Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
-=======
 Bug fixes
 ---------
 - :class:`StringEncoder` now works correctly in presence of null values.
