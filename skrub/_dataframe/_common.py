@@ -43,6 +43,11 @@ __all__ = [
     "col_by_idx",
     "collect",
     #
+    # Loading data
+    #
+    "read_parquet",
+    "read_csv",
+    #
     # Querying and modifying metadata
     #
     "shape",
@@ -66,6 +71,7 @@ __all__ = [
     "is_integer",
     "is_float",
     "to_float32",
+    "to_bool",
     "is_string",
     "to_string",
     "is_object",
@@ -407,6 +413,43 @@ def _collect_polars_lazyframe(df):
 
 
 #
+# Loading data
+# ============
+#
+
+
+# TODO: Adding X here as a placeholder to get around the type check,
+@dispatch
+def read_parquet(X, input_path):
+    raise NotImplementedError()
+
+
+@read_parquet.specialize("pandas", argument_type=["DataFrame"])
+def _read_parquet_pandas(X, input_path):
+    return pd.read_parquet(input_path)
+
+
+@read_parquet.specialize("polars", argument_type=["DataFrame"])
+def _read_parquet_polars(X, input_path):
+    return pl.read_parquet(input_path)
+
+
+@dispatch
+def read_csv(X, input_path):
+    raise NotImplementedError()
+
+
+@read_csv.specialize("pandas", argument_type=["DataFrame"])
+def _read_csv_pandas(X, input_path):
+    return pd.read_csv(input_path)
+
+
+@read_csv.specialize("polars", argument_type=["DataFrame"])
+def _read_csv_polars(X, input_path):
+    return pl.read_csv(input_path)
+
+
+#
 # Querying and modifying metadata
 # ===============================
 #
@@ -700,6 +743,25 @@ def _to_float32_polars(col, strict=True):
     if col.dtype == pl.Float32:
         return col
     return col.cast(pl.Float32, strict=strict)
+
+
+@dispatch
+def to_bool(col, strict=True):
+    raise NotImplementedError()
+
+
+@to_bool.specialize("pandas", argument_type="Column")
+def _to_bool_pandas(col, strict=True):
+    if not pd.api.types.is_numeric_dtype(col):
+        col = pd.to_numeric(col, errors="raise" if strict else "coerce")
+    return col.astype(np.bool)
+
+
+@to_bool.specialize("polars", argument_type="Column")
+def _to_bool_polars(col, strict=True):
+    if col.dtype == pl.Boolean:
+        return col
+    return col.cast(pl.Boolean, strict=strict)
 
 
 @dispatch
