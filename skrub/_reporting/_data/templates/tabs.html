@@ -12,7 +12,8 @@ NOTE: some columns have very strong associations and may be redundant.
 
 <div>
     <div class="flex-reverse tab-list-wrapper">
-        <div class="tab-list tab-list-scroller" data-manager="TabList">
+        <div class="tab-list tab-list-scroller" data-manager="TabList"
+        {% if summary.associations_skipped %}data-associations-skipped{% endif %}>
             <div>
                 <button type="button" data-target-panel-id="dataframe-sample-panel"
                     data-role="tab" data-is-selected data-test="sample-tab" class="tab"
@@ -28,6 +29,7 @@ NOTE: some columns have very strong associations and may be redundant.
                     data-role="tab" data-test="summaries-tab" class="tab"
                     title="{{ column_summaries_title }}">Distributions</button>
             </div>
+            {% if not summary.associations_skipped %}
             <div>
                 <button type="button" data-target-panel-id="column-associations-panel"
                     data-role="tab" class="tab" {% if associations_warning %}
@@ -38,6 +40,7 @@ NOTE: some columns have very strong associations and may be redundant.
                     </div>
                     Associations</button>
             </div>
+            {% endif %}
         </div>
         {% include "column-filter.html" %}
     </div>
@@ -54,10 +57,12 @@ NOTE: some columns have very strong associations and may be redundant.
     data-test="summaries-panel">
     {% include "column-summaries.html" %}
 </div>
+{% if not summary.associations_skipped %}
 <div class="tab-panel" id="column-associations-panel" data-hidden
     data-test="associations-panel">
     {% include "column-associations.html" %}
 </div>
+{% endif %}
 
 {% if is_inline_report %}
 <div class="report-bottom-border"></div>

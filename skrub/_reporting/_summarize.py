@@ -14,6 +14,7 @@ def summarize_dataframe(
     *,
     order_by=None,
     with_plots=True,
+    with_associations=True,
     title=None,
     max_top_slice_size=5,
     max_bottom_slice_size=5,
@@ -34,6 +35,9 @@ def summarize_dataframe(
 
     with_plots : bool, default=True
         Generate the images or not.
+
+    with_associations : bool, default=True
+        Compute the associations or not.
 
     title : str or None, default=None
         A title that gets added to the returned dictionary and can be picked up
@@ -67,6 +71,7 @@ def summarize_dataframe(
         "columns": [],
         "dataframe_is_empty": not n_rows or not n_columns,
         "plots_skipped": not with_plots,
+        "associations_skipped": not with_associations,
         "sample_table": _sample_table.make_table(
             df,
             max_top_slice_size=max_top_slice_size,
@@ -106,10 +111,11 @@ def summarize_dataframe(
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
-    if n_rows and n_columns:
-        _add_associations(df, summary)
-    else:
-        summary["top_associations"] = []
+    if with_associations:
+        if n_rows and n_columns:
+            _add_associations(df, summary)
+        else:
+            summary["top_associations"] = []
     return summary
 
 
