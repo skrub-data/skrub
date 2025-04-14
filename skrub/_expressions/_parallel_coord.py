@@ -19,7 +19,8 @@ def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
                 metadata,
                 colorscale=colorscale,
             )
-        )
+        ),
+        layout=go.Layout(font=dict(size=18)),
     )
 
 

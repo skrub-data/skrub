@@ -129,6 +129,8 @@ To contribute, you will first have to run through some steps:
 - Set up your environment by forking the repository (`Github doc on
   forking and
   cloning <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`__).
+- Add ``upstream`` to your remotes with ``git remote add upstream git@github.com:skrub-data/skrub.git``.
+
 - Create and activate a new virtual environment:
 
   - With `venv <https://docs.python.org/3/library/venv.html>`__, create
@@ -157,10 +159,11 @@ take a long time. Some tests may raise warnings such as:
 This is expected, and you may proceed with the next steps without worrying about them. However, no tests should fail at this point: if they do fail, then let us know.
 
 Now that the development environment is ready, you may start working on
-the new issue by creating a new branch:
+the new issue.
 
 .. code:: sh
-
+   # fetch latest updates and start from the current head
+   git fetch upstream
    git checkout -b my-branch-name-eg-fix-issue-123
    # make some changes
    git add ./the/file-i-changed

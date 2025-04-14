@@ -141,8 +141,7 @@ def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
 
 
 class Cleaner(TransformerMixin, BaseEstimator):
-    """
-    A light transformer that preprocesses each column of a dataframe.
+    """Column-wise consistency checks and sanitization, eg of null values or dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
     such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
@@ -170,23 +169,29 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Maps the name of each column to a list of all the processing steps that were
         applied to it.
 
+    See Also
+    --------
+    TableVectorizer :
+        Process columns of a dataframe and convert them to a numeric (vectorized)
+        representation.
+
     Notes
     -----
     The ``Cleaner`` performs the following set of transformations on each column:
 
     - ``CleanNullStrings()``: replace strings used to represent null values
-    with actual null values.
+      with actual null values.
 
     - ``DropIfTooManyNulls()``: drop the column if it contains too many null values.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
-    actual datetimes with the correct dtype.
+      actual datetimes with the correct dtype.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
-    library (Pandas or Polars) to force consistent typing and avoid issues downstream.
+      library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
     - ``ToStr()``: convert columns to strings, unless they are numerical,
-    categorical, or datetime.
+      categorical, or datetime.
 
     The ``Cleaner`` object should only be used for preliminary sanitizing of
     the data because it does not perform any transformations on numeric columns.
@@ -245,12 +250,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
     [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
     >>> cleaner.all_processing_steps_['D']
     [DropIfTooManyNulls()]
-
-    See Also:
-    --------
-    TableVectorizer :
-        Process columns of a dataframe and convert them to a numeric (vectorized)
-        representation.
     """
 
     def __init__(self, drop_null_fraction=1.0, n_jobs=1):
@@ -482,6 +481,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         A function that accepts a scikit-learn estimator and creates a pipeline
         combining a ``TableVectorizer``, optional missing value imputation and
         the provided estimator.
+
+    Cleaner :
+        Preprocesses each column of a dataframe with consistency checks and
+        sanitization, eg of null values or dates.
 
     Examples
     --------
