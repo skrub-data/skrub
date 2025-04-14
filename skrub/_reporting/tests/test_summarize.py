@@ -13,10 +13,17 @@ from skrub._reporting._summarize import summarize_dataframe
 
 @pytest.mark.parametrize("order_by", [None, "date.utc", "value"])
 @pytest.mark.parametrize("with_plots", [False, True])
-def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
+@pytest.mark.parametrize("with_associations", [False, True])
+def test_summarize(
+    monkeypatch, df_module, air_quality, order_by, with_plots, with_associations
+):
     monkeypatch.setattr(_column_associations, "_CATEGORICAL_THRESHOLD", 10)
     summary = summarize_dataframe(
-        air_quality, with_plots=with_plots, order_by=order_by, title="the title"
+        air_quality,
+        with_plots=with_plots,
+        with_associations=with_associations,
+        order_by=order_by,
+        title="the title",
     )
     assert summary["title"] == "the title"
     assert not summary["dataframe_is_empty"]
@@ -79,15 +86,19 @@ def test_summarize(monkeypatch, df_module, air_quality, order_by, with_plots):
     assert summary["columns"][8]["nulls_level"] == "critical"
 
     # checking top associations
-
-    assert len(summary["top_associations"]) == 20
-    asso = [
-        d | {"cramer_v": round(d["cramer_v"], 1)} for d in summary["top_associations"]
-    ]
-    assert set(
-        tuple(sorted((a["left_column_name"], a["right_column_name"]))) for a in asso[:3]
-    ) == {("city", "country"), ("city", "location"), ("country", "location")}
-    assert asso[-1]["cramer_v"] == 0.0
+    if with_associations:
+        assert len(summary["top_associations"]) == 20
+        asso = [
+            d | {"cramer_v": round(d["cramer_v"], 1)}
+            for d in summary["top_associations"]
+        ]
+        assert set(
+            tuple(sorted((a["left_column_name"], a["right_column_name"])))
+            for a in asso[:3]
+        ) == {("city", "country"), ("city", "location"), ("country", "location")}
+        assert asso[-1]["cramer_v"] == 0.0
+    else:
+        assert "top_associations" not in summary.keys()
 
 
 def test_no_title(pd_module):
