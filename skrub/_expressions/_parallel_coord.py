@@ -19,8 +19,7 @@ def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
                 metadata,
                 colorscale=colorscale,
             )
-        ),
-        layout=go.Layout(font=dict(size=18)),
+        )
     )
 
 
@@ -41,7 +40,8 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
             colorbar=dict(title=dict(text="score")),
         ),
         dimensions=prepared_columns,
-        labelangle=45,
+        labelangle=15,
+        labelside="top",
     )
 
 
