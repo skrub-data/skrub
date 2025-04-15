@@ -42,15 +42,18 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
 
     .. math::
 
-        a = \begin{cases}
+        \begin{align*}
+            a &:= \begin{cases}
                 1/(q_{\beta} - q_{\alpha}) &, q_{\beta} \neq q_{\alpha} \\
                 2/(q_1 - q_0) &, q_{\beta} = q_{\alpha} \text{ and } q_1 \neq q_0 \\
                 0 &, \text{ otherwise.}
-            \end{cases}
-        z = a(x - q_{1/2}),
-        x_{\mathrm{out}} = \frac{z}{\sqrt{1 + (z/B)^2}},
+            \end{cases} \\
+            z &:= a(x - q_{1/2}), \\
+            x_{\mathrm{out}} &:= \frac{z}{\sqrt{1 + (z/B)^2}},
+        \end{align*}
 
     where
+
     - :math:`x` is a value in the input column.
     - :math:`q_{\gamma}` is the :math:`\gamma`-quantile of the finite values in X,
     - :math:`B` is max_abs_value
@@ -114,17 +117,17 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
         del y
 
         if not isinstance(self.max_absolute_value, numbers.Number):
-            raise ValueError(
+            raise TypeError(
                 "max_absolute_value needs to be a number, but got"
                 f" type(max_absolute_value)={type(self.max_absolute_value)}"
             )
         if not isinstance(self.lower_quantile_alpha, numbers.Number):
-            raise ValueError(
+            raise TypeError(
                 "lower_quantile_alpha needs to be a number, but got"
                 f" type(lower_quantile_alpha)={type(self.lower_quantile_alpha)}"
             )
         if not isinstance(self.upper_quantile_alpha, numbers.Number):
-            raise ValueError(
+            raise TypeError(
                 "upper_quantile_alpha needs to be a number, but got"
                 f" type(upper_quantile_alpha)={type(self.upper_quantile_alpha)}"
             )
@@ -145,16 +148,15 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
         if not sbd.is_numeric(X):
             raise RejectColumn(f"Column {self.col_name_} is not numeric.")
 
-        eps = 1e-30  # todo: expose?
+        eps = np.finfo("float32").tiny
 
         values = sbd.to_numpy(X).astype(np.float32)
         finite_values = values[np.isfinite(values)]
         if len(finite_values) > 0:
             self.median_ = np.median(finite_values)
-            quantiles = [
-                np.quantile(finite_values, q)
-                for q in [self.lower_quantile_alpha, self.upper_quantile_alpha]
-            ]
+            quantiles = np.quantile(
+                finite_values, [self.lower_quantile_alpha, self.upper_quantile_alpha]
+            )
             if quantiles[1] == quantiles[0]:
                 min = np.min(finite_values)
                 max = np.max(finite_values)
@@ -167,9 +169,6 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
         else:
             self.median_ = 0.0
             self.scale_ = 1.0
-
-        self._is_fitted = True
-        self.n_components_ = 1
 
         return self.transform(X)
 
@@ -198,10 +197,7 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
 
         # this will use the column name of the column that was passed in fit_transform,
         # not the name of X
-        return self._post_process(X, values_np, self.col_name_)
-
-    def _post_process(self, X, result, name):
-        result = sbd.make_column_like(X, result, name)
+        result = sbd.make_column_like(X, values_np, self.col_name_)
         result = sbd.copy_index(X, result)
 
         return result

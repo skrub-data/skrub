@@ -66,7 +66,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
         t_out = tfm.transform(X_df["test"])
         tfm_out = {"train": ft_out, "test": t_out}
 
-        eps = 1e-30
+        eps = np.finfo("float32").tiny
         finite_values = X["train"][np.isfinite(X["train"])].astype(np.float32)
         if len(finite_values) > 0:
             median = np.median(finite_values)
@@ -116,6 +116,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
     "config",
     [
         (
+            TypeError,
             "number",
             dict(
                 max_absolute_value=None,
@@ -124,6 +125,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             ),
         ),
         (
+            ValueError,
             "positive",
             dict(
                 max_absolute_value=0.0,
@@ -132,6 +134,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             ),
         ),
         (
+            ValueError,
             "finite",
             dict(
                 max_absolute_value=np.inf,
@@ -140,6 +143,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             ),
         ),
         (
+            TypeError,
             "number",
             dict(
                 max_absolute_value=3.0,
@@ -148,6 +152,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             ),
         ),
         (
+            TypeError,
             "number",
             dict(
                 max_absolute_value=3.0,
@@ -156,14 +161,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             ),
         ),
         (
-            "number",
-            dict(
-                max_absolute_value=3.0,
-                lower_quantile_alpha=0.25,
-                upper_quantile_alpha="0.75",
-            ),
-        ),
-        (
+            ValueError,
             "need",
             dict(
                 max_absolute_value=3.0,
@@ -172,6 +170,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             ),
         ),
         (
+            ValueError,
             "need",
             dict(
                 max_absolute_value=3.0,
@@ -180,6 +179,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             ),
         ),
         (
+            ValueError,
             "need",
             dict(
                 max_absolute_value=3.0,
@@ -198,10 +198,10 @@ def test_adaptive_squashing_error_msgs(df_module, config):
             category=RuntimeWarning,
             message="invalid value encountered in cast",
         )
-        msg_match, params = config
+        err_type, msg_match, params = config
         X = df_module.make_column("col", [-1.0, 0.0, 1.0])
         tfm = AdaptiveSquashingTransformer(**params)
-        with pytest.raises(ValueError, match=msg_match):
+        with pytest.raises(err_type, match=msg_match):
             tfm.fit_transform(X)
 
 
