@@ -48,32 +48,29 @@ Acyclic Graph of computations.
 What is the difference with orchestrators like Apache Airflow?
 ==============================================================
 
-Skrub pipelines are not an orchestrator, and don't offer capabilities for scheduling
-runs or provisionning resources and environments. They are a generalization of
-scikit-learn pipelines, which can still be used within an orchestrator.
+Skrub pipelines are not an orchestrator and do not offer capabilities for scheduling
+runs or provisioning resources and environments. Instead, they are a generalization
+of scikit-learn pipelines, which can still be used within an orchestrator.
 
 .. _expressions:
 
 Skrub expressions
 ~~~~~~~~~~~~~~~~~
 
-Skrub pipelines are built using special objects that represent intermediate results in a
-computation. They record the different operations we perform on them (such as
-applying operators or calling methods), which allows to later retrieve the
-whole computation graph as a machine-learning estimator that can be fitted and
-applied to unseen data.
+Skrub pipelines are built using special objects that represent intermediate results in
+a computation. These objects record the operations performed on them—such as applying
+operators or calling methods—allowing the entire computation graph to be retrieved
+later as a machine learning estimator that can be fitted and applied to unseen data.
 
-Because those Skrub objects encapsulate a computation, which can be evaluated
-to produce a result, we call them "expressions".
+Because these Skrub objects encapsulate computations that can be evaluated to produce
+results, we call them **expressions**.
 
-The simplest expressions are variables, which represent inputs to our
-machine-learning estimator such as a ``"products"`` or a ``"customers"`` tables
-or dataframes.
+The simplest expressions are **variables**, which represent inputs to our machine
+learning estimator—such as "products" or "customers" tables or dataframes.
 
-Those variables can be combined with operators and function calls to build up
-more complex expressions. The estimator is being constructed implicitly when we
-apply those operations, rather than by providing an explicit list of
-transformations.
+These variables can be combined using operators and function calls to build more
+complex expressions. The estimator is constructed implicitly as we apply these
+operations, rather than by specifying an explicit list of transformations.
 
 We start by declaring inputs:
 
@@ -116,11 +113,11 @@ Finally, we can get an estimator that can be fitted and applied to data.
 Previews
 ~~~~~~~~
 
-As we saw above, we can call ``.skb.eval()`` with a dictionary of bindings to compute
-the result of the pipeline. However, to develop interactively without having to call
-``.skb.eval()`` repeatedly, skrub provides a way to preview the result of the
-expression. When we create a variable, if we pass a value in addition to its name,
-skrub will use it to compute the result of the expression on that value.
+As we saw above, we can call .skb.eval() with a dictionary of bindings to compute
+the result of a pipeline. However, to make interactive development easier without
+having to call .skb.eval() repeatedly, Skrub provides a way to preview the result
+of an expression. When creating a variable, if we pass a value along with its name,
+Skrub will use that value to compute and preview the result of the expression.
 
 .. code:: python
 
@@ -157,9 +154,8 @@ We can create a skrub variable to represent that input:
 
     orders = skrub.var("orders", orders_df)
 
-
-Because we know we will feed a DataFrame to the computation, we manipulate
-``orders`` as if it were a DataFrame.
+Because we know that a dataframe will be provided as input to the computation, we
+can manipulate ``orders`` as if it were a regular dataframe.
 
 We can access its attributes:
 
@@ -185,7 +181,7 @@ We can apply operators:
     # 3    8.8
     # dtype: float64
 
-Calling methods:
+We can call methods:
 
 .. code:: python
 
@@ -196,15 +192,14 @@ Calling methods:
     # 2   pen    1.5    2    3.0
     # 3  fork    2.2    4    8.8
 
-It is important to note that the original ``orders`` pipeline is not modified
-by the previous cells. Instead, in each cell a new expression is created that
+It's important to note that the original orders pipeline is not modified by the
+operations in the previous cells. Instead, each cell creates a new expression that
 represents the result of the operation.
 
-This is similar to how Pandas and Polars
-dataframes work: when we call a method on a dataframe, it returns a new
-dataframe that represents the result of the operation, rather than modifying
-the original dataframe in place. However, while in Pandas it is possible to
-work on a dataframe in place, Skrub does not allow this.
+This behavior is similar to how Pandas and Polars dataframes work: when we call
+a method on a dataframe, it returns a new dataframe representing the result, rather
+than modifying the original in place. However, unlike Pandas—where in-place
+modifications are possible—Skrub does not allow in-place updates.
 
 Applying machine-learning estimators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -243,14 +238,13 @@ It is also possible to apply a transformer to a subset of the columns:
     # 2  1.000000e+00  4.260130e-08 -2.691092e-09    1.5    2
     # 3  9.629613e-10 -1.792075e-03  9.999982e-01    2.2    4
 
-Again, the crucial part is that when applying such operations, the return
-value encapsulates the whole computation that produces the result we see. We are
-not interested in a single result for the example values we provided, but in
-the ability to retrieve a machine-learning estimator that we can fit and then
-apply to unseen data.
+Again, the crucial point is that when we apply such operations, the returned value
+encapsulates the entire computation that produces the result we see. We're not just
+interested in the output for the example values we provided—we're building a machine
+learning estimator that can be fitted and applied to unseen data.
 
-We can retrieve the estimator, fit it on the data we provided initially, then apply
-it on new data:
+We can retrieve the estimator, fit it on the data we initially provided, and
+then apply it to new data:
 
 .. code:: python
 
@@ -264,13 +258,13 @@ it on new data:
 Deferred evaluation
 ~~~~~~~~~~~~~~~~~~~
 
-Expressions represent a computation that has not yet been executed, and will
-be executed when we trigger it, for example by calling ``eval()`` or getting
-the estimator and calling ``fit()``.
+Expressions represent computations that haven't been executed yet and will only be
+triggered when we call something like ``eval()``, or when we retrieve the estimator
+and call ``fit()``.
 
-This means that we cannot use usual Python control flow statements such as
-``if``, ``for``, ``with`` etc. with expressions, because those constructs would
-execute immediately.
+This means we can't use standard Python control flow statements—such as ``if``,
+``for``, ``with``, etc.—with expressions, because those constructs would execute
+immediately.
 
 .. code:: python
 
@@ -295,11 +289,11 @@ see a result for that value:
 So we must delay the execution of the ``for`` statement until the computation
 actually runs and ``orders.columns`` has been evaluated.
 
-We can do this by defining a function that contains the control flow statement we need,
-and decorating it with ``skrub.deferred``. What this does is deferring
-the calls to our function. Now when we call it, instead of running
-immediately, it returns a skrub expression that wraps the function call. The
-original function is actually called when we evaluate the expression.
+We can achieve this by defining a function that contains the control flow logic
+we need, and decorating it with ``skrub.deferred``. This decorator defers the execution
+of the function: when we call it, it doesn't run immediately. Instead, it returns
+a Skrub expression that wraps the function call. The original function is only
+executed when the expression is evaluated.
 
 .. code:: python
 
@@ -318,9 +312,9 @@ original function is actually called when we evaluate the expression.
     # 2   pen    1.5    2
     # 3  fork    2.2    4
 
-``skrub.deferred`` is useful for our own functions but also when we need to
-call module-level functions from a library. For example to delay loading of a
-csv file we could use something like:
+``skrub.deferred`` is useful not only for our own functions, but also when we
+need to call module-level functions from a library. For example, to delay the
+loading of a CSV file, we could write something like:
 
 .. code:: python
 
@@ -343,14 +337,13 @@ result without modifying its input.
     # For example if df is a pandas DataFrame:
     # df = df.assign(new_col=...) instead of df['new_col'] = ...
 
-Finally, there are other occasions where we may need to use ``deferred``:
+Finally, there are other situations where using ``deferred`` can be helpful:
 
-- we have many nodes in our graph, and we want to collapse a sequence of
-  steps into a single function call, that will appear as a single node
-- we have steps that need to be deferred until the full computation runs,
-  because they depend on the runtime environment or on objects that cannot be
-  pickled together with the rest of the computation graph -- for example
-  opening and reading a file.
+- When we have many nodes in our graph and want to collapse a sequence of steps into
+  a single function call that appears as a single node.
+- When certain steps need to be deferred until the full computation runs, because they
+  depend on the runtime environment, or on objects that cannot be pickled with the
+  rest of the computation graph (for example, opening and reading a file).
 
 .. rubric:: Examples
 
