@@ -21,7 +21,7 @@ class DropUninformative(SingleColumnTransformer):
 
     Parameters
     ----------
-    drop_if_constant: bool, default=True
+    drop_if_constant: bool, default=False
         If True, drop the column if it contains only one unique value. Missing values
         count as one additional distinct value.
     drop_if_id: bool, default=False
@@ -44,15 +44,12 @@ class DropUninformative(SingleColumnTransformer):
         self.null_fraction_threshold = null_fraction_threshold
 
     def _check_params(self):
-        if self.drop_if_constant not in [True, False]:
-            raise ValueError(
-                "constant_column must be in [True, False], found"
-                f" {self.drop_if_constant}."
+        if not isinstance(self.drop_if_constant, bool):
+            raise TypeError(
+                f"drop_if_constant must be boolean, found {self.drop_if_constant}."
             )
-        if self.drop_if_id not in [True, False]:
-            raise ValueError(
-                f"column_is_id must be in [True, False], found {self.drop_if_id}."
-            )
+        if not isinstance(self.drop_if_id, bool):
+            raise TypeError(f"drop_if_id must be boolean, found {self.drop_if_id}.")
 
         if self.null_fraction_threshold is not None:
             if (
@@ -61,7 +58,7 @@ class DropUninformative(SingleColumnTransformer):
             ):
                 raise ValueError(
                     f"Threshold {self.null_fraction_threshold} is invalid. Threshold"
-                    " should be a number in the range [0, 1]."
+                    " should be a number in the range [0, 1], or None."
                 )
 
     def _drop_if_too_many_nulls(self, column):

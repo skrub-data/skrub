@@ -593,7 +593,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), DropUninformative(constant_column=False), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), DropUninformative(drop_if_constant=False), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
     Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
@@ -668,7 +668,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(constant_column=False), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(drop_if_constant=False), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 

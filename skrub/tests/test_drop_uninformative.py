@@ -91,12 +91,11 @@ def test_error_checking(drop_null_table):
     dn = DropUninformative(null_fraction_threshold=-1)
     with pytest.raises(ValueError):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
-
-    dn = DropUninformative(drop_if_id="wrong")
-    with pytest.raises(ValueError, match="constant_column"):
+    dn = DropUninformative(drop_if_constant="wrong")
+    with pytest.raises(TypeError, match="drop_if_constant"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
     dn = DropUninformative(drop_if_id="wrong")
-    with pytest.raises(ValueError, match="column_is_id"):
+    with pytest.raises(TypeError, match="drop_if_id"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
     dn = DropUninformative(null_fraction_threshold="wrong")
     with pytest.raises(ValueError, match="Threshold"):
@@ -140,12 +139,12 @@ def drop_constant_table(df_module):
         (dict(), "constant_float_with_nulls", [2.5, 2.5, np.nan]),
         (dict(), "constant_str", []),
         (dict(), "constant_str_with_nulls", ["const", "const", None]),
-        (dict(constant_column=False), "idx", [1, 2, 3]),
-        (dict(constant_column=False), "constant_float", [2.5] * 3),
-        (dict(constant_column=False), "constant_float_with_nulls", [2.5, 2.5, np.nan]),
-        (dict(constant_column=False), "constant_str", ["const"] * 3),
+        (dict(drop_if_constant=False), "idx", [1, 2, 3]),
+        (dict(drop_if_constant=False), "constant_float", [2.5] * 3),
+        (dict(drop_if_constant=False), "constant_float_with_nulls", [2.5, 2.5, np.nan]),
+        (dict(drop_if_constant=False), "constant_str", ["const"] * 3),
         (
-            dict(constant_column=False),
+            dict(drop_if_constant=False),
             "constant_str_with_nulls",
             ["const", "const", None],
         ),
