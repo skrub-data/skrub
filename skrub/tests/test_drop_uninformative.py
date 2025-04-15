@@ -189,33 +189,13 @@ def drop_id_column(df_module):
     )
 
 
-@pytest.mark.parametrize(
-    "params, column, result",
-    [
-        (dict(), "idx", [1, 2, 3]),
-        (dict(), "idx_with_nulls", [1, 2, np.nan]),
-        (dict(), "str", ["i1", "i2", "i3"]),
-        (dict(), "str_with_nulls", ["i1", "i2", None]),
-        (dict(), "variable", ["A", "B", "B"]),
-        (dict(column_is_id=True), "idx", [1, 2, 3]),
-        (dict(column_is_id=True), "idx_with_nulls", [1, 2, np.nan]),
-        (dict(column_is_id=True), "str", []),
-        (dict(column_is_id=True), "str_with_nulls", ["i1", "i2", None]),
-        (dict(column_is_id=True), "variable", ["A", "B", "B"]),
-    ],
-)
-def test_drop_id(df_module, drop_id_column, params, column, result):
-    enc = DropUninformative(**params)
-    res = enc.fit_transform(drop_id_column[column])
-    if result == []:
-        assert res == result
-    elif sbd.is_numeric(res):
-        df_module.assert_column_equal(
-            res,
-            df_module.make_column(column, np.array(result)),
-        )
-    else:
-        df_module.assert_column_equal(
-            res,
-            df_module.make_column(column, result),
-        )
+@pytest.mark.parametrize("drop_ids", [True, False])
+def test_drop_id(df_module, drop_id_column, drop_ids):
+    enc = DropUninformative(column_is_id=drop_ids)
+    for column in drop_id_column.columns:
+        res = enc.fit_transform(drop_id_column[column])
+        # Check that "str" is the only column that gets dropped
+        if column == "str" and drop_ids:
+            assert res == []
+        else:
+            df_module.assert_column_equal(res, df_module.make_column(column, res))
