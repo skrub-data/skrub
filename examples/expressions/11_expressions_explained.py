@@ -223,7 +223,9 @@ orders.assign(total=orders["price"] * orders["qty"])
 #
 # We can check this by looking at the graph of ``orders`` (which remains unmodified),
 # and ``new_orders`` (which instead contains the new steps):
+# %%
 orders
+
 # %%
 new_orders = orders.assign(total=orders["price"] * orders["qty"])
 new_orders

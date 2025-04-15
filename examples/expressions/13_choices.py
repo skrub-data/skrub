@@ -19,7 +19,7 @@ Skrub `expressions <10_expressions.html>`_ provide a convenient way to specify
 the range of possible values, by inserting it directly in place of the actual
 value. For example we can write:
 
- ``RidgeClassifier(alpha=skrub.choose_from([0.1, 1.0, 10.0], name='α'))``
+``RidgeClassifier(alpha=skrub.choose_from([0.1, 1.0, 10.0], name='α'))``
 
 instead of:
 
@@ -101,18 +101,17 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 #
 # Note that ``skrub.choose_float()`` and ``skrub.choose_int()`` can be given a
 # ``log`` argument to sample in log scale.
+
 # %%
 X, y = skrub.X(texts), skrub.y(labels)
 
 encoder = skrub.MinHashEncoder(
     n_components=skrub.choose_int(5, 50, log=True, name="N components")
 )
-X = X.skb.apply(encoder)
-
 classifier = HistGradientBoostingClassifier(
     learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="lr")
 )
-pred = X.skb.apply(classifier, y=y)
+pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 
 # %%
 # We can then obtain an estimator that performs the hyperparameter search with
@@ -161,13 +160,12 @@ search.plot_results()
 # %%
 X, y = skrub.X(texts), skrub.y(labels)
 
-X = X.assign(
+X.assign(
     length=skrub.choose_from(
         {"words": X["text"].str.count(r"\b\w+\b"), "chars": X["text"].str.len()},
         name="length",
     )
 )
-X
 
 # %%
 # ``choose_from`` can be given a dictionary if we want to provide
@@ -190,7 +188,7 @@ encoder = skrub.choose_from(
     },
     name="encoder",
 )
-X = X.skb.apply(encoder, cols="text")
+X.skb.apply(encoder, cols="text")
 
 # %%
 # In a similar vein, we might want to choose between a HGB classifier and a Ridge
@@ -206,7 +204,7 @@ hgb = HistGradientBoostingClassifier(
 )
 ridge = RidgeClassifier(alpha=skrub.choose_float(0.01, 100, log=True, name="α"))
 classifier = skrub.choose_from({"hgb": hgb, "ridge": ridge}, name="classifier")
-pred = X.skb.apply(classifier, y=y)
+pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 print(pred.skb.describe_param_grid())
 
 # %%
@@ -245,17 +243,17 @@ from sklearn.preprocessing import StandardScaler
 
 X, y = skrub.X(texts), skrub.y(labels)
 
-X = X.skb.apply(skrub.MinHashEncoder())
+vectorized_X = X.skb.apply(skrub.MinHashEncoder())
 
 estimator_kind = skrub.choose_from(["ridge", "HGB"], name="estimator kind")
 
 scaling = estimator_kind.match({"ridge": StandardScaler(), "HGB": "passthrough"})
-X = X.skb.apply(scaling)
+scaled_X = vectorized_X.skb.apply(scaling)
 
 classifier = estimator_kind.match(
     {"ridge": RidgeClassifier(), "HGB": HistGradientBoostingClassifier()}
 )
-pred = X.skb.apply(classifier, y=y)
+pred = scaled_X.skb.apply(classifier, y=y)
 print(pred.skb.describe_param_grid())
 
 # %%
@@ -276,20 +274,21 @@ print(pred.skb.describe_param_grid())
 # of the text as a feature or not. Then, ``if_else()`` will assign the length
 # of the text to a new column ``length`` if the choice is ``True``, or do nothing
 # if the choice is ``False``.
+
 # %%
 X, y = skrub.X(texts), skrub.y(labels)
 
 add_length = skrub.choose_bool(name="add_length")
-X = add_length.if_else(X.assign(length=X["text"].str.len()), X).as_expr()
-X = X.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
+with_length = add_length.if_else(X.assign(length=X["text"].str.len()), X).as_expr()
+vectorized_X = with_length.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
 
 # Note: we can manually set the outcome of a choice when evaluating an
 # expression (or fitting an estimator)
 
-X.skb.eval({"add_length": False})
+vectorized_X.skb.eval({"add_length": False})
 
 # %%
-X.skb.eval({"add_length": True})
+vectorized_X.skb.eval({"add_length": True})
 
 # %%
 # Arbitrary logic depending on a choice
@@ -299,6 +298,7 @@ X.skb.eval({"add_length": True})
 # eager logic based on a choice we can resort to using ``skrub.deferred``. For
 # example the choice of adding the text length or not could also have been
 # written as:
+
 # %%
 X, y = skrub.X(texts), skrub.y(labels)
 
@@ -310,13 +310,14 @@ def extract_features(df, add_length):
     return df
 
 
-X = extract_features(X, skrub.choose_bool(name="add_length"))
-X = X.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
+feat = extract_features(X, skrub.choose_bool(name="add_length")).skb.apply(
+    skrub.MinHashEncoder(n_components=2), cols="text"
+)
 
-X.skb.eval({"add_length": False})
+feat.skb.eval({"add_length": False})
 
 # %%
-X.skb.eval({"add_length": True})
+feat.skb.eval({"add_length": True})
 
 # %%
 # Concluding, we have seen how to use skrub's ``choose_from`` objects to tune

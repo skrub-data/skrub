@@ -165,7 +165,7 @@ def filter_products(products, baskets):
     return products[products["basket_ID"].isin(baskets["ID"])]
 
 
-products = filter_products(products, baskets)
+kept_products = filter_products(products, baskets)
 
 # %%
 # We saw before that a transformer can be restricted to a subset of columns in
