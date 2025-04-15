@@ -117,7 +117,7 @@ def test_pickling_preview_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        skrub.X([]) + [cls()]
+        (skrub.X([]) + [cls()]).skb.get_estimator()
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
