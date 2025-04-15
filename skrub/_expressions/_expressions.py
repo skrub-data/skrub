@@ -5,7 +5,6 @@ import inspect
 import itertools
 import operator
 import pathlib
-import pickle
 import re
 import textwrap
 import traceback
@@ -31,7 +30,6 @@ __all__ = [
     "as_expr",
     "deferred",
     "check_expr",
-    "check_can_be_pickled",
     "eval_mode",
 ]
 
@@ -218,21 +216,6 @@ class ExprImpl:
         return f"<{self.__class__.__name__}>"
 
 
-def check_can_be_pickled(obj):
-    try:
-        dumped = pickle.dumps(obj)
-        pickle.loads(dumped)
-    except Exception as e:
-        msg = "The check to verify that the pipeline can be serialized failed."
-        if "recursion" in str(e).lower():
-            msg = (
-                f"{msg} Is a step in the pipeline holding a reference to "
-                "the full pipeline itself? For example a global variable "
-                "in a `@skrub.deferred` function?"
-            )
-        raise pickle.PicklingError(msg) from e
-
-
 def _find_dataframe(expr, func_name):
     # If a dataframe is found in an expression that is likely a mistake.
     # Eg skrub.X().join(actual_df, ...) instead of skrub.X().join(skrub.var('Z'), ...)
@@ -278,13 +261,6 @@ def check_expr(f):
             raise ValueError(conflicts["message"])
         if (found_df := _find_dataframe(expr, func_name)) is not None:
             raise TypeError(found_df["message"])
-
-        # Note: if checking pickling for every step is expensive we could also
-        # do it in `get_estimator()` only, ie before any cross-val or
-        # grid-search. or we could have some more elaborate check (possibly
-        # with false negatives) where we pickle nodes separately and we only
-        # check new nodes that haven't yet been checked.
-        check_can_be_pickled(expr)
         check_choices_before_Xy(expr)
         try:
             evaluate(expr, mode="preview", environment=None)

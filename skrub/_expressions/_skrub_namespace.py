@@ -1,3 +1,4 @@
+import pickle
 import typing
 
 from sklearn import model_selection
@@ -21,7 +22,6 @@ from ._expressions import (
     IfElse,
     Match,
     Var,
-    check_can_be_pickled,
     check_expr,
     check_name,
     deferred,
@@ -41,6 +41,21 @@ def _var_values_provided(expr, environment):
     }
     intersection = names.intersection(environment.keys())
     return bool(intersection)
+
+
+def _check_can_be_pickled(obj):
+    try:
+        dumped = pickle.dumps(obj)
+        pickle.loads(dumped)
+    except Exception as e:
+        msg = "The check to verify that the pipeline can be serialized failed."
+        if "recursion" in str(e).lower():
+            msg = (
+                f"{msg} Is a step in the pipeline holding a reference to "
+                "the full pipeline itself? For example a global variable "
+                "in a `@skrub.deferred` function?"
+            )
+        raise pickle.PicklingError(msg) from e
 
 
 class SkrubNamespace:
@@ -1104,7 +1119,7 @@ class SkrubNamespace:
         # are pickled by value by cloudpickle and that reference global
         # variables, and those global variables may have changed since the
         # expression was created.
-        check_can_be_pickled(estimator)
+        _check_can_be_pickled(estimator)
         if not fitted:
             return estimator
         return estimator.fit(self.get_data())
