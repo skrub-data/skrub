@@ -22,7 +22,7 @@ from .._utils import PassThrough, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import get_chosen_or_default
-from ._utils import FITTED_PREDICTOR_METHODS, NULL, _CloudPickle, attribute_error
+from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
 
 __all__ = [
     "var",
@@ -420,8 +420,7 @@ class _ExprDoc:
         return f"""Skrub expression.\nDocstring of the preview:\n{doc}"""
 
 
-class Expr(_CloudPickle):
-    _cloudpickle_attributes = ["_skrub_impl"]
+class Expr:
     __hash__ = None
 
     __doc__ = _ExprDoc()
