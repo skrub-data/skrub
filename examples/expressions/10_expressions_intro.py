@@ -75,7 +75,7 @@ skrub.TableReport(dataset.products)
 # storing fitted estimators, splitting the input data and cross-validation, and
 # hyper-parameter tuning.
 #
-# Moreover, we might need some pandas code to perform the aggregation and join.
+# Moreover, we might need some Pandas code to perform the aggregation and join.
 # Again, as this transformation is not in a scikit-learn estimator, it is error-prone.
 # The difficulty is that we have to keep track of it ourselves to apply it later
 # to unseen data, and we cannot tune any choices (like the choice of the
@@ -223,6 +223,12 @@ search = predictions.skb.get_randomized_search(
 search.results_
 
 # %%
+# We can also run a cross validation, using the first choices defined in the ``choose``
+# objects:
+
+predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
+
+# %%
 # We can also display a parallel coordinates plot of the results.
 #
 # In a parallel coordinates plot, each line corresponds to a combination
@@ -230,7 +236,7 @@ search.results_
 # scores, and training and scoring computation durations.
 # Different columns show the hyperparameter values.
 #
-# By clicking and dragging the mouse on any column, we can restrict the
+# By **clicking and dragging the mouse** on any column, we can restrict the
 # set of lines we see. This allows quickly inspecting which hyperparameters are
 # important, which values perform best, and potential trade-offs between the quality
 # of predictions and computation time.
@@ -242,11 +248,31 @@ search.plot_results()
 # It seems here that using the LSA as an encoder brings better test scores,
 # but at the expense of training and scoring time.
 #
+# Serializing
+# -----------
+# We would usually save this model in a binary file, but to avoid accessing the
+# filesystem with this example notebook, we serialize the model in memory instead.
+import pickle
+
+saved_model = pickle.dumps(search.best_estimator_)
+
+# %%
+# Let's say we got some new data, and we want to use the model we just saved
+# to make predictions on them:
+new_data = skrub.datasets.fetch_credit_fraud(split="test")
+new_baskets = new_data.baskets[["ID"]]
+new_products = new_data.products
+
+# %%
+# Our estimator expects the same variable names as the training pipeline, which is why
+# we pass a dictionary that contains new dataframes and the same variable:
+loaded_model = pickle.loads(saved_model)
+loaded_model.predict({"baskets": new_baskets, "products": new_products})
 
 # %%
 # Conclusion
 # ----------
 #
-# If you are curious to know more on how to
-# build your own complex, multi-table pipelines with easy hyperparameter
-# tuning, please see the next examples for an in-depth tutorial.
+# If you are curious to know more on how to build your own complex, multi-table
+# pipelines with easy hyperparameter tuning, please see the next examples for an
+# in-depth tutorial.
