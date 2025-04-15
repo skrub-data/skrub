@@ -771,12 +771,20 @@ class _FindConflicts(_ExprTraversal):
             )
         assert conflict["reason"] == "name", conflict["reason"]
         name = conflict["name"]
-        return (
+        msg = (
             f"Choice and node names must be unique. The name {name!r} was used "
             "for 2 different objects:\n"
             f"first object using the name {name!r}:\n{first}\n"
             f"second object using the name {name!r}:\n{second}"
         )
+        if repr(first) == repr(second):
+            msg += (
+                "\nIs it possible that you accidentally added a transformation twice, "
+                "for example by re-running a Jupyter notebook cell that rebinds a "
+                "Python variable to a new skrub expression "
+                "(eg `expr = expr.skb.apply(...)`)?"
+            )
+        return msg
 
     def _add_to_dict(self, d, key, val, reason):
         if key is None:
