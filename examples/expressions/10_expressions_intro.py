@@ -1,12 +1,11 @@
 """
+.. _example_expressions_intro:
+
 Building complex tabular pipelines
 ==================================
 
-In this example, we show a pipeline to handle a dataset with 2 tables.
-Despite being very simple, this pipeline would be difficult to implement, validate
-and deploy correctly without skrub. We show the script with minimal comments to
-motivate the tools that are explained in detail in subsequent examples.
-
+In this example, we show a simple pipeline handling a dataset with 2 tables, which
+would be difficult to implement, validate, and deploy correctly without skrub.
 """
 
 # %%
