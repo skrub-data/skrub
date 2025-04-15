@@ -65,13 +65,13 @@ def test_parallel_coord():
     next(data)
     next(data)
     dim = next(data)
+    assert dim["label"] == "c4"
+    assert list(dim["ticktext"]) == ["Null", "A", "z"]
+    assert list(dim["tickvals"]) == [-1.0, 0, 1]
+    dim = next(data)
     assert dim["label"] == "c5"
     assert list(dim["ticktext"]) == ["Null", "False", "True"]
     assert list(dim["tickvals"]) == [-1.0, 0, 1]
     next(data)
-    dim = next(data)
-    assert dim["label"] == "c4"
-    assert list(dim["ticktext"]) == ["Null", "A", "z"]
-    assert list(dim["tickvals"]) == [-1.0, 0, 1]
     dim = next(data)
     assert dim["label"] == "fit time"

@@ -97,7 +97,7 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 #   ``X.skb.apply(skrub.optional(StandardScaler()))``
 #
 # Choices can be given a name which is used to display hyperparameter search
-# results and plots or to override their outcome.
+# results and plots or to override their outcome. The name is optional.
 #
 # Note that ``skrub.choose_float()`` and ``skrub.choose_int()`` can be given a
 # ``log`` argument to sample in log scale.

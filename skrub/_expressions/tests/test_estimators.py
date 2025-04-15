@@ -191,6 +191,23 @@ def test_grid_search(expression, data, n_jobs):
     assert train_score == pytest.approx(0.94)
 
 
+def test_no_names():
+    X, y = make_classification(random_state=0, n_samples=20)
+    e = (
+        skrub.X(X)
+        .skb.apply(StandardScaler(with_mean=skrub.choose_bool()))
+        .skb.apply(StandardScaler(with_mean=skrub.choose_bool()))
+        .skb.apply(StandardScaler(with_mean=skrub.choose_bool(name="m")))
+        .skb.apply(LogisticRegression(), y=skrub.y(y))
+    ).skb.get_grid_search(fitted=True, cv=2)
+    assert list(e.results_.columns) == [
+        "mean_test_score",
+        "choose_bool()",
+        "choose_bool()_1",
+        "m",
+    ]
+
+
 def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     search = expression.skb.get_randomized_search(
         n_iter=3, n_jobs=n_jobs, random_state=0

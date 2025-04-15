@@ -92,10 +92,15 @@ def _check_match_keys(outcome_values, mapping_keys, has_default):
 
 
 def _check_name(name):
-    if not isinstance(name, str):
+    if name is not None and not isinstance(name, str):
         raise TypeError(
-            f"choice `name` must be a `str`, got object of type: {type(name)}"
+            f"choice `name` must be a `str` or `None`, got object of type: {type(name)}"
         )
+
+
+class _Ellipsis:
+    def __repr__(self):
+        return "…"
 
 
 @dataclasses.dataclass
@@ -104,7 +109,7 @@ class Choice(BaseChoice):
 
     outcomes: list[typing.Any]
     outcome_names: typing.Optional[list[str]]
-    name: str
+    name: typing.Optional[str] = None
     chosen_outcome_idx: typing.Optional[int] = None
 
     def __post_init__(self):
@@ -227,12 +232,12 @@ class Choice(BaseChoice):
         >>> print(pred.skb.describe_param_grid())
         - k: choose_int(15, 25, name='k')
           learner: 'logistic'
-          C: choose_float(0.01, 10.0, log=True, name='C')
           string__n_components: choose_int(5, 20, name='string__n_components')
+          C: choose_float(0.01, 10.0, log=True, name='C')
         - k: choose_int(15, 25, name='k')
           learner: 'hgb'
-          learning_rate: choose_float(0.01, 0.9, log=True, name='learning_rate')
           minhash__n_components: choose_int(10, 30, name='minhash__n_components')
+          learning_rate: choose_float(0.01, 0.9, log=True, name='learning_rate')
 
         In the grid above, we see that we have 2 different families of
         configurations: one for the logistic regression and one for the
@@ -264,7 +269,16 @@ class Choice(BaseChoice):
             arg = self.outcomes
         else:
             arg = {name: out for name, out in zip(self.outcome_names, self.outcomes)}
-        args_r = _utils.repr_args((arg,), {"name": self.name})
+        args_r = _utils.repr_args((arg,), {"name": self.name}, {"name": None})
+        return f"choose_from({args_r})"
+
+    def __skrub_short_repr__(self):
+        if self.outcome_names is None:
+            return repr(self)
+        arg = {
+            name: _Ellipsis() for name, out in zip(self.outcome_names, self.outcomes)
+        }
+        args_r = _utils.repr_args((arg,), {"name": self.name}, {"name": None})
         return f"choose_from({args_r})"
 
 
@@ -334,7 +348,7 @@ class Match:
         return as_expr(self)
 
 
-def choose_from(outcomes, *, name):
+def choose_from(outcomes, *, name=None):
     """Construct a choice among several possible outcomes.
 
     Outcomes can be provided in a list:
@@ -389,6 +403,12 @@ def get_chosen_or_default(obj):
     return obj
 
 
+def get_display_name(choice):
+    if choice.name is not None:
+        return choice.name
+    return _utils.short_repr(choice)
+
+
 class Optional(Choice):
     """A choice between something and nothing."""
 
@@ -399,7 +419,7 @@ class Optional(Choice):
         return f"optional({args})"
 
 
-def optional(value, *, name):
+def optional(value, *, name=None):
     """Construct a choice between a value and ``None``.
 
     This is useful for optional steps in a pipeline. If we want to try our
@@ -420,7 +440,7 @@ def optional(value, *, name):
 
 class BoolChoice(Choice):
     def __repr__(self):
-        args = _utils.repr_args((), {"name": self.name})
+        args = _utils.repr_args((), {"name": self.name}, {"name": None})
         return f"choose_bool({args})"
 
     def if_else(self, if_true, if_false):
@@ -448,7 +468,7 @@ class BoolChoice(Choice):
         return self.match({True: if_true, False: if_false})
 
 
-def choose_bool(*, name):
+def choose_bool(*, name=None):
     """Construct a choice between False and True."""
     return BoolChoice([True, False], outcome_names=None, name=name)
 
@@ -470,7 +490,7 @@ def _repr_numeric_choice(choice):
             "n_steps": getattr(choice, "n_steps", None),
             "name": choice.name,
         },
-        defaults={"log": False, "n_steps": None},
+        defaults={"log": False, "n_steps": None, "name": None},
     )
     if choice.to_int:
         return f"choose_int({args})"
@@ -576,7 +596,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
         return iter(self.grid)
 
 
-def choose_float(low, high, *, log=False, n_steps=None, name):
+def choose_float(low, high, *, log=False, n_steps=None, name=None):
     """Construct a choice of floating-point numbers from a numeric range."""
     if n_steps is None:
         return NumericChoice(low, high, log=log, to_int=False, name=name)
@@ -585,7 +605,7 @@ def choose_float(low, high, *, log=False, n_steps=None, name):
     )
 
 
-def choose_int(low, high, *, log=False, n_steps=None, name):
+def choose_int(low, high, *, log=False, n_steps=None, name=None):
     """Construct a choice of integers from a numeric range."""
     if n_steps is None:
         return NumericChoice(low, high, log=log, to_int=True, name=name)

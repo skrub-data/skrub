@@ -16,7 +16,7 @@ from .._reporting._serve import open_in_browser
 from .._utils import Repr, random_string, short_repr
 from . import _utils
 from ._choosing import BaseNumericChoice
-from ._evaluation import choices, clear_results, evaluate, graph, param_grid
+from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
 
 # TODO after merging the expressions do some refactoring and move this stuff to
@@ -342,15 +342,15 @@ def draw_expr_graph(expr, url=None, direction="TB"):
 
 def describe_param_grid(expr):
     grid = param_grid(expr)
-    expr_choices = choices(expr)
+    expr_choices = choice_graph(expr)
 
     buf = io.StringIO()
     for subgrid in grid:
         prefix = "- "
         for k, v in subgrid.items():
             assert isinstance(v, (BaseNumericChoice, list))
-            choice = expr_choices[k]
-            name = choice.name
+            choice = expr_choices["choices"][k]
+            name = expr_choices["choice_display_names"][k]
             buf.write(f"{prefix}{name}: ")
             if isinstance(choice, BaseNumericChoice):
                 buf.write(f"{v}\n")
