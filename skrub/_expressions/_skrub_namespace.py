@@ -1112,13 +1112,7 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
         """
-
         estimator = ExprEstimator(self.clone())
-        # We need to check here even if intermediate steps have been checked,
-        # because there might be in the expression some calls to functions that
-        # are pickled by value by cloudpickle and that reference global
-        # variables, and those global variables may have changed since the
-        # expression was created.
         _check_can_be_pickled(estimator)
         if not fitted:
             return estimator
