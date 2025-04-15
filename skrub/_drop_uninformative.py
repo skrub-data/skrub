@@ -65,20 +65,20 @@ class DropUninformative(SingleColumnTransformer):
         if self.null_fraction_threshold == 1.0:
             return sbd.is_all_null(column)
         # No nulls found, or no threshold
-        if self.null_count == 0 or self.null_fraction_threshold is None:
+        if self._null_count == 0 or self.null_fraction_threshold is None:
             return False
-        return self.null_count / len(column) > self.null_fraction_threshold
+        return self._null_count / len(column) > self.null_fraction_threshold
 
     def _drop_if_constant(self, column):
         if self.drop_if_constant:
-            if (sbd.n_unique(column) == 1) and (sum(sbd.is_null(column)) == 0):
+            if (sbd.n_unique(column) == 1) and (not sbd.has_nulls(column)):
                 return True
         return False
 
     def _drop_if_id(self, column):
         if self.drop_if_id and not sbd.is_numeric(column):
             n_unique = sbd.n_unique(column)
-            if self.null_count > 0:
+            if self._null_count > 0:
                 return False
             if n_unique == len(column):
                 return True
@@ -102,7 +102,7 @@ class DropUninformative(SingleColumnTransformer):
         self._check_params()
 
         # Count nulls
-        self.null_count = sum(sbd.is_null(column))
+        self._null_count = sum(sbd.is_null(column))
 
         self.drop_ = any(
             [
