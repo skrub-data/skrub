@@ -21,10 +21,10 @@ class DropUninformative(SingleColumnTransformer):
 
     Parameters
     ----------
-    constant_column: bool, default=True
+    drop_if_constant: bool, default=True
         If True, drop the column if it contains only one unique value. Missing values
         count as one additional distinct value.
-    column_is_id: bool, default=False
+    drop_if_id: bool, default=False
         If True, drop the column if all values are distinct. Missing values count as
         one additional distinct value. Numeric columns are never dropped.
     null_fraction_threshold: float or None, default=1.0
@@ -35,23 +35,23 @@ class DropUninformative(SingleColumnTransformer):
 
     def __init__(
         self,
-        constant_column=True,
-        column_is_id=False,
+        drop_if_constant=True,
+        drop_if_id=False,
         null_fraction_threshold=1.0,
     ):
-        self.constant_column = constant_column
-        self.column_is_id = column_is_id
+        self.drop_if_constant = drop_if_constant
+        self.drop_if_id = drop_if_id
         self.null_fraction_threshold = null_fraction_threshold
 
     def _check_params(self):
-        if self.constant_column not in [True, False]:
+        if self.drop_if_constant not in [True, False]:
             raise ValueError(
                 "constant_column must be in [True, False], found"
-                f" {self.constant_column}."
+                f" {self.drop_if_constant}."
             )
-        if self.column_is_id not in [True, False]:
+        if self.drop_if_id not in [True, False]:
             raise ValueError(
-                f"column_is_id must be in [True, False], found {self.column_is_id}."
+                f"column_is_id must be in [True, False], found {self.drop_if_id}."
             )
 
         if self.null_fraction_threshold is not None:
@@ -73,13 +73,13 @@ class DropUninformative(SingleColumnTransformer):
         return self.null_count / len(column) > self.null_fraction_threshold
 
     def _drop_if_constant(self, column):
-        if self.constant_column:
+        if self.drop_if_constant:
             if (sbd.n_unique(column) == 1) and (sum(sbd.is_null(column)) == 0):
                 return True
         return False
 
     def _drop_if_id(self, column):
-        if self.column_is_id and not sbd.is_numeric(column):
+        if self.drop_if_id and not sbd.is_numeric(column):
             n_unique = sbd.n_unique(column)
             if self.null_count > 0:
                 return False

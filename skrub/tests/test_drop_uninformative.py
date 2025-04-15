@@ -92,10 +92,10 @@ def test_error_checking(drop_null_table):
     with pytest.raises(ValueError):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
 
-    dn = DropUninformative(constant_column="wrong")
+    dn = DropUninformative(drop_if_id="wrong")
     with pytest.raises(ValueError, match="constant_column"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
-    dn = DropUninformative(column_is_id="wrong")
+    dn = DropUninformative(drop_if_id="wrong")
     with pytest.raises(ValueError, match="column_is_id"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
     dn = DropUninformative(null_fraction_threshold="wrong")
@@ -191,7 +191,7 @@ def drop_id_column(df_module):
 
 @pytest.mark.parametrize("drop_ids", [True, False])
 def test_drop_id(df_module, drop_id_column, drop_ids):
-    enc = DropUninformative(column_is_id=drop_ids)
+    enc = DropUninformative(drop_if_id=drop_ids)
     for column in drop_id_column.columns:
         res = enc.fit_transform(drop_id_column[column])
         # Check that "str" is the only column that gets dropped

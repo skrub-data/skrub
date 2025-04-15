@@ -121,8 +121,8 @@ def _get_preprocessors(
         CleanNullStrings(),
         DropUninformative(
             null_fraction_threshold=drop_null_fraction,
-            constant_column=drop_constant,
-            column_is_id=drop_ids,
+            drop_if_constant=drop_constant,
+            drop_if_id=drop_ids,
         ),
         ToDatetime(),
     ]

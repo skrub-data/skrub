@@ -22,6 +22,11 @@ class DropIfTooManyNulls(SingleColumnTransformer):
     ----------
     threshold : float in range [0, 1], or None
         Threshold of null values past which the column is dropped.
+
+    .. deprecated:: 0.5.3
+        The functionality provided by this object is now implemented in
+        ``DropUninformative``.
+
     """
 
     def __init__(self, threshold=1.0):

@@ -85,6 +85,7 @@ Building a pipeline
    Cleaner
    SelectCols
    DropCols
+   DropUninformative
 
 .. autosummary::
    :toctree: generated/
