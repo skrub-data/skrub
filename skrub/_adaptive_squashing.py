@@ -7,20 +7,19 @@ from ._on_each_column import RejectColumn, SingleColumnTransformer
 
 
 class AdaptiveSquashingTransformer(SingleColumnTransformer):
-    """Preprocess a numerical column by robust centering, scaling, \
-    and soft clipping to a defined interval.
+    r"""Preprocess a numerical column by robust centering, scaling, and soft clipping to a defined interval.
 
     This transformer has two stages:
 
     1. Center the median of the data to zero
-      and multiply the data by a scaling factor
-      determined based on quantiles of the distribution.
-      This is similar to scikit-learn's RobustScaler
-      but with a min-max-scaling based handling
-      for edge cases in which the two quantiles are equal.
+       and multiply the data by a scaling factor
+       determined based on quantiles of the distribution.
+       This is similar to scikit-learn's RobustScaler
+       but with a min-max-scaling based handling
+       for edge cases in which the two quantiles are equal.
     2. Apply a soft-clipping function to limit the data
-      to the interval [-max_absolute_value, max_absolute_value]
-      in an injective way.
+       to the interval [-max_absolute_value, max_absolute_value]
+       in an injective way.
 
     Infinite values will be mapped to the corresponding boundaries of the interval.
     NaN values will be preserved.
@@ -41,19 +40,23 @@ class AdaptiveSquashingTransformer(SingleColumnTransformer):
 
     The formula for the transform is
 
-    scaled = scale * (x - median)
+    .. math::
 
-    result = scaled / sqrt(1 + (scaled/max_abs_value)^2)
+        a = \begin{cases}
+                1/(q_{\beta} - q_{\alpha}) &, q_{\beta} \neq q_{\alpha} \\
+                2/(q_1 - q_0) &, q_{\beta} = q_{\alpha} \text{ and } q_1 \neq q_0 \\
+                0 &, \text{ otherwise.}
+            \end{cases}
+        z = a(x - q_{1/2}),
+        x_{\mathrm{out}} = \frac{z}{\sqrt{1 + (z/B)^2}},
 
-    where median is the median of the finite values in x,
-
-    scale = 1.0 / (upper_quantile - lower_quantile)
-
-    if the upper and lower quantiles are not equal, otherwise
-
-    scale = 2.0 / (max - min)
-
-    if the max and min are not equal, and scale=0 otherwise.
+    where
+    - :math:`x` is a value in the input column.
+    - :math:`q_{\gamma}` is the :math:`\gamma`-quantile of the finite values in X,
+    - :math:`B` is max_abs_value
+    - :math:`\alpha` is lower_quantile_alpha
+    - :math:`\beta` is upper_quantile_alpha.
+    - :math:`x_{\mathrm{out}}` is the result of the computation that will be returned.
 
     References
     ----------
