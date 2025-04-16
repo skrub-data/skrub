@@ -5,6 +5,7 @@ skrub: Prepping tables for machine learning.
 from pathlib import Path as _Path
 
 from . import _selectors as selectors
+from ._adaptive_squashing import AdaptiveSquashingTransformer
 from ._agg_joiner import AggJoiner, AggTarget
 from ._column_associations import column_associations
 from ._datetime_encoder import DatetimeEncoder
@@ -95,4 +96,5 @@ __all__ = [
     "StringEncoder",
     "column_associations",
     "toy_orders",
+    "AdaptiveSquashingTransformer",
 ]
