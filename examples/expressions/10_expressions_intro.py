@@ -124,8 +124,9 @@ skrub.TableReport(dataset.products)
 
 # %%
 products = skrub.var("products", dataset.products)
-baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_X()
-fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
+full_baskets = skrub.var("baskets", dataset.baskets).skb.preview_subsample(n=1000)
+baskets = full_baskets[["ID"]].skb.mark_as_X()
+fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
 # They are given a name and an (optional) initial
@@ -250,6 +251,23 @@ predictions
 
 # %%
 print(predictions.skb.describe_param_grid())
+
+# %%
+# We can first run a small dry-run to check if our param search will run correctly:
+
+# %%
+quick_search = predictions.skb.get_randomized_search(
+    scoring="roc_auc",
+    n_iter=4,
+    n_jobs=4,
+    random_state=0,
+    fitted=True,
+    subsampling=True,
+)
+quick_search.results_
+
+# %%
+# And then actually run it on the full data:
 
 # %%
 search = predictions.skb.get_randomized_search(

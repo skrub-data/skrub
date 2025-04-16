@@ -1505,3 +1505,14 @@ def eval_mode():
     2
     """
     return Expr(EvalMode())
+
+
+class EvalEnvironment(ExprImpl):
+    _fields = []
+
+    def compute(self, e, mode, environment):
+        return environment
+
+
+def eval_environment():
+    return Expr(EvalEnvironment())
