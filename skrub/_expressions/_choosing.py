@@ -188,7 +188,7 @@ class Choice(BaseChoice):
         Examples
         --------
         Suppose we want to encode strings differently depending on the
-        supervised estimator we use. the ``MinHashEncoder`` can be a good
+        supervised estimator we use. the :class:`MinHashEncoder` can be a good
         choice when the downstream learner is a tree-based model, but not when
         it is a linear model. So we have 2 choices in our pipeline, the
         encoding and the learner, but they are not independent: not all
