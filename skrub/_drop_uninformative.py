@@ -23,13 +23,15 @@ class DropUninformative(SingleColumnTransformer):
 
     Parameters
     ----------
-    drop_if_constant: bool, default=False
+    drop_if_constant : bool, default=False
         If True, drop the column if it contains only one unique value. Missing values
         count as one additional distinct value.
-    drop_if_id: bool, default=False
+
+    drop_if_id : bool, default=False
         If True, drop the column if all values are distinct. Missing values count as
         one additional distinct value. Numeric columns are never dropped.
-    null_fraction_threshold: float or None, default=1.0
+
+    null_fraction_threshold : float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
 
@@ -59,7 +61,6 @@ class DropUninformative(SingleColumnTransformer):
     >>> du = DropUninformative(drop_if_id=True)
     >>> du.fit_transform(df["col1"])
     []
-
     """
 
     def __init__(
@@ -118,13 +119,16 @@ class DropUninformative(SingleColumnTransformer):
 
         Parameters
         ----------
-            column : Pandas or Polars series. The input column to check.
-            y : None. Ignored.
+        column : Pandas or Polars series
+            The input column to check.
+        y : None
+            Ignored.
 
         Returns
         -------
-            The input column, or an empty list if the column is selected to be
-            dropped depending on the threshold.
+        column
+            The input column, or an empty list if the column is chosen to be
+            dropped.
         """
         del y
 
@@ -147,9 +151,10 @@ class DropUninformative(SingleColumnTransformer):
     def transform(self, column):
         """Transform a column.
 
-        Parameters:
+        Parameters
         -----------
-            column : Pandas or Polars series. The input column to check.
+        column : Pandas or Polars series
+            The input column to check.
 
         Returns
         -------
