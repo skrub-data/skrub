@@ -15,6 +15,8 @@ def should_subsample(
 
 @_expressions.deferred
 def preview_subsample(df, n, how="head", should_subsample=should_subsample()):
+    if how not in ["head", "random"]:
+        raise ValueError("`how` should be 'head' or 'random', got: {how!r}")
     if not should_subsample:
         return df
     if how == "head":
