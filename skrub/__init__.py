@@ -84,7 +84,6 @@ __all__ = [
     "SelectCols",
     "DropCols",
     "Drop",
-    "Recipe",
     "cross_validate",
     "train_test_split",
     "choose_from",
