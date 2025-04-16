@@ -616,8 +616,8 @@ class SkrubNamespace:
         """  # noqa: E501
         return Expr(ConcatHorizontal(self._expr, others))
 
-    def preview_subsample(self, n=1000):
-        return preview_subsample(self._expr, n=n)
+    def preview_subsample(self, n=1000, how="head"):
+        return preview_subsample(self._expr, n=n, how=how)
 
     def clone(self, drop_values=True):
         """Get an independent clone of the expression.
