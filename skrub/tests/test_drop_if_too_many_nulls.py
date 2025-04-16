@@ -49,6 +49,7 @@ def drop_null_table(df_module):
     )
 
 
+@pytest.mark.filterwarnings("ignore:DropIfTooManyNulls will be deprecated*")
 def test_single_column(drop_null_table, df_module):
     # Check that null columns are dropped and non-null columns are kept.
     dn = DropIfTooManyNulls()
@@ -113,8 +114,20 @@ def test_single_column(drop_null_table, df_module):
     )
 
 
+@pytest.mark.filterwarnings("ignore:DropIfTooManyNulls will be deprecated*")
 def test_error_checking(drop_null_table):
     dn = DropIfTooManyNulls(threshold=-1)
 
     with pytest.raises(ValueError):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
+
+
+def test_drop_if_too_many_nulls_warning():
+    with pytest.warns(
+        DeprecationWarning,
+        match=(
+            "DropIfTooManyNulls will be deprecated in the next release. "
+            "Equivalent functionality is available in DropUninformative."
+        ),
+    ):
+        DropIfTooManyNulls()

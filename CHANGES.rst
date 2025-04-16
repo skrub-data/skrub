@@ -27,6 +27,11 @@ Lemaitre <glemaitre>`, :user:`Adrin Jalali <adrinjalali>`, :user:`Olivier Grisel
 <ogrisel>` and others participated through many discussions in defining the
 requirements and the public API.
 
+- Adding the :class:`DropUninformative` transformer, which uses different heuristics
+  to detect columns that are considered not informative for the downstream task.
+  The current implementation includes detection of constant columns, fully missing
+  values, and id-like columns. :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Changes
 -------
 
@@ -37,6 +42,9 @@ Changes
 - The `packaging` dependency was removed.
   :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+- The :class:`DropIfTooManyNulls` transformer has been replaced by the
+  :class:`DropUninformative` transformer and will be removed in a future release.
+  :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bugfixes
 --------
