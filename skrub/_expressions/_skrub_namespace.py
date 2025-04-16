@@ -1,3 +1,4 @@
+import pickle
 import typing
 
 from sklearn import model_selection
@@ -21,7 +22,6 @@ from ._expressions import (
     IfElse,
     Match,
     Var,
-    check_can_be_pickled,
     check_expr,
     check_name,
     deferred,
@@ -41,6 +41,21 @@ def _var_values_provided(expr, environment):
     }
     intersection = names.intersection(environment.keys())
     return bool(intersection)
+
+
+def _check_can_be_pickled(obj):
+    try:
+        dumped = pickle.dumps(obj)
+        pickle.loads(dumped)
+    except Exception as e:
+        msg = "The check to verify that the pipeline can be serialized failed."
+        if "recursion" in str(e).lower():
+            msg = (
+                f"{msg} Is a step in the pipeline holding a reference to "
+                "the full pipeline itself? For example a global variable "
+                "in a `@skrub.deferred` function?"
+            )
+        raise pickle.PicklingError(msg) from e
 
 
 class SkrubNamespace:
@@ -906,22 +921,22 @@ class SkrubNamespace:
         ... )
         >>> pred = selected.skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_param_grid())
-        - classifier: 'logreg'
-          C: choose_float(0.001, 100, log=True, name='C')
-          dim_reduction: 'PCA'
+        - dim_reduction: 'PCA'
           n_components: choose_int(5, 100, log=True, name='n_components')
-        - classifier: 'logreg'
+          classifier: 'logreg'
           C: choose_float(0.001, 100, log=True, name='C')
-          dim_reduction: 'SelectKBest'
-          k: choose_int(5, 100, log=True, name='k')
-        - classifier: 'rf'
-          N 🌴: choose_int(20, 400, name='N 🌴')
-          dim_reduction: 'PCA'
+        - dim_reduction: 'PCA'
           n_components: choose_int(5, 100, log=True, name='n_components')
-        - classifier: 'rf'
+          classifier: 'rf'
           N 🌴: choose_int(20, 400, name='N 🌴')
-          dim_reduction: 'SelectKBest'
+        - dim_reduction: 'SelectKBest'
           k: choose_int(5, 100, log=True, name='k')
+          classifier: 'logreg'
+          C: choose_float(0.001, 100, log=True, name='C')
+        - dim_reduction: 'SelectKBest'
+          k: choose_int(5, 100, log=True, name='k')
+          classifier: 'rf'
+          N 🌴: choose_int(20, 400, name='N 🌴')
 
         Sampling a configuration for this pipeline starts by selecting an entry
         (marked by ``-``) in the list above, then a value for each of the
@@ -1097,14 +1112,8 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
         """
-
         estimator = ExprEstimator(self.clone())
-        # We need to check here even if intermediate steps have been checked,
-        # because there might be in the expression some calls to functions that
-        # are pickled by value by cloudpickle and that reference global
-        # variables, and those global variables may have changed since the
-        # expression was created.
-        check_can_be_pickled(estimator)
+        _check_can_be_pickled(estimator)
         if not fitted:
             return estimator
         return estimator.fit(self.get_data())
@@ -1241,12 +1250,12 @@ class SkrubNamespace:
 
         >>> search = pred.skb.get_grid_search(fitted=True)
         >>> search.results_
-           mean_test_score classifier     C   N 🌴
-        0             0.89         rf   NaN  30.0
-        1             0.84   logistic   0.1   NaN
-        2             0.80   logistic  10.0   NaN
-        3             0.65         rf   NaN   3.0
-        4             0.50      dummy   NaN   NaN
+           mean_test_score     C   N 🌴 classifier
+        0             0.89   NaN  30.0         rf
+        1             0.84   0.1   NaN   logistic
+        2             0.80  10.0   NaN   logistic
+        3             0.65   NaN   3.0         rf
+        4             0.50   NaN   NaN      dummy
         """  # noqa: E501
         for c in choices(self._expr).values():
             if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
@@ -1323,17 +1332,17 @@ class SkrubNamespace:
 
         >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
         >>> search.results_
-           mean_test_score classifier         C   k   N 🌴
-        0             0.93         rf       NaN   6  20.0
-        1             0.92         rf       NaN   4  18.0
-        2             0.90         rf       NaN   7  12.0
-        3             0.84   logistic  0.109758  15   NaN
-        4             0.82   logistic  0.584633  14   NaN
-        5             0.82   logistic  9.062263  14   NaN
-        6             0.80   logistic  1.533519  15   NaN
-        7             0.50      dummy       NaN   4   NaN
-        8             0.50      dummy       NaN   9   NaN
-        9             0.50      dummy       NaN   5   NaN
+           mean_test_score   k         C  N 🌴 classifier
+        0             0.92   4  4.626363  NaN   logistic
+        1             0.89  10       NaN  7.0         rf
+        2             0.87   7  3.832217  NaN   logistic
+        3             0.86  15       NaN  6.0         rf
+        4             0.85  10  4.881255  NaN   logistic
+        5             0.80  19  3.965675  NaN   logistic
+        6             0.77  14       NaN  3.0         rf
+        7             0.50   4       NaN  NaN      dummy
+        8             0.50   9       NaN  NaN      dummy
+        9             0.50   5       NaN  NaN      dummy
         """  # noqa: E501
 
         search = ParamSearch(

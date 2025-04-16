@@ -117,7 +117,7 @@ def test_pickling_preview_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        skrub.X([]) + [cls()]
+        (skrub.X([]) + [cls()]).skb.get_estimator()
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
@@ -165,6 +165,11 @@ def test_duplicate_choice_name():
         ValueError, match=r".*The name 'X' was used for 2 different objects"
     ):
         skrub.X() + skrub.var("X")
+
+    with pytest.raises(
+        ValueError, match=r"(?s).*2 different objects.*Jupyter notebook cell"
+    ):
+        skrub.as_expr([skrub.var("a"), skrub.var("a")])
 
 
 def test_duplicate_X():

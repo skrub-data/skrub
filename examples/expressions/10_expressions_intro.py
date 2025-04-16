@@ -126,17 +126,26 @@ fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_a
 # amount for each kind of product in a basket:
 
 # %%
-products = products[products["basket_ID"].isin(baskets["ID"])]
-products = products.assign(
-    total_price=products["Nbr_of_prod_purchas"] * products["cash_price"]
+kept_products = products[products["basket_ID"].isin(baskets["ID"])]
+products_with_total = kept_products.assign(
+    total_price=kept_products["Nbr_of_prod_purchas"] * kept_products["cash_price"]
 )
-products
+products_with_total
 
 # %%
 # We see previews of the output of intermediate results. For
 # example, the added ``"total_price"`` column is in the output above.
 # The "Show graph" dropdown at the top allows us to check the
 # structure of the pipeline and all the steps it contains.
+#
+# .. note::
+#
+#    We recommend to assign each new skrub expression to a new variable name,
+#    as is done above. For example ``kept_products = products[...]`` instead of
+#    reusing the name ``products = products[...]``. This makes it easy to
+#    backtrack to any step of the pipeline and change the subsequent steps, and
+#    can avoid ending up in a confusing state in jupyter notebooks when the
+#    same cell might be re-executed several times.
 #
 # With skrub, we do not need to specify a grid of hyperparameters separately
 # from the pipeline. Instead, we replace a parameter's value with a skrub
@@ -172,7 +181,9 @@ vectorizer = skrub.TableVectorizer(high_cardinality=encoder)
 # parameters. In our example, we vectorize all columns except the ``"basket_ID"``.
 
 # %%
-vectorized_products = products.skb.apply(vectorizer, exclude_cols="basket_ID")
+vectorized_products = products_with_total.skb.apply(
+    vectorizer, exclude_cols="basket_ID"
+)
 
 # %%
 # Having access to the underlying dataframe's API, we can perform the

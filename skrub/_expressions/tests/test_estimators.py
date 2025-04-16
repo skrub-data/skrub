@@ -1,5 +1,6 @@
 import copy
 import io
+import pickle
 from unittest.mock import Mock
 
 import numpy as np
@@ -189,6 +190,23 @@ def test_grid_search(expression, data, n_jobs):
     assert search.decision_function(data).shape == (100,)
     train_score = search.score(data)
     assert train_score == pytest.approx(0.94)
+
+
+def test_no_names():
+    X, y = make_classification(random_state=0, n_samples=20)
+    e = (
+        skrub.X(X)
+        .skb.apply(StandardScaler(with_mean=skrub.choose_bool()))
+        .skb.apply(StandardScaler(with_mean=skrub.choose_bool()))
+        .skb.apply(StandardScaler(with_mean=skrub.choose_bool(name="m")))
+        .skb.apply(LogisticRegression(), y=skrub.y(y))
+    ).skb.get_grid_search(fitted=True, cv=2)
+    assert list(e.results_.columns) == [
+        "mean_test_score",
+        "choose_bool()",
+        "choose_bool()_1",
+        "m",
+    ]
 
 
 def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
@@ -459,6 +477,19 @@ def test_caching():
             )
         )
     )
+
+
+@pytest.mark.parametrize(
+    "e",
+    [
+        skrub.var("a").skb.apply_func(lambda x, f: x * f(), lambda: 2),
+        skrub.as_expr(lambda x: x * 2)(skrub.var("a")),
+        (skrub.as_expr([]) + [lambda x: x * 2])[0](skrub.var("a")),
+    ],
+)
+def test_pickling(e):
+    estimator = pickle.loads(pickle.dumps(e.skb.get_estimator()))
+    assert estimator.fit_transform({"a": 10}) == 20
 
 
 #
