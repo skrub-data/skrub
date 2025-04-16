@@ -31,7 +31,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
-from ._subsampling import SHOULD_SUBSAMPLE_KEY, preview_subsample
+from ._subsampling import SHOULD_SUBSAMPLE_KEY, PreviewSubsample
 from ._utils import NULL, attribute_error
 
 
@@ -617,7 +617,7 @@ class SkrubNamespace:
         return Expr(ConcatHorizontal(self._expr, others))
 
     def preview_subsample(self, n=1000, how="head"):
-        return preview_subsample(self._expr, n=n, how=how)
+        return Expr(PreviewSubsample(self._expr, n=n, how=how))
 
     def clone(self, drop_values=True):
         """Get an independent clone of the expression.
