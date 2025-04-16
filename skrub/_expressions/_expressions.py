@@ -925,6 +925,11 @@ def as_expr(value):
     -------
     An expression that evaluates to the given value
 
+    See also
+    --------
+    deferred :
+        Wrap function calls in an expression.
+
     Examples
     --------
     >>> import skrub
@@ -1240,6 +1245,11 @@ def deferred(func):
         When called, rather than applying the original function immediately, it
         returns an expression. Evaluating the expression applies the original
         function.
+
+    See also
+    --------
+    as_expr :
+        Create an expression that evaluates to the given value.
 
     Examples
     --------
