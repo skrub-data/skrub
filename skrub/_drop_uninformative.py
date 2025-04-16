@@ -14,12 +14,12 @@ class DropUninformative(SingleColumnTransformer):
     A column is considered to be "uninformative" if one or more of the following
     issues are found:
 
-        - The fraction of missing values is larger than a certain fraction (by default,
-        all values must be null for the column to be dropped).
-        - The column includes only one unique value (the column is constant). Missing
-        values are considered a separate value.
-        - The number of unique values in the column is equal to the length of the
-        column.
+    - The fraction of missing values is larger than a certain fraction (by default,
+    all values must be null for the column to be dropped).
+    - The column includes only one unique value (the column is constant). Missing
+    values are considered a separate value.
+    - The number of unique values in the column is equal to the length of the
+    column.
 
     Parameters
     ----------
@@ -42,12 +42,14 @@ class DropUninformative(SingleColumnTransformer):
     >>> df = pd.DataFrame({"col1": [None, None, None]})
 
     By default, only null columns are dropped:
+
     >>> du = DropUninformative()
     >>> du.fit_transform(df["col1"])
     []
 
     It is also possible to drop constant columns, or specify a lower null fraction
     threshold:
+
     >>> df = pd.DataFrame({"col1": [1,2,None], "col2": ["const", "const", "const"]})
     >>> du = DropUninformative(drop_if_constant=True, null_fraction_threshold=0.1)
     >>> du.fit_transform(df["col1"])
@@ -57,6 +59,7 @@ class DropUninformative(SingleColumnTransformer):
 
     Finally, it is possible to set ``drop_if_id`` to ``True`` in order to drop
     string columns that contain all distinct values:
+
     >>> df = pd.DataFrame({"col1": ["A", "B", "C"]})
     >>> du = DropUninformative(drop_if_id=True)
     >>> du.fit_transform(df["col1"])
