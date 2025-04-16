@@ -15,11 +15,11 @@ class DropUninformative(SingleColumnTransformer):
     issues are found:
 
     - The fraction of missing values is larger than a certain fraction (by default,
-    all values must be null for the column to be dropped).
+        all values must be null for the column to be dropped).
     - The column includes only one unique value (the column is constant). Missing
-    values are considered a separate value.
+        values are considered a separate value.
     - The number of unique values in the column is equal to the length of the
-    column.
+        column.
 
     Parameters
     ----------
