@@ -124,8 +124,9 @@ skrub.TableReport(dataset.products)
 
 # %%
 products = skrub.var("products", dataset.products)
-baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_X()
-fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
+full_baskets = skrub.var("baskets", dataset.baskets).skb.preview_subsample(n=200)
+baskets = full_baskets[["ID"]].skb.mark_as_X()
+fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
 # They are given a name and an (optional) initial
