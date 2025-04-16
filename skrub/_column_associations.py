@@ -38,7 +38,7 @@ def column_associations(df):
     To compute the Pearson's Correlation Coefficient, only numeric columns are
     considered. The correlation is computed using the Pearson method used in
     pandas or polars, depending on the dataframe. In both case, lines containing NaNs
-    are dropped
+    are dropped.
 
     Parameters
     ----------
