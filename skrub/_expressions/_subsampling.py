@@ -7,6 +7,8 @@ SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
 def _should_subsample(mode, environment):
     if mode == "preview":
         return True
+    if "fit" not in mode:
+        return False
     return environment.get(SHOULD_SUBSAMPLE_KEY, False)
 
 
