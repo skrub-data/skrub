@@ -20,6 +20,7 @@ from ._evaluation import (
 )
 from ._expressions import Apply
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
+from ._subsampling import SHOULD_SUBSAMPLE_KEY
 from ._utils import X_NAME, Y_NAME, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
@@ -437,7 +438,7 @@ def _compute_Xy(expr, environment):
     return X, y
 
 
-def cross_validate(expr_estimator, environment, **cv_params):
+def cross_validate(expr_estimator, environment, subsampling=False, **cv_params):
     """Cross-validate an estimator built from an expression.
 
     This runs cross-validation from an estimator that was built from a skrub
@@ -480,6 +481,8 @@ def cross_validate(expr_estimator, environment, **cv_params):
     >>> skrub.cross_validate(search, pred.skb.get_data())['test_score'] # doctest: +SKIP
     array([0.75, 0.95, 0.85, 0.85, 0.85])
     """
+    if subsampling:
+        environment = environment | {SHOULD_SUBSAMPLE_KEY: True}
     estimator = _to_Xy_estimator(expr_estimator, environment)
     X, y = _compute_Xy(expr_estimator.expr, environment)
     result = model_selection.cross_validate(

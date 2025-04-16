@@ -31,6 +31,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
+from ._subsampling import SHOULD_SUBSAMPLE_KEY, preview_subsample
 from ._utils import NULL, attribute_error
 
 
@@ -41,6 +42,21 @@ def _var_values_provided(expr, environment):
     }
     intersection = names.intersection(environment.keys())
     return bool(intersection)
+
+
+def _check_subsampling(fitted, subsampling):
+    if not fitted and subsampling:
+        raise ValueError(
+            "Subsampling is only applied when fitting the estimator "
+            "on the data already provided when initializing variables. "
+            "Please pass `fitted=True` or subsampling=`False`."
+        )
+
+
+def _with_subsampling(environment, subsampling):
+    if not subsampling:
+        return environment
+    return environment | {SHOULD_SUBSAMPLE_KEY: True}
 
 
 class SkrubNamespace:
@@ -600,6 +616,9 @@ class SkrubNamespace:
         """  # noqa: E501
         return Expr(ConcatHorizontal(self._expr, others))
 
+    def preview_subsample(self, n=1000):
+        return preview_subsample(self._expr, n=n)
+
     def clone(self, drop_values=True):
         """Get an independent clone of the expression.
 
@@ -1032,7 +1051,7 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def get_estimator(self, fitted=False):
+    def get_estimator(self, fitted=False, subsampling=False):
         """Get a scikit-learn-like estimator for this expression.
 
         Returns a :class:`ExprEstimator`.
@@ -1097,6 +1116,7 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
         """
+        _check_subsampling(fitted, subsampling)
 
         estimator = ExprEstimator(self.clone())
         # We need to check here even if intermediate steps have been checked,
@@ -1107,7 +1127,7 @@ class SkrubNamespace:
         check_can_be_pickled(estimator)
         if not fitted:
             return estimator
-        return estimator.fit(self.get_data())
+        return estimator.fit(_with_subsampling(self.get_data(), subsampling))
 
     def train_test_split(
         self,
@@ -1178,10 +1198,13 @@ class SkrubNamespace:
         if environment is None:
             environment = self.get_data()
         return train_test_split(
-            self._expr, environment, splitter=splitter, **splitter_kwargs
+            self._expr,
+            environment,
+            splitter=splitter,
+            **splitter_kwargs,
         )
 
-    def get_grid_search(self, *, fitted=False, **kwargs):
+    def get_grid_search(self, *, fitted=False, subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -1248,6 +1271,8 @@ class SkrubNamespace:
         3             0.65   NaN   3.0         rf
         4             0.50   NaN   NaN      dummy
         """  # noqa: E501
+        _check_subsampling(fitted, subsampling)
+
         for c in choices(self._expr).values():
             if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
                 raise ValueError(
@@ -1261,9 +1286,9 @@ class SkrubNamespace:
         )
         if not fitted:
             return search
-        return search.fit(self.get_data())
+        return search.fit(_with_subsampling(self.get_data(), subsampling))
 
-    def get_randomized_search(self, *, fitted=False, **kwargs):
+    def get_randomized_search(self, *, fitted=False, subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -1335,15 +1360,16 @@ class SkrubNamespace:
         8             0.50   9       NaN  NaN      dummy
         9             0.50   5       NaN  NaN      dummy
         """  # noqa: E501
+        _check_subsampling(fitted, subsampling)
 
         search = ParamSearch(
             self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
         )
         if not fitted:
             return search
-        return search.fit(self.get_data())
+        return search.fit(_with_subsampling(self.get_data(), subsampling))
 
-    def cross_validate(self, environment=None, **kwargs):
+    def cross_validate(self, environment=None, subsampling=False, **kwargs):
         """Cross-validate the expression.
 
         This generates the estimator (with default hyperparameters) and runs
@@ -1383,10 +1409,10 @@ class SkrubNamespace:
         >>> pred.skb.cross_validate(data)['test_score']
         array([0.75, 0.9 , 0.85, 0.65, 0.9 ])
         """
-
         if environment is None:
             environment = self.get_data()
 
+        environment = _with_subsampling(environment, subsampling)
         return cross_validate(self.get_estimator(), environment, **kwargs)
 
     @check_expr
