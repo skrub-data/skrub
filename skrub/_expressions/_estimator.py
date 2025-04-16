@@ -498,7 +498,11 @@ def cross_validate(expr_estimator, environment, subsampling=False, **cv_params):
 
 
 def train_test_split(
-    expr, environment, splitter=model_selection.train_test_split, **splitter_kwargs
+    expr,
+    environment,
+    subsampling=False,
+    splitter=model_selection.train_test_split,
+    **splitter_kwargs,
 ):
     """Split an environment into a training an testing environments.
 
@@ -562,6 +566,8 @@ def train_test_split(
     >>> accuracy_score(split["y_test"], predictions)
     0.0
     """
+    if subsampling:
+        environment = environment | {SHOULD_SUBSAMPLE_KEY: True}
     X, y = _compute_Xy(expr, environment)
     if y is None:
         X_train, X_test = splitter(X, **splitter_kwargs)

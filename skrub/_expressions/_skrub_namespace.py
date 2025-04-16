@@ -1132,6 +1132,7 @@ class SkrubNamespace:
     def train_test_split(
         self,
         environment=None,
+        subsampling=False,
         splitter=model_selection.train_test_split,
         **splitter_kwargs,
     ):
@@ -1200,6 +1201,7 @@ class SkrubNamespace:
         return train_test_split(
             self._expr,
             environment,
+            subsampling=subsampling,
             splitter=splitter,
             **splitter_kwargs,
         )
@@ -1412,8 +1414,9 @@ class SkrubNamespace:
         if environment is None:
             environment = self.get_data()
 
-        environment = _with_subsampling(environment, subsampling)
-        return cross_validate(self.get_estimator(), environment, **kwargs)
+        return cross_validate(
+            self.get_estimator(), environment, subsampling=subsampling, **kwargs
+        )
 
     @check_expr
     def mark_as_X(self):
