@@ -478,7 +478,12 @@ def cross_validate(expr_estimator, environment, **cv_params):
     >>> pred = X.skb.apply(log_reg, y=y)
     >>> search = pred.skb.get_randomized_search(random_state=0)
     >>> skrub.cross_validate(search, pred.skb.get_data())['test_score'] # doctest: +SKIP
-    array([0.75, 0.95, 0.85, 0.85, 0.85])
+    0    0.75
+    1    0.90
+    2    0.95
+    3    0.75
+    4    0.85
+    Name: test_score, dtype: float64
     """
     estimator = _to_Xy_estimator(expr_estimator, environment)
     X, y = _compute_Xy(expr_estimator.expr, environment)
@@ -489,9 +494,10 @@ def cross_validate(expr_estimator, environment, **cv_params):
         **cv_params,
     )
     if (estimators := result.get("estimator", None)) is None:
-        return result
+        return pd.DataFrame(result)
+
     result["estimator"] = [_to_env_estimator(e) for e in estimators]
-    return result
+    return pd.DataFrame(result)
 
 
 def train_test_split(
