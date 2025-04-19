@@ -1,6 +1,7 @@
 import pickle
 import typing
 
+import pandas as pd
 from sklearn import model_selection
 
 from .. import selectors as s
@@ -873,7 +874,8 @@ class SkrubNamespace:
         grid (set of combinations) of hyperparameters extracted from the
         expression.
 
-        Please refer to the examples gallery for a full explanation of choices
+        Please refer to the :ref:`documentation <expressions_documentation_ref>`
+        for a full explanation of choices
         and hyper-parameter tuning.
 
         Returns
@@ -1052,7 +1054,8 @@ class SkrubNamespace:
 
         Returns a :class:`ExprEstimator`.
 
-        Please see the examples gallery for full information about expressions
+        Please refer to the :ref:`documentation <expressions_documentation_ref>`
+        for full information about expressions
         and the estimators they generate.
 
         Provides an estimator with a ``fit()`` method so we can fit it to some
@@ -1371,7 +1374,7 @@ class SkrubNamespace:
 
         Returns
         -------
-        dict
+        pandas.DataFrame
             Cross-validation results.
 
         Examples
@@ -1396,7 +1399,7 @@ class SkrubNamespace:
         if environment is None:
             environment = self.get_data()
 
-        return cross_validate(self.get_estimator(), environment, **kwargs)
+        return pd.DataFrame(cross_validate(self.get_estimator(), environment, **kwargs))
 
     @check_expr
     def mark_as_X(self):
@@ -1422,7 +1425,8 @@ class SkrubNamespace:
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
 
-        Please see the examples gallery for more information.
+        Please see the :ref:`documentation <expressions_documentation_ref>`
+        for more information.
 
         Note: this marks the expression in-place and also returns it.
 
@@ -1495,7 +1499,8 @@ class SkrubNamespace:
         ``skrub.y(value)`` can be used as a shorthand for
         ``skrub.var('y', value).skb.mark_as_y()``.
 
-        Please see the examples gallery for more information.
+        Please see the :ref:`documentation <expressions_documentation_ref>`
+        for more information.
 
         Note: this marks the expression in-place and also returns it.
 
