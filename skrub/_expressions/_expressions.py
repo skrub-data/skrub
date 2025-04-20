@@ -1410,7 +1410,7 @@ class Concat(ExprImpl):
             raise TypeError(
                 "`concat` should be passed a list of dataframes. "
                 "If you have a single dataframe, wrap it in a list: "
-                "`concat([table_1])` not `concat(table_1)`"
+                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
             )
         idx, non_df = next(
             ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
@@ -1419,7 +1419,7 @@ class Concat(ExprImpl):
         if non_df is not None:
             raise TypeError(
                 "`concat` should be passed a list of dataframes: "
-                "`table_0.skb.concat([table_1, ...])`. "
+                "`table_0.skb.concat([table_1, ...], axis=...)`. "
                 f"An object of type {non_df.__class__.__name__!r} "
                 f"was found at index {idx}."
             )
@@ -1430,7 +1430,7 @@ class Concat(ExprImpl):
                 f"Expected one of 0/'index' or 1/'columns'."
             )
         
-        result = sbd.concat(e.first, *e.others, e.axis)
+        result = sbd.concat(e.first, *e.others, axis=e.axis)
 
         if (e.axis == 1 or e.axis == 'columns'):
             if mode == "preview" or "fit" in mode:

@@ -592,6 +592,7 @@ class SkrubNamespace:
         >>> a = skrub.var('a', pd.DataFrame({'a1': [0], 'a2': [1]}))
         >>> b = skrub.var('b', pd.DataFrame({'b1': [2], 'b2': [3]}))
         >>> c = skrub.var('c', pd.DataFrame({'c1': [4], 'c2': [5]}))
+        >>> d = skrub.var('d', pd.DataFrame({'c1': [6], 'c2': [7]}))
         >>> a
         <Var 'a'>
         Result:
@@ -604,6 +605,15 @@ class SkrubNamespace:
         ―――――――
            a1  a2  b1  b2  c1  c2
         0   0   1   2   3   4   5
+
+        >>> c.skb.concat([d],axis=0)
+        <Concat: 2 dataframes>
+        Result:
+        ―――――――
+           c1  c2
+        0   4   5
+        0   6   7
+        
 
         Note that even if we want to concatenate a single dataframe we must
         still put it in a list:

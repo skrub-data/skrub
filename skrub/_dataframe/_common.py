@@ -36,7 +36,7 @@ __all__ = [
     "make_column_like",
     "null_value_for",
     "all_null_like",
-    "concat_horizontal",
+    "concat",
     "is_column_list",
     "to_column_list",
     "col",
@@ -325,25 +325,39 @@ def _all_null_like_polars(col, length=None, dtype=None, name=None):
 
 
 @dispatch
-def concat_horizontal(*dataframes):
+def concat(*dataframes, axis=0):
     raise NotImplementedError()
 
 
-@concat_horizontal.specialize("pandas")
-def _concat_horizontal_pandas(*dataframes):
-    init_index = dataframes[0].index
-    dataframes = [df.reset_index(drop=True) for df in dataframes]
-    dataframes = _join_utils.make_column_names_unique(*dataframes)
+@concat.specialize("pandas")
+def _concat_pandas(*dataframes, axis=0):
     kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
-    result = pd.concat(dataframes, axis=1, **kwargs)
-    result.index = init_index
-    return result
+    if axis in [0, "index"]:
+        return pd.concat(dataframes, axis=0, **kwargs)
+    elif axis in [1, "columns"]:
+        init_index = dataframes[0].index
+        dataframes = [df.reset_index(drop=True) for df in dataframes]
+        dataframes = _join_utils.make_column_names_unique(*dataframes)
+        kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
+        result = pd.concat(dataframes, axis=1, **kwargs)
+        result.index = init_index
+        return result
+    else:
+        raise ValueError(
+            "axis must be 0/'index' or 1/'columns'"
+        )
 
-
-@concat_horizontal.specialize("polars")
-def _concat_horizontal_polars(*dataframes):
-    dataframes = _join_utils.make_column_names_unique(*dataframes)
-    return pl.concat(dataframes, how="horizontal")
+@concat.specialize("polars")
+def _concat_polars(*dataframes, axis=0):
+    if axis in [0, "index"]:
+        return pl.concat(dataframes, how="vertical")
+    elif axis in [1, "columns"]:
+        dataframes = _join_utils.make_column_names_unique(*dataframes)
+        return pl.concat(dataframes, how="horizontal")
+    else:
+        raise ValueError(
+            "axis must be 0/'index' or 1/'columns'"
+        )
 
 
 def is_column_list(obj):

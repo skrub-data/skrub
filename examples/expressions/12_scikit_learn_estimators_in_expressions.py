@@ -288,5 +288,5 @@ loaded_model.predict({"baskets": new_baskets, "products": new_products})
 #
 # - naming nodes, passing the value for any node with the inputs
 # - ``.skb.applied_estimator``
-# - ``.skb.concat_horizontal``, ``.skb.drop`` and ``.skb.select``, more skrub selectors
+# - ``.skb.concat``, ``.skb.drop`` and ``.skb.select``, more skrub selectors
 # - ``.skb.freeze_after_fit`` (niche / very advanced)

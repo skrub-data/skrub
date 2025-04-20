@@ -270,14 +270,31 @@ def test_apply_on_cols(use_choice):
 def test_concat_horizontal_duplicate_cols():
     X_df = pd.DataFrame({"a": [0, 1, 2], "b": [3, 4, 5]})
     X = skrub.X()
-    e = X.skb.concat_horizontal([X])
+    e = X.skb.concat([X],axis=1)
     estimator = e.skb.get_estimator()
     out_1 = estimator.fit_transform({"X": X_df})
     out_2 = estimator.transform({"X": X_df})
     assert len(set(out_1.columns)) == len(out_1.columns) == 4
     assert list(out_1.columns) == list(out_2.columns)
 
+def test_concat_vertical_duplicate_cols():
+    X_df1 = pd.DataFrame({"a": [0, 1], "b": [2, 3]})
+    X_df2 = pd.DataFrame({"a": [4, 5], "b": [6, 7]}) # Same columns
+    X1 = skrub.var('X1', pd.DataFrame({"a": [0, 1], "b": [2, 3]}))
+    X2 = skrub.var('X2', pd.DataFrame({"a": [4, 5], "b": [6, 7]}))
 
+    e = X1.skb.concat([X2], axis=0) 
+    assert isinstance(e, skrub.Expr)
+
+    estimator = e.skb.get_estimator()
+    data_dict = {"X1": X_df1, "X2": X_df2}
+    out_1 = estimator.fit_transform(data_dict)
+    out_2 = estimator.transform(data_dict)
+
+    assert out_1.shape[1] == out_2.shape[1] == 2
+    assert out_1.shape[0] == out_2.shape[0] == 4
+
+    
 def test_class_skb():
     from skrub._expressions._skrub_namespace import SkrubNamespace
 

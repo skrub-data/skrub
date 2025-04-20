@@ -136,7 +136,7 @@ For more control or in order to build pipelines for more datasets, use the skrub
 
    Expr.skb.apply
    Expr.skb.clone
-   Expr.skb.concat_horizontal
+   Expr.skb.concat
    Expr.skb.cross_validate
    Expr.skb.describe_param_grid
    Expr.skb.describe_steps
