@@ -37,6 +37,9 @@ Changes
 - The `packaging` dependency was removed.
   :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+- The `skrub.concat_horizontal` function was replaced with `skrub.concat`. Horizontal or vertical concatenation
+  is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`
+
 
 Bugfixes
 --------
