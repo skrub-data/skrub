@@ -343,9 +343,8 @@ def _concat_pandas(*dataframes, axis=0):
         result.index = init_index
         return result
     else:
-        raise ValueError(
-            "axis must be 0/'index' or 1/'columns'"
-        )
+        raise ValueError("axis must be 0/'index' or 1/'columns'")
+
 
 @concat.specialize("polars")
 def _concat_polars(*dataframes, axis=0):
@@ -355,9 +354,7 @@ def _concat_polars(*dataframes, axis=0):
         dataframes = _join_utils.make_column_names_unique(*dataframes)
         return pl.concat(dataframes, how="horizontal")
     else:
-        raise ValueError(
-            "axis must be 0/'index' or 1/'columns'"
-        )
+        raise ValueError("axis must be 0/'index' or 1/'columns'")
 
 
 def is_column_list(obj):

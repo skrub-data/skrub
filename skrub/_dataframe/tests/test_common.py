@@ -197,6 +197,7 @@ def test_concat_horizontal(df_module, example_data_dict):
         # Index of the first dataframe is kept
         assert_array_equal(df.index, [10, 20])
 
+
 def test_concat_vertical(df_module, example_data_dict):
     df1 = df_module.make_dataframe(example_data_dict)
     df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
@@ -204,7 +205,7 @@ def test_concat_vertical(df_module, example_data_dict):
     assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
 
     # Test concatenating dataframes with the same column names
-    df2 = df_module.make_dataframe(example_data_dict) # it's a copy with same structure
+    df2 = df_module.make_dataframe(example_data_dict)  # it's a copy with same structure
     df = ns.concat(df1, df2, axis=0)
     assert ns.shape(df) == (8, 8)
     assert ns.column_names(df) == ns.column_names(df1)
@@ -212,7 +213,9 @@ def test_concat_vertical(df_module, example_data_dict):
     # Test concatenating pandas dataframes with different indexes (of same length)
     if df_module.name == "pandas":
         pd_df1 = pd.DataFrame(data=[1.0, 2.0], columns=["a"], index=[10, 20])
-        pd_df2 = pd.DataFrame(data=[3.0, 4.0], columns=["a"], index=[1, 2]) # Same columns
+        pd_df2 = pd.DataFrame(
+            data=[3.0, 4.0], columns=["a"], index=[1, 2]
+        )  # Same columns
         df = ns.concat(pd_df1, pd_df2, axis=0)
         assert ns.shape(df) == (4, 1)
 
@@ -221,9 +224,13 @@ def test_concat_vertical(df_module, example_data_dict):
         df = ns.concat(pd_df1, pd_df3, axis=0)
         assert ns.shape(df) == (4, 1)
         if isinstance(df, pd.DataFrame):
-            assert_array_equal(df.index.to_numpy(), np.concatenate([pd_df1.index.to_numpy(), pd_df3.index.to_numpy()])) 
+            assert_array_equal(
+                df.index.to_numpy(),
+                np.concatenate([pd_df1.index.to_numpy(), pd_df3.index.to_numpy()]),
+            )
         else:
             pass
+
 
 def test_is_column_list(df_module):
     assert ns.is_column_list([])

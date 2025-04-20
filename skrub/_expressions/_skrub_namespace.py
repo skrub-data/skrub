@@ -613,7 +613,7 @@ class SkrubNamespace:
            c1  c2
         0   4   5
         0   6   7
-        
+
 
         Note that even if we want to concatenate a single dataframe we must
         still put it in a list:
