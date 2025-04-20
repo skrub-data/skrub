@@ -334,7 +334,7 @@ def _concat_pandas(*dataframes, axis=0):
     kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
     if axis in [0, "index"]:
         return pd.concat(dataframes, axis=0, **kwargs)
-    elif axis in [1, "columns"]:
+    else:
         init_index = dataframes[0].index
         dataframes = [df.reset_index(drop=True) for df in dataframes]
         dataframes = _join_utils.make_column_names_unique(*dataframes)
@@ -342,19 +342,15 @@ def _concat_pandas(*dataframes, axis=0):
         result = pd.concat(dataframes, axis=1, **kwargs)
         result.index = init_index
         return result
-    else:
-        pass
 
 
 @concat.specialize("polars")
 def _concat_polars(*dataframes, axis=0):
     if axis in [0, "index"]:
         return pl.concat(dataframes, how="vertical")
-    elif axis in [1, "columns"]:
+    else:
         dataframes = _join_utils.make_column_names_unique(*dataframes)
         return pl.concat(dataframes, how="horizontal")
-    else:
-        pass
 
 
 def is_column_list(obj):
