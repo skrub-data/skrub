@@ -178,12 +178,12 @@ def test_all_null_like(df_module):
 def test_concat_horizontal(df_module, example_data_dict):
     df1 = df_module.make_dataframe(example_data_dict)
     df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
-    df = ns.concat_horizontal(df1, df2)
+    df = ns.concat(df1, df2, axis=1)
     assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
 
     # Test concatenating dataframes with the same column names
     df2 = df1
-    df = ns.concat_horizontal(df1, df2)
+    df = ns.concat(df1, df2, axis=1)
     assert ns.shape(df) == (4, 16)
     for n in ns.column_names(df)[8:]:
         assert re.match(r".*__skrub_[0-9a-f]+__", n)
@@ -192,7 +192,7 @@ def test_concat_horizontal(df_module, example_data_dict):
     if df_module.name == "pandas":
         df1 = df_module.DataFrame(data=[1.0, 2.0], columns=["a"], index=[10, 20])
         df2 = df_module.DataFrame(data=[3.0, 4.0], columns=["b"], index=[1, 2])
-        df = ns.concat_horizontal(df1, df2)
+        df = ns.concat(df1, df2, axis=1)
         assert ns.shape(df) == (2, 2)
         # Index of the first dataframe is kept
         assert_array_equal(df.index, [10, 20])
