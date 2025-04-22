@@ -626,7 +626,7 @@ class SkrubNamespace:
         return Expr(ConcatHorizontal(self._expr, others))
 
     @check_expr
-    def preview_subsample(self, n=1000, how="head"):
+    def preview_subsample(self, n=1000, *, how="head"):
         """Configure subsampling of a dataframe.
 
         This defines how the dataframe should be subsampled for previews or

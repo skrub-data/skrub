@@ -317,6 +317,7 @@ def _check_return_value(f):
             "their argument unchanged and return a new object."
         )
         warnings.warn(msg)
+        return expr
 
     return check_call_return_value
 

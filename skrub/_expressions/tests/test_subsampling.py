@@ -1,0 +1,151 @@
+import numpy as np
+import pandas as pd
+import pytest
+from sklearn.datasets import make_regression
+from sklearn.dummy import DummyRegressor
+
+import skrub
+from skrub._expressions import _subsampling
+
+
+@pytest.mark.parametrize("as_frame", [False, True])
+def test_preview_subsample(as_frame):
+    shapes = []
+
+    def log_shape(a):
+        shapes.append(a.shape)
+        return a
+
+    X_a, y_a = make_regression(random_state=0, n_features=13)
+    if as_frame:
+        X_a = pd.DataFrame(X_a, columns=list(map(str, range(X_a.shape[1]))))
+        y_a = pd.Series(y_a, name="y")
+    X = skrub.X(X_a).skb.preview_subsample(n=15).skb.apply_func(log_shape)
+    y = skrub.y(y_a).skb.preview_subsample(n=15).skb.apply_func(log_shape)
+    pred = X.skb.apply(
+        DummyRegressor(strategy=skrub.choose_from(["mean", "median"])), y=y
+    )
+    assert shapes == [(15, 13), (15,)]
+    shapes = []
+    pred.skb.get_estimator(fitted=True, subsampling=True)
+    assert shapes == [(15, 13), (15,)]
+    shapes = []
+    pred.skb.get_estimator(fitted=True)
+    assert shapes == [(100, 13), (100,)]
+    shapes = []
+    pred.skb.get_grid_search(fitted=True, subsampling=True, cv=3)
+    assert (
+        shapes
+        == [
+            # train
+            (15, 13),
+            (15,),
+            # test
+            (34, 13),
+            (34,),
+            # train
+            (15, 13),
+            (15,),
+            # test
+            (33, 13),
+            (33,),
+            # train
+            (15, 13),
+            (15,),
+            # test
+            (33, 13),
+            (33,),
+        ]
+        # 2 grid cells
+        * 2
+        # refit best model
+        + [(15, 13), (15,)]
+    )
+    shapes = []
+    pred.skb.get_grid_search(fitted=True, cv=3)
+    assert (
+        shapes
+        == [
+            # train
+            (66, 13),
+            (66,),
+            # test
+            (34, 13),
+            (34,),
+            # train
+            (67, 13),
+            (67,),
+            # test
+            (33, 13),
+            (33,),
+            # train
+            (67, 13),
+            (67,),
+            # test
+            (33, 13),
+            (33,),
+        ]
+        # 2 grid cells
+        * 2
+        # refit best model
+        + [(100, 13), (100,)]
+    )
+    with pytest.raises(ValueError):
+        pred.skb.get_estimator(fitted=False, subsampling=True)
+    with pytest.raises(ValueError):
+        pred.skb.get_grid_search(fitted=False, subsampling=True)
+
+
+@pytest.mark.parametrize("as_frame", [False, True])
+def test_how(as_frame):
+    def _to_np(a):
+        return a.values if as_frame else a
+
+    X_a = np.eye(3)
+    if as_frame:
+        X_a = pd.DataFrame(X_a, columns=list(map(str, range(X_a.shape[1]))))
+
+    X = skrub.X(X_a).skb.preview_subsample(n=2)
+    assert (_to_np(X.skb.eval()) == _to_np(X_a)[:2]).all()
+
+    X = skrub.X(X_a).skb.preview_subsample(n=2, how="random")
+    # sampling is done differently for numpy arrays and in df.sample()
+    idx = [2, 1] if as_frame else [1, 2]
+    assert (_to_np(X.skb.eval()) == _to_np(X_a)[idx]).all()
+
+
+def test_sample_errors():
+    with pytest.raises(RuntimeError, match=".*`how` should be 'head' or 'random'"):
+        skrub.as_expr(np.eye(3)).skb.preview_subsample(n=2, how="bad-how")
+    with pytest.raises(RuntimeError, match=".*the input should be a dataframe"):
+        skrub.as_expr(list(range(30))).skb.preview_subsample(n=2)
+
+
+def test_should_subsample():
+    should = []
+
+    def log(a, s):
+        should.append(s)
+        return a
+
+    X_a, y_a = make_regression(random_state=0, n_features=13)
+    s = _subsampling.should_subsample()
+    X = skrub.X(X_a).skb.apply_func(log, s)
+    y = skrub.y(y_a)
+    pred = X.skb.apply(
+        DummyRegressor(strategy=skrub.choose_from(["mean", "median"])), y=y
+    )
+    assert should == [True]
+    should = []
+    pred.skb.get_estimator(fitted=True, subsampling=True)
+    assert should == [True]
+    should = []
+    pred.skb.get_estimator(fitted=True)
+    assert should == [False]
+    should = []
+    pred.skb.get_grid_search(fitted=True, subsampling=True, cv=3)
+    # train/test * 3 cv folds * 2 params + refit
+    assert should == [True, False, True, False, True, False] * 2 + [True]
+    should = []
+    pred.skb.get_grid_search(fitted=True, cv=3)
+    assert should == [False] * 12 + [False]
