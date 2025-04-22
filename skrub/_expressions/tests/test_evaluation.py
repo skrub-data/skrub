@@ -283,7 +283,7 @@ def test_describe_steps():
     ...     func(a, skrub.var("b"))
     ...     .skb.apply(skrub.TableVectorizer())
     ...     .amethod(skrub.as_expr(10))
-    ...     .skb.concat([b],axis=1)
+    ...     .skb.concat([b], axis=1)
     ...     + skrub.choose_bool(name="?").as_expr()
     ...     + skrub.X().skb.if_else(3, b)[skrub.var("item")].b
     ... )
