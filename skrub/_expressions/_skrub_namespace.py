@@ -625,7 +625,122 @@ class SkrubNamespace:
         """  # noqa: E501
         return Expr(ConcatHorizontal(self._expr, others))
 
+    @check_expr
     def preview_subsample(self, n=1000, how="head"):
+        """Configure subsampling of a dataframe.
+
+        This defines how the dataframe should be subsampled for previews or
+        when subsampling is explicitly requested, for example by calling
+        ``.skb.get_randomized_search(subsampling=True)``.
+
+        This can only be applied to steps that produce a dataframe, a column or
+        a numpy array.
+
+        Parameters
+        ----------
+        n : int, default=1000
+            Number of rows to keep.
+
+        how : 'head' or 'random'
+            How subsampling should be done (when it takes place). If 'head',
+            the first ``n`` rows are kept. If 'random', ``n`` rows are sampled
+            randomly, without maintaining order and without replacement.
+
+        Returns
+        -------
+        DataFrame
+            The subsampled dataframe.
+
+        Examples
+        --------
+        >>> from sklearn.datasets import load_diabetes
+        >>> from sklearn.linear_model import Ridge
+        >>> import skrub
+
+        >>> df = load_diabetes(as_frame=True)["frame"]
+        >>> df.shape
+        (442, 11)
+
+        The ``preview_subsample`` configures how the sampling is done when it
+        takes place
+
+        whether it takes place or not depends on the context:
+            - for preview the subsampling is always on
+            - for fitting and cross-validation subsampling is only on when we
+              ask for it explicitly with ``subsampling=True``
+
+        >>> data = skrub.var("data", df).skb.preview_subsample(n=15)
+
+        We can see that the previews use only a subsample of 15 rows:
+
+        >>> data.shape
+        <GetAttr 'shape'>
+        Result:
+        ―――――――
+        (15, 11)
+        >>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
+        >>> y = data["target"].skb.mark_as_y()
+        >>> pred = X.skb.apply(
+        ...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+        ... )
+
+        Here also, the preview for the predictions contains 15 rows:
+
+        >>> pred
+        <Apply Ridge>
+        Result:
+        ―――――――
+                target
+        0   142.866906
+        1   130.980765
+        2   138.555388
+        3   149.703363
+        4   136.015214
+        5   139.773213
+        6   134.110415
+        7   129.224783
+        8   140.161363
+        9   155.272033
+        10  139.552110
+        11  130.318783
+        12  135.956591
+        13  142.998060
+        14  132.511013
+
+        By default, model fitting and hyperparameter search are done on the
+        full data, so if we want the subsampling to take place we have to
+        pass ``subsampling=True``:
+
+        >>> quick_search = pred.skb.get_randomized_search(
+        ...     subsampling=True, fitted=True, n_iter=4, random_state=0
+        ... )
+        >>> quick_search.detailed_results_[["mean_test_score", "mean_fit_time", "α"]] # doctest: +SKIP
+           mean_test_score  mean_fit_time         α
+        0        -0.597596       0.004322  0.431171
+        1        -0.599036       0.004328  0.443038
+        2        -0.615900       0.004272  0.643117
+        3        -0.637498       0.004219  1.398196
+
+        Now that we have checked our pipeline works on a subsample, we can
+        fit the hyperparameter search on the full data:
+
+        >>> full_search = pred.skb.get_randomized_search(
+        ...     fitted=True, n_iter=4, random_state=0
+        ... )
+        >>> full_search.detailed_results_[["mean_test_score", "mean_fit_time", "α"]] # doctest: +SKIP
+           mean_test_score  mean_fit_time         α
+        0         0.457807       0.004791  0.431171
+        1         0.456808       0.004834  0.443038
+        2         0.439670       0.004849  0.643117
+        3         0.380719       0.004827  1.398196
+
+        This example dataset is so small that the subsampling does not change
+        the fit computation time but we can tell the second search used the
+        full data from the higher scores. For datasets of a realistic size
+        using the subsampling allows us to do a "dry run" of the
+        cross-validation or model fitting much faster than when using the
+        full data.
+        """  # noqa : E501
         return Expr(PreviewSubsample(self._expr, n=n, how=how))
 
     def clone(self, drop_values=True):
