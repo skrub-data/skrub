@@ -90,10 +90,10 @@ class PreviewSubsample(_expressions.ExprImpl):
             return e.target
         if e.how == "head":
             if isinstance(e.target, np.ndarray):
-                return _head_numpy(e.target, e.n)
+                return _head_numpy(e.target, n=e.n)
             return sbd.head(e.target, n=e.n)
         if isinstance(e.target, np.ndarray):
-            return _sample_numpy(e.target, e.n)
+            return _sample_numpy(e.target, n=e.n)
         return sbd.sample(e.target, n=e.n, seed=0)
 
 
