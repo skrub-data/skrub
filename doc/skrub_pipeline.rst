@@ -1,8 +1,8 @@
 .. _skrub_pipeline:
 
-===================================================
-Skrub Pipeline: flexible machine learning pipelines
-===================================================
+========================================================
+Skrub Pipeline: Cross-validate or tune any data pipeline
+========================================================
 
 .. currentmodule:: skrub
 
@@ -36,21 +36,21 @@ What is the difference with scikit-learn :class:`~sklearn.pipeline.Pipeline`?
 Scikit-learn pipelines represent a linear sequence of transformations on one
 table with a fixed number of rows.
 
-.. image:: ../../_static/sklearn_pipeline.svg
+.. image:: _static/sklearn_pipeline.svg
     :width: 500
 
 Skrub expressions, on the other hand, can manipulate any number of variables.
 The transformation they perform is not a linear sequence but any Directed
 Acyclic Graph of computations.
 
-.. image:: ../../_static/skrub_expressions.svg
+.. image:: _static/skrub_expressions.svg
 
 What is the difference with orchestrators like Apache Airflow?
 ==============================================================
 
-Skrub pipelines are not an orchestrator and do not offer capabilities for scheduling
-runs or provisioning resources and environments. Instead, they are a generalization
-of scikit-learn pipelines, which can still be used within an orchestrator.
+Skrub pipelines are not an [orchestrator](https://huyenchip.com/2021/09/13/data-science-infrastructure.html#workflow)
+and do not offer capabilities for scheduling runs or provisioning resources and
+environments. Instead, they are a generalization of scikit-learn pipelines, which can still be used within an orchestrator.
 
 .. _expressions:
 
@@ -113,9 +113,9 @@ Finally, we can get an estimator that can be fitted and applied to data.
 Previews
 ~~~~~~~~
 
-As we saw above, we can call .skb.eval() with a dictionary of bindings to compute
+As we saw above, we can call ``.skb.eval()`` with a dictionary of bindings to compute
 the result of a pipeline. However, to make interactive development easier without
-having to call .skb.eval() repeatedly, Skrub provides a way to preview the result
+having to call ``.skb.eval()`` repeatedly, Skrub provides a way to preview the result
 of an expression. When creating a variable, if we pass a value along with its name,
 Skrub will use that value to compute and preview the result of the expression.
 
@@ -192,7 +192,7 @@ We can call methods:
     # 2   pen    1.5    2    3.0
     # 3  fork    2.2    4    8.8
 
-It's important to note that the original orders pipeline is not modified by the
+It's important to note that the original ``orders`` pipeline is not modified by the
 operations in the previous cells. Instead, each cell creates a new expression that
 represents the result of the operation.
 
