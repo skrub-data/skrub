@@ -116,7 +116,12 @@ dataset = skrub.datasets.fetch_credit_fraud()
 # marked as ``X``, and therefore it is colored blue and has a double box.
 
 # %%
-baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_X()
+# Optionally, we can use ``preview_subsample`` to configure some subsampling
+# that only takes place for previews while debugging the pipeline, or when we
+# ask for it explicitly.
+
+full_baskets = skrub.var("baskets", dataset.baskets).skb.preview_subsample(n=1000)
+baskets = full_baskets[["ID"]].skb.mark_as_X()
 baskets
 
 # %%
@@ -124,7 +129,7 @@ baskets
 # ``baskets`` table is red as it is marked as ``y``.
 
 # %%
-fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
+fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 fraud_flags
 
 # %%
@@ -218,7 +223,11 @@ predictions = features.skb.apply(HistGradientBoostingClassifier(), y=fraud_flags
 predictions
 
 # %%
-# Finally, we can evaluate our estimator.
+# Finally, we can evaluate our estimator. By default the subsampling is only
+# applied for previews but if we wanted to we could ask to apply it here by
+# passing ``subsampling=True``. This can be useful to quickly detect errors by
+# running the cross-validation on a sample before launching the full
+# computation.
 
 # %%
 cv_results = predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)

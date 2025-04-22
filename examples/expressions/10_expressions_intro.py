@@ -124,7 +124,13 @@ skrub.TableReport(dataset.products)
 
 # %%
 products = skrub.var("products", dataset.products)
+
+# Optionally, we can use ``preview_subsample`` to configure some subsampling
+# that only takes place for previews while debugging the pipeline, or when we
+# ask for it explicitly.
+
 full_baskets = skrub.var("baskets", dataset.baskets).skb.preview_subsample(n=1000)
+
 baskets = full_baskets[["ID"]].skb.mark_as_X()
 fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 
@@ -267,7 +273,9 @@ quick_search = predictions.skb.get_randomized_search(
 quick_search.results_
 
 # %%
-# And then actually run it on the full data:
+# And then actually run it on the full data. When fitting an estimator or
+# parameter search or running cross-validation the default is to not apply any
+# subsampling.
 
 # %%
 search = predictions.skb.get_randomized_search(
