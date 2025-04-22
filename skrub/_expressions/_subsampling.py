@@ -59,7 +59,7 @@ def should_subsample():
 def _sample_numpy(a, n):
     rng = np.random.default_rng(0)
     idx = rng.choice(a.shape[0], size=n, replace=False)
-    return [idx]
+    return a[idx]
 
 
 def _head_numpy(a, n):
