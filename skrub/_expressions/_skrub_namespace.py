@@ -599,7 +599,7 @@ class SkrubNamespace:
         ―――――――
            a1  a2
         0   0   1
-        >>> a.skb.concat([b, c],axis=1)
+        >>> a.skb.concat([b, c], axis=1)
         <Concat: 3 dataframes>
         Result:
         ―――――――
