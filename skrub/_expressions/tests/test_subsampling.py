@@ -5,6 +5,7 @@ from sklearn.datasets import make_regression
 from sklearn.dummy import DummyRegressor
 
 import skrub
+from skrub import _dataframe as sbd
 from skrub._expressions import _subsampling
 
 
@@ -149,3 +150,21 @@ def test_should_subsample():
     should = []
     pred.skb.get_grid_search(fitted=True, cv=3)
     assert should == [False] * 12 + [False]
+
+
+@pytest.mark.parametrize("how", ["head", "random"])
+def test_n_too_large(how, df_module):
+    # subsampling is just to speed-up previews so setting n larger than a data
+    # should not cause errors
+    df = df_module.example_dataframe
+    X = skrub.X(df).skb.preview_subsample(n=10_000, how=how)
+    assert sbd.shape(X.skb.eval())[0] == sbd.shape(df)[0]
+
+
+@pytest.mark.parametrize("how", ["head", "random"])
+def test_n_too_large_numpy(how):
+    # subsampling is just to speed-up previews so setting n larger than a data
+    # should not cause errors
+    a = np.eye(3)
+    X = skrub.X(a).skb.preview_subsample(n=10_000, how=how)
+    assert X.skb.eval().shape[0] == a.shape[0]

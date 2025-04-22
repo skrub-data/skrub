@@ -77,24 +77,23 @@ class PreviewSubsample(_expressions.ExprImpl):
     def compute(self, e, mode, environment):
         if e.how not in ["head", "random"]:
             raise ValueError("`how` should be 'head' or 'random', got: {e.how!r}")
-        if not (
-            isinstance(e.target, np.ndarray)
-            or sbd.is_dataframe(e.target)
-            or sbd.is_column(e.target)
-        ):
+        is_numpy = isinstance(e.target, np.ndarray)
+        if not (is_numpy or sbd.is_dataframe(e.target) or sbd.is_column(e.target)):
             raise TypeError(
                 "To use subsampling, the input should be a dataframe, "
                 f"column or numpy array, got an object of type: {type(e.target)}."
             )
         if not _should_subsample(mode, environment):
             return e.target
+        shape = e.target.shape if is_numpy else sbd.shape(e.target)
+        n = min(e.n, shape[0])
         if e.how == "head":
-            if isinstance(e.target, np.ndarray):
-                return _head_numpy(e.target, n=e.n)
-            return sbd.head(e.target, n=e.n)
-        if isinstance(e.target, np.ndarray):
-            return _sample_numpy(e.target, n=e.n)
-        return sbd.sample(e.target, n=e.n, seed=0)
+            return _head_numpy(e.target, n=n) if is_numpy else sbd.head(e.target, n=n)
+        return (
+            _sample_numpy(e.target, n=n)
+            if is_numpy
+            else sbd.sample(e.target, n=n, seed=0)
+        )
 
 
 def env_with_subsampling(environment, subsampling):
