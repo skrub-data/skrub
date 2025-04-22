@@ -333,7 +333,7 @@ def concat(*dataframes, axis=0):
 def _concat_pandas(*dataframes, axis=0):
     kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
     if axis in [0, "index"]:
-        return pd.concat(dataframes, axis=0, **kwargs)
+        return pd.concat(dataframes, axis=0, ignore_index=True, **kwargs)
     else:
         init_index = dataframes[0].index
         dataframes = [df.reset_index(drop=True) for df in dataframes]

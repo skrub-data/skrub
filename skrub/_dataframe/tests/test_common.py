@@ -226,7 +226,7 @@ def test_concat_vertical(df_module, example_data_dict):
         if isinstance(df, pd.DataFrame):
             assert_array_equal(
                 df.index.to_numpy(),
-                np.concatenate([pd_df1.index.to_numpy(), pd_df3.index.to_numpy()]),
+                np.array(range(len(df))),
             )
         else:
             pass
