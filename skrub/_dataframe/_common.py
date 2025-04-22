@@ -347,7 +347,7 @@ def _concat_pandas(*dataframes, axis=0):
 @concat.specialize("polars")
 def _concat_polars(*dataframes, axis=0):
     if axis in [0, "index"]:
-        return pl.concat(dataframes, how="vertical")
+        return pl.concat(dataframes, how="diagonal_relaxed")
     else:
         dataframes = _join_utils.make_column_names_unique(*dataframes)
         return pl.concat(dataframes, how="horizontal")
