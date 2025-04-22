@@ -31,7 +31,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
-from ._subsampling import SHOULD_SUBSAMPLE_KEY, PreviewSubsample
+from ._subsampling import PreviewSubsample, env_with_subsampling
 from ._utils import NULL, attribute_error
 
 
@@ -51,12 +51,6 @@ def _check_subsampling(fitted, subsampling):
             "on the data already provided when initializing variables. "
             "Please pass `fitted=True` or subsampling=`False`."
         )
-
-
-def _with_subsampling(environment, subsampling):
-    if not subsampling:
-        return environment
-    return environment | {SHOULD_SUBSAMPLE_KEY: True}
 
 
 def _check_can_be_pickled(obj):
@@ -1137,7 +1131,7 @@ class SkrubNamespace:
         _check_can_be_pickled(estimator)
         if not fitted:
             return estimator
-        return estimator.fit(_with_subsampling(self.get_data(), subsampling))
+        return estimator.fit(env_with_subsampling(self.get_data(), subsampling))
 
     def train_test_split(
         self,
@@ -1298,7 +1292,7 @@ class SkrubNamespace:
         )
         if not fitted:
             return search
-        return search.fit(_with_subsampling(self.get_data(), subsampling))
+        return search.fit(env_with_subsampling(self.get_data(), subsampling))
 
     def get_randomized_search(self, *, fitted=False, subsampling=False, **kwargs):
         """Find the best parameters with grid search.
@@ -1379,7 +1373,7 @@ class SkrubNamespace:
         )
         if not fitted:
             return search
-        return search.fit(_with_subsampling(self.get_data(), subsampling))
+        return search.fit(env_with_subsampling(self.get_data(), subsampling))
 
     def cross_validate(self, environment=None, subsampling=False, **kwargs):
         """Cross-validate the expression.
