@@ -209,9 +209,6 @@ class ExprImpl:
     def preview_if_available(self):
         return self.results.get("preview", NULL)
 
-    def fields_required_for_eval(self, mode):
-        return self._fields
-
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
@@ -936,6 +933,13 @@ def as_expr(value):
 class IfElse(ExprImpl):
     _fields = ["condition", "value_if_true", "value_if_false"]
 
+    def eval(self, *, environment, mode):
+        cond = yield self.condition
+        if cond:
+            return (yield self.value_if_true)
+        else:
+            return (yield self.value_if_false)
+
     def __repr__(self):
         cond, if_true, if_false = map(
             short_repr, (self.condition, self.value_if_true, self.value_if_false)
@@ -945,6 +949,14 @@ class IfElse(ExprImpl):
 
 class Match(ExprImpl):
     _fields = ["query", "targets", "default"]
+
+    def eval(self, *, environment, mode):
+        query = yield self.query
+        if self.has_default():
+            target = self.targets.get(query, self.default)
+        else:
+            target = self.targets[query]
+        return (yield target)
 
     def has_default(self):
         return self.default is not NULL
@@ -956,14 +968,9 @@ class Match(ExprImpl):
 class FreezeAfterFit(ExprImpl):
     _fields = ["target"]
 
-    def fields_required_for_eval(self, mode):
-        if "fit" in mode or mode == "preview":
-            return self._fields
-        return []
-
-    def compute(self, e, mode, environment):
+    def eval(self, *, mode, environment):
         if mode == "preview" or "fit" in mode:
-            self.value_ = e.target
+            self.value_ = yield self.target
         return self.value_
 
 
@@ -981,40 +988,42 @@ class Apply(ExprImpl):
     _fields = ["X", "estimator", "y", "cols", "how", "allow_reject", "unsupervised"]
 
     # TODO can we avoid the need for an explicit unsupervised parameter by
-    # inspecting sklearn tags?
+    # inspecting the estimator? eg in recent versions we can look at
+    # tags.target_tags.required
 
-    def fields_required_for_eval(self, mode):
-        if "fit" in mode or mode == "preview":
-            if not self.unsupervised:
-                return self._fields
-            return [f for f in self._fields if f != "y"]
-        if mode == "score":
-            return ["X", "y"]
-        return ["X"]
-
-    def compute(self, e, mode, environment):
+    def eval(self, *, mode, environment):
         if mode not in self.supported_modes():
             mode = "fit_transform" if "fit" in mode else "transform"
         method_name = "fit_transform" if mode == "preview" else mode
 
-        X = _check_column_names(e.X)
+        X = yield self.X
+        if ("fit" in method_name and not self.unsupervised) or method_name == "score":
+            y = yield self.y
+        else:
+            y = None
+
+        X = _check_column_names(X)
 
         if "fit" in method_name:
+            estimator = yield self.estimator
+            cols = yield self.cols
+            how = yield self.how
+            allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
-                estimator=e.estimator,
-                cols=e.cols,
-                how=e.how,
-                allow_reject=e.allow_reject,
+                estimator=estimator,
+                cols=cols,
+                how=how,
+                allow_reject=allow_reject,
                 X=X,
             )
 
         if "transform" in method_name and not hasattr(self.estimator_, "transform"):
             if "fit" in method_name:
-                self.estimator_.fit(X, e.y)
-                if sbd.is_column(e.y):
-                    self._all_outputs = [sbd.name(e.y)]
-                elif sbd.is_dataframe(e.y):
-                    self._all_outputs = sbd.column_names(e.y)
+                self.estimator_.fit(X, y)
+                if sbd.is_column(y):
+                    self._all_outputs = [sbd.name(y)]
+                elif sbd.is_dataframe(y):
+                    self._all_outputs = sbd.column_names(y)
                 else:
                     self._all_outputs = None
             pred = self.estimator_.predict(X)
@@ -1033,12 +1042,12 @@ class Apply(ExprImpl):
             return sbd.copy_index(X, result)
 
         if "fit" in method_name:
-            y = () if self.unsupervised else (e.y,)
+            y_arg = () if self.unsupervised else (y,)
         elif method_name == "score":
-            y = (e.y,)
+            y_arg = (y,)
         else:
-            y = ()
-        return getattr(self.estimator_, method_name)(X, *y)
+            y_arg = ()
+        return getattr(self.estimator_, method_name)(X, *y_arg)
 
     def supported_modes(self):
         modes = ["preview", "fit_transform", "transform"]
