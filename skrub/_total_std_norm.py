@@ -6,13 +6,18 @@ from sklearn.utils.validation import check_array
 from . import _dataframe as sbd
 
 
-def total_variance_norm(X):
+def total_std_norm(X):
     r"""Fit the average L2 norm and apply the normalization.
 
     Compute the average L2 norm (a scalar) from a numerical DataFrame or a 2D NumPy
     array, and use this norm to normalize the input element-wise. This computation
     is robust to non-finite values such as ``np.inf`` or ``np.nan``, but raises an
     error if string values are present.
+
+    Returns
+    -------
+    norm : float,
+        The total standard deviation norm.
 
     See Also
     --------
@@ -84,7 +89,7 @@ def total_variance_norm(X):
     return norm
 
 
-def accumulate_norm(X, mean1, var1, n1):
+def accumulate_std_norm(X, mean1, var1, n1):
     total_combined_var = 0
     if X.ndim == 1:
         X = X.reshape(-1, 1)

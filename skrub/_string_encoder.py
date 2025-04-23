@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
-from ._total_variance_norm import total_variance_norm
+from ._total_std_norm import total_std_norm
 
 
 class StringEncoder(SingleColumnTransformer):
@@ -160,7 +160,7 @@ class StringEncoder(SingleColumnTransformer):
         del X_out  # optimize memory: we no longer need X_out
 
         # block normalize
-        self.norm_ = total_variance_norm(result)
+        self.norm_ = total_std_norm(result)
         result /= self.norm_
 
         self.n_components_ = result.shape[1]

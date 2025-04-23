@@ -37,6 +37,9 @@ Changes
 - The `packaging` dependency was removed.
   :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+- :class:`TextEncoder`, :class:`StringEncoder` and :class:`GapEncoder` outputs during
+  transform are now normalized by computing the total standard deviation during
+  training. :pr:`1274` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 Bugfixes
 --------

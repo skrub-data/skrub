@@ -19,7 +19,7 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._total_variance_norm import accumulate_norm, total_variance_norm
+from ._total_std_norm import accumulate_std_norm, total_std_norm
 from ._utils import unique_strings
 
 
@@ -477,7 +477,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._fit_transform(sbd.to_numpy(X), is_null)
 
-        self.norm_ = total_variance_norm(result)
+        self.norm_ = total_std_norm(result)
         result /= self.norm_
 
         return self._post_process(X, result)
@@ -719,7 +719,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         result = self._transform(X, is_null)
 
         if not hasattr(self, "prev_stats_"):
-            self.norm_ = total_variance_norm(result)
+            self.norm_ = total_std_norm(result)
             self.prev_stats_ = {
                 "mean1": result.mean(),
                 "var1": result.var(ddof=0),
@@ -727,7 +727,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             }
         else:
             # Accumulate previous statistics
-            self.norm_, self.prev_stats_ = accumulate_norm(result, **self.prev_stats_)
+            self.norm_, self.prev_stats_ = accumulate_std_norm(
+                result, **self.prev_stats_
+            )
 
         return self
 
@@ -766,7 +768,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
 
-        # XXX: support block normalization for partial fit?
         result /= self.norm_
 
         return self._post_process(X, result)
