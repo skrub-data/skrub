@@ -15,11 +15,11 @@ class DropUninformative(SingleColumnTransformer):
     issues are found:
 
     - The fraction of missing values is larger than a certain fraction (by default,
-        all values must be null for the column to be dropped).
+      all values must be null for the column to be dropped).
     - The column includes only one unique value (the column is constant). Missing
-        values are considered a separate value.
+      values are considered a separate value.
     - The number of unique values in the column is equal to the length of the
-        column.
+      column.
 
     Parameters
     ----------
@@ -96,7 +96,7 @@ class DropUninformative(SingleColumnTransformer):
 
     def _drop_if_too_many_nulls(self, column):
         if self.null_fraction_threshold == 1.0:
-            return sbd.is_all_null(column)
+            return self._null_count == len(column)
         # No nulls found, or no threshold
         if self._null_count == 0 or self.null_fraction_threshold is None:
             return False
@@ -104,7 +104,7 @@ class DropUninformative(SingleColumnTransformer):
 
     def _drop_if_constant(self, column):
         if self.drop_if_constant:
-            if (sbd.n_unique(column) == 1) and (not sbd.has_nulls(column)):
+            if (sbd.n_unique(column) == 1) and (not self._null_count > 0):
                 return True
         return False
 
