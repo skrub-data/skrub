@@ -164,7 +164,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         ``None``, this selection is disabled: no columns are dropped based on the
         number of null values they contain.
 
-    drop_constant : bool, default=True
+    drop_constant : bool, default=False
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
@@ -276,7 +276,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     """
 
     def __init__(
-        self, drop_null_fraction=1.0, drop_constant=True, drop_ids=False, n_jobs=1
+        self, drop_null_fraction=1.0, drop_constant=False, drop_ids=False, n_jobs=1
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_constant = drop_constant
@@ -456,7 +456,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         this selection is disabled: no columns are dropped based on the number
         of null values they contain.
 
-    drop_constant : bool, default=True
+    drop_constant : bool, default=False
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
@@ -593,7 +593,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), DropUninformative(drop_if_constant=False), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), DropUninformative(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
     Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
@@ -668,7 +668,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(drop_if_constant=False), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 
