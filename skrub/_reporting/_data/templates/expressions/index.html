@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>run report</title>
+    <style>
+     {% include "expressions.css" %}
+    </style>
+</head>
+
+<body>
+    <p>
+        Click on a node to display more information.
+    </p>
+    <div id="graph-nav" data-node-status='{{ node_status | tojson }}'>
+        {{ svg | safe }}
+    </div>
+</body>
+<script>
+ {% include "expression-report.js" %}
+</script>
+
+</html>

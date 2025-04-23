@@ -12,13 +12,31 @@ Ongoing development
 New features
 ------------
 
-- The :class:`BlockNormalizerL2` is now available to perform global L2 normalization.
-  Normalization has been enabled by default through the parameter `block_normalize` in
-  the :class:`GapEncoder`, :class:`StringEncoder` and :class:`TextEncoder`.
-  :pr:`1274` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+The skrub expressions are new mechanism for building machine-learning pipelines
+that handle multiple tables and easily describing their hyperparameter spaces.
+See :ref:`the examples <expressions_examples_ref>` for an introduction.
+:pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of work from other
+contributors is not directly visible on the pull request page: :user:`Vincent
+Maladiere <Vincent-Maladiere>` provided very important help by trying the
+expressions on many use-cases and datasets, providing feedback and suggesting
+improvements, improving the examples (including creating all the figures in the
+examples) and adding jitter to the parallel coordinate plots, :user:`Riccardo
+Cappuzzo<rcap107>` experimented with the expressions, suggested improvements and
+improved the examples, :user:`Gaël Varoquaux <gaelvaroquaux>` , :user:`Guillaume
+Lemaitre <glemaitre>`, :user:`Adrin Jalali <adrinjalali>`, :user:`Olivier Grisel
+<ogrisel>` and others participated through many discussions in defining the
+requirements and the public API.
 
 Changes
 -------
+
+- A new parameter ``max_association_columns`` has been added to the
+  :class:`TableReport` to skip association computation when the number of columns
+  exceeds the specified value. :pr:`1304` by :user:`Victoria Shevchenko <victoris93>`.
+
+- The `packaging` dependency was removed.
+  :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
 
 Bugfixes
 --------
@@ -84,7 +102,6 @@ Changes
 - Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
-=======
 Bug fixes
 ---------
 - :class:`StringEncoder` now works correctly in presence of null values.

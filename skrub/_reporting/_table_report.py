@@ -47,6 +47,11 @@ class TableReport:
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
+    max_association_columns : int, default=30
+        Maximum number of columns for which associations should be computed.
+        If the number of columns in the dataframe is greater than this value,
+        the associations will not be computed. If None, the associations
+        for all columns will be computed.
 
     See Also
     --------
@@ -121,6 +126,7 @@ class TableReport:
         column_filters=None,
         verbose=1,
         max_plot_columns=30,
+        max_association_columns=30,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
@@ -134,31 +140,29 @@ class TableReport:
         self.dataframe = dataframe
         self.verbose = verbose
         self.max_plot_columns = max_plot_columns
+        self.max_association_columns = max_association_columns
+        self.n_columns = sbd.shape(self.dataframe)[1]
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
 
     @functools.cached_property
-    def _summary_with_plots(self):
-        return summarize_dataframe(
-            self.dataframe, with_plots=True, title=self.title, **self._summary_kwargs
+    def _summary(self):
+        with_plots = (
+            self.max_plot_columns is None or self.max_plot_columns >= self.n_columns
+        )
+        with_associations = (
+            self.max_association_columns is None
+            or self.max_association_columns >= self.n_columns
         )
 
-    @functools.cached_property
-    def _summary_without_plots(self):
         return summarize_dataframe(
-            self.dataframe, with_plots=False, title=self.title, **self._summary_kwargs
+            self.dataframe,
+            with_plots=with_plots,
+            with_associations=with_associations,
+            title=self.title,
+            **self._summary_kwargs,
         )
-
-    def _get_summary(self):
-        if self.max_plot_columns is None:
-            summary = self._summary_with_plots
-        elif self.max_plot_columns >= sbd.shape(self.dataframe)[1]:
-            summary = self._summary_with_plots
-        else:
-            summary = self._summary_without_plots
-
-        return summary
 
     def html(self):
         """Get the report as a full HTML page.
@@ -169,7 +173,7 @@ class TableReport:
             The HTML page.
         """
         return to_html(
-            self._get_summary(),
+            self._summary,
             standalone=True,
             column_filters=self.column_filters,
         )
@@ -183,7 +187,7 @@ class TableReport:
             The HTML snippet.
         """
         return to_html(
-            self._get_summary(),
+            self._summary,
             standalone=False,
             column_filters=self.column_filters,
         )
@@ -197,9 +201,7 @@ class TableReport:
             The JSON data.
         """
         to_remove = ["dataframe", "sample_table"]
-        data = {
-            k: v for k, v in self._summary_without_plots.items() if k not in to_remove
-        }
+        data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
 
     def _repr_mimebundle_(self, include=None, exclude=None):

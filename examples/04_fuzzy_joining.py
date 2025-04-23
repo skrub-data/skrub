@@ -342,7 +342,7 @@ print(f"Mean R² score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 
 #######################################################################
 # Using the |joiner| to fuzzy join multiple tables
-# --------------------------------------------
+# -------------------------------------------------
 # A convenient way to merge different tables from the World Bank
 # to `X` in a scikit-learn Pipeline and tune the parameters is to use the |joiner|.
 #

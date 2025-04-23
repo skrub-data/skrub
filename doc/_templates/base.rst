@@ -22,6 +22,7 @@
    :members:
    :inherited-members:
    :special-members: __call__
+   :exclude-members: get_metadata_routing, set_fit_request
 
 .. minigallery:: {{ module }}.{{ objname }} {% for meth in methods %}{{ module }}.{{ objname }}.{{ meth }} {% endfor %}
    :add-heading: Gallery examples
