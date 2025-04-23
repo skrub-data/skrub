@@ -340,9 +340,9 @@ def test_concat_needs_wrapping_in_list():
 
 def test_concat_axis_undefined():
     a = skrub.var("a", skrub.toy_orders().orders)
-    with pytest.raises(Exception, match=".*one of 0/'index' or 1/'columns'"):
+    with pytest.raises(Exception, match=".*one of 0 or 1"):
         a.skb.concat([a], axis=2)
-    with pytest.raises(Exception, match=".*one of 0/'index' or 1/'columns'"):
+    with pytest.raises(Exception, match=".*one of 0 or 1"):
         a.skb.concat([a], axis="foo")
 
 

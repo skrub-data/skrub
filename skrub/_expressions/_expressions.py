@@ -1424,15 +1424,14 @@ class Concat(ExprImpl):
                 f"was found at index {idx}."
             )
 
-        if e.axis not in (0, 1, "index", "columns"):
+        if e.axis not in (0, 1):
             raise ValueError(
-                f"Invalid axis value {e.axis!r} for concat. "
-                "Expected one of 0/'index' or 1/'columns'."
+                f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
             )
 
         result = sbd.concat(e.first, *e.others, axis=e.axis)
 
-        if e.axis == 1 or e.axis == "columns":
+        if e.axis == 1:
             if mode == "preview" or "fit" in mode:
                 self.all_outputs_ = sbd.column_names(result)
             else:

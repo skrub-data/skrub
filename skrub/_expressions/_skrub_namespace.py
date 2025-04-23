@@ -577,8 +577,10 @@ class SkrubNamespace:
         ----------
         others : list of dataframes
             The dataframes to stack horizontally with ``self``
-        axis : {0 or 'index', 1 or 'columns'}, default 0
+        axis : {0, 1}, default 0
             The axis to concatenate along.
+            0: stack vertically (rows)
+            1: stack horizontally (columns)
 
         Returns
         -------
