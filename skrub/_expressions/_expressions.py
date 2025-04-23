@@ -576,7 +576,7 @@ class Expr:
             f"{graph}<br /><br />\n</details>\n"
             "<strong><samp>Result:</samp></strong>"
         )
-        report = node_report(self)
+        report = node_report(self, max_plot_columns=0, max_association_columns=0)
         if hasattr(report, "_repr_html_"):
             report = report._repr_html_()
         return f"<div>\n{prefix}\n{report}\n</div>"
