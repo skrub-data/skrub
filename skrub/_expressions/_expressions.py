@@ -988,7 +988,8 @@ class Apply(ExprImpl):
     _fields = ["X", "estimator", "y", "cols", "how", "allow_reject", "unsupervised"]
 
     # TODO can we avoid the need for an explicit unsupervised parameter by
-    # inspecting sklearn tags?
+    # inspecting the estimator? eg in recent versions we can look at
+    # tags.target_tags.required
 
     def eval(self, *, mode, environment):
         if mode not in self.supported_modes():
