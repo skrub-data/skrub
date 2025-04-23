@@ -1,4 +1,6 @@
 import numpy as np
+import sklearn
+from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_array
 
 from . import _dataframe as sbd
@@ -54,13 +56,19 @@ def total_variance_norm(X):
             f"X must be a Pandas, Polars dataframe or a Numpy array, got {type(X)}."
         )
 
+    sklearn_version = parse_version(parse_version(sklearn.__version__).base_version)
+    all_finite_key = (
+        "force_all_finite"
+        if sklearn_version < parse_version("1.6")
+        else "ensure_all_finite"
+    )
     X = check_array(
         X,
         accept_sparse=False,
-        force_all_finite=False,
         dtype="numeric",
         ensure_2d=True,
         copy=False,
+        **{all_finite_key: False},
     )
 
     # Sanity check: replace inf values with nan
