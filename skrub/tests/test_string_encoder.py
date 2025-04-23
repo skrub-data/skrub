@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 
 from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
+from skrub._total_variance_norm import total_variance_norm
 
 
 @pytest.fixture
@@ -40,6 +41,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
     )
     check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
     check = check.astype("float32")  # StringEncoder is float32
+    check /= total_variance_norm(check)
 
     names = [f"col1_{idx}" for idx in range(2)]
 
@@ -50,7 +52,6 @@ def test_tfidf_vectorizer(encode_column, df_module):
         vectorizer="tfidf",
         ngram_range=ngram_range,
         analyzer=analyzer,
-        block_normalize=False,
     )
     result = se.fit_transform(encode_column)
 

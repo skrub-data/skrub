@@ -18,8 +18,8 @@ from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
-from ._block_normalizer import BlockNormalizerL2
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._total_variance_norm import accumulate_norm, total_variance_norm
 from ._utils import unique_strings
 
 
@@ -115,8 +115,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         set ``max_no_improvement=None``.
     verbose : int, default=0
         Verbosity level. The higher, the more granular the logging.
-    block_normalize : bool, default=True
-        If set to true, normalize the output using :class:`BlockNormalizerL2`.
 
     Attributes
     ----------
@@ -204,7 +202,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         max_iter_e_step=1,
         max_no_improvement=5,
         verbose=0,
-        block_normalize=True,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
@@ -224,7 +221,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.max_iter_e_step = max_iter_e_step
         self.max_no_improvement = max_no_improvement
         self.verbose = verbose
-        self.block_normalize = block_normalize
 
     def _init_vars(self, X, is_null):
         """
@@ -481,10 +477,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._fit_transform(sbd.to_numpy(X), is_null)
 
-        if self.block_normalize:
-            normalizer = BlockNormalizerL2()
-            result = normalizer.fit_transform(result)
-            self.normalizer_ = normalizer
+        self.norm_ = total_variance_norm(result)
+        result /= self.norm_
 
         return self._post_process(X, result)
 
@@ -721,6 +715,20 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         )
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
+
+        result = self._transform(X, is_null)
+
+        if not hasattr(self, "prev_stats_"):
+            self.norm_ = total_variance_norm(result)
+            self.prev_stats_ = {
+                "mean1": result.mean(),
+                "var1": result.var(ddof=0),
+                "n1": result.shape[0],
+            }
+        else:
+            # Accumulate previous statistics
+            self.norm_, self.prev_stats_ = accumulate_norm(result, **self.prev_stats_)
+
         return self
 
     def _add_unseen_keys_to_H_dict(self, X):
@@ -759,8 +767,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         result = self._transform(sbd.to_numpy(X), is_null)
 
         # XXX: support block normalization for partial fit?
-        if self.block_normalize and hasattr(self, "normalizer_"):
-            result = self.normalizer_.transform(result)
+        result /= self.norm_
 
         return self._post_process(X, result)
 

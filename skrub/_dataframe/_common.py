@@ -640,6 +640,8 @@ def is_numeric(col):
 
 @is_numeric.specialize("pandas", argument_type="Column")
 def _is_numeric_pandas(col):
+    if pd.api.types.is_object_dtype(col):
+        col = col.convert_dtypes()
     # polars and pandas disagree about whether Booleans are numbers
     return pandas.api.types.is_numeric_dtype(
         col

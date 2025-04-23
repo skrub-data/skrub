@@ -211,13 +211,6 @@ Cleaning a dataframe
 
    deduplicate
 
-.. autosummary::
-   :toctree: generated/
-   :template: base.rst
-   :nosignatures:
-
-   BlockNormalizerL2
-
 
 .. _downloading_a_dataset_ref:
 

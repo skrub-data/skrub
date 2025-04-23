@@ -9,8 +9,8 @@ from sklearn.feature_extraction.text import (
 from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
-from ._block_normalizer import BlockNormalizerL2
 from ._on_each_column import SingleColumnTransformer
+from ._total_variance_norm import total_variance_norm
 
 
 class StringEncoder(SingleColumnTransformer):
@@ -42,9 +42,6 @@ class StringEncoder(SingleColumnTransformer):
         Whether the feature should be made of word or character n-grams.
         Option ``char_wb`` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
-
-    block_normalize : bool, default=True
-        If set to true, normalize the output using :class:`BlockNormalizerL2`.
 
     See Also
     --------
@@ -82,13 +79,11 @@ class StringEncoder(SingleColumnTransformer):
         vectorizer="tfidf",
         ngram_range=(3, 4),
         analyzer="char_wb",
-        block_normalize=True,
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
         self.ngram_range = ngram_range
         self.analyzer = analyzer
-        self.block_normalize = block_normalize
 
     def get_feature_names_out(self):
         """Get output feature names for transformation.
@@ -164,12 +159,10 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()  # To avoid a reference to X_out
         del X_out  # optimize memory: we no longer need X_out
 
-        if self.block_normalize:
-            normalizer = BlockNormalizerL2()
-            result = normalizer.fit_transform(result)
-            self.normalizer_ = normalizer
+        # block normalize
+        self.norm_ = total_variance_norm(result)
+        result /= self.norm_
 
-        self._is_fitted = True
         self.n_components_ = result.shape[1]
 
         name = sbd.name(X)
@@ -203,8 +196,8 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()
         del X_out  # optimize memory: we no longer need X_out
 
-        if self.block_normalize:
-            result = self.normalizer_.transform(result)
+        # block normalize
+        result /= self.norm_
 
         return self._post_process(X, result)
 

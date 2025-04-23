@@ -149,7 +149,6 @@ def test_partial_fit(df_module, add_words, generate_data):
         batch_size=n_samples,
         max_iter=1,
         add_words=add_words,
-        block_normalize=False,
     )
     X_enc = enc.fit_transform(X)
     # Gap encoder with partial fit
