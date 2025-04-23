@@ -268,7 +268,7 @@ quick_search = predictions.skb.get_randomized_search(
     n_jobs=4,
     random_state=0,
     fitted=True,
-    subsampling=True,
+    subsampling=True, # force the randomized search to run only on the subsample
 )
 quick_search.results_
 
