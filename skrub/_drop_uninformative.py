@@ -68,7 +68,7 @@ class DropUninformative(SingleColumnTransformer):
 
     def __init__(
         self,
-        drop_if_constant=True,
+        drop_if_constant=False,
         drop_if_id=False,
         null_fraction_threshold=1.0,
     ):
