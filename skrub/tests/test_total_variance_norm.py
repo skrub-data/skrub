@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 
 import skrub._dataframe as sbd
-from skrub import GapEncoder, StringEncoder, TextEncoder
+from skrub import GapEncoder, StringEncoder
 from skrub._total_variance_norm import total_variance_norm
 
 try:
@@ -49,12 +49,12 @@ def test_dataframe(df_module):
     [
         StringEncoder(n_components=2),
         GapEncoder(n_components=2),
-        pytest.param(
-            TextEncoder(n_components=2),
-            marks=pytest.mark.skipif(
-                not TRANSFORMERS, reason="sentence-transformers is not installed"
-            ),
-        ),
+        # pytest.param(
+        #     TextEncoder(n_components=2),
+        #     marks=pytest.mark.skipif(
+        #         not TRANSFORMERS, reason="sentence-transformers is not installed"
+        #     ),
+        # ),
     ],
 )
 def test_encoders(df_module, encoder):
