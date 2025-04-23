@@ -59,7 +59,7 @@ class StringEncoder(SingleColumnTransformer):
 
     We will encode the comments using 2 components:
 
-    >>> enc = StringEncoder(n_components=2, block_normalize=False)
+    >>> enc = StringEncoder(n_components=2)
     >>> X = pd.Series([
     ...   "The professor snatched a good interview out of the jaws of these questions.",
     ...   "Bookmarking this to watch later.",
@@ -68,9 +68,9 @@ class StringEncoder(SingleColumnTransformer):
 
     >>> enc.fit_transform(X) # doctest: +SKIP
        video comments_0  video comments_1
-    0      8.218069e-01      4.557474e-17
-    1      6.971618e-16      1.000000e+00
-    2      8.218069e-01     -3.046564e-16
+    0          1.322973         -0.163070
+    1          0.379688          1.659319
+    2          1.306400         -0.317120
     """
 
     def __init__(

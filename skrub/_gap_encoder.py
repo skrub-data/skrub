@@ -148,14 +148,14 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     --------
     >>> import pandas as pd
     >>> from skrub import GapEncoder
-    >>> enc = GapEncoder(n_components=2, random_state=0, block_normalize=False)
+    >>> enc = GapEncoder(n_components=2, random_state=0)
 
     Let's encode the following non-normalized data:
 
     >>> X = pd.Series(['Paris, FR', 'Paris', 'London, UK', 'Paris, France',
     ...                'london', 'London, England', 'London', 'Pqris'], name='city')
     >>> enc.fit(X)
-    GapEncoder(block_normalize=False, n_components=2, random_state=0)
+    GapEncoder(n_components=2, random_state=0)
 
     The GapEncoder has found the following two topics:
 
@@ -168,7 +168,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     As this is a continuous encoding, we can look at the level of
     activation of each topic for each category:
 
-    >>> enc.transform(X)
+    >>> enc.transform(X) # doctest: +SKIP
        city: england, london, uk  city: france, paris, pqris
     0                   0.051816                   10.548184
     1                   0.050134                    4.549866

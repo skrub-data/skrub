@@ -129,9 +129,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         Verbose level, controls whether to show a progress bar or not during
         ``transform``.
 
-    block_normalize : bool, default=True
-        If set to true, normalize the output using :class:`BlockNormalizerL2`.
-
     Attributes
     ----------
     input_name_ : str
@@ -171,7 +168,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     Let's encode video comments using only 2 embedding dimensions:
 
     >>> enc = TextEncoder(
-    ...    model_name='intfloat/e5-small-v2', n_components=2, block_normalize=False
+    ...    model_name='intfloat/e5-small-v2', n_components=2
     ... )
     >>> X = pd.Series([
     ...   "The professor snatched a good interview out of the jaws of these questions.",
