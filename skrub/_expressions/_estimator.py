@@ -20,7 +20,7 @@ from ._evaluation import (
 )
 from ._expressions import Apply
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
-from ._utils import X_NAME, Y_NAME, attribute_error
+from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SEARCH_FITTED_ATTRIBUTES = [
@@ -59,7 +59,11 @@ def _copy_attr(source, target, attributes):
             pass
 
 
-class ExprEstimator(BaseEstimator):
+class _CloudPickleExpr(_CloudPickle):
+    _cloudpickle_attributes = ["expr"]
+
+
+class ExprEstimator(_CloudPickleExpr, BaseEstimator):
     """Estimator that evaluates a skrub expression.
 
     This class is not meant to be instantiated manually, ``ExprEstimator``
@@ -585,7 +589,7 @@ def train_test_split(
 # each sampled param combination.
 
 
-class ParamSearch(BaseEstimator):
+class ParamSearch(_CloudPickleExpr, BaseEstimator):
     """Estimator that evaluates a skrub expression with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``

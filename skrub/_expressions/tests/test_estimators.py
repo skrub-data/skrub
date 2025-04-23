@@ -1,5 +1,6 @@
 import copy
 import io
+import pickle
 from unittest.mock import Mock
 
 import numpy as np
@@ -476,6 +477,19 @@ def test_caching():
             )
         )
     )
+
+
+@pytest.mark.parametrize(
+    "e",
+    [
+        skrub.var("a").skb.apply_func(lambda x, f: x * f(), lambda: 2),
+        skrub.as_expr(lambda x: x * 2)(skrub.var("a")),
+        (skrub.as_expr([]) + [lambda x: x * 2])[0](skrub.var("a")),
+    ],
+)
+def test_pickling(e):
+    estimator = pickle.loads(pickle.dumps(e.skb.get_estimator()))
+    assert estimator.fit_transform({"a": 10}) == 20
 
 
 #
