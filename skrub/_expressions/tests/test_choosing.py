@@ -23,7 +23,7 @@ def test_choice_unpacking(name):
         skrub.choose_from([10, 20], name=name)[0]
 
 
-@pytest.mark.parametrize("name", [None, 0, skrub.var("name", "the_name")])
+@pytest.mark.parametrize("name", [0, skrub.var("name", "the_name")])
 def test_bad_name(name):
     with pytest.raises(TypeError, match=".*must be a `str`"):
         skrub.choose_from({"a": 0}, name=name)
@@ -168,3 +168,56 @@ def test_bad_match_mappings(test_class):
         "unhashable type: 'Expr'",
     ):
         c.match({1: "one", 11: "eleven"})
+
+
+def test_get_display_name():
+    c = skrub.choose_from([1, 2])
+    assert _choosing.get_display_name(c) == "choose_from([1, 2])"
+    c = skrub.choose_from([1, 2], name="c")
+    assert _choosing.get_display_name(c) == "c"
+
+
+def test_choice_repr():
+    """
+    >>> import numpy as np
+    >>> import skrub
+
+    >>> n_components = skrub.choose_int(10, 30, name="n")
+    >>> n_components
+    choose_int(10, 30, name='n')
+    >>> skrub.choose_from(
+    ...     [
+    ...         skrub.StringEncoder(n_components=n_components),
+    ...         skrub.TextEncoder(n_components=n_components),
+    ...     ]
+    ... )
+    choose_from([StringEncoder(...), TextEncoder(...)])
+    >>> skrub.choose_from(
+    ...     {
+    ...         "string": skrub.StringEncoder(n_components=n_components),
+    ...         "text": skrub.TextEncoder(n_components=n_components),
+    ...     }
+    ... )
+    choose_from({'string': StringEncoder(...), 'text': TextEncoder(...)})
+
+    >>> skrub.choose_from([np.eye(3)])
+    choose_from([ndarray(...)])
+    >>> skrub.choose_from([1, 2])
+    choose_from([1, 2])
+    >>> skrub.as_expr([skrub.choose_from([1, 2]), skrub.optional(np.eye(3))])
+    <Value list>
+    Result:
+    ―――――――
+    [choose_from([1, 2]), optional(ndarray(...))]
+
+    >>> skrub.optional(0, name='a')
+    optional(0, name='a')
+    >>> skrub.optional(0)
+    optional(0)
+    >>> skrub.choose_bool()
+    choose_bool()
+    >>> skrub.choose_bool(name='a')
+    choose_bool(name='a')
+    >>> skrub.choose_float(1, 10, n_steps=2, name="i")
+    choose_float(1, 10, n_steps=2, name='i')
+    """

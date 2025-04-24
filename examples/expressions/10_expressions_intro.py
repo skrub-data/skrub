@@ -1,35 +1,11 @@
 """
+.. _example_expressions_intro:
+
 Building complex tabular pipelines
 ==================================
 
-Skrub provides an easy way to build complex, flexible machine-learning
-pipelines. There are several problems that are not easily addressed with the
-standard scikit-learn tools such as the ``Pipeline`` and ``ColumnTransformer``
-and for which a skrub pipeline is a solution:
-
-- **Multiple tables:** when there are several tables of different shapes (for example,
-  "Customers", "Orders" and "Products" tables). Not suitable for scikit-learn
-  estimators, expecting a single design matrix ``X`` and array of targets ``y``
-  with one row per observation.
-
-- **DataFrame wrangling:** performing typical dataframe operations
-  such as projections, joins and aggregations leveraging the powerful APIs of
-  ``pandas`` or ``polars``.
-
-- **Iterative development:** building a pipeline step by step, while
-  inspecting the intermediate results so that the feedback loop is short and
-  errors are discovered early.
-
-- **Hyperparameter tuning:** choices of estimators, hyperparameters,
-  and even the architecture of the pipeline can be informed by validation scores.
-  Specifying the grid of hyperparameters separately from the model (as in
-  ``GridSearchCV``) is difficult for complex pipelines.
-
-In this example, we show a pipeline to handle a dataset with 2 tables.
-Despite being very simple, this pipeline would be difficult to implement,
-validate and deploy correctly without skrub.
-We show the script with minimal comments to motivate the tools that are
-explained in detail in subsequent examples.
+In this example, we show a simple pipeline handling a dataset with 2 tables, which
+would be difficult to implement, validate, and deploy correctly without skrub.
 """
 
 # %%
@@ -99,7 +75,7 @@ skrub.TableReport(dataset.products)
 # storing fitted estimators, splitting the input data and cross-validation, and
 # hyper-parameter tuning.
 #
-# Moreover, we might need some pandas code to perform the aggregation and join.
+# Moreover, we might need some Pandas code to perform the aggregation and join.
 # Again, as this transformation is not in a scikit-learn estimator, it is error-prone.
 # The difficulty is that we have to keep track of it ourselves to apply it later
 # to unseen data, and we cannot tune any choices (like the choice of the
@@ -150,17 +126,26 @@ fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_a
 # amount for each kind of product in a basket:
 
 # %%
-products = products[products["basket_ID"].isin(baskets["ID"])]
-products = products.assign(
-    total_price=products["Nbr_of_prod_purchas"] * products["cash_price"]
+kept_products = products[products["basket_ID"].isin(baskets["ID"])]
+products_with_total = kept_products.assign(
+    total_price=kept_products["Nbr_of_prod_purchas"] * kept_products["cash_price"]
 )
-products
+products_with_total
 
 # %%
 # We see previews of the output of intermediate results. For
 # example, the added ``"total_price"`` column is in the output above.
 # The "Show graph" dropdown at the top allows us to check the
 # structure of the pipeline and all the steps it contains.
+#
+# .. note::
+#
+#    We recommend to assign each new skrub expression to a new variable name,
+#    as is done above. For example ``kept_products = products[...]`` instead of
+#    reusing the name ``products = products[...]``. This makes it easy to
+#    backtrack to any step of the pipeline and change the subsequent steps, and
+#    can avoid ending up in a confusing state in jupyter notebooks when the
+#    same cell might be re-executed several times.
 #
 # With skrub, we do not need to specify a grid of hyperparameters separately
 # from the pipeline. Instead, we replace a parameter's value with a skrub
@@ -196,7 +181,9 @@ vectorizer = skrub.TableVectorizer(high_cardinality=encoder)
 # parameters. In our example, we vectorize all columns except the ``"basket_ID"``.
 
 # %%
-vectorized_products = products.skb.apply(vectorizer, exclude_cols="basket_ID")
+vectorized_products = products_with_total.skb.apply(
+    vectorizer, exclude_cols="basket_ID"
+)
 
 # %%
 # Having access to the underlying dataframe's API, we can perform the
@@ -247,6 +234,12 @@ search = predictions.skb.get_randomized_search(
 search.results_
 
 # %%
+# We can also run a cross validation, using the first choices defined in the ``choose``
+# objects:
+
+predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
+
+# %%
 # We can also display a parallel coordinates plot of the results.
 #
 # In a parallel coordinates plot, each line corresponds to a combination
@@ -254,7 +247,7 @@ search.results_
 # scores, and training and scoring computation durations.
 # Different columns show the hyperparameter values.
 #
-# By clicking and dragging the mouse on any column, we can restrict the
+# By **clicking and dragging the mouse** on any column, we can restrict the
 # set of lines we see. This allows quickly inspecting which hyperparameters are
 # important, which values perform best, and potential trade-offs between the quality
 # of predictions and computation time.
@@ -266,11 +259,31 @@ search.plot_results()
 # It seems here that using the LSA as an encoder brings better test scores,
 # but at the expense of training and scoring time.
 #
+# Serializing
+# -----------
+# We would usually save this model in a binary file, but to avoid accessing the
+# filesystem with this example notebook, we serialize the model in memory instead.
+import pickle
+
+saved_model = pickle.dumps(search.best_estimator_)
+
+# %%
+# Let's say we got some new data, and we want to use the model we just saved
+# to make predictions on them:
+new_data = skrub.datasets.fetch_credit_fraud(split="test")
+new_baskets = new_data.baskets[["ID"]]
+new_products = new_data.products
+
+# %%
+# Our estimator expects the same variable names as the training pipeline, which is why
+# we pass a dictionary that contains new dataframes and the same variable:
+loaded_model = pickle.loads(saved_model)
+loaded_model.predict({"baskets": new_baskets, "products": new_products})
 
 # %%
 # Conclusion
 # ----------
 #
-# If you are curious to know more on how to
-# build your own complex, multi-table pipelines with easy hyperparameter
-# tuning, please see the next examples for an in-depth tutorial.
+# If you are curious to know more on how to build your own complex, multi-table
+# pipelines with easy hyperparameter tuning, please see the next examples for an
+# in-depth tutorial.

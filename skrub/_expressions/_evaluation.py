@@ -14,8 +14,6 @@ from . import _choosing
 from ._expressions import (
     Apply,
     Expr,
-    IfElse,
-    Match,
     Value,
     Var,
 )
@@ -109,12 +107,10 @@ class _ExprTraversal:
                 stack.pop()
         return last_result
 
-    def handle_expr(self, expr, attributes_to_evaluate=None):
+    def handle_expr(self, expr):
         impl = expr._skrub_impl
         evaluated_attributes = {}
-        if attributes_to_evaluate is None:
-            attributes_to_evaluate = impl._fields
-        for name in attributes_to_evaluate:
+        for name in impl._fields:
             attr = getattr(impl, name)
             evaluated_attributes[name] = yield attr
         return self.compute_result(expr, evaluated_attributes)
@@ -216,41 +212,17 @@ class _Evaluator(_ExprTraversal):
             return self._fetch(expr)
         except KeyError:
             pass
-        impl = expr._skrub_impl
-        if isinstance(impl, IfElse):
-            result = yield from self._handle_if_else(expr)
-        elif isinstance(impl, Match):
-            result = yield from self._handle_match(expr)
-        else:
-            result = yield from self._handle_expr_default(expr)
+        result = yield from self._eval_expr(expr)
         self._store(expr, result)
         for cb in self.callbacks:
             cb(expr, result)
         return result
 
-    def _handle_if_else(self, expr):
+    def _eval_expr(self, expr):
         impl = expr._skrub_impl
-        cond = yield impl.condition
-        if cond:
-            return (yield impl.value_if_true)
-        else:
-            return (yield impl.value_if_false)
-
-    def _handle_match(self, expr):
-        impl = expr._skrub_impl
-        query = yield impl.query
-        if impl.has_default():
-            target = impl.targets.get(query, impl.default)
-        else:
-            target = impl.targets[query]
-        return (yield target)
-
-    def _handle_expr_default(self, expr):
-        return (
-            yield from super().handle_expr(
-                expr, expr._skrub_impl.fields_required_for_eval(self.mode)
-            )
-        )
+        if hasattr(impl, "eval"):
+            return (yield from impl.eval(mode=self.mode, environment=self.environment))
+        return (yield from super().handle_expr(expr))
 
     def handle_choice(self, choice):
         if choice.name is not None and choice.name in self.environment:
@@ -508,6 +480,30 @@ def clear_results(expr, mode=None):
             n._skrub_impl.errors.pop(mode, None)
 
 
+def _choice_display_names(choices):
+    used = set()
+    names = {}
+
+    def add(choice_ids):
+        for c_id in choice_ids:
+            stem = _choosing.get_display_name(choices[c_id])
+            if stem not in used:
+                used.add(stem)
+                names[c_id] = stem
+                continue
+            i = 1
+            while (numbered := f"{stem}_{i}") in used:
+                i += 1
+            used.add(numbered)
+            names[c_id] = numbered
+        return names
+
+    add(c_id for (c_id, c) in choices.items() if c.name is not None)
+    add(c_id for (c_id, c) in choices.items() if c.name is None)
+    # keep the same order as in choices
+    return {c_id: names[c_id] for c_id in choices.keys()}
+
+
 class _ChoiceGraph(_ExprTraversal):
     def run(self, expr):
         self._choices = {}
@@ -536,18 +532,22 @@ class _ChoiceGraph(_ExprTraversal):
         #     choice's short id (1, 2, ...) to BaseChoice instance
         # - children:
         #     (choice short id, outcome index) to list of child choices' short ids
-        return {"choices": choices, "children": children}
+        return {
+            "choices": choices,
+            "children": children,
+            "choice_display_names": _choice_display_names(choices),
+        }
 
     def handle_choice(self, choice):
-        # unlike during evaluation here we need pre-ordering
         self._children[self._current_outcome[-1]].append(id(choice))
-        self._choices[id(choice)] = choice
         if not isinstance(choice, _choosing.Choice):
+            self._choices[id(choice)] = choice
             return choice
         for outcome_idx, outcome in enumerate(choice.outcomes):
             self._current_outcome.append((id(choice), outcome_idx))
             yield outcome
             self._current_outcome.pop()
+        self._choices[id(choice)] = choice
         return choice
 
     def handle_choice_match(self, choice_match):
@@ -559,13 +559,11 @@ class _ChoiceGraph(_ExprTraversal):
         return choice_match
 
 
-def choices(expr):
-    return _ChoiceGraph().run(expr)["choices"]
-
-
-def choice_graph(expr):
+def choice_graph(expr, check_Xy=True):
     full_builder = _ChoiceGraph()
     full_graph = full_builder.run(expr)
+    if not check_Xy:
+        return full_graph
     # identify which choices are used before the nodes marked as X or y. Those
     # choices cannot be tuned (they are needed before the cv loop starts) so
     # they will be clamped to a single value (the chosen outcome if that has been
@@ -590,6 +588,10 @@ def choice_graph(expr):
         )
     full_graph["Xy_choices"] = Xy_choices
     return full_graph
+
+
+def choices(expr):
+    return choice_graph(expr, check_Xy=False)["choices"]
 
 
 def check_choices_before_Xy(expr):
@@ -685,10 +687,10 @@ class _FindNode(_ExprTraversal):
     def __init__(self, predicate=None):
         self.predicate = predicate
 
-    def handle_expr(self, e, *args, **kwargs):
+    def handle_expr(self, e):
         if self.predicate is None or self.predicate(e):
             raise _Found(e)
-        yield from super().handle_expr(e, *args, **kwargs)
+        yield from super().handle_expr(e)
 
     def handle_choice(self, choice):
         if self.predicate is None or self.predicate(choice):
@@ -740,14 +742,14 @@ class _FindConflicts(_ExprTraversal):
         self._x = {}
         self._y = {}
 
-    def handle_expr(self, e, *args, **kwargs):
+    def handle_expr(self, e):
         self._add(
             e,
             getattr(e._skrub_impl, "name", None),
             e._skrub_impl.is_X,
             e._skrub_impl.is_y,
         )
-        yield from super().handle_expr(e, *args, **kwargs)
+        yield from super().handle_expr(e)
 
     def handle_choice(self, choice):
         self._add(choice, getattr(choice, "name", None), False, False)
@@ -771,12 +773,20 @@ class _FindConflicts(_ExprTraversal):
             )
         assert conflict["reason"] == "name", conflict["reason"]
         name = conflict["name"]
-        return (
+        msg = (
             f"Choice and node names must be unique. The name {name!r} was used "
             "for 2 different objects:\n"
             f"first object using the name {name!r}:\n{first}\n"
             f"second object using the name {name!r}:\n{second}"
         )
+        if repr(first) == repr(second):
+            msg += (
+                "\nIs it possible that you accidentally added a transformation twice, "
+                "for example by re-running a Jupyter notebook cell that rebinds a "
+                "Python variable to a new skrub expression "
+                "(eg `expr = expr.skb.apply(...)`)?"
+            )
+        return msg
 
     def _add_to_dict(self, d, key, val, reason):
         if key is None:
@@ -818,10 +828,10 @@ class _FindArg(_ExprTraversal):
         self.predicate = predicate
         self.skip_types = skip_types
 
-    def handle_expr(self, expr, **kwargs):
+    def handle_expr(self, expr):
         if isinstance(expr._skrub_impl, self.skip_types):
             return expr
-        return (yield from super().handle_expr(expr, **kwargs))
+        return (yield from super().handle_expr(expr))
 
     def handle_value(self, value):
         if self.predicate(value):
@@ -841,10 +851,10 @@ class _FindFirstApply(_ExprTraversal):
     def handle_choice(self, choice):
         return (yield choice.chosen_outcome_or_default())
 
-    def handle_expr(self, expr, **kwargs):
+    def handle_expr(self, expr):
         if isinstance(expr._skrub_impl, Apply):
             raise _Found(expr)
-        return (yield from super().handle_expr(expr, **kwargs))
+        return (yield from super().handle_expr(expr))
 
 
 def find_first_apply(expr):

@@ -7,7 +7,7 @@ from sklearn.utils.validation import check_is_fitted
 from .. import _join_utils
 from ._choosing import Choice, get_default
 from ._evaluation import (
-    choices,
+    choice_graph,
     evaluate,
     find_first_apply,
     find_node_by_name,
@@ -20,7 +20,7 @@ from ._evaluation import (
 )
 from ._expressions import Apply
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
-from ._utils import X_NAME, Y_NAME, attribute_error
+from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SEARCH_FITTED_ATTRIBUTES = [
@@ -59,7 +59,11 @@ def _copy_attr(source, target, attributes):
             pass
 
 
-class ExprEstimator(BaseEstimator):
+class _CloudPickleExpr(_CloudPickle):
+    _cloudpickle_attributes = ["expr"]
+
+
+class ExprEstimator(_CloudPickleExpr, BaseEstimator):
     """Estimator that evaluates a skrub expression.
 
     This class is not meant to be instantiated manually, ``ExprEstimator``
@@ -585,7 +589,7 @@ def train_test_split(
 # each sampled param combination.
 
 
-class ParamSearch(BaseEstimator):
+class ParamSearch(_CloudPickleExpr, BaseEstimator):
     """Estimator that evaluates a skrub expression with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``
@@ -677,14 +681,16 @@ class ParamSearch(BaseEstimator):
 
     def _get_cv_results_table(self, return_metadata=False, detailed=False):
         check_is_fitted(self, "cv_results_")
-        expr_choices = choices(self.expr)
+        expr_choices = choice_graph(self.expr)
 
         all_rows = []
         log_scale_columns = set()
         for params in self.cv_results_["params"]:
             row = {}
             for param_id, param in params.items():
-                choice = expr_choices[int(param_id.lstrip("expr__"))]
+                choice_id = int(param_id.lstrip("expr__"))
+                choice = expr_choices["choices"][choice_id]
+                choice_name = expr_choices["choice_display_names"][choice_id]
                 if isinstance(choice, Choice):
                     if choice.outcome_names is not None:
                         value = choice.outcome_names[param]
@@ -693,12 +699,14 @@ class ParamSearch(BaseEstimator):
                 else:
                     value = param
                     if choice.log:
-                        log_scale_columns.add(choice.name)
-                row[choice.name] = value
+                        log_scale_columns.add(choice_name)
+                row[choice_name] = value
             all_rows.append(row)
 
         metadata = {"log_scale_columns": list(log_scale_columns)}
-        table = pd.DataFrame(all_rows)
+        table = pd.DataFrame(
+            all_rows, columns=list(expr_choices["choice_display_names"].values())
+        )
         if isinstance(self.scorer_, dict):
             metric_names = list(self.scorer_.keys())
             if isinstance(self.search.refit, str):

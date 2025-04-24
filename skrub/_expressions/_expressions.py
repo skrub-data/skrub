@@ -5,7 +5,6 @@ import inspect
 import itertools
 import operator
 import pathlib
-import pickle
 import re
 import textwrap
 import traceback
@@ -22,7 +21,7 @@ from .._utils import PassThrough, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import get_chosen_or_default
-from ._utils import FITTED_PREDICTOR_METHODS, NULL, _CloudPickle, attribute_error
+from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
 
 __all__ = [
     "var",
@@ -31,7 +30,6 @@ __all__ = [
     "as_expr",
     "deferred",
     "check_expr",
-    "check_can_be_pickled",
     "eval_mode",
 ]
 
@@ -211,26 +209,8 @@ class ExprImpl:
     def preview_if_available(self):
         return self.results.get("preview", NULL)
 
-    def fields_required_for_eval(self, mode):
-        return self._fields
-
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
-
-
-def check_can_be_pickled(obj):
-    try:
-        dumped = pickle.dumps(obj)
-        pickle.loads(dumped)
-    except Exception as e:
-        msg = "The check to verify that the pipeline can be serialized failed."
-        if "recursion" in str(e).lower():
-            msg = (
-                f"{msg} Is a step in the pipeline holding a reference to "
-                "the full pipeline itself? For example a global variable "
-                "in a `@skrub.deferred` function?"
-            )
-        raise pickle.PicklingError(msg) from e
 
 
 def _find_dataframe(expr, func_name):
@@ -278,13 +258,6 @@ def check_expr(f):
             raise ValueError(conflicts["message"])
         if (found_df := _find_dataframe(expr, func_name)) is not None:
             raise TypeError(found_df["message"])
-
-        # Note: if checking pickling for every step is expensive we could also
-        # do it in `get_estimator()` only, ie before any cross-val or
-        # grid-search. or we could have some more elaborate check (possibly
-        # with false negatives) where we pickle nodes separately and we only
-        # check new nodes that haven't yet been checked.
-        check_can_be_pickled(expr)
         check_choices_before_Xy(expr)
         try:
             evaluate(expr, mode="preview", environment=None)
@@ -341,6 +314,7 @@ def _check_return_value(f):
             "their argument unchanged and return a new object."
         )
         warnings.warn(msg)
+        return expr
 
     return check_call_return_value
 
@@ -959,6 +933,13 @@ def as_expr(value):
 class IfElse(ExprImpl):
     _fields = ["condition", "value_if_true", "value_if_false"]
 
+    def eval(self, *, environment, mode):
+        cond = yield self.condition
+        if cond:
+            return (yield self.value_if_true)
+        else:
+            return (yield self.value_if_false)
+
     def __repr__(self):
         cond, if_true, if_false = map(
             short_repr, (self.condition, self.value_if_true, self.value_if_false)
@@ -968,6 +949,14 @@ class IfElse(ExprImpl):
 
 class Match(ExprImpl):
     _fields = ["query", "targets", "default"]
+
+    def eval(self, *, environment, mode):
+        query = yield self.query
+        if self.has_default():
+            target = self.targets.get(query, self.default)
+        else:
+            target = self.targets[query]
+        return (yield target)
 
     def has_default(self):
         return self.default is not NULL
@@ -979,14 +968,9 @@ class Match(ExprImpl):
 class FreezeAfterFit(ExprImpl):
     _fields = ["target"]
 
-    def fields_required_for_eval(self, mode):
-        if "fit" in mode or mode == "preview":
-            return self._fields
-        return []
-
-    def compute(self, e, mode, environment):
+    def eval(self, *, mode, environment):
         if mode == "preview" or "fit" in mode:
-            self.value_ = e.target
+            self.value_ = yield self.target
         return self.value_
 
 
@@ -1001,43 +985,45 @@ def _check_column_names(X):
 
 
 class Apply(ExprImpl):
-    _fields = ["estimator", "cols", "X", "y", "how", "allow_reject", "unsupervised"]
+    _fields = ["X", "estimator", "y", "cols", "how", "allow_reject", "unsupervised"]
 
     # TODO can we avoid the need for an explicit unsupervised parameter by
-    # inspecting sklearn tags?
+    # inspecting the estimator? eg in recent versions we can look at
+    # tags.target_tags.required
 
-    def fields_required_for_eval(self, mode):
-        if "fit" in mode or mode == "preview":
-            if not self.unsupervised:
-                return self._fields
-            return [f for f in self._fields if f != "y"]
-        if mode == "score":
-            return ["X", "y"]
-        return ["X"]
-
-    def compute(self, e, mode, environment):
+    def eval(self, *, mode, environment):
         if mode not in self.supported_modes():
             mode = "fit_transform" if "fit" in mode else "transform"
         method_name = "fit_transform" if mode == "preview" else mode
 
-        X = _check_column_names(e.X)
+        X = yield self.X
+        if ("fit" in method_name and not self.unsupervised) or method_name == "score":
+            y = yield self.y
+        else:
+            y = None
+
+        X = _check_column_names(X)
 
         if "fit" in method_name:
+            estimator = yield self.estimator
+            cols = yield self.cols
+            how = yield self.how
+            allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
-                estimator=e.estimator,
-                cols=e.cols,
-                how=e.how,
-                allow_reject=e.allow_reject,
+                estimator=estimator,
+                cols=cols,
+                how=how,
+                allow_reject=allow_reject,
                 X=X,
             )
 
         if "transform" in method_name and not hasattr(self.estimator_, "transform"):
             if "fit" in method_name:
-                self.estimator_.fit(X, e.y)
-                if sbd.is_column(e.y):
-                    self._all_outputs = [sbd.name(e.y)]
-                elif sbd.is_dataframe(e.y):
-                    self._all_outputs = sbd.column_names(e.y)
+                self.estimator_.fit(X, y)
+                if sbd.is_column(y):
+                    self._all_outputs = [sbd.name(y)]
+                elif sbd.is_dataframe(y):
+                    self._all_outputs = sbd.column_names(y)
                 else:
                     self._all_outputs = None
             pred = self.estimator_.predict(X)
@@ -1056,12 +1042,12 @@ class Apply(ExprImpl):
             return sbd.copy_index(X, result)
 
         if "fit" in method_name:
-            y = () if self.unsupervised else (e.y,)
+            y_arg = () if self.unsupervised else (y,)
         elif method_name == "score":
-            y = (e.y,)
+            y_arg = (y,)
         else:
-            y = ()
-        return getattr(self.estimator_, method_name)(X, *y)
+            y_arg = ()
+        return getattr(self.estimator_, method_name)(X, *y_arg)
 
     def supported_modes(self):
         modes = ["preview", "fit_transform", "transform"]
@@ -1134,7 +1120,7 @@ class GetItem(ExprImpl):
         return f"[{_get_preview(self.key)!r}]"
 
 
-class Call(_CloudPickle, ExprImpl):
+class Call(ExprImpl):
     _fields = [
         "func",
         "args",
@@ -1144,7 +1130,6 @@ class Call(_CloudPickle, ExprImpl):
         "defaults",
         "kwdefaults",
     ]
-    _cloudpickle_attributes = ["func"]
 
     def compute(self, e, mode, environment):
         func = e.func
