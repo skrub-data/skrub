@@ -259,6 +259,7 @@ def test_max_plot_columns_parameter(df_module):
 
 
 def test_minimal_mode(pd_module):
+    # Check that flags are set properly  and that the panels are not created
     df = pd_module.example_dataframe
     report = TableReport(df)
     report._set_minimal_mode()
