@@ -30,7 +30,7 @@ New features
 - The :mod:`selectors` module provides utilities for selecting columns to which
   a transformer should be applied in a flexible way. The module was created in
   :pr:`895` by :user:`Jérôme Dockès <jeromedockes>` and added to the public API
-  in :pr:`TODO` by :user:`Jérôme Dockès <jeromedockes>`.
+  in :pr:`1341` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
