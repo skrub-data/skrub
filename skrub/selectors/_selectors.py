@@ -35,7 +35,7 @@ def glob(pattern):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -78,7 +78,7 @@ def regex(pattern, flags=0):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -148,7 +148,7 @@ def numeric():
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> import numpy as np
     >>> df = pd.DataFrame(
@@ -200,7 +200,7 @@ def integer():
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> import numpy as np
     >>> df = pd.DataFrame(
@@ -249,7 +249,7 @@ def float():
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> import numpy as np
     >>> df = pd.DataFrame(
@@ -295,7 +295,7 @@ def any_date():
     Examples
     --------
     >>> import datetime
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
 
     >>> df = pd.DataFrame(
@@ -331,7 +331,7 @@ def categorical():
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     dict(
@@ -368,7 +368,7 @@ def string():
     Examples
     --------
 
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     dict(
@@ -410,7 +410,7 @@ def boolean():
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> import numpy as np
     >>> df = pd.DataFrame(
@@ -461,7 +461,7 @@ def cardinality_below(threshold):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     dict(
@@ -502,7 +502,7 @@ def has_nulls():
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(dict(a=[0, 1, 2], b=[0, None, 20], c=['a', 'b', None]))
     >>> s.select(df, s.has_nulls())

@@ -14,7 +14,7 @@ import warnings
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
-from .. import _selectors as s
+from .. import selectors as s
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, short_repr

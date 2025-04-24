@@ -9,7 +9,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 
 from skrub import _dataframe as sbd
-from skrub import _selectors as s
+from skrub import selectors as s
 from skrub._on_each_column import OnEachColumn, RejectColumn, SingleColumnTransformer
 from skrub._select_cols import Drop
 

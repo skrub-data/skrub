@@ -15,7 +15,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
-from skrub import _selectors as s
+from skrub import selectors as s
 from skrub._dataframe import _common as ns
 
 

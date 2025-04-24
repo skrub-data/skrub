@@ -9,7 +9,7 @@ import jinja2
 import pandas as pd
 
 from skrub import _dataframe as sbd
-from skrub import _selectors as s
+from skrub import selectors as s
 
 from .._utils import random_string
 from . import _utils
