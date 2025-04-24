@@ -106,7 +106,7 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 X, y = skrub.X(texts), skrub.y(labels)
 
 encoder = skrub.MinHashEncoder(
-    n_components=skrub.choose_int(5, 50, log=True, name="N components")
+    n_components=skrub.choose_int(5, 15, name="N components")
 )
 classifier = HistGradientBoostingClassifier(
     learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="lr")
@@ -179,7 +179,7 @@ X.assign(
 # the number of components.
 
 # %%
-n_components = skrub.choose_int(5, 50, log=True, name="N components")
+n_components = skrub.choose_int(5, 15, name="N components")
 
 encoder = skrub.choose_from(
     {

@@ -165,7 +165,7 @@ products_with_total
 # the number of components it uses.
 
 # %%
-n = skrub.choose_int(5, 15, log=True, name="n_components")
+n = skrub.choose_int(5, 15, name="n_components")
 encoder = skrub.choose_from(
     {
         "MinHash": skrub.MinHashEncoder(n_components=n),
