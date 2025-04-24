@@ -1,5 +1,14 @@
 <article class="margin-t-s flex-reverse wrapper gap-l">
-    {% if summary["top_associations"] %}
+    {% if summary["associations_skipped"] %}
+
+    <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between">
+        <div class="alert-content shrinkable-text">
+            Computing pairwise associations was skipped because the dataframe has many columns.
+            See TableReport's <code>max_association_columns</code> parameter.
+        </div>
+    </div>
+
+    {% elif summary["top_associations"] %}
 
     <div class="horizontal-scroll padding-b-s">
     <table class="pure-table">
