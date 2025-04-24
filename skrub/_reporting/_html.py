@@ -124,6 +124,9 @@ def to_html(summary, standalone=True, column_filters=None, minimal_report_mode=F
         Each key is an id for the filter (e.g. ``"all()"``) and the value is a
         mapping with the keys ``display_name`` (the name shown in the menu,
         e.g. ``"All columns"``) and ``columns`` (a list of column names).
+    minimal_report_mode : bool
+        Whether to turn on the minimal mode, which hides the 'distributions'
+        and 'associations' tabs.
 
     Returns
     -------
