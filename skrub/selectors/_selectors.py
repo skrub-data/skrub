@@ -26,7 +26,7 @@ __all__ = [
 def glob(pattern):
     """Select columns by name with Unix shell style 'glob' pattern.
 
-    pattern is interpreted as described in ``fnmatch.fnmatchcase``:
+    pattern is interpreted as described in ``fnmatch.fnmatchcase``::
 
         *       matches everything
         ?       matches any single character
