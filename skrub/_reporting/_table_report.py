@@ -135,6 +135,7 @@ class TableReport:
             "max_bottom_slice_size": n_rows // 2,
             "verbose": verbose,
         }
+        self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
         self.dataframe = dataframe
@@ -142,6 +143,25 @@ class TableReport:
         self.max_plot_columns = max_plot_columns
         self.max_association_columns = max_association_columns
         self.n_columns = sbd.shape(self.dataframe)[1]
+
+    def _set_minimal_mode(self):
+        """Put the report in minimal mode.
+
+        This is meant to be called by other skrub functions, such as the
+        expressions  ``__repr__``.
+
+        In the minimal mode, the associations and distributions tabs are not
+        shown and the plots and associations are not computed.
+
+        Once set this cannot be undone.
+        """
+        try:
+            delattr(self, "_summary")
+        except AttributeError:
+            pass
+        self._to_html_kwargs["minimal_report_mode"] = True
+        self.max_association_columns = 0
+        self.max_plot_columns = 0
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
@@ -176,6 +196,7 @@ class TableReport:
             self._summary,
             standalone=True,
             column_filters=self.column_filters,
+            **self._to_html_kwargs,
         )
 
     def html_snippet(self):
@@ -190,6 +211,7 @@ class TableReport:
             self._summary,
             standalone=False,
             column_filters=self.column_filters,
+            **self._to_html_kwargs,
         )
 
     def json(self):

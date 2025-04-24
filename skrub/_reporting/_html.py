@@ -107,7 +107,7 @@ def _get_column_filters(summary):
     return filters
 
 
-def to_html(summary, standalone=True, column_filters=None):
+def to_html(summary, standalone=True, column_filters=None, minimal_report_mode=False):
     """Given a dataframe summary, generate the HTML string.
 
     Parameters
@@ -148,6 +148,7 @@ def to_html(summary, standalone=True, column_filters=None):
             "high_association_threshold": _HIGH_ASSOCIATION_THRESHOLD,
             "base64_column_filters": _b64_encode(column_filters),
             "report_id": f"report_{secrets.token_hex()[:8]}",
+            "minimal_report_mode": minimal_report_mode,
         }
     )
 
