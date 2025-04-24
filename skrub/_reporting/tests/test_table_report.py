@@ -256,3 +256,14 @@ def test_max_plot_columns_parameter(df_module):
     )
     summary = TableReport(df6, max_plot_columns=None)._summary
     assert not summary["plots_skipped"]
+
+
+def test_minimal_mode(pd_module):
+    df = pd_module.example_dataframe
+    report = TableReport(df)
+    report._set_minimal_mode()
+    html = report.html()
+    assert "data-test-plots-skipped" in html
+    assert "data-test-associations-skipped" in html
+    assert 'id="column-summaries-panel"' not in html
+    assert 'id="column-associations-panel"' not in html

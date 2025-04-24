@@ -3,7 +3,9 @@
         <style>
          {% include "report.css" %}
         </style>
-        <div id="report">
+        <div id="report"
+             {% if summary.plots_skipped %}data-test-plots-skipped{% endif %}
+             {% if summary.associations_skipped %}data-test-associations-skipped{% endif %} >
             {% if summary.title %}
             <div class="report-header wrapper text">
                 <h1>{{ summary.title }}</h1>
