@@ -53,24 +53,30 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
 def _add_jitter(column):
     vals = column["values"]
     min_val, max_val = np.min(vals), np.max(vals)
+    argmin, argmax = np.argmin(vals), np.argmax(vals)
     eps = (max_val - min_val) / 200
-    column["values"] = column["values"] + np.random.uniform(
-        low=-eps, high=eps, size=vals.shape[0]
-    )
+    vals = column["values"] + np.random.uniform(low=-eps, high=eps, size=vals.shape[0])
+    # plotly adds extra labels for the min and max of the range. So we make
+    # sure we don't exceed the current bounds and that they are still attained
+    # at least once to avoid having incorrect bounds displayed.
+    vals = np.clip(vals, min_val, max_val)
+    vals[argmin] = min_val
+    vals[argmax] = max_val
+
+    column["values"] = vals
     return column
 
 
 def _prepare_column(col, is_log_scale, is_int):
     if pd.api.types.is_bool_dtype(col) or not pd.api.types.is_numeric_dtype(col):
         return _prepare_obj_column(col)
-    if is_log_scale or col.isna().any():
-        return _prepare_numeric_column(col, is_log_scale, is_int)
-    label = {
+    result = _prepare_numeric_column(col, is_log_scale, is_int)
+    result["label"] = {
         "mean_test_score": "score",
         "mean_fit_time": "fit time",
         "mean_score_time": "score time",
-    }.get(col.name, col.name)
-    return {"label": label, "values": col.to_numpy()}
+    }.get(result["label"], result["label"])
+    return result
 
 
 def _prepare_obj_column(col):
