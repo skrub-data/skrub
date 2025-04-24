@@ -31,7 +31,7 @@ class DropUninformative(SingleColumnTransformer):
         If True, drop the column if all values are distinct. Missing values count as
         one additional distinct value. Numeric columns are never dropped.
 
-    null_fraction_threshold : float or None, default=1.0
+    drop_null_fraction : float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
 
@@ -51,7 +51,7 @@ class DropUninformative(SingleColumnTransformer):
     threshold:
 
     >>> df = pd.DataFrame({"col1": [1,2,None], "col2": ["const", "const", "const"]})
-    >>> du = DropUninformative(drop_if_constant=True, null_fraction_threshold=0.1)
+    >>> du = DropUninformative(drop_if_constant=True, drop_null_fraction=0.1)
     >>> du.fit_transform(df["col1"])
     []
     >>> du.fit_transform(df["col2"])
@@ -70,11 +70,11 @@ class DropUninformative(SingleColumnTransformer):
         self,
         drop_if_constant=False,
         drop_if_id=False,
-        null_fraction_threshold=1.0,
+        drop_null_fraction=1.0,
     ):
         self.drop_if_constant = drop_if_constant
         self.drop_if_id = drop_if_id
-        self.null_fraction_threshold = null_fraction_threshold
+        self.drop_null_fraction = drop_null_fraction
 
     def _check_params(self):
         if not isinstance(self.drop_if_constant, bool):
@@ -84,23 +84,23 @@ class DropUninformative(SingleColumnTransformer):
         if not isinstance(self.drop_if_id, bool):
             raise TypeError(f"drop_if_id must be boolean, found {self.drop_if_id}.")
 
-        if self.null_fraction_threshold is not None:
+        if self.drop_null_fraction is not None:
             if (
-                not isinstance(self.null_fraction_threshold, numbers.Number)
-                or not 0.0 <= self.null_fraction_threshold <= 1.0
+                not isinstance(self.drop_null_fraction, numbers.Number)
+                or not 0.0 <= self.drop_null_fraction <= 1.0
             ):
                 raise ValueError(
-                    f"Threshold {self.null_fraction_threshold} is invalid. Threshold"
+                    f"Threshold {self.drop_null_fraction} is invalid. Threshold"
                     " should be a number in the range [0, 1], or None."
                 )
 
     def _drop_if_too_many_nulls(self, column):
-        if self.null_fraction_threshold == 1.0:
+        if self.drop_null_fraction == 1.0:
             return self._null_count == len(column)
         # No nulls found, or no threshold
-        if self._null_count == 0 or self.null_fraction_threshold is None:
+        if self._null_count == 0 or self.drop_null_fraction is None:
             return False
-        return self._null_count / len(column) > self.null_fraction_threshold
+        return self._null_count / len(column) > self.drop_null_fraction
 
     def _drop_if_constant(self, column):
         if self.drop_if_constant:

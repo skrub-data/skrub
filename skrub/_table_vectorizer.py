@@ -114,15 +114,21 @@ def _check_transformer(transformer):
 
 
 def _get_preprocessors(
-    *, cols, drop_null_fraction, drop_ids, drop_constant, n_jobs, add_tofloat32=True
+    *,
+    cols,
+    drop_null_fraction,
+    drop_if_id,
+    drop_if_constant,
+    n_jobs,
+    add_tofloat32=True,
 ):
     steps = [CheckInputDataFrame()]
     transformers = [
         CleanNullStrings(),
         DropUninformative(
-            null_fraction_threshold=drop_null_fraction,
-            drop_if_constant=drop_constant,
-            drop_if_id=drop_ids,
+            drop_null_fraction=drop_null_fraction,
+            drop_if_constant=drop_if_constant,
+            drop_if_id=drop_if_id,
         ),
         ToDatetime(),
     ]
@@ -164,11 +170,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
         ``None``, this selection is disabled: no columns are dropped based on the
         number of null values they contain.
 
-    drop_constant : bool, default=False
+    drop_if_constant : bool, default=False
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
-    drop_ids : bool, default=False
+    drop_if_id : bool, default=False
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
@@ -276,11 +282,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
     """
 
     def __init__(
-        self, drop_null_fraction=1.0, drop_constant=False, drop_ids=False, n_jobs=1
+        self, drop_null_fraction=1.0, drop_if_constant=False, drop_if_id=False, n_jobs=1
     ):
         self.drop_null_fraction = drop_null_fraction
-        self.drop_constant = drop_constant
-        self.drop_ids = drop_ids
+        self.drop_if_constant = drop_if_constant
+        self.drop_if_id = drop_if_id
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -304,8 +310,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         all_steps = _get_preprocessors(
             cols=s.all(),
             drop_null_fraction=self.drop_null_fraction,
-            drop_constant=self.drop_constant,
-            drop_ids=self.drop_ids,
+            drop_if_constant=self.drop_if_constant,
+            drop_if_id=self.drop_if_id,
             n_jobs=self.n_jobs,
             add_tofloat32=False,
         )
@@ -456,11 +462,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         this selection is disabled: no columns are dropped based on the number
         of null values they contain.
 
-    drop_constant : bool, default=False
+    drop_if_constant : bool, default=False
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
-    drop_ids : bool, default=False
+    drop_if_id : bool, default=False
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
@@ -692,8 +698,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
         drop_null_fraction=1.0,
-        drop_constant=False,
-        drop_ids=False,
+        drop_if_constant=False,
+        drop_if_id=False,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -708,8 +714,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
         self.drop_null_fraction = drop_null_fraction
-        self.drop_constant = drop_constant
-        self.drop_ids = drop_ids
+        self.drop_if_constant = drop_if_constant
+        self.drop_if_id = drop_if_id
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -825,7 +831,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         transformer_list = [CleanNullStrings()]
         transformer_list.append(
             DropUninformative(
-                self.drop_constant, self.drop_ids, self.drop_null_fraction
+                self.drop_if_constant, self.drop_if_id, self.drop_null_fraction
             )
         )
 
