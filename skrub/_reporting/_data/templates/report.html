@@ -4,6 +4,7 @@
          {% include "report.css" %}
         </style>
         <div id="report"
+        {# data-test-* attributes are used for testing #} 
              {% if summary.plots_skipped %}data-test-plots-skipped{% endif %}
              {% if summary.associations_skipped %}data-test-associations-skipped{% endif %} >
             {% if summary.title %}

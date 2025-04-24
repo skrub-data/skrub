@@ -53,7 +53,7 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
         result_df = sbd.copy_index(result, result_df)
         result = result_df
     if sbd.is_dataframe(result):
-        report_kwargs.setdefault("verbose", False)
+        report_kwargs.setdefault("verbose", False) # Hide the progress bar
         report = TableReport(result, **report_kwargs)
         report._set_minimal_mode()
     else:

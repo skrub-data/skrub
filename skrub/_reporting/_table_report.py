@@ -156,6 +156,7 @@ class TableReport:
         Once set this cannot be undone.
         """
         try:
+            # delete the cached _summary if it already exists as summarize args have changed
             delattr(self, "_summary")
         except AttributeError:
             pass
