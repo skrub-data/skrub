@@ -1,6 +1,6 @@
 from ._on_each_column import OnEachColumn
 from ._on_subframe import OnSubFrame
-from ._selectors import make_selector
+from .selectors import make_selector
 
 __all__ = ["wrap_transformer"]
 
@@ -74,7 +74,7 @@ def wrap_transformer(
     --------
     >>> from skrub._wrap_transformer import wrap_transformer
     >>> from skrub._to_datetime import ToDatetime
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> from sklearn.preprocessing import OrdinalEncoder
 
     >>> wrap_transformer(ToDatetime(), s.all())

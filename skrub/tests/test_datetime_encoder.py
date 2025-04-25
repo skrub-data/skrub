@@ -4,7 +4,7 @@ import pytest
 
 from skrub import DatetimeEncoder
 from skrub import _dataframe as sbd
-from skrub import _selectors as s
+from skrub import selectors as s
 from skrub._datetime_encoder import _CircularEncoder, _SplineEncoder
 from skrub._on_each_column import OnEachColumn
 from skrub._to_float32 import ToFloat32

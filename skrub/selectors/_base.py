@@ -8,7 +8,7 @@ def all():
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -37,7 +37,7 @@ def cols(*columns):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -97,7 +97,7 @@ def inv(obj):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -136,7 +136,7 @@ def make_selector(obj):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
 
     >>> s.make_selector('ID')
     cols('ID')
@@ -180,7 +180,7 @@ def select(df, selector):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -408,7 +408,7 @@ def filter(predicate, *args, **kwargs):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -471,7 +471,7 @@ def filter_names(predicate, *args, **kwargs):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {

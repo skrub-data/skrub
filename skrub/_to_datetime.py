@@ -6,7 +6,7 @@ from pandas._libs.tslibs.parsing import (
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors as s
+from . import selectors as s
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._wrap_transformer import wrap_transformer

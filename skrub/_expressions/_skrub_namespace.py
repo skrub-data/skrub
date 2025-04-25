@@ -16,7 +16,7 @@ from ._evaluation import (
 from ._expressions import (
     AppliedEstimator,
     Apply,
-    ConcatHorizontal,
+    Concat,
     Expr,
     FreezeAfterFit,
     IfElse,
@@ -570,13 +570,17 @@ class SkrubNamespace:
         return self._apply(DropCols(cols), how="full_frame")
 
     @check_expr
-    def concat_horizontal(self, others):
-        """Concatenate dataframes horizontally.
+    def concat(self, others, axis=0):
+        """Concatenate dataframes vertically or horizontally.
 
         Parameters
         ----------
         others : list of dataframes
             The dataframes to stack horizontally with ``self``
+        axis : {0, 1}, default 0
+            The axis to concatenate along.
+            0: stack vertically (rows)
+            1: stack horizontally (columns)
 
         Returns
         -------
@@ -590,30 +594,40 @@ class SkrubNamespace:
         >>> a = skrub.var('a', pd.DataFrame({'a1': [0], 'a2': [1]}))
         >>> b = skrub.var('b', pd.DataFrame({'b1': [2], 'b2': [3]}))
         >>> c = skrub.var('c', pd.DataFrame({'c1': [4], 'c2': [5]}))
+        >>> d = skrub.var('d', pd.DataFrame({'c1': [6], 'c2': [7]}))
         >>> a
         <Var 'a'>
         Result:
         ―――――――
            a1  a2
         0   0   1
-        >>> a.skb.concat_horizontal([b, c])
-        <ConcatHorizontal: 3 dataframes>
+        >>> a.skb.concat([b, c], axis=1)
+        <Concat: 3 dataframes>
         Result:
         ―――――――
            a1  a2  b1  b2  c1  c2
         0   0   1   2   3   4   5
 
+        >>> c.skb.concat([d], axis=0)
+        <Concat: 2 dataframes>
+        Result:
+        ―――――――
+           c1  c2
+        0   4   5
+        1   6   7
+
+
         Note that even if we want to concatenate a single dataframe we must
         still put it in a list:
 
-        >>> a.skb.concat_horizontal([b])
-        <ConcatHorizontal: 2 dataframes>
+        >>> a.skb.concat([b], axis=1)
+        <Concat: 2 dataframes>
         Result:
         ―――――――
            a1  a2  b1  b2
         0   0   1   2   3
         """  # noqa: E501
-        return Expr(ConcatHorizontal(self._expr, others))
+        return Expr(Concat(self._expr, others, axis=axis))
 
     def clone(self, drop_values=True):
         """Get an independent clone of the expression.

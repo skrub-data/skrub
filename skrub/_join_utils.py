@@ -4,8 +4,8 @@ import inspect
 import re
 
 from skrub import _dataframe as sbd
-from skrub import _selectors as s
 from skrub import _utils
+from skrub import selectors as s
 from skrub._dispatch import dispatch
 
 

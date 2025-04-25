@@ -12,20 +12,25 @@ Ongoing development
 New features
 ------------
 
-The skrub expressions are new mechanism for building machine-learning pipelines
-that handle multiple tables and easily describing their hyperparameter spaces.
-See :ref:`the examples <expressions_examples_ref>` for an introduction.
-:pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of work from other
-contributors is not directly visible on the pull request page: :user:`Vincent
-Maladiere <Vincent-Maladiere>` provided very important help by trying the
-expressions on many use-cases and datasets, providing feedback and suggesting
-improvements, improving the examples (including creating all the figures in the
-examples) and adding jitter to the parallel coordinate plots, :user:`Riccardo
-Cappuzzo<rcap107>` experimented with the expressions, suggested improvements and
-improved the examples, :user:`Gaël Varoquaux <gaelvaroquaux>` , :user:`Guillaume
-Lemaitre <glemaitre>`, :user:`Adrin Jalali <adrinjalali>`, :user:`Olivier Grisel
-<ogrisel>` and others participated through many discussions in defining the
-requirements and the public API.
+- The skrub expressions are new mechanism for building machine-learning
+  pipelines that handle multiple tables and easily describing their
+  hyperparameter spaces. See :ref:`the examples <expressions_examples_ref>` for
+  an introduction. :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of
+  work from other contributors is not directly visible on the pull request page:
+  :user:`Vincent Maladiere <Vincent-Maladiere>` provided very important help by
+  trying the expressions on many use-cases and datasets, providing feedback and
+  suggesting improvements, improving the examples (including creating all the
+  figures in the examples) and adding jitter to the parallel coordinate plots,
+  :user:`Riccardo Cappuzzo<rcap107>` experimented with the expressions,
+  suggested improvements and improved the examples, :user:`Gaël Varoquaux
+  <gaelvaroquaux>` , :user:`Guillaume Lemaitre <glemaitre>`, :user:`Adrin Jalali
+  <adrinjalali>`, :user:`Olivier Grisel <ogrisel>` and others participated
+  through many discussions in defining the requirements and the public API.
+
+- The :mod:`selectors` module provides utilities for selecting columns to which
+  a transformer should be applied in a flexible way. The module was created in
+  :pr:`895` by :user:`Jérôme Dockès <jeromedockes>` and added to the public API
+  in :pr:`1341` by :user:`Jérôme Dockès <jeromedockes>`.
 
 - The :class:`DropUninformative` transformer is now available. This transformer
   employs different heuristics to detect columns that are not likely to bring
@@ -46,7 +51,10 @@ Changes
 
 - The :class:`DropIfTooManyNulls` transformer has been replaced by the
   :class:`DropUninformative` transformer and will be removed in a future release.
-  :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
+  :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`
+
+- The :func:`concat_horizontal` function was replaced with :func:`concat`. Horizontal or vertical concatenation
+  is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`.
 
 Bugfixes
 --------

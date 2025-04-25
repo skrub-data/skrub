@@ -8,7 +8,7 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors, _utils
+from . import _utils, selectors
 from ._join_utils import pick_column_names
 
 __all__ = ["OnEachColumn", "SingleColumnTransformer", "RejectColumn"]
@@ -425,7 +425,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         transformer,
-        cols=_selectors.all(),
+        cols=selectors.all(),
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
@@ -443,7 +443,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         return self
 
     def fit_transform(self, X, y=None):
-        self._columns = _selectors.make_selector(self.cols).expand(X)
+        self._columns = selectors.make_selector(self.cols).expand(X)
         results = []
         all_columns = sbd.column_names(X)
         parallel = Parallel(n_jobs=self.n_jobs)
