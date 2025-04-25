@@ -31,7 +31,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
-from ._subsampling import PreviewSubsample, env_with_subsampling, uses_subsampling
+from ._subsampling import SubsamplePreviews, env_with_subsampling, uses_subsampling
 from ._utils import NULL, attribute_error
 
 
@@ -754,7 +754,7 @@ class SkrubNamespace:
         cross-validation or model fitting much faster than when using the
         full data.
         """  # noqa : E501
-        return Expr(PreviewSubsample(self._expr, n=n, how=how))
+        return Expr(SubsamplePreviews(self._expr, n=n, how=how))
 
     def clone(self, drop_values=True):
         """Get an independent clone of the expression.

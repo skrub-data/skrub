@@ -66,7 +66,7 @@ def _head_numpy(a, n):
     return a[:n]
 
 
-class PreviewSubsample(_expressions.ExprImpl):
+class SubsamplePreviews(_expressions.ExprImpl):
     """Optionally subsample a dataframe.
 
     See the docstring of ``.skb.subsample_previews`` for details.
@@ -127,7 +127,7 @@ def uses_subsampling(expr):
         _evaluation.find_node(
             expr,
             lambda e: isinstance(e, _expressions.Expr)
-            and isinstance(e._skrub_impl, PreviewSubsample),
+            and isinstance(e._skrub_impl, SubsamplePreviews),
         )
         is not None
     )
