@@ -234,6 +234,26 @@ def test_repr():
     NULL
     >>> print(skrub.X()._skrub_impl.value)
     NULL
+
+    The preview indicates if subsampling took place:
+
+    >>> import numpy as np
+
+    >>> skrub.X(np.ones((5, 2))) + 10
+    <BinOp: add>
+    Result:
+    ―――――――
+    array([[11., 11.],
+           [11., 11.],
+           [11., 11.],
+           [11., 11.],
+           [11., 11.]])
+    >>> skrub.X(np.ones((5, 2))).skb.preview_subsample(n=2) + 10
+    <BinOp: add>
+    Result (on a subsample):
+    ――――――――――――――――――――――――
+    array([[11., 11.],
+           [11., 11.]])
     """
 
 

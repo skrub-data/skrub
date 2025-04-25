@@ -168,3 +168,8 @@ def test_n_too_large_numpy(how):
     a = np.eye(3)
     X = skrub.X(a).skb.preview_subsample(n=10_000, how=how)
     assert X.skb.eval().shape[0] == a.shape[0]
+
+
+def test_uses_subsampling():
+    assert not _subsampling.uses_subsampling(skrub.var("a") + 10)
+    assert _subsampling.uses_subsampling(skrub.var("a").skb.preview_subsample(n=5) + 10)

@@ -1,7 +1,7 @@
 import numpy as np
 
 from .. import _dataframe as sbd
-from . import _expressions
+from . import _evaluation, _expressions
 
 SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
 
@@ -108,3 +108,26 @@ def env_with_subsampling(environment, subsampling):
     if not subsampling:
         return environment
     return environment | {SHOULD_SUBSAMPLE_KEY: True}
+
+
+def uses_subsampling(expr):
+    """Find if subsampling is configured somewhere in the expression.
+
+    This can be used for example to notify the user that the preview they see
+    comes from a subsample.
+
+    Note that the check is a bit too simple so there may be false positives
+    (this returns True but actually all of the data was used) for example if
+    subsampling was done with ``subsample size >= data size`` and
+    ``how='head'``, or if subsampling takes place in a path that was not used
+    for the preview (e.g. the unused branch of a ``.skb.if_else()``
+    expression).
+    """
+    return (
+        _evaluation.find_node(
+            expr,
+            lambda e: isinstance(e, _expressions.Expr)
+            and isinstance(e._skrub_impl, PreviewSubsample),
+        )
+        is not None
+    )

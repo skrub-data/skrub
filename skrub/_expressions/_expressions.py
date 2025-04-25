@@ -521,6 +521,8 @@ class Expr:
         )
 
     def __repr__(self):
+        from ._subsampling import uses_subsampling
+
         result = repr(self._skrub_impl)
         if (
             not isinstance(self._skrub_impl, Var)
@@ -530,7 +532,10 @@ class Expr:
         preview = self._skrub_impl.preview_if_available()
         if preview is NULL:
             return result
-        return f"{result}\nResult:\n―――――――\n{preview!r}"
+        subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
+        header = f"Result{subsample_msg}:"
+        underline = "―" * len(header)
+        return f"{result}\n{header}\n{underline}\n{preview!r}"
 
     def __skrub_short_repr__(self):
         return repr(self._skrub_impl)
