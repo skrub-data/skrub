@@ -6,7 +6,7 @@
 
 from typing import Callable
 
-from skrub._expressions._expressions import SkrubNamespace
+from skrub._expressions._skrub_namespace import SkrubNamespace
 
 class Expr:
     skb: SkrubNamespace
