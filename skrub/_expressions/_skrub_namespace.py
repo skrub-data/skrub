@@ -1213,6 +1213,16 @@ class SkrubNamespace:
             If true, the returned estimator is fitted to the data provided when
             initializing variables in the expression.
 
+        subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.preview_subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the estimator when ``fitted=True``,
+            subsequent use of the estimator is not affected by subsampling.
+            Therefore it is an error to pass ``subsampling=True`` and
+            ``fitted=False`` (because ``subsampling=True`` would have no
+            effect).
+
         Returns
         -------
         estimator
@@ -1264,6 +1274,7 @@ class SkrubNamespace:
     def train_test_split(
         self,
         environment=None,
+        *,
         subsampling=False,
         splitter=model_selection.train_test_split,
         **splitter_kwargs,
@@ -1276,6 +1287,11 @@ class SkrubNamespace:
             The environment (dict mapping variable names to values) containing the
             full data. If ``None`` (the default), the data is retrieved from the
             expression.
+
+        subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.preview_subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
 
         splitter : function, optional
             The function used to split X and y once they have been computed. By
@@ -1359,6 +1375,16 @@ class SkrubNamespace:
             initializing variables in this expression (the data returned by
             ``.skb.get_data()``).
 
+        subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.preview_subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the grid search when ``fitted=True``,
+            subsequent use of the grid search is not affected by subsampling.
+            Therefore it is an error to pass ``subsampling=True`` and
+            ``fitted=False`` (because ``subsampling=True`` would have no
+            effect).
+
         kwargs : dict
             All other named arguments are forwarded to
             ``sklearn.search.GridSearchCV``.
@@ -1438,6 +1464,16 @@ class SkrubNamespace:
             initializing variables in this expression (the data returned by
             ``.skb.get_data()``).
 
+        subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.preview_subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the randomized search when ``fitted=True``,
+            subsequent use of the randomized search is not affected by subsampling.
+            Therefore it is an error to pass ``subsampling=True`` and
+            ``fitted=False`` (because ``subsampling=True`` would have no
+            effect).
+
         kwargs : dict
             All other named arguments are forwarded to
             ``sklearn.search.RandomizedSearchCV``.
@@ -1503,7 +1539,7 @@ class SkrubNamespace:
             return search
         return search.fit(env_with_subsampling(self.get_data(), subsampling))
 
-    def cross_validate(self, environment=None, subsampling=False, **kwargs):
+    def cross_validate(self, environment=None, *, subsampling=False, **kwargs):
         """Cross-validate the expression.
 
         This generates the estimator (with default hyperparameters) and runs
@@ -1515,6 +1551,11 @@ class SkrubNamespace:
             Bindings for variables contained in the expression. If not
             provided, the ``value``s passed when initializing ``var()`` are
             used.
+
+        subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.preview_subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
 
         kwargs : dict
             All other named arguments are forwarded to

@@ -442,7 +442,7 @@ def _compute_Xy(expr, environment):
     return X, y
 
 
-def cross_validate(expr_estimator, environment, subsampling=False, **cv_params):
+def cross_validate(expr_estimator, environment, *, subsampling=False, **cv_params):
     """Cross-validate an estimator built from an expression.
 
     This runs cross-validation from an estimator that was built from a skrub
@@ -459,6 +459,11 @@ def cross_validate(expr_estimator, environment, subsampling=False, **cv_params):
 
     environment : dict
         Bindings for variables contained in the expression.
+
+    subsampling : bool, default=False
+        If True, and if subsampling has been configured (see
+        :meth:`Expr.skb.preview_subsample`), use a subsample of the data. By
+        default subsampling is not applied and all the data is used.
 
     cv_params : dict
         All other named arguments are forwarded to
@@ -503,6 +508,7 @@ def cross_validate(expr_estimator, environment, subsampling=False, **cv_params):
 def train_test_split(
     expr,
     environment,
+    *,
     subsampling=False,
     splitter=model_selection.train_test_split,
     **splitter_kwargs,
@@ -517,6 +523,11 @@ def train_test_split(
     environment : dict
         The environment (dict mapping variable names to values) containing the
         full data.
+
+    subsampling : bool, default=False
+        If True, and if subsampling has been configured (see
+        :meth:`Expr.skb.preview_subsample`), use a subsample of the data. By
+        default subsampling is not applied and all the data is used.
 
     splitter : function, optional
         The function used to split X and y once they have been computed. By
