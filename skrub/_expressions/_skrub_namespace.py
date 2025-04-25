@@ -627,14 +627,27 @@ class SkrubNamespace:
 
     @check_expr
     def preview_subsample(self, n=1000, *, how="head"):
-        """Configure subsampling of a dataframe.
+        """Configure subsampling of a dataframe or numpy array.
 
-        This defines how the dataframe should be subsampled for previews or
-        when subsampling is explicitly requested, for example by calling
-        ``.skb.get_randomized_search(subsampling=True)``.
+        The goal is to allow faster development and debugging of a pipeline by
+        computing the previews (and optionally "dry runs" of the
+        cross-validation) on a subset of the available data.
 
-        This can only be applied to steps that produce a dataframe, a column or
-        a numpy array.
+        This method configures _how_ the dataframe should be subsampled. If it
+        has been configured, subsampling actually only takes place in some
+        specific situations:
+
+        - When computing the previews (results displayed when printing an
+          expression).
+        - When it is explicitly requested by passing ``subsampling=True`` to one
+          of the functions that expose that parameter such as
+          :meth:`Expr.skb.get_randomized_search` or :func:`cross_validate`.
+
+        When subsampling has not been configured (``preview_subsample`` has not
+        been called anywhere in the expression), no subsampling is ever done.
+
+        This method can only be used on steps that produce a dataframe, a
+        column (series) or a numpy array.
 
         Parameters
         ----------
@@ -661,8 +674,8 @@ class SkrubNamespace:
         >>> df.shape
         (442, 11)
 
-        The ``preview_subsample`` configures how the sampling is done when it
-        takes place
+        The ``preview_subsample`` configures _how_ the sampling is done when it
+        takes place.
 
         whether it takes place or not depends on the context:
             - for preview the subsampling is always on
@@ -675,8 +688,8 @@ class SkrubNamespace:
 
         >>> data.shape
         <GetAttr 'shape'>
-        Result:
-        ―――――――
+        Result (on a subsample):
+        ――――――――――――――――――――――――
         (15, 11)
         >>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
         >>> y = data["target"].skb.mark_as_y()
@@ -688,8 +701,8 @@ class SkrubNamespace:
 
         >>> pred
         <Apply Ridge>
-        Result:
-        ―――――――
+        Result (on a subsample):
+        ――――――――――――――――――――――――
                 target
         0   142.866906
         1   130.980765
