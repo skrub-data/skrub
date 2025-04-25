@@ -16,7 +16,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import _join_utils, _matching, _utils
-from . import _selectors as s
+from . import selectors as s
 from ._check_input import CheckInputDataFrame
 from ._datetime_encoder import DatetimeEncoder
 from ._table_vectorizer import TableVectorizer
