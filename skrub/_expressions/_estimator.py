@@ -685,6 +685,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
 
         all_rows = []
         log_scale_columns = set()
+        int_columns = set()
         for params in self.cv_results_["params"]:
             row = {}
             for param_id, param in params.items():
@@ -700,10 +701,15 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
                     value = param
                     if choice.log:
                         log_scale_columns.add(choice_name)
+                    if choice.to_int:
+                        int_columns.add(choice_name)
                 row[choice_name] = value
             all_rows.append(row)
 
-        metadata = {"log_scale_columns": list(log_scale_columns)}
+        metadata = {
+            "log_scale_columns": list(log_scale_columns),
+            "int_columns": list(int_columns),
+        }
         table = pd.DataFrame(
             all_rows, columns=list(expr_choices["choice_display_names"].values())
         )
