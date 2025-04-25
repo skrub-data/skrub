@@ -315,7 +315,7 @@ class InterpolationJoiner(TransformerMixin, BaseEstimator):
             )
             for df in predictions
         ]
-        return sbd.concat_horizontal(main_table, *predictions)
+        return sbd.concat(main_table, *predictions, axis=1)
 
     def _check_prediction_results(self, main_table, results):
         checked_results = []

@@ -1406,21 +1406,21 @@ def deferred(func):
     return deferred_func
 
 
-class ConcatHorizontal(ExprImpl):
-    _fields = ["first", "others"]
+class Concat(ExprImpl):
+    _fields = ["first", "others", "axis"]
 
     def compute(self, e, mode, environment):
         if not sbd.is_dataframe(e.first):
             raise TypeError(
-                "`concat_horizontal` can only be used with dataframes. "
-                "`.skb.concat_horizontal` was accessed on an object of type "
+                "`concat` can only be used with dataframes. "
+                "`.skb.concat` was accessed on an object of type "
                 f"{e.first.__class__.__name__!r}"
             )
         if sbd.is_dataframe(e.others):
             raise TypeError(
-                "`concat_horizontal` should be passed a list of dataframes. "
+                "`concat` should be passed a list of dataframes. "
                 "If you have a single dataframe, wrap it in a list: "
-                "`concat_horizontal([table_1])` not `concat_horizontal(table_1)`"
+                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
             )
         idx, non_df = next(
             ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
@@ -1428,16 +1428,24 @@ class ConcatHorizontal(ExprImpl):
         )
         if non_df is not None:
             raise TypeError(
-                "`concat_horizontal` should be passed a list of dataframes: "
-                "`table_0.skb.concat_horizontal([table_1, ...])`. "
+                "`concat` should be passed a list of dataframes: "
+                "`table_0.skb.concat([table_1, ...], axis=...)`. "
                 f"An object of type {non_df.__class__.__name__!r} "
                 f"was found at index {idx}."
             )
-        result = sbd.concat_horizontal(e.first, *e.others)
-        if mode == "preview" or "fit" in mode:
-            self.all_outputs_ = sbd.column_names(result)
-        else:
-            result = sbd.set_column_names(result, self.all_outputs_)
+
+        if e.axis not in (0, 1):
+            raise ValueError(
+                f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
+            )
+
+        result = sbd.concat(e.first, *e.others, axis=e.axis)
+
+        if e.axis == 1:
+            if mode == "preview" or "fit" in mode:
+                self.all_outputs_ = sbd.column_names(result)
+            else:
+                result = sbd.set_column_names(result, self.all_outputs_)
         return result
 
     def __repr__(self):

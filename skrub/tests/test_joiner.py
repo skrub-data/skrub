@@ -78,7 +78,7 @@ def test_multiple_keys(df_module):
     )
     result = joiner_list.fit_transform(df)
 
-    expected = ns.concat_horizontal(df, df2)
+    expected = ns.concat(df, df2, axis=1)
     df_module.assert_frame_equal(result, expected)
 
     joiner_list = Joiner(
