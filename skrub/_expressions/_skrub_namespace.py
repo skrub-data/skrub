@@ -31,7 +31,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
-from ._subsampling import PreviewSubsample, env_with_subsampling
+from ._subsampling import PreviewSubsample, env_with_subsampling, uses_subsampling
 from ._utils import NULL, attribute_error
 
 
@@ -633,7 +633,7 @@ class SkrubNamespace:
         computing the previews (and optionally "dry runs" of the
         cross-validation) on a subset of the available data.
 
-        This method configures _how_ the dataframe should be subsampled. If it
+        This method configures *how* the dataframe should be subsampled. If it
         has been configured, subsampling actually only takes place in some
         specific situations:
 
@@ -674,7 +674,7 @@ class SkrubNamespace:
         >>> df.shape
         (442, 11)
 
-        The ``preview_subsample`` configures _how_ the sampling is done when it
+        The ``preview_subsample`` configures *how* the sampling is done when it
         takes place.
 
         whether it takes place or not depends on the context:
@@ -798,11 +798,11 @@ class SkrubNamespace:
 
         Note that in that case the cache used for previews is still cleared. So
         if we want the preview we need to prime the new expression by
-        evaluating it once (either directly or by adding more steps to it):
+        accessing the preview once (either directly or by adding more steps to it):
 
         >>> clone
         <BinOp: add>
-        >>> clone.skb.eval()
+        >>> clone.skb.preview()
         1
         >>> clone
         <BinOp: add>
@@ -813,12 +813,12 @@ class SkrubNamespace:
 
         return clone(self._expr, drop_preview_data=drop_values)
 
-    def eval(self, environment=None):
+    def eval(self, environment=None, *, subsampling=False):
         """Evaluate the expression.
 
         This returns the result produced by evaluating the expression, ie
-        running the corresponding pipeline. The result is **always** the output
-        of the pipeline's ``fit_transform`` -- the pipeline is refitted to the
+        running the corresponding pipeline. The result is always the output
+        of the pipeline's ``fit_transform`` -- a pipeline is refitted to the
         provided data.
 
         If no data is provided, the values passed when creating the variables
@@ -830,6 +830,11 @@ class SkrubNamespace:
             If ``None``, the initial values of the variables contained in the
             expression are used. If a dict, it must map the name of each
             variable to a corresponding value.
+
+        subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.preview_subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
 
         Returns
         -------
@@ -858,20 +863,22 @@ class SkrubNamespace:
                 "The `environment` passed to `eval()` should be None or a dictionary, "
                 f"got: '{type(environment)}'"
             )
+        if environment is None and (subsampling or not uses_subsampling(self._expr)):
+            return self.preview()
         if environment is None:
-            mode = "preview"
-            clear = False
-        else:
-            mode = "fit_transform"
-            clear = True
-            environment = {
-                **environment,
-                "_skrub_use_var_values": not _var_values_provided(
-                    self._expr, environment
-                ),
-            }
+            environment = self.get_data()
+        environment = {
+            **environment,
+            "_skrub_use_var_values": not _var_values_provided(self._expr, environment),
+        }
+        environment = env_with_subsampling(environment, subsampling)
+        return evaluate(
+            self._expr, mode="fit_transform", environment=environment, clear=True
+        )
 
-        return evaluate(self._expr, mode=mode, environment=environment, clear=clear)
+    def preview(self):
+        """Get the value computed for previews (shown when printing the expression)."""
+        return evaluate(self._expr, mode="preview", environment=None, clear=False)
 
     @check_expr
     def freeze_after_fit(self):

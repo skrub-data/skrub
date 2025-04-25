@@ -107,12 +107,16 @@ def test_how(as_frame):
         X_a = pd.DataFrame(X_a, columns=list(map(str, range(X_a.shape[1]))))
 
     X = skrub.X(X_a).skb.preview_subsample(n=2)
-    assert (_to_np(X.skb.eval()) == _to_np(X_a)[:2]).all()
+    assert (_to_np(X.skb.eval()) == _to_np(X_a)).all()
+    assert (_to_np(X.skb.eval(subsampling=True)) == _to_np(X_a)[:2]).all()
+    assert (_to_np(X.skb.preview()) == _to_np(X_a)[:2]).all()
 
     X = skrub.X(X_a).skb.preview_subsample(n=2, how="random")
     # sampling is done differently for numpy arrays and in df.sample()
     idx = [2, 1] if as_frame else [1, 2]
-    assert (_to_np(X.skb.eval()) == _to_np(X_a)[idx]).all()
+    assert (_to_np(X.skb.eval()) == _to_np(X_a)).all()
+    assert (_to_np(X.skb.eval(subsampling=True)) == _to_np(X_a)[idx]).all()
+    assert (_to_np(X.skb.preview()) == _to_np(X_a)[idx]).all()
 
 
 def test_sample_errors():
