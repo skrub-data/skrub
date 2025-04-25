@@ -1,5 +1,6 @@
 import inspect
 
+import numpy as np
 import pytest
 
 import skrub
@@ -80,6 +81,10 @@ def test_repr_html():
     assert "add" in (skrub.var("thename", 0) + 2)._repr_html_()
     b = a.skb.apply_func(lambda x: x).skb.set_name("the name b")
     assert "the name b" in b._repr_html_()
+    a = skrub.X(np.ones((5, 2))) + 10
+    assert "on a subsample" not in a._repr_html_()
+    a = skrub.X(np.ones((5, 2))).skb.subsample_previews(n=2) + 10
+    assert "on a subsample" in a._repr_html_()
 
 
 def test_repr():

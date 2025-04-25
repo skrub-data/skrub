@@ -552,6 +552,7 @@ class Expr:
 
     def _repr_html_(self):
         from ._inspection import node_report
+        from ._subsampling import uses_subsampling
 
         try:
             graph = self.skb.draw_graph().svg.decode("utf-8")
@@ -572,11 +573,12 @@ class Expr:
             name_line = ""
         title = f"<strong><samp>{html.escape(short_repr(self))}</samp></strong><br />\n"
         summary = "<samp>Show graph</samp>"
+        subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
         prefix = (
             f"{title}{name_line}"
             f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
-            "<strong><samp>Result:</samp></strong>"
+            f"<strong><samp>Result{subsample_msg}:</samp></strong>"
         )
         report = node_report(self)
         if hasattr(report, "_repr_html_"):
