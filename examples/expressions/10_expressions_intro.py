@@ -101,11 +101,11 @@ skrub.TableReport(dataset.products)
 # %%
 products = skrub.var("products", dataset.products)
 
-# Optionally, we can use ``preview_subsample`` to configure some subsampling
+# Optionally, we can use ``subsample_previews`` to configure some subsampling
 # that only takes place for previews while debugging the pipeline, or when we
 # ask for it explicitly.
 
-full_baskets = skrub.var("baskets", dataset.baskets).skb.preview_subsample(n=1000)
+full_baskets = skrub.var("baskets", dataset.baskets).skb.subsample_previews(n=1000)
 
 baskets = full_baskets[["ID"]].skb.mark_as_X()
 fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()

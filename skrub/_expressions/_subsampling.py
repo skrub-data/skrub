@@ -69,7 +69,7 @@ def _head_numpy(a, n):
 class PreviewSubsample(_expressions.ExprImpl):
     """Optionally subsample a dataframe.
 
-    See the docstring of ``.skb.preview_subsample`` for details.
+    See the docstring of ``.skb.subsample_previews`` for details.
     """
 
     _fields = ["target", "n", "how"]

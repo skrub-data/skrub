@@ -462,7 +462,7 @@ def cross_validate(expr_estimator, environment, *, subsampling=False, **cv_param
 
     subsampling : bool, default=False
         If True, and if subsampling has been configured (see
-        :meth:`Expr.skb.preview_subsample`), use a subsample of the data. By
+        :meth:`Expr.skb.subsample_previews`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
     cv_params : dict
@@ -526,7 +526,7 @@ def train_test_split(
 
     subsampling : bool, default=False
         If True, and if subsampling has been configured (see
-        :meth:`Expr.skb.preview_subsample`), use a subsample of the data. By
+        :meth:`Expr.skb.subsample_previews`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
     splitter : function, optional

@@ -248,7 +248,7 @@ def test_repr():
            [11., 11.],
            [11., 11.],
            [11., 11.]])
-    >>> skrub.X(np.ones((5, 2))).skb.preview_subsample(n=2) + 10
+    >>> skrub.X(np.ones((5, 2))).skb.subsample_previews(n=2) + 10
     <BinOp: add>
     Result (on a subsample):
     ――――――――――――――――――――――――
