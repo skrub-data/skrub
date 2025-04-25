@@ -114,12 +114,11 @@ def _prepare_numeric_column(col, *, is_log_scale, is_int):
         if is_log_scale:
             tickvals = np.log(tickvals)
         tickvals = tickvals.tolist()
-        ticktext = list(map(str, tickvals_label_space))
+        ticktext = [str(val) for val in tickvals_label_space]
     else:
         tickvals = tickvals.tolist()
-        ticktext = list(
-            map("{:.2g}".format, np.exp(tickvals) if is_log_scale else tickvals)
-        )
+        tickvals_label_space = np.exp(tickvals) if is_log_scale else tickvals
+        ticktext = [f"{val:.2g}" for val in tickvals_label_space]
     if np.isnan(vals).any():
         tickvals = [min_val - (max_val - min_val) / 10] + tickvals
         ticktext = ["NaN"] + ticktext
