@@ -20,5 +20,5 @@ jobs:
           pixi-version: v0.41.3
           frozen: true
 
-      - name: Check diff
+      - name: Check stub file for `_expression.py` is up-to-date
         run: pixi run -e check-pyi-diff check
