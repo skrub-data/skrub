@@ -5,7 +5,7 @@ import numpy as np
 
 from . import _dataframe as sbd
 from . import _join_utils
-from . import _selectors as s
+from . import selectors as s
 from ._joiner import DEFAULT_REF_DIST, DEFAULT_STRING_ENCODER, Joiner
 
 

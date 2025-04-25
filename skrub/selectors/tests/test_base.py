@@ -1,12 +1,19 @@
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub import _selectors as s
+from skrub import selectors as s
+
+
+def test_import_selectors():
+    # selectors used to be called _selectors but now this should work
+    import skrub.selectors
+
+    assert "numeric" in skrub.selectors.__all__
 
 
 def test_repr():
     """
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> s.all()
     all()
     >>> s.all() - ["ID", "Name"]

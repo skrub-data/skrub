@@ -10,7 +10,7 @@ from sklearn.ensemble import (
 
 from . import _dataframe as sbd
 from . import _join_utils, _utils
-from . import _selectors as s
+from . import selectors as s
 from ._minhash_encoder import MinHashEncoder
 from ._sklearn_compat import get_tags
 from ._table_vectorizer import TableVectorizer

@@ -1,6 +1,6 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from . import _selectors as s
+from . import selectors as s
 from ._on_each_column import SingleColumnTransformer
 
 

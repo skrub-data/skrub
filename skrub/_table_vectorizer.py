@@ -11,8 +11,8 @@ from sklearn.utils._estimator_html_repr import _VisualBlock
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors as s
 from . import _utils
+from . import selectors as s
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
@@ -91,7 +91,7 @@ def _created_by(*transformers):
         attribute) ``_pipeline`` which is constructed and fitted during
         ``TableVectorizer.fit``, and is never cloned. ``_created_by`` is a
         private helper of ``TableVectorizer``, not meant to be generally useful
-        and it should not be moved to the ``skrub._selectors`` module.
+        and it should not be moved to the ``skrub.selectors`` module.
     """
     return s.Filter(
         _created_by_predicate,
