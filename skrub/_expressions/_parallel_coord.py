@@ -109,7 +109,7 @@ def _prepare_numeric_column(col, log_scale, is_int):
     if pd.api.types.is_integer_dtype(col) or is_int:
         if log_scale:
             tickvals = np.exp(tickvals)
-        tickvals = np.unique(np.round(tickvals).astype("int"))
+        tickvals = np.unique(np.round(tickvals).astype(np.int64))
         tickvals_label_space = tickvals.tolist()
         if log_scale:
             tickvals = np.log(tickvals)
