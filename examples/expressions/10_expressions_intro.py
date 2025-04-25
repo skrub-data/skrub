@@ -4,8 +4,9 @@
 Building complex tabular pipelines
 ==================================
 
-In this example, we show a simple pipeline handling a dataset with 2 tables, which
-would be difficult to implement, validate, and deploy correctly without skrub.
+In this example, we show a simple pipeline handling a dataset with 2 tables,
+which would be difficult to implement, validate, and deploy correctly without
+skrub.
 """
 
 # %%
