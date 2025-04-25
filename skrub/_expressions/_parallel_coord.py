@@ -28,8 +28,8 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
     prepared_columns = [
         _prepare_column(
             cv_results[col_name],
-            col_name in metadata["log_scale_columns"],
-            col_name in metadata["int_columns"],
+            is_log_scale=col_name in metadata["log_scale_columns"],
+            is_int=col_name in metadata["int_columns"],
         )
         for col_name in cv_results.columns
     ]
@@ -67,10 +67,10 @@ def _add_jitter(column):
     return column
 
 
-def _prepare_column(col, is_log_scale, is_int):
+def _prepare_column(col, *, is_log_scale, is_int):
     if pd.api.types.is_bool_dtype(col) or not pd.api.types.is_numeric_dtype(col):
         return _prepare_obj_column(col)
-    result = _prepare_numeric_column(col, is_log_scale, is_int)
+    result = _prepare_numeric_column(col, is_log_scale=is_log_scale, is_int=is_int)
     result["label"] = {
         "mean_test_score": "score",
         "mean_fit_time": "fit time",
@@ -100,24 +100,25 @@ def _prepare_obj_column(col):
     }
 
 
-def _prepare_numeric_column(col, log_scale, is_int):
+def _prepare_numeric_column(col, *, is_log_scale, is_int):
     vals = col.to_numpy()
-    if log_scale:
+    if is_log_scale:
         vals = np.log(vals)
     min_val, max_val = np.nanmin(vals), np.nanmax(vals)
-    tickvals = np.linspace(min_val, max_val, 10).tolist()
+    tickvals = np.linspace(min_val, max_val, 10)
     if pd.api.types.is_integer_dtype(col) or is_int:
-        if log_scale:
+        if is_log_scale:
             tickvals = np.exp(tickvals)
         tickvals = np.unique(np.round(tickvals).astype("int"))
         tickvals_label_space = tickvals.tolist()
-        if log_scale:
+        if is_log_scale:
             tickvals = np.log(tickvals)
         tickvals = tickvals.tolist()
         ticktext = list(map(str, tickvals_label_space))
     else:
+        tickvals = tickvals.tolist()
         ticktext = list(
-            map("{:.2g}".format, np.exp(tickvals) if log_scale else tickvals)
+            map("{:.2g}".format, np.exp(tickvals) if is_log_scale else tickvals)
         )
     if np.isnan(vals).any():
         tickvals = [min_val - (max_val - min_val) / 10] + tickvals
