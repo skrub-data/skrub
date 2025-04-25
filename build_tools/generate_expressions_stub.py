@@ -35,6 +35,7 @@ for name in sorted(skrub.Expr.__dict__):
         "__contains__",
         "__dict__",
         "__doc__",
+        "__firstlineno__",
         "__hash__",
         "__init__",
         "__iter__",
@@ -42,6 +43,7 @@ for name in sorted(skrub.Expr.__dict__):
         "__setattr__",
         "__setitem__",
         "__signature__",
+        "__static_attributes__",
         "__weakref__",
         "skb",
     ]:
@@ -53,8 +55,11 @@ not_an_expression_factory = ["deferred"]
 
 for name in sorted(set(_expressions.__dict__).intersection(skrub.__dict__)):
     obj = getattr(_expressions, name)
-    if isinstance(obj, types.FunctionType) and name not in not_an_expression_factory:
-        p(f"def {name}(*args, **kwargs) -> Expr: ...\n")
+    if obj is not getattr(skrub, name):
+        continue
+    if not isinstance(obj, types.FunctionType) or name in not_an_expression_factory:
+        continue
+    p(f"def {name}(*args, **kwargs) -> Expr: ...\n")
 
 p("def deferred(*args, **kwargs) -> Callable: ...\n")
 

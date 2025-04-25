@@ -190,11 +190,15 @@ clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference
 [tool.pixi.feature.lint.tasks]
 lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
 
+[tool.pixi.feature.check-pyi-diff.tasks]
+check = { cmd = "python build_tools/generate_expressions_stub.py | diff - skrub/_expressions/_expressions.pyi" }
+
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
 
 [tool.pixi.environments]
 lint = ["lint"]
+check-pyi-diff = ["check-pyi-diff"]
 doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
