@@ -195,15 +195,24 @@ def test_missing_X_or_y():
     with pytest.raises(
         ValueError, match=r'expr should have a node marked with "mark_as_X\(\)"'
     ):
-        X.skb.apply(LogisticRegression(), y=y.skb.mark_as_y()).skb.cross_validate(env)
+        skrub.cross_validate(
+            X.skb.apply(LogisticRegression(), y=y.skb.mark_as_y()).skb.get_estimator(),
+            env,
+        )
     with pytest.raises(
         ValueError, match=r'expr should have a node marked with "mark_as_y\(\)"'
     ):
-        X.skb.mark_as_X().skb.apply(LogisticRegression(), y=y).skb.cross_validate(env)
+        skrub.cross_validate(
+            X.skb.mark_as_X().skb.apply(LogisticRegression(), y=y).skb.get_estimator(),
+            env,
+        )
     # now both are correctly marked:
-    X.skb.mark_as_X().skb.apply(
-        LogisticRegression(), y=y.skb.mark_as_y()
-    ).skb.cross_validate(env)
+    skrub.cross_validate(
+        X.skb.mark_as_X()
+        .skb.apply(LogisticRegression(), y=y.skb.mark_as_y())
+        .skb.get_estimator(),
+        env,
+    )
 
 
 def test_warn_if_choice_before_X_or_y():

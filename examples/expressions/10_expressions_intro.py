@@ -238,7 +238,19 @@ search.results_
 # We can also run a cross validation, using the first choices defined in the ``choose``
 # objects:
 
-predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
+skrub.cross_validate(
+    predictions.skb.get_estimator(),
+    predictions.skb.get_data(),
+    scoring="roc_auc",
+    verbose=1,
+    n_jobs=4,
+)
+
+# %%
+# Above we would just replace ``.skb.get_estimator()`` with
+# ``.skb.get_randomized_search(...)`` to run the full nested cross-validation of
+# the hyperparameter search. We do not do it here to keep the execution time of
+# the example short.
 
 # %%
 # We can also display a parallel coordinates plot of the results.

@@ -146,7 +146,9 @@ def test_fit_predict():
 
 
 def test_cross_validate(expression, data, n_jobs):
-    results = expression.skb.cross_validate(data, n_jobs=n_jobs, return_estimator=True)
+    results = skrub.cross_validate(
+        expression.skb.get_estimator(), data, n_jobs=n_jobs, return_estimator=True
+    )
     estimators = results["estimator"]
     assert len(estimators) == 5
     for e in estimators:
@@ -249,7 +251,9 @@ def test_unsupervised():
     X, y = make_blobs(n_samples=10, random_state=0)
     k_means = KMeans(n_clusters=2, random_state=0, n_init=1)
     e = skrub.X(X).skb.apply(k_means, y=skrub.y(y), unsupervised=True)
-    expr_scores = e.skb.cross_validate()["test_score"]
+    expr_scores = skrub.cross_validate(e.skb.get_estimator(), e.skb.get_data())[
+        "test_score"
+    ]
     sklearn_scores = cross_validate(k_means, X, y)["test_score"]
     assert_allclose(sklearn_scores, expr_scores)
     expr_k_means = e.skb.get_estimator()
@@ -263,8 +267,11 @@ def test_unsupervised():
 
 def test_no_apply_step():
     assert list(
-        skrub.X().skb.cross_validate(
-            {"X": np.ones((10, 2))}, cv=2, scoring=lambda e, X: 0
+        skrub.cross_validate(
+            skrub.X().skb.get_estimator(),
+            {"X": np.ones((10, 2))},
+            cv=2,
+            scoring=lambda e, X: 0,
         )["test_score"]
     ) == [0, 0]
 
