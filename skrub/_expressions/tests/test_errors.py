@@ -65,7 +65,8 @@ def test_setattr():
 def test_func_returning_none():
     a = skrub.var("a", [])
     with pytest.warns(UserWarning, match=r"Calling '\.append\(\)' returned None"):
-        a.append(0)
+        out = a.append(0)
+    assert out.skb.eval() is None
 
 
 #

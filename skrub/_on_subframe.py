@@ -2,7 +2,7 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors, _utils
+from . import _utils, selectors
 from ._join_utils import pick_column_names
 
 __all__ = ["OnSubFrame"]
@@ -128,7 +128,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         transformer,
-        cols=_selectors.all(),
+        cols=selectors.all(),
         keep_original=False,
         rename_columns="{}",
     ):
@@ -143,12 +143,12 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
 
     def fit_transform(self, X, y=None):
         self.all_inputs_ = sbd.column_names(X)
-        self._columns = _selectors.make_selector(self.cols).expand(X)
-        to_transform = _selectors.select(X, self._columns)
+        self._columns = selectors.make_selector(self.cols).expand(X)
+        to_transform = selectors.select(X, self._columns)
         if self.keep_original:
             passthrough = X
         else:
-            passthrough = _selectors.select(X, _selectors.inv(self._columns))
+            passthrough = selectors.select(X, selectors.inv(self._columns))
         passthrough_names = sbd.column_names(passthrough)
         if self._columns:
             self.transformer_ = clone(self.transformer)
@@ -187,11 +187,11 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
 
         # do the selection even if self._columns is empty to raise if X doesn't
         # have the right columns
-        to_transform = _selectors.select(X, self._columns)
+        to_transform = selectors.select(X, self._columns)
         if self.keep_original:
             passthrough = X
         else:
-            passthrough = _selectors.select(X, _selectors.inv(self._columns))
+            passthrough = selectors.select(X, selectors.inv(self._columns))
         if not self._columns:
             return passthrough
         transformed = self.transformer_.transform(to_transform)

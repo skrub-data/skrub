@@ -195,7 +195,7 @@ TableReport(products_transformed)
 # |MinHashEncoder|, for reasons that are out of the scope of this notebook.
 #
 from skrub import AggJoiner
-from skrub import _selectors as s
+from skrub import selectors as s
 
 # Skrub selectors allow us to select columns using regexes, which reduces
 # the boilerplate.

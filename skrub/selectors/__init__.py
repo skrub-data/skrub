@@ -33,7 +33,7 @@ Here is an example dataframe:
 A simple kind of selector selects a fixed list of column names. Such selectors
 are created with the ``cols()`` function.
 
->>> from skrub import _selectors as s
+>>> from skrub import selectors as s
 >>> mm_cols = s.cols("height_mm", "width_mm")
 >>> mm_cols
 cols('height_mm', 'width_mm')
@@ -134,9 +134,8 @@ client code. Rather, users would create selectors and pass them instead of a
 column list to skrub objects that operate on a subset of columns. This could
 be, for example, the cols parameter of SelectCols: SelectCols(s.glob("*_mm")).
 
-This is not yet the case for SelectCols, as _selectors is still a completely
-private module. One example of a (private) function that consumes selectors is
-the ``select`` function provided in this module.
+One example of a (private) function that consumes selectors is the ``select``
+function provided in this module.
 
 >>> s.select(df, ["ID", "kind"])
    ID kind
@@ -224,7 +223,7 @@ Directly instantiating a Filter or FilterNames object allows passing the name
 argument and thus controlling the repr of the resulting selector, so an
 slightly improved version could be:
 
->>> from skrub._selectors._base import NameFilter
+>>> from skrub.selectors._base import NameFilter
 
 >>> def ends_with(suffix):
 ...     return NameFilter(str.endswith, args=(suffix,), name='ends_with')
