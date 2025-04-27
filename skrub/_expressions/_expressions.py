@@ -351,13 +351,13 @@ class _Skb:
 _EXPR_CLASS_DOC = """
 Representation of a computation that can be used to build ML estimators.
 
-Please refer to the example gallery for an introduction to skrub
-expressions.
+Please refer to the :doc:`expression introduction </examples/expressions/10_expressions_intro>`
+and the :doc:`pipeline concept guide </skrub_pipeline>` for more details.
 
 This class is usually not instantiated manually, but through one of the functions
-:func:`var`, :func:`as_expr`, :func:`X` or :func:`y`, by applying a
-:func:`deferred` function, or by calling a method or applying an operator
-to an existing expression.
+:func:`~skrub.var`, :func:`~skrub.as_expr`, :func:`~skrub.X`,
+:func:`~skrub.y`, or by applying a :func:`~skrub.deferred` function, or by
+calling a method or applying an operator to an existing expression.
 """
 
 _EXPR_INSTANCE_DOC = """Skrub expression.
@@ -365,8 +365,8 @@ _EXPR_INSTANCE_DOC = """Skrub expression.
 This object represents a computation and can be used to build machine-learning
 estimators.
 
-Please refer to the example gallery for an introduction to skrub
-expressions.
+Please refer to the :doc:`expression introduction </examples/expressions/10_expressions_intro>`
+and the :doc:`pipeline concept guide </skrub_pipeline>` for more details.
 """
 
 
@@ -574,8 +574,7 @@ class Expr:
             "<strong><samp>Result:</samp></strong>"
         )
         report = node_report(self)
-        if hasattr(report, "_repr_html_"):
-            report = report._repr_html_()
+        if hasattr(report, "_repr_html_"):            report = report._repr_html_()
         return f"<div>\n{prefix}\n{report}\n</div>"
 
 
@@ -618,30 +617,21 @@ for op_name in _UNARY_OPS:
 
 def _check_wrap_params(cols, how, allow_reject, reason):
     msg = None
-    if not isinstance(cols, type(s.all())):
-        msg = f"`cols` must be `all()` (the default) when {reason}"
-    elif how not in ["auto", "full_frame"]:
-        msg = f"`how` must be 'auto' (the default) or 'full_frame' when {reason}"
-    elif allow_reject:
-        msg = f"`allow_reject` must be False (the default) when {reason}"
-    if msg is not None:
-        raise ValueError(msg)
+    if not isinstance(cols, type(s.all())):        msg = f"`cols` must be `all()` (the default) when {reason}"
+    elif how not in ["auto", "full_frame"]:        msg = f"`how` must be 'auto' (the default) or 'full_frame' when {reason}"
+    elif allow_reject:        msg = f"`allow_reject` must be False (the default) when {reason}"
+    if msg is not None:        raise ValueError(msg)
 
 
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
-    def _check(reason):
-        _check_wrap_params(cols, how, allow_reject, reason)
+    def _check(reason):        _check_wrap_params(cols, how, allow_reject, reason)
 
-    if estimator in [None, "passthrough"]:
-        estimator = PassThrough()
-    if how == "full_frame":
-        _check("`how` is 'full_frame'")
+    if estimator in [None, "passthrough"]:        estimator = PassThrough()
+    if how == "full_frame":        _check("`how` is 'full_frame'")
         return estimator
-    if not hasattr(estimator, "transform"):
-        _check("`estimator` is a predictor (not a transformer)")
+    if not hasattr(estimator, "transform"):        _check("`estimator` is a predictor (not a transformer)")
         return estimator
-    if not sbd.is_dataframe(X):
-        _check("the input is not a DataFrame")
+    if not sbd.is_dataframe(X):        _check("the input is not a DataFrame")
         return estimator
     columnwise = {"auto": "auto", "columnwise": True, "sub_frame": False}[how]
     return wrap_transformer(
@@ -650,19 +640,15 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
 
 
 def check_name(name, is_var):
-    if is_var and name is None:
-        raise TypeError(
+    if is_var and name is None:        raise TypeError(
             "The `name` of a `skrub.var()` must be a string, it cannot be None."
         )
-    if name is None:
-        return
+    if name is None:        return
     description = "a string" if is_var else "a string or None"
-    if not isinstance(name, str):
-        raise TypeError(
+    if not isinstance(name, str):        raise TypeError(
             f"`name` must be {description}, got object of type: {type(name)}"
         )
-    if name.startswith("_skrub_"):
-        raise ValueError(
+    if name.startswith("_skrub_"):        raise ValueError(
             f"names starting with '_skrub_' are reserved for skrub use, got: {name!r}."
         )
 
@@ -698,8 +684,6 @@ def var(name, value=NULL):
     combined with other variables, constants, operators, function calls etc. to
     build up complex expressions, which implicitly define the pipeline.
 
-    See the example gallery for more information about skrub pipelines.
-
     Parameters
     ----------
     name : str
@@ -716,6 +700,17 @@ def var(name, value=NULL):
     Returns
     -------
     A skrub variable
+
+    See Also
+    --------
+    X : Create a variable named 'X' and marked as the design matrix.
+    y : Create a variable named 'y' and marked as the target.
+    as_expr : Convert a concrete value into an expression.
+
+    References
+    ----------
+    See the :doc:`expression introduction </examples/expressions/10_expressions_intro>`
+    and the :doc:`pipeline concept guide </skrub_pipeline>` for more details.
 
     Examples
     --------
@@ -769,12 +764,8 @@ def var(name, value=NULL):
 
     But we can still override them. And inputs must be provided explicitly when
     using the estimator returned by ``.skb.get_estimator()``.
-
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
-
-    Much more information about skrub variables is provided in the examples
-    gallery.
     """
     check_name(name, is_var=True)
     return Expr(Var(name, value=value))
@@ -788,19 +779,27 @@ def X(value=NULL):
         skrub.var("X", value).skb.mark_as_X()
 
     Marking a variable as ``X`` tells skrub that this is the design matrix that
-    must be split into training and testing sets for cross-validation. Please
-    refer to the examples gallery for more information.
+    must be split into training and testing sets for cross-validation.
 
     Parameters
     ----------
     value : object
         The value passed to ``skrub.var()``, which is used for previews of the
         pipeline's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for ``skrub.var()``.
 
     Returns
     -------
     A skrub variable
+
+    See Also
+    --------
+    var : Create a generic skrub variable.
+
+    References
+    ----------
+    See the :doc:`expression introduction </examples/expressions/10_expressions_intro>`
+    and the :doc:`pipeline concept guide </skrub_pipeline>` for more details.
 
     Examples
     --------
@@ -833,19 +832,27 @@ def y(value=NULL):
 
     Marking a variable as ``y`` tells skrub that this is the column or table of
     targets that must be split into training and testing sets for
-    cross-validation. Please refer to the examples gallery for more
-    information.
+    cross-validation.
 
     Parameters
     ----------
     value : object
         The value passed to ``skrub.var()``, which is used for previews of the
         pipeline's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for ``skrub.var()``.
 
     Returns
     -------
     A skrub variable
+
+    See Also
+    --------
+    var : Create a generic skrub variable.
+
+    References
+    ----------
+    See the :doc:`expression introduction </examples/expressions/10_expressions_intro>`
+    and the :doc:`pipeline concept guide </skrub_pipeline>` for more details.
 
     Examples
     --------
@@ -898,6 +905,16 @@ def as_expr(value):
     Returns
     -------
     An expression that evaluates to the given value
+
+    See Also
+    --------
+    var : Create a variable representing a pipeline input.
+    deferred : Wrap a function call to defer its execution.
+
+    References
+    ----------
+    See the :doc:`expression introduction </examples/expressions/10_expressions_intro>`
+    and the :doc:`pipeline concept guide </skrub_pipeline>` for more details.
 
     Examples
     --------
@@ -1094,9 +1111,9 @@ class GetAttr(ExprImpl):
             pass
         if isinstance(self.source_object, Expr) and hasattr(
             self.source_object.skb, e.attr_name
-        ):
+        ): 
             comment = f"Did you mean '.skb.{e.attr_name}'?"
-        else:
+        else: 
             comment = None
         attribute_error(e.source_object, e.attr_name, comment)
 
@@ -1178,14 +1195,11 @@ class CallMethod(ExprImpl):
         except Exception as err:
             # Better error message if we used the pandas DataFrame's `apply()`
             # but we meant `.skb.apply()`
-            if e.method_name == "apply" and e.args:
-                if isinstance(e.args[0], BaseEstimator):
-                    raise TypeError(
+            if e.method_name == "apply" and e.args:                if isinstance(e.args[0], BaseEstimator):                    raise TypeError(
                         f"Calling `.apply()` with an estimator: `{e.args[0]!r}` "
                         "failed with the error above. Did you mean `.skb.apply()`?"
                     ) from err
-                if e.args[0] in [None, "passthrough"]:
-                    raise TypeError(
+                if e.args[0] in [None, "passthrough"]:                    raise TypeError(
                         f"Calling `.apply()` with the argument: `{e.args[0]!r}` "
                         "failed with the error above. Did you mean `.skb.apply()`?"
                     ) from err
@@ -1211,9 +1225,6 @@ def deferred(func):
     This allows including a call to any function as a step in a pipeline,
     rather than executing it immediately.
 
-    See the examples gallery for an in-depth explanation of skrub expressions
-    and ``deferred``.
-
     Parameters
     ----------
     func : function
@@ -1225,6 +1236,15 @@ def deferred(func):
         When called, rather than applying the original function immediately, it
         returns an expression. Evaluating the expression applies the original
         function.
+
+    See Also
+    --------
+    as_expr : Convert a concrete value into an expression.
+
+    References
+    ----------
+    See the :doc:`expression introduction </examples/expressions/10_expressions_intro>`
+    and the :doc:`pipeline concept guide </skrub_pipeline>` for more details.
 
     Examples
     --------
@@ -1265,7 +1285,7 @@ def deferred(func):
     >>> x = skrub.var('x')
     >>> e = log(x)
     >>> e.skb.eval({'x': 3})
-    INFO x = 3
+        INFO x = 3
     3
 
     Advanced examples
@@ -1288,7 +1308,7 @@ def deferred(func):
     >>> result
     <Call 'f'>
     >>> result.skb.eval({'a': 100, 'b': 20, 'c': 3})
-    x=100, y=20, z=3
+        x=100, y=20, z=3
     123
 
     Another example with a closure:
@@ -1317,21 +1337,9 @@ def deferred(func):
     function so ``transform`` works as expected:
 
     >>> out.skb.eval({"hour": np.arange(0, 25, 4)})
-    array([[ 0],
-           [ 4],
-           [ 8],
-           [12],
-           [16],
-           [20],
-           [24]])
+    array([[ 0],           [ 4],           [ 8],           [12],           [16],           [20],           [24]])
     >>> out.skb.eval({"hour": np.arange(0, 25, 4), "hour_encoding": "trigo"})
-    array([[ 0.  ,  1.  ],
-           [ 0.87,  0.5 ],
-           [ 0.87, -0.5 ],
-           [ 0.  , -1.  ],
-           [-0.87, -0.5 ],
-           [-0.87,  0.5 ],
-           [-0.  ,  1.  ]])
+    array([[ 0.  ,  1.  ],           [ 0.87,  0.5 ],           [ 0.87, -0.5 ],           [ 0.  , -1.  ],           [-0.87, -0.5 ],           [-0.87,  0.5 ],           [-0.  ,  1.  ]])
     """  # noqa : E501
     from ._evaluation import needs_eval
 
@@ -1382,8 +1390,7 @@ def deferred(func):
     closure = tuple(c.cell_contents for c in func.__closure__ or ())
     if not f_globals and not needs_eval(
         (closure, func.__defaults__, func.__kwdefaults__)
-    ):
-        return deferred_func
+    ):        return deferred_func
 
     @_check_return_value
     @check_expr

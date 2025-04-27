@@ -1,4 +1,4 @@
-import pickle
+'''import pickle
 import typing
 
 from sklearn import model_selection
@@ -25,6 +25,9 @@ from ._expressions import (
     check_expr,
     check_name,
     deferred,
+    choose_from,  # Added for doc links
+    choose_int,  # Added for doc links
+    choose_float,  # Added for doc links
 )
 from ._inspection import (
     describe_param_grid,
@@ -107,6 +110,10 @@ class SkrubNamespace:
         """
         Apply a scikit-learn estimator to a dataframe or numpy array.
 
+        This is a central part of building data processing pipelines with skrub
+        expressions. See the :doc:`/skrub_pipeline` documentation for more
+        details.
+
         Parameters
         ----------
         estimator : scikit-learn estimator
@@ -156,6 +163,16 @@ class SkrubNamespace:
             The transformed dataframe when ``estimator`` is a transformer, and
             the fitted ``estimator``'s predictions if it is a supervised
             predictor.
+
+        See Also
+        --------
+        :func:`~skrub.deferred` : Decorator to turn a Python function into an expression node.
+        :meth:`~skrub.Expr.skb.apply_func` : Apply a Python function to the expression.
+
+        References
+        ----------
+        :doc:`/skrub_pipeline` : Conceptual documentation on skrub pipelines.
+        :doc:`/examples/expressions/10_expressions_intro` : Example using ``apply``.
 
         Examples
         --------
@@ -288,7 +305,10 @@ class SkrubNamespace:
         r"""Apply the given function.
 
         This is a convenience function; ``X.skb.apply_func(func)`` is
-        equivalent to ``skrub.deferred(func)(X)``.
+        equivalent to ``skrub.deferred(func)(X)``. It allows applying arbitrary
+        Python functions within a skrub pipeline.
+
+        See the :doc:`/skrub_pipeline` documentation for more details.
 
         Parameters
         ----------
@@ -306,6 +326,16 @@ class SkrubNamespace:
         expression
             The expression that evaluates to the result of calling ``func`` as
             ``func(self, *args, **kwargs)``.
+
+        See Also
+        --------
+        :func:`~skrub.deferred` : Decorator to turn a Python function into an expression node.
+        :meth:`~skrub.Expr.skb.apply` : Apply a scikit-learn estimator to the expression.
+
+        References
+        ----------
+        :doc:`/skrub_pipeline` : Conceptual documentation on skrub pipelines.
+        :doc:`/examples/expressions/10_expressions_intro` : Example using ``apply_func``.
 
         Examples
         --------
@@ -359,6 +389,8 @@ class SkrubNamespace:
         advantage compared to wrapping the conditional statement in a
         `@skrub.deferred` function.
 
+        See the :doc:`/skrub_pipeline` documentation for more details.
+
         Parameters
         ----------
         value_if_true
@@ -370,6 +402,14 @@ class SkrubNamespace:
         Returns
         -------
         Conditional expression
+
+        See Also
+        --------
+        :meth:`~skrub.Expr.skb.match` : Select an expression based on the value of another.
+
+        References
+        ----------
+        :doc:`/skrub_pipeline` : Conceptual documentation on skrub pipelines.
 
         Examples
         --------
@@ -418,6 +458,8 @@ class SkrubNamespace:
         is the main advantage compared to placing the selection inside a
         ``@skrub.deferred`` function.
 
+        See the :doc:`/skrub_pipeline` documentation for more details.
+
         Parameters
         ----------
         targets : dict
@@ -432,6 +474,14 @@ class SkrubNamespace:
         Returns
         -------
         The value corresponding to the matching key or the default
+
+        See Also
+        --------
+        :meth:`~skrub.Expr.skb.if_else` : Create a simple conditional expression.
+
+        References
+        ----------
+        :doc:`/skrub_pipeline` : Conceptual documentation on skrub pipelines.
 
         Examples
         --------
@@ -480,6 +530,11 @@ class SkrubNamespace:
         Returns
         -------
         dataframe with only the selected columns
+
+        See Also
+        --------
+        Expr.skb.drop : Drop a subset of columns.
+        skrub.selectors : Module containing column selectors.
 
         Examples
         --------
@@ -533,6 +588,11 @@ class SkrubNamespace:
         Returns
         -------
         dataframe without the dropped columns
+
+        See Also
+        --------
+        Expr.skb.select : Select a subset of columns.
+        skrub.selectors : Module containing column selectors.
 
         Examples
         --------
@@ -896,6 +956,15 @@ class SkrubNamespace:
             A textual description of the different choices contained in this
             expression.
 
+        See Also
+        --------
+        Expr.skb.get_grid_search : Perform grid search over choices.
+        Expr.skb.get_randomized_search : Perform randomized search over choices.
+        skrub.choose_from : Define a choice between discrete values or estimators.
+        skrub.choose_int : Define a choice over a range of integers.
+        skrub.choose_float : Define a choice over a range of floats.
+        :doc:`/examples/expressions/11_choices` : Example using choices for tuning.
+
         Examples
         --------
         >>> from sklearn.linear_model import LogisticRegression
@@ -1093,6 +1162,13 @@ class SkrubNamespace:
             that its methods accept a dictionary of named inputs rather than
             ``X`` and ``y`` arguments.
 
+        See Also
+        --------
+        Expr.skb.cross_validate : Cross-validate the generated estimator.
+        Expr.skb.get_grid_search : Perform grid search using the estimator.
+        Expr.skb.get_randomized_search : Perform randomized search using the estimator.
+        ExprEstimator : The class of the returned estimator.
+
         Examples
         --------
         >>> import skrub
@@ -1173,6 +1249,12 @@ class SkrubNamespace:
               the test environment, if there is one (may not be the case for
               unsupervised learning).
 
+        See Also
+        --------
+        Expr.skb.cross_validate : Perform cross-validation.
+        Expr.skb.get_estimator : Get the underlying scikit-learn-like estimator.
+        sklearn.model_selection.train_test_split : Default splitter used.
+
         Examples
         --------
         >>> import skrub
@@ -1236,6 +1318,18 @@ class SkrubNamespace:
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
 
+        See Also
+        --------
+        :meth:`~skrub.Expr.skb.get_randomized_search` : Perform randomized search over choices.
+        :meth:`~skrub.Expr.skb.cross_validate` : Cross-validate the expression.
+        :func:`~skrub.choose_from` : Define choices for hyperparameter search.
+        ParamSearch : The class of the returned search object.
+        sklearn.model_selection.GridSearchCV : The underlying scikit-learn searcher.
+
+        References
+        ----------
+        :doc:`/examples/expressions/11_choices` : Example using choices for tuning.
+
         Examples
         --------
         >>> import skrub
@@ -1287,7 +1381,7 @@ class SkrubNamespace:
         return search.fit(self.get_data())
 
     def get_randomized_search(self, *, fitted=False, **kwargs):
-        """Find the best parameters with grid search.
+        """Find the best parameters with randomized search.
 
         This function returns a :class:`ParamSearch`, an object similar to
         scikit-learn's ``RandomizedSearchCV``. The main difference is that
@@ -1312,6 +1406,20 @@ class SkrubNamespace:
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
+
+        See Also
+        --------
+        :meth:`~skrub.Expr.skb.get_grid_search` : Perform grid search over choices.
+        :meth:`~skrub.Expr.skb.cross_validate` : Cross-validate the expression.
+        :func:`~skrub.choose_from` : Define choices between discrete options.
+        :func:`~skrub.choose_int` : Define choices over integer ranges.
+        :func:`~skrub.choose_float` : Define choices over float ranges.
+        ParamSearch : The class of the returned search object.
+        sklearn.model_selection.RandomizedSearchCV : The underlying scikit-learn searcher.
+
+        References
+        ----------
+        :doc:`/examples/expressions/11_choices` : Example using choices for tuning.
 
         Examples
         --------
@@ -1388,6 +1496,14 @@ class SkrubNamespace:
         dict
             Cross-validation results.
 
+        See Also
+        --------
+        :meth:`~skrub.Expr.skb.get_estimator` : Get the underlying scikit-learn-like estimator.
+        :meth:`~skrub.Expr.skb.train_test_split` : Split data for manual validation.
+        :meth:`~skrub.Expr.skb.get_grid_search` : Perform grid search with cross-validation.
+        :meth:`~skrub.Expr.skb.get_randomized_search` : Perform randomized search with cross-validation.
+        sklearn.model_selection.cross_validate : The underlying scikit-learn function.
+
         Examples
         --------
         >>> from sklearn.datasets import make_classification
@@ -1436,13 +1552,23 @@ class SkrubNamespace:
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
 
-        Please see the examples gallery for more information.
+        Please see the :doc:`/skrub_pipeline` documentation and the examples
+        gallery for more information.
 
         Note: this marks the expression in-place and also returns it.
 
         Returns
         -------
         The input expression, which has been marked as being ``X``
+
+        See Also
+        --------
+        Expr.skb.mark_as_y : Mark an expression as the target ``y``.
+        skrub.X : Create a variable marked as ``X``.
+
+        References
+        ----------
+        :doc:`/skrub_pipeline` : Conceptual documentation on skrub pipelines.
 
         Examples
         --------
@@ -1487,7 +1613,7 @@ class SkrubNamespace:
 
     @check_expr
     def mark_as_y(self):
-        """Mark this expression as being the ``X`` table.
+        """Mark this expression as being the target ``y``.
 
         Returns a copy; the original expression is left unchanged.
 
@@ -1509,13 +1635,23 @@ class SkrubNamespace:
         ``skrub.y(value)`` can be used as a shorthand for
         ``skrub.var('y', value).skb.mark_as_y()``.
 
-        Please see the examples gallery for more information.
+        Please see the :doc:`/skrub_pipeline` documentation and the examples
+        gallery for more information.
 
         Note: this marks the expression in-place and also returns it.
 
         Returns
         -------
         The input expression, which has been marked as being ``y``
+
+        See Also
+        --------
+        Expr.skb.mark_as_X : Mark an expression as the feature table ``X``.
+        skrub.y : Create a variable marked as ``y``.
+
+        References
+        ----------
+        :doc:`/skrub_pipeline` : Conceptual documentation on skrub pipelines.
 
         Examples
         --------
@@ -1751,3 +1887,4 @@ class SkrubNamespace:
                 ),
             )
         return Expr(AppliedEstimator(self._expr))
+'''
