@@ -8,6 +8,9 @@ def total_standard_deviation_norm(X):
     :class:`TextEncoder` and :class:`GapEncoder`. It is computed during ``fit`` and
     applied during ``transform``.
 
+    Conceptually, this norm corresponds to the square root of the sum of the variances
+    of all columns of X.
+
     Parameters
     ----------
     X : np.ndarray of shape (n_samples, n_features)
