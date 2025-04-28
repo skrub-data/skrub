@@ -3,6 +3,7 @@ Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 from __future__ import annotations
 
+from collections import defaultdict
 from copy import deepcopy
 
 import numpy as np
@@ -19,7 +20,10 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._total_std_norm import accumulate_std_norm, total_std_norm
+from ._total_std_norm import (
+    batch_standard_deviation_norm,
+    total_standard_deviation_norm,
+)
 from ._utils import unique_strings
 
 
@@ -477,7 +481,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._fit_transform(sbd.to_numpy(X), is_null)
 
-        self.norm_ = total_std_norm(result)
+        self.norm_ = total_standard_deviation_norm(result)
         result /= self.norm_
 
         return self._post_process(X, result)
@@ -718,18 +722,14 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         result = self._transform(X, is_null)
 
-        if not hasattr(self, "prev_stats_"):
-            self.norm_ = total_std_norm(result)
-            self.prev_stats_ = {
-                "mean1": result.mean(),
-                "var1": result.var(ddof=0),
-                "n1": result.shape[0],
-            }
-        else:
-            # Accumulate previous statistics
-            self.norm_, self.prev_stats_ = accumulate_std_norm(
-                result, **self.prev_stats_
-            )
+        self.norm_, self.past_stats_ = batch_standard_deviation_norm(
+            result,
+            getattr(
+                self,
+                "past_stats_",
+                defaultdict(lambda: {"n": 0, "mean": 0.0, "var": 0.0}),
+            ),
+        )
 
         return self
 

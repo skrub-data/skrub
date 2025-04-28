@@ -10,7 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._total_std_norm import total_std_norm
+from ._total_std_norm import total_standard_deviation_norm
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
 
@@ -262,7 +262,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 X_out = X_out[:, : self.n_components]
 
         # block normalize
-        self.norm_ = total_std_norm(X_out)
+        self.norm_ = total_standard_deviation_norm(X_out)
         X_out /= self.norm_
 
         self.n_components_ = X_out.shape[1]
