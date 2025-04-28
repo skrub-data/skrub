@@ -441,7 +441,20 @@ def _compute_Xy(expr, environment):
     return X, y
 
 
-def cross_validate(pipeline, environment, **cv_params):
+def _rename_cv_param_pipeline_to_estimator(kwargs):
+    if "return_estimator" in kwargs:
+        raise TypeError(
+            "``cross_validate`` does not have a ``return_estimator`` parameter. Use"
+            " ``return_pipeline`` instead."
+        )
+    renamed = dict(kwargs)
+    if "return_pipeline" not in renamed:
+        return kwargs
+    renamed["return_estimator"] = renamed.pop("return_pipeline")
+    return renamed
+
+
+def cross_validate(pipeline, environment, **kwargs):
     """Cross-validate a pipeline built from an expression.
 
     This runs cross-validation from a pipeline that was built from a skrub
@@ -459,9 +472,10 @@ def cross_validate(pipeline, environment, **cv_params):
     environment : dict
         Bindings for variables contained in the expression.
 
-    cv_params : dict
+    kwargs : dict
         All other named arguments are forwarded to
-        ``sklearn.model_selection.cross_validate``.
+        ``sklearn.model_selection.cross_validate``, except that scikit-learn's
+        ``return_estimator`` parameter is named ``return_pipeline`` here.
 
     Returns
     -------
@@ -484,12 +498,13 @@ def cross_validate(pipeline, environment, **cv_params):
     >>> skrub.cross_validate(search, pred.skb.get_data())['test_score'] # doctest: +SKIP
     array([0.75, 0.95, 0.85, 0.85, 0.85])
     """
+    kwargs = _rename_cv_param_pipeline_to_estimator(kwargs)
     X, y = _compute_Xy(pipeline.expr, environment)
     result = model_selection.cross_validate(
         _to_Xy_pipeline(pipeline, environment),
         X,
         y,
-        **cv_params,
+        **kwargs,
     )
     if (fitted_pipelines := result.pop("estimator", None)) is None:
         return result

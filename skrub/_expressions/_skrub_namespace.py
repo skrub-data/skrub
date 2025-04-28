@@ -1381,7 +1381,9 @@ class SkrubNamespace:
 
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.model_selection.cross_validate``.
+            ``sklearn.model_selection.cross_validate``, except that
+            scikit-learn's ``return_estimator`` parameter is named
+            ``return_pipeline`` here.
 
         Returns
         -------
