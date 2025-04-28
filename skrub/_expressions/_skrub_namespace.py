@@ -1400,13 +1400,20 @@ class SkrubNamespace:
         >>> X, y = skrub.X(X_a), skrub.y(y_a)
         >>> pred = X.skb.apply(LogisticRegression(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.84, 0.78])
+        0    0.84
+        1    0.78
+        Name: test_score, dtype: float64
 
         Passing some data:
 
         >>> data = {'X': X_a, 'y': y_a}
         >>> pred.skb.cross_validate(data)['test_score']
-        array([0.75, 0.9 , 0.85, 0.65, 0.9 ])
+        0    0.75
+        1    0.90
+        2    0.85
+        3    0.65
+        4    0.90
+        Name: test_score, dtype: float64
         """
 
         if environment is None:
@@ -1471,7 +1478,9 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.66666667, 0.66666667])
+        0    0.666667
+        1    0.666667
+        Name: test_score, dtype: float64
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
@@ -1541,7 +1550,9 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.66666667, 0.66666667])
+        0    0.666667
+        1    0.666667
+        Name: test_score, dtype: float64
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the

@@ -1,4 +1,5 @@
 import numbers
+import warnings
 
 from sklearn.utils.validation import check_is_fitted
 
@@ -21,10 +22,22 @@ class DropIfTooManyNulls(SingleColumnTransformer):
     ----------
     threshold : float in range [0, 1], or None
         Threshold of null values past which the column is dropped.
+
+    .. deprecated:: 0.5.3
+        The functionality provided by this object is now implemented in
+        ``DropUninformative``.
+
     """
 
     def __init__(self, threshold=1.0):
         self.threshold = threshold
+        warnings.warn(
+            (
+                "DropIfTooManyNulls will be deprecated in the next release. "
+                "Equivalent functionality is available in DropUninformative."
+            ),
+            category=DeprecationWarning,
+        )
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
