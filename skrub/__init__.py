@@ -24,7 +24,6 @@ from ._expressions import (
     deferred,
     eval_mode,
     optional,
-    train_test_split,
     var,
     y,
 )
@@ -85,7 +84,6 @@ __all__ = [
     "DropCols",
     "Drop",
     "cross_validate",
-    "train_test_split",
     "choose_from",
     "optional",
     "choose_float",
