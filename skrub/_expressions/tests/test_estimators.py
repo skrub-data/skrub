@@ -219,7 +219,7 @@ def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     results = skrub.cross_validate(search, data, n_jobs=n_jobs, return_pipeline=True)
     assert not is_fitted(search)
     score = results["test_score"]
-    pipelines = results["pipelines"]
+    pipelines = results["pipeline"]
     assert len(pipelines) == 5
     for p in pipelines:
         assert is_fitted(p)
