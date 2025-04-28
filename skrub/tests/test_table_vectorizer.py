@@ -199,7 +199,7 @@ def test_get_preprocessors():
         cols=X.columns,
         drop_null_fraction=1.0,
         drop_if_constant=True,
-        drop_if_id=False,
+        drop_if_unique=False,
         n_jobs=1,
         add_tofloat32=True,
     )
@@ -209,7 +209,7 @@ def test_get_preprocessors():
         cols=X.columns,
         drop_null_fraction=1.0,
         drop_if_constant=True,
-        drop_if_id=False,
+        drop_if_unique=False,
         n_jobs=1,
         add_tofloat32=False,
     )

@@ -117,7 +117,7 @@ def _get_preprocessors(
     *,
     cols,
     drop_null_fraction,
-    drop_if_id,
+    drop_if_unique,
     drop_if_constant,
     n_jobs,
     add_tofloat32=True,
@@ -128,7 +128,7 @@ def _get_preprocessors(
         DropUninformative(
             drop_null_fraction=drop_null_fraction,
             drop_if_constant=drop_if_constant,
-            drop_if_id=drop_if_id,
+            drop_if_unique=drop_if_unique,
         ),
         ToDatetime(),
     ]
@@ -174,7 +174,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
-    drop_if_id : bool, default=False
+    drop_if_unique : bool, default=False
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
@@ -282,11 +282,15 @@ class Cleaner(TransformerMixin, BaseEstimator):
     """
 
     def __init__(
-        self, drop_null_fraction=1.0, drop_if_constant=False, drop_if_id=False, n_jobs=1
+        self,
+        drop_null_fraction=1.0,
+        drop_if_constant=False,
+        drop_if_unique=False,
+        n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
-        self.drop_if_id = drop_if_id
+        self.drop_if_unique = drop_if_unique
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -311,7 +315,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             cols=s.all(),
             drop_null_fraction=self.drop_null_fraction,
             drop_if_constant=self.drop_if_constant,
-            drop_if_id=self.drop_if_id,
+            drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             add_tofloat32=False,
         )
@@ -466,7 +470,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         If set to true, drop columns that contain a single unique value. Note that
         missing values are considered as one additional distinct value.
 
-    drop_if_id : bool, default=False
+    drop_if_unique : bool, default=False
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
@@ -699,7 +703,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         specific_transformers=(),
         drop_null_fraction=1.0,
         drop_if_constant=False,
-        drop_if_id=False,
+        drop_if_unique=False,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -715,7 +719,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.n_jobs = n_jobs
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
-        self.drop_if_id = drop_if_id
+        self.drop_if_unique = drop_if_unique
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -831,7 +835,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         transformer_list = [CleanNullStrings()]
         transformer_list.append(
             DropUninformative(
-                self.drop_if_constant, self.drop_if_id, self.drop_null_fraction
+                self.drop_if_constant, self.drop_if_unique, self.drop_null_fraction
             )
         )
 

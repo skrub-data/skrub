@@ -94,8 +94,8 @@ def test_error_checking(drop_null_table):
     dn = DropUninformative(drop_if_constant="wrong")
     with pytest.raises(TypeError, match="drop_if_constant"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
-    dn = DropUninformative(drop_if_id="wrong")
-    with pytest.raises(TypeError, match="drop_if_id"):
+    dn = DropUninformative(drop_if_unique="wrong")
+    with pytest.raises(TypeError, match="drop_if_unique"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
     dn = DropUninformative(drop_null_fraction="wrong")
     with pytest.raises(ValueError, match="Threshold"):
@@ -192,13 +192,13 @@ def drop_id_column(df_module):
     )
 
 
-@pytest.mark.parametrize("drop_if_id", [True, False])
-def test_drop_id(df_module, drop_id_column, drop_if_id):
-    enc = DropUninformative(drop_if_id=drop_if_id)
+@pytest.mark.parametrize("drop_if_unique", [True, False])
+def test_drop_id(df_module, drop_id_column, drop_if_unique):
+    enc = DropUninformative(drop_if_unique=drop_if_unique)
     for column in drop_id_column.columns:
         res = enc.fit_transform(drop_id_column[column])
         # Check that "str" is the only column that gets dropped
-        if column == "str" and drop_if_id:
+        if column == "str" and drop_if_unique:
             assert res == []
         else:
             df_module.assert_column_equal(res, df_module.make_column(column, res))

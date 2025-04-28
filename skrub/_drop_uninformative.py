@@ -19,7 +19,9 @@ class DropUninformative(SingleColumnTransformer):
     - The column includes only one unique value (the column is constant). Missing
       values are considered a separate value.
     - The number of unique values in the column is equal to the length of the
-      column.
+      column, i.e., all values are unique. This is only considered for non-numeric
+      columns. Missing values are considered a separate value. Note that this
+      may lead to dropping columns that contain free-flowing text.
 
     Parameters
     ----------
@@ -27,9 +29,10 @@ class DropUninformative(SingleColumnTransformer):
         If True, drop the column if it contains only one unique value. Missing values
         count as one additional distinct value.
 
-    drop_if_id : bool, default=False
+    drop_if_unique : bool, default=False
         If True, drop the column if all values are distinct. Missing values count as
-        one additional distinct value. Numeric columns are never dropped.
+        one additional distinct value. Numeric columns are never dropped. This may
+        lead to dropping columns that contain free-flowing text.
 
     drop_null_fraction : float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
@@ -57,11 +60,11 @@ class DropUninformative(SingleColumnTransformer):
     >>> du.fit_transform(df["col2"])
     []
 
-    Finally, it is possible to set ``drop_if_id`` to ``True`` in order to drop
+    Finally, it is possible to set ``drop_if_unique`` to ``True`` in order to drop
     string columns that contain all distinct values:
 
     >>> df = pd.DataFrame({"col1": ["A", "B", "C"]})
-    >>> du = DropUninformative(drop_if_id=True)
+    >>> du = DropUninformative(drop_if_unique=True)
     >>> du.fit_transform(df["col1"])
     []
     """
@@ -69,11 +72,11 @@ class DropUninformative(SingleColumnTransformer):
     def __init__(
         self,
         drop_if_constant=False,
-        drop_if_id=False,
+        drop_if_unique=False,
         drop_null_fraction=1.0,
     ):
         self.drop_if_constant = drop_if_constant
-        self.drop_if_id = drop_if_id
+        self.drop_if_unique = drop_if_unique
         self.drop_null_fraction = drop_null_fraction
 
     def _check_params(self):
@@ -81,8 +84,10 @@ class DropUninformative(SingleColumnTransformer):
             raise TypeError(
                 f"drop_if_constant must be boolean, found {self.drop_if_constant}."
             )
-        if not isinstance(self.drop_if_id, bool):
-            raise TypeError(f"drop_if_id must be boolean, found {self.drop_if_id}.")
+        if not isinstance(self.drop_if_unique, bool):
+            raise TypeError(
+                f"drop_if_unique must be boolean, found {self.drop_if_unique}."
+            )
 
         if self.drop_null_fraction is not None:
             if (
@@ -108,8 +113,8 @@ class DropUninformative(SingleColumnTransformer):
                 return True
         return False
 
-    def _drop_if_id(self, column):
-        if self.drop_if_id and not sbd.is_numeric(column):
+    def _drop_if_unique(self, column):
+        if self.drop_if_unique and not sbd.is_numeric(column):
             n_unique = sbd.n_unique(column)
             if self._null_count > 0:
                 return False
@@ -145,7 +150,7 @@ class DropUninformative(SingleColumnTransformer):
             for check in [
                 self._drop_if_too_many_nulls,
                 self._drop_if_constant,
-                self._drop_if_id,
+                self._drop_if_unique,
             ]
         )
 
