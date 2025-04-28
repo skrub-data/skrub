@@ -50,7 +50,7 @@ class DropUninformative(SingleColumnTransformer):
     It is also possible to drop constant columns, or specify a lower null fraction
     threshold:
 
-    >>> df = pd.DataFrame({"col1": [1,2,None], "col2": ["const", "const", "const"]})
+    >>> df = pd.DataFrame({"col1": [1, 2, None], "col2": ["const", "const", "const"]})
     >>> du = DropUninformative(drop_if_constant=True, drop_null_fraction=0.1)
     >>> du.fit_transform(df["col1"])
     []
