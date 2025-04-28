@@ -741,7 +741,7 @@ def var(name, value=NULL):
 
     And also to keys to the inputs to the pipeline:
 
-    >>> estimator = c.skb.get_estimator()
+    >>> estimator = c.skb.get_pipeline()
     >>> estimator.fit_transform({'a': 5, 'b': 4})
     9
 
@@ -768,7 +768,7 @@ def var(name, value=NULL):
     5
 
     But we can still override them. And inputs must be provided explicitly when
-    using the estimator returned by ``.skb.get_estimator()``.
+    using the estimator returned by ``.skb.get_pipeline()``.
 
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
@@ -1506,7 +1506,7 @@ def eval_mode():
     >>> mode = skrub.eval_mode()
     >>> mode.skb.eval()
     'preview'
-    >>> estimator = mode.skb.get_estimator()
+    >>> estimator = mode.skb.get_pipeline()
     >>> estimator.fit_transform({})
     'fit_transform'
     >>> estimator.transform({})

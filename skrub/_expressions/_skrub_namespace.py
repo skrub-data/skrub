@@ -265,7 +265,7 @@ class SkrubNamespace:
         >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
-        >>> est = e.skb.get_estimator().fit({"X": X})
+        >>> est = e.skb.get_pipeline().fit({"X": X})
         >>> est.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
@@ -773,7 +773,7 @@ class SkrubNamespace:
         2   3     cup         5  2020-04-04
         3   4   spoon         1  2020-04-05
         >>> n_products = skrub.X()['product'].nunique()
-        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer = n_products.skb.get_pipeline()
         >>> transformer.fit_transform({'X': X_df})
         3
 
@@ -787,7 +787,7 @@ class SkrubNamespace:
         remembered during ``fit`` and reused during ``transform``:
 
         >>> n_products = skrub.X()['product'].nunique().skb.freeze_after_fit()
-        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer = n_products.skb.get_pipeline()
         >>> transformer.fit_transform({'X': X_df})
         3
         >>> transformer.transform({'X': X_df.iloc[:2]})
@@ -1061,7 +1061,7 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def get_estimator(self, fitted=False):
+    def get_pipeline(self, fitted=False):
         """Get a scikit-learn-like estimator for this expression.
 
         Returns a :class:`ExprEstimator`.
@@ -1113,7 +1113,7 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
-        >>> estimator = pred.skb.get_estimator(fitted=True)
+        >>> estimator = pred.skb.get_pipeline(fitted=True)
         >>> new_orders_df = skrub.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
@@ -1189,7 +1189,7 @@ class SkrubNamespace:
         >>> split = delayed.skb.train_test_split(random_state=0)
         >>> split.keys()
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
-        >>> estimator = delayed.skb.get_estimator()
+        >>> estimator = delayed.skb.get_pipeline()
         >>> estimator.fit(split["train"])
         ExprEstimator(expr=<Apply DummyClassifier>)
         >>> estimator.score(split["test"])
@@ -1410,7 +1410,7 @@ class SkrubNamespace:
         if environment is None:
             environment = self.get_data()
 
-        return cross_validate(self.get_estimator(), environment, **kwargs)
+        return cross_validate(self.get_pipeline(), environment, **kwargs)
 
     @check_expr
     def mark_as_X(self):

@@ -106,7 +106,7 @@ Finally, we can get an estimator that can be fitted and applied to data.
 
 .. code:: python
 
-    estimator = c.skb.get_estimator()
+    estimator = c.skb.get_pipeline()
     estimator.fit_transform({"a": 10, "b": 7})
     # 17
 
@@ -248,7 +248,7 @@ then apply it to new data:
 
 .. code:: python
 
-    estimator = vectorized_orders.skb.get_estimator(fitted=True)
+    estimator = vectorized_orders.skb.get_pipeline(fitted=True)
     new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
     estimator.transform({"orders": new_orders})
     #          item_0    item_1    item_2  price  qty

@@ -129,7 +129,7 @@ def n_jobs(request):
 
 def test_fit_predict():
     expression, data = get_expression_and_data("simple")
-    estimator = expression.skb.get_estimator()
+    estimator = expression.skb.get_pipeline()
     X_train, X_test, y_train, y_test = train_test_split(
         data["X"], data["y"], shuffle=False
     )
@@ -252,7 +252,7 @@ def test_unsupervised():
     expr_scores = e.skb.cross_validate()["test_score"]
     sklearn_scores = cross_validate(k_means, X, y)["test_score"]
     assert_allclose(sklearn_scores, expr_scores)
-    expr_k_means = e.skb.get_estimator()
+    expr_k_means = e.skb.get_pipeline()
     expr_k_means.fit({"X": X})
     k_means.fit(X)
     assert (k_means.predict(X) == expr_k_means.predict({"X": X})).all()
@@ -488,7 +488,7 @@ def test_caching():
     ],
 )
 def test_pickling(e):
-    estimator = pickle.loads(pickle.dumps(e.skb.get_estimator()))
+    estimator = pickle.loads(pickle.dumps(e.skb.get_pipeline()))
     assert estimator.fit_transform({"a": 10}) == 20
 
 
@@ -531,7 +531,7 @@ def test_plot_results():
 @pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     expr, data = get_expression_and_data("simple")
-    est = expr.skb.get_estimator()
+    est = expr.skb.get_pipeline()
     with pytest.raises(NotFittedError):
         est.report(mode="score", environment=data)
     fit_report = est.report(
@@ -575,7 +575,7 @@ def test_get_params():
         ),
         y=skrub.y(),
     )
-    estimator = e.skb.get_estimator()
+    estimator = e.skb.get_pipeline()
     params = {
         "expr",
         "expr__0",
@@ -590,7 +590,7 @@ def test_get_params():
 def test_set_expr_in_params():
     e1 = skrub.var("a") + skrub.var("b")
     e2 = skrub.var("a") - skrub.var("b")
-    estimator = e1.skb.get_estimator()
+    estimator = e1.skb.get_pipeline()
     data = {"a": 10, "b": 20}
     assert estimator.fit_transform(data) == 30
     estimator.set_params(expr=e2)
@@ -605,7 +605,7 @@ def test_find_fitted_estimator():
         .skb.set_name("scaler")
         .skb.apply(LogisticRegression(), y=skrub.y())
         .skb.set_name("predictor")
-        .skb.get_estimator()
+        .skb.get_pipeline()
     )
     with pytest.raises(KeyError, match="'xyz'"):
         estimator.find_fitted_estimator("xyz")
@@ -625,7 +625,7 @@ def test_sub_estimator():
         .skb.apply(MinMaxScaler())
         .skb.set_name("scaling")
         .skb.apply(LogisticRegression(), y=skrub.y())
-        .skb.get_estimator()
+        .skb.get_pipeline()
     )
     X = np.array([10.0, 5.0, 0.0])[:, None]
     y = np.array([1, 0, 1])
@@ -677,7 +677,7 @@ def test_estimator_type(estimator_type, expected, bury_apply):
             .as_expr()
         )
     for est in [
-        e.skb.get_estimator(),
+        e.skb.get_pipeline(),
         e.skb.get_grid_search(),
         e.skb.get_randomized_search(n_iter=2),
     ]:
@@ -693,7 +693,7 @@ def test_estimator_type(estimator_type, expected, bury_apply):
 def test_estimator_type_no_apply():
     e = skrub.X()
     for est in [
-        e.skb.get_estimator(),
+        e.skb.get_pipeline(),
         e.skb.get_grid_search(),
         e.skb.get_randomized_search(n_iter=2),
     ]:
@@ -721,7 +721,7 @@ def test_classes(bury_apply):
         )
     logreg = LogisticRegression().fit(data["X"], data["y"])
     for est in [
-        expression.skb.get_estimator(),
+        expression.skb.get_pipeline(),
         expression.skb.get_grid_search(),
         expression.skb.get_randomized_search(n_iter=2),
     ]:
@@ -734,7 +734,7 @@ def test_classes(bury_apply):
 def test_classes_no_apply():
     expression = skrub.X() + skrub.choose_from([0.0, 1.0], name="_")
     for est in [
-        expression.skb.get_estimator(),
+        expression.skb.get_pipeline(),
         expression.skb.get_grid_search(scoring=lambda e, X: 0),
         expression.skb.get_randomized_search(n_iter=2, scoring=lambda e, X: 0),
     ]:
@@ -754,7 +754,7 @@ def test_support_modes(bury_apply):
     e = skrub.X().skb.apply(classif, y=skrub.y())
     if bury_apply:
         e = skrub.as_expr({"a": e})["a"]
-    estimator = e.skb.get_estimator()
+    estimator = e.skb.get_pipeline()
 
     # as in grid-search, before fitting the estimator's capabilities are read
     # from the default estimator and after fitting from the fitted estimator
@@ -767,7 +767,7 @@ def test_support_modes(bury_apply):
 
 
 def test_support_modes_no_apply():
-    estimator = skrub.X().skb.get_estimator()
+    estimator = skrub.X().skb.get_pipeline()
     for a in ["predict", "predict_proba", "score", "decision_function"]:
         assert not hasattr(estimator, a)
     for a in ["fit", "transform", "fit_transform"]:

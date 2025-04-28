@@ -67,7 +67,7 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
     """Estimator that evaluates a skrub expression.
 
     This class is not meant to be instantiated manually, ``ExprEstimator``
-    objects are created by calling :meth:`Expr.skb.get_estimator()` on an
+    objects are created by calling :meth:`Expr.skb.get_pipeline()` on an
     expression.
     """
 
@@ -175,7 +175,7 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
         ...     .skb.apply(DummyClassifier(), y=y)
         ...     .skb.set_name("classifier")
         ... )
-        >>> estimator = pred.skb.get_estimator()
+        >>> estimator = pred.skb.get_pipeline()
         >>> estimator.fit({'X': orders.X, 'y': orders.y})
         ExprEstimator(expr=<classifier | Apply DummyClassifier>)
 
@@ -290,7 +290,7 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
         ...     .skb.set_name("vectorizer")
         ...     .skb.apply(DummyClassifier(), y=y)
         ... )
-        >>> estimator = pred.skb.get_estimator()
+        >>> estimator = pred.skb.get_pipeline()
         >>> estimator.fit({"X": orders.X, "y": orders.y})
         ExprEstimator(expr=<Apply DummyClassifier>)
         >>> estimator.predict({"X": orders.X})
@@ -445,7 +445,7 @@ def cross_validate(expr_estimator, environment, **cv_params):
     """Cross-validate an estimator built from an expression.
 
     This runs cross-validation from an estimator that was built from a skrub
-    expression with ``.skb.get_estimator()``, ``.skb.get_grid_search()`` or
+    expression with ``.skb.get_pipeline()``, ``.skb.get_grid_search()`` or
     ``.skb.get_randomized_search()``.
 
     It is useful to run nested cross-validation of a grid search or randomized

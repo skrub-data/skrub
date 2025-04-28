@@ -118,7 +118,7 @@ def test_pickling_preview_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        (skrub.X([]) + [cls()]).skb.get_estimator()
+        (skrub.X([]) + [cls()]).skb.get_pipeline()
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
@@ -130,7 +130,7 @@ def test_pickling_estimator_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        e.skb.get_estimator()
+        e.skb.get_pipeline()
 
 
 #
@@ -269,11 +269,11 @@ def test_X_y_instead_of_environment():
     with pytest.raises(
         TypeError, match="`environment` should be a dictionary of input values"
     ):
-        skrub.X().skb.get_estimator().fit_transform(0)
+        skrub.X().skb.get_pipeline().fit_transform(0)
     with pytest.raises(TypeError):
         skrub.X().skb.eval(X=0)
     with pytest.raises(TypeError):
-        skrub.X().skb.get_estimator().fit_transform(X=0)
+        skrub.X().skb.get_pipeline().fit_transform(X=0)
 
 
 def test_expr_or_choice_in_environment():

@@ -146,7 +146,7 @@ prediction
 # we didn't return a fitted object. Now that we have completed this graph, we can turn
 # it into an estimator and fit it, before serializing it.
 
-estimator = prediction.skb.get_estimator()
+estimator = prediction.skb.get_pipeline()
 estimator.fit(environment={"loans": loans_df, "currency_rate": 2.0})
 print(estimator.predict_proba({"loans": loans_df.head(1), "currency_rate": 2.0}))
 
