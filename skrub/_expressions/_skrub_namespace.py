@@ -1425,7 +1425,9 @@ class SkrubNamespace:
         >>> skrub.cross_validate(
         ...     pred.skb.get_estimator(), pred.skb.get_data(), cv=2
         ... )['test_score']
-        array([0.66666667, 0.66666667])
+        0    0.666667
+        1    0.666667
+        Name: test_score, dtype: float64
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
@@ -1497,7 +1499,9 @@ class SkrubNamespace:
         >>> skrub.cross_validate(
         ...     pred.skb.get_estimator(), pred.skb.get_data(), cv=2
         ... )['test_score']
-        array([0.66666667, 0.66666667])
+        0    0.666667
+        1    0.666667
+        Name: test_score, dtype: float64
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the

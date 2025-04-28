@@ -9,6 +9,7 @@ from ._agg_joiner import AggJoiner, AggTarget
 from ._column_associations import column_associations
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
+from ._drop_uninformative import DropUninformative
 from ._expressions import (
     Expr,
     ExprEstimator,
@@ -71,6 +72,7 @@ __all__ = [
     "SimilarityEncoder",
     "TableVectorizer",
     "Cleaner",
+    "DropUninformative",
     "deduplicate",
     "compute_ngram_distance",
     "ToCategorical",
@@ -81,7 +83,6 @@ __all__ = [
     "SelectCols",
     "DropCols",
     "Drop",
-    "Recipe",
     "cross_validate",
     "choose_from",
     "optional",
