@@ -150,7 +150,7 @@ def test_cross_validate(expression, data, n_jobs):
     estimators = results["estimator"]
     assert len(estimators) == 5
     for e in estimators:
-        assert e.__class__.__name__ == "ExprEstimator"
+        assert e.__class__.__name__ == "SkrubPipeline"
         assert is_fitted(e)
     score = results["test_score"]
     assert len(score) == 5
@@ -619,8 +619,8 @@ def test_find_fitted_estimator():
     assert isinstance(estimator.find_fitted_estimator("predictor"), LogisticRegression)
 
 
-def test_sub_estimator():
-    estimator = (
+def test_sub_pipeline():
+    pipeline = (
         skrub.X()
         .skb.apply(MinMaxScaler())
         .skb.set_name("scaling")
@@ -629,17 +629,17 @@ def test_sub_estimator():
     )
     X = np.array([10.0, 5.0, 0.0])[:, None]
     y = np.array([1, 0, 1])
-    estimator.fit({"X": X, "y": y})
-    sub_estimator = estimator.sub_estimator("scaling")
+    pipeline.fit({"X": X, "y": y})
+    sub_pipeline = pipeline.sub_pipeline("scaling")
     assert np.allclose(
-        sub_estimator.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
+        sub_pipeline.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
     )
     X = np.array([100.0, 50.0, -10.0])[:, None]
     assert np.allclose(
-        sub_estimator.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
+        sub_pipeline.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
     )
     with pytest.raises(KeyError, match="'xyz'"):
-        estimator.sub_estimator("xyz")
+        pipeline.sub_pipeline("xyz")
 
 
 #
@@ -681,7 +681,7 @@ def test_estimator_type(estimator_type, expected, bury_apply):
         e.skb.get_grid_search(),
         e.skb.get_randomized_search(n_iter=2),
     ]:
-        Xy_est = est.__skrub_to_Xy_estimator__({})
+        Xy_est = est.__skrub_to_Xy_pipeline__({})
         assert Xy_est._estimator_type == expected
         if hasattr(estimator_type, "__sklearn_tags__"):
             # scikit-learn >= 1.6
@@ -697,7 +697,7 @@ def test_estimator_type_no_apply():
         e.skb.get_grid_search(),
         e.skb.get_randomized_search(n_iter=2),
     ]:
-        Xy_est = est.__skrub_to_Xy_estimator__({})
+        Xy_est = est.__skrub_to_Xy_pipeline__({})
         assert Xy_est._estimator_type == "transformer"
         if hasattr(BaseEstimator, "__sklearn_tags__"):
             # scikit-learn >= 1.6
@@ -725,7 +725,7 @@ def test_classes(bury_apply):
         expression.skb.get_grid_search(),
         expression.skb.get_randomized_search(n_iter=2),
     ]:
-        Xy_est = est.__skrub_to_Xy_estimator__({})
+        Xy_est = est.__skrub_to_Xy_pipeline__({})
         assert not hasattr(Xy_est, "classes_")
         Xy_est.fit(data["X"], data["y"])
         assert (Xy_est.classes_ == logreg.classes_).all()
@@ -738,7 +738,7 @@ def test_classes_no_apply():
         expression.skb.get_grid_search(scoring=lambda e, X: 0),
         expression.skb.get_randomized_search(n_iter=2, scoring=lambda e, X: 0),
     ]:
-        Xy_est = est.__skrub_to_Xy_estimator__({})
+        Xy_est = est.__skrub_to_Xy_pipeline__({})
         assert not hasattr(Xy_est, "classes_")
         Xy_est.fit(np.ones((10, 2)))
         assert not hasattr(Xy_est, "classes_")

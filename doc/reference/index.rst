@@ -174,7 +174,7 @@ For more control or in order to build pipelines for more datasets, use the skrub
    :template: base.rst
    :nosignatures:
 
-   ExprEstimator
+   SkrubPipeline
    ParamSearch
 
 .. _selectors_ref:

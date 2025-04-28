@@ -5,7 +5,7 @@ from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
-from ._estimator import ExprEstimator, ParamSearch, cross_validate, train_test_split
+from ._estimator import ParamSearch, SkrubPipeline, cross_validate, train_test_split
 from ._evaluation import (
     choices,
     clone,
@@ -1064,7 +1064,7 @@ class SkrubNamespace:
     def get_pipeline(self, fitted=False):
         """Get a scikit-learn-like estimator for this expression.
 
-        Returns a :class:`ExprEstimator`.
+        Returns a :class:`SkrubPipeline`.
 
         Please see the examples gallery for full information about expressions
         and the estimators they generate.
@@ -1126,7 +1126,7 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
         """
-        estimator = ExprEstimator(self.clone())
+        estimator = SkrubPipeline(self.clone())
         _check_can_be_pickled(estimator)
         if not fitted:
             return estimator
@@ -1191,7 +1191,7 @@ class SkrubNamespace:
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
         >>> estimator = delayed.skb.get_pipeline()
         >>> estimator.fit(split["train"])
-        ExprEstimator(expr=<Apply DummyClassifier>)
+        SkrubPipeline(expr=<Apply DummyClassifier>)
         >>> estimator.score(split["test"])
         0.0
         >>> predictions = estimator.predict(split["test"])
