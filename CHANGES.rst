@@ -32,6 +32,13 @@ New features
   :pr:`895` by :user:`Jérôme Dockès <jeromedockes>` and added to the public API
   in :pr:`1341` by :user:`Jérôme Dockès <jeromedockes>`.
 
+- The :class:`DropUninformative` transformer is now available. This transformer
+  employs different heuristics to detect columns that are not likely to bring
+  useful information for training a model.
+  The current implementation includes detection of columns that contain only a
+  single value (constant columns), only missing values, or all unique values (such
+  as IDs). :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Changes
 -------
 
@@ -47,9 +54,12 @@ Changes
   normalize the vector outputs by performing element-wise division on all entries.
   :pr:`1274` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- The :class:`DropIfTooManyNulls` transformer has been replaced by the
+  :class:`DropUninformative` transformer and will be removed in a future release.
+  :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`
+
 - The :func:`concat_horizontal` function was replaced with :func:`concat`. Horizontal or vertical concatenation
   is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`.
-
 
 Bugfixes
 --------
