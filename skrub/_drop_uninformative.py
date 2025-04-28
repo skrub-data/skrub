@@ -104,7 +104,7 @@ class DropUninformative(SingleColumnTransformer):
 
     def _drop_if_constant(self, column):
         if self.drop_if_constant:
-            if (sbd.n_unique(column) == 1) and (not self._null_count > 0):
+            if (sbd.n_unique(column) == 1) and (self._null_count == 0):
                 return True
         return False
 
