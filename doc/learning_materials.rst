@@ -1,5 +1,7 @@
 Learning Materials
-=======
+==================
+
+You are being redirected to the new learning materials page.
 
 .. raw:: html
 
