@@ -441,7 +441,7 @@ def _compute_Xy(expr, environment):
     return X, y
 
 
-def cross_validate(expr_pipeline, environment, **cv_params):
+def cross_validate(pipeline, environment, **cv_params):
     """Cross-validate a pipeline built from an expression.
 
     This runs cross-validation from a pipeline that was built from a skrub
@@ -453,7 +453,7 @@ def cross_validate(expr_pipeline, environment, **cv_params):
 
     Parameters
     ----------
-    expr_pipeline : skrub pipeline
+    pipeline : skrub pipeline
         A pipeline generated from a skrub expression.
 
     environment : dict
@@ -484,17 +484,16 @@ def cross_validate(expr_pipeline, environment, **cv_params):
     >>> skrub.cross_validate(search, pred.skb.get_data())['test_score'] # doctest: +SKIP
     array([0.75, 0.95, 0.85, 0.85, 0.85])
     """
-    Xy_pipeline = _to_Xy_pipeline(expr_pipeline, environment)
-    X, y = _compute_Xy(expr_pipeline.expr, environment)
+    X, y = _compute_Xy(pipeline.expr, environment)
     result = model_selection.cross_validate(
-        Xy_pipeline,
+        _to_Xy_pipeline(pipeline, environment),
         X,
         y,
         **cv_params,
     )
-    if (fitted_pipelines := result.get("estimator", None)) is None:
+    if (fitted_pipelines := result.pop("estimator", None)) is None:
         return result
-    result["estimator"] = [_to_env_pipeline(p) for p in fitted_pipelines]
+    result["pipeline"] = [_to_env_pipeline(p) for p in fitted_pipelines]
     return result
 
 
@@ -615,9 +614,8 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         return new_grid
 
     def fit(self, environment):
-        pipeline = _XyPipeline(self.expr, _SharedDict(environment))
         search = clone(self.search)
-        search.estimator = pipeline
+        search.estimator = _XyPipeline(self.expr, _SharedDict(environment))
         param_grid = self._get_param_grid()
         if hasattr(search, "param_grid"):
             search.param_grid = param_grid
