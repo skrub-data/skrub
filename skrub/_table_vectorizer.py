@@ -20,6 +20,7 @@ from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
 from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
+from ._repr import _SkrubHTMLDocumentationLinkMixin
 from ._select_cols import Drop
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
@@ -377,7 +378,9 @@ class SimpleCleaner(Cleaner):
         )
 
 
-class TableVectorizer(TransformerMixin, BaseEstimator):
+class TableVectorizer(
+    _SkrubHTMLDocumentationLinkMixin, TransformerMixin, BaseEstimator
+):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     Applies a different transformation to each of several kinds of columns:
