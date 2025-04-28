@@ -1,8 +1,7 @@
 {% import "buttons.html" as buttons %}
 
 <article class="wrapper margin-t-s flow" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
-    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED"
-    {% if summary.plots_skipped %}data-plots-skipped{% endif %}>
+    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED" >
     <div class="flex flex-wrap">
         <div class="box">
             <pre id="selected-columns-display" data-manager="SelectedColumnsDisplay"></pre>

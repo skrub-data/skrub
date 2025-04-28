@@ -194,13 +194,15 @@ def test_repr():
     2
 
     >>> X = skrub.X()
-    >>> X.skb.concat_horizontal([X, X])
-    <ConcatHorizontal: 3 dataframes>
+    >>> X.skb.concat([X, X],axis=1)
+    <Concat: 3 dataframes>
+    >>> X.skb.concat([X, X],axis=0)
+    <Concat: 3 dataframes>
 
     When we do not know the length of the list of dataframes to concatenate
 
-    >>> X.skb.concat_horizontal(skrub.as_expr([X, X]))
-    <ConcatHorizontal>
+    >>> X.skb.concat(skrub.as_expr([X, X]),axis=0)
+    <Concat>
 
     if we end up applying a OnEachColumn, seeing the inner transformer is more
     informative.

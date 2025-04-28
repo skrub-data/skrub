@@ -9,13 +9,13 @@ may influence its prediction performance, such as hyperparameters (e.g. the
 regularization parameter ``alpha`` of a ``RidgeClassifier``, the
 ``learning_rate`` of a ``HistGradientBoostingClassifier``), which estimator to
 use (e.g. ``RidgeClassifier`` or ``HistGradientBoostingClassifier``), or which
-steps to include (e.g. should we join a table to bring additional information or
-not).
+steps to include (e.g. should we join a table to bring additional information
+or not).
 
 We want to tune those choices by trying several options and keeping those that
 give the best performance on a validation set.
 
-Skrub `expressions <10_expressions.html>`_ provide a convenient way to specify
+Skrub :ref:`expressions <skrub_pipeline>` provide a convenient way to specify
 the range of possible values, by inserting it directly in place of the actual
 value. For example we can write:
 
@@ -106,7 +106,7 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 X, y = skrub.X(texts), skrub.y(labels)
 
 encoder = skrub.MinHashEncoder(
-    n_components=skrub.choose_int(5, 50, log=True, name="N components")
+    n_components=skrub.choose_int(5, 15, name="N components")
 )
 classifier = HistGradientBoostingClassifier(
     learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="lr")
@@ -179,7 +179,7 @@ X.assign(
 # the number of components.
 
 # %%
-n_components = skrub.choose_int(5, 50, log=True, name="N components")
+n_components = skrub.choose_int(5, 15, name="N components")
 
 encoder = skrub.choose_from(
     {
