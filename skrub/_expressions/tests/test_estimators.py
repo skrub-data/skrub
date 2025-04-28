@@ -158,6 +158,12 @@ def test_cross_validate(expression, data, n_jobs):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
+def test_return_estimator():
+    expression, data = get_expression_and_data("simple")
+    with pytest.raises(TypeError, match=".*return_pipeline"):
+        expression.skb.cross_validate(data, return_estimator=True)
+
+
 def test_randomized_search(expression, data, n_jobs):
     search = expression.skb.get_randomized_search(
         n_iter=3, n_jobs=n_jobs, random_state=0
