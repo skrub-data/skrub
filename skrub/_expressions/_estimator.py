@@ -316,8 +316,9 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         >>> pipeline.sub_pipeline("vectorizer")
         SkrubPipeline(expr=<vectorizer | Apply TableVectorizer>)
 
-        This contains only the inner ``TableVectorizer`` that was fitted inside of the
-        ``"vectorizer"`` step:
+        The result of ``find_fitted_estimator`` only contains the inner
+        ``TableVectorizer`` that was fitted inside of the ``"vectorizer"``
+        step:
 
         >>> pipeline.find_fitted_estimator("vectorizer")
         OnSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
@@ -444,8 +445,10 @@ def _compute_Xy(expr, environment):
 def _rename_cv_param_pipeline_to_estimator(kwargs):
     if "return_estimator" in kwargs:
         raise TypeError(
-            "``cross_validate`` does not have a ``return_estimator`` parameter. Use"
-            " ``return_pipeline`` instead."
+            "`skrub.cross_validate` does not have a `return_estimator` parameter. The"
+            " equivalent of scikit-learn's `return_estimator` is called"
+            " `return_pipeline`. Use `cross_validate(return_pipeline=True)` instead of"
+            " `cross_validate(return_estimator=True)`."
         )
     renamed = dict(kwargs)
     if "return_pipeline" not in renamed:
