@@ -265,8 +265,8 @@ class SkrubNamespace:
         >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
-        >>> est = e.skb.get_pipeline().fit({"X": X})
-        >>> est.predict({"X": X})  # doctest: +SKIP
+        >>> pipeline = e.skb.get_pipeline().fit({"X": X})
+        >>> pipeline.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
@@ -1113,13 +1113,13 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
-        >>> estimator = pred.skb.get_pipeline(fitted=True)
+        >>> pipeline = pred.skb.get_pipeline(fitted=True)
         >>> new_orders_df = skrub.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
         4   5     cup         5  2020-04-11
         5   6    fork         2  2020-04-12
-        >>> estimator.predict({'orders': new_orders_df})
+        >>> pipeline.predict({'orders': new_orders_df})
         array([False, False])
 
         Note that the ``'orders'`` key in the dictionary passed to ``predict``
@@ -1189,10 +1189,10 @@ class SkrubNamespace:
         >>> split = delayed.skb.train_test_split(random_state=0)
         >>> split.keys()
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
-        >>> estimator = delayed.skb.get_pipeline()
-        >>> estimator.fit(split["train"])
+        >>> pipeline = delayed.skb.get_pipeline()
+        >>> pipeline.fit(split["train"])
         SkrubPipeline(expr=<Apply DummyClassifier>)
-        >>> estimator.score(split["test"])
+        >>> pipeline.score(split["test"])
         0.0
         >>> predictions = estimator.predict(split["test"])
         >>> accuracy_score(split["y_test"], predictions)
