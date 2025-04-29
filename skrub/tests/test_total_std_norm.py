@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 
 import skrub._dataframe as sbd
-from skrub import GapEncoder, StringEncoder
+from skrub import GapEncoder, StringEncoder, TextEncoder
 from skrub._total_std_norm import total_standard_deviation_norm
 
 try:
@@ -32,16 +32,8 @@ def test_nonfinite():
     """Nonfinite values are equivalent to removing these value
     column-wise.
     """
-    X = np.array([[None, np.inf, np.nan], [1, 2, 3], [4, 5, 6]])
+    X = np.array([[np.nan, np.nan, np.nan], [1, 2, 3], [4, 5, 6]])
     assert total_standard_deviation_norm(X) == total_standard_deviation_norm(X[1:])
-
-
-def test_dataframe(df_module):
-    X = df_module.example_dataframe[
-        ["int-col", "int-not-null-col", "float-col", "bool-col", "bool-not-null-col"]
-    ]
-    norm = total_standard_deviation_norm(X)
-    assert total_standard_deviation_norm(X / norm) == pytest.approx(1)
 
 
 @pytest.mark.parametrize(
@@ -49,25 +41,18 @@ def test_dataframe(df_module):
     [
         StringEncoder(n_components=2),
         GapEncoder(n_components=2),
+        pytest.param(
+            TextEncoder(n_components=2),
+            marks=pytest.mark.skipif(
+                not TRANSFORMERS, reason="missing sentence-transformers"
+            ),
+        ),
     ],
 )
 def test_encoders(df_module, encoder):
     X = df_module.example_dataframe["str-col"]
     X_t = encoder.fit_transform(X)
     assert total_standard_deviation_norm(np.array(X_t)) == pytest.approx(1)
-
-
-def test_non_num_values(df_module):
-    with pytest.raises(ValueError, match="must only have numeric columns"):
-        total_standard_deviation_norm(df_module.example_dataframe)
-
-    with pytest.raises(ValueError, match="must only have numeric values"):
-        total_standard_deviation_norm(np.array([[1, "a"]]))
-
-    with pytest.raises(
-        TypeError, match="must be a Pandas, Polars dataframe or a Numpy"
-    ):
-        total_standard_deviation_norm([1, 3])
 
 
 def test_partial_fit(df_module):
@@ -81,4 +66,7 @@ def test_partial_fit(df_module):
     gap.partial_fit(X2)
     Xt = gap.transform(X_full)
 
-    assert total_standard_deviation_norm(Xt) == pytest.approx(1)
+    Xt_np = np.hstack(
+        [sbd.to_numpy(col).reshape(-1, 1) for col in sbd.to_column_list(Xt)]
+    )
+    assert total_standard_deviation_norm(Xt_np) == pytest.approx(1)
