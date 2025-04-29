@@ -3,7 +3,7 @@ Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from copy import deepcopy
 
 import numpy as np
@@ -727,7 +727,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             getattr(
                 self,
                 "past_stats_",
-                defaultdict(lambda: {"n": 0, "mean": 0.0, "var": 0.0}),
+                defaultdict(Counter),
             ),
         )
 

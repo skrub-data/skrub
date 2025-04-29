@@ -3,7 +3,7 @@ import pytest
 from numpy.testing import assert_array_almost_equal
 
 import skrub._dataframe as sbd
-from skrub import GapEncoder, StringEncoder, TextEncoder
+from skrub import GapEncoder, StringEncoder
 from skrub._total_std_norm import total_standard_deviation_norm
 
 try:
@@ -41,12 +41,6 @@ def test_nonfinite():
     [
         StringEncoder(n_components=2),
         GapEncoder(n_components=2),
-        pytest.param(
-            TextEncoder(n_components=2),
-            marks=pytest.mark.skipif(
-                not TRANSFORMERS, reason="missing sentence-transformers"
-            ),
-        ),
     ],
 )
 def test_encoders(df_module, encoder):
