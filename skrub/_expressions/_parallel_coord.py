@@ -115,7 +115,7 @@ def _prepare_numeric_column(col, *, is_log_scale, is_int):
     if is_log_scale:
         vals = np.log(vals)
     min_val, max_val = np.nanmin(vals), np.nanmax(vals)
-    tickvals = np.linspace(min_val, max_val, 10)
+    tickvals = np.unique(np.linspace(min_val, max_val, 10))
     if pd.api.types.is_integer_dtype(col) or is_int:
         if is_log_scale:
             tickvals = np.exp(tickvals)
