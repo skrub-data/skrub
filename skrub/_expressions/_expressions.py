@@ -741,8 +741,8 @@ def var(name, value=NULL):
 
     And also to keys to the inputs to the pipeline:
 
-    >>> estimator = c.skb.get_pipeline()
-    >>> estimator.fit_transform({'a': 5, 'b': 4})
+    >>> pipeline = c.skb.get_pipeline()
+    >>> pipeline.fit_transform({'a': 5, 'b': 4})
     9
 
     When providing a value, we see what the pipeline produces for the values we
