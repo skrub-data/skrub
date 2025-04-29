@@ -1062,34 +1062,34 @@ class SkrubNamespace:
         )
 
     def get_pipeline(self, fitted=False):
-        """Get a scikit-learn-like estimator for this expression.
+        """Get a skrub pipeline for this expression.
 
         Returns a :class:`SkrubPipeline`.
 
         Please see the examples gallery for full information about expressions
-        and the estimators they generate.
+        and the pipelines they generate.
 
-        Provides an estimator with a ``fit()`` method so we can fit it to some
+        Provides a skrub pipeline with a ``fit()`` method so we can fit it to some
         training data and then apply it to unseen data by calling
         ``transform()`` or ``predict()``.
 
         An important difference is that those methods accept a dictionary of
         inputs rather than ``X`` and ``y`` arguments (see examples below).
 
-        We can pass ``fitted=True`` to get an estimator fitted to the data
+        We can pass ``fitted=True`` to get a pipeline fitted to the data
         provided as the values in ``skrub.var("name", value=...)`` and
         ``skrub.X(value)``.
 
         Parameters
         ----------
         fitted : bool (default=False)
-            If true, the returned estimator is fitted to the data provided when
+            If true, the returned pipeline is fitted to the data provided when
             initializing variables in the expression.
 
         Returns
         -------
-        estimator
-            An estimator with an interface similar to scikit-learn's, except
+        pipeline
+            A skrub pipeline with an interface similar to scikit-learn's, except
             that its methods accept a dictionary of named inputs rather than
             ``X`` and ``y`` arguments.
 
@@ -1126,11 +1126,11 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
         """
-        estimator = SkrubPipeline(self.clone())
-        _check_can_be_pickled(estimator)
+        pipeline = SkrubPipeline(self.clone())
+        _check_can_be_pickled(pipeline)
         if not fitted:
-            return estimator
-        return estimator.fit(self.get_data())
+            return pipeline
+        return pipeline.fit(self.get_data())
 
     def train_test_split(
         self,
@@ -1194,7 +1194,7 @@ class SkrubNamespace:
         SkrubPipeline(expr=<Apply DummyClassifier>)
         >>> pipeline.score(split["test"])
         0.0
-        >>> predictions = estimator.predict(split["test"])
+        >>> predictions = pipeline.predict(split["test"])
         >>> accuracy_score(split["y_test"], predictions)
         0.0
         """
@@ -1369,7 +1369,7 @@ class SkrubNamespace:
     def cross_validate(self, environment=None, **kwargs):
         """Cross-validate the expression.
 
-        This generates the estimator (with default hyperparameters) and runs
+        This generates the pipeline with default hyperparameters and runs
         scikit-learn cross-validation.
 
         Parameters
