@@ -563,7 +563,7 @@ def test_report(tmp_path):
 
 
 #
-# methods & attributes of the estimators
+# methods & attributes of the pipelines
 #
 
 

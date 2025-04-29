@@ -155,16 +155,16 @@ def test_predictor_as_transformer():
 def test_predictor_as_df_transformer():
     X = pd.DataFrame({"a": [1, 2, 3], "b": [10, 20, 30]})
     pred = skrub.X().skb.apply(DummyRegressor(), y=skrub.y())
-    estimator = pred.skb.get_pipeline()
+    pipeline = pred.skb.get_pipeline()
     expected = pd.DataFrame({"a": [2.0, 2.0, 2.0], "b": [20.0, 20.0, 20.0]})
-    assert_frame_equal(estimator.fit_transform({"X": X, "y": X}), expected)
-    assert_frame_equal(estimator.transform({"X": X, "y": X}), expected)
+    assert_frame_equal(pipeline.fit_transform({"X": X, "y": X}), expected)
+    assert_frame_equal(pipeline.transform({"X": X, "y": X}), expected)
 
 
 def test_get_pipeline():
-    e = (skrub.var("a", 0) + skrub.var("b", 1)).skb.get_pipeline()
-    assert e.fit_transform({"a": 10, "b": 2}) == 12
-    assert e.transform({"a": 100, "b": 30}) == 130
+    p = (skrub.var("a", 0) + skrub.var("b", 1)).skb.get_pipeline()
+    assert p.fit_transform({"a": 10, "b": 2}) == 12
+    assert p.transform({"a": 100, "b": 30}) == 130
 
 
 @pytest.mark.parametrize("how", ["deepcopy", "sklearn", "skb"])
@@ -271,9 +271,9 @@ def test_concat_horizontal_duplicate_cols():
     X_df = pd.DataFrame({"a": [0, 1, 2], "b": [3, 4, 5]})
     X = skrub.X()
     e = X.skb.concat([X], axis=1)
-    estimator = e.skb.get_pipeline()
-    out_1 = estimator.fit_transform({"X": X_df})
-    out_2 = estimator.transform({"X": X_df})
+    pipeline = e.skb.get_pipeline()
+    out_1 = pipeline.fit_transform({"X": X_df})
+    out_2 = pipeline.transform({"X": X_df})
     assert len(set(out_1.columns)) == len(out_1.columns) == 4
     assert list(out_1.columns) == list(out_2.columns)
 
@@ -287,10 +287,10 @@ def test_concat_vertical_duplicate_cols():
     e = X1.skb.concat([X2], axis=0)
     assert isinstance(e, skrub.Expr)
 
-    estimator = e.skb.get_pipeline()
+    pipeline = e.skb.get_pipeline()
     data_dict = {"X1": X_df1, "X2": X_df2}
-    out_1 = estimator.fit_transform(data_dict)
-    out_2 = estimator.transform(data_dict)
+    out_1 = pipeline.fit_transform(data_dict)
+    out_2 = pipeline.transform(data_dict)
 
     assert out_1.shape[1] == out_2.shape[1] == 2
     assert out_1.shape[0] == out_2.shape[0] == 4
