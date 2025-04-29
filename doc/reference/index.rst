@@ -147,7 +147,7 @@ For more control or in order to build pipelines for more datasets, use the skrub
    Expr.skb.freeze_after_fit
    Expr.skb.full_report
    Expr.skb.get_data
-   Expr.skb.get_estimator
+   Expr.skb.get_pipeline
    Expr.skb.get_grid_search
    Expr.skb.get_randomized_search
    Expr.skb.if_else
@@ -175,7 +175,7 @@ For more control or in order to build pipelines for more datasets, use the skrub
    :template: base.rst
    :nosignatures:
 
-   ExprEstimator
+   SkrubPipeline
    ParamSearch
 
 .. _selectors_ref:

@@ -5,7 +5,7 @@ from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
-from ._estimator import ExprEstimator, ParamSearch, cross_validate, train_test_split
+from ._estimator import ParamSearch, SkrubPipeline, cross_validate, train_test_split
 from ._evaluation import (
     choices,
     clone,
@@ -265,8 +265,8 @@ class SkrubNamespace:
         >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
-        >>> est = e.skb.get_estimator().fit({"X": X})
-        >>> est.predict({"X": X})  # doctest: +SKIP
+        >>> pipeline = e.skb.get_pipeline().fit({"X": X})
+        >>> pipeline.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
@@ -773,7 +773,7 @@ class SkrubNamespace:
         2   3     cup         5  2020-04-04
         3   4   spoon         1  2020-04-05
         >>> n_products = skrub.X()['product'].nunique()
-        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer = n_products.skb.get_pipeline()
         >>> transformer.fit_transform({'X': X_df})
         3
 
@@ -787,7 +787,7 @@ class SkrubNamespace:
         remembered during ``fit`` and reused during ``transform``:
 
         >>> n_products = skrub.X()['product'].nunique().skb.freeze_after_fit()
-        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer = n_products.skb.get_pipeline()
         >>> transformer.fit_transform({'X': X_df})
         3
         >>> transformer.transform({'X': X_df.iloc[:2]})
@@ -1061,35 +1061,36 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def get_estimator(self, fitted=False):
-        """Get a scikit-learn-like estimator for this expression.
+    def get_pipeline(self, fitted=False):
+        """Get a skrub pipeline for this expression.
 
-        Returns a :class:`ExprEstimator`.
+        Returns a :class:`SkrubPipeline`.
 
         Please see the examples gallery for full information about expressions
-        and the estimators they generate.
+        and the pipelines they generate.
 
-        Provides an estimator with a ``fit()`` method so we can fit it to some
+        Provides a skrub pipeline with a ``fit()`` method so we can fit it to some
         training data and then apply it to unseen data by calling
         ``transform()`` or ``predict()``.
 
-        An important difference is that those methods accept a dictionary of
-        inputs rather than ``X`` and ``y`` arguments (see examples below).
+        An important difference between skrub pipelines and scikit-learn
+        estimators is that ``fit()``, ``transform()`` etc. accept a dictionary
+        of inputs rather than ``X`` and ``y`` arguments (see examples below).
 
-        We can pass ``fitted=True`` to get an estimator fitted to the data
+        We can pass ``fitted=True`` to get a pipeline fitted to the data
         provided as the values in ``skrub.var("name", value=...)`` and
         ``skrub.X(value)``.
 
         Parameters
         ----------
         fitted : bool (default=False)
-            If true, the returned estimator is fitted to the data provided when
+            If true, the returned pipeline is fitted to the data provided when
             initializing variables in the expression.
 
         Returns
         -------
-        estimator
-            An estimator with an interface similar to scikit-learn's, except
+        pipeline
+            A skrub pipeline with an interface similar to scikit-learn's, except
             that its methods accept a dictionary of named inputs rather than
             ``X`` and ``y`` arguments.
 
@@ -1113,24 +1114,24 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
-        >>> estimator = pred.skb.get_estimator(fitted=True)
+        >>> pipeline = pred.skb.get_pipeline(fitted=True)
         >>> new_orders_df = skrub.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
         4   5     cup         5  2020-04-11
         5   6    fork         2  2020-04-12
-        >>> estimator.predict({'orders': new_orders_df})
+        >>> pipeline.predict({'orders': new_orders_df})
         array([False, False])
 
         Note that the ``'orders'`` key in the dictionary passed to ``predict``
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
         """
-        estimator = ExprEstimator(self.clone())
-        _check_can_be_pickled(estimator)
+        pipeline = SkrubPipeline(self.clone())
+        _check_can_be_pickled(pipeline)
         if not fitted:
-            return estimator
-        return estimator.fit(self.get_data())
+            return pipeline
+        return pipeline.fit(self.get_data())
 
     def train_test_split(
         self,
@@ -1189,12 +1190,12 @@ class SkrubNamespace:
         >>> split = delayed.skb.train_test_split(random_state=0)
         >>> split.keys()
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
-        >>> estimator = delayed.skb.get_estimator()
-        >>> estimator.fit(split["train"])
-        ExprEstimator(expr=<Apply DummyClassifier>)
-        >>> estimator.score(split["test"])
+        >>> pipeline = delayed.skb.get_pipeline()
+        >>> pipeline.fit(split["train"])
+        SkrubPipeline(expr=<Apply DummyClassifier>)
+        >>> pipeline.score(split["test"])
         0.0
-        >>> predictions = estimator.predict(split["test"])
+        >>> predictions = pipeline.predict(split["test"])
         >>> accuracy_score(split["y_test"], predictions)
         0.0
         """
@@ -1369,7 +1370,7 @@ class SkrubNamespace:
     def cross_validate(self, environment=None, **kwargs):
         """Cross-validate the expression.
 
-        This generates the estimator (with default hyperparameters) and runs
+        This generates the pipeline with default hyperparameters and runs
         scikit-learn cross-validation.
 
         Parameters
@@ -1381,7 +1382,9 @@ class SkrubNamespace:
 
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.model_selection.cross_validate``.
+            ``sklearn.model_selection.cross_validate``, except that
+            scikit-learn's ``return_estimator`` parameter is named
+            ``return_pipeline`` here.
 
         Returns
         -------
@@ -1417,7 +1420,7 @@ class SkrubNamespace:
         if environment is None:
             environment = self.get_data()
 
-        return cross_validate(self.get_estimator(), environment, **kwargs)
+        return cross_validate(self.get_pipeline(), environment, **kwargs)
 
     @check_expr
     def mark_as_X(self):

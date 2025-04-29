@@ -12,8 +12,8 @@ from ._deduplicate import compute_ngram_distance, deduplicate
 from ._drop_uninformative import DropUninformative
 from ._expressions import (
     Expr,
-    ExprEstimator,
     ParamSearch,
+    SkrubPipeline,
     X,
     as_expr,
     choose_bool,
@@ -51,7 +51,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 __all__ = [
     "Expr",
     "var",
-    "ExprEstimator",
+    "SkrubPipeline",
     "ParamSearch",
     "X",
     "y",
