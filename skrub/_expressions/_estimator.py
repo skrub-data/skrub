@@ -23,9 +23,14 @@ from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
-_SEARCH_FITTED_ATTRIBUTES = [
+_SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
+    # Some attributes are intentionally left out because the skrub ParamSearch
+    # doesn't expose them or they need more than simply copying to the skrub
+    # object and are handled separately.
+    #
+    # In particular this list does not include `best_estimator_` nor `classes_`.
+    #
     "cv_results_",
-    "best_pipeline_",
     "best_score_",
     "best_params_",
     "best_index_",
@@ -33,6 +38,9 @@ _SEARCH_FITTED_ATTRIBUTES = [
     "n_splits_",
     "refit_time_",
     "multimetric_",
+]
+_SEARCH_FITTED_ATTRIBUTES = _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY + [
+    "best_pipeline_"
 ]
 
 
@@ -590,7 +598,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             search.param_distributions = param_grid
         X, y = _compute_Xy(self.expr, environment)
         search.fit(X, y)
-        _copy_attr(search, self, _SEARCH_FITTED_ATTRIBUTES)
+        _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
         try:
             self.best_pipeline_ = _to_env_pipeline(search.best_estimator_)
         except AttributeError:
