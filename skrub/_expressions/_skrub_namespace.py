@@ -1073,8 +1073,9 @@ class SkrubNamespace:
         training data and then apply it to unseen data by calling
         ``transform()`` or ``predict()``.
 
-        An important difference is that those methods accept a dictionary of
-        inputs rather than ``X`` and ``y`` arguments (see examples below).
+        An important difference between skrub pipelines and scikit-learn
+        estimators is that ``fit()``, ``transform()`` etc. accept a dictionary
+        of inputs rather than ``X`` and ``y`` arguments (see examples below).
 
         We can pass ``fitted=True`` to get a pipeline fitted to the data
         provided as the values in ``skrub.var("name", value=...)`` and
