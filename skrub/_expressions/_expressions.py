@@ -349,7 +349,7 @@ class _Skb:
 
 
 _EXPR_CLASS_DOC = """
-Representation of a computation that can be used to build ML estimators.
+Representation of a computation that can be used to build ML pipelines.
 
 Please refer to the example gallery for an introduction to skrub
 expressions.
@@ -363,7 +363,7 @@ to an existing expression.
 _EXPR_INSTANCE_DOC = """Skrub expression.
 
 This object represents a computation and can be used to build machine-learning
-estimators.
+pipelines.
 
 Please refer to the example gallery for an introduction to skrub
 expressions.
@@ -768,7 +768,7 @@ def var(name, value=NULL):
     5
 
     But we can still override them. And inputs must be provided explicitly when
-    using the estimator returned by ``.skb.get_pipeline()``.
+    using the pipeline returned by ``.skb.get_pipeline()``.
 
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
@@ -1496,7 +1496,7 @@ def eval_mode():
     - 'preview': when the previews are being eagerly computed when the
       expression is defined or when we call ``.skb.eval()`` without
       arguments.
-    - otherwise, the method we called on the estimator such as ``'predict'``
+    - otherwise, the method we called on the pipeline such as ``'predict'``
       or ``'fit_transform'``.
 
     Examples
@@ -1506,10 +1506,10 @@ def eval_mode():
     >>> mode = skrub.eval_mode()
     >>> mode.skb.eval()
     'preview'
-    >>> estimator = mode.skb.get_pipeline()
-    >>> estimator.fit_transform({})
+    >>> pipeline = mode.skb.get_pipeline()
+    >>> pipeline.fit_transform({})
     'fit_transform'
-    >>> estimator.transform({})
+    >>> pipeline.transform({})
     'transform'
 
     ``eval_mode()`` can be particularly useful to have a different behavior in
