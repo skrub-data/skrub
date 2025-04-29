@@ -103,7 +103,9 @@ def _prepare_obj_column(col):
 def _pick_format(vals):
     delta = (vals.max() - vals.min()) / (len(vals) + 1)
     if delta == 0.0 or any("e" in f"{v:g}" for v in vals):
+        # only one values, or scientific notation -- bail for simplicity
         return "{:g}"
+    # guess the necessary number of digits
     n = max(0, -int(np.floor(np.log10(delta))))
     return f"{{:.{n}f}}"
 
