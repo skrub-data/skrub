@@ -46,12 +46,12 @@ def should_subsample():
     Result:
     ―――――――
     1.0
-    >>> e.skb.get_estimator(fitted=True)
+    >>> e.skb.get_pipeline(fitted=True)
     subsampling: False
-    ExprEstimator(expr=<Call 'load_data'>)
-    >>> e.skb.get_estimator(subsampling=True, fitted=True)
+    SkrubPipeline(expr=<Call 'load_data'>)
+    >>> e.skb.get_pipeline(subsampling=True, fitted=True)
     subsampling: True
-    ExprEstimator(expr=<Call 'load_data'>)
+    SkrubPipeline(expr=<Call 'load_data'>)
     """
     return _expressions.Expr(_ShouldSubsample())
 

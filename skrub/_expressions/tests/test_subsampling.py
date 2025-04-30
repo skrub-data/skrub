@@ -28,10 +28,10 @@ def test_subsample_previews(as_frame):
     )
     assert shapes == [(15, 13), (15,)]
     shapes = []
-    pred.skb.get_estimator(fitted=True, subsampling=True)
+    pred.skb.get_pipeline(fitted=True, subsampling=True)
     assert shapes == [(15, 13), (15,)]
     shapes = []
-    pred.skb.get_estimator(fitted=True)
+    pred.skb.get_pipeline(fitted=True)
     assert shapes == [(100, 13), (100,)]
     shapes = []
     pred.skb.get_grid_search(fitted=True, subsampling=True, cv=3)
@@ -92,7 +92,7 @@ def test_subsample_previews(as_frame):
         + [(100, 13), (100,)]
     )
     with pytest.raises(ValueError):
-        pred.skb.get_estimator(fitted=False, subsampling=True)
+        pred.skb.get_pipeline(fitted=False, subsampling=True)
     with pytest.raises(ValueError):
         pred.skb.get_grid_search(fitted=False, subsampling=True)
 
@@ -142,10 +142,10 @@ def test_should_subsample():
     )
     assert should == [True]
     should = []
-    pred.skb.get_estimator(fitted=True, subsampling=True)
+    pred.skb.get_pipeline(fitted=True, subsampling=True)
     assert should == [True]
     should = []
-    pred.skb.get_estimator(fitted=True)
+    pred.skb.get_pipeline(fitted=True)
     assert should == [False]
     should = []
     pred.skb.get_grid_search(fitted=True, subsampling=True, cv=3)
