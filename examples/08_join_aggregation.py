@@ -266,7 +266,7 @@ param_distributions = dict(
     histgradientboostingclassifier__min_samples_leaf=randint(2, 64),
     histgradientboostingclassifier__max_leaf_nodes=[None, 10, 30, 60, 90],
     histgradientboostingclassifier__n_iter_no_change=[50],
-    histgradientboostingclassifier__max_iter=[1000]
+    histgradientboostingclassifier__max_iter=[1000],
 )
 
 tic = time()
