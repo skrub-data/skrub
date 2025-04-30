@@ -361,6 +361,17 @@ def choose_from(outcomes, *, name=None):
 
     >>> choose_from({'one': 1, 'two': 2}, name='the number')
     choose_from({'one': 1, 'two': 2}, name='the number')
+
+    See also
+    --------
+    choose_bool :
+        Construct a choice between False and True.
+
+    choose_float :
+        Construct a choice of floating-point numbers from a numeric range.
+
+    choose_int :
+        Construct a choice of integers from a numeric range.
     """
     if isinstance(outcomes, typing.Mapping):
         outcome_names, outcomes = list(outcomes.keys()), list(outcomes.values())
@@ -469,7 +480,19 @@ class BoolChoice(Choice):
 
 
 def choose_bool(*, name=None):
-    """Construct a choice between False and True."""
+    """Construct a choice between False and True.
+
+    See also
+    --------
+    choose_float :
+        Construct a choice of floating-point numbers from a numeric range.
+
+    choose_from :
+        Construct a choice among several possible outcomes.
+
+    choose_int :
+        Construct a choice of integers from a numeric range.
+    """
     return BoolChoice([True, False], outcome_names=None, name=name)
 
 
@@ -597,7 +620,19 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
 
 
 def choose_float(low, high, *, log=False, n_steps=None, name=None):
-    """Construct a choice of floating-point numbers from a numeric range."""
+    """Construct a choice of floating-point numbers from a numeric range.
+
+    See also
+    --------
+    choose_bool :
+        Construct a choice between False and True.
+
+    choose_int :
+        Construct a choice of integers from a numeric range.
+
+    choose_from :
+        Construct a choice among several possible outcomes.
+    """
     if n_steps is None:
         return NumericChoice(low, high, log=log, to_int=False, name=name)
     return DiscretizedNumericChoice(
@@ -606,7 +641,19 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None):
 
 
 def choose_int(low, high, *, log=False, n_steps=None, name=None):
-    """Construct a choice of integers from a numeric range."""
+    """Construct a choice of integers from a numeric range.
+
+    See also
+    --------
+    choose_bool :
+        Construct a choice between False and True.
+
+    choose_float :
+        Construct a choice of floating-point numbers from a numeric range.
+
+    choose_from :
+        Construct a choice among several possible outcomes.
+    """
     if n_steps is None:
         return NumericChoice(low, high, log=log, to_int=True, name=name)
     return DiscretizedNumericChoice(

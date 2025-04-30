@@ -884,10 +884,10 @@ class Value(ExprImpl):
 
 @check_expr
 def as_expr(value):
-    """Create an expression that evaluates to the given value.
+    """Create an expression :class:`Expr` that evaluates to the given value.
 
     This wraps any object in an expression. When the expression is evaluated,
-    the result is the provided value. This has a similar role as ``deferred``,
+    the result is the provided value. This has a similar role as :func:`deferred`,
     but for any object rather than for functions.
 
     Parameters
@@ -903,6 +903,8 @@ def as_expr(value):
     --------
     deferred :
         Wrap function calls in an expression.
+    Expr :
+        Representation of a computation that can be used to build ML estimators.
 
     Examples
     --------
@@ -1207,7 +1209,7 @@ class CallMethod(ExprImpl):
 
 
 def deferred(func):
-    """Wrap function calls in an expression.
+    """Wrap function calls in an expression :class:`Expr`.
 
     When this decorator is applied, the resulting function returns expressions.
     The returned expression wraps the call to the original function, and the
@@ -1235,6 +1237,9 @@ def deferred(func):
     --------
     as_expr :
         Create an expression that evaluates to the given value.
+
+    Expr :
+        Representation of a computation that can be used to build ML estimators.
 
     Examples
     --------

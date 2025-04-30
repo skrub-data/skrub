@@ -461,12 +461,17 @@ def cross_validate(expr_estimator, environment, **cv_params):
 
     cv_params : dict
         All other named arguments are forwarded to
-        ``sklearn.model_selection.cross_validate``.
+        :func:`~sklearn.model_selection.cross_validate`.
 
     Returns
     -------
     dict
         Cross-validation results.
+
+    See also
+    --------
+    :func:`sklearn.model_selection.cross_validate`:
+        Evaluate metric(s) by cross-validation and also record fit/score times.
 
     Examples
     --------
