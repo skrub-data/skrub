@@ -250,7 +250,7 @@ quick_search = predictions.skb.get_randomized_search(
 quick_search.results_
 
 # %%
-# And then actually run it on the full data. When fitting an estimator or
+# And then actually run it on the full data. When fitting a pipeline or
 # parameter search or running cross-validation the default is to not apply any
 # subsampling.
 
@@ -292,7 +292,7 @@ search.plot_results()
 # filesystem with this example notebook, we serialize the model in memory instead.
 import pickle
 
-saved_model = pickle.dumps(search.best_estimator_)
+saved_model = pickle.dumps(search.best_pipeline_)
 
 # %%
 # Let's say we got some new data, and we want to use the model we just saved
@@ -302,7 +302,7 @@ new_baskets = new_data.baskets[["ID"]]
 new_products = new_data.products
 
 # %%
-# Our estimator expects the same variable names as the training pipeline, which is why
+# Our pipeline expects the same variable names as the training pipeline, which is why
 # we pass a dictionary that contains new dataframes and the same variable:
 loaded_model = pickle.loads(saved_model)
 loaded_model.predict({"baskets": new_baskets, "products": new_products})

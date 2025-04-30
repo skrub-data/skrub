@@ -114,7 +114,7 @@ classifier = HistGradientBoostingClassifier(
 pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 
 # %%
-# We can then obtain an estimator that performs the hyperparameter search with
+# We can then obtain a pipeline that performs the hyperparameter search with
 # ``.skb.get_grid_search()`` or ``.skb.get_randomized_search()``. They accept
 # the same arguments as their scikit-learn counterparts (e.g. ``scoring`` and
 # ``n_jobs``). Also, like ``.skb.get_pipeline()``, they accept a ``fitted``
@@ -283,7 +283,7 @@ with_length = add_length.if_else(X.assign(length=X["text"].str.len()), X).as_exp
 vectorized_X = with_length.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
 
 # Note: we can manually set the outcome of a choice when evaluating an
-# expression (or fitting an estimator)
+# expression (or fitting a pipeline)
 
 vectorized_X.skb.eval({"add_length": False})
 
