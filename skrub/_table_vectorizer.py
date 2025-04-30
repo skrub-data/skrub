@@ -18,7 +18,6 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
-from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
 from ._to_datetime import ToDatetime
@@ -37,7 +36,7 @@ class PassThrough(SingleColumnTransformer):
         return column
 
 
-HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+HIGH_CARDINALITY_TRANSFORMER = "warn"
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     sparse_output=False,
     dtype="float32",
@@ -760,6 +759,17 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         dataframe
             The transformed input.
         """
+        if self.high_cardinality == "warn":
+            warnings.warn(
+                (
+                    "The default high_cardinality encoder will be changed to "
+                    "StringEncoder in a future release. "
+                    "To suppress this warning, please set the "
+                    "high_cardinality parameter explicitly."
+                ),
+                category=DeprecationWarning,
+            )
+
         self._check_specific_columns()
         self._make_pipeline()
         output = self._pipeline.fit_transform(X, y=y)

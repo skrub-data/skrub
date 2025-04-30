@@ -1,3 +1,5 @@
+import warnings
+
 import sklearn
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
@@ -226,6 +228,14 @@ def tabular_learner(estimator, *, n_jobs=None):
     - There is no standard scaling which is unnecessary for trees and ensembles
       of trees.
     """  # noqa: E501
+    warnings.warn(
+        (
+            "The default high_cardinality encoder will be changed to "
+            "StringEncoder in a future release. "
+        ),
+        category=DeprecationWarning,
+    )
+
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         cat_feat_kwargs = {}
