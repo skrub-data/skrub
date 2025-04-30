@@ -266,7 +266,7 @@ search.plot_results()
 # filesystem with this example notebook, we serialize the model in memory instead.
 import pickle
 
-saved_model = pickle.dumps(search.best_estimator_)
+saved_model = pickle.dumps(search.best_pipeline_)
 
 # %%
 # Let's say we got some new data, and we want to use the model we just saved
