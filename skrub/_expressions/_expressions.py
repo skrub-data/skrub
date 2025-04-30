@@ -14,7 +14,7 @@ import warnings
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
-from .. import _selectors as s
+from .. import selectors as s
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, short_repr
@@ -349,7 +349,7 @@ class _Skb:
 
 
 _EXPR_CLASS_DOC = """
-Representation of a computation that can be used to build ML estimators.
+Representation of a computation that can be used to build ML pipelines.
 
 Please refer to the example gallery for an introduction to skrub
 expressions.
@@ -363,7 +363,7 @@ to an existing expression.
 _EXPR_INSTANCE_DOC = """Skrub expression.
 
 This object represents a computation and can be used to build machine-learning
-estimators.
+pipelines.
 
 Please refer to the example gallery for an introduction to skrub
 expressions.
@@ -741,8 +741,8 @@ def var(name, value=NULL):
 
     And also to keys to the inputs to the pipeline:
 
-    >>> estimator = c.skb.get_estimator()
-    >>> estimator.fit_transform({'a': 5, 'b': 4})
+    >>> pipeline = c.skb.get_pipeline()
+    >>> pipeline.fit_transform({'a': 5, 'b': 4})
     9
 
     When providing a value, we see what the pipeline produces for the values we
@@ -768,7 +768,7 @@ def var(name, value=NULL):
     5
 
     But we can still override them. And inputs must be provided explicitly when
-    using the estimator returned by ``.skb.get_estimator()``.
+    using the pipeline returned by ``.skb.get_pipeline()``.
 
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
@@ -1421,21 +1421,21 @@ def deferred(func):
     return deferred_func
 
 
-class ConcatHorizontal(ExprImpl):
-    _fields = ["first", "others"]
+class Concat(ExprImpl):
+    _fields = ["first", "others", "axis"]
 
     def compute(self, e, mode, environment):
         if not sbd.is_dataframe(e.first):
             raise TypeError(
-                "`concat_horizontal` can only be used with dataframes. "
-                "`.skb.concat_horizontal` was accessed on an object of type "
+                "`concat` can only be used with dataframes. "
+                "`.skb.concat` was accessed on an object of type "
                 f"{e.first.__class__.__name__!r}"
             )
         if sbd.is_dataframe(e.others):
             raise TypeError(
-                "`concat_horizontal` should be passed a list of dataframes. "
+                "`concat` should be passed a list of dataframes. "
                 "If you have a single dataframe, wrap it in a list: "
-                "`concat_horizontal([table_1])` not `concat_horizontal(table_1)`"
+                "`concat([table_1], axis=...)` not `concat(table_1, axis=...)`"
             )
         idx, non_df = next(
             ((i, o) for i, o in enumerate(e.others) if not sbd.is_dataframe(o)),
@@ -1443,16 +1443,24 @@ class ConcatHorizontal(ExprImpl):
         )
         if non_df is not None:
             raise TypeError(
-                "`concat_horizontal` should be passed a list of dataframes: "
-                "`table_0.skb.concat_horizontal([table_1, ...])`. "
+                "`concat` should be passed a list of dataframes: "
+                "`table_0.skb.concat([table_1, ...], axis=...)`. "
                 f"An object of type {non_df.__class__.__name__!r} "
                 f"was found at index {idx}."
             )
-        result = sbd.concat_horizontal(e.first, *e.others)
-        if mode == "preview" or "fit" in mode:
-            self.all_outputs_ = sbd.column_names(result)
-        else:
-            result = sbd.set_column_names(result, self.all_outputs_)
+
+        if e.axis not in (0, 1):
+            raise ValueError(
+                f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
+            )
+
+        result = sbd.concat(e.first, *e.others, axis=e.axis)
+
+        if e.axis == 1:
+            if mode == "preview" or "fit" in mode:
+                self.all_outputs_ = sbd.column_names(result)
+            else:
+                result = sbd.set_column_names(result, self.all_outputs_)
         return result
 
     def __repr__(self):
@@ -1503,7 +1511,7 @@ def eval_mode():
     - 'preview': when the previews are being eagerly computed when the
       expression is defined or when we call ``.skb.eval()`` without
       arguments.
-    - otherwise, the method we called on the estimator such as ``'predict'``
+    - otherwise, the method we called on the pipeline such as ``'predict'``
       or ``'fit_transform'``.
 
     Examples
@@ -1513,10 +1521,10 @@ def eval_mode():
     >>> mode = skrub.eval_mode()
     >>> mode.skb.eval()
     'preview'
-    >>> estimator = mode.skb.get_estimator()
-    >>> estimator.fit_transform({})
+    >>> pipeline = mode.skb.get_pipeline()
+    >>> pipeline.fit_transform({})
     'fit_transform'
-    >>> estimator.transform({})
+    >>> pipeline.transform({})
     'transform'
 
     ``eval_mode()`` can be particularly useful to have a different behavior in

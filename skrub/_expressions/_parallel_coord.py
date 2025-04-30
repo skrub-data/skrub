@@ -26,7 +26,11 @@ def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
 
 def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
     prepared_columns = [
-        _prepare_column(cv_results[col_name], col_name in metadata["log_scale_columns"])
+        _prepare_column(
+            cv_results[col_name],
+            is_log_scale=col_name in metadata["log_scale_columns"],
+            is_int=col_name in metadata["int_columns"],
+        )
         for col_name in cv_results.columns
     ]
     prepared_columns = [
@@ -49,24 +53,30 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
 def _add_jitter(column):
     vals = column["values"]
     min_val, max_val = np.min(vals), np.max(vals)
+    argmin, argmax = np.argmin(vals), np.argmax(vals)
     eps = (max_val - min_val) / 200
-    column["values"] = column["values"] + np.random.uniform(
-        low=-eps, high=eps, size=vals.shape[0]
-    )
+    vals = column["values"] + np.random.uniform(low=-eps, high=eps, size=vals.shape[0])
+    # plotly adds extra labels for the min and max of the range. So we make
+    # sure we don't exceed the current bounds and that they are still attained
+    # at least once to avoid having incorrect bounds displayed.
+    vals = np.clip(vals, min_val, max_val)
+    vals[argmin] = min_val
+    vals[argmax] = max_val
+
+    column["values"] = vals
     return column
 
 
-def _prepare_column(col, is_log_scale):
+def _prepare_column(col, *, is_log_scale, is_int):
     if pd.api.types.is_bool_dtype(col) or not pd.api.types.is_numeric_dtype(col):
         return _prepare_obj_column(col)
-    if is_log_scale or col.isna().any():
-        return _prepare_numeric_column(col, is_log_scale)
-    label = {
+    result = _prepare_numeric_column(col, is_log_scale=is_log_scale, is_int=is_int)
+    result["label"] = {
         "mean_test_score": "score",
         "mean_fit_time": "fit time",
         "mean_score_time": "score time",
-    }.get(col.name, col.name)
-    return {"label": label, "values": col.to_numpy()}
+    }.get(result["label"], result["label"])
+    return result
 
 
 def _prepare_obj_column(col):
@@ -90,18 +100,36 @@ def _prepare_obj_column(col):
     }
 
 
-def _prepare_numeric_column(col, log_scale):
+def _pick_format(vals):
+    delta = (vals.max() - vals.min()) / (len(vals) + 1)
+    if delta == 0.0 or any("e" in f"{v:g}" for v in vals):
+        # only one values, or scientific notation -- bail for simplicity
+        return "{:g}"
+    # guess the necessary number of digits
+    n = max(0, -int(np.floor(np.log10(delta))))
+    return f"{{:.{n}f}}"
+
+
+def _prepare_numeric_column(col, *, is_log_scale, is_int):
     vals = col.to_numpy()
-    if log_scale:
+    if is_log_scale:
         vals = np.log(vals)
     min_val, max_val = np.nanmin(vals), np.nanmax(vals)
-    tickvals = np.linspace(min_val, max_val, 10).tolist()
-    if pd.api.types.is_integer_dtype(col):
-        ticktext = [str(int(np.round(np.exp(v)))) for v in tickvals]
+    tickvals = np.unique(np.linspace(min_val, max_val, 10))
+    if pd.api.types.is_integer_dtype(col) or is_int:
+        if is_log_scale:
+            tickvals = np.exp(tickvals)
+        tickvals = np.unique(np.round(tickvals).astype(np.int64))
+        tickvals_label_space = tickvals.tolist()
+        if is_log_scale:
+            tickvals = np.log(tickvals)
+        tickvals = tickvals.tolist()
+        ticktext = [str(val) for val in tickvals_label_space]
     else:
-        ticktext = list(
-            map("{:.2g}".format, np.exp(tickvals) if log_scale else tickvals)
-        )
+        tickvals_label_space = np.exp(tickvals) if is_log_scale else tickvals
+        tickvals = tickvals.tolist()
+        fmt = _pick_format(tickvals_label_space)
+        ticktext = [fmt.format(val) for val in tickvals_label_space]
     if np.isnan(vals).any():
         tickvals = [min_val - (max_val - min_val) / 10] + tickvals
         ticktext = ["NaN"] + ticktext

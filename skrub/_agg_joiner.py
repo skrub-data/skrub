@@ -15,7 +15,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
 from skrub import _join_utils, _utils
-from skrub import _selectors as s
+from skrub import selectors as s
 from skrub._dispatch import dispatch
 
 from ._check_input import CheckInputDataFrame

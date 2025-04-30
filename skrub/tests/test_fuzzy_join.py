@@ -6,7 +6,7 @@ from numpy.testing import assert_array_equal
 from sklearn.feature_extraction.text import HashingVectorizer
 
 from skrub import ToDatetime, _join_utils, fuzzy_join
-from skrub import _selectors as s
+from skrub import selectors as s
 from skrub._dataframe import _common as ns
 
 

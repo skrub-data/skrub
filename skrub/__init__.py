@@ -4,15 +4,16 @@ skrub: Prepping tables for machine learning.
 
 from pathlib import Path as _Path
 
-from . import _selectors as selectors
+from . import selectors
 from ._agg_joiner import AggJoiner, AggTarget
 from ._column_associations import column_associations
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
+from ._drop_uninformative import DropUninformative
 from ._expressions import (
     Expr,
-    ExprEstimator,
     ParamSearch,
+    SkrubPipeline,
     X,
     as_expr,
     choose_bool,
@@ -23,7 +24,6 @@ from ._expressions import (
     deferred,
     eval_mode,
     optional,
-    train_test_split,
     var,
     y,
 )
@@ -51,7 +51,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 __all__ = [
     "Expr",
     "var",
-    "ExprEstimator",
+    "SkrubPipeline",
     "ParamSearch",
     "X",
     "y",
@@ -72,6 +72,7 @@ __all__ = [
     "SimilarityEncoder",
     "TableVectorizer",
     "Cleaner",
+    "DropUninformative",
     "deduplicate",
     "compute_ngram_distance",
     "ToCategorical",
@@ -82,9 +83,7 @@ __all__ = [
     "SelectCols",
     "DropCols",
     "Drop",
-    "Recipe",
     "cross_validate",
-    "train_test_split",
     "choose_from",
     "optional",
     "choose_float",

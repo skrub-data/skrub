@@ -9,7 +9,7 @@ from sklearn.preprocessing import FunctionTransformer
 
 from skrub import SelectCols
 from skrub import _dataframe as sbd
-from skrub import _selectors as s
+from skrub import selectors as s
 from skrub._on_subframe import OnSubFrame
 
 
