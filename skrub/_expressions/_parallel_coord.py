@@ -100,12 +100,22 @@ def _prepare_obj_column(col):
     }
 
 
+def _pick_format(vals):
+    delta = (vals.max() - vals.min()) / (len(vals) + 1)
+    if delta == 0.0 or any("e" in f"{v:g}" for v in vals):
+        # only one values, or scientific notation -- bail for simplicity
+        return "{:g}"
+    # guess the necessary number of digits
+    n = max(0, -int(np.floor(np.log10(delta))))
+    return f"{{:.{n}f}}"
+
+
 def _prepare_numeric_column(col, *, is_log_scale, is_int):
     vals = col.to_numpy()
     if is_log_scale:
         vals = np.log(vals)
     min_val, max_val = np.nanmin(vals), np.nanmax(vals)
-    tickvals = np.linspace(min_val, max_val, 10)
+    tickvals = np.unique(np.linspace(min_val, max_val, 10))
     if pd.api.types.is_integer_dtype(col) or is_int:
         if is_log_scale:
             tickvals = np.exp(tickvals)
@@ -116,9 +126,10 @@ def _prepare_numeric_column(col, *, is_log_scale, is_int):
         tickvals = tickvals.tolist()
         ticktext = [str(val) for val in tickvals_label_space]
     else:
-        tickvals = tickvals.tolist()
         tickvals_label_space = np.exp(tickvals) if is_log_scale else tickvals
-        ticktext = [f"{val:.2g}" for val in tickvals_label_space]
+        tickvals = tickvals.tolist()
+        fmt = _pick_format(tickvals_label_space)
+        ticktext = [fmt.format(val) for val in tickvals_label_space]
     if np.isnan(vals).any():
         tickvals = [min_val - (max_val - min_val) / 10] + tickvals
         ticktext = ["NaN"] + ticktext

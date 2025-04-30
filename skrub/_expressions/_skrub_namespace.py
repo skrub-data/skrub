@@ -1471,12 +1471,12 @@ class SkrubNamespace:
         return search.fit(env_with_subsampling(self.get_data(), subsampling))
 
     def get_randomized_search(self, *, fitted=False, subsampling=False, **kwargs):
-        """Find the best parameters with grid search.
+        """Find the best parameters with randomized search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's ``RandomizedSearchCV``. The main difference is that
-        methods such as ``fit()`` and ``predict()`` accept a dictionary of
-        inputs rather than ``X`` and ``y``. Please refer to the examples
+        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`. The main
+        difference is that methods such as ``fit()`` and ``predict()`` accept a
+        dictionary of inputs rather than ``X`` and ``y``. Please refer to the examples
         gallery for an in-depth explanation.
 
         Parameters
@@ -1498,7 +1498,7 @@ class SkrubNamespace:
 
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.search.RandomizedSearchCV``.
+            :class:`~sklearn.search.RandomizedSearchCV`.
 
         Returns
         -------
