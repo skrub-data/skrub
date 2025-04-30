@@ -287,6 +287,8 @@ filterwarnings = [
     'ignore:.*`clean_up_tokenization_spaces` was not set.*',
     'ignore:The current process just got forked.*',
     'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+    # TODO: remove when StringEncoder is set as default high cardinality encoder
+    'ignore:.*default high_cardinality encoder*:DeprecationWarning'
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
