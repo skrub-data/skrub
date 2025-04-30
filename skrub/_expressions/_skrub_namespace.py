@@ -157,6 +157,11 @@ class SkrubNamespace:
             the fitted ``estimator``'s predictions if it is a supervised
             predictor.
 
+        See also
+        --------
+        skrub.Expr.skb.get_pipeline :
+            Get a skrub pipeline for this expression.
+
         Examples
         --------
         >>> import skrub
@@ -1237,6 +1242,11 @@ class SkrubNamespace:
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
 
+        See also
+        --------
+        skrub.Expr.skb.get_randomized_search :
+            Find the best parameters with grid search.
+
         Examples
         --------
         >>> import skrub
@@ -1313,6 +1323,11 @@ class SkrubNamespace:
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
+
+        See also
+        --------
+        skrub.Expr.skb.get_grid_search :
+            Find the best parameters with grid search.
 
         Examples
         --------

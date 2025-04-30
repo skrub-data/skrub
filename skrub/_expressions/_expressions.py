@@ -717,6 +717,14 @@ def var(name, value=NULL):
     -------
     A skrub variable
 
+    See also
+    --------
+    skrub.X :
+        Create a skrub variable and mark it as being ``X``.
+
+    skrub.y :
+        Create a skrub variable and mark it as being ``y``.
+
     Examples
     --------
     Variables without a value:
@@ -802,6 +810,17 @@ def X(value=NULL):
     -------
     A skrub variable
 
+    See also
+    --------
+    skrub.y :
+        Create a skrub variable and mark it as being ``y``.
+
+    skrub.var :
+        Create a skrub variable.
+
+    skrub.Expr.skb.mark_as_X :
+        Mark this expression as being the ``X`` table.
+
     Examples
     --------
     >>> import skrub
@@ -846,6 +865,17 @@ def y(value=NULL):
     Returns
     -------
     A skrub variable
+
+    See also
+    --------
+    skrub.X :
+        Create a skrub variable and mark it as being ``y``.
+
+    skrub.var :
+        Create a skrub variable.
+
+    skrub.Expr.skb.mark_as_y :
+        Mark this expression as being the ``y`` table.
 
     Examples
     --------
