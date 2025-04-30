@@ -853,7 +853,6 @@ def test_accept_pipeline():
     parse_version(sklearn.__version__) < parse_version("1.4"),
     reason="set_output('polars') was added in scikit-learn 1.4",
 )
-@pytest.mark.filterwarnings("ignore:*high_cardinality*")
 def test_clean_null_downcast_warning():
     # non-regression test for https://github.com/skrub-data/skrub/issues/894
     pl = pytest.importorskip("polars")
@@ -917,3 +916,13 @@ def test_drop_null_column():
     tv = TableVectorizer(drop_null_fraction=1.0)
     transformed = tv.fit_transform(X)
     assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)
+
+
+def test_deprecation_high_cardinality():
+    """Check that the deprecation warning is raised when using the default
+    value for the high_cardinality encoder."""
+    with pytest.warns(
+        DeprecationWarning,
+        match=".*The default high_cardinality encode will change*",
+    ):
+        TableVectorizer().fit(_get_clean_dataframe())
