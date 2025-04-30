@@ -253,11 +253,10 @@ model
 
 # %%
 # We tune the hyper-parameters of the |HGBC| model using ``RandomizedSearchCV``.
-# As we vary the ``min_samples_leaf`` parameter, we set the ``max_leaf_nodes``
-# to ``None``. By default, the |HGBC| applies early stopping when there are at
-# least 10_000 samples so we don't need to explicitly tune the number of trees
-# (``max_iter``). We increase ``n_iter_no_change`` to make sure early stopping
-# does not kick in too early and we tune the learning rate.
+# By default, the |HGBC| applies early stopping when there are at least 10_000
+# samples so we don't need to explicitly tune the number of trees (``max_iter``).
+# Therefore we set this at a very high level of 1_000. We increase
+# ``n_iter_no_change`` to make sure early stopping does not kick in too early.
 from time import time
 
 from sklearn.model_selection import RandomizedSearchCV
@@ -265,16 +264,14 @@ from sklearn.model_selection import RandomizedSearchCV
 param_distributions = dict(
     histgradientboostingclassifier__learning_rate=loguniform(1e-2, 5e-1),
     histgradientboostingclassifier__min_samples_leaf=randint(2, 64),
+    histgradientboostingclassifier__max_leaf_nodes=[None, 10, 30, 60, 90],
+    histgradientboostingclassifier__n_iter_no_change=[50],
+    histgradientboostingclassifier__max_iter=[1000]
 )
 
 tic = time()
 search = RandomizedSearchCV(
-    model.set_params(
-        **{
-            "histgradientboostingclassifier__max_leaf_nodes": None,
-            "histgradientboostingclassifier__n_iter_no_change": 50,
-        }
-    ),
+    model,
     param_distributions,
     scoring="neg_log_loss",
     refit=False,
