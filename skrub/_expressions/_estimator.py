@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -18,9 +20,17 @@ from ._evaluation import (
     set_params,
     supported_modes,
 )
-from ._expressions import Apply
+from ._expressions import Apply, Expr
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
-from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
+from ._utils import (
+    CROSS_VAL_DEFAULT_ENVIRONMENT,
+    CROSS_VAL_DEFAULT_EXPR,
+    CROSS_VAL_DEFAULT_PIPELINE,
+    X_NAME,
+    Y_NAME,
+    _CloudPickle,
+    attribute_error,
+)
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -42,8 +52,6 @@ _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
 _SEARCH_FITTED_ATTRIBUTES = _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY + [
     "best_pipeline_"
 ]
-_GET_PIPELINE_DEFAULT_ARG = "expr.skb.get_pipeline()"
-_GET_DATA_DEFAULT_ARG = "expr.skb.get_data()"
 
 
 def _default_sklearn_tags():
@@ -468,21 +476,53 @@ def _rename_cv_param_pipeline_to_estimator(kwargs):
 
 
 def _check_expr_pipeline_env(expr, pipeline, environment):
-    # TODO error handling
-    if expr is None:
+    def _check_expr_type(expr):
+        if not isinstance(expr, Expr):
+            raise TypeError(
+                "When provided `expr` must be a skrub expression. "
+                f"Got object of type: {type(expr)}"
+            )
+
+    def _check_pipeline_type(pipeline):
+        if not hasattr(pipeline, "expr") or not hasattr(pipeline, "fit"):
+            raise TypeError(
+                "When provided `pipeline` must be a skrub pipeline, "
+                f"got object of type: {type(pipeline)}."
+            )
+
+    def _check_environment_type(environment):
+        if not isinstance(environment, Mapping):
+            raise TypeError(
+                "When provided `environment` must be a dict that maps "
+                f"variable names to values. Got object of type: {type(environment)}."
+            )
+
+    if expr is CROSS_VAL_DEFAULT_EXPR:
+        if pipeline is CROSS_VAL_DEFAULT_PIPELINE:
+            raise TypeError("When `expr` is None, `pipeline` must be provided.")
+        if environment is CROSS_VAL_DEFAULT_ENVIRONMENT:
+            raise TypeError("When `expr` is None, `environment` must be provided.")
+        _check_pipeline_type(pipeline)
+        _check_environment_type(environment)
         expr = pipeline.expr
-    if isinstance(pipeline, str):
+    else:
+        _check_expr_type(expr)
+    if pipeline is CROSS_VAL_DEFAULT_PIPELINE:
         pipeline = expr.skb.get_pipeline()
-    if isinstance(environment, str):
+    else:
+        _check_pipeline_type(pipeline)
+    if environment is CROSS_VAL_DEFAULT_ENVIRONMENT:
         environment = expr.skb.get_data()
+    else:
+        _check_environment_type(environment)
     return expr, pipeline, environment
 
 
 def cross_validate(
-    expr=None,
+    expr=CROSS_VAL_DEFAULT_EXPR,
     *,
-    pipeline=_GET_PIPELINE_DEFAULT_ARG,
-    environment=_GET_DATA_DEFAULT_ARG,
+    pipeline=CROSS_VAL_DEFAULT_PIPELINE,
+    environment=CROSS_VAL_DEFAULT_ENVIRONMENT,
     **kwargs,
 ):
     """Cross-validate a pipeline built from an expression.
