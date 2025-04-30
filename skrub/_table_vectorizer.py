@@ -18,6 +18,7 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
+from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
 from ._to_datetime import ToDatetime
@@ -36,7 +37,7 @@ class PassThrough(SingleColumnTransformer):
         return column
 
 
-HIGH_CARDINALITY_TRANSFORMER = "warn"
+HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     sparse_output=False,
     dtype="float32",
@@ -696,7 +697,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         *,
         cardinality_threshold=40,
         low_cardinality=LOW_CARDINALITY_TRANSFORMER,
-        high_cardinality=HIGH_CARDINALITY_TRANSFORMER,
+        high_cardinality="warn",
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
@@ -769,6 +770,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                 ),
                 category=DeprecationWarning,
             )
+            self.high_cardinality = HIGH_CARDINALITY_TRANSFORMER
 
         self._check_specific_columns()
         self._make_pipeline()
