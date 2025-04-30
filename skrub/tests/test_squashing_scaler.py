@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub._adaptive_squashing import AdaptiveSquashingTransformer
 from skrub._dataframe._common import _set_index
 from skrub._on_each_column import RejectColumn
+from skrub._squashing_scaler import SquashingScaler
 
 
 @pytest.mark.parametrize(
@@ -22,15 +22,11 @@ from skrub._on_each_column import RejectColumn
 @pytest.mark.parametrize(
     "params",
     [
-        dict(
-            max_absolute_value=3.0, lower_quantile_alpha=0.25, upper_quantile_alpha=0.75
-        ),
-        dict(
-            max_absolute_value=5.0, lower_quantile_alpha=0.1, upper_quantile_alpha=0.6
-        ),
+        dict(max_absolute_value=3.0, lower_quantile=0.25, upper_quantile=0.75),
+        dict(max_absolute_value=5.0, lower_quantile=0.1, upper_quantile=0.6),
     ],
 )
-def test_adaptive_squashing_output(df_module, values, dtype, params):
+def test_squashing_scaler_output(df_module, values, dtype, params):
     with warnings.catch_warnings():
         # this is to filter the warning created by df_module.make_column
         # due to pd.Series.convert_dtypes()
@@ -60,7 +56,7 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             )
             X_df[part] = _set_index(X_df[part], indexes[part])
 
-        tfm = AdaptiveSquashingTransformer(**params)
+        tfm = SquashingScaler(**params)
         ft_out = tfm.fit_transform(X_df["train"])
 
         t_out = tfm.transform(X_df["test"])
@@ -73,8 +69,8 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             quantiles = [
                 np.quantile(finite_values, q)
                 for q in [
-                    params["lower_quantile_alpha"],
-                    params["upper_quantile_alpha"],
+                    params["lower_quantile"],
+                    params["upper_quantile"],
                 ]
             ]
             if quantiles[1] == quantiles[0]:
@@ -120,8 +116,8 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             "number",
             dict(
                 max_absolute_value=None,
-                lower_quantile_alpha=0.25,
-                upper_quantile_alpha=0.75,
+                lower_quantile=0.25,
+                upper_quantile=0.75,
             ),
         ),
         (
@@ -129,8 +125,8 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             "positive",
             dict(
                 max_absolute_value=0.0,
-                lower_quantile_alpha=0.25,
-                upper_quantile_alpha=0.75,
+                lower_quantile=0.25,
+                upper_quantile=0.75,
             ),
         ),
         (
@@ -138,8 +134,8 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             "finite",
             dict(
                 max_absolute_value=np.inf,
-                lower_quantile_alpha=0.25,
-                upper_quantile_alpha=0.75,
+                lower_quantile=0.25,
+                upper_quantile=0.75,
             ),
         ),
         (
@@ -147,8 +143,8 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             "number",
             dict(
                 max_absolute_value=3.0,
-                lower_quantile_alpha="0.25",
-                upper_quantile_alpha=0.75,
+                lower_quantile="0.25",
+                upper_quantile=0.75,
             ),
         ),
         (
@@ -156,8 +152,8 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             "number",
             dict(
                 max_absolute_value=3.0,
-                lower_quantile_alpha=0.25,
-                upper_quantile_alpha="0.75",
+                lower_quantile=0.25,
+                upper_quantile="0.75",
             ),
         ),
         (
@@ -165,8 +161,8 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             "need",
             dict(
                 max_absolute_value=3.0,
-                lower_quantile_alpha=-0.2,
-                upper_quantile_alpha=0.75,
+                lower_quantile=-0.2,
+                upper_quantile=0.75,
             ),
         ),
         (
@@ -174,8 +170,8 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             "need",
             dict(
                 max_absolute_value=3.0,
-                lower_quantile_alpha=0.25,
-                upper_quantile_alpha=1.1,
+                lower_quantile=0.25,
+                upper_quantile=1.1,
             ),
         ),
         (
@@ -183,13 +179,13 @@ def test_adaptive_squashing_output(df_module, values, dtype, params):
             "need",
             dict(
                 max_absolute_value=3.0,
-                lower_quantile_alpha=0.8,
-                upper_quantile_alpha=0.75,
+                lower_quantile=0.8,
+                upper_quantile=0.75,
             ),
         ),
     ],
 )
-def test_adaptive_squashing_error_msgs(df_module, config):
+def test_squashing_scaler_error_msgs(df_module, config):
     with warnings.catch_warnings():
         # this is to filter the warning created by df_module.make_column
         # due to pd.Series.convert_dtypes()
@@ -200,12 +196,12 @@ def test_adaptive_squashing_error_msgs(df_module, config):
         )
         err_type, msg_match, params = config
         X = df_module.make_column("col", [-1.0, 0.0, 1.0])
-        tfm = AdaptiveSquashingTransformer(**params)
+        tfm = SquashingScaler(**params)
         with pytest.raises(err_type, match=msg_match):
             tfm.fit_transform(X)
 
 
-def test_adaptive_squashing_non_numeric(df_module):
+def test_squashing_scaler_non_numeric(df_module):
     with warnings.catch_warnings():
         # this is to filter the warning created by df_module.make_column
         # due to pd.Series.convert_dtypes()
@@ -215,12 +211,12 @@ def test_adaptive_squashing_non_numeric(df_module):
             message="invalid value encountered in cast",
         )
         X = df_module.make_column(None, ["a", "b"])
-        tfm = AdaptiveSquashingTransformer()
+        tfm = SquashingScaler()
         with pytest.raises(RejectColumn, match="not numeric"):
             tfm.fit_transform(X)
 
 
-def test_adaptive_squashing_known_values(df_module):
+def test_squashing_scaler_known_values(df_module):
     with warnings.catch_warnings():
         # this is to filter the warning created by df_module.make_column
         # due to pd.Series.convert_dtypes()
@@ -230,7 +226,7 @@ def test_adaptive_squashing_known_values(df_module):
             message="invalid value encountered in cast",
         )
         X = df_module.make_column("test", [np.nan, -np.inf, -1.0, 0.0, 1.0, np.inf])
-        tfm = AdaptiveSquashingTransformer(3.0)
+        tfm = SquashingScaler(3.0)
         X_out = tfm.fit_transform(X)
         target_value = 1.0 / np.sqrt(1 + (1.0 / 3.0) ** 2)
         X_target = sbd.to_float32(
@@ -239,3 +235,22 @@ def test_adaptive_squashing_known_values(df_module):
             )
         )
         df_module.assert_column_equal(X_target, X_out)
+
+
+def test_squashing_scaler_dataframe(df_module):
+    # check that applying SquashingScaler to a dataframe
+    # is equivalent to applying it to each column separately
+    data_dict = {"a": [1.0, 2.0, 3.0, 4.0, 5.0], "b": [-1000, -1, 0, 3, 20]}
+    df = df_module.make_dataframe(data_dict)
+
+    direct = SquashingScaler().fit_transform(df)
+    col_wise = df_module.make_dataframe(
+        {
+            key: SquashingScaler().fit_transform(df_module.make_column(key, value))
+            for key, value in data_dict.items()
+        }
+    )
+
+    df_module.assert_frame_equal(
+        sbd.pandas_convert_dtypes(direct), sbd.pandas_convert_dtypes(col_wise)
+    )

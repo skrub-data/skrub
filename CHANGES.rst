@@ -27,7 +27,7 @@ Lemaitre <glemaitre>`, :user:`Adrin Jalali <adrinjalali>`, :user:`Olivier Grisel
 <ogrisel>` and others participated through many discussions in defining the
 requirements and the public API.
 
-- Added the :class:`AdaptiveSquashingTransformer` that
+- Added the :class:`SquashingScaler` that
   robustly rescales and smoothly clips numerical columns,
   enabling more robust handling of numerical columns
   with neural networks.
