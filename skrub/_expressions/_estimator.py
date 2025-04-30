@@ -479,21 +479,21 @@ def _check_expr_pipeline_env(expr, pipeline, environment):
     def _check_expr_type(expr):
         if not isinstance(expr, Expr):
             raise TypeError(
-                "When provided `expr` must be a skrub expression. "
+                "When provided, `expr` must be a skrub expression. "
                 f"Got object of type: {type(expr)}"
             )
 
     def _check_pipeline_type(pipeline):
         if not hasattr(pipeline, "__skrub_to_Xy_pipeline__"):
             raise TypeError(
-                "When provided `pipeline` must be a skrub pipeline, "
+                "When provided, `pipeline` must be a skrub pipeline, "
                 f"got object of type: {type(pipeline)}."
             )
 
     def _check_environment_type(environment):
         if not isinstance(environment, Mapping):
             raise TypeError(
-                "When provided `environment` must be a dict that maps "
+                "When provided, `environment` must be a dict that maps "
                 f"variable names to values. Got object of type: {type(environment)}."
             )
 
@@ -551,7 +551,7 @@ def cross_validate(
         :meth:`Expr.skb.get_grid_search`.
 
     environment : dict
-        Bindings for variables contained in the expression. By default, it is
+        Dictionary containing the variables used in the expression. By default, it is
         obtained from the variable values in ``expr`` by calling
         :meth:`Expr.skb.get_data`.
 
