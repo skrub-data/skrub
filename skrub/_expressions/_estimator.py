@@ -164,6 +164,14 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
             may be wrapped in a ``skrub.OnEachColumn`` or ``skrub.OnSubFrame``,
             see examples below.
 
+        See also
+        --------
+        skrub.Expr.skb.set_name :
+            Give a name to this expression.
+
+        skrub.Expr.skb.apply :
+            Apply a scikit-learn estimator to a dataframe or numpy array.
+
         Examples
         --------
         >>> from sklearn.decomposition import PCA
@@ -485,13 +493,27 @@ def cross_validate(pipeline, environment, **kwargs):
 
     kwargs : dict
         All other named arguments are forwarded to
-        ``sklearn.model_selection.cross_validate``, except that scikit-learn's
+        :func:`sklearn.model_selection.cross_validate`, except that scikit-learn's
         ``return_estimator`` parameter is named ``return_pipeline`` here.
 
     Returns
     -------
     dict
         Cross-validation results.
+
+    See also
+    --------
+    :func:`sklearn.model_selection.cross_validate`:
+        Evaluate metric(s) by cross-validation and also record fit/score times.
+
+    :func:`skrub.Expr.skb.get_pipeline`:
+        Get a skrub pipeline for this expression.
+
+    :func:`skrub.Expr.skb.get_grid_search`:
+        Find the best parameters with grid search.
+
+    :func:`skrub.Expr.skb.get_randomized_search`:
+        Find the best parameters with grid search.
 
     Examples
     --------
