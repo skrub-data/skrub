@@ -160,6 +160,51 @@ def test_cross_validate(expression, data, n_jobs):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
+def test_cross_validate_bad_args():
+    e, env = get_expression_and_data("simple")
+    pipe = e.skb.get_pipeline()
+    with pytest.raises(TypeError, match=".*`pipeline` must be provided"):
+        skrub.cross_validate(environment=env)
+    with pytest.raises(TypeError, match=".*`environment` must be provided"):
+        skrub.cross_validate(pipeline=pipe)
+    with pytest.raises(TypeError, match=".*must be a skrub pipeline"):
+        skrub.cross_validate(pipeline=e, environment=env)
+    with pytest.raises(TypeError, match=".*must be a dict"):
+        skrub.cross_validate(pipeline=pipe, environment=None)
+    with pytest.raises(TypeError, match=".*must be a skrub expression"):
+        skrub.cross_validate(pipe, environment=env)
+    with pytest.raises(TypeError, match=".*must be a skrub pipeline"):
+        skrub.cross_validate(e, pipeline=e.skb.get_pipeline, environment=env)
+    with pytest.raises(TypeError, match=".*must be a dict"):
+        skrub.cross_validate(e, pipeline=pipe, environment=e.skb.get_data)
+    with pytest.raises(TypeError, match="takes from 0 to 1 positional"):
+        skrub.cross_validate(pipe, env)
+
+
+@pytest.mark.parametrize(
+    "pass_e, pass_pipe, pass_env",
+    [
+        (False, True, True),
+        (True, False, False),
+        (True, False, True),
+        (True, True, False),
+        (True, True, True),
+    ],
+)
+def test_cross_validate_default_args(pass_e, pass_pipe, pass_env):
+    X, y = make_classification(random_state=0, n_samples=20)
+    e = skrub.X(X).skb.apply(LogisticRegression(), y=skrub.y(y))
+    args = {}
+    if pass_e:
+        args["expr"] = e
+    if pass_pipe:
+        args["pipeline"] = e.skb.get_pipeline()
+    if pass_env:
+        args["environment"] = e.skb.get_data()
+    res = skrub.cross_validate(**args, cv=2)
+    assert res["test_score"].mean() == pytest.approx(0.75, abs=0.05)
+
+
 def test_return_estimator():
     expression, data = get_expression_and_data("simple")
     with pytest.raises(TypeError, match=".*return_pipeline"):
@@ -274,7 +319,10 @@ def test_unsupervised():
 def test_no_apply_step():
     assert list(
         skrub.cross_validate(
-            skrub.X(), environment={"X": np.ones((10, 2))}, cv=2, scoring=lambda e, X: 0
+            skrub.X(),
+            environment={"X": np.ones((10, 2))},
+            cv=2,
+            scoring=lambda e, X: 0,
         )["test_score"]
     ) == [0, 0]
 

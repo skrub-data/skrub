@@ -484,7 +484,7 @@ def _check_expr_pipeline_env(expr, pipeline, environment):
             )
 
     def _check_pipeline_type(pipeline):
-        if not hasattr(pipeline, "expr") or not hasattr(pipeline, "fit"):
+        if not hasattr(pipeline, "__skrub_to_Xy_pipeline__"):
             raise TypeError(
                 "When provided `pipeline` must be a skrub pipeline, "
                 f"got object of type: {type(pipeline)}."
