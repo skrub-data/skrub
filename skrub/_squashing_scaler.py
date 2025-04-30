@@ -73,7 +73,7 @@ class SingleColumnSquashingScaler(SingleColumnTransformer):
     --------
     >>> import pandas as pd
     >>> import numpy as np
-    >>> from skrub import SingleColumnSquashingScaler
+    >>> from skrub._squashing_scaler import SingleColumnSquashingScaler
 
     >>> tfm = SingleColumnSquashingScaler()
     >>> X = pd.Series([-np.inf, -100.0, 0.0, 8.0, 9.0, 10.0, 20.0, 100.0, np.inf, np.nan], name='improvement')
@@ -271,7 +271,7 @@ class SquashingScaler(BaseEstimator, TransformerMixin):
         --------
         >>> import pandas as pd
         >>> import numpy as np
-        >>> from skrub import SingleColumnSquashingScaler
+        >>> from skrub import SquashingScaler
 
         >>> tfm = SquashingScaler()
         >>> X = pd.Series([-np.inf, -100.0, 0.0, 8.0, 9.0, 10.0, 20.0, 100.0, np.inf, np.nan], name='improvement')
@@ -311,7 +311,8 @@ class SquashingScaler(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        self: The current object.
+        self: SquashingScaler
+            The current object.
         """
         self.tfm_ = SingleColumnSquashingScaler(
             max_absolute_value=self.max_absolute_value,
