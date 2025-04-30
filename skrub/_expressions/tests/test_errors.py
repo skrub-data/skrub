@@ -118,7 +118,7 @@ def test_pickling_preview_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        (skrub.X([]) + [cls()]).skb.get_estimator()
+        (skrub.X([]) + [cls()]).skb.get_pipeline()
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
@@ -130,7 +130,7 @@ def test_pickling_estimator_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        e.skb.get_estimator()
+        e.skb.get_pipeline()
 
 
 #
@@ -269,11 +269,11 @@ def test_X_y_instead_of_environment():
     with pytest.raises(
         TypeError, match="`environment` should be a dictionary of input values"
     ):
-        skrub.X().skb.get_estimator().fit_transform(0)
+        skrub.X().skb.get_pipeline().fit_transform(0)
     with pytest.raises(TypeError):
         skrub.X().skb.eval(X=0)
     with pytest.raises(TypeError):
-        skrub.X().skb.get_estimator().fit_transform(X=0)
+        skrub.X().skb.get_pipeline().fit_transform(X=0)
 
 
 def test_expr_or_choice_in_environment():
@@ -317,15 +317,34 @@ def test_concat_horizontal_numpy():
     a = skrub.var("a", skrub.toy_orders().orders)
     b = skrub.var("b", np.eye(3))
     with pytest.raises(Exception, match=".*can only be used with dataframes"):
-        b.skb.concat_horizontal([a])
+        b.skb.concat([a], axis=1)
     with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat_horizontal([b])
+        a.skb.concat([b], axis=1)
 
 
-def test_concat_horizontal_needs_wrapping_in_list():
+def test_concat_vertical_numpy():
+    a = skrub.var("a", skrub.toy_orders().orders)
+    b = skrub.var("b", np.eye(3))
+    with pytest.raises(Exception, match=".*can only be used with dataframes"):
+        b.skb.concat([a], axis=0)
+    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+        a.skb.concat([b], axis=0)
+
+
+def test_concat_needs_wrapping_in_list():
     a = skrub.var("a", skrub.toy_orders().orders)
     with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat_horizontal(a)
+        a.skb.concat(a, axis=1)
+    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+        a.skb.concat(a, axis=0)
+
+
+def test_concat_axis_undefined():
+    a = skrub.var("a", skrub.toy_orders().orders)
+    with pytest.raises(Exception, match=".*one of 0 or 1"):
+        a.skb.concat([a], axis=2)
+    with pytest.raises(Exception, match=".*one of 0 or 1"):
+        a.skb.concat([a], axis="foo")
 
 
 def test_apply_instead_of_skb_apply():

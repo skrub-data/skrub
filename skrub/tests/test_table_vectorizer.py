@@ -196,12 +196,22 @@ def _get_missing_values_dataframe(categorical_dtype="object"):
 def test_get_preprocessors():
     X = _get_clean_dataframe()
     steps = _get_preprocessors(
-        cols=X.columns, drop_null_fraction=1.0, n_jobs=1, add_tofloat32=True
+        cols=X.columns,
+        drop_null_fraction=1.0,
+        drop_if_constant=True,
+        drop_if_unique=False,
+        n_jobs=1,
+        add_tofloat32=True,
     )
     assert any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
 
     steps = _get_preprocessors(
-        cols=X.columns, drop_null_fraction=1.0, n_jobs=1, add_tofloat32=False
+        cols=X.columns,
+        drop_null_fraction=1.0,
+        drop_if_constant=True,
+        drop_if_unique=False,
+        n_jobs=1,
+        add_tofloat32=False,
     )
     assert not any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
 

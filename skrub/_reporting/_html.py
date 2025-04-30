@@ -107,7 +107,7 @@ def _get_column_filters(summary):
     return filters
 
 
-def to_html(summary, standalone=True, column_filters=None):
+def to_html(summary, standalone=True, column_filters=None, minimal_report_mode=False):
     """Given a dataframe summary, generate the HTML string.
 
     Parameters
@@ -124,6 +124,9 @@ def to_html(summary, standalone=True, column_filters=None):
         Each key is an id for the filter (e.g. ``"all()"``) and the value is a
         mapping with the keys ``display_name`` (the name shown in the menu,
         e.g. ``"All columns"``) and ``columns`` (a list of column names).
+    minimal_report_mode : bool
+        Whether to turn on the minimal mode, which hides the 'distributions'
+        and 'associations' tabs.
 
     Returns
     -------
@@ -148,6 +151,7 @@ def to_html(summary, standalone=True, column_filters=None):
             "high_association_threshold": _HIGH_ASSOCIATION_THRESHOLD,
             "base64_column_filters": _b64_encode(column_filters),
             "report_id": f"report_{secrets.token_hex()[:8]}",
+            "minimal_report_mode": minimal_report_mode,
         }
     )
 

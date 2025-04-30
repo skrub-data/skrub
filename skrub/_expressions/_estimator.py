@@ -24,9 +24,14 @@ from ._subsampling import env_with_subsampling
 from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
-_SEARCH_FITTED_ATTRIBUTES = [
+_SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
+    # Some attributes are intentionally left out because the skrub ParamSearch
+    # doesn't expose them or they need more than simply copying to the skrub
+    # object and are handled separately.
+    #
+    # In particular this list does not include `best_estimator_` nor `classes_`.
+    #
     "cv_results_",
-    "best_estimator_",
     "best_score_",
     "best_params_",
     "best_index_",
@@ -34,6 +39,9 @@ _SEARCH_FITTED_ATTRIBUTES = [
     "n_splits_",
     "refit_time_",
     "multimetric_",
+]
+_SEARCH_FITTED_ATTRIBUTES = _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY + [
+    "best_pipeline_"
 ]
 
 
@@ -64,19 +72,19 @@ class _CloudPickleExpr(_CloudPickle):
     _cloudpickle_attributes = ["expr"]
 
 
-class ExprEstimator(_CloudPickleExpr, BaseEstimator):
-    """Estimator that evaluates a skrub expression.
+class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
+    """Pipeline that evaluates a skrub expression.
 
-    This class is not meant to be instantiated manually, ``ExprEstimator``
-    objects are created by calling :meth:`Expr.skb.get_estimator()` on an
+    This class is not meant to be instantiated manually, ``SkrubPipeline``
+    objects are created by calling :meth:`Expr.skb.get_pipeline()` on an
     expression.
     """
 
     def __init__(self, expr):
         self.expr = expr
 
-    def __skrub_to_Xy_estimator__(self, environment):
-        new = _XyExprEstimator(self.expr, _SharedDict(environment))
+    def __skrub_to_Xy_pipeline__(self, environment):
+        new = _XyPipeline(self.expr, _SharedDict(environment))
         _copy_attr(self, new, ["_is_fitted"])
         return new
 
@@ -176,14 +184,14 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
         ...     .skb.apply(DummyClassifier(), y=y)
         ...     .skb.set_name("classifier")
         ... )
-        >>> estimator = pred.skb.get_estimator()
-        >>> estimator.fit({'X': orders.X, 'y': orders.y})
-        ExprEstimator(expr=<classifier | Apply DummyClassifier>)
+        >>> pipeline = pred.skb.get_pipeline()
+        >>> pipeline.fit({'X': orders.X, 'y': orders.y})
+        SkrubPipeline(expr=<classifier | Apply DummyClassifier>)
 
         We can retrieve the fitted transformer for a given step with
         ``find_fitted_estimator``:
 
-        >>> estimator.find_fitted_estimator("classifier")
+        >>> pipeline.find_fitted_estimator("classifier")
         DummyClassifier()
 
         Depending on the parameters passed to ``skb.apply()``, the estimator we provide
@@ -200,7 +208,7 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
         fitted attribute ``transformers_`` which maps column names to the corresponding
         fitted transformer.
 
-        >>> encoder = estimator.find_fitted_estimator('product_encoder')
+        >>> encoder = pipeline.find_fitted_estimator('product_encoder')
         >>> encoder.transformers_
         {'product': StringEncoder(n_components=2)}
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
@@ -216,7 +224,7 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
         in the dataframe selected by the ``cols`` argument passed to ``.skb.apply()``.
         The fitted ``PCA`` can be found in the fitted attribute ``transformer_``.
 
-        >>> pca = estimator.find_fitted_estimator('pca')
+        >>> pca = pipeline.find_fitted_estimator('pca')
         >>> pca
         OnSubFrame(cols=glob('date_*'), transformer=PCA(n_components=2))
         >>> pca.transformer_
@@ -230,7 +238,7 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
         The ``DummyRegressor`` is a scikit-learn predictor. In the pipeline it gets
         applied directly to the input dataframe without any wrapping.
 
-        >>> classifier = estimator.find_fitted_estimator('classifier')
+        >>> classifier = pipeline.find_fitted_estimator('classifier')
         >>> classifier
         DummyClassifier()
         >>> classifier.class_prior_
@@ -251,12 +259,12 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
             )
         if not hasattr(impl, "estimator_"):
             raise NotFittedError(
-                f"Node {name!r} has not been fitted. Call fit() on the estimator "
+                f"Node {name!r} has not been fitted. Call fit() on the pipeline "
                 "before attempting to retrieve fitted sub-estimators."
             )
         return node._skrub_impl.estimator_
 
-    def sub_estimator(self, name):
+    def sub_pipeline(self, name):
         """Extract the part of the pipeline that leads up to the given step.
 
         This is similar to slicing a scikit-learn pipeline. It can be useful
@@ -273,8 +281,8 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
 
         Returns
         -------
-        ExprEstimator
-            An estimator that performs all the transformations leading up to
+        SkrubPipeline
+            A skrub pipeline that performs all the transformations leading up to
             (and including) the required step.
 
         Examples
@@ -291,17 +299,17 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
         ...     .skb.set_name("vectorizer")
         ...     .skb.apply(DummyClassifier(), y=y)
         ... )
-        >>> estimator = pred.skb.get_estimator()
-        >>> estimator.fit({"X": orders.X, "y": orders.y})
-        ExprEstimator(expr=<Apply DummyClassifier>)
-        >>> estimator.predict({"X": orders.X})
+        >>> pipeline = pred.skb.get_pipeline()
+        >>> pipeline.fit({"X": orders.X, "y": orders.y})
+        SkrubPipeline(expr=<Apply DummyClassifier>)
+        >>> pipeline.predict({"X": orders.X})
         array([False, False, False, False])
 
         Truncate the pipeline after vectorization:
 
-        >>> vectorizer = estimator.sub_estimator("vectorizer")
+        >>> vectorizer = pipeline.sub_pipeline("vectorizer")
         >>> vectorizer
-        ExprEstimator(expr=<vectorizer | Apply TableVectorizer>)
+        SkrubPipeline(expr=<vectorizer | Apply TableVectorizer>)
         >>> vectorizer.transform({"X": orders.X})
             ID  product_cup  product_pen  ...  date_year  date_month  date_day
         0  1.0          0.0          1.0  ...     2020.0         4.0       3.0
@@ -314,13 +322,14 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
 
         This contains the full transformation up to the given step:
 
-        >>> estimator.sub_estimator("vectorizer")
-        ExprEstimator(expr=<vectorizer | Apply TableVectorizer>)
+        >>> pipeline.sub_pipeline("vectorizer")
+        SkrubPipeline(expr=<vectorizer | Apply TableVectorizer>)
 
-        This contains only the inner ``TableVectorizer`` that was fitted inside of the
-        ``"vectorizer"`` step:
+        The result of ``find_fitted_estimator`` only contains the inner
+        ``TableVectorizer`` that was fitted inside of the ``"vectorizer"``
+        step:
 
-        >>> estimator.find_fitted_estimator("vectorizer")
+        >>> pipeline.find_fitted_estimator("vectorizer")
         OnSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
         node = find_node_by_name(self.expr, name)
@@ -331,12 +340,12 @@ class ExprEstimator(_CloudPickleExpr, BaseEstimator):
         return new
 
 
-def _to_Xy_estimator(estimator, environment):
-    return estimator.__skrub_to_Xy_estimator__(environment)
+def _to_Xy_pipeline(pipeline, environment):
+    return pipeline.__skrub_to_Xy_pipeline__(environment)
 
 
-def _to_env_estimator(estimator):
-    return estimator.__skrub_to_env_estimator__()
+def _to_env_pipeline(pipeline):
+    return pipeline.__skrub_to_env_pipeline__()
 
 
 def _get_classes(expr):
@@ -350,7 +359,7 @@ def _get_classes(expr):
     return estimator.classes_
 
 
-class _XyEstimatorMixin:
+class _XyPipelineMixin:
     def _get_env(self, X, y):
         xy_environment = {X_NAME: X}
         if y is not None:
@@ -384,13 +393,13 @@ class _XyEstimatorMixin:
             attribute_error(self, "classes_")
 
 
-class _XyExprEstimator(_XyEstimatorMixin, ExprEstimator):
+class _XyPipeline(_XyPipelineMixin, SkrubPipeline):
     def __init__(self, expr, environment):
         self.expr = expr
         self.environment = environment
 
-    def __skrub_to_env_estimator__(self):
-        new = ExprEstimator(self.expr)
+    def __skrub_to_env_pipeline__(self):
+        new = SkrubPipeline(self.expr)
         _copy_attr(self, new, ["_is_fitted"])
         return new
 
@@ -442,11 +451,26 @@ def _compute_Xy(expr, environment):
     return X, y
 
 
-def cross_validate(expr_estimator, environment, *, subsampling=False, **cv_params):
-    """Cross-validate an estimator built from an expression.
+def _rename_cv_param_pipeline_to_estimator(kwargs):
+    if "return_estimator" in kwargs:
+        raise TypeError(
+            "`skrub.cross_validate` does not have a `return_estimator` parameter. The"
+            " equivalent of scikit-learn's `return_estimator` is called"
+            " `return_pipeline`. Use `cross_validate(return_pipeline=True)` instead of"
+            " `cross_validate(return_estimator=True)`."
+        )
+    renamed = dict(kwargs)
+    if "return_pipeline" not in renamed:
+        return kwargs
+    renamed["return_estimator"] = renamed.pop("return_pipeline")
+    return renamed
 
-    This runs cross-validation from an estimator that was built from a skrub
-    expression with ``.skb.get_estimator()``, ``.skb.get_grid_search()`` or
+
+def cross_validate(pipeline, environment, *, subsampling=False, **kwargs):
+    """Cross-validate a pipeline built from an expression.
+
+    This runs cross-validation from a pipeline that was built from a skrub
+    expression with ``.skb.get_pipeline()``, ``.skb.get_grid_search()`` or
     ``.skb.get_randomized_search()``.
 
     It is useful to run nested cross-validation of a grid search or randomized
@@ -454,8 +478,8 @@ def cross_validate(expr_estimator, environment, *, subsampling=False, **cv_param
 
     Parameters
     ----------
-    expr_estimator : estimator
-        An estimator generated from a skrub expression.
+    pipeline : skrub pipeline
+        A pipeline generated from a skrub expression.
 
     environment : dict
         Bindings for variables contained in the expression.
@@ -465,9 +489,10 @@ def cross_validate(expr_estimator, environment, *, subsampling=False, **cv_param
         :meth:`Expr.skb.subsample_previews`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
-    cv_params : dict
+    kwargs : dict
         All other named arguments are forwarded to
-        ``sklearn.model_selection.cross_validate``.
+        ``sklearn.model_selection.cross_validate``, except that scikit-learn's
+        ``return_estimator`` parameter is named ``return_pipeline`` here.
 
     Returns
     -------
@@ -488,21 +513,25 @@ def cross_validate(expr_estimator, environment, *, subsampling=False, **cv_param
     >>> pred = X.skb.apply(log_reg, y=y)
     >>> search = pred.skb.get_randomized_search(random_state=0)
     >>> skrub.cross_validate(search, pred.skb.get_data())['test_score'] # doctest: +SKIP
-    array([0.75, 0.95, 0.85, 0.85, 0.85])
+    0    0.75
+    1    0.90
+    2    0.95
+    3    0.75
+    4    0.85
+    Name: test_score, dtype: float64
     """
     environment = env_with_subsampling(environment, subsampling)
-    estimator = _to_Xy_estimator(expr_estimator, environment)
-    X, y = _compute_Xy(expr_estimator.expr, environment)
+    kwargs = _rename_cv_param_pipeline_to_estimator(kwargs)
+    X, y = _compute_Xy(pipeline.expr, environment)
     result = model_selection.cross_validate(
-        estimator,
+        _to_Xy_pipeline(pipeline, environment),
         X,
         y,
-        **cv_params,
+        **kwargs,
     )
-    if (estimators := result.get("estimator", None)) is None:
-        return result
-    result["estimator"] = [_to_env_estimator(e) for e in estimators]
-    return result
+    if (fitted_pipelines := result.pop("estimator", None)) is not None:
+        result["pipeline"] = [_to_env_pipeline(p) for p in fitted_pipelines]
+    return pd.DataFrame(result)
 
 
 def train_test_split(
@@ -515,70 +544,9 @@ def train_test_split(
 ):
     """Split an environment into a training an testing environments.
 
-    Parameters
-    ----------
-    expr : skrub expression
-        The expression to be evaluated in the environment.
-
-    environment : dict
-        The environment (dict mapping variable names to values) containing the
-        full data.
-
-    subsampling : bool, default=False
-        If True, and if subsampling has been configured (see
-        :meth:`Expr.skb.subsample_previews`), use a subsample of the data. By
-        default subsampling is not applied and all the data is used.
-
-    splitter : function, optional
-        The function used to split X and y once they have been computed. By
-        default, ``sklearn.train_test_split`` is used.
-
-    splitter_kwargs
-        Additional named arguments to pass to the splitter.
-
-    Returns
-    -------
-    dict
-        The return value is slightly different than scikit-learn's. Rather than
-        a tuple, it returns a dictionary with the following keys:
-
-        - train: a dictionary containing the training environment
-        - test: a dictionary containing the test environment
-        - X_train: the value of the variable marked with ``skb.mark_as_x()`` in
-          the train environment
-        - X_test: the value of the variable marked with ``skb.mark_as_x()`` in
-          the test environment
-        - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
-          the train environment, if there is one (may not be the case for
-          unsupervised learning).
-        - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
-          the test environment, if there is one (may not be the case for
-          unsupervised learning).
-
-    Examples
-    --------
-    >>> import skrub
-    >>> from sklearn.dummy import DummyClassifier
-    >>> from sklearn.metrics import accuracy_score
-
-    >>> orders = skrub.var("orders", skrub.toy_orders().orders)
-    >>> X = orders.skb.drop("delayed").skb.mark_as_X()
-    >>> y = orders["delayed"].skb.mark_as_y()
-    >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
-    ...     DummyClassifier(), y=y
-    ... )
-
-    >>> split = skrub.train_test_split(delayed, delayed.skb.get_data(), random_state=0)
-    >>> split.keys()
-    dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
-    >>> estimator = delayed.skb.get_estimator()
-    >>> estimator.fit(split["train"])
-    ExprEstimator(expr=<Apply DummyClassifier>)
-    >>> estimator.score(split["test"])
-    0.0
-    >>> predictions = estimator.predict(split["test"])
-    >>> accuracy_score(split["y_test"], predictions)
-    0.0
+    This functionality is exposed to users through the
+    ``Expr.skb.train_test_split()`` method. See the corresponding docstring for
+    details and examples.
     """
     environment = env_with_subsampling(environment, subsampling)
     X, y = _compute_Xy(expr, environment)
@@ -608,7 +576,7 @@ def train_test_split(
 
 
 class ParamSearch(_CloudPickleExpr, BaseEstimator):
-    """Estimator that evaluates a skrub expression with hyperparameter tuning.
+    """Pipeline that evaluates a skrub expression with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``
     objects are created by calling :meth:`Expr.skb.get_grid_search()` or
@@ -619,7 +587,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         self.expr = expr
         self.search = search
 
-    def __skrub_to_Xy_estimator__(self, environment):
+    def __skrub_to_Xy_pipeline__(self, environment):
         new = _XyParamSearch(self.expr, self.search, _SharedDict(environment))
         _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
         return new
@@ -633,9 +601,8 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         return new_grid
 
     def fit(self, environment):
-        estimator = _XyExprEstimator(self.expr, _SharedDict(environment))
         search = clone(self.search)
-        search.estimator = estimator
+        search.estimator = _XyPipeline(self.expr, _SharedDict(environment))
         param_grid = self._get_param_grid()
         if hasattr(search, "param_grid"):
             search.param_grid = param_grid
@@ -644,9 +611,9 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             search.param_distributions = param_grid
         X, y = _compute_Xy(self.expr, environment)
         search.fit(X, y)
-        _copy_attr(search, self, _SEARCH_FITTED_ATTRIBUTES)
+        _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
         try:
-            self.best_estimator_ = _to_env_estimator(search.best_estimator_)
+            self.best_pipeline_ = _to_env_pipeline(search.best_estimator_)
         except AttributeError:
             # refit is set to False, there is no best_estimator_
             pass
@@ -664,14 +631,14 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
 
     def _call_predictor_method(self, name, environment):
         check_is_fitted(self, "cv_results_")
-        if not hasattr(self, "best_estimator_"):
+        if not hasattr(self, "best_pipeline_"):
             raise AttributeError(
                 "This parameter search was initialized with `refit=False`. "
                 f"{name} is available only after refitting on the best parameters. "
-                "Please pass another value to `refit` or fit an estimator manually "
+                "Please pass another value to `refit` or fit a pipeline manually "
                 "using the `best_params_` or `cv_results_` attributes."
             )
-        return getattr(self.best_estimator_, name)(environment)
+        return getattr(self.best_pipeline_, name)(environment)
 
     @property
     def results_(self):
@@ -703,6 +670,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
 
         all_rows = []
         log_scale_columns = set()
+        int_columns = set()
         for params in self.cv_results_["params"]:
             row = {}
             for param_id, param in params.items():
@@ -718,10 +686,15 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
                     value = param
                     if choice.log:
                         log_scale_columns.add(choice_name)
+                    if choice.to_int:
+                        int_columns.add(choice_name)
                 row[choice_name] = value
             all_rows.append(row)
 
-        metadata = {"log_scale_columns": list(log_scale_columns)}
+        metadata = {
+            "log_scale_columns": list(log_scale_columns),
+            "int_columns": list(int_columns),
+        }
         table = pd.DataFrame(
             all_rows, columns=list(expr_choices["choice_display_names"].values())
         )
@@ -802,23 +775,23 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
 
 
-class _XyParamSearch(_XyEstimatorMixin, ParamSearch):
+class _XyParamSearch(_XyPipelineMixin, ParamSearch):
     def __init__(self, expr, search, environment):
         self.expr = expr
         self.search = search
         self.environment = environment
 
-    def __skrub_to_env_estimator__(self):
+    def __skrub_to_env_pipeline__(self):
         new = ParamSearch(self.expr, self.search)
         _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
         return new
 
     @property
     def classes_(self):
-        if not hasattr(self, "best_estimator_"):
+        if not hasattr(self, "best_pipeline_"):
             attribute_error(self, "classes_")
         try:
-            return _get_classes(self.best_estimator_.expr)
+            return _get_classes(self.best_pipeline_.expr)
         except AttributeError:
             attribute_error(self, "classes_")
 
@@ -827,4 +800,4 @@ class _XyParamSearch(_XyEstimatorMixin, ParamSearch):
         return self
 
     def _call_predictor_method(self, name, X, y=None):
-        return getattr(self.best_estimator_, name)(self._get_env(X, y))
+        return getattr(self.best_pipeline_, name)(self._get_env(X, y))

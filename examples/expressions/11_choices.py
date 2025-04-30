@@ -9,8 +9,8 @@ may influence its prediction performance, such as hyperparameters (e.g. the
 regularization parameter ``alpha`` of a ``RidgeClassifier``, the
 ``learning_rate`` of a ``HistGradientBoostingClassifier``), which estimator to
 use (e.g. ``RidgeClassifier`` or ``HistGradientBoostingClassifier``), or which
-steps to include (e.g. should we join a table to bring additional information or
-not).
+steps to include (e.g. should we join a table to bring additional information
+or not).
 
 We want to tune those choices by trying several options and keeping those that
 give the best performance on a validation set.
@@ -106,7 +106,7 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 X, y = skrub.X(texts), skrub.y(labels)
 
 encoder = skrub.MinHashEncoder(
-    n_components=skrub.choose_int(5, 50, log=True, name="N components")
+    n_components=skrub.choose_int(5, 15, name="N components")
 )
 classifier = HistGradientBoostingClassifier(
     learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="lr")
@@ -117,7 +117,7 @@ pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 # We can then obtain an estimator that performs the hyperparameter search with
 # ``.skb.get_grid_search()`` or ``.skb.get_randomized_search()``. They accept
 # the same arguments as their scikit-learn counterparts (e.g. ``scoring`` and
-# ``n_jobs``). Also, like ``.skb.get_estimator()``, they accept a ``fitted``
+# ``n_jobs``). Also, like ``.skb.get_pipeline()``, they accept a ``fitted``
 # argument and if it is ``True`` the search is fitted on the data we provided
 # when initializing our pipeline's variables.
 
@@ -179,7 +179,7 @@ X.assign(
 # the number of components.
 
 # %%
-n_components = skrub.choose_int(5, 50, log=True, name="N components")
+n_components = skrub.choose_int(5, 15, name="N components")
 
 encoder = skrub.choose_from(
     {

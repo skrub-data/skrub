@@ -17,7 +17,7 @@ from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
-from ._drop_if_too_many_nulls import DropIfTooManyNulls
+from ._drop_uninformative import DropUninformative
 from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
@@ -113,11 +113,23 @@ def _check_transformer(transformer):
     return clone(transformer)
 
 
-def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
+def _get_preprocessors(
+    *,
+    cols,
+    drop_null_fraction,
+    drop_if_unique,
+    drop_if_constant,
+    n_jobs,
+    add_tofloat32=True,
+):
     steps = [CheckInputDataFrame()]
     transformers = [
         CleanNullStrings(),
-        DropIfTooManyNulls(drop_null_fraction),
+        DropUninformative(
+            drop_null_fraction=drop_null_fraction,
+            drop_if_constant=drop_if_constant,
+            drop_if_unique=drop_if_unique,
+        ),
         ToDatetime(),
     ]
     if add_tofloat32:
@@ -158,6 +170,15 @@ class Cleaner(TransformerMixin, BaseEstimator):
         ``None``, this selection is disabled: no columns are dropped based on the
         number of null values they contain.
 
+    drop_if_constant : bool, default=False
+        If set to true, drop columns that contain a single unique value. Note that
+        missing values are considered as one additional distinct value.
+
+    drop_if_unique : bool, default=False
+        If set to true, drop columns that contain only unique values, i.e., the number
+        of unique values is equal to the number of rows in the column. Numeric columns
+        are never dropped.
+
     n_jobs : int, default=None
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
@@ -182,7 +203,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``CleanNullStrings()``: replace strings used to represent null values
       with actual null values.
 
-    - ``DropIfTooManyNulls()``: drop the column if it contains too many null values.
+    - ``DropUninformative()``: drop the column if it contains too many null values,
+    if it contains only one distinct value, or if all values are distinct (off by
+    default).
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
       actual datetimes with the correct dtype.
@@ -243,17 +266,31 @@ class Cleaner(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> cleaner.all_processing_steps_['A']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
+    [CleanNullStrings(), DropUninformative(), ToStr()]
     >>> cleaner.all_processing_steps_['B']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime()]
+    [CleanNullStrings(), DropUninformative(), ToDatetime()]
     >>> cleaner.all_processing_steps_['C']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
+    [CleanNullStrings(), DropUninformative(), ToStr()]
     >>> cleaner.all_processing_steps_['D']
-    [DropIfTooManyNulls()]
+    [DropUninformative()]
+
+    See Also:
+    --------
+    TableVectorizer :
+        Process columns of a dataframe and convert them to a numeric (vectorized)
+        representation.
     """
 
-    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
+    def __init__(
+        self,
+        drop_null_fraction=1.0,
+        drop_if_constant=False,
+        drop_if_unique=False,
+        n_jobs=1,
+    ):
         self.drop_null_fraction = drop_null_fraction
+        self.drop_if_constant = drop_if_constant
+        self.drop_if_unique = drop_if_unique
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -277,6 +314,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         all_steps = _get_preprocessors(
             cols=s.all(),
             drop_null_fraction=self.drop_null_fraction,
+            drop_if_constant=self.drop_if_constant,
+            drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             add_tofloat32=False,
         )
@@ -427,6 +466,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         this selection is disabled: no columns are dropped based on the number
         of null values they contain.
 
+    drop_if_constant : bool, default=False
+        If set to true, drop columns that contain a single unique value. Note that
+        missing values are considered as one additional distinct value.
+
+    drop_if_unique : bool, default=False
+        If set to true, drop columns that contain only unique values, i.e., the number
+        of unique values is equal to the number of rows in the column. Numeric columns
+        are never dropped.
+
     n_jobs : int, default=None
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
@@ -555,7 +603,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), DropUninformative(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
     Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
@@ -630,7 +678,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropIfTooManyNulls(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 
@@ -654,6 +702,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
         drop_null_fraction=1.0,
+        drop_if_constant=False,
+        drop_if_unique=False,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -668,6 +718,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
         self.drop_null_fraction = drop_null_fraction
+        self.drop_if_constant = drop_if_constant
+        self.drop_if_unique = drop_if_unique
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -781,7 +833,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self._preprocessors = [CheckInputDataFrame()]
 
         transformer_list = [CleanNullStrings()]
-        transformer_list.append(DropIfTooManyNulls(self.drop_null_fraction))
+        transformer_list.append(
+            DropUninformative(
+                self.drop_if_constant, self.drop_if_unique, self.drop_null_fraction
+            )
+        )
 
         transformer_list += [
             ToDatetime(),

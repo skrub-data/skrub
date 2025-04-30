@@ -283,7 +283,7 @@ def test_describe_steps():
     ...     func(a, skrub.var("b"))
     ...     .skb.apply(skrub.TableVectorizer())
     ...     .amethod(skrub.as_expr(10))
-    ...     .skb.concat_horizontal([b])
+    ...     .skb.concat([b], axis=1)
     ...     + skrub.choose_bool(name="?").as_expr()
     ...     + skrub.X().skb.if_else(3, b)[skrub.var("item")].b
     ... )
@@ -297,7 +297,7 @@ def test_describe_steps():
     ( VAR 'a' )*
     ( VAR 'a' )*
     BINOP: add
-    CONCATHORIZONTAL: 2 dataframes
+    CONCAT: 2 dataframes
     VALUE BoolChoice
     BINOP: add
     VAR 'X'

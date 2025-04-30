@@ -129,33 +129,39 @@ def n_jobs(request):
 
 def test_fit_predict():
     expression, data = get_expression_and_data("simple")
-    estimator = expression.skb.get_estimator()
+    pipeline = expression.skb.get_pipeline()
     X_train, X_test, y_train, y_test = train_test_split(
         data["X"], data["y"], shuffle=False
     )
     with pytest.raises(NotFittedError):
-        estimator.predict({})
-    estimator.fit({"X": X_train, "y": y_train})
+        pipeline.predict({})
+    pipeline.fit({"X": X_train, "y": y_train})
 
     # Note that y is missing from the environment here. It is not needed for
     # predict (or transform, score etc.)
-    assert estimator.decision_function({"X": X_test}).shape == (25,)
-    predicted = estimator.predict({"X": X_test})
+    assert pipeline.decision_function({"X": X_test}).shape == (25,)
+    predicted = pipeline.predict({"X": X_test})
 
     assert accuracy_score(y_test, predicted) == pytest.approx(0.84, abs=0.05)
 
 
 def test_cross_validate(expression, data, n_jobs):
-    results = expression.skb.cross_validate(data, n_jobs=n_jobs, return_estimator=True)
-    estimators = results["estimator"]
-    assert len(estimators) == 5
-    for e in estimators:
-        assert e.__class__.__name__ == "ExprEstimator"
-        assert is_fitted(e)
+    results = expression.skb.cross_validate(data, n_jobs=n_jobs, return_pipeline=True)
+    pipelines = results["pipeline"]
+    assert len(pipelines) == 5
+    for p in pipelines:
+        assert p.__class__.__name__ == "SkrubPipeline"
+        assert is_fitted(p)
     score = results["test_score"]
     assert len(score) == 5
 
     assert score.mean() == pytest.approx(0.84, abs=0.05)
+
+
+def test_return_estimator():
+    expression, data = get_expression_and_data("simple")
+    with pytest.raises(TypeError, match=".*return_pipeline"):
+        expression.skb.cross_validate(data, return_estimator=True)
 
 
 def test_randomized_search(expression, data, n_jobs):
@@ -216,14 +222,14 @@ def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     mock = Mock(side_effect=pd.read_csv)
     monkeypatch.setattr(pd, "read_csv", mock)
 
-    results = skrub.cross_validate(search, data, n_jobs=n_jobs, return_estimator=True)
+    results = skrub.cross_validate(search, data, n_jobs=n_jobs, return_pipeline=True)
     assert not is_fitted(search)
     score = results["test_score"]
-    estimators = results["estimator"]
-    assert len(estimators) == 5
-    for e in estimators:
-        assert is_fitted(e)
-        assert e.__class__.__name__ == "ParamSearch"
+    pipelines = results["pipeline"]
+    assert len(pipelines) == 5
+    for p in pipelines:
+        assert is_fitted(p)
+        assert p.__class__.__name__ == "ParamSearch"
 
     # when data is loaded from csv we check that the caching results in
     # read_csv being called exactly twice (we have 2 different 'files' to
@@ -252,7 +258,7 @@ def test_unsupervised():
     expr_scores = e.skb.cross_validate()["test_score"]
     sklearn_scores = cross_validate(k_means, X, y)["test_score"]
     assert_allclose(sklearn_scores, expr_scores)
-    expr_k_means = e.skb.get_estimator()
+    expr_k_means = e.skb.get_pipeline()
     expr_k_means.fit({"X": X})
     k_means.fit(X)
     assert (k_means.predict(X) == expr_k_means.predict({"X": X})).all()
@@ -488,8 +494,8 @@ def test_caching():
     ],
 )
 def test_pickling(e):
-    estimator = pickle.loads(pickle.dumps(e.skb.get_estimator()))
-    assert estimator.fit_transform({"a": 10}) == 20
+    pipeline = pickle.loads(pickle.dumps(e.skb.get_pipeline()))
+    assert pipeline.fit_transform({"a": 10}) == 20
 
 
 #
@@ -531,20 +537,20 @@ def test_plot_results():
 @pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     expr, data = get_expression_and_data("simple")
-    est = expr.skb.get_estimator()
+    pipe = expr.skb.get_pipeline()
     with pytest.raises(NotFittedError):
-        est.report(mode="score", environment=data)
-    fit_report = est.report(
+        pipe.report(mode="score", environment=data)
+    fit_report = pipe.report(
         mode="fit",
         environment=data,
         output_dir=tmp_path / "report",
         overwrite=True,
         open=False,
     )
-    assert fit_report["result"] is est
+    assert fit_report["result"] is pipe
     assert fit_report["error"] is None
     assert fit_report["report_path"].is_relative_to(tmp_path)
-    score_report = est.report(
+    score_report = pipe.report(
         mode="score",
         environment=data,
         output_dir=tmp_path / "report",
@@ -557,7 +563,7 @@ def test_report(tmp_path):
 
 
 #
-# methods & attributes of the estimators
+# methods & attributes of the pipelines
 #
 
 
@@ -575,7 +581,7 @@ def test_get_params():
         ),
         y=skrub.y(),
     )
-    estimator = e.skb.get_estimator()
+    pipeline = e.skb.get_pipeline()
     params = {
         "expr",
         "expr__0",
@@ -583,63 +589,63 @@ def test_get_params():
         "expr__2",
         "expr__3",
     }
-    assert estimator.get_params(deep=True).keys() == params
-    assert estimator.get_params(deep=False).keys() == {"expr"}
+    assert pipeline.get_params(deep=True).keys() == params
+    assert pipeline.get_params(deep=False).keys() == {"expr"}
 
 
 def test_set_expr_in_params():
     e1 = skrub.var("a") + skrub.var("b")
     e2 = skrub.var("a") - skrub.var("b")
-    estimator = e1.skb.get_estimator()
+    pipeline = e1.skb.get_pipeline()
     data = {"a": 10, "b": 20}
-    assert estimator.fit_transform(data) == 30
-    estimator.set_params(expr=e2)
-    assert estimator.fit_transform(data) == -10
+    assert pipeline.fit_transform(data) == 30
+    pipeline.set_params(expr=e2)
+    assert pipeline.fit_transform(data) == -10
 
 
 def test_find_fitted_estimator():
-    estimator = (
+    pipeline = (
         (skrub.X() * 1.0)
         .skb.set_name("mul")
         .skb.apply(StandardScaler())
         .skb.set_name("scaler")
         .skb.apply(LogisticRegression(), y=skrub.y())
         .skb.set_name("predictor")
-        .skb.get_estimator()
+        .skb.get_pipeline()
     )
     with pytest.raises(KeyError, match="'xyz'"):
-        estimator.find_fitted_estimator("xyz")
+        pipeline.find_fitted_estimator("xyz")
     with pytest.raises(TypeError, match="Node 'X' does not represent"):
-        estimator.find_fitted_estimator("X")
+        pipeline.find_fitted_estimator("X")
     with pytest.raises(ValueError, match="Node 'scaler' has not been fitted"):
-        estimator.find_fitted_estimator("scaler")
+        pipeline.find_fitted_estimator("scaler")
     data = _simple_data()
-    estimator.fit(data)
-    assert isinstance(estimator.find_fitted_estimator("scaler"), StandardScaler)
-    assert isinstance(estimator.find_fitted_estimator("predictor"), LogisticRegression)
+    pipeline.fit(data)
+    assert isinstance(pipeline.find_fitted_estimator("scaler"), StandardScaler)
+    assert isinstance(pipeline.find_fitted_estimator("predictor"), LogisticRegression)
 
 
-def test_sub_estimator():
-    estimator = (
+def test_sub_pipeline():
+    pipeline = (
         skrub.X()
         .skb.apply(MinMaxScaler())
         .skb.set_name("scaling")
         .skb.apply(LogisticRegression(), y=skrub.y())
-        .skb.get_estimator()
+        .skb.get_pipeline()
     )
     X = np.array([10.0, 5.0, 0.0])[:, None]
     y = np.array([1, 0, 1])
-    estimator.fit({"X": X, "y": y})
-    sub_estimator = estimator.sub_estimator("scaling")
+    pipeline.fit({"X": X, "y": y})
+    sub_pipeline = pipeline.sub_pipeline("scaling")
     assert np.allclose(
-        sub_estimator.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
+        sub_pipeline.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
     )
     X = np.array([100.0, 50.0, -10.0])[:, None]
     assert np.allclose(
-        sub_estimator.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
+        sub_pipeline.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
     )
     with pytest.raises(KeyError, match="'xyz'"):
-        estimator.sub_estimator("xyz")
+        pipeline.sub_pipeline("xyz")
 
 
 #
@@ -676,35 +682,35 @@ def test_estimator_type(estimator_type, expected, bury_apply):
             .match({"a": e, "b": e})
             .as_expr()
         )
-    for est in [
-        e.skb.get_estimator(),
+    for pipe in [
+        e.skb.get_pipeline(),
         e.skb.get_grid_search(),
         e.skb.get_randomized_search(n_iter=2),
     ]:
-        Xy_est = est.__skrub_to_Xy_estimator__({})
-        assert Xy_est._estimator_type == expected
+        Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
+        assert Xy_pipe._estimator_type == expected
         if hasattr(estimator_type, "__sklearn_tags__"):
             # scikit-learn >= 1.6
-            assert Xy_est.__sklearn_tags__() == estimator.__sklearn_tags__()
+            assert Xy_pipe.__sklearn_tags__() == estimator.__sklearn_tags__()
         else:
-            assert not hasattr(Xy_est, "__sklearn_tags__")
+            assert not hasattr(Xy_pipe, "__sklearn_tags__")
 
 
 def test_estimator_type_no_apply():
     e = skrub.X()
-    for est in [
-        e.skb.get_estimator(),
+    for pipe in [
+        e.skb.get_pipeline(),
         e.skb.get_grid_search(),
         e.skb.get_randomized_search(n_iter=2),
     ]:
-        Xy_est = est.__skrub_to_Xy_estimator__({})
-        assert Xy_est._estimator_type == "transformer"
+        Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
+        assert Xy_pipe._estimator_type == "transformer"
         if hasattr(BaseEstimator, "__sklearn_tags__"):
             # scikit-learn >= 1.6
-            assert Xy_est.__sklearn_tags__().transformer_tags is not None
-            assert Xy_est.__sklearn_tags__().classifier_tags is None
+            assert Xy_pipe.__sklearn_tags__().transformer_tags is not None
+            assert Xy_pipe.__sklearn_tags__().classifier_tags is None
         else:
-            assert not hasattr(Xy_est, "__sklearn_tags__")
+            assert not hasattr(Xy_pipe, "__sklearn_tags__")
 
 
 @pytest.mark.parametrize("bury_apply", [False, True])
@@ -720,28 +726,28 @@ def test_classes(bury_apply):
             .skb.apply_func(lambda x: x)
         )
     logreg = LogisticRegression().fit(data["X"], data["y"])
-    for est in [
-        expression.skb.get_estimator(),
+    for pipe in [
+        expression.skb.get_pipeline(),
         expression.skb.get_grid_search(),
         expression.skb.get_randomized_search(n_iter=2),
     ]:
-        Xy_est = est.__skrub_to_Xy_estimator__({})
-        assert not hasattr(Xy_est, "classes_")
-        Xy_est.fit(data["X"], data["y"])
-        assert (Xy_est.classes_ == logreg.classes_).all()
+        Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
+        assert not hasattr(Xy_pipe, "classes_")
+        Xy_pipe.fit(data["X"], data["y"])
+        assert (Xy_pipe.classes_ == logreg.classes_).all()
 
 
 def test_classes_no_apply():
     expression = skrub.X() + skrub.choose_from([0.0, 1.0], name="_")
-    for est in [
-        expression.skb.get_estimator(),
+    for pipe in [
+        expression.skb.get_pipeline(),
         expression.skb.get_grid_search(scoring=lambda e, X: 0),
         expression.skb.get_randomized_search(n_iter=2, scoring=lambda e, X: 0),
     ]:
-        Xy_est = est.__skrub_to_Xy_estimator__({})
-        assert not hasattr(Xy_est, "classes_")
-        Xy_est.fit(np.ones((10, 2)))
-        assert not hasattr(Xy_est, "classes_")
+        Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
+        assert not hasattr(Xy_pipe, "classes_")
+        Xy_pipe.fit(np.ones((10, 2)))
+        assert not hasattr(Xy_pipe, "classes_")
 
 
 @pytest.mark.parametrize("bury_apply", [False, True])
@@ -754,21 +760,21 @@ def test_support_modes(bury_apply):
     e = skrub.X().skb.apply(classif, y=skrub.y())
     if bury_apply:
         e = skrub.as_expr({"a": e})["a"]
-    estimator = e.skb.get_estimator()
+    pipeline = e.skb.get_pipeline()
 
-    # as in grid-search, before fitting the estimator's capabilities are read
-    # from the default estimator and after fitting from the fitted estimator
-    assert hasattr(estimator, "predict")
-    assert hasattr(estimator, "predict_proba")
-    assert not hasattr(estimator, "decision_function")
-    estimator.fit(data | {"c": "logistic"})
-    assert hasattr(estimator, "decision_function")
-    assert estimator.decision_function(data).shape == data["y"].shape
+    # as in grid-search, before fitting the pipelines's capabilities are read
+    # from the default pipeline and after fitting from the fitted pipeline
+    assert hasattr(pipeline, "predict")
+    assert hasattr(pipeline, "predict_proba")
+    assert not hasattr(pipeline, "decision_function")
+    pipeline.fit(data | {"c": "logistic"})
+    assert hasattr(pipeline, "decision_function")
+    assert pipeline.decision_function(data).shape == data["y"].shape
 
 
 def test_support_modes_no_apply():
-    estimator = skrub.X().skb.get_estimator()
+    pipeline = skrub.X().skb.get_pipeline()
     for a in ["predict", "predict_proba", "score", "decision_function"]:
-        assert not hasattr(estimator, a)
+        assert not hasattr(pipeline, a)
     for a in ["fit", "transform", "fit_transform"]:
-        assert hasattr(estimator, a)
+        assert hasattr(pipeline, a)

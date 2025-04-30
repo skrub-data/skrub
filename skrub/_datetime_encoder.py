@@ -434,7 +434,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
         # Setting the index back to that of the input column (pandas shenanigans)
         X_out = sbd.copy_index(column, sbd.make_dataframe_like(column, all_extracted))
-        X_out = sbd.concat_horizontal(X_out, *new_features)
+        X_out = sbd.concat(X_out, *new_features, axis=1)
 
         # Censoring all the null features
         X_out = sbd.where_row(X_out, not_nulls, null_mask)

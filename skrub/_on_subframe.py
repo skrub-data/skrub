@@ -167,7 +167,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
             transformed = sbd.set_column_names(
                 transformed, self._transformed_output_names
             )
-            result = sbd.concat_horizontal(passthrough, transformed)
+            result = sbd.concat(passthrough, transformed, axis=1)
         else:
             self.transformer_ = None
             result = passthrough
@@ -199,7 +199,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
         # had a correct type (e.g. polars dataframe) in `fit_transform` it will
         # have the same (correct) type in `transform`.
         transformed = sbd.set_column_names(transformed, self._transformed_output_names)
-        result = sbd.concat_horizontal(passthrough, transformed)
+        result = sbd.concat(passthrough, transformed, axis=1)
         result = sbd.copy_index(X, result)
         return result
 

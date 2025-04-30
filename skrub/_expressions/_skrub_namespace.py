@@ -5,7 +5,7 @@ from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
-from ._estimator import ExprEstimator, ParamSearch, cross_validate, train_test_split
+from ._estimator import ParamSearch, SkrubPipeline, cross_validate, train_test_split
 from ._evaluation import (
     choices,
     clone,
@@ -16,7 +16,7 @@ from ._evaluation import (
 from ._expressions import (
     AppliedEstimator,
     Apply,
-    ConcatHorizontal,
+    Concat,
     Expr,
     FreezeAfterFit,
     IfElse,
@@ -275,8 +275,8 @@ class SkrubNamespace:
         >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
-        >>> est = e.skb.get_estimator().fit({"X": X})
-        >>> est.predict({"X": X})  # doctest: +SKIP
+        >>> pipeline = e.skb.get_pipeline().fit({"X": X})
+        >>> pipeline.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
@@ -580,13 +580,17 @@ class SkrubNamespace:
         return self._apply(DropCols(cols), how="full_frame")
 
     @check_expr
-    def concat_horizontal(self, others):
-        """Concatenate dataframes horizontally.
+    def concat(self, others, axis=0):
+        """Concatenate dataframes vertically or horizontally.
 
         Parameters
         ----------
         others : list of dataframes
             The dataframes to stack horizontally with ``self``
+        axis : {0, 1}, default 0
+            The axis to concatenate along.
+            0: stack vertically (rows)
+            1: stack horizontally (columns)
 
         Returns
         -------
@@ -600,30 +604,40 @@ class SkrubNamespace:
         >>> a = skrub.var('a', pd.DataFrame({'a1': [0], 'a2': [1]}))
         >>> b = skrub.var('b', pd.DataFrame({'b1': [2], 'b2': [3]}))
         >>> c = skrub.var('c', pd.DataFrame({'c1': [4], 'c2': [5]}))
+        >>> d = skrub.var('d', pd.DataFrame({'c1': [6], 'c2': [7]}))
         >>> a
         <Var 'a'>
         Result:
         ―――――――
            a1  a2
         0   0   1
-        >>> a.skb.concat_horizontal([b, c])
-        <ConcatHorizontal: 3 dataframes>
+        >>> a.skb.concat([b, c], axis=1)
+        <Concat: 3 dataframes>
         Result:
         ―――――――
            a1  a2  b1  b2  c1  c2
         0   0   1   2   3   4   5
 
+        >>> c.skb.concat([d], axis=0)
+        <Concat: 2 dataframes>
+        Result:
+        ―――――――
+           c1  c2
+        0   4   5
+        1   6   7
+
+
         Note that even if we want to concatenate a single dataframe we must
         still put it in a list:
 
-        >>> a.skb.concat_horizontal([b])
-        <ConcatHorizontal: 2 dataframes>
+        >>> a.skb.concat([b], axis=1)
+        <Concat: 2 dataframes>
         Result:
         ―――――――
            a1  a2  b1  b2
         0   0   1   2   3
         """  # noqa: E501
-        return Expr(ConcatHorizontal(self._expr, others))
+        return Expr(Concat(self._expr, others, axis=axis))
 
     @check_expr
     def subsample_previews(self, n=1000, *, how="head"):
@@ -907,7 +921,7 @@ class SkrubNamespace:
         2   3     cup         5  2020-04-04
         3   4   spoon         1  2020-04-05
         >>> n_products = skrub.X()['product'].nunique()
-        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer = n_products.skb.get_pipeline()
         >>> transformer.fit_transform({'X': X_df})
         3
 
@@ -921,7 +935,7 @@ class SkrubNamespace:
         remembered during ``fit`` and reused during ``transform``:
 
         >>> n_products = skrub.X()['product'].nunique().skb.freeze_after_fit()
-        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer = n_products.skb.get_pipeline()
         >>> transformer.fit_transform({'X': X_df})
         3
         >>> transformer.transform({'X': X_df.iloc[:2]})
@@ -1195,29 +1209,30 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def get_estimator(self, fitted=False, subsampling=False):
-        """Get a scikit-learn-like estimator for this expression.
+    def get_pipeline(self, *, fitted=False, subsampling=False):
+        """Get a skrub pipeline for this expression.
 
-        Returns a :class:`ExprEstimator`.
+        Returns a :class:`SkrubPipeline`.
 
         Please see the examples gallery for full information about expressions
-        and the estimators they generate.
+        and the pipelines they generate.
 
-        Provides an estimator with a ``fit()`` method so we can fit it to some
+        Provides a skrub pipeline with a ``fit()`` method so we can fit it to some
         training data and then apply it to unseen data by calling
         ``transform()`` or ``predict()``.
 
-        An important difference is that those methods accept a dictionary of
-        inputs rather than ``X`` and ``y`` arguments (see examples below).
+        An important difference between skrub pipelines and scikit-learn
+        estimators is that ``fit()``, ``transform()`` etc. accept a dictionary
+        of inputs rather than ``X`` and ``y`` arguments (see examples below).
 
-        We can pass ``fitted=True`` to get an estimator fitted to the data
+        We can pass ``fitted=True`` to get a pipeline fitted to the data
         provided as the values in ``skrub.var("name", value=...)`` and
         ``skrub.X(value)``.
 
         Parameters
         ----------
         fitted : bool (default=False)
-            If true, the returned estimator is fitted to the data provided when
+            If true, the returned pipeline is fitted to the data provided when
             initializing variables in the expression.
 
         subsampling : bool (default=False)
@@ -1232,8 +1247,8 @@ class SkrubNamespace:
 
         Returns
         -------
-        estimator
-            An estimator with an interface similar to scikit-learn's, except
+        pipeline
+            A skrub pipeline with an interface similar to scikit-learn's, except
             that its methods accept a dictionary of named inputs rather than
             ``X`` and ``y`` arguments.
 
@@ -1257,13 +1272,13 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
-        >>> estimator = pred.skb.get_estimator(fitted=True)
+        >>> pipeline = pred.skb.get_pipeline(fitted=True)
         >>> new_orders_df = skrub.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
         4   5     cup         5  2020-04-11
         5   6    fork         2  2020-04-12
-        >>> estimator.predict({'orders': new_orders_df})
+        >>> pipeline.predict({'orders': new_orders_df})
         array([False, False])
 
         Note that the ``'orders'`` key in the dictionary passed to ``predict``
@@ -1272,11 +1287,11 @@ class SkrubNamespace:
         """
         _check_subsampling(fitted, subsampling)
 
-        estimator = ExprEstimator(self.clone())
-        _check_can_be_pickled(estimator)
+        pipeline = SkrubPipeline(self.clone())
+        _check_can_be_pickled(pipeline)
         if not fitted:
-            return estimator
-        return estimator.fit(env_with_subsampling(self.get_data(), subsampling))
+            return pipeline
+        return pipeline.fit(env_with_subsampling(self.get_data(), subsampling))
 
     def train_test_split(
         self,
@@ -1342,12 +1357,12 @@ class SkrubNamespace:
         >>> split = delayed.skb.train_test_split(random_state=0)
         >>> split.keys()
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
-        >>> estimator = delayed.skb.get_estimator()
-        >>> estimator.fit(split["train"])
-        ExprEstimator(expr=<Apply DummyClassifier>)
-        >>> estimator.score(split["test"])
+        >>> pipeline = delayed.skb.get_pipeline()
+        >>> pipeline.fit(split["train"])
+        SkrubPipeline(expr=<Apply DummyClassifier>)
+        >>> pipeline.score(split["test"])
         0.0
-        >>> predictions = estimator.predict(split["test"])
+        >>> predictions = pipeline.predict(split["test"])
         >>> accuracy_score(split["y_test"], predictions)
         0.0
         """
@@ -1549,7 +1564,7 @@ class SkrubNamespace:
     def cross_validate(self, environment=None, *, subsampling=False, **kwargs):
         """Cross-validate the expression.
 
-        This generates the estimator (with default hyperparameters) and runs
+        This generates the pipeline with default hyperparameters and runs
         scikit-learn cross-validation.
 
         Parameters
@@ -1566,7 +1581,9 @@ class SkrubNamespace:
 
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.model_selection.cross_validate``.
+            ``sklearn.model_selection.cross_validate``, except that
+            scikit-learn's ``return_estimator`` parameter is named
+            ``return_pipeline`` here.
 
         Returns
         -------
@@ -1583,19 +1600,26 @@ class SkrubNamespace:
         >>> X, y = skrub.X(X_a), skrub.y(y_a)
         >>> pred = X.skb.apply(LogisticRegression(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.84, 0.78])
+        0    0.84
+        1    0.78
+        Name: test_score, dtype: float64
 
         Passing some data:
 
         >>> data = {'X': X_a, 'y': y_a}
         >>> pred.skb.cross_validate(data)['test_score']
-        array([0.75, 0.9 , 0.85, 0.65, 0.9 ])
+        0    0.75
+        1    0.90
+        2    0.85
+        3    0.65
+        4    0.90
+        Name: test_score, dtype: float64
         """
         if environment is None:
             environment = self.get_data()
 
         return cross_validate(
-            self.get_estimator(), environment, subsampling=subsampling, **kwargs
+            self.get_pipeline(), environment, subsampling=subsampling, **kwargs
         )
 
     @check_expr
@@ -1655,7 +1679,9 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.66666667, 0.66666667])
+        0    0.666667
+        1    0.666667
+        Name: test_score, dtype: float64
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
@@ -1725,7 +1751,9 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.66666667, 0.66666667])
+        0    0.666667
+        1    0.666667
+        Name: test_score, dtype: float64
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the

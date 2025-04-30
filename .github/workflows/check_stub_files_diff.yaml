@@ -1,0 +1,24 @@
+name: Check if .pyi needs updating
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  check-pyi-diff:
+    name: Check if .pyi file differs from generated one
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.8
+        with:
+          pixi-version: v0.41.3
+          frozen: true
+
+      - name: Check stub file for `_expression.py` is up-to-date
+        run: pixi run -e check-pyi-diff check

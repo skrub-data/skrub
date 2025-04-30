@@ -43,8 +43,9 @@ def test_parallel_coord():
     c5 = skrub.choose_bool(name="c5")
     c6 = skrub.choose_from([2, 3, 4, 5], name="c6").match({2: c2, 3: c3, 4: c4, 5: c5})
     c7 = skrub.choose_int(1, 100, log=True, name="c7")
+    c9 = skrub.choose_from([skrub.choose_int(1, 3, name="c8"), 4], name="c9")
 
-    X = skrub.as_expr([skrub.X(), c0, c1, c6, c7])[0]
+    X = skrub.as_expr([skrub.X(), c0, c1, c6, c7, c9])[0]
     pred = X.skb.apply(DummyClassifier(), y=skrub.y())
     search = pred.skb.get_randomized_search(random_state=0, n_iter=30).fit(
         {"X": X_a, "y": y_a}
@@ -73,5 +74,11 @@ def test_parallel_coord():
     assert list(dim["ticktext"]) == ["Null", "False", "True"]
     assert list(dim["tickvals"]) == [-1.0, 0, 1]
     next(data)
+    dim = next(data)
+    assert dim["label"] == "c8"
+    assert list(dim["ticktext"]) == ["NaN", "1", "2", "3"]
+    dim = next(data)
+    assert dim["label"] == "c9"
+    assert list(dim["ticktext"]) == ["4", "choose_int(1, 3, name='c8')"]
     dim = next(data)
     assert dim["label"] == "fit time"
