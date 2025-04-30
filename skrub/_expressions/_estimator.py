@@ -263,7 +263,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
             )
         return node._skrub_impl.estimator_
 
-    def sub_pipeline(self, name):
+    def truncated_after(self, name):
         """Extract the part of the pipeline that leads up to the given step.
 
         This is similar to slicing a scikit-learn pipeline. It can be useful
@@ -306,7 +306,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
 
         Truncate the pipeline after vectorization:
 
-        >>> vectorizer = pipeline.sub_pipeline("vectorizer")
+        >>> vectorizer = pipeline.truncated_after("vectorizer")
         >>> vectorizer
         SkrubPipeline(expr=<vectorizer | Apply TableVectorizer>)
         >>> vectorizer.transform({"X": orders.X})
@@ -321,7 +321,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
 
         This contains the full transformation up to the given step:
 
-        >>> pipeline.sub_pipeline("vectorizer")
+        >>> pipeline.truncated_after("vectorizer")
         SkrubPipeline(expr=<vectorizer | Apply TableVectorizer>)
 
         The result of ``find_fitted_estimator`` only contains the inner
