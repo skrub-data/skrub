@@ -922,7 +922,7 @@ def test_deprecation_high_cardinality():
     """Check that the deprecation warning is raised when using the default
     value for the high_cardinality encoder."""
     with pytest.warns(
-        DeprecationWarning,
-        match=".*The default high_cardinality encode will change*",
+        FutureWarning,
+        match=".*The default high_cardinality encoder will be changed*",
     ):
         TableVectorizer().fit(_get_clean_dataframe())

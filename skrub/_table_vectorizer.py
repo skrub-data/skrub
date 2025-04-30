@@ -697,7 +697,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         *,
         cardinality_threshold=40,
         low_cardinality=LOW_CARDINALITY_TRANSFORMER,
-        high_cardinality=HIGH_CARDINALITY_TRANSFORMER,
+        high_cardinality="warn",
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
@@ -760,7 +760,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         dataframe
             The transformed input.
         """
-        if self.high_cardinality is HIGH_CARDINALITY_TRANSFORMER:
+        if self.high_cardinality == "warn":
             warnings.warn(
                 (
                     "The default high_cardinality encoder will be changed to "
@@ -768,8 +768,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                     "To suppress this warning, please set the "
                     "high_cardinality parameter explicitly."
                 ),
-                category=DeprecationWarning,
+                category=FutureWarning,
             )
+            self.high_cardinality = HIGH_CARDINALITY_TRANSFORMER
 
         self._check_specific_columns()
         self._make_pipeline()
