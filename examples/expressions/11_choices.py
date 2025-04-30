@@ -72,7 +72,7 @@ pred = X.skb.apply(skrub.MinHashEncoder()).skb.apply(
     HistGradientBoostingClassifier(), y=y
 )
 
-pred.skb.cross_validate(n_jobs=4)["test_score"]
+skrub.cross_validate(pred, n_jobs=4)["test_score"]
 
 # %%
 # For the sake of the example, we will focus on the number of ``MinHashEncoder``

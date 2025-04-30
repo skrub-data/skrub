@@ -5,7 +5,7 @@ from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
-from ._estimator import ParamSearch, SkrubPipeline, cross_validate, train_test_split
+from ._estimator import ParamSearch, SkrubPipeline, train_test_split
 from ._evaluation import (
     choices,
     clone,
@@ -262,7 +262,7 @@ class SkrubNamespace:
         ...     y=skrub.y(y),
         ...     unsupervised=True,
         ... )
-        >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
+        >>> skrub.cross_validate(e)["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
         >>> pipeline = e.skb.get_pipeline().fit({"X": X})
@@ -1367,61 +1367,6 @@ class SkrubNamespace:
             return search
         return search.fit(self.get_data())
 
-    def cross_validate(self, environment=None, **kwargs):
-        """Cross-validate the expression.
-
-        This generates the pipeline with default hyperparameters and runs
-        scikit-learn cross-validation.
-
-        Parameters
-        ----------
-        environment : dict or None
-            Bindings for variables contained in the expression. If not
-            provided, the ``value``s passed when initializing ``var()`` are
-            used.
-
-        kwargs : dict
-            All other named arguments are forwarded to
-            ``sklearn.model_selection.cross_validate``, except that
-            scikit-learn's ``return_estimator`` parameter is named
-            ``return_pipeline`` here.
-
-        Returns
-        -------
-        dict
-            Cross-validation results.
-
-        Examples
-        --------
-        >>> from sklearn.datasets import make_classification
-        >>> from sklearn.linear_model import LogisticRegression
-        >>> import skrub
-
-        >>> X_a, y_a = make_classification(random_state=0)
-        >>> X, y = skrub.X(X_a), skrub.y(y_a)
-        >>> pred = X.skb.apply(LogisticRegression(), y=y)
-        >>> pred.skb.cross_validate(cv=2)['test_score']
-        0    0.84
-        1    0.78
-        Name: test_score, dtype: float64
-
-        Passing some data:
-
-        >>> data = {'X': X_a, 'y': y_a}
-        >>> pred.skb.cross_validate(data)['test_score']
-        0    0.75
-        1    0.90
-        2    0.85
-        3    0.65
-        4    0.90
-        Name: test_score, dtype: float64
-        """
-
-        if environment is None:
-            environment = self.get_data()
-
-        return cross_validate(self.get_pipeline(), environment, **kwargs)
-
     @check_expr
     def mark_as_X(self):
         """Mark this expression as being the ``X`` table.
@@ -1478,7 +1423,7 @@ class SkrubNamespace:
 
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
-        >>> pred.skb.cross_validate(cv=2)['test_score']
+        >>> skrub.cross_validate(pred, cv=2)['test_score']
         0    0.666667
         1    0.666667
         Name: test_score, dtype: float64
@@ -1550,7 +1495,7 @@ class SkrubNamespace:
 
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
-        >>> pred.skb.cross_validate(cv=2)['test_score']
+        >>> skrub.cross_validate(pred, cv=2)['test_score']
         0    0.666667
         1    0.666667
         Name: test_score, dtype: float64
