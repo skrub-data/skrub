@@ -42,6 +42,8 @@ _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
 _SEARCH_FITTED_ATTRIBUTES = _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY + [
     "best_pipeline_"
 ]
+_GET_PIPELINE_DEFAULT_ARG = "expr.skb.get_pipeline()"
+_GET_DATA_DEFAULT_ARG = "expr.skb.get_data()"
 
 
 def _default_sklearn_tags():
@@ -465,7 +467,24 @@ def _rename_cv_param_pipeline_to_estimator(kwargs):
     return renamed
 
 
-def cross_validate(pipeline, environment, **kwargs):
+def _check_expr_pipeline_env(expr, pipeline, environment):
+    # TODO error handling
+    if expr is None:
+        expr = pipeline.expr
+    if isinstance(pipeline, str):
+        pipeline = expr.skb.get_pipeline()
+    if isinstance(environment, str):
+        environment = expr.skb.get_data()
+    return expr, pipeline, environment
+
+
+def cross_validate(
+    expr=None,
+    *,
+    pipeline=_GET_PIPELINE_DEFAULT_ARG,
+    environment=_GET_DATA_DEFAULT_ARG,
+    **kwargs,
+):
     """Cross-validate a pipeline built from an expression.
 
     This runs cross-validation from a pipeline that was built from a skrub
@@ -477,11 +496,24 @@ def cross_validate(pipeline, environment, **kwargs):
 
     Parameters
     ----------
+    expr : skrub expression
+        The expression to cross-validate, the expression from which the default
+        pipeline and data are created. If both ``pipeline`` and ``environment``
+        are provided, ``expr`` is unused and should not be provided.
+
     pipeline : skrub pipeline
-        A pipeline generated from a skrub expression.
+        A pipeline generated from a skrub expression. By default, it is
+        obtained from ``expr`` by calling :meth:`Expr.skb.get_pipeline()`. Note
+        that this creates a pipeline that uses the default value for each of
+        the (hyperparameter) choices. To perform hyperparameter search, replace
+        this default value with a pipeline created by calling
+        :meth:`Expr.skb.get_randomized_search` or
+        :meth:`Expr.skb.get_grid_search`.
 
     environment : dict
-        Bindings for variables contained in the expression.
+        Bindings for variables contained in the expression. By default, it is
+        obtained from the variable values in ``expr`` by calling
+        :meth:`Expr.skb.get_data`.
 
     kwargs : dict
         All other named arguments are forwarded to
@@ -515,7 +547,8 @@ def cross_validate(pipeline, environment, **kwargs):
     Name: test_score, dtype: float64
     """
     kwargs = _rename_cv_param_pipeline_to_estimator(kwargs)
-    X, y = _compute_Xy(pipeline.expr, environment)
+    expr, pipeline, environment = _check_expr_pipeline_env(expr, pipeline, environment)
+    X, y = _compute_Xy(expr, environment)
     result = model_selection.cross_validate(
         _to_Xy_pipeline(pipeline, environment),
         X,
