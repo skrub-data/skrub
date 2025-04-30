@@ -121,6 +121,7 @@ def _get_preprocessors(
     drop_if_constant,
     n_jobs,
     add_tofloat32=True,
+    datetime_format=None,
 ):
     steps = [CheckInputDataFrame()]
     transformers = [
@@ -130,7 +131,7 @@ def _get_preprocessors(
             drop_if_constant=drop_if_constant,
             drop_if_unique=drop_if_unique,
         ),
-        ToDatetime(),
+        ToDatetime(format=datetime_format),
     ]
     if add_tofloat32:
         transformers.append(ToFloat32())
@@ -286,11 +287,13 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_null_fraction=1.0,
         drop_if_constant=False,
         drop_if_unique=False,
+        datetime_format=None,
         n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
+        self.datetime_format = datetime_format
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -318,6 +321,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             add_tofloat32=False,
+            datetime_format=self.datetime_format,
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
@@ -704,6 +708,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         drop_null_fraction=1.0,
         drop_if_constant=False,
         drop_if_unique=False,
+        datetime_format=None,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -720,6 +725,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
+        self.datetime_format = datetime_format
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -840,7 +846,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         )
 
         transformer_list += [
-            ToDatetime(),
+            ToDatetime(format=self.datetime_format),
             ToFloat32(),
             CleanCategories(),
             ToStr(),
