@@ -28,7 +28,6 @@ instead of:
 Skrub then inspects
 our pipeline to discover all the places where we used objects like
 ``skrub.choose_from()`` and builds a grid of hyperparameters for us.
-
 """
 
 # %%
