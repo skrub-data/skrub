@@ -71,10 +71,10 @@ Because these Skrub objects encapsulate computations that can be evaluated to pr
 results, we call them **expressions**.
 
 The simplest expressions are **variables**, which represent inputs to our machine
-learning estimator—such as "products" or "customers" tables or dataframes.
+learning pipeline—such as "products" or "customers" tables or dataframes.
 
 These variables can be combined using operators and function calls to build more
-complex expressions. The estimator is constructed implicitly as we apply these
+complex expressions. The pipeline is constructed implicitly as we apply these
 operations, rather than by specifying an explicit list of transformations.
 
 We start by declaring inputs:
@@ -84,24 +84,28 @@ We start by declaring inputs:
 >>> a = skrub.var("a")
 >>> b = skrub.var("b")
 
-We then apply transformations, which we can finally evaluate, by passing a dictionary
-mapping input name to values:
+We then apply transformations, composing more complex expressions.
 
 >>> c = a + b
+>>> c
+
+Finally, we can evaluate an expression, by passing a dictionary mapping input
+(variable) names to values:
+
 >>> c.skb.eval({"a": 10, "b": 6})
 16
 
 As shown above, the special ``.skb`` attribute allows to interact with the expression
-object itself, and ``.skb.eval()`` evaluate an expression.
+object itself, and :meth:`~Expr.skb.eval()` evaluates an expression.
 
-Access to any other attribute is simply added as a new operation in the computation
-graph:
+Access to any other attribute than ``.skb`` is simply added as a new operation
+in the computation graph:
 
 >>> d = c.capitalize()
 >>> d.skb.eval({"a": "hello, ", "b": "world!"})
 'Hello, world!'
 
-Finally, we can get an estimator that can be fitted and applied to data.
+Finally, we can get a pipeline that can be fitted and applied to data.
 
 >>> pipeline = c.skb.get_pipeline()
 >>> pipeline.fit_transform({"a": 10, "b": 7})
@@ -110,11 +114,12 @@ Finally, we can get an estimator that can be fitted and applied to data.
 Previews
 ~~~~~~~~
 
-As we saw above, we can call ``.skb.eval()`` with a dictionary of bindings to compute
-the result of a pipeline. However, to make interactive development easier without
-having to call ``.skb.eval()`` repeatedly, Skrub provides a way to preview the result
-of an expression. When creating a variable, if we pass a value along with its name,
-Skrub will use that value to compute and preview the result of the expression.
+As we saw above, we can call :meth:`~Expr.skb.eval` with a dictionary of
+bindings to compute the result of a pipeline. However, to make interactive
+development easier without having to call `eval()` repeatedly, Skrub provides a
+way to preview the result of an expression. When creating a variable, if we pass
+a value along with its name, Skrub will use that value to compute and preview
+the result of the expression.
 
 >>> a = skrub.var("a", 10)
 >>> b = skrub.var("b", 6)
