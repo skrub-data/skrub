@@ -70,7 +70,9 @@ class BaseChoice:
         raise TypeError(f"key must be {self.keys()[0]!r}")
 
 
-def _check_match_keys(outcome_values, mapping_keys, has_default):
+def _check_match_keys(outcome_values, default_outcome, mapping_keys, has_default):
+    if default_outcome is not NULL:
+        outcome_values = [*outcome_values, default_outcome]
     try:
         extra_keys = set(mapping_keys).difference(outcome_values)
         extra_outcomes = set(outcome_values).difference(mapping_keys)
@@ -110,6 +112,7 @@ class Choice(BaseChoice):
     outcomes: list[typing.Any]
     outcome_names: typing.Optional[list[str]]
     name: typing.Optional[str] = None
+    default_outcome: typing.Any = NULL
     chosen_outcome_idx: typing.Optional[int] = None
 
     def __post_init__(self):
@@ -129,31 +132,10 @@ class Choice(BaseChoice):
         if len(set(self.outcome_names)) != len(self.outcome_names):
             raise ValueError("Outcome names should be unique")
 
-    def map_values(self, func):
-        """
-        Apply ``func`` to each of the outcomes' value.
-
-        This does not modify the choice nor its outcomes in-place. It returns a
-        new choice where each of the outcome's value has been replaced by its
-        image through ``func``. The choice name and outcome names are
-        preserved.
-
-        >>> from skrub import choose_from
-        >>> choice = choose_from(
-        ...     {"a": "outcome a", "b": "outcome b"}, name="the choice"
-        ... )
-        >>> choice
-        choose_from({'a': 'outcome a', 'b': 'outcome b'}, name='the choice')
-        >>> choice.map_values(str.upper)
-        choose_from({'a': 'OUTCOME A', 'b': 'OUTCOME B'}, name='the choice')
-        >>> choice
-        choose_from({'a': 'outcome a', 'b': 'outcome b'}, name='the choice')
-        """
-        outcomes = [func(out) for out in self.outcomes]
-        return _with_fields(self, outcomes=outcomes)
-
     def default(self):
         """Default outcome: the first one in the list."""
+        if self.default_outcome is not NULL:
+            return self.default_outcome
         return self.outcomes[0]
 
     def chosen_outcome_or_default(self):
@@ -254,7 +236,12 @@ class Choice(BaseChoice):
         >>> learner_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
         {'logistic': 'linear', 'hgb': 'unknown'}
         """  # noqa : E501
-        _check_match_keys(self.outcomes, outcome_mapping.keys(), default is not NULL)
+        _check_match_keys(
+            self.outcomes,
+            self.default_outcome,
+            outcome_mapping.keys(),
+            default is not NULL,
+        )
         if default is NULL:
             complete_mapping = outcome_mapping
         else:
@@ -269,7 +256,11 @@ class Choice(BaseChoice):
             arg = self.outcomes
         else:
             arg = {name: out for name, out in zip(self.outcome_names, self.outcomes)}
-        args_r = _utils.repr_args((arg,), {"name": self.name}, {"name": None})
+        args_r = _utils.repr_args(
+            (arg,),
+            {"name": self.name, "default": self.default_outcome},
+            {"name": None, "default": NULL},
+        )
         return f"choose_from({args_r})"
 
     def __skrub_short_repr__(self):
@@ -278,7 +269,11 @@ class Choice(BaseChoice):
         arg = {
             name: _Ellipsis() for name, out in zip(self.outcome_names, self.outcomes)
         }
-        args_r = _utils.repr_args((arg,), {"name": self.name}, {"name": None})
+        args_r = _utils.repr_args(
+            (arg,),
+            {"name": self.name, "default": self.default_outcome},
+            {"name": None, "default": NULL},
+        )
         return f"choose_from({args_r})"
 
 
@@ -330,6 +325,7 @@ class Match:
         """  # noqa: E501
         _check_match_keys(
             self.outcome_mapping.values(),
+            NULL,
             outcome_mapping.keys(),
             default is not NULL,
         )
@@ -348,7 +344,7 @@ class Match:
         return as_expr(self)
 
 
-def choose_from(outcomes, *, name=None):
+def choose_from(outcomes, *, name=None, default=NULL):
     """Construct a choice among several possible outcomes.
 
     Outcomes can be provided in a list:
@@ -377,7 +373,9 @@ def choose_from(outcomes, *, name=None):
         outcome_names, outcomes = list(outcomes.keys()), list(outcomes.values())
     else:
         outcome_names = None
-    return Choice(outcomes, outcome_names=outcome_names, name=name)
+    return Choice(
+        outcomes, outcome_names=outcome_names, name=name, default_outcome=default
+    )
 
 
 def get_default(obj):
@@ -425,12 +423,14 @@ class Optional(Choice):
 
     def __repr__(self):
         args = _utils.repr_args(
-            (get_default(self),), {"name": self.name}, defaults={"name": None}
+            (self.outcomes[0]),
+            {"name": self.name, "default": self.default_outcome},
+            defaults={"name": None, "default": NULL},
         )
         return f"optional({args})"
 
 
-def optional(value, *, name=None):
+def optional(value, *, name=None, default=NULL):
     """Construct a choice between a value and ``None``.
 
     This is useful for optional steps in a pipeline. If we want to try our
@@ -446,12 +446,21 @@ def optional(value, *, name=None):
     the PCA and one without.
     """
     # TODO remove outcome names
-    return Optional([value, None], outcome_names=["true", "false"], name=name)
+    return Optional(
+        [value, None],
+        outcome_names=["true", "false"],
+        name=name,
+        default_outcome=default,
+    )
 
 
 class BoolChoice(Choice):
     def __repr__(self):
-        args = _utils.repr_args((), {"name": self.name}, {"name": None})
+        args = _utils.repr_args(
+            (),
+            {"name": self.name, "default": self.default_outcome},
+            {"name": None, "default": NULL},
+        )
         return f"choose_bool({args})"
 
     def if_else(self, if_true, if_false):
@@ -479,7 +488,7 @@ class BoolChoice(Choice):
         return self.match({True: if_true, False: if_false})
 
 
-def choose_bool(*, name=None):
+def choose_bool(*, name=None, default=NULL):
     """Construct a choice between False and True.
 
     See also
@@ -493,7 +502,9 @@ def choose_bool(*, name=None):
     choose_int :
         Construct a choice of integers from a numeric range.
     """
-    return BoolChoice([True, False], outcome_names=None, name=name)
+    return BoolChoice(
+        [True, False], outcome_names=None, name=name, default_outcome=default
+    )
 
 
 def _check_bounds(low, high, log):
@@ -512,8 +523,9 @@ def _repr_numeric_choice(choice):
             "log": choice.log,
             "n_steps": getattr(choice, "n_steps", None),
             "name": choice.name,
+            "default": choice.default_outcome,
         },
-        defaults={"log": False, "n_steps": None, "name": None},
+        defaults={"log": False, "n_steps": None, "name": None, "default": NULL},
     )
     if choice.to_int:
         return f"choose_int({args})"
@@ -538,6 +550,7 @@ class NumericChoice(BaseNumericChoice):
     log: bool
     to_int: bool
     name: str
+    default_outcome: float
     chosen_outcome: typing.Optional[typing.Union[int, float]] = None
 
     def __post_init__(self):
@@ -555,6 +568,8 @@ class NumericChoice(BaseNumericChoice):
         return value
 
     def default(self):
+        if self.default_outcome is not NULL:
+            return self.default_outcome
         low, high = self.low, self.high
         if self.log:
             low, high = np.log(low), np.log(high)
@@ -579,6 +594,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
     log: bool
     to_int: bool
     name: str
+    default_outcome: float
     chosen_outcome: typing.Optional[typing.Union[int, float]] = None
 
     def __post_init__(self):
@@ -601,6 +617,8 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
         return random_state.choice(self.grid, size=size)
 
     def default(self):
+        if self.default_outcome is not NULL:
+            return self.default_outcome
         return self.grid[(len(self.grid) - 1) // 2]
 
     def __repr__(self):
@@ -619,7 +637,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
         return iter(self.grid)
 
 
-def choose_float(low, high, *, log=False, n_steps=None, name=None):
+def choose_float(low, high, *, log=False, n_steps=None, name=None, default=NULL):
     """Construct a choice of floating-point numbers from a numeric range.
 
     See also
@@ -634,13 +652,21 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None):
         Construct a choice among several possible outcomes.
     """
     if n_steps is None:
-        return NumericChoice(low, high, log=log, to_int=False, name=name)
+        return NumericChoice(
+            low, high, log=log, to_int=False, name=name, default_outcome=default
+        )
     return DiscretizedNumericChoice(
-        low, high, log=log, to_int=False, n_steps=n_steps, name=name
+        low,
+        high,
+        log=log,
+        to_int=False,
+        n_steps=n_steps,
+        name=name,
+        default_outcome=default,
     )
 
 
-def choose_int(low, high, *, log=False, n_steps=None, name=None):
+def choose_int(low, high, *, log=False, n_steps=None, name=None, default=NULL):
     """Construct a choice of integers from a numeric range.
 
     See also
@@ -655,7 +681,15 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None):
         Construct a choice among several possible outcomes.
     """
     if n_steps is None:
-        return NumericChoice(low, high, log=log, to_int=True, name=name)
+        return NumericChoice(
+            low, high, log=log, to_int=True, name=name, default_outcome=default
+        )
     return DiscretizedNumericChoice(
-        low, high, log=log, to_int=True, n_steps=n_steps, name=name
+        low,
+        high,
+        log=log,
+        to_int=True,
+        n_steps=n_steps,
+        name=name,
+        default_outcome=default,
     )
