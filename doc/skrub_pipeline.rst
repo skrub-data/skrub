@@ -62,10 +62,11 @@ environments. Instead, they are a generalization of scikit-learn pipelines, whic
 Skrub expressions
 ~~~~~~~~~~~~~~~~~
 
-Skrub pipelines are built using special objects that represent intermediate results in
-a computation. These objects record the operations performed on them—such as applying
-operators or calling methods—allowing the entire computation graph to be retrieved
-later as a machine learning pipeline that can be fitted and applied to unseen data.
+Skrub pipelines are built using special objects that represent intermediate
+results in a computation. These objects record the operations performed on them
+(such as applying operators or calling methods) allowing the entire computation
+graph to be retrieved later as a machine learning pipeline that can be fitted
+and applied to unseen data.
 
 Because these Skrub objects encapsulate computations that can be evaluated to produce
 results, we call them **expressions**.
@@ -97,7 +98,7 @@ Finally, we can evaluate an expression, by passing a dictionary mapping input
 16
 
 As shown above, the special ``.skb`` attribute allows to interact with the expression
-object itself, and :meth:`~Expr.skb.eval()` evaluates an expression.
+object itself, and :meth:`.skb.eval() <Expr.skb.eval>` evaluates an expression.
 
 Access to any other attribute than ``.skb`` is simply added as a new operation
 in the computation graph:
@@ -115,9 +116,9 @@ Finally, we can get a pipeline that can be fitted and applied to data.
 Previews
 ~~~~~~~~
 
-As we saw above, we can call :meth:`~Expr.skb.eval` with a dictionary of
+As we saw above, we can call :meth:`.skb.eval() <Expr.skb.eval>` with a dictionary of
 bindings to compute the result of a pipeline. However, to make interactive
-development easier without having to call `eval()` repeatedly, Skrub provides a
+development easier without having to call ``eval()`` repeatedly, Skrub provides a
 way to preview the result of an expression. When creating a variable, if we pass
 a value along with its name, Skrub will use that value to compute and preview
 the result of the expression.
@@ -216,7 +217,10 @@ Result:
 3  fork    2.2    4    8.8
 
 Note that the original ``orders`` pipeline is not modified by the operations
-above. Instead, each operation creates a new expression.
+above. Instead, each operation creates a new expression. Expressions cannot be
+modified in-place, all operations that we apply must produce a new value. We
+discuss this in more detail in a
+:ref:`later section <user_guide_deferred_evaluation_ref>`.
 
 
 Applying machine-learning estimators
@@ -225,7 +229,7 @@ Applying machine-learning estimators
 As mentioned above, in addition to those usual operations, the expressions
 have a special attribute: ``.skb``, which gives access to the methods and objects
 provided by Skrub. A particularly important one is
-``.skb.apply()``, which allows to scikit-learn estimators to the pipeline.
+:meth:`.skb.apply() <Expr.skb.apply>`, which allows to add scikit-learn estimators to the pipeline.
 
 >>> orders.skb.apply(skrub.TableVectorizer())
 <Apply TableVectorizer>
@@ -252,13 +256,14 @@ Result:
 2  9.999999e-01  1.666000e-08  4.998001e-08    1.5    2
 3  3.942477e-08  9.999999e-01  7.884953e-08    2.2    4
 
-Again, the crucial point is that when we apply such operations, the returned value
-encapsulates the entire computation that produces the result we see. We're not just
-interested in the output for the example values we provided—we're building a machine
-learning estimator that can be fitted and applied to unseen data.
+Importantly, when we apply such operations, the returned value
+encapsulates the entire computation that produces the result we see. We are not only
+interested in the output for the example values we provided: we are building a machine
+learning pipeline that can be fitted and applied to unseen data.
 
-We can retrieve the estimator, fit it on the data we initially provided, and
-then apply it to new data:
+We can retrieve the pipeline with :meth:`.skb.get_pipeline()
+<Expr.skb.get_pipeline>`, fit it on the data we initially provided, and then
+apply it to new data:
 
 >>> pipeline = vectorized_orders.skb.get_pipeline(fitted=True)
 >>> new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
@@ -267,15 +272,18 @@ then apply it to new data:
 0  5.984116e-09     1.0 -1.323546e-07    2.2    5
 
 
+.. _user_guide_deferred_evaluation_ref:
+
 Deferred evaluation
 ~~~~~~~~~~~~~~~~~~~
 
-Expressions represent computations that haven't been executed yet and will only be
-triggered when we call something like ``eval()``, or when we retrieve the estimator
-and call ``fit()``.
+An expression represents a computation that has not been executed yet, and will
+only be triggered when we call :meth:`.skb.eval() <Expr.skb.eval>`, or when we
+create the pipeline with :meth:`.skb.get_pipeline() <Expr.skb.get_pipeline>` and
+call one of its methods such as ``fit()``.
 
-This means we can't use standard Python control flow statements—such as ``if``,
-``for``, ``with``, etc.—with expressions, because those constructs would execute
+This means we cannot use standard Python control flow statements such as ``if``,
+``for``, ``with``, etc. with expressions, because those constructs would execute
 immediately.
 
 >>> for column in orders.columns:
@@ -298,12 +306,18 @@ Result:
 ―――――――
 Index(['item', 'price', 'qty'], dtype='object')
 
-So we must delay the execution of the ``for`` statement until the computation
+The "result" we see is an *example* result that the computation produces for the
+data we provided. But we want to fit our pipeline and apply it to different
+datasets, for which it will return a new object every time. So even if we see a
+preview of the output on the data we provided, ``orders.columns`` still
+represents a future computation that remains to be evaluated.
+
+Therefore, we must delay the execution of the ``for`` statement until the computation
 actually runs and ``orders.columns`` has been evaluated.
 
 We can achieve this by defining a function that contains the control flow logic
-we need, and decorating it with ``skrub.deferred``. This decorator defers the execution
-of the function: when we call it, it doesn't run immediately. Instead, it returns
+we need, and decorating it with :func:`deferred`. This decorator defers the execution
+of the function: when we call it, it does not run immediately. Instead, it returns
 a Skrub expression that wraps the function call. The original function is only
 executed when the expression is evaluated.
 
@@ -322,7 +336,10 @@ Result:
 2   pen    1.5    2
 3  fork    2.2    4
 
-``skrub.deferred`` is useful not only for our own functions, but also when we
+When the computation runs, ``orders`` will be evaluated first and the result (an
+actual dataframe) will be passed as the ``df`` argument to our function.
+
+:func:`deferred` is useful not only for our own functions, but also when we
 need to call module-level functions from a library. For example, to delay the
 loading of a CSV file, we could write something like:
 
