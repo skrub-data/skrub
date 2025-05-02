@@ -339,6 +339,24 @@ Result:
 When the computation runs, ``orders`` will be evaluated first and the result (an
 actual dataframe) will be passed as the ``df`` argument to our function.
 
+When the first argument to our function is a skrub expression, rather than
+applying ``deferred`` and calling the function as shown above we can use
+:meth:`.skb.apply_func() <Expr.skb.apply_func>`:
+
+>>> def with_upper_columns(df):
+...     new_columns = [c.upper() for c in df.columns]
+...     return df.set_axis(new_columns, axis="columns")
+
+>>> orders.skb.apply_func(with_upper_columns)
+<Call 'with_upper_columns'>
+Result:
+―――――――
+   ITEM  PRICE  QTY
+0   pen    1.5    1
+1   cup    NaN    1
+2   pen    1.5    2
+3  fork    2.2    4
+
 :func:`deferred` is useful not only for our own functions, but also when we
 need to call module-level functions from a library. For example, to delay the
 loading of a CSV file, we could write something like:
