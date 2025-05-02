@@ -26,10 +26,8 @@ solution:
   the powerful and familiar APIs of `Pandas <https://pandas.pydata.org>`_ or
   `Polars <https://docs.pola.rs/>`_.
 - **Hyperparameter tuning**: Choices of estimators, hyperparameters, and even
-  the pipeline architecture can be guided by validation scores. Specifying ranges of values to explore for 
-  each choice (as in :class:`~sklearn.model_selection.GridSearchCV`) is difficult in complex pipelines. 
-  ranges of values to explore for each choice should be easy, but doing so
-  separately from the model (as in
+  the pipeline architecture can be guided by validation scores. Specifying
+  ranges of possible values outside of the pipeline itself (as in
   :class:`~sklearn.model_selection.GridSearchCV`) is difficult in complex
   pipelines.
 - **Iterative development**: Building a pipeline step by step while inspecting
