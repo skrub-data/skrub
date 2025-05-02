@@ -1,8 +1,8 @@
 .. _skrub_pipeline:
 
-========================================================
-Skrub Pipeline: Cross-validate or tune any data pipeline
-========================================================
+================================================================
+Skrub Pipeline: fit, tune, and validate arbitrary data wrangling
+================================================================
 
 .. currentmodule:: skrub
 
