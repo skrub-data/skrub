@@ -631,8 +631,9 @@ def _check_wrap_params(cols, how, allow_reject, reason):
 def _check_estimator_type(estimator):
     if inspect.isclass(estimator):
         raise TypeError(
-            "Please provide an estimator instance to `apply`, rather than the class. "
-            f"Got: {estimator}."
+            "Please provide an instance of a scikit-learn-like estimator "
+            "to `apply`, rather than a class. "
+            f"Got a class rather than an instance: {estimator}."
         )
     if hasattr(estimator, "get_params"):
         return

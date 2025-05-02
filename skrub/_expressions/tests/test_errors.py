@@ -377,7 +377,7 @@ def test_apply_instead_of_apply_func():
 
 
 def test_apply_class_not_instance():
-    with pytest.raises(Exception, match=r"Please provide an estimator instance"):
+    with pytest.raises(Exception, match=r"Please provide an instance"):
         skrub.X(0).skb.apply(skrub.TableVectorizer)
 
 
