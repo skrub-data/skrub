@@ -48,7 +48,7 @@ Acyclic Graph of computations.
 What is the difference with orchestrators like Apache Airflow?
 ==============================================================
 
-Skrub pipelines are not an [orchestrator](https://huyenchip.com/2021/09/13/data-science-infrastructure.html#workflow)
+Skrub pipelines are not an `orchestrator <https://huyenchip.com/2021/09/13/data-science-infrastructure.html#workflow>`_
 and do not offer capabilities for scheduling runs or provisioning resources and
 environments. Instead, they are a generalization of scikit-learn pipelines, which can still be used within an orchestrator.
 
@@ -74,21 +74,17 @@ operations, rather than by specifying an explicit list of transformations.
 
 We start by declaring inputs:
 
-.. code:: python
+>>> import skrub
 
-    import skrub
-
-    a = skrub.var("a")
-    b = skrub.var("b")
+>>> a = skrub.var("a")
+>>> b = skrub.var("b")
 
 We then apply transformations, which we can finally evaluate, by passing a dictionary
 mapping input name to values:
 
-.. code:: python
-
-    c = a + b
-    c.skb.eval({"a": 10, "b": 6})
-    # 16
+>>> c = a + b
+>>> c.skb.eval({"a": 10, "b": 6})
+16
 
 As shown above, the special ``.skb`` attribute allows to interact with the expression
 object itself, and ``.skb.eval()`` evaluate an expression.
@@ -96,19 +92,15 @@ object itself, and ``.skb.eval()`` evaluate an expression.
 Access to any other attribute is simply added as a new operation in the computation
 graph:
 
-.. code:: python
-
-    d = c.capitalize()
-    d.skb.eval({"a": "hello, ", "b": "world!"})
-    # Hello world!
+>>> d = c.capitalize()
+>>> d.skb.eval({"a": "hello, ", "b": "world!"})
+'Hello, world!'
 
 Finally, we can get an estimator that can be fitted and applied to data.
 
-.. code:: python
-
-    pipeline = c.skb.get_pipeline()
-    pipeline.fit_transform({"a": 10, "b": 7})
-    # 17
+>>> pipeline = c.skb.get_pipeline()
+>>> pipeline.fit_transform({"a": 10, "b": 7})
+17
 
 Previews
 ~~~~~~~~
@@ -119,13 +111,14 @@ having to call ``.skb.eval()`` repeatedly, Skrub provides a way to preview the r
 of an expression. When creating a variable, if we pass a value along with its name,
 Skrub will use that value to compute and preview the result of the expression.
 
-.. code:: python
-
-   a = skrub.var("a", 10)
-   b = skrub.var("b", 6)
-   c = a + b
-   c  # we don't need to call .skb.eval anymore!
-   # 16
+>>> a = skrub.var("a", 10)
+>>> b = skrub.var("b", 6)
+>>> c = a + b
+>>> c  # we don't need to call .skb.eval anymore!
+<BinOp: add>
+Result:
+―――――――
+16
 
 Note that example values are immutable throughout the pipeline. This means that
 to change the value of a variable, we need to create the pipeline again with
@@ -136,61 +129,64 @@ Composing expressions
 
 Suppose we want to process dataframes that look like this:
 
-.. code:: python
 
-    import pandas as pd
+>>> import pandas as pd
 
-    orders_df = pd.DataFrame(
-        {
-            "item": ["pen", "cup", "pen", "fork"],
-            "price": [1.5, None, 1.5, 2.2],
-            "qty": [1, 1, 2, 4],
-        }
-    )
+>>> orders_df = pd.DataFrame(
+...     {
+...         "item": ["pen", "cup", "pen", "fork"],
+...         "price": [1.5, None, 1.5, 2.2],
+...         "qty": [1, 1, 2, 4],
+...     }
+... )
 
 We can create a skrub variable to represent that input:
 
-.. code:: python
-
-    orders = skrub.var("orders", orders_df)
+>>> orders = skrub.var("orders", orders_df)
 
 Because we know that a dataframe will be provided as input to the computation, we
 can manipulate ``orders`` as if it were a regular dataframe.
 
 We can access its attributes:
 
-.. code:: python
+>>> orders.columns
+<GetAttr 'columns'>
+Result:
+―――――――
+Index(['item', 'price', 'qty'], dtype='object')
 
-    orders.columns
-    # Index([item, price, qty])
-
-    orders["item"].iloc[1:]
-    # 1    cup
-    # 2    pen
-    # 3    fork
-    # Name: item, dtype: object
+>>> orders["item"].iloc[1:]
+<GetItem slice(1, None, None)>
+Result:
+―――――――
+1     cup
+2     pen
+3    fork
+Name: item, dtype: object
 
 We can apply operators:
 
-.. code:: python
-
-    orders["price"] * orders["qty"]
-    # 0    1.5
-    # 1    NaN
-    # 2    3.0
-    # 3    8.8
-    # dtype: float64
+>>> orders["price"] * orders["qty"]
+<BinOp: mul>
+Result:
+―――――――
+0    1.5
+1    NaN
+2    3.0
+3    8.8
+dtype: float64
 
 We can call methods:
 
-.. code:: python
-
-    orders.assign(total=orders["price"] * orders["qty"])
-    #    item  price  qty  total
-    # 0   pen    1.5    1    1.5
-    # 1   cup    NaN    1    NaN
-    # 2   pen    1.5    2    3.0
-    # 3  fork    2.2    4    8.8
+>>> orders.assign(total=orders["price"] * orders["qty"])
+<CallMethod 'assign'>
+Result:
+―――――――
+   item  price  qty  total
+0   pen    1.5    1    1.5
+1   cup    NaN    1    NaN
+2   pen    1.5    2    3.0
+3  fork    2.2    4    8.8
 
 It's important to note that the original ``orders`` pipeline is not modified by the
 operations in the previous cells. Instead, each cell creates a new expression that
@@ -209,34 +205,30 @@ have a special attribute: ``.skb``, which gives access to the methods and object
 provided by Skrub. A particularly important one is
 ``.skb.apply()``, which allows to scikit-learn estimators to the pipeline.
 
-.. code:: python
-
-    orders.skb.apply(skrub.TableVectorizer())
-    # <Apply TableVectorizer>
-    # Result:
-    # ―――――――
-    #    item_cup  item_fork  item_pen  price  qty
-    # 0       0.0        0.0       1.0    1.5  1.0
-    # 1       1.0        0.0       0.0    NaN  1.0
-    # 2       0.0        0.0       1.0    1.5  2.0
-    # 3       0.0        1.0       0.0    2.2  4.0
+>>> orders.skb.apply(skrub.TableVectorizer())
+<Apply TableVectorizer>
+Result:
+―――――――
+   item_cup  item_fork  item_pen  price  qty
+0       0.0        0.0       1.0    1.5  1.0
+1       1.0        0.0       0.0    NaN  1.0
+2       0.0        0.0       1.0    1.5  2.0
+3       0.0        1.0       0.0    2.2  4.0
 
 It is also possible to apply a transformer to a subset of the columns:
 
-.. code:: python
-
-    vectorized_orders = orders.skb.apply(
-        skrub.StringEncoder(n_components=3), cols="item"
-    )
-    vectorized_orders
-    # <Apply StringEncoder>
-    # Result:
-    # ―――――――
-    #          item_0        item_1        item_2  price  qty
-    # 0  1.000000e+00  4.260130e-08 -2.691092e-09    1.5    1
-    # 1 -1.703285e-07  9.999984e-01  1.792236e-03    NaN    1
-    # 2  1.000000e+00  4.260130e-08 -2.691092e-09    1.5    2
-    # 3  9.629613e-10 -1.792075e-03  9.999982e-01    2.2    4
+>>> vectorized_orders = orders.skb.apply(
+...     skrub.StringEncoder(n_components=3), cols="item"
+... )
+>>> vectorized_orders # doctest: +SKIP
+<Apply StringEncoder>
+Result:
+―――――――
+         item_0        item_1        item_2  price  qty
+0  9.999999e-01  1.666000e-08  4.998001e-08    1.5    1
+1 -1.332800e-07 -1.199520e-07  1.000000e+00    NaN    1
+2  9.999999e-01  1.666000e-08  4.998001e-08    1.5    2
+3  3.942477e-08  9.999999e-01  7.884953e-08    2.2    4
 
 Again, the crucial point is that when we apply such operations, the returned value
 encapsulates the entire computation that produces the result we see. We're not just
@@ -246,13 +238,11 @@ learning estimator that can be fitted and applied to unseen data.
 We can retrieve the estimator, fit it on the data we initially provided, and
 then apply it to new data:
 
-.. code:: python
-
-    pipeline = vectorized_orders.skb.get_pipeline(fitted=True)
-    new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
-    pipeline.transform({"orders": new_orders})
-    #          item_0    item_1    item_2  price  qty
-    # 0  3.247730e-09 -0.126657  0.991947    2.2    5
+>>> pipeline = vectorized_orders.skb.get_pipeline(fitted=True)
+>>> new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
+>>> pipeline.transform({"orders": new_orders}) # doctest: +SKIP
+         item_0  item_1        item_2  price  qty
+0  5.984116e-09     1.0 -1.323546e-07    2.2    5
 
 
 Deferred evaluation
@@ -266,12 +256,11 @@ This means we can't use standard Python control flow statements—such as ``if``
 ``for``, ``with``, etc.—with expressions, because those constructs would execute
 immediately.
 
-.. code:: python
-
-    for column in orders.columns:
-        pass
-    # TypeError: This object is an expression that will be evaluated later, when your
-    # pipeline runs. So it is not possible to eagerly iterate over it now.
+>>> for column in orders.columns:
+...     pass
+Traceback (most recent call last):
+    ...
+TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.
 
 We get an error because the ``for`` statement tries to iterate immediately
 over the columns. However, ``orders.columns`` is not an actual list of
@@ -281,10 +270,11 @@ when we run the computation.
 This remains true even if we have provided a value for ``orders`` and we can
 see a result for that value:
 
-.. code:: python
-
-    orders.columns
-    # Index([item, price, qty])
+>>> orders.columns
+<GetAttr 'columns'>
+Result:
+―――――――
+Index(['item', 'price', 'qty'], dtype='object')
 
 So we must delay the execution of the ``for`` statement until the computation
 actually runs and ``orders.columns`` has been evaluated.
@@ -295,31 +285,27 @@ of the function: when we call it, it doesn't run immediately. Instead, it return
 a Skrub expression that wraps the function call. The original function is only
 executed when the expression is evaluated.
 
-.. code:: python
+>>> @skrub.deferred
+... def with_upper_columns(df):
+...     new_columns = [c.upper() for c in df.columns]
+...     return df.set_axis(new_columns, axis="columns")
 
-    @skrub.deferred
-    def with_upper_columns(df):
-        new_columns = [c.upper() for c in df.columns]
-        return df.set_axis(new_columns, axis="columns")
-
-    with_upper_columns(orders)
-    # <Call 'with_upper_columns'>
-    # Result:
-    # ―――――――
-    #    ITEM  PRICE  QTY
-    # 0   pen    1.5    1
-    # 1   cup    NaN    1
-    # 2   pen    1.5    2
-    # 3  fork    2.2    4
+>>> with_upper_columns(orders)
+<Call 'with_upper_columns'>
+Result:
+―――――――
+   ITEM  PRICE  QTY
+0   pen    1.5    1
+1   cup    NaN    1
+2   pen    1.5    2
+3  fork    2.2    4
 
 ``skrub.deferred`` is useful not only for our own functions, but also when we
 need to call module-level functions from a library. For example, to delay the
 loading of a CSV file, we could write something like:
 
-.. code:: python
-
-    csv_path = skrub.var("csv_path")
-    data = skrub.deferred(pd.read_csv)(csv_path)
+>>> csv_path = skrub.var("csv_path")
+>>> data = skrub.deferred(pd.read_csv)(csv_path)
 
 For the same reason (we are building a computation graph, not
 immediately computing a single result), any transformation that we have must
@@ -328,14 +314,12 @@ not modify its input, but leave it unchanged and return a new value.
 Think of the transformers in a scikit-learn pipeline: each computes a new
 result without modifying its input.
 
-.. code:: python
-
-    orders['total'] = orders['price'] * orders['qty']
-    # TypeError: Do not modify an expression in-place. Instead, use a function that
-    # returns a new value.This is necessary to allow chaining several steps in a
-    # sequence of transformations.
-    # For example if df is a pandas DataFrame:
-    # df = df.assign(new_col=...) instead of df['new_col'] = ...
+>>> orders['total'] = orders['price'] * orders['qty']
+Traceback (most recent call last):
+    ...
+TypeError: Do not modify an expression in-place. Instead, use a function that returns a new value. This is necessary to allow chaining several steps in a sequence of transformations.
+For example if df is a pandas DataFrame:
+df = df.assign(new_col=...) instead of df['new_col'] = ...
 
 Finally, there are other situations where using ``deferred`` can be helpful:
 

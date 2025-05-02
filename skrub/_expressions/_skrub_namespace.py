@@ -157,6 +157,11 @@ class SkrubNamespace:
             the fitted ``estimator``'s predictions if it is a supervised
             predictor.
 
+        See also
+        --------
+        skrub.Expr.skb.get_pipeline :
+            Get a skrub pipeline for this expression.
+
         Examples
         --------
         >>> import skrub
@@ -357,7 +362,7 @@ class SkrubNamespace:
 
         The branch which is not selected is not evaluated, which is the main
         advantage compared to wrapping the conditional statement in a
-        `@skrub.deferred` function.
+        ``@skrub.deferred`` function.
 
         Parameters
         ----------
@@ -370,6 +375,11 @@ class SkrubNamespace:
         Returns
         -------
         Conditional expression
+
+        See also
+        --------
+        skrub.Expr.skb.match :
+            Select based on the value of an expression.
 
         Examples
         --------
@@ -432,6 +442,11 @@ class SkrubNamespace:
         Returns
         -------
         The value corresponding to the matching key or the default
+
+        See also
+        --------
+        skrub.deferred :
+            Wrap function calls in an expression :class:`Expr`.
 
         Examples
         --------
@@ -1237,6 +1252,11 @@ class SkrubNamespace:
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
 
+        See also
+        --------
+        skrub.Expr.skb.get_randomized_search :
+            Find the best parameters with grid search.
+
         Examples
         --------
         >>> import skrub
@@ -1313,6 +1333,11 @@ class SkrubNamespace:
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
             ``results_`` and ``plot_results()``.
+
+        See also
+        --------
+        skrub.Expr.skb.get_grid_search :
+            Find the best parameters with grid search.
 
         Examples
         --------

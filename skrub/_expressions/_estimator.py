@@ -174,6 +174,14 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
             may be wrapped in a ``skrub.OnEachColumn`` or ``skrub.OnSubFrame``,
             see examples below.
 
+        See also
+        --------
+        skrub.Expr.skb.set_name :
+            Give a name to this expression.
+
+        skrub.Expr.skb.apply :
+            Apply a scikit-learn estimator to a dataframe or numpy array.
+
         Examples
         --------
         >>> from sklearn.decomposition import PCA
@@ -273,7 +281,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
             )
         return node._skrub_impl.estimator_
 
-    def sub_pipeline(self, name):
+    def truncated_after(self, name):
         """Extract the part of the pipeline that leads up to the given step.
 
         This is similar to slicing a scikit-learn pipeline. It can be useful
@@ -316,7 +324,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
 
         Truncate the pipeline after vectorization:
 
-        >>> vectorizer = pipeline.sub_pipeline("vectorizer")
+        >>> vectorizer = pipeline.truncated_after("vectorizer")
         >>> vectorizer
         SkrubPipeline(expr=<vectorizer | Apply TableVectorizer>)
         >>> vectorizer.transform({"X": orders.X})
@@ -331,7 +339,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
 
         This contains the full transformation up to the given step:
 
-        >>> pipeline.sub_pipeline("vectorizer")
+        >>> pipeline.truncated_after("vectorizer")
         SkrubPipeline(expr=<vectorizer | Apply TableVectorizer>)
 
         The result of ``find_fitted_estimator`` only contains the inner
@@ -557,13 +565,27 @@ def cross_validate(
 
     kwargs : dict
         All other named arguments are forwarded to
-        ``sklearn.model_selection.cross_validate``, except that scikit-learn's
+        :func:`sklearn.model_selection.cross_validate`, except that scikit-learn's
         ``return_estimator`` parameter is named ``return_pipeline`` here.
 
     Returns
     -------
     dict
         Cross-validation results.
+
+    See also
+    --------
+    :func:`sklearn.model_selection.cross_validate`:
+        Evaluate metric(s) by cross-validation and also record fit/score times.
+
+    :func:`skrub.Expr.skb.get_pipeline`:
+        Get a skrub pipeline for this expression.
+
+    :func:`skrub.Expr.skb.get_grid_search`:
+        Find the best parameters with grid search.
+
+    :func:`skrub.Expr.skb.get_randomized_search`:
+        Find the best parameters with grid search.
 
     Examples
     --------

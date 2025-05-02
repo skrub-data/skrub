@@ -717,6 +717,14 @@ def var(name, value=NULL):
     -------
     A skrub variable
 
+    See also
+    --------
+    skrub.X :
+        Create a skrub variable and mark it as being ``X``.
+
+    skrub.y :
+        Create a skrub variable and mark it as being ``y``.
+
     Examples
     --------
     Variables without a value:
@@ -802,6 +810,17 @@ def X(value=NULL):
     -------
     A skrub variable
 
+    See also
+    --------
+    skrub.y :
+        Create a skrub variable and mark it as being ``y``.
+
+    skrub.var :
+        Create a skrub variable.
+
+    skrub.Expr.skb.mark_as_X :
+        Mark this expression as being the ``X`` table.
+
     Examples
     --------
     >>> import skrub
@@ -847,6 +866,17 @@ def y(value=NULL):
     -------
     A skrub variable
 
+    See also
+    --------
+    skrub.X :
+        Create a skrub variable and mark it as being ``y``.
+
+    skrub.var :
+        Create a skrub variable.
+
+    skrub.Expr.skb.mark_as_y :
+        Mark this expression as being the ``y`` table.
+
     Examples
     --------
     >>> import skrub
@@ -884,10 +914,10 @@ class Value(ExprImpl):
 
 @check_expr
 def as_expr(value):
-    """Create an expression that evaluates to the given value.
+    """Create an expression :class:`Expr` that evaluates to the given value.
 
     This wraps any object in an expression. When the expression is evaluated,
-    the result is the provided value. This has a similar role as ``deferred``,
+    the result is the provided value. This has a similar role as :func:`deferred`,
     but for any object rather than for functions.
 
     Parameters
@@ -898,6 +928,13 @@ def as_expr(value):
     Returns
     -------
     An expression that evaluates to the given value
+
+    See also
+    --------
+    deferred :
+        Wrap function calls in an expression.
+    Expr :
+        Representation of a computation that can be used to build ML estimators.
 
     Examples
     --------
@@ -1202,7 +1239,7 @@ class CallMethod(ExprImpl):
 
 
 def deferred(func):
-    """Wrap function calls in an expression.
+    """Wrap function calls in an expression :class:`Expr`.
 
     When this decorator is applied, the resulting function returns expressions.
     The returned expression wraps the call to the original function, and the
@@ -1225,6 +1262,14 @@ def deferred(func):
         When called, rather than applying the original function immediately, it
         returns an expression. Evaluating the expression applies the original
         function.
+
+    See also
+    --------
+    as_expr :
+        Create an expression that evaluates to the given value.
+
+    Expr :
+        Representation of a computation that can be used to build ML estimators.
 
     Examples
     --------
