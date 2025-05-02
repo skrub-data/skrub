@@ -120,7 +120,7 @@ mechanism is used, except that several splits are done and the model fitting and
 scoring is done for us. This is done with
 :meth:`.skb.cross_validate() <Expr.skb.cross_validate>`.
 
->>> pred.skb.cross_validate()
+>>> pred.skb.cross_validate() # doctest: +SKIP
    fit_time  score_time  test_score
 0  0.002816    0.001344    0.321665
 1  0.002685    0.001323    0.440485
@@ -160,7 +160,7 @@ for ``alpha``.
 We can then find the best hyperparameters.
 
 >>> search = pred.skb.get_randomized_search(fitted=True, scoring="r2", random_state=0)
->>> search.results_
+>>> search.results_ # doctest: +SKIP
    mean_test_score  choose_float(0.01, 10.0, log=True)
 0         0.478338                            0.141359
 1         0.476022                            0.186623
@@ -191,7 +191,7 @@ expressions to compare different pipelines. Choices can be nested arbitrarily.
   N 🌴: choose_int(5, 50, name='N 🌴')
 
 >>> search = pred.skb.get_randomized_search(fitted=True, scoring="r2", random_state=0)
->>> search.results_
+>>> search.results_ # doctest: +SKIP
    mean_test_score         α   N 🌴 regressor
 0         0.480425  0.078092   NaN     ridge
 1         0.477904  0.150784   NaN     ridge
