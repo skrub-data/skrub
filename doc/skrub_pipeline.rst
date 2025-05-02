@@ -346,11 +346,12 @@ loading of a CSV file, we could write something like:
 >>> csv_path = skrub.var("csv_path")
 >>> data = skrub.deferred(pd.read_csv)(csv_path)
 
-For the same reason (we are building a computation graph, not
-immediately computing a single result), any transformation that we have must
-not modify its input, but leave it unchanged and return a new value.
+Another consequence of the fact that expressions are evaluated lazily (we are
+building a pipeline, not immediately computing a single result), any
+transformation that we apply must not modify its input, but leave it unchanged
+and return a new value.
 
-Think of the transformers in a scikit-learn pipeline: each computes a new
+Consider the transformers in a scikit-learn pipeline: each computes a new
 result without modifying its input.
 
 >>> orders['total'] = orders['price'] * orders['qty']
@@ -360,13 +361,19 @@ TypeError: Do not modify an expression in-place. Instead, use a function that re
 For example if df is a pandas DataFrame:
 df = df.assign(new_col=...) instead of df['new_col'] = ...
 
-Finally, there are other situations where using ``deferred`` can be helpful:
+Note the suggestion in the error message: using :meth:`pandas.DataFrame.assign`.
+When we do need assignments or in-place transformations, we can put them in a
+:func:`deferred` function. But we should make a (shallow) copy of the inputs and
+return a new value.
+
+Finally, there are other situations where using :func:`deferred` can be helpful:
 
 - When we have many nodes in our graph and want to collapse a sequence of steps into
   a single function call that appears as a single node.
-- When certain steps need to be deferred until the full computation runs, because they
-  depend on the runtime environment, or on objects that cannot be pickled with the
-  rest of the computation graph (for example, opening and reading a file).
+- When certain function calls need to be deferred until the full computation
+  runs, because they depend on the runtime environment, or on objects that
+  cannot be pickled with the rest of the computation graph (for example, opening
+  and reading a file).
 
 .. rubric:: Examples
 
