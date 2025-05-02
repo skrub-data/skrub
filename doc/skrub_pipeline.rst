@@ -61,14 +61,11 @@ environments. Instead, they are a generalization of scikit-learn pipelines, whic
 Skrub expressions
 ~~~~~~~~~~~~~~~~~
 
-Skrub pipelines are built using *Expressions*: special objects that encapsulate computations that can be evaluated to produce results
-results in a computation. *Expressions* record the operations performed on them
-(such as applying operators or calling methods) allowing the entire computation
-graph to be retrieved later as a machine learning pipeline that can be fitted
-and applied to unseen data.
-
-Because these Skrub objects encapsulate computations that can be evaluated to produce
-results, we call them **expressions**.
+Skrub pipelines are built using **expressions**: special objects that
+encapsulate computations that can be evaluated to produce a result. Expressions
+record the operations performed on them (such as applying operators or calling
+methods) allowing the entire computation graph to be retrieved later as a
+machine learning pipeline that can be fitted and applied to unseen data.
 
 The simplest expressions are **variables**, which represent inputs to our machine
 learning pipeline—such as "products" or "customers" tables or dataframes.
