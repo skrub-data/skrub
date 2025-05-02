@@ -88,6 +88,7 @@ We then apply transformations, composing more complex expressions.
 
 >>> c = a + b
 >>> c
+<BinOp: add>
 
 Finally, we can evaluate an expression, by passing a dictionary mapping input
 (variable) names to values:
@@ -121,24 +122,32 @@ way to preview the result of an expression. When creating a variable, if we pass
 a value along with its name, Skrub will use that value to compute and preview
 the result of the expression.
 
->>> a = skrub.var("a", 10)
+>>> a = skrub.var("a", 10) # we pass the value 10 in addition to the name
 >>> b = skrub.var("b", 6)
 >>> c = a + b
->>> c  # we don't need to call .skb.eval anymore!
+>>> c  # now the display of c includes a preview of the result
 <BinOp: add>
 Result:
 ―――――――
 16
 
-Note that example values are immutable throughout the pipeline. This means that
-to change the value of a variable, we need to create the pipeline again with
-the new value.
+Note that seeing results for the values we provided does *not* change the fact
+that we are building a pipeline that we want to reuse, not just computing the
+result for a fixed input. The displayed result is only preview of the output on
+one example dataset.
+
+>>> c.skb.eval({"a": 3, "b": 2})
+5
 
 Composing expressions
 ~~~~~~~~~~~~~~~~~~~~~
 
-Suppose we want to process dataframes that look like this:
+We create complex expressions by applying operations to simpler ones (like
+variables). As the operations are replayed on the actual data when the pipeline
+runs, we can use (most of) the operations that are valid for the types we will
+pass to the pipeline.
 
+Suppose we want to process dataframes that look like this:
 
 >>> import pandas as pd
 
@@ -149,6 +158,12 @@ Suppose we want to process dataframes that look like this:
 ...         "qty": [1, 1, 2, 4],
 ...     }
 ... )
+>>> orders_df
+   item  price  qty
+0   pen    1.5    1
+1   cup    NaN    1
+2   pen    1.5    2
+3  fork    2.2    4
 
 We can create a skrub variable to represent that input:
 
@@ -164,6 +179,8 @@ We can access its attributes:
 Result:
 ―――――――
 Index(['item', 'price', 'qty'], dtype='object')
+
+Accessing items, indexing, slicing:
 
 >>> orders["item"].iloc[1:]
 <GetItem slice(1, None, None)>
@@ -198,14 +215,9 @@ Result:
 2   pen    1.5    2    3.0
 3  fork    2.2    4    8.8
 
-It's important to note that the original ``orders`` pipeline is not modified by the
-operations in the previous cells. Instead, each cell creates a new expression that
-represents the result of the operation.
+Note that the original ``orders`` pipeline is not modified by the operations
+above. Instead, each operation creates a new expression.
 
-This behavior is similar to how Pandas and Polars dataframes work: when we call
-a method on a dataframe, it returns a new dataframe representing the result, rather
-than modifying the original in place. However, unlike Pandas—where in-place
-modifications are possible—Skrub does not allow in-place updates.
 
 Applying machine-learning estimators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
