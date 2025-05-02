@@ -423,7 +423,7 @@ class Optional(Choice):
 
     def __repr__(self):
         args = _utils.repr_args(
-            (self.outcomes[0]),
+            (self.outcomes[0],),
             {"name": self.name, "default": self.default_outcome},
             defaults={"name": None, "default": NULL},
         )
