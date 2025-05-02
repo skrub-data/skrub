@@ -10,25 +10,30 @@ Introduction
 ~~~~~~~~~~~~
 
 Skrub provides an easy way to build complex, flexible machine learning pipelines.
-There are several problems that are not easily addressed with standard scikit-learn
+There are several needs that are not easily addressed with standard scikit-learn
 tools such as :class:`~sklearn.pipeline.Pipeline` and
 :class:`~sklearn.compose.ColumnTransformer`, and for which a Skrub pipeline offers a
 solution:
 
-- **Multiple tables**: When there are several tables of different shapes (for example,
-  "Customers", "Orders", and "Products" tables), standard scikit-learn estimators fall
-  short, as they expect a single design matrix ``X`` and a target array ``y``, with one
-  row per observation.
-- **DataFrame wrangling**: Performing typical DataFrame operations such as projections,
-  joins, and aggregations—leveraging the powerful APIs of pandas or polars—is not
-  easily expressed in standard pipelines.
-- **Iterative development**: Building a pipeline step by step while inspecting
-  intermediate results allows for a short feedback loop and early discovery of errors.
-- **Hyperparameter tuning**: Choices of estimators, hyperparameters, and even the
-  pipeline architecture can be guided by validation scores. Specifying a grid of
-  hyperparameters separately from the model (as in
-  :class:`~sklearn.model_selection.GridSearchCV`) becomes difficult in complex
+- **Multiple tables**: We often have several tables of different shapes (for
+  example, "Customers", "Orders", and "Products" tables) that need to be
+  processed and assembled into a design matrix ``X``. The target ``y`` may also
+  be the result of some data processing. Standard scikit-learn estimators do not
+  support this, as they expect right away a single design matrix ``X`` and a
+  target array ``y``, with one row per observation.
+- **DataFrame wrangling**: Performing typical DataFrame operations such as
+  projections, joins, and aggregations should be possible and allow leveraging
+  the powerful and familiar APIs of `Pandas <https://pandas.pydata.org>`_ or
+  `Polars <https://docs.pola.rs/>`_.
+- **Hyperparameter tuning**: Choices of estimators, hyperparameters, and even
+  the pipeline architecture can be guided by validation scores. Specifying
+  ranges of values to explore for each choice should be easy, but doing so
+  separately from the model (as in
+  :class:`~sklearn.model_selection.GridSearchCV`) is difficult in complex
   pipelines.
+- **Iterative development**: Building a pipeline step by step while inspecting
+  intermediate results allows for a short feedback loop and early discovery of
+  errors.
 
 What is the difference with scikit-learn :class:`~sklearn.pipeline.Pipeline`?
 =============================================================================
@@ -60,7 +65,7 @@ Skrub expressions
 Skrub pipelines are built using special objects that represent intermediate results in
 a computation. These objects record the operations performed on them—such as applying
 operators or calling methods—allowing the entire computation graph to be retrieved
-later as a machine learning estimator that can be fitted and applied to unseen data.
+later as a machine learning pipeline that can be fitted and applied to unseen data.
 
 Because these Skrub objects encapsulate computations that can be evaluated to produce
 results, we call them **expressions**.
