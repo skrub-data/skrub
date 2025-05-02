@@ -628,7 +628,26 @@ def _check_wrap_params(cols, how, allow_reject, reason):
         raise ValueError(msg)
 
 
+def _check_estimator_type(estimator):
+    if inspect.isclass(estimator):
+        raise TypeError(
+            "Please provide an estimator instance to `apply`, rather than the class. "
+            f"Got: {estimator}."
+        )
+    if hasattr(estimator, "get_params"):
+        return
+    if callable(estimator):
+        description = "function" if inspect.isroutine(estimator) else "callable object"
+        raise TypeError(
+            "The `estimator` passed to `.skb.apply()` should be "
+            f"a scikit-learn estimator. Got a {description} instead: {estimator}. "
+            "Did you mean to use `.skb.apply_func()` rather than `.skb.apply()`?"
+        )
+
+
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
+    _check_estimator_type(estimator)
+
     def _check(reason):
         _check_wrap_params(cols, how, allow_reject, reason)
 
@@ -1093,7 +1112,6 @@ class Apply(ExprImpl):
         except AttributeError:
             estimator = get_chosen_or_default(self.estimator)
         for name in FITTED_PREDICTOR_METHODS:
-            # TODO forbid estimator being lazy?
             if hasattr(estimator, name):
                 modes.append(name)
         return modes

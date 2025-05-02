@@ -357,6 +357,30 @@ def test_apply_instead_of_skb_apply():
         a.apply(int)
 
 
+def test_apply_instead_of_apply_func():
+    with pytest.raises(
+        Exception,
+        match=r".*Got a function instead.*Did you mean to use `\.skb\.apply_func\(\)`",
+    ):
+        skrub.X(0).skb.apply(lambda x: x)
+
+    class Func:
+        def __call__(self, x):
+            return x
+
+    with pytest.raises(
+        Exception,
+        match=r".*Got a callable object instead.*"
+        r"Did you mean to use `\.skb\.apply_func\(\)`",
+    ):
+        skrub.X(0).skb.apply(Func())
+
+
+def test_apply_class_not_instance():
+    with pytest.raises(Exception, match=r"Please provide an estimator instance"):
+        skrub.X(0).skb.apply(skrub.TableVectorizer)
+
+
 def test_method_call_failure():
     with pytest.raises(
         Exception,
