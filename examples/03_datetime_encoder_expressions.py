@@ -1,0 +1,473 @@
+"""
+.. _example_datetime_encoder :
+
+===================================================
+Handling datetime features with the DatetimeEncoder
+===================================================
+
+In this example, we illustrate how to better integrate datetime features
+in machine learning models with the |DatetimeEncoder|.
+
+This encoder breaks down passed datetime features into relevant numerical
+features, such as the month, the day of the week, the hour of the day, etc.
+
+It is used by default in the |TableVectorizer|.
+
+
+.. |DatetimeEncoder| replace::
+    :class:`~skrub.DatetimeEncoder`
+
+.. |TableVectorizer| replace::
+    :class:`~skrub.TableVectorizer`
+
+.. |OneHotEncoder| replace::
+    :class:`~sklearn.preprocessing.OneHotEncoder`
+
+.. |TimeSeriesSplit| replace::
+    :class:`~sklearn.model_selection.TimeSeriesSplit`
+
+.. |ColumnTransformer| replace::
+    :class:`~sklearn.compose.ColumnTransformer`
+
+.. |make_column_transformer| replace::
+    :class:`~sklearn.compose.make_column_transformer`
+
+.. |RidgeCV| replace::
+    :class:`~sklearn.linear_model.RidgeCV`
+
+.. |SimpleImputer| replace::
+    :class:`~sklearn.impute.SimpleImputer`
+
+.. |StandardScaler| replace::
+    :class:`~sklearn.preprocessing.StandardScaler`
+
+.. |ToDatetime| replace::
+    :class:`~skrub.ToDatetime`
+
+.. |var| replace::
+    :meth:`skrub.var`
+
+.. |apply_func| replace::
+    :meth:`skrub.Expr.skb.apply_func`
+
+.. |train_test_split| replace::
+    :meth:`skrub.Expr.skb.train_test_split`
+
+.. _scikit-learn example:
+ `<https://scikit-learn.org/stable/auto_examples/applications/plot_time_series_lagged_features.html#generating-polars-engineered-lagged-featurehttps://scikit-learn.org/stable/auto_examples/applications/plot_time_series_lagged_features.html#generating-polars-engineered-lagged-featuress>`_
+
+"""
+
+# %%
+# A problem with relevant datetime features
+# -----------------------------------------
+#
+# We will use a dataset of bike sharing demand in 2011 and 2012.
+# In this setting, we want to predict the number of bike rentals, based
+# on the date, time and weather conditions.
+# In this example, we will use Polars dataframes instead of Pandas.
+
+from pprint import pprint
+
+import polars as pl
+
+import skrub
+from skrub import TableReport, datasets
+
+data = datasets.fetch_bike_sharing().bike_sharing
+data = pl.from_pandas(data)
+TableReport(data)
+
+###############################################################################
+# %% We can convert the dataframe's ``"date"`` column from string to datetime
+# using |ToDatetime|.
+
+from skrub import ToDatetime
+
+transformed_dates = ToDatetime().fit_transform(data["date"])
+
+print(
+    "original dtype:",
+    data["date"].dtype,
+    "\n\nconverted dtype:",
+    transformed_dates.dtype,
+)
+# %%
+###############################################################################
+# Encoding the features
+# .....................
+#
+# For the sake of the example, we will now encode the ``date`` column
+# with a |DatetimeEncoder| to show the operations that are executed by the
+# encoder. In practice, the ``DatetimeEncoder`` would be passed to a
+# |TableVectorizer| object, as the latter will handle parsing datetimes
+# and perform additional cleaning steps.
+#
+# During the instantiation of the |DatetimeEncoder|, we specify that we want
+# don't want to extract features with a resolution finer than hours. This is
+# because we don't want to extract minutes, seconds and lower units, as they
+# are unimportant here.
+
+from skrub import DatetimeEncoder
+
+# DatetimeEncoder has "hour" as default resolution
+date_enc = DatetimeEncoder().fit_transform(transformed_dates)
+
+print(transformed_dates, "\n\nHas been encoded as:\n\n", date_enc)
+# %%
+###############################################################################
+# We see that the encoder is working as expected: the column has
+# been replaced by features extracting the month, day, hour, and day of the
+# week. Additionally, the total seconds since Epoch are also added by default.
+
+###############################################################################
+# One-liner with the TableVectorizer
+# ..................................
+#
+# As mentioned earlier, the |TableVectorizer| makes use of the
+# |DatetimeEncoder| by default. Note that ``X["date"]`` is still
+# a string, but will be automatically transformed into a datetime in the
+# |TableVectorizer|.
+
+from skrub import TableVectorizer
+
+table_vec = TableVectorizer().fit(data)
+pprint(table_vec.get_feature_names_out())
+
+# %%
+###############################################################################
+# If we want to customize the |DatetimeEncoder| inside the |TableVectorizer|,
+# we can replace its default parameter with a new, custom instance.
+#
+# Here, for example, we want it to extract the day of the week:
+
+# use the ``datetime`` argument to use a custom DatetimeEncoder in the TableVectorizer
+table_vec_weekday = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True)).fit(
+    data
+)
+pprint(table_vec_weekday.get_feature_names_out())
+
+###############################################################################
+# .. note:
+#     For more information on how to customize the |TableVectorizer|, see
+#     :ref:`sphx_glr_auto_examples_01_dirty_categories.py`.
+#
+# Inspecting the |TableVectorizer| further, we can check that the
+# |DatetimeEncoder| is used on the correct column(s).
+pprint(table_vec_weekday.transformers_)
+
+###############################################################################
+#
+# Feature engineering for linear models
+# ....................................................................
+#
+# The |DatetimeEncoder| can generate additional periodic features. These are
+# particularly useful for linear models. This is controlled by the
+# ``periodic encoding`` parameter which can be either  ``circular`` or ``spline``,
+# for trigonometric functions or B-Splines respectively. In this example, we use
+# ``spline``.
+
+table_vec_periodic = TableVectorizer(
+    datetime=DatetimeEncoder(add_weekday=True, periodic_encoding="spline")
+).fit(data)
+table_vec_periodic.transform(data)
+
+# Spline features for each part of the date (month in year, day in month, day in
+# week, day in year) are added.
+
+# %%
+###############################################################################
+# Prediction with datetime features
+# ---------------------------------
+#
+# In this section, we will use skrub Expressions to build a predictive pipeline
+# that pre-processes the data and performs hyperparameter optimization for various
+# of the steps involved in the preparation.
+# We will use a |RidgeCV| model as our learner. While it is not the most powerful
+# model, it will help us illustrate how feature engineering affects the prediction
+# performance.
+
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import RidgeCV
+
+# As we are working with timeseries, we need to use |TimeSeriesSplit| to perform
+# crossvalidation.
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+ts = TimeSeriesSplit()
+
+ts = TimeSeriesSplit(
+    n_splits=3,  # to keep the notebook fast enough on common laptops
+    gap=48,  # 2 days data gap between train and test
+    max_train_size=10000,  # keep train sets of comparable sizes
+    test_size=3000,  # for 2 or 3 digits of precision in scores
+)
+# We define a skrub |var| to start with.
+data_var = skrub.var("data", data)
+
+# We extract our input data (X) and the target column (y), and mark them as X and y.
+X = data_var[
+    "date", "holiday", "weathersit", "temp", "hum", "windspeed"
+].skb.mark_as_X()
+y = data_var["cnt"].skb.mark_as_y()
+X
+
+# %%
+# Now we define a simple default pipeline for the |RidgeCV| predictor, which includes
+# a |StandardScaler| for numerical and a |SimpleImputer|. We will not modify this
+# pipeline: we will instead focus on the pre-processing and feature engineering.
+default_ridge_pipeline = make_pipeline(StandardScaler(), SimpleImputer(), RidgeCV())
+
+# The "base" variant of the pipeline uses the default |TableVectorizer|, with
+# no hyperparameter search.
+vectorized = X.skb.apply(TableVectorizer())
+predictions_base = vectorized.skb.apply(default_ridge_pipeline, y=y)
+search_base = predictions_base.skb.get_grid_search(fitted=True, cv=ts)
+
+# %% We can observe the results directly using ``.detailed_results``. Unsurprisingly,
+# the results are not very good. In this case, performing a GridSearch is not
+# necessary, but we will do it for consistency with the next steps.
+search_base.detailed_results_
+
+# %%
+# Prediction with periodic encoders and hyperparameter optimization
+# -----------------------------------------------------------------
+#
+# For our second pipeline, we define a grid of hyperparameters using the skrub
+# ``choose_*`` functions. In this case, we use |choose_bool| and |choose_from|,
+# as we are not interested in tweaking numerical parameters.
+# The ``choose_*`` functions allow to easily prepare a grid of parameters to use
+# to perform hyperparameter optimization.
+# Here, we use them to turn on and off the ``weekday`` and ``total_seconds`` flag,
+# and to select the specific periodic encoder to use.
+datetime_encoder = DatetimeEncoder(
+    add_weekday=skrub.choose_bool(name="weekday"),
+    add_total_seconds=skrub.choose_bool(name="total_seconds"),
+    periodic_encoding=skrub.choose_from(
+        [
+            "spline",
+            "circular",
+            None,
+        ]
+    ),
+)
+
+vectorized = X.skb.apply(TableVectorizer(datetime=datetime_encoder))
+predictions_enc = vectorized.skb.apply(default_ridge_pipeline, y=y)
+
+# Note that, in general, randomized search should be used instead of grid search.
+# In this case, grid search is fine as we are interested in a grid of categorical
+# values.
+search_enc = predictions_enc.skb.get_grid_search(fitted=True, cv=ts)
+# %%
+search_enc.detailed_results_
+# %%
+# We can observe that the prediction results have improved a lot thanks to the
+# introduction of the periodic features, however they are still not very good.
+# We can also see that setting ``total_seconds`` to ``True`` seems to consistently
+# reduce the test score.
+#
+# Adding lagged features
+# ----------------------
+#
+# The prediction results are not very good, so in this section we will extend the
+# feature generation section to include lagged features.
+# This function is taken from a similar `scikit-learn example`_. As the lagged
+# features are based on the actual count, we go back to the original data to
+# perform feature engineering on that.
+
+
+# To introduce the lagged features, we use a |deferred| function that takes the
+# dataframe we are working with, then adds lagged features to it. Given a sample
+# in the dataset, lagged features add information relative to samples prior to it.
+# In this case, for each hourly sample we add information relative to the previous
+# three hours, the same hour on the prior day, as well as aggregate features
+# (mean, max, min) obtained by using a rolling mean of either 24 hours, or 7 days.
+@skrub.deferred
+def get_lagged_features(df):
+    lagged_df = df.select(
+        "cnt",
+        *[pl.col("cnt").shift(i).alias(f"lagged_count_{i}h") for i in [1, 2, 3]],
+        lagged_count_1d=pl.col("cnt").shift(24),
+        lagged_count_1d_1h=pl.col("cnt").shift(24 + 1),
+        lagged_count_7d=pl.col("cnt").shift(7 * 24),
+        lagged_count_7d_1h=pl.col("cnt").shift(7 * 24 + 1),
+        lagged_mean_24h=pl.col("cnt").shift(1).rolling_mean(24),
+        lagged_max_24h=pl.col("cnt").shift(1).rolling_max(24),
+        lagged_min_24h=pl.col("cnt").shift(1).rolling_min(24),
+        lagged_mean_7d=pl.col("cnt").shift(1).rolling_mean(7 * 24),
+        lagged_max_7d=pl.col("cnt").shift(1).rolling_max(7 * 24),
+        lagged_min_7d=pl.col("cnt").shift(1).rolling_min(7 * 24),
+    )
+    return lagged_df
+
+
+data_prep = data_var.drop("casual", "instant", "registered").skb.mark_as_X()
+data_lagged = data_prep.skb.apply_func(get_lagged_features).drop("cnt")
+X = data_prep.skb.concat([data_lagged], axis=1).drop("cnt")
+X
+# Notice that adding lagged samples will introduce null values for all the initial
+# samples, as there is no previous information for them.
+
+y = data_var["cnt"].skb.mark_as_y()
+# %% We use the datetime encoder defined above to observe the impact of the new
+# features on the predictions.
+
+vectorized = X.skb.apply(TableVectorizer(datetime=datetime_encoder))
+predictions_lagged = vectorized.skb.apply(default_ridge_pipeline, y=y)
+search_lagged = predictions_lagged.skb.get_grid_search(fitted=True, cv=ts)
+# %%
+search_lagged.detailed_results_
+
+# We can see that the lagged features improved the prediction performance by a
+# large margin. Periodic features bring some benefit.
+
+###############################################################################
+# Plotting the prediction
+# .......................
+#
+# To have a better idea of the quality of the predictions, we can plot them directly.
+# To do so, we try to predict
+
+# %%
+# We can use |train_test_split| to separate the data into a train split and
+# a test split.
+# In this case, we will use all the data for the year 2011 to predict year 2012.
+# The |train_test_split| function can take a custom `splitter` function that returns
+# the X and y splits based on some specific requirements; here, we specify a
+# cutoff date and use that to prepare the train an test splits.
+# For each pipeline, we run a grid search and select only the best pipeline according
+# to its test score.
+
+
+def split_function(X, y, cutoff=None):
+    mask = X["date"] < cutoff
+    X_train, X_test = X.filter(mask), X.filter(~mask)
+    y_train, y_test = y.filter(mask), y.filter(~mask)
+    return X_train, X_test, y_train, y_test
+
+
+# Then, we train each pipeline on the training split and predict on the test split.
+split = predictions_base.skb.train_test_split(
+    environment=predictions_base.skb.get_data(),
+    splitter=split_function,
+    cutoff="2012-01-01",
+)
+search_base = predictions_base.skb.get_grid_search(cv=TimeSeriesSplit()).fit(
+    split["train"]
+)
+results_base = search_base.best_pipeline_.predict(split["test"])
+
+split = predictions_enc.skb.train_test_split(
+    environment=predictions_enc.skb.get_data(),
+    splitter=split_function,
+    cutoff="2012-01-01",
+)
+search_enc = predictions_enc.skb.get_grid_search(cv=TimeSeriesSplit()).fit(
+    split["train"]
+)
+results_enc = search_enc.best_pipeline_.predict(split["test"])
+
+split = predictions_lagged.skb.train_test_split(
+    environment=predictions_lagged.skb.get_data(),
+    splitter=split_function,
+    cutoff="2012-01-01",
+)
+search_lagged = predictions_lagged.skb.get_grid_search(cv=TimeSeriesSplit()).fit(
+    split["train"]
+)
+results_lagged = search_lagged.best_pipeline_.predict(split["test"])
+#
+# %%
+# Now we can plot the results. For the sake of the example, we will consider only
+# a single week in the year to be able to observe some details.
+from datetime import datetime, timedelta
+
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(12, 3), layout="constrained")
+
+X_plot = split["X_test"].select(pl.col("date").str.to_datetime())
+y_true = split["y_test"]
+y_base = results_base
+y_enc = results_enc
+y_lagged = results_lagged
+
+ax.plot(X_plot, y_true, label="Actual demand", linewidth=2, linestyle="--")
+ax.plot(X_plot, y_base, label="Default DatetimeEncoder")
+ax.plot(X_plot, y_enc, label="Periodic Features")
+ax.plot(X_plot, y_lagged, label="Lagged + Periodic Features")
+
+# Consider only the first week of November 2012.
+ax.set_xlim([datetime(2012, 11, 1), datetime(2012, 11, 8)])
+ax.set_ylim([0, 800])
+
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %h"))
+ax.xaxis.set_minor_formatter(mdates.DateFormatter("%Hh"))
+
+ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 6)))
+ax.xaxis.set_major_locator(mdates.DayLocator())
+
+ax.set_ylabel("Demand")
+
+ax.tick_params(axis="x", which="minor", labelsize=8)
+ax.tick_params(axis="x", which="major", pad=10)
+
+annotation_text = "Weekend"
+
+point1 = [datetime(2012, 11, 3, 14, 0, 0), 500]
+point2 = [datetime(2012, 11, 4, 14, 0, 0), 550]
+
+td = timedelta(hours=3)
+
+ax.annotate(
+    annotation_text,
+    xy=point1,
+    xytext=(point1[0] + td, point1[1] + 200),
+    arrowprops=dict(
+        facecolor="black", shrink=0.01, width=0.5, headwidth=5, headlength=5
+    ),
+    fontsize=10,
+)
+ax.annotate(
+    annotation_text,
+    xy=point2,
+    xytext=(point1[0] + td, point1[1] + 200),
+    arrowprops=dict(
+        facecolor="black", shrink=0.01, width=0.5, headwidth=5, headlength=5
+    ),
+    fontsize=10,
+)
+fig.legend(loc="center right", bbox_to_anchor=(1.2, 0.5), ncols=1, borderaxespad=0.0)
+
+fig.suptitle(
+    "Predicting the demand with linear models and different feature engineering"
+    " strategies"
+)
+
+fig.savefig("test.png", bbox_inches="tight")
+
+# %%
+###############################################################################
+# As we can see, the pipeline that uses only the basic RidgeCV model does not
+# follow the actual demand: it shows a periodic behavior that matches the days,
+# but cannot model properly the peaks.
+# The pipeline that includes periodic features is more accurate in modeling the peaks
+# from rush hour, however it does not match the different behavior shown in the
+# weekends, and it does not match the rush hour peaks either.
+# Finally, the pipeline that includes lagged features tracks the actual demand
+# very accurately, and is also able to follow the difference in demand that on the
+# weeekends.
+#
+# Summary
+# ^^^^^^^
+# In this example we have shown how to use the Skrub DatetimeEncoder to perform
+# feature engineering on dates to generate periodic features, and we added
+# lagged features to further extract information from the data.
+# We also described how to use skrub expressions to generate hyperparameter grids,
+# how to use deferred functions, and how to cross-validate models to produce
+# results.
+# Finally, we plotted the predictions and drew some conclusions.
