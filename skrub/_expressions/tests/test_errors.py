@@ -388,6 +388,13 @@ def test_apply_bad_type():
         skrub.X(0).skb.apply(...)
 
 
+def test_apply_bad_string():
+    with pytest.raises(
+        Exception, match=r".*should be `None`, the string 'passthrough' or"
+    ):
+        skrub.X(0).skb.apply("pass through")
+
+
 def test_method_call_failure():
     with pytest.raises(
         Exception,
