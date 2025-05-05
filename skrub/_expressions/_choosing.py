@@ -153,8 +153,7 @@ class Choice(BaseChoice):
             Maps possible outcome to the desired result. The keys must all be
             one of the possible outcomes for the choice. If no ``default`` is
             provided, there must be an entry in ``outcome_mapping`` for each
-            possible choice outcome (including the choice's default outcome if
-            that has been set).
+            possible choice outcome.
 
         default : object, optional
             The value to use for outcomes not found in ``outcome_mapping``.
@@ -439,8 +438,9 @@ class Optional(Choice):
     """A choice between something and nothing."""
 
     def __repr__(self):
-        value, none_by_default = self.outcomes[0], False
-        if value is None:
+        if self.outcomes[0] is not None or self.outcomes[1] is None:
+            value, none_by_default = self.outcomes[0], False
+        else:
             value, none_by_default = self.outcomes[1], True
         args = _utils.repr_args(
             (value,),
