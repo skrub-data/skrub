@@ -99,3 +99,22 @@ def toy_orders(split="train"):
     else:
         assert split == "all", split
     return Bunch(X=X, y=y, orders=X.assign(delayed=y), orders_=X, delayed=y)
+
+def toy_dataframe():
+    """
+    Create a toy dataframe with various data types. Such as strings, booleans, dates, and integers.
+    
+    Returns
+    -------
+    df : pd.DataFrame
+        A pandas DataFrame with 5 rows and 6 columns.
+    """
+    df = pd.DataFrame({
+        "ID": [1, 2, 3, 4, 5],
+        "name": ["Alice", "Bob", "Charlie", "David", "Eve"],
+        "product": ["pen", np.nan, "cup", "spoon", "fork"],
+        "is_active": [True, False, True, False, True],
+        "signup_date": pd.to_datetime(["2020-01-01", "2021-02-25", "2022-03-15", "2020-04-20", "2021-11-05"]),
+        "score": [np.nan, 85, 90, 95, 88]
+    })
+    return df
