@@ -268,3 +268,20 @@ def test_choice_repr():
     >>> skrub.choose_float(1, 10, n_steps=2, name="i")
     choose_float(1, 10, n_steps=2, name='i')
     """
+
+
+def test_defaults_shown_in_doc_table():
+    assert skrub.choose_from([10, 20]).default() == 10
+    assert skrub.choose_from({"a_name": 10, "b_name": 20}).default() == 10
+    assert skrub.optional(10).default() == 10
+    assert skrub.choose_bool().default() is True
+    assert skrub.choose_float(1.0, 100.0).default() == 50.5
+    assert skrub.choose_int(1, 100).default() == 50
+    assert skrub.choose_float(1.0, 100.0, log=True).default() == pytest.approx(10.0)
+    assert skrub.choose_int(1, 100, log=True).default() == 10
+    assert skrub.choose_float(1.0, 100.0, n_steps=4).default() == 34.0
+    assert skrub.choose_int(1, 100, n_steps=4).default() == 34
+    assert skrub.choose_float(
+        1.0, 100.0, log=True, n_steps=4
+    ).default() == pytest.approx(4.641588833612779)
+    assert skrub.choose_int(1, 100, log=True, n_steps=4).default() == 5

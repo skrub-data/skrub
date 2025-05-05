@@ -399,12 +399,12 @@ def choose_from(outcomes, *, name=None, default=NULL):
 
     Normally the default value is the first item:
 
-    >>> choose_from([1, 2, 3]).as_expr().skb.eval()
+    >>> choose_from([1, 2, 3]).default()
     1
 
     But we can override it with a different value:
 
-    >>> choose_from([1, 2, 3], default=2).as_expr().skb.eval()
+    >>> choose_from([1, 2, 3], default=2).default()
     2
     """
     if isinstance(outcomes, typing.Mapping):
@@ -517,13 +517,13 @@ def optional(value, *, name=None, default=NULL):
     When a pipeline containing an ``optional`` step is used *without
     hyperparameter tuning*, the default outcome is the provided ``value``.
 
-    >>> print(optional(PCA()).as_expr().skb.eval())
+    >>> print(optional(PCA()).default())
     PCA()
 
     This can be overridden with the ``default`` parameter. For example if we
     want the alternative (``None``) by default:
 
-    >>> print(optional(PCA(), default=None).as_expr().skb.eval())
+    >>> print(optional(PCA(), default=None).default())
     None
     """
     return Optional(
@@ -607,12 +607,12 @@ def choose_bool(*, name=None, default=NULL):
     >>> import skrub
     >>> print(skrub.choose_bool().as_expr().skb.describe_param_grid())
     - choose_bool(): [True, False]
-    >>> skrub.choose_bool().as_expr().skb.eval()
+    >>> skrub.choose_bool().default()
     True
 
     We can set the default to make it ``False``:
 
-    >>> skrub.choose_bool(default=False).as_expr().skb.eval()
+    >>> skrub.choose_bool(default=False).default()
     False
     """
     return BoolChoice(
