@@ -70,12 +70,12 @@ class BaseChoice:
         raise TypeError(f"key must be {self.keys()[0]!r}")
 
 
-def _check_match_keys(outcome_values, default_outcome, mapping_keys, has_default):
+def _check_match_keys(outcomes, default_outcome, match_keys, match_has_default):
     if default_outcome is not NULL:
-        outcome_values = [*outcome_values, default_outcome]
+        outcomes = [*outcomes, default_outcome]
     try:
-        extra_keys = set(mapping_keys).difference(outcome_values)
-        extra_outcomes = set(outcome_values).difference(mapping_keys)
+        extra_keys = set(match_keys).difference(outcomes)
+        extra_outcomes = set(outcomes).difference(match_keys)
     except TypeError as e:
         raise TypeError(f"To use `match()`, all choice outcomes must be hashable. {e}")
     if extra_keys:
@@ -83,7 +83,7 @@ def _check_match_keys(outcome_values, default_outcome, mapping_keys, has_default
             "The following keys were found in the mapping provided to `match()` but"
             f" are not possible choice outcomes: {extra_keys!r}"
         )
-    if has_default:
+    if match_has_default:
         return
     if extra_outcomes:
         raise ValueError(
@@ -237,10 +237,10 @@ class Choice(BaseChoice):
         {'logistic': 'linear', 'hgb': 'unknown'}
         """  # noqa : E501
         _check_match_keys(
-            self.outcomes,
-            self.default_outcome,
-            outcome_mapping.keys(),
-            default is not NULL,
+            outcomes=self.outcomes,
+            default_outcome=self.default_outcome,
+            match_keys=outcome_mapping.keys(),
+            match_has_default=default is not NULL,
         )
         if default is NULL:
             complete_mapping = outcome_mapping
@@ -324,10 +324,10 @@ class Match:
         {'logistic': StandardScaler(), 'random_forest': 'passthrough', 'hgb': 'passthrough'}
         """  # noqa: E501
         _check_match_keys(
-            self.outcome_mapping.values(),
-            NULL,
-            outcome_mapping.keys(),
-            default is not NULL,
+            outcomes=self.outcome_mapping.values(),
+            default_outcome=NULL,
+            match_keys=outcome_mapping.keys(),
+            match_has_default=default is not NULL,
         )
         mapping = {
             k: outcome_mapping.get(v, default) for k, v in self.outcome_mapping.items()
