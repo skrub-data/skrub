@@ -629,31 +629,38 @@ def _check_wrap_params(cols, how, allow_reject, reason):
 
 
 def _check_estimator_type(estimator):
-    if inspect.isclass(estimator):
-        raise TypeError(
-            "Please provide an instance of a scikit-learn-like estimator "
-            "to `apply`, rather than a class. "
-            f"Got a class rather than an instance: {estimator}."
-        )
     if hasattr(estimator, "get_params"):
+        if inspect.isclass(estimator):
+            raise TypeError(
+                "Please provide an instance of a scikit-learn-like estimator "
+                "to `apply`, rather than a class. "
+                f"Got a class rather than an instance: {estimator!r}."
+            )
         return
     if callable(estimator):
-        description = "function" if inspect.isroutine(estimator) else "callable object"
+        kind = "function" if inspect.isroutine(estimator) else "callable object"
         raise TypeError(
             "The `estimator` passed to `.skb.apply()` should be "
-            f"a scikit-learn estimator. Got a {description} instead: {estimator}. "
+            f"a scikit-learn-like estimator. Got a {kind} instead: {estimator!r}. "
             "Did you mean to use `.skb.apply_func()` rather than `.skb.apply()`?"
         )
+    raise TypeError(
+        "The `estimator` passed to `.skb.apply()` should be "
+        "`None`, the string 'passthrough' or "
+        "a scikit-learn-like estimator (with methods `get_params()`, `fit()`, etc.). "
+        f"Got: {estimator!r}."
+    )
 
 
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
+    if estimator in [None, "passthrough"]:
+        estimator = PassThrough()
+
     _check_estimator_type(estimator)
 
     def _check(reason):
         _check_wrap_params(cols, how, allow_reject, reason)
 
-    if estimator in [None, "passthrough"]:
-        estimator = PassThrough()
     if how == "full_frame":
         _check("`how` is 'full_frame'")
         return estimator
