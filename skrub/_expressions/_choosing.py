@@ -1,5 +1,6 @@
 import dataclasses
 import functools
+import numbers
 import typing
 from collections.abc import Sequence
 
@@ -110,7 +111,6 @@ class Choice(BaseChoice):
     outcomes: list[typing.Any]
     outcome_names: typing.Optional[list[str]]
     name: typing.Optional[str] = None
-    default_outcome: typing.Any = NULL
     chosen_outcome_idx: typing.Optional[int] = None
 
     def __post_init__(self):
@@ -132,8 +132,6 @@ class Choice(BaseChoice):
 
     def default(self):
         """Get the default outcome."""
-        if self.default_outcome is not NULL:
-            return self.default_outcome
         return self.outcomes[0]
 
     def chosen_outcome_or_default(self):
@@ -236,17 +234,13 @@ class Choice(BaseChoice):
         >>> learner_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
         {'logistic': 'linear', 'hgb': 'unknown'}
         """  # noqa : E501
-        if self.default_outcome is NULL:
-            outcomes = self.outcomes
-        else:
-            outcomes = [*self.outcomes, self.default_outcome]
         _check_match_keys(
-            outcomes=outcomes,
+            outcomes=self.outcomes,
             match_keys=outcome_mapping.keys(),
             match_has_default=default is not NULL,
         )
         complete_mapping = {
-            outcome: outcome_mapping.get(outcome, default) for outcome in outcomes
+            outcome: outcome_mapping.get(outcome, default) for outcome in self.outcomes
         }
         return Match(self, complete_mapping)
 
@@ -255,11 +249,7 @@ class Choice(BaseChoice):
             arg = self.outcomes
         else:
             arg = {name: out for name, out in zip(self.outcome_names, self.outcomes)}
-        args_r = _utils.repr_args(
-            (arg,),
-            {"name": self.name, "default": self.default_outcome},
-            {"name": None, "default": NULL},
-        )
+        args_r = _utils.repr_args((arg,), {"name": self.name}, {"name": None})
         return f"choose_from({args_r})"
 
     def __skrub_short_repr__(self):
@@ -268,11 +258,7 @@ class Choice(BaseChoice):
         arg = {
             name: _Ellipsis() for name, out in zip(self.outcome_names, self.outcomes)
         }
-        args_r = _utils.repr_args(
-            (arg,),
-            {"name": self.name, "default": self.default_outcome},
-            {"name": None, "default": NULL},
-        )
+        args_r = _utils.repr_args((arg,), {"name": self.name}, {"name": None})
         return f"choose_from({args_r})"
 
 
@@ -342,8 +328,11 @@ class Match:
         return as_expr(self)
 
 
-def choose_from(outcomes, *, name=None, default=NULL):
+def choose_from(outcomes, *, name=None):
     """Construct a choice among several possible outcomes.
+
+    The default choice, when a pipeline is used without hyperparameter tuning,
+    is the first outcome in the provided list or dict.
 
     Parameters
     ----------
@@ -356,11 +345,6 @@ def choose_from(outcomes, *, name=None, default=NULL):
         If not ``None``, ``name`` is used when displaying search results and
         can also be used to override the choice's value by setting it in the
         environment containing a pipeline's inputs.
-
-    default : object, optional (default=NULL)
-        If provided, override the choice's default value when hyperparameter
-        search is not used. Otherwise the default value is the first item in
-        ``outcomes``.
 
     Returns
     -------
@@ -393,27 +377,17 @@ def choose_from(outcomes, *, name=None, default=NULL):
     choose_from({'one': 1, 'two': 2}, name='the number')
 
     When a pipeline containing a ``choose_from`` is used *without
-    hyperparameter tuning*, the default outcome for the choice is used. This
-    can be set explicitly with the ``default`` parameter. If not set, it is the
-    first outcome in the provided list or dict.
-
-    Normally the default value is the first item:
+    hyperparameter tuning*, the default outcome for the choice is used.
+    It is the first outcome in the provided list or dict:
 
     >>> choose_from([1, 2, 3]).default()
     1
-
-    But we can override it with a different value:
-
-    >>> choose_from([1, 2, 3], default=2).default()
-    2
     """
     if isinstance(outcomes, typing.Mapping):
         outcome_names, outcomes = list(outcomes.keys()), list(outcomes.values())
     else:
         outcome_names = None
-    return Choice(
-        outcomes, outcome_names=outcome_names, name=name, default_outcome=default
-    )
+    return Choice(outcomes, outcome_names=outcome_names, name=name)
 
 
 # helper for other skrub modules
@@ -431,8 +405,8 @@ def get_default(obj):
     1
     >>> get_default(choice)
     1
-    >>> get_default(choice.default())
-    1
+    >>> get_default(choice.match({1: 'one', 2: 'two'}))
+    'one'
     >>> get_default(1)
     1
     """
@@ -465,15 +439,18 @@ class Optional(Choice):
     """A choice between something and nothing."""
 
     def __repr__(self):
+        value, none_by_default = self.outcomes[0], False
+        if value is None:
+            value, none_by_default = self.outcomes[1], True
         args = _utils.repr_args(
-            (self.outcomes[0],),
-            {"name": self.name, "default": self.default_outcome},
-            defaults={"name": None, "default": NULL},
+            (value,),
+            {"name": self.name, "none_by_default": none_by_default},
+            defaults={"name": None, "none_by_default": False},
         )
         return f"optional({args})"
 
 
-def optional(value, *, name=None, default=NULL):
+def optional(value, *, name=None, none_by_default=False):
     """Construct a choice between a value and ``None``.
 
     Parameters
@@ -486,10 +463,10 @@ def optional(value, *, name=None, default=NULL):
         can also be used to override the choice's value by setting it in the
         environment containing a pipeline's inputs.
 
-    default : object, optional (default=NULL)
-        If provided, override the choice's default value when hyperparameter
-        search is not used. Otherwise the default value is the provided
-        ``value``.
+    none_by_default : bool, optional (default=False)
+        If False, the default outcome for this choice when hyperparameter
+        search is not used is the provided ``value``. If ``none_by_default`` is
+        ``True``, the default outcome becomes the alternative, ``None``.
 
     Returns
     -------
@@ -512,7 +489,7 @@ def optional(value, *, name=None, default=NULL):
     the PCA and one without:
 
     >>> print(optional(PCA(), name='dim reduction').as_expr().skb.describe_param_grid())
-    - dim reduction: ['true', 'false']
+    - dim reduction: [PCA(), None]
 
     When a pipeline containing an ``optional`` step is used *without
     hyperparameter tuning*, the default outcome is the provided ``value``.
@@ -520,26 +497,22 @@ def optional(value, *, name=None, default=NULL):
     >>> print(optional(PCA()).default())
     PCA()
 
-    This can be overridden with the ``default`` parameter. For example if we
+    This can be overridden with the ``none_by_default`` parameter. If we
     want the alternative (``None``) by default:
 
-    >>> print(optional(PCA(), default=None).default())
+    >>> print(optional(PCA(), none_by_default=True).default())
     None
     """
-    return Optional(
-        [value, None],
-        outcome_names=["true", "false"],
-        name=name,
-        default_outcome=default,
-    )
+    outcomes = [None, value] if none_by_default else [value, None]
+    return Optional(outcomes, outcome_names=None, name=name)
 
 
 class BoolChoice(Choice):
     def __repr__(self):
         args = _utils.repr_args(
             (),
-            {"name": self.name, "default": self.default_outcome},
-            {"name": None, "default": NULL},
+            {"name": self.name, "default": self.outcomes[0]},
+            {"name": None, "default": True},
         )
         return f"choose_bool({args})"
 
@@ -568,11 +541,11 @@ class BoolChoice(Choice):
         return self.match({True: if_true, False: if_false})
 
 
-def choose_bool(*, name=None, default=NULL):
+def choose_bool(*, name=None, default=True):
     """Construct a choice between False and True.
 
     When a pipeline containing a ``choose_bool`` is used *without
-    hyperparameter tuning*, the default outcome is ``True``.
+    hyperparameter tuning*, the default outcome the value of ``default``.
 
     Parameters
     ----------
@@ -581,9 +554,8 @@ def choose_bool(*, name=None, default=NULL):
         can also be used to override the choice's value by setting it in the
         environment containing a pipeline's inputs.
 
-    default : object, optional (default=NULL)
-        If provided, override the choice's default value when hyperparameter
-        search is not used. Otherwise the default value is ``True``.
+    default : bool, optional (default=True)
+        Choice's default value when hyperparameter search is not used.
 
     Returns
     -------
@@ -615,9 +587,8 @@ def choose_bool(*, name=None, default=NULL):
     >>> skrub.choose_bool(default=False).default()
     False
     """
-    return BoolChoice(
-        [True, False], outcome_names=None, name=name, default_outcome=default
-    )
+    default = bool(default)
+    return BoolChoice([default, not default], outcome_names=None, name=name)
 
 
 def _check_bounds(low, high, log):
@@ -629,6 +600,21 @@ def _check_bounds(low, high, log):
         raise ValueError(f"To use log space 'low' must be > 0, got low={low}")
 
 
+def _check_default_numeric_outcome(default, to_int):
+    if default is None:
+        return
+    if to_int and not isinstance(default, numbers.Integral):
+        raise TypeError(
+            "The default for `choose_int` must be an integer. "
+            f"Got object of type: {type(default)}"
+        )
+    if not isinstance(default, numbers.Real):
+        raise TypeError(
+            "The default for `choose_float` must be a float. "
+            f"Got object of type: {type(default)}"
+        )
+
+
 def _repr_numeric_choice(choice):
     args = _utils.repr_args(
         (choice.low, choice.high),
@@ -638,7 +624,7 @@ def _repr_numeric_choice(choice):
             "name": choice.name,
             "default": choice.default_outcome,
         },
-        defaults={"log": False, "n_steps": None, "name": None, "default": NULL},
+        defaults={"log": False, "n_steps": None, "name": None, "default": None},
     )
     if choice.to_int:
         return f"choose_int({args})"
@@ -669,6 +655,7 @@ class NumericChoice(BaseNumericChoice):
     def __post_init__(self):
         _check_name(self.name)
         _check_bounds(self.low, self.high, self.log)
+        _check_default_numeric_outcome(self.default_outcome, self.to_int)
         if self.log:
             self._distrib = stats.loguniform(self.low, self.high)
         else:
@@ -681,7 +668,7 @@ class NumericChoice(BaseNumericChoice):
         return value
 
     def default(self):
-        if self.default_outcome is not NULL:
+        if self.default_outcome is not None:
             return self.default_outcome
         low, high = self.low, self.high
         if self.log:
@@ -713,6 +700,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
     def __post_init__(self):
         _check_name(self.name)
         _check_bounds(self.low, self.high, self.log)
+        _check_default_numeric_outcome(self.default_outcome, self.to_int)
         if self.n_steps < 1:
             raise ValueError(f"n_steps must be >= 1, got: {self.n_steps}")
         if self.log:
@@ -730,7 +718,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
         return random_state.choice(self.grid, size=size)
 
     def default(self):
-        if self.default_outcome is not NULL:
+        if self.default_outcome is not None:
             return self.default_outcome
         return self.grid[(len(self.grid) - 1) // 2]
 
@@ -750,7 +738,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
         return iter(self.grid)
 
 
-def choose_float(low, high, *, log=False, n_steps=None, name=None, default=NULL):
+def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None):
     """Construct a choice of floating-point numbers from a numeric range.
 
     Parameters
@@ -776,7 +764,7 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=NULL)
         can also be used to override the choice's value by setting it in the
         environment containing a pipeline's inputs.
 
-    default : float, optional (default=NULL)
+    default : float, optional (default=None)
         If provided, override the choice's default value when hyperparameter
         search is not used. Otherwise the default value is the middle of the
         range (either on a linear or logarithmic scale depending on the value
@@ -814,7 +802,7 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=NULL)
     )
 
 
-def choose_int(low, high, *, log=False, n_steps=None, name=None, default=NULL):
+def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
     """Construct a choice of integers from a numeric range.
 
     Parameters
@@ -840,7 +828,7 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None, default=NULL):
         can also be used to override the choice's value by setting it in the
         environment containing a pipeline's inputs.
 
-    default : int, optional (default=NULL)
+    default : int, optional (default=None)
         If provided, override the choice's default value when hyperparameter
         search is not used. Otherwise the default value is the integer closest
         to the middle of the range (either on a linear or logarithmic scale

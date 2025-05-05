@@ -125,14 +125,11 @@ class _ExprTraversal:
         return estimator
 
     def handle_choice(self, choice):
-        new_default = yield choice.default_outcome
         if not isinstance(choice, _choosing.Choice):
             # choice is a BaseNumericChoice
-            return _choosing._with_fields(choice, default_outcome=new_default)
+            return _choosing._with_fields(choice)
         new_outcomes = yield choice.outcomes
-        return _choosing._with_fields(
-            choice, outcomes=new_outcomes, default_outcome=new_default
-        )
+        return _choosing._with_fields(choice, outcomes=new_outcomes)
 
     def handle_choice_match(self, choice_match):
         choice = yield choice_match.choice
