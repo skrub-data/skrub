@@ -10,6 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._total_std_norm import total_standard_deviation_norm
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
 
@@ -166,7 +167,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
     Let's encode video comments using only 2 embedding dimensions:
 
-    >>> enc = TextEncoder(model_name='intfloat/e5-small-v2', n_components=2)
+    >>> enc = TextEncoder(
+    ...    model_name='intfloat/e5-small-v2', n_components=2
+    ... )
     >>> X = pd.Series([
     ...   "The professor snatched a good interview out of the jaws of these questions.",
     ...   "Bookmarking this to watch later.",
@@ -258,6 +261,10 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 # number of dimensions of X_out.
                 X_out = X_out[:, : self.n_components]
 
+        # block normalize
+        self.norm_ = total_standard_deviation_norm(X_out)
+        X_out /= self.norm_
+
         self.n_components_ = X_out.shape[1]
 
         cols = self.get_feature_names_out()
@@ -293,6 +300,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             X_out = self.pca_.transform(X_out)
         elif self.n_components is not None:
             X_out = X_out[:, : self.n_components]
+
+        # block normalize
+        X_out /= self.norm_
 
         cols = self.get_feature_names_out()
         X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))
