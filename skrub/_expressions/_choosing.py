@@ -70,9 +70,7 @@ class BaseChoice:
         raise TypeError(f"key must be {self.keys()[0]!r}")
 
 
-def _check_match_keys(outcomes, default_outcome, match_keys, match_has_default):
-    if default_outcome is not NULL:
-        outcomes = [*outcomes, default_outcome]
+def _check_match_keys(outcomes, match_keys, match_has_default):
     try:
         extra_keys = set(match_keys).difference(outcomes)
         extra_outcomes = set(outcomes).difference(match_keys)
@@ -133,12 +131,13 @@ class Choice(BaseChoice):
             raise ValueError("Outcome names should be unique")
 
     def default(self):
-        """Default outcome: the first one in the list."""
+        """Get the default outcome."""
         if self.default_outcome is not NULL:
             return self.default_outcome
         return self.outcomes[0]
 
     def chosen_outcome_or_default(self):
+        """Chosen outcome when it has been set, otherwise the default."""
         if self.chosen_outcome_idx is not None:
             return self.outcomes[self.chosen_outcome_idx]
         return self.default()
@@ -156,7 +155,8 @@ class Choice(BaseChoice):
             Maps possible outcome to the desired result. The keys must all be
             one of the possible outcomes for the choice. If no ``default`` is
             provided, there must be an entry in ``outcome_mapping`` for each
-            possible choice outcome.
+            possible choice outcome (including the choice's default outcome if
+            that has been set).
 
         default : object, optional
             The value to use for outcomes not found in ``outcome_mapping``.
@@ -236,19 +236,18 @@ class Choice(BaseChoice):
         >>> learner_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
         {'logistic': 'linear', 'hgb': 'unknown'}
         """  # noqa : E501
+        if self.default_outcome is NULL:
+            outcomes = self.outcomes
+        else:
+            outcomes = [*self.outcomes, self.default_outcome]
         _check_match_keys(
-            outcomes=self.outcomes,
-            default_outcome=self.default_outcome,
+            outcomes=outcomes,
             match_keys=outcome_mapping.keys(),
             match_has_default=default is not NULL,
         )
-        if default is NULL:
-            complete_mapping = outcome_mapping
-        else:
-            complete_mapping = {
-                outcome: outcome_mapping.get(outcome, default)
-                for outcome in self.outcomes
-            }
+        complete_mapping = {
+            outcome: outcome_mapping.get(outcome, default) for outcome in outcomes
+        }
         return Match(self, complete_mapping)
 
     def __repr__(self):
@@ -325,7 +324,6 @@ class Match:
         """  # noqa: E501
         _check_match_keys(
             outcomes=self.outcome_mapping.values(),
-            default_outcome=NULL,
             match_keys=outcome_mapping.keys(),
             match_has_default=default is not NULL,
         )
@@ -347,16 +345,28 @@ class Match:
 def choose_from(outcomes, *, name=None, default=NULL):
     """Construct a choice among several possible outcomes.
 
-    Outcomes can be provided in a list:
+    Parameters
+    ----------
+    outcomes : list or dict
+        The possible outcomes to choose from. If a dict, the values are the
+        outcomes and the keys give them human-readable names used to display
+        hyperparameter search grids and results.
 
-    >>> from skrub import choose_from
-    >>> choose_from([1, 2], name='the number')
-    choose_from([1, 2], name='the number')
+    name : str, optional (default=None)
+        If not ``None``, ``name`` is used when displaying search results and
+        can also be used to override the choice's value by setting it in the
+        environment containing a pipeline's inputs.
 
-    They can also be provided in a dictionary to give a name to each outcome:
+    default : object, optional (default=NULL)
+        If provided, override the choice's default value when hyperparameter
+        search is not used. Otherwise the default value is the first item in
+        ``outcomes``.
 
-    >>> choose_from({'one': 1, 'two': 2}, name='the number')
-    choose_from({'one': 1, 'two': 2}, name='the number')
+    Returns
+    -------
+    Choice
+        An object representing this choice, which can be used in a skrub
+        pipeline.
 
     See also
     --------
@@ -368,6 +378,34 @@ def choose_from(outcomes, *, name=None, default=NULL):
 
     choose_int :
         Construct a choice of integers from a numeric range.
+
+    Examples
+    --------
+    Outcomes can be provided in a list:
+
+    >>> from skrub import choose_from
+    >>> choose_from([1, 2], name='the number')
+    choose_from([1, 2], name='the number')
+
+    They can also be provided in a dictionary to give a name to each outcome:
+
+    >>> choose_from({'one': 1, 'two': 2}, name='the number')
+    choose_from({'one': 1, 'two': 2}, name='the number')
+
+    When a pipeline containing a ``choose_from`` is used *without
+    hyperparameter tuning*, the default outcome for the choice is used. This
+    can be set explicitly with the ``default`` parameter. If not set, it is the
+    first outcome in the provided list or dict.
+
+    Normally the default value is the first item:
+
+    >>> choose_from([1, 2, 3]).as_expr().skb.eval()
+    1
+
+    But we can override it with a different value:
+
+    >>> choose_from([1, 2, 3], default=2).as_expr().skb.eval()
+    2
     """
     if isinstance(outcomes, typing.Mapping):
         outcome_names, outcomes = list(outcomes.keys()), list(outcomes.values())
@@ -378,8 +416,9 @@ def choose_from(outcomes, *, name=None, default=NULL):
     )
 
 
+# helper for other skrub modules
 def get_default(obj):
-    """Extract a value from a Choice, Match, or plain value.
+    """Extract the default value from a Choice, Match, or plain value.
 
     If the input is a Choice, the default outcome is used.
     Otherwise returns the input.
@@ -404,7 +443,9 @@ def get_default(obj):
     return obj
 
 
+# helper for other skrub modules
 def get_chosen_or_default(obj):
+    """Extract the chosen (or if not set, default) value."""
     if isinstance(obj, Match):
         return obj.outcome_mapping[get_chosen_or_default(obj.choice)]
     if isinstance(obj, BaseChoice):
@@ -412,7 +453,9 @@ def get_chosen_or_default(obj):
     return obj
 
 
+# helper for other skrub modules
 def get_display_name(choice):
+    """Name to use for representing a choice in CV results and plots."""
     if choice.name is not None:
         return choice.name
     return _utils.short_repr(choice)
@@ -433,9 +476,32 @@ class Optional(Choice):
 def optional(value, *, name=None, default=NULL):
     """Construct a choice between a value and ``None``.
 
-    This is useful for optional steps in a pipeline. If we want to try our
-    pipeline with or without dimensionality reduction, we can add a step such
-    as:
+    Parameters
+    ----------
+    value : object
+        The outcome (when ``None`` is not chosen).
+
+    name : str, optional (default=None)
+        If not ``None``, ``name`` is used when displaying search results and
+        can also be used to override the choice's value by setting it in the
+        environment containing a pipeline's inputs.
+
+    default : object, optional (default=NULL)
+        If provided, override the choice's default value when hyperparameter
+        search is not used. Otherwise the default value is the provided
+        ``value``.
+
+    Returns
+    -------
+    Choice
+        An object representing this choice, which can be used in a skrub
+        pipeline.
+
+    Examples
+    --------
+    ``optional`` is useful for optional steps in a pipeline. If we want to try
+    our pipeline with or without dimensionality reduction, we can add a step
+    such as:
 
     >>> from sklearn.decomposition import PCA
     >>> from skrub import optional
@@ -443,9 +509,23 @@ def optional(value, *, name=None, default=NULL):
     optional(PCA(), name='use dim reduction')
 
     The constructed parameter grid will include a version of the pipeline with
-    the PCA and one without.
+    the PCA and one without:
+
+    >>> print(optional(PCA(), name='dim reduction').as_expr().skb.describe_param_grid())
+    - dim reduction: ['true', 'false']
+
+    When a pipeline containing an ``optional`` step is used *without
+    hyperparameter tuning*, the default outcome is the provided ``value``.
+
+    >>> print(optional(PCA()).as_expr().skb.eval())
+    PCA()
+
+    This can be overridden with the ``default`` parameter. For example if we
+    want the alternative (``None``) by default:
+
+    >>> print(optional(PCA(), default=None).as_expr().skb.eval())
+    None
     """
-    # TODO remove outcome names
     return Optional(
         [value, None],
         outcome_names=["true", "false"],
@@ -491,6 +571,26 @@ class BoolChoice(Choice):
 def choose_bool(*, name=None, default=NULL):
     """Construct a choice between False and True.
 
+    When a pipeline containing a ``choose_bool`` is used *without
+    hyperparameter tuning*, the default outcome is ``True``.
+
+    Parameters
+    ----------
+    name : str, optional (default=None)
+        If not ``None``, ``name`` is used when displaying search results and
+        can also be used to override the choice's value by setting it in the
+        environment containing a pipeline's inputs.
+
+    default : object, optional (default=NULL)
+        If provided, override the choice's default value when hyperparameter
+        search is not used. Otherwise the default value is ``True``.
+
+    Returns
+    -------
+    BoolChoice
+        An object representing this choice, which can be used in a skrub
+        pipeline.
+
     See also
     --------
     choose_float :
@@ -501,6 +601,19 @@ def choose_bool(*, name=None, default=NULL):
 
     choose_int :
         Construct a choice of integers from a numeric range.
+
+    Examples
+    --------
+    >>> import skrub
+    >>> print(skrub.choose_bool().as_expr().skb.describe_param_grid())
+    - choose_bool(): [True, False]
+    >>> skrub.choose_bool().as_expr().skb.eval()
+    True
+
+    We can set the default to make it ``False``:
+
+    >>> skrub.choose_bool(default=False).as_expr().skb.eval()
+    False
     """
     return BoolChoice(
         [True, False], outcome_names=None, name=name, default_outcome=default
@@ -640,6 +753,41 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
 def choose_float(low, high, *, log=False, n_steps=None, name=None, default=NULL):
     """Construct a choice of floating-point numbers from a numeric range.
 
+    Parameters
+    ----------
+    low : float
+        The start of the range.
+
+    high : float
+        Then end of the range.
+
+    log : bool, optional (default=False)
+        Whether sampling should be done on a logarithmic scale.
+
+    n_steps : int, optional (default=None)
+        If not ``None``, a grid of ``n_steps`` values across the range is
+        defined and sampling is done on that grid. This can be useful to limit
+        the number of unique values that get sampled, for example to improve
+        the effectiveness of caching. However, it means a much more restricted
+        space of possible values gets explored.
+
+    name : str, optional (default=None)
+        If not ``None``, ``name`` is used when displaying search results and
+        can also be used to override the choice's value by setting it in the
+        environment containing a pipeline's inputs.
+
+    default : float, optional (default=NULL)
+        If provided, override the choice's default value when hyperparameter
+        search is not used. Otherwise the default value is the middle of the
+        range (either on a linear or logarithmic scale depending on the value
+        of ``log``).
+
+    Returns
+    -------
+    numeric choice
+        An object representing this choice, which can be used in a skrub
+        pipeline.
+
     See also
     --------
     choose_bool :
@@ -668,6 +816,41 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=NULL)
 
 def choose_int(low, high, *, log=False, n_steps=None, name=None, default=NULL):
     """Construct a choice of integers from a numeric range.
+
+    Parameters
+    ----------
+    low : int
+        The start of the range.
+
+    high : int
+        Then end of the range. It is included in the possible outcomes.
+
+    log : bool, optional (default=False)
+        Whether sampling should be done on a logarithmic scale.
+
+    n_steps : int, optional (default=None)
+        If not ``None``, a grid of ``n_steps`` values across the range is
+        defined and sampling is done on that grid. This can be useful to limit
+        the number of unique values that get sampled, for example to improve
+        the effectiveness of caching. However, it means a much more restricted
+        space of possible values gets explored.
+
+    name : str, optional (default=None)
+        If not ``None``, ``name`` is used when displaying search results and
+        can also be used to override the choice's value by setting it in the
+        environment containing a pipeline's inputs.
+
+    default : int, optional (default=NULL)
+        If provided, override the choice's default value when hyperparameter
+        search is not used. Otherwise the default value is the integer closest
+        to the middle of the range (either on a linear or logarithmic scale
+        depending on the value of ``log``).
+
+    Returns
+    -------
+    numeric choice
+        An object representing this choice, which can be used in a skrub
+        pipeline.
 
     See also
     --------
