@@ -153,15 +153,18 @@ search.plot_results()
 # example in previews or to get a quick first result before spending the
 # computation time to run the search. When we use :meth:`.skb.get_pipeline()
 # <Expr.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
-# and uses those default values.
+# and uses those default values. That default pipeline is the one used for
+# :meth:`.skb.eval() <Expr.skb.eval>`.
 #
-# We can control what should be the default value in this case. For
-# :func:`choose_int`, :func:`choose_float` and :func:`choose_bool`, we can
-# provide an explicit ``default``. For :func:`choose_from`, the default is the
-# first item from the list or dict of outcomes we provide. For
-# :func:`optional`, we can pass ``none_by_default`` to force the default to be
-# the alternative outcome, ``None``. If we do not set an explicit default,
-# skrub picks one for depending on the kind of choice:
+# We can control what should be the default value for each choice. For
+# :func:`choose_int`, :func:`choose_float` and :func:`choose_bool`, we can use
+# the ``default`` parameter. For :func:`choose_from`, the default is the first
+# item from the list or dict of outcomes we provide. For :func:`optional`, we
+# can pass ``none_by_default=True`` to force the default to be the alternative
+# outcome, ``None``.
+#
+# When we do not set an explicit default, skrub picks one for depending on the
+# kind of choice:
 #
 # .. list-table:: default choice outcomes
 #    :header-rows: 1
@@ -199,7 +202,7 @@ search.plot_results()
 #
 
 # %%
-# Of course if we set the default that is used instead:
+# As mentioned we can control the default value:
 
 # %%
 skrub.choose_float(1.0, 100.0, default=12.0).default()

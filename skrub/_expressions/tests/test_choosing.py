@@ -76,6 +76,14 @@ def test_bad_bounds():
         skrub.choose_float(0.0, 10.0, log=True, name="c")
 
 
+def test_bad_numeric_default():
+    with pytest.raises(TypeError, match=".*must be an integer"):
+        skrub.choose_int(0, 10, default=5.5)
+    with pytest.raises(TypeError, match=".*must be a float"):
+        skrub.choose_float(0, 10, default=skrub.as_expr(5.5))
+    assert skrub.choose_float(0, 10, default=5).default() == 5
+
+
 def test_as_expr():
     c = skrub.choose_from([10, 20, 30], name="c")
     m = c.match({10: "ten", 20: "twenty"}, default="?")
@@ -244,6 +252,12 @@ def test_choice_repr():
     choose_bool(name='a')
     >>> skrub.choose_float(1, 10, n_steps=2, name="i")
     choose_float(1, 10, n_steps=2, name='i')
+    >>> skrub.optional('value')
+    optional('value')
+    >>> skrub.optional('value', none_by_default=True)
+    optional('value', none_by_default=True)
+    >>> skrub.optional(None, none_by_default=True)
+    optional(None)
     """
 
 

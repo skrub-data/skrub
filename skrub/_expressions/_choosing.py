@@ -439,6 +439,7 @@ class Optional(Choice):
 
     def __repr__(self):
         if self.outcomes[0] is not None or self.outcomes[1] is None:
+            # note when `value` is None, `none_by_default` makes no difference
             value, none_by_default = self.outcomes[0], False
         else:
             value, none_by_default = self.outcomes[1], True
