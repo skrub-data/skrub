@@ -916,13 +916,3 @@ def test_drop_null_column():
     tv = TableVectorizer(drop_null_fraction=1.0)
     transformed = tv.fit_transform(X)
     assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)
-
-
-def test_deprecation_high_cardinality():
-    """Check that the deprecation warning is raised when using the default
-    value for the high_cardinality encoder."""
-    with pytest.warns(
-        FutureWarning,
-        match=".*The default high_cardinality encoder will be changed*",
-    ):
-        TableVectorizer().fit(_get_clean_dataframe())

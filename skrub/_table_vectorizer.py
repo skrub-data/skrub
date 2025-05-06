@@ -18,9 +18,9 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
-from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
+from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
 from ._to_str import ToStr
@@ -37,7 +37,7 @@ class PassThrough(SingleColumnTransformer):
         return column
 
 
-HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+HIGH_CARDINALITY_TRANSFORMER = StringEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     sparse_output=False,
     dtype="float32",
@@ -434,10 +434,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         and drop one of the transformed columns if the feature contains only 2
         categories.
 
-    high_cardinality : transformer, "passthrough" or "drop", default=GapEncoder instance
+    high_cardinality : transformer, "passthrough" or "drop", default=StringEncoder instance
         The transformer for string or categorical columns with at least
         ``cardinality_threshold`` unique values. The default is a
-        :class:`~skrub.GapEncoder` with 30 components (30 output columns for each
+        :class:`~skrub.StringEncoder` with 30 components (30 output columns for each
         input).
 
     numeric : transformer, "passthrough" or "drop", default="passthrough"
@@ -697,7 +697,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         *,
         cardinality_threshold=40,
         low_cardinality=LOW_CARDINALITY_TRANSFORMER,
-        high_cardinality="warn",
+        high_cardinality=HIGH_CARDINALITY_TRANSFORMER,
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
@@ -760,18 +760,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         dataframe
             The transformed input.
         """
-        if self.high_cardinality == "warn":
-            warnings.warn(
-                (
-                    "The default high_cardinality encoder will be changed to "
-                    "StringEncoder in a future release. "
-                    "To suppress this warning, please set the "
-                    "high_cardinality parameter explicitly."
-                ),
-                category=FutureWarning,
-            )
-            self.high_cardinality = HIGH_CARDINALITY_TRANSFORMER
-
         self._check_specific_columns()
         self._make_pipeline()
         output = self._pipeline.fit_transform(X, y=y)
