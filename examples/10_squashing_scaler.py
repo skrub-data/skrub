@@ -37,7 +37,7 @@ from skrub.datasets import fetch_employee_salaries
 ######################################################################
 # Comparing numerical preprocessings
 # -----------------
-# We test the :class:`~skrub.SquashingScaler`vs the `StandardScaler`
+# We test the :class:`~skrub.SquashingScaler` vs the `StandardScaler`
 # and the `QuantileTransformer` from scikit-learn.
 # We put each of these together in a pipeline with a TableVectorizer
 # and a simple MLPRegressor.
@@ -74,7 +74,7 @@ for num_transformer in [
 
     print(
         f"Cross-validation R2 scores for {num_transformer.__class__.__name__} (higher"
-        f" is better): {scores}"
+        f" is better):\n{scores}"
     )
 
 ######################################################################

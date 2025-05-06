@@ -210,7 +210,7 @@ Cleaning a dataframe
    :nosignatures:
 
    deduplicate
-   AdaptiveSquashingTransformer
+   SquashingScaler
 
 
 .. _downloading_a_dataset_ref:
