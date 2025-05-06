@@ -59,6 +59,10 @@ Changes
 - The default high cardinality encoder for :class:`TableVectorizer` and :meth:`tabular_learner`
   been changed to :class:`StringEncoder`. :pr:`1354` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The :class:`TableVectorizer` and :class:`Cleaner` now accept a `datetime_format`
+  parameter for specifying the format to use when parsing datetime columns.
+  :pr:`1358` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Bugfixes
 --------
 

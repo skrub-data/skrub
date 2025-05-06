@@ -625,7 +625,7 @@ def test_find_fitted_estimator():
     assert isinstance(pipeline.find_fitted_estimator("predictor"), LogisticRegression)
 
 
-def test_sub_pipeline():
+def test_truncated_after():
     pipeline = (
         skrub.X()
         .skb.apply(MinMaxScaler())
@@ -636,7 +636,7 @@ def test_sub_pipeline():
     X = np.array([10.0, 5.0, 0.0])[:, None]
     y = np.array([1, 0, 1])
     pipeline.fit({"X": X, "y": y})
-    sub_pipeline = pipeline.sub_pipeline("scaling")
+    sub_pipeline = pipeline.truncated_after("scaling")
     assert np.allclose(
         sub_pipeline.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
     )
@@ -645,7 +645,7 @@ def test_sub_pipeline():
         sub_pipeline.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
     )
     with pytest.raises(KeyError, match="'xyz'"):
-        pipeline.sub_pipeline("xyz")
+        pipeline.truncated_after("xyz")
 
 
 #
