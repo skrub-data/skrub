@@ -53,7 +53,6 @@ for num_transformer in [
     data = fetch_employee_salaries()
 
     model = TransformedTargetRegressor(MLPRegressor(), transformer=StandardScaler())
-    scoring = "r2"
 
     pipeline = Pipeline(
         steps=[
@@ -70,11 +69,11 @@ for num_transformer in [
         # ignore warning about unknown categories
         warnings.simplefilter("ignore", category=UserWarning)
 
-        scores = cross_val_score(pipeline, data.X, data.y, cv=3, scoring=scoring)
+        scores = cross_val_score(pipeline, data.X, data.y, cv=3, scoring="r2")
 
     print(
-        f"Cross-validation R2 scores for {num_transformer.__class__.__name__} (higher"
-        f" is better):\n{scores}"
+        f"Cross-validation R2 scores for {num_transformer.__class__.__name__}"
+        f" (higher is better):\n{scores}"
     )
 
 ######################################################################
