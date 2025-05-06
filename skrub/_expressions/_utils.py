@@ -10,16 +10,22 @@ Y_NAME = "_skrub_y"
 
 
 class Sentinels(enum.Enum):
-    NULL = enum.auto()
+    NULL = "NULL"
+    CROSS_VAL_DEFAULT_EXPR = "pipeline.expr"
+    CROSS_VAL_DEFAULT_PIPELINE = "expr.skb.get_pipeline()"
+    CROSS_VAL_DEFAULT_ENVIRONMENT = "expr.skb.get_data()"
 
     def __repr__(self):
-        return self.name
+        return self.value
 
     def __str__(self):
-        return self.name
+        return self.value
 
 
 NULL = Sentinels.NULL
+CROSS_VAL_DEFAULT_EXPR = Sentinels.CROSS_VAL_DEFAULT_EXPR
+CROSS_VAL_DEFAULT_PIPELINE = Sentinels.CROSS_VAL_DEFAULT_PIPELINE
+CROSS_VAL_DEFAULT_ENVIRONMENT = Sentinels.CROSS_VAL_DEFAULT_ENVIRONMENT
 
 
 def simple_repr(expr):

@@ -238,7 +238,7 @@ search.results_
 # We can also run a cross validation, using the first choices defined in the ``choose``
 # objects:
 
-predictions.skb.cross_validate(scoring="roc_auc", verbose=1, n_jobs=4)
+skrub.cross_validate(predictions, scoring="roc_auc", verbose=1, n_jobs=4)
 
 # %%
 # We can also display a parallel coordinates plot of the results.

@@ -2,9 +2,9 @@ import copy
 import functools
 import inspect
 import types
-import typing
 import warnings
 from collections import defaultdict
+from collections.abc import Mapping
 from types import SimpleNamespace
 
 from sklearn.base import BaseEstimator
@@ -263,7 +263,7 @@ class _Evaluator(_ExprTraversal):
 def _check_environment(environment):
     if environment is None:
         return
-    if not isinstance(environment, typing.Mapping):
+    if not isinstance(environment, Mapping):
         raise TypeError(
             "`environment` should be a dictionary of input values, for example: "
             "{'X': features_df, 'other_table_name': other_df, ...}. "

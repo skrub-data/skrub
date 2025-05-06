@@ -146,7 +146,9 @@ def test_fit_predict():
 
 
 def test_cross_validate(expression, data, n_jobs):
-    results = expression.skb.cross_validate(data, n_jobs=n_jobs, return_pipeline=True)
+    results = skrub.cross_validate(
+        expression, environment=data, n_jobs=n_jobs, return_pipeline=True
+    )
     pipelines = results["pipeline"]
     assert len(pipelines) == 5
     for p in pipelines:
@@ -158,10 +160,55 @@ def test_cross_validate(expression, data, n_jobs):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
+def test_cross_validate_bad_args():
+    e, env = get_expression_and_data("simple")
+    pipe = e.skb.get_pipeline()
+    with pytest.raises(TypeError, match=".*`pipeline` must be provided"):
+        skrub.cross_validate(environment=env)
+    with pytest.raises(TypeError, match=".*`environment` must be provided"):
+        skrub.cross_validate(pipeline=pipe)
+    with pytest.raises(TypeError, match=".*must be a skrub pipeline"):
+        skrub.cross_validate(pipeline=e, environment=env)
+    with pytest.raises(TypeError, match=".*must be a dict"):
+        skrub.cross_validate(pipeline=pipe, environment=None)
+    with pytest.raises(TypeError, match=".*must be a skrub expression"):
+        skrub.cross_validate(pipe, environment=env)
+    with pytest.raises(TypeError, match=".*must be a skrub pipeline"):
+        skrub.cross_validate(e, pipeline=e.skb.get_pipeline, environment=env)
+    with pytest.raises(TypeError, match=".*must be a dict"):
+        skrub.cross_validate(e, pipeline=pipe, environment=e.skb.get_data)
+    with pytest.raises(TypeError, match="takes from 0 to 1 positional"):
+        skrub.cross_validate(pipe, env)
+
+
+@pytest.mark.parametrize(
+    "pass_e, pass_pipe, pass_env",
+    [
+        (False, True, True),
+        (True, False, False),
+        (True, False, True),
+        (True, True, False),
+        (True, True, True),
+    ],
+)
+def test_cross_validate_default_args(pass_e, pass_pipe, pass_env):
+    X, y = make_classification(random_state=0, n_samples=20)
+    e = skrub.X(X).skb.apply(LogisticRegression(), y=skrub.y(y))
+    args = {}
+    if pass_e:
+        args["expr"] = e
+    if pass_pipe:
+        args["pipeline"] = e.skb.get_pipeline()
+    if pass_env:
+        args["environment"] = e.skb.get_data()
+    res = skrub.cross_validate(**args, cv=2)
+    assert res["test_score"].mean() == pytest.approx(0.75, abs=0.05)
+
+
 def test_return_estimator():
     expression, data = get_expression_and_data("simple")
     with pytest.raises(TypeError, match=".*return_pipeline"):
-        expression.skb.cross_validate(data, return_estimator=True)
+        skrub.cross_validate(expression, environment=data, return_estimator=True)
 
 
 def test_randomized_search(expression, data, n_jobs):
@@ -222,7 +269,9 @@ def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
     mock = Mock(side_effect=pd.read_csv)
     monkeypatch.setattr(pd, "read_csv", mock)
 
-    results = skrub.cross_validate(search, data, n_jobs=n_jobs, return_pipeline=True)
+    results = skrub.cross_validate(
+        pipeline=search, environment=data, n_jobs=n_jobs, return_pipeline=True
+    )
     assert not is_fitted(search)
     score = results["test_score"]
     pipelines = results["pipeline"]
@@ -243,9 +292,9 @@ def test_nested_cv(expression, data, data_kind, n_jobs, monkeypatch):
 def test_unsupervised_no_y():
     X = np.random.default_rng(0).normal(size=(30, 20))
     expr = skrub.X(X).skb.apply(PCA(**skrub.choose_from([4, 8], name="n_components")))
-    expr_scores = skrub.cross_validate(expr.skb.get_grid_search(), expr.skb.get_data())[
-        "test_score"
-    ]
+    expr_scores = skrub.cross_validate(
+        pipeline=expr.skb.get_grid_search(), environment=expr.skb.get_data()
+    )["test_score"]
     sklearn_search = GridSearchCV(PCA(), {"n_components": [4, 8]})
     sklearn_scores = cross_validate(sklearn_search, X)["test_score"]
     assert_allclose(sklearn_scores, expr_scores)
@@ -255,7 +304,7 @@ def test_unsupervised():
     X, y = make_blobs(n_samples=10, random_state=0)
     k_means = KMeans(n_clusters=2, random_state=0, n_init=1)
     e = skrub.X(X).skb.apply(k_means, y=skrub.y(y), unsupervised=True)
-    expr_scores = e.skb.cross_validate()["test_score"]
+    expr_scores = skrub.cross_validate(e)["test_score"]
     sklearn_scores = cross_validate(k_means, X, y)["test_score"]
     assert_allclose(sklearn_scores, expr_scores)
     expr_k_means = e.skb.get_pipeline()
@@ -269,8 +318,11 @@ def test_unsupervised():
 
 def test_no_apply_step():
     assert list(
-        skrub.X().skb.cross_validate(
-            {"X": np.ones((10, 2))}, cv=2, scoring=lambda e, X: 0
+        skrub.cross_validate(
+            skrub.X(),
+            environment={"X": np.ones((10, 2))},
+            cv=2,
+            scoring=lambda e, X: 0,
         )["test_score"]
     ) == [0, 0]
 
@@ -281,9 +333,9 @@ def test_multiclass():
         LogisticRegression(**skrub.choose_from([0.001, 0.1], name="C"), random_state=0),
         y=skrub.y(y),
     )
-    expr_scores = skrub.cross_validate(expr.skb.get_grid_search(), expr.skb.get_data())[
-        "test_score"
-    ]
+    expr_scores = skrub.cross_validate(
+        pipeline=expr.skb.get_grid_search(), environment=expr.skb.get_data()
+    )["test_score"]
     sklearn_search = GridSearchCV(
         LogisticRegression(random_state=0), {"C": [0.001, 0.1]}
     )
@@ -457,7 +509,7 @@ def test_caching():
     cv, search_iter, search_cv = 4, 3, 2
     search = pred.skb.get_randomized_search(n_iter=search_iter, cv=search_cv)
     data = {"load_counter": {}, "scale_counter": {}}
-    skrub.cross_validate(search, data, cv=cv)
+    skrub.cross_validate(pipeline=search, environment=data, cv=cv)
     assert data["load_counter"]["count"] == 1
     assert data["scale_counter"]["count"] == (
         # for each train-test split in outer loop

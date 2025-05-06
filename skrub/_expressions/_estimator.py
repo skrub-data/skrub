@@ -1,3 +1,5 @@
+from collections.abc import Mapping
+
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -18,9 +20,17 @@ from ._evaluation import (
     set_params,
     supported_modes,
 )
-from ._expressions import Apply
+from ._expressions import Apply, Expr
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
-from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
+from ._utils import (
+    CROSS_VAL_DEFAULT_ENVIRONMENT,
+    CROSS_VAL_DEFAULT_EXPR,
+    CROSS_VAL_DEFAULT_PIPELINE,
+    X_NAME,
+    Y_NAME,
+    _CloudPickle,
+    attribute_error,
+)
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -473,7 +483,56 @@ def _rename_cv_param_pipeline_to_estimator(kwargs):
     return renamed
 
 
-def cross_validate(pipeline, environment, **kwargs):
+def _check_expr_pipeline_env(expr, pipeline, environment):
+    def _check_expr_type(expr):
+        if not isinstance(expr, Expr):
+            raise TypeError(
+                "When provided, `expr` must be a skrub expression. "
+                f"Got object of type: {type(expr)}"
+            )
+
+    def _check_pipeline_type(pipeline):
+        if not hasattr(pipeline, "__skrub_to_Xy_pipeline__"):
+            raise TypeError(
+                "When provided, `pipeline` must be a skrub pipeline, "
+                f"got object of type: {type(pipeline)}."
+            )
+
+    def _check_environment_type(environment):
+        if not isinstance(environment, Mapping):
+            raise TypeError(
+                "When provided, `environment` must be a dict that maps "
+                f"variable names to values. Got object of type: {type(environment)}."
+            )
+
+    if expr is CROSS_VAL_DEFAULT_EXPR:
+        if pipeline is CROSS_VAL_DEFAULT_PIPELINE:
+            raise TypeError("When `expr` is None, `pipeline` must be provided.")
+        if environment is CROSS_VAL_DEFAULT_ENVIRONMENT:
+            raise TypeError("When `expr` is None, `environment` must be provided.")
+        _check_pipeline_type(pipeline)
+        _check_environment_type(environment)
+        expr = pipeline.expr
+    else:
+        _check_expr_type(expr)
+    if pipeline is CROSS_VAL_DEFAULT_PIPELINE:
+        pipeline = expr.skb.get_pipeline()
+    else:
+        _check_pipeline_type(pipeline)
+    if environment is CROSS_VAL_DEFAULT_ENVIRONMENT:
+        environment = expr.skb.get_data()
+    else:
+        _check_environment_type(environment)
+    return expr, pipeline, environment
+
+
+def cross_validate(
+    expr=CROSS_VAL_DEFAULT_EXPR,
+    *,
+    pipeline=CROSS_VAL_DEFAULT_PIPELINE,
+    environment=CROSS_VAL_DEFAULT_ENVIRONMENT,
+    **kwargs,
+):
     """Cross-validate a pipeline built from an expression.
 
     This runs cross-validation from a pipeline that was built from a skrub
@@ -485,11 +544,24 @@ def cross_validate(pipeline, environment, **kwargs):
 
     Parameters
     ----------
+    expr : skrub expression
+        The expression to cross-validate, the expression from which the default
+        pipeline and data are created. If both ``pipeline`` and ``environment``
+        are provided, ``expr`` is unused and should not be provided.
+
     pipeline : skrub pipeline
-        A pipeline generated from a skrub expression.
+        A pipeline generated from a skrub expression. By default, it is
+        obtained from ``expr`` by calling :meth:`Expr.skb.get_pipeline()`. Note
+        that this creates a pipeline that uses the default value for each of
+        the (hyperparameter) choices. To perform hyperparameter search, replace
+        this default value with a pipeline created by calling
+        :meth:`Expr.skb.get_randomized_search` or
+        :meth:`Expr.skb.get_grid_search`.
 
     environment : dict
-        Bindings for variables contained in the expression.
+        Dictionary containing the variables used in the expression. By default, it is
+        obtained from the variable values in ``expr`` by calling
+        :meth:`Expr.skb.get_data`.
 
     kwargs : dict
         All other named arguments are forwarded to
@@ -537,7 +609,8 @@ def cross_validate(pipeline, environment, **kwargs):
     Name: test_score, dtype: float64
     """
     kwargs = _rename_cv_param_pipeline_to_estimator(kwargs)
-    X, y = _compute_Xy(pipeline.expr, environment)
+    expr, pipeline, environment = _check_expr_pipeline_env(expr, pipeline, environment)
+    X, y = _compute_Xy(expr, environment)
     result = model_selection.cross_validate(
         _to_Xy_pipeline(pipeline, environment),
         X,
