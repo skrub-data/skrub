@@ -9,7 +9,7 @@ from scipy import stats
 from sklearn.utils import check_random_state
 
 from .. import _utils
-from ._utils import NULL
+from ._utils import NULL, OPTIONAL_VALUE
 
 
 def _with_fields(obj, **fields):
@@ -328,10 +328,10 @@ class Match:
 
 
 def choose_from(outcomes, *, name=None):
-    """Construct a choice among several possible outcomes.
+    """A choice among several possible outcomes.
 
-    The default choice, when a pipeline is used without hyperparameter tuning,
-    is the first outcome in the provided list or dict.
+    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    this choice is the first value in the ``outcomes`` list or dict.
 
     Parameters
     ----------
@@ -439,20 +439,24 @@ class Optional(Choice):
 
     def __repr__(self):
         if self.outcomes[0] is not None or self.outcomes[1] is None:
-            # note when `value` is None, `none_by_default` makes no difference
-            value, none_by_default = self.outcomes[0], False
+            # note when `value` is None, `default` makes no difference
+            value, default = self.outcomes[0], OPTIONAL_VALUE
         else:
-            value, none_by_default = self.outcomes[1], True
+            value, default = self.outcomes[1], None
         args = _utils.repr_args(
             (value,),
-            {"name": self.name, "none_by_default": none_by_default},
-            defaults={"name": None, "none_by_default": False},
+            {"name": self.name, "default": default},
+            defaults={"name": None, "default": OPTIONAL_VALUE},
         )
         return f"optional({args})"
 
 
-def optional(value, *, name=None, none_by_default=False):
-    """Construct a choice between a value and ``None``.
+def optional(value, *, name=None, default=OPTIONAL_VALUE):
+    """A choice between ``value`` and ``None``.
+
+    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    this choice is ``value``. Pass ``default=None`` to make ``None`` the
+    default outcome.
 
     Parameters
     ----------
@@ -464,10 +468,12 @@ def optional(value, *, name=None, none_by_default=False):
         can also be used to override the choice's value by setting it in the
         environment containing a pipeline's inputs.
 
-    none_by_default : bool, optional (default=False)
-        If False, the default outcome for this choice when hyperparameter
-        search is not used is the provided ``value``. If ``none_by_default`` is
-        ``True``, the default outcome becomes the alternative, ``None``.
+    default : NoneType, optional
+        An ``optional`` is a choice between the provided ``value`` and
+        ``None``. Normally, the default outcome when a pipeline is used
+        *without hyperparameter tuning* is the provided ``value``. Pass
+        ``default=None`` to make the alternative outcome, ``None``, the
+        default. `None` is the only allowed value for this parameter.
 
     Returns
     -------
@@ -498,13 +504,17 @@ def optional(value, *, name=None, none_by_default=False):
     >>> print(optional(PCA()).default())
     PCA()
 
-    This can be overridden with the ``none_by_default`` parameter. If we
-    want the alternative (``None``) by default:
+    This can be overridden by passing ``default=None``:
 
-    >>> print(optional(PCA(), none_by_default=True).default())
+    >>> print(optional(PCA(), default=None).default())
     None
     """
-    outcomes = [None, value] if none_by_default else [value, None]
+    if default is not OPTIONAL_VALUE and default is not None:
+        raise TypeError(
+            "If provided, the `default` argument must be `None`. "
+            f"Got object of type: {type(default)}"
+        )
+    outcomes = [None, value] if default is None else [value, None]
     return Optional(outcomes, outcome_names=None, name=name)
 
 
@@ -543,10 +553,11 @@ class BoolChoice(Choice):
 
 
 def choose_bool(*, name=None, default=True):
-    """Construct a choice between False and True.
+    """A choice between ``True`` and ``False``.
 
-    When a pipeline containing a ``choose_bool`` is used *without
-    hyperparameter tuning*, the default outcome the value of ``default``.
+    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    this choice is ``True``. Pass ``default=False`` to make ``False`` the
+    default outcome.
 
     Parameters
     ----------
@@ -740,7 +751,11 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
 
 
 def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None):
-    """Construct a choice of floating-point numbers from a numeric range.
+    """A choice of floating-point numbers from a numeric range.
+
+    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    this choice is the middle of the range (possibly on a ``log`` scale). Pass
+    a float as the ``default`` argument to set the default outcome.
 
     Parameters
     ----------
@@ -804,7 +819,11 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
 
 
 def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
-    """Construct a choice of integers from a numeric range.
+    """A choice of integers from a numeric range.
+
+    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    this choice is the middle of the range (possibly on a ``log`` scale). Pass
+    an int as the ``default`` argument to set the default outcome.
 
     Parameters
     ----------

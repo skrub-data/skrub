@@ -160,7 +160,7 @@ search.plot_results()
 # :func:`choose_int`, :func:`choose_float` and :func:`choose_bool`, we can use
 # the ``default`` parameter. For :func:`choose_from`, the default is the first
 # item from the list or dict of outcomes we provide. For :func:`optional`, we
-# can pass ``none_by_default=True`` to force the default to be the alternative
+# can pass ``default=None`` to force the default to be the alternative
 # outcome, ``None``.
 #
 # When we do not set an explicit default, skrub picks one for depending on the

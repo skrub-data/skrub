@@ -142,6 +142,11 @@ def test_get_chosen_or_default_explicit_default():
     assert _choosing.get_default(c) == 72
 
 
+def test_bad_optional_default():
+    with pytest.raises(TypeError, match=".*must be `None`"):
+        skrub.optional(10, default=10)
+
+
 def test_match():
     assert not hasattr(skrub.choose_int(0, 10, n_steps=6, name="N"), "match")
     c = skrub.choose_from(["a", "b", "c"], name="c")
@@ -254,9 +259,9 @@ def test_choice_repr():
     choose_float(1, 10, n_steps=2, name='i')
     >>> skrub.optional('value')
     optional('value')
-    >>> skrub.optional('value', none_by_default=True)
-    optional('value', none_by_default=True)
-    >>> skrub.optional(None, none_by_default=True)
+    >>> skrub.optional('value', default=None)
+    optional('value', default=None)
+    >>> skrub.optional(None, default=None)
     optional(None)
     """
 
