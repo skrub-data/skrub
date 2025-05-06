@@ -23,7 +23,6 @@ from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import (
     Cleaner,
-    SimpleCleaner,
     TableVectorizer,
     _get_preprocessors,
 )
@@ -388,13 +387,6 @@ def test_cleaner_dtypes(X, dict_expected_types):
                     assert sbd.is_float(X_trans[col])
                 else:
                     assert dict_expected_types[col] == X_trans[col].dtype
-
-
-def test_simplecleaner_warning():
-    with pytest.warns(DeprecationWarning, match="SimpleCleaner was renamed to Cleaner"):
-        X = _get_clean_dataframe()
-        vectorizer = SimpleCleaner()
-        vectorizer.fit(X)
 
 
 def test_convert_float32():
