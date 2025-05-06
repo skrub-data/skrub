@@ -136,6 +136,7 @@ For more control or in order to build pipelines for more datasets, use the skrub
    :nosignatures:
 
    Expr.skb.apply
+   Expr.skb.apply_func
    Expr.skb.clone
    Expr.skb.concat
    Expr.skb.cross_validate
