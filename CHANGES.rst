@@ -56,6 +56,9 @@ Changes
 - The :func:`concat_horizontal` function was replaced with :func:`concat`. Horizontal or vertical concatenation
   is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`.
 
+- The default high cardinality encoder for :class:`TableVectorizer` and :meth:`tabular_learner`
+  been changed to :class:`StringEncoder`. :pr:`1354` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Bugfixes
 --------
 
