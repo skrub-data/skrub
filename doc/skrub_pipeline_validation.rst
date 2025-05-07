@@ -215,7 +215,7 @@ we are not using hyperparameter search:
 
 We can then find the best hyperparameters.
 
->>> search = pred.skb.get_randomized_search(fitted=True, scoring="r2", random_state=0)
+>>> search = pred.skb.get_randomized_search(fitted=True)
 >>> search.results_  # doctest: +SKIP
    mean_test_score         α
 0         0.478338  0.141359
@@ -229,7 +229,38 @@ We can then find the best hyperparameters.
 8         0.233172  4.734989
 9         0.168444  7.780156
 
+Validating hyperparameter search with nested cross-validation
+-------------------------------------------------------------
 
+To avoid overfitting hyperparameters, the best combination must be evaluated on
+data that has not been used to select hyperparameters. This can be done with a
+single train-test split or with nested cross-validation.
+
+Single train-test split:
+
+>>> split = pred.skb.train_test_split()
+>>> search = pred.skb.get_randomized_search()
+>>> search.fit(split['train'])
+ParamSearch(expr=<Apply Ridge>,
+            search=RandomizedSearchCV(estimator=None, param_distributions=None))
+>>> search.score(split['test'])  # doctest: +SKIP
+0.4922874902029253
+
+For nested cross-validation we use :func:`skrub.cross_validate`, which accepts a
+``pipeline`` parameter (as opposed to
+:meth:`.skb.cross_validate() <Expr.skb.cross_validate>`
+which always uses the default hyperparameters):
+
+>>> skrub.cross_validate(pred.skb.get_randomized_search(), pred.skb.get_data())  # doctest: +SKIP
+   fit_time  score_time  test_score
+0  0.891390    0.002768    0.412935
+1  0.889267    0.002773    0.519140
+2  0.928562    0.003124    0.491722
+3  0.890453    0.002732    0.428337
+4  0.889162    0.002773    0.536168
+
+Choices beyond estimator hyperparameters
+----------------------------------------
 
 Choices are not limited to scikit-learn hyperparameters. In fact, a choice can
 be used wherever an expression can be used. The choice of the estimator to use,
@@ -322,3 +353,56 @@ example to choose between several completely different pipelines:
   α: choose_float(0.01, 10.0, log=True, name='α')
 - choose_from({'ridge': …, 'rf': …}): 'rf'
   N 🌴: choose_int(5, 50, name='N 🌴')
+
+Linking choices
+---------------
+
+Choices can depend on another choice made with :func:`choose_from`,
+:func:`choose_bool` or :func:`optional` through those objects' ``.match()``
+method.
+
+Suppose we want to use either ridge regression, random forest or gradient
+boosting, and that we want to use imputation for ridge and random forest (only),
+and scaling for the ridge (only). We can start by choosing the kind of
+estimators and make further choices depend on the estimator kind:
+
+>>> import skrub
+>>> from sklearn.impute import SimpleImputer, KNNImputer
+>>> from sklearn.preprocessing import StandardScaler, RobustScaler
+>>> from sklearn.linear_model import Ridge
+>>> from sklearn.ensemble import RandomForestRegressor, HistGradientBoostingRegressor
+
+>>> estimator_kind = skrub.choose_from(
+...     ["ridge", "random forest", "gradient boosting"], name="estimator"
+... )
+>>> imputer = estimator_kind.match(
+...     {"gradient boosting": None},
+...     default=skrub.choose_from([SimpleImputer(), KNNImputer()], name="imputer"),
+... )
+>>> scaler = estimator_kind.match(
+...     {"ridge": skrub.choose_from([StandardScaler(), RobustScaler()], name="scaler")},
+...     default=None,
+... )
+>>> predictor = estimator_kind.match(
+...     {
+...         "ridge": Ridge(),
+...         "random forest": RandomForestRegressor(),
+...         "gradient boosting": HistGradientBoostingRegressor(),
+...     }
+... )
+>>> pred = skrub.X().skb.apply(imputer).skb.apply(scaler).skb.apply(predictor)
+>>> print(pred.skb.describe_param_grid())
+- estimator: 'ridge'
+  imputer: [SimpleImputer(), KNNImputer()]
+  scaler: [StandardScaler(), RobustScaler()]
+- estimator: 'random forest'
+  imputer: [SimpleImputer(), KNNImputer()]
+- estimator: 'gradient boosting'
+
+Note that only relevant choices are included in each subgrid. For example, when
+the estimator is ``'random forest'``, the subgrid contains several options for
+imputation but not for scaling.
+
+In addition to ``match``, choices created with :func:`choose_bool` have an
+``if_else()`` method which is a convenience helper equivalent to
+``match({True: ..., False: ...})``.
