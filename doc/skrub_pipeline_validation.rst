@@ -32,7 +32,7 @@ the same way.
 >>> from sklearn.linear_model import Ridge
 >>> import skrub
 
->>> diabetes_df = load_diabetes(as_frame=True)['frame']
+>>> diabetes_df = load_diabetes(as_frame=True)["frame"]
 
 In the original data, all features and the target are in the same dataframe.
 
@@ -40,7 +40,7 @@ In the original data, all features and the target are in the same dataframe.
 
 We build our design matrix by dropping the target. Note we use
 ``errors="ignore"`` so that pandas does not raise an error if the column we want
-to drop is already missing. Indeed, if later we are asked to make actual useful
+to drop is already missing. Indeed, when we will need to make actual useful
 predictions on unlabelled data, the "target" column will not be available.
 
 >>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
@@ -83,8 +83,8 @@ Splitting
 ---------
 
 We can use :meth:`.skb.train_test_split() <Expr.skb.train_test_split>` to
-perform a single train-test split. Skrub first executes the first evaluates the
-expressions on which we used :meth:`.skb.mark_as_X() <Expr.skb.mark_as_X>` and
+perform a single train-test split. Skrub first evaluates the expressions on
+which we used :meth:`.skb.mark_as_X() <Expr.skb.mark_as_X>` and
 :meth:`.skb.mark_as_y() <Expr.skb.mark_as_y>`: the first few steps of the
 pipeline are executed until we have a value for ``X`` and for ``y``. Then, those
 dataframes are split using the provided splitter function (by default
@@ -97,7 +97,7 @@ dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
 We can now fit our pipeline on the training data:
 
 >>> pipeline = pred.skb.get_pipeline()
->>> pipeline.fit(split['train'])
+>>> pipeline.fit(split["train"])
 SkrubPipeline(expr=<Apply Ridge>)
 
 Only the training part of ``X`` and ``y`` are used. The subsequent steps are
@@ -105,10 +105,11 @@ evaluated, using this data, to fit the rest of the pipeline.
 
 And we can obtain predictions on the test part:
 
->>> test_pred = pipeline.predict(split['test'])
->>> test_y_true = split['y_test']
+>>> test_pred = pipeline.predict(split["test"])
+>>> test_y_true = split["y_test"]
 
 >>> from sklearn.metrics import r2_score
+
 >>> r2_score(test_y_true, test_pred)
 0.440999149220359
 
@@ -137,11 +138,13 @@ set.
 
 Rather than specifying a grid of hyperparameters separately from the pipeline,
 we simply insert special skrub objects in place of the value. For example we
-replace the hyperparameter `alpha` (which should be a float) with a range
+replace the hyperparameter ``alpha`` (which should be a float) with a range
 created by :func:`skrub.choose_float`. Skrub can use it to select the best value
 for ``alpha``.
 
->>> pred = X.skb.apply(Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True)), y=y)
+>>> pred = X.skb.apply(
+...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+... )
 
 .. warning::
 
@@ -180,7 +183,8 @@ call, etc. can be replaced with choices. We can also choose between several
 expressions to compare different pipelines. Choices can be nested arbitrarily.
 
 >>> from sklearn.ensemble import RandomForestRegressor
->>> ridge = Ridge(alpha=skrub.choose_float(.01, 10.0, log=True, name="α"))
+
+>>> ridge = Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α"))
 >>> rf = RandomForestRegressor(n_estimators=skrub.choose_int(5, 50, name="N 🌴"))
 >>> regressor = skrub.choose_from({"ridge": ridge, "rf": rf}, name="regressor")
 >>> pred = X.skb.apply(regressor, y=y)

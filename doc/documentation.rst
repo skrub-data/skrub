@@ -43,4 +43,3 @@ essential to prevent data leakage and ensure generalization.
    skrub_pipeline_validation
    assembling
    cleaning
-   skrub_pipeline
