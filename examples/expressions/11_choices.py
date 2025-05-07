@@ -142,42 +142,14 @@ search.results_
 search.plot_results()
 
 # %%
-# Choices can appear in many places
-# ---------------------------------
-#
-# Choices are not limited to selecting estimator hyperparameters. They can also be
-# used to choose between different estimators, or in place of any value used in
-# our pipeline.
-#
-# For example, here we pass a choice to pandas DataFrame's ``assign`` method.
-# We want to add a feature that captures the length of the text, but we are not
-# sure if it is better to count length in characters or in words. We do not
-# want to add both because it would be redundant. We can add a column to the
-# dataframe, which will be chosen among the length in characters or the length
-# in words:
-
-# %%
-X, y = skrub.X(texts), skrub.y(labels)
-
-X.assign(
-    length=skrub.choose_from(
-        {"words": X["text"].str.count(r"\b\w+\b"), "chars": X["text"].str.len()},
-        name="length",
-    )
-)
-
-# %%
-# ``choose_from`` can be given a dictionary if we want to provide
-# names for the individual outcomes, or a list, when names are not needed:
-# ``choose_from([1, 100], name='N')``,
-# ``choose_from({'small': 1, 'big': 100}, name='N')``.
-#
 # Choices can be nested arbitrarily. For example, here we want to choose
 # between 2 possible encoder types: the ``MinHashEncoder`` or the
 # ``StringEncoder``. Each of the possible outcomes contains a choice itself:
 # the number of components.
 
 # %%
+X, y = skrub.X(texts), skrub.y(labels)
+
 n_components = skrub.choose_int(5, 15, name="N components")
 
 encoder = skrub.choose_from(
@@ -221,108 +193,10 @@ search.plot_results()
 # feature does not have a significant impact on the score.
 
 # %%
-# Advanced usage
-# --------------
-#
-# This section shows some more advanced or less frequently needed use cases.
-#
-# Choices can depend on each other
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# Sometimes not all combinations (cross-product) of hyperparameter values make
-# sense, and instead choices may be linked. For example, our downstream estimator
-# can be a ``RidgeClassifier`` or ``HistGradientBoostingClassifier``, and
-# standard scaling should be applied only when it is a ``Ridge``.
-#
-# Skrub choices have a ``match`` method to obtain different results depending
-# on the outcome of the choice.
-
-# %%
-from sklearn.preprocessing import StandardScaler
-
-X, y = skrub.X(texts), skrub.y(labels)
-
-vectorized_X = X.skb.apply(skrub.MinHashEncoder())
-
-estimator_kind = skrub.choose_from(["ridge", "HGB"], name="estimator kind")
-
-scaling = estimator_kind.match({"ridge": StandardScaler(), "HGB": "passthrough"})
-scaled_X = vectorized_X.skb.apply(scaling)
-
-classifier = estimator_kind.match(
-    {"ridge": RidgeClassifier(), "HGB": HistGradientBoostingClassifier()}
-)
-pred = scaled_X.skb.apply(classifier, y=y)
-print(pred.skb.describe_param_grid())
-
-# %%
-# Here we can see that there is only one parameter: the estimator kind. When it
-# is ``"ridge"``, the ``StandardScaler`` and the ``RidgeClassifier`` are used;
-# when it is ``"HGB"`` ``"passthrough"`` and the
-# ``HistGradientBoostingClassifier`` are used.
-#
-# Similarly, objects returned by ``choose_bool`` have a ``if_else()`` method.
-
-# %%
-# Choices can be turned into expressions
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# We can turn a choice (or the result of a choice ``match()`` or ``if_else``)
-# into an expression, so that we can keep chaining more operations onto it.
-# Here, we create a ``.choose_bool()`` object to choose whether to add the length
-# of the text as a feature or not. Then, ``if_else()`` will assign the length
-# of the text to a new column ``length`` if the choice is ``True``, or do nothing
-# if the choice is ``False``.
-
-# %%
-X, y = skrub.X(texts), skrub.y(labels)
-
-add_length = skrub.choose_bool(name="add_length")
-with_length = add_length.if_else(X.assign(length=X["text"].str.len()), X).as_expr()
-vectorized_X = with_length.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
-
-# Note: we can manually set the outcome of a choice when evaluating an
-# expression (or fitting an estimator)
-
-vectorized_X.skb.eval({"add_length": False})
-
-# %%
-vectorized_X.skb.eval({"add_length": True})
-
-# %%
-# Arbitrary logic depending on a choice
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# When ``match`` or ``if_else`` are not enough and we need to apply arbitrary,
-# eager logic based on a choice we can resort to using ``skrub.deferred``. For
-# example the choice of adding the text length or not could also have been
-# written as:
-
-# %%
-X, y = skrub.X(texts), skrub.y(labels)
-
-
-@skrub.deferred
-def extract_features(df, add_length):
-    if add_length:
-        return df.assign(length=df["text"].str.len())
-    return df
-
-
-feat = extract_features(X, skrub.choose_bool(name="add_length")).skb.apply(
-    skrub.MinHashEncoder(n_components=2), cols="text"
-)
-
-feat.skb.eval({"add_length": False})
-
-# %%
-feat.skb.eval({"add_length": True})
-
-# %%
 # Concluding, we have seen how to use skrub's ``choose_from`` objects to tune
-# hyperparameters, choose optional configurations, add features, and nest choices.
+# hyperparameters, choose optional configurations, and nest choices.
 # We then looked at how the different choices affect the pipeline and the prediction
 # scores.
 #
-# Thanks to the ``choose_from`` objects, Skrub expressions ease the process of
-# hyperparameter tuning.
+# There is more to skrub choices, please find more information in the
+# :ref:`user guide <skrub_pipeline_validation>`.
