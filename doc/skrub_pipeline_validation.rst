@@ -283,7 +283,7 @@ tunable hyperparameter:
 - regressor: 'rf'
   N 🌴: choose_int(5, 50, name='N 🌴')
 
->>> search = pred.skb.get_randomized_search(fitted=True, scoring="r2", random_state=0)
+>>> search = pred.skb.get_randomized_search(fitted=True)
 >>> search.results_ # doctest: +SKIP
    mean_test_score         α   N 🌴 regressor
 0         0.480425  0.078092   NaN     ridge
