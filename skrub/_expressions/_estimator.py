@@ -542,7 +542,7 @@ def cross_validate(pipeline, environment, *, subsampling=False, **kwargs):
     4    0.85
     Name: test_score, dtype: float64
     """
-    environment = env_with_subsampling(environment, subsampling)
+    environment = env_with_subsampling(pipeline.expr, environment, subsampling)
     kwargs = _rename_cv_param_pipeline_to_estimator(kwargs)
     X, y = _compute_Xy(pipeline.expr, environment)
     result = model_selection.cross_validate(
@@ -570,7 +570,7 @@ def train_test_split(
     ``Expr.skb.train_test_split()`` method. See the corresponding docstring for
     details and examples.
     """
-    environment = env_with_subsampling(environment, subsampling)
+    environment = env_with_subsampling(expr, environment, subsampling)
     X, y = _compute_Xy(expr, environment)
     if y is None:
         X_train, X_test = splitter(X, **splitter_kwargs)

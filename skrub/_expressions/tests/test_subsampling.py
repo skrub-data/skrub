@@ -179,3 +179,14 @@ def test_uses_subsampling():
     assert _subsampling.uses_subsampling(
         skrub.var("a").skb.subsample_previews(n=5) + 10
     )
+
+
+def test_subsampling_not_configured():
+    with pytest.raises(ValueError, match=".*no subsampling has been configured"):
+        skrub.as_expr(np.ones(3)).skb.eval(subsampling=True)
+    with pytest.raises(ValueError, match=".*no subsampling has been configured"):
+        skrub.as_expr(np.ones(3)).skb.get_pipeline(fitted=True, subsampling=True)
+    assert (
+        skrub.as_expr(np.ones(3)).skb.subsample_previews(n=2).skb.eval(subsampling=True)
+        == np.ones(2)
+    ).all()

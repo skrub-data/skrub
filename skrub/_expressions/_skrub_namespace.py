@@ -893,6 +893,12 @@ class SkrubNamespace:
                 f"got: '{type(environment)}'"
             )
         if environment is None and (subsampling or not uses_subsampling(self._expr)):
+            # In this configuration the result is the same as the preview so
+            # we call preview() to benefit from the cached result.
+
+            # before, we trigger an error if subsampling=True was passed but no
+            # subsampling was configured:
+            environment = env_with_subsampling(self._expr, {}, subsampling)
             return self.preview()
         if environment is None:
             environment = self.get_data()
@@ -900,7 +906,7 @@ class SkrubNamespace:
             **environment,
             "_skrub_use_var_values": not _var_values_provided(self._expr, environment),
         }
-        environment = env_with_subsampling(environment, subsampling)
+        environment = env_with_subsampling(self._expr, environment, subsampling)
         return evaluate(
             self._expr, mode="fit_transform", environment=environment, clear=True
         )
@@ -1306,7 +1312,9 @@ class SkrubNamespace:
         _check_can_be_pickled(pipeline)
         if not fitted:
             return pipeline
-        return pipeline.fit(env_with_subsampling(self.get_data(), subsampling))
+        return pipeline.fit(
+            env_with_subsampling(self._expr, self.get_data(), subsampling)
+        )
 
     def train_test_split(
         self,
@@ -1488,7 +1496,9 @@ class SkrubNamespace:
         )
         if not fitted:
             return search
-        return search.fit(env_with_subsampling(self.get_data(), subsampling))
+        return search.fit(
+            env_with_subsampling(self._expr, self.get_data(), subsampling)
+        )
 
     def get_randomized_search(self, *, fitted=False, subsampling=False, **kwargs):
         """Find the best parameters with randomized search.
@@ -1584,7 +1594,9 @@ class SkrubNamespace:
         )
         if not fitted:
             return search
-        return search.fit(env_with_subsampling(self.get_data(), subsampling))
+        return search.fit(
+            env_with_subsampling(self._expr, self.get_data(), subsampling)
+        )
 
     def cross_validate(self, environment=None, *, subsampling=False, **kwargs):
         """Cross-validate the expression.

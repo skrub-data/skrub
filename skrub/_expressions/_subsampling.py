@@ -14,7 +14,7 @@ def _should_subsample(mode, environment):
     return environment.get(SHOULD_SUBSAMPLE_KEY, False)
 
 
-class _ShouldSubsample(_expressions.ExprImpl):
+class ShouldSubsample(_expressions.ExprImpl):
     _fields = []
 
     def compute(self, e, mode, environment):
@@ -43,8 +43,8 @@ def should_subsample():
     subsampling: True
     >>> e
     <Call 'load_data'>
-    Result:
-    ―――――――
+    Result (on a subsample):
+    ――――――――――――――――――――――――
     1.0
     >>> e.skb.get_pipeline(fitted=True)
     subsampling: False
@@ -53,7 +53,7 @@ def should_subsample():
     subsampling: True
     SkrubPipeline(expr=<Call 'load_data'>)
     """
-    return _expressions.Expr(_ShouldSubsample())
+    return _expressions.Expr(ShouldSubsample())
 
 
 def _sample_numpy(a, n):
@@ -96,7 +96,7 @@ class SubsamplePreviews(_expressions.ExprImpl):
         )
 
 
-def env_with_subsampling(environment, subsampling):
+def env_with_subsampling(expr, environment, subsampling):
     """Update an environment with subsampling indication.
 
     Small private helper to add subsampling to an environment, if subsampling
@@ -107,6 +107,12 @@ def env_with_subsampling(environment, subsampling):
     """
     if not subsampling:
         return environment
+    if not uses_subsampling(expr):
+        raise ValueError(
+            "`subsampling=True` was passed but no subsampling has been configured "
+            "anywhere in the expression. Either pass `subsampling=False` (the default) "
+            "or configure subsampling with `.skb.subsample_previews()`."
+        )
     return environment | {SHOULD_SUBSAMPLE_KEY: True}
 
 
@@ -127,7 +133,7 @@ def uses_subsampling(expr):
         _evaluation.find_node(
             expr,
             lambda e: isinstance(e, _expressions.Expr)
-            and isinstance(e._skrub_impl, SubsamplePreviews),
+            and isinstance(e._skrub_impl, (SubsamplePreviews, ShouldSubsample)),
         )
         is not None
     )
