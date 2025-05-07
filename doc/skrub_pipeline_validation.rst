@@ -235,6 +235,9 @@ estimator to use, any argument of an expression's method or deferred function
 call, etc. can be replaced with choices. We can also choose between several
 expressions to compare different pipelines. Choices can be nested arbitrarily.
 
+Here is an example choosing between 2 different estimators, each of which has a
+tunable hyperparameter:
+
 >>> from sklearn.ensemble import RandomForestRegressor
 
 >>> ridge = Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α"))
@@ -260,3 +263,6 @@ expressions to compare different pipelines. Choices can be nested arbitrarily.
 7         0.403278       NaN  37.0        rf
 8         0.348517       NaN   8.0        rf
 9         0.168444  7.780156   NaN     ridge
+
+The results can be displayed in an interactive parallel coordinate plot with
+:meth:`ParamSearch.plot_results`.
