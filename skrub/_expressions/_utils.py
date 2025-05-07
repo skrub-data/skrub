@@ -10,16 +10,18 @@ Y_NAME = "_skrub_y"
 
 
 class Sentinels(enum.Enum):
-    NULL = enum.auto()
+    NULL = "NULL"
+    OPTIONAL_VALUE = "value"
 
     def __repr__(self):
-        return self.name
+        return self.value
 
     def __str__(self):
-        return self.name
+        return self.value
 
 
 NULL = Sentinels.NULL
+OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
 
 
 def simple_repr(expr):

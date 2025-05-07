@@ -1,4 +1,6 @@
 """
+.. currentmodule:: skrub
+
 .. _example_tuning_pipelines:
 
 Tuning pipelines
@@ -140,6 +142,70 @@ search.results_
 
 # %%
 search.plot_results()
+
+# %%
+# Default choice values
+# ---------------------
+#
+# The goal of using the different ``choose_*`` functions is to tune choices on
+# validation metrics with randomized or grid search. However, even when our
+# expression contains such choices we can still use it without tuning, for
+# example in previews or to get a quick first result before spending the
+# computation time to run the search. When we use :meth:`.skb.get_pipeline()
+# <Expr.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
+# and uses those default values. That default pipeline is the one used for
+# :meth:`.skb.eval() <Expr.skb.eval>`.
+#
+# We can control what should be the default value for each choice. For
+# :func:`choose_int`, :func:`choose_float` and :func:`choose_bool`, we can use
+# the ``default`` parameter. For :func:`choose_from`, the default is the first
+# item from the list or dict of outcomes we provide. For :func:`optional`, we
+# can pass ``default=None`` to force the default to be the alternative
+# outcome, ``None``.
+#
+# When we do not set an explicit default, skrub picks one for depending on the
+# kind of choice:
+#
+# .. list-table:: default choice outcomes
+#    :header-rows: 1
+#
+#    * - choosing function
+#      - default outcome
+#    * - :func:`choose_from([10, 20]) <choose_from>`
+#      - first outcome in the list: ``10``
+#    * - :func:`choose_from({"a_name": 10, "b_name": 20}) <choose_from>`
+#      - first outcome in the dict: ``10``
+#    * - :func:`optional(10) <optional>`
+#      - the provided ``value``: ``10``
+#    * - :func:`choose_bool() <choose_bool>`
+#      - ``True``
+#    * - :func:`choose_float(1.0, 100.0) <choose_float>`
+#      - the middle of the range: ``50.5``
+#    * - :func:`choose_int(1, 100) <choose_int>`
+#      - the int closest to the middle of the range: ``50``
+#    * - :func:`choose_float(1.0, 100.0, log=True) <choose_float>`
+#      - the middle of the range on a log scale: ``10.0``
+#    * - :func:`choose_int(1, 100, log=True) <choose_int>`
+#      - the int closest to the middle of the range on a log scale: ``10``
+#    * - :func:`choose_float(1.0, 100.0, n_steps=4) <choose_float>`
+#      - the step closest to the middle of the range: ``34.0`` (here steps are
+#        ``[1.0, 34.0, 67.0, 100.0]``)
+#    * - :func:`choose_int(1, 100, n_steps=4) <choose_int>`
+#      - the (integer) step closest to the middle of the range: ``34`` (here steps are
+#        ``[1, 34, 67, 100]``)
+#    * - :func:`choose_float(1.0, 100.0, log=True, n_steps=4) <choose_float>`
+#      - the step closest to the middle of the range on a log scale: ``4.64``
+#        (here steps are ``[1.0, 4.64, 21.54, 100.0]``)
+#    * - :func:`choose_float(1.0, 100.0, log=True) <choose_int>`
+#      - the (integer) step closest to the middle of the range on a log scale: ``5``
+#        (here steps are ``[1, 5, 22, 100]``)
+#
+
+# %%
+# As mentioned we can control the default value:
+
+# %%
+skrub.choose_float(1.0, 100.0, default=12.0).default()
 
 # %%
 # Choices can appear in many places
