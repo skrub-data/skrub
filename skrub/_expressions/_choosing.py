@@ -473,7 +473,7 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
         ``None``. Normally, the default outcome when a pipeline is used
         *without hyperparameter tuning* is the provided ``value``. Pass
         ``default=None`` to make the alternative outcome, ``None``, the
-        default. `None` is the only allowed value for this parameter.
+        default. ``None`` is the only allowed value for this parameter.
 
     Returns
     -------
