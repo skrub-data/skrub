@@ -230,10 +230,12 @@ We can then find the best hyperparameters.
 9         0.168444  7.780156
 
 
-Choices are not limited to scikit-learn hyperparameters. The choice of the
-estimator to use, any argument of an expression's method or deferred function
-call, etc. can be replaced with choices. We can also choose between several
-expressions to compare different pipelines. Choices can be nested arbitrarily.
+
+Choices are not limited to scikit-learn hyperparameters. In fact, a choice can
+be used wherever an expression can be used. The choice of the estimator to use,
+any argument of an expression's method or :func:`deferred` function call, etc. can be
+replaced with choices. We can also choose between several expressions to compare
+different pipelines. Choices can be nested arbitrarily.
 
 Here is an example choosing between 2 different estimators, each of which has a
 tunable hyperparameter:
@@ -266,3 +268,57 @@ tunable hyperparameter:
 
 The results can be displayed in an interactive parallel coordinate plot with
 :meth:`ParamSearch.plot_results`.
+
+As mentioned, a choice can be passed as an argument of an expression's method.
+For example, we can consider several ways to perform an aggregation on a pandas DataFrame:
+
+>>> import skrub
+>>> import skrub.datasets
+
+>>> ratings = skrub.var("ratings", skrub.datasets.fetch_movielens().ratings)
+>>> agg_ratings = ratings.groupby("movieId")["rating"].agg(
+...     skrub.choose_from(["median", "mean"], name="rating_aggregation")
+... )
+>>> agg_ratings
+<CallMethod 'agg'>
+Result:
+―――――――
+movieId
+1         4.0
+2         3.5
+3         3.0
+4         3.0
+5         3.0
+         ...
+193581    4.0
+193583    3.5
+193585    3.5
+193587    3.5
+193609    4.0
+Name: rating, Length: 9724, dtype: float64
+>>> print(agg_ratings.skb.describe_param_grid())
+- rating_aggregation: ['median', 'mean']
+
+Finally, a choice can easily be turned into an expression with its ``as_expr``
+method (or :func:`as_expr`, which works on any object). This can be useful for
+example to choose between several completely different pipelines:
+
+>>> from sklearn.preprocessing import StandardScaler
+
+>>> data = skrub.var("data", diabetes_df)
+>>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
+>>> y = data["target"].skb.mark_as_y()
+
+>>> ridge_pred = X.skb.apply(skrub.optional(StandardScaler())).skb.apply(
+...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+... )
+>>> rf_pred = X.skb.apply(
+...     RandomForestRegressor(n_estimators=skrub.choose_int(5, 50, name="N 🌴")), y=y
+... )
+>>> pred = skrub.choose_from({"ridge": ridge_pred, "rf": rf_pred}).as_expr()
+>>> print(pred.skb.describe_param_grid())
+- choose_from({'ridge': …, 'rf': …}): 'ridge'
+  choose_from({'true': …, 'false': …}): ['true', 'false']
+  α: choose_float(0.01, 10.0, log=True, name='α')
+- choose_from({'ridge': …, 'rf': …}): 'rf'
+  N 🌴: choose_int(5, 50, name='N 🌴')
