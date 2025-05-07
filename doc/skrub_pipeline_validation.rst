@@ -303,30 +303,10 @@ The results can be displayed in an interactive parallel coordinate plot with
 As mentioned, a choice can be passed as an argument of an expression's method.
 For example, we can consider several ways to perform an aggregation on a pandas DataFrame:
 
->>> import skrub
->>> import skrub.datasets
-
->>> ratings = skrub.var("ratings", skrub.datasets.fetch_movielens().ratings)
+>>> ratings = skrub.var("ratings")
 >>> agg_ratings = ratings.groupby("movieId")["rating"].agg(
 ...     skrub.choose_from(["median", "mean"], name="rating_aggregation")
 ... )
->>> agg_ratings
-<CallMethod 'agg'>
-Result:
-―――――――
-movieId
-1         4.0
-2         3.5
-3         3.0
-4         3.0
-5         3.0
-         ...
-193581    4.0
-193583    3.5
-193585    3.5
-193587    3.5
-193609    4.0
-Name: rating, Length: 9724, dtype: float64
 >>> print(agg_ratings.skb.describe_param_grid())
 - rating_aggregation: ['median', 'mean']
 
