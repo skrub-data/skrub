@@ -163,18 +163,18 @@ for ``alpha``.
 We can then find the best hyperparameters.
 
 >>> search = pred.skb.get_randomized_search(fitted=True, scoring="r2", random_state=0)
->>> search.results_ # doctest: +SKIP
-   mean_test_score  choose_float(0.01, 10.0, log=True)
-0         0.478338                            0.141359
-1         0.476022                            0.186623
-2         0.474905                            0.205476
-3         0.457807                            0.431171
-4         0.456808                            0.443038
-5         0.439670                            0.643117
-6         0.420917                            0.866328
-7         0.380719                            1.398196
-8         0.233172                            4.734989
-9         0.168444                            7.780156
+>>> search.results_  # doctest: +SKIP
+   mean_test_score         α
+0         0.478338  0.141359
+1         0.476022  0.186623
+2         0.474905  0.205476
+3         0.457807  0.431171
+4         0.456808  0.443038
+5         0.439670  0.643117
+6         0.420917  0.866328
+7         0.380719  1.398196
+8         0.233172  4.734989
+9         0.168444  7.780156
 
 
 Choices are not limited to scikit-learn hyperparameters. The choice of the
