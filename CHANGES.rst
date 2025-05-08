@@ -39,6 +39,12 @@ New features
   single value (constant columns), only missing values, or all unique values (such
   as IDs). :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- Added the :class:`SquashingScaler` that
+  robustly rescales and smoothly clips numerical columns,
+  enabling more robust handling of numerical columns
+  with neural networks.
+  :pr:`1310` by :user:`David Holzmüller <dholzmueller>`.
+
 Changes
 -------
 
