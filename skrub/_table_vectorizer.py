@@ -203,9 +203,12 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``CleanNullStrings()``: replace strings used to represent null values
       with actual null values.
 
-    - ``DropUninformative()``: drop the column if it contains too many null values,
-    if it contains only one distinct value, or if all values are distinct (off by
-    default).
+    - ``DropUninformative()``: drop the column if it is considered to be
+      "uninformative". A column is considered to be "uninformative" if it contains
+      only null values (``drop_null_fraction``), only a constant value
+      (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
+      that contain text.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
       actual datetimes with the correct dtype.
