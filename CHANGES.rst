@@ -41,6 +41,10 @@ New features
 
 Changes
 -------
+.. warning::
+  The default high cardinality encoder for both :class:`TableVectorizer` and
+  :meth:`tabular_learner` has been changed from :class:`GapEncoder` to
+  :class:`StringEncoder`. :pr:`1354` by user :user:`Riccardo Cappuzzo<rcap107>`.
 
 - A new parameter ``max_association_columns`` has been added to the
   :class:`TableReport` to skip association computation when the number of columns
