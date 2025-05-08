@@ -7,8 +7,8 @@ from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
 from ._datetime_encoder import DatetimeEncoder
-from ._minhash_encoder import MinHashEncoder
 from ._sklearn_compat import get_tags
+from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
@@ -60,6 +60,10 @@ def tabular_learner(estimator, *, n_jobs=None):
        ``tabular_learner`` is a recent addition and the heuristics used
        to define an appropriate preprocessing based on the ``estimator`` may change
        in future releases.
+
+    .. versionchanged:: 0.6.0
+        The high cardinality encoder has been changed from
+        :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
 
     Parameters
     ----------
@@ -265,7 +269,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     ):
         vectorizer.set_params(
             low_cardinality=ToCategorical(),
-            high_cardinality=MinHashEncoder(),
+            high_cardinality=StringEncoder(),
         )
     elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         vectorizer.set_params(
@@ -273,7 +277,7 @@ def tabular_learner(estimator, *, n_jobs=None):
                 handle_unknown="use_encoded_value",
                 unknown_value=-1,
             ),
-            high_cardinality=MinHashEncoder(),
+            high_cardinality=StringEncoder(),
         )
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))

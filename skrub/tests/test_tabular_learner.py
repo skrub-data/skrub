@@ -7,8 +7,7 @@ from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
 from skrub import (
-    GapEncoder,
-    MinHashEncoder,
+    StringEncoder,
     TableVectorizer,
     ToCategorical,
     tabular_learner,
@@ -22,7 +21,7 @@ def test_default_pipeline(learner_kind):
     p = tabular_learner(learner_kind)
     tv, learner = [e for _, e in p.steps]
     assert isinstance(tv, TableVectorizer)
-    assert isinstance(tv.high_cardinality, MinHashEncoder)
+    assert isinstance(tv.high_cardinality, StringEncoder)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         assert isinstance(tv.low_cardinality, OrdinalEncoder)
     else:
@@ -53,7 +52,7 @@ def test_linear_learner():
     p = tabular_learner(original_learner)
     tv, imputer, scaler, learner = [e for _, e in p.steps]
     assert learner is original_learner
-    assert isinstance(tv.high_cardinality, GapEncoder)
+    assert isinstance(tv.high_cardinality, StringEncoder)
     assert isinstance(tv.low_cardinality, OneHotEncoder)
     assert isinstance(imputer, SimpleImputer)
     assert isinstance(scaler, StandardScaler)
@@ -69,7 +68,7 @@ def test_tree_learner():
     else:
         tv, learner = [e for _, e in p.steps]
     assert learner is original_learner
-    assert isinstance(tv.high_cardinality, MinHashEncoder)
+    assert isinstance(tv.high_cardinality, StringEncoder)
     assert isinstance(tv.low_cardinality, OrdinalEncoder)
     assert tv.datetime.periodic_encoding is None
 
