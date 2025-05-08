@@ -61,6 +61,10 @@ def tabular_learner(estimator, *, n_jobs=None):
        to define an appropriate preprocessing based on the ``estimator`` may change
        in future releases.
 
+    .. versionchanged:: 0.6.0
+        The high cardinality encoder has been changed from
+        :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
+
     Parameters
     ----------
     estimator : {"regressor", "regression", "classifier", "classification"} or scikit-learn estimator

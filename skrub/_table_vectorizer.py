@@ -448,6 +448,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         :class:`~skrub.StringEncoder` with 30 components (30 output columns for each
         input).
 
+        .. versionchanged:: 0.6.0
+           The default ``high_cardinality`` encoder has been changed from
+           :class:`~skrub.GapEncoder` to :class:`~skrub.StringEncoder`.
+
     numeric : transformer, "passthrough" or "drop", default="passthrough"
         The transformer for numeric columns (floats, ints, booleans).
 
