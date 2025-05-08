@@ -18,9 +18,9 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
-from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
+from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
 from ._to_str import ToStr
@@ -37,7 +37,7 @@ class PassThrough(SingleColumnTransformer):
         return column
 
 
-HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+HIGH_CARDINALITY_TRANSFORMER = StringEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     sparse_output=False,
     dtype="float32",
@@ -121,6 +121,7 @@ def _get_preprocessors(
     drop_if_constant,
     n_jobs,
     add_tofloat32=True,
+    datetime_format=None,
 ):
     steps = [CheckInputDataFrame()]
     transformers = [
@@ -130,7 +131,7 @@ def _get_preprocessors(
             drop_if_constant=drop_if_constant,
             drop_if_unique=drop_if_unique,
         ),
-        ToDatetime(),
+        ToDatetime(format=datetime_format),
     ]
     if add_tofloat32:
         transformers.append(ToFloat32())
@@ -179,6 +180,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
 
+    datetime_format : str, default=None
+        The format to use when parsing dates. If None, the format is inferred.
+
     n_jobs : int, default=None
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
@@ -208,7 +212,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
     default).
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
-      actual datetimes with the correct dtype.
+      actual datetimes with the correct dtype. If ``datetime_format`` is provided,
+      it is forwarded to ``ToDatetime()``. Otherwise, the format is inferred.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
@@ -286,11 +291,13 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_null_fraction=1.0,
         drop_if_constant=False,
         drop_if_unique=False,
+        datetime_format=None,
         n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
+        self.datetime_format = datetime_format
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -318,6 +325,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             add_tofloat32=False,
+            datetime_format=self.datetime_format,
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
@@ -434,10 +442,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         and drop one of the transformed columns if the feature contains only 2
         categories.
 
-    high_cardinality : transformer, "passthrough" or "drop", default=GapEncoder instance
+    high_cardinality : transformer, "passthrough" or "drop", default=StringEncoder instance
         The transformer for string or categorical columns with at least
         ``cardinality_threshold`` unique values. The default is a
-        :class:`~skrub.GapEncoder` with 30 components (30 output columns for each
+        :class:`~skrub.StringEncoder` with 30 components (30 output columns for each
         input).
 
     numeric : transformer, "passthrough" or "drop", default="passthrough"
@@ -474,6 +482,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
+
+    datetime_format : str, default=None
+        The format to use when parsing dates. If None, the format is inferred.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -600,6 +611,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     represented as strings. By default, columns that contain only null values are
     dropped. Moreover, a final post-processing step is applied to all
     non-categorical columns in the encoder's output to cast them to float32.
+    If ``datetime_format`` is provided, it will be used to parse all datetime
+    columns.
+
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
@@ -697,13 +711,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         *,
         cardinality_threshold=40,
         low_cardinality=LOW_CARDINALITY_TRANSFORMER,
-        high_cardinality="warn",
+        high_cardinality=HIGH_CARDINALITY_TRANSFORMER,
         numeric=NUMERIC_TRANSFORMER,
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
         drop_null_fraction=1.0,
         drop_if_constant=False,
         drop_if_unique=False,
+        datetime_format=None,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -720,6 +735,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
+        self.datetime_format = datetime_format
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -760,18 +776,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         dataframe
             The transformed input.
         """
-        if self.high_cardinality == "warn":
-            warnings.warn(
-                (
-                    "The default high_cardinality encoder will be changed to "
-                    "StringEncoder in a future release. "
-                    "To suppress this warning, please set the "
-                    "high_cardinality parameter explicitly."
-                ),
-                category=FutureWarning,
-            )
-            self.high_cardinality = HIGH_CARDINALITY_TRANSFORMER
-
         self._check_specific_columns()
         self._make_pipeline()
         output = self._pipeline.fit_transform(X, y=y)
@@ -852,7 +856,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         )
 
         transformer_list += [
-            ToDatetime(),
+            ToDatetime(format=self.datetime_format),
             ToFloat32(),
             CleanCategories(),
             ToStr(),

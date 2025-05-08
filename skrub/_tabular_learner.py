@@ -1,5 +1,3 @@
-import warnings
-
 import sklearn
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
@@ -9,8 +7,8 @@ from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
 from ._datetime_encoder import DatetimeEncoder
-from ._minhash_encoder import MinHashEncoder
 from ._sklearn_compat import get_tags
+from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
@@ -228,14 +226,6 @@ def tabular_learner(estimator, *, n_jobs=None):
     - There is no standard scaling which is unnecessary for trees and ensembles
       of trees.
     """  # noqa: E501
-    warnings.warn(
-        (
-            "The default high_cardinality encoder will be changed to "
-            "StringEncoder in a future release. "
-        ),
-        category=DeprecationWarning,
-    )
-
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         cat_feat_kwargs = {}
@@ -275,7 +265,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     ):
         vectorizer.set_params(
             low_cardinality=ToCategorical(),
-            high_cardinality=MinHashEncoder(),
+            high_cardinality=StringEncoder(),
         )
     elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         vectorizer.set_params(
@@ -283,7 +273,7 @@ def tabular_learner(estimator, *, n_jobs=None):
                 handle_unknown="use_encoded_value",
                 unknown_value=-1,
             ),
-            high_cardinality=MinHashEncoder(),
+            high_cardinality=StringEncoder(),
         )
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))

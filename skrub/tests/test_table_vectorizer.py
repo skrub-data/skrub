@@ -1,5 +1,6 @@
 import re
 import warnings
+from datetime import datetime
 
 import joblib
 import numpy as np
@@ -918,11 +919,45 @@ def test_drop_null_column():
     assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)
 
 
-def test_deprecation_high_cardinality():
-    """Check that the deprecation warning is raised when using the default
-    value for the high_cardinality encoder."""
-    with pytest.warns(
-        FutureWarning,
-        match=".*The default high_cardinality encoder will be changed*",
-    ):
-        TableVectorizer().fit(_get_clean_dataframe())
+def test_date_format(df_module):
+    # Test that the date format is correctly inferred
+
+    X = df_module.make_dataframe(
+        {
+            "date": [
+                "22 April 2025",
+                "23 April 2025",
+                "24 April 2025",
+                "25 April 2025",
+                "26 April 2025",
+            ]
+        }
+    )
+
+    expected = df_module.make_dataframe(
+        {
+            "date_year": [2025.0, 2025.0, 2025.0, 2025.0, 2025.0],
+            "date_month": [4.0, 4.0, 4.0, 4.0, 4.0],
+            "date_day": [22.0, 23.0, 24.0, 25.0, 26.0],
+        }
+    )
+    datetime_encoder = DatetimeEncoder(add_total_seconds=False)
+    vectorizer = TableVectorizer(datetime_format="%d %B %Y", datetime=datetime_encoder)
+    transformed = vectorizer.fit_transform(X)
+    for col in transformed.columns:
+        df_module.assert_column_equal(transformed[col], sbd.to_float32(expected[col]))
+
+    expected = df_module.make_dataframe(
+        {
+            "date": [
+                datetime.fromisoformat("2025-04-22"),
+                datetime.fromisoformat("2025-04-23"),
+                datetime.fromisoformat("2025-04-24"),
+                datetime.fromisoformat("2025-04-25"),
+                datetime.fromisoformat("2025-04-26"),
+            ],
+        }
+    )
+    cleaner = Cleaner(datetime_format="%d %B %Y")
+    transformed = cleaner.fit_transform(X)
+    df_module.assert_column_equal(transformed["date"], expected["date"])
