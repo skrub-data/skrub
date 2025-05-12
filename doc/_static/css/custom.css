@@ -365,6 +365,27 @@ a.sk-btn-orange:hover {
     margin-bottom: 1rem;
 }
 
+/* Switch the arrow on small screens, as it needs to point down */
+@media (max-width: 720px) {
+    .visible-small-screen  {
+	display: initial;
+    }
+
+    .visible-large-screen  {
+	display: none;
+    }
+}
+
+@media (min-width: 720px) {
+    .visible-small-screen  {
+	display: none;
+    }
+
+    .visible-large-screen  {
+	display: initial;
+    }
+}
+
 /** Contributors ***************************/
 
 .contributors-list {
