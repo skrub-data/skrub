@@ -1250,6 +1250,14 @@ class SkrubNamespace:
         provided as the values in ``skrub.var("name", value=...)`` and
         ``skrub.X(value)``.
 
+        .. warning::
+
+           If the expression contains choices (e.g. ``choose_from(...)``), this
+           pipeline uses the default value of each choice. To actually pick the
+           best value with hyperparameter tuning, use
+           :meth:`Expr.skb.get_randomized_search` or
+           :meth:`Expr.skb.get_grid_search` instead.
+
         Parameters
         ----------
         fitted : bool (default=False)
