@@ -127,7 +127,7 @@ class _ExprTraversal:
     def handle_choice(self, choice):
         if not isinstance(choice, _choosing.Choice):
             # choice is a BaseNumericChoice
-            return choice
+            return _choosing._with_fields(choice)
         new_outcomes = yield choice.outcomes
         return _choosing._with_fields(choice, outcomes=new_outcomes)
 
@@ -390,8 +390,6 @@ class _Cloner(_ExprTraversal):
         if id(choice) in self._replace:
             return self._replace[id(choice)]
         new_choice = yield from super().handle_choice(choice)
-        if not isinstance(new_choice, _choosing.Choice):
-            new_choice = _choosing._with_fields(choice)
         self._replace[id(choice)] = new_choice
         return new_choice
 

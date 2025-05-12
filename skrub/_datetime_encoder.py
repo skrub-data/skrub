@@ -96,17 +96,11 @@ class DatetimeEncoder(SingleColumnTransformer):
     """
     Extract temporal features such as month, day of the week, … from a datetime column.
 
-    All extracted features are provided as float32 columns.
-
-    No timezone conversion is performed: if the input column is timezone aware, the
-    extracted features will be in the column's timezone.
-
-    An input column that does not have a Date or Datetime dtype will be
-    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
-    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
-    only sends datetime columns to its ``datetime_encoder``. Therefore it is
-    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
-    ``datetime_encoder`` parameter.
+    The ``DatetimeEncoder`` converts datetime features to numerical features that
+    can be used by learners. It separates each datetime in its parts (year, month,
+    day, etc.), and adds new features based on the datetime (weekday, seconds
+    from epoch, day of year). Circular or spline-based periodic features may also
+    be included.
 
     Parameters
     ----------
@@ -149,6 +143,38 @@ class DatetimeEncoder(SingleColumnTransformer):
     --------
     ToDatetime :
         Convert strings to datetimes.
+
+    Notes
+    -----
+    All extracted features are provided as float32 columns.
+
+    No timezone conversion is performed: if the input column is timezone aware, the
+    extracted features will be in the column's timezone.
+
+    An input column that does not have a Date or Datetime dtype will be
+    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
+    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
+    only sends datetime columns to its ``datetime_encoder``. Therefore it is
+    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
+    ``datetime_encoder`` parameter.
+
+    The ``DatetimeEncoder`` uses hardcoded values for generating periodic features.
+    The period of each feature is:
+
+    - ``day_of_year``: 366
+    - ``month``: 12 (month in year)
+    - ``day``: 30 (day in month)
+    - ``hour``: 24 (hour in day)
+    - ``weekday``: 7 (day in week)
+
+    Additionally, we specify the number of splines for each feature to avoid
+    generating too many features:
+
+    - ``day_of_year``: 12
+    - ``month``: 12
+    - ``day``: 4
+    - ``hour``: 12
+    - ``weekday``: 7
 
     Examples
     --------
@@ -304,8 +330,9 @@ class DatetimeEncoder(SingleColumnTransformer):
     2      2024.0  ...              -0.965926
 
     Added features can be explored using ``DatetimeEncoder.all_outputs_``:
+
     >>> encoder[-1].all_outputs_
-        ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
+    ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
         'login_day_circular_0', 'login_day_circular_1', 'login_hour_circular_0', 'login_hour_circular_1']
     """  # noqa: E501
 

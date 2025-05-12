@@ -60,6 +60,8 @@ Changes
   parameter for specifying the format to use when parsing datetime columns.
   :pr:`1358` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The :class:`SimpleCleaner` has been removed. use :class:`Cleaner` instead. :pr:`1370` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Bugfixes
 --------
 

@@ -1,5 +1,4 @@
 import reprlib
-import warnings
 from collections import UserDict
 from typing import Iterable
 
@@ -207,9 +206,12 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``CleanNullStrings()``: replace strings used to represent null values
       with actual null values.
 
-    - ``DropUninformative()``: drop the column if it contains too many null values,
-    if it contains only one distinct value, or if all values are distinct (off by
-    default).
+    - ``DropUninformative()``: drop the column if it is considered to be
+      "uninformative". A column is considered to be "uninformative" if it contains
+      only null values (``drop_null_fraction``), only a constant value
+      (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
+      that contain text.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
       actual datetimes with the correct dtype. If ``datetime_format`` is provided,
@@ -371,18 +373,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
         """
         self.fit_transform(X, y=y)
         return self
-
-
-class SimpleCleaner(Cleaner):
-    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
-        super().__init__(drop_null_fraction=drop_null_fraction, n_jobs=n_jobs)
-        warnings.warn(
-            (
-                "SimpleCleaner was renamed to Cleaner and will be removed in the "
-                "next release."
-            ),
-            category=DeprecationWarning,
-        )
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
