@@ -898,7 +898,7 @@ class SkrubNamespace:
 
             # before, we trigger an error if subsampling=True was passed but no
             # subsampling was configured:
-            environment = env_with_subsampling(self._expr, {}, subsampling)
+            _ = env_with_subsampling(self._expr, {}, subsampling)
             return self.preview()
         if environment is None:
             environment = self.get_data()
