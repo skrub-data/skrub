@@ -331,7 +331,7 @@ example to choose between several completely different pipelines:
 >>> pred = skrub.choose_from({"ridge": ridge_pred, "rf": rf_pred}).as_expr()
 >>> print(pred.skb.describe_param_grid())
 - choose_from({'ridge': …, 'rf': …}): 'ridge'
-  choose_from({'true': …, 'false': …}): ['true', 'false']
+  optional(StandardScaler()): [StandardScaler(), None]
   α: choose_float(0.01, 10.0, log=True, name='α')
 - choose_from({'ridge': …, 'rf': …}): 'rf'
   N 🌴: choose_int(5, 50, name='N 🌴')
