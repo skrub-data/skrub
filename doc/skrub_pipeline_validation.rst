@@ -114,9 +114,8 @@ And we can obtain predictions on the test part:
 Cross-validation
 ----------------
 
-Rather than a single split, we often want to run cross-validation. The same
-mechanism is used, except that several splits are done and the model fitting and
-scoring is done for us. This is done with
+We can increase our confidence in our score by using cross-validation instead of a single split.
+mechanism now fits and evaluates the model on several splits. This is done with
 :meth:`.skb.cross_validate() <Expr.skb.cross_validate>`.
 
 >>> pred.skb.cross_validate() # doctest: +SKIP
