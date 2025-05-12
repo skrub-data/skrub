@@ -902,10 +902,13 @@ class SkrubNamespace:
             return self.preview()
         if environment is None:
             environment = self.get_data()
-        environment = {
-            **environment,
-            "_skrub_use_var_values": not _var_values_provided(self._expr, environment),
-        }
+        else:
+            environment = {
+                **environment,
+                "_skrub_use_var_values": not _var_values_provided(
+                    self._expr, environment
+                ),
+            }
         environment = env_with_subsampling(self._expr, environment, subsampling)
         return evaluate(
             self._expr, mode="fit_transform", environment=environment, clear=True
