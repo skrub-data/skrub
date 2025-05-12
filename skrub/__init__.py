@@ -36,6 +36,7 @@ from ._multi_agg_joiner import MultiAggJoiner
 from ._reporting import TableReport, patch_display, unpatch_display
 from ._select_cols import Drop, DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
+from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import Cleaner, TableVectorizer
 from ._tabular_learner import tabular_learner
@@ -94,4 +95,5 @@ __all__ = [
     "StringEncoder",
     "column_associations",
     "toy_orders",
+    "SquashingScaler",
 ]
