@@ -262,9 +262,10 @@ which always uses the default hyperparameters):
 Choices beyond estimator hyperparameters
 ----------------------------------------
 
-Choices are not limited to scikit-learn hyperparameters: we can use choices wherever we use expressions. The choice of the estimator to use,
-any argument of an expression's method or :func:`deferred` function call, etc. can be
-replaced with choices. We can also choose between several expressions to compare
+Choices are not limited to scikit-learn hyperparameters: we can use choices
+wherever we use expressions. The choice of the estimator to use, any argument of
+an expression's method or :func:`deferred` function call, etc. can be replaced
+with choices. We can also choose between several expressions to compare
 different pipelines.
 
 As an example of choices outside of scikit-learn estimators, we can consider
@@ -277,8 +278,9 @@ several ways to perform an aggregation on a pandas DataFrame:
 >>> print(agg_ratings.skb.describe_param_grid())
 - rating_aggregation: ['median', 'mean']
 
-We can also choose between several completely different pipelines by turning a choice into an expression, via its
-``as_expr`` method (or by using :func:`as_expr` on any object).
+We can also choose between several completely different pipelines by turning a
+choice into an expression, via its ``as_expr`` method (or by using
+:func:`as_expr` on any object).
 
 >>> from sklearn.preprocessing import StandardScaler
 
