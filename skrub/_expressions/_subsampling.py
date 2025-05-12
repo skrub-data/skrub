@@ -96,6 +96,23 @@ class SubsamplePreviews(_expressions.ExprImpl):
         )
 
 
+def check_missing_subsampling_config(expr, subsampling):
+    """Check if subsampling config is missing.
+
+    This is a helper for other skrub functions, to raise an exception if
+    subsampling was requested (e.g. `cross_validate(..., subsampling=True)`)
+    but the expr does not use subsampling anywhere (`.skb.subsample_previews()`
+    was never used).
+    """
+    if not subsampling or uses_subsampling(expr):
+        return
+    raise ValueError(
+        "`subsampling=True` was passed but no subsampling has been configured "
+        "anywhere in the expression. Either pass `subsampling=False` (the default) "
+        "or configure subsampling with `.skb.subsample_previews()`."
+    )
+
+
 def env_with_subsampling(expr, environment, subsampling):
     """Update an environment with subsampling indication.
 
@@ -107,12 +124,7 @@ def env_with_subsampling(expr, environment, subsampling):
     """
     if not subsampling:
         return environment
-    if not uses_subsampling(expr):
-        raise ValueError(
-            "`subsampling=True` was passed but no subsampling has been configured "
-            "anywhere in the expression. Either pass `subsampling=False` (the default) "
-            "or configure subsampling with `.skb.subsample_previews()`."
-        )
+    check_missing_subsampling_config(expr, subsampling)
     return environment | {SHOULD_SUBSAMPLE_KEY: True}
 
 
