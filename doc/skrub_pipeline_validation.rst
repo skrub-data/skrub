@@ -6,13 +6,12 @@
 Tuning and validating Skrub Pipelines
 =====================================
 
-Typically, we want to evaluate the prediction performance of our pipeline. This
-is usually done by fitting it on a training dataset, then obtaining prediction
+To evaluate the prediction performance of our pipeline, we can fit it on a training dataset, then obtaining prediction
 on an unseen, test dataset.
 
-In scikit-learn, estimators and pipelines are given an ``X`` and a ``y`` matrix
-with one row per observation from the very start. Therefore splitting of these
-data into training and test set can be done independently from the pipeline.
+In scikit-learn, we pass to estimators and pipelines an ``X`` and ``y`` matrix
+with one row per observation from the start. Therefore, we can split the
+data into a training and test set independently from the pipeline.
 
 However, in many real-world scenarios, our data sources are not already
 organized into ``X`` and ``y`` matrices. Some transformations may be necessary to
@@ -23,9 +22,8 @@ Therefore, we must start our pipeline by creating the design matrix and targets,
 then tell skrub which intermediate results in the pipeline constitute ``X`` and
 ``y`` respectively.
 
-Let us consider a toy example where the only step needed to obtain ``X`` and
-``y`` is extracting them from a single table -- in the input to the pipeline,
-both are in the same dataframe. More complex transformations would be handled in
+Let us consider a toy example where we simply obtain ``X`` and
+``y`` from a single table. More complex transformations would be handled in
 the same way.
 
 >>> from sklearn.datasets import load_diabetes
@@ -264,8 +262,7 @@ which always uses the default hyperparameters):
 Choices beyond estimator hyperparameters
 ----------------------------------------
 
-Choices are not limited to scikit-learn hyperparameters. In fact, a choice can
-be used wherever an expression can be used. The choice of the estimator to use,
+Choices are not limited to scikit-learn hyperparameters: we can use choices wherever we use expressions. The choice of the estimator to use,
 any argument of an expression's method or :func:`deferred` function call, etc. can be
 replaced with choices. We can also choose between several expressions to compare
 different pipelines. Choices can be nested arbitrarily.
@@ -312,9 +309,8 @@ For example, we can consider several ways to perform an aggregation on a pandas 
 >>> print(agg_ratings.skb.describe_param_grid())
 - rating_aggregation: ['median', 'mean']
 
-Finally, a choice can easily be turned into an expression with its ``as_expr``
-method (or :func:`as_expr`, which works on any object). This can be useful for
-example to choose between several completely different pipelines:
+Finally, we can choose between several completely different pipelines by turning a choice into an expression, via its
+``as_expr`` method (or by using :func:`as_expr` on any object).
 
 >>> from sklearn.preprocessing import StandardScaler
 
