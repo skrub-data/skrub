@@ -265,42 +265,10 @@ Choices beyond estimator hyperparameters
 Choices are not limited to scikit-learn hyperparameters: we can use choices wherever we use expressions. The choice of the estimator to use,
 any argument of an expression's method or :func:`deferred` function call, etc. can be
 replaced with choices. We can also choose between several expressions to compare
-different pipelines. Choices can be nested arbitrarily.
+different pipelines.
 
-Here is an example choosing between 2 different estimators, each of which has a
-tunable hyperparameter:
-
->>> from sklearn.ensemble import RandomForestRegressor
-
->>> ridge = Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α"))
->>> rf = RandomForestRegressor(n_estimators=skrub.choose_int(5, 50, name="N 🌴"))
->>> regressor = skrub.choose_from({"ridge": ridge, "rf": rf}, name="regressor")
->>> pred = X.skb.apply(regressor, y=y)
->>> print(pred.skb.describe_param_grid())
-- regressor: 'ridge'
-  α: choose_float(0.01, 10.0, log=True, name='α')
-- regressor: 'rf'
-  N 🌴: choose_int(5, 50, name='N 🌴')
-
->>> search = pred.skb.get_randomized_search(fitted=True)
->>> search.results_ # doctest: +SKIP
-   mean_test_score         α   N 🌴 regressor
-0         0.480425  0.078092   NaN     ridge
-1         0.477904  0.150784   NaN     ridge
-2         0.470507  0.271016   NaN     ridge
-3         0.443326  0.600529   NaN     ridge
-4         0.439670  0.643117   NaN     ridge
-5         0.423326       NaN  47.0        rf
-6         0.416455       NaN  31.0        rf
-7         0.403278       NaN  37.0        rf
-8         0.348517       NaN   8.0        rf
-9         0.168444  7.780156   NaN     ridge
-
-The results can be displayed in an interactive parallel coordinate plot with
-:meth:`ParamSearch.plot_results`.
-
-As mentioned, a choice can be passed as an argument of an expression's method.
-For example, we can consider several ways to perform an aggregation on a pandas DataFrame:
+As an example of choices outside of scikit-learn estimators, we can consider
+several ways to perform an aggregation on a pandas DataFrame:
 
 >>> ratings = skrub.var("ratings")
 >>> agg_ratings = ratings.groupby("movieId")["rating"].agg(
@@ -309,7 +277,7 @@ For example, we can consider several ways to perform an aggregation on a pandas 
 >>> print(agg_ratings.skb.describe_param_grid())
 - rating_aggregation: ['median', 'mean']
 
-Finally, we can choose between several completely different pipelines by turning a choice into an expression, via its
+We can also choose between several completely different pipelines by turning a choice into an expression, via its
 ``as_expr`` method (or by using :func:`as_expr` on any object).
 
 >>> from sklearn.preprocessing import StandardScaler
@@ -331,6 +299,10 @@ Finally, we can choose between several completely different pipelines by turning
   α: choose_float(0.01, 10.0, log=True, name='α')
 - choose_from({'ridge': …, 'rf': …}): 'rf'
   N 🌴: choose_int(5, 50, name='N 🌴')
+
+Also note that as seen above, choices can be nested arbitrarily. For example it
+is frequent to choose between several estimators, each of which contains choices
+in its hyperparameters.
 
 Linking choices
 ---------------
