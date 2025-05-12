@@ -16,7 +16,7 @@ data into training and test set can be done independently from the pipeline.
 
 However, in many real-world scenarios, our data sources are not already
 organized into ``X`` and ``y`` matrices. Some transformations may be necessary to
-build those, and we want to keep those transformations inside the pipeline so
+build them, and we want to keep those transformations inside the pipeline so
 that they can be reliably re-applied to new data.
 
 Therefore, we must start our pipeline by creating the design matrix and targets,
