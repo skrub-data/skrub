@@ -1,14 +1,14 @@
 import numpy as np
 
 
-def total_standard_deviation_norm(X):
-    r"""Compute the total standard deviation norm of X.
+def total_standard_deviation_scaler(X):
+    r"""Compute the total standard deviation scaler of X.
 
-    This norm is used to normalize the vectors outputs of :class:`StringEncoder`,
+    This scaler is used to normalize the vectors outputs of :class:`StringEncoder`,
     :class:`TextEncoder` and :class:`GapEncoder`. It is computed during ``fit`` and
     applied during ``transform``.
 
-    Conceptually, this norm corresponds to the square root of the sum of the variances
+    Conceptually, this scaler corresponds to the square root of the sum of the variances
     of all columns of X.
 
     Parameters
@@ -18,8 +18,8 @@ def total_standard_deviation_norm(X):
 
     Returns
     -------
-    norm : float,
-        The total standard deviation norm.
+    scaler : float,
+        The total standard deviation scaler.
 
     See Also
     --------
@@ -28,7 +28,7 @@ def total_standard_deviation_norm(X):
 
     Notes
     -----
-    We define this norm as:
+    We define the scaler as:
 
     .. math::
 
@@ -39,7 +39,9 @@ def total_standard_deviation_norm(X):
     * :math:`\sigma^2(X_j)` is the population variance of the column :math:`j`
     * :math:`D` is the number of features
 
-    When :math:`D = 1`, this norm is the population standard deviation of the column.
+    When :math:`D = 1`, this scaler is the population standard deviation of the column.
+
+    We then rescale every element of :math:`X` using this scaler.
     """
     norm = np.sqrt(np.nansum(np.nanvar(X, ddof=0, axis=0)))
 
@@ -50,12 +52,12 @@ def total_standard_deviation_norm(X):
     return norm
 
 
-def batch_standard_deviation_norm(X, past_stats):
-    """Compute the batched version of the total standard deviation norm.
+def batch_standard_deviation_scaler(X, past_stats):
+    """Compute the batched version of the total standard deviation scaler.
 
-    This function is used to compute the norm in ``GapEncoder.partial_fit``, when
+    This function is used to compute the scaler in ``GapEncoder.partial_fit``, when
     the dataset is only accessed via batches coming one by one. This function
-    accumulates statistics obtained from previous partial fit to compute the norm.
+    accumulates statistics obtained from previous partial fit to compute the scaler.
 
     Parameters
     ----------
@@ -67,8 +69,8 @@ def batch_standard_deviation_norm(X, past_stats):
 
     Returns
     -------
-    norm : float
-        The total standard deviation norm, up to the last batch
+    scaler : float
+        The total standard deviation scaler, up to the last batch
 
     past_stats : defaultdict(Counter)
         Past statistics container, updated with the last batch.

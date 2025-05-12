@@ -10,7 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._total_std_norm import total_standard_deviation_norm
+from ._total_std_scaler import total_standard_deviation_scaler
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
 
@@ -262,8 +262,8 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 X_out = X_out[:, : self.n_components]
 
         # block normalize
-        self.norm_ = total_standard_deviation_norm(X_out)
-        X_out /= self.norm_
+        self.scaler_ = total_standard_deviation_scaler(X_out)
+        X_out /= self.scaler_
 
         self.n_components_ = X_out.shape[1]
 
@@ -301,8 +301,8 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         elif self.n_components is not None:
             X_out = X_out[:, : self.n_components]
 
-        # block normalize
-        X_out /= self.norm_
+        # block scale
+        X_out /= self.scaler_
 
         cols = self.get_feature_names_out()
         X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))

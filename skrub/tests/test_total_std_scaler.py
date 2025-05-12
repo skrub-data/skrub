@@ -4,7 +4,7 @@ from numpy.testing import assert_array_almost_equal
 
 import skrub._dataframe as sbd
 from skrub import GapEncoder, StringEncoder
-from skrub._total_std_norm import total_standard_deviation_norm
+from skrub._total_std_scaler import total_standard_deviation_scaler
 
 try:
     import sentence_transformers  # noqa: F401
@@ -14,18 +14,18 @@ except ImportError:
     TRANSFORMERS = False
 
 
-def test_normalization_invariance():
-    """Normalizing twice leads to a unit norm."""
+def test_scaling_invariance():
+    """Normalizing twice leads to a unit scale."""
     X = np.random.randn(10, 3)
-    norm_1 = total_standard_deviation_norm(X)
-    X_norm_1 = X / norm_1
+    scale_1 = total_standard_deviation_scaler(X)
+    X_scale_1 = X / scale_1
 
-    norm_2 = total_standard_deviation_norm(X_norm_1)
-    X_norm_2 = X_norm_1 / norm_2
+    scale_2 = total_standard_deviation_scaler(X_scale_1)
+    X_scale_2 = X_scale_1 / scale_2
 
-    assert_array_almost_equal(X_norm_1, X_norm_2)
+    assert_array_almost_equal(X_scale_1, X_scale_2)
 
-    assert norm_2 == pytest.approx(1)
+    assert scale_2 == pytest.approx(1)
 
 
 def test_nonfinite():
@@ -33,7 +33,7 @@ def test_nonfinite():
     column-wise.
     """
     X = np.array([[np.nan, np.nan, np.nan], [1, 2, 3], [4, 5, 6]])
-    assert total_standard_deviation_norm(X) == total_standard_deviation_norm(X[1:])
+    assert total_standard_deviation_scaler(X) == total_standard_deviation_scaler(X[1:])
 
 
 @pytest.mark.parametrize(
@@ -46,7 +46,7 @@ def test_nonfinite():
 def test_encoders(df_module, encoder):
     X = df_module.example_dataframe["str-col"]
     X_t = encoder.fit_transform(X)
-    assert total_standard_deviation_norm(np.array(X_t)) == pytest.approx(1)
+    assert total_standard_deviation_scaler(np.array(X_t)) == pytest.approx(1)
 
 
 def test_partial_fit(df_module):
@@ -63,4 +63,4 @@ def test_partial_fit(df_module):
     Xt_np = np.hstack(
         [sbd.to_numpy(col).reshape(-1, 1) for col in sbd.to_column_list(Xt)]
     )
-    assert total_standard_deviation_norm(Xt_np) == pytest.approx(1)
+    assert total_standard_deviation_scaler(Xt_np) == pytest.approx(1)

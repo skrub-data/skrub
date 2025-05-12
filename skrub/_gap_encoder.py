@@ -20,9 +20,9 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._total_std_norm import (
-    batch_standard_deviation_norm,
-    total_standard_deviation_norm,
+from ._total_std_scaler import (
+    batch_standard_deviation_scaler,
+    total_standard_deviation_scaler,
 )
 from ._utils import unique_strings
 
@@ -481,8 +481,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._fit_transform(sbd.to_numpy(X), is_null)
 
-        self.norm_ = total_standard_deviation_norm(result)
-        result /= self.norm_
+        self.scaler_ = total_standard_deviation_scaler(result)
+        result /= self.scaler_
 
         return self._post_process(X, result)
 
@@ -722,7 +722,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         result = self._transform(X, is_null)
 
-        self.norm_, self.past_stats_ = batch_standard_deviation_norm(
+        self.scaler_, self.past_stats_ = batch_standard_deviation_scaler(
             result,
             getattr(
                 self,
@@ -768,7 +768,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
 
-        result /= self.norm_
+        result /= self.scaler_
 
         return self._post_process(X, result)
 
