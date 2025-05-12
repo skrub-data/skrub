@@ -1,5 +1,6 @@
 import re
 import warnings
+from datetime import datetime
 
 import joblib
 import numpy as np
@@ -22,7 +23,6 @@ from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import (
     Cleaner,
-    SimpleCleaner,
     TableVectorizer,
     _get_preprocessors,
 )
@@ -387,13 +387,6 @@ def test_cleaner_dtypes(X, dict_expected_types):
                     assert sbd.is_float(X_trans[col])
                 else:
                     assert dict_expected_types[col] == X_trans[col].dtype
-
-
-def test_simplecleaner_warning():
-    with pytest.warns(DeprecationWarning, match="SimpleCleaner was renamed to Cleaner"):
-        X = _get_clean_dataframe()
-        vectorizer = SimpleCleaner()
-        vectorizer.fit(X)
 
 
 def test_convert_float32():
@@ -916,3 +909,47 @@ def test_drop_null_column():
     tv = TableVectorizer(drop_null_fraction=1.0)
     transformed = tv.fit_transform(X)
     assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)
+
+
+def test_date_format(df_module):
+    # Test that the date format is correctly inferred
+
+    X = df_module.make_dataframe(
+        {
+            "date": [
+                "22 April 2025",
+                "23 April 2025",
+                "24 April 2025",
+                "25 April 2025",
+                "26 April 2025",
+            ]
+        }
+    )
+
+    expected = df_module.make_dataframe(
+        {
+            "date_year": [2025.0, 2025.0, 2025.0, 2025.0, 2025.0],
+            "date_month": [4.0, 4.0, 4.0, 4.0, 4.0],
+            "date_day": [22.0, 23.0, 24.0, 25.0, 26.0],
+        }
+    )
+    datetime_encoder = DatetimeEncoder(add_total_seconds=False)
+    vectorizer = TableVectorizer(datetime_format="%d %B %Y", datetime=datetime_encoder)
+    transformed = vectorizer.fit_transform(X)
+    for col in transformed.columns:
+        df_module.assert_column_equal(transformed[col], sbd.to_float32(expected[col]))
+
+    expected = df_module.make_dataframe(
+        {
+            "date": [
+                datetime.fromisoformat("2025-04-22"),
+                datetime.fromisoformat("2025-04-23"),
+                datetime.fromisoformat("2025-04-24"),
+                datetime.fromisoformat("2025-04-25"),
+                datetime.fromisoformat("2025-04-26"),
+            ],
+        }
+    )
+    cleaner = Cleaner(datetime_format="%d %B %Y")
+    transformed = cleaner.fit_transform(X)
+    df_module.assert_column_equal(transformed["date"], expected["date"])

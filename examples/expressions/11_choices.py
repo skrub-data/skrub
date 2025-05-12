@@ -1,4 +1,6 @@
 """
+.. currentmodule:: skrub
+
 .. _example_tuning_pipelines:
 
 Tuning pipelines
@@ -88,17 +90,17 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 #
 # Several utilities are available:
 #
-# - ``choose_from`` to choose from a discrete set of values
-# - ``choose_float`` and ``choose_int`` to sample numbers in a given range
-# - ``choose_bool`` to choose between ``True`` and ``False``
-# - ``optional`` to choose between something and ``None``; typically to make a
+# - :func:`choose_from` to choose from a discrete set of values
+# - :func:`choose_float` and :func:`choose_int` to sample numbers in a given range
+# - :func:`choose_bool` to choose between ``True`` and ``False``
+# - :func:`optional` to choose between something and ``None``; typically to make a
 #   transformation step optional such as
 #   ``X.skb.apply(skrub.optional(StandardScaler()))``
 #
 # Choices can be given a name which is used to display hyperparameter search
 # results and plots or to override their outcome. The name is optional.
 #
-# Note that ``skrub.choose_float()`` and ``skrub.choose_int()`` can be given a
+# Note that :func:`skrub.choose_float()` and :func:`skrub.choose_int()` can be given a
 # ``log`` argument to sample in log scale.
 
 # %%
@@ -142,6 +144,66 @@ search.results_
 search.plot_results()
 
 # %%
+# Default choice values
+# ---------------------
+#
+# The goal of using the different ``choose_*`` functions is to tune choices on
+# validation metrics with randomized or grid search. However, even when our
+# expression contains such choices we can still use it without tuning, for
+# example in previews or to get a quick first result before spending the
+# computation time to run the search. When we use :meth:`.skb.get_pipeline()
+# <Expr.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
+# and uses those default values. That default pipeline is the one used for
+# :meth:`.skb.eval() <Expr.skb.eval>`.
+#
+# We can control what should be the default value for each choice. For
+# :func:`choose_int`, :func:`choose_float` and :func:`choose_bool`, we can use
+# the ``default`` parameter. For :func:`choose_from`, the default is the first
+# item from the list or dict of outcomes we provide. For :func:`optional`, we
+# can pass ``default=None`` to force the default to be the alternative
+# outcome, ``None``.
+#
+# When we do not set an explicit default, skrub picks one for depending on the
+# kind of choice, as detailed in :ref:`this table<choice-defaults-table>` in the
+# User Guide.
+
+# %%
+# As mentioned we can control the default value:
+
+# %%
+skrub.choose_float(1.0, 100.0, default=12.0).default()
+
+# %%
+# Choices can appear in many places
+# ---------------------------------
+#
+# Choices are not limited to selecting estimator hyperparameters. They can also be
+# used to choose between different estimators, or in place of any value used in
+# our pipeline.
+#
+# For example, here we pass a choice to pandas DataFrame's ``assign`` method.
+# We want to add a feature that captures the length of the text, but we are not
+# sure if it is better to count length in characters or in words. We do not
+# want to add both because it would be redundant. We can add a column to the
+# dataframe, which will be chosen among the length in characters or the length
+# in words:
+
+# %%
+X, y = skrub.X(texts), skrub.y(labels)
+
+X.assign(
+    length=skrub.choose_from(
+        {"words": X["text"].str.count(r"\b\w+\b"), "chars": X["text"].str.len()},
+        name="length",
+    )
+)
+
+# %%
+# ``choose_from`` can be given a dictionary if we want to provide
+# names for the individual outcomes, or a list, when names are not needed:
+# ``choose_from([1, 100], name='N')``,
+# ``choose_from({'small': 1, 'big': 100}, name='N')``.
+#
 # Choices can be nested arbitrarily. For example, here we want to choose
 # between 2 possible encoder types: the ``MinHashEncoder`` or the
 # ``StringEncoder``. Each of the possible outcomes contains a choice itself:

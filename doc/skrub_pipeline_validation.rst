@@ -163,6 +163,8 @@ for ``alpha``.
 Here are the different kinds of choices, along with their default outcome when
 we are not using hyperparameter search:
 
+.. _choice-defaults-table:
+
 .. list-table:: default choice outcomes
    :header-rows: 1
 

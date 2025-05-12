@@ -137,7 +137,7 @@ def test_describe_param_grid():
     >>> X = skrub.X()
     >>> y = skrub.y()
 
-    >>> imputed = X.skb.apply(skrub.optional(SimpleImputer, name="impute"))
+    >>> imputed = X.skb.apply(skrub.optional(SimpleImputer(), name="impute"))
     >>> dim_reduction = skrub.choose_from(
     ...     {
     ...         "PCA": PCA(),
@@ -182,38 +182,38 @@ def test_describe_param_grid():
     subgrids.
 
     >>> print(pred.skb.describe_param_grid())
-    - impute: ['true', 'false']
+    - impute: [SimpleImputer(), None]
       dim_reduction: ['PCA', 'SelectKBest']
       scaling: True
       scaling_kind: 'robust'
       robust_scaler__with_centering: [True, False]
       classifier: 'logreg'
       C: choose_float(0.001, 100, log=True, name='C')
-    - impute: ['true', 'false']
+    - impute: [SimpleImputer(), None]
       dim_reduction: ['PCA', 'SelectKBest']
       scaling: True
       scaling_kind: 'robust'
       robust_scaler__with_centering: [True, False]
       classifier: 'rf'
       N 🌴: choose_int(20, 400, name='N 🌴')
-    - impute: ['true', 'false']
+    - impute: [SimpleImputer(), None]
       dim_reduction: ['PCA', 'SelectKBest']
       scaling: True
       scaling_kind: 'standard'
       classifier: 'logreg'
       C: choose_float(0.001, 100, log=True, name='C')
-    - impute: ['true', 'false']
+    - impute: [SimpleImputer(), None]
       dim_reduction: ['PCA', 'SelectKBest']
       scaling: True
       scaling_kind: 'standard'
       classifier: 'rf'
       N 🌴: choose_int(20, 400, name='N 🌴')
-    - impute: ['true', 'false']
+    - impute: [SimpleImputer(), None]
       dim_reduction: ['PCA', 'SelectKBest']
       scaling: False
       classifier: 'logreg'
       C: choose_float(0.001, 100, log=True, name='C')
-    - impute: ['true', 'false']
+    - impute: [SimpleImputer(), None]
       dim_reduction: ['PCA', 'SelectKBest']
       scaling: False
       classifier: 'rf'
