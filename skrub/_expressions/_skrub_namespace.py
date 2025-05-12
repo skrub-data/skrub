@@ -31,12 +31,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
-from ._subsampling import (
-    SubsamplePreviews,
-    check_missing_subsampling_config,
-    env_with_subsampling,
-    uses_subsampling,
-)
+from ._subsampling import SubsamplePreviews, env_with_subsampling, uses_subsampling
 from ._utils import NULL, attribute_error
 
 
@@ -901,9 +896,9 @@ class SkrubNamespace:
             # In this configuration the result is the same as the preview so
             # we call preview() to benefit from the cached result.
 
-            # Before, we trigger an error if subsampling=True was passed but no
+            # before, we trigger an error if subsampling=True was passed but no
             # subsampling was configured:
-            check_missing_subsampling_config(self._expr, subsampling)
+            environment = env_with_subsampling(self._expr, {}, subsampling)
             return self.preview()
         if environment is None:
             environment = self.get_data()
