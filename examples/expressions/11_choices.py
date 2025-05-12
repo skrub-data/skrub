@@ -194,13 +194,14 @@ search.plot_results()
 
 # %%
 # Concluding, we have seen how to use skrub's ``choose_from`` objects to tune
-# hyperparameters, choose optional configurations, and nest choices.
-# We then looked at how the different choices affect the pipeline and the prediction
+# hyperparameters, choose optional configurations, and nest choices. We then
+# looked at how the different choices affect the pipeline and the prediction
 # scores.
 #
-# There is more about skrub choices than what is in covered in this example. In particular,
-# choices are not limited to choosing estimators and their hyperparameters but
-# can be used anywhere an expression can be used, such as the argument of an
-# expression's method or operator or of a :func:`deferred` function, and
-# choices can be inter-dependent. Please find more information in the
-# :ref:`user guide <skrub_pipeline_validation>`.
+# There is more to say about skrub choices than what is covered in this
+# example. In particular, choices are not limited to choosing estimators and
+# their hyperparameters: they can be used anywhere an expression can be used,
+# such as the argument of a :func:`deferred` function, or the argument of
+# another expression's method or operator. Finally, choices can be
+# inter-dependent. Please find more information in the :ref:`user guide
+# <skrub_pipeline_validation>`.
