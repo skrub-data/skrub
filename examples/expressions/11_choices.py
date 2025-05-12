@@ -198,7 +198,7 @@ search.plot_results()
 # We then looked at how the different choices affect the pipeline and the prediction
 # scores.
 #
-# There is about skrub choices than in covered in this example. In particular,
+# There is more about skrub choices than what is in covered in this example. In particular,
 # choices are not limited to choosing estimators and their hyperparameters but
 # can be used anywhere an expression can be used, such as the argument of an
 # expression's method or operator or of a :func:`deferred` function, and
