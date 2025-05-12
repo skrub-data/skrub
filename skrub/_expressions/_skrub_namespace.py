@@ -49,7 +49,7 @@ def _check_subsampling(fitted, subsampling):
         raise ValueError(
             "Subsampling is only applied when fitting the estimator "
             "on the data already provided when initializing variables. "
-            "Please pass `fitted=True` or subsampling=`False`."
+            "Please pass `fitted=True` or `subsampling=False`."
         )
 
 
