@@ -93,8 +93,8 @@ def _get_dt_feature_polars(col, feature):
 
 
 class DatetimeEncoder(SingleColumnTransformer):
-    """Extract temporal features such as month, day of the week, … from a \
-        datetime column.
+    """
+    Extract temporal features such as month, day of the week, … from a datetime column.
 
     The ``DatetimeEncoder`` converts datetime features to numerical features that
     can be used by learners. It separates each datetime in its parts (year, month,
@@ -144,37 +144,37 @@ class DatetimeEncoder(SingleColumnTransformer):
     ToDatetime :
         Convert strings to datetimes.
 
-   Notes
-   -----
-   All extracted features are provided as float32 columns.
+    Notes
+    -----
+    All extracted features are provided as float32 columns.
 
-   No timezone conversion is performed: if the input column is timezone aware, the
-   extracted features will be in the column's timezone.
+    No timezone conversion is performed: if the input column is timezone aware, the
+    extracted features will be in the column's timezone.
 
-   An input column that does not have a Date or Datetime dtype will be
-   rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
-   converting strings to proper datetimes. **Note:** the ``TableVectorizer``
-   only sends datetime columns to its ``datetime_encoder``. Therefore it is
-   always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
-   ``datetime_encoder`` parameter.
+    An input column that does not have a Date or Datetime dtype will be
+    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
+    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
+    only sends datetime columns to its ``datetime_encoder``. Therefore it is
+    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
+    ``datetime_encoder`` parameter.
 
-   The ``DatetimeEncoder`` uses hardcoded values for generating periodic features.
-   The period of each feature is:
+    The ``DatetimeEncoder`` uses hardcoded values for generating periodic features.
+    The period of each feature is:
 
-   - ``day_of_year``: 366
-   - ``month``: 12 (month in year)
-   - ``day``: 30 (day in month)
-   - ``hour``: 24 (hour in day)
-   - ``weekday``: 7 (day in week)
+    - ``day_of_year``: 366
+    - ``month``: 12 (month in year)
+    - ``day``: 30 (day in month)
+    - ``hour``: 24 (hour in day)
+    - ``weekday``: 7 (day in week)
 
-   Additionally, we specify the number of splines for each feature to avoid
-   generating too many features:
+    Additionally, we specify the number of splines for each feature to avoid
+    generating too many features:
 
-   - ``day_of_year``: 12
-   - ``month``: 12
-   - ``day``: 4
-   - ``hour``: 12
-   - ``weekday``: 7
+    - ``day_of_year``: 12
+    - ``month``: 12
+    - ``day``: 4
+    - ``hour``: 12
+    - ``weekday``: 7
 
     Examples
     --------
