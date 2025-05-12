@@ -34,6 +34,10 @@ generate_demo()
 if not os.path.exists("generated_for_index/code_block_2.html"):
     runpy.run_path("generate_pipeline_for_index.py")
 
+# Generate the HTML snippets for the datetime encoder demo on the homepage:
+if not os.path.exists("generated_for_index/demo_periodic_features.svg"):
+    runpy.run_path("generate_datetime_example.py")
+
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
 # is relative to the documentation root, use os.path.abspath to make it
