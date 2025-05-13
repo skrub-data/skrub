@@ -725,7 +725,6 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             *(f"mean_train_{n}" for n in metric_names),
             *(f"std_train_{n}" for n in metric_names),
         ]
-        breakpoint()
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
         table.columns = new_names
