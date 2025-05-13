@@ -17,9 +17,9 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
-from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
+from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
 from ._to_str import ToStr
@@ -36,7 +36,7 @@ class PassThrough(SingleColumnTransformer):
         return column
 
 
-HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+HIGH_CARDINALITY_TRANSFORMER = StringEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     sparse_output=False,
     dtype="float32",
@@ -432,11 +432,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         and drop one of the transformed columns if the feature contains only 2
         categories.
 
-    high_cardinality : transformer, "passthrough" or "drop", default=GapEncoder instance
+    high_cardinality : transformer, "passthrough" or "drop", default=StringEncoder instance
         The transformer for string or categorical columns with at least
         ``cardinality_threshold`` unique values. The default is a
-        :class:`~skrub.GapEncoder` with 30 components (30 output columns for each
+        :class:`~skrub.StringEncoder` with 30 components (30 output columns for each
         input).
+
+        .. versionchanged:: 0.6.0
+           The default ``high_cardinality`` encoder has been changed from
+           :class:`~skrub.GapEncoder` to :class:`~skrub.StringEncoder`.
 
     numeric : transformer, "passthrough" or "drop", default="passthrough"
         The transformer for numeric columns (floats, ints, booleans).

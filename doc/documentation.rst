@@ -39,6 +39,6 @@ essential to prevent data leakage and ensure generalization.
 
    end_to_end_pipeline
    encoding
+   skrub_pipeline
    assembling
    cleaning
-   skrub_pipeline
