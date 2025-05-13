@@ -731,7 +731,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         metadata["log_scale_columns"] = [
             renaming[c] for c in metadata["log_scale_columns"]
         ]
-        for k in result_keys[: len(metric_names)][::-1]:
+        for k in result_keys[: len(metric_names)]:
             table.insert(table.shape[1], k, self.cv_results_[k])
         if detailed:
             for k in result_keys[len(metric_names) :]:
