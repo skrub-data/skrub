@@ -703,13 +703,6 @@ class SkrubNamespace:
         >>> df.shape
         (442, 11)
 
-        The ``subsample_previews`` configures *how* the sampling is done when it
-        takes place.
-
-        whether it takes place or not depends on the context:
-            - for preview the subsampling is always on
-            - for fitting and cross-validation subsampling is only on when we
-              ask for it explicitly with ``subsampling=True``
 
         >>> data = skrub.var("data", df).skb.subsample_previews(n=15)
 
@@ -896,7 +889,7 @@ class SkrubNamespace:
             # In this configuration the result is the same as the preview so
             # we call preview() to benefit from the cached result.
 
-            # before, we trigger an error if subsampling=True was passed but no
+            # Before returning, we trigger an error if subsampling=True was passed but no
             # subsampling was configured:
             _ = env_with_subsampling(self._expr, {}, subsampling)
             return self.preview()
