@@ -725,6 +725,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             *(f"mean_train_{n}" for n in metric_names),
             *(f"std_train_{n}" for n in metric_names),
         ]
+        breakpoint()
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
         table.columns = new_names
@@ -732,7 +733,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             renaming[c] for c in metadata["log_scale_columns"]
         ]
         for k in result_keys[: len(metric_names)][::-1]:
-            table.insert(0, k, self.cv_results_[k])
+            table.insert(table.shape[1], k, self.cv_results_[k])
         if detailed:
             for k in result_keys[len(metric_names) :]:
                 if k in self.cv_results_:
