@@ -92,6 +92,12 @@ scikit-learn's :func:`sklearn.model_selection.train_test_split`).
 >>> split.keys()
 dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
 
+``train`` and ``test`` are the full dictionaries corresponding to the training
+and testing data. The corresponding ``X`` and ``y`` are the values, in those
+dictionaries, for the nodes marked with
+:meth:`.skb.mark_as_X() <Expr.skb.mark_as_X>`
+and :meth:`.skb.mark_as_y() <Expr.skb.mark_as_y>`.
+
 We can now fit our pipeline on the training data:
 
 >>> pipeline = pred.skb.get_pipeline()
@@ -283,6 +289,7 @@ choice into an expression, via its ``as_expr`` method (or by using
 :func:`as_expr` on any object).
 
 >>> from sklearn.preprocessing import StandardScaler
+>>> from sklearn.ensemble import RandomForestRegressor
 
 >>> data = skrub.var("data", diabetes_df)
 >>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
