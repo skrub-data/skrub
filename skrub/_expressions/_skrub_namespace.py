@@ -658,25 +658,10 @@ class SkrubNamespace:
     def subsample_previews(self, n=1000, *, how="head"):
         """Configure subsampling of a dataframe or numpy array.
 
-        The goal is to allow faster development and debugging of a pipeline by
-        computing the previews (and optionally "dry runs" of the
-        cross-validation) on a subset of the available data.
-
-        This method configures *how* the dataframe should be subsampled. If it
-        has been configured, subsampling actually only takes place in some
-        specific situations:
-
-        - When computing the previews (results displayed when printing an
-          expression).
-        - When it is explicitly requested by passing ``keep_subsampling=True`` to one
-          of the functions that expose that parameter such as
-          :meth:`Expr.skb.get_randomized_search` or :func:`cross_validate`.
-
-        When subsampling has not been configured (``subsample_previews`` has not
-        been called anywhere in the expression), no subsampling is ever done.
-
-        This method can only be used on steps that produce a dataframe, a
-        column (series) or a numpy array.
+        Enables faster development by computing the previews on a subsample of
+        the available data. Outside of previews, no subsampling takes place by
+        default but it can be turned on with the ``keep_subsampling`` parameter
+        -- see the Notes section for details.
 
         Parameters
         ----------
@@ -690,13 +675,31 @@ class SkrubNamespace:
 
         Returns
         -------
-        DataFrame
-            The subsampled dataframe.
+        subsampled data
+            The subsampled dataframe, column or numpy array.
 
         See Also
         --------
         Expr.skb.preview :
             Access a preview of the result on the subsampled data.
+
+        Notes
+        -----
+        This method configures *how* the dataframe should be subsampled. If it
+        has been configured, subsampling actually only takes place in some
+        specific situations:
+
+        - When computing the previews (results displayed when printing an
+          expression and the output of :meth:`Expr.skb.preview`).
+        - When it is explicitly requested by passing ``keep_subsampling=True`` to one
+          of the functions that expose that parameter such as
+          :meth:`Expr.skb.get_randomized_search` or :func:`cross_validate`.
+
+        When subsampling has not been configured (``subsample_previews`` has not
+        been called anywhere in the expression), no subsampling is ever done.
+
+        This method can only be used on steps that produce a dataframe, a
+        column (series) or a numpy array.
 
         Examples
         --------
