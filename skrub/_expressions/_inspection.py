@@ -352,7 +352,7 @@ def describe_params(params, expr_choices):
             if choice.outcome_names is not None:
                 value = choice.outcome_names[param]
             else:
-                value = f"{param}: {short_repr(choice.outcomes[param])}"
+                value = short_repr(choice.outcomes[param])
         else:
             value = param
             if isinstance(value, np.number):

@@ -1331,10 +1331,10 @@ class SkrubNamespace:
         >>> search = pred.skb.get_grid_search(fitted=True)
         >>> search.results_
               C   N 🌴 classifier mean_test_score
-        0   NaN  30.0         rf             0.89
+        0   NaN    30         rf             0.89
         1   0.1   NaN   logistic             0.84
         2  10.0   NaN   logistic             0.80
-        3   NaN   3.0         rf             0.65
+        3   NaN     3         rf             0.65
         4   NaN   NaN      dummy             0.50
         """  # noqa: E501
         for c in choices(self._expr).values():

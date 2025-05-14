@@ -5,7 +5,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
-from ._choosing import Choice, get_default
+from ._choosing import BaseNumericChoice, get_default
 from ._evaluation import (
     choice_graph,
     chosen_or_default_outcomes,
@@ -681,37 +681,14 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             attribute_error(self, "results_")
 
     def _get_cv_results_table(self, return_metadata=False, detailed=False):
-        # TODO: use _inspection.describe_params()
         check_is_fitted(self, "cv_results_")
         expr_choices = choice_graph(self.expr)
 
         all_rows = []
-        log_scale_columns = set()
-        int_columns = set()
         for params in self.cv_results_["params"]:
-            row = {}
-            for param_id, param in params.items():
-                choice_id = int(param_id.lstrip("expr__"))
-                choice = expr_choices["choices"][choice_id]
-                choice_name = expr_choices["choice_display_names"][choice_id]
-                if isinstance(choice, Choice):
-                    if choice.outcome_names is not None:
-                        value = choice.outcome_names[param]
-                    else:
-                        value = choice.outcomes[param]
-                else:
-                    value = param
-                    if choice.log:
-                        log_scale_columns.add(choice_name)
-                    if choice.to_int:
-                        int_columns.add(choice_name)
-                row[choice_name] = value
-            all_rows.append(row)
+            params = {int(k.lstrip("expr__")): v for k, v in params.items()}
+            all_rows.append(describe_params(params, expr_choices))
 
-        metadata = {
-            "log_scale_columns": list(log_scale_columns),
-            "int_columns": list(int_columns),
-        }
         table = pd.DataFrame(
             all_rows, columns=list(expr_choices["choice_display_names"].values())
         )
@@ -736,6 +713,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
         table.columns = new_names
+        metadata = _get_results_metadata(expr_choices)
         metadata["log_scale_columns"] = [
             renaming[c] for c in metadata["log_scale_columns"]
         ]
@@ -793,6 +771,22 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         if not cv_results.shape[0]:
             raise ValueError("No results to plot")
         return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
+
+
+def _get_results_metadata(expr_choices):
+    log_scale_columns = set()
+    int_columns = set()
+    for choice_id, choice in expr_choices["choices"].items():
+        if isinstance(choice, BaseNumericChoice):
+            choice_name = expr_choices["choice_display_names"][choice_id]
+            if choice.log:
+                log_scale_columns.add(choice_name)
+            if choice.to_int:
+                int_columns.add(choice_name)
+    return {
+        "log_scale_columns": list(log_scale_columns),
+        "int_columns": list(int_columns),
+    }
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):
