@@ -49,7 +49,7 @@ def should_subsample():
     >>> e.skb.get_pipeline(fitted=True)
     subsampling: False
     SkrubPipeline(expr=<Call 'load_data'>)
-    >>> e.skb.get_pipeline(subsampling=True, fitted=True)
+    >>> e.skb.get_pipeline(keep_subsampling=True, fitted=True)
     subsampling: True
     SkrubPipeline(expr=<Call 'load_data'>)
     """
@@ -96,22 +96,22 @@ class SubsamplePreviews(_expressions.ExprImpl):
         )
 
 
-def env_with_subsampling(expr, environment, subsampling):
+def env_with_subsampling(expr, environment, keep_subsampling):
     """Update an environment with subsampling indication.
 
     Small private helper to add subsampling to an environment, if subsampling
-    is required. If `subsampling` is False, the environment is left as-is. That
+    is required. If `keep_subsampling` is False, the environment is left as-is. That
     is because subsampling might have been turned on at a higher level (e.g. a
     cross-validation loop), in which case we don't turn it off at the lower
     level (e.g. fitting an estimator).
     """
-    if not subsampling:
+    if not keep_subsampling:
         return environment
     if not uses_subsampling(expr):
         raise ValueError(
-            "`subsampling=True` was passed but no subsampling has been configured "
-            "anywhere in the expression. Either pass `subsampling=False` (the default) "
-            "or configure subsampling with `.skb.subsample_previews()`."
+            "`keep_subsampling=True` was passed but no subsampling has been configured"
+            " anywhere in the expression. Either pass `keep_subsampling=False` (the"
+            " default) or configure subsampling with `.skb.subsample_previews()`."
         )
     return environment | {SHOULD_SUBSAMPLE_KEY: True}
 

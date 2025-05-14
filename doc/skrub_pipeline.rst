@@ -414,7 +414,7 @@ expression.
 By default, subsampling is applied only for those previews; subsampling is
 **not** applied when actually fitting or cross-validating the final pipeline.
 
-However, we can turn on subsampling by passing ``subsampling=True`` to methods
+However, we can turn on subsampling by passing ``keep_subsampling=True`` to methods
 such as :meth:`.skb.cross_validate() <Expr.skb.cross_validate>` or
 :meth:`.skb.get_randomized_search() <Expr.skb.get_randomized_search>`.
 This allows us to quickly try our pipeline or cross-validation on a subsample
@@ -472,7 +472,7 @@ Here we run the cross-validation on the small subsample of 100 rows we
 configured. With such a small subsample the scores will be very low but this
 might help us quickly detect errors in our cross-validation scheme.
 
->>> predictions.skb.cross_validate(subsampling=True) # doctest: +SKIP
+>>> predictions.skb.cross_validate(keep_subsampling=True) # doctest: +SKIP
    fit_time  score_time  test_score
 0  0.140158    0.034195    0.025644
 1  0.142826    0.033435    0.194648
@@ -480,7 +480,7 @@ might help us quickly detect errors in our cross-validation scheme.
 3  0.139700    0.034499   -0.008564
 4  0.147971    0.033802    0.070962
 
-By default, when we do not explicitly ask for ``subsampling=True``, no
+By default, when we do not explicitly ask for ``keep_subsampling=True``, no
 subsampling takes place. Here we run the cross-validation on the full data. Note
 the longer ``fit_time`` and much better ``test_score``.
 
