@@ -404,63 +404,17 @@ subsample of our data.
 
 This is done with
 :meth:`.skb.subsample_previews() <Expr.skb.subsample_previews>`.
+When we use it, the previews shown when printing an expression and returned by
+:meth:`.skb.preview() <Expr.skb.preview>` are computed on a subsample.
+By default, subsampling is only applied for those previews.
 
->>> from sklearn.datasets import load_diabetes
->>> from sklearn.linear_model import Ridge
+Subsampling **is turned off** by default when we call other methods such as
+:meth:`.skb.eval() <Expr.skb.eval>`,
+:meth:`.skb.cross_validate() <Expr.skb.cross_validate>`,
+:meth:`.skb.train_test_split <Expr.skb.train_test_split>`,
+:meth:`Expr.skb.get_pipeline`,
+:meth:`Expr.skb.get_randomized_search`, etc.
+However, all of those methods have a ``keep_subsampling`` parameter that we can
+set to ``True`` to force using the subsampling when we call them.
 
->>> df = load_diabetes(as_frame=True)["frame"]
->>> df.shape
-(442, 11)
-
->>> data = skrub.var("data", df).skb.subsample_previews(n=15)
-
-We can see that the previews use only a subsample of 15 rows:
-
->>> data.shape
-<GetAttr 'shape'>
-Result (on a subsample):
-――――――――――――――――――――――――
-(15, 11)
->>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
->>> y = data["target"].skb.mark_as_y()
->>> pred = X.skb.apply(Ridge(), y=y)
-
-Here also, the preview for the predictions contains 15 rows:
-
->>> pred
-<Apply Ridge>
-Result (on a subsample):
-――――――――――――――――――――――――
-        target
-0   140.064159
-1   135.884932
-...
-13  140.062716
-14  136.349610
-
-By default, model fitting, cross-validation and hyperparameter search are
-done on the full data, so if we want the subsampling to take place we have to
-pass ``keep_subsampling=True``:
-
->>> quick_cv = pred.skb.cross_validate(keep_subsampling=True)
->>> quick_cv['test_score']
-0   -0.289692
-1   -0.002983
-2   -2.010246
-3   -0.039844
-4   -0.807225
-Name: test_score, dtype: float64
-
-Here we get quick results (but very low scores because we are only using 15 data
-points).
-
-Now that we have checked our pipeline works on a subsample, we can
-fit the hyperparameter search on the full data:
-
->>> pred.skb.cross_validate()['test_score']
-0    0.321665
-1    0.440485
-2    0.422104
-3    0.424661
-4    0.441961
-Name: test_score, dtype: float64
+See more details in a :ref:`full example <example_subsampling>`.
