@@ -3,6 +3,10 @@ import numpy as np
 from .. import _dataframe as sbd
 from . import _evaluation, _expressions
 
+# The key in the evaluation environment that indicates if subsampling should
+# take place or not. Subsampling can be turned on or off when evaluating an
+# expression by setting the corresponding value in the environment.
+
 SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
 
 
