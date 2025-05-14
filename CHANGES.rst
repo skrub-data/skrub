@@ -41,10 +41,6 @@ New features
 
 Changes
 -------
-
-- The score(s) columns of :class:`ParamSearch.results_` is now the right-most columns.
-  :pr:`1378` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
-
 .. warning::
   The default high cardinality encoder for both :class:`TableVectorizer` and
   :meth:`tabular_learner` has been changed from :class:`GapEncoder` to
