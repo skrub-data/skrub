@@ -402,92 +402,65 @@ Subsampling
 To speed-up the development of our pipeline, we can tell skrub to work on a
 subsample of our data.
 
-On any transformation that produces either a DataFrame, a Column (Series) or a
-numpy array, we can call :meth:`.skb.subsample_previews()
-<Expr.skb.subsample_previews>` to configure how that intermediate result should
-be subsampled.
+This is done with
+:meth:`.skb.subsample_previews() <Expr.skb.subsample_previews>`.
 
-Once we have set this configuration, the corresponding dataframe will be
-subsampled when computing the preview results that are shown when displaying the
-expression.
+>>> from sklearn.datasets import load_diabetes
+>>> from sklearn.linear_model import Ridge
 
-By default, subsampling is applied only for those previews; subsampling is
-**not** applied when actually fitting or cross-validating the final pipeline.
+>>> df = load_diabetes(as_frame=True)["frame"]
+>>> df.shape
+(442, 11)
 
-However, we can turn on subsampling by passing ``keep_subsampling=True`` to methods
-such as :meth:`.skb.cross_validate() <Expr.skb.cross_validate>` or
-:meth:`.skb.get_randomized_search() <Expr.skb.get_randomized_search>`.
-This allows us to quickly try our pipeline or cross-validation on a subsample
-for faster debugging, before running it on the full data.
+>>> data = skrub.var("data", df).skb.subsample_previews(n=15)
 
->>> from sklearn.ensemble import HistGradientBoostingRegressor
->>> import skrub.datasets # doctest: +SKIP
+We can see that the previews use only a subsample of 15 rows:
 
->>> dataset = skrub.datasets.fetch_employee_salaries() # doctest: +SKIP
-
-The ``subsample_previews`` configures how the sampling is done when it takes place
-whether it takes place or not depends on the context:
-
-- for preview the subsampling is always on
-- for fitting, cross-val etc subsampling is only on when we ask for it explicitly
-
->>> data = skrub.var("data", dataset.employee_salaries).skb.subsample_previews(n=100) # doctest: +SKIP
-
-The rest of our example pipeline encodes the table and applies a gradient
-boosting regressor:
-
->>> employees = data.drop(columns="current_annual_salary", errors="ignore").skb.mark_as_X() # doctest: +SKIP
->>> salaries = data["current_annual_salary"].skb.mark_as_y() # doctest: +SKIP
-
->>> vectorizer = skrub.TableVectorizer( # doctest: +SKIP
-...     high_cardinality=skrub.MinHashEncoder(n_components=8)
-... )
->>> predictions = employees.skb.apply(vectorizer).skb.apply( # doctest: +SKIP
-...     HistGradientBoostingRegressor(), y=salaries
-... )
-
-When we display our ``predictions`` expression, we see that the preview is
-computed on a subsample: the result column has only 100 entries.
-
->>> predictions # doctest: +SKIP
-<Apply HistGradientBoostingRegressor>
+>>> data.shape
+<GetAttr 'shape'>
 Result (on a subsample):
 ――――――――――――――――――――――――
-    current_annual_salary
-0            64010.508704
-1            93895.681345
-2           111069.687630
-3            47371.638449
-4            99164.683918
-..                    ...
-95           66806.892677
-96           21893.103728
-97           67908.021554
-98           37268.585910
-99           54057.641463
-[100 rows x 1 columns]
+(15, 11)
+>>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
+>>> y = data["target"].skb.mark_as_y()
+>>> pred = X.skb.apply(Ridge(), y=y)
 
-We can also turn on subsampling for other methods of the expression, such as :meth:``
-Here we run the cross-validation on the small subsample of 100 rows we
-configured. With such a small subsample the scores will be very low but this
-might help us quickly detect errors in our cross-validation scheme.
+Here also, the preview for the predictions contains 15 rows:
 
->>> predictions.skb.cross_validate(keep_subsampling=True) # doctest: +SKIP
-   fit_time  score_time  test_score
-0  0.140158    0.034195    0.025644
-1  0.142826    0.033435    0.194648
-2  0.182789    0.038410    0.311852
-3  0.139700    0.034499   -0.008564
-4  0.147971    0.033802    0.070962
+>>> pred
+<Apply Ridge>
+Result (on a subsample):
+――――――――――――――――――――――――
+        target
+0   140.064159
+1   135.884932
+...
+13  140.062716
+14  136.349610
 
-By default, when we do not explicitly ask for ``keep_subsampling=True``, no
-subsampling takes place. Here we run the cross-validation on the full data. Note
-the longer ``fit_time`` and much better ``test_score``.
+By default, model fitting, cross-validation and hyperparameter search are
+done on the full data, so if we want the subsampling to take place we have to
+pass ``keep_subsampling=True``:
 
->>> predictions.skb.cross_validate() # doctest: +SKIP
-   fit_time  score_time  test_score
-0  1.277097    0.059447    0.886352
-1  1.249571    0.060606    0.871790
-2  1.221268    0.058626    0.897748
-3  1.206781    0.059475    0.900165
-4  1.269222    0.057922    0.911406
+>>> quick_cv = pred.skb.cross_validate(keep_subsampling=True)
+>>> quick_cv['test_score']
+0   -0.289692
+1   -0.002983
+2   -2.010246
+3   -0.039844
+4   -0.807225
+Name: test_score, dtype: float64
+
+Here we get quick results (but very low scores because we are only using 15 data
+points).
+
+Now that we have checked our pipeline works on a subsample, we can
+fit the hyperparameter search on the full data:
+
+>>> pred.skb.cross_validate()['test_score']
+0    0.321665
+1    0.440485
+2    0.422104
+3    0.424661
+4    0.441961
+Name: test_score, dtype: float64

@@ -101,12 +101,7 @@ skrub.TableReport(dataset.products)
 
 # %%
 products = skrub.var("products", dataset.products)
-
-# Optionally, we can use ``subsample_previews`` to configure some subsampling
-# that only takes place for previews while debugging the pipeline, or when we
-# ask for it explicitly.
-
-full_baskets = skrub.var("baskets", dataset.baskets).skb.subsample_previews(n=1000)
+full_baskets = skrub.var("baskets", dataset.baskets)
 
 baskets = full_baskets[["ID"]].skb.mark_as_X()
 fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
@@ -234,20 +229,6 @@ predictions
 
 # %%
 print(predictions.skb.describe_param_grid())
-
-# %%
-# We can first run a small dry-run to check if our param search will run correctly:
-
-# %%
-quick_search = predictions.skb.get_randomized_search(
-    scoring="roc_auc",
-    n_iter=4,
-    n_jobs=4,
-    random_state=0,
-    fitted=True,
-    keep_subsampling=True,  # force the randomized search to run only on the subsample
-)
-quick_search.results_
 
 # %%
 # And then actually run it on the full data. When fitting a pipeline or
