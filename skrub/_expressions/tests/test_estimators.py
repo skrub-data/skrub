@@ -173,10 +173,10 @@ def test_randomized_search(expression, data, n_jobs):
     assert not hasattr(search, "results_")
     assert not hasattr(search, "detailed_results_")
     search.fit(data)
-    assert list(search.results_.columns) == ["mean_test_score", "C"]
+    assert list(search.results_.columns) == ["C", "mean_test_score"]
     assert list(search.detailed_results_.columns) == [
-        "mean_test_score",
         "C",
+        "mean_test_score",
         "std_test_score",
         "mean_fit_time",
         "std_fit_time",
@@ -208,10 +208,10 @@ def test_no_names():
         .skb.apply(LogisticRegression(), y=skrub.y(y))
     ).skb.get_grid_search(fitted=True, cv=2)
     assert list(e.results_.columns) == [
-        "mean_test_score",
         "choose_bool()",
         "choose_bool()_1",
         "m",
+        "mean_test_score",
     ]
 
 
@@ -303,14 +303,14 @@ def test_multimetric():
         .skb.get_grid_search(fitted=True, scoring=scoring, refit="roc_auc")
     )
     assert list(expr_search.results_.columns) == [
+        "C",
         "mean_test_roc_auc",
         "mean_test_accuracy",
-        "C",
     ]
     assert list(expr_search.detailed_results_.columns) == [
+        "C",
         "mean_test_roc_auc",
         "mean_test_accuracy",
-        "C",
         "std_test_roc_auc",
         "std_test_accuracy",
         "mean_fit_time",

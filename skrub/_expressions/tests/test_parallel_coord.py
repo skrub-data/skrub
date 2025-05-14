@@ -56,8 +56,6 @@ def test_parallel_coord():
     fig = search.plot_results()
     data = iter(fig.data[0]["dimensions"])
     dim = next(data)
-    assert dim["label"] == "score"
-    dim = next(data)
     assert dim["label"] == "c0"
     assert list(dim["ticktext"]) == ["a", "b"]
     assert list(dim["tickvals"]) == [0, 1]
@@ -80,5 +78,7 @@ def test_parallel_coord():
     dim = next(data)
     assert dim["label"] == "c9"
     assert list(dim["ticktext"]) == ["4", "choose_int(1, 3, name='c8')"]
+    dim = next(data)
+    assert dim["label"] == "score"
     dim = next(data)
     assert dim["label"] == "fit time"
