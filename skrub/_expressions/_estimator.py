@@ -737,13 +737,14 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             for k in result_keys[len(metric_names) :]:
                 if k in self.cv_results_:
                     table.insert(table.shape[1], k, self.cv_results_[k])
+        col_score = f"mean_test_{metric_names[0]}"
         table = table.sort_values(
-            f"mean_test_{metric_names[0]}",
+            col_score,
             ascending=False,
             ignore_index=True,
             kind="stable",
         )
-        return (table, metadata) if return_metadata else table
+        return (table, col_score, metadata) if return_metadata else (table, col_score)
 
     def plot_results(self, *, colorscale=DEFAULT_COLORSCALE, min_score=None):
         """Create a parallel coordinate plot of the cross-validation results.
@@ -766,7 +767,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         -------
         Plotly Figure
         """
-        cv_results, metadata = self._get_cv_results_table(
+        cv_results, col_score, metadata = self._get_cv_results_table(
             return_metadata=True, detailed=True
         )
         cv_results = cv_results.drop(
@@ -780,11 +781,14 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             axis="columns",
             errors="ignore",
         )
+
         if min_score is not None:
-            cv_results = cv_results[cv_results["mean_test_score"] >= min_score]
+            cv_results = cv_results[cv_results[col_score] >= min_score]
         if not cv_results.shape[0]:
             raise ValueError("No results to plot")
-        return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
+        return plot_parallel_coord(
+            cv_results, metadata, col_score, colorscale=colorscale
+        )
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):

@@ -6,7 +6,7 @@ __all__ = ["get_parallel_coord_data", "plot_parallel_coord", "DEFAULT_COLORSCALE
 DEFAULT_COLORSCALE = "bluered"
 
 
-def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
+def plot_parallel_coord(cv_results, metadata, col_score, colorscale=DEFAULT_COLORSCALE):
     try:
         import plotly.graph_objects as go
     except ImportError:
@@ -17,6 +17,7 @@ def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
             **get_parallel_coord_data(
                 cv_results,
                 metadata,
+                col_score,
                 colorscale=colorscale,
             )
         ),
@@ -24,7 +25,9 @@ def plot_parallel_coord(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
     )
 
 
-def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE):
+def get_parallel_coord_data(
+    cv_results, metadata, col_score, colorscale=DEFAULT_COLORSCALE
+):
     prepared_columns = [
         _prepare_column(
             cv_results[col_name],
@@ -39,7 +42,7 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
     ]
     return dict(
         line=dict(
-            color=cv_results["mean_test_score"],
+            color=cv_results[col_score],
             colorscale=colorscale,
             showscale=True,
             colorbar=dict(title=dict(text="score")),
