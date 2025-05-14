@@ -231,11 +231,6 @@ predictions
 print(predictions.skb.describe_param_grid())
 
 # %%
-# And then actually run it on the full data. When fitting a pipeline or
-# parameter search or running cross-validation the default is to not apply any
-# subsampling.
-
-# %%
 search = predictions.skb.get_randomized_search(
     scoring="roc_auc", n_iter=8, n_jobs=4, random_state=0, fitted=True
 )
