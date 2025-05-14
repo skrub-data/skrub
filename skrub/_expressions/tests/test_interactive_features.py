@@ -83,7 +83,7 @@ def test_repr_html():
     assert "the name b" in b._repr_html_()
     a = skrub.X(np.ones((5, 2))) + 10
     assert "on a subsample" not in a._repr_html_()
-    a = skrub.X(np.ones((5, 2))).skb.subsample_previews(n=2) + 10
+    a = skrub.X(np.ones((5, 2))).skb.subsample(n=2) + 10
     assert "on a subsample" in a._repr_html_()
 
 
@@ -255,7 +255,7 @@ def test_repr():
            [11., 11.],
            [11., 11.],
            [11., 11.]])
-    >>> skrub.X(np.ones((5, 2))).skb.subsample_previews(n=2) + 10
+    >>> skrub.X(np.ones((5, 2))).skb.subsample(n=2) + 10
     <BinOp: add>
     Result (on a subsample):
     ――――――――――――――――――――――――

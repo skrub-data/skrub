@@ -403,7 +403,7 @@ To speed-up the development of our pipeline, we can tell skrub to work on a
 subsample of our data.
 
 This is done with
-:meth:`.skb.subsample() <Expr.skb.subsample_previews>`.
+:meth:`.skb.subsample() <Expr.skb.subsample>`.
 When we use it, the previews shown when printing an expression and returned by
 :meth:`.skb.preview() <Expr.skb.preview>` are computed on a subsample.
 By default, subsampling is only applied for those previews.
