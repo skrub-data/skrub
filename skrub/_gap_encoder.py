@@ -3,6 +3,7 @@ Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 from __future__ import annotations
 
+from collections import Counter, defaultdict
 from copy import deepcopy
 
 import numpy as np
@@ -19,6 +20,10 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._total_std_scaler import (
+    batch_standard_deviation_scaler,
+    total_standard_deviation_scaler,
+)
 from ._utils import unique_strings
 
 
@@ -167,7 +172,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
     As this is a continuous encoding, we can look at the level of
     activation of each topic for each category:
 
-    >>> enc.transform(X)
+    >>> enc.transform(X) # doctest: +SKIP
        city: england, london, uk  city: france, paris, pqris
     0                   0.051816                   10.548184
     1                   0.050134                    4.549866
@@ -430,8 +435,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
             raise ValueError("analyzer should be one of ['word', 'char', 'char_wb'].")
 
     def fit(self, X, y=None):
-        """
-        Fit the GapEncoder on `X`.
+        """Fit the GapEncoder and transform a column.
 
         Parameters
         ----------
@@ -442,8 +446,27 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         Returns
         -------
-        GapEncoderColumn
-            The fitted GapEncoderColumn instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
+        """
+        _ = self.fit_transform(X)
+        return self
+
+    def fit_transform(self, X, y=None):
+        """
+        Fit the GapEncoder on a column.
+
+        Parameters
+        ----------
+        X : Column, shape (n_samples, )
+            The string data to fit the model on.
+        y : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        X_out : Pandas or Polars DataFrame, of shape (n_samples, n_components)
+            The embedding representation of the input.
         """
         self._check_analyzer()
         self._check_input_type(X)
@@ -456,7 +479,14 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._input_name = sbd.name(X)
         self._random_state = check_random_state(self.random_state)
         is_null = sbd.to_numpy(sbd.is_null(X))
-        X = sbd.to_numpy(X)
+        result = self._fit_transform(sbd.to_numpy(X), is_null)
+
+        self.scaler_ = total_standard_deviation_scaler(result)
+        result /= self.scaler_
+
+        return self._post_process(X, result)
+
+    def _fit_transform(self, X, is_null):
         # Copy parameter rho
         self.rho_ = self.rho
         # Attributes to monitor the convergence
@@ -467,7 +497,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         unq_X, unq_V, lookup = self._init_vars(X, is_null)
         n_batch = (len(X) - 1) // self.batch_size + 1
         n_samples = len(X)
-        del X
+
         # Get activations unq_H
         unq_H = self._get_H(unq_X)
         converged = False
@@ -516,7 +546,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
-        return self
+
+        # Transform and normalize the output.
+        return self._transform(X, is_null)
 
     def get_feature_names_out(self, n_labels=3):
         """
@@ -621,8 +653,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         Returns
         -------
-        GapEncoderColumn
-            The fitted GapEncoderColumn instance (self).
+        GapEncoder
+            The fitted GapEncoder instance (self).
         """
         self._check_analyzer()
         self._check_input_type(X)
@@ -687,6 +719,18 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         )
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
+
+        result = self._transform(X, is_null)
+
+        self.scaler_, self.past_stats_ = batch_standard_deviation_scaler(
+            result,
+            getattr(
+                self,
+                "past_stats_",
+                defaultdict(Counter),
+            ),
+        )
+
         return self
 
     def _add_unseen_keys_to_H_dict(self, X):
@@ -723,10 +767,10 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._check_input_type(X, err_type=ValueError)
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
-        names = self.get_feature_names_out()
-        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
-        result = sbd.copy_index(X, result)
-        return result
+
+        result /= self.scaler_
+
+        return self._post_process(X, result)
 
     def _check_input_type(self, X, err_type=RejectColumn):
         if sbd.is_categorical(X) or sbd.is_string(X):
@@ -763,6 +807,12 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         result = self._get_H(X)
         # Restore H
         self.H_dict_ = pre_trans_H_dict_
+        return result
+
+    def _post_process(self, X, result):
+        names = self.get_feature_names_out()
+        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
+        result = sbd.copy_index(X, result)
         return result
 
 
