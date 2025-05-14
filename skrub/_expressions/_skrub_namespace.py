@@ -889,8 +889,8 @@ class SkrubNamespace:
             # In this configuration the result is the same as the preview so
             # we call preview() to benefit from the cached result.
 
-            # Before returning, we trigger an error if subsampling=True was passed but no
-            # subsampling was configured:
+            # Before returning, we trigger an error if subsampling=True was
+            # passed but no subsampling was configured:
             _ = env_with_subsampling(self._expr, {}, subsampling)
             return self.preview()
         if environment is None:
