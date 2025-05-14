@@ -421,9 +421,9 @@ This allows us to quickly try our pipeline or cross-validation on a subsample
 for faster debugging, before running it on the full data.
 
 >>> from sklearn.ensemble import HistGradientBoostingRegressor
->>> import skrub.datasets
+>>> import skrub.datasets # doctest: +SKIP
 
->>> dataset = skrub.datasets.fetch_employee_salaries()
+>>> dataset = skrub.datasets.fetch_employee_salaries() # doctest: +SKIP
 
 The ``subsample_previews`` configures how the sampling is done when it takes place
 whether it takes place or not depends on the context:
@@ -431,18 +431,18 @@ whether it takes place or not depends on the context:
 - for preview the subsampling is always on
 - for fitting, cross-val etc subsampling is only on when we ask for it explicitly
 
->>> data = skrub.var("data", dataset.employee_salaries).skb.subsample_previews(n=100)
+>>> data = skrub.var("data", dataset.employee_salaries).skb.subsample_previews(n=100) # doctest: +SKIP
 
 The rest of our example pipeline encodes the table and applies a gradient
 boosting regressor:
 
->>> employees = data.drop(columns="current_annual_salary", errors="ignore").skb.mark_as_X()
->>> salaries = data["current_annual_salary"].skb.mark_as_y()
+>>> employees = data.drop(columns="current_annual_salary", errors="ignore").skb.mark_as_X() # doctest: +SKIP
+>>> salaries = data["current_annual_salary"].skb.mark_as_y() # doctest: +SKIP
 
->>> vectorizer = skrub.TableVectorizer(
+>>> vectorizer = skrub.TableVectorizer( # doctest: +SKIP
 ...     high_cardinality=skrub.MinHashEncoder(n_components=8)
 ... )
->>> predictions = employees.skb.apply(vectorizer).skb.apply(
+>>> predictions = employees.skb.apply(vectorizer).skb.apply( # doctest: +SKIP
 ...     HistGradientBoostingRegressor(), y=salaries
 ... )
 
