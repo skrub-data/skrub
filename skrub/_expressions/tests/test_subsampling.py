@@ -10,7 +10,7 @@ from skrub._expressions import _subsampling
 
 
 @pytest.mark.parametrize("as_frame", [False, True])
-def test_subsample_previews(as_frame):
+def test_subsample(as_frame):
     shapes = []
 
     def log_shape(a):
@@ -21,8 +21,8 @@ def test_subsample_previews(as_frame):
     if as_frame:
         X_a = pd.DataFrame(X_a, columns=list(map(str, range(X_a.shape[1]))))
         y_a = pd.Series(y_a, name="y")
-    X = skrub.X(X_a).skb.subsample_previews(n=15).skb.apply_func(log_shape)
-    y = skrub.y(y_a).skb.subsample_previews(n=15).skb.apply_func(log_shape)
+    X = skrub.X(X_a).skb.subsample(n=15).skb.apply_func(log_shape)
+    y = skrub.y(y_a).skb.subsample(n=15).skb.apply_func(log_shape)
     pred = X.skb.apply(
         DummyRegressor(strategy=skrub.choose_from(["mean", "median"])), y=y
     )
@@ -106,12 +106,12 @@ def test_how(as_frame):
     if as_frame:
         X_a = pd.DataFrame(X_a, columns=list(map(str, range(X_a.shape[1]))))
 
-    X = skrub.X(X_a).skb.subsample_previews(n=2)
+    X = skrub.X(X_a).skb.subsample(n=2)
     assert (_to_np(X.skb.eval()) == _to_np(X_a)).all()
     assert (_to_np(X.skb.eval(keep_subsampling=True)) == _to_np(X_a)[:2]).all()
     assert (_to_np(X.skb.preview()) == _to_np(X_a)[:2]).all()
 
-    X = skrub.X(X_a).skb.subsample_previews(n=2, how="random")
+    X = skrub.X(X_a).skb.subsample(n=2, how="random")
     # sampling is done differently for numpy arrays and in df.sample()
     idx = [2, 1] if as_frame else [1, 2]
     assert (_to_np(X.skb.eval()) == _to_np(X_a)).all()
@@ -121,9 +121,9 @@ def test_how(as_frame):
 
 def test_sample_errors():
     with pytest.raises(RuntimeError, match=".*`how` should be 'head' or 'random'"):
-        skrub.as_expr(np.eye(3)).skb.subsample_previews(n=2, how="bad-how")
+        skrub.as_expr(np.eye(3)).skb.subsample(n=2, how="bad-how")
     with pytest.raises(RuntimeError, match=".*the input should be a dataframe"):
-        skrub.as_expr(list(range(30))).skb.subsample_previews(n=2)
+        skrub.as_expr(list(range(30))).skb.subsample(n=2)
 
 
 def test_should_subsample():
@@ -161,7 +161,7 @@ def test_n_too_large(how, df_module):
     # subsampling is just to speed-up previews so setting n larger than a data
     # should not cause errors
     df = df_module.example_dataframe
-    X = skrub.X(df).skb.subsample_previews(n=10_000, how=how)
+    X = skrub.X(df).skb.subsample(n=10_000, how=how)
     assert sbd.shape(X.skb.eval())[0] == sbd.shape(df)[0]
 
 
@@ -170,15 +170,13 @@ def test_n_too_large_numpy(how):
     # subsampling is just to speed-up previews so setting n larger than a data
     # should not cause errors
     a = np.eye(3)
-    X = skrub.X(a).skb.subsample_previews(n=10_000, how=how)
+    X = skrub.X(a).skb.subsample(n=10_000, how=how)
     assert X.skb.eval().shape[0] == a.shape[0]
 
 
 def test_uses_subsampling():
     assert not _subsampling.uses_subsampling(skrub.var("a") + 10)
-    assert _subsampling.uses_subsampling(
-        skrub.var("a").skb.subsample_previews(n=5) + 10
-    )
+    assert _subsampling.uses_subsampling(skrub.var("a").skb.subsample(n=5) + 10)
 
 
 def test_subsampling_not_configured():
@@ -189,12 +187,10 @@ def test_subsampling_not_configured():
 
     # no problem if subsampling was configured
     assert (
-        skrub.as_expr(np.ones(3))
-        .skb.subsample_previews(n=2)
-        .skb.eval(keep_subsampling=True)
+        skrub.as_expr(np.ones(3)).skb.subsample(n=2).skb.eval(keep_subsampling=True)
         == np.ones(2)
     ).all()
-    skrub.as_expr(np.ones(3)).skb.subsample_previews(n=2).skb.get_pipeline(
+    skrub.as_expr(np.ones(3)).skb.subsample(n=2).skb.get_pipeline(
         fitted=True, keep_subsampling=True
     )
 

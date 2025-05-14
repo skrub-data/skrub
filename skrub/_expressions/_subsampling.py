@@ -69,7 +69,7 @@ def _head_numpy(a, n):
 class SubsamplePreviews(_expressions.ExprImpl):
     """Optionally subsample a dataframe.
 
-    See the docstring of ``.skb.subsample_previews`` for details.
+    See the docstring of ``.skb.subsample`` for details.
     """
 
     _fields = ["target", "n", "how"]
@@ -111,7 +111,7 @@ def env_with_subsampling(expr, environment, keep_subsampling):
         raise ValueError(
             "`keep_subsampling=True` was passed but no subsampling has been configured"
             " anywhere in the expression. Either pass `keep_subsampling=False` (the"
-            " default) or configure subsampling with `.skb.subsample_previews()`."
+            " default) or configure subsampling with `.skb.subsample()`."
         )
     return environment | {SHOULD_SUBSAMPLE_KEY: True}
 

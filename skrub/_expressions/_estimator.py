@@ -494,7 +494,7 @@ def cross_validate(pipeline, environment, *, keep_subsampling=False, **kwargs):
 
     keep_subsampling : bool, default=False
         If True, and if subsampling has been configured (see
-        :meth:`Expr.skb.subsample_previews`), use a subsample of the data. By
+        :meth:`Expr.skb.subsample`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
     kwargs : dict

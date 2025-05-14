@@ -6,8 +6,8 @@
 Subsampling for faster development
 ==================================
 
-Here we show how to use :meth:`.skb.subsample_previews()
-<Expr.skb.subsample_previews>` to speed-up interactive creation of skrub
+Here we show how to use :meth:`.skb.subsample()
+<Expr.skb.subsample>` to speed-up interactive creation of skrub
 expressions by subsampling the data when computing preview results.
 """
 
@@ -29,10 +29,10 @@ full_data
 # computing results on the whole data can slow us down.
 #
 # So we can tell skrub to subsample the data when computing the previews, with
-# :meth:`.skb.subsample_previews() <Expr.skb.subsample_previews>`.
+# :meth:`.skb.subsample() <Expr.skb.subsample>`.
 
 # %%
-data = full_data.skb.subsample_previews(n=100)
+data = full_data.skb.subsample(n=100)
 data
 
 # %%

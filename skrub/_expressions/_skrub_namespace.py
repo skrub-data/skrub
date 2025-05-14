@@ -655,7 +655,7 @@ class SkrubNamespace:
         return Expr(Concat(self._expr, others, axis=axis))
 
     @check_expr
-    def subsample_previews(self, n=1000, *, how="head"):
+    def subsample(self, n=1000, *, how="head"):
         """Configure subsampling of a dataframe or numpy array.
 
         Enables faster development by computing the previews on a subsample of
@@ -695,7 +695,7 @@ class SkrubNamespace:
           of the functions that expose that parameter such as
           :meth:`Expr.skb.get_randomized_search` or :func:`cross_validate`.
 
-        When subsampling has not been configured (``subsample_previews`` has not
+        When subsampling has not been configured (``subsample`` has not
         been called anywhere in the expression), no subsampling is ever done.
 
         This method can only be used on steps that produce a dataframe, a
@@ -712,7 +712,7 @@ class SkrubNamespace:
         (442, 11)
 
 
-        >>> data = skrub.var("data", df).skb.subsample_previews(n=15)
+        >>> data = skrub.var("data", df).skb.subsample(n=15)
 
         We can see that the previews use only a subsample of 15 rows:
 
@@ -863,7 +863,7 @@ class SkrubNamespace:
 
         keep_subsampling : bool, default=False
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample_previews`), use a subsample of the data. By
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
         Returns
@@ -935,7 +935,7 @@ class SkrubNamespace:
 
         See Also
         --------
-        Expr.skb.subsample_previews :
+        Expr.skb.subsample :
             Specify how to subsample an intermediate result when computing
             previews.
 
@@ -1329,7 +1329,7 @@ class SkrubNamespace:
 
         keep_subsampling : bool (default=False)
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample_previews`), fit on a subsample of the data. By
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
             default subsampling is not applied and all the data is used. This
             is only applied for fitting the estimator when ``fitted=True``,
             subsequent use of the estimator is not affected by subsampling.
@@ -1406,7 +1406,7 @@ class SkrubNamespace:
 
         keep_subsampling : bool, default=False
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample_previews`), use a subsample of the data. By
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
         splitter : function, optional
@@ -1493,7 +1493,7 @@ class SkrubNamespace:
 
         keep_subsampling : bool (default=False)
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample_previews`), fit on a subsample of the data. By
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
             default subsampling is not applied and all the data is used. This
             is only applied for fitting the grid search when ``fitted=True``,
             subsequent use of the grid search is not affected by subsampling.
@@ -1589,7 +1589,7 @@ class SkrubNamespace:
 
         keep_subsampling : bool (default=False)
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample_previews`), fit on a subsample of the data. By
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
             default subsampling is not applied and all the data is used. This
             is only applied for fitting the randomized search when ``fitted=True``,
             subsequent use of the randomized search is not affected by subsampling.
@@ -1684,7 +1684,7 @@ class SkrubNamespace:
 
         keep_subsampling : bool, default=False
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample_previews`), use a subsample of the data. By
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
         kwargs : dict
