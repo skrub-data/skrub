@@ -395,3 +395,99 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
   expressions on dataframes.
 - See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
   skrub pipelines.
+
+Subsampling
+~~~~~~~~~~~
+
+To speed-up the development of our pipeline, we can tell skrub to work on a
+subsample of our data.
+
+On any transformation that produces either a DataFrame, a Column (Series) or a
+numpy array, we can call :meth:`.skb.subsample_previews()
+<Expr.skb.subsample_previews>` to configure how that intermediate result should
+be subsampled.
+
+Once we have set this configuration, the corresponding dataframe will be
+subsampled when computing the preview results that are shown when displaying the
+expression.
+
+By default, subsampling is applied only for those previews; subsampling is
+**not** applied when actually fitting or cross-validating the final pipeline.
+
+However, we can turn on subsampling by passing ``subsampling=True`` to methods
+such as :meth:`.skb.cross_validate() <Expr.skb.cross_validate>` or
+:meth:`.skb.get_randomized_search() <Expr.skb.get_randomized_search>`.
+This allows us to quickly try our pipeline or cross-validation on a subsample
+for faster debugging, before running it on the full data.
+
+>>> from sklearn.ensemble import HistGradientBoostingRegressor
+>>> import skrub.datasets
+
+>>> dataset = skrub.datasets.fetch_employee_salaries()
+
+The ``subsample_previews`` configures how the sampling is done when it takes place
+whether it takes place or not depends on the context:
+
+- for preview the subsampling is always on
+- for fitting, cross-val etc subsampling is only on when we ask for it explicitly
+
+>>> data = skrub.var("data", dataset.employee_salaries).skb.subsample_previews(n=100)
+
+The rest of our example pipeline encodes the table and applies a gradient
+boosting regressor:
+
+>>> employees = data.drop(columns="current_annual_salary", errors="ignore").skb.mark_as_X()
+>>> salaries = data["current_annual_salary"].skb.mark_as_y()
+
+>>> vectorizer = skrub.TableVectorizer(
+...     high_cardinality=skrub.MinHashEncoder(n_components=8)
+... )
+>>> predictions = employees.skb.apply(vectorizer).skb.apply(
+...     HistGradientBoostingRegressor(), y=salaries
+... )
+
+When we display our ``predictions`` expression, we see that the preview is
+computed on a subsample: the result column has only 100 entries.
+
+>>> predictions # doctest: +SKIP
+<Apply HistGradientBoostingRegressor>
+Result (on a subsample):
+――――――――――――――――――――――――
+    current_annual_salary
+0            64010.508704
+1            93895.681345
+2           111069.687630
+3            47371.638449
+4            99164.683918
+..                    ...
+95           66806.892677
+96           21893.103728
+97           67908.021554
+98           37268.585910
+99           54057.641463
+[100 rows x 1 columns]
+
+We can also turn on subsampling for other methods of the expression, such as :meth:``
+Here we run the cross-validation on the small subsample of 100 rows we
+configured. With such a small subsample the scores will be very low but this
+might help us quickly detect errors in our cross-validation scheme.
+
+>>> predictions.skb.cross_validate(subsampling=True) # doctest: +SKIP
+   fit_time  score_time  test_score
+0  0.140158    0.034195    0.025644
+1  0.142826    0.033435    0.194648
+2  0.182789    0.038410    0.311852
+3  0.139700    0.034499   -0.008564
+4  0.147971    0.033802    0.070962
+
+By default, when we do not explicitly ask for ``subsampling=True``, no
+subsampling takes place. Here we run the cross-validation on the full data. Note
+the longer ``fit_time`` and much better ``test_score``.
+
+>>> predictions.skb.cross_validate() # doctest: +SKIP
+   fit_time  score_time  test_score
+0  1.277097    0.059447    0.886352
+1  1.249571    0.060606    0.871790
+2  1.221268    0.058626    0.897748
+3  1.206781    0.059475    0.900165
+4  1.269222    0.057922    0.911406
