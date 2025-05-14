@@ -12,7 +12,6 @@ expressions by subsampling the data when computing preview results.
 """
 
 # %%
-from sklearn.ensemble import HistGradientBoostingRegressor
 
 import skrub
 import skrub.datasets
@@ -48,11 +47,17 @@ data
 #    done by default*. We can explicitly ask for it with ``keep_subsampling=True``
 #    as we will see below.
 #
-# To finish our pipeline we simply apply a TableVectorizer then gradient boosting:
+# To continue our pipeline we now define X and y:
 
 # %%
 employees = data.drop(columns="current_annual_salary", errors="ignore").skb.mark_as_X()
 salaries = data["current_annual_salary"].skb.mark_as_y()
+
+# %%
+# And finally we apply a TableVectorizer then gradient boosting:
+
+# %%
+from sklearn.ensemble import HistGradientBoostingRegressor
 
 predictions = employees.skb.apply(skrub.TableVectorizer()).skb.apply(
     HistGradientBoostingRegressor(), y=salaries
