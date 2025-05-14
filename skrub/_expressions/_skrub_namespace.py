@@ -693,6 +693,11 @@ class SkrubNamespace:
         DataFrame
             The subsampled dataframe.
 
+        See Also
+        --------
+        Expr.skb.preview :
+            Access a preview of the result on the subsampled data.
+
         Examples
         --------
         >>> from sklearn.datasets import load_diabetes
@@ -864,6 +869,13 @@ class SkrubNamespace:
             The result of running the computation, ie of executing the
             pipeline's ``fit_transform`` on the provided data.
 
+        See Also
+        --------
+        Expr.skb.preview :
+            Access the preview of the result on the variables initial values,
+            with subsampling. Faster than ``eval`` but does not allow passing
+            new data and always applies subsampling.
+
         Examples
         --------
         >>> import skrub
@@ -908,7 +920,57 @@ class SkrubNamespace:
         )
 
     def preview(self):
-        """Get the value computed for previews (shown when printing the expression)."""
+        """Get the value computed for previews (shown when printing the expression).
+
+        Returns
+        -------
+        preview result
+            The result of evaluating the expression on the data stored in its
+            variables.
+
+        See Also
+        --------
+        Expr.skb.subsample_previews :
+            Specify how to subsample an intermediate result when computing
+            previews.
+
+        Expr.skb.eval :
+            Evaluate the expression. Unlike ``preview``, we can pass new data
+            rather than using the values that variables were initialized with,
+            but results are not cached, and no subsampling takes place by
+            default.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> a = skrub.var('a', 1)
+        >>> b = skrub.var('b', 2)
+        >>> c = a + b
+
+        When we display an expression, we see a preview of the result (``3`` in
+        this case):
+
+        >>> c
+        <BinOp: add>
+        Result:
+        ―――――――
+        3
+
+        If we want to actually access that value ``3``, rather than just seeing
+        it displayed, we can use ``.skb.preview()``:
+
+        >>> c.skb.preview()
+        3
+
+        This is the actual number ``3``, not an expression or just a display
+
+        >>> type(c.skb.preview())
+        <class 'int'>
+
+        Accessing the preview is usually faster than calling ``.skb.eval()``
+        because results are cached and subsampling is used by default.
+        """
         return evaluate(self._expr, mode="preview", environment=None, clear=False)
 
     @check_expr
