@@ -1330,12 +1330,12 @@ class SkrubNamespace:
 
         >>> search = pred.skb.get_grid_search(fitted=True)
         >>> search.results_
-           mean_test_score     C   N 🌴 classifier
-        0             0.89   NaN  30.0         rf
-        1             0.84   0.1   NaN   logistic
-        2             0.80  10.0   NaN   logistic
-        3             0.65   NaN   3.0         rf
-        4             0.50   NaN   NaN      dummy
+              C   N 🌴 classifier mean_test_score
+        0   NaN  30.0         rf             0.89
+        1   0.1   NaN   logistic             0.84
+        2  10.0   NaN   logistic             0.80
+        3   NaN   3.0         rf             0.65
+        4   NaN   NaN      dummy             0.50
         """  # noqa: E501
         for c in choices(self._expr).values():
             if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
@@ -1417,17 +1417,17 @@ class SkrubNamespace:
 
         >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
         >>> search.results_
-           mean_test_score   k         C  N 🌴 classifier
-        0             0.92   4  4.626363  NaN   logistic
-        1             0.89  10       NaN  7.0         rf
-        2             0.87   7  3.832217  NaN   logistic
-        3             0.86  15       NaN  6.0         rf
-        4             0.85  10  4.881255  NaN   logistic
-        5             0.80  19  3.965675  NaN   logistic
-        6             0.77  14       NaN  3.0         rf
-        7             0.50   4       NaN  NaN      dummy
-        8             0.50   9       NaN  NaN      dummy
-        9             0.50   5       NaN  NaN      dummy
+            k         C  N 🌴 classifier mean_test_score
+        0   4  4.626363  NaN   logistic             0.92
+        1  10       NaN  7.0         rf             0.89
+        2   7  3.832217  NaN   logistic             0.87
+        3  15       NaN  6.0         rf             0.86
+        4  10  4.881255  NaN   logistic             0.85
+        5  19  3.965675  NaN   logistic             0.80
+        6  14       NaN  3.0         rf             0.77
+        7   4       NaN  NaN      dummy             0.50
+        8   9       NaN  NaN      dummy             0.50
+        9   5       NaN  NaN      dummy             0.50
         """  # noqa: E501
 
         search = ParamSearch(
