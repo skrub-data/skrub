@@ -219,3 +219,25 @@ def test_describe_param_grid():
       classifier: 'rf'
       N 🌴: choose_int(20, 400, name='N 🌴')
     """
+
+
+def test_describe_params():
+    c1 = skrub.choose_float(0.0, 1.0)
+    c2 = skrub.choose_from((5.5, c1), name="c2")
+    c3 = skrub.choose_bool()
+    c4 = skrub.choose_from({"2": c2, "1": c1, "3": c3})
+    c5 = skrub.choose_int(10, 20, default=11, name="c5")
+    c6 = skrub.choose_from(["a", "b"])
+    c7 = skrub.choose_float(100.0, 200.0, default=110.5)
+    e = c6.match({"a": [c4, c2.as_expr() + c7], "b": c5}).as_expr()
+    print(e.skb.describe_defaults())
+    expected = {
+        "choose_from(['a', 'b'])": "0: 'a'",
+        "choose_from({'2': …, '1': …, '3': …})": "2",
+        "c2": "0: 5.5",
+        "choose_float(100.0, 200.0, default=110.5)": 110.5,
+    }
+
+    assert e.skb.describe_defaults() == expected
+    assert e.skb.get_pipeline().describe_params() == expected
+    assert skrub.X().skb.describe_defaults() == {}

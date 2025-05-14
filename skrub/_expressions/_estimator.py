@@ -8,6 +8,7 @@ from .. import _join_utils
 from ._choosing import Choice, get_default
 from ._evaluation import (
     choice_graph,
+    chosen_or_default_outcomes,
     evaluate,
     find_first_apply,
     find_node_by_name,
@@ -19,6 +20,7 @@ from ._evaluation import (
     supported_modes,
 )
 from ._expressions import Apply
+from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
 
@@ -345,6 +347,11 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         new = self.__class__(node)
         _copy_attr(self, new, ["_is_fitted"])
         return new
+
+    def describe_params(self):
+        return describe_params(
+            chosen_or_default_outcomes(self.expr), choice_graph(self.expr)
+        )
 
 
 def _to_Xy_pipeline(pipeline, environment):
@@ -674,6 +681,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             attribute_error(self, "results_")
 
     def _get_cv_results_table(self, return_metadata=False, detailed=False):
+        # TODO: use _inspection.describe_params()
         check_is_fitted(self, "cv_results_")
         expr_choices = choice_graph(self.expr)
 

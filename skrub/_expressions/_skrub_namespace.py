@@ -976,6 +976,43 @@ class SkrubNamespace:
 
         return describe_param_grid(self._expr)
 
+    def describe_defaults(self):
+        """Describe the hyper-parameters used by the default pipeline.
+
+        Returns a dict mapping choice names to a simplified representation of
+        the corresponding value in the default pipeline.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.feature_selection import SelectKBest
+        >>> from sklearn.ensemble import RandomForestClassifier
+
+        >>> X, y = skrub.X(), skrub.y()
+        >>> selector = SelectKBest(k=skrub.choose_int(4, 20, log=True, name='k'))
+        >>> logistic = LogisticRegression(
+        ...     C=skrub.choose_float(0.1, 10.0, log=True, name="C"),
+        ... )
+        >>> rf = RandomForestClassifier(
+        ...     n_estimators=skrub.choose_int(3, 30, log=True, name="N 🌴"),
+        ...     random_state=0,
+        ... )
+        >>> classifier = skrub.choose_from(
+        ...     {"logistic": logistic, "rf": rf}, name="classifier"
+        ... )
+        >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
+        >>> print(pred.skb.describe_defaults())
+        {'k': 9, 'classifier': 'logistic', 'C': 1.000...}
+        """
+        from ._evaluation import choice_graph, chosen_or_default_outcomes
+        from ._inspection import describe_params
+
+        return describe_params(
+            chosen_or_default_outcomes(self._expr), choice_graph(self._expr)
+        )
+
     def full_report(
         self,
         environment=None,

@@ -7,6 +7,7 @@ import webbrowser
 from pathlib import Path
 
 import jinja2
+import numpy as np
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
@@ -15,7 +16,7 @@ from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._utils import Repr, random_string, short_repr
 from . import _utils
-from ._choosing import BaseNumericChoice
+from ._choosing import BaseNumericChoice, Choice
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
 
@@ -340,6 +341,24 @@ def draw_expr_graph(expr, url=None, direction="TB"):
             dot_graph.add_edge(pydot.Edge(_dot_id(child), _dot_id(c)))
 
     return GraphDrawing(dot_graph)
+
+
+def describe_params(params, expr_choices):
+    description = {}
+    for choice_id, param in params.items():
+        choice = expr_choices["choices"][choice_id]
+        choice_name = expr_choices["choice_display_names"][choice_id]
+        if isinstance(choice, Choice):
+            if choice.outcome_names is not None:
+                value = choice.outcome_names[param]
+            else:
+                value = f"{param}: {short_repr(choice.outcomes[param])}"
+        else:
+            value = param
+            if isinstance(value, np.number):
+                value = value.tolist()
+        description[choice_name] = value
+    return description
 
 
 def describe_param_grid(expr):
