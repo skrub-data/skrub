@@ -103,4 +103,4 @@ def test_multi_scoring():
 
     dimensions = fig.data[0]["dimensions"]
     assert dimensions[1]["label"] == "mean_test_accuracy"
-    assert dimensions[2]["label"] == "mean_test_neg_brier_score"
+    assert dimensions[2]["label"] == "mean_test_neg_<br>\nbrier_score"
