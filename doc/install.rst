@@ -33,7 +33,7 @@ Install
 
     pip install skrub -U
 
-|
+
 
 **Deep learning dependencies**
 
@@ -58,7 +58,6 @@ and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
 
     conda install -c conda-forge skrub
 
-|
 
 **Deep learning dependencies**
 
@@ -104,6 +103,8 @@ and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transforme
         <div class="tab-pane fade" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
             <hr />
 
+.. _installing_from_source:
+
 Advanced Usage for Contributors
 -------------------------------
 
@@ -139,25 +140,44 @@ are correctly set up:
 
     git remote -v
 
+You should see something like this:
+
+.. code:: console
+
+    origin  git@github.com:<YOUR_USERNAME>/skrub.git (fetch)
+    origin  git@github.com:<YOUR_USERNAME>/skrub.git (push)
+    upstream        git@github.com:skrub-data/skrub.git (fetch)
+    upstream        git@github.com:skrub-data/skrub.git (push)
+
 
 3. Setup your environment
 '''''''''''''''''''''''''
 
-Now, setup a development environment. For example, you can use
-`conda <https://docs.conda.io/en/latest/>`_  to create a virtual environment:
+Now, setup a development environment.
+Below is two options for setting up a virtual environment:
+
+- With `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__:
 
 .. code:: console
 
-    conda create -n skrub python=3.10 # or any later python version
-    conda activate skrub
+    conda create -n env_skrub python=3.10 # or any later python version
+    conda activate env_skrub
 
-Install the local package in editable mode with development dependencies:
+- With `venv <https://docs.python.org/3/library/venv.html>`__:
+.. code:: console
+
+    python -m venv env_skrub
+    source env_skrub/bin/activate
+
+Then, with the environment activated and at the root of your local copy of skrub,
+install the local package in editable mode with development dependencies:
 
 .. code:: console
 
-    pip install -e ".[dev, lint, test]"
+    pip install --editable ".[dev, lint, test, doc]"
 
-Enable pre-commit hooks to ensure code style consistency:
+Enable pre-commit hooks to ensure code style consistency,this will activate some checks
+that will run every time you do a ``git commit`` (mostly, formatting checks):
 
 .. code:: console
 
@@ -171,7 +191,7 @@ IDE integrations. These revisions are listed in .git-blame-ignore-revs:
 
     git config blame.ignoreRevsFile .git-blame-ignore-revs
 
-4. Run the tests
+1. Run the tests
 ''''''''''''''''
 
 To ensure your environment is correctly set up, run the test suite:
@@ -182,11 +202,6 @@ To ensure your environment is correctly set up, run the test suite:
 
 Testing should take about 5 minutes.
 If no errors or failures are found, your environment is ready for development!
-
-Now that you're set up, review our :ref:`implementation guidelines<implementation guidelines>`
-and start coding!
-
-|
 
 **Deep learning dependencies**
 
@@ -200,6 +215,10 @@ and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
 
     $ pip install -e ".[transformers]"
 
+
+Now that you're set up,
+you may return to :ref:`writing your first pull request<writing-your-first-pull-request>`
+and start coding!
 
 .. raw:: html
 
