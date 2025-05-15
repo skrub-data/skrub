@@ -395,3 +395,26 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
   expressions on dataframes.
 - See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
   skrub pipelines.
+
+Subsampling to develop pipelines with reduced computation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To speed-up the development of our pipeline, we can tell skrub to work on a
+subsample of our data.
+
+This is done with
+:meth:`.skb.subsample() <Expr.skb.subsample>`.
+When we use it, the previews shown when printing an expression and returned by
+:meth:`.skb.preview() <Expr.skb.preview>` are computed on a subsample.
+By default, subsampling is only applied for those previews.
+
+Subsampling **is turned off** by default when we call other methods such as
+:meth:`.skb.eval() <Expr.skb.eval>`,
+:meth:`.skb.cross_validate() <Expr.skb.cross_validate>`,
+:meth:`.skb.train_test_split <Expr.skb.train_test_split>`,
+:meth:`Expr.skb.get_pipeline`,
+:meth:`Expr.skb.get_randomized_search`, etc.
+However, all of those methods have a ``keep_subsampling`` parameter that we can
+set to ``True`` to force using the subsampling when we call them.
+
+See more details in a :ref:`full example <example_subsampling>`.
