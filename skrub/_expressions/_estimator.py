@@ -731,12 +731,12 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         metadata["log_scale_columns"] = [
             renaming[c] for c in metadata["log_scale_columns"]
         ]
-        for k in result_keys[: len(metric_names)]:
-            table.insert(table.shape[1], k, self.cv_results_[k])
         if detailed:
-            for k in result_keys[len(metric_names) :]:
+            for k in result_keys[len(metric_names) :][::-1]:
                 if k in self.cv_results_:
                     table.insert(table.shape[1], k, self.cv_results_[k])
+        for k in result_keys[: len(metric_names)][::-1]:
+            table.insert(table.shape[1], k, self.cv_results_[k])
         metadata["col_score"] = f"mean_test_{metric_names[0]}"
         table = table.sort_values(
             metadata["col_score"],
