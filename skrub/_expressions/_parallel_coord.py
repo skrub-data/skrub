@@ -1,3 +1,5 @@
+import textwrap
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
@@ -76,6 +78,7 @@ def _prepare_column(col, *, is_log_scale, is_int):
         "mean_fit_time": "fit time",
         "mean_score_time": "score time",
     }.get(result["label"], result["label"])
+    result["label"] = "<br>\n".join(textwrap.wrap(result["label"], width=20))
     return result
 
 
