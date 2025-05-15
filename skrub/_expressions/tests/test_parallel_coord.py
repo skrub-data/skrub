@@ -86,6 +86,8 @@ def test_parallel_coord():
 
 
 def test_multi_scoring():
+    pytest.importorskip("plotly")
+
     X, y = make_classification()
     X = pd.DataFrame(X)
     X, y = skrub.X(X), skrub.y(y)
