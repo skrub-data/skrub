@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
@@ -82,3 +83,24 @@ def test_parallel_coord():
     assert dim["label"] == "score"
     dim = next(data)
     assert dim["label"] == "fit time"
+
+
+def test_multi_scoring():
+    pytest.importorskip("plotly")
+
+    X, y = make_classification()
+    X = pd.DataFrame(X)
+    X, y = skrub.X(X), skrub.y(y)
+
+    cols = skrub.choose_from([[0], [1]], name="cols")
+    pred = X[cols].skb.apply(DummyClassifier(), y=y)
+    search = pred.skb.get_grid_search(
+        fitted=True,
+        scoring=["accuracy", "neg_brier_score"],
+        refit="accuracy",
+    )
+    fig = search.plot_results()
+
+    dimensions = fig.data[0]["dimensions"]
+    assert dimensions[1]["label"] == "mean_test_accuracy"
+    assert dimensions[2]["label"] == "mean_test_neg_brier_score"
