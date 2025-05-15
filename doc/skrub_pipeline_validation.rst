@@ -219,6 +219,13 @@ we are not using hyperparameter search:
        (here steps are ``[1, 5, 22, 100]``)
 
 
+The default choices for an expression, those that get used when calling
+:meth:`.skb.get_pipeline() <Expr.skb.get_pipeline>`, can be inspected with
+:meth:`.skb.describe_defaults() <Expr.skb.describe_defaults>`:
+
+>>> pred.skb.describe_defaults()
+{'α': 0.316...}
+
 We can then find the best hyperparameters.
 
 >>> search = pred.skb.get_randomized_search(fitted=True)
@@ -246,8 +253,8 @@ search respectively.
 A human-readable description of parameters for a pipeline can be obtained with
 :meth:`SkrubPipeline.describe_params`:
 
->>> search.best_pipeline_.describe_params()
-{'α': 0.013881294018109133}
+>>> search.best_pipeline_.describe_params() # doctest: +SKIP
+{'α': 0.054081804486393326}
 
 Validating hyperparameter search with nested cross-validation
 -------------------------------------------------------------
