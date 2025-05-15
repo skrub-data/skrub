@@ -58,6 +58,16 @@ def _check_can_be_pickled(obj):
         raise pickle.PicklingError(msg) from e
 
 
+def _check_grid_search_possible(expr):
+    for c in choices(expr).values():
+        if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
+            raise ValueError(
+                "Cannot use grid search with continuous numeric ranges. "
+                "Please use `get_randomized_search` or provide a number "
+                f"of steps for this range: {c}"
+            )
+
+
 class SkrubNamespace:
     """The expressions' ``.skb`` attribute."""
 
@@ -1337,14 +1347,7 @@ class SkrubNamespace:
         3   NaN     3         rf             0.65
         4   NaN   NaN      dummy             0.50
         """  # noqa: E501
-        for c in choices(self._expr).values():
-            if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
-                raise ValueError(
-                    "Cannot use grid search with continuous numeric ranges. "
-                    "Please use `get_randomized_search` or provide a number "
-                    f"of steps for this range: {c}"
-                )
-
+        _check_grid_search_possible(self._expr)
         search = ParamSearch(
             self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
         )
@@ -1436,6 +1439,158 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(self.get_data())
+
+    def iter_pipelines_grid(self):
+        """Get pipelines with different parameter combinations.
+
+        This generator yields a :class:`SkrubPipeline` parametrized for each
+        possible combination of choices.
+
+        The choice outcomes used in each pipeline can be inspected with
+        :meth:`SkrubPipeline.describe_params()`.
+
+        See Also
+        --------
+        Expr.skb.iter_pipelines_randomized :
+            Similar function but for random sampling of the parameter space.
+            Must be used when the expression contains some numeric ranges built
+            with :func:`choose_float` or :func:`choose_int` with
+            ``n_steps=None``.
+
+        Expr.skb.get_grid_search :
+            Pipeline with built-in exhaustive exploration of the parameter grid
+            to select the best one.
+
+        Expr.skb.get_randomized_search :
+            Pipeline with built-in randomized exploration of the parameter grid
+            to select the best one.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from sklearn import preprocessing
+        >>> import skrub
+
+        >>> scaler = skrub.choose_from(
+        ...     [
+        ...         preprocessing.MinMaxScaler(),
+        ...         preprocessing.StandardScaler(),
+        ...         preprocessing.RobustScaler(),
+        ...         preprocessing.MaxAbsScaler(),
+        ...     ],
+        ...     name="scaler",
+        ... )
+        >>> out = skrub.X().skb.apply(scaler)
+
+        >>> X = np.asarray([-4.0, 3.0, 10.0])[:, None]
+
+        >>> for p in out.skb.iter_pipelines_grid():
+        ...     print("======================================")
+        ...     print("params:", p.describe_params())
+        ...     print("result:")
+        ...     print(p.fit_transform({"X": X}))
+        ======================================
+        params: {'scaler': 'MinMaxScaler()'}
+        result:
+        [[0. ]
+         [0.5]
+         [1. ]]
+        ======================================
+        params: {'scaler': 'StandardScaler()'}
+        result:
+        [[-1.22474487]
+         [ 0.        ]
+         [ 1.22474487]]
+        ======================================
+        params: {'scaler': 'RobustScaler()'}
+        result:
+        [[-1.]
+         [ 0.]
+         [ 1.]]
+        ======================================
+        params: {'scaler': 'MaxAbsScaler()'}
+        result:
+        [[-0.4]
+         [ 0.3]
+         [ 1. ]]
+        """
+        pipeline = self.get_pipeline()
+        grid = model_selection.ParameterGrid(pipeline.get_param_grid())
+        for params in grid:
+            new = self.get_pipeline()
+            new.set_params(**params)
+            yield new
+
+    def iter_pipelines_randomized(self, n_iter, *, random_state=None):
+        """Get pipelines with different parameter combinations.
+
+        This generator yields a :class:`SkrubPipeline` parametrized for each
+        possible combination of choices.
+
+        The choice outcomes used in each pipeline can be inspected with
+        :meth:`SkrubPipeline.describe_params()`.
+
+        See Also
+        --------
+        Expr.skb.iter_pipelines_grid :
+            Similar function but for exploring all the possible parameter
+            combinations. Cannot be used when the expression contains some
+            numeric ranges built with :func:`choose_float` or
+            :func:`choose_int` with ``n_steps=None``.
+
+        Expr.skb.get_grid_search :
+            Pipeline with built-in exhaustive exploration of the parameter grid
+            to select the best one.
+
+        Expr.skb.get_randomized_search :
+            Pipeline with built-in randomized exploration of the parameter grid
+            to select the best one.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from sklearn import preprocessing
+        >>> import skrub
+
+        >>> scaler = skrub.choose_from(
+        ...     [
+        ...         preprocessing.MinMaxScaler(),
+        ...         preprocessing.StandardScaler(),
+        ...         preprocessing.RobustScaler(),
+        ...         preprocessing.MaxAbsScaler(),
+        ...     ],
+        ...     name="scaler",
+        ... )
+        >>> out = skrub.X().skb.apply(scaler)
+
+        >>> X = np.asarray([-4.0, 3.0, 10.0])[:, None]
+
+        >>> for p in out.skb.iter_pipelines_randomized(n_iter=2, random_state=0):
+        ...     print("======================================")
+        ...     print("params:", p.describe_params())
+        ...     print("result:")
+        ...     print(p.fit_transform({"X": X}))
+        ======================================
+        params: {'scaler': 'RobustScaler()'}
+        result:
+        [[-1.]
+         [ 0.]
+         [ 1.]]
+        ======================================
+        params: {'scaler': 'MaxAbsScaler()'}
+        result:
+        [[-0.4]
+         [ 0.3]
+         [ 1. ]]
+        """
+        pipeline = self.get_pipeline()
+        sampler = model_selection.ParameterSampler(
+            pipeline.get_param_grid(), n_iter=n_iter, random_state=random_state
+        )
+        for params in sampler:
+            new = self.get_pipeline()
+            new.set_params(**params)
+            yield new
 
     def cross_validate(self, environment=None, **kwargs):
         """Cross-validate the expression.

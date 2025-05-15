@@ -145,6 +145,14 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         set_params(self.expr, {int(k.lstrip("expr__")): v for k, v in params.items()})
         return self
 
+    def get_param_grid(self):
+        grid = param_grid(self.expr)
+        new_grid = []
+        for subgrid in grid:
+            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
+            new_grid.append(subgrid)
+        return new_grid
+
     def find_fitted_estimator(self, name):
         """
         Find the scikit-learn estimator that has been fitted in a ``.skb.apply()`` step.
@@ -608,18 +616,10 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
         return new
 
-    def _get_param_grid(self):
-        grid = param_grid(self.expr)
-        new_grid = []
-        for subgrid in grid:
-            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
-            new_grid.append(subgrid)
-        return new_grid
-
     def fit(self, environment):
         search = clone(self.search)
         search.estimator = _XyPipeline(self.expr, _SharedDict(environment))
-        param_grid = self._get_param_grid()
+        param_grid = search.estimator.get_param_grid()
         if hasattr(search, "param_grid"):
             search.param_grid = param_grid
         else:
