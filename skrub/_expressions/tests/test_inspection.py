@@ -232,9 +232,9 @@ def test_describe_params():
     e = c6.match({"a": [c4, c2.as_expr() + c7], "b": c5}).as_expr()
     print(e.skb.describe_defaults())
     expected = {
-        "choose_from(['a', 'b'])": "'a'",
+        "choose_from(['a', 'b'])": "a",
         "choose_from({'2': …, '1': …, '3': …})": "2",
-        "c2": "5.5",
+        "c2": 5.5,
         "choose_float(100.0, 200.0, default=110.5)": 110.5,
     }
 

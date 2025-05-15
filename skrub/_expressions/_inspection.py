@@ -1,6 +1,7 @@
 import datetime
 import html
 import io
+import numbers
 import re
 import shutil
 import webbrowser
@@ -352,7 +353,11 @@ def describe_params(params, expr_choices):
             if choice.outcome_names is not None:
                 value = choice.outcome_names[param]
             else:
-                value = short_repr(choice.outcomes[param])
+                value = choice.outcomes[param]
+                if not isinstance(
+                    value, (numbers.Number, bool, str, bytes, type(None))
+                ):
+                    value = short_repr(value)
         else:
             value = param
             if isinstance(value, np.number):
