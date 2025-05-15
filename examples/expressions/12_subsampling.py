@@ -53,7 +53,11 @@ data
 # To continue our pipeline we now define X and y:
 
 # %%
-employees = data.drop(columns="current_annual_salary", errors="ignore").skb.mark_as_X()
+employees = data.drop(
+    columns="current_annual_salary",
+    errors="ignore",
+).skb.mark_as_X()
+
 salaries = data["current_annual_salary"].skb.mark_as_y()
 
 # %%
