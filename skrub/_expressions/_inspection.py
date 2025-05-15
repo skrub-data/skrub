@@ -350,6 +350,9 @@ def describe_params(params, expr_choices):
         choice = expr_choices["choices"][choice_id]
         choice_name = expr_choices["choice_display_names"][choice_id]
         if isinstance(choice, Choice):
+            # If we have a Choice we use the outcome name if there is one, and
+            # if there isn't, the value if it is a simple type otherwise a
+            # short repr
             if choice.outcome_names is not None:
                 value = choice.outcome_names[param]
             else:
@@ -359,6 +362,9 @@ def describe_params(params, expr_choices):
                 ):
                     value = short_repr(value)
         else:
+            # If we have a NumericChoice we use the corresponding number. We
+            # convert numpy numbers to built-in types to avoid the long
+            # 'np.float64(5.0)' repr
             value = param
             if isinstance(value, np.number):
                 value = value.tolist()

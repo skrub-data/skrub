@@ -687,10 +687,13 @@ class _ChosenOrDefaultOutcomes(_ExprTraversal):
         if id(choice) in self.results:
             return self.results[id(choice)]
         if not isinstance(choice, _choosing.Choice):
+            # We have a NumericChoice, the outcome is simply a number
             outcome = choice.chosen_outcome_or_default()
             self.chosen[id(choice)] = outcome
             self.results[id(choice)] = outcome
             return outcome
+        # We have a Choice and need to visit the chosen outcome (it may contain
+        # further choices).
         idx = choice.chosen_outcome_idx or 0
         self.chosen[id(choice)] = idx
         outcome = choice.outcomes[idx]
