@@ -27,7 +27,10 @@ full_data
 # as we expect. However, if some estimators are slow, fitting them and
 # computing results on the whole data can slow us down.
 #
-# So we can tell skrub to subsample the data when computing the previews, with
+# Lightweight construction of the pipeline on a subsample
+# -------------------------------------------------------------------------------------
+# 
+# We can tell skrub to subsample the data when computing the previews, with
 # :meth:`.skb.subsample() <Expr.skb.subsample>`.
 
 # %%
@@ -37,7 +40,7 @@ data
 # %%
 # The rest of the pipeline will now use only 100 points for its previews.
 #
-# .. note::
+# .. topic:: Subsampling only applies to previews by default
 #
 #    By default subsampling is applied *only for previews*: the results
 #    shown when we display the expression, and the output of calling
@@ -64,6 +67,9 @@ predictions = employees.skb.apply(skrub.TableVectorizer()).skb.apply(
 )
 
 # %%
+# 
+# All the lines above run very fast, including fitting the predictor above.
+# 
 # When we display our ``predictions`` expression, we see that the preview is
 # computed on a subsample: the result column has only 100 entries.
 
@@ -81,8 +87,13 @@ predictions
 predictions.skb.cross_validate(keep_subsampling=True)
 
 # %%
+# 
+# Evaluating the pipeline on the full data
+# --------------------------------------------------------
 # By default, when we do not explicitly ask for ``keep_subsampling=True``, no
-# subsampling takes place. Here we run the cross-validation on the full data.
+# subsampling takes place.
+# 
+# Here we run the cross-validation **on the full data**.
 # Note the longer ``fit_time`` and much better ``test_score``.
 
 # %%
