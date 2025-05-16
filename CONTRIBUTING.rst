@@ -154,7 +154,6 @@ Please follow the steps in "From Source" tab in :ref:`Installing from source<ins
 .. take a long time. Some tests may raise warnings such as:
 
 
-
 .. code:: sh
 
   UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
