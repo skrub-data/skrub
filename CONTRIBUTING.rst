@@ -124,7 +124,9 @@ See the relevant sections above on how to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Please follow the steps in "From Source" tab in :ref:`Installing from source<installing_from_source>` page.
+To setup your development environment, you need to follow the steps in "From Source" tab
+present in :ref:`Installing from source<installing_from_source>` page.
+After that, you can return to this page to continue.
 
 If you ran the tests ``pytest -s skrub/tests``;
 you may have seen some warnings such as:
