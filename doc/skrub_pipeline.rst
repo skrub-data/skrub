@@ -418,3 +418,67 @@ However, all of those methods have a ``keep_subsampling`` parameter that we can
 set to ``True`` to force using the subsampling when we call them.
 
 See more details in a :ref:`full example <example_subsampling>`.
+
+Arriving late and leaving early
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We can give a name to any node with :meth:`.skb.set_name() <Expr.skb.set_name>`.
+When this is done we can:
+
+- Bypass the computation of that node and override its result by passing it as a
+  key in the ``environment`` argument.
+- Truncate the pipeline after this node to obtain the intermediate result with
+  :meth:`SkrubPipeline.truncated_after`.
+
+Here is a toy example with 3 steps:
+
+>>> def load_data():
+...     print("load")
+...     return [1, 2, 3, 4]
+
+
+>>> def transform(x):
+...     print("transform")
+...     return [e * 10 for e in x]
+
+
+>>> def agg(x):
+...     print("predict")
+...     return max(x)
+
+
+>>> output = (
+...     skrub.deferred(load_data)()
+...     .skb.set_name("loaded")
+...     .skb.apply_func(transform)
+...     .skb.set_name("transformed")
+...     .skb.apply_func(agg)
+... )
+load
+transform
+predict
+>>> output
+<Call 'agg'>
+Result:
+―――――――
+40
+
+>>> pipeline = output.skb.get_pipeline(fitted=True)
+load
+transform
+predict
+
+Bypass the ``load_data`` step:
+
+>>> pipeline.transform({'loaded': [6, 5, 4]})
+transform
+predict
+60
+
+Stop after the ``transform`` step:
+
+>>> truncated = pipeline.truncated_after('transformed')
+>>> truncated.transform({})
+load
+transform
+[10, 20, 30, 40]
