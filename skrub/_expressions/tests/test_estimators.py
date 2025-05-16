@@ -424,6 +424,20 @@ def test_train_test_split(with_y):
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
 
 
+def test_iter_pipelines():
+    e = skrub.choose_from([1, 2, 3], name="c").as_expr()
+    assert [p.describe_params() for p in e.skb.iter_pipelines_grid()] == [
+        {"c": 1},
+        {"c": 2},
+        {"c": 3},
+    ]
+
+    e = skrub.choose_int(0, 1000, name="c").as_expr()
+    assert [
+        p.describe_params() for p in e.skb.iter_pipelines_randomized(3, random_state=0)
+    ] == [{"c": 548}, {"c": 715}, {"c": 602}]
+
+
 #
 # caching
 #

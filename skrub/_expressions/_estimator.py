@@ -5,9 +5,10 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
-from ._choosing import Choice, get_default
+from ._choosing import BaseNumericChoice, get_default
 from ._evaluation import (
     choice_graph,
+    chosen_or_default_outcomes,
     evaluate,
     find_first_apply,
     find_node_by_name,
@@ -19,6 +20,7 @@ from ._evaluation import (
     supported_modes,
 )
 from ._expressions import Apply
+from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
 from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
@@ -143,6 +145,14 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
             self.expr = params.pop("expr")
         set_params(self.expr, {int(k.lstrip("expr__")): v for k, v in params.items()})
         return self
+
+    def get_param_grid(self):
+        grid = param_grid(self.expr)
+        new_grid = []
+        for subgrid in grid:
+            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
+            new_grid.append(subgrid)
+        return new_grid
 
     def find_fitted_estimator(self, name):
         """
@@ -346,6 +356,11 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         new = self.__class__(node)
         _copy_attr(self, new, ["_is_fitted"])
         return new
+
+    def describe_params(self):
+        return describe_params(
+            chosen_or_default_outcomes(self.expr), choice_graph(self.expr)
+        )
 
 
 def _to_Xy_pipeline(pipeline, environment):
@@ -614,18 +629,10 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
         return new
 
-    def _get_param_grid(self):
-        grid = param_grid(self.expr)
-        new_grid = []
-        for subgrid in grid:
-            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
-            new_grid.append(subgrid)
-        return new_grid
-
     def fit(self, environment):
         search = clone(self.search)
         search.estimator = _XyPipeline(self.expr, _SharedDict(environment))
-        param_grid = self._get_param_grid()
+        param_grid = search.estimator.get_param_grid()
         if hasattr(search, "param_grid"):
             search.param_grid = param_grid
         else:
@@ -691,32 +698,10 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         expr_choices = choice_graph(self.expr)
 
         all_rows = []
-        log_scale_columns = set()
-        int_columns = set()
         for params in self.cv_results_["params"]:
-            row = {}
-            for param_id, param in params.items():
-                choice_id = int(param_id.lstrip("expr__"))
-                choice = expr_choices["choices"][choice_id]
-                choice_name = expr_choices["choice_display_names"][choice_id]
-                if isinstance(choice, Choice):
-                    if choice.outcome_names is not None:
-                        value = choice.outcome_names[param]
-                    else:
-                        value = choice.outcomes[param]
-                else:
-                    value = param
-                    if choice.log:
-                        log_scale_columns.add(choice_name)
-                    if choice.to_int:
-                        int_columns.add(choice_name)
-                row[choice_name] = value
-            all_rows.append(row)
+            params = {int(k.lstrip("expr__")): v for k, v in params.items()}
+            all_rows.append(describe_params(params, expr_choices))
 
-        metadata = {
-            "log_scale_columns": list(log_scale_columns),
-            "int_columns": list(int_columns),
-        }
         table = pd.DataFrame(
             all_rows, columns=list(expr_choices["choice_display_names"].values())
         )
@@ -741,6 +726,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
         table.columns = new_names
+        metadata = _get_results_metadata(expr_choices)
         metadata["log_scale_columns"] = [
             renaming[c] for c in metadata["log_scale_columns"]
         ]
@@ -799,6 +785,22 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         if not cv_results.shape[0]:
             raise ValueError("No results to plot")
         return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
+
+
+def _get_results_metadata(expr_choices):
+    log_scale_columns = set()
+    int_columns = set()
+    for choice_id, choice in expr_choices["choices"].items():
+        if isinstance(choice, BaseNumericChoice):
+            choice_name = expr_choices["choice_display_names"][choice_id]
+            if choice.log:
+                log_scale_columns.add(choice_name)
+            if choice.to_int:
+                int_columns.add(choice_name)
+    return {
+        "log_scale_columns": list(log_scale_columns),
+        "int_columns": list(int_columns),
+    }
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):
