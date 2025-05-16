@@ -155,9 +155,11 @@ For more control or in order to build pipelines for more datasets, use the skrub
    Expr.skb.mark_as_X
    Expr.skb.mark_as_y
    Expr.skb.match
+   Expr.skb.preview
    Expr.skb.select
    Expr.skb.set_description
    Expr.skb.set_name
+   Expr.skb.subsample
    Expr.skb.train_test_split
 
 .. autosummary::

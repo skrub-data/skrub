@@ -176,12 +176,12 @@ def test_randomized_search(expression, data, n_jobs):
     assert list(search.results_.columns) == ["C", "mean_test_score"]
     assert list(search.detailed_results_.columns) == [
         "C",
-        "mean_test_score",
-        "std_test_score",
-        "mean_fit_time",
-        "std_fit_time",
-        "mean_score_time",
         "std_score_time",
+        "mean_score_time",
+        "std_fit_time",
+        "mean_fit_time",
+        "std_test_score",
+        "mean_test_score",
     ]
     assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
@@ -304,19 +304,19 @@ def test_multimetric():
     )
     assert list(expr_search.results_.columns) == [
         "C",
-        "mean_test_roc_auc",
         "mean_test_accuracy",
+        "mean_test_roc_auc",
     ]
     assert list(expr_search.detailed_results_.columns) == [
         "C",
-        "mean_test_roc_auc",
-        "mean_test_accuracy",
-        "std_test_roc_auc",
-        "std_test_accuracy",
-        "mean_fit_time",
-        "std_fit_time",
-        "mean_score_time",
         "std_score_time",
+        "mean_score_time",
+        "std_fit_time",
+        "mean_fit_time",
+        "std_test_accuracy",
+        "std_test_roc_auc",
+        "mean_test_accuracy",
+        "mean_test_roc_auc",
     ]
 
     sklearn_results = (
