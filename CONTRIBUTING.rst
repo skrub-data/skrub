@@ -124,32 +124,12 @@ See the relevant sections above on how to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To contribute, you will first have to run through some steps:
+To setup your development environment, you need to follow the steps in "From Source" tab
+present in :ref:`Installing from source<installing_from_source>` page.
+After that, you can return to this page to continue.
 
-- Set up your environment by forking the repository (`Github doc on
-  forking and
-  cloning <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`__).
-- Add ``upstream`` to your remotes with ``git remote add upstream git@github.com:skrub-data/skrub.git``.
-
-- Create and activate a new virtual environment:
-
-  - With `venv <https://docs.python.org/3/library/venv.html>`__, create
-    the env with ``python -m venv env_skrub`` and then activate it with
-    ``source env_skrub/bin/activate``.
-  - With
-    `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__,
-    create the env with ``conda create -n env_skrub`` and activate it with
-    ``conda activate env_skrub``.
-  - While at the root of your local copy of skrub and within the new
-    env, install the required development dependencies by running
-    ``pip install --editable ".[dev, lint, test, doc]"``.
-
-- Run ``pre-commit install`` to activate some checks that will run every
-  time you do a ``git commit`` (mostly, formatting checks).
-
-If you want to make sure that everything runs properly, you can run all
-the tests with the command ``pytest -s skrub/tests``; note that this may
-take a long time. Some tests may raise warnings such as:
+If you ran the tests ``pytest -s skrub/tests``;
+you may have seen some warnings such as:
 
 .. code:: sh
 
@@ -158,7 +138,7 @@ take a long time. Some tests may raise warnings such as:
 
 This is expected, and you may proceed with the next steps without worrying about them. However, no tests should fail at this point: if they do fail, then let us know.
 
-Now that the development environment is ready, you may start working on
+Now that the development environment is ready, you may create a new branch and start working on
 the new issue.
 
 .. code:: sh
