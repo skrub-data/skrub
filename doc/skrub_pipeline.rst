@@ -432,53 +432,54 @@ When this is done we can:
 
 Here is a toy example with 3 steps:
 
->>> def load_data():
-...     print("load")
+>>> def load_data(url):
+...     print("load: ", url)
 ...     return [1, 2, 3, 4]
 
 
 >>> def transform(x):
 ...     print("transform")
-...     return [e * 10 for e in x]
+...     return [item * 10 for item in x]
 
 
 >>> def agg(x):
-...     print("predict")
+...     print("agg")
 ...     return max(x)
 
 
+>>> url = skrub.var("url")
 >>> output = (
-...     skrub.deferred(load_data)()
+...     url.skb.apply_func(load_data)
 ...     .skb.set_name("loaded")
 ...     .skb.apply_func(transform)
 ...     .skb.set_name("transformed")
 ...     .skb.apply_func(agg)
 ... )
-load
-transform
-predict
->>> output
-<Call 'agg'>
-Result:
-―――――――
-40
 
->>> pipeline = output.skb.get_pipeline(fitted=True)
-load
+>>> pipeline = output.skb.get_pipeline()
+>>> pipeline.fit({"url": "file:///example.db"})
+load:  file:///example.db
 transform
-predict
+agg
+SkrubPipeline(expr=<Call 'agg'>)
+
+>>> pipeline.transform({"url": "file:///example.db"})
+load:  file:///example.db
+transform
+agg
+40
 
 Bypass the ``load_data`` step:
 
->>> pipeline.transform({'loaded': [6, 5, 4]})
+>>> pipeline.transform({"loaded": [6, 5, 4]})
 transform
-predict
+agg
 60
 
 Stop after the ``transform`` step:
 
->>> truncated = pipeline.truncated_after('transformed')
->>> truncated.transform({})
-load
+>>> truncated = pipeline.truncated_after("transformed")
+>>> truncated.transform({"url": "file:///example.db"})
+load:  file:///example.db
 transform
 [10, 20, 30, 40]
