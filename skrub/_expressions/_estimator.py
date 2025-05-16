@@ -1,3 +1,5 @@
+# Scikit-learn-ish interface to the skrub expressions
+
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -55,6 +57,14 @@ def _default_sklearn_tags():
 
 
 class _SharedDict(dict):
+    """A dict that does not get copied during deepcopy/sklearn clone.
+
+    To make the evaluation environment available to the pipelines' methods, we
+    put it in an attribute of the _XyPipeline or _XyParamSearch objects (see
+    _XyPipeline for details). As it is potentially large and is never modified
+    we avoid making copies by overriding __deepcopy__ and __sklearn_clone__.
+    """
+
     def __deepcopy__(self, memo):
         return self
 
@@ -71,6 +81,11 @@ def _copy_attr(source, target, attributes):
 
 
 class _CloudPickleExpr(_CloudPickle):
+    """
+    Mixin to serialize the `expr` attribute with cloudpickle when pickling a
+    pipeline.
+    """
+
     _cloudpickle_attributes = ["expr"]
 
 
@@ -86,6 +101,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         self.expr = expr
 
     def __skrub_to_Xy_pipeline__(self, environment):
+        """Convert to a scikit-learn compatible pipeline."""
         new = _XyPipeline(self.expr, _SharedDict(environment))
         _copy_attr(self, new, ["_is_fitted"])
         return new
@@ -109,6 +125,10 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         return result
 
     def report(self, *, environment, mode, **full_report_kwargs):
+        """Call the method specified by `mode` and return the result and full report.
+
+        See :meth:`Expr.skb.full_report` for more information.
+        """
         from ._inspection import full_report
 
         if mode not in _FITTING_METHODS:
@@ -358,6 +378,12 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         return new
 
     def describe_params(self):
+        """Describe parameters for this pipeline.
+
+        Returns a human-readable description (in form of a dict) of the
+        parameters (outcomes of `choose_*` objects contained in the
+        expression).
+        """
         return describe_params(
             chosen_or_default_outcomes(self.expr), choice_graph(self.expr)
         )
@@ -417,6 +443,22 @@ class _XyPipelineMixin:
 
 
 class _XyPipeline(_XyPipelineMixin, SkrubPipeline):
+    """
+    Scikit-learn compatible interface to the SkrubPipeline.
+
+    This is a private, transient class used only during cross-validation.
+
+    It is used to swap out the fit({'baskets': ..., 'products': ...}) interface
+    with the scikit-learn fit(X, y). It exists only during cross-validation and
+    is converted back to the skrub pipeline interface after (if the fitted
+    pipelines are kept, eg in the `best_pipeline_`). It shares state (the
+    `expr`) with the `SkrubPipeline` that it is converted to and from.
+
+    To make the evaluation environment (the {'baskets': ...} dict) available,
+    that is stored as an attribute of type SharedDict (a dict type for which
+    scikit-learn's clone incurs no copy).
+    """
+
     def __init__(self, expr, environment):
         self.expr = expr
         self.environment = environment
@@ -437,6 +479,7 @@ class _XyPipeline(_XyPipelineMixin, SkrubPipeline):
 
 
 def _find_Xy(expr):
+    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
     x_node = find_X(expr)
     if x_node is None:
         raise ValueError('expr should have a node marked with "mark_as_X()"')
@@ -455,6 +498,8 @@ def _find_Xy(expr):
 
 
 def _compute_Xy(expr, environment):
+    """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
+
     Xy = _find_Xy(expr.skb.clone())
     X = evaluate(
         Xy["X"],
@@ -605,11 +650,6 @@ def train_test_split(
         result["y_train"] = y_train
         result["y_test"] = y_test
     return result
-
-
-# TODO with ParameterGrid and ParameterSampler we can generate the list of
-# candidates so we can provide more than just a score, eg full predictions for
-# each sampled param combination.
 
 
 class ParamSearch(_CloudPickleExpr, BaseEstimator):
@@ -804,6 +844,8 @@ def _get_results_metadata(expr_choices):
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):
+    # Similar to _XyPipeline but for ParamSearch. See _XyPipeline docstring.
+
     def __init__(self, expr, search, environment):
         self.expr = expr
         self.search = search
