@@ -261,7 +261,17 @@ def test_repr():
     ――――――――――――――――――――――――
     array([[11., 11.],
            [11., 11.]])
-    """
+
+
+    short_repr of choices:
+
+    >>> c1 = skrub.choose_float(10, 100)
+    >>> c2 = skrub.choose_float(1, 100, log=True, n_steps=100, default=10)
+    >>> e = skrub.var('x') + c1 + c2
+    >>> print(e.skb.describe_param_grid())
+    - choose_float(10, 100): choose_float(10, 100)
+      choose_float(1, 100, log=True, n_...): choose_float(1, 100, log=True, n_steps=100, default=10)
+    """  # noqa: E501
 
 
 def test_format():

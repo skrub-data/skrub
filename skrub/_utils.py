@@ -1,6 +1,7 @@
 import collections
 import importlib
 import itertools
+import re
 import reprlib
 import secrets
 from typing import Iterable
@@ -218,6 +219,8 @@ class _ShortRepr(Repr):
 
         r = repr(instance)
         if "\n" in r or len(r) > 50:
+            if (m := re.match(r"^(\w{1,25})\((.*)\)$", r)) is not None:
+                return f"{m.group(1)}({m.group(2)[:20]}...)"
             return f"{instance.__class__.__name__}(...)"
         return super().repr_instance(instance, level)
 
