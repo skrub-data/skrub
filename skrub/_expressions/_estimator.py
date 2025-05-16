@@ -101,7 +101,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         self.expr = expr
 
     def __skrub_to_Xy_pipeline__(self, environment):
-        """Convert to a scikit-learn compatible pipeline."""
+        """Convert to a fully scikit-learn compatible pipeline (fit takes X, y)."""
         new = _XyPipeline(self.expr, _SharedDict(environment))
         _copy_attr(self, new, ["_is_fitted"])
         return new
