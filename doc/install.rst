@@ -33,7 +33,7 @@ Install
 
     pip install skrub -U
 
-
+|
 
 **Deep learning dependencies**
 
@@ -58,6 +58,7 @@ and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
 
     conda install -c conda-forge skrub
 
+|
 
 **Deep learning dependencies**
 
@@ -191,7 +192,7 @@ IDE integrations. These revisions are listed in .git-blame-ignore-revs:
 
     git config blame.ignoreRevsFile .git-blame-ignore-revs
 
-1. Run the tests
+4. Run the tests
 ''''''''''''''''
 
 To ensure your environment is correctly set up, run the test suite:
