@@ -153,6 +153,8 @@ Please follow the steps in "From Source" tab in :ref:`Installing from source<ins
 .. the tests with the command ``pytest -s skrub/tests``; note that this may
 .. take a long time. Some tests may raise warnings such as:
 
+If you ran the tests ``pytest -s skrub/tests``;
+you may have seen some warnings such as:
 
 .. code:: sh
 
