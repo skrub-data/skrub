@@ -21,10 +21,6 @@ from ._choosing import BaseNumericChoice, Choice
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
 
-# TODO after merging the expressions do some refactoring and move this stuff to
-# _reporting. better to do it later to avoid conflicts with independent changes
-# to the _reporting module.
-
 
 def _get_jinja_env():
     env = jinja2.Environment(
@@ -142,7 +138,8 @@ def _do_full_report(
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
         # TODO dump report in callback instead of evaluating full expression
-        # first, so that we can clear intermediate results
+        # first, so that we can clear intermediate results.
+        # See evaluate's `callback` parameter
         result = evaluate(expr, mode=mode, environment=environment, clear=False)
         evaluate_error = None
     except Exception as e:

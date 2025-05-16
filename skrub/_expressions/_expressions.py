@@ -74,9 +74,6 @@ _EXCLUDED_PANDAS_ATTR = [
     "_typ",
 ]
 
-# TODO: compare with
-# https://github.com/GrahamDumpleton/wrapt/blob/develop/src/wrapt/wrappers.py#L70
-# and see which methods we are missing
 
 _BIN_OPS = [
     "__add__",
