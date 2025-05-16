@@ -126,33 +126,6 @@ Setting up the environment
 
 Please follow the steps in "From Source" tab in :ref:`Installing from source<installing_from_source>` page.
 
-.. To contribute, you will first have to run through some steps:
-
-.. - Set up your environment by forking the repository (`Github doc on
-..   forking and
-..   cloning <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`__).
-.. - Add ``upstream`` to your remotes with ``git remote add upstream git@github.com:skrub-data/skrub.git``.
-
-.. - Create and activate a new virtual environment:
-
-..   - With `venv <https://docs.python.org/3/library/venv.html>`__, create
-..     the env with ``python -m venv env_skrub`` and then activate it with
-..     ``source env_skrub/bin/activate``.
-..   - With
-..     `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__,
-..     create the env with ``conda create -n env_skrub`` and activate it with
-..     ``conda activate env_skrub``.
-..   - While at the root of your local copy of skrub and within the new
-..     env, install the required development dependencies by running
-..     ``pip install --editable ".[dev, lint, test, doc]"``.
-
-.. - Run ``pre-commit install`` to activate some checks that will run every
-..   time you do a ``git commit`` (mostly, formatting checks).
-
-.. If you want to make sure that everything runs properly, you can run all
-.. the tests with the command ``pytest -s skrub/tests``; note that this may
-.. take a long time. Some tests may raise warnings such as:
-
 If you ran the tests ``pytest -s skrub/tests``;
 you may have seen some warnings such as:
 
