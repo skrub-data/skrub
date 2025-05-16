@@ -105,7 +105,7 @@ def test_multi_scoring():
     fig = search.plot_results()
 
     dimensions = fig.data[0]["dimensions"]
-    assert [d["label"] for d in dimensions] == [
+    assert [d["label"].replace("<br>\n", "") for d in dimensions] == [
         "cols",
         "score time",
         "fit time",
