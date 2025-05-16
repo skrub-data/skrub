@@ -31,6 +31,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
+from ._subsampling import SubsamplePreviews, env_with_subsampling, uses_subsampling
 from ._utils import NULL, attribute_error
 
 
@@ -41,6 +42,15 @@ def _var_values_provided(expr, environment):
     }
     intersection = names.intersection(environment.keys())
     return bool(intersection)
+
+
+def _check_keep_subsampling(fitted, keep_subsampling):
+    if not fitted and keep_subsampling:
+        raise ValueError(
+            "Subsampling is only applied when fitting the estimator "
+            "on the data already provided when initializing variables. "
+            "Please pass `fitted=True` or `keep_subsampling=False`."
+        )
 
 
 def _check_can_be_pickled(obj):
@@ -56,6 +66,16 @@ def _check_can_be_pickled(obj):
                 "in a `@skrub.deferred` function?"
             )
         raise pickle.PicklingError(msg) from e
+
+
+def _check_grid_search_possible(expr):
+    for c in choices(expr).values():
+        if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
+            raise ValueError(
+                "Cannot use grid search with continuous numeric ranges. "
+                "Please use `get_randomized_search` or provide a number "
+                f"of steps for this range: {c}"
+            )
 
 
 class SkrubNamespace:
@@ -644,6 +664,138 @@ class SkrubNamespace:
         """  # noqa: E501
         return Expr(Concat(self._expr, others, axis=axis))
 
+    @check_expr
+    def subsample(self, n=1000, *, how="head"):
+        """Configure subsampling of a dataframe or numpy array.
+
+        Enables faster development by computing the previews on a subsample of
+        the available data. Outside of previews, no subsampling takes place by
+        default but it can be turned on with the ``keep_subsampling`` parameter
+        -- see the Notes section for details.
+
+        Parameters
+        ----------
+        n : int, default=1000
+            Number of rows to keep.
+
+        how : 'head' or 'random'
+            How subsampling should be done (when it takes place). If 'head',
+            the first ``n`` rows are kept. If 'random', ``n`` rows are sampled
+            randomly, without maintaining order and without replacement.
+
+        Returns
+        -------
+        subsampled data
+            The subsampled dataframe, column or numpy array.
+
+        See Also
+        --------
+        Expr.skb.preview :
+            Access a preview of the result on the subsampled data.
+
+        Notes
+        -----
+        This method configures *how* the dataframe should be subsampled. If it
+        has been configured, subsampling actually only takes place in some
+        specific situations:
+
+        - When computing the previews (results displayed when printing an
+          expression and the output of :meth:`Expr.skb.preview`).
+        - When it is explicitly requested by passing ``keep_subsampling=True`` to one
+          of the functions that expose that parameter such as
+          :meth:`Expr.skb.get_randomized_search` or :func:`cross_validate`.
+
+        When subsampling has not been configured (``subsample`` has not
+        been called anywhere in the expression), no subsampling is ever done.
+
+        This method can only be used on steps that produce a dataframe, a
+        column (series) or a numpy array.
+
+        Examples
+        --------
+        >>> from sklearn.datasets import load_diabetes
+        >>> from sklearn.linear_model import Ridge
+        >>> import skrub
+
+        >>> df = load_diabetes(as_frame=True)["frame"]
+        >>> df.shape
+        (442, 11)
+
+
+        >>> data = skrub.var("data", df).skb.subsample(n=15)
+
+        We can see that the previews use only a subsample of 15 rows:
+
+        >>> data.shape
+        <GetAttr 'shape'>
+        Result (on a subsample):
+        ――――――――――――――――――――――――
+        (15, 11)
+        >>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
+        >>> y = data["target"].skb.mark_as_y()
+        >>> pred = X.skb.apply(
+        ...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+        ... )
+
+        Here also, the preview for the predictions contains 15 rows:
+
+        >>> pred
+        <Apply Ridge>
+        Result (on a subsample):
+        ――――――――――――――――――――――――
+                target
+        0   142.866906
+        1   130.980765
+        2   138.555388
+        3   149.703363
+        4   136.015214
+        5   139.773213
+        6   134.110415
+        7   129.224783
+        8   140.161363
+        9   155.272033
+        10  139.552110
+        11  130.318783
+        12  135.956591
+        13  142.998060
+        14  132.511013
+
+        By default, model fitting and hyperparameter search are done on the
+        full data, so if we want the subsampling to take place we have to
+        pass ``keep_subsampling=True``:
+
+        >>> quick_search = pred.skb.get_randomized_search(
+        ...     keep_subsampling=True, fitted=True, n_iter=4, random_state=0
+        ... )
+        >>> quick_search.detailed_results_[["mean_test_score", "mean_fit_time", "α"]] # doctest: +SKIP
+           mean_test_score  mean_fit_time         α
+        0        -0.597596       0.004322  0.431171
+        1        -0.599036       0.004328  0.443038
+        2        -0.615900       0.004272  0.643117
+        3        -0.637498       0.004219  1.398196
+
+        Now that we have checked our pipeline works on a subsample, we can
+        fit the hyperparameter search on the full data:
+
+        >>> full_search = pred.skb.get_randomized_search(
+        ...     fitted=True, n_iter=4, random_state=0
+        ... )
+        >>> full_search.detailed_results_[["mean_test_score", "mean_fit_time", "α"]] # doctest: +SKIP
+           mean_test_score  mean_fit_time         α
+        0         0.457807       0.004791  0.431171
+        1         0.456808       0.004834  0.443038
+        2         0.439670       0.004849  0.643117
+        3         0.380719       0.004827  1.398196
+
+        This example dataset is so small that the subsampling does not change
+        the fit computation time but we can tell the second search used the
+        full data from the higher scores. For datasets of a realistic size
+        using the subsampling allows us to do a "dry run" of the
+        cross-validation or model fitting much faster than when using the
+        full data.
+        """  # noqa : E501
+        return Expr(SubsamplePreviews(self._expr, n=n, how=how))
+
     def clone(self, drop_values=True):
         """Get an independent clone of the expression.
 
@@ -686,11 +838,11 @@ class SkrubNamespace:
 
         Note that in that case the cache used for previews is still cleared. So
         if we want the preview we need to prime the new expression by
-        evaluating it once (either directly or by adding more steps to it):
+        accessing the preview once (either directly or by adding more steps to it):
 
         >>> clone
         <BinOp: add>
-        >>> clone.skb.eval()
+        >>> clone.skb.preview()
         1
         >>> clone
         <BinOp: add>
@@ -701,12 +853,12 @@ class SkrubNamespace:
 
         return clone(self._expr, drop_preview_data=drop_values)
 
-    def eval(self, environment=None):
+    def eval(self, environment=None, *, keep_subsampling=False):
         """Evaluate the expression.
 
         This returns the result produced by evaluating the expression, ie
-        running the corresponding pipeline. The result is **always** the output
-        of the pipeline's ``fit_transform`` -- the pipeline is refitted to the
+        running the corresponding pipeline. The result is always the output
+        of the pipeline's ``fit_transform`` -- a pipeline is refitted to the
         provided data.
 
         If no data is provided, the values passed when creating the variables
@@ -719,11 +871,23 @@ class SkrubNamespace:
             expression are used. If a dict, it must map the name of each
             variable to a corresponding value.
 
+        keep_subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
+
         Returns
         -------
         result
             The result of running the computation, ie of executing the
             pipeline's ``fit_transform`` on the provided data.
+
+        See Also
+        --------
+        Expr.skb.preview :
+            Access the preview of the result on the variables initial values,
+            with subsampling. Faster than ``eval`` but does not allow passing
+            new data and always applies subsampling.
 
         Examples
         --------
@@ -746,20 +910,83 @@ class SkrubNamespace:
                 "The `environment` passed to `eval()` should be None or a dictionary, "
                 f"got: '{type(environment)}'"
             )
+        if environment is None and (
+            keep_subsampling or not uses_subsampling(self._expr)
+        ):
+            # In this configuration the result is the same as the preview so
+            # we call preview() to benefit from the cached result.
+
+            # Before returning, we trigger an error if keep_subsampling=True was
+            # passed but no subsampling was configured:
+            _ = env_with_subsampling(self._expr, {}, keep_subsampling)
+            return self.preview()
         if environment is None:
-            mode = "preview"
-            clear = False
+            environment = self.get_data()
         else:
-            mode = "fit_transform"
-            clear = True
             environment = {
                 **environment,
                 "_skrub_use_var_values": not _var_values_provided(
                     self._expr, environment
                 ),
             }
+        environment = env_with_subsampling(self._expr, environment, keep_subsampling)
+        return evaluate(
+            self._expr, mode="fit_transform", environment=environment, clear=True
+        )
 
-        return evaluate(self._expr, mode=mode, environment=environment, clear=clear)
+    def preview(self):
+        """Get the value computed for previews (shown when printing the expression).
+
+        Returns
+        -------
+        preview result
+            The result of evaluating the expression on the data stored in its
+            variables.
+
+        See Also
+        --------
+        Expr.skb.subsample :
+            Specify how to subsample an intermediate result when computing
+            previews.
+
+        Expr.skb.eval :
+            Evaluate the expression. Unlike ``preview``, we can pass new data
+            rather than using the values that variables were initialized with,
+            but results are not cached, and no subsampling takes place by
+            default.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> a = skrub.var('a', 1)
+        >>> b = skrub.var('b', 2)
+        >>> c = a + b
+
+        When we display an expression, we see a preview of the result (``3`` in
+        this case):
+
+        >>> c
+        <BinOp: add>
+        Result:
+        ―――――――
+        3
+
+        If we want to actually access that value ``3``, rather than just seeing
+        it displayed, we can use ``.skb.preview()``:
+
+        >>> c.skb.preview()
+        3
+
+        This is the actual number ``3``, not an expression or just a display
+
+        >>> type(c.skb.preview())
+        <class 'int'>
+
+        Accessing the preview is usually faster than calling ``.skb.eval()``
+        because results are cached and subsampling is used by default.
+        """
+        return evaluate(self._expr, mode="preview", environment=None, clear=False)
 
     @check_expr
     def freeze_after_fit(self):
@@ -976,6 +1203,43 @@ class SkrubNamespace:
 
         return describe_param_grid(self._expr)
 
+    def describe_defaults(self):
+        """Describe the hyper-parameters used by the default pipeline.
+
+        Returns a dict mapping choice names to a simplified representation of
+        the corresponding value in the default pipeline.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.feature_selection import SelectKBest
+        >>> from sklearn.ensemble import RandomForestClassifier
+
+        >>> X, y = skrub.X(), skrub.y()
+        >>> selector = SelectKBest(k=skrub.choose_int(4, 20, log=True, name='k'))
+        >>> logistic = LogisticRegression(
+        ...     C=skrub.choose_float(0.1, 10.0, log=True, name="C"),
+        ... )
+        >>> rf = RandomForestClassifier(
+        ...     n_estimators=skrub.choose_int(3, 30, log=True, name="N 🌴"),
+        ...     random_state=0,
+        ... )
+        >>> classifier = skrub.choose_from(
+        ...     {"logistic": logistic, "rf": rf}, name="classifier"
+        ... )
+        >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
+        >>> print(pred.skb.describe_defaults())
+        {'k': 9, 'classifier': 'logistic', 'C': 1.000...}
+        """
+        from ._evaluation import choice_graph, chosen_or_default_outcomes
+        from ._inspection import describe_params
+
+        return describe_params(
+            chosen_or_default_outcomes(self._expr), choice_graph(self._expr)
+        )
+
     def full_report(
         self,
         environment=None,
@@ -1076,7 +1340,7 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def get_pipeline(self, fitted=False):
+    def get_pipeline(self, *, fitted=False, keep_subsampling=False):
         """Get a skrub pipeline for this expression.
 
         Returns a :class:`SkrubPipeline`.
@@ -1109,6 +1373,16 @@ class SkrubNamespace:
         fitted : bool (default=False)
             If true, the returned pipeline is fitted to the data provided when
             initializing variables in the expression.
+
+        keep_subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the estimator when ``fitted=True``,
+            subsequent use of the estimator is not affected by subsampling.
+            Therefore it is an error to pass ``keep_subsampling=True`` and
+            ``fitted=False`` (because ``keep_subsampling=True`` would have no
+            effect).
 
         Returns
         -------
@@ -1150,15 +1424,21 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
         """
+        _check_keep_subsampling(fitted, keep_subsampling)
+
         pipeline = SkrubPipeline(self.clone())
         _check_can_be_pickled(pipeline)
         if not fitted:
             return pipeline
-        return pipeline.fit(self.get_data())
+        return pipeline.fit(
+            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+        )
 
     def train_test_split(
         self,
         environment=None,
+        *,
+        keep_subsampling=False,
         splitter=model_selection.train_test_split,
         **splitter_kwargs,
     ):
@@ -1170,6 +1450,11 @@ class SkrubNamespace:
             The environment (dict mapping variable names to values) containing the
             full data. If ``None`` (the default), the data is retrieved from the
             expression.
+
+        keep_subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
 
         splitter : function, optional
             The function used to split X and y once they have been computed. By
@@ -1225,10 +1510,14 @@ class SkrubNamespace:
         if environment is None:
             environment = self.get_data()
         return train_test_split(
-            self._expr, environment, splitter=splitter, **splitter_kwargs
+            self._expr,
+            environment,
+            keep_subsampling=keep_subsampling,
+            splitter=splitter,
+            **splitter_kwargs,
         )
 
-    def get_grid_search(self, *, fitted=False, **kwargs):
+    def get_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -1248,6 +1537,16 @@ class SkrubNamespace:
             If ``True``, the gridsearch is fitted on the data provided when
             initializing variables in this expression (the data returned by
             ``.skb.get_data()``).
+
+        keep_subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the grid search when ``fitted=True``,
+            subsequent use of the grid search is not affected by subsampling.
+            Therefore it is an error to pass ``keep_subsampling=True`` and
+            ``fitted=False`` (because ``keep_subsampling=True`` would have no
+            effect).
 
         kwargs : dict
             All other named arguments are forwarded to
@@ -1293,29 +1592,26 @@ class SkrubNamespace:
 
         >>> search = pred.skb.get_grid_search(fitted=True)
         >>> search.results_
-           mean_test_score     C   N 🌴 classifier
-        0             0.89   NaN  30.0         rf
-        1             0.84   0.1   NaN   logistic
-        2             0.80  10.0   NaN   logistic
-        3             0.65   NaN   3.0         rf
-        4             0.50   NaN   NaN      dummy
+              C   N 🌴 classifier mean_test_score
+        0   NaN  30.0         rf             0.89
+        1   0.1   NaN   logistic             0.84
+        2  10.0   NaN   logistic             0.80
+        3   NaN   3.0         rf             0.65
+        4   NaN   NaN      dummy             0.50
         """  # noqa: E501
-        for c in choices(self._expr).values():
-            if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
-                raise ValueError(
-                    "Cannot use grid search with continuous numeric ranges. "
-                    "Please use `get_randomized_search` or provide a number "
-                    f"of steps for this range: {c}"
-                )
+        _check_keep_subsampling(fitted, keep_subsampling)
+        _check_grid_search_possible(self._expr)
 
         search = ParamSearch(
             self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
         )
         if not fitted:
             return search
-        return search.fit(self.get_data())
+        return search.fit(
+            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+        )
 
-    def get_randomized_search(self, *, fitted=False, **kwargs):
+    def get_randomized_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with randomized search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -1330,6 +1626,16 @@ class SkrubNamespace:
             If ``True``, the randomized search is fitted on the data provided when
             initializing variables in this expression (the data returned by
             ``.skb.get_data()``).
+
+        keep_subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the randomized search when ``fitted=True``,
+            subsequent use of the randomized search is not affected by subsampling.
+            Therefore it is an error to pass ``keep_subsampling=True`` and
+            ``fitted=False`` (because ``keep_subsampling=True`` would have no
+            effect).
 
         kwargs : dict
             All other named arguments are forwarded to
@@ -1380,27 +1686,182 @@ class SkrubNamespace:
 
         >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
         >>> search.results_
-           mean_test_score   k         C  N 🌴 classifier
-        0             0.92   4  4.626363  NaN   logistic
-        1             0.89  10       NaN  7.0         rf
-        2             0.87   7  3.832217  NaN   logistic
-        3             0.86  15       NaN  6.0         rf
-        4             0.85  10  4.881255  NaN   logistic
-        5             0.80  19  3.965675  NaN   logistic
-        6             0.77  14       NaN  3.0         rf
-        7             0.50   4       NaN  NaN      dummy
-        8             0.50   9       NaN  NaN      dummy
-        9             0.50   5       NaN  NaN      dummy
+            k         C  N 🌴 classifier mean_test_score
+        0   4  4.626363  NaN   logistic             0.92
+        1  10       NaN  7.0         rf             0.89
+        2   7  3.832217  NaN   logistic             0.87
+        3  15       NaN  6.0         rf             0.86
+        4  10  4.881255  NaN   logistic             0.85
+        5  19  3.965675  NaN   logistic             0.80
+        6  14       NaN  3.0         rf             0.77
+        7   4       NaN  NaN      dummy             0.50
+        8   9       NaN  NaN      dummy             0.50
+        9   5       NaN  NaN      dummy             0.50
         """  # noqa: E501
+        _check_keep_subsampling(fitted, keep_subsampling)
 
         search = ParamSearch(
             self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
         )
         if not fitted:
             return search
-        return search.fit(self.get_data())
+        return search.fit(
+            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+        )
 
-    def cross_validate(self, environment=None, **kwargs):
+    def iter_pipelines_grid(self):
+        """Get pipelines with different parameter combinations.
+
+        This generator yields a :class:`SkrubPipeline` parametrized for each
+        possible combination of choices.
+
+        The choice outcomes used in each pipeline can be inspected with
+        :meth:`SkrubPipeline.describe_params()`.
+
+        See Also
+        --------
+        Expr.skb.iter_pipelines_randomized :
+            Similar function but for random sampling of the parameter space.
+            Must be used when the expression contains some numeric ranges built
+            with :func:`choose_float` or :func:`choose_int` with
+            ``n_steps=None``.
+
+        Expr.skb.get_grid_search :
+            Pipeline with built-in exhaustive exploration of the parameter grid
+            to select the best one.
+
+        Expr.skb.get_randomized_search :
+            Pipeline with built-in randomized exploration of the parameter grid
+            to select the best one.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from sklearn import preprocessing
+        >>> import skrub
+
+        >>> scaler = skrub.choose_from(
+        ...     [
+        ...         preprocessing.MinMaxScaler(),
+        ...         preprocessing.StandardScaler(),
+        ...         preprocessing.RobustScaler(),
+        ...         preprocessing.MaxAbsScaler(),
+        ...     ],
+        ...     name="scaler",
+        ... )
+        >>> out = skrub.X().skb.apply(scaler)
+
+        >>> X = np.asarray([-4.0, 3.0, 10.0])[:, None]
+
+        >>> for p in out.skb.iter_pipelines_grid():
+        ...     print("======================================")
+        ...     print("params:", p.describe_params())
+        ...     print("result:")
+        ...     print(p.fit_transform({"X": X}))
+        ======================================
+        params: {'scaler': 'MinMaxScaler()'}
+        result:
+        [[0. ]
+         [0.5]
+         [1. ]]
+        ======================================
+        params: {'scaler': 'StandardScaler()'}
+        result:
+        [[-1.22474487]
+         [ 0.        ]
+         [ 1.22474487]]
+        ======================================
+        params: {'scaler': 'RobustScaler()'}
+        result:
+        [[-1.]
+         [ 0.]
+         [ 1.]]
+        ======================================
+        params: {'scaler': 'MaxAbsScaler()'}
+        result:
+        [[-0.4]
+         [ 0.3]
+         [ 1. ]]
+        """
+        pipeline = self.get_pipeline()
+        grid = model_selection.ParameterGrid(pipeline.get_param_grid())
+        for params in grid:
+            new = self.get_pipeline()
+            new.set_params(**params)
+            yield new
+
+    def iter_pipelines_randomized(self, n_iter, *, random_state=None):
+        """Get pipelines with different parameter combinations.
+
+        This generator yields a :class:`SkrubPipeline` parametrized for each
+        possible combination of choices.
+
+        The choice outcomes used in each pipeline can be inspected with
+        :meth:`SkrubPipeline.describe_params()`.
+
+        See Also
+        --------
+        Expr.skb.iter_pipelines_grid :
+            Similar function but for exploring all the possible parameter
+            combinations. Cannot be used when the expression contains some
+            numeric ranges built with :func:`choose_float` or
+            :func:`choose_int` with ``n_steps=None``.
+
+        Expr.skb.get_grid_search :
+            Pipeline with built-in exhaustive exploration of the parameter grid
+            to select the best one.
+
+        Expr.skb.get_randomized_search :
+            Pipeline with built-in randomized exploration of the parameter grid
+            to select the best one.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from sklearn import preprocessing
+        >>> import skrub
+
+        >>> scaler = skrub.choose_from(
+        ...     [
+        ...         preprocessing.MinMaxScaler(),
+        ...         preprocessing.StandardScaler(),
+        ...         preprocessing.RobustScaler(),
+        ...         preprocessing.MaxAbsScaler(),
+        ...     ],
+        ...     name="scaler",
+        ... )
+        >>> out = skrub.X().skb.apply(scaler)
+
+        >>> X = np.asarray([-4.0, 3.0, 10.0])[:, None]
+
+        >>> for p in out.skb.iter_pipelines_randomized(n_iter=2, random_state=0):
+        ...     print("======================================")
+        ...     print("params:", p.describe_params())
+        ...     print("result:")
+        ...     print(p.fit_transform({"X": X}))
+        ======================================
+        params: {'scaler': 'RobustScaler()'}
+        result:
+        [[-1.]
+         [ 0.]
+         [ 1.]]
+        ======================================
+        params: {'scaler': 'MaxAbsScaler()'}
+        result:
+        [[-0.4]
+         [ 0.3]
+         [ 1. ]]
+        """
+        pipeline = self.get_pipeline()
+        sampler = model_selection.ParameterSampler(
+            pipeline.get_param_grid(), n_iter=n_iter, random_state=random_state
+        )
+        for params in sampler:
+            new = self.get_pipeline()
+            new.set_params(**params)
+            yield new
+
+    def cross_validate(self, environment=None, *, keep_subsampling=False, **kwargs):
         """Cross-validate the expression.
 
         This generates the pipeline with default hyperparameters and runs
@@ -1412,6 +1873,11 @@ class SkrubNamespace:
             Bindings for variables contained in the expression. If not
             provided, the ``value``s passed when initializing ``var()`` are
             used.
+
+        keep_subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
 
         kwargs : dict
             All other named arguments are forwarded to
@@ -1449,11 +1915,15 @@ class SkrubNamespace:
         4    0.90
         Name: test_score, dtype: float64
         """
-
         if environment is None:
             environment = self.get_data()
 
-        return cross_validate(self.get_pipeline(), environment, **kwargs)
+        return cross_validate(
+            self.get_pipeline(),
+            environment,
+            keep_subsampling=keep_subsampling,
+            **kwargs,
+        )
 
     @check_expr
     def mark_as_X(self):

@@ -5,9 +5,10 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
-from ._choosing import Choice, get_default
+from ._choosing import BaseNumericChoice, get_default
 from ._evaluation import (
     choice_graph,
+    chosen_or_default_outcomes,
     evaluate,
     find_first_apply,
     find_node_by_name,
@@ -19,7 +20,9 @@ from ._evaluation import (
     supported_modes,
 )
 from ._expressions import Apply
+from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
+from ._subsampling import env_with_subsampling
 from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
@@ -142,6 +145,14 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
             self.expr = params.pop("expr")
         set_params(self.expr, {int(k.lstrip("expr__")): v for k, v in params.items()})
         return self
+
+    def get_param_grid(self):
+        grid = param_grid(self.expr)
+        new_grid = []
+        for subgrid in grid:
+            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
+            new_grid.append(subgrid)
+        return new_grid
 
     def find_fitted_estimator(self, name):
         """
@@ -346,6 +357,11 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         _copy_attr(self, new, ["_is_fitted"])
         return new
 
+    def describe_params(self):
+        return describe_params(
+            chosen_or_default_outcomes(self.expr), choice_graph(self.expr)
+        )
+
 
 def _to_Xy_pipeline(pipeline, environment):
     return pipeline.__skrub_to_Xy_pipeline__(environment)
@@ -473,7 +489,7 @@ def _rename_cv_param_pipeline_to_estimator(kwargs):
     return renamed
 
 
-def cross_validate(pipeline, environment, **kwargs):
+def cross_validate(pipeline, environment, *, keep_subsampling=False, **kwargs):
     """Cross-validate a pipeline built from an expression.
 
     This runs cross-validation from a pipeline that was built from a skrub
@@ -490,6 +506,11 @@ def cross_validate(pipeline, environment, **kwargs):
 
     environment : dict
         Bindings for variables contained in the expression.
+
+    keep_subsampling : bool, default=False
+        If True, and if subsampling has been configured (see
+        :meth:`Expr.skb.subsample`), use a subsample of the data. By
+        default subsampling is not applied and all the data is used.
 
     kwargs : dict
         All other named arguments are forwarded to
@@ -536,6 +557,7 @@ def cross_validate(pipeline, environment, **kwargs):
     4    0.85
     Name: test_score, dtype: float64
     """
+    environment = env_with_subsampling(pipeline.expr, environment, keep_subsampling)
     kwargs = _rename_cv_param_pipeline_to_estimator(kwargs)
     X, y = _compute_Xy(pipeline.expr, environment)
     result = model_selection.cross_validate(
@@ -550,7 +572,12 @@ def cross_validate(pipeline, environment, **kwargs):
 
 
 def train_test_split(
-    expr, environment, splitter=model_selection.train_test_split, **splitter_kwargs
+    expr,
+    environment,
+    *,
+    keep_subsampling=False,
+    splitter=model_selection.train_test_split,
+    **splitter_kwargs,
 ):
     """Split an environment into a training an testing environments.
 
@@ -558,6 +585,7 @@ def train_test_split(
     ``Expr.skb.train_test_split()`` method. See the corresponding docstring for
     details and examples.
     """
+    environment = env_with_subsampling(expr, environment, keep_subsampling)
     X, y = _compute_Xy(expr, environment)
     if y is None:
         X_train, X_test = splitter(X, **splitter_kwargs)
@@ -601,18 +629,10 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
         return new
 
-    def _get_param_grid(self):
-        grid = param_grid(self.expr)
-        new_grid = []
-        for subgrid in grid:
-            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
-            new_grid.append(subgrid)
-        return new_grid
-
     def fit(self, environment):
         search = clone(self.search)
         search.estimator = _XyPipeline(self.expr, _SharedDict(environment))
-        param_grid = self._get_param_grid()
+        param_grid = search.estimator.get_param_grid()
         if hasattr(search, "param_grid"):
             search.param_grid = param_grid
         else:
@@ -655,7 +675,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         Cross-validation results containing parameters and scores in a dataframe.
         """
         try:
-            return self._get_cv_results_table()
+            return self._get_cv_results_table()[0]
         except NotFittedError:
             attribute_error(self, "results_")
 
@@ -669,41 +689,19 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         score durations.
         """
         try:
-            return self._get_cv_results_table(detailed=True)
+            return self._get_cv_results_table(detailed=True)[0]
         except NotFittedError:
             attribute_error(self, "results_")
 
-    def _get_cv_results_table(self, return_metadata=False, detailed=False):
+    def _get_cv_results_table(self, detailed=False):
         check_is_fitted(self, "cv_results_")
         expr_choices = choice_graph(self.expr)
 
         all_rows = []
-        log_scale_columns = set()
-        int_columns = set()
         for params in self.cv_results_["params"]:
-            row = {}
-            for param_id, param in params.items():
-                choice_id = int(param_id.lstrip("expr__"))
-                choice = expr_choices["choices"][choice_id]
-                choice_name = expr_choices["choice_display_names"][choice_id]
-                if isinstance(choice, Choice):
-                    if choice.outcome_names is not None:
-                        value = choice.outcome_names[param]
-                    else:
-                        value = choice.outcomes[param]
-                else:
-                    value = param
-                    if choice.log:
-                        log_scale_columns.add(choice_name)
-                    if choice.to_int:
-                        int_columns.add(choice_name)
-                row[choice_name] = value
-            all_rows.append(row)
+            params = {int(k.lstrip("expr__")): v for k, v in params.items()}
+            all_rows.append(describe_params(params, expr_choices))
 
-        metadata = {
-            "log_scale_columns": list(log_scale_columns),
-            "int_columns": list(int_columns),
-        }
         table = pd.DataFrame(
             all_rows, columns=list(expr_choices["choice_display_names"].values())
         )
@@ -728,19 +726,24 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
         table.columns = new_names
+        metadata = _get_results_metadata(expr_choices)
         metadata["log_scale_columns"] = [
             renaming[c] for c in metadata["log_scale_columns"]
         ]
-        for k in result_keys[: len(metric_names)][::-1]:
-            table.insert(0, k, self.cv_results_[k])
         if detailed:
-            for k in result_keys[len(metric_names) :]:
+            for k in result_keys[len(metric_names) :][::-1]:
                 if k in self.cv_results_:
                     table.insert(table.shape[1], k, self.cv_results_[k])
+        for k in result_keys[: len(metric_names)][::-1]:
+            table.insert(table.shape[1], k, self.cv_results_[k])
+        metadata["col_score"] = f"mean_test_{metric_names[0]}"
         table = table.sort_values(
-            list(table.columns)[0], ascending=False, ignore_index=True, kind="stable"
+            metadata["col_score"],
+            ascending=False,
+            ignore_index=True,
+            kind="stable",
         )
-        return (table, metadata) if return_metadata else table
+        return table, metadata
 
     def plot_results(self, *, colorscale=DEFAULT_COLORSCALE, min_score=None):
         """Create a parallel coordinate plot of the cross-validation results.
@@ -763,9 +766,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         -------
         Plotly Figure
         """
-        cv_results, metadata = self._get_cv_results_table(
-            return_metadata=True, detailed=True
-        )
+        cv_results, metadata = self._get_cv_results_table(detailed=True)
         cv_results = cv_results.drop(
             [
                 "std_test_score",
@@ -777,11 +778,29 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
             axis="columns",
             errors="ignore",
         )
+
         if min_score is not None:
-            cv_results = cv_results[cv_results["mean_test_score"] >= min_score]
+            col_score = metadata["col_score"]
+            cv_results = cv_results[cv_results[col_score] >= min_score]
         if not cv_results.shape[0]:
             raise ValueError("No results to plot")
         return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
+
+
+def _get_results_metadata(expr_choices):
+    log_scale_columns = set()
+    int_columns = set()
+    for choice_id, choice in expr_choices["choices"].items():
+        if isinstance(choice, BaseNumericChoice):
+            choice_name = expr_choices["choice_display_names"][choice_id]
+            if choice.log:
+                log_scale_columns.add(choice_name)
+            if choice.to_int:
+                int_columns.add(choice_name)
+    return {
+        "log_scale_columns": list(log_scale_columns),
+        "int_columns": list(int_columns),
+    }
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):

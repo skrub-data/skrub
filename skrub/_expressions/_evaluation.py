@@ -676,6 +676,43 @@ def set_params(expr, params):
             target.chosen_outcome = v
 
 
+class _ChosenOrDefaultOutcomes(_ExprTraversal):
+    def run(self, expr):
+        self.chosen = {}
+        self.results = {}
+        _ = super().run(expr)
+        return self.chosen
+
+    def handle_choice(self, choice):
+        if id(choice) in self.results:
+            return self.results[id(choice)]
+        if not isinstance(choice, _choosing.Choice):
+            # We have a NumericChoice, the outcome is simply a number
+            outcome = choice.chosen_outcome_or_default()
+            self.chosen[id(choice)] = outcome
+            self.results[id(choice)] = outcome
+            return outcome
+        # We have a Choice and need to visit the chosen outcome (it may contain
+        # further choices).
+        idx = choice.chosen_outcome_idx or 0
+        self.chosen[id(choice)] = idx
+        outcome = choice.outcomes[idx]
+        result = yield outcome
+        self.results[id(choice)] = result
+        return result
+
+    def handle_choice_match(self, choice_match):
+        outcome = yield choice_match.choice
+        return (yield choice_match.outcome_mapping[outcome])
+
+
+def chosen_or_default_outcomes(expr):
+    expr_choices = choices(expr)
+    short_ids = {id(c): k for k, c in expr_choices.items()}
+    outcomes = _ChosenOrDefaultOutcomes().run(expr)
+    return {short_ids[k]: v for k, v in outcomes.items()}
+
+
 class _Found(Exception):
     def __init__(self, value):
         self.value = value

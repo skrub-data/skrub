@@ -521,6 +521,8 @@ class Expr:
         )
 
     def __repr__(self):
+        from ._subsampling import uses_subsampling
+
         result = repr(self._skrub_impl)
         if (
             not isinstance(self._skrub_impl, Var)
@@ -530,7 +532,10 @@ class Expr:
         preview = self._skrub_impl.preview_if_available()
         if preview is NULL:
             return result
-        return f"{result}\nResult:\n―――――――\n{preview!r}"
+        subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
+        header = f"Result{subsample_msg}:"
+        underline = "―" * len(header)
+        return f"{result}\n{header}\n{underline}\n{preview!r}"
 
     def __skrub_short_repr__(self):
         return repr(self._skrub_impl)
@@ -547,6 +552,7 @@ class Expr:
 
     def _repr_html_(self):
         from ._inspection import node_report
+        from ._subsampling import uses_subsampling
 
         try:
             graph = self.skb.draw_graph().svg.decode("utf-8")
@@ -567,11 +573,12 @@ class Expr:
             name_line = ""
         title = f"<strong><samp>{html.escape(short_repr(self))}</samp></strong><br />\n"
         summary = "<samp>Show graph</samp>"
+        subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
         prefix = (
             f"{title}{name_line}"
             f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
-            "<strong><samp>Result:</samp></strong>"
+            f"<strong><samp>Result{subsample_msg}:</samp></strong>"
         )
         report = node_report(self)
         if hasattr(report, "_repr_html_"):
