@@ -22,6 +22,7 @@ from ._evaluation import (
 from ._expressions import Apply
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
+from ._subsampling import env_with_subsampling
 from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
@@ -488,7 +489,7 @@ def _rename_cv_param_pipeline_to_estimator(kwargs):
     return renamed
 
 
-def cross_validate(pipeline, environment, **kwargs):
+def cross_validate(pipeline, environment, *, keep_subsampling=False, **kwargs):
     """Cross-validate a pipeline built from an expression.
 
     This runs cross-validation from a pipeline that was built from a skrub
@@ -505,6 +506,11 @@ def cross_validate(pipeline, environment, **kwargs):
 
     environment : dict
         Bindings for variables contained in the expression.
+
+    keep_subsampling : bool, default=False
+        If True, and if subsampling has been configured (see
+        :meth:`Expr.skb.subsample`), use a subsample of the data. By
+        default subsampling is not applied and all the data is used.
 
     kwargs : dict
         All other named arguments are forwarded to
@@ -551,6 +557,7 @@ def cross_validate(pipeline, environment, **kwargs):
     4    0.85
     Name: test_score, dtype: float64
     """
+    environment = env_with_subsampling(pipeline.expr, environment, keep_subsampling)
     kwargs = _rename_cv_param_pipeline_to_estimator(kwargs)
     X, y = _compute_Xy(pipeline.expr, environment)
     result = model_selection.cross_validate(
@@ -565,7 +572,12 @@ def cross_validate(pipeline, environment, **kwargs):
 
 
 def train_test_split(
-    expr, environment, splitter=model_selection.train_test_split, **splitter_kwargs
+    expr,
+    environment,
+    *,
+    keep_subsampling=False,
+    splitter=model_selection.train_test_split,
+    **splitter_kwargs,
 ):
     """Split an environment into a training an testing environments.
 
@@ -573,6 +585,7 @@ def train_test_split(
     ``Expr.skb.train_test_split()`` method. See the corresponding docstring for
     details and examples.
     """
+    environment = env_with_subsampling(expr, environment, keep_subsampling)
     X, y = _compute_Xy(expr, environment)
     if y is None:
         X_train, X_test = splitter(X, **splitter_kwargs)
