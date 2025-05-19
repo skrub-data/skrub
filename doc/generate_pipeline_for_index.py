@@ -46,7 +46,7 @@ fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 
 # A pandas-based data-preparation pipeline that merges the tables
 aggregated_products = products.groupby("basket_ID").agg(
-    skrub.choose_from(("mean", "max", "count"))).reset_index()
+    skrub.choose_from(("mean", "max", "count"), name="agg")).reset_index()
 features = basket_IDs.merge(aggregated_products, on="basket_ID")
 from sklearn.ensemble import ExtraTreesClassifier
 predictions = features.skb.apply(ExtraTreesClassifier(), y=fraud_flags)
