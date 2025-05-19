@@ -70,8 +70,7 @@ def _add_jitter(column):
 
 
 def _wrap_label(column):
-    """ Add "<br>" to limit the width of a label to at most 20 chars
-    """
+    """Add "<br>" to limit the width of a label to at most 20 chars"""
     label = "<br>\n".join(textwrap.wrap(column["label"], width=20))
     return {**column, "label": label}
 
