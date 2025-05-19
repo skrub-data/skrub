@@ -1,3 +1,5 @@
+import textwrap
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
@@ -67,16 +69,22 @@ def _add_jitter(column):
     return column
 
 
+def _wrap_label(column):
+    """Add "<br>" to limit the width of a label to at most 20 chars"""
+    label = "<br>\n".join(textwrap.wrap(column["label"], width=20))
+    return {**column, "label": label}
+
+
 def _prepare_column(col, *, is_log_scale, is_int):
     if pd.api.types.is_bool_dtype(col) or not pd.api.types.is_numeric_dtype(col):
-        return _prepare_obj_column(col)
+        return _wrap_label(_prepare_obj_column(col))
     result = _prepare_numeric_column(col, is_log_scale=is_log_scale, is_int=is_int)
     result["label"] = {
         "mean_test_score": "score",
         "mean_fit_time": "fit time",
         "mean_score_time": "score time",
     }.get(result["label"], result["label"])
-    return result
+    return _wrap_label(result)
 
 
 def _prepare_obj_column(col):
