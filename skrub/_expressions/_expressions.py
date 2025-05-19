@@ -187,7 +187,7 @@ def _format_expr_creation_stack():
 
 
 class ExprImpl:
-    """Base class for all kinds of expressions (computatin graph nodes).
+    """Base class for all kinds of expressions (computation graph nodes).
 
     Those types are used as `_skrub_impl` attributes of `Expr` instances. They
     provide the expression's functionality.
