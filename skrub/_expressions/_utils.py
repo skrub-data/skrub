@@ -45,7 +45,6 @@ class _CloudPickle:
             # before python 3.11
             state = self.__dict__.copy()
         for k in self._cloudpickle_attributes:
-            # TODO warn if cloudpickle has to pickle by value
             state[k] = cloudpickle.dumps(state[k])
         return state
 
