@@ -459,7 +459,7 @@ Here is a toy example with 3 steps:
 ... )
 
 Above, we give a name to each intermediate result with ``.skb.set_name()`` so
-that we can later to refer to it when manipulating a fitted pipeline.
+that we can later refer to it when manipulating a fitted pipeline.
 
 >>> pipeline = output.skb.get_pipeline()
 >>> pipeline.fit({"url": "file:///example.db"})
