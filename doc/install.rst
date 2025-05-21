@@ -155,7 +155,7 @@ You should see something like this:
 '''''''''''''''''''''''''
 
 Now, setup a development environment.
-You can set up a virtual environment with Conda, or with python's `venv`:
+You can set up a virtual environment with Conda, or with python's ``venv``:
 
 - With `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__:
 
