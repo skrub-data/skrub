@@ -204,7 +204,7 @@ Additionally, you might have updated the internal dataframe API in
 ``amazing_function``.
 
 Run each updated test file using ``pytest``
-([pytest docs](https://docs.pytest.org/en/stable/)):
+( [pytest docs](https://docs.pytest.org/en/stable/) ):
 
 .. code:: sh
 
@@ -350,13 +350,6 @@ and addressing any issues.**
 
 First, make sure you have properly installed the development version of skrub.
 You can follow the :ref:`installation_instructions` > "From source" section, if needed.
-
-Building the documentation requires installing some additional packages:
-
-.. code:: bash
-
-    cd skrub
-    pip install '.[doc]'
 
 To build the documentation, you need to be in the ``doc`` folder:
 
