@@ -153,20 +153,20 @@ def _get_preprocessors(
 
 
 class Cleaner(TransformerMixin, BaseEstimator):
-    """Column-wise consistency checks and sanitization, eg of null values or dates.
+    """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
-    such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
-    dates. See the "Notes" section for a full list.
+    such as detecting null values represented as strings (e.g. ``'N/A'``), parsing
+    dates, and removing uninformative columns. See the "Notes" section for a full list.
 
     Parameters
     ----------
     drop_null_fraction : float or None, default=1.0
-        Fraction of null above which the column is dropped. If `drop_null_fraction`
+        Fraction of null above which the column is dropped. If ``drop_null_fraction``
         is set to ``1.0``, the column is dropped if it contains only
-        nulls or NaNs (this is the default behavior). If `drop_null_fraction` is a
+        nulls or NaNs (this is the default behavior). If ``drop_null_fraction`` is a
         number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
-        is strictly larger than `drop_null_fraction`. If `drop_null_fraction` is
+        is strictly larger than ``drop_null_fraction``. If ``drop_null_fraction`` is
         ``None``, this selection is disabled: no columns are dropped based on the
         number of null values they contain.
 
@@ -203,13 +203,15 @@ class Cleaner(TransformerMixin, BaseEstimator):
     -----
     The ``Cleaner`` performs the following set of transformations on each column:
 
-    - ``CleanNullStrings()``: replace strings used to represent null values
-      with actual null values.
+    - ``CleanNullStrings()``: replace strings used to represent missing values
+      with null values.
 
     - ``DropUninformative()``: drop the column if it is considered to be
       "uninformative". A column is considered to be "uninformative" if it contains
-      only null values (``drop_null_fraction``), only a constant value
+      only missing values (``drop_null_fraction``), only a constant value
       (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      By default, the ``Cleaner`` keeps all columns, unless they contain only
+      missing values.
       Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
       that contain text.
 
@@ -225,7 +227,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     The ``Cleaner`` object should only be used for preliminary sanitizing of
     the data because it does not perform any transformations on numeric columns.
-    On the other hand, the ``TableVectorizer`` converts numeric columns to float32
+    On the other hand, the ``TableVectorizer`` converts numeric columns to ``float32``
     and ensures that null values are represented with NaNs, which can be handled
     correctly by downstream scikit-learn estimators.
 
