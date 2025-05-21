@@ -67,6 +67,8 @@ Changes
 
 Bugfixes
 --------
+- Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
+  input column was a Categorical datatype. :pr:`1401` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 
 Release 0.5.3
