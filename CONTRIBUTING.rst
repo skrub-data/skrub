@@ -204,7 +204,7 @@ Additionally, you might have updated the internal dataframe API in
 ``amazing_function``.
 
 Run each updated test file using ``pytest``
-( [pytest docs](https://docs.pytest.org/en/stable/) ):
+(`pytest docs <https://docs.pytest.org/en/stable//>`__):
 
 .. code:: sh
 
