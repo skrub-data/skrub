@@ -225,8 +225,11 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             The embedding representation of the input.
         """
         del y
-        if not sbd.is_string(column):
+        if not (sbd.is_string(column) or sbd.is_categorical(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
+
+        if sbd.is_categorical(column):
+            column = sbd.to_string(column)
 
         self._check_params()
 
@@ -284,8 +287,11 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         """
         check_is_fitted(self, "_estimator")
 
-        if not sbd.is_string(column):
+        if not (sbd.is_string(column) or sbd.is_categorical(column)):
             raise ValueError(f"Column {sbd.name(column)!r} does not contain strings.")
+
+        if sbd.is_categorical(column):
+            column = sbd.to_string(column)
 
         X_out = self._vectorize(column)
 

@@ -133,7 +133,10 @@ class StringEncoder(SingleColumnTransformer):
                 f" 'hashing', got {self.vectorizer!r}"
             )
 
-        X_filled = sbd.fill_nulls(X, "")
+        if not (sbd.is_string(X) or sbd.is_categorical(X)):
+            raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
+        X_filled = sbd.to_string(X)
+        X_filled = sbd.fill_nulls(X_filled, "")
         X_out = self.vectorizer_.fit_transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
 
@@ -182,6 +185,10 @@ class StringEncoder(SingleColumnTransformer):
             The embedding representation of the input.
         """
 
+        if not (sbd.is_string(X) or sbd.is_categorical(X)):
+            raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
+        if sbd.is_categorical(X):
+            X = sbd.to_string(X)
         X_filled = sbd.fill_nulls(X, "")
         X_out = self.vectorizer_.transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
