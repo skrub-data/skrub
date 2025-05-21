@@ -177,7 +177,7 @@ install the local package in editable mode with development dependencies:
 
     pip install --editable ".[dev, lint, test, doc]"
 
-Enable pre-commit hooks to ensure code style consistency,this will activate some checks
+Enable pre-commit hooks to ensure code style consistency, this will activate some checks
 that will run every time you do a ``git commit`` (mostly, formatting checks):
 
 .. code:: console
