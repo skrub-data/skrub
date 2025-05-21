@@ -62,6 +62,9 @@ Changes
 
 - The :class:`SimpleCleaner` has been removed. use :class:`Cleaner` instead. :pr:`1370` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The :class:`DatetimeEncoder` no longer encodes month in year, as the same functionality is implemented by the
+  "day in year" encoding. :pr:`1396` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Bugfixes
 --------
 
