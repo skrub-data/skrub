@@ -175,7 +175,7 @@ install the local package in editable mode with development dependencies:
 
 .. code:: console
 
-    pip install --editable ".[dev, lint, test, doc]"
+    pip install -e ".[dev, lint, test, doc]"
 
 Enabling pre-commit hooks ensures code style consistency by triggering checks (mainly formatting) every time you run a ``git commit``.
 
@@ -198,10 +198,20 @@ To ensure your environment is correctly set up, run the test suite:
 
 .. code:: console
 
-    pytest -s skrub/tests
+    pytest --pyargs skrub
 
 Testing should take about 5 minutes.
-If no errors or failures are found, your environment is ready for development!
+
+If you see some warnings like:
+.. code:: sh
+
+  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
+    warnings.warn(
+
+This is expected, and you may proceed with the next steps without worrying about them.
+However, no tests should fail at this point: if they do fail, then let us know.
+
+After that, your environment is ready for development!
 
 **Deep learning dependencies**
 
