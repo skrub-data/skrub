@@ -142,7 +142,7 @@ To contribute, you will first have to run through some steps:
     ``conda activate env_skrub``.
   - While at the root of your local copy of skrub and within the new
     env, install the required development dependencies by running
-    ``pip install --editable ".[dev, lint, test, doc]"``.
+    ``pip install --editable ".[dev]"``.
 
 - Run ``pre-commit install`` to activate some checks that will run every
   time you do a ``git commit`` (mostly, formatting checks).

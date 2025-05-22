@@ -155,7 +155,7 @@ Install the local package in editable mode with development dependencies:
 
 .. code:: console
 
-    pip install -e ".[dev, lint, test]"
+    pip install -e ".[dev]"
 
 Enable pre-commit hooks to ensure code style consistency:
 
