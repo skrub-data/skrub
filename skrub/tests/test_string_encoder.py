@@ -148,7 +148,7 @@ def test_get_feature_names_out(encode_column, df_module):
     encoder = StringEncoder(n_components=4)
 
     encoder.fit(encode_column)
-    expected_columns = ["col1_0", "col1_1", "col1_2", "col1_3"]
+    expected_columns = ["col1_1", "col1_2", "col1_3", "col1_4"]
     assert encoder.get_feature_names_out() == expected_columns
 
     # Checking that a series with an empty name generates the proper column names
@@ -165,7 +165,7 @@ def test_get_feature_names_out(encode_column, df_module):
     encoder = StringEncoder(n_components=4)
 
     encoder.fit(X)
-    expected_columns = ["tsvd_0", "tsvd_1", "tsvd_2", "tsvd_3"]
+    expected_columns = ["tsvd_1", "tsvd_2", "tsvd_3", "tsvd_4"]
     assert encoder.get_feature_names_out() == expected_columns
 
 

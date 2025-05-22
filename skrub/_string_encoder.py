@@ -95,7 +95,7 @@ class StringEncoder(SingleColumnTransformer):
 
         num_digits = len(str(self.n_components - 1))
         return [
-            f"{self._input_name}_{str(i).zfill(num_digits)}"
+            f"{self._input_name}_{str(i+1).zfill(num_digits)}"
             for i in range(self.n_components)
         ]
 
