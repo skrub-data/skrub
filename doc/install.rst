@@ -161,7 +161,7 @@ You can set up a virtual environment with Conda, or with python's ``venv``:
 
 .. code:: console
 
-    conda create -n env_skrub python=3.10 # or any later python version
+    conda create -n env_skrub python=3.13
     conda activate env_skrub
 
 - With `venv <https://docs.python.org/3/library/venv.html>`__:
