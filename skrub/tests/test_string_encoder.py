@@ -41,7 +41,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
     check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
     check = check.astype("float32")  # StringEncoder is float32
 
-    names = [f"col1_{idx}" for idx in range(2)]
+    names = [f"col1_{idx+1}" for idx in range(2)]
 
     check_df = df_module.make_dataframe(dict(zip(names, check.T)))
 
@@ -202,7 +202,7 @@ def test_n_components_equal_voc_size(df_module):
     x = df_module.make_column("x", ["aab", "bba"])
     encoder = StringEncoder(n_components=2, ngram_range=(1, 1), analyzer="char")
     out = encoder.fit_transform(x)
-    assert sbd.column_names(out) == ["x_0", "x_1"]
+    assert sbd.column_names(out) == ["x_1", "x_2"]
     assert not hasattr(encoder, "tsvd_")
 
 
