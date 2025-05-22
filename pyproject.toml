@@ -73,7 +73,7 @@ dev = [
     "pytest-xdist",
 
     # optional
-    "pyarrow",
+    "pyarrow<20.0.0",
     "polars",
     "plotly",
 ]
@@ -125,7 +125,7 @@ ruff = "==0.4.8"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
-pyarrow = "*"
+pyarrow = "<20.0.0"
 polars = "*"
 plotly = "*"
 
