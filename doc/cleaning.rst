@@ -14,6 +14,17 @@ consistent data representation with which it is easier to work. For
 instance, it detects null values represented as strings, parses dates,
 removes uninformative columns.
 
+.. Code in a comment to build the variables we need for doctests to run
+
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({
+    ...     'A': ['one', 'two', 'two', 'three'],
+    ...     'B': ['02/02/2024', '23/02/2024', '12/03/2024', '13/03/2024'],
+    ...     'C': ['1.5', 'N/A', '12.2', 'N/A'],
+    ...     'D': [1.5, 2.0, 2.5, 3.0],
+    ... })
+    >>> df_test = df
+
 To have reproducible transformations, it is implemented as a scikit-learn
 transformer:
 
