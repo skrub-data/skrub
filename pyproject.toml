@@ -54,7 +54,6 @@ dev = [
     "jupyterlite-pyodide-kernel",
     "numpydoc",
     "pydata-sphinx-theme",
-    "plotly",
     "seaborn",
     "sphinx",
     "sphinx-copybutton",
@@ -62,7 +61,6 @@ dev = [
     "sphinxext-opengraph",
     "sphinx-autosummary-accessors",
     "statsmodels",
-    "pyarrow",
 
     # lint
     "black==23.3.0",
@@ -70,7 +68,6 @@ dev = [
     "pre-commit",
 
     # test
-    "numpydoc",
     "pytest",
     "pytest-cov",
     "pytest-xdist",
