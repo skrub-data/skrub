@@ -128,20 +128,11 @@ To setup your development environment, you need to follow the steps in "From Sou
 present in :ref:`Installing from source<installing_from_source>` page.
 After that, you can return to this page to continue.
 
-If you ran the tests ``pytest -s skrub/tests``;
-you may have seen some warnings such as:
-
-.. code:: sh
-
-  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
-    warnings.warn(
-
-This is expected, and you may proceed with the next steps without worrying about them. However, no tests should fail at this point: if they do fail, then let us know.
-
 Now that the development environment is ready, you may create a new branch and start working on
 the new issue.
 
 .. code:: sh
+
    # fetch latest updates and start from the current head
    git fetch upstream
    git checkout -b my-branch-name-eg-fix-issue-123
