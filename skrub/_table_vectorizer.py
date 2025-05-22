@@ -204,7 +204,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     The ``Cleaner`` performs the following set of transformations on each column:
 
     - ``CleanNullStrings()``: replace strings used to represent missing values
-      with null values.
+      with NA markers.
 
     - ``DropUninformative()``: drop the column if it is considered to be
       "uninformative". A column is considered to be "uninformative" if it contains
