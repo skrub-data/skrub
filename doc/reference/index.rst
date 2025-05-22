@@ -254,6 +254,7 @@ Cleaning a dataframe
    :nosignatures:
 
    deduplicate
+   SquashingScaler
 
 
 .. _downloading_a_dataset_ref:
