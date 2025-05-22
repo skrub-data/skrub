@@ -89,10 +89,15 @@ class StringEncoder(SingleColumnTransformer):
 
         Returns
         -------
-        feature_names_out : list of str objects
+        feature_names_out : ndarray of str objects
             Transformed feature names.
         """
-        return list(self.all_outputs_)
+
+        num_digits = len(str(self.n_components - 1))
+        return [
+            f"{self._input_name}_{str(i).zfill(num_digits)}"
+            for i in range(self.n_components)
+        ]
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -161,10 +166,11 @@ class StringEncoder(SingleColumnTransformer):
         self._is_fitted = True
         self.n_components_ = result.shape[1]
 
-        name = sbd.name(X)
-        if not name:
-            name = "tsvd"
-        self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components_)]
+        self._input_name = sbd.name(X)
+        if not self._input_name:
+            self._input_name = "tsvd"
+
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, result)
 
