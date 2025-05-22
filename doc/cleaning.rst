@@ -42,5 +42,3 @@ dataframe operations that need exact correspondences, such as counting
 elements. It is typically not needed when the entries are fed directly to
 a machine-learning model, as a :ref:`dirty-category encoder <dirty_categories>`
 can suffice.
-
-
