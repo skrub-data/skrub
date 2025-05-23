@@ -10,9 +10,9 @@ Cleaning
 =========================================
 
 :class:`Cleaner` sanitizes a dataframe, transforming it to a more
-consistent data representation with which it is easier to work. For
-instance, it detects null values represented as strings, parses dates,
-removes uninformative columns.
+consistent data representation which is easier to work with: it detects
+null values represented as strings, parses dates, and removes
+uninformative columns (see docstring: :class:`Cleaner`).
 
 .. Code in a comment to build the variables we need for doctests to run
 
