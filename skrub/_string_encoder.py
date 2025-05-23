@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
+from ._to_str import ToStr
 
 
 class StringEncoder(SingleColumnTransformer):
@@ -111,6 +112,13 @@ class StringEncoder(SingleColumnTransformer):
         """
         del y
 
+        if not (sbd.is_string(X) or sbd.is_categorical(X)):
+            raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
+        self.to_str = ToStr(convert_category=True)
+        X_filled = self.to_str.fit_transform(X)
+        X_filled = sbd.to_string(X)
+        X_filled = sbd.fill_nulls(X_filled, "")
+
         if self.vectorizer == "tfidf":
             self.vectorizer_ = TfidfVectorizer(
                 ngram_range=self.ngram_range, analyzer=self.analyzer
@@ -133,10 +141,6 @@ class StringEncoder(SingleColumnTransformer):
                 f" 'hashing', got {self.vectorizer!r}"
             )
 
-        if not (sbd.is_string(X) or sbd.is_categorical(X)):
-            raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
-        X_filled = sbd.to_string(X)
-        X_filled = sbd.fill_nulls(X_filled, "")
         X_out = self.vectorizer_.fit_transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
 
@@ -187,8 +191,7 @@ class StringEncoder(SingleColumnTransformer):
 
         if not (sbd.is_string(X) or sbd.is_categorical(X)):
             raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
-        if sbd.is_categorical(X):
-            X = sbd.to_string(X)
+        X_filled = self.to_str.transform(X)
         X_filled = sbd.fill_nulls(X, "")
         X_out = self.vectorizer_.transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X

@@ -10,6 +10,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._to_str import ToStr
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
 
@@ -228,8 +229,8 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         if not (sbd.is_string(column) or sbd.is_categorical(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
 
-        if sbd.is_categorical(column):
-            column = sbd.to_string(column)
+        self.to_str = ToStr(convert_category=True)
+        column = self.to_str.fit_transform(column)
 
         self._check_params()
 
@@ -290,7 +291,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         if not (sbd.is_string(column) or sbd.is_categorical(column)):
             raise ValueError(f"Column {sbd.name(column)!r} does not contain strings.")
 
-        column = sbd.to_string(column)
+        column = self.to_str.transform(column)
 
         X_out = self._vectorize(column)
 
