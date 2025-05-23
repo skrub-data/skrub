@@ -65,6 +65,9 @@ Changes
 
 - The :class:`SimpleCleaner` has been removed. use :class:`Cleaner` instead. :pr:`1370` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The optional dependencies 'dev', 'doc', 'lint' and 'test' have been coalesced into
+  'dev'. :pr:`1404` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 Bugfixes
 --------
 

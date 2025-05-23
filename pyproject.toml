@@ -48,13 +48,12 @@ dev = [
     "ipykernel",
     "ipython",
     "jupyterlab",
-]
-doc = [
+
+    # doc
     "jupyterlite-sphinx",
     "jupyterlite-pyodide-kernel",
     "numpydoc",
     "pydata-sphinx-theme",
-    "plotly",
     "seaborn",
     "sphinx",
     "sphinx-copybutton",
@@ -62,26 +61,24 @@ doc = [
     "sphinxext-opengraph",
     "sphinx-autosummary-accessors",
     "statsmodels",
-    "pyarrow",
-]
-lint = [
+
+    # lint
     "black==23.3.0",
     "ruff==0.4.8",
     "pre-commit",
-]
-optional = [
+
+    # test
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+
+    # optional
     "pyarrow",
     "polars",
     "plotly",
 ]
 transformers = [
     "sentence-transformers",
-]
-test = [
-    "numpydoc",
-    "pytest",
-    "pytest-cov",
-    "pytest-xdist",
 ]
 
 [project.urls]

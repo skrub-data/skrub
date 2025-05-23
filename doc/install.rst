@@ -175,7 +175,7 @@ install the local package in editable mode with development dependencies:
 
 .. code:: console
 
-    pip install -e ".[dev, lint, test, doc]"
+    pip install -e ".[dev]"
 
 Enabling pre-commit hooks ensures code style consistency by triggering checks (mainly formatting) every time you run a ``git commit``.
 
