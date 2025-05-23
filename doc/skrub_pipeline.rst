@@ -418,3 +418,80 @@ However, all of those methods have a ``keep_subsampling`` parameter that we can
 set to ``True`` to force using the subsampling when we call them.
 
 See more details in a :ref:`full example <example_subsampling>`.
+
+Using only a part of a pipeline
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We can give a name to any node with :meth:`.skb.set_name() <Expr.skb.set_name>`.
+When this is done we can:
+
+- Bypass the computation of that node and override its result by passing it as a
+  key in the ``environment`` argument.
+- Truncate the pipeline after this node to obtain the intermediate result with
+  :meth:`SkrubPipeline.truncated_after`.
+- Retrieve that node and inspect the estimator that was fitted in it, if the
+  node was created with :meth:`.skb.apply() <Expr.skb.apply>`.
+
+Here is a toy example with 3 steps:
+
+>>> def load_data(url):
+...     print("load: ", url)
+...     return [1, 2, 3, 4]
+
+
+>>> def transform(x):
+...     print("transform")
+...     return [item * 10 for item in x]
+
+
+>>> def agg(x):
+...     print("agg")
+...     return max(x)
+
+
+>>> url = skrub.var("url")
+>>> output = (
+...     url.skb.apply_func(load_data)
+...     .skb.set_name("loaded")
+...     .skb.apply_func(transform)
+...     .skb.set_name("transformed")
+...     .skb.apply_func(agg)
+... )
+
+Above, we give a name to each intermediate result with ``.skb.set_name()`` so
+that we can later refer to it when manipulating a fitted pipeline.
+
+>>> pipeline = output.skb.get_pipeline()
+>>> pipeline.fit({"url": "file:///example.db"})
+load:  file:///example.db
+transform
+agg
+SkrubPipeline(expr=<Call 'agg'>)
+
+>>> pipeline.transform({"url": "file:///example.db"})
+load:  file:///example.db
+transform
+agg
+40
+
+Below, we bypass the data loading. Because we directly provide a value for the
+intermediate result that we named ``"loaded"``, the corresponding computation is
+skipped and the provided value is used instead. We can see that
+``"load: ..."`` is not printed and that the rest of the computation proceeds
+using ``[6, 5, 4]`` (instead of ``[1, 2, 3, 4]`` as before).
+
+>>> pipeline.transform({"loaded": [6, 5, 4]})
+transform
+agg
+60
+
+Now we show how to stop at the result we named ``"transformed"``. With
+``truncated_after``, we obtain a pipeline that computes that intermediate result
+and returns it instead of applying the last transformation; note that ``"agg"``
+is not printed and we get the output of ``transform()``, not of ``agg()``:
+
+>>> truncated = pipeline.truncated_after("transformed")
+>>> truncated.transform({"url": "file:///example.db"})
+load:  file:///example.db
+transform
+[10, 20, 30, 40]
