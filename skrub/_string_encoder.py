@@ -89,7 +89,7 @@ class StringEncoder(SingleColumnTransformer):
 
         Returns
         -------
-        feature_names_out : ndarray of str objects
+        feature_names_out : list of str objects
             Transformed feature names.
         """
 
