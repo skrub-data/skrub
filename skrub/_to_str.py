@@ -173,13 +173,19 @@ class ToStr(SingleColumnTransformer):
     skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'Date' to strings.
     """  # noqa: E501
 
+    def __init__(self, convert_category=False):
+        self.convert_category = convert_category
+
     def fit_transform(self, column, y=None):
         del y
-        if (
-            sbd.is_numeric(column)
-            or sbd.is_any_date(column)
-            or sbd.is_categorical(column)
-        ):
+        if sbd.is_categorical(column):
+            if self.convert_category:
+                return self.transform(column)
+            raise RejectColumn(
+                f"Refusing to convert {sbd.name(column)!r} "
+                f"with dtype '{sbd.dtype(column)}' to strings."
+            )
+        if sbd.is_numeric(column) or sbd.is_any_date(column):
             raise RejectColumn(
                 f"Refusing to convert {sbd.name(column)!r} "
                 f"with dtype '{sbd.dtype(column)}' to strings."
