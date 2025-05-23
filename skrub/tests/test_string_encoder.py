@@ -11,7 +11,7 @@ from sklearn.pipeline import Pipeline
 
 from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
-from skrub._total_std_scaler import total_standard_deviation_scaler
+from skrub._scaling_factor import scaling_factor
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
     )
     check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
     check = check.astype("float32")  # StringEncoder is float32
-    check /= total_standard_deviation_scaler(check)
+    check /= scaling_factor(check)
 
     names = [f"col1_{idx}" for idx in range(2)]
 

@@ -20,9 +20,9 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._total_std_scaler import (
-    batch_standard_deviation_scaler,
-    total_standard_deviation_scaler,
+from ._scaling_factor import (
+    scaling_factor,
+    scaling_factor_batch,
 )
 from ._utils import unique_strings
 
@@ -479,14 +479,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._input_name = sbd.name(X)
         self._random_state = check_random_state(self.random_state)
         is_null = sbd.to_numpy(sbd.is_null(X))
-        result = self._fit_transform(sbd.to_numpy(X), is_null)
+        X_original = deepcopy(X)
+        X = sbd.to_numpy(X)
 
-        self.scaler_ = total_standard_deviation_scaler(result)
-        result /= self.scaler_
-
-        return self._post_process(X, result)
-
-    def _fit_transform(self, X, is_null):
         # Copy parameter rho
         self.rho_ = self.rho
         # Attributes to monitor the convergence
@@ -548,7 +543,12 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.H_dict_.update(zip(unq_X, unq_H))
 
         # Transform and normalize the output.
-        return self._transform(X, is_null)
+        result = self._transform(X, is_null)
+
+        self.scaling_factor_ = scaling_factor(result)
+        result /= self.scaling_factor_
+
+        return self._post_process(X_original, result)
 
     def get_feature_names_out(self, n_labels=3):
         """
@@ -722,7 +722,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         result = self._transform(X, is_null)
 
-        self.scaler_, self.past_stats_ = batch_standard_deviation_scaler(
+        self.scaling_factor_, self.past_stats_ = scaling_factor_batch(
             result,
             getattr(
                 self,
@@ -768,7 +768,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
 
-        result /= self.scaler_
+        result /= self.scaling_factor_
 
         return self._post_process(X, result)
 

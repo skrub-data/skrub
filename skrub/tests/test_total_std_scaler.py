@@ -4,7 +4,7 @@ from numpy.testing import assert_array_almost_equal
 
 import skrub._dataframe as sbd
 from skrub import GapEncoder, StringEncoder
-from skrub._total_std_scaler import total_standard_deviation_scaler
+from skrub._scaling_factor import scaling_factor
 
 try:
     import sentence_transformers  # noqa: F401
@@ -17,10 +17,10 @@ except ImportError:
 def test_scaling_invariance():
     """Normalizing twice leads to a unit scale."""
     X = np.random.randn(10, 3)
-    scale_1 = total_standard_deviation_scaler(X)
+    scale_1 = scaling_factor(X)
     X_scale_1 = X / scale_1
 
-    scale_2 = total_standard_deviation_scaler(X_scale_1)
+    scale_2 = scaling_factor(X_scale_1)
     X_scale_2 = X_scale_1 / scale_2
 
     assert_array_almost_equal(X_scale_1, X_scale_2)
@@ -33,7 +33,7 @@ def test_nonfinite():
     column-wise.
     """
     X = np.array([[np.nan, np.nan, np.nan], [1, 2, 3], [4, 5, 6]])
-    assert total_standard_deviation_scaler(X) == total_standard_deviation_scaler(X[1:])
+    assert scaling_factor(X) == scaling_factor(X[1:])
 
 
 @pytest.mark.parametrize(
@@ -46,7 +46,7 @@ def test_nonfinite():
 def test_encoders(df_module, encoder):
     X = df_module.example_dataframe["str-col"]
     X_t = encoder.fit_transform(X)
-    assert total_standard_deviation_scaler(np.array(X_t)) == pytest.approx(1)
+    assert scaling_factor(np.array(X_t)) == pytest.approx(1)
 
 
 def test_partial_fit(df_module):
@@ -63,4 +63,4 @@ def test_partial_fit(df_module):
     Xt_np = np.hstack(
         [sbd.to_numpy(col).reshape(-1, 1) for col in sbd.to_column_list(Xt)]
     )
-    assert total_standard_deviation_scaler(Xt_np) == pytest.approx(1)
+    assert scaling_factor(Xt_np) == pytest.approx(1)

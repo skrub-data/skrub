@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
-from ._total_std_scaler import total_standard_deviation_scaler
+from ._scaling_factor import scaling_factor
 
 
 class StringEncoder(SingleColumnTransformer):
@@ -160,8 +160,8 @@ class StringEncoder(SingleColumnTransformer):
         del X_out  # optimize memory: we no longer need X_out
 
         # block normalize
-        self.scaler_ = total_standard_deviation_scaler(result)
-        result /= self.scaler_
+        self.scaling_factor_ = scaling_factor(result)
+        result /= self.scaling_factor_
 
         self.n_components_ = result.shape[1]
 
@@ -197,7 +197,7 @@ class StringEncoder(SingleColumnTransformer):
         del X_out  # optimize memory: we no longer need X_out
 
         # block normalize
-        result /= self.scaler_
+        result /= self.scaling_factor_
 
         return self._post_process(X, result)
 
