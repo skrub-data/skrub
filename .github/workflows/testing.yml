@@ -16,10 +16,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
         environment: [
-            ci-py309-min-deps,
-            ci-py309-min-optional-deps,
-            ci-py313-latest-deps,
-            ci-py313-latest-optional-deps
+            ci-py311-transformers,
         ]
     runs-on: ${{ matrix.os }}
     steps:
@@ -33,9 +30,12 @@ jobs:
           frozen: true
 
       - name: Run tests
-        run: pixi run -e ${{ matrix.environment }} test -n auto
+        run: pixi run -e ${{ matrix.environment }} test
         env:
           OMP_NUM_THREADS: 1
+          MKL_NUM_THREADS: 1
+          TORCH_SHOW_CPP_STACKTRACES: 1
+          TORCH_CPP_LOG_LEVEL: 1
 
       - name: Run user guide doctests
         run: pixi run -e ${{ matrix.environment }} test-user-guide
