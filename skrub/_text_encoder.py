@@ -290,8 +290,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         if not (sbd.is_string(column) or sbd.is_categorical(column)):
             raise ValueError(f"Column {sbd.name(column)!r} does not contain strings.")
 
-        if sbd.is_categorical(column):
-            column = sbd.to_string(column)
+        column = sbd.to_string(column)
 
         X_out = self._vectorize(column)
 
