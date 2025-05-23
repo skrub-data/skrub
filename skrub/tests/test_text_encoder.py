@@ -175,16 +175,15 @@ def test_store_weights_in_pickle(df_module, encoder, store_weights_in_pickle):
     assert ("_estimator" in encoder_unpickled.__dict__) is store_weights_in_pickle
 
 
-def test_categorical_features(df_module):
+def test_categorical_features(df_module, encoder):
     data = {
         "categorical": pd.Categorical(["A", "B", "A", "C"]),
         "numeric": [1, 2, 3, 4],
     }
     df = pd.DataFrame(data)
 
-    text_encoder = TextEncoder(n_components=2)
     with pytest.raises(ValueError, match="Column 'numeric' does not contain strings."):
-        text_encoder.fit(df["numeric"])
+        encoder.fit(df["numeric"])
 
-    out = text_encoder.fit_transform(df["categorical"])
+    out = encoder.fit_transform(df["categorical"])
     assert sbd.column_names(out) == ["categorical_1", "categorical_2"]
