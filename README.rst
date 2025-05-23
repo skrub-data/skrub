@@ -54,7 +54,7 @@ year_first_hired                                                        1986
 >>> cross_val_score(tabular_learner('regressor'), df, y)
 array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])
 
-All features are fully supported for both Pandas and Polars dataframes.
+All features are support both Pandas and Polars dataframes.
 
 See our `examples <https://skrub-data.org/stable/auto_examples>`_, or check out
 the `learning materials <https://skrub-data.org/skrub-materials/index.html>`_.
