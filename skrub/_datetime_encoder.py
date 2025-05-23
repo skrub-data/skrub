@@ -30,14 +30,12 @@ _TIME_LEVELS = [
 
 _DEFAULT_ENCODING_PERIODS = {
     "day_of_year": 366,
-    "month": 12,
     "day": 30,
     "hour": 24,
     "weekday": 7,
 }
 _DEFAULT_ENCODING_SPLINES = {
     "day_of_year": 12,
-    "month": 12,
     "day": 4,
     "hour": 12,
     "weekday": 7,
@@ -162,7 +160,6 @@ class DatetimeEncoder(SingleColumnTransformer):
     The period of each feature is:
 
     - ``day_of_year``: 366
-    - ``month``: 12 (month in year)
     - ``day``: 30 (day in month)
     - ``hour``: 24 (hour in day)
     - ``weekday``: 7 (day in week)
@@ -171,7 +168,6 @@ class DatetimeEncoder(SingleColumnTransformer):
     generating too many features:
 
     - ``day_of_year``: 12
-    - ``month``: 12
     - ``day``: 4
     - ``hour``: 12
     - ``weekday``: 7
