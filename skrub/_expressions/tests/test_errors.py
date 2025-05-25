@@ -441,7 +441,7 @@ def test_pass_df_instead_of_expr():
         skrub.var("a").join(df, on="ID")
     # this one is raised by polars so we do not control the type or error
     # message but it fails early and is understandable
-    with pytest.raises(TypeError, match="expected .* to be a DataFrame"):
+    with pytest.raises(TypeError, match="expected .* to be a '?DataFrame'?"):
         df.join(skrub.var("a"), on="ID")
 
 
