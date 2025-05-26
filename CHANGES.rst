@@ -43,7 +43,7 @@ Changes
 -------
 - :class:`StringEncoder` now exposes the `stop_words` argument, which is passed to the
   underlying vectorizer (:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
-  or :class:`~sklearn.feature_extraction.text.HashingVectorizer`). :pr:`??` by
+  or :class:`~sklearn.feature_extraction.text.HashingVectorizer`). :pr:`1415` by
   :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 .. warning::
