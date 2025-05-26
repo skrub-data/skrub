@@ -420,7 +420,10 @@ def _collect_polars_lazyframe(df):
 
 @dispatch
 def shape(obj):
-    raise NotImplementedError()
+    raise NotImplementedError(
+        "Operation not supported on this object. Expecting a Pandas or Polars"
+        f"dataframe, but got an object of type {type(obj)}."
+    )
 
 
 @shape.specialize("pandas")
