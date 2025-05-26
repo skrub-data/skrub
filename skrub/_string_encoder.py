@@ -27,6 +27,7 @@ class StringEncoder(SingleColumnTransformer):
     n_components : int, default=30
         Number of components to be used for the singular value decomposition (SVD).
         Must be a positive integer.
+
     vectorizer : str, "tfidf" or "hashing", default="tfidf"
         Vectorizer to apply to the strings, either `tfidf` or `hashing` for
         scikit-learn TfidfVectorizer or HashingVectorizer respectively.
@@ -42,6 +43,14 @@ class StringEncoder(SingleColumnTransformer):
         Option ``char_wb`` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
 
+    stop_words : {'english'}, list, default=None
+        If 'english', a built-in stop word list for English is used. There are several
+        known issues with 'english' and you should consider an alternative (see Using
+        stop words).
+
+        If a list, that list is assumed to contain stop words, all of which will be
+        removed from the resulting tokens. Only applies if ``analyzer == 'word'``.
+
     random_state : int, RandomState instance or None, default=None
         Used during randomized svd. Pass an int for reproducible results across
         multiple function calls.
@@ -54,6 +63,25 @@ class StringEncoder(SingleColumnTransformer):
         Encode string columns by constructing latent topics.
     TextEncoder :
         Encode string columns using pre-trained language models.
+
+    Notes
+    -----
+    Skrub provides ``StringEncoder`` as a simple interface to perform `Latent Semantic
+    Analysis (LSA) <https://scikit-learn.org/stable/modules/decomposition.html#about-truncated-svd-and-latent-semantic-analysis-(lsa)>`_.
+    As such, it doesn't support all hyper-parameters exposed by the underlying
+    {:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
+    :class:`~sklearn.feature_extraction.text.HashingVectorizer`} and
+    :class:`~sklearn.decomposition.TruncatedSVD`. If you need more flexibility than the
+    proposed hyper-parameters of ``StringEncoder``, you must create your own LSA using
+    scikit-learn :class:`~sklearn.pipeline.Pipeline`, such as:
+
+    >>> from sklearn.pipeline import make_pipeline
+    >>> from sklearn.feature_extraction.text import TfidfVectorizer
+    >>> from sklearn.decomposition import TruncatedSVD
+
+    >>> make_pipeline(TfidfVectorizer(max_df=300), TruncatedSVD())
+    Pipeline(steps=[('tfidfvectorizer', TfidfVectorizer(max_df=300)),
+                ('truncatedsvd', TruncatedSVD())])
 
     Examples
     --------
@@ -74,7 +102,7 @@ class StringEncoder(SingleColumnTransformer):
     0      8.218069e-01      4.557474e-17
     1      6.971618e-16      1.000000e+00
     2      8.218069e-01     -3.046564e-16
-    """
+    """  # noqa: E501
 
     def __init__(
         self,
@@ -82,12 +110,14 @@ class StringEncoder(SingleColumnTransformer):
         vectorizer="tfidf",
         ngram_range=(3, 4),
         analyzer="char_wb",
+        stop_words=None,
         random_state=None,
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
         self.ngram_range = ngram_range
         self.analyzer = analyzer
+        self.stop_words = stop_words
         self.random_state = random_state
 
     def get_feature_names_out(self):
@@ -119,7 +149,9 @@ class StringEncoder(SingleColumnTransformer):
 
         if self.vectorizer == "tfidf":
             self.vectorizer_ = TfidfVectorizer(
-                ngram_range=self.ngram_range, analyzer=self.analyzer
+                ngram_range=self.ngram_range,
+                analyzer=self.analyzer,
+                stop_words=self.stop_words,
             )
         elif self.vectorizer == "hashing":
             self.vectorizer_ = Pipeline(
@@ -127,7 +159,9 @@ class StringEncoder(SingleColumnTransformer):
                     (
                         "hashing",
                         HashingVectorizer(
-                            ngram_range=self.ngram_range, analyzer=self.analyzer
+                            ngram_range=self.ngram_range,
+                            analyzer=self.analyzer,
+                            stop_words=self.stop_words,
                         ),
                     ),
                     ("tfidf", TfidfTransformer()),

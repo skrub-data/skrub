@@ -41,6 +41,11 @@ New features
 
 Changes
 -------
+- :class:`StringEncoder` now exposes the `stop_words` argument, which is passed to the
+  underlying vectorizer (:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
+  or :class:`~sklearn.feature_extraction.text.HashingVectorizer`). :pr:`??` by
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 .. warning::
   The default high cardinality encoder for both :class:`TableVectorizer` and
   :meth:`tabular_learner` has been changed from :class:`GapEncoder` to
