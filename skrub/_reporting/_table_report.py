@@ -138,10 +138,15 @@ class TableReport:
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.dataframe = dataframe
         self.verbose = verbose
         self.max_plot_columns = max_plot_columns
         self.max_association_columns = max_association_columns
+        self.shape = sbd.shape(dataframe)
+        # If data has one column, as a pandas/polars Series, convert it to a DataFrame.
+        if (len(self.shape) < 2) and hasattr(dataframe, "to_frame"):
+            self.dataframe = dataframe.to_frame()
+        else:
+            self.dataframe = dataframe
         self.n_columns = sbd.shape(self.dataframe)[1]
 
     def _set_minimal_mode(self):
