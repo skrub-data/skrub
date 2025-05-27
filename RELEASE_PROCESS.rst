@@ -71,6 +71,10 @@ The doc update has succeeded
     because we want to keep the history in the ``0.2.X`` branch close to the history of
     the main branch which will help for future bug fix releases.
 
+    Only squash & merge is available
+
+-
+
 
 ---
 
