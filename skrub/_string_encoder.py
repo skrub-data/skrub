@@ -45,8 +45,8 @@ class StringEncoder(SingleColumnTransformer):
 
     stop_words : {'english'}, list, default=None
         If 'english', a built-in stop word list for English is used. There are several
-        known issues with 'english' and you should consider an alternative (see [Using
-        stop words](https://scikit-learn.org/stable/modules/feature_extraction.html#using-stop-words)).
+        known issues with 'english' and you should consider an alternative (see `Using
+        stop words <https://scikit-learn.org/stable/modules/feature_extraction.html#using-stop-words>`_).
 
         If a list, that list is assumed to contain stop words, all of which will be
         removed from the resulting tokens. Only applies if ``analyzer == 'word'``.
