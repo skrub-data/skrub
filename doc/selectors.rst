@@ -1,3 +1,5 @@
+.. _selectors:
+
 Skrub Selectors: helpers for selecting columns in a dataframe
 =============================================================
 
