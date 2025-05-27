@@ -56,9 +56,7 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
         report = TableReport(result, **report_kwargs)
         report._set_minimal_mode()
         if uses_subsampling(expr):
-            # Evaluate the result without subsampling
-            full_result = expr.skb.eval(keep_subsampling=False)
-            report._display_subsample_info(sbd.shape(full_result)[0])
+            report._display_subsample_hint()
     else:
         try:
             report = result._repr_html_()

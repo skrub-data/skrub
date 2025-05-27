@@ -165,9 +165,8 @@ class TableReport:
         self.max_association_columns = 0
         self.max_plot_columns = 0
 
-    def _display_subsample_info(self, original_n_samples):
-        self.original_n_samples = original_n_samples
-        self._summary["original_n_samples"] = original_n_samples
+    def _display_subsample_hint(self):
+        self._summary["is_subsampled"] = True
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
