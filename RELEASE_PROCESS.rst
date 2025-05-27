@@ -10,16 +10,71 @@ This document is aimed toward established contributors the project.
 Process
 -------
 
-Going further, we assume you have write-access to both the repository
-and the PyPI project page.
+Going further, we assume you have write-access to both the repository, PyPI and
+conda-forge project page.
 
-.. note::
+.. note:: We follow scikit-learn versioning conventions:
 
-   It is useful to publish a beta version of the package before the
-   actual one.
+   - Major/Minor releases are numbered X.Y.0.
+   - Bug-fix releases are done as needed between major/minor releases and only apply to
+     the last stable version. These releases are numbered X.Y.Z.
 
 To release a new minor version of ``skrub`` (e.g. 0.1.0 -> 0.2.0), here are
 the main steps and appropriate resources:
+
+Preparing the release branch
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Create the ``0.2.X`` branch, branching from upstream/main, and push it upstream
+  (it may already exist).
+- Edit CHANGES.rst: replace "ongoing development" with ``0.2.0``
+- Edit VERSION.txt: replace ``0.2.dev0`` with ``0.2.0``
+- Build the wheel and test it:
+
+  - ``rm -r dist skrub.egg-info``
+  - ``python -m build`` (may need ``pip install build``)
+  - ``twine check dist/*`` (may need ``pip install twine``)
+  - in a directory outside of the skrub repo
+
+    - install the wheel in a fresh virtualenv
+    - Run all tests with ``pytest --pyargs skrub``
+
+- git commit the changes done to CHANGES.rst and VERSION.txt
+- If we are doing a bugfix release (``0.2.X`` already existed before) we need to rebase
+  on the existing ``0.2.X``.
+
+  - run ``git rebase -i upstream/0.2.X``
+  - all commits that have been made on main that we want to keep will be replayed on
+    top of the last release's tag in ``0.2.X``.
+
+- Open a PR targeting ``0.2.X``. This will update the doc for the stable release. While
+  the update runs, we can prepare a PR on the main branch to be merged after the
+  release, see the next section.
+
+Meanwhile, preparing the post-released branch
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- For a major/minor (not a patch) release:
+    - VERSION.txt: update to 0.3.dev0 (the next minor).
+    - CHANGES.rst: create a header for the new entries ("ongoing development").
+    - doc/version.json: update the version numbers of the stable release and dev branch.
+
+
+The doc update has succeeded
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Merge the PR targeting 0.2.X, **without squashing the commits**
+
+.. warning::
+
+    This PR should be merged with the rebase mode instead of the usual squash mode
+    because we want to keep the history in the ``0.2.X`` branch close to the history of
+    the main branch which will help for future bug fix releases.
+
+
+---
+
+
 
 1.  Update ``skrub/CHANGES.rst``. It should be updated at each PR,
     but double-checking before the release is good practice.
