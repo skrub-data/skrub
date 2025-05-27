@@ -85,7 +85,11 @@ data-spans__{{ i }}__{{ j }}
     <div>
         <strong>{{ summary.n_rows | format_number }}</strong> rows ✕
         <strong data-manager="ColumnFilterMatchCount"
-            data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong> columns.
+            data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong> columns
+        {% if 'original_n_samples' in summary %}
+         (subsampled from <strong>{{ summary.original_n_samples | format_number}}
+        </strong> rows)
+        {% endif %}
     </div>
     <div class="keyboard-hints">
         <div>
