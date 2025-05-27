@@ -51,6 +51,8 @@ class StringEncoder(SingleColumnTransformer):
         If a list, that list is assumed to contain stop words, all of which will be
         removed from the resulting tokens. Only applies if ``analyzer == 'word'``.
 
+        If None, no stop words will be used.
+
     random_state : int, RandomState instance or None, default=None
         Used during randomized svd. Pass an int for reproducible results across
         multiple function calls.
