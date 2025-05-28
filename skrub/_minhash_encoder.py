@@ -15,7 +15,7 @@ from . import _dataframe as sbd
 from ._fast_hash import ngram_min_hash
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._string_distances import get_unique_ngrams
-from ._utils import LRUDict, unique_strings
+from ._utils import LRUDict, get_encoder_feature_names, unique_strings
 
 NoneType = type(None)
 
@@ -104,7 +104,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
     The encoded data with 5 components are:
 
     >>> enc.transform(X)
-             city_0        city_1        city_2        city_3        city_4
+             city_1        city_2        city_3        city_4        city_5
     0 -1.783375e+09 -1.588270e+09 -1.663592e+09 -1.819887e+09 -1.962594e+09
     1 -8.480470e+08 -1.766579e+09 -1.558912e+09 -1.485745e+09 -1.687299e+09
     2 -1.975829e+09 -2.095000e+09 -1.596521e+09 -1.817594e+09 -2.095693e+09
@@ -246,7 +246,8 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
                 "minmax_hash encoding is not supported with the murmur hashing function"
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
-        self._input_name = sbd.name(X)
+        self._input_name = sbd.name(X) or "minhash"
+
         return self
 
     def transform(self, X):
@@ -303,8 +304,4 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         """
 
         check_is_fitted(self)
-        num_digits = len(str(self.n_components - 1))
-        return [
-            f"{self._input_name}_{str(i).zfill(num_digits)}"
-            for i in range(self.n_components)
-        ]
+        return get_encoder_feature_names(self._input_name, self.n_components)

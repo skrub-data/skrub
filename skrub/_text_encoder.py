@@ -10,7 +10,11 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._utils import import_optional_dependency, unique_strings
+from ._utils import (
+    get_encoder_feature_names,
+    import_optional_dependency,
+    unique_strings,
+)
 from .datasets._utils import get_data_dir
 
 
@@ -230,7 +234,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
         self._check_params()
 
-        self.input_name_ = sbd.name(column)
+        self.input_name_ = sbd.name(column) or "lm"
 
         X_out = self._vectorize(column)
 
@@ -260,7 +264,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
         self.n_components_ = X_out.shape[1]
 
-        cols = self.get_feature_names_out()
+        cols = get_encoder_feature_names(self.input_name_, self.n_components_)
         X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))
         X_out = sbd.copy_index(column, X_out)
 
@@ -388,11 +392,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             Transformed feature names.
         """
         check_is_fitted(self)
-        n_digits = len(str(self.n_components_))
-        return [
-            f"{self.input_name_}_{str(i).zfill(n_digits)}"
-            for i in range(1, self.n_components_ + 1)
-        ]
+        return get_encoder_feature_names(self.input_name_, self.n_components_)
 
     def __getstate__(self):
         state = self.__dict__.copy()

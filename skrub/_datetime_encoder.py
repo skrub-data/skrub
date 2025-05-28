@@ -14,6 +14,7 @@ from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._sklearn_compat import TransformerTags
+from ._utils import get_encoder_feature_names
 
 __all__ = ["DatetimeEncoder"]
 
@@ -324,7 +325,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
     >>> encoder.fit_transform(login)
-       login_year  ...  login_hour_circular_1
+       login_year  ...  login_hour_circular_2
     0      2024.0  ...              -1.000000
     1         NaN  ...                    NaN
     2      2024.0  ...              -0.965926
@@ -332,8 +333,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     Added features can be explored using ``DatetimeEncoder.all_outputs_``:
 
     >>> encoder[-1].all_outputs_
-    ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
-        'login_day_circular_0', 'login_day_circular_1', 'login_hour_circular_0', 'login_hour_circular_1']
+    ['login_year', 'login_total_seconds', 'login_month_circular_1', 'login_month_circular_2',
+        'login_day_circular_1', 'login_day_circular_2', 'login_hour_circular_1', 'login_hour_circular_2']
     """  # noqa: E501
 
     def __init__(
@@ -549,9 +550,9 @@ class _SplineEncoder(SingleColumnTransformer):
         self.n_components_ = X_out.shape[1]
 
         name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_spline_{idx}" for idx in range(self.n_components_)
-        ]
+        self.all_outputs_ = get_encoder_feature_names(
+            f"{name}_circular", self.n_components_
+        )
 
         return self._post_process(X, X_out)
 
@@ -634,9 +635,9 @@ class _CircularEncoder(SingleColumnTransformer):
         self.n_components_ = 2
 
         name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_circular_{idx}" for idx in range(self.n_components_)
-        ]
+        self.all_outputs_ = get_encoder_feature_names(
+            f"{name}_circular", self.n_components_
+        )
 
         return self._post_process(X, new_features)
 

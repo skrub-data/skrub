@@ -104,8 +104,8 @@ def test_missing_values(df_module, hashing):
             encoder.fit_transform(X)
     else:
         y = encoder.fit_transform(X)
-        assert y["_0"][1] == 0.0
-        assert y["_0"][7] == 0.0
+        assert y["minhash_1"][1] == 0.0
+        assert y["minhash_1"][7] == 0.0
         # non-regression for https://github.com/skrub-data/skrub/issues/921
         assert sbd.is_null(X)[1]
         assert sbd.is_null(X)[7]
@@ -118,10 +118,10 @@ def test_missing_values_none(df_module, hashing):
 
     enc = MinHashEncoder(hashing=hashing)
     d = enc.fit_transform(a)
-    assert d["_00"][0] != 0.0
-    assert d["_00"][1] != 0.0
-    assert_array_equal(d["_00"][2], 0.0)
-    assert_array_equal(d["_00"][3], 0.0)
+    assert d["minhash_01"][0] != 0.0
+    assert d["minhash_01"][1] != 0.0
+    assert_array_equal(d["minhash_01"][2], 0.0)
+    assert_array_equal(d["minhash_01"][3], 0.0)
 
 
 def test_cache_overflow(df_module):
@@ -136,7 +136,7 @@ def test_cache_overflow(df_module):
     raw_data = [get_random_string(10) for _ in range(capacity + 1)]
     raw_data = df_module.make_column("", raw_data)
     y = encoder.fit_transform(raw_data)
-    assert (sbd.to_numpy(y["_0"]) != -1.0).all()
+    assert (sbd.to_numpy(y["minhash_1"]) != -1.0).all()
 
 
 @skip_if_no_parallel
@@ -252,18 +252,17 @@ def test_get_feature_names_out(df_module):
         ["a", "b", "c", "d", "e", "f", "g", "h"],
     )
     encoder.fit(X)
-    expected_columns = ["col1_0", "col1_1", "col1_2", "col1_3"]
+    expected_columns = ["col1_1", "col1_2", "col1_3", "col1_4"]
     assert encoder.get_feature_names_out() == expected_columns
 
 
 @pytest.mark.parametrize(
     "n_components, expected_columns",
     [
-        (3, ["col_0", "col_1", "col_2"]),  # No padding needed for components < 10
+        (3, ["col_1", "col_2", "col_3"]),  # No padding needed for components < 10
         (
             12,
             [
-                "col_00",
                 "col_01",
                 "col_02",
                 "col_03",
@@ -275,6 +274,7 @@ def test_get_feature_names_out(df_module):
                 "col_09",
                 "col_10",
                 "col_11",
+                "col_12",
             ],
         ),  # 2-digit padding
     ],
