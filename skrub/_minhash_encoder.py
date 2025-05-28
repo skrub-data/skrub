@@ -246,8 +246,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
                 "minmax_hash encoding is not supported with the murmur hashing function"
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
-        name = sbd.name(X)
-        self._input_name = name if name else "minhash"
+        self.input_name_ = sbd.name(X) or "minhash"
 
         return self
 

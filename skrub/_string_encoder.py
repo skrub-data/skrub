@@ -153,9 +153,7 @@ class StringEncoder(SingleColumnTransformer):
         self._is_fitted = True
         self.n_components_ = result.shape[1]
 
-        self._input_name = sbd.name(X)
-        if not self._input_name:
-            self._input_name = "tsvd"
+        self._input_name = sbd.name(X) or "tsvd"
 
         self.all_outputs_ = self.get_feature_names_out()
 
