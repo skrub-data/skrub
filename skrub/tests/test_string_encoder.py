@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 from sklearn.base import clone
@@ -230,3 +231,18 @@ def test_missing_values(df_module, vectorizer):
     for c in sbd.to_column_list(out):
         assert_almost_equal(c[1], 0.0, decimal=6)
         assert_almost_equal(c[2], 0.0, decimal=6)
+
+
+def test_categorical_features(df_module):
+    data = {
+        "categorical": pd.Categorical(["A", "B", "A", "C"]),
+        "numeric": [1, 2, 3, 4],
+    }
+    df = pd.DataFrame(data)
+
+    se = StringEncoder(n_components=2)
+    with pytest.raises(ValueError, match="Column 'numeric' does not contain strings."):
+        se.fit(df["numeric"])
+
+    out = se.fit_transform(df["categorical"])
+    assert sbd.column_names(out) == ["categorical_0", "categorical_1"]

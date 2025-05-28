@@ -50,3 +50,14 @@ def test_pandas_na():
     out = ToStr().fit_transform(s)
     assert out[1] is not pd.NA
     assert np.isnan(out[1])
+
+
+def test_convert_category(df_module):
+    col = ToCategorical().fit_transform(df_module.make_column("", ["a", "b"]))
+
+    with pytest.raises(RejectColumn):
+        ToStr().fit_transform(col)
+
+    # force conversion
+    transformed = ToStr(convert_category=True).fit_transform(col)
+    assert sbd.is_string(transformed)
