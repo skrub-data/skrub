@@ -7,9 +7,11 @@ from sklearn.feature_extraction.text import (
     TfidfVectorizer,
 )
 from sklearn.pipeline import Pipeline
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
+from ._utils import get_encoder_feature_names
 
 
 class StringEncoder(SingleColumnTransformer):
@@ -66,7 +68,7 @@ class StringEncoder(SingleColumnTransformer):
     ... ], name='video comments')
 
     >>> enc.fit_transform(X) # doctest: +SKIP
-       video comments_0  video comments_1
+       video comments_1  video comments_1
     0      8.218069e-01      4.557474e-17
     1      6.971618e-16      1.000000e+00
     2      8.218069e-01     -3.046564e-16
@@ -83,21 +85,6 @@ class StringEncoder(SingleColumnTransformer):
         self.vectorizer = vectorizer
         self.ngram_range = ngram_range
         self.analyzer = analyzer
-
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : list of str objects
-            Transformed feature names.
-        """
-
-        num_digits = len(str(self.n_components - 1))
-        return [
-            f"{self._input_name}_{str(i+1).zfill(num_digits)}"
-            for i in range(self.n_components)
-        ]
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -205,3 +192,14 @@ class StringEncoder(SingleColumnTransformer):
         result = sbd.copy_index(X, result)
 
         return result
+
+    def get_feature_names_out(self):
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self)
+        return get_encoder_feature_names(self._input_name, self.n_components_)

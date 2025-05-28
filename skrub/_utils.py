@@ -340,3 +340,15 @@ class PassThrough(BaseEstimator):
 
     def transform(self, X):
         return X
+
+
+def get_encoder_feature_names(input_name, n_components):
+    """Get output feature names for transformation.
+
+    Returns
+    -------
+    feature_names_out : list of str objects
+        Transformed feature names.
+    """
+    num_digits = len(str(n_components - 1))
+    return [f"{input_name}_{str(i+1).zfill(num_digits)}" for i in range(n_components)]
