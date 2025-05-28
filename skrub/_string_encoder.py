@@ -44,6 +44,10 @@ class StringEncoder(SingleColumnTransformer):
         Option ``char_wb`` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
 
+    random_state : int, RandomState instance or None, default=None
+        Used during randomized svd. Pass an int for reproducible results across
+        multiple function calls.
+
     See Also
     --------
     MinHashEncoder :
@@ -80,11 +84,13 @@ class StringEncoder(SingleColumnTransformer):
         vectorizer="tfidf",
         ngram_range=(3, 4),
         analyzer="char_wb",
+        random_state=None,
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
         self.ngram_range = ngram_range
         self.analyzer = analyzer
+        self.random_state = random_state
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -130,7 +136,9 @@ class StringEncoder(SingleColumnTransformer):
         del X_filled  # optimizes memory: we no longer need X
 
         if (min_shape := min(X_out.shape)) > self.n_components:
-            self.tsvd_ = TruncatedSVD(n_components=self.n_components)
+            self.tsvd_ = TruncatedSVD(
+                n_components=self.n_components, random_state=self.random_state
+            )
             result = self.tsvd_.fit_transform(X_out)
         elif X_out.shape[1] == self.n_components:
             result = X_out.toarray()
