@@ -272,5 +272,5 @@ def test_minimal_mode(pd_module):
 
 def test_error_input_type():
     df = datasets.fetch_employee_salaries()
-    with pytest.raises(NotImplementedError, match="not supported on this object"):
+    with pytest.raises(TypeError):
         TableReport(df)
