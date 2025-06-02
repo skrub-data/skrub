@@ -460,13 +460,23 @@ def to_datetime(data, format=None):
 
     Parameters
     ----------
-    data : dataframe or column
-        The dataframe or column to transform.
+    data : pandas or polars ``{DataFrame, Series}``
+        The dataframe or series to transform.
 
     format : str or None, optional, default=None
         Format string to use to parse datetime strings.
         See the reference documentation for format codes:
         https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes .
+
+    Returns
+    -------
+    output : pandas or polars {DataFrame, Series}.
+        The input transformed to Datetime.
+
+    See also
+    --------
+    ToDatetime :
+        Parse datetimes represented as strings and return Datetime columns.
 
     Examples
     --------
