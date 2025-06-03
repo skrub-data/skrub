@@ -440,6 +440,16 @@ def notebook_modification_function(notebook_content, notebook_filename):
     )
 
 
+import skrub
+
+default_global_config = skrub.get_config()
+
+
+def reset_skrub_config(gallery_conf, fname):
+    """Reset sklearn config to default values."""
+    skrub.set_config(**default_global_config)
+
+
 sphinx_gallery_conf = {
     "doc_module": "skrub",
     "backreferences_dir": os.path.join("reference/generated"),
@@ -463,6 +473,7 @@ sphinx_gallery_conf = {
         "use_jupyter_lab": True,
     },
     "default_thumb_file": "./_static/skrub.svg",
+    "reset_modules": (reset_skrub_config,),
 }
 if with_jupyterlite:
     sphinx_gallery_conf["jupyterlite"] = {

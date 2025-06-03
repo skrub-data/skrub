@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from .. import _dataframe as sbd
+from .._config import get_config
 from ._html import to_html
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
@@ -47,11 +48,34 @@ class TableReport:
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> skrub.set_config(tablereport_threshold=10)
+
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_TABLEREPORT_THRESHOLD=10
+
     max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
         If the number of columns in the dataframe is greater than this value,
         the associations will not be computed. If None, the associations
         for all columns will be computed.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> skrub.set_config(tablereport_threshold=10)
+
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_TABLEREPORT_THRESHOLD=10
 
     See Also
     --------
@@ -125,8 +149,8 @@ class TableReport:
         title=None,
         column_filters=None,
         verbose=1,
-        max_plot_columns=30,
-        max_association_columns=30,
+        max_plot_columns=None,
+        max_association_columns=None,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
@@ -140,8 +164,16 @@ class TableReport:
         self.column_filters = column_filters
         self.dataframe = dataframe
         self.verbose = verbose
-        self.max_plot_columns = max_plot_columns
-        self.max_association_columns = max_association_columns
+        self.max_plot_columns = (
+            max_plot_columns
+            if max_plot_columns is not None
+            else get_config()["tablereport_threshold"]
+        )
+        self.max_association_columns = (
+            max_association_columns
+            if max_association_columns is not None
+            else get_config()["tablereport_threshold"]
+        )
         self.n_columns = sbd.shape(self.dataframe)[1]
 
     def _set_minimal_mode(self):
