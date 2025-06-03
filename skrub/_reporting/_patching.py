@@ -121,6 +121,18 @@ def patch_display(
     )
 
 
+def _patch_display(
+    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
+):
+    _change_display(
+        _patch,
+        _get_to_patch(pandas=pandas, polars=polars),
+        verbose=verbose,
+        max_plot_columns=max_plot_columns,
+        max_association_columns=max_association_columns,
+    )
+
+
 def unpatch_display(pandas=True, polars=True):
     """Undo the effect of ``skrub.patch_display()``.
 
@@ -154,3 +166,7 @@ def unpatch_display(pandas=True, polars=True):
         ),
         category=DeprecationWarning,
     )
+
+
+def _unpatch_display(pandas=True, polars=True):
+    _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))

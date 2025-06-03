@@ -8,21 +8,21 @@ def _use_tablereport(obj):
     return "SkrubTableReport" in obj._repr_html_()
 
 
-def test_expression_display():
+def use_tablereport_expr():
     X = skrub.X(fetch_employee_salaries().X)
 
-    with config_context(expression_display="tablereport"):
+    with config_context(use_tablereport_expr=True):
         assert _use_tablereport(X)
-        with config_context(expression_display="original"):
+        with config_context(use_tablereport_expr=False):
             assert not _use_tablereport(X)
 
 
-def test_dataframe_display():
+def test_use_tablereport():
     X = fetch_employee_salaries().X
     assert not _use_tablereport(X)
-    with config_context(dataframe_display="tablereport"):
+    with config_context(use_tablereport=True):
         assert _use_tablereport(X)
-        with config_context(dataframe_display="original"):
+        with config_context(use_tablereport=False):
             assert not _use_tablereport(X)
 
 
@@ -45,7 +45,7 @@ def test_tablereport_threshold():
 
     # Check that tablereport_threshold can be set after patching the TableReport
     # repr_html.
-    with config_context(dataframe_display="tablereport"):
+    with config_context(use_tablereport=True):
         with config_context(tablereport_threshold=3):
             "Plotting was skipped" in X._repr_html_()
 

@@ -43,7 +43,7 @@ def _get_template(template_name):
 
 
 def _use_tablereport_display():
-    return get_config()["expression_display"] == "tablereport"
+    return get_config()["use_tablereport_expr"]
 
 
 def node_report(expr, mode="preview", environment=None, **report_kwargs):

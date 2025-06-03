@@ -8,8 +8,8 @@ import numpy as np
 from ._reporting import _patching
 
 _global_config = {
-    "expression_display": os.environ.get("SKB_EXPRESSION_DISPLAY", "tablereport"),
-    "dataframe_display": os.environ.get("SKB_DATAFRAME_DISPLAY", "original"),
+    "use_tablereport": os.environ.get("SKB_USE_TABLEREPORT", False),
+    "use_tablereport_expr": os.environ.get("SKB_USE_TABLEREPORT_EXPR", True),
     "tablereport_threshold": int(os.environ.get("SKB_TABLEREPORT_THRESHOLD", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
@@ -50,19 +50,19 @@ def _apply_external_patches(config):
     """
     TODO
     """
-    if config["dataframe_display"] == "tablereport":
-        _patching.patch_display(
+    if config["use_tablereport"]:
+        _patching._patch_display(
             max_plot_columns=config["tablereport_threshold"],
             max_association_columns=config["tablereport_threshold"],
         )
     else:
         # No-op if dispatch haven't been previously enabled
-        _patching.unpatch_display()
+        _patching._unpatch_display()
 
 
 def set_config(
-    expression_display=None,
-    dataframe_display=None,
+    use_tablereport=None,
+    use_tablereport_expr=None,
     tablereport_threshold=None,
     subsampling_seed=None,
     enable_subsampling=None,
@@ -71,26 +71,26 @@ def set_config(
 
     Parameters
     ----------
-    expression_display : {'tablereport', 'original'}, default=None
+    use_tablereport : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
-        expressions. Default is ``"tablereport"``.
+        expressions. Default is ``False``.
 
-        - If ``"tablereport"``, :class:`~skrub.TableReport` will be used.
-        - If ``"original"``, the original Pandas or Polars dataframe display will be
+        - If ``True``, :class:`~skrub.TableReport` will be used.
+        - If ``False``, the original Pandas or Polars dataframe display will be
           used.
 
-        This configuration can also be set with the ``SKB_EXPRESSION_DISPLAY``
+        This configuration can also be set with the ``SKB_USE_TABLEREPORT``
         environment variable.
 
-    dataframe_display : {'tablereport', 'original'}, default=None
-        The type of display used for dataframes. Default is ``"original"``.
+    use_tablereport_expr : bool, default=None
+        The type of display used for dataframes. Default is ``True``.
 
-        - If ``"tablereport"``, replace the default DataFrame HTML displays with
+        - If ``True``, replace the default DataFrame HTML displays with
           :class:`~skrub.TableReport`.
-        - If ``"original"``, the original Pandas or Polars dataframe HTML representation
+        - If ``False``, the original Pandas or Polars dataframe HTML representation
           will be used.
 
-        This configuration can also be set with the ``SKB_DATAFRAME_DISPLAY``
+        This configuration can also be set with the ``SKB_USE_TABLEREPORT_EXPR``
         environment variable.
 
     tablereport_threshold : int, default=None
@@ -128,24 +128,23 @@ def set_config(
     Examples
     --------
     >>> from skrub import set_config
-    >>> set_config(expression_display='tablereport')  # doctest: +SKIP
+    >>> set_config(use_tablereport=True)  # doctest: +SKIP
     """
     local_config = _get_threadlocal_config()
-    if expression_display is not None:
-        if expression_display not in (options := ("tablereport", "original")):
+    if use_tablereport is not None:
+        if not isinstance(use_tablereport, bool):
             raise ValueError(
-                f"'expression_display' options are {options!r}, got "
-                f"{expression_display!r}."
+                f"'use_tablereport' must be a boolean, got {use_tablereport!r}."
             )
-        local_config["expression_display"] = expression_display
+        local_config["use_tablereport"] = use_tablereport
 
-    if dataframe_display is not None:
-        if dataframe_display not in (options := ("tablereport", "original")):
+    if use_tablereport_expr is not None:
+        if not isinstance(use_tablereport_expr, bool):
             raise ValueError(
-                f"'dataframe_display' options are {options!r}, got "
-                f"{dataframe_display!r}."
+                "'use_tablereport_expr' must be a boolean, got "
+                f"{use_tablereport_expr!r}."
             )
-        local_config["dataframe_display"] = dataframe_display
+        local_config["use_tablereport_expr"] = use_tablereport_expr
 
     if tablereport_threshold is not None:
         if not isinstance(tablereport_threshold, numbers.Real):
@@ -173,8 +172,8 @@ def set_config(
 @contextmanager
 def config_context(
     *,
-    expression_display=None,
-    dataframe_display=None,
+    use_tablereport=None,
+    use_tablereport_expr=None,
     tablereport_threshold=None,
     subsampling_seed=None,
     enable_subsampling=None,
@@ -183,26 +182,26 @@ def config_context(
 
     Parameters
     ----------
-    expression_display : {'tablereport', 'original'}, default=None
-        The type of HTML representation used for the dataframes preview in skrub
-        expressions. Default is ``"tablereport"``.
+    use_tablereport : bool, default=None
+        The type of display used for dataframes. Default is ``False``.
 
-        - If ``"tablereport"``, :class:`~skrub.TableReport` will be used.
-        - If ``"original"``, the original Pandas or Polars dataframe display will be
-          used.
-
-        This configuration can also be set with the ``SKB_EXPRESSION_DISPLAY``
-        environment variable.
-
-    dataframe_display : {'tablereport', 'original'}, default=None
-        The type of display used for dataframes. Default is ``"original"``.
-
-        - If ``"tablereport"``, replace the default DataFrame HTML displays with
+        - If ``True``, replace the default DataFrame HTML displays with
           :class:`~skrub.TableReport`.
-        - If ``"original"``, the original Pandas or Polars dataframe HTML representation
+        - If ``False``, the original Pandas or Polars dataframe HTML representation
           will be used.
 
-        This configuration can also be set with the ``SKB_DATAFRAME_DISPLAY``
+        This configuration can also be set with the ``SKB_USE_TABLEREPORT``
+        environment variable.
+
+    use_tablereport_expr : bool, default=None
+        The type of HTML representation used for the dataframes preview in skrub
+        expressions. Default is ``True``.
+
+        - If ``True``, :class:`~skrub.TableReport` will be used.
+        - If ``False``, the original Pandas or Polars dataframe display will be
+          used.
+
+        This configuration can also be set with the ``SKB_USE_TABLEREPORT_EXPR``
         environment variable.
 
     tablereport_threshold : int, default=None
@@ -250,8 +249,8 @@ def config_context(
     """
     original_config = get_config()
     set_config(
-        expression_display=expression_display,
-        dataframe_display=dataframe_display,
+        use_tablereport=use_tablereport,
+        use_tablereport_expr=use_tablereport_expr,
         tablereport_threshold=tablereport_threshold,
         subsampling_seed=subsampling_seed,
         enable_subsampling=enable_subsampling,

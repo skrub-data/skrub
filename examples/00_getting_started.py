@@ -75,14 +75,14 @@ TableReport(employees_df)
 
 from skrub import set_config
 
-set_config(dataframe_display="tablereport")
+set_config(use_tablereport=True)
 
 employees_df
 
 # %%
 # This setting can easily be reverted:
 
-set_config(dataframe_display="original")
+set_config(use_tablereport=False)
 
 employees_df
 
