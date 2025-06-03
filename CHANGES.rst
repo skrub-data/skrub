@@ -68,7 +68,7 @@ Changes
 - The optional dependencies 'dev', 'doc', 'lint' and 'test' have been coalesced into
   'dev'. :pr:`1404` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
-- The :class:`TableReport` now supports Series not just Dataframes. :pr:`1420` by :user:`Vitor Pohlenz<vitorpohlenz>`.
+- The :class:`TableReport` now supports Series in addition to Dataframes. :pr:`1420` by :user:`Vitor Pohlenz<vitorpohlenz>`.
 
 Bugfixes
 --------
