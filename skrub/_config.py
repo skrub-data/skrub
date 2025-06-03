@@ -47,9 +47,6 @@ def get_config():
 
 
 def _apply_external_patches(config):
-    """
-    TODO
-    """
     if config["use_tablereport"]:
         _patching._patch_display(
             max_plot_columns=config["tablereport_threshold"],
