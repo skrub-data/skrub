@@ -435,19 +435,19 @@ def _shape_polars(obj):
 
 
 @dispatch
-def to_frame(series):
-    """Convert a Series to a DataFrame."""
+def to_frame(col):
+    """Convert a single Column to a DataFrame."""
     raise NotImplementedError()
 
 
 @to_frame.specialize("pandas", argument_type="Column")
-def _to_frame_pandas(series):
-    return series.to_frame()
+def _to_frame_pandas(col):
+    return col.to_frame()
 
 
 @to_frame.specialize("polars", argument_type="Column")
-def _to_frame_polars(series):
-    return series.to_frame()
+def _to_frame_polars(col):
+    return col.to_frame()
 
 
 @dispatch
