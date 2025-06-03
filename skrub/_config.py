@@ -72,36 +72,53 @@ def set_config(
     Parameters
     ----------
     expression_display : {'tablereport', 'original'}, default=None
-        The type of HTML representation used for the dataframes preview in
-        skrub expressions. Default is 'tablereport'.
+        The type of HTML representation used for the dataframes preview in skrub
+        expressions. Default is ``"tablereport"``.
 
-        - If 'tablereport', :class:`~skrub.TableReport` will be used.
-        - If 'original', the original Pandas or Polars dataframe display will be used.
+        - If ``"tablereport"``, :class:`~skrub.TableReport` will be used.
+        - If ``"original"``, the original Pandas or Polars dataframe display will be
+          used.
+
+        This configuration can also be set with the ``SKB_EXPRESSION_DISPLAY``
+        environment variable.
 
     dataframe_display : {'tablereport', 'original'}, default=None
-        The type of display used for dataframes. Default is 'original'.
+        The type of display used for dataframes. Default is ``"original"``.
 
-        - If 'tablereport', replace the default DataFrame HTML displays with
+        - If ``"tablereport"``, replace the default DataFrame HTML displays with
           :class:`~skrub.TableReport`.
-        - If 'original', the original Pandas or Polars dataframe HTML representation
+        - If ``"original"``, the original Pandas or Polars dataframe HTML representation
           will be used.
 
+        This configuration can also be set with the ``SKB_DATAFRAME_DISPLAY``
+        environment variable.
+
     tablereport_threshold : int, default=None
-        Set both the 'max_plot_columns' and 'max_association_columns' argument of
-        :class:`~skrub.TableReport`. Default is 30.
+        Set both the ``max_plot_columns`` and ``max_association_columns`` argument
+        of :class:`~skrub.TableReport`. Default is 30.
+
+        This configuration can also be set with the ``SKB_TABLEREPORT_THRESHOLD``
+        environment variable.
 
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`, when how='random' is passed.
+        :func:`skrub.Expr.skb.subsample`, when ``how="random"`` is passed.
+
+        This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
+        variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
         Control the activation of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`. Default is 'default'.
+        :func:`skrub.Expr.skb.subsample`. Default is ``"default"``.
 
-        - If 'default', the behavior of :func:`skrub.Expr.skb.subsample` is used.
-        - If 'disable', subsampling is never used, so `skb.subsample` becomes a no-op.
-        - If 'force', subsampling is used in all expression evaluation modes (preview,
-          fit_transform, etc.).
+        - If ``"default"``, the behavior of :func:`skrub.Expr.skb.subsample` is used.
+        - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
+          no-op.
+        - If ``"force"``, subsampling is used in all expression evaluation modes
+          (preview, fit_transform, etc.).
+
+        This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
+        environment variable.
 
     See Also
     --------
@@ -167,36 +184,53 @@ def config_context(
     Parameters
     ----------
     expression_display : {'tablereport', 'original'}, default=None
-        The type of HTML representation used for the dataframes preview in
-        skrub expressions. Default is 'tablereport'.
+        The type of HTML representation used for the dataframes preview in skrub
+        expressions. Default is ``"tablereport"``.
 
-        - If 'tablereport', :class:`~skrub.TableReport` will be used.
-        - If 'original', the original Pandas or Polars dataframe display will be used.
+        - If ``"tablereport"``, :class:`~skrub.TableReport` will be used.
+        - If ``"original"``, the original Pandas or Polars dataframe display will be
+          used.
+
+        This configuration can also be set with the ``SKB_EXPRESSION_DISPLAY``
+        environment variable.
 
     dataframe_display : {'tablereport', 'original'}, default=None
-        The type of display used for dataframes. Default is 'original'.
+        The type of display used for dataframes. Default is ``"original"``.
 
-        - If 'tablereport', replace the default DataFrame HTML displays with
+        - If ``"tablereport"``, replace the default DataFrame HTML displays with
           :class:`~skrub.TableReport`.
-        - If 'original', the original Pandas or Polars dataframe HTML representation
+        - If ``"original"``, the original Pandas or Polars dataframe HTML representation
           will be used.
 
+        This configuration can also be set with the ``SKB_DATAFRAME_DISPLAY``
+        environment variable.
+
     tablereport_threshold : int, default=None
-        Set both the 'max_plot_columns' and 'max_association_columns' argument of
-        :class:`~skrub.TableReport`. Default is 30.
+        Set both the ``max_plot_columns`` and ``max_association_columns`` argument
+        of :class:`~skrub.TableReport`. Default is 30.
+
+        This configuration can also be set with the ``SKB_TABLEREPORT_THRESHOLD``
+        environment variable.
 
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`, when how='random' is passed.
+        :func:`skrub.Expr.skb.subsample`, when ``how="random"`` is passed.
+
+        This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
+        variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
         Control the activation of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`. Default is 'default'.
+        :func:`skrub.Expr.skb.subsample`. Default is ``"default"``.
 
-        - If 'default', the behavior of :func:`skrub.Expr.skb.subsample` is used.
-        - If 'disable', subsampling is never used, so `skb.subsample` becomes a no-op.
-        - If 'force', subsampling is used in all expression evaluation modes (preview,
-          fit_transform, etc.).
+        - If ``"default"``, the behavior of :func:`skrub.Expr.skb.subsample` is used.
+        - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
+          no-op.
+        - If ``"force"``, subsampling is used in all expression evaluation modes
+          (preview, fit_transform, etc.).
+
+        This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
+        environment variable.
 
     Yields
     ------
