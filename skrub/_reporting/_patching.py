@@ -1,4 +1,5 @@
 import importlib
+import warnings
 
 from ._table_report import TableReport
 
@@ -92,6 +93,10 @@ def patch_display(
         the associations will not be computed. If None, the associations
         for all columns will be computed.
 
+    .. deprecated:: 0.6.0
+        The functionality provided by this function is now implemented in
+        :func:`~skrub.set_config`.
+
     See Also
     --------
     unpatch_display :
@@ -106,6 +111,13 @@ def patch_display(
         verbose=verbose,
         max_plot_columns=max_plot_columns,
         max_association_columns=max_association_columns,
+    )
+    warnings.warn(
+        (
+            "patch_display will be deprecated in the next release. "
+            "Equivalent functionality is available in skrub.set_config."
+        ),
+        category=DeprecationWarning,
     )
 
 
@@ -122,6 +134,10 @@ def unpatch_display(pandas=True, polars=True):
     polars : bool, optional (default=True)
         If False, do not restore the displays for polars dataframes.
 
+    .. deprecated:: 0.6.0
+        The functionality provided by this function is now implemented in
+        :func:`~skrub.set_config`.
+
     See Also
     --------
     patch_display :
@@ -131,3 +147,10 @@ def unpatch_display(pandas=True, polars=True):
         Directly create a report from a dataframe.
     """
     _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))
+    warnings.warn(
+        (
+            "unpatch_display will be deprecated in the next release. "
+            "Equivalent functionality is available in skrub.set_config."
+        ),
+        category=DeprecationWarning,
+    )

@@ -3,8 +3,8 @@ import functools
 import json
 from pathlib import Path
 
+from .. import _config
 from .. import _dataframe as sbd
-from .._config import get_config
 from ._html import to_html
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
@@ -167,12 +167,12 @@ class TableReport:
         self.max_plot_columns = (
             max_plot_columns
             if max_plot_columns is not None
-            else get_config()["tablereport_threshold"]
+            else _config.get_config()["tablereport_threshold"]
         )
         self.max_association_columns = (
             max_association_columns
             if max_association_columns is not None
-            else get_config()["tablereport_threshold"]
+            else _config.get_config()["tablereport_threshold"]
         )
         self.n_columns = sbd.shape(self.dataframe)[1]
 
