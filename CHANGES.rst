@@ -39,6 +39,10 @@ New features
   single value (constant columns), only missing values, or all unique values (such
   as IDs). :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- :func:`get_config`, :func:`set_config` and :func:`config_context` are now available
+  to configure settings for dataframes display and expressions.
+  :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 Changes
 -------
 .. warning::
