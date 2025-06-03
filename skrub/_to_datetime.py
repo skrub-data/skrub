@@ -473,7 +473,7 @@ def to_datetime(data, format=None):
     output : pandas or polars {DataFrame, Series}.
         The input transformed to Datetime.
 
-    See also
+    See Also
     --------
     ToDatetime :
         Parse datetimes represented as strings and return Datetime columns.
