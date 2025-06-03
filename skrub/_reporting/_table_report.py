@@ -19,7 +19,7 @@ class TableReport:
 
     Parameters
     ----------
-    dataframe : pandas or polars DataFrame or Series
+    dataframe : pandas or polars Series or DataFrame.
         The dataframe or series to summarize.
     n_rows : int, default=10
         Maximum number of rows to show in the sample table. Half will be taken
