@@ -66,6 +66,10 @@ def patch_display(
 ):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
 
+    .. deprecated:: 0.6.0
+        The functionality provided by this function is now implemented in
+        :func:`~skrub.set_config`.
+
     This function replaces the HTML displays (what is shown when an object is
     the output of a jupyter notebook cell) of pandas and polars DataFrames
     with a TableReport.
@@ -92,10 +96,6 @@ def patch_display(
         If the number of columns in the dataframe is greater than this value,
         the associations will not be computed. If None, the associations
         for all columns will be computed.
-
-    .. deprecated:: 0.6.0
-        The functionality provided by this function is now implemented in
-        :func:`~skrub.set_config`.
 
     See Also
     --------
@@ -124,6 +124,10 @@ def patch_display(
 def unpatch_display(pandas=True, polars=True):
     """Undo the effect of ``skrub.patch_display()``.
 
+    .. deprecated:: 0.6.0
+        The functionality provided by this function is now implemented in
+        :func:`~skrub.set_config`.
+
     This function restores the default HTML displays of pandas and polars
     DataFrames.
 
@@ -133,10 +137,6 @@ def unpatch_display(pandas=True, polars=True):
         If False, do not restore the displays for pandas dataframes.
     polars : bool, optional (default=True)
         If False, do not restore the displays for polars dataframes.
-
-    .. deprecated:: 0.6.0
-        The functionality provided by this function is now implemented in
-        :func:`~skrub.set_config`.
 
     See Also
     --------

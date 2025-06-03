@@ -24,8 +24,24 @@ def _get_threadlocal_config():
 
 
 def get_config():
-    """
-    TODO
+    """Retrieve current values for configuration set by :func:`set_config`.
+
+    Returns
+    -------
+    config : dict
+        Keys are parameter names that can be passed to :func:`set_config`.
+
+    See Also
+    --------
+    config_context : Context manager for global skrub configuration.
+    set_config : Set global skrub configuration.
+
+    Examples
+    --------
+    >>> import sklearn
+    >>> config = sklearn.get_config()
+    >>> config.keys()
+    dict_keys([...])
     """
     return _get_threadlocal_config().copy()
 
@@ -51,8 +67,51 @@ def set_config(
     subsampling_seed=None,
     enable_subsampling=None,
 ):
-    """
-    TODO
+    """Set global skrub configuration.
+
+    Parameters
+    ----------
+    expression_display : {'tablereport', 'original'}, default=None
+        The type of HTML representation used for the dataframes preview in
+        skrub expressions. Default is 'tablereport'.
+
+        - If 'tablereport', :class:`~skrub.TableReport` will be used.
+        - If 'original', the original Pandas or Polars dataframe display will be used.
+
+    dataframe_display : {'tablereport', 'original'}, default=None
+        The type of display used for dataframes. Default is 'original'.
+
+        - If 'tablereport', replace the default DataFrame HTML displays with
+          :class:`~skrub.TableReport`.
+        - If 'original', the original Pandas or Polars dataframe HTML representation
+          will be used.
+
+    tablereport_threshold : int, default=None
+        Set both the 'max_plot_columns' and 'max_association_columns' argument of
+        :class:`~skrub.TableReport`. Default is 30.
+
+    subsampling_seed : int, default=None
+        Set the random seed of subsampling in skrub expressions
+        :func:`skrub.Expr.skb.subsample`, when how='random' is passed.
+
+    enable_subsampling : {'default', 'disable', 'force'}, default=None
+        Control the activation of subsampling in skrub expressions
+        :func:`skrub.Expr.skb.subsample`. Default is 'default'.
+
+        - If 'default', the behavior of :func:`skrub.Expr.skb.subsample` is used.
+        - If 'disable', subsampling is never used, so `skb.subsample` becomes a no-op.
+        - If 'force', subsampling is used in all expression evaluation modes (preview,
+          fit_transform, etc.).
+
+    See Also
+    --------
+    get_config : Retrieve current values for global configuration.
+    config_context : Context manager for global skrub configuration.
+
+    Examples
+    --------
+    >>> from skrub import set_config
+    >>> set_config(expression_display='tablereport')  # doctest: +SKIP
     """
     local_config = _get_threadlocal_config()
     if expression_display is not None:
@@ -103,8 +162,57 @@ def config_context(
     subsampling_seed=None,
     enable_subsampling=None,
 ):
-    """
-    TODO
+    """Context manager for global skrub configuration.
+
+    Parameters
+    ----------
+    expression_display : {'tablereport', 'original'}, default=None
+        The type of HTML representation used for the dataframes preview in
+        skrub expressions. Default is 'tablereport'.
+
+        - If 'tablereport', :class:`~skrub.TableReport` will be used.
+        - If 'original', the original Pandas or Polars dataframe display will be used.
+
+    dataframe_display : {'tablereport', 'original'}, default=None
+        The type of display used for dataframes. Default is 'original'.
+
+        - If 'tablereport', replace the default DataFrame HTML displays with
+          :class:`~skrub.TableReport`.
+        - If 'original', the original Pandas or Polars dataframe HTML representation
+          will be used.
+
+    tablereport_threshold : int, default=None
+        Set both the 'max_plot_columns' and 'max_association_columns' argument of
+        :class:`~skrub.TableReport`. Default is 30.
+
+    subsampling_seed : int, default=None
+        Set the random seed of subsampling in skrub expressions
+        :func:`skrub.Expr.skb.subsample`, when how='random' is passed.
+
+    enable_subsampling : {'default', 'disable', 'force'}, default=None
+        Control the activation of subsampling in skrub expressions
+        :func:`skrub.Expr.skb.subsample`. Default is 'default'.
+
+        - If 'default', the behavior of :func:`skrub.Expr.skb.subsample` is used.
+        - If 'disable', subsampling is never used, so `skb.subsample` becomes a no-op.
+        - If 'force', subsampling is used in all expression evaluation modes (preview,
+          fit_transform, etc.).
+
+    Yields
+    ------
+    None.
+
+    See Also
+    --------
+    get_config : Retrieve current values for global configuration.
+    set_config : Set global skrub configuration.
+
+    Examples
+    --------
+    >>> import skrub
+    >>> X = skrub.datasets.fetch_employee_salaries().X
+    >>> with skrub.config_context(tablereport_threshold=1):
+    ...     skrub.TableReport(X).open()
     """
     original_config = get_config()
     set_config(
