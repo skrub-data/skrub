@@ -73,9 +73,7 @@ class TableReport:
     >>> import pandas as pd
     >>> from skrub import TableReport
     >>> df = pd.DataFrame(dict(a=[1, 2], b=['one', 'two'], c=[11.1, 11.1]))
-    >>> series = pd.Series([1, 2, 3], name="my_series")
-    >>> report_df = TableReport(df)
-    >>> report_series = TableReport(series)
+    >>> report = TableReport(df)
 
     If you are in a Jupyter notebook, to display the report just have it be the
     last expression evaluated in a cell so that it is displayed in the cell's
