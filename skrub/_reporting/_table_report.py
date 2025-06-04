@@ -52,7 +52,8 @@ class TableReport:
         To avoid having to set this parameter at each call of ``TableReport``, you can
         change the default using :func:`set_config`:
 
-        >>> skrub.set_config(tablereport_threshold=10)
+        >>> from skrub import set_config
+        >>> set_config(tablereport_threshold=10)
 
         You can also enable this default more permanently via an environment variable:
 
@@ -69,7 +70,8 @@ class TableReport:
         To avoid having to set this parameter at each call of ``TableReport``, you can
         change the default using :func:`set_config`:
 
-        >>> skrub.set_config(tablereport_threshold=10)
+        >>> from skrub import set_config
+        >>> set_config(tablereport_threshold=10)
 
         You can also enable this default more permanently via an environment variable:
 

@@ -240,9 +240,8 @@ def config_context(
     Examples
     --------
     >>> import skrub
-    >>> X = skrub.datasets.fetch_employee_salaries().X
     >>> with skrub.config_context(tablereport_threshold=1):
-    ...     skrub.TableReport(X).open()
+    ...     ...  # doctest: +SKIP
     """
     original_config = get_config()
     set_config(
