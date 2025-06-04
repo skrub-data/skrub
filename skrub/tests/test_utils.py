@@ -97,10 +97,11 @@ def test_passthrough():
 @pytest.mark.parametrize(
     "n_components, expected_columns",
     [
-        (3, ["col_1", "col_2", "col_3"]),  # No padding needed for components < 10
+        (3, ["col_0", "col_1", "col_2"]),  # No padding needed for components < 10
         (
             12,
             [
+                "col_00",
                 "col_01",
                 "col_02",
                 "col_03",
@@ -112,7 +113,6 @@ def test_passthrough():
                 "col_09",
                 "col_10",
                 "col_11",
-                "col_12",
             ],
         ),  # 2-digit padding
     ],
