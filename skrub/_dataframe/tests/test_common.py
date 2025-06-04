@@ -295,7 +295,7 @@ def test_col_by_idx_duplicate_columns(pd_module):
 
 
 #
-# Querying and modifying metadata
+# Querying, modifying metadata and shape
 # ===============================
 #
 
@@ -305,6 +305,11 @@ def test_shape(df_module):
     assert ns.shape(df_module.empty_dataframe) == (0, 0)
     assert ns.shape(df_module.example_column) == (4,)
     assert ns.shape(df_module.empty_column) == (0,)
+
+
+def test_to_frame(df_module):
+    col = df_module.example_column
+    assert ns.is_dataframe(ns.to_frame(col))
 
 
 @pytest.mark.parametrize("name", ["", "a\nname"])
