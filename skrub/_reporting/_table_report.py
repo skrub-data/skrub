@@ -20,8 +20,8 @@ class TableReport:
 
     Parameters
     ----------
-    dataframe : pandas or polars DataFrame
-        The dataframe to summarize.
+    dataframe : pandas or polars Series or DataFrame
+        The dataframe or series to summarize.
     n_rows : int, default=10
         Maximum number of rows to show in the sample table. Half will be taken
         from the beginning (head) of the dataframe and half from the end
@@ -164,7 +164,6 @@ class TableReport:
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.dataframe = dataframe
         self.verbose = verbose
         self.max_plot_columns = (
             max_plot_columns
@@ -175,6 +174,8 @@ class TableReport:
             max_association_columns
             if max_association_columns is not None
             else _config.get_config()["tablereport_threshold"]
+        self.dataframe = (
+            sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
         self.n_columns = sbd.shape(self.dataframe)[1]
 
