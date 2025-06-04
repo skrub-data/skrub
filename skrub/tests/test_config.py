@@ -1,5 +1,5 @@
 import skrub
-from skrub import TableReport, config_context
+from skrub import TableReport, config_context, get_config
 from skrub._expressions._evaluation import evaluate
 from skrub.datasets import fetch_employee_salaries
 
@@ -8,7 +8,21 @@ def _use_tablereport(obj):
     return "SkrubTableReport" in obj._repr_html_()
 
 
-def use_tablereport_expr():
+def test_config_context():
+    assert get_config() == {
+        "use_tablereport": False,
+        "use_tablereport_expr": True,
+        "tablereport_threshold": 30,
+        "subsampling_seed": 0,
+        "enable_subsampling": "default",
+    }
+
+    # Not using as a context manager affects nothing
+    config_context(use_tablereport=True)
+    assert get_config()["use_tablereport"] is False
+
+
+def test_use_tablereport_expr():
     X = skrub.X(fetch_employee_salaries().X)
 
     with config_context(use_tablereport_expr=True):
