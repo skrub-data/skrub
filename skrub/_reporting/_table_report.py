@@ -53,13 +53,13 @@ class TableReport:
         change the default using :func:`set_config`:
 
         >>> from skrub import set_config
-        >>> set_config(tablereport_threshold=10)
+        >>> set_config(tablereport_threshold=30)
 
         You can also enable this default more permanently via an environment variable:
 
         .. code:: shell
 
-            export SKB_TABLEREPORT_THRESHOLD=10
+            export SKB_TABLEREPORT_THRESHOLD=30
 
     max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
@@ -71,13 +71,13 @@ class TableReport:
         change the default using :func:`set_config`:
 
         >>> from skrub import set_config
-        >>> set_config(tablereport_threshold=10)
+        >>> set_config(tablereport_threshold=30)
 
         You can also enable this default more permanently via an environment variable:
 
         .. code:: shell
 
-            export SKB_TABLEREPORT_THRESHOLD=10
+            export SKB_TABLEREPORT_THRESHOLD=30
 
     See Also
     --------
