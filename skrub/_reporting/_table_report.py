@@ -174,6 +174,7 @@ class TableReport:
             max_association_columns
             if max_association_columns is not None
             else _config.get_config()["tablereport_threshold"]
+        )
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
