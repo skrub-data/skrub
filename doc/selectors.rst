@@ -162,8 +162,8 @@ instead of the column.
 0      297.0     210.0
 1      420.0     297.0
 
-We can pass args and kwargs that will be forwarded to the predicate, to help avoid lambda
-or local functions and thus ensure the selector is picklable.
+We can pass args and kwargs that will be forwarded to the predicate, to help avoid
+lambda or local functions and thus ensure the selector is picklable.
 
 >>> s.select(df, s.filter_names(str.endswith, 'mm'))
    height_mm  width_mm
