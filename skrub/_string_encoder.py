@@ -72,7 +72,7 @@ class StringEncoder(SingleColumnTransformer):
     ... ], name='video comments')
 
     >>> enc.fit_transform(X) # doctest: +SKIP
-       video comments_1  video comments_1
+       video comments_0  video comments_1
     0      8.218069e-01      4.557474e-17
     1      6.971618e-16      1.000000e+00
     2      8.218069e-01     -3.046564e-16

@@ -181,7 +181,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     but ensure various checks and enable dimension reduction.
 
     >>> enc.fit_transform(X) # doctest: +SKIP
-       video comments_1  video comments_2
+       video comments_0  video comments_1
     0          0.411395          0.096504
     1         -0.105210         -0.344567
     2         -0.306184          0.248063

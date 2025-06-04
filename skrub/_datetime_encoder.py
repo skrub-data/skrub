@@ -325,7 +325,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
     >>> encoder.fit_transform(login)
-       login_year  ...  login_hour_circular_2
+       login_year  ...  login_hour_circular_1
     0      2024.0  ...              -1.000000
     1         NaN  ...                    NaN
     2      2024.0  ...              -0.965926
@@ -333,8 +333,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     Added features can be explored using ``DatetimeEncoder.all_outputs_``:
 
     >>> encoder[-1].all_outputs_
-    ['login_year', 'login_total_seconds', 'login_month_circular_1', 'login_month_circular_2',
-        'login_day_circular_1', 'login_day_circular_2', 'login_hour_circular_1', 'login_hour_circular_2']
+    ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
+        'login_day_circular_0', 'login_day_circular_1', 'login_hour_circular_0', 'login_hour_circular_1']
     """  # noqa: E501
 
     def __init__(

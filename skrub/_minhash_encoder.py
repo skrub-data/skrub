@@ -104,7 +104,7 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
     The encoded data with 5 components are:
 
     >>> enc.transform(X)
-             city_1        city_2        city_3        city_4        city_5
+             city_0        city_1        city_2        city_3        city_4
     0 -1.783375e+09 -1.588270e+09 -1.663592e+09 -1.819887e+09 -1.962594e+09
     1 -8.480470e+08 -1.766579e+09 -1.558912e+09 -1.485745e+09 -1.687299e+09
     2 -1.975829e+09 -2.095000e+09 -1.596521e+09 -1.817594e+09 -2.095693e+09
