@@ -234,7 +234,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
         self._check_params()
 
-        self.input_name_ = sbd.name(column) or "lm"
+        self.input_name_ = sbd.name(column) or "text_enc"
 
         X_out = self._vectorize(column)
 
