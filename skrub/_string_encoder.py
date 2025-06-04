@@ -116,7 +116,6 @@ class StringEncoder(SingleColumnTransformer):
             raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
         self.to_str = ToStr(convert_category=True)
         X_filled = self.to_str.fit_transform(X)
-        X_filled = sbd.to_string(X)
         X_filled = sbd.fill_nulls(X_filled, "")
 
         if self.vectorizer == "tfidf":
