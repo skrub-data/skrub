@@ -1,5 +1,7 @@
+import pytest
+
 import skrub
-from skrub import TableReport, config_context, get_config
+from skrub import TableReport, config_context, get_config, set_config
 from skrub._expressions._evaluation import evaluate
 from skrub.datasets import fetch_employee_salaries
 
@@ -82,6 +84,23 @@ def test_enable_subsampling():
         assert evaluate(expr.skb.subsample(n=3), mode="preview").shape[0] == X.shape[0]
         with config_context(enable_subsampling="default"):
             assert evaluate(expr.skb.subsample(n=3), mode="preview").shape[0] == 3
+
+
+def test_error():
+    with pytest.raises(ValueError):
+        set_config(use_tablereport="hello")
+
+    with pytest.raises(ValueError):
+        set_config(use_tablereport_expr=1)
+
+    with pytest.raises(ValueError):
+        set_config(tablereport_threshold="hello")
+
+    with pytest.raises(ValueError):
+        set_config(subsampling_seed=-1)
+
+    with pytest.raises(ValueError):
+        set_config(enable_subsampling="no")
 
 
 def test_subsampling_seed():
