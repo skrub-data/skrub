@@ -165,7 +165,7 @@ def test_get_feature_names_out(encode_column, df_module):
     encoder = StringEncoder(n_components=4)
 
     encoder.fit(X)
-    expected_columns = ["tsvd_0", "tsvd_1", "tsvd_2", "tsvd_3"]
+    expected_columns = ["string_enc_0", "string_enc_1", "string_enc_2", "string_enc_3"]
     assert encoder.get_feature_names_out() == expected_columns
 
 
