@@ -193,14 +193,15 @@ class ToStr(SingleColumnTransformer):
 
     def fit_transform(self, column, y=None):
         del y
-        if sbd.is_categorical(column):
-            if self.convert_category:
-                return self.transform(column)
+        if (
+            (sbd.is_categorical(column) and not self.convert_category)
+            or sbd.is_numeric(column)
+            or sbd.is_any_date(column)
+        ):
             raise RejectColumn(
                 f"Refusing to convert {sbd.name(column)!r} "
                 f"with dtype '{sbd.dtype(column)}' to strings."
             )
-        if sbd.is_numeric(column) or sbd.is_any_date(column):
             raise RejectColumn(
                 f"Refusing to convert {sbd.name(column)!r} "
                 f"with dtype '{sbd.dtype(column)}' to strings."
