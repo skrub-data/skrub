@@ -65,6 +65,9 @@ Changes
 
 - The :class:`SimpleCleaner` has been removed. use :class:`Cleaner` instead. :pr:`1370` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The periodic encoding for the ``day_in_year`` has been removed from the :class:`DatetimeEncoder` as it was
+  redundant. The feature itself is still added if the flag is set to True. :pr:`1396` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Bugfixes
 --------
 
