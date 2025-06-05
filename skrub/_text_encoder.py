@@ -227,6 +227,11 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         """
         del y
 
+        # This check is added because ToStr raises RejectColumn rather than
+        # ValueError, and handling RejectColumn complicates things
+        if not (sbd.is_string(column) or sbd.is_categorical(column)):
+            raise ValueError(f"Column {sbd.name(column)!r} does not contain strings.")
+
         self.to_str = ToStr(convert_category=True)
         column = self.to_str.fit_transform(column)
 

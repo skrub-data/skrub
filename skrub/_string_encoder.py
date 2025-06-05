@@ -112,6 +112,11 @@ class StringEncoder(SingleColumnTransformer):
         """
         del y
 
+        # This check is added because ToStr raises RejectColumn rather than
+        # ValueError, and handling RejectColumn complicates things
+        if not (sbd.is_string(X) or sbd.is_categorical(X)):
+            raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
+
         self.to_str = ToStr(convert_category=True)
         X_filled = self.to_str.fit_transform(X)
         X_filled = sbd.fill_nulls(X_filled, "")
@@ -189,7 +194,7 @@ class StringEncoder(SingleColumnTransformer):
         if not (sbd.is_string(X) or sbd.is_categorical(X)):
             raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
         X_filled = self.to_str.transform(X)
-        X_filled = sbd.fill_nulls(X, "")
+        X_filled = sbd.fill_nulls(X_filled, "")
         X_out = self.vectorizer_.transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
         if hasattr(self, "tsvd_"):

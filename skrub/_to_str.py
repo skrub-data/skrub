@@ -202,10 +202,6 @@ class ToStr(SingleColumnTransformer):
                 f"Refusing to convert {sbd.name(column)!r} "
                 f"with dtype '{sbd.dtype(column)}' to strings."
             )
-            raise RejectColumn(
-                f"Refusing to convert {sbd.name(column)!r} "
-                f"with dtype '{sbd.dtype(column)}' to strings."
-            )
         return self.transform(column)
 
     def transform(self, column):

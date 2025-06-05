@@ -176,14 +176,20 @@ def test_store_weights_in_pickle(df_module, encoder, store_weights_in_pickle):
 
 
 def test_categorical_features(df_module, encoder):
+    cat_col = sbd.to_categorical(
+        df_module.make_column("cat", ["A", "B", "A", "C", "B", "D"])
+    )
     data = {
-        "categorical": pd.Categorical(["A", "B", "A", "C"]),
-        "numeric": [1, 2, 3, 4],
+        "categorical": cat_col,
+        "numeric": [1, 2, 3, 4, 5, 6],
     }
-    df = pd.DataFrame(data)
+    df = df_module.make_dataframe(data)
 
     with pytest.raises(ValueError, match="Column 'numeric' does not contain strings."):
         encoder.fit(df["numeric"])
 
     out = encoder.fit_transform(df["categorical"])
+    assert len(sbd.column_names(out)) == 30
+
+    out = encoder.fit(df["categorical"][:4]).transform(df["categorical"][4:])
     assert len(sbd.column_names(out)) == 30
