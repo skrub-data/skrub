@@ -548,7 +548,7 @@ class _SplineEncoder(SingleColumnTransformer):
         self.is_fitted = True
         self.n_components_ = X_out.shape[1]
 
-        self.input_name_ = sbd.name(X)
+        self.input_name_ = sbd.name(X) + "_spline"
         self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, X_out)
@@ -631,7 +631,7 @@ class _CircularEncoder(SingleColumnTransformer):
 
         self.n_components_ = 2
 
-        self.input_name_ = sbd.name(X)
+        self.input_name_ = sbd.name(X) + "_circular"
         self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, new_features)
