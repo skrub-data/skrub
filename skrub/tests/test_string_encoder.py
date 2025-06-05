@@ -230,3 +230,36 @@ def test_missing_values(df_module, vectorizer):
     for c in sbd.to_column_list(out):
         assert_almost_equal(c[1], 0.0, decimal=6)
         assert_almost_equal(c[2], 0.0, decimal=6)
+
+
+@pytest.mark.parametrize(
+    "n_components, expected_columns",
+    [
+        (3, ["col_0", "col_1", "col_2"]),  # No padding needed for components < 10
+        (
+            12,
+            [
+                "col_00",
+                "col_01",
+                "col_02",
+                "col_03",
+                "col_04",
+                "col_05",
+                "col_06",
+                "col_07",
+                "col_08",
+                "col_09",
+                "col_10",
+                "col_11",
+            ],
+        ),  # 2-digit padding
+    ],
+)
+def test_zero_padding_in_feature_names_out(df_module, n_components, expected_columns):
+    """Check that the feature names are zero-padded."""
+    encoder = StringEncoder(n_components=n_components)
+    X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
+    encoder.fit(X)
+    feature_names = encoder.get_feature_names_out()
+
+    assert feature_names[: len(expected_columns)] == expected_columns

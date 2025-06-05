@@ -9,7 +9,6 @@ from skrub import _dataframe as sbd
 from skrub import _utils
 from skrub._utils import (
     LRUDict,
-    get_encoder_feature_names,
     import_optional_dependency,
     unique_strings,
 )
@@ -92,33 +91,3 @@ def test_passthrough():
     assert p.transform(X) is X
     X = [4, 5, 6]
     assert p.transform(X) is X
-
-
-@pytest.mark.parametrize(
-    "n_components, expected_columns",
-    [
-        (3, ["col_0", "col_1", "col_2"]),  # No padding needed for components < 10
-        (
-            12,
-            [
-                "col_00",
-                "col_01",
-                "col_02",
-                "col_03",
-                "col_04",
-                "col_05",
-                "col_06",
-                "col_07",
-                "col_08",
-                "col_09",
-                "col_10",
-                "col_11",
-            ],
-        ),  # 2-digit padding
-    ],
-)
-def test_zero_padding_in_feature_names_out(n_components, expected_columns):
-    """Check that the feature names are zero-padded."""
-    feature_names = get_encoder_feature_names("col", n_components)
-
-    assert feature_names[: len(expected_columns)] == expected_columns

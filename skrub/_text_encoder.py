@@ -11,7 +11,6 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._utils import (
-    get_encoder_feature_names,
     import_optional_dependency,
     unique_strings,
 )
@@ -135,7 +134,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     Attributes
     ----------
     input_name_ : str
-        The name of the fitted column.
+        The name of the fitted column, or "text_enc" if the column has no name.
 
     pca_ : sklearn.decomposition.PCA
         A fitted PCA to reduce the embedding dimensionality (either PCA or truncation,
@@ -264,7 +263,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
         self.n_components_ = X_out.shape[1]
 
-        cols = get_encoder_feature_names(self.input_name_, self.n_components_)
+        cols = self.get_feature_names_out()
         X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))
         X_out = sbd.copy_index(column, X_out)
 
@@ -382,17 +381,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 f"Got model_name={self.model_name} but expected a str or a Path type."
             )
         return
-
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : list of str
-            Transformed feature names.
-        """
-        check_is_fitted(self)
-        return get_encoder_feature_names(self.input_name_, self.n_components_)
 
     def __getstate__(self):
         state = self.__dict__.copy()

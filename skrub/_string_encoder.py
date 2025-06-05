@@ -7,11 +7,9 @@ from sklearn.feature_extraction.text import (
     TfidfVectorizer,
 )
 from sklearn.pipeline import Pipeline
-from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
-from ._utils import get_encoder_feature_names
 
 
 class StringEncoder(SingleColumnTransformer):
@@ -47,6 +45,19 @@ class StringEncoder(SingleColumnTransformer):
     random_state : int, RandomState instance or None, default=None
         Used during randomized svd. Pass an int for reproducible results across
         multiple function calls.
+
+    Attributes
+    ----------
+    input_name_ : str
+        Name of the fitted column, or "string_enc" if the column has no name.
+
+    n_components_ : int
+        The number of dimensions of the embeddings after dimensionality
+        reduction.
+
+    all_outputs_ : list of str
+        A list that contains the name of all the features generated from the fitted
+        column.
 
     See Also
     --------
@@ -161,7 +172,7 @@ class StringEncoder(SingleColumnTransformer):
         self._is_fitted = True
         self.n_components_ = result.shape[1]
 
-        self._input_name = sbd.name(X) or "string_enc"
+        self.input_name_ = sbd.name(X) or "string_enc"
 
         self.all_outputs_ = self.get_feature_names_out()
 
@@ -198,14 +209,3 @@ class StringEncoder(SingleColumnTransformer):
         result = sbd.copy_index(X, result)
 
         return result
-
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : ndarray of str objects
-            Transformed feature names.
-        """
-        check_is_fitted(self)
-        return get_encoder_feature_names(self._input_name, self.n_components_)

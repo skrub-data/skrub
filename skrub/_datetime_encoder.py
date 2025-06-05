@@ -14,7 +14,6 @@ from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._sklearn_compat import TransformerTags
-from ._utils import get_encoder_feature_names
 
 __all__ = ["DatetimeEncoder"]
 
@@ -549,10 +548,8 @@ class _SplineEncoder(SingleColumnTransformer):
         self.is_fitted = True
         self.n_components_ = X_out.shape[1]
 
-        name = sbd.name(X)
-        self.all_outputs_ = get_encoder_feature_names(
-            f"{name}_circular", self.n_components_
-        )
+        self.input_name_ = sbd.name(X)
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, X_out)
 
@@ -634,10 +631,8 @@ class _CircularEncoder(SingleColumnTransformer):
 
         self.n_components_ = 2
 
-        name = sbd.name(X)
-        self.all_outputs_ = get_encoder_feature_names(
-            f"{name}_circular", self.n_components_
-        )
+        self.input_name_ = sbd.name(X)
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, new_features)
 
