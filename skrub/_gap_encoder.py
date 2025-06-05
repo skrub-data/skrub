@@ -692,7 +692,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.H_dict_.update(zip(unq_X, unq_H))
 
         # XXX: Maybe we should accumulate unq_V or the scaling factor somehow?
-        self.scaling_factor_ = _gap_scaling_factor(unq_V)
+        scaling_factor = _gap_scaling_factor(unq_V)
+        if not hasattr(self, "scaling_factor_") or scaling_factor != 0:
+            self.scaling_factor_ = scaling_factor
 
         return self
 
