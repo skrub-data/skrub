@@ -7,7 +7,6 @@ from sklearn.base import clone
 
 import skrub._dataframe as sbd
 from skrub import TableVectorizer, TextEncoder
-from skrub._on_each_column import RejectColumn
 from skrub._text_encoder import ModelNotFound
 
 pytest.importorskip("sentence_transformers")
@@ -63,7 +62,7 @@ def test_not_a_series(X, encoder):
 
 def test_not_a_series_with_string(df_module, encoder):
     X = df_module.make_column("", [1, 2, 3])
-    with pytest.raises(RejectColumn):
+    with pytest.raises(ValueError):
         clone(encoder).fit(X)
 
 
