@@ -3,7 +3,6 @@ Implements the GapEncoder: a probabilistic encoder for categorical variables.
 """
 from __future__ import annotations
 
-from collections import Counter, defaultdict
 from copy import deepcopy
 
 import numpy as np
@@ -20,10 +19,6 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._scaling_factor import (
-    scaling_factor,
-    scaling_factor_batch,
-)
 from ._utils import unique_strings
 
 
@@ -449,25 +444,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         GapEncoder
             The fitted GapEncoder instance (self).
         """
-        _ = self.fit_transform(X)
-        return self
-
-    def fit_transform(self, X, y=None):
-        """
-        Fit the GapEncoder on a column.
-
-        Parameters
-        ----------
-        X : Column, shape (n_samples, )
-            The string data to fit the model on.
-        y : None
-            Unused, only here for compatibility.
-
-        Returns
-        -------
-        X_out : Pandas or Polars DataFrame, of shape (n_samples, n_components)
-            The embedding representation of the input.
-        """
         self._check_analyzer()
         self._check_input_type(X)
         # Check that n_samples >= n_components
@@ -479,7 +455,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._input_name = sbd.name(X)
         self._random_state = check_random_state(self.random_state)
         is_null = sbd.to_numpy(sbd.is_null(X))
-        X_original = deepcopy(X)
         X = sbd.to_numpy(X)
 
         # Copy parameter rho
@@ -542,13 +517,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
 
-        # Transform and normalize the output.
-        result = self._transform(X, is_null)
+        self.scaling_factor_ = _gap_scaling_factor(unq_V)
 
-        self.scaling_factor_ = scaling_factor(result)
-        result /= self.scaling_factor_
-
-        return self._post_process(X_original, result)
+        return self
 
     def get_feature_names_out(self, n_labels=3):
         """
@@ -720,16 +691,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         # Update self.H_dict_ with the learned encoded vectors (activations)
         self.H_dict_.update(zip(unq_X, unq_H))
 
-        result = self._transform(X, is_null)
-
-        self.scaling_factor_, self.past_stats_ = scaling_factor_batch(
-            result,
-            getattr(
-                self,
-                "past_stats_",
-                defaultdict(Counter),
-            ),
-        )
+        # XXX: Maybe we should accumulate unq_V or the scaling factor somehow?
+        self.scaling_factor_ = _gap_scaling_factor(unq_V)
 
         return self
 
@@ -767,10 +730,11 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self._check_input_type(X, err_type=ValueError)
         is_null = sbd.to_numpy(sbd.is_null(X))
         result = self._transform(sbd.to_numpy(X), is_null)
-
         result /= self.scaling_factor_
+        names = self.get_feature_names_out()
+        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
 
-        return self._post_process(X, result)
+        return sbd.copy_index(X, result)
 
     def _check_input_type(self, X, err_type=RejectColumn):
         if sbd.is_categorical(X) or sbd.is_string(X):
@@ -807,12 +771,6 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         result = self._get_H(X)
         # Restore H
         self.H_dict_ = pre_trans_H_dict_
-        return result
-
-    def _post_process(self, X, result):
-        names = self.get_feature_names_out()
-        result = sbd.make_dataframe_like(X, dict(zip(names, result.T)))
-        result = sbd.copy_index(X, result)
         return result
 
 
@@ -970,3 +928,7 @@ def get_kmeans_prototypes(
     neighbors.fit(projected)
     indexes_prototypes = np.unique(neighbors.kneighbors(centers, 1)[-1])
     return np.sort(X[indexes_prototypes])
+
+
+def _gap_scaling_factor(unq_V):
+    return unq_V.sum(axis=1).mean() / 2

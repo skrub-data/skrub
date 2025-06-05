@@ -46,7 +46,7 @@ def test_nonfinite():
 def test_encoders(df_module, encoder):
     X = df_module.example_dataframe["str-col"]
     X_t = encoder.fit_transform(X)
-    assert scaling_factor(np.array(X_t)) == pytest.approx(1)
+    assert scaling_factor(np.array(X_t)) == pytest.approx(1, abs=0.1)
 
 
 def test_partial_fit(df_module):
