@@ -135,6 +135,7 @@ class SingleColumnTransformer(BaseEstimator):
         list of str
             The list of feature names.
         """
+        check_is_fitted(self, "n_components_")
         num_digits = len(str(self.n_components_ - 1))
         return [
             f"{self.input_name_}_{str(i).zfill(num_digits)}"
