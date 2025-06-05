@@ -1,5 +1,8 @@
 """
+.. currentmodule:: skrub
+
 .. _example_tuning_pipelines:
+
 
 Tuning pipelines
 ================
@@ -28,7 +31,6 @@ instead of:
 Skrub then inspects
 our pipeline to discover all the places where we used objects like
 ``skrub.choose_from()`` and builds a grid of hyperparameters for us.
-
 """
 
 # %%
@@ -89,17 +91,17 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 #
 # Several utilities are available:
 #
-# - ``choose_from`` to choose from a discrete set of values
-# - ``choose_float`` and ``choose_int`` to sample numbers in a given range
-# - ``choose_bool`` to choose between ``True`` and ``False``
-# - ``optional`` to choose between something and ``None``; typically to make a
+# - :func:`choose_from` to choose from a discrete set of values
+# - :func:`choose_float` and :func:`choose_int` to sample numbers in a given range
+# - :func:`choose_bool` to choose between ``True`` and ``False``
+# - :func:`optional` to choose between something and ``None``; typically to make a
 #   transformation step optional such as
 #   ``X.skb.apply(skrub.optional(StandardScaler()))``
 #
 # Choices can be given a name which is used to display hyperparameter search
 # results and plots or to override their outcome. The name is optional.
 #
-# Note that ``skrub.choose_float()`` and ``skrub.choose_int()`` can be given a
+# Note that :func:`skrub.choose_float()` and :func:`skrub.choose_int()` can be given a
 # ``log`` argument to sample in log scale.
 
 # %%
@@ -114,10 +116,10 @@ classifier = HistGradientBoostingClassifier(
 pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 
 # %%
-# We can then obtain an estimator that performs the hyperparameter search with
+# We can then obtain a pipeline that performs the hyperparameter search with
 # ``.skb.get_grid_search()`` or ``.skb.get_randomized_search()``. They accept
 # the same arguments as their scikit-learn counterparts (e.g. ``scoring`` and
-# ``n_jobs``). Also, like ``.skb.get_estimator()``, they accept a ``fitted``
+# ``n_jobs``). Also, like ``.skb.get_pipeline()``, they accept a ``fitted``
 # argument and if it is ``True`` the search is fitted on the data we provided
 # when initializing our pipeline's variables.
 
@@ -141,6 +143,36 @@ search.results_
 
 # %%
 search.plot_results()
+
+# %%
+# Default choice values
+# ---------------------
+#
+# The goal of using the different ``choose_*`` functions is to tune choices on
+# validation metrics with randomized or grid search. However, even when our
+# expression contains such choices we can still use it without tuning, for
+# example in previews or to get a quick first result before spending the
+# computation time to run the search. When we use :meth:`.skb.get_pipeline()
+# <Expr.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
+# and uses those default values. That default pipeline is the one used for
+# :meth:`.skb.eval() <Expr.skb.eval>`.
+#
+# We can control what should be the default value for each choice. For
+# :func:`choose_int`, :func:`choose_float` and :func:`choose_bool`, we can use
+# the ``default`` parameter. For :func:`choose_from`, the default is the first
+# item from the list or dict of outcomes we provide. For :func:`optional`, we
+# can pass ``default=None`` to force the default to be the alternative
+# outcome, ``None``.
+#
+# When we do not set an explicit default, skrub picks one for depending on the
+# kind of choice, as detailed in :ref:`this table<choice-defaults-table>` in the
+# User Guide.
+
+# %%
+# As mentioned we can control the default value:
+
+# %%
+skrub.choose_float(1.0, 100.0, default=12.0).default()
 
 # %%
 # Choices can appear in many places
@@ -179,6 +211,8 @@ X.assign(
 # the number of components.
 
 # %%
+X, y = skrub.X(texts), skrub.y(labels)
+
 n_components = skrub.choose_int(5, 15, name="N components")
 
 encoder = skrub.choose_from(
@@ -222,108 +256,15 @@ search.plot_results()
 # feature does not have a significant impact on the score.
 
 # %%
-# Advanced usage
-# --------------
-#
-# This section shows some more advanced or less frequently needed use cases.
-#
-# Choices can depend on each other
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# Sometimes not all combinations (cross-product) of hyperparameter values make
-# sense, and instead choices may be linked. For example, our downstream estimator
-# can be a ``RidgeClassifier`` or ``HistGradientBoostingClassifier``, and
-# standard scaling should be applied only when it is a ``Ridge``.
-#
-# Skrub choices have a ``match`` method to obtain different results depending
-# on the outcome of the choice.
-
-# %%
-from sklearn.preprocessing import StandardScaler
-
-X, y = skrub.X(texts), skrub.y(labels)
-
-vectorized_X = X.skb.apply(skrub.MinHashEncoder())
-
-estimator_kind = skrub.choose_from(["ridge", "HGB"], name="estimator kind")
-
-scaling = estimator_kind.match({"ridge": StandardScaler(), "HGB": "passthrough"})
-scaled_X = vectorized_X.skb.apply(scaling)
-
-classifier = estimator_kind.match(
-    {"ridge": RidgeClassifier(), "HGB": HistGradientBoostingClassifier()}
-)
-pred = scaled_X.skb.apply(classifier, y=y)
-print(pred.skb.describe_param_grid())
-
-# %%
-# Here we can see that there is only one parameter: the estimator kind. When it
-# is ``"ridge"``, the ``StandardScaler`` and the ``RidgeClassifier`` are used;
-# when it is ``"HGB"`` ``"passthrough"`` and the
-# ``HistGradientBoostingClassifier`` are used.
-#
-# Similarly, objects returned by ``choose_bool`` have a ``if_else()`` method.
-
-# %%
-# Choices can be turned into expressions
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# We can turn a choice (or the result of a choice ``match()`` or ``if_else``)
-# into an expression, so that we can keep chaining more operations onto it.
-# Here, we create a ``.choose_bool()`` object to choose whether to add the length
-# of the text as a feature or not. Then, ``if_else()`` will assign the length
-# of the text to a new column ``length`` if the choice is ``True``, or do nothing
-# if the choice is ``False``.
-
-# %%
-X, y = skrub.X(texts), skrub.y(labels)
-
-add_length = skrub.choose_bool(name="add_length")
-with_length = add_length.if_else(X.assign(length=X["text"].str.len()), X).as_expr()
-vectorized_X = with_length.skb.apply(skrub.MinHashEncoder(n_components=2), cols="text")
-
-# Note: we can manually set the outcome of a choice when evaluating an
-# expression (or fitting an estimator)
-
-vectorized_X.skb.eval({"add_length": False})
-
-# %%
-vectorized_X.skb.eval({"add_length": True})
-
-# %%
-# Arbitrary logic depending on a choice
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-# When ``match`` or ``if_else`` are not enough and we need to apply arbitrary,
-# eager logic based on a choice we can resort to using ``skrub.deferred``. For
-# example the choice of adding the text length or not could also have been
-# written as:
-
-# %%
-X, y = skrub.X(texts), skrub.y(labels)
-
-
-@skrub.deferred
-def extract_features(df, add_length):
-    if add_length:
-        return df.assign(length=df["text"].str.len())
-    return df
-
-
-feat = extract_features(X, skrub.choose_bool(name="add_length")).skb.apply(
-    skrub.MinHashEncoder(n_components=2), cols="text"
-)
-
-feat.skb.eval({"add_length": False})
-
-# %%
-feat.skb.eval({"add_length": True})
-
-# %%
 # Concluding, we have seen how to use skrub's ``choose_from`` objects to tune
-# hyperparameters, choose optional configurations, add features, and nest choices.
-# We then looked at how the different choices affect the pipeline and the prediction
+# hyperparameters, choose optional configurations, and nest choices. We then
+# looked at how the different choices affect the pipeline and the prediction
 # scores.
 #
-# Thanks to the ``choose_from`` objects, Skrub expressions ease the process of
-# hyperparameter tuning.
+# There is more to say about skrub choices than what is covered in this
+# example. In particular, choices are not limited to choosing estimators and
+# their hyperparameters: they can be used anywhere an expression can be used,
+# such as the argument of a :func:`deferred` function, or the argument of
+# another expression's method or operator. Finally, choices can be
+# inter-dependent. Please find more information in the :ref:`user guide
+# <skrub_pipeline_validation>`.

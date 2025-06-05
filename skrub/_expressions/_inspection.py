@@ -1,12 +1,14 @@
 import datetime
 import html
 import io
+import numbers
 import re
 import shutil
 import webbrowser
 from pathlib import Path
 
 import jinja2
+import numpy as np
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
@@ -15,13 +17,9 @@ from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._utils import Repr, random_string, short_repr
 from . import _utils
-from ._choosing import BaseNumericChoice
+from ._choosing import BaseNumericChoice, Choice
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
-
-# TODO after merging the expressions do some refactoring and move this stuff to
-# _reporting. better to do it later to avoid conflicts with independent changes
-# to the _reporting module.
 
 
 def _get_jinja_env():
@@ -140,7 +138,8 @@ def _do_full_report(
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
         # TODO dump report in callback instead of evaluating full expression
-        # first, so that we can clear intermediate results
+        # first, so that we can clear intermediate results.
+        # See evaluate's `callback` parameter
         result = evaluate(expr, mode=mode, environment=environment, clear=False)
         evaluate_error = None
     except Exception as e:
@@ -340,6 +339,34 @@ def draw_expr_graph(expr, url=None, direction="TB"):
             dot_graph.add_edge(pydot.Edge(_dot_id(child), _dot_id(c)))
 
     return GraphDrawing(dot_graph)
+
+
+def describe_params(params, expr_choices):
+    description = {}
+    for choice_id, param in params.items():
+        choice = expr_choices["choices"][choice_id]
+        choice_name = expr_choices["choice_display_names"][choice_id]
+        if isinstance(choice, Choice):
+            # If we have a Choice we use the outcome name if there is one, and
+            # if there isn't, the value if it is a simple type otherwise a
+            # short repr
+            if choice.outcome_names is not None:
+                value = choice.outcome_names[param]
+            else:
+                value = choice.outcomes[param]
+                if not isinstance(
+                    value, (numbers.Number, bool, str, bytes, type(None))
+                ):
+                    value = short_repr(value)
+        else:
+            # If we have a NumericChoice we use the corresponding number. We
+            # convert numpy numbers to built-in types to avoid the long
+            # 'np.float64(5.0)' repr
+            value = param
+            if isinstance(value, np.number):
+                value = value.tolist()
+        description[choice_name] = value
+    return description
 
 
 def describe_param_grid(expr):

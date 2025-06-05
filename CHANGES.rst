@@ -41,6 +41,15 @@ New features
 
 Changes
 -------
+.. warning::
+  The default high cardinality encoder for both :class:`TableVectorizer` and
+  :meth:`tabular_learner` has been changed from :class:`GapEncoder` to
+  :class:`StringEncoder`. :pr:`1354` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- :class:`StringEncoder` now exposes the ``stop_words`` argument, which is passed to the
+  underlying vectorizer (:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
+  or :class:`~sklearn.feature_extraction.text.HashingVectorizer`). :pr:`1415` by
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 - A new parameter ``max_association_columns`` has been added to the
   :class:`TableReport` to skip association computation when the number of columns
@@ -60,6 +69,16 @@ Changes
 
 - The :func:`concat_horizontal` function was replaced with :func:`concat`. Horizontal or vertical concatenation
   is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`.
+- The :class:`TableVectorizer` and :class:`Cleaner` now accept a `datetime_format`
+  parameter for specifying the format to use when parsing datetime columns.
+  :pr:`1358` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The :class:`SimpleCleaner` has been removed. use :class:`Cleaner` instead. :pr:`1370` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The optional dependencies 'dev', 'doc', 'lint' and 'test' have been coalesced into
+  'dev'. :pr:`1404` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- The :class:`TableReport` now supports Series in addition to Dataframes. :pr:`1420` by :user:`Vitor Pohlenz<vitorpohlenz>`.
 
 Bugfixes
 --------

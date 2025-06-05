@@ -1,3 +1,5 @@
+import textwrap
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import OrdinalEncoder
@@ -39,7 +41,7 @@ def get_parallel_coord_data(cv_results, metadata, colorscale=DEFAULT_COLORSCALE)
     ]
     return dict(
         line=dict(
-            color=cv_results["mean_test_score"],
+            color=cv_results[metadata["col_score"]],
             colorscale=colorscale,
             showscale=True,
             colorbar=dict(title=dict(text="score")),
@@ -67,16 +69,22 @@ def _add_jitter(column):
     return column
 
 
+def _wrap_label(column):
+    """Add "<br>" to limit the width of a label to at most 20 chars"""
+    label = "<br>\n".join(textwrap.wrap(column["label"], width=20))
+    return {**column, "label": label}
+
+
 def _prepare_column(col, *, is_log_scale, is_int):
     if pd.api.types.is_bool_dtype(col) or not pd.api.types.is_numeric_dtype(col):
-        return _prepare_obj_column(col)
+        return _wrap_label(_prepare_obj_column(col))
     result = _prepare_numeric_column(col, is_log_scale=is_log_scale, is_int=is_int)
     result["label"] = {
         "mean_test_score": "score",
         "mean_fit_time": "fit time",
         "mean_score_time": "score time",
     }.get(result["label"], result["label"])
-    return result
+    return _wrap_label(result)
 
 
 def _prepare_obj_column(col):
@@ -100,12 +108,22 @@ def _prepare_obj_column(col):
     }
 
 
+def _pick_format(vals):
+    delta = (vals.max() - vals.min()) / (len(vals) + 1)
+    if delta == 0.0 or any("e" in f"{v:g}" for v in vals):
+        # only one values, or scientific notation -- bail for simplicity
+        return "{:g}"
+    # guess the necessary number of digits
+    n = max(0, -int(np.floor(np.log10(delta))))
+    return f"{{:.{n}f}}"
+
+
 def _prepare_numeric_column(col, *, is_log_scale, is_int):
     vals = col.to_numpy()
     if is_log_scale:
         vals = np.log(vals)
     min_val, max_val = np.nanmin(vals), np.nanmax(vals)
-    tickvals = np.linspace(min_val, max_val, 10)
+    tickvals = np.unique(np.linspace(min_val, max_val, 10))
     if pd.api.types.is_integer_dtype(col) or is_int:
         if is_log_scale:
             tickvals = np.exp(tickvals)
@@ -116,9 +134,10 @@ def _prepare_numeric_column(col, *, is_log_scale, is_int):
         tickvals = tickvals.tolist()
         ticktext = [str(val) for val in tickvals_label_space]
     else:
-        tickvals = tickvals.tolist()
         tickvals_label_space = np.exp(tickvals) if is_log_scale else tickvals
-        ticktext = [f"{val:.2g}" for val in tickvals_label_space]
+        tickvals = tickvals.tolist()
+        fmt = _pick_format(tickvals_label_space)
+        ticktext = [fmt.format(val) for val in tickvals_label_space]
     if np.isnan(vals).any():
         tickvals = [min_val - (max_val - min_val) / 10] + tickvals
         ticktext = ["NaN"] + ticktext

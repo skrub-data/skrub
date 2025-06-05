@@ -200,6 +200,17 @@ def test_n_components(df_module):
     assert encoder_30.n_components_ == 30
 
 
+@pytest.mark.parametrize("name_vectorizer", ["tfidf", "hashing"])
+def test_stop_words(encode_column, name_vectorizer):
+    encoder = StringEncoder(vectorizer=name_vectorizer, stop_words="english").fit(
+        encode_column
+    )
+    vectorizer = encoder.vectorizer_
+    if isinstance(vectorizer, Pipeline):
+        vectorizer = vectorizer[0]
+    assert vectorizer.stop_words == "english"
+
+
 def test_n_components_equal_voc_size(df_module):
     x = df_module.make_column("x", ["aab", "bba"])
     encoder = StringEncoder(n_components=2, ngram_range=(1, 1), analyzer="char")
