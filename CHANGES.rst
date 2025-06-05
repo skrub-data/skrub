@@ -46,6 +46,11 @@ Changes
   :meth:`tabular_learner` has been changed from :class:`GapEncoder` to
   :class:`StringEncoder`. :pr:`1354` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- :class:`StringEncoder` now exposes the ``stop_words`` argument, which is passed to the
+  underlying vectorizer (:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
+  or :class:`~sklearn.feature_extraction.text.HashingVectorizer`). :pr:`1415` by
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 - A new parameter ``max_association_columns`` has been added to the
   :class:`TableReport` to skip association computation when the number of columns
   exceeds the specified value. :pr:`1304` by :user:`Victoria Shevchenko <victoris93>`.
@@ -67,6 +72,11 @@ Changes
 
 - The periodic encoding for the ``day_in_year`` has been removed from the :class:`DatetimeEncoder` as it was
   redundant. The feature itself is still added if the flag is set to True. :pr:`1396` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The optional dependencies 'dev', 'doc', 'lint' and 'test' have been coalesced into
+  'dev'. :pr:`1404` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- The :class:`TableReport` now supports Series in addition to Dataframes. :pr:`1420` by :user:`Vitor Pohlenz<vitorpohlenz>`.
 
 Bugfixes
 --------

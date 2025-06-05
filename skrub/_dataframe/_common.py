@@ -43,9 +43,10 @@ __all__ = [
     "col_by_idx",
     "collect",
     #
-    # Querying and modifying metadata
+    # Querying, modifying metadata and shape
     #
     "shape",
+    "to_frame",
     "name",
     "column_names",
     "rename",
@@ -413,8 +414,8 @@ def _collect_polars_lazyframe(df):
 
 
 #
-# Querying and modifying metadata
-# ===============================
+# Querying, modifying metadata and shape
+# ======================================
 #
 
 
@@ -431,6 +432,22 @@ def _shape_pandas(obj):
 @shape.specialize("polars")
 def _shape_polars(obj):
     return obj.shape
+
+
+@dispatch
+def to_frame(col):
+    """Convert a single Column to a DataFrame."""
+    raise NotImplementedError()
+
+
+@to_frame.specialize("pandas", argument_type="Column")
+def _to_frame_pandas(col):
+    return col.to_frame()
+
+
+@to_frame.specialize("polars", argument_type="Column")
+def _to_frame_polars(col):
+    return col.to_frame()
 
 
 @dispatch
