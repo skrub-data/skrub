@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal
 
+import skrub
 import skrub._dataframe as sbd
 from skrub import GapEncoder, StringEncoder
 from skrub._scaling_factor import scaling_factor
@@ -41,6 +42,12 @@ def test_nonfinite():
     [
         StringEncoder(n_components=2),
         GapEncoder(n_components=2),
+        pytest.param(
+            skrub.TextEncoder(n_components=2),
+            marks=pytest.mark.skipif(
+                not TRANSFORMERS, reason="transformers not installed"
+            ),
+        ),
     ],
 )
 def test_encoders(df_module, encoder):
