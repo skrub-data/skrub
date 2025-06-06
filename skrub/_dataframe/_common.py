@@ -200,7 +200,7 @@ def _is_column_polars(obj):
 
 @dispatch
 def to_list(col):
-    raise _raise(col, type="Series")
+    raise _raise(col, kind="Series")
 
 
 @to_list.specialize("pandas", argument_type="Column")
