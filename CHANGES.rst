@@ -83,6 +83,14 @@ Changes
 Bugfixes
 --------
 
+Release 0.5.4
+=============
+
+Maintenance
+-----------
+* Make ``skrub`` compatible with scikit-learn 1.7.
+  :pr:`1434` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 
 Release 0.5.3
 =============
@@ -98,11 +106,6 @@ Changes
   :class:`TableReport` and :func:`patch_display` to skip column plots when the
   number of columns exceeds the specified value. :pr:`1255` by :user:`Priscilla
   Baah<priscilla-b>`.
-
-Maintenance
------------
-* Make ``skrub`` compatible with scikit-learn 1.7.
-  :pr:`1434` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 
 Release 0.5.2
