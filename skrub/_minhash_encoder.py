@@ -64,6 +64,8 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
 
     Attributes
     ----------
+    input_name_ : str
+        Name of the fitted column, or "minhash" if the column has no name.
     hash_dict_ : LRUDict
         Computed hashes.
     n_features_in_ : int
@@ -246,7 +248,10 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
                 "minmax_hash encoding is not supported with the murmur hashing function"
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
-        self._input_name = sbd.name(X)
+        self.input_name_ = sbd.name(X) or "minhash"
+        # Needed for get_feature_names
+        self.n_components_ = self.n_components
+
         return self
 
     def transform(self, X):
@@ -292,19 +297,3 @@ class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
         result = sbd.make_dataframe_like(X, dict(zip(names, X_out.T)))
         result = sbd.copy_index(X, result)
         return result
-
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : ndarray of str objects
-            Transformed feature names.
-        """
-
-        check_is_fitted(self)
-        num_digits = len(str(self.n_components - 1))
-        return [
-            f"{self._input_name}_{str(i).zfill(num_digits)}"
-            for i in range(self.n_components)
-        ]
