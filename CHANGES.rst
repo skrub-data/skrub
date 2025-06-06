@@ -18,6 +18,14 @@ Changes
 Bugfixes
 --------
 
+Release 0.5.4
+=============
+
+Maintenance
+-----------
+* Make ``skrub`` compatible with scikit-learn 1.7.
+  :pr:`1434` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 
 Release 0.5.3
 =============
