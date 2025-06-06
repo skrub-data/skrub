@@ -455,19 +455,28 @@ def _guess_datetime_format(column):
     return None
 
 
-@dispatch
 def to_datetime(data, format=None):
     """Convert DataFrame or column to Datetime dtype.
 
     Parameters
     ----------
-    data : dataframe or column
-        The dataframe or column to transform.
+    data : pandas or polars ``{DataFrame, Series}``
+        The dataframe or series to transform.
 
     format : str or None, optional, default=None
         Format string to use to parse datetime strings.
         See the reference documentation for format codes:
         https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes .
+
+    Returns
+    -------
+    output : pandas or polars {DataFrame, Series}.
+        The input transformed to Datetime.
+
+    See Also
+    --------
+    ToDatetime :
+        Parse datetimes represented as strings and return Datetime columns.
 
     Examples
     --------
@@ -483,22 +492,30 @@ def to_datetime(data, format=None):
     0  1 2021-02-01
     1  2 2021-02-21
     """  # noqa: E501
+    # Wrap _to_datetime to avoid duplicate Sphinx entry due to overloading with
+    # functools.singledispatch.
+    # TODO: remove when https://github.com/sphinx-doc/sphinx/issues/10359 is fixed.
+    return _to_datetime(data, format=format)
+
+
+@dispatch
+def _to_datetime(data, format=None):
     raise TypeError(
         "Input to skrub.to_datetime must be a pandas or polars Series or DataFrame."
         f" Got {type(data)}."
     )
 
 
-@to_datetime.specialize("pandas", argument_type="DataFrame")
-@to_datetime.specialize("polars", argument_type="DataFrame")
+@_to_datetime.specialize("pandas", argument_type="DataFrame")
+@_to_datetime.specialize("polars", argument_type="DataFrame")
 def _to_datetime_dataframe(df, format=None):
     return wrap_transformer(
         ToDatetime(format=format), s.all(), allow_reject=True
     ).fit_transform(df)
 
 
-@to_datetime.specialize("pandas", argument_type="Column")
-@to_datetime.specialize("polars", argument_type="Column")
+@_to_datetime.specialize("pandas", argument_type="Column")
+@_to_datetime.specialize("polars", argument_type="Column")
 def _to_datetime_column(column, format=None):
     try:
         result = ToDatetime(format=format).fit_transform(column)

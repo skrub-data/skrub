@@ -7,7 +7,11 @@ import pytest
 import skrub
 from skrub import _dataframe as sbd
 from skrub import _utils
-from skrub._utils import LRUDict, import_optional_dependency, unique_strings
+from skrub._utils import (
+    LRUDict,
+    import_optional_dependency,
+    unique_strings,
+)
 
 
 def test_lrudict():
