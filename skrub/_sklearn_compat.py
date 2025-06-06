@@ -577,6 +577,6 @@ else:
 ########################################################################################
 
 if sklearn_version < parse_version("1.7"):
-    pass
+    from sklearn.utils._estimator_html_repr import _VisualBlock  # noqa: F401
 else:
-    pass
+    from sklearn.utils._repr_html.estimator import _VisualBlock  # noqa: F401
