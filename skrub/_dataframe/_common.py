@@ -446,7 +446,7 @@ def _shape_polars(obj):
 @dispatch
 def to_frame(col):
     """Convert a single Column to a DataFrame."""
-    raise NotImplementedError()
+    raise _raise(col, kind="Series")
 
 
 @to_frame.specialize("pandas", argument_type="Column")
