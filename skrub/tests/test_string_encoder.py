@@ -166,7 +166,7 @@ def test_get_feature_names_out(encode_column, df_module):
     encoder = StringEncoder(n_components=4)
 
     encoder.fit(X)
-    expected_columns = ["tsvd_0", "tsvd_1", "tsvd_2", "tsvd_3"]
+    expected_columns = ["string_enc_0", "string_enc_1", "string_enc_2", "string_enc_3"]
     assert encoder.get_feature_names_out() == expected_columns
 
 
@@ -197,6 +197,17 @@ def test_n_components(df_module):
     assert not hasattr(encoder_30, "tsvd_")
     assert sbd.shape(X_out)[1] == 30
     assert encoder_30.n_components_ == 30
+
+
+@pytest.mark.parametrize("name_vectorizer", ["tfidf", "hashing"])
+def test_stop_words(encode_column, name_vectorizer):
+    encoder = StringEncoder(vectorizer=name_vectorizer, stop_words="english").fit(
+        encode_column
+    )
+    vectorizer = encoder.vectorizer_
+    if isinstance(vectorizer, Pipeline):
+        vectorizer = vectorizer[0]
+    assert vectorizer.stop_words == "english"
 
 
 def test_n_components_equal_voc_size(df_module):
@@ -232,7 +243,6 @@ def test_missing_values(df_module, vectorizer):
         assert_almost_equal(c[1], 0.0, decimal=6)
         assert_almost_equal(c[2], 0.0, decimal=6)
 
-
 def test_categorical_features(df_module):
     cat_col = sbd.to_categorical(
         df_module.make_column("cat", ["A", "B", "A", "C", "B", "D"])
@@ -264,3 +274,35 @@ def test_transform_error_on_float_data(df_module):
 
     with pytest.raises(ValueError, match="does not contain strings"):
         encoder.transform(x)
+
+@pytest.mark.parametrize(
+    "n_components, expected_columns",
+    [
+        (3, ["col_0", "col_1", "col_2"]),  # No padding needed for components < 10
+        (
+            12,
+            [
+                "col_00",
+                "col_01",
+                "col_02",
+                "col_03",
+                "col_04",
+                "col_05",
+                "col_06",
+                "col_07",
+                "col_08",
+                "col_09",
+                "col_10",
+                "col_11",
+            ],
+        ),  # 2-digit padding
+    ],
+)
+def test_zero_padding_in_feature_names_out(df_module, n_components, expected_columns):
+    """Check that the feature names are zero-padded."""
+    encoder = StringEncoder(n_components=n_components)
+    X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
+    encoder.fit(X)
+    feature_names = encoder.get_feature_names_out()
+
+    assert feature_names[: len(expected_columns)] == expected_columns

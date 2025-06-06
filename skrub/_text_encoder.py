@@ -9,7 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._to_str import ToStr
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
@@ -132,7 +132,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     Attributes
     ----------
     input_name_ : str
-        The name of the fitted column.
+        The name of the fitted column, or "text_enc" if the column has no name.
 
     pca_ : sklearn.decomposition.PCA
         A fitted PCA to reduce the embedding dimensionality (either PCA or truncation,
@@ -178,7 +178,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     but ensure various checks and enable dimension reduction.
 
     >>> enc.fit_transform(X) # doctest: +SKIP
-       video comments_1  video comments_2
+       video comments_0  video comments_1
     0          0.411395          0.096504
     1         -0.105210         -0.344567
     2         -0.306184          0.248063
@@ -232,7 +232,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
         self._check_params()
 
-        self.input_name_ = sbd.name(column)
+        self.input_name_ = sbd.name(column) or "text_enc"
 
         X_out = self._vectorize(column)
 
@@ -379,21 +379,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 f"Got model_name={self.model_name} but expected a str or a Path type."
             )
         return
-
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : list of str
-            Transformed feature names.
-        """
-        check_is_fitted(self)
-        n_digits = len(str(self.n_components_))
-        return [
-            f"{self.input_name_}_{str(i).zfill(n_digits)}"
-            for i in range(1, self.n_components_ + 1)
-        ]
 
     def __getstate__(self):
         state = self.__dict__.copy()

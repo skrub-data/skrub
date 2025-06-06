@@ -548,10 +548,12 @@ class _SplineEncoder(SingleColumnTransformer):
         self.is_fitted = True
         self.n_components_ = X_out.shape[1]
 
-        name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_spline_{idx}" for idx in range(self.n_components_)
-        ]
+        # TODO: this will raise an error if X is None, but it should not happen
+        # since this function is always called by the DatetimeEncoder
+        # If we decide to expose this class, we should handle the case where X is None
+        # See https://github.com/skrub-data/skrub/pull/1405
+        self.input_name_ = sbd.name(X) + "_spline"
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, X_out)
 
@@ -633,10 +635,12 @@ class _CircularEncoder(SingleColumnTransformer):
 
         self.n_components_ = 2
 
-        name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_circular_{idx}" for idx in range(self.n_components_)
-        ]
+        # TODO: this will raise an error if X is None, but it should not happen
+        # since this function is always called by the DatetimeEncoder
+        # If we decide to expose this class, we should handle the case where X is None
+        # See https://github.com/skrub-data/skrub/pull/1405
+        self.input_name_ = sbd.name(X) + "_circular"
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, new_features)
 
