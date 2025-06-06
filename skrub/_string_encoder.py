@@ -231,6 +231,13 @@ class StringEncoder(SingleColumnTransformer):
         result: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
             The embedding representation of the input.
         """
+        # Error checking at fit time is done by the ToStr transformer,
+        # but after ToStr is fitted it does not check the input type anymore,
+        # while we want to ensure that the input column is a string or categorical
+        # so we need to add the check here.
+        if not (sbd.is_string(X) or sbd.is_categorical(X)):
+            raise ValueError("Input column does not contain strings.")
+
         X_filled = self.to_str.transform(X)
         X_filled = sbd.fill_nulls(X_filled, "")
         X_out = self.vectorizer_.transform(X_filled).astype("float32")

@@ -286,6 +286,12 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         """
         check_is_fitted(self, "_estimator")
 
+        # Error checking at fit time is done by the ToStr transformer,
+        # but after ToStr is fitted it does not check the input type anymore,
+        # while we want to ensure that the input column is a string or categorical
+        # so we need to add the check here.
+        if not (sbd.is_string(column) or sbd.is_categorical(column)):
+            raise ValueError("Input column does not contain strings.")
         column = self.to_str.transform(column)
 
         X_out = self._vectorize(column)
