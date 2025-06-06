@@ -14,3 +14,4 @@ facilitate learning on databases.
     vision
     about
     CONTRIBUTING
+    RELEASE_PROCESS
