@@ -57,6 +57,19 @@ class StringEncoder(SingleColumnTransformer):
         Used during randomized svd. Pass an int for reproducible results across
         multiple function calls.
 
+    Attributes
+    ----------
+    input_name_ : str
+        Name of the fitted column, or "string_enc" if the column has no name.
+
+    n_components_ : int
+        The number of dimensions of the embeddings after dimensionality
+        reduction.
+
+    all_outputs_ : list of str
+        A list that contains the name of all the features generated from the fitted
+        column.
+
     See Also
     --------
     MinHashEncoder :
@@ -121,16 +134,6 @@ class StringEncoder(SingleColumnTransformer):
         self.analyzer = analyzer
         self.stop_words = stop_words
         self.random_state = random_state
-
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : list of str objects
-            Transformed feature names.
-        """
-        return list(self.all_outputs_)
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -205,10 +208,9 @@ class StringEncoder(SingleColumnTransformer):
         self._is_fitted = True
         self.n_components_ = result.shape[1]
 
-        name = sbd.name(X)
-        if not name:
-            name = "tsvd"
-        self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components_)]
+        self.input_name_ = sbd.name(X) or "string_enc"
+
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, result)
 
