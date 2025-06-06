@@ -43,7 +43,11 @@ def test_nonfinite():
         StringEncoder(n_components=2),
         GapEncoder(n_components=2),
         pytest.param(
-            skrub.TextEncoder(n_components=2),
+            skrub.TextEncoder(
+                model_name="sentence-transformers/paraphrase-albert-small-v2",
+                n_components=2,
+                device="cpu",
+            ),
             marks=pytest.mark.skipif(
                 not TRANSFORMERS, reason="transformers not installed"
             ),
