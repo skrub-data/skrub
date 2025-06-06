@@ -570,3 +570,13 @@ else:
         _check_n_features,  # noqa: F401
         validate_data,  # noqa: F401
     )
+
+
+########################################################################################
+# Upgrading for scikit-learn 1.7
+########################################################################################
+
+if sklearn_version < parse_version("1.7"):
+    pass
+else:
+    pass
