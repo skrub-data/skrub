@@ -205,4 +205,8 @@ class ToStr(SingleColumnTransformer):
         return self.transform(column)
 
     def transform(self, column):
-        return sbd.to_string(column)
+        if sbd.is_string(column) or sbd.is_categorical(column):
+            return sbd.to_string(column)
+        raise RejectColumn(
+            f"Column {sbd.name(column)!r} does not contain strings or categorical data."
+        )

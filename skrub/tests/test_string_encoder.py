@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 
 from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
+from skrub._on_each_column import RejectColumn
 
 
 @pytest.fixture
@@ -243,7 +244,7 @@ def test_categorical_features(df_module):
     df = df_module.make_dataframe(data)
 
     se = StringEncoder(n_components=2)
-    with pytest.raises(ValueError, match="Column 'numeric' does not contain strings."):
+    with pytest.raises(RejectColumn):
         se.fit(df["numeric"])
 
     out = se.fit_transform(df["categorical"])
@@ -251,3 +252,15 @@ def test_categorical_features(df_module):
 
     out = se.fit(df["categorical"][:4]).transform(df["categorical"][4:])
     assert sbd.column_names(out) == ["categorical_0", "categorical_1"]
+
+
+def test_transform_error_on_float_data(df_module):
+    """Check that we raise an error when data without any string is passed at
+    transform."""
+    x = df_module.make_column("", [1.0, 2.5, 3.7])
+
+    encoder = StringEncoder(n_components=2)
+    encoder.fit(df_module.make_column("", ["hello", "world"]))
+
+    with pytest.raises(ValueError, match="does not contain strings"):
+        encoder.transform(x)
