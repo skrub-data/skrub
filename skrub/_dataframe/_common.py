@@ -328,27 +328,31 @@ def _all_null_like_polars(col, length=None, dtype=None, name=None):
 def _check_same_type(objects):
     is_df = np.array([is_dataframe(obj) for obj in objects])
     is_col = np.array([is_column(obj) for obj in objects])
-    indices_df = np.argwhere(is_df).ravel()
-    indices_col = np.argwhere(is_col).ravel()
-    indices_other = np.argwhere(~(is_df | is_col))
+    is_other = ~(is_df | is_col)
 
-    msg = "Mixing types is not allowed"
-    # Using np.any because we redefined the built-in any
-    if np.any(is_df) and np.any(is_col):
-        raise TypeError(
-            f"{msg}, got dataframes at position {indices_df} "
-            f"and series at position {indices_col}."
+    if is_df.all() or is_col.all() or is_other.all():
+        return
+
+    def _indices(array):
+        return np.argwhere(array).ravel()
+
+    prefix = "Mixing types is not allowed, got"
+    addons = []
+    if is_df.any():
+        addons.append(f"dataframes at position {_indices(is_df)}")
+
+    if is_col.any():
+        addons.append(f"series at position {_indices(is_col)}")
+
+    if is_other.any():
+        addons.append(
+            "types that are neither dataframes nor series at position "
+            f"{_indices(is_other)}"
         )
-    elif np.any(is_df) and len(indices_other) > 0:
-        raise TypeError(
-            f"{msg}, got dataframes at position {indices_df} "
-            f"and other types at position {indices_other}."
-        )
-    elif np.any(is_col) and len(indices_other) > 0:
-        raise TypeError(
-            f"{msg}, got series at position {indices_col} "
-            f"and other types at position {indices_other}."
-        )
+
+    msg = prefix + " " + ", ".join(addons) + "."
+
+    raise TypeError(msg)
 
 
 @dispatch
