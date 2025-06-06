@@ -243,6 +243,7 @@ def test_missing_values(df_module, vectorizer):
         assert_almost_equal(c[1], 0.0, decimal=6)
         assert_almost_equal(c[2], 0.0, decimal=6)
 
+
 def test_categorical_features(df_module):
     cat_col = sbd.to_categorical(
         df_module.make_column("cat", ["A", "B", "A", "C", "B", "D"])
@@ -274,6 +275,7 @@ def test_transform_error_on_float_data(df_module):
 
     with pytest.raises(ValueError, match="does not contain strings"):
         encoder.transform(x)
+
 
 @pytest.mark.parametrize(
     "n_components, expected_columns",
