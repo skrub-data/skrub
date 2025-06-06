@@ -59,6 +59,13 @@ def test_full_report():
 
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+def test_preview_subsample():
+    X = datasets.fetch_employee_salaries().X
+    preview = skrub.X(X).skb.subsample(n=3)._repr_html_()
+    assert "subsample" in preview
+
+
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_full_report_failed_apply():
     # Somewhat contrived example for the corner case where an Apply does not
     # have an easily identifiable estimator.
