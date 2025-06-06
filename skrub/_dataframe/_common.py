@@ -325,13 +325,27 @@ def _all_null_like_polars(col, length=None, dtype=None, name=None):
     return pl.Series(name, [None] * length, dtype=dtype)
 
 
+def _check_only_dataframes(objects):
+    # Using np.any since we redefine the built-in any
+    if np.any(not_df := [not is_dataframe(obj) for obj in objects]):
+        indices = np.argwhere(not_df).ravel().tolist()
+        raise TypeError(f"Non-dataframe elements in indices {indices}.")
+
+
+def _check_only_column(objects):
+    if np.any(not_df := [not is_column(obj) for obj in objects]):
+        indices = np.argwhere(not_df).ravel().tolist()
+        raise TypeError(f"Non-column elements in indices {indices}.")
+
+
 @dispatch
 def concat(*dataframes, axis=0):
     raise NotImplementedError()
 
 
-@concat.specialize("pandas")
+@concat.specialize("pandas", argument_type="DataFrame")
 def _concat_pandas(*dataframes, axis=0):
+    _check_only_dataframes(dataframes)
     kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
     if axis == 0:
         return pd.concat(dataframes, axis=0, ignore_index=True, **kwargs)
@@ -344,13 +358,26 @@ def _concat_pandas(*dataframes, axis=0):
         return result
 
 
-@concat.specialize("polars")
+@concat.specialize("polars", argument_type="DataFrame")
 def _concat_polars(*dataframes, axis=0):
+    _check_only_dataframes(dataframes)
     if axis == 0:
         return pl.concat(dataframes, how="diagonal_relaxed")
     else:  # axis == 1
         dataframes = _join_utils.make_column_names_unique(*dataframes)
         return pl.concat(dataframes, how="horizontal")
+
+
+@concat.specialize("pandas", argument_type="Column")
+def _concat_pandas_cols(*columns, axis=0):
+    _check_only_column(columns)
+    return _concat_pandas(*[to_frame(col) for col in columns], axis=axis)
+
+
+@concat.specialize("polars", argument_type="Column")
+def _concat_polars_cols(*columns, axis=0):
+    _check_only_column(columns)
+    return _concat_polars(*[to_frame(col) for col in columns], axis=axis)
 
 
 def is_column_list(obj):
