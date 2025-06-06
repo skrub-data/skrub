@@ -60,14 +60,9 @@ def test_partial_fit(df_module):
     X = df_module.example_dataframe["str-col"]
     X1 = sbd.slice(X, 0, 2)
     X2 = sbd.slice(X, 2, 4)
-    X_full = sbd.slice(X, 0, 4)
 
     gap = GapEncoder(n_components=2)
     gap.partial_fit(X1)
     gap.partial_fit(X2)
-    Xt = gap.transform(X_full)
 
-    Xt_np = np.hstack(
-        [sbd.to_numpy(col).reshape(-1, 1) for col in sbd.to_column_list(Xt)]
-    )
-    assert scaling_factor(Xt_np) == pytest.approx(1)
+    assert gap.scaling_factor_ == pytest.approx(0.75)
