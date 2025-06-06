@@ -237,9 +237,11 @@ def test_concat_series(df_module):
     col = df_module.example_column
 
     # Mixing types is not allowed
-    with pytest.raises(TypeError):
+    msg = r"got dataframes at position \[0\] and series at position \[1\]"
+    with pytest.raises(TypeError, match=msg):
         ns.concat(df, col)
 
+    msg = r"got series at position \[0\] and dataframes at position \[1\]."
     with pytest.raises(TypeError):
         ns.concat(col, df)
 

@@ -325,17 +325,30 @@ def _all_null_like_polars(col, length=None, dtype=None, name=None):
     return pl.Series(name, [None] * length, dtype=dtype)
 
 
-def _check_only_dataframes(objects):
-    # Using np.any since we redefine the built-in any
-    if np.any(not_df := [not is_dataframe(obj) for obj in objects]):
-        indices = np.argwhere(not_df).ravel().tolist()
-        raise TypeError(f"Non-dataframe elements in indices {indices}.")
+def _check_same_type(objects):
+    is_df = np.array([is_dataframe(obj) for obj in objects])
+    is_col = np.array([is_column(obj) for obj in objects])
+    indices_df = np.argwhere(is_df).ravel()
+    indices_col = np.argwhere(is_col).ravel()
+    indices_other = np.argwhere(~(is_df | is_col))
 
-
-def _check_only_column(objects):
-    if np.any(not_df := [not is_column(obj) for obj in objects]):
-        indices = np.argwhere(not_df).ravel().tolist()
-        raise TypeError(f"Non-column elements in indices {indices}.")
+    msg = "Mixing types is not allowed"
+    # Using np.any because we redefined the built-in any
+    if np.any(is_df) and np.any(is_col):
+        raise TypeError(
+            f"{msg}, got dataframes at position {indices_df} "
+            f"and series at position {indices_col}."
+        )
+    elif np.any(is_df) and len(indices_other) > 0:
+        raise TypeError(
+            f"{msg}, got dataframes at position {indices_df} "
+            f"and other types at position {indices_other}."
+        )
+    elif np.any(is_col) and len(indices_other) > 0:
+        raise TypeError(
+            f"{msg}, got series at position {indices_col} "
+            f"and other types at position {indices_other}."
+        )
 
 
 @dispatch
@@ -345,7 +358,7 @@ def concat(*dataframes, axis=0):
 
 @concat.specialize("pandas", argument_type="DataFrame")
 def _concat_pandas(*dataframes, axis=0):
-    _check_only_dataframes(dataframes)
+    _check_same_type(dataframes)
     kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
     if axis == 0:
         return pd.concat(dataframes, axis=0, ignore_index=True, **kwargs)
@@ -360,7 +373,7 @@ def _concat_pandas(*dataframes, axis=0):
 
 @concat.specialize("polars", argument_type="DataFrame")
 def _concat_polars(*dataframes, axis=0):
-    _check_only_dataframes(dataframes)
+    _check_same_type(dataframes)
     if axis == 0:
         return pl.concat(dataframes, how="diagonal_relaxed")
     else:  # axis == 1
@@ -370,13 +383,13 @@ def _concat_polars(*dataframes, axis=0):
 
 @concat.specialize("pandas", argument_type="Column")
 def _concat_pandas_cols(*columns, axis=0):
-    _check_only_column(columns)
+    _check_same_type(columns)
     return _concat_pandas(*[to_frame(col) for col in columns], axis=axis)
 
 
 @concat.specialize("polars", argument_type="Column")
 def _concat_polars_cols(*columns, axis=0):
-    _check_only_column(columns)
+    _check_same_type(columns)
     return _concat_polars(*[to_frame(col) for col in columns], axis=axis)
 
 
