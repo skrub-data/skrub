@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
+from ._to_str import ToStr
 
 
 class StringEncoder(SingleColumnTransformer):
@@ -152,6 +153,10 @@ class StringEncoder(SingleColumnTransformer):
         """
         del y
 
+        self.to_str = ToStr(convert_category=True)
+        X_filled = self.to_str.fit_transform(X)
+        X_filled = sbd.fill_nulls(X_filled, "")
+
         if self.vectorizer == "tfidf":
             self.vectorizer_ = TfidfVectorizer(
                 ngram_range=self.ngram_range,
@@ -178,7 +183,6 @@ class StringEncoder(SingleColumnTransformer):
                 f" 'hashing', got {self.vectorizer!r}"
             )
 
-        X_filled = sbd.fill_nulls(X, "")
         X_out = self.vectorizer_.fit_transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
 
@@ -227,8 +231,15 @@ class StringEncoder(SingleColumnTransformer):
         result: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
             The embedding representation of the input.
         """
+        # Error checking at fit time is done by the ToStr transformer,
+        # but after ToStr is fitted it does not check the input type anymore,
+        # while we want to ensure that the input column is a string or categorical
+        # so we need to add the check here.
+        if not (sbd.is_string(X) or sbd.is_categorical(X)):
+            raise ValueError("Input column does not contain strings.")
 
-        X_filled = sbd.fill_nulls(X, "")
+        X_filled = self.to_str.transform(X)
+        X_filled = sbd.fill_nulls(X_filled, "")
         X_out = self.vectorizer_.transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
         if hasattr(self, "tsvd_"):
