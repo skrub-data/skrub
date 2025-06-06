@@ -6,7 +6,6 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils._estimator_html_repr import _VisualBlock
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -19,6 +18,7 @@ from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
+from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
