@@ -29,14 +29,12 @@ _TIME_LEVELS = [
 ]
 
 _DEFAULT_ENCODING_PERIODS = {
-    "day_of_year": 366,
     "month": 12,
     "day": 30,
     "hour": 24,
     "weekday": 7,
 }
 _DEFAULT_ENCODING_SPLINES = {
-    "day_of_year": 12,
     "month": 12,
     "day": 4,
     "hour": 12,
@@ -161,7 +159,6 @@ class DatetimeEncoder(SingleColumnTransformer):
     The ``DatetimeEncoder`` uses hardcoded values for generating periodic features.
     The period of each feature is:
 
-    - ``day_of_year``: 366
     - ``month``: 12 (month in year)
     - ``day``: 30 (day in month)
     - ``hour``: 24 (hour in day)
@@ -170,7 +167,6 @@ class DatetimeEncoder(SingleColumnTransformer):
     Additionally, we specify the number of splines for each feature to avoid
     generating too many features:
 
-    - ``day_of_year``: 12
     - ``month``: 12
     - ``day``: 4
     - ``hour``: 12
@@ -391,11 +387,9 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Adding transformers for periodic encoding
         self._periodic_encoders = {}
         if self.periodic_encoding is not None:
-            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[1 : idx_level + 1]
+            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[0:idx_level]
             if self.add_weekday:
                 encoding_levels += ["weekday"]
-            if self.add_day_of_year:
-                encoding_levels = encoding_levels + ["day_of_year"]
             for enc_feature in encoding_levels:
                 if self.periodic_encoding == "circular":
                     self._periodic_encoders[enc_feature] = _CircularEncoder(
@@ -548,10 +542,12 @@ class _SplineEncoder(SingleColumnTransformer):
         self.is_fitted = True
         self.n_components_ = X_out.shape[1]
 
-        name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_spline_{idx}" for idx in range(self.n_components_)
-        ]
+        # TODO: this will raise an error if X is None, but it should not happen
+        # since this function is always called by the DatetimeEncoder
+        # If we decide to expose this class, we should handle the case where X is None
+        # See https://github.com/skrub-data/skrub/pull/1405
+        self.input_name_ = sbd.name(X) + "_spline"
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, X_out)
 
@@ -633,10 +629,12 @@ class _CircularEncoder(SingleColumnTransformer):
 
         self.n_components_ = 2
 
-        name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_circular_{idx}" for idx in range(self.n_components_)
-        ]
+        # TODO: this will raise an error if X is None, but it should not happen
+        # since this function is always called by the DatetimeEncoder
+        # If we decide to expose this class, we should handle the case where X is None
+        # See https://github.com/skrub-data/skrub/pull/1405
+        self.input_name_ = sbd.name(X) + "_circular"
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, new_features)
 
