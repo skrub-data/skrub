@@ -51,7 +51,7 @@
 
                     <h3>This step used:</h3>
                     <ul>
-                        {% for parent in node_parents %}
+                        {% for parent in node_children %}
                         <li><a href="{{ parent['url'] }}">{{ parent['id'] }}:
                                 {{ parent['description'] }}</a></li>
                         {% endfor %}
@@ -61,7 +61,7 @@
                 <div>
                     <h3>This step was used by:</h3>
                     <ul>
-                        {% for child in node_children %}
+                        {% for child in node_parents %}
                         <li><a href="{{ child['url'] }}">{{ child['id'] }}:
                                 {{ child['description'] }}</a></li>
                         {% endfor %}

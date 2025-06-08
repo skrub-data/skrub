@@ -262,11 +262,6 @@ class GraphDrawing:
 
 def _node_kwargs(expr, url=None):
     label = html.escape(_utils.simple_repr(expr))
-    if (
-        not isinstance(expr._skrub_impl, Var)
-        and (name := expr._skrub_impl.name) is not None
-    ):
-        label = f"{label}\n{name!r}"
     kwargs = {
         "shape": "box",
         "fontsize": 12,
