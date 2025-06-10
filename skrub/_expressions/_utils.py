@@ -25,9 +25,7 @@ OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
 
 
 def simple_repr(expr):
-    text = repr(expr).splitlines()[0].removeprefix("<").removesuffix(">")
-    start, sep, rest = text.partition(" ")
-    return f"{start.upper()}{sep}{rest}"
+    return repr(expr).splitlines()[0].removeprefix("<").removesuffix(">")
 
 
 def attribute_error(obj, name, comment=None):

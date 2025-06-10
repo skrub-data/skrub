@@ -864,9 +864,9 @@ def var(name, value=NULL):
     >>> c
     <BinOp: add>
     >>> print(c.skb.describe_steps())
-    VAR 'a'
-    VAR 'b'
-    BINOP: add
+    Var 'a'
+    Var 'b'
+    BinOp: add
 
     The names of variables correspond to keys in the inputs:
 
