@@ -10,6 +10,8 @@ try:
 except ImportError:
     pass
 
+from _dataframe._common import _raise as _sbd_raise
+
 from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
@@ -46,7 +48,7 @@ _DEFAULT_ENCODING_SPLINES = {
 
 @dispatch
 def _is_date(col):
-    raise NotImplementedError()
+    raise _sbd_raise(col, kind="Series")
 
 
 @_is_date.specialize("pandas", argument_type="Column")
@@ -62,7 +64,7 @@ def _is_date_polars(col):
 
 @dispatch
 def _get_dt_feature(col, feature):
-    raise NotImplementedError()
+    raise _sbd_raise(col, kind="Series")
 
 
 @_get_dt_feature.specialize("pandas", argument_type="Column")
