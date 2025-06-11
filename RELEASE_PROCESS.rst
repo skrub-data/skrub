@@ -19,7 +19,7 @@ conda-forge project page.
    - Bug-fix releases are done as needed between major/minor releases and only apply to
      the last stable version. These releases are numbered X.Y.Z.
 
-To release a new minor version of ``skrub`` (e.g. 0.1.0 -> 0.2.0), here are
+To release a new minor version of skrub (e.g., from 0.1.0 to 0.2.0), here are the main steps and appropriate resources:
 the main steps and appropriate resources:
 
 Preparing the release branch
@@ -124,7 +124,7 @@ Update the conda-forge recipe
 - Edit ``recipe/meta.yml``, which is the only file we edit manually in that repo:
     - Update the version number.
     - Update the sha256 using Pypi hash.
-    - If needed, result the build number to 0.
+    - If needed, reset the build number to 0.
     - If needed, update the requirements.
 
       - Check the new requirements with:
