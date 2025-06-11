@@ -79,7 +79,6 @@ def set_config(
         This configuration can also be set with the ``SKB_USE_TABLEREPORT``
         environment variable.
 
-
     use_tablereport_expr : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         expressions. Default is ``False``.
