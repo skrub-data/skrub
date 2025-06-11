@@ -274,8 +274,8 @@ def test_error_input_type():
     df = datasets.fetch_employee_salaries()
     with pytest.raises(TypeError):
         TableReport(df)
-        
-        
+
+
 def test_single_column_report(df_module):
     # Check that single column report works
     single_col = df_module.example_column
