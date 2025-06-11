@@ -1,0 +1,22 @@
+{% import "buttons.html" as buttons %}
+
+<div class="table-bar-wrapper">
+<div class="flex flex-wrap table-bar"
+     data-manager="SampleTableBar"
+     data-hidden
+     data-show-on="SAMPLE_TABLE_CELL_ACTIVATED"
+     data-hide-on="SAMPLE_TABLE_CELL_DEACTIVATED">
+    <div class="box">
+        <pre id="sample-table-bar-display" data-role="content-display"></pre>
+        {{ buttons.copybutton("sample-table-bar-display") }}
+    </div>
+</div>
+<div class="flex">
+    <div class="text important-note"
+         data-hide-on="SAMPLE_TABLE_CELL_ACTIVATED"
+         data-show-on="SAMPLE_TABLE_CELL_DEACTIVATED"
+         data-test="click-on-table-announcement">
+        Click a table cell for more info about its column.
+    </div>
+</div>
+</div>

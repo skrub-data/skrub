@@ -1,0 +1,348 @@
+/* Default styles for html elements */
+/* -------------------------------- */
+
+:host {
+    font-size: var(--font-size-m);
+    line-height: var(--line-height);
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+#report {
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    color-scheme: light dark;
+    border-radius: var(--radius, 0);
+    max-width: max-content;
+}
+
+a:link {
+    color: var(--color-text-link);
+}
+
+a:visited {
+    color: var(--color-text-visited);
+}
+
+h1 {
+    font-size: var(--font-size-xl);
+}
+
+button {
+    background: var(--color-background-button-primary);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius);
+    padding: var(--spacing-s) var(--spacing-m);
+}
+
+button:hover {
+    background: var(--color-background-button-primary-hover);
+}
+
+button:active {
+    background: var(--color-background-button-primary-active);
+}
+
+button > * {
+    pointer-events: none;
+}
+
+select {
+    background: var(--color-background-button-primary);
+    color: var(--color-text-primary);
+    box-shadow: none;
+    border-radius: var(--radius);
+    border: 1px solid var(--color-border-primary);
+}
+
+input[type="checkbox"] {
+    width: var(--font-size-s);
+}
+
+/* pure.css / Normalize.css overrides the default firefox blue ring around focussed */
+/* elements with something almost impossible to see, making it impossible to use */
+/* tab navigation. We revert it to the browser's appropriate default. */
+#report :focus-visible {
+    outline: revert;
+}
+
+:is(select, summary, button) {
+    cursor: pointer;
+}
+
+summary > * {
+    display: inline;
+}
+
+p {
+    margin: var(--spacing-m) 0;
+}
+
+code {
+    overflow-wrap: anywhere;
+}
+
+pre {
+    margin: 0;
+}
+
+code,
+pre {
+    font-family: var(--font-family-monospace);
+    font-size: var(--font-size-s);
+}
+
+table {
+    font-size: var(--font-size-m);
+}
+
+#report :is(td, th) {
+    padding: var(--spacing-s) var(--spacing-m);
+    white-space: nowrap;
+}
+
+/* Align the items of definition lists, used to show the columns metadata (number */
+/* of null values, mean, etc) */
+
+dl {
+    display: grid;
+    grid-template-columns: max-content auto;
+    column-gap: var(--spacing-m);
+    margin: 0;
+}
+
+dt {
+    grid-column-start: 1;
+    font-weight: bold;
+    justify-self: end;
+}
+
+dt::after {
+    content: ":";
+}
+
+dd {
+    grid-column-start: 2;
+    justify-self: start;
+    margin: 0;
+}
+
+/* Generic utility classes */
+/* ----------------------- */
+
+:is([data-hidden], [data-excluded-by-column-filter]) {
+    display: none !important;
+}
+
+[data-not-visible] {
+    visibility: hidden;
+}
+
+.wrap-long-name {
+    overflow-wrap: anywhere;
+}
+
+.margin-r-m {
+    margin-inline-end: var(--spacing-m);
+}
+
+.margin-v-m {
+    margin-block-start: var(--spacing-m);
+    margin-block-end: var(--spacing-m);
+}
+
+.margin-t-s {
+    margin-top: var(--spacing-s);
+}
+
+.margin-t-m {
+    margin-top: var(--spacing-m);
+}
+
+.padding-b-s {
+    padding-bottom: var(--spacing-s);
+}
+
+.horizontal-scroll {
+    overflow-x: auto;
+}
+
+.select-all {
+    user-select: all;
+}
+
+.select-none {
+    user-select: none;
+}
+
+.wrapper {
+    padding-inline-start: var(--spacing-l);
+    padding-inline-end: var(--spacing-l);
+    padding-block-end: var(--spacing-m);
+}
+
+/* Special-case the article (container) */
+article.wrapper {
+    padding-block-end: 0;
+}
+
+.flow > * + * {
+    margin-top: var(--spacing-m);
+}
+
+.text {
+    max-width: 100%;
+}
+
+.shrink {
+    display: flex;
+}
+
+.shrink > * {
+    width: 0;
+    flex-grow: 1;
+}
+
+.shrinkable-text {
+    flex-basis: 20em;
+    flex-grow: 1;
+}
+
+.flex {
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
+}
+
+.gap-l {
+    gap: var(--spacing-xl);
+}
+
+.flex-reverse {
+    display: flex;
+    flex-wrap: wrap-reverse;
+}
+
+.space-between {
+    justify-content: space-between;
+}
+
+.flex-wrap {
+    flex-wrap: wrap;
+}
+
+.flex-wrap > * {
+    margin: 0;
+}
+
+#report .elided {
+    max-width: 70ch;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#report .elided-short {
+    max-width: 30ch;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+:is(.ok, .warning, .critical) {
+    font-weight: bold;
+}
+
+.ok {
+    color: var(--color-text-success);
+}
+
+.warning {
+    color: var(--color-text-warning);
+}
+
+.critical {
+    color: var(--color-text-critical);
+}
+
+.box-shadow {
+    box-shadow: 0.3px 0.5px 0.7px var(--color-shadow),
+        0.8px 1.6px 2px -0.8px var(--color-shadow),
+        2.1px 4.1px 5.2px -1.7px var(--color-shadow),
+        5px 10px 12.6px -2.5px var(--color-shadow);
+}
+
+/* Misc tweaks */
+/* ----------- */
+
+#report {
+    padding-top: var(--spacing-s);
+}
+
+#report svg {
+    max-width: 100%;
+}
+
+.report-header {
+    font-size: var(--font-size-l);
+    padding-block-start: var(--spacing-s);
+    padding-block-end: var(--spacing-s);
+}
+
+.report-header > h1 {
+    margin: 0;
+}
+
+.important-note {
+    background-color: var(--color-background-highlight-primary);
+    padding: var(--spacing-m);
+    border-radius: var(--radius);
+}
+
+.alert-info-dismissable {
+    position: relative;
+    padding: var(--spacing-m);
+    background-color: var(--color-background-info);
+    border-color: var(--color-border-info);
+    color: var(--color-text-info);
+    border-radius: var(--radius);
+    margin-bottom: var(--spacing-m);
+}
+
+.alert-dismiss-button {
+    height: var(--button-size-xs);
+    width: var(--button-size-xs);
+
+    padding: var(--spacing-s);
+    border: none;
+    border-radius: var(--radius);
+    background-color: var(--color-background-button-secondary);
+
+    transition: background-color var(--animation-duration)
+        var(--animation-easing);
+}
+
+.alert-dismiss-button:hover {
+    background-color: var(--color-background-button-tertiary-hover);
+}
+
+.alert-dismiss-button:active {
+    background-color: var(--color-background-button-secondary-active);
+}
+
+.alert-dismiss-button svg {
+    fill: var(--color-text-info);
+    stroke: var(--color-text-info);
+    stroke-width: var(--border-s);
+}

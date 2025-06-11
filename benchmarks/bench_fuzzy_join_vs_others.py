@@ -42,7 +42,7 @@ def thefuzz_merge(
                high to low
 
     Return:
-        Dataframe with boths keys and matches.
+        Dataframe with both keys and matches.
     """
     s = df_2[right_on].tolist()
     m = df_1[left_on].apply(lambda x: process.extract(x, s, limit=limit, scorer=scorer))
@@ -96,8 +96,8 @@ benchmark_name = "bench_fuzzy_join_vs_others"
     repeat=5,
 )
 def benchmark(
-    dataset_name: str,
-    join: str,
+    dataset_name,
+    join,
 ):
     left_table, right_table, gt = load_data(dataset_name)
 
@@ -106,14 +106,12 @@ def benchmark(
         joined_fj = fuzzy_join(
             left_table,
             right_table,
-            how="left",
-            left_on="title",
-            right_on="title",
-            suffixes=("_l", "_r"),
+            on="title",
+            suffix="_r",
         )
         end_time = perf_counter()
         pr, re, f1 = evaluate(
-            list(zip(joined_fj["title_l"], joined_fj["title_r"])),
+            list(zip(joined_fj["title"], joined_fj["title_r"])),
             list(zip(gt["title_l"], gt["title_r"])),
         )
     elif join == "autofj":
@@ -153,7 +151,7 @@ def benchmark(
     return res_dic
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     sns.set_theme(style="ticks", palette="pastel")
 
     n_datasets = len(np.unique(df["dataset_name"]))

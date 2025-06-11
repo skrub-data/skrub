@@ -1,10 +1,11 @@
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
 import pytest
 
-from skrub.datasets._utils import get_data_dir, get_data_home
+from skrub.datasets._utils import DATA_HOME_ENVAR_NAME, get_data_dir, get_data_home
 
 
 @pytest.mark.parametrize("data_home_type", ["string", "path"])
@@ -31,18 +32,29 @@ def test_get_data_dir(data_home_type):
         assert data_home.exists()
 
 
-def test_get_data_home_default():
-    """Test function for ``get_data_home()`` with default `data_home`."""
-    # We should take care of not deleting the folder if our user
-    # already cached some data
-    user_path = Path("~").expanduser() / "skrub_data"
-    is_already_existing = user_path.exists()
+def test_get_data_home_without_parameter(monkeypatch, tmp_path):
+    home = tmp_path / "my-home"
+    dirpath = home / "skrub_data"
 
-    data_home = get_data_home(data_home=None)
-    assert data_home == user_path
-    assert data_home.exists()
+    with monkeypatch.context() as mp:
+        mp.setenv("USERPROFILE" if sys.platform == "win32" else "HOME", str(home))
 
-    if not is_already_existing:
-        # Clear the folder if it was not already existing.
-        shutil.rmtree(user_path)
-        assert not user_path.exists()
+        assert get_data_home() == dirpath
+        assert dirpath.exists()
+
+
+def test_get_data_home_with_parameter(tmp_path):
+    dirpath = tmp_path / "my-home"
+
+    assert get_data_home(dirpath) == dirpath
+    assert dirpath.exists()
+
+
+def test_get_data_home_with_envar(monkeypatch, tmp_path):
+    dirpath = tmp_path / "my-home"
+
+    with monkeypatch.context() as mp:
+        mp.setenv(DATA_HOME_ENVAR_NAME, str(dirpath))
+
+        assert get_data_home() == dirpath
+        assert dirpath.exists()

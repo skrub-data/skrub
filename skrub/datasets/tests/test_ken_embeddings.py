@@ -33,6 +33,9 @@ def test_fetch_ken_types():
     assert types3.shape[0] == 2532
 
 
+# TODO: mock download in test & make download more robust & better error messages
+# See https://github.com/skrub-data/skrub/issues/900
+@pytest.mark.skip("Downloads large files and fails CI unpredictably")
 def test_small_ken_embeddings():
     """
     Test if small sized embeddings were fetched correctly
@@ -54,6 +57,9 @@ def test_small_ken_embeddings():
     assert emb2.shape[1] == 7
 
 
+# TODO: mock download in test & make download more robust & better error messages
+# See https://github.com/skrub-data/skrub/issues/900
+@pytest.mark.skip("Downloads large files and fails CI unpredictably")
 def test_big_ken_embeddings():
     """
     Test if bigger sized embeddings were fetched correctly
@@ -75,3 +81,26 @@ def test_big_ken_embeddings():
         pca_components=10,
     )
     assert emb4.shape[1] == 12
+
+
+@pytest.mark.parametrize("pca_components", [None, 5])
+@pytest.mark.parametrize("suffix", ["", "_aux"])
+def test_ken_embedding_suffix(pca_components, suffix):
+    """Check that we always add the suffix to the columns names.
+
+    Non-regression test for:
+    https://github.com/skrub-data/skrub/issues/955
+    """
+    pytest.importorskip("pyarrow")
+    embedding = fetch_ken_embeddings(
+        search_types="game_designers",
+        embedding_table_id="39254360",
+        embedding_type_id="39266678",
+        suffix=suffix,
+        pca_components=pca_components,
+    )
+    column_names = embedding.columns.drop(["Entity", "Type"])
+    expected_n_components = pca_components or 200
+    assert column_names.tolist() == [
+        f"X{i}{suffix}" for i in range(expected_n_components)
+    ]

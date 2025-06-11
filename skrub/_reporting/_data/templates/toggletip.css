@@ -1,0 +1,51 @@
+.toggletip-wrapper {
+    position: relative;
+}
+
+.toggletip {
+    display: inline-block;
+    --height-button: var(--font-size-xl);
+}
+
+.toggletip > button {
+    height: var(--height-button);
+    width: var(--height-button);
+    background-color: var(--color-background-info);
+    text-shadow: 0 0 1px color-mix(in srgb, var(--color-background-info) 20%, black);
+    font-family: var(--font-family-monospace);
+    font-weight: bold;
+    color: var(--color-text-info);
+    border: var(--border-s) solid var(--color-background-info);
+    border-radius: 50%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.toggletip > .toggletip-info {
+    box-sizing: border-box;
+    position: absolute;
+    top: calc(1.3 * var(--height-button));
+    left: calc(0.8 * var(--height-button));
+    width: calc(min(50ch, 100% - var(--height-button)));
+    min-width: min-content;
+    padding: var(--spacing-l);
+    background-color: var(--color-background-primary);
+    border: var(--border-m) solid var(--color-background-info);
+    border-radius: var(--radius);
+    z-index: 2;
+    visibility: hidden;
+    transition: visibility 0ms 400ms;
+}
+
+.toggletip:hover > .toggletip-info,
+.toggletip:has(button:is(:focus, :active, :hover)) > .toggletip-info {
+    visibility: visible;
+    transition-delay: 0ms;
+}
+
+.toggletip button:is(:focus, :active) {
+    outline: var(--border-m) solid var(--color-background-info);
+    outline-offset: var(--border-m);
+}

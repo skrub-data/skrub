@@ -13,10 +13,10 @@ jobs:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh
       - restore_cache:
-          key: v1-datasets-{{ .Branch }}
+          key: saved-cache
       - run:
           command: ./build_tools/circle/build_doc.sh
-          no_output_timeout: 40m
+          no_output_timeout: 30m
       - store_artifacts:
           path: doc/_build/html
           destination: doc
@@ -28,6 +28,10 @@ jobs:
       - persist_to_workspace:
           root: doc/_build/html
           paths: .
+      - save_cache:
+          key: saved-cache
+          paths:
+            - /home/circleci/skrub_data
 
   deploy:
     docker:

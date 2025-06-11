@@ -3,29 +3,26 @@ Implements the MinHashEncoder, which encodes string categorical features by
 applying the MinHash method to n-gram decompositions of strings.
 """
 
-from collections.abc import Callable, Collection
-from typing import Literal
+from __future__ import annotations
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
-from numpy.typing import ArrayLike, NDArray
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
-from sklearn.utils.validation import _check_feature_names_in, check_is_fitted
+from sklearn.utils.validation import check_is_fitted
 
+from . import _dataframe as sbd
 from ._fast_hash import ngram_min_hash
+from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._string_distances import get_unique_ngrams
-from ._utils import LRUDict, check_input
+from ._utils import LRUDict, unique_strings
 
 NoneType = type(None)
 
 
-# Ignore lines too long, first docstring lines can't be cut
-# flake8: noqa: E501
-
-
-class MinHashEncoder(TransformerMixin, BaseEstimator):
-    """Encode string categorical features by applying the MinHash method to n-gram decompositions of strings.
+class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
+    """Encode string categorical features by applying the MinHash method to n-gram \
+    decompositions of strings.
 
     The principle is as follows:
 
@@ -58,9 +55,6 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         might have some concern with its entropy.
     minmax_hash : bool, default=False
         If `True`, returns the min and max hashes concatenated.
-    handle_missing : {'error', 'zero_impute'}, default='zero_impute'
-        Whether to raise an error or encode missing values (NaN) with
-        vectors filled with zeros.
     n_jobs : int, optional
         The number of jobs to run in parallel.
         The hash computations for all unique elements are parallelized.
@@ -70,6 +64,8 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
     Attributes
     ----------
+    input_name_ : str
+        Name of the fitted column, or "minhash" if the column has no name.
     hash_dict_ : LRUDict
         Computed hashes.
     n_features_in_ : int
@@ -80,9 +76,12 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
     See Also
     --------
     GapEncoder
-        Encodes dirty categories (strings) by constructing latent topics with continuous encoding.
+        Encodes dirty categories (strings) by constructing latent topics with
+        continuous encoding.
     SimilarityEncoder
         Encode string columns as a numeric array with n-gram string similarity.
+    StringEncoder
+        Fast n-gram encoding of string columns.
     deduplicate
         Deduplicate data by hierarchically clustering similar strings.
 
@@ -94,50 +93,44 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    >>> import pandas as pd
+    >>> from skrub import MinHashEncoder
     >>> enc = MinHashEncoder(n_components=5)
 
     Let's encode the following non-normalized data:
 
-    >>> X = [['paris, FR'], ['Paris'], ['London, UK'], ['London']]
-
+    >>> X = pd.Series(['paris, FR', 'Paris', 'London, UK', 'London'], name='city')
     >>> enc.fit(X)
-    MinHashEncoder()
+    MinHashEncoder(n_components=5)
 
     The encoded data with 5 components are:
 
     >>> enc.transform(X)
-    array([[-1.78337518e+09, -1.58827021e+09, -1.66359234e+09,
-            -1.81988679e+09, -1.96259387e+09],
-           [-8.48046971e+08, -1.76657887e+09, -1.55891205e+09,
-            -1.48574446e+09, -1.68729890e+09],
-           [-1.97582893e+09, -2.09500033e+09, -1.59652117e+09,
-            -1.81759383e+09, -2.09569333e+09],
-           [-1.97582893e+09, -2.09500033e+09, -1.53072052e+09,
-            -1.45918266e+09, -1.58098831e+09]])
+             city_0        city_1        city_2        city_3        city_4
+    0 -1.783375e+09 -1.588270e+09 -1.663592e+09 -1.819887e+09 -1.962594e+09
+    1 -8.480470e+08 -1.766579e+09 -1.558912e+09 -1.485745e+09 -1.687299e+09
+    2 -1.975829e+09 -2.095000e+09 -1.596521e+09 -1.817594e+09 -2.095693e+09
+    3 -1.975829e+09 -2.095000e+09 -1.530721e+09 -1.459183e+09 -1.580988e+09
     """
 
-    hash_dict_: LRUDict
-
-    _capacity: int = 2**10
+    _capacity = 2**10
 
     def __init__(
         self,
         *,
-        n_components: int = 30,
-        ngram_range: tuple[int, int] = (2, 4),
-        hashing: Literal["fast", "murmur"] = "fast",
-        minmax_hash: bool = False,
-        handle_missing: Literal["error", "zero_impute"] = "zero_impute",
-        n_jobs: int = None,
+        n_components=30,
+        ngram_range=(2, 4),
+        hashing="fast",
+        minmax_hash=False,
+        n_jobs=None,
     ):
         self.ngram_range = ngram_range
         self.n_components = n_components
         self.hashing = hashing
         self.minmax_hash = minmax_hash
-        self.handle_missing = handle_missing
         self.n_jobs = n_jobs
 
-    def _get_murmur_hash(self, string: str) -> NDArray:
+    def _get_murmur_hash(self, string):
         """
         Encode a string using murmur hashing function.
 
@@ -151,10 +144,10 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         ndarray of shape (n_components, )
             The encoded string.
         """
-        min_hashes = np.ones(self.n_components) * np.infty
+        min_hashes = np.ones(self.n_components) * np.inf
         grams = get_unique_ngrams(string, self.ngram_range)
-        if len(grams) == 0:
-            grams = get_unique_ngrams(" Na ", self.ngram_range)
+        if string == "" or len(grams) == 0:
+            return np.zeros(self.n_components)
         for gram in grams:
             hash_array = np.array(
                 [
@@ -165,7 +158,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             min_hashes = np.minimum(min_hashes, hash_array)
         return min_hashes / (2**32 - 1)
 
-    def _get_fast_hash(self, string: str) -> NDArray:
+    def _get_fast_hash(self, string):
         """Encode a string with fast hashing function.
 
         Fast hashing supports both min_hash and minmax_hash encoding.
@@ -195,9 +188,7 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
                 ]
             )
 
-    def _compute_hash_batched(
-        self, batch: Collection[str], hash_func: Callable[[str], NDArray]
-    ) -> NDArray:
+    def _compute_hash_batched(self, batch, hash_func):
         """Function called to compute the hashes of a batch of strings.
 
         Check if the string is in the hash dictionary, if not, compute the hash
@@ -218,14 +209,11 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         res = np.zeros((len(batch), self.n_components))
         for i, string in enumerate(batch):
             if string not in self.hash_dict_:
-                if string == "NAN":  # true if x is a missing value
-                    self.hash_dict_[string] = np.zeros(self.n_components)
-                else:
-                    self.hash_dict_[string] = hash_func(string)
+                self.hash_dict_[string] = hash_func(string)
             res[i] = self.hash_dict_[string]
         return res
 
-    def fit(self, X: ArrayLike, y=None) -> "MinHashEncoder":
+    def fit(self, X, y=None):
         """Fit the MinHashEncoder to `X`.
 
         In practice, just initializes a dictionary
@@ -243,24 +231,30 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
         MinHashEncoder
             The fitted MinHashEncoder instance (self).
         """
-        self._check_feature_names(X, reset=True)
-        X = check_input(X)
-        self._check_n_features(X, reset=True)
-
+        if not (sbd.is_categorical(X) or sbd.is_string(X)):
+            raise RejectColumn(f"Column {sbd.name(X)!r} does not contain strings.")
         if self.hashing not in ["fast", "murmur"]:
             raise ValueError(
                 f"Got hashing={self.hashing!r}, "
                 "but expected any of {'fast', 'murmur'}. "
             )
-        if self.handle_missing not in ["error", "zero_impute"]:
+        if self.minmax_hash and self.n_components % 2 != 0:
             raise ValueError(
-                f"Got handle_missing={self.handle_missing!r}, but expected "
-                "any of {'error', 'zero_impute'}. "
+                "n_components should be even when using"
+                f"minmax_hash encoding, got {self.n_components}"
+            )
+        if self.hashing == "murmur" and self.minmax_hash:
+            raise ValueError(
+                "minmax_hash encoding is not supported with the murmur hashing function"
             )
         self.hash_dict_ = LRUDict(capacity=self._capacity)
+        self.input_name_ = sbd.name(X) or "minhash"
+        # Needed for get_feature_names
+        self.n_components_ = self.n_components
+
         return self
 
-    def transform(self, X: ArrayLike) -> NDArray:
+    def transform(self, X):
         """
         Transform `X` using specified encoding scheme.
 
@@ -275,56 +269,19 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             Transformed input.
         """
         check_is_fitted(self, "hash_dict_")
-        X = check_input(X)
-        self._check_feature_names(X, reset=False)
-        self._check_n_features(X, reset=False)
-        if self.minmax_hash:
-            if self.n_components % 2 != 0:
-                raise ValueError(
-                    "n_components should be even when using"
-                    f"minmax_hash encoding, got {self.n_components}"
-                )
-        if self.hashing == "murmur":
-            if self.minmax_hash:
-                raise ValueError(
-                    "minmax_hash encoding is not supported"
-                    "with the murmur hashing function"
-                )
-        if self.handle_missing not in ["error", "zero_impute"]:
-            raise ValueError(
-                "handle_missing should be either "
-                f"'error' or 'zero_impute', got {self.handle_missing!r}"
-            )
+        if not (sbd.is_categorical(X) or sbd.is_string(X)):
+            raise ValueError(f"Column {sbd.name(X)!r} does not contain strings.")
 
-        # Handle missing values
-        missing_mask = (
-            ~(X == X)  # Find np.nan
-            | (X == None)  # Find None. Note: `X is None` doesn't work.
-            | (X == "")  # Find empty strings
-        )
-
-        if missing_mask.any():  # contains at least one missing value
-            if self.handle_missing == "error":
-                raise ValueError(
-                    "Found missing values in input data; set "
-                    "handle_missing='zero_impute' to encode with missing values"
-                )
-            elif self.handle_missing == "zero_impute":
-                # NANs will be replaced by zeroes in _compute_hash
-                X[missing_mask] = "NAN"
-
+        X_values = sbd.to_numpy(X)
         if self.hashing == "fast":
             hash_func = self._get_fast_hash
-        elif self.hashing == "murmur":
-            hash_func = self._get_murmur_hash
         else:
-            raise ValueError(
-                "Hashing function should be either 'fast' or 'murmur', "
-                f"got {self.hashing!r}"
-            )
+            # already checked during fit
+            assert self.hashing == "murmur", self.hashing
+            hash_func = self._get_murmur_hash
 
-        # Compute the hashes for unique values
-        unique_x, indices_x = np.unique(X, return_inverse=True)
+        is_null = sbd.to_numpy(sbd.is_null(X))
+        unique_x, indices_x = unique_strings(X_values, is_null)
         n_jobs = effective_n_jobs(self.n_jobs)
 
         # Compute the hashes in parallel on n_jobs batches
@@ -335,64 +292,8 @@ class MinHashEncoder(TransformerMixin, BaseEstimator):
             )
             for idx_slice in gen_even_slices(len(unique_x), n_jobs)
         )
-
-        # Match the hashes of the unique value to the original values
-        X_out = np.concatenate(unique_x_trans)[indices_x].reshape(
-            len(X), X.shape[1] * self.n_components
-        )
-
-        return X_out.astype(np.float64)  # The output is an int32 before conversion
-
-    def get_feature_names_out(
-        self, input_features: ArrayLike | str | None = None
-    ) -> NDArray[np.str_]:
-        """Get output feature names for transformation.
-
-        The output feature names look like:
-        ``["x0_0", "x0_1", ..., "x0_(n_components - 1)",
-        "x1_0", ..., "x1_(n_components - 1)", ...,
-        "x(n_features_out - 1)_(n_components - 1)"]``
-
-        Parameters
-        ----------
-        input_features : array-like of str or None, default=None
-            Input features.
-
-            - If ``input_features`` is ``None``, then ``feature_names_in_`` is
-              used as feature names in. If ``feature_names_in_`` is not defined,
-              then the following input feature names are generated:
-              ``["x0", "x1", ..., "x(n_features_in_ - 1)"]``.
-            - If ``input_features`` is an array-like, then ``input_features`` must
-              match ``feature_names_in_`` if ``feature_names_in_`` is defined.
-
-        Returns
-        -------
-        feature_names_out : ndarray of str objects
-            Transformed feature names.
-        """
-
-        check_is_fitted(self)
-        input_features = _check_feature_names_in(self, input_features)
-
-        feature_names = []
-        for feature in input_features:
-            for i in range(self.n_components):
-                feature_names.append(f"{feature}_{i}")
-
-        return feature_names
-
-    def _more_tags(self):
-        """
-        Used internally by sklearn to ease the estimator checks.
-        """
-        return {
-            "X_types": ["2darray", "categorical", "string"],
-            "preserves_dtype": [],
-            "allow_nan": True,
-            "_xfail_checks": {
-                "check_estimator_sparse_data": (
-                    "Cannot create sparse matrix with strings."
-                ),
-                "check_estimators_dtypes": "We only support string dtypes.",
-            },
-        }
+        X_out = np.concatenate(unique_x_trans, dtype="float32")[indices_x]
+        names = self.get_feature_names_out()
+        result = sbd.make_dataframe_like(X, dict(zip(names, X_out.T)))
+        result = sbd.copy_index(X, result)
+        return result

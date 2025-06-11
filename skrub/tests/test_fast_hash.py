@@ -2,7 +2,7 @@ from skrub._fast_hash import ngram_min_hash
 from skrub.tests.utils import generate_data
 
 
-def test_fast_hash() -> None:
+def test_fast_hash():
     data = generate_data(100, as_list=True)
     a = data[0]
 

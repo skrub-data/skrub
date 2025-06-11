@@ -1,11 +1,11 @@
-=================================
+===============================
 Vision: where is skrub heading?
-=================================
+===============================
 
 .. currentmodule:: skrub
 
 Vision statement
-=================
+================
 
 The goal of skrub is to facilitate building and deploying
 machine-learning models on tables: `pandas <https://pandas.pydata.org>`__
@@ -17,11 +17,11 @@ Skrub is high-level, with a philosophy and an API matching that of
 `scikit-learn <http://scikit-learn.org>`_. It strives to bridge the world
 of databases to that of machine-learning, **enabling imperfect assembly and
 representations of the data when it is noisy**, using the downstream
-target to predict to guide assembly when possible (supervised learing for
+target to predict to guide assembly when possible (supervised learning for
 data assembly).
 
 In the long term, as skrub is built on higher-level APIs, it will make it
-easier for data-scientist to use efficient database patterns and
+easier for data-scientists to use efficient database patterns and
 backends.
 
 Skrub seeks tradeoffs in terms of flexibility: its high-level APIs are by
@@ -36,7 +36,7 @@ in the :class:`TableVectorizer`.
 
 
 Roadmap
-=========
+=======
 
 In an open-source project, roadmaps can be whishful thinking: things
 happen in an iterative way, often guided by the community.
@@ -50,16 +50,14 @@ From shorter term to longer term:
   the sense of hyper-parameter tuning)
 
 - Add a Join-aggregator object, to do feature augmentation on one-to-many
-  correspondances
+  correspondences
 
-- fuzzy joining on datetime values
-
-- Support polars?
+- Support polars
 
 - Support time series (eg in the aggregations)
 
 - Interpolator join to join across multiple columns without exact
-  correspondances in the keys
+  correspondences in the keys
 
 - Release (yes we are not planning to release very soon)
 
@@ -71,4 +69,3 @@ From shorter term to longer term:
 
 - Automatic feature synthesis in databases, building on the assembling
   features
-

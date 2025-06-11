@@ -2,6 +2,8 @@
 comment: false
 
 coverage:
+  wait_for_ci: true
+
   status:
     project:
       default:
@@ -22,5 +24,4 @@ coverage:
         threshold: 1%
 
 ignore:
-  - "skrub/_check_dependencies.py"
   - "**/setup.py"

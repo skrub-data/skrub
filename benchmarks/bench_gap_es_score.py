@@ -2,27 +2,28 @@
 Benchmark hyperparameters of GapEncoder on traffic_violations dataset
 """
 
-from utils import default_parser, find_result, monitor
 from time import perf_counter
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from skrub.datasets import fetch_traffic_violations
-from sklearn.model_selection import train_test_split
+import seaborn as sns
 from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.metrics import roc_auc_score, balanced_accuracy_score
+from sklearn.metrics import balanced_accuracy_score, roc_auc_score
+from sklearn.model_selection import train_test_split
+from utils import default_parser, find_result, monitor
+
 from skrub import GapEncoder
 from skrub._gap_encoder import (
-    GapEncoderColumn,
     _beta_divergence,
-    batch_lookup,
     _multiplicative_update_h,
     _multiplicative_update_w,
+    batch_lookup,
 )
-import seaborn as sns
-import matplotlib.pyplot as plt
+from skrub.datasets import fetch_traffic_violations
 
 
-class ModifiedGapEncoderColumn(GapEncoderColumn):
+class ModifiedGapEncoderColumn(GapEncoder):
     def __init__(self, *args, **kwargs):
         if "max_no_improvement" in kwargs:
             self.max_no_improvement = kwargs.pop("max_no_improvement")
@@ -81,7 +82,7 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 
         return False
 
-    def fit(self, X, y=None) -> "GapEncoderColumn":
+    def fit(self, X, y=None):
         """
         Fit the GapEncoder on `X`.
 
@@ -163,8 +164,6 @@ class ModifiedGapEncoderColumn(GapEncoderColumn):
 
 
 class ModifiedGapEncoder(GapEncoder):
-    fitted_models_: list[ModifiedGapEncoderColumn]
-
     def _create_column_gap_encoder(self):
         return ModifiedGapEncoderColumn(
             ngram_range=self.ngram_range,
@@ -218,9 +217,9 @@ benchmark_name = "gap_encoder_benchmark_es_score"
     repeat=2,
 )
 def benchmark(
-    high_card_feature: str,
-    max_rows: int,
-    modif: bool,
+    high_card_feature,
+    max_rows,
+    modif,
 ):
     ds = fetch_traffic_violations()
     X = np.array(ds.X[high_card_feature]).reshape(-1, 1).astype(str)
@@ -276,7 +275,7 @@ def benchmark(
     return res_dic
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     sns.lineplot(
         x="train_size", y="time_fit", data=df, hue="high_card_feature", style="modif"
     )

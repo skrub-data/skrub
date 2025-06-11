@@ -1,0 +1,95 @@
+/* Boxes with copy-to-clipboard buttons */
+/* ------------------------------------ */
+
+/* Those are used to quickly copy some code snippets, column names, etc. */
+
+:host {
+    --box-min-width: calc(6 * var(--base-size));
+    --box-max-width: calc(40 * var(--base-size));
+    --table-box-max-width: calc(55 * var(--base-size));
+    --box-min-height: calc(1.9 * var(--base-size));
+    --box-max-height: calc(10 * var(--base-size));
+}
+
+.box {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    border: var(--border-s) solid var(--color-border-primary);
+    padding: 0;
+    min-width: var(--box-min-width);
+    max-width: var(--box-max-width);
+    min-height: var(--box-min-height);
+    max-height: var(--box-max-height);
+}
+
+.box pre {
+    overflow-x: auto;
+    padding: var(--spacing-s);
+    padding-left: var(--spacing-m);
+    flex-grow: 1;
+    white-space: pre;
+}
+
+.copybutton {
+    margin: var(--spacing-xs);
+    padding: var(--spacing-s);
+    min-width: var(--button-size-s);
+    max-width: var(--button-size-s);
+    max-height: var(--button-size-s);
+    border-radius: 0;
+    border: none;
+    position: relative;
+}
+
+.copybutton-left {
+    order: -1;
+}
+
+.copybutton {
+    background: var(--color-background-button-primary);
+}
+
+.copybutton:hover {
+    background: var(--color-background-button-primary-hover);
+}
+
+.copybutton:active {
+    background: var(--color-background-button-primary-active);
+}
+
+.copybutton:not([data-show-checkmark]) > :not(:first-child) {
+    display: none;
+}
+
+.copybutton[data-show-checkmark] > :first-child {
+    display: none;
+}
+
+.copied-message {
+    font-size: var(--font-size-s);
+    font-weight: bold;
+    background-color: var(--color-background-primary);
+    color: var(--color-text-primary);
+    padding: var(--spacing-s);
+    border-radius: var(--radius);
+    position: absolute;
+    top: var(--spacing-xs);
+    margin: 0;
+    right: calc(100% + var(--spacing-s));
+    filter: invert(1);
+}
+
+.copybutton-left .copied-message {
+    left: calc(100% + var(--spacing-s));
+    right: auto;
+}
+
+[data-shows-placeholder] {
+    color: var(--color-background-secondary);
+}
+
+.table-bar .box {
+    flex-grow: 1;
+    max-width: var(--table-box-max-width);
+}

@@ -1,5 +1,3 @@
-from functools import cache
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -18,14 +16,14 @@ from skrub.datasets import make_deduplication_data
 
 
 @pytest.mark.parametrize(
-    ["entries_per_category", "prob_mistake_per_letter"],
-    [[[500, 100, 1500], 0.05], [[100, 100], 0.02], [[200, 50, 30, 200, 800], 0.01]],
+    "entries_per_category, prob_mistake_per_letter",
+    [([500, 100, 1500], 0.05), ([100, 100], 0.02), ([200, 50, 30, 200, 800], 0.01)],
 )
 def test_deduplicate(
-    entries_per_category: list[int],
-    prob_mistake_per_letter: float,
-    seed: int = 123,
-) -> None:
+    entries_per_category,
+    prob_mistake_per_letter,
+    seed=123,
+):
     rng = np.random.RandomState(seed)
 
     # hard coded to fix ground truth string similarities
@@ -60,7 +58,7 @@ def test_deduplicate(
     assert np.isin(unique_other_analyzer, recovered_categories).all()
 
 
-def test_compute_ngram_distance() -> None:
+def test_compute_ngram_distance():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
     distance = compute_ngram_distance(words)
     distance = squareform(distance)
@@ -70,7 +68,7 @@ def test_compute_ngram_distance() -> None:
         assert np.allclose(distance[words == un_word][:, words == un_word], 0)
 
 
-def test__guess_clusters() -> None:
+def test__guess_clusters():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
     distance = compute_ngram_distance(words)
     Z = linkage(distance, method="average")
@@ -78,7 +76,7 @@ def test__guess_clusters() -> None:
     assert n_clusters == len(np.unique(words))
 
 
-def test__create_spelling_correction(seed: int = 123) -> None:
+def test__create_spelling_correction(seed=123):
     rng = np.random.RandomState(seed)
     n_clusters = 3
     samples_per_cluster = 10
@@ -101,8 +99,7 @@ def test__create_spelling_correction(seed: int = 123) -> None:
         ).all()
 
 
-@cache
-def default_deduplicate(n: int = 500):
+def default_deduplicate(n=500, random_state=0):
     """
     Create a default deduplication dataset.
     """
@@ -110,12 +107,13 @@ def default_deduplicate(n: int = 500):
         examples=["black", "white", "red"],
         entries_per_example=[n, n, n],
         prob_mistake_per_letter=0.3,
+        random_state=random_state,
     )
     y = deduplicate(X)
     return X, y
 
 
-def test_parallelism() -> None:
+def test_parallelism():
     """Tests that parallelism works with different backends and n_jobs."""
 
     X, y = default_deduplicate(n=200)
@@ -132,7 +130,7 @@ class DummyBackend(DEFAULT_JOBLIB_BACKEND):  # type: ignore
     A dummy backend used to check that specifying a backend works
     in deduplicate.
     The `count` attribute is used to check that the backend is used.
-    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    Copied from sklearn/ensemble/tests/test_forest.py
     """
 
     def __init__(self, *args, **kwargs):
@@ -151,7 +149,7 @@ joblib.register_parallel_backend("testing", DummyBackend)
 def test_backend_respected():
     """
     Test that the joblib backend is used.
-    Copied from https://github.com/scikit-learn/scikit-learn/blob/36958fb240fbe435673a9e3c52e769f01f36bec0/sklearn/ensemble/tests/test_forest.py  # noqa
+    Copied from sklearn/ensemble/tests/test_forest.py
     """
     # Test that parallelism works
     X = make_deduplication_data(

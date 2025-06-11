@@ -11,14 +11,13 @@ from skrub.datasets import (
     fetch_road_safety,
     fetch_traffic_violations,
 )
-from skrub.datasets import DatasetAll
 
 
-def find_result(bench_name: str) -> Path:
+def find_result(bench_name):
     return choose_file(find_results(bench_name))
 
 
-def find_results(bench_name: str) -> list[Path]:
+def find_results(bench_name):
     """
     Returns the list of results in the results' directory.
     """
@@ -30,7 +29,7 @@ def find_results(bench_name: str) -> list[Path]:
     ]
 
 
-def choose_file(results: list[Path]) -> Path:
+def choose_file(results):
     """
     Given a list of files, chooses one based on these rules:
     - If there are no files to choose from, exit the program
@@ -66,7 +65,7 @@ def choose_file(results: list[Path]) -> Path:
         return results[int(choice) - 1]
 
 
-def get_classification_datasets() -> dict[str, DatasetAll]:
+def get_classification_datasets():
     return {
         "open_payments": fetch_open_payments(),
         "drug_directory": fetch_drug_directory(),
@@ -76,7 +75,7 @@ def get_classification_datasets() -> dict[str, DatasetAll]:
     }
 
 
-def get_regression_datasets() -> dict[str, DatasetAll]:
+def get_regression_datasets():
     return {
         "medical_charge": fetch_medical_charge(),
         "employee_salaries": fetch_employee_salaries(),

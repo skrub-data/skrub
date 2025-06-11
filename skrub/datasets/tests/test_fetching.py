@@ -1,162 +1,89 @@
 from tempfile import TemporaryDirectory
-from unittest import mock
-from urllib.error import URLError
 
 import pandas as pd
 import pytest
+import requests
+from pandas.testing import assert_frame_equal, assert_series_equal
 
-from skrub.datasets import _fetching
-
-
-def _has_data_id(call, data_id: int) -> bool:
-    # Unpacking copied from `mock._Call.__eq__`
-    if len(call) == 2:
-        args, kwargs = call
-    else:
-        name, args, kwargs = call
-    return kwargs["data_id"] == data_id
+import skrub.datasets
+from skrub.datasets import _fetching, _utils
 
 
-@mock.patch(
-    "skrub.datasets._fetching.fetch_openml",
-    side_effect=_fetching.fetch_openml,
-)
-def test_openml_fetching(fetch_openml_mock: mock.Mock):
-    """
-    Downloads a small dataset (midwest survey) and performs a bunch of tests
-    that asserts the fetching function works correctly.
+def _get_table_names_from_bunch(bunch):
+    return [k for k in bunch if isinstance(bunch[k], pd.DataFrame)]
 
-    We don't download all datasets as it would take way too long:
-    see https://github.com/skrub-data/skrub/issues/523
-    """
+
+@pytest.mark.parametrize("dataset_name", ["employee_salaries", "drug_directory"])
+def test_fetching(monkeypatch, dataset_name):
     with TemporaryDirectory() as temp_dir:
-        # Download the dataset without loading it in memory.
-        dataset = _fetching.fetch_midwest_survey(
-            data_directory=temp_dir,
-            load_dataframe=False,
-        )
-        fetch_openml_mock.assert_called_once()
-        assert _has_data_id(fetch_openml_mock.call_args, _fetching.MIDWEST_SURVEY_ID)
-        fetch_openml_mock.reset_mock()
-        assert isinstance(dataset, _fetching.DatasetInfoOnly)
-        # Briefly load the dataframe in memory, to test that reading
-        # from disk works.
-        assert pd.read_csv(dataset.path, **dataset.read_csv_kwargs).shape == (2494, 29)
-        assert dataset.name == (
-            _fetching.fetch_midwest_survey.__name__[len("fetch_") :]
-            .replace("_", " ")
-            .capitalize()
-        )
-        assert dataset.source.startswith("https://www.openml.org/")
-        assert str(_fetching.MIDWEST_SURVEY_ID) in dataset.source
-        # Now, load it into memory, and expect `fetch_openml`
-        # to not be called because the dataset is already on disk.
-        dataset = _fetching.fetch_midwest_survey(data_directory=temp_dir)
-        fetch_openml_mock.assert_not_called()
-        fetch_openml_mock.reset_mock()
-        assert dataset.X.shape == (2494, 28)
-        assert dataset.y.shape == (2494,)
+        fetch_func = getattr(_fetching, f"fetch_{dataset_name}")
+        bunch = fetch_func(data_home=temp_dir)
+
+        def _error_on_get(*args, **kwargs):
+            raise AssertionError("request called")
+
+        # Raise an error if requests.get() is called
+        monkeypatch.setattr(requests, "get", _error_on_get)
+
+        # calling the fetch function one more time
+        local_bunch = fetch_func(data_home=temp_dir)
+
+    for table_name in _get_table_names_from_bunch(bunch):
+        assert_frame_equal(bunch[table_name], local_bunch[table_name])
+
+    if hasattr(bunch, "y"):
+        if isinstance(bunch.y, pd.Series):
+            assert_series_equal(bunch.y, local_bunch.y)
+        else:
+            assert_frame_equal(bunch.y, local_bunch.y)
+    assert bunch["metadata"] == local_bunch["metadata"]
 
 
-def test_openml_datasets_exist():
-    """
-    Queries OpenML to see if the datasets are still available on the website.
-    """
-    openml = pytest.importorskip("openml")
-    openml.datasets.check_datasets_active(
-        dataset_ids=[
-            _fetching.ROAD_SAFETY_ID,
-            _fetching.OPEN_PAYMENTS_ID,
-            _fetching.MIDWEST_SURVEY_ID,
-            _fetching.MEDICAL_CHARGE_ID,
-            _fetching.EMPLOYEE_SALARIES_ID,
-            _fetching.TRAFFIC_VIOLATIONS_ID,
-            _fetching.DRUG_DIRECTORY_ID,
-        ],
-        raise_error_if_not_exist=True,
-    )
+def test_fetch_credit_fraud():
+    data = skrub.datasets.fetch_credit_fraud()
+    assert data.baskets.shape == (61241, 2)
+    data = skrub.datasets.fetch_credit_fraud(split="train")
+    assert data.baskets.shape == (61241, 2)
+    data = skrub.datasets.fetch_credit_fraud(split="test")
+    assert data.baskets.shape == (31549, 2)
+    data = skrub.datasets.fetch_credit_fraud(split="all")
+    assert data.baskets.shape == (92790, 2)
+    with pytest.raises(ValueError, match=".*got: None"):
+        skrub.datasets.fetch_credit_fraud(split=None)
 
 
-@mock.patch("skrub.datasets._fetching.fetch_openml")
-def test_openml_datasets_calls(fetch_openml_mock: mock.Mock):
-    """
-    Checks that calling the fetching functions actually calls
-    `sklearn.datasets.fetch_openml`.
-    Complementary to `test_openml_fetching`
-    """
+def test_fetching_wrong_checksum(monkeypatch):
+    dataset_info = _utils.DATASET_INFO["employee_salaries"]
+    monkeypatch.setitem(dataset_info, "sha256", "bad_checksum")
+    with pytest.raises(OSError, match=".*Can't download"):
+        with TemporaryDirectory() as temp_dir:
+            _fetching.fetch_employee_salaries(data_home=temp_dir)
+
+
+def test_warning_redownload_checksum_has_changed(monkeypatch):
     with TemporaryDirectory() as temp_dir:
-        for fetching_function, identifier in [
-            (_fetching.fetch_road_safety, _fetching.ROAD_SAFETY_ID),
-            (_fetching.fetch_open_payments, _fetching.OPEN_PAYMENTS_ID),
-            (_fetching.fetch_midwest_survey, _fetching.MIDWEST_SURVEY_ID),
-            (_fetching.fetch_medical_charge, _fetching.MEDICAL_CHARGE_ID),
-            (_fetching.fetch_employee_salaries, _fetching.EMPLOYEE_SALARIES_ID),
-            (_fetching.fetch_traffic_violations, _fetching.TRAFFIC_VIOLATIONS_ID),
-            (_fetching.fetch_drug_directory, _fetching.DRUG_DIRECTORY_ID),
-        ]:
+        _ = _fetching.fetch_employee_salaries(data_home=temp_dir)
+
+        # altering the checksum to trigger a new download
+        dataset_info = _utils.DATASET_INFO["employee_salaries"]
+        monkeypatch.setitem(dataset_info, "sha256", "bad_checksum")
+
+        with pytest.warns(match=r".*re-downloading.*"):
+            # In the context of testing, altering the checksum will also raise an
+            # error after re-downloading, which we doesn't want.
             try:
-                fetching_function(data_directory=temp_dir)
-            except FileNotFoundError:
+                _ = _fetching.fetch_employee_salaries(data_home=temp_dir)
+            except OSError:
                 pass
-            fetch_openml_mock.assert_called_once()
-            assert _has_data_id(fetch_openml_mock.call_args, identifier)
-            fetch_openml_mock.reset_mock()
 
 
-def test_fetch_world_bank_indicator():
-    """
-    Tests the ``fetch_world_bank_indicator()``
-    function in a real environment.
-    """
-    test_dataset = {
-        "id": "NY.GDP.PCAP.CD",
-        "desc_start": "This table shows",
-        "url": "https://api.worldbank.org/v2/en/indicator/NY.GDP.PCAP.CD?downloadformat=csv",  # noqa
-        "dataset_columns_count": 2,
-    }
+def test_cant_download(monkeypatch):
+    def _error_on_get(*args, **kwargs):
+        raise Exception("some error happened")
+
+    # Raise an error when requests.get() is called
+    monkeypatch.setattr(requests, "get", _error_on_get)
 
     with TemporaryDirectory() as temp_dir:
-        try:
-            # First, we want to purposefully test FileNotFoundError exceptions.
-            with pytest.raises(FileNotFoundError):
-                assert _fetching.fetch_world_bank_indicator(
-                    indicator_id=0, data_directory=temp_dir
-                )
-                assert _fetching.fetch_world_bank_indicator(
-                    indicator_id=2**32,
-                    data_directory=temp_dir,
-                )
-
-            # Valid call
-            returned_info = _fetching.fetch_world_bank_indicator(
-                indicator_id=test_dataset["id"],
-                data_directory=temp_dir,
-            )
-
-        except (ConnectionError, URLError):
-            pytest.skip(
-                "Exception: Skipping this test because we encountered an "
-                "issue probably related to an Internet connection problem. "
-            )
-            return
-
-        assert returned_info.description.startswith(test_dataset["desc_start"])
-        assert returned_info.source == test_dataset["url"]
-        assert returned_info.path.is_file()
-
-        dataset = pd.read_csv(returned_info.path)
-
-        assert dataset.columns[0] == "Country Name"
-        assert dataset.shape[1] == test_dataset["dataset_columns_count"]
-
-        # Now that we have verified the file is on disk, we want to test
-        # whether calling the function again reads it from disk (it should)
-        # or queries the network again (it shouldn't).
-        with mock.patch("urllib.request.urlretrieve") as mock_urlretrieve:
-            # Same valid call as above
-            disk_loaded_info = _fetching.fetch_world_bank_indicator(
-                indicator_id=test_dataset["id"],
-                data_directory=temp_dir,
-            )
-            mock_urlretrieve.assert_not_called()
-            assert disk_loaded_info == returned_info
+        with pytest.raises(OSError, match="Can't download"):
+            _ = _fetching.fetch_employee_salaries(data_home=temp_dir)

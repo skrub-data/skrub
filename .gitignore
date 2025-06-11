@@ -21,6 +21,8 @@ var/
 *.egg
 *.pkl
 
+.pytest_cache/
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -58,13 +60,25 @@ skrub/datasets/data/*
 doc/_build
 doc/auto_examples
 doc/generated
+doc/generated_for_index
+doc/reference/generated
 doc/CHANGES.rst
 doc/RELEASE_PROCESS.rst
 doc/CONTRIBUTING.rst
+doc/sg_execution_times.rst
 .DS_Store
+doc/_templates/demo_table_report_generated.html
 
 # Pkl files for benchmarks
 benchmarks/*.pkl
 
 # Default JupyterLite content
 jupyterlite_contents
+
+# Pixi folder
+.pixi/
+
+# python virtual environment
+.venv
+venv
+env_skrub

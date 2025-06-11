@@ -1,0 +1,200 @@
+/* The table showing the first few and last rows of the dataframe */
+/* -------------------------------------------------------------- */
+
+td, th {
+    width: var(--spacing-xl);
+}
+
+tr {
+    height: var(--font-size-xs);
+}
+
+.table-with-selectable-cells {
+    --arrow-width: var(--base-size);
+}
+
+.table-with-selectable-cells {
+    margin: var(--border-m);
+    border: none;
+}
+
+.table-with-selectable-cells tbody {
+    border: var(--border-s) solid var(--color-border-secondary);
+}
+
+.table-with-selectable-cells .table-cell {
+    transition: background-color var(--animation-duration)
+        var(--animation-easing);
+}
+
+.table-with-selectable-cells thead th {
+    vertical-align: top;
+    border: var(--border-s) solid var(--color-border-secondary);
+    background-color: var(--color-background-quaternary);
+}
+
+.table-with-selectable-cells tbody tr {
+    background-color: var(--color-background-tertiary);
+}
+
+.table-with-selectable-cells tbody tr:nth-child(2n -1) {
+    background-color: var(--color-background-secondary);
+}
+
+.table-with-selectable-cells thead tr .table-cell[data-is-in-active-column],
+.table-with-selectable-cells tbody tr .table-cell[data-is-in-active-column] {
+    background-color: var(--color-background-highlight-primary);
+}
+
+.table-with-selectable-cells
+    tbody
+    tr:nth-child(2n -1)
+    .table-cell[data-is-in-active-column] {
+    background-color: color-mix(
+        in srgb,
+        var(--color-background-highlight-primary),
+        var(--color-background-primary)
+    );
+}
+
+.table-with-selectable-cells thead tr .table-cell[data-is-active],
+.table-with-selectable-cells thead tr .table-cell[data-is-active]:focus,
+.table-with-selectable-cells tbody tr .table-cell[data-is-active],
+.table-with-selectable-cells tbody tr .table-cell[data-is-active]:focus {
+    background-color: var(--color-background-active);
+}
+
+.table-with-selectable-cells th[data-role="padding"] {
+    background-color: var(--color-background-primary);
+    border: none;
+    transition: none;
+}
+
+#report .table-with-selectable-cells th[data-role="columns-level-name"] {
+    text-align: right;
+    padding-right: calc(calc(2 * var(--spacing-s)) + var(--arrow-width));
+    position: relative;
+}
+
+.table-with-selectable-cells th[data-role="columns-level-name"] > .arrow-icon {
+    position: absolute;
+    width: var(--arrow-width);
+    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    right: calc(-1 * var(--arrow-width));
+    transform: translateX(calc(-1 * var(--spacing-s) - var(--arrow-width)));
+    display: flex;
+    user-select: none;
+}
+
+.table-with-selectable-cells th[data-role="index-level-name"],
+.table-with-selectable-cells th[data-role="index-level-value"] {
+    background-color: var(--color-background-primary);
+    border: var(--border-s) solid var(--color-border-secondary);
+    text-align: right;
+}
+
+table:not(:focus-within):not(:has(:active)) .table-cell[data-is-active] {
+    outline: var(--border-m) dotted;
+}
+
+.table-cell[data-is-active]:focus {
+    outline-width: var(--border-m);
+    outline-style: solid;
+}
+
+#report .table-cell[data-is-active][data-just-copied]:focus {
+    outline-width: var(--border-m);
+    outline-style: dashed;
+}
+
+/* The gap separating the head and the tail of the table */
+
+#report .elided-table-part,
+#report .elided-table-part td {
+    border: var(--border-m) dashed var(--color-border-secondary);
+    text-align: center;
+    border-top: 0;
+    border-bottom: 0;
+    background: var(--color-background-primary);
+}
+
+#report .ellipsis-icon {
+    display: flex;
+    flex-direction: column;
+    max-height: var(--spacing-xl);
+}
+
+#report
+    table:has([data-role="index-level-value"])
+    .elided-table-part
+    td:first-child
+    .ellipsis-icon
+    * {
+    align-self: flex-end;
+}
+
+.table-bar-wrapper {
+    min-height: calc(var(--line-height) * 1em + 2 * var(--spacing-m));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: var(--spacing-s);
+}
+
+/* Information below the table: dimensions and keyboard shortcuts */
+
+.table-footer {
+    display: flex;
+    justify-content: flex-start;
+    column-gap: var(--spacing-xxl);
+    padding-top: var(--spacing-s);
+}
+
+.table-footer > * {
+    flex-shrink: 1;
+}
+
+.keyboard-hints {
+    display: none;
+    flex-basis: max(0px, min(50%, calc((50% - 25ch) * 99999)));
+    min-width: 0px;
+    height: 2em;
+    margin-bottom: calc(-1 * var(--spacing-m));
+    margin-right: var(--spacing-s);
+    overflow: hidden;
+    flex-shrink: 10000;
+}
+
+.keyboard-hints > div {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 2em;
+}
+
+:has(.table-with-selectable-cells:focus-within)
+    ~ .table-footer
+    .keyboard-hints {
+    display: block;
+}
+
+.keyboard-key {
+    font-size: var(--font-size-xs);
+    font-family: var(--font-family-monospace);
+    padding: 0 var(--spacing-m);
+    line-height: 1.8;
+    color: var(--color-text-secondary);
+    border: var(--border-s) solid var(--color-border-secondary);
+    border-bottom: var(--border-s) solid var(--color-border-secondary);
+    box-shadow: inset 0 calc(-1 * var(--border-s)) 0
+        var(--color-shadow-keyboard);
+    border-radius: 0.2em;
+    min-width: 1em;
+    text-align: center;
+    margin: var(--spacing-xs);
+    display: inline-block;
+    text-wrap: nowrap;
+    flex-shrink: 0;
+}

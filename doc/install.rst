@@ -1,6 +1,10 @@
-==========
-Installing
-==========
+.. _installation_instructions:
+
+.. currentmodule:: skrub
+
+=======
+Install
+=======
 
 .. raw:: html
 
@@ -8,7 +12,7 @@ Installing
 
     <ul class="nav nav-pills nav-fill" id="installation" role="tablist">
         <li class="nav-item" role="presentation">
-            <a class="nav-link" id="pip-tab" data-bs-toggle="tab" data-bs-target="#pip-tab-pane" type="button" role="tab" aria-controls="pip" aria-selected="false">Using pip</a>
+            <a class="nav-link active" id="pip-tab" data-bs-toggle="tab" data-bs-target="#pip-tab-pane" type="button" role="tab" aria-controls="pip" aria-selected="true">Using pip</a>
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="conda-tab" data-bs-toggle="tab" data-bs-target="#conda-tab-pane" type="button" role="tab" aria-controls="conda" aria-selected="false">Using conda</a>
@@ -17,17 +21,32 @@ Installing
             <a class="nav-link" id="mamba-tab" data-bs-toggle="tab" data-bs-target="#mamba-tab-pane" type="button" role="tab" aria-controls="mamba" aria-selected="false">Using mamba</a>
         </li>
         <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="source-tab" data-bs-toggle="tab" data-bs-target="#source-tab-pane" type="button" role="tab" aria-controls="source" aria-selected="true">From source</a>
+            <a class="nav-link" id="source-tab" data-bs-toggle="tab" data-bs-target="#source-tab-pane" type="button" role="tab" aria-controls="source" aria-selected="false">From source</a>
         </li>
     </ul>
 
     <div class="tab-content">
-        <div class="tab-pane fade" id="pip-tab-pane" role="tabpanel" aria-labelledby="pip-tab" tabindex="0">
+        <div class="tab-pane fade show active" id="pip-tab-pane" role="tabpanel" aria-labelledby="pip-tab" tabindex="0">
             <hr />
 
-.. warning::
+.. code:: console
 
-   skrub has not yet been released. See the "From source" tab.
+    pip install skrub -U
+
+|
+
+**Deep learning dependencies**
+
+Deep-learning based encoders like :class:`TextEncoder` require installing optional
+dependencies to use them. The following will install
+`torch <https://pypi.org/project/torch/>`_,
+`transformers <https://pypi.org/project/transformers/>`_,
+and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
+
+.. code:: console
+
+    $ pip install skrub[transformers] -U
+
 
 .. raw:: html
 
@@ -35,9 +54,24 @@ Installing
         <div class="tab-pane fade" id="conda-tab-pane" role="tabpanel" aria-labelledby="conda-tab" tabindex="0">
             <hr />
 
-.. warning::
+.. code:: console
 
-   skrub has not yet been released. See the "From source" tab.
+    conda install -c conda-forge skrub
+
+|
+
+**Deep learning dependencies**
+
+Deep-learning based encoders like :class:`TextEncoder` require installing optional
+dependencies to use them. The following will install
+`torch <https://anaconda.org/pytorch/pytorch>`_,
+`transformers <https://anaconda.org/conda-forge/transformers>`_,
+and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transformers>`_.
+
+.. code:: console
+
+    $ conda install -c conda-forge skrub[transformers]
+
 
 .. raw:: html
 
@@ -45,72 +79,159 @@ Installing
         <div class="tab-pane fade" id="mamba-tab-pane" role="tabpanel" aria-labelledby="mamba-tab" tabindex="0">
             <hr />
 
-.. warning::
+.. code:: console
 
-   skrub has not yet been released. See the "From source" tab.
+    mamba install -c conda-forge skrub
+
+|
+
+**Deep learning dependencies**
+
+Deep-learning based encoders like :class:`TextEncoder` require installing optional
+dependencies to use them. The following will install
+`torch <https://anaconda.org/pytorch/pytorch>`_,
+`transformers <https://anaconda.org/conda-forge/transformers>`_,
+and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transformers>`_.
+
+.. code:: console
+
+    $ mamba install -c conda-forge skrub[transformers]
+
 
 .. raw:: html
 
         </div>
-        <div class="tab-pane fade show active" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
+        <div class="tab-pane fade" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
             <hr />
 
-Recommended usage, for users
-----------------------------
+.. _installing_from_source:
 
-To install from `the source <https://github.com/skrub-data/skrub>`_ using pip,
-run the following command in a shell command line:
+Advanced Usage for Contributors
+-------------------------------
 
-.. code:: console
+1. Fork the project
+'''''''''''''''''''
 
-    $ pip install git+https://github.com/skrub-data/skrub.git
+To contribute to the project, you first need to
+`fork skrub on GitHub <https://github.com/skrub-data/skrub/fork>`_.
 
-Advanced usage, for contributors
---------------------------------
+That will enable you to push your commits to a branch *on your fork*.
 
-If you want to contribute to the project, you can install the development version
-of skrub from the source code:
+2. Clone your fork
+''''''''''''''''''
 
-.. code:: console
-
-    $ git clone https://github.com/skrub-data/skrub
-
-Create a virtual environment, here for example, using `conda <https://docs.conda.io/en/latest/>`_:
+Clone your forked repo to your local machine:
 
 .. code:: console
 
-    $ conda create -n skrub python=3.10
-    $ conda activate skrub
+    git clone https://github.com/<YOUR_USERNAME>/skrub
+    cd skrub
 
-Then, install the local package in editable mode,
-with the development requirements:
-
-.. code:: console
-
-    $ cd skrub
-    $ pip install -e '.[dev]'
-
-Next step, enable the pre-commit hooks:
+Next, add the *upstream* remote (i.e. the official skrub repository). This allows you
+to pull the latest changes from the main repository:
 
 .. code:: console
 
-    $ pre-commit install
+    git remote add upstream https://github.com/skrub-data/skrub.git
 
-Finally, a few revisions better be ignored by ``git blame`` and IDE integrations.
-These revisions are listed in ``.git-blame-ignore-revs``,
-which can be set in your local repository with:
+Verify that both the origin (your fork) and upstream (official repo)
+are correctly set up:
 
 .. code:: console
 
-    $ git config blame.ignoreRevsFile .git-blame-ignore-revs
+    git remote -v
 
-You're ready to go! If not already done, please have a look at
-the `contributing guidelines <https://skrub-data.org/stable/CONTRIBUTING.html>`_.
+You should see something like this:
+
+.. code:: console
+
+    origin  git@github.com:<YOUR_USERNAME>/skrub.git (fetch)
+    origin  git@github.com:<YOUR_USERNAME>/skrub.git (push)
+    upstream        git@github.com:skrub-data/skrub.git (fetch)
+    upstream        git@github.com:skrub-data/skrub.git (push)
+
+
+3. Setup your environment
+'''''''''''''''''''''''''
+
+Now, setup a development environment.
+You can set up a virtual environment with Conda, or with python's ``venv``:
+
+- With `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__:
+
+.. code:: console
+
+    conda create -n env_skrub python=3.13
+    conda activate env_skrub
+
+- With `venv <https://docs.python.org/3/library/venv.html>`__:
+.. code:: console
+
+    python -m venv env_skrub
+    source env_skrub/bin/activate
+
+Then, with the environment activated and at the root of your local copy of skrub,
+install the local package in editable mode with development dependencies:
+
+.. code:: console
+
+    pip install -e ".[dev]"
+
+Enabling pre-commit hooks ensures code style consistency by triggering checks (mainly formatting) every time you run a ``git commit``.
+
+.. code:: console
+
+    pre-commit install
+
+
+Optionally, configure Git to ignore certain revisions in git blame and
+IDE integrations. These revisions are listed in .git-blame-ignore-revs:
+
+.. code:: console
+
+    git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+4. Run the tests
+''''''''''''''''
+
+To ensure your environment is correctly set up, run the test suite:
+
+.. code:: console
+
+    pytest --pyargs skrub
+
+Testing should take about 5 minutes.
+
+If you see some warnings like:
+.. code:: sh
+
+  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
+    warnings.warn(
+
+This is expected, and you may proceed with the next steps without worrying about them.
+However, no tests should fail at this point: if they do fail, then let us know.
+
+After that, your environment is ready for development!
+
+**Deep learning dependencies**
+
+Deep-learning based encoders like :class:`TextEncoder` require installing optional
+dependencies to use them. The following will install
+`torch <https://pypi.org/project/torch/>`_,
+`transformers <https://pypi.org/project/transformers/>`_,
+and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
+
+.. code:: console
+
+    $ pip install -e ".[transformers]"
+
+
+Now that you're set up,
+you may return to :ref:`writing your first pull request<writing-your-first-pull-request>`
+and start coding!
 
 .. raw:: html
 
         </div>
     </div>
-
     </div>
-

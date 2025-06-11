@@ -48,11 +48,11 @@ def gen_atom(atom_len, seed=0):
 
 
 def ngram_min_hash(
-    string: str,
-    ngram_range: tuple[int, int] = (2, 4),
-    seed: int = 0,
+    string,
+    ngram_range=(2, 4),
+    seed=0,
     return_minmax=False,
-) -> int | tuple[int, int]:
+):
     """
     Compute the min/max hash of the ngrams of the string.
 
@@ -76,6 +76,8 @@ def ngram_min_hash(
         The min_hash or (min_hash, max_hash) of the n-grams of the string.
     """
     # Create a numerical 1D array from the string
+    if not len(string):
+        return (0, 0) if return_minmax else 0
     array = np.frombuffer(string.encode(), dtype="int8", count=len(string))
 
     max_hash = MININT32

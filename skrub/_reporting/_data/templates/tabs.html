@@ -1,0 +1,68 @@
+{% set associations_warning = summary["top_associations"] and summary["top_associations"][0]["cramer_v"] is gt high_association_threshold %}
+
+{% set table_title %}Display a few rows of the dataframe in a table.{% endset %}
+{% set stats_title %}Summary statistics for all columns.{% endset %}
+{% set column_summaries_title %}Plots showing the distributions of all columns{% endset %}
+{% set associations_title -%}
+Show which columns are similar (have a strong association).
+{%- if associations_warning %}
+NOTE: some columns have very strong associations and may be redundant.
+{%- endif -%}
+{%- endset %}
+
+<div>
+    <div class="flex-reverse tab-list-wrapper">
+        <div class="tab-list tab-list-scroller" data-manager="TabList" >
+            <div>
+                <button type="button" data-target-panel-id="dataframe-sample-panel"
+                    data-role="tab" data-is-selected data-test="sample-tab" class="tab"
+                    title="{{ table_title }}">Table</button>
+            </div>
+            <div>
+                <button type="button" data-target-panel-id="summary-statistics-panel"
+                    data-role="tab" data-test="summary-statistics-tab" class="tab"
+                    title="{{ stats_title }}">Stats</button>
+            </div>
+            {% if not minimal_report_mode %}
+            <div>
+                <button type="button" data-target-panel-id="column-summaries-panel"
+                    data-role="tab" data-test="summaries-tab" class="tab"
+                    title="{{ column_summaries_title }}">Distributions</button>
+            </div>
+            <div>
+                <button type="button" data-target-panel-id="column-associations-panel"
+                    data-role="tab" class="tab" {% if associations_warning %}
+                    data-has-warning {% endif %} data-test="associations-tab"
+                    title="{{ associations_title }}">
+                    <div class="warning-sign">
+                        {% include "icons/exclamation-triangle.svg" %}
+                    </div>
+                    Associations</button>
+            </div>
+            {% endif %}
+        </div>
+        {% include "column-filter.html" %}
+    </div>
+</div>
+
+<div class="tab-panel" id="dataframe-sample-panel" data-test="sample-panel">
+    {% include "dataframe-sample.html" %}
+</div>
+<div class="tab-panel" id="summary-statistics-panel" data-hidden
+    data-test="summary-statistics-panel">
+    {% include "summary-statistics.html" %}
+</div>
+{% if not minimal_report_mode %}
+<div class="tab-panel" id="column-summaries-panel" data-hidden
+     data-test="summaries-panel">
+    {% include "column-summaries.html" %}
+</div>
+<div class="tab-panel" id="column-associations-panel" data-hidden
+    data-test="associations-panel">
+    {% include "column-associations.html" %}
+</div>
+{% endif %}
+
+{% if is_inline_report %}
+<div class="report-bottom-border"></div>
+{% endif %}

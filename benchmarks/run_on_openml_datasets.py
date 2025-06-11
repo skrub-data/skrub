@@ -4,20 +4,22 @@ It can be used to check that we can deal with any dataset without failing.
 It can also be used to compare our scores to OpenML scores uploaded by other users,
 using the `--compare_scores` flag (this is slow).
 """
-from collections import Counter
-import openml
+import argparse
 import os
+from collections import Counter
+
 import numpy as np
-from benchmarks.utils import default_parser
-from skrub import TableVectorizer, MinHashEncoder
-from sklearn.pipeline import Pipeline
+import openml
+from loguru import logger
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
 )
 from sklearn.model_selection import cross_val_score
-import argparse
-from loguru import logger
+from sklearn.pipeline import Pipeline
+
+from benchmarks.utils import default_parser
+from skrub import MinHashEncoder, TableVectorizer
 
 # argparse
 parser = argparse.ArgumentParser(parents=[default_parser])
@@ -45,14 +47,14 @@ openml.config.cache_directory = os.path.expanduser(args.cache_directory)
 
 classification_pipeline = Pipeline(
     [
-        ("vectorizer", TableVectorizer(high_card_cat_transformer=MinHashEncoder())),
+        ("vectorizer", TableVectorizer(high_cardinality=MinHashEncoder())),
         ("classifier", HistGradientBoostingClassifier()),
     ]
 )
 
 regression_pipeline = Pipeline(
     [
-        ("vectorizer", TableVectorizer(high_card_cat_transformer=MinHashEncoder())),
+        ("vectorizer", TableVectorizer(high_cardinality=MinHashEncoder())),
         ("regressor", HistGradientBoostingRegressor()),
     ]
 )
@@ -178,7 +180,7 @@ for type_id, problem, pipeline, metric in [
             errors[task_id] = str(e)
             continue
 
-logger.info(f"Finished! ")
+logger.info("Finished! ")
 logger.error(f"{len(errors)} tasks with errors: {set(errors.keys())}")
 # print all unique errors
 errors_counter = Counter(errors.values())

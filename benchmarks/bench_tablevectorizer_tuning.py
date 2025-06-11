@@ -53,13 +53,13 @@ benchmark_name = "bench_tablevectorizer_tuning"
     repeat=3,
 )
 def benchmark(
-    tv_cardinality_threshold: int,
-    minhash_n_components: int,
-    dataset_name: str,
+    tv_cardinality_threshold,
+    minhash_n_components,
+    dataset_name,
 ):
     tv = TableVectorizer(
         cardinality_threshold=tv_cardinality_threshold,
-        high_card_cat_transformer=MinHashEncoder(n_components=minhash_n_components),
+        high_cardinality=MinHashEncoder(n_components=minhash_n_components),
     )
 
     dataset = dataset_map[dataset_name]
@@ -84,7 +84,7 @@ def benchmark(
     }
 
 
-def plot(df: pd.DataFrame):
+def plot(df):
     sns.set_theme(style="ticks", palette="pastel")
 
     n_datasets = len(np.unique(df["dataset_name"]))

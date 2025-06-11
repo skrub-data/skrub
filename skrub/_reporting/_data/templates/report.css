@@ -1,0 +1,12 @@
+{% include "pure-3.0.0/base-min.css" %}
+
+{% include "_variables.css" %}
+{% include "base.css" %}
+{% include "tables.css" %}
+{% include "copybutton.css" %}
+{% include "column-summaries.css" %}
+{% include "dataframe-sample.css" %}
+{% include "summary-statistics.css" %}
+{% include "tabs.css" %}
+{% include "toggletip.css" %}
+{% include "column-filter.css" %}

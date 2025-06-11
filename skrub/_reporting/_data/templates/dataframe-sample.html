@@ -1,0 +1,113 @@
+{% macro kbd(text) %}
+<span class="keyboard-key">{{ text }}</span>
+{% endmacro %}
+
+{% macro add_spanned(cell) %}
+{% set rowspan = cell['rowspan'] or 1 %}
+{% set colspan = cell['colspan'] or 1 %}
+{% for i in range(cell['i'], cell['i'] + rowspan) %}
+{% for j in range(cell['j'], cell['j'] + colspan) %}
+data-spans__{{ i }}__{{ j }}
+{% endfor %}
+{% endfor %}
+{% endmacro %}
+
+<article class="wrapper" data-show-on="NON_EMPTY_COLUMN_FILTER_SELECTED"
+    data-hide-on="EMPTY_COLUMN_FILTER_SELECTED">
+    {% include "table-bar.html" %}
+
+    <div class="horizontal-scroll" tabindex="-1">
+        <table class="pure-table pure-table-striped table-with-selectable-cells"
+               data-manager="SampleTable"
+        data-start-i="{{ summary['sample_table']['start_i'] }}"
+        data-stop-i="{{ summary['sample_table']['stop_i'] }}"
+        data-start-j="{{ summary['sample_table']['start_j'] }}"
+        data-stop-j="{{ summary['sample_table']['stop_j'] }}"
+        >
+            {% for table_part in summary["sample_table"]["parts"] %}
+            {% if table_part["name"] == "ellipsis" %}
+            <tbody class="elided-table-part">
+                <tr>
+                    {% for i in range(summary["sample_table"]["start_j"], summary["sample_table"]["stop_j"])%}
+                    <td
+                        {% if i >= 0%}
+                        data-manager="FilterableColumn"
+                        data-column-idx="{{ i }}"
+                        data-role="ellipsis"
+                        {% endif %}
+                        ><div class="ellipsis-icon">{% include "icons/three-dots-vertical.svg" %}</div></td>
+                    {% endfor %}
+                </tr>
+            </tbody>
+            {% else %}
+            <{{ table_part['elem'] }}>
+            {% for row in table_part["rows"] %}
+            <tr>
+                {% for cell in row %}
+                {% set is_padding = cell["role"] == "padding" %}
+                <{{ cell['elem'] }}
+                id="{{ random_string() }}"
+                class="table-cell elided-short {{ 'clickable' if not is_padding }}"
+                {% if 'role' in cell %}
+                data-role="{{ cell['role'] }}"
+                {% endif %}
+                {% if not is_padding %}
+                data-manager="SampleTableCell {{ 'FilterableColumn' if 'column_idx' in cell }}"
+                {% endif %}
+                data-i="{{ cell['i'] }}"
+                data-j="{{ cell['j'] }}"
+                {{ add_spanned(cell) }}
+                rowspan="{{ cell['rowspan'] or 1 }}"
+                colspan="{{ cell['colspan'] or 1 }}"
+                data-value-repr="{{ cell['value'].__repr__() }}"
+                data-value-str="{{ cell['value'].__str__() }}"
+                {% if 'column_idx' in cell %}
+                data-column-idx="{{ cell['column_idx'] }}"
+                {% endif %}
+                >
+                {%- if not (cell["value"]) | is_null -%}
+                {{ cell["value"] }}
+                {%-  if cell["role"] == "columns-level-name" -%}
+                <div class="arrow-icon">{% include "icons/arrow-right.svg" %}</div>
+                {%- endif -%}
+                {%- endif -%}
+                </{{ cell['elem'] }}>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+            </{{ table_part['elem'] }}>
+            {% endif %}
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="table-footer">
+    <div>
+        <strong>{{ summary.n_rows | format_number }}</strong> rows ✕
+        <strong data-manager="ColumnFilterMatchCount"
+            data-test="n-columns-display">{{ summary.n_columns | format_number }}</strong> columns.
+    </div>
+    <div class="keyboard-hints">
+        <div>
+            {{ kbd("Ctrl-C") }}
+            {{ kbd("←") }}
+            {{ kbd("↑") }}
+            {{ kbd("↓") }}
+            {{ kbd("→") }}
+            {{ kbd("Esc") }}
+        </div>
+    </div>
+    </div>
+
+
+    <div class="column-summary-group columns-in-sample-tab">
+        {% set in_sample_tab=True %}
+        {% for column in summary.columns %}
+        {% set col_id="col_{}_in_sample_tab".format(loop.index0) %}
+        {% include "column-summary.html" %}
+        {% endfor %}
+        {% set in_sample_tab=False %}
+    </div>
+</article>
+
+{% include "no-filter-matches.html" %}

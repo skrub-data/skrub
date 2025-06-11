@@ -1,151 +1,332 @@
 """
-Implements the Joiner, a transformer that allows
-multiple fuzzy joins on a table.
+The Joiner provides fuzzy joining as a scikit-learn transformer.
 """
 
-from typing import Literal
+from functools import partial
 
 import numpy as np
-import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+import sklearn
+from sklearn.base import BaseEstimator, TransformerMixin, clone
+from sklearn.compose import make_column_transformer
+from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.utils.fixes import parse_version
+from sklearn.utils.validation import check_is_fitted
 
-from skrub._fuzzy_join import fuzzy_join
+from . import _dataframe as sbd
+from . import _join_utils, _matching, _utils
+from . import selectors as s
+from ._check_input import CheckInputDataFrame
+from ._datetime_encoder import DatetimeEncoder
+from ._table_vectorizer import TableVectorizer
+from ._to_str import ToStr
+from ._wrap_transformer import wrap_transformer
+
+DEFAULT_STRING_ENCODER = make_pipeline(
+    FunctionTransformer(partial(sbd.fill_nulls, value="")),
+    ToStr(),
+    HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)),
+    TfidfTransformer(),
+)
+_DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
+
+
+_MATCHERS = {
+    "random_pairs": _matching.RandomPairs,
+    "second_neighbor": _matching.OtherNeighbor,
+    "self_join_neighbor": _matching.SelfJoinNeighbor,
+    "no_rescaling": _matching.Matching,
+}
+DEFAULT_REF_DIST = "random_pairs"
+
+
+def _compat_df(df):
+    # In scikit-learn versions older than 1.4, the ColumnTransformer fails on
+    # polars dataframes. Here it is only applied as an internal step on the
+    # joining columns, and we get the output as a numpy array or sparse matrix.
+    # Therefore on old scikit-learn versions we convert the joining columns to
+    # pandas before vectorizing them.
+    if parse_version(sklearn.__version__) < parse_version("1.4"):
+        return sbd.to_pandas(df)
+    return df
+
+
+def _make_vectorizer(table, string_encoder, rescale):
+    """Construct the transformer used to vectorize joining columns.
+
+    The resulting ColumnTransformer applies TFIDF transformation to string
+    columns, DatetimeEncoder to datetimes and passthrough to numeric columns.
+    In addition if `rescale` is `True`, a StandardScaler is applied to
+    numeric and datetime columns.
+    """
+    skrubber = TableVectorizer(
+        datetime="passthrough",
+        low_cardinality="passthrough",
+        high_cardinality="passthrough",
+        numeric="passthrough",
+    )
+    table = skrubber.fit_transform(table)
+    cols = skrubber.kind_to_columns_
+    transformers = [
+        (clone(string_encoder), c)
+        for c in cols["high_cardinality"] + cols["low_cardinality"]
+    ]
+    if cols["numeric"]:
+        transformers.append(
+            (StandardScaler() if rescale else "passthrough", cols["numeric"])
+        )
+    if cols["datetime"]:
+        transformers.append(
+            (
+                make_pipeline(
+                    wrap_transformer(_DATETIME_ENCODER, s.all()),
+                    StandardScaler() if rescale else "passthrough",
+                ),
+                cols["datetime"],
+            )
+        )
+    return make_pipeline(skrubber, make_column_transformer(*transformers))
 
 
 class Joiner(TransformerMixin, BaseEstimator):
-    """Augment a main table by automatically joining multiple auxiliary tables on it.
+    """Augment features in a main table by fuzzy-joining an auxiliary table to it.
 
-    Given a list of tables and key column names,
-    fuzzy join them to the main table.
+    This transformer is initialized with an auxiliary table `aux_table`. It
+    transforms a main table by joining it, with approximate ("fuzzy") matching,
+    to the auxiliary table. The output of `transform` has the same rows as
+    the main table (i.e. as the argument passed to `transform`), but each row
+    is augmented with values from the best match in the auxiliary table.
 
-    The principle is as follows:
+    To identify the best match for each row, values from the matching columns
+    (`main_key` and `aux_key`) are vectorized, i.e. represented by vectors of
+    continuous values. Then, the Euclidean distances between these vectors are
+    computed to find, for each main table row, its nearest neighbor within the
+    auxiliary table.
 
-    1. The main table and the key column name are provided at initialisation.
-    2. The auxiliary tables are provided for fitting, and will be joined
-       sequentially when Joiner.transform is called.
+    Optionally, a maximum distance threshold, `max_dist`, can be set. Matches
+    between vectors that are separated by a distance (strictly) greater than
+    `max_dist` will be rejected. We will consider that main table rows that
+    are farther than `max_dist` from their nearest neighbor do not have a
+    matching row in the auxiliary table, and the output will contain nulls for
+    the entries that would normally have come from the auxiliary table (as in a
+    traditional left join).
 
-    It is advised to use hyperparameter tuning tools such as GridSearchCV
-    to determine the best `match_score` parameter, as this can significantly
-    improve your results.
-    (see example 'Fuzzy joining dirty tables with the Joiner'
-    for an illustration)
+    To make it easier to set a `max_dist` threshold, the distances are
+    rescaled by dividing them by a reference distance, which can be chosen with
+    `ref_dist`. The default is `'random_pairs'`. The possible choices are:
+
+    'random_pairs'
+        Pairs of rows are sampled randomly from the auxiliary table and their
+        distance is computed. The reference distance is the first quartile of
+        those distances.
+
+    'second_neighbor'
+        The reference distance is the distance to the *second* nearest neighbor
+        in the auxiliary table.
+
+    'self_join_neighbor'
+        Once the match candidate (i.e. the nearest neighbor from the auxiliary
+        table) has been found, we find its nearest neighbor in the auxiliary
+        table (excluding itself). The reference distance is the distance that
+        separates those 2 auxiliary rows.
+
+    'no_rescaling'
+        The reference distance is 1.0, i.e. no rescaling of the distances is
+        applied.
 
     Parameters
     ----------
-    tables : 2-tuple or list of 2-tuple (:obj:`~pandas.DataFrame`, str)
-        List of (table, column name) tuples, the tables to join.
-        Can be a tuple if only one table to join.
-    main_key : str or list of str
-        The key column names from the main table on which the join will
-        be performed.
-    match_score : float, default=0
-        Distance score between the closest matches that will be accepted.
-        In a [0, 1] interval. 1 means that only a perfect match will be
-        accepted, and zero means that the closest match will be accepted,
-        no matter how distant.
-        For numerical joins, this defines the maximum Euclidean distance
-        between the matches.
-    analyzer : {'word', 'char', 'char_wb'}, default=`char_wb`
-        Analyzer parameter for the CountVectorizer used for
-        the string similarities.
-        Describes whether the matrix `V` to factorize should be made of
-        word counts or character n-gram counts.
-        Option `char_wb` creates character n-grams only from text inside word
-        boundaries; n-grams at the edges of words are padded with space.
-    ngram_range : 2-tuple of int, default=(2, 4)
-        The lower and upper boundaries of the range of n-values for different
-         n-grams used in the string similarity. All values of `n` such
-         that ``min_n <= n <= max_n`` will be used.
+    aux_table : dataframe
+        The auxiliary table, which will be fuzzy-joined to the main table when
+        calling `transform`.
+    key : str or list of str, default=None
+        The column names to use for both `main_key` and `aux_key` when they
+        are the same. Provide either `key` or both `main_key` and `aux_key`.
+    main_key : str or list of str, default=None
+        The column names in the main table on which the join will be performed.
+        Can be a string if joining on a single column.
+        If `None`, `aux_key` must also be `None` and `key` must be provided.
+    aux_key : str or list of str, default=None
+        The column names in the auxiliary table on which the join will
+        be performed. Can be a string if joining on a single column.
+        If `None`, `main_key` must also be `None` and `key` must be provided.
+    suffix : str, default=""
+        Suffix to append to the `aux_table`'s column names. You can use it
+        to avoid duplicate column names in the join.
+    max_dist : int, float, `None` or `np.inf`, default=`np.inf`
+        Maximum acceptable (rescaled) distance between a row in the
+        `main_table` and its nearest neighbor in the `aux_table`. Rows that
+        are farther apart are not considered to match. By default, the distance
+        is rescaled so that a value between 0 and 1 is typically a good choice,
+        although rescaled distances can be greater than 1 for some choices of
+        `ref_dist`. `None`, `"inf"`, `float("inf")` or `numpy.inf`
+        mean that no matches are rejected.
+    ref_dist : reference distance for rescaling, default='random_pairs'
+        Options are {"random_pairs", "second_neighbor", "self_join_neighbor",
+        "no_rescaling"}. See above for a description of each option. To
+        facilitate the choice of `max_dist`, distances between rows in
+        `main_table` and their nearest neighbor in `aux_table` will be
+        rescaled by this reference distance.
+    string_encoder : scikit-learn transformer used to vectorize text columns
+        By default a `HashingVectorizer` combined with a `TfidfTransformer`
+        is used. Here we use raw TF-IDF features rather than transforming them
+        for example with `GapEncoder` or `MinHashEncoder` because it is
+        faster, these features are only used to find nearest neighbors and not
+        used by downstream estimators, and distances between TF-IDF vectors
+        have a somewhat simpler interpretation.
+    add_match_info : bool, default=True
+        Insert some columns whose names start with `skrub_Joiner` containing
+        the distance, rescaled distance and whether the rescaled distance is
+        above the threshold. Those values can be helpful for an estimator that
+        uses the joined features, or to inspect the result of the join and set
+        a `max_dist` threshold.
+
+    Attributes
+    ----------
+    max_dist_ : the maximum distance for a match to be accepted
+        Equal to the parameter `max_dist` except that `"inf"` and `None`
+        are mapped to `np.inf` (i.e. accept all matches).
+
+    vectorizer_ : scikit-learn ColumnTransformer
+        The fitted transformer used to transform the matching columns into
+        numerical vectors.
 
     See Also
     --------
-    fuzzy_join :
-        Join two tables (dataframes) based on approximate column matching.
+    AggJoiner :
+        Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
-    get_ken_embeddings :
-        Download vector embeddings for many common entities (cities,
-        places, people...).
+    fuzzy_join :
+        Join two tables (dataframes) based on approximate column matching. This
+        is the same functionality as provided by the `Joiner` but exposed as
+        a function rather than a transformer.
 
     Examples
     --------
-    >>> X = pd.DataFrame(['France', 'Germany', 'Italy'],
-                         columns=['Country'])
-    >>> X
-    Country
-    0   France
-    1  Germany
-    2    Italy
-
-    >>> aux_table_1 = pd.DataFrame([['Germany', 84_000_000],
-                                    ['France', 68_000_000],
-                                    ['Italy', 59_000_000]],
-                                    columns=['Country', 'Population'])
-    >>> aux_table_1
-       Country  Population
-    0  Germany    84000000
-    1   France    68000000
-    2    Italy    59000000
-
-    >>> aux_table_2 = pd.DataFrame([['French Republic', 2937],
-                                    ['Italy', 2099],
-                                    ['Germany', 4223],
-                                    ['UK', 3186]],
-                                    columns=['Country name', 'GDP (billion)'])
-    >>> aux_table_2
-        Country name  GDP (billion)
-    0   French Republic      2937
-    1        Italy           2099
-    2      Germany           4223
-    3           UK           3186
-
-    >>> aux_table_3 = pd.DataFrame([['France', 'Paris'],
-                                    ['Italia', 'Rome'],
-                                    ['Germany', 'Berlin']],
-                                    columns=['Countries', 'Capital'])
-    >>> aux_table_3
-      Countries Capital
-    0    France   Paris
-    1     Italia   Rome
-    2   Germany  Berlin
-
-    >>> aux_tables = [(aux_table_1, "Country"),
-                      (aux_table_2, "Country name"),
-                      (aux_table_3, "Countries")]
-
-    >>> joiner = Joiner(tables=aux_tables, main_key='Country')
-
-    >>> augmented_table = joiner.fit_transform(X)
-    >>> augmented_table
-        Country Country_aux  Population Country name  GDP (billion) Countries Capital
-    0   France      France    68000000  French Republic       2937    France   Paris
-    1   Germany     Germany   84000000      Germany           4223   Germany   Berlin
-    2    Italy       Italy    59000000        Italy           2099    Italia   Rome
+    >>> import pandas as pd
+    >>> from skrub import Joiner
+    >>> main_table = pd.DataFrame({"Country": ["France", "Italia", "Georgia"]})
+    >>> aux_table = pd.DataFrame( {"Country": ["Germany", "France", "Italy"],
+    ...                            "Capital": ["Berlin", "Paris", "Rome"]} )
+    >>> main_table
+      Country
+    0  France
+    1  Italia
+    2   Georgia
+    >>> aux_table
+       Country Capital
+    0  Germany  Berlin
+    1   France   Paris
+    2    Italy    Rome
+    >>> joiner = Joiner(
+    ...     aux_table,
+    ...     key="Country",
+    ...     suffix="_aux",
+    ...     max_dist=0.8,
+    ...     add_match_info=False,
+    ... )
+    >>> joiner.fit_transform(main_table)
+      Country      Country_aux      Capital_aux
+    0  France           France            Paris
+    1  Italia            Italy             Rome
+    2  Georgia              NaN              NaN
     """
+
+    _match_info_keys = ["distance", "rescaled_distance", "match_accepted"]
+    _match_info_key_renaming = {k: f"skrub_Joiner_{k}" for k in _match_info_keys}
+    match_info_columns = list(_match_info_key_renaming.values())
 
     def __init__(
         self,
-        tables: tuple[pd.DataFrame, str] | list[tuple[pd.DataFrame, str]],
-        main_key: str | list[str],
+        aux_table,
         *,
-        match_score: float = 0.0,
-        analyzer: Literal["word", "char", "char_wb"] = "char_wb",
-        ngram_range: tuple[int, int] = (2, 4),
+        key=None,
+        main_key=None,
+        aux_key=None,
+        suffix="",
+        max_dist=np.inf,
+        ref_dist=DEFAULT_REF_DIST,
+        string_encoder=DEFAULT_STRING_ENCODER,
+        add_match_info=True,
     ):
-        self.tables = tables
+        self.aux_table = aux_table
+        self.key = key
         self.main_key = main_key
-        self.match_score = match_score
-        self.analyzer = analyzer
-        self.ngram_range = ngram_range
+        self.aux_key = aux_key
+        self.suffix = suffix
+        self.max_dist = max_dist
+        self.ref_dist = ref_dist
+        self.string_encoder = (
+            clone(string_encoder)
+            if string_encoder is DEFAULT_STRING_ENCODER
+            else string_encoder
+        )
+        self.add_match_info = add_match_info
 
-    def fit(self, X: pd.DataFrame, y=None) -> "Joiner":
+    def _check_max_dist(self):
+        if (
+            self.max_dist is None
+            or isinstance(self.max_dist, str)
+            and self.max_dist == "inf"
+        ):
+            self.max_dist_ = np.inf
+        else:
+            self.max_dist_ = self.max_dist
+
+    def _check_ref_dist(self):
+        if self.ref_dist not in _MATCHERS:
+            raise ValueError(
+                f"'ref_dist' should be one of {list(_MATCHERS.keys())}. Got"
+                f" {self.ref_dist!r}"
+            )
+        self._matching = _MATCHERS[self.ref_dist]()
+
+    def fit_transform(self, X, y=None):
         """Fit the instance to the main table.
-
-        In practice, just checks if the key columns in X,
-        the main table, and in the auxiliary tables exist.
 
         Parameters
         ----------
-        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
+        X : dataframe
+            The main table, to be joined to the auxiliary ones.
+        y : None
+            Unused, only here for compatibility.
+
+        Returns
+        -------
+        DataFrame
+            The final joined table.
+        """
+        self._aux_table = CheckInputDataFrame().fit_transform(self.aux_table)
+        self._main_check_input = CheckInputDataFrame()
+        X = self._main_check_input.fit_transform(X)
+        self._check_ref_dist()
+        self._check_max_dist()
+        self._main_key, self._aux_key = _join_utils.check_key(
+            self.main_key, self.aux_key, self.key
+        )
+        _join_utils.check_missing_columns(X, self._main_key, "'X' (the main table)")
+        _join_utils.check_missing_columns(self._aux_table, self._aux_key, "'aux_table'")
+        self._right_cols_renaming = f"{{}}{self.suffix}".format
+        self.vectorizer_ = _make_vectorizer(
+            s.select(self._aux_table, s.cols(*self._aux_key)),
+            self.string_encoder,
+            rescale=self.ref_dist != "no_rescaling",
+        )
+        aux = self.vectorizer_.fit_transform(
+            _compat_df(s.select(self._aux_table, s.cols(*self._aux_key)))
+        )
+        self._matching.fit(aux)
+        result = self._transform(X, y)
+        self.all_outputs_ = sbd.column_names(result)
+        return result
+
+    def fit(self, X, y=None):
+        """Fit the instance to the main table.
+
+        Parameters
+        ----------
+        X : DataFrame
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
@@ -153,60 +334,56 @@ class Joiner(TransformerMixin, BaseEstimator):
         Returns
         -------
         Joiner
-            Fitted Joiner instance (self).
+            Fitted :class:`Joiner`instance (self).
         """
-
-        main_key_list = np.atleast_1d(self.main_key).tolist()
-
-        for col in main_key_list:
-            if col not in X.columns:
-                raise ValueError(
-                    f"Main key {col!r} not found in columns of X:"
-                    f" {X.columns.tolist()}. "
-                )
-
-        if isinstance(self.tables[0], tuple):
-            self.tables_ = self.tables
-        else:
-            self.tables_ = list()
-            self.tables_.append(tuple(self.tables))
-
-        for table_idx, (df, cols) in enumerate(self.tables_):
-            cols = np.atleast_1d(cols).tolist()
-            for col in cols:
-                if col not in df.columns:
-                    raise ValueError(
-                        f"Column key {col!r} not found in columns of "
-                        f"table index {table_idx}: {df.columns.tolist()}. "
-                    )
+        _ = self.fit_transform(X, y)
         return self
 
-    def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
+    def transform(self, X, y=None):
         """Transform `X` using the specified encoding scheme.
 
         Parameters
         ----------
-        X : :obj:`~pandas.DataFrame`, shape [n_samples, n_features]
+        X : dataframe
             The main table, to be joined to the auxiliary ones.
         y : None
             Unused, only here for compatibility.
 
         Returns
         -------
-        :obj:`~pandas.DataFrame`
+        dataframe
             The final joined table.
         """
+        check_is_fitted(self, "vectorizer_")
+        X = self._main_check_input.transform(X)
+        result = self._transform(X)
+        return sbd.set_column_names(result, self.all_outputs_)
 
-        for df, cols in self.tables_:
-            aux_table = df
-            X = fuzzy_join(
-                X,
-                aux_table,
-                left_on=self.main_key,
-                right_on=cols,
-                match_score=self.match_score,
-                analyzer=self.analyzer,
-                ngram_range=self.ngram_range,
-                suffixes=("", "_aux"),
-            )
-        return X
+    def _transform(self, X, y=None):
+        main = sbd.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
+        main = self.vectorizer_.transform(_compat_df(main))
+        match_result = self._matching.match(main, self.max_dist_)
+        matching_col = match_result["index"].copy()
+        matching_col[~match_result["match_accepted"]] = -1
+        token = _utils.random_string()
+        left_key_name = f"skrub_left_key_{token}"
+        right_key_name = f"skrub_right_key_{token}"
+        left = sbd.with_columns(X, **{left_key_name: matching_col})
+        right = sbd.with_columns(
+            self._aux_table,
+            **{right_key_name: np.arange(sbd.shape(self._aux_table)[0], dtype="int64")},
+        )
+        join = _join_utils.left_join(
+            left,
+            right,
+            left_on=left_key_name,
+            right_on=right_key_name,
+            rename_right_cols=self._right_cols_renaming,
+        )
+        join = s.select(join, ~s.cols(left_key_name))
+        if self.add_match_info:
+            match_info_dict = {}
+            for info_key, info_col_name in self._match_info_key_renaming.items():
+                match_info_dict[info_col_name] = match_result[info_key]
+            join = sbd.with_columns(join, **match_info_dict)
+        return join

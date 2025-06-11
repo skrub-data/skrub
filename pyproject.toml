@@ -1,10 +1,213 @@
 [build-system]
-# Minimum requirements for the build system to execute.
-requires = [
-    "setuptools",
-    "wheel",
-]
+requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "skrub"
+dynamic = ["version", "readme"]
+description = "Machine learning with dataframes"
+authors = [
+    {name = "Riccardo Cappuzzo"},
+    {name = "Jerome Dockes"},
+    {name = "Guillaume Lemaitre"},
+    {name = "Vincent Maladiere"},
+    {name = "Gael Varoquaux"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.23.5",
+    "pandas>=1.5.3",
+    "scikit-learn>=1.2.1",
+    "scipy>=1.9.3",
+    "jinja2>=3.1.2",
+    "matplotlib>=3.4.3",
+    "requests>=2.25.0",
+    "pydot",
+]
+
+[tool.setuptools.dynamic]
+version = { file = "skrub/VERSION.txt" }
+readme = { file = "README.rst" }
+
+[project.optional-dependencies]
+dev = [
+    "ipykernel",
+    "ipython",
+    "jupyterlab",
+
+    # doc
+    "jupyterlite-sphinx",
+    "jupyterlite-pyodide-kernel",
+    "numpydoc",
+    "pydata-sphinx-theme",
+    "seaborn",
+    "sphinx",
+    "sphinx-copybutton",
+    "sphinx-gallery",
+    "sphinxext-opengraph",
+    "sphinx-autosummary-accessors",
+    "statsmodels",
+
+    # lint
+    "black==23.3.0",
+    "ruff==0.4.8",
+    "pre-commit",
+
+    # test
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+
+    # optional
+    "pyarrow",
+    "polars",
+    "plotly",
+]
+transformers = [
+    "sentence-transformers",
+]
+
+[project.urls]
+Homepage = "https://skrub-data.org/"
+Source = "https://github.com/skrub-data/skrub"
+Issues = "https://github.com/skrub-data/skrub/issues"
+
+[tool.setuptools]
+packages = ["skrub"]
+
+[tool.pixi.project]
+channels = ["conda-forge", "pytorch"]
+platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
+
+[tool.pixi.dependencies]
+numpy = ">=1.23.5"
+pandas = ">=1.5.3"
+scikit-learn = ">=1.2.1"
+scipy = ">=1.9.3"
+jinja2 = ">=3.1.2"
+matplotlib = ">=3.4.3"
+pydot = "*"
+requests = ">=2.25.0"
+
+[tool.pixi.feature.doc.dependencies]
+jupyterlite-sphinx = "*"
+jupyterlite-pyodide-kernel = "*"
+matplotlib = "*"
+pydot = "*"
+numpydoc = "*"
+pydata-sphinx-theme = "*"
+plotly = "*"
+seaborn = "*"
+sphinx = "*"
+sphinx-copybutton = "*"
+sphinx-gallery = "*"
+sphinxext-opengraph = "*"
+sphinx-autosummary-accessors = ">=2025.3.1,<2026"
+statsmodels = "*"
+
+[tool.pixi.feature.lint.dependencies]
+black = "==23.3.0"
+ruff = "==0.4.8"
+pre-commit = "*"
+
+[tool.pixi.feature.optional.dependencies]
+pyarrow = "*"
+polars = "*"
+plotly = "*"
+
+[tool.pixi.feature.transformers]
+# pytorch is not anymore released on osx-64 platform
+platforms = ["linux-64", "osx-arm64", "win-64"]
+
+[tool.pixi.feature.transformers.dependencies]
+pytorch = { version = ">=2.4.1,<3" }
+transformers = "*"
+sentence-transformers = ">=3.0,<5"
+
+[tool.pixi.feature.test.dependencies]
+numpydoc = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+
+[tool.pixi.feature.dev.dependencies]
+ipykernel = "*"
+ipython = "*"
+jupyterlab = "*"
+
+[tool.pixi.pypi-dependencies]
+skrub = { path = ".", editable = true }
+
+[tool.pixi.feature.min-dependencies.dependencies]
+numpy = "==1.23.5"
+pandas = "==1.5.3"
+scikit-learn = "==1.2.1"
+scipy = "==1.9.3"
+jinja2 = "==3.1.2"
+matplotlib = "==3.4.3"
+pydot = "*"
+requests = "==2.25.0"
+
+[tool.pixi.feature.min-optional-dependencies.dependencies]
+pyarrow = "==15.0.2"
+polars = "==0.20.15"
+plotly = "*"
+
+[tool.pixi.feature.py309.dependencies]
+python = "~=3.9.0"
+
+[tool.pixi.feature.py311.dependencies]
+python = "~=3.11.0"
+
+[tool.pixi.feature.py312.dependencies]
+python = "~=3.12.0"
+
+[tool.pixi.feature.py313.dependencies]
+python = "~=3.13.0"
+
+[tool.pixi.feature.doc.tasks]
+build-doc = { cmd = "make html", cwd = "doc" }
+build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
+clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
+
+[tool.pixi.feature.lint.tasks]
+lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
+
+[tool.pixi.feature.check-pyi-diff.tasks]
+# Note: this only works on Unix
+check = { cmd = "python build_tools/generate_expressions_stub.py | diff - skrub/_expressions/_expressions.pyi" }
+
+[tool.pixi.feature.test.tasks]
+test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
+test-user-guide = { cmd = "pytest doc/*.rst" }
+
+[tool.pixi.environments]
+lint = ["lint"]
+check-pyi-diff = ["check-pyi-diff"]
+doc = ["optional", "doc", "transformers"]
+test = ["optional", "test"]
+dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
+ci-py309-min-deps = ["py309", "min-dependencies", "test"]
+ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
+ci-py311-transformers = ["py311", "transformers", "test"]
+ci-py312-latest-deps = ["py312", "test"]
+ci-py312-latest-optional-deps = ["py312", "optional", "test"]
+ci-py313-latest-deps = ["py313", "test"]
+ci-py313-latest-optional-deps = ["py313", "optional", "test"]
 
 [tool.black]
 line-length = 88
@@ -24,17 +227,71 @@ exclude = '''
 )/
 '''
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+# max line length for black
+line-length = 88
+target-version = "py38"
+exclude=[
+    ".git",
+    "__pycache__",
+    "dist",
+    "doc/_build",
+    "doc/auto_examples",
+    "build",
+]
+
+[tool.ruff.lint]
+# all rules can be found here: https://beta.ruff.rs/docs/rules/
+select = ["E", "F", "W", "I"]
+ignore=[
+    # space before : (needed for how black formats slicing)
+    "E203",
+    # do not assign a lambda expression, use a def
+    "E731",
+    # do not use variables named 'l', 'O', or 'I'
+    "E741",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# It's fine not to put the import at the top of the file in the examples
+# folder.
+"examples/*"=["E402"]
+"doc/conf.py"=["E402"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
     # Turn deprecation warnings into errors
     "error::FutureWarning",
     "error::DeprecationWarning",
-    "error::numpy.VisibleDeprecationWarning",
 
     # Ignore warning from np.in1d since the future behavior is already the desired
     # behavior. TODO remove when numpy min version >= 1.25.
     'ignore:elementwise\ comparison\ failed:FutureWarning',
+    # TODO remove when pandas min version >= 2.2.0
+    'ignore:.*utcfromtimestamp\(\) is deprecated.*:DeprecationWarning',
+    # TODO remove when joblib min version >= 1.4.0
+    'ignore:.*ast\.Num is deprecated.*:DeprecationWarning',
+    # TODO remove when joblib min version >= 1.4.0
+    'ignore:.*ast\.NameConstant is deprecated.*:DeprecationWarning',
+    # TODO remove when joblib min version >= 1.4.0
+    'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
+    # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
+    'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
+    # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
+    # should be addressed in pandas
+    'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
+    'ignore:.*distutils Version classes are deprecated.*',
+    'ignore:.*`resume_download` is deprecated.*',
+    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+    'ignore:The current process just got forked.*',
+    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
+addopts = "--doctest-modules"
+doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
+
+[tool.codespell]
+# Ref: https://github.com/codespell-project/codespell#using-a-config-file
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*'
+check-hidden = true
+# ignore-regex = ''
+ignore-words-list = 'ans,serie,fulfilment'

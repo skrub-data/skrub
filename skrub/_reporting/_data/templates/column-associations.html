@@ -1,0 +1,56 @@
+<article class="margin-t-s flex-reverse wrapper gap-l">
+    {% if summary["associations_skipped"] %}
+
+    <div id="skipped-associations-alert" class="alert-info-dismissable flex space-between">
+        <div class="alert-content shrinkable-text">
+            Computing pairwise associations was skipped because the dataframe has many columns.
+            See TableReport's <code>max_association_columns</code> parameter.
+        </div>
+    </div>
+
+    {% elif summary["top_associations"] %}
+
+    <div class="horizontal-scroll padding-b-s">
+    <table class="pure-table">
+        <thead>
+            <tr>
+                <th scope="col">Column 1</th>
+                <th scope="col">Column 2</th>
+                <th scope="col"><a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a></th>
+                <th scope="col"><a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson's Correlation</a></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for association in summary["top_associations"] %}
+            <tr>
+                <td class="elided">{{ association["left_column_name"] }}</td>
+                <td class="elided">{{ association["right_column_name"] }}</td>
+                <td
+                    {% if association["cramer_v"] is gt high_association_threshold %}
+                    class="critical"
+                    {%- endif -%}
+                    >
+                    {{ association["cramer_v"] | format_number }}
+                </td>
+                <td>
+                    {%- if not (association["pearson_corr"] | is_null) -%}
+                    {{ association["pearson_corr"] | format_number }}
+                    {%- endif -%}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+    <div class="text shrinkable-text">
+        The table below shows the strength of association between the most similar columns in the dataframe.
+        <a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a> statistic is a number between 0 and 1.
+        When it is close to 1 the columns are strongly associated — they contain similar information.
+        In this case, one of them may be redundant and for some models (such as linear models) it might be beneficial to remove it.
+    </div>
+
+    {% else %}
+    No strong associations between any pair of columns were identified by a quick screening of a subsample of the dataframe.
+    {% endif %}
+</article>

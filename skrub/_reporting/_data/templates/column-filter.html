@@ -1,0 +1,14 @@
+<div class="column-filter" data-manager="InvisibleInAssociationsTabPanel">
+    <select data-manager="ColumnFilter"
+            data-all-filters-base64="{{ base64_column_filters | safe }}"
+            data-test="column-filter-select"
+            autocomplete="off">
+        <optgroup label="Select columns to show:">
+        <option value="all()" selected disabled hidden>Filter columns</option>
+        {% for filter_name in column_filters %}
+        <option value="{{ filter_name }}">
+            {{ column_filters[filter_name]["display_name"] }}</option>
+        {% endfor %}
+        </optgroup>
+    </select>
+</div>

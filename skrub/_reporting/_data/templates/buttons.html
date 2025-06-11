@@ -1,0 +1,27 @@
+{% macro copybutton(target) %}
+<button
+    class="copybutton copybutton-left"
+    data-manager="CopyButton"
+    type="button"
+    data-target-id="{{ target }}">
+    {% include "icons/copy.svg" %}
+    {% include "icons/check-lg.svg" %}
+    <div class="copied-message">Copied!</div>
+</button>
+{% endmacro %}
+
+{% macro closebutton() %}
+<button class="close-card-button"
+        type="button"
+        data-role="close-button">
+    {% include "icons/x-lg.svg" %}
+</button>
+{% endmacro %}
+
+{% macro dismissbutton() %}
+<button class="alert-dismiss-button"
+        type="button"
+        data-role="dismiss-button">
+        {% include "icons/x-lg.svg" %}
+</button>
+{% endmacro %}

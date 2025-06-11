@@ -6,7 +6,7 @@ When the data comprises common entities (cities,
 companies or famous people), bringing new information assembled from external
 sources may be the key to improving the analysis.
 
-Embeddings, or vectorial representations of entities, are a conveniant way to
+Embeddings, or vectorial representations of entities, are a convenient way to
 capture and summarize the information on an entity.
 Relational data embeddings capture all common entities from Wikipedia. [#]_
 These will be called `KEN embeddings` in the following example.
@@ -44,18 +44,16 @@ improve our results.
 # Let's retrieve the dataset:
 import pandas as pd
 
-X = pd.read_csv(
-    "https://raw.githubusercontent.com/William2064888/vgsales.csv/main/vgsales.csv",
-    sep=";",
-    on_bad_lines="skip",
-)
-# Shuffle the data
-X = X.sample(frac=1, random_state=11, ignore_index=True)
+from skrub import datasets
+
+data = datasets.fetch_videogame_sales()
+
+X = data.X
 X.head(3)
 
 ###############################################################################
 # Our goal will be to predict the sales amount (y, our target column):
-y = X["Global_Sales"]
+y = data.y
 y
 
 
@@ -81,9 +79,9 @@ plt.show()
 # Before moving further, let's carry out some basic preprocessing:
 
 # Get a mask of the rows with missing values in "Publisher" and "Global_Sales"
-mask = X.isna()["Publisher"] | X.isna()["Global_Sales"]
+mask = X["Publisher"].isna() | y.isna()
 # And remove them
-X.dropna(subset=["Publisher", "Global_Sales"], inplace=True)
+X = X[~mask]
 y = y[~mask]
 
 ###############################################################################
@@ -137,7 +135,6 @@ embedding_games = fetch_ken_embeddings(
 embedding_publisher = fetch_ken_embeddings(
     search_types="game_development_companies|game_companies|game_publish",
     embedding_table_id="games",
-    suffix="_aux",
 )
 
 # We keep the 200 embeddings column names in a list (for the |Pipeline|):
@@ -159,8 +156,8 @@ emb_columns2 = [f"X{j}_aux" for j in range(n_dim)]
 # column "Publisher"
 from skrub import Joiner
 
-fa1 = Joiner(tables=(embedding_games, "Entity"), main_key="Name")
-fa2 = Joiner(tables=(embedding_publisher, "Entity"), main_key="Publisher")
+fa1 = Joiner(embedding_games, aux_key="Entity", main_key="Name")
+fa2 = Joiner(embedding_publisher, aux_key="Entity", main_key="Publisher", suffix="_aux")
 
 X_full = fa1.fit_transform(X)
 X_full = fa2.fit_transform(X_full)
@@ -188,7 +185,7 @@ ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
 encoder = make_column_transformer(
     ("passthrough", ["Year"]),
     (ohe, ["Genre"]),
-    (min_hash, ["Platform"]),
+    (min_hash, "Platform"),
     remainder="drop",
 )
 
@@ -203,14 +200,18 @@ pipeline = make_pipeline(encoder, hgb)
 
 ###############################################################################
 # The |Pipeline| can now be readily applied to the dataframe for prediction:
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import KFold, cross_validate
 
-# We will save the results in a dictionnary:
+# We will save the results in a dictionary:
 all_r2_scores = dict()
 all_rmse_scores = dict()
 
+# The dataset is ordered by rank (most sales first so we need to shuffle before
+# splitting into cross-validation folds)
+cv = KFold(shuffle=True, random_state=0)
+
 cv_results = cross_validate(
-    pipeline, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
+    pipeline, X_full, y, scoring=["r2", "neg_root_mean_squared_error"], cv=cv
 )
 
 all_r2_scores["Base features"] = cv_results["test_r2"]
@@ -244,7 +245,7 @@ pipeline2 = make_pipeline(encoder2, hgb)
 ###############################################################################
 # Let's look at the results:
 cv_results = cross_validate(
-    pipeline2, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
+    pipeline2, X_full, y, scoring=["r2", "neg_root_mean_squared_error"], cv=cv
 )
 
 all_r2_scores["KEN features"] = cv_results["test_r2"]
@@ -277,7 +278,7 @@ encoder3 = make_column_transformer(
     ("passthrough", emb_columns2),
     ("passthrough", ["Year"]),
     (ohe, ["Genre"]),
-    (min_hash, ["Platform"]),
+    (min_hash, "Platform"),
     remainder="drop",
 )
 
@@ -288,7 +289,7 @@ pipeline3 = make_pipeline(encoder3, hgb)
 ###############################################################################
 # Let's look at the results:
 cv_results = cross_validate(
-    pipeline3, X_full, y, scoring=["r2", "neg_root_mean_squared_error"]
+    pipeline3, X_full, y, scoring=["r2", "neg_root_mean_squared_error"], cv=cv
 )
 
 all_r2_scores["Base + KEN features"] = cv_results["test_r2"]

@@ -1,0 +1,131 @@
+{% import "buttons.html" as buttons %}
+
+<div class="card column-summary" id="{{ col_id }}"
+    data-name-repr="{{ column.name.__repr__() }}"
+    data-column-name="{{ column.name }}"
+    data-column-idx="{{ column.idx }}"
+     {% if column['n_low_outliers'] %}
+     data-has-low-outliers
+     {% endif %}
+     {% if column['n_high_outliers'] %}
+     data-has-high-outliers
+     {% endif %}
+    data-manager="FilterableColumn {% if in_sample_tab %}SampleColumnSummary{% endif %}"
+    {% if column.value_is_constant %} data-constant-column {% endif %}
+    {% if in_sample_tab %} data-role="sample-column" data-hidden {% else %}
+    data-role="selectable-column" {% endif %}>
+    <div class="card-header">
+        <h3>
+            {% if not in_sample_tab %}
+            <input data-role="select-column-checkbox"
+                data-manager="SelectColumnCheckBox" type="checkbox">
+            {% endif %}
+            <span class="select-all wrap-long-name">{{ column.name }}</span>
+        </h3>
+        <span>{{ column.dtype }}</span>
+        {%- if in_sample_tab -%}
+        {{ buttons.closebutton() }}
+        {%- endif -%}
+    </div>
+    <div class="column-summary-content wrapper">
+        <div>
+            <dl>
+                <dt>Null values</dt>
+               <dd class="{{ column.nulls_level }}">{{ column.null_count | format_number }} ({{ column.null_proportion | format_percent }})</dd>
+                {% if not column.value_is_constant %}
+                {% if column.n_unique %}
+                <dt>Unique values</dt>
+                <dd>{{ column.n_unique | format_number }} ({{ column.unique_proportion | format_percent }})</dd>
+                {% endif %}
+
+                {% if column["duration_unit"] %}
+                {% set unit = " {}s".format(column['duration_unit']) %}
+                {% else %}
+                {% set unit = "" %}
+                {% endif %}
+
+                {% if "mean" in column %}
+                <dt>Mean ± Std</dt>
+                <dd>{{ column["mean"] | format_number }} ±
+                    {{ column["standard_deviation"] | format_number }}
+                    {{ unit }}
+                </dd>
+                {% endif %}
+                {% if column.quantiles %}
+                <dt>Median ± IQR</dt>
+                <dd>{{ column.quantiles[0.5] | format_number }} ±
+                    {{ column["inter_quartile_range"] | format_number}}
+                    {{ unit }}
+                </dd>
+
+                <dt>Min | Max</dt>
+                <dd>
+                    <span class="min-value">{{ column.quantiles[0.0] | format_number }}</span> |
+                    <span class="max-value">{{ column.quantiles[1.0] | format_number }}</span>
+                    {{ unit }}
+                </dd>
+                {% elif "min" in column %}
+                <dt>Min | Max</dt>
+                <dd>
+                    <span class="min-value">{{ column.min | format_number }}</span> |
+                    <span class="max-value">{{ column.max | format_number }}</span>
+                    {{ unit }}
+                </dd>
+                {% endif %}
+                {% endif %}
+
+                {% if column.string_length_is_constant %}
+                <dt>(constant) String length</dt>
+                <dd>{{ column.constant_string_length }}</dd>
+                {% endif %}
+            </dl>
+        </div>
+
+        {% if column.value_is_constant %}
+        {% set val_id = "{}-constant-value".format(col_id) %}
+        <div class="margin-v-m">
+            <strong>Constant value:</strong>
+            <div class="copybutton-grid">
+                <div class="box">
+                    <pre id="{{ val_id }}"
+                         data-copy-text="{{ column.constant_value.__repr__() }}">{{ column.constant_value }}</pre>
+                    {{ buttons.copybutton(val_id) }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% for plot_name in column.plot_names %}
+        <div>
+            <div class="margin-t-m" data-svg-needs-adjust-viewbox>
+                {{ column[plot_name] | safe }}
+            </div>
+            {% if plot_name == "value_counts_plot" %}
+            <details data-test="frequent-values-details">
+                <summary>Most frequent values</summary>
+                <div class="shrink">
+                    <div class="copybutton-grid">
+                        {% for (value, count) in column.value_counts %}
+                        {% set val_id = "{}-freq-value-{}".format(col_id, loop.index0) %}
+                        <div class="box" data-test="frequent-value-{{ loop.index0 }}">
+                            <pre id="{{ val_id }}"
+                                data-copy-text="{{ value.__repr__()  }}">{{ value }}</pre>
+                            {{ buttons.copybutton(val_id) }}
+                        </div>
+
+                        {% endfor %}
+                        <span class="grid-separator">List:</span>
+                        {% set val_id = "{}-freq-value-list".format(col_id) %}
+                        <div class="box">
+                            <pre id="{{ val_id }}"
+                                data-copy-text="{{ column.most_frequent_values }}">{{ column.most_frequent_values }}</pre>
+                            {{ buttons.copybutton(val_id) }}
+                        </div>
+                    </div>
+                </div>
+            </details>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>

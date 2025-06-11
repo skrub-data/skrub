@@ -1,0 +1,31 @@
+name: 'test reports javascript'
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.8
+        with:
+          pixi-version: v0.41.3
+          environments: ci-py312-latest-optional-deps
+          # we can freeze the environment and manually bump the dependencies to the
+          # latest version time to time.
+          frozen: true
+
+      - name: Create the reports
+        working-directory: skrub/_reporting/js_tests/
+        run: pixi run make-reports
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: skrub/_reporting/js_tests/

@@ -1,0 +1,136 @@
+/* The column summary cards */
+/* ------------------------ */
+
+/* Collection of column summary cards (as shown in the "column summaries" tab) */
+/* --------------------------------------------------------------------------- */
+
+/* The cards next to each other and horizontal scrolling. */
+.column-summary-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: var(--spacing-l);
+    width: max-content;
+}
+
+.column-summary-group > .card {
+    margin: 0;
+}
+
+/* Individual column summary cards */
+/* ------------------------------- */
+
+.card {
+    padding: 0;
+    margin: var(--spacing-l);
+    border-radius: var(--radius);
+    min-width: min-content;
+    border: 1px solid var(--color-border-card);
+    background-color: var(--color-background-card);
+}
+
+.card-header {
+    border-radius: var(--radius) var(--radius) 0 0;
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    column-gap: var(--spacing-l);
+
+    padding: var(--spacing-m);
+    margin-block-end: var(--spacing-m);
+    background-color: var(--color-background-card-header);
+    border-block-end: var(--border-s) solid var(--color-border-card);
+}
+
+.card-header > * {
+    margin-block-start: 0;
+    margin-block-end: 0;
+    font-size: var(--spacing-l);
+}
+
+.card-header input[type="checkbox"] {
+    margin-right: var(--spacing-s);
+}
+
+.column-summary-content {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Grid of boxes with copybuttons for a column's most frequent values */
+
+.copybutton-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    padding-block-start: var(--spacing-m);
+    padding-block-end: var(--spacing-m);
+}
+
+.grid-separator {
+    grid-column: 1/-1;
+    justify-self: left;
+}
+
+/* Highlight min and max values when outliers were truncated from the histogram*/
+
+.column-summary[data-has-low-outliers] .min-value {
+    color: var(--color-text-critical);
+    font-weight: bold;
+}
+
+.column-summary[data-has-high-outliers] .max-value {
+    color: var(--color-text-critical);
+    font-weight: bold;
+}
+
+/* Aspects specific to the single card shown in the dataframe sample tab */
+/* --------------------------------------------------------------------- */
+
+.columns-in-sample-tab {
+    margin-top: var(--spacing-m);
+}
+
+/* Hide the container when it is empty */
+
+.columns-in-sample-tab:not(
+        :has([data-role="sample-column"]:not([data-hidden]))
+    ) {
+    display: none;
+}
+
+/* The header has the same color as the selected cells in the table */
+
+.columns-in-sample-tab .card-header {
+    position: relative;
+    padding-right: calc(var(--button-size-s) + var(--spacing-m));
+}
+
+
+/* Button for closing the card / deselecting the column in the table */
+
+.card .close-card-button {
+    height: var(--button-size-s);
+    width: var(--button-size-s);
+
+    padding: var(--spacing-s);
+    border: none;
+    border-radius: var(--radius);
+    background-color: var(--color-background-button-secondary);
+
+    position: absolute;
+    top: var(--spacing-s);
+    right: var(--spacing-s);
+
+    transition: background-color var(--animation-duration)
+        var(--animation-easing);
+}
+
+.card .close-card-button:hover {
+    background-color: var(--color-background-button-secondary-hover);
+}
+
+.card .close-card-button:active {
+    background-color: var(--color-background-button-secondary-active);
+}

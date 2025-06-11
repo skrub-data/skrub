@@ -10,13 +10,18 @@ should also remove their corresponding references from the list.
 
 import inspect
 import re
-from collections.abc import Callable
 from importlib import import_module
 
 import pytest
 from numpydoc.validate import validate
 
 DOCSTRING_TEMP_IGNORE_SET = {
+    # TODO remove
+    "skrub._expressions",
+    "skrub._expressions._expressions",
+    "skrub._expressions._choosing",
+    "skrub._expressions._estimator",
+    "skrub._select_cols.Drop",
     "skrub._table_vectorizer.SuperVectorizer",
     # The following are not documented in skrub (and thus are out of scope)
     # They are usually inherited from other libraries.
@@ -26,8 +31,6 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "skrub._table_vectorizer.SuperVectorizer.fit",
     "skrub._table_vectorizer.SuperVectorizer.set_params",
     "skrub._table_vectorizer.SuperVectorizer.named_transformers_",
-    # The following are internal functions
-    "skrub._check_dependencies.check_dependencies",
 }
 
 
@@ -68,10 +71,10 @@ def get_functions_to_validate():
 
 
 def repr_errors(
-    res: dict,
-    estimator: type | None = None,
-    method: str | None = None,
-) -> str:
+    res,
+    estimator=None,
+    method=None,
+):
     """
     Pretty print original docstring and the obtained errors
 
@@ -126,7 +129,7 @@ def repr_errors(
     return msg
 
 
-def filter_errors(errors, method: Callable, estimator_cls: type | None = None):
+def filter_errors(errors, method, estimator_cls=None):
     """
     Ignore some errors based on the method type.
     """
@@ -163,7 +166,7 @@ def filter_errors(errors, method: Callable, estimator_cls: type | None = None):
     ["estimator_cls", "method"],
     get_methods_to_validate(),
 )
-def test_estimator_docstrings(estimator_cls: type, method: str, request):
+def test_estimator_docstrings(estimator_cls, method, request):
     base_import_path = estimator_cls.__module__
     import_path = [base_import_path, estimator_cls.__name__]
     if method is not None:
@@ -171,7 +174,12 @@ def test_estimator_docstrings(estimator_cls: type, method: str, request):
 
     import_path = ".".join(import_path)
 
-    if import_path in DOCSTRING_TEMP_IGNORE_SET:
+    if (
+        (import_path in DOCSTRING_TEMP_IGNORE_SET)
+        or (base_import_path in DOCSTRING_TEMP_IGNORE_SET)
+        or f"{estimator_cls.__module__}.{estimator_cls.__name__}"
+        in DOCSTRING_TEMP_IGNORE_SET
+    ):
         request.applymarker(
             pytest.mark.xfail(run=False, reason="TODO pass numpydoc validation")
         )
@@ -190,11 +198,14 @@ def test_estimator_docstrings(estimator_cls: type, method: str, request):
     ["func", "name"],
     get_functions_to_validate(),
 )
-def test_function_docstrings(func: Callable, name: str, request):
+def test_function_docstrings(func, name, request):
     import_path = ".".join([func.__module__, name])
     print(import_path)
 
-    if import_path in DOCSTRING_TEMP_IGNORE_SET:
+    if (
+        import_path in DOCSTRING_TEMP_IGNORE_SET
+        or func.__module__ in DOCSTRING_TEMP_IGNORE_SET
+    ):
         request.applymarker(
             pytest.mark.xfail(run=False, reason="TODO pass numpydoc validation")
         )

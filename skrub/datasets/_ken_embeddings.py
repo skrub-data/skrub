@@ -1,15 +1,35 @@
 """
 Get the Wikipedia embeddings for feature augmentation.
 """
+# Required for ignoring lines too long in the docstrings
+# flake8: noqa: E501
+
+import urllib.request
+import warnings
+from dataclasses import dataclass
+from itertools import chain
+from pathlib import Path
+from urllib.error import URLError
 
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from skrub.datasets import fetch_figshare
+from skrub._utils import import_optional_dependency
 
-# Required for ignoring lines too long in the docstrings
-# flake8: noqa: E501
+from ._utils import _sha256, get_data_dir
 
+figshare_id_to_hash = {
+    39142985: "47d73381ef72b050002a8642194c6718a4954ec9e6c556f4c4ddc6ed84ceec92",
+    39149066: "e479cf9741a90c40401697e7fa54409e3b9cfa09f27502877382e64e86fbfcd0",
+    39149069: "7b0dcdb15d3aeecba6022c929665ee064f6fb4b8b94186a6e89b6fbc781b3775",
+    39149072: "4f58f15168bb8a6cc8b152bd48995bc7d1a4d4d89a9e22d87aa51ccf30118122",
+    39149075: "7037603362af1d4bf73551d50644c0957cb91d2b4892e75413f57f415962029a",
+    39254360: "531130c714ba6ee9902108d4010f42388aa9c0b3167d124cd57e2c632df3e05a",
+    39266300: "37b23b2c37a1f7ff906bc7951cbed4be15d8417dad0762092282f7b491cf8c21",
+    39266678: "4e041322985e078de8b08acfd44b93a5ce347c1e501e9d869651e753de747ba1",
+    40019230: "4d43fed75dba1e59a5587bf31c1addf2647a1f15ebea66e93177ccda41e18f2f",
+    40019788: "67ae86496c8a08c6cc352f573160a094f605e7e0da022eb91c603abb7edf3747",
+}
 
 _correspondence_table_url = (
     "https://raw.githubusercontent.com/skrub-data/datasets"
@@ -17,7 +37,288 @@ _correspondence_table_url = (
 )
 
 
-def fetch_ken_table_aliases() -> set[str]:
+@dataclass(unsafe_hash=True)
+class DatasetAll:
+    """
+    Represents a dataset and its information.
+    With this state, the dataset is loaded in memory as a DataFrame (`X` and `y`).
+    Additional information such as `path` and `read_csv_kwargs` are provided
+    in case the dataframe has to be read from disk, as such:
+
+    .. code:: python
+
+        ds = fetch_employee_salaries(load_dataframe=False)
+        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+    """
+
+    name: str
+    description: str
+    source: str
+    target: str
+    X: pd.DataFrame
+    y: pd.Series
+    path: Path
+    read_csv_kwargs: dict[str]
+
+    def __eq__(self, other):
+        """
+        Implemented for the tests to work without bloating the code.
+        The main reason for which it's needed is that equality between
+        DataFrame (`X` and `y`) is often ambiguous and will raise an error.
+        """
+        return (
+            self.name == other.name
+            and self.description == other.description
+            and self.source == other.source
+            and self.target == other.target
+            and self.X.equals(other.X)
+            and self.y.equals(other.y)
+            and self.path == other.path
+            and self.read_csv_kwargs == other.read_csv_kwargs
+        )
+
+
+@dataclass(unsafe_hash=True)
+class DatasetInfoOnly:
+    """
+    Represents a dataset and its information.
+    With this state, the dataset is NOT loaded in memory, but can be read
+    with `path` and `read_csv_kwargs`, as such:
+
+    .. code:: python
+
+        ds = fetch_employee_salaries(load_dataframe=False)
+        df = pd.read_csv(ds.path, **ds.read_csv_kwargs)
+    """
+
+    name: str
+    description: str
+    source: str
+    target: str
+    path: Path
+    read_csv_kwargs: dict[str]
+
+
+def fetch_figshare(
+    figshare_id: str,
+    *,
+    target=None,
+    load_dataframe=True,
+    data_directory=None,
+):
+    """Fetches a table of from figshare.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
+    """
+    return _fetch_dataset_as_dataclass(
+        source="figshare",
+        dataset_name=f"figshare_{figshare_id!r}",
+        dataset_id=figshare_id,
+        target=target,
+        load_dataframe=load_dataframe,
+        data_directory=data_directory,
+    )
+
+
+def _fetch_dataset_as_dataclass(
+    source,
+    dataset_name,
+    dataset_id,
+    target,
+    load_dataframe,
+    data_directory=None,
+    read_csv_kwargs=None,
+):
+    """Fetches a dataset from a source, and returns it as a dataclass.
+
+    Takes a dataset identifier, a target column name (if applicable),
+    and some additional keyword arguments for read_csv.
+
+    If you don't need the dataset to be loaded in memory,
+    pass `load_dataframe=False`.
+
+    To save/load the dataset to/from a specific directory,
+    pass `data_directory`. If `None`, uses the default skrub
+    data directory.
+
+    If the dataset doesn't have a target (unsupervised learning or inapplicable),
+    explicitly specify `target=None`.
+
+    Returns
+    -------
+    DatasetAll
+        If `load_dataframe=True`
+
+    DatasetInfoOnly
+        If `load_dataframe=False`
+    """
+    if isinstance(data_directory, str):
+        data_directory = Path(data_directory)
+
+    if source == "figshare":
+        info = _fetch_figshare(dataset_id, data_directory)
+    else:
+        raise ValueError(f"Unknown source {source!r}")
+
+    if read_csv_kwargs is None:
+        read_csv_kwargs = {}
+
+    if target is None:
+        target = []
+
+    if load_dataframe:
+        if source == "figshare":
+            df = pd.read_parquet(info["path"])
+        else:
+            df = pd.read_csv(info["path"], **read_csv_kwargs)
+        y = df[target]
+        X = df.drop(target, axis="columns")
+        dataset = DatasetAll(
+            name=dataset_name,
+            description=info["description"],
+            source=info["source"],
+            target=target,
+            X=X,
+            y=y,
+            path=info["path"],
+            read_csv_kwargs=read_csv_kwargs,
+        )
+    else:
+        dataset = DatasetInfoOnly(
+            name=dataset_name,
+            description=info["description"],
+            source=info["source"],
+            target=target,
+            path=info["path"],
+            read_csv_kwargs=read_csv_kwargs,
+        )
+
+    return dataset
+
+
+def _fetch_figshare(
+    figshare_id,
+    data_directory,
+):
+    """Fetch a dataset from figshare using the download ID number.
+
+    Parameters
+    ----------
+    figshare_id : str
+        The ID of the dataset to fetch.
+    data_directory : pathlib.Path, optional
+        The directory where the dataset is stored.
+        By default, a subdirectory "figshare" in the skrub data directory.
+
+    Returns
+    -------
+    mapping of str to any
+        A dictionary containing:
+          - `description` : str
+              The description of the dataset.
+          - `source` : str
+              The dataset's URL.
+          - `path` : pathlib.Path
+              The local path leading to the dataset,
+              saved as a parquet file.
+
+    Notes
+    -----
+    The files are read and returned in parquet format, this function needs
+    pyarrow installed to run correctly.
+    """
+    if data_directory is None:
+        data_directory = get_data_dir(name="figshare")
+
+    parquet_path = (data_directory / f"figshare_{figshare_id}.parquet").resolve()
+    data_directory.mkdir(parents=True, exist_ok=True)
+    url = f"https://ndownloader.figshare.com/files/{figshare_id}"
+    description = f"This table shows the {figshare_id!r} figshare file."
+    file_paths = [
+        file
+        for file in data_directory.iterdir()
+        if file.name.startswith(f"figshare_{figshare_id}")
+    ]
+    if len(file_paths) > 0:
+        if len(file_paths) == 1:
+            parquet_paths = [str(file_paths[0].resolve())]
+        else:
+            parquet_paths = []
+            for path in file_paths:
+                parquet_path = str(path.resolve())
+                parquet_paths += [parquet_path]
+        return {
+            "dataset_name": figshare_id,
+            "description": description,
+            "source": url,
+            "path": parquet_paths,
+        }
+    else:
+        warnings.warn(
+            (
+                f"Could not find the dataset {figshare_id!r} locally. "
+                "Downloading it from figshare; this might take a while... "
+                "If it is interrupted, some files might be invalid/incomplete: "
+                "if on the following run, the fetching raises errors, you can try "
+                f"fixing this issue by deleting the directory {parquet_path!s}."
+            ),
+            UserWarning,
+            stacklevel=2,
+        )
+        import_optional_dependency(
+            "pyarrow", extra="pyarrow is required for parquet support."
+        )
+        from pyarrow.parquet import ParquetFile
+
+        try:
+            filehandle, _ = urllib.request.urlretrieve(url)
+
+            # checksum the file
+            checksum = _sha256(filehandle)
+            if figshare_id in figshare_id_to_hash:
+                expected_checksum = figshare_id_to_hash[figshare_id]
+                if checksum != expected_checksum:
+                    raise OSError(
+                        f"{filehandle!r} SHA256 checksum differs from "
+                        f"expected ({checksum}!={expected_checksum}) ; "
+                        "file is probably corrupted. Please try again. "
+                        "If the error persists, please open an issue on GitHub. "
+                    )
+
+            df = ParquetFile(filehandle)
+            record = df.iter_batches(
+                batch_size=1_000_000,
+            )
+            idx = []
+            for _, x in enumerate(
+                chain(range(0, df.metadata.num_rows, 1_000_000), [df.metadata.num_rows])
+            ):
+                idx += [x]
+            parquet_paths = []
+            for i in range(1, len(idx)):
+                parquet_path = (
+                    data_directory / f"figshare_{figshare_id}_{idx[i]}.parquet"
+                ).resolve()
+                batch = next(record).to_pandas()
+                batch.to_parquet(parquet_path, index=False)
+                parquet_paths += [parquet_path]
+            return {
+                "dataset_name": figshare_id,
+                "description": description,
+                "source": url,
+                "path": parquet_paths,
+            }
+        except URLError:
+            raise URLError("No internet connection or the website is down.")
+
+
+def fetch_ken_table_aliases():
     """Get the supported aliases of embedded KEN entities tables.
 
     These aliases can be using in subsequent functions (see section *See Also*).
@@ -42,19 +343,20 @@ def fetch_ken_table_aliases() -> set[str]:
     --------
     Let's see what are the current KEN subtables available
     for download:
-    >>> fetch_ken_table_aliases()
-    {'games', 'companies', 'schools', 'albums', 'all_entities', 'movies'}
+
+    >>> sorted(fetch_ken_table_aliases())
+    ['albums', 'all_entities', 'companies', 'games', 'movies', 'schools']
     """
     correspondence = pd.read_csv(_correspondence_table_url)
     return set(["all_entities"] + list(correspondence["table"].values))
 
 
 def fetch_ken_types(
-    search: str = None,
+    search=None,
     *,
-    exclude: str | None = None,
-    embedding_table_id: str = "all_entities",
-) -> pd.DataFrame:
+    exclude=None,
+    embedding_table_id="all_entities",
+):
     """Helper function to search for KEN entity types.
 
     The result can then be used with fetch_ken_embeddings.
@@ -96,9 +398,9 @@ def fetch_ken_types(
     --------
     To get all the existing KEN types of entities:
 
-    >>> embedding_types = fetch_ken_types()
-    >>> embedding_types.head()
-                                Type
+    >>> embedding_types = fetch_ken_types()  # doctest: +SKIP
+    >>> embedding_types.head() # doctest: +SKIP
+                                                    Type
     0                 wikicat_italian_male_screenwriters
     1  wikicat_21st-century_roman_catholic_archbishop...
     2                 wikicat_2000s_romantic_drama_films
@@ -107,10 +409,10 @@ def fetch_ken_types(
 
     Let's search for all KEN types with the strings "dance" or "music":
 
-    >>> embedding_filtered_types = fetch_ken_types(search="dance|music")
-    >>> embedding_filtered_types.head()
-                                    Type
-    0                    wikicat_music_festivals_in_france
+    >>> embedding_filtered_types = fetch_ken_types(search="dance|music") # doctest: +SKIP
+    >>> embedding_filtered_types.head() # doctest: +SKIP
+                                                    Type
+    0                  wikicat_music_festivals_in_france
     1  wikicat_films_scored_by_bharadwaj_(music_direc...
     2                  wikicat_english_music_journalists
     3       wikicat_20th-century_american_male_musicians
@@ -136,14 +438,14 @@ def fetch_ken_types(
 
 
 def fetch_ken_embeddings(
-    search_types: str | None = None,
+    search_types=None,
     *,
-    exclude: str | None = None,
-    embedding_table_id: str = "all_entities",
-    embedding_type_id: str | None = None,
-    pca_components: int | None = None,
-    suffix: str = "",
-) -> pd.DataFrame:
+    exclude=None,
+    embedding_table_id="all_entities",
+    embedding_type_id=None,
+    pca_components=None,
+    suffix="",
+):
     """Download Wikipedia embeddings by type.
 
     More details on the embeddings can be found on
@@ -216,14 +518,14 @@ def fetch_ken_embeddings(
     you are interested in. For instance, if we are interested in
     video games:
 
-    >>> games_embedding = fetch_ken_embeddings(search_types="video_games")
-    >>> games_embedding.head()
-                    Entity                       Type                       ...      X198      X199
-    0       The_Mysterious_Island  wikicat_novels_adapted_into_video_games  ... -0.072814 -0.156973
-    1    Storyteller_(video_game)             wikicat_upcoming_video_games  ...  0.059816  0.021077
-    2  Skull_&_Bones_(video_game)        wikicat_video_games_about_pirates  ... -0.141682  0.024204
-    3               Ethan_Winters   wikicat_male_characters_in_video_games  ... -0.107913 -0.089531
-    4                     Cruis'n               wikicat_racing_video_games  ... -0.260757  0.060700
+    >>> games_embedding = fetch_ken_embeddings(search_types="video_games") # doctest: +SKIP
+    >>> games_embedding.head() # doctest: +SKIP
+                             Entity  ...      X199
+    0             A_Little_Princess  ...  0.04...
+    1                 The_Dark_Half  ... -0.00...
+    2                  Frankenstein  ... -0.11...
+    3                 Albert_Wesker  ... -0.16...
+    4  Harukanaru_Toki_no_Naka_de_3  ...  0.14...
 
     Extracts all embeddings with the "games" type.
     For the list of existing types see fetch_ken_types.
@@ -231,14 +533,14 @@ def fetch_ken_embeddings(
     Some tables are available pre-filtered for us using the
     `embedding_table_id` parameter:
 
-    >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games")
-    >>> games_embedding_fast.head()
-                     Entity                               Type                      ...      X198      X199
-    0              R-Type_Delta                                 wikicat_irem_games  ... -0.125806  0.040006
-    1  Just_Add_Water_(company)  wikicat_video_game_companies_of_the_united_kin...  ...  0.067210 -0.025676
-    2                 Li_Xiayan          wikicat_asian_games_medalists_in_swimming  ... -0.104818  0.003485
-    3             Vampire_Night                        wikicat_vampire_video_games  ... -0.118209 -0.145383
-    4               Shatterhand                             wikicat_platform_games  ... -0.138462  0.197820
+    >>> games_embedding_fast = fetch_ken_embeddings(embedding_table_id="games") # doctest: +SKIP
+    >>> games_embedding_fast.head() # doctest: +SKIP
+                         Entity  ...      X199
+    0              R-Type_Delta  ...  0.04...
+    1  Just_Add_Water_(company)  ... -0.02...
+    2                 Li_Xiayan  ...  0.00...
+    3             Vampire_Night  ... -0.14...
+    4               Shatterhand  ...  0.19...
 
     It takes less time to load the wanted output, and is more precise as the
     types have been carefully filtered out.
@@ -281,6 +583,11 @@ def fetch_ken_embeddings(
             )
             emb_final.append(emb_pca)
         else:
+            if suffix != "":
+                emb_extracts.columns = [
+                    col if col in ["Entity", "Type"] else col + suffix
+                    for col in emb_extracts.columns
+                ]
             emb_final.append(emb_extracts)
     emb_df = pd.concat(emb_final)
     emb_df["Entity"] = emb_df["Entity"].str[1:-1]
