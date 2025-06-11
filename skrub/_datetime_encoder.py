@@ -5,13 +5,6 @@ import pandas as pd
 from sklearn.preprocessing import SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
-try:
-    import polars as pl
-except ImportError:
-    pass
-
-from _dataframe._common import _raise as _sbd_raise
-
 from . import _dataframe as sbd
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
@@ -48,6 +41,9 @@ _DEFAULT_ENCODING_SPLINES = {
 
 @dispatch
 def _is_date(col):
+    # Avoid circular import
+    from _dataframe._common import _raise as _sbd_raise
+
     raise _sbd_raise(col, kind="Series")
 
 
@@ -64,6 +60,9 @@ def _is_date_polars(col):
 
 @dispatch
 def _get_dt_feature(col, feature):
+    # Avoid circular import
+    from _dataframe._common import _raise as _sbd_raise
+
     raise _sbd_raise(col, kind="Series")
 
 
@@ -86,6 +85,8 @@ def _get_dt_feature_pandas(col, feature):
 
 @_get_dt_feature.specialize("polars", argument_type="Column")
 def _get_dt_feature_polars(col, feature):
+    import polars as pl
+
     if feature == "total_seconds":
         return (col.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
     if feature == "day_of_year":
