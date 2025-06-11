@@ -117,7 +117,7 @@ def patch_display(
             "patch_display will be deprecated in the next release. "
             "Equivalent functionality is available in skrub.set_config."
         ),
-        category=DeprecationWarning,
+        category=FutureWarning,
     )
 
 
@@ -164,7 +164,7 @@ def unpatch_display(pandas=True, polars=True):
             "unpatch_display will be deprecated in the next release. "
             "Equivalent functionality is available in skrub.set_config."
         ),
-        category=DeprecationWarning,
+        category=FutureWarning,
     )
 
 

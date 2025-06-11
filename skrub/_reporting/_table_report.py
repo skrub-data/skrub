@@ -1,6 +1,7 @@
 import codecs
 import functools
 import json
+import numbers
 from pathlib import Path
 
 from .. import _config
@@ -9,6 +10,34 @@ from ._html import to_html
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
+
+
+def _check_max_cols(max_plot_columns, max_association_columns):
+    max_plot_columns = (
+        max_plot_columns
+        if max_plot_columns is not None
+        else _config.get_config()["tablereport_max_col"]
+    )
+    if not (isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0):
+        raise ValueError(
+            f"'max_plot_columns' must be a positive scalar, got {max_plot_columns!r}."
+        )
+
+    max_association_columns = (
+        max_association_columns
+        if max_association_columns is not None
+        else _config.get_config()["tablereport_max_col"]
+    )
+    if not (
+        isinstance(max_association_columns, numbers.Real)
+        and max_association_columns >= 0
+    ):
+        raise ValueError(
+            "'max_association_columns' must be a positive scalar, got "
+            f"{max_association_columns!r}."
+        )
+
+    return max_plot_columns, max_association_columns
 
 
 class TableReport:
@@ -53,13 +82,13 @@ class TableReport:
         change the default using :func:`set_config`:
 
         >>> from skrub import set_config
-        >>> set_config(tablereport_threshold=30)
+        >>> set_config(tablereport_max_col=30)
 
         You can also enable this default more permanently via an environment variable:
 
         .. code:: shell
 
-            export SKB_TABLEREPORT_THRESHOLD=30
+            export SKB_TABLEREPORT_MAX_COL=30
 
     max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
@@ -71,13 +100,13 @@ class TableReport:
         change the default using :func:`set_config`:
 
         >>> from skrub import set_config
-        >>> set_config(tablereport_threshold=30)
+        >>> set_config(tablereport_max_col=30)
 
         You can also enable this default more permanently via an environment variable:
 
         .. code:: shell
 
-            export SKB_TABLEREPORT_THRESHOLD=30
+            export SKB_TABLEREPORT_MAX_COL=30
 
     See Also
     --------
@@ -165,15 +194,8 @@ class TableReport:
         self.title = title
         self.column_filters = column_filters
         self.verbose = verbose
-        self.max_plot_columns = (
-            max_plot_columns
-            if max_plot_columns is not None
-            else _config.get_config()["tablereport_threshold"]
-        )
-        self.max_association_columns = (
-            max_association_columns
-            if max_association_columns is not None
-            else _config.get_config()["tablereport_threshold"]
+        self.max_plot_columns, self.max_association_columns = _check_max_cols(
+            max_plot_columns, max_association_columns
         )
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe

@@ -14,7 +14,7 @@ def test_config_context():
     assert get_config() == {
         "use_tablereport": False,
         "use_tablereport_expr": True,
-        "tablereport_threshold": 30,
+        "tablereport_max_col": 30,
         "subsampling_seed": 0,
         "enable_subsampling": "default",
     }
@@ -42,14 +42,14 @@ def test_use_tablereport():
             assert not _use_tablereport(X)
 
 
-def test_tablereport_threshold():
+def test_tablereport_max_col():
     X = fetch_employee_salaries().X
     report = TableReport(X)
     assert report.max_association_columns == 30
     assert report.max_plot_columns == 30
 
     # Set default to 1
-    with config_context(tablereport_threshold=1):
+    with config_context(tablereport_max_col=1):
         report = TableReport(X)
         assert report.max_association_columns == 1
         assert report.max_plot_columns == 1
@@ -59,10 +59,10 @@ def test_tablereport_threshold():
         assert report.max_association_columns == 1
         assert report.max_plot_columns == 12
 
-    # Check that tablereport_threshold can be set after patching the TableReport
+    # Check that tablereport_max_col can be set after patching the TableReport
     # repr_html.
     with config_context(use_tablereport=True):
-        with config_context(tablereport_threshold=3):
+        with config_context(tablereport_max_col=3):
             "Plotting was skipped" in X._repr_html_()
 
 
@@ -86,21 +86,19 @@ def test_enable_subsampling():
             assert evaluate(expr.skb.subsample(n=3), mode="preview").shape[0] == 3
 
 
-def test_error():
+@pytest.mark.parametrize(
+    "params",
+    [
+        {"use_tablereport": "hello"},
+        {"use_tablereport_expr": 1},
+        {"tablereport_max_col": "hello"},
+        {"subsampling_seed": -1},
+        {"enable_subsampling": "no"},
+    ],
+)
+def test_error(params):
     with pytest.raises(ValueError):
-        set_config(use_tablereport="hello")
-
-    with pytest.raises(ValueError):
-        set_config(use_tablereport_expr=1)
-
-    with pytest.raises(ValueError):
-        set_config(tablereport_threshold="hello")
-
-    with pytest.raises(ValueError):
-        set_config(subsampling_seed=-1)
-
-    with pytest.raises(ValueError):
-        set_config(enable_subsampling="no")
+        set_config(**params)
 
 
 def test_subsampling_seed():
