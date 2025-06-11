@@ -4,8 +4,7 @@ Release process
 Target audience
 ---------------
 
-This document is aimed toward established contributors the project.
-
+This document is aimed at established contributors to the project.
 
 Process
 -------
@@ -19,14 +18,15 @@ conda-forge project page.
    - Bug-fix releases are done as needed between major/minor releases and only apply to
      the last stable version. These releases are numbered X.Y.Z.
 
-To release a new minor version of skrub (e.g., from 0.1.0 to 0.2.0), here are the main steps and appropriate resources:
-the main steps and appropriate resources:
+To release a new minor version of skrub (e.g., from 0.1.0 to 0.2.0), here are the main
+steps and appropriate resources: the main steps and appropriate resources:
 
 Preparing the release branch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Create the ``0.2.X`` branch, branching from upstream/main, and push it upstream
-  (it may already exist).
+  (it may already exist). You can also use the GitHub UI to create the branch if you
+  disabled ``git push upstream`` in your local git config.
 - Edit CHANGES.rst: replace "ongoing development" with ``0.2.0``
 - Edit VERSION.txt: replace ``0.2.dev0`` with ``0.2.0``
 - Build the wheel and test it:
@@ -77,7 +77,8 @@ The doc update has succeeded
     PR targeting ``0.2.X`` with the rebase option, then disable the setting again.
 
 - Check the rendering of the doc for the built ``0.2.X`` branch, the examples and the
-  changelog.
+  changelog. Ideally, we should go over all features and double check that the docs are
+  being rendered correctly, because issues there often go unnoticed.
 
 
 Next, we'll build the wheel and push it to Pypi!
@@ -111,9 +112,16 @@ Pushing the wheel to Pypi
 
 - Check that your version is now on Pypi.
 - Merge the post-release PR
-- For major/minor releases only, update the documentation symlink to stable version,
-  here from 0.1 to 0.2. The documentation branches repo is:
-  https://github.com/skrub-data/skrub-data.github.io.
+- For major/minor releases only, in the documentation branches repository
+  https://github.com/skrub-data/skrub-data.github.io, update the documentation symlink
+  to stable version, here from 0.1 to 0.2:
+
+  .. code:: shell
+
+     rm stable
+     ln -s 0.2 stable
+
+  ``stable`` should point on the latest number release.
 
 
 Update the conda-forge recipe
