@@ -19,6 +19,9 @@ datetime features on the prediction performance.
 .. |TableVectorizer| replace::
     :class:`~skrub.TableVectorizer`
 
+.. |Cleaner| replace::
+    :class:`~skrub.Cleaner`
+
 .. |OneHotEncoder| replace::
     :class:`~sklearn.preprocessing.OneHotEncoder`
 
@@ -49,6 +52,12 @@ datetime features on the prediction performance.
 .. |apply_func| replace::
     :meth:`skrub.Expr.skb.apply_func`
 
+.. |choose_bool| replace::
+    :meth:`skrub.Expr.skb.choose_bool`
+
+.. |choose_from| replace::
+    :meth:`skrub.Expr.skb.choose_from`
+
 .. |train_test_split| replace::
     :meth:`skrub.Expr.skb.train_test_split`
 
@@ -75,9 +84,8 @@ data = datasets.fetch_bike_sharing().bike_sharing
 data = pl.from_pandas(data)
 TableReport(data)
 
+
 # %%
-###############################################################################
-#
 # Prediction with datetime features
 # ---------------------------------
 #
@@ -115,7 +123,8 @@ from skrub import TableVectorizer
 data_var = skrub.var("data", data)
 
 ###############################################################################
-# We extract our input data (X) and the target column (y), and mark them as X and y.
+# We extract our input data (``X``) and the target column (``y``), and mark them
+# as X and y.
 
 X = data_var[
     "date", "holiday", "weathersit", "temp", "hum", "windspeed"
@@ -124,39 +133,39 @@ y = data_var["cnt"].skb.mark_as_y()
 X
 
 # %%
-from skrub import Cleaner
-
 # We can use the |Cleaner| to clean the data and convert the date column to a
 # datetime column, as well as performing additional consistency and cleaning checks.
+
+from skrub import Cleaner
+
 X = X.skb.apply(Cleaner())
 
 # %%
-###############################################################################
 # Now we define a simple default pipeline for the |RidgeCV| predictor, which includes
 # a |StandardScaler| for numerical features and a |SimpleImputer| to handle
-# missing values. We will not modify this
-# pipeline: we will instead focus on pre-processing and feature engineering.
+# missing values. We will not modify this pipeline: we will instead focus on
+# pre-processing and feature engineering.
 
 default_ridge_pipeline = make_pipeline(StandardScaler(), SimpleImputer(), RidgeCV())
 
-###############################################################################
+
 # The "base" variant of the pipeline uses the default |TableVectorizer|, with
 # no hyperparameter search.
+
 
 vectorized = X.skb.apply(TableVectorizer())
 predictions_base = vectorized.skb.apply(default_ridge_pipeline, y=y)
 search_base = predictions_base.skb.get_grid_search(fitted=True, cv=ts)
 
 # %%
-###############################################################################
 # We can observe the results directly using ``.detailed_results``. Unsurprisingly,
 # the results are not very good. In this case, performing a GridSearch is not
 # necessary, but we will do it for consistency with the next steps.
 
 search_base.detailed_results_
 
+
 # %%
-###############################################################################
 # Prediction with periodic encoders and hyperparameter optimization
 # -----------------------------------------------------------------
 #
@@ -213,21 +222,26 @@ vectorized = X.skb.apply(datetime_encoder, cols=s.any_date()).skb.apply(
 )
 predictions_enc = vectorized.skb.apply(default_ridge_pipeline, y=y)
 
-###############################################################################
+
 # Note that, in general, randomized search should be used instead of grid search.
 # In this case, grid search is fine as we are interested in a grid of categorical
 # values.
+
+
 search_enc = predictions_enc.skb.get_grid_search(fitted=True, cv=ts)
+
+
 # %%
-###############################################################################
+# We again observe the results of the grid search, and plot the parallel coordinate
+# plot to visualize the impact of the hyperparameters on the prediction performance.
+
 search_enc.detailed_results_
 
 # %%
-###############################################################################
 search_enc.plot_results(min_score=0.0)
 
+
 # %%
-###############################################################################
 # We can observe that the prediction results have improved a lot thanks to the
 # introduction of the periodic features, however they are still not very good.
 # We can also see that setting ``total_seconds`` to ``True`` seems to consistently
@@ -243,14 +257,17 @@ search_enc.plot_results(min_score=0.0)
 # This function is taken from a similar `scikit-learn example`_. As the lagged
 # features are based on the actual count, we go back to the original data to
 # perform feature engineering on that.
-
-
+#
 # To introduce the lagged features, we use a |deferred| function that takes the
 # dataframe we are working with, then adds lagged features to it. Given a sample
 # in the dataset, lagged features add information relative to samples prior to it.
 # In this case, for each hourly sample we add information relative to the previous
 # three hours, the same hour on the prior day, as well as aggregate features
 # (mean, max, min) obtained by using a rolling mean of either 24 hours, or 7 days.
+#
+
+
+# %%
 @skrub.deferred
 def get_lagged_features(df):
     lagged_df = df.select(
@@ -270,39 +287,46 @@ def get_lagged_features(df):
     return lagged_df
 
 
-###############################################################################
 # To add lagged features to the data, we go back to the original ``data_var``, and
 # drop the columns that are not relevant. We will have to clean the data again.
 
+
+# %%
 data_prep = data_var.drop("casual", "instant", "registered").skb.mark_as_X()
 data_prep = data_prep.skb.apply(Cleaner())
 
 
-###############################################################################
 # We can use the |apply_func| method to apply the lagged feature function
 # to the data. The lagged features are added to the dataframe, and we can then
 # concatenate them with the original data.
 
+# %%
 data_lagged = data_prep.skb.apply_func(get_lagged_features).drop("cnt")
 X = data_prep.skb.concat([data_lagged], axis=1).drop("cnt")
 X
 
-###############################################################################
+
 # Notice that adding lagged samples will introduce null values for all the initial
 # samples, as there is no previous information for them.
 
+
+# %%
 y = data_var["cnt"].skb.mark_as_y()
+
+
 # %% We can use the datetime encoder defined above to observe the impact of the new
 # features on the predictions.
+
 
 vectorized = X.skb.apply(TableVectorizer(datetime=datetime_encoder))
 predictions_lagged = vectorized.skb.apply(default_ridge_pipeline, y=y)
 search_lagged = predictions_lagged.skb.get_grid_search(fitted=True, cv=ts)
-# %%
 search_lagged.detailed_results_
+
 
 # We can see that the lagged features improved the prediction performance by a
 # large margin. Periodic features bring some benefit.
+
 
 ###############################################################################
 # Plotting the prediction
@@ -357,11 +381,12 @@ search_lagged = predictions_lagged.skb.get_grid_search(
     cv=TimeSeriesSplit(), fitted=True
 ).fit(split["train"])
 results_lagged = search_lagged.best_pipeline_.predict(split["test"])
-#
+
+
 # %%
-###############################################################################
 # Now we can plot the results. For the sake of the example, we will consider only
 # a single week in the year to be able to observe some details.
+
 
 from datetime import datetime, timedelta
 
@@ -428,10 +453,8 @@ fig.suptitle(
     " strategies"
 )
 
-fig.savefig("test.png", bbox_inches="tight")
-
 # %%
-###############################################################################
+#
 # As we can see, the pipeline that uses only the basic RidgeCV model does not
 # follow the actual demand: it shows a periodic behavior that matches the days,
 # but cannot model properly the peaks.
@@ -441,6 +464,7 @@ fig.savefig("test.png", bbox_inches="tight")
 # Finally, the pipeline that includes lagged features tracks the actual demand
 # very accurately, and is also able to follow the difference in demand that on the
 # weeekends.
+#
 #
 # Summary
 # ^^^^^^^
