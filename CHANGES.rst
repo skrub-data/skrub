@@ -39,6 +39,10 @@ New features
   single value (constant columns), only missing values, or all unique values (such
   as IDs). :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The :class:`FrequencyEncoder` is now available. This encoder encoders numerical
+  columns as categorical by binning them. :pr:`707` by :user:`Mikołaj<coconutattitude>`
+  and :user:`Riccardo Cappuzzo<rcap107>`.
+
 Changes
 -------
 .. warning::
