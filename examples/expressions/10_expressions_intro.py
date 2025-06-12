@@ -1,6 +1,7 @@
 """
 .. _example_expressions_intro:
 
+
 Building complex tabular pipelines
 ==================================
 
@@ -101,8 +102,10 @@ skrub.TableReport(dataset.products)
 
 # %%
 products = skrub.var("products", dataset.products)
-baskets = skrub.var("baskets", dataset.baskets[["ID"]]).skb.mark_as_X()
-fraud_flags = skrub.var("fraud_flags", dataset.baskets["fraud_flag"]).skb.mark_as_y()
+full_baskets = skrub.var("baskets", dataset.baskets)
+
+baskets = full_baskets[["ID"]].skb.mark_as_X()
+fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
 # They are given a name and an (optional) initial
@@ -276,7 +279,7 @@ new_baskets = new_data.baskets[["ID"]]
 new_products = new_data.products
 
 # %%
-# Our estimator expects the same variable names as the training pipeline, which is why
+# Our pipeline expects the same variable names as the training pipeline, which is why
 # we pass a dictionary that contains new dataframes and the same variable:
 loaded_model = pickle.loads(saved_model)
 loaded_model.predict({"baskets": new_baskets, "products": new_products})

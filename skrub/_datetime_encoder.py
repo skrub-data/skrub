@@ -29,14 +29,12 @@ _TIME_LEVELS = [
 ]
 
 _DEFAULT_ENCODING_PERIODS = {
-    "day_of_year": 366,
     "month": 12,
     "day": 30,
     "hour": 24,
     "weekday": 7,
 }
 _DEFAULT_ENCODING_SPLINES = {
-    "day_of_year": 12,
     "month": 12,
     "day": 4,
     "hour": 12,
@@ -96,17 +94,11 @@ class DatetimeEncoder(SingleColumnTransformer):
     """
     Extract temporal features such as month, day of the week, … from a datetime column.
 
-    All extracted features are provided as float32 columns.
-
-    No timezone conversion is performed: if the input column is timezone aware, the
-    extracted features will be in the column's timezone.
-
-    An input column that does not have a Date or Datetime dtype will be
-    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
-    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
-    only sends datetime columns to its ``datetime_encoder``. Therefore it is
-    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
-    ``datetime_encoder`` parameter.
+    The ``DatetimeEncoder`` converts datetime features to numerical features that
+    can be used by learners. It separates each datetime in its parts (year, month,
+    day, etc.), and adds new features based on the datetime (weekday, seconds
+    from epoch, day of year). Circular or spline-based periodic features may also
+    be included.
 
     Parameters
     ----------
@@ -149,6 +141,36 @@ class DatetimeEncoder(SingleColumnTransformer):
     --------
     ToDatetime :
         Convert strings to datetimes.
+
+    Notes
+    -----
+    All extracted features are provided as float32 columns.
+
+    No timezone conversion is performed: if the input column is timezone aware, the
+    extracted features will be in the column's timezone.
+
+    An input column that does not have a Date or Datetime dtype will be
+    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
+    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
+    only sends datetime columns to its ``datetime_encoder``. Therefore it is
+    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
+    ``datetime_encoder`` parameter.
+
+    The ``DatetimeEncoder`` uses hardcoded values for generating periodic features.
+    The period of each feature is:
+
+    - ``month``: 12 (month in year)
+    - ``day``: 30 (day in month)
+    - ``hour``: 24 (hour in day)
+    - ``weekday``: 7 (day in week)
+
+    Additionally, we specify the number of splines for each feature to avoid
+    generating too many features:
+
+    - ``month``: 12
+    - ``day``: 4
+    - ``hour``: 12
+    - ``weekday``: 7
 
     Examples
     --------
@@ -304,8 +326,9 @@ class DatetimeEncoder(SingleColumnTransformer):
     2      2024.0  ...              -0.965926
 
     Added features can be explored using ``DatetimeEncoder.all_outputs_``:
+
     >>> encoder[-1].all_outputs_
-        ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
+    ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
         'login_day_circular_0', 'login_day_circular_1', 'login_hour_circular_0', 'login_hour_circular_1']
     """  # noqa: E501
 
@@ -364,11 +387,9 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Adding transformers for periodic encoding
         self._periodic_encoders = {}
         if self.periodic_encoding is not None:
-            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[1 : idx_level + 1]
+            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[0:idx_level]
             if self.add_weekday:
                 encoding_levels += ["weekday"]
-            if self.add_day_of_year:
-                encoding_levels = encoding_levels + ["day_of_year"]
             for enc_feature in encoding_levels:
                 if self.periodic_encoding == "circular":
                     self._periodic_encoders[enc_feature] = _CircularEncoder(
@@ -521,10 +542,12 @@ class _SplineEncoder(SingleColumnTransformer):
         self.is_fitted = True
         self.n_components_ = X_out.shape[1]
 
-        name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_spline_{idx}" for idx in range(self.n_components_)
-        ]
+        # TODO: this will raise an error if X is None, but it should not happen
+        # since this function is always called by the DatetimeEncoder
+        # If we decide to expose this class, we should handle the case where X is None
+        # See https://github.com/skrub-data/skrub/pull/1405
+        self.input_name_ = sbd.name(X) + "_spline"
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, X_out)
 
@@ -606,10 +629,12 @@ class _CircularEncoder(SingleColumnTransformer):
 
         self.n_components_ = 2
 
-        name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_circular_{idx}" for idx in range(self.n_components_)
-        ]
+        # TODO: this will raise an error if X is None, but it should not happen
+        # since this function is always called by the DatetimeEncoder
+        # If we decide to expose this class, we should handle the case where X is None
+        # See https://github.com/skrub-data/skrub/pull/1405
+        self.input_name_ = sbd.name(X) + "_circular"
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, new_features)
 

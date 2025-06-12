@@ -104,6 +104,8 @@ and `sentence-transformers <https://anaconda.org/conda-forge/sentence-transforme
         <div class="tab-pane fade" id="source-tab-pane" role="tabpanel" aria-labelledby="source-tab" tabindex="0">
             <hr />
 
+.. _installing_from_source:
+
 Advanced Usage for Contributors
 -------------------------------
 
@@ -139,25 +141,43 @@ are correctly set up:
 
     git remote -v
 
+You should see something like this:
+
+.. code:: console
+
+    origin  git@github.com:<YOUR_USERNAME>/skrub.git (fetch)
+    origin  git@github.com:<YOUR_USERNAME>/skrub.git (push)
+    upstream        git@github.com:skrub-data/skrub.git (fetch)
+    upstream        git@github.com:skrub-data/skrub.git (push)
+
 
 3. Setup your environment
 '''''''''''''''''''''''''
 
-Now, setup a development environment. For example, you can use
-`conda <https://docs.conda.io/en/latest/>`_  to create a virtual environment:
+Now, setup a development environment.
+You can set up a virtual environment with Conda, or with python's ``venv``:
+
+- With `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__:
 
 .. code:: console
 
-    conda create -n skrub python=3.10 # or any later python version
-    conda activate skrub
+    conda create -n env_skrub python=3.13
+    conda activate env_skrub
 
-Install the local package in editable mode with development dependencies:
+- With `venv <https://docs.python.org/3/library/venv.html>`__:
+.. code:: console
+
+    python -m venv env_skrub
+    source env_skrub/bin/activate
+
+Then, with the environment activated and at the root of your local copy of skrub,
+install the local package in editable mode with development dependencies:
 
 .. code:: console
 
-    pip install -e ".[dev, lint, test]"
+    pip install -e ".[dev]"
 
-Enable pre-commit hooks to ensure code style consistency:
+Enabling pre-commit hooks ensures code style consistency by triggering checks (mainly formatting) every time you run a ``git commit``.
 
 .. code:: console
 
@@ -178,15 +198,20 @@ To ensure your environment is correctly set up, run the test suite:
 
 .. code:: console
 
-    pytest -s skrub/tests
+    pytest --pyargs skrub
 
 Testing should take about 5 minutes.
-If no errors or failures are found, your environment is ready for development!
 
-Now that you're set up, review our :ref:`implementation guidelines<implementation guidelines>`
-and start coding!
+If you see some warnings like:
+.. code:: sh
 
-|
+  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
+    warnings.warn(
+
+This is expected, and you may proceed with the next steps without worrying about them.
+However, no tests should fail at this point: if they do fail, then let us know.
+
+After that, your environment is ready for development!
 
 **Deep learning dependencies**
 
@@ -200,6 +225,10 @@ and `sentence-transformers <https://pypi.org/project/sentence-transformers/>`_.
 
     $ pip install -e ".[transformers]"
 
+
+Now that you're set up,
+you may return to :ref:`writing your first pull request<writing-your-first-pull-request>`
+and start coding!
 
 .. raw:: html
 

@@ -1,5 +1,4 @@
 import reprlib
-import warnings
 from collections import UserDict
 from typing import Iterable
 
@@ -7,7 +6,6 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils._estimator_html_repr import _VisualBlock
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -18,9 +16,10 @@ from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
-from ._gap_encoder import GapEncoder
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
+from ._sklearn_compat import _VisualBlock
+from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
 from ._to_str import ToStr
@@ -37,7 +36,7 @@ class PassThrough(SingleColumnTransformer):
         return column
 
 
-HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+HIGH_CARDINALITY_TRANSFORMER = StringEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     sparse_output=False,
     dtype="float32",
@@ -121,6 +120,7 @@ def _get_preprocessors(
     drop_if_constant,
     n_jobs,
     add_tofloat32=True,
+    datetime_format=None,
 ):
     steps = [CheckInputDataFrame()]
     transformers = [
@@ -130,7 +130,7 @@ def _get_preprocessors(
             drop_if_constant=drop_if_constant,
             drop_if_unique=drop_if_unique,
         ),
-        ToDatetime(),
+        ToDatetime(format=datetime_format),
     ]
     if add_tofloat32:
         transformers.append(ToFloat32())
@@ -153,20 +153,20 @@ def _get_preprocessors(
 
 
 class Cleaner(TransformerMixin, BaseEstimator):
-    """Column-wise consistency checks and sanitization, eg of null values or dates.
+    """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
-    such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
-    dates. See the "Notes" section for a full list.
+    such as detecting null values represented as strings (e.g. ``'N/A'``), parsing
+    dates, and removing uninformative columns. See the "Notes" section for a full list.
 
     Parameters
     ----------
     drop_null_fraction : float or None, default=1.0
-        Fraction of null above which the column is dropped. If `drop_null_fraction`
+        Fraction of null above which the column is dropped. If ``drop_null_fraction``
         is set to ``1.0``, the column is dropped if it contains only
-        nulls or NaNs (this is the default behavior). If `drop_null_fraction` is a
+        nulls or NaNs (this is the default behavior). If ``drop_null_fraction`` is a
         number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
-        is strictly larger than `drop_null_fraction`. If `drop_null_fraction` is
+        is strictly larger than ``drop_null_fraction``. If ``drop_null_fraction`` is
         ``None``, this selection is disabled: no columns are dropped based on the
         number of null values they contain.
 
@@ -178,6 +178,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
+
+    datetime_format : str, default=None
+        The format to use when parsing dates. If None, the format is inferred.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -200,15 +203,21 @@ class Cleaner(TransformerMixin, BaseEstimator):
     -----
     The ``Cleaner`` performs the following set of transformations on each column:
 
-    - ``CleanNullStrings()``: replace strings used to represent null values
-      with actual null values.
+    - ``CleanNullStrings()``: replace strings used to represent missing values
+      with NA markers.
 
-    - ``DropUninformative()``: drop the column if it contains too many null values,
-    if it contains only one distinct value, or if all values are distinct (off by
-    default).
+    - ``DropUninformative()``: drop the column if it is considered to be
+      "uninformative". A column is considered to be "uninformative" if it contains
+      only missing values (``drop_null_fraction``), only a constant value
+      (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      By default, the ``Cleaner`` keeps all columns, unless they contain only
+      missing values.
+      Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
+      that contain text.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
-      actual datetimes with the correct dtype.
+      actual datetimes with the correct dtype. If ``datetime_format`` is provided,
+      it is forwarded to ``ToDatetime()``. Otherwise, the format is inferred.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
@@ -218,7 +227,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     The ``Cleaner`` object should only be used for preliminary sanitizing of
     the data because it does not perform any transformations on numeric columns.
-    On the other hand, the ``TableVectorizer`` converts numeric columns to float32
+    On the other hand, the ``TableVectorizer`` converts numeric columns to ``float32``
     and ensures that null values are represented with NaNs, which can be handled
     correctly by downstream scikit-learn estimators.
 
@@ -286,11 +295,13 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_null_fraction=1.0,
         drop_if_constant=False,
         drop_if_unique=False,
+        datetime_format=None,
         n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
+        self.datetime_format = datetime_format
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -318,6 +329,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             add_tofloat32=False,
+            datetime_format=self.datetime_format,
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
@@ -363,18 +375,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
         """
         self.fit_transform(X, y=y)
         return self
-
-
-class SimpleCleaner(Cleaner):
-    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
-        super().__init__(drop_null_fraction=drop_null_fraction, n_jobs=n_jobs)
-        warnings.warn(
-            (
-                "SimpleCleaner was renamed to Cleaner and will be removed in the "
-                "next release."
-            ),
-            category=DeprecationWarning,
-        )
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
@@ -434,11 +434,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         and drop one of the transformed columns if the feature contains only 2
         categories.
 
-    high_cardinality : transformer, "passthrough" or "drop", default=GapEncoder instance
+    high_cardinality : transformer, "passthrough" or "drop", default=StringEncoder instance
         The transformer for string or categorical columns with at least
         ``cardinality_threshold`` unique values. The default is a
-        :class:`~skrub.GapEncoder` with 30 components (30 output columns for each
+        :class:`~skrub.StringEncoder` with 30 components (30 output columns for each
         input).
+
+        .. versionchanged:: 0.6.0
+           The default ``high_cardinality`` encoder has been changed from
+           :class:`~skrub.GapEncoder` to :class:`~skrub.StringEncoder`.
 
     numeric : transformer, "passthrough" or "drop", default="passthrough"
         The transformer for numeric columns (floats, ints, booleans).
@@ -474,6 +478,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
+
+    datetime_format : str, default=None
+        The format to use when parsing dates. If None, the format is inferred.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -600,6 +607,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     represented as strings. By default, columns that contain only null values are
     dropped. Moreover, a final post-processing step is applied to all
     non-categorical columns in the encoder's output to cast them to float32.
+    If ``datetime_format`` is provided, it will be used to parse all datetime
+    columns.
+
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
@@ -704,6 +714,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         drop_null_fraction=1.0,
         drop_if_constant=False,
         drop_if_unique=False,
+        datetime_format=None,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -720,6 +731,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
+        self.datetime_format = datetime_format
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -840,7 +852,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         )
 
         transformer_list += [
-            ToDatetime(),
+            ToDatetime(format=self.datetime_format),
             ToFloat32(),
             CleanCategories(),
             ToStr(),

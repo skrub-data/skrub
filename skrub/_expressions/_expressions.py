@@ -1,3 +1,31 @@
+# This module defines the Expr class, which represents skrub expressions.
+#
+# Accessing an attribute or method of an expression creates a new node in the
+# computation graph. Therefore the namespace of the Expr class must remain
+# almost empty to avoid name clashes with methods users want to use in their
+# pipeline: if `e = skrub.var('x', pd.DataFrame(...))`, `e.groupby()` must
+# create a node that will call `pd.DataFrame.groupby`, not execute some skrub
+# functionality.
+#
+# Therefore, the actual skrub functionality is hidden away in the attribute
+# `_skrub_impl` (whose name is chosen to avoid any potential name clash). The
+# only public attribute is `.skb` which gives users access to the public API of
+# the expressions.
+#
+# Thus expressions are mostly an empty shell around their `_skrub_impl`, which
+# is of type `ExprImpl`. Each kind of node in the computation graph is
+# represented by a different subclass of `ExprImpl`: `Call` for function calls,
+# `BinOp` for binary operators, `GetAttr` for attribute access etc.
+# See the docstring of `ExprImpl` for information on how to define a new node
+# type.
+#
+# Most of the logic for manipulating and evaluating expressions is outside of
+# those classes, in the `_evaluation` module.
+#
+# The `_estimator` module provides the scikit-learn-like interface (with `fit`
+# and `predict`) to expressions. `_skrub_namespace` contains the definition of
+# the `.skb` attribute.
+
 import dis
 import functools
 import html
@@ -74,9 +102,6 @@ _EXCLUDED_PANDAS_ATTR = [
     "_typ",
 ]
 
-# TODO: compare with
-# https://github.com/GrahamDumpleton/wrapt/blob/develop/src/wrapt/wrappers.py#L70
-# and see which methods we are missing
 
 _BIN_OPS = [
     "__add__",
@@ -121,6 +146,11 @@ class UninitializedVariable(KeyError):
 
 
 def _remove_shell_frames(stack):
+    """
+    Remove the uninformative frames that belong to the python shell itself from
+    traces displayed in reports or in "this expression was created here"
+    messages.
+    """
     shells = [
         (pathlib.Path("IPython", "core", "interactiveshell.py"), "run_code"),
         (pathlib.Path("IPython", "utils", "py3compat.py"), "execfile"),
@@ -138,6 +168,8 @@ def _remove_shell_frames(stack):
 
 
 def _format_expr_creation_stack():
+    "Call stack information used to tell users where an expression was defined."
+
     # TODO use inspect.stack() instead of traceback.extract_stack() for more
     # context lines + within-line position of the instruction (dis.Positions
     # was only added in 3.11, though)
@@ -152,6 +184,49 @@ def _format_expr_creation_stack():
 
 
 class ExprImpl:
+    """Base class for all kinds of expressions (computation graph nodes).
+
+    Those types are used as `_skrub_impl` attributes of `Expr` instances. They
+    provide the expression's functionality.
+
+    Subclass `ExprImpl` to define a new type of node (such as `GetAttr`,
+    `Apply`, etc.)
+
+    Subclasses must _not_ define `__init__`. They must have a static attribute
+    `_fields` listing all the attributes, ie the children needed to evaluate
+    this node. For example a binary operator will have `left` and `right`
+    fields, `Call` will have `func`, `args` and `kwargs`, etc.
+
+    An ExprImpl subclass must implement the logic to compute its result, once
+    its children have been evaluated. The orchestration for evaluating the full
+    expression is the responsibility of the `_evaluation` module.
+
+    To implement the computation of the final result there are 2 possibilities:
+    define `compute()` or define `eval()`.
+
+    In the simplest case, all children must be evaluated before we can compute
+    the result. For example for `BinOp`, all the children `left`, `right` and
+    `op` (the operator name) must be known before we can compute the result.
+    In this case we must define the `compute()` method. It receives the
+    (already evaluated) children in the argument `e`, a SimpleNamespace object:
+    for example `e.left` contains the computed value for the field `left`.
+
+    In more complex cases, only some of the children need to be evaluated. For
+    example in `IfElse`, only one of the fields `value_if_true` or
+    `value_if_false` should be computed (depending on the result of
+    `condition`). In such cases to have control over sending the children for
+    evaluation, the class must define `eval()` (and not `compute` which is
+    never call when `eval` exists). `eval` must be a generator function. It
+    should `yield` objects that need to be evaluated for the computation to
+    continue (and the value of the yield expression will be the computed value
+    of the yielded object). Finally it should `return` the computed result. See
+    `IfElse` or `Match` in this module for simple examples.
+
+    `eval` and `yield` both get arguments `environment` (the dict of variable
+    values passed by the user) and `mode` (the current evaluatiion mode such as
+    "preview", "fit", "predict", ...)
+    """
+
     def __init_subclass__(cls):
         params = [
             inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)
@@ -235,11 +310,11 @@ def _find_dataframe(expr, func_name):
 def check_expr(f):
     """Check an expression and evaluate the preview.
 
-    We decorate the functions that create expressions rather than do it in
-    ``__init__`` to make tracebacks as short as possible: the second frame in
-    the stack trace is the one in user code that created the problematic
-    expression. If the check was done in ``__init__`` it might be buried
-    several calls deep, making it harder to understand those errors.
+    We must decorate all the functions that create expressions rather than do
+    it in ``__init__`` to make tracebacks as short as possible: the second
+    frame in the stack trace is the one in user code that created the
+    problematic expression. If the check was done in ``__init__`` it might be
+    buried several calls deep, making it harder to understand those errors.
     """
 
     @functools.wraps(f)
@@ -395,6 +470,14 @@ class _ExprDoc:
 
 
 class Expr:
+    """A skrub expression."""
+
+    # This class is mostly an empty shell that captures all attribute accesses
+    # in its `__getattr__` to add them to the computation graph. Its relevant
+    # attributes are `_skrub_impl` which provides its actual functionality, of
+    # type SkrubImpl, and the `.skb` of type `SkrubNamespace` (in the
+    # `_skrub_namespace` module).
+
     __hash__ = None
 
     __doc__ = _ExprDoc()
@@ -521,6 +604,8 @@ class Expr:
         )
 
     def __repr__(self):
+        from ._subsampling import uses_subsampling
+
         result = repr(self._skrub_impl)
         if (
             not isinstance(self._skrub_impl, Var)
@@ -530,7 +615,10 @@ class Expr:
         preview = self._skrub_impl.preview_if_available()
         if preview is NULL:
             return result
-        return f"{result}\nResult:\n―――――――\n{preview!r}"
+        subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
+        header = f"Result{subsample_msg}:"
+        underline = "―" * len(header)
+        return f"{result}\n{header}\n{underline}\n{preview!r}"
 
     def __skrub_short_repr__(self):
         return repr(self._skrub_impl)
@@ -547,6 +635,7 @@ class Expr:
 
     def _repr_html_(self):
         from ._inspection import node_report
+        from ._subsampling import uses_subsampling
 
         try:
             graph = self.skb.draw_graph().svg.decode("utf-8")
@@ -567,16 +656,21 @@ class Expr:
             name_line = ""
         title = f"<strong><samp>{html.escape(short_repr(self))}</samp></strong><br />\n"
         summary = "<samp>Show graph</samp>"
+        subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
         prefix = (
             f"{title}{name_line}"
             f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
-            "<strong><samp>Result:</samp></strong>"
+            f"<strong><samp>Result{subsample_msg}:</samp></strong>"
         )
         report = node_report(self)
         if hasattr(report, "_repr_html_"):
             report = report._repr_html_()
         return f"<div>\n{prefix}\n{report}\n</div>"
+
+
+# Dynamically generate the expression's dunder methods for arithmetic and
+# bitwise operators
 
 
 def _make_bin_op(op_name):
@@ -628,12 +722,43 @@ def _check_wrap_params(cols, how, allow_reject, reason):
         raise ValueError(msg)
 
 
+def _check_estimator_type(estimator):
+    if hasattr(estimator, "get_params"):
+        if inspect.isclass(estimator):
+            raise TypeError(
+                "Please provide an instance of a scikit-learn-like estimator "
+                "to `apply`, rather than a class. "
+                f"Got a class rather than an instance: {estimator!r}."
+            )
+        return
+    if callable(estimator):
+        kind = "function" if inspect.isroutine(estimator) else "callable object"
+        raise TypeError(
+            "The `estimator` passed to `.skb.apply()` should be "
+            f"a scikit-learn-like estimator. Got a {kind} instead: {estimator!r}. "
+            "Did you mean to use `.skb.apply_func()` rather than `.skb.apply()`?"
+        )
+    raise TypeError(
+        "The `estimator` passed to `.skb.apply()` should be "
+        "`None`, the string 'passthrough' or "
+        "a scikit-learn-like estimator (with methods `get_params()`, `fit()`, etc.). "
+        f"Got: {estimator!r}."
+    )
+
+
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
+    """
+    Wrap the estimator passed to .skb.apply in OnEachColumn or OnSubFrame if
+    needed.
+    """
+    if estimator in [None, "passthrough"]:
+        estimator = PassThrough()
+
+    _check_estimator_type(estimator)
+
     def _check(reason):
         _check_wrap_params(cols, how, allow_reject, reason)
 
-    if estimator in [None, "passthrough"]:
-        estimator = PassThrough()
     if how == "full_frame":
         _check("`how` is 'full_frame'")
         return estimator
@@ -668,6 +793,7 @@ def check_name(name, is_var):
 
 
 class Var(ExprImpl):
+    "A `skrub.var()` expression."
     _fields = ["name", "value"]
 
     def compute(self, e, mode, environment):
@@ -717,6 +843,14 @@ def var(name, value=NULL):
     -------
     A skrub variable
 
+    See also
+    --------
+    skrub.X :
+        Create a skrub variable and mark it as being ``X``.
+
+    skrub.y :
+        Create a skrub variable and mark it as being ``y``.
+
     Examples
     --------
     Variables without a value:
@@ -730,9 +864,9 @@ def var(name, value=NULL):
     >>> c
     <BinOp: add>
     >>> print(c.skb.describe_steps())
-    VAR 'a'
-    VAR 'b'
-    BINOP: add
+    Var 'a'
+    Var 'b'
+    BinOp: add
 
     The names of variables correspond to keys in the inputs:
 
@@ -802,6 +936,17 @@ def X(value=NULL):
     -------
     A skrub variable
 
+    See also
+    --------
+    skrub.y :
+        Create a skrub variable and mark it as being ``y``.
+
+    skrub.var :
+        Create a skrub variable.
+
+    skrub.Expr.skb.mark_as_X :
+        Mark this expression as being the ``X`` table.
+
     Examples
     --------
     >>> import skrub
@@ -847,6 +992,17 @@ def y(value=NULL):
     -------
     A skrub variable
 
+    See also
+    --------
+    skrub.X :
+        Create a skrub variable and mark it as being ``y``.
+
+    skrub.var :
+        Create a skrub variable.
+
+    skrub.Expr.skb.mark_as_y :
+        Mark this expression as being the ``y`` table.
+
     Examples
     --------
     >>> import skrub
@@ -870,6 +1026,11 @@ def y(value=NULL):
 
 
 class Value(ExprImpl):
+    """Wrap any object in an expression.
+
+    See `skrub.as_expr()` docstring.
+    """
+
     _fields = ["value"]
 
     def compute(self, e, mode, environment):
@@ -884,10 +1045,10 @@ class Value(ExprImpl):
 
 @check_expr
 def as_expr(value):
-    """Create an expression that evaluates to the given value.
+    """Create an expression :class:`Expr` that evaluates to the given value.
 
     This wraps any object in an expression. When the expression is evaluated,
-    the result is the provided value. This has a similar role as ``deferred``,
+    the result is the provided value. This has a similar role as :func:`deferred`,
     but for any object rather than for functions.
 
     Parameters
@@ -898,6 +1059,13 @@ def as_expr(value):
     Returns
     -------
     An expression that evaluates to the given value
+
+    See also
+    --------
+    deferred :
+        Wrap function calls in an expression.
+    Expr :
+        Representation of a computation that can be used to build ML estimators.
 
     Examples
     --------
@@ -931,6 +1099,8 @@ def as_expr(value):
 
 
 class IfElse(ExprImpl):
+    """Node created by `.skb.if_else()`"""
+
     _fields = ["condition", "value_if_true", "value_if_false"]
 
     def eval(self, *, environment, mode):
@@ -948,6 +1118,8 @@ class IfElse(ExprImpl):
 
 
 class Match(ExprImpl):
+    """Node created by `.skb.match()`."""
+
     _fields = ["query", "targets", "default"]
 
     def eval(self, *, environment, mode):
@@ -985,11 +1157,13 @@ def _check_column_names(X):
 
 
 class Apply(ExprImpl):
+    """.skb.apply() nodes."""
+
     _fields = ["X", "estimator", "y", "cols", "how", "allow_reject", "unsupervised"]
 
-    # TODO can we avoid the need for an explicit unsupervised parameter by
-    # inspecting the estimator? eg in recent versions we can look at
-    # tags.target_tags.required
+    # We define `eval()` rather than `compute` because some children may not
+    # need to be evaluated depending on the mode. For example in "predict" mode
+    # we do not evaluate `y`.
 
     def eval(self, *, mode, environment):
         if mode not in self.supported_modes():
@@ -1050,13 +1224,16 @@ class Apply(ExprImpl):
         return getattr(self.estimator_, method_name)(X, *y_arg)
 
     def supported_modes(self):
+        """
+        Used by SkrubPipeline and param search to decide if they have the
+        methods `predict`, `predict_proba` etc.
+        """
         modes = ["preview", "fit_transform", "transform"]
         try:
             estimator = self.estimator_
         except AttributeError:
             estimator = get_chosen_or_default(self.estimator)
         for name in FITTED_PREDICTOR_METHODS:
-            # TODO forbid estimator being lazy?
             if hasattr(estimator, name):
                 modes.append(name)
         return modes
@@ -1134,6 +1311,12 @@ class Call(ExprImpl):
     def compute(self, e, mode, environment):
         func = e.func
         if e.globals or e.closure or e.defaults:
+            # The deferred function has skrub expressions (that need to be
+            # evaluated) in its global variables, free variables or default
+            # arguments. In this case after those are evaluated, we recompile a
+            # new function in which the expressions have been replaced by their
+            # computed value. More details in the docstring of
+            # `skrub.deferred`.
             func = types.FunctionType(
                 func.__code__,
                 globals={**func.__globals__, **e.globals},
@@ -1202,7 +1385,7 @@ class CallMethod(ExprImpl):
 
 
 def deferred(func):
-    """Wrap function calls in an expression.
+    """Wrap function calls in an expression :class:`Expr`.
 
     When this decorator is applied, the resulting function returns expressions.
     The returned expression wraps the call to the original function, and the
@@ -1225,6 +1408,14 @@ def deferred(func):
         When called, rather than applying the original function immediately, it
         returns an expression. Evaluating the expression applies the original
         function.
+
+    See also
+    --------
+    as_expr :
+        Create an expression that evaluates to the given value.
+
+    Expr :
+        Representation of a computation that can be used to build ML estimators.
 
     Examples
     --------
@@ -1407,6 +1598,8 @@ def deferred(func):
 
 
 class Concat(ExprImpl):
+    """.skb.concat() nodes"""
+
     _fields = ["first", "others", "axis"]
 
     def compute(self, e, mode, environment):

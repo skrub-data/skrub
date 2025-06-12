@@ -268,3 +268,12 @@ def test_minimal_mode(pd_module):
     assert "data-test-associations-skipped" in html
     assert 'id="column-summaries-panel"' not in html
     assert 'id="column-associations-panel"' not in html
+
+
+def test_single_column_report(df_module):
+    # Check that single column report works
+    single_col = df_module.example_column
+    report = TableReport(single_col)
+    col_name = sbd.name(single_col)
+    html = report.html()
+    assert col_name in html

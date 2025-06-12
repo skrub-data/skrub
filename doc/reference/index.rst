@@ -136,9 +136,11 @@ For more control or in order to build pipelines for more datasets, use the skrub
    :nosignatures:
 
    Expr.skb.apply
+   Expr.skb.apply_func
    Expr.skb.clone
    Expr.skb.concat
    Expr.skb.cross_validate
+   Expr.skb.describe_defaults
    Expr.skb.describe_param_grid
    Expr.skb.describe_steps
    Expr.skb.draw_graph
@@ -151,12 +153,16 @@ For more control or in order to build pipelines for more datasets, use the skrub
    Expr.skb.get_grid_search
    Expr.skb.get_randomized_search
    Expr.skb.if_else
+   Expr.skb.iter_pipelines_grid
+   Expr.skb.iter_pipelines_randomized
    Expr.skb.mark_as_X
    Expr.skb.mark_as_y
    Expr.skb.match
+   Expr.skb.preview
    Expr.skb.select
    Expr.skb.set_description
    Expr.skb.set_name
+   Expr.skb.subsample
    Expr.skb.train_test_split
 
 .. autosummary::

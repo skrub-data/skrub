@@ -10,22 +10,22 @@ Y_NAME = "_skrub_y"
 
 
 class Sentinels(enum.Enum):
-    NULL = enum.auto()
+    NULL = "NULL"
+    OPTIONAL_VALUE = "value"
 
     def __repr__(self):
-        return self.name
+        return self.value
 
     def __str__(self):
-        return self.name
+        return self.value
 
 
 NULL = Sentinels.NULL
+OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
 
 
 def simple_repr(expr):
-    text = repr(expr).splitlines()[0].removeprefix("<").removesuffix(">")
-    start, sep, rest = text.partition(" ")
-    return f"{start.upper()}{sep}{rest}"
+    return repr(expr).splitlines()[0].removeprefix("<").removesuffix(">")
 
 
 def attribute_error(obj, name, comment=None):
@@ -43,7 +43,6 @@ class _CloudPickle:
             # before python 3.11
             state = self.__dict__.copy()
         for k in self._cloudpickle_attributes:
-            # TODO warn if cloudpickle has to pickle by value
             state[k] = cloudpickle.dumps(state[k])
         return state
 

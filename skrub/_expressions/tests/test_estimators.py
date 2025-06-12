@@ -173,15 +173,15 @@ def test_randomized_search(expression, data, n_jobs):
     assert not hasattr(search, "results_")
     assert not hasattr(search, "detailed_results_")
     search.fit(data)
-    assert list(search.results_.columns) == ["mean_test_score", "C"]
+    assert list(search.results_.columns) == ["C", "mean_test_score"]
     assert list(search.detailed_results_.columns) == [
-        "mean_test_score",
         "C",
-        "std_test_score",
-        "mean_fit_time",
-        "std_fit_time",
-        "mean_score_time",
         "std_score_time",
+        "mean_score_time",
+        "std_fit_time",
+        "mean_fit_time",
+        "std_test_score",
+        "mean_test_score",
     ]
     assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
@@ -208,10 +208,10 @@ def test_no_names():
         .skb.apply(LogisticRegression(), y=skrub.y(y))
     ).skb.get_grid_search(fitted=True, cv=2)
     assert list(e.results_.columns) == [
-        "mean_test_score",
         "choose_bool()",
         "choose_bool()_1",
         "m",
+        "mean_test_score",
     ]
 
 
@@ -303,20 +303,20 @@ def test_multimetric():
         .skb.get_grid_search(fitted=True, scoring=scoring, refit="roc_auc")
     )
     assert list(expr_search.results_.columns) == [
-        "mean_test_roc_auc",
-        "mean_test_accuracy",
         "C",
+        "mean_test_accuracy",
+        "mean_test_roc_auc",
     ]
     assert list(expr_search.detailed_results_.columns) == [
-        "mean_test_roc_auc",
-        "mean_test_accuracy",
         "C",
-        "std_test_roc_auc",
-        "std_test_accuracy",
-        "mean_fit_time",
-        "std_fit_time",
-        "mean_score_time",
         "std_score_time",
+        "mean_score_time",
+        "std_fit_time",
+        "mean_fit_time",
+        "std_test_accuracy",
+        "std_test_roc_auc",
+        "mean_test_accuracy",
+        "mean_test_roc_auc",
     ]
 
     sklearn_results = (
@@ -422,6 +422,20 @@ def test_train_test_split(with_y):
         assert e.skb.eval(split["train"]) == [2, 1, 0]
         assert e.skb.eval(split["test"]) == [3]
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
+
+
+def test_iter_pipelines():
+    e = skrub.choose_from([1, 2, 3], name="c").as_expr()
+    assert [p.describe_params() for p in e.skb.iter_pipelines_grid()] == [
+        {"c": 1},
+        {"c": 2},
+        {"c": 3},
+    ]
+
+    e = skrub.choose_int(0, 1000, name="c").as_expr()
+    assert [
+        p.describe_params() for p in e.skb.iter_pipelines_randomized(3, random_state=0)
+    ] == [{"c": 548}, {"c": 715}, {"c": 602}]
 
 
 #

@@ -357,6 +357,44 @@ def test_apply_instead_of_skb_apply():
         a.apply(int)
 
 
+def test_apply_instead_of_apply_func():
+    with pytest.raises(
+        Exception,
+        match=r".*Got a function instead.*Did you mean to use `\.skb\.apply_func\(\)`",
+    ):
+        skrub.X(0).skb.apply(lambda x: x)
+
+    class Func:
+        def __call__(self, x):
+            return x
+
+    with pytest.raises(
+        Exception,
+        match=r".*Got a callable object instead.*"
+        r"Did you mean to use `\.skb\.apply_func\(\)`",
+    ):
+        skrub.X(0).skb.apply(Func())
+
+
+def test_apply_class_not_instance():
+    with pytest.raises(Exception, match=r"Please provide an instance"):
+        skrub.X(0).skb.apply(skrub.TableVectorizer)
+
+
+def test_apply_bad_type():
+    with pytest.raises(
+        Exception, match=r".*should be `None`, the string 'passthrough' or"
+    ):
+        skrub.X(0).skb.apply(...)
+
+
+def test_apply_bad_string():
+    with pytest.raises(
+        Exception, match=r".*should be `None`, the string 'passthrough' or"
+    ):
+        skrub.X(0).skb.apply("pass through")
+
+
 def test_method_call_failure():
     with pytest.raises(
         Exception,
@@ -403,7 +441,7 @@ def test_pass_df_instead_of_expr():
         skrub.var("a").join(df, on="ID")
     # this one is raised by polars so we do not control the type or error
     # message but it fails early and is understandable
-    with pytest.raises(TypeError, match="expected .* to be a DataFrame"):
+    with pytest.raises(TypeError, match="expected .* to be a '?DataFrame'?"):
         df.join(skrub.var("a"), on="ID")
 
 

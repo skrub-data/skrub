@@ -7,7 +7,11 @@ import pytest
 import skrub
 from skrub import _dataframe as sbd
 from skrub import _utils
-from skrub._utils import LRUDict, import_optional_dependency, unique_strings
+from skrub._utils import (
+    LRUDict,
+    import_optional_dependency,
+    unique_strings,
+)
 
 
 def test_lrudict():
@@ -71,6 +75,12 @@ def test_short_repr():
             return "short"
 
     assert _utils.short_repr(A()) == "short"
+
+    class A:
+        def __repr__(self):
+            return f"make({list(range(100))})"
+
+    assert _utils.short_repr(A()) == "make([0, 1, 2, 3, 4, 5, 6...)"
 
 
 def test_passthrough():
