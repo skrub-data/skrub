@@ -77,6 +77,7 @@ TableReport(data)
 
 # %%
 ###############################################################################
+#
 # Prediction with datetime features
 # ---------------------------------
 #
@@ -91,17 +92,16 @@ TableReport(data)
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import RidgeCV
 
+###############################################################################
 # Since we are working with timeseries, we need to use |TimeSeriesSplit| to perform
 # crossvalidation.
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
-ts = TimeSeriesSplit()
-
 ts = TimeSeriesSplit(
     n_splits=3,  # to keep the notebook fast enough on common laptops
-    gap=48,  # 2 days data gap between train and test
+    gap=48,  # 2 days (48 hours) data gap between train and test
     max_train_size=10000,  # keep train sets of comparable sizes
     test_size=3000,  # for 2 or 3 digits of precision in scores
 )
@@ -110,20 +110,13 @@ import skrub
 from skrub import TableVectorizer
 
 ###############################################################################
-# The |DatetimeEncoder| can generate additional periodic features, which are
-# particularly useful for linear models such as Ridge. Periodic features are off
-# by default, but they can be enabled by setting the
-# ``periodic encoding`` parameter to either  ``circular`` or ``spline``,
-# for trigonometric functions or B-Splines respectively. In this example, we use
-# ``spline``.
-# Periodic features are added for each part of the date: hour in day, day in week,
-# day in month, month in year.
-# week, day in year) are added.
-
 # We define a skrub |var| to start with.
+
 data_var = skrub.var("data", data)
 
+###############################################################################
 # We extract our input data (X) and the target column (y), and mark them as X and y.
+
 X = data_var[
     "date", "holiday", "weathersit", "temp", "hum", "windspeed"
 ].skb.mark_as_X()
@@ -131,28 +124,49 @@ y = data_var["cnt"].skb.mark_as_y()
 X
 
 # %%
+from skrub import Cleaner
+
+# We can use the |Cleaner| to clean the data and convert the date column to a
+# datetime column, as well as performing additional consistency and cleaning checks.
+X = X.skb.apply(Cleaner())
+
+# %%
+###############################################################################
 # Now we define a simple default pipeline for the |RidgeCV| predictor, which includes
 # a |StandardScaler| for numerical features and a |SimpleImputer| to handle
 # missing values. We will not modify this
 # pipeline: we will instead focus on pre-processing and feature engineering.
-# Note that
+
 default_ridge_pipeline = make_pipeline(StandardScaler(), SimpleImputer(), RidgeCV())
 
+###############################################################################
 # The "base" variant of the pipeline uses the default |TableVectorizer|, with
 # no hyperparameter search.
+
 vectorized = X.skb.apply(TableVectorizer())
 predictions_base = vectorized.skb.apply(default_ridge_pipeline, y=y)
 search_base = predictions_base.skb.get_grid_search(fitted=True, cv=ts)
 
-# %% We can observe the results directly using ``.detailed_results``. Unsurprisingly,
+# %%
+###############################################################################
+# We can observe the results directly using ``.detailed_results``. Unsurprisingly,
 # the results are not very good. In this case, performing a GridSearch is not
 # necessary, but we will do it for consistency with the next steps.
+
 search_base.detailed_results_
 
 # %%
+###############################################################################
 # Prediction with periodic encoders and hyperparameter optimization
 # -----------------------------------------------------------------
 #
+# The |DatetimeEncoder| can generate additional periodic features, which are
+# particularly useful for linear models such as Ridge. Periodic features are off
+# by default, but they can be enabled by setting the
+# ``periodic encoding`` parameter to either  ``circular`` or ``spline``,
+# for trigonometric functions or B-Splines respectively.
+# Periodic features are added for each part of the date: hour in day, day in week,
+# day in month, month in year.
 # For our second pipeline, we define a grid of hyperparameters using the skrub
 # ``choose_*`` functions. In this case, we use |choose_bool| and |choose_from|,
 # as we are not interested in tweaking numerical parameters.
@@ -171,24 +185,55 @@ datetime_encoder = DatetimeEncoder(
             "spline",
             "circular",
             None,
-        ]
+        ],
+        name="periodic_encoding",
     ),
 )
 
-vectorized = X.skb.apply(TableVectorizer(datetime=datetime_encoder))
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import KBinsDiscretizer
+
+import skrub.selectors as s
+
+numeric_encoder = make_pipeline(
+    skrub.choose_from(
+        {
+            "kbins": KBinsDiscretizer(n_bins=5, encode="ordinal", strategy="uniform"),
+            "passthrough": "passthrough",
+        },
+        name="numeric_encoder",
+    ),
+    StandardScaler(),
+    SimpleImputer(),
+)
+
+
+vectorized = X.skb.apply(datetime_encoder, cols=s.any_date()).skb.apply(
+    numeric_encoder, cols=s.numeric()
+)
 predictions_enc = vectorized.skb.apply(default_ridge_pipeline, y=y)
 
+###############################################################################
 # Note that, in general, randomized search should be used instead of grid search.
 # In this case, grid search is fine as we are interested in a grid of categorical
 # values.
 search_enc = predictions_enc.skb.get_grid_search(fitted=True, cv=ts)
 # %%
+###############################################################################
 search_enc.detailed_results_
+
 # %%
+###############################################################################
+search_enc.plot_results(min_score=0.0)
+
+# %%
+###############################################################################
 # We can observe that the prediction results have improved a lot thanks to the
 # introduction of the periodic features, however they are still not very good.
 # We can also see that setting ``total_seconds`` to ``True`` seems to consistently
-# reduce the test score.
+# reduce the test score. Performing a KBins discretization on the numerical features
+# does not seem to help either, as the results are worse than using passthrough,
+# although discretization helps when the periodic features are not used.
 #
 # Adding lagged features
 # ----------------------
@@ -225,15 +270,29 @@ def get_lagged_features(df):
     return lagged_df
 
 
+###############################################################################
+# To add lagged features to the data, we go back to the original ``data_var``, and
+# drop the columns that are not relevant. We will have to clean the data again.
+
 data_prep = data_var.drop("casual", "instant", "registered").skb.mark_as_X()
+data_prep = data_prep.skb.apply(Cleaner())
+
+
+###############################################################################
+# We can use the |apply_func| method to apply the lagged feature function
+# to the data. The lagged features are added to the dataframe, and we can then
+# concatenate them with the original data.
+
 data_lagged = data_prep.skb.apply_func(get_lagged_features).drop("cnt")
 X = data_prep.skb.concat([data_lagged], axis=1).drop("cnt")
 X
+
+###############################################################################
 # Notice that adding lagged samples will introduce null values for all the initial
 # samples, as there is no previous information for them.
 
 y = data_var["cnt"].skb.mark_as_y()
-# %% We use the datetime encoder defined above to observe the impact of the new
+# %% We can use the datetime encoder defined above to observe the impact of the new
 # features on the predictions.
 
 vectorized = X.skb.apply(TableVectorizer(datetime=datetime_encoder))
@@ -250,9 +309,6 @@ search_lagged.detailed_results_
 # .......................
 #
 # To have a better idea of the quality of the predictions, we can plot them directly.
-# To do so, we try to predict
-
-# %%
 # We can use |train_test_split| to separate the data into a train split and
 # a test split.
 # In this case, we will use all the data for the year 2011 to predict year 2012.
@@ -270,15 +326,16 @@ def split_function(X, y, cutoff=None):
     return X_train, X_test, y_train, y_test
 
 
+###############################################################################
 # Then, we train each pipeline on the training split and predict on the test split.
 split = predictions_base.skb.train_test_split(
     environment=predictions_base.skb.get_data(),
     splitter=split_function,
     cutoff="2012-01-01",
 )
-search_base = predictions_base.skb.get_grid_search(cv=TimeSeriesSplit()).fit(
-    split["train"]
-)
+search_base = predictions_base.skb.get_grid_search(
+    cv=TimeSeriesSplit(), fitted=True
+).fit(split["train"])
 results_base = search_base.best_pipeline_.predict(split["test"])
 
 split = predictions_enc.skb.train_test_split(
@@ -286,7 +343,7 @@ split = predictions_enc.skb.train_test_split(
     splitter=split_function,
     cutoff="2012-01-01",
 )
-search_enc = predictions_enc.skb.get_grid_search(cv=TimeSeriesSplit()).fit(
+search_enc = predictions_enc.skb.get_grid_search(cv=TimeSeriesSplit(), fitted=True).fit(
     split["train"]
 )
 results_enc = search_enc.best_pipeline_.predict(split["test"])
@@ -296,14 +353,16 @@ split = predictions_lagged.skb.train_test_split(
     splitter=split_function,
     cutoff="2012-01-01",
 )
-search_lagged = predictions_lagged.skb.get_grid_search(cv=TimeSeriesSplit()).fit(
-    split["train"]
-)
+search_lagged = predictions_lagged.skb.get_grid_search(
+    cv=TimeSeriesSplit(), fitted=True
+).fit(split["train"])
 results_lagged = search_lagged.best_pipeline_.predict(split["test"])
 #
 # %%
+###############################################################################
 # Now we can plot the results. For the sake of the example, we will consider only
 # a single week in the year to be able to observe some details.
+
 from datetime import datetime, timedelta
 
 import matplotlib.dates as mdates
