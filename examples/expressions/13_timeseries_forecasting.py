@@ -66,113 +66,14 @@ datetime features on the prediction performance.
 # on the date, time and weather conditions.
 # In this example, we will use Polars dataframes instead of Pandas.
 
-from pprint import pprint
 
 import polars as pl
 
-import skrub
 from skrub import TableReport, datasets
 
 data = datasets.fetch_bike_sharing().bike_sharing
 data = pl.from_pandas(data)
 TableReport(data)
-
-###############################################################################
-# %% We can convert the dataframe's ``"date"`` column from string to datetime
-# using |ToDatetime|.
-
-from skrub import ToDatetime
-
-transformed_dates = ToDatetime().fit_transform(data["date"])
-
-print(
-    "original dtype:",
-    data["date"].dtype,
-    "\n\nconverted dtype:",
-    transformed_dates.dtype,
-)
-# %%
-###############################################################################
-# Encoding the features
-# .....................
-#
-# For the sake of the example, we will now encode the ``date`` column
-# with a |DatetimeEncoder| to show the operations that are executed by the
-# encoder. In practice, the ``DatetimeEncoder`` would be passed to a
-# |TableVectorizer| object, as the latter will handle parsing datetimes
-# and perform additional cleaning steps.
-#
-# During the instantiation of the |DatetimeEncoder|, we specify that we want
-# don't want to extract features with a resolution finer than hours. This is
-# because we don't want to extract minutes, seconds and lower units, as they
-# are unimportant here.
-
-from skrub import DatetimeEncoder
-
-# DatetimeEncoder has "hour" as default resolution
-date_enc = DatetimeEncoder().fit_transform(transformed_dates)
-
-print(transformed_dates, "\n\nHas been encoded as:\n\n", date_enc)
-# %%
-###############################################################################
-# We see that the encoder is working as expected: the column has
-# been replaced by features extracting the month, day, hour, and day of the
-# week. Additionally, the total seconds since Epoch are also added by default.
-
-###############################################################################
-# One-liner with the TableVectorizer
-# ..................................
-#
-# As mentioned earlier, the |TableVectorizer| makes use of the
-# |DatetimeEncoder| by default. Note that ``X["date"]`` is still
-# a string, but will be automatically transformed into a datetime in the
-# |TableVectorizer|.
-
-from skrub import TableVectorizer
-
-table_vec = TableVectorizer().fit(data)
-pprint(table_vec.get_feature_names_out())
-
-# %%
-###############################################################################
-# If we want to customize the |DatetimeEncoder| inside the |TableVectorizer|,
-# we can replace its default parameter with a new, custom instance.
-#
-# Here, for example, we want it to extract the day of the week:
-
-# use the ``datetime`` argument to use a custom DatetimeEncoder in the TableVectorizer
-table_vec_weekday = TableVectorizer(datetime=DatetimeEncoder(add_weekday=True)).fit(
-    data
-)
-pprint(table_vec_weekday.get_feature_names_out())
-
-###############################################################################
-# .. note:
-#     For more information on how to customize the |TableVectorizer|, see
-#     :ref:`sphx_glr_auto_examples_01_dirty_categories.py`.
-#
-# Inspecting the |TableVectorizer| further, we can check that the
-# |DatetimeEncoder| is used on the correct column(s).
-pprint(table_vec_weekday.transformers_)
-
-###############################################################################
-#
-# Feature engineering for linear models
-# ....................................................................
-#
-# The |DatetimeEncoder| can generate additional periodic features. These are
-# particularly useful for linear models. This is controlled by the
-# ``periodic encoding`` parameter which can be either  ``circular`` or ``spline``,
-# for trigonometric functions or B-Splines respectively. In this example, we use
-# ``spline``.
-
-table_vec_periodic = TableVectorizer(
-    datetime=DatetimeEncoder(add_weekday=True, periodic_encoding="spline")
-).fit(data)
-table_vec_periodic.transform(data)
-
-# Spline features for each part of the date (month in year, day in month, day in
-# week, day in year) are added.
 
 # %%
 ###############################################################################
@@ -186,10 +87,11 @@ table_vec_periodic.transform(data)
 # model, it will help us illustrate how feature engineering affects the prediction
 # performance.
 
+
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import RidgeCV
 
-# As we are working with timeseries, we need to use |TimeSeriesSplit| to perform
+# Since we are working with timeseries, we need to use |TimeSeriesSplit| to perform
 # crossvalidation.
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.pipeline import make_pipeline
@@ -203,6 +105,21 @@ ts = TimeSeriesSplit(
     max_train_size=10000,  # keep train sets of comparable sizes
     test_size=3000,  # for 2 or 3 digits of precision in scores
 )
+
+import skrub
+from skrub import TableVectorizer
+
+###############################################################################
+# The |DatetimeEncoder| can generate additional periodic features, which are
+# particularly useful for linear models such as Ridge. Periodic features are off
+# by default, but they can be enabled by setting the
+# ``periodic encoding`` parameter to either  ``circular`` or ``spline``,
+# for trigonometric functions or B-Splines respectively. In this example, we use
+# ``spline``.
+# Periodic features are added for each part of the date: hour in day, day in week,
+# day in month, month in year.
+# week, day in year) are added.
+
 # We define a skrub |var| to start with.
 data_var = skrub.var("data", data)
 
@@ -215,8 +132,10 @@ X
 
 # %%
 # Now we define a simple default pipeline for the |RidgeCV| predictor, which includes
-# a |StandardScaler| for numerical and a |SimpleImputer|. We will not modify this
-# pipeline: we will instead focus on the pre-processing and feature engineering.
+# a |StandardScaler| for numerical features and a |SimpleImputer| to handle
+# missing values. We will not modify this
+# pipeline: we will instead focus on pre-processing and feature engineering.
+# Note that
 default_ridge_pipeline = make_pipeline(StandardScaler(), SimpleImputer(), RidgeCV())
 
 # The "base" variant of the pipeline uses the default |TableVectorizer|, with
@@ -241,6 +160,9 @@ search_base.detailed_results_
 # to perform hyperparameter optimization.
 # Here, we use them to turn on and off the ``weekday`` and ``total_seconds`` flag,
 # and to select the specific periodic encoder to use.
+
+from skrub import DatetimeEncoder
+
 datetime_encoder = DatetimeEncoder(
     add_weekday=skrub.choose_bool(name="weekday"),
     add_total_seconds=skrub.choose_bool(name="total_seconds"),
