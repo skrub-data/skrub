@@ -120,11 +120,13 @@ from skrub import TableVectorizer
 ###############################################################################
 # We define a skrub |var| to start with.
 
+
 data_var = skrub.var("data", data)
 
-###############################################################################
+
 # We extract our input data (``X``) and the target column (``y``), and mark them
 # as X and y.
+
 
 X = data_var[
     "date", "holiday", "weathersit", "temp", "hum", "windspeed"
@@ -132,9 +134,11 @@ X = data_var[
 y = data_var["cnt"].skb.mark_as_y()
 X
 
+
 # %%
 # We can use the |Cleaner| to clean the data and convert the date column to a
 # datetime column, as well as performing additional consistency and cleaning checks.
+
 
 from skrub import Cleaner
 
@@ -145,6 +149,7 @@ X = X.skb.apply(Cleaner())
 # a |StandardScaler| for numerical features and a |SimpleImputer| to handle
 # missing values. We will not modify this pipeline: we will instead focus on
 # pre-processing and feature engineering.
+
 
 default_ridge_pipeline = make_pipeline(StandardScaler(), SimpleImputer(), RidgeCV())
 
@@ -161,6 +166,7 @@ search_base = predictions_base.skb.get_grid_search(fitted=True, cv=ts)
 # We can observe the results directly using ``.detailed_results``. Unsurprisingly,
 # the results are not very good. In this case, performing a GridSearch is not
 # necessary, but we will do it for consistency with the next steps.
+
 
 search_base.detailed_results_
 
@@ -183,6 +189,7 @@ search_base.detailed_results_
 # to perform hyperparameter optimization.
 # Here, we use them to turn on and off the ``weekday`` and ``total_seconds`` flag,
 # and to select the specific periodic encoder to use.
+
 
 from skrub import DatetimeEncoder
 
@@ -232,12 +239,16 @@ search_enc = predictions_enc.skb.get_grid_search(fitted=True, cv=ts)
 
 
 # %%
-# We again observe the results of the grid search, and plot the parallel coordinate
-# plot to visualize the impact of the hyperparameters on the prediction performance.
+# We again observe the results of the grid search:
+
 
 search_enc.detailed_results_
 
 # %%
+# We may also use the parallel coordinate plot to visualize the impact of the
+# hyperparameters on the prediction performance.
+
+
 search_enc.plot_results(min_score=0.0)
 
 
