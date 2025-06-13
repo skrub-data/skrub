@@ -73,7 +73,7 @@ datetime features on the prediction performance.
 # A problem with relevant datetime features
 # -----------------------------------------
 #
-# We will use a dataset of bike sharing demand in 2011 and 2012.
+# We use a dataset of bike sharing demand in 2011 and 2012.
 # In this setting, we want to predict the number of bike rentals, based
 # on the date, time and weather conditions.
 # In this example, we will use Polars dataframes instead of Pandas.
