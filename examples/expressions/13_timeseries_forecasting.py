@@ -92,7 +92,7 @@ TableReport(data)
 # Prediction with datetime features
 # ---------------------------------
 #
-# In this section, we will use skrub Expressions to build a predictive pipeline
+# In this section, we use skrub Expressions to build a predictive pipeline
 # that pre-processes the data and performs hyperparameter optimization for various
 # of the steps involved in the preparation.
 # We will use a |RidgeCV| model as our learner. While it is not the most powerful
