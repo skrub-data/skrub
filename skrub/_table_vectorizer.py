@@ -182,6 +182,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
+    convert_float32 : bool, default=False
+        If set to ``True``, convert numeric columns to ``np.float32`` dtype.
+
     n_jobs : int, default=None
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
@@ -225,11 +228,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``ToStr()``: convert columns to strings, unless they are numerical,
       categorical, or datetime.
 
-    The ``Cleaner`` object should only be used for preliminary sanitizing of
-    the data because it does not perform any transformations on numeric columns.
-    On the other hand, the ``TableVectorizer`` converts numeric columns to ``float32``
-    and ensures that null values are represented with NaNs, which can be handled
-    correctly by downstream scikit-learn estimators.
+    If ``convert_float32`` is set to ``True``, the ``Cleaner`` will also convert
+    numeric columns to ``np.float32`` dtype, ensuring a consistent representation
+    of numbers and missing values. This can be useful if the ``Cleaner``
+    is used as a preprocessing step in a skrub pipeline.
 
     Examples
     --------
@@ -288,6 +290,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
     TableVectorizer :
         Process columns of a dataframe and convert them to a numeric (vectorized)
         representation.
+
+    ToFloat32 :
+        Convert numeric columns to ``np.float32``, to have consistent numeric
+        types and representation of missing values. More informative columns (e.g.,
+        categorical or datetime) are not converted.
     """
 
     def __init__(
@@ -296,12 +303,14 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_constant=False,
         drop_if_unique=False,
         datetime_format=None,
+        convert_float32=False,
         n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
+        self.convert_float32 = convert_float32
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -328,7 +337,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=False,
+            add_tofloat32=self.convert_float32,
             datetime_format=self.datetime_format,
         )
         self._pipeline = make_pipeline(*all_steps)
@@ -539,7 +548,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     Cleaner :
         Preprocesses each column of a dataframe with consistency checks and
-        sanitization, eg of null values or dates.
+        sanitization, e.g., of null values or dates.
 
     Examples
     --------

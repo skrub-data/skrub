@@ -405,6 +405,11 @@ def test_convert_float32():
     assert sbd.is_float(out["float"])
     assert sbd.is_integer(out["int"])
 
+    vectorizer = Cleaner(convert_float32=True)
+    out = vectorizer.fit_transform(X)
+    assert sbd.is_float(out["float"])
+    assert sbd.is_float(out["int"])
+
 
 def test_auto_cast_missing_categories():
     X = _get_dirty_dataframe("category")
