@@ -61,6 +61,9 @@ datetime features on the prediction performance.
 .. |train_test_split| replace::
     :meth:`skrub.Expr.skb.train_test_split`
 
+.. |deferred| replace::
+    :meth:`skrub.deferred`
+
 .. _scikit-learn example:
  `<https://scikit-learn.org/stable/auto_examples/applications/plot_time_series_lagged_features.html#generating-polars-engineered-lagged-featurehttps://scikit-learn.org/stable/auto_examples/applications/plot_time_series_lagged_features.html#generating-polars-engineered-lagged-featuress>`_
 
@@ -114,20 +117,17 @@ ts = TimeSeriesSplit(
     test_size=3000,  # for 2 or 3 digits of precision in scores
 )
 
-import skrub
-from skrub import TableVectorizer
 
 ###############################################################################
 # We define a skrub |var| to start with.
 
 
-data_var = skrub.var("data", data)
+import skrub
 
+data_var = skrub.var("data", data)
 
 # We extract our input data (``X``) and the target column (``y``), and mark them
 # as X and y.
-
-
 X = data_var[
     "date", "holiday", "weathersit", "temp", "hum", "windspeed"
 ].skb.mark_as_X()
@@ -138,6 +138,7 @@ X
 # %%
 # We can use the |Cleaner| to clean the data and convert the date column to a
 # datetime column, as well as performing additional consistency and cleaning checks.
+#
 
 
 from skrub import Cleaner
@@ -153,10 +154,12 @@ X = X.skb.apply(Cleaner())
 
 default_ridge_pipeline = make_pipeline(StandardScaler(), SimpleImputer(), RidgeCV())
 
-
+# %%
 # The "base" variant of the pipeline uses the default |TableVectorizer|, with
-# no hyperparameter search.
+# no hyperparameter search. In this case, performing a GridSearch is not
+# necessary, but we will do it for consistency with the next steps.
 
+from skrub import TableVectorizer
 
 vectorized = X.skb.apply(TableVectorizer())
 predictions_base = vectorized.skb.apply(default_ridge_pipeline, y=y)
@@ -164,8 +167,7 @@ search_base = predictions_base.skb.get_grid_search(fitted=True, cv=ts)
 
 # %%
 # We can observe the results directly using ``.detailed_results``. Unsurprisingly,
-# the results are not very good. In this case, performing a GridSearch is not
-# necessary, but we will do it for consistency with the next steps.
+# the results are not very good.
 
 
 search_base.detailed_results_
@@ -191,6 +193,9 @@ search_base.detailed_results_
 # and to select the specific periodic encoder to use.
 
 
+from sklearn.pipeline import make_pipeline
+
+import skrub.selectors as s
 from skrub import DatetimeEncoder
 
 datetime_encoder = DatetimeEncoder(
@@ -206,30 +211,11 @@ datetime_encoder = DatetimeEncoder(
     ),
 )
 
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import KBinsDiscretizer
 
-import skrub.selectors as s
-
-numeric_encoder = make_pipeline(
-    skrub.choose_from(
-        {
-            "kbins": KBinsDiscretizer(n_bins=5, encode="ordinal", strategy="uniform"),
-            "passthrough": "passthrough",
-        },
-        name="numeric_encoder",
-    ),
-    StandardScaler(),
-    SimpleImputer(),
-)
-
-
-vectorized = X.skb.apply(datetime_encoder, cols=s.any_date()).skb.apply(
-    numeric_encoder, cols=s.numeric()
-)
+vectorized = X.skb.apply(datetime_encoder, cols=s.any_date())
 predictions_enc = vectorized.skb.apply(default_ridge_pipeline, y=y)
 
-
+# %%
 # Note that, in general, randomized search should be used instead of grid search.
 # In this case, grid search is fine as we are interested in a grid of categorical
 # values.
@@ -239,15 +225,15 @@ search_enc = predictions_enc.skb.get_grid_search(fitted=True, cv=ts)
 
 
 # %%
-# We again observe the results of the grid search:
-
+# We again observe the results of the grid search using ``.detailed_results_``.
 
 search_enc.detailed_results_
 
 # %%
 # We may also use the parallel coordinate plot to visualize the impact of the
-# hyperparameters on the prediction performance.
-
+# hyperparameters on the prediction performance. It is possible to set a ``min_score``
+# to filter out results that have score below the given threshold: in this case,
+# we filter out result with a score below ``0.0``.
 
 search_enc.plot_results(min_score=0.0)
 
@@ -256,18 +242,16 @@ search_enc.plot_results(min_score=0.0)
 # We can observe that the prediction results have improved a lot thanks to the
 # introduction of the periodic features, however they are still not very good.
 # We can also see that setting ``total_seconds`` to ``True`` seems to consistently
-# reduce the test score. Performing a KBins discretization on the numerical features
-# does not seem to help either, as the results are worse than using passthrough,
-# although discretization helps when the periodic features are not used.
+# reduce the test score.
 #
 # Adding lagged features
 # ----------------------
 #
-# The prediction results are not very good, so in this section we will extend the
-# feature generation section to include lagged features.
-# This function is taken from a similar `scikit-learn example`_. As the lagged
-# features are based on the actual count, we go back to the original data to
-# perform feature engineering on that.
+# To further improve the prediction performance, we will extend the
+# feature generation step to include lagged features.
+# This function is taken from a similar `_scikit-learn example`. As the lagged
+# features are based on the real count (i.e., the target feature), we go back to
+# the original data to perform feature engineering on that.
 #
 # To introduce the lagged features, we use a |deferred| function that takes the
 # dataframe we are working with, then adds lagged features to it. Given a sample
@@ -276,6 +260,9 @@ search_enc.plot_results(min_score=0.0)
 # three hours, the same hour on the prior day, as well as aggregate features
 # (mean, max, min) obtained by using a rolling mean of either 24 hours, or 7 days.
 #
+# |deferred| functions delay the execution of the function until it is reached in
+# the execution of the skrub expression. They allow arbitrary code to be executed,
+# such as operations that leverage the Pandas or Polars API.
 
 
 # %%
@@ -298,34 +285,32 @@ def get_lagged_features(df):
     return lagged_df
 
 
+# %%
 # To add lagged features to the data, we go back to the original ``data_var``, and
 # drop the columns that are not relevant. We will have to clean the data again.
 
 
-# %%
 data_prep = data_var.drop("casual", "instant", "registered").skb.mark_as_X()
 data_prep = data_prep.skb.apply(Cleaner())
 
 
+# %%
 # We can use the |apply_func| method to apply the lagged feature function
 # to the data. The lagged features are added to the dataframe, and we can then
-# concatenate them with the original data.
-
-# %%
-data_lagged = data_prep.skb.apply_func(get_lagged_features).drop("cnt")
-X = data_prep.skb.concat([data_lagged], axis=1).drop("cnt")
-X
-
-
+# concatenate them with the original data. This is done by using the ``.skb.concat``
+# method, which concatenates the two dataframes along either the rows or the columns.
+#
 # Notice that adding lagged samples will introduce null values for all the initial
 # samples, as there is no previous information for them.
 
+data_lagged = data_prep.skb.apply_func(get_lagged_features).drop("cnt")
+X = data_prep.skb.concat([data_lagged], axis=1).drop("cnt")
+y = data_var["cnt"].skb.mark_as_y()
+X
+
 
 # %%
-y = data_var["cnt"].skb.mark_as_y()
-
-
-# %% We can use the datetime encoder defined above to observe the impact of the new
+# We can use the datetime encoder defined above to observe the impact of the new
 # features on the predictions.
 
 
@@ -335,8 +320,9 @@ search_lagged = predictions_lagged.skb.get_grid_search(fitted=True, cv=ts)
 search_lagged.detailed_results_
 
 
+# %%
 # We can see that the lagged features improved the prediction performance by a
-# large margin. Periodic features bring some benefit.
+# large margin. Periodic features are still bringing some benefit.
 
 
 ###############################################################################
@@ -352,6 +338,7 @@ search_lagged.detailed_results_
 # cutoff date and use that to prepare the train an test splits.
 # For each pipeline, we run a grid search and select only the best pipeline according
 # to its test score.
+# Then, we train each pipeline on the training split and predict on the test split.
 
 
 def split_function(X, y, cutoff=None):
@@ -362,36 +349,35 @@ def split_function(X, y, cutoff=None):
 
 
 ###############################################################################
-# Then, we train each pipeline on the training split and predict on the test split.
-split = predictions_base.skb.train_test_split(
+split_base = predictions_base.skb.train_test_split(
     environment=predictions_base.skb.get_data(),
     splitter=split_function,
     cutoff="2012-01-01",
 )
 search_base = predictions_base.skb.get_grid_search(
     cv=TimeSeriesSplit(), fitted=True
-).fit(split["train"])
-results_base = search_base.best_pipeline_.predict(split["test"])
+).fit(split_base["train"])
+results_base = search_base.best_pipeline_.predict(split_base["test"])
 
-split = predictions_enc.skb.train_test_split(
+split_enc = predictions_enc.skb.train_test_split(
     environment=predictions_enc.skb.get_data(),
     splitter=split_function,
     cutoff="2012-01-01",
 )
 search_enc = predictions_enc.skb.get_grid_search(cv=TimeSeriesSplit(), fitted=True).fit(
-    split["train"]
+    split_enc["train"]
 )
-results_enc = search_enc.best_pipeline_.predict(split["test"])
+results_enc = search_enc.best_pipeline_.predict(split_enc["test"])
 
-split = predictions_lagged.skb.train_test_split(
+split_lagged = predictions_lagged.skb.train_test_split(
     environment=predictions_lagged.skb.get_data(),
     splitter=split_function,
     cutoff="2012-01-01",
 )
 search_lagged = predictions_lagged.skb.get_grid_search(
     cv=TimeSeriesSplit(), fitted=True
-).fit(split["train"])
-results_lagged = search_lagged.best_pipeline_.predict(split["test"])
+).fit(split_lagged["train"])
+results_lagged = search_lagged.best_pipeline_.predict(split_lagged["test"])
 
 
 # %%
@@ -406,8 +392,8 @@ import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots(figsize=(12, 3), layout="constrained")
 
-X_plot = split["X_test"].select(pl.col("date").str.to_datetime())
-y_true = split["y_test"]
+X_plot = split_base["X_test"].select(pl.col("date").str.to_datetime())
+y_true = split_base["y_test"]
 y_base = results_base
 y_enc = results_enc
 y_lagged = results_lagged
@@ -421,17 +407,19 @@ ax.plot(X_plot, y_lagged, label="Lagged + Periodic Features")
 ax.set_xlim([datetime(2012, 11, 1), datetime(2012, 11, 8)])
 ax.set_ylim([0, 800])
 
+# Format the x-axis
+# Set the x-axis minor ticks to appear every 6 hours and the major ticks to appear
+# every day.
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %h"))
 ax.xaxis.set_minor_formatter(mdates.DateFormatter("%Hh"))
-
 ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 6)))
 ax.xaxis.set_major_locator(mdates.DayLocator())
-
-ax.set_ylabel("Demand")
-
 ax.tick_params(axis="x", which="minor", labelsize=8)
 ax.tick_params(axis="x", which="major", pad=10)
 
+ax.set_ylabel("Demand")
+
+# Annotating the days that correspond to the weekend.
 annotation_text = "Weekend"
 
 point1 = [datetime(2012, 11, 3, 14, 0, 0), 500]
@@ -473,16 +461,17 @@ fig.suptitle(
 # from rush hour, however it does not match the different behavior shown in the
 # weekends, and it does not match the rush hour peaks either.
 # Finally, the pipeline that includes lagged features tracks the actual demand
-# very accurately, and is also able to follow the difference in demand that on the
+# very accurately, and is also able to follow the difference in demand on the
 # weeekends.
 #
 #
 # Summary
 # ^^^^^^^
-# In this example we have shown how to use the Skrub DatetimeEncoder to perform
-# feature engineering on dates to generate periodic features, and we added
-# lagged features to further extract information from the data.
+# In this example we have shown how to combine the Skrub DatetimeEncoder and the
+# skrub expressions to perform feature engineering on dates: we generated periodic
+# features, and we added lagged features to further extract information from the data.
 # We also described how to use skrub expressions to generate hyperparameter grids,
 # how to use deferred functions, and how to cross-validate models to produce
 # results.
-# Finally, we plotted the predictions and drew some conclusions.
+# Finally, we plotted the predictions to observe the effectiveness of the different
+# preprocessing strategies.
