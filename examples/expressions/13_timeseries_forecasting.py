@@ -490,8 +490,6 @@ ax.legend(
     frameon=True,
 )
 
-fig.savefig("test.png")
-
 # %%
 #
 # As we can see, the pipeline that uses only the basic RidgeCV model does not
