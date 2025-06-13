@@ -405,10 +405,16 @@ def test_convert_float32():
     assert sbd.is_float(out["float"])
     assert sbd.is_integer(out["int"])
 
-    vectorizer = Cleaner(convert_float32=True)
+    vectorizer = Cleaner(numerical_dtype="float32")
     out = vectorizer.fit_transform(X)
     assert sbd.is_float(out["float"])
     assert sbd.is_float(out["int"])
+
+
+def test_cleaner_invalid_numerical_dtype():
+    X = _get_clean_dataframe()
+    with pytest.raises(ValueError, match="numerical_dtype.*must be one of"):
+        Cleaner(numerical_dtype="wrong").fit_transform(X)
 
 
 def test_auto_cast_missing_categories():

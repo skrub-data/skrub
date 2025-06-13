@@ -182,8 +182,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
-    convert_float32 : bool, default=False
-        If set to ``True``, convert numeric columns to ``np.float32`` dtype.
+    numerical_dtype : "float32" or None, default=None
+        If set to ``float32``, convert numeric columns to ``np.float32`` dtype. If
+        ``None``, numerical dtypes are not modified.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -228,7 +229,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``ToStr()``: convert columns to strings, unless they are numerical,
       categorical, or datetime.
 
-    If ``convert_float32`` is set to ``True``, the ``Cleaner`` will also convert
+    If ``numerical_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
     numeric columns to ``np.float32`` dtype, ensuring a consistent representation
     of numbers and missing values. This can be useful if the ``Cleaner``
     is used as a preprocessing step in a skrub pipeline.
@@ -303,14 +304,14 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_constant=False,
         drop_if_unique=False,
         datetime_format=None,
-        convert_float32=False,
+        numerical_dtype=None,
         n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
-        self.convert_float32 = convert_float32
+        self.numerical_dtype = numerical_dtype
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -331,13 +332,21 @@ class Cleaner(TransformerMixin, BaseEstimator):
         dataframe
             The transformed input.
         """
+
+        add_tofloat32 = self.numerical_dtype == "float32"
+        if self.numerical_dtype not in (None, "float32"):
+            raise ValueError(
+                "`numerical_dtype` must be one of"
+                f"[`None`, `'float32'`]. Found {self.numerical_dtype}."
+            )
+
         all_steps = _get_preprocessors(
             cols=s.all(),
             drop_null_fraction=self.drop_null_fraction,
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=self.convert_float32,
+            add_tofloat32=add_tofloat32,
             datetime_format=self.datetime_format,
         )
         self._pipeline = make_pipeline(*all_steps)
