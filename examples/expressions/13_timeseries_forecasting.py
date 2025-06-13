@@ -105,23 +105,22 @@ TableReport(data)
 # Prediction with datetime features
 # ---------------------------------
 #
-# In this section, we use skrub Expressions to build a predictive pipeline
-# that pre-processes the data and performs hyperparameter optimization for various
-# of the steps involved in the preparation.
+# In this section, we use the skrub |DatetimeEncoder|, paired with the skrub
+# Expressions to build a predictive pipeline
+# that pre-processes the data, performs feature engineering and executes
+# hyperparameter optimization to improve the prediction performance.
 # We will use a |RidgeCV| model as our learner. While it is not the most powerful
 # model, it will help us illustrate how feature engineering affects the prediction
 # performance.
 
 
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import RidgeCV
 
-###############################################################################
+# %%
 # Since we are working with timeseries, we need to use |TimeSeriesSplit| to perform
 # crossvalidation.
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
 
 ts = TimeSeriesSplit(
     n_splits=3,  # to keep the notebook fast enough on common laptops
@@ -131,13 +130,16 @@ ts = TimeSeriesSplit(
 )
 
 
-###############################################################################
-# We define a skrub |var| to start with.
-
+# %%
+# We import ``skrub`` to access the skrub expressions and define a skrub |var|
+# to start with. We use |.skb.subsample| to reduce the size of the dataset used
+# in the preview to 100 rows, so that the notebook runs faster when developing.
+# When the models are trained, the expressions switch automatically to the full
+# dataset.
 
 import skrub
 
-data_var = skrub.var("data", data)
+data_var = skrub.var("data", data).skb.subsample(n=100)
 
 # We extract our input data (``X``) and the target column (``y``), and mark them
 # as X and y.
@@ -151,12 +153,13 @@ X
 # %%
 # We can use the |Cleaner| to clean the data and convert the date column to a
 # datetime column, as well as performing additional consistency and cleaning checks.
-#
+# The updated ``X`` dataframe will have the "date" column converted to a datetime.
 
 
 from skrub import Cleaner
 
 X = X.skb.apply(Cleaner())
+X
 
 # %%
 # Now we define a simple default pipeline for the |RidgeCV| predictor, which includes
@@ -164,23 +167,37 @@ X = X.skb.apply(Cleaner())
 # missing values. We will not modify this pipeline: we will instead focus on
 # pre-processing and feature engineering.
 
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
 
 default_ridge_pipeline = make_pipeline(StandardScaler(), SimpleImputer(), RidgeCV())
 
 # %%
 # The "base" variant of the pipeline uses the default |TableVectorizer|, with
-# no hyperparameter search. In this case, performing a GridSearch is not
+# no hyperparameter search. In this case, performing a grid-search is not
 # necessary, but we will do it for consistency with the next steps.
+# Note that in this case, the |TableVectorizer| repeats the same cleaning steps
+# as the |Cleaner|: for consistency with the next steps, we retain the cleaned
+# dataframe, but we could have used the original ``X`` dataframe instead.
+# The ``vectorized`` dataframe now contains the original numerical features,
+# while the ``date`` column has been converted to multiple columns, one for each
+# part of the date (year, month, day, hour, etc.). All numerical columns are now
+# float32.
 
 from skrub import TableVectorizer
 
 vectorized = X.skb.apply(TableVectorizer())
+vectorized
+# %%
 predictions_base = vectorized.skb.apply(default_ridge_pipeline, y=y)
 search_base = predictions_base.skb.get_grid_search(fitted=True, cv=ts)
 
 # %%
-# We can observe the results directly using ``.detailed_results``. Unsurprisingly,
-# the results are not very good.
+# We can observe the results directly using ``.detailed_results_``. Unsurprisingly,
+# the results are not very good. In this case, we are running a grid search with
+# a single pipeline, so the results are not very informative. In the next steps,
+# we introduce hyperparameter optimization, in which case the grid search will
+# become more useful.
 
 
 search_base.detailed_results_
@@ -204,7 +221,8 @@ search_base.detailed_results_
 # to perform hyperparameter optimization.
 # Here, we use them to turn on and off the ``weekday`` and ``total_seconds`` flag,
 # and to select the specific periodic encoder to use.
-
+# The new pipeline has the ending ``_feat_eng`` to indicate that it
+# includes feature engineering steps.
 
 from sklearn.pipeline import make_pipeline
 
@@ -226,7 +244,7 @@ datetime_encoder = DatetimeEncoder(
 
 
 vectorized = X.skb.apply(datetime_encoder, cols=s.any_date())
-predictions_enc = vectorized.skb.apply(default_ridge_pipeline, y=y)
+predictions_feat_eng = vectorized.skb.apply(default_ridge_pipeline, y=y)
 
 # %%
 # Note that, in general, randomized search should be used instead of grid search.
@@ -234,13 +252,13 @@ predictions_enc = vectorized.skb.apply(default_ridge_pipeline, y=y)
 # values.
 
 
-search_enc = predictions_enc.skb.get_grid_search(fitted=True, cv=ts)
+search_feat_eng = predictions_feat_eng.skb.get_grid_search(fitted=True, cv=ts)
 
 
 # %%
 # We again observe the results of the grid search using ``.detailed_results_``.
 
-search_enc.detailed_results_
+search_feat_eng.detailed_results_
 
 # %%
 # We may also use the parallel coordinate plot to visualize the impact of the
@@ -248,7 +266,7 @@ search_enc.detailed_results_
 # to filter out results that have score below the given threshold: in this case,
 # we filter out result with a score below ``0.0``.
 
-search_enc.plot_results(min_score=0.0)
+search_feat_eng.plot_results(min_score=0.0)
 
 
 # %%
@@ -332,13 +350,15 @@ predictions_lagged = vectorized.skb.apply(default_ridge_pipeline, y=y)
 search_lagged = predictions_lagged.skb.get_grid_search(fitted=True, cv=ts)
 search_lagged.detailed_results_
 
+# %%
+search_lagged.plot_results(min_score=0.0)
 
 # %%
 # We can see that the lagged features improved the prediction performance by a
 # large margin. Periodic features are still bringing some benefit.
 
 
-###############################################################################
+# %%
 # Plotting the prediction
 # .......................
 #
@@ -361,7 +381,7 @@ def split_function(X, y, cutoff=None):
     return X_train, X_test, y_train, y_test
 
 
-###############################################################################
+# %%
 split_base = predictions_base.skb.train_test_split(
     environment=predictions_base.skb.get_data(),
     splitter=split_function,
@@ -372,15 +392,15 @@ search_base = predictions_base.skb.get_grid_search(
 ).fit(split_base["train"])
 results_base = search_base.best_pipeline_.predict(split_base["test"])
 
-split_enc = predictions_enc.skb.train_test_split(
-    environment=predictions_enc.skb.get_data(),
+split_feat_eng = predictions_feat_eng.skb.train_test_split(
+    environment=predictions_feat_eng.skb.get_data(),
     splitter=split_function,
     cutoff="2012-01-01",
 )
-search_enc = predictions_enc.skb.get_grid_search(cv=TimeSeriesSplit(), fitted=True).fit(
-    split_enc["train"]
-)
-results_enc = search_enc.best_pipeline_.predict(split_enc["test"])
+search_feat_eng = predictions_feat_eng.skb.get_grid_search(
+    cv=TimeSeriesSplit(), fitted=True
+).fit(split_feat_eng["train"])
+results_feat_eng = search_feat_eng.best_pipeline_.predict(split_feat_eng["test"])
 
 split_lagged = predictions_lagged.skb.train_test_split(
     environment=predictions_lagged.skb.get_data(),
@@ -408,7 +428,7 @@ fig, ax = plt.subplots(figsize=(12, 3), layout="constrained")
 X_plot = split_base["X_test"].select(pl.col("date").str.to_datetime())
 y_true = split_base["y_test"]
 y_base = results_base
-y_enc = results_enc
+y_enc = results_feat_eng
 y_lagged = results_lagged
 
 ax.plot(X_plot, y_true, label="Actual demand", linewidth=2, linestyle="--")
@@ -423,7 +443,7 @@ ax.set_ylim([0, 800])
 # Format the x-axis
 # Set the x-axis minor ticks to appear every 6 hours and the major ticks to appear
 # every day.
-ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %h"))
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%a %d %b"))
 ax.xaxis.set_minor_formatter(mdates.DateFormatter("%Hh"))
 ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 6)))
 ax.xaxis.set_major_locator(mdates.DayLocator())
@@ -460,7 +480,7 @@ ax.annotate(
 )
 fig.legend(loc="center right", bbox_to_anchor=(1.2, 0.5), ncols=1, borderaxespad=0.0)
 
-fig.suptitle(
+_ = fig.suptitle(
     "Predicting the demand with linear models and different feature engineering"
     " strategies"
 )
