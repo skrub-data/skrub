@@ -81,10 +81,23 @@ datetime features on the prediction performance.
 
 import polars as pl
 
-from skrub import TableReport, datasets
+from skrub import datasets
 
 data = datasets.fetch_bike_sharing().bike_sharing
 data = pl.from_pandas(data)
+
+# %%
+# As first step, we use the skrub |TableReport| to explore the data and get an idea
+# of the features we are working with.
+# In particular, we can see that the dataset contains a "date" column, and that
+# the "cnt" column is the target we want to predict. We can get a high level
+# overview of the features in the dataset by checking out the ``Stats`` tab in the
+# report. Among other things, we can see that the "date" column is a string column.
+# This is potentially problematic, and a good use case for the skrub |DatetimeEncoder|,
+# as we show in the rest of the example.
+
+from skrub import TableReport
+
 TableReport(data)
 
 
