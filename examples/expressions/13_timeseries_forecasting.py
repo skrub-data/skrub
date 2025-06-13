@@ -418,10 +418,11 @@ results_lagged = search_lagged.best_pipeline_.predict(split_lagged["test"])
 # a single week in the year to be able to observe some details.
 
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
+import pandas as pd
 
 fig, ax = plt.subplots(figsize=(12, 3), layout="constrained")
 
@@ -431,10 +432,18 @@ y_base = results_base
 y_enc = results_feat_eng
 y_lagged = results_lagged
 
-ax.plot(X_plot, y_true, label="Actual demand", linewidth=2, linestyle="--")
-ax.plot(X_plot, y_base, label="Default DatetimeEncoder")
-ax.plot(X_plot, y_enc, label="Periodic Features")
-ax.plot(X_plot, y_lagged, label="Lagged + Periodic Features")
+# Preparing a dataframe with the results to simplify the plotting code
+df_results = pd.DataFrame(
+    {
+        "date": X_plot.to_series(),
+        "Actual demand": y_true,
+        "Default DatetimeEncoder": y_base,
+        "Periodic Features": y_enc,
+        "Lagged + Periodic Features": y_lagged,
+    }
+)
+
+df_results.set_index("date").plot(ax=ax, legend=None)
 
 # Consider only the first week of November 2012.
 ax.set_xlim([datetime(2012, 11, 1), datetime(2012, 11, 8)])
@@ -451,33 +460,24 @@ ax.tick_params(axis="x", which="minor", labelsize=8)
 ax.tick_params(axis="x", which="major", pad=10)
 
 ax.set_ylabel("Demand")
+ax.set_xlabel("")
 
 # Annotating the days that correspond to the weekend.
 annotation_text = "Weekend"
-
-point1 = [datetime(2012, 11, 3, 14, 0, 0), 500]
-point2 = [datetime(2012, 11, 4, 14, 0, 0), 550]
-
-td = timedelta(hours=3)
-
-ax.annotate(
-    annotation_text,
-    xy=point1,
-    xytext=(point1[0] + td, point1[1] + 200),
-    arrowprops=dict(
-        facecolor="black", shrink=0.01, width=0.5, headwidth=5, headlength=5
-    ),
-    fontsize=10,
+ax.axvspan(
+    datetime(2012, 11, 3), datetime(2012, 11, 5), color="grey", alpha=0.05, zorder=0
 )
-ax.annotate(
+ax.text(
+    datetime(2012, 11, 3),
+    800,
     annotation_text,
-    xy=point2,
-    xytext=(point1[0] + td, point1[1] + 200),
-    arrowprops=dict(
-        facecolor="black", shrink=0.01, width=0.5, headwidth=5, headlength=5
-    ),
+    verticalalignment="top",
+    horizontalalignment="left",
     fontsize=10,
+    color="grey",
+    fontweight="bold",
 )
+
 fig.legend(loc="center right", bbox_to_anchor=(1.2, 0.5), ncols=1, borderaxespad=0.0)
 
 _ = fig.suptitle(
