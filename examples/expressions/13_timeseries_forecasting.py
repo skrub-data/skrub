@@ -428,18 +428,15 @@ fig, ax = plt.subplots(figsize=(12, 3), layout="constrained")
 
 X_plot = split_base["X_test"].select(pl.col("date").str.to_datetime())
 y_true = split_base["y_test"]
-y_base = results_base
-y_enc = results_feat_eng
-y_lagged = results_lagged
 
 # Preparing a dataframe with the results to simplify the plotting code
 df_results = pd.DataFrame(
     {
         "date": X_plot.to_series(),
         "Actual demand": y_true,
-        "Default DatetimeEncoder": y_base,
-        "Periodic Features": y_enc,
-        "Lagged + Periodic Features": y_lagged,
+        "Default DatetimeEncoder": results_base,
+        "Periodic Features": results_feat_eng,
+        "Lagged + Periodic Features": results_lagged,
     }
 )
 
@@ -478,11 +475,20 @@ ax.text(
     fontweight="bold",
 )
 
-fig.legend(loc="center right", bbox_to_anchor=(1.2, 0.5), ncols=1, borderaxespad=0.0)
-
 _ = fig.suptitle(
-    "Predicting the demand with linear models and different feature engineering"
-    " strategies"
+    (
+        "Predicting the demand with linear models and different feature engineering"
+        " strategies"
+    ),
+    y=1.12,  # Move the title higher to make space for the legend
+)
+
+fig.legend(
+    loc="upper center",
+    bbox_to_anchor=(0.5, 1.06),
+    ncol=4,
+    borderaxespad=0.0,
+    frameon=False,
 )
 
 # %%
