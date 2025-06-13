@@ -10,7 +10,8 @@ from ._reporting import _patching
 _global_config = {
     "use_tablereport": os.environ.get("SKB_USE_TABLEREPORT", False),
     "use_tablereport_expr": os.environ.get("SKB_USE_TABLEREPORT_EXPR", True),
-    "tablereport_max_col": int(os.environ.get("SKB_TABLEREPORT_MAX_COL", 30)),
+    "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
+    "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
 }
@@ -18,6 +19,11 @@ _threadlocal = threading.local()
 
 
 def _get_threadlocal_config():
+    """Return a thread-local copy of the global configuration.
+
+    This is used to ensure that each thread has its own configuration
+    without affecting the global configuration.
+    """
     if not hasattr(_threadlocal, "global_config"):
         _threadlocal.global_config = _global_config.copy()
     return _threadlocal.global_config
@@ -49,8 +55,8 @@ def get_config():
 def _apply_external_patches(config):
     if config["use_tablereport"]:
         _patching._patch_display(
-            max_plot_columns=config["tablereport_max_col"],
-            max_association_columns=config["tablereport_max_col"],
+            max_plot_columns=config["max_plot_columns"],
+            max_association_columns=config["max_plot_columns"],
         )
     else:
         # No-op if dispatch haven't been previously enabled
@@ -60,7 +66,8 @@ def _apply_external_patches(config):
 def set_config(
     use_tablereport=None,
     use_tablereport_expr=None,
-    tablereport_max_col=None,
+    max_plot_columns=None,
+    max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
 ):
@@ -90,11 +97,18 @@ def set_config(
         This configuration can also be set with the ``SKB_USE_TABLEREPORT_EXPR``
         environment variable.
 
-    tablereport_max_col : int, default=None
-        Set both the ``max_plot_columns`` and ``max_association_columns`` argument
-        of :class:`~skrub.TableReport`. Default is 30.
+    max_plot_columns : int, default=None
+        Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
+        Default is 30.
 
-        This configuration can also be set with the ``SKB_TABLEREPORT_MAX_COL``
+        This configuration can also be set with the ``SKB_MAX_PLOT_COLUMNS``
+        environment variable.
+
+    max_association_columns : int, default=None
+        Set the ``max_association_columns`` argument of :class:`~skrub.TableReport`.
+        Default is 30.
+
+        This configuration can also be set with the ``SKB_MAX_ASSOCIATION_COLUMNS``
         environment variable.
 
     subsampling_seed : int, default=None
@@ -112,7 +126,7 @@ def set_config(
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
         - If ``"force"``, subsampling is used in all expression evaluation modes
-          (preview, fit_transform, etc.).
+          (:func:`~skrub.Expr.skb.eval`, fit_transform, etc.).
 
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
         environment variable.
@@ -143,13 +157,20 @@ def set_config(
             )
         local_config["use_tablereport_expr"] = use_tablereport_expr
 
-    if tablereport_max_col is not None:
-        if not isinstance(tablereport_max_col, numbers.Real):
+    if max_plot_columns is not None:
+        if not isinstance(max_plot_columns, numbers.Real):
             raise ValueError(
-                "'tablereport_max_col' should be a number, got "
-                f"{type(tablereport_max_col)!r}"
+                f"'max_plot_columns' should be a number, got {type(max_plot_columns)!r}"
             )
-        local_config["tablereport_max_col"] = tablereport_max_col
+        local_config["max_plot_columns"] = max_plot_columns
+
+    if max_association_columns is not None:
+        if not isinstance(max_association_columns, numbers.Real):
+            raise ValueError(
+                "'max_association_columns' should be a number, got "
+                f"{type(max_association_columns)!r}"
+            )
+        local_config["max_association_columns"] = max_association_columns
 
     if subsampling_seed is not None:
         np.random.RandomState(subsampling_seed)  # check seed
@@ -171,7 +192,8 @@ def config_context(
     *,
     use_tablereport=None,
     use_tablereport_expr=None,
-    tablereport_max_col=None,
+    max_plot_columns=None,
+    max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
 ):
@@ -201,11 +223,18 @@ def config_context(
         This configuration can also be set with the ``SKB_USE_TABLEREPORT_EXPR``
         environment variable.
 
-    tablereport_max_col : int, default=None
-        Set both the ``max_plot_columns`` and ``max_association_columns`` argument
-        of :class:`~skrub.TableReport`. Default is 30.
+    max_plot_columns : int, default=None
+        Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
+        Default is 30.
 
-        This configuration can also be set with the ``SKB_TABLEREPORT_MAX_COL``
+        This configuration can also be set with the ``SKB_MAX_PLOT_COLUMNS``
+        environment variable.
+
+    max_association_columns : int, default=None
+        Set the ``max_association_columns`` argument of :class:`~skrub.TableReport`.
+        Default is 30.
+
+        This configuration can also be set with the ``SKB_MAX_ASSOCIATION_COLUMNS``
         environment variable.
 
     subsampling_seed : int, default=None
@@ -240,14 +269,15 @@ def config_context(
     Examples
     --------
     >>> import skrub
-    >>> with skrub.config_context(tablereport_max_col=1):
+    >>> with skrub.config_context(max_plot_columns=1):
     ...     ...  # doctest: +SKIP
     """
     original_config = get_config()
     set_config(
         use_tablereport=use_tablereport,
         use_tablereport_expr=use_tablereport_expr,
-        tablereport_max_col=tablereport_max_col,
+        max_plot_columns=max_plot_columns,
+        max_association_columns=max_association_columns,
         subsampling_seed=subsampling_seed,
         enable_subsampling=enable_subsampling,
     )

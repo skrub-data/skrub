@@ -14,7 +14,8 @@ def test_config_context():
     assert get_config() == {
         "use_tablereport": False,
         "use_tablereport_expr": True,
-        "tablereport_max_col": 30,
+        "max_plot_columns": 30,
+        "max_association_columns": 30,
         "subsampling_seed": 0,
         "enable_subsampling": "default",
     }
@@ -42,27 +43,27 @@ def test_use_tablereport():
             assert not _use_tablereport(X)
 
 
-def test_tablereport_max_col():
+def test_max_plot_columns():
     X = fetch_employee_salaries().X
     report = TableReport(X)
     assert report.max_association_columns == 30
     assert report.max_plot_columns == 30
 
     # Set default to 1
-    with config_context(tablereport_max_col=1):
+    with config_context(max_plot_columns=1):
         report = TableReport(X)
-        assert report.max_association_columns == 1
+        assert report.max_association_columns == 30
         assert report.max_plot_columns == 1
 
         # Argument takes precedence over default configuration
-        report = TableReport(X, max_plot_columns=12)
-        assert report.max_association_columns == 1
-        assert report.max_plot_columns == 12
+        report = TableReport(X, max_association_columns=12)
+        assert report.max_association_columns == 12
+        assert report.max_plot_columns == 1
 
-    # Check that tablereport_max_col can be set after patching the TableReport
+    # Check that max_plot_columns can be set after patching the TableReport
     # repr_html.
     with config_context(use_tablereport=True):
-        with config_context(tablereport_max_col=3):
+        with config_context(max_plot_columns=3):
             "Plotting was skipped" in X._repr_html_()
 
 
@@ -91,7 +92,8 @@ def test_enable_subsampling():
     [
         {"use_tablereport": "hello"},
         {"use_tablereport_expr": 1},
-        {"tablereport_max_col": "hello"},
+        {"max_plot_columns": "hello"},
+        {"max_association_columns": "hello"},
         {"subsampling_seed": -1},
         {"enable_subsampling": "no"},
     ],

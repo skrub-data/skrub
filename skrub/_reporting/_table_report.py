@@ -16,7 +16,7 @@ def _check_max_cols(max_plot_columns, max_association_columns):
     max_plot_columns = (
         max_plot_columns
         if max_plot_columns is not None
-        else _config.get_config()["tablereport_max_col"]
+        else _config.get_config()["max_plot_columns"]
     )
     if not (isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0):
         raise ValueError(
@@ -26,7 +26,7 @@ def _check_max_cols(max_plot_columns, max_association_columns):
     max_association_columns = (
         max_association_columns
         if max_association_columns is not None
-        else _config.get_config()["tablereport_max_col"]
+        else _config.get_config()["max_association_columns"]
     )
     if not (
         isinstance(max_association_columns, numbers.Real)
@@ -82,13 +82,13 @@ class TableReport:
         change the default using :func:`set_config`:
 
         >>> from skrub import set_config
-        >>> set_config(tablereport_max_col=30)
+        >>> set_config(max_plot_columns=30)
 
         You can also enable this default more permanently via an environment variable:
 
         .. code:: shell
 
-            export SKB_TABLEREPORT_MAX_COL=30
+            export SKB_MAX_PLOT_COLUMNS=30
 
     max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
@@ -100,13 +100,13 @@ class TableReport:
         change the default using :func:`set_config`:
 
         >>> from skrub import set_config
-        >>> set_config(tablereport_max_col=30)
+        >>> set_config(max_association_columns=30)
 
         You can also enable this default more permanently via an environment variable:
 
         .. code:: shell
 
-            export SKB_TABLEREPORT_MAX_COL=30
+            export SKB_MAX_ASSOCIATION_COLUMNS=30
 
     See Also
     --------
