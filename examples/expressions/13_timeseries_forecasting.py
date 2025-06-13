@@ -247,7 +247,7 @@ datetime_encoder = DatetimeEncoder(
 
 
 vectorized = X.skb.apply(datetime_encoder, cols=s.any_date())
-predictions_feat_eng = vectorized.skb.apply(default_ridge_pipeline, y=y)
+predictions_rich_features = vectorized.skb.apply(default_ridge_pipeline, y=y)
 
 # %%
 # Note that, in general, randomized search should be used instead of grid search.
@@ -255,13 +255,13 @@ predictions_feat_eng = vectorized.skb.apply(default_ridge_pipeline, y=y)
 # values.
 
 
-search_feat_eng = predictions_feat_eng.skb.get_grid_search(fitted=True, cv=ts)
+search_rich_features = predictions_rich_features.skb.get_grid_search(fitted=True, cv=ts)
 
 
 # %%
 # We again observe the results of the grid search using ``.detailed_results_``.
 
-search_feat_eng.detailed_results_
+search_rich_features.detailed_results_
 
 # %%
 # We may also use the parallel coordinate plot to visualize the impact of the
@@ -269,7 +269,7 @@ search_feat_eng.detailed_results_
 # to filter out results that have score below the given threshold: in this case,
 # we filter out result with a score below ``0.0``.
 
-search_feat_eng.plot_results(min_score=0.0)
+search_rich_features.plot_results(min_score=0.0)
 
 
 # %%
@@ -351,12 +351,14 @@ X
 
 
 vectorized = X.skb.apply(TableVectorizer(datetime=datetime_encoder))
-predictions_lagged = vectorized.skb.apply(default_ridge_pipeline, y=y)
-search_lagged = predictions_lagged.skb.get_grid_search(fitted=True, cv=ts)
-search_lagged.detailed_results_
+predictions_lagged_features = vectorized.skb.apply(default_ridge_pipeline, y=y)
+search_lagged_features = predictions_lagged_features.skb.get_grid_search(
+    fitted=True, cv=ts
+)
+search_lagged_features.detailed_results_
 
 # %%
-search_lagged.plot_results(min_score=0.0)
+search_lagged_features.plot_results(min_score=0.0)
 
 # %%
 # We can see that the lagged features improved the prediction performance by a
@@ -397,25 +399,29 @@ search_base = predictions_base.skb.get_grid_search(
 ).fit(split_base["train"])
 results_base = search_base.best_pipeline_.predict(split_base["test"])
 
-split_feat_eng = predictions_feat_eng.skb.train_test_split(
-    environment=predictions_feat_eng.skb.get_data(),
+split_feat_eng = predictions_rich_features.skb.train_test_split(
+    environment=predictions_rich_features.skb.get_data(),
     splitter=split_function,
     cutoff="2012-01-01",
 )
-search_feat_eng = predictions_feat_eng.skb.get_grid_search(
+search_rich_features = predictions_rich_features.skb.get_grid_search(
     cv=TimeSeriesSplit(), fitted=True
 ).fit(split_feat_eng["train"])
-results_feat_eng = search_feat_eng.best_pipeline_.predict(split_feat_eng["test"])
+results_rich_features = search_rich_features.best_pipeline_.predict(
+    split_feat_eng["test"]
+)
 
-split_lagged = predictions_lagged.skb.train_test_split(
-    environment=predictions_lagged.skb.get_data(),
+split_lagged = predictions_lagged_features.skb.train_test_split(
+    environment=predictions_lagged_features.skb.get_data(),
     splitter=split_function,
     cutoff="2012-01-01",
 )
-search_lagged = predictions_lagged.skb.get_grid_search(
+search_lagged_features = predictions_lagged_features.skb.get_grid_search(
     cv=TimeSeriesSplit(), fitted=True
 ).fit(split_lagged["train"])
-results_lagged = search_lagged.best_pipeline_.predict(split_lagged["test"])
+results_lagged_features = search_lagged_features.best_pipeline_.predict(
+    split_lagged["test"]
+)
 
 
 # %%
@@ -440,8 +446,8 @@ df_results = pd.DataFrame(
         "date": X_plot.to_series(),
         "Actual demand": y_true,
         "Default DatetimeEncoder": results_base,
-        "Periodic Features": results_feat_eng,
-        "Lagged + Periodic Features": results_lagged,
+        "Periodic Features": results_rich_features,
+        "Lagged + Periodic Features": results_lagged_features,
     }
 )
 
