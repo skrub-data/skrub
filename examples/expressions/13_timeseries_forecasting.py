@@ -424,7 +424,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
 
-fig, ax = plt.subplots(figsize=(12, 3), layout="constrained")
+fig, ax = plt.subplots(figsize=(9, 3), layout="constrained")
 
 X_plot = split_base["X_test"].select(pl.col("date").str.to_datetime())
 y_true = split_base["y_test"]
@@ -480,16 +480,17 @@ _ = fig.suptitle(
         "Predicting the demand with linear models and different feature engineering"
         " strategies"
     ),
-    y=1.12,  # Move the title higher to make space for the legend
 )
 
-fig.legend(
-    loc="upper center",
-    bbox_to_anchor=(0.5, 1.06),
-    ncol=4,
+ax.legend(
+    loc="upper right",
+    # bbox_to_anchor=(0.5, 1.06),
+    ncol=1,
     borderaxespad=0.0,
-    frameon=False,
+    frameon=True,
 )
+
+fig.savefig("test.png")
 
 # %%
 #
