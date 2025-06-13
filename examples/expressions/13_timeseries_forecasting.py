@@ -47,25 +47,28 @@ datetime features on the prediction performance.
     :class:`~skrub.ToDatetime`
 
 .. |var| replace::
-    :meth:`skrub.var`
+    :meth:`~skrub.var`
 
 .. |apply_func| replace::
-    :meth:`skrub.Expr.skb.apply_func`
+    :meth:`~skrub.Expr.skb.apply_func`
 
 .. |choose_bool| replace::
-    :meth:`skrub.Expr.skb.choose_bool`
+    :meth:`~skrub.Expr.skb.choose_bool`
 
 .. |choose_from| replace::
-    :meth:`skrub.Expr.skb.choose_from`
+    :meth:`~skrub.Expr.skb.choose_from`
 
 .. |train_test_split| replace::
-    :meth:`skrub.Expr.skb.train_test_split`
+    :meth:`~skrub.Expr.skb.train_test_split`
 
 .. |deferred| replace::
-    :meth:`skrub.deferred`
+    :meth:`~skrub.deferred`
 
-.. _scikit-learn example:
- `<https://scikit-learn.org/stable/auto_examples/applications/plot_time_series_lagged_features.html#generating-polars-engineered-lagged-featurehttps://scikit-learn.org/stable/auto_examples/applications/plot_time_series_lagged_features.html#generating-polars-engineered-lagged-featuress>`_
+.. |.skb.subsample| replace::
+    :meth:`~skrub.Expr.skb.subsample`
+
+.. |TableReport| replace::
+    :class:`~skrub.TableReport`
 
 """
 
@@ -280,7 +283,9 @@ search_feat_eng.plot_results(min_score=0.0)
 #
 # To further improve the prediction performance, we will extend the
 # feature generation step to include lagged features.
-# This function is taken from a similar `_scikit-learn example`. As the lagged
+# This function is taken from a similar
+# `scikit-learn example <https://scikit-learn.org/stable/auto_examples/applications/plot_time_series_lagged_features.html#generating-polars-engineered-lagged-features>`_
+# As the lagged
 # features are based on the real count (i.e., the target feature), we go back to
 # the original data to perform feature engineering on that.
 #
@@ -489,6 +494,7 @@ ax.legend(
     borderaxespad=0.0,
     frameon=True,
 )
+
 
 # %%
 #
