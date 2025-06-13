@@ -400,15 +400,16 @@ def test_convert_float32():
     assert out.dtypes["float"] == "float32"
     assert out.dtypes["int"] == "float32"
 
+    # default behavior: keep numeric type
     vectorizer = Cleaner()
     out = vectorizer.fit_transform(X)
-    assert sbd.is_float(out["float"])
-    assert sbd.is_integer(out["int"])
+    assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
+    assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
     vectorizer = Cleaner(numerical_dtype="float32")
     out = vectorizer.fit_transform(X)
-    assert sbd.is_float(out["float"])
-    assert sbd.is_float(out["int"])
+    assert out.dtypes["float"] == "float32"
+    assert out.dtypes["int"] == "float32"
 
 
 def test_cleaner_invalid_numerical_dtype():
