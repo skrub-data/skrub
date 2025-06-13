@@ -83,6 +83,10 @@ Changes
 
 - The :class:`TableReport` now supports Series in addition to Dataframes. :pr:`1420` by :user:`Vitor Pohlenz<vitorpohlenz>`.
 
+- The :class:`Cleaner` now exposes a parameter to convert numerical values to float32. :pr:`1440` by
+  :user:`Riccardo Cappuzzo<rcap107>`.
+
+
 Bugfixes
 --------
 - Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
