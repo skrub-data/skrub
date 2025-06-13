@@ -53,10 +53,10 @@ datetime features on the prediction performance.
     :meth:`~skrub.Expr.skb.apply_func`
 
 .. |choose_bool| replace::
-    :meth:`~skrub.Expr.skb.choose_bool`
+    :meth:`~skrub.choose_bool`
 
 .. |choose_from| replace::
-    :meth:`~skrub.Expr.skb.choose_from`
+    :meth:`~skrub.choose_from`
 
 .. |train_test_split| replace::
     :meth:`~skrub.Expr.skb.train_test_split`
