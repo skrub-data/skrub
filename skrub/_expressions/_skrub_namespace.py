@@ -11,6 +11,7 @@ from ._evaluation import (
     clone,
     describe_steps,
     evaluate,
+    iter_evaluate,
     nodes,
 )
 from ._expressions import (
@@ -931,6 +932,26 @@ class SkrubNamespace:
             }
         environment = env_with_subsampling(self._expr, environment, keep_subsampling)
         return evaluate(
+            self._expr, mode="fit_transform", environment=environment, clear=True
+        )
+
+    def iter_eval(self, environment=None, *, keep_subsampling=False):
+        if environment is not None and not isinstance(environment, typing.Mapping):
+            raise TypeError(
+                "The `environment` passed to `eval()` should be None or a dictionary, "
+                f"got: '{type(environment)}'"
+            )
+        if environment is None:
+            environment = self.get_data()
+        else:
+            environment = {
+                **environment,
+                "_skrub_use_var_values": not _var_values_provided(
+                    self._expr, environment
+                ),
+            }
+        environment = env_with_subsampling(self._expr, environment, keep_subsampling)
+        return iter_evaluate(
             self._expr, mode="fit_transform", environment=environment, clear=True
         )
 
