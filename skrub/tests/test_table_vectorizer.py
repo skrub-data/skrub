@@ -394,7 +394,7 @@ def test_convert_float32(df_module):
     Test that the TableVectorizer converts float64 to float32
     when using the default parameters.
     """
-    X = df_module.make_dataframe({"float": [1.0, 2.3, 4.5], "int": [1, 2, 3]})
+    X = _get_clean_dataframe()
     vectorizer = TableVectorizer()
     out = vectorizer.fit_transform(X)
     assert sbd.dtype(out["float"]) == "float32"
@@ -408,16 +408,16 @@ def test_convert_float32(df_module):
     assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
     assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
-    vectorizer = Cleaner(numerical_dtype="float32")
+    vectorizer = Cleaner(numeric_dtype="float32")
     out = vectorizer.fit_transform(X)
     assert out.dtypes["float"] == "float32"
     assert out.dtypes["int"] == "float32"
 
 
-def test_cleaner_invalid_numerical_dtype():
+def test_cleaner_invalid_numeric_dtype():
     X = _get_clean_dataframe()
-    with pytest.raises(ValueError, match="numerical_dtype.*must be one of"):
-        Cleaner(numerical_dtype="wrong").fit_transform(X)
+    with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
+        Cleaner(numeric_dtype="wrong").fit_transform(X)
 
 
 def test_auto_cast_missing_categories():
