@@ -182,7 +182,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
-    numerical_dtype : "float32" or None, default=None
+    numeric_dtype : "float32" or None, default=None
         If set to ``float32``, convert numeric columns to ``np.float32`` dtype. If
         ``None``, numerical dtypes are not modified.
 
@@ -229,7 +229,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``ToStr()``: convert columns to strings, unless they are numerical,
       categorical, or datetime.
 
-    If ``numerical_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
+    If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
     numeric columns to ``np.float32`` dtype, ensuring a consistent representation
     of numbers and missing values. This can be useful if the ``Cleaner``
     is used as a preprocessing step in a skrub pipeline.
@@ -304,14 +304,14 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_constant=False,
         drop_if_unique=False,
         datetime_format=None,
-        numerical_dtype=None,
+        numeric_dtype=None,
         n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
-        self.numerical_dtype = numerical_dtype
+        self.numeric_dtype = numeric_dtype
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -333,11 +333,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
             The transformed input.
         """
 
-        add_tofloat32 = self.numerical_dtype == "float32"
-        if self.numerical_dtype not in (None, "float32"):
+        add_tofloat32 = self.numeric_dtype == "float32"
+        if self.numeric_dtype not in (None, "float32"):
             raise ValueError(
-                "`numerical_dtype` must be one of"
-                f"[`None`, `'float32'`]. Found {self.numerical_dtype}."
+                "`numeric_dtype` must be one of"
+                f"[`None`, `'float32'`]. Found {self.numeric_dtype}."
             )
 
         all_steps = _get_preprocessors(
