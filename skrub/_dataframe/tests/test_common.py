@@ -232,6 +232,34 @@ def test_concat_vertical(df_module, example_data_dict):
             pass
 
 
+def test_concat_series(df_module):
+    df = df_module.example_dataframe
+    col = df_module.example_column
+
+    # Mixing types is not allowed
+    msg = r"got dataframes at position \[0\], series at position \[1\]"
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(df, col)
+
+    msg = r"got dataframes at position \[1\], series at position \[0\]."
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(col, df)
+
+    msg = (
+        r"got dataframes at position \[2\], series at position \[0\], "
+        r"types that are neither dataframes nor series at position \[1 3\]"
+    )
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(col, 0, df, 1)
+
+    # Cols only is allowed
+    for axis in 0, 1:
+        assert (
+            ns.shape(ns.concat(col, col, axis=axis))[axis]
+            == ns.shape(ns.to_frame(col))[axis] * 2
+        )
+
+
 def test_is_column_list(df_module):
     assert ns.is_column_list([])
     assert ns.is_column_list(())
