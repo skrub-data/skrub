@@ -711,6 +711,14 @@ class SkrubNamespace:
         This method can only be used on steps that produce a dataframe, a
         column (series) or a numpy array.
 
+        Note that subsampling is local to the variable that is being subsampled.
+        This means that, if two variables are meant to have the same number of
+        rows (e.g., ``X`` and ``y``), both should be subsampled with the same
+        strategy.
+
+        The seed for the ``random`` strategy is fixed, so the sampled rows are
+        constant when sampling across different variables.
+
         Examples
         --------
         >>> from sklearn.datasets import load_diabetes
