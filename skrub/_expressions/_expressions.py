@@ -797,7 +797,7 @@ def check_value_type(value):
 
     if needs_eval(value):
         raise TypeError(
-            "The `value` of a `skrub.var()` must not be a skrub"
+            "The `value` of a `skrub.var()` must not be a skrub "
             f"expression or skrub choice. Got: {type(value)}."
         )
 
