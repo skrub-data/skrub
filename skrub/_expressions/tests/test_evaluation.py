@@ -116,14 +116,6 @@ def test_needs_eval():
     )
 
 
-def test_skrub_encoder_error():
-    # skrub encoders (as well as other encoders) cannot take expressions or
-    # choices as parameters, so we check that they raise an informative error
-    # if a value that has `needs_eval` is passed as parameter
-
-    pass
-
-
 def test_find_node_by_name():
     a = skrub.var("a")
     X = skrub.X()
