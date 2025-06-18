@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 
 from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
+from skrub._on_each_column import RejectColumn
 from skrub._scaling_factor import scaling_factor
 
 
@@ -167,7 +168,7 @@ def test_get_feature_names_out(encode_column, df_module):
     encoder = StringEncoder(n_components=4)
 
     encoder.fit(X)
-    expected_columns = ["tsvd_0", "tsvd_1", "tsvd_2", "tsvd_3"]
+    expected_columns = ["string_enc_0", "string_enc_1", "string_enc_2", "string_enc_3"]
     assert encoder.get_feature_names_out() == expected_columns
 
 
@@ -243,3 +244,69 @@ def test_missing_values(df_module, vectorizer):
     for c in sbd.to_column_list(out):
         assert_almost_equal(c[1], 0.0, decimal=6)
         assert_almost_equal(c[2], 0.0, decimal=6)
+
+
+def test_categorical_features(df_module):
+    cat_col = sbd.to_categorical(
+        df_module.make_column("cat", ["A", "B", "A", "C", "B", "D"])
+    )
+    data = {
+        "categorical": cat_col,
+        "numeric": [1, 2, 3, 4, 5, 6],
+    }
+    df = df_module.make_dataframe(data)
+
+    se = StringEncoder(n_components=2)
+    with pytest.raises(RejectColumn):
+        se.fit(df["numeric"])
+
+    out = se.fit_transform(df["categorical"])
+    assert sbd.column_names(out) == ["categorical_0", "categorical_1"]
+
+    out = se.fit(df["categorical"][:4]).transform(df["categorical"][4:])
+    assert sbd.column_names(out) == ["categorical_0", "categorical_1"]
+
+
+def test_transform_error_on_float_data(df_module):
+    """Check that we raise an error when data without any string is passed at
+    transform."""
+    x = df_module.make_column("", [1.0, 2.5, 3.7])
+
+    encoder = StringEncoder(n_components=2)
+    encoder.fit(df_module.make_column("", ["hello", "world"]))
+
+    with pytest.raises(ValueError, match="does not contain strings"):
+        encoder.transform(x)
+
+
+@pytest.mark.parametrize(
+    "n_components, expected_columns",
+    [
+        (3, ["col_0", "col_1", "col_2"]),  # No padding needed for components < 10
+        (
+            12,
+            [
+                "col_00",
+                "col_01",
+                "col_02",
+                "col_03",
+                "col_04",
+                "col_05",
+                "col_06",
+                "col_07",
+                "col_08",
+                "col_09",
+                "col_10",
+                "col_11",
+            ],
+        ),  # 2-digit padding
+    ],
+)
+def test_zero_padding_in_feature_names_out(df_module, n_components, expected_columns):
+    """Check that the feature names are zero-padded."""
+    encoder = StringEncoder(n_components=n_components)
+    X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
+    encoder.fit(X)
+    feature_names = encoder.get_feature_names_out()
+
+    assert feature_names[: len(expected_columns)] == expected_columns

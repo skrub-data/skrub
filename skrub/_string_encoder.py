@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 from . import _dataframe as sbd
 from ._on_each_column import SingleColumnTransformer
 from ._scaling_factor import scaling_factor
+from ._to_str import ToStr
 
 
 class StringEncoder(SingleColumnTransformer):
@@ -57,6 +58,19 @@ class StringEncoder(SingleColumnTransformer):
     random_state : int, RandomState instance or None, default=None
         Used during randomized svd. Pass an int for reproducible results across
         multiple function calls.
+
+    Attributes
+    ----------
+    input_name_ : str
+        Name of the fitted column, or "string_enc" if the column has no name.
+
+    n_components_ : int
+        The number of dimensions of the embeddings after dimensionality
+        reduction.
+
+    all_outputs_ : list of str
+        A list that contains the name of all the features generated from the fitted
+        column.
 
     See Also
     --------
@@ -123,16 +137,6 @@ class StringEncoder(SingleColumnTransformer):
         self.stop_words = stop_words
         self.random_state = random_state
 
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : list of str objects
-            Transformed feature names.
-        """
-        return list(self.all_outputs_)
-
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
 
@@ -149,6 +153,10 @@ class StringEncoder(SingleColumnTransformer):
             The embedding representation of the input.
         """
         del y
+
+        self.to_str = ToStr(convert_category=True)
+        X_filled = self.to_str.fit_transform(X)
+        X_filled = sbd.fill_nulls(X_filled, "")
 
         if self.vectorizer == "tfidf":
             self.vectorizer_ = TfidfVectorizer(
@@ -176,7 +184,6 @@ class StringEncoder(SingleColumnTransformer):
                 f" 'hashing', got {self.vectorizer!r}"
             )
 
-        X_filled = sbd.fill_nulls(X, "")
         X_out = self.vectorizer_.fit_transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
 
@@ -209,10 +216,9 @@ class StringEncoder(SingleColumnTransformer):
 
         self.n_components_ = result.shape[1]
 
-        name = sbd.name(X)
-        if not name:
-            name = "tsvd"
-        self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components_)]
+        self.input_name_ = sbd.name(X) or "string_enc"
+
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, result)
 
@@ -229,8 +235,15 @@ class StringEncoder(SingleColumnTransformer):
         result: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
             The embedding representation of the input.
         """
+        # Error checking at fit time is done by the ToStr transformer,
+        # but after ToStr is fitted it does not check the input type anymore,
+        # while we want to ensure that the input column is a string or categorical
+        # so we need to add the check here.
+        if not (sbd.is_string(X) or sbd.is_categorical(X)):
+            raise ValueError("Input column does not contain strings.")
 
-        X_filled = sbd.fill_nulls(X, "")
+        X_filled = self.to_str.transform(X)
+        X_filled = sbd.fill_nulls(X_filled, "")
         X_out = self.vectorizer_.transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
         if hasattr(self, "tsvd_"):

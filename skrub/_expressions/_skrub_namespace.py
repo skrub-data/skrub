@@ -1102,13 +1102,13 @@ class SkrubNamespace:
         >>> c = a + b
         >>> d = c * c
         >>> print(d.skb.describe_steps())
-        VAR 'a'
-        VAR 'b'
-        BINOP: add
-        ( VAR 'a' )*
-        ( VAR 'b' )*
-        ( BINOP: add )*
-        BINOP: mul
+        Var 'a'
+        Var 'b'
+        BinOp: add
+        ( Var 'a' )*
+        ( Var 'b' )*
+        ( BinOp: add )*
+        BinOp: mul
         * Cached, not recomputed
 
         The above should be read from top to bottom as instructions for a

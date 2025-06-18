@@ -288,27 +288,27 @@ def test_describe_steps():
     ...     + skrub.X().skb.if_else(3, b)[skrub.var("item")].b
     ... )
     >>> print(c.skb.describe_steps())
-    VAR 'a'
-    VAR 'b'
-    CALL 'func'
-    APPLY TableVectorizer
-    VALUE int
-    CALLMETHOD 'amethod'
-    ( VAR 'a' )*
-    ( VAR 'a' )*
-    BINOP: add
-    CONCAT: 2 dataframes
-    VALUE BoolChoice
-    BINOP: add
-    VAR 'X'
-    ( VAR 'a' )*
-    ( VAR 'a' )*
-    ( BINOP: add )*
-    IFELSE <Var 'X'> ? 3 : <BinOp: add>
-    VAR 'item'
-    GETITEM <Var 'item'>
-    GETATTR 'b'
-    BINOP: add
+    Var 'a'
+    Var 'b'
+    Call 'func'
+    Apply TableVectorizer
+    Value int
+    CallMethod 'amethod'
+    ( Var 'a' )*
+    ( Var 'a' )*
+    BinOp: add
+    Concat: 2 dataframes
+    Value BoolChoice
+    BinOp: add
+    Var 'X'
+    ( Var 'a' )*
+    ( Var 'a' )*
+    ( BinOp: add )*
+    IfElse <Var 'X'> ? 3 : <BinOp: add>
+    Var 'item'
+    GetItem <Var 'item'>
+    GetAttr 'b'
+    BinOp: add
     * Cached, not recomputed
     """
 
