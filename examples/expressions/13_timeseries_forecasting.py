@@ -151,17 +151,15 @@ X
 
 # %%
 # The first step is cleaning the data to ensure consistent data types and convert
-# the date column to datetime. This can be done with the |Cleaner|. Additionally,
-#
-# We can use the |Cleaner| to prepare the data by
-# clean the data and convert the date column to a
-# datetime column, as well as performing additional consistency and cleaning checks.
-# The updated ``X`` dataframe will have the "date" column converted to a datetime.
+# the date column to datetime. This can be done with the |Cleaner|: by setting
+# ``numeric_dtype="float32"`` we convert all numerical features to ``float32``,
+# which ensures consistent datatypes, and reduces the RAM footprint of the features.
+# Additionally, the ``date`` column is converted to datetime.
 
 
 from skrub import Cleaner
 
-X = X.skb.apply(Cleaner())
+X = X.skb.apply(Cleaner(numeric_dtype="float32"))
 X
 
 # %%
@@ -389,45 +387,25 @@ def split_function(X, y, cutoff=None):
 
 
 # %%
-split_base = predictions_base.skb.train_test_split(
-    environment=predictions_base.skb.get_data(),
-    splitter=split_function,
-    cutoff="2012-01-01",
-)
-search_base = predictions_base.skb.get_grid_search(
-    cv=TimeSeriesSplit(), fitted=True
-).fit(split_base["train"])
-results_base = search_base.best_pipeline_.predict(split_base["test"])
+results = {}
+learners = [predictions_base, predictions_rich_features, predictions_lagged_features]
+dict_learners = dict(zip(["base", "rich", "lagged"], learners))
 
-split_feat_eng = predictions_rich_features.skb.train_test_split(
-    environment=predictions_rich_features.skb.get_data(),
-    splitter=split_function,
-    cutoff="2012-01-01",
-)
-search_rich_features = predictions_rich_features.skb.get_grid_search(
-    cv=TimeSeriesSplit(), fitted=True
-).fit(split_feat_eng["train"])
-results_rich_features = search_rich_features.best_pipeline_.predict(
-    split_feat_eng["test"]
-)
-
-split_lagged = predictions_lagged_features.skb.train_test_split(
-    environment=predictions_lagged_features.skb.get_data(),
-    splitter=split_function,
-    cutoff="2012-01-01",
-)
-search_lagged_features = predictions_lagged_features.skb.get_grid_search(
-    cv=TimeSeriesSplit(), fitted=True
-).fit(split_lagged["train"])
-results_lagged_features = search_lagged_features.best_pipeline_.predict(
-    split_lagged["test"]
-)
-
+for name, learner in dict_learners.items():
+    print(f"Working with learner {name}...")
+    split = learner.skb.train_test_split(
+        environment=learner.skb.get_data(),
+        splitter=split_function,
+        cutoff="2012-01-01",
+    )
+    search = learner.skb.get_grid_search(cv=TimeSeriesSplit(), fitted=True).fit(
+        split["train"]
+    )
+    results[name] = search.best_pipeline_.predict(split["test"])
 
 # %%
 # Now we can plot the results. For the sake of the example, we will consider only
 # a single week in the year to be able to observe some details.
-
 
 from datetime import datetime
 
@@ -437,17 +415,17 @@ import pandas as pd
 
 fig, ax = plt.subplots(figsize=(9, 3), layout="constrained")
 
-X_plot = split_base["X_test"].select(pl.col("date").str.to_datetime())
-y_true = split_base["y_test"]
+X_plot = split["X_test"].select(pl.col("date").str.to_datetime())
+y_true = split["y_test"]
 
 # Preparing a dataframe with the results to simplify the plotting code
 df_results = pd.DataFrame(
     {
         "date": X_plot.to_series(),
         "Actual demand": y_true,
-        "Default DatetimeEncoder": results_base,
-        "Periodic Features": results_rich_features,
-        "Lagged + Periodic Features": results_lagged_features,
+        "Default DatetimeEncoder": results["base"],
+        "Periodic Features": results["rich"],
+        "Lagged + Periodic Features": results["lagged"],
     }
 )
 
