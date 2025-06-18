@@ -543,6 +543,7 @@ numpydoc_xref_aliases = {
     "to_datetime": "skrub.to_datetime",
     "TableVectorizer": "skrub.TableVectorizer",
     "_replace_false_missing": "skrub._table_vectorizer._replace_false_missing",
+    "train_test_split": "skrub.Expr.skb.train_test_split",
 }
 numpydoc_xref_ignore = "all"
 
