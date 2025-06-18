@@ -797,7 +797,7 @@ def check_var_value(value):
     or a choice."""
     if isinstance(value, (BaseChoice, Expr)):
         raise TypeError(
-            "The `value` of a `skrub.var()` must not be a skrub"
+            "The `value` of a `skrub.var()` must not be a skrub "
             f"expression or skrub choice. Got: {type(value)}."
         )
 
