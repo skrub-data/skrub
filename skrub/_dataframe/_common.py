@@ -337,20 +337,20 @@ def _check_same_type(objects):
         return np.argwhere(array).ravel()
 
     prefix = "Mixing types is not allowed, got"
-    addons = []
+    hints = []
     if is_df.any():
-        addons.append(f"dataframes at position {_indices(is_df)}")
+        hints.append(f"dataframes at position {_indices(is_df)}")
 
     if is_col.any():
-        addons.append(f"series at position {_indices(is_col)}")
+        hints.append(f"series at position {_indices(is_col)}")
 
     if is_other.any():
-        addons.append(
+        hints.append(
             "types that are neither dataframes nor series at position "
             f"{_indices(is_other)}"
         )
 
-    msg = prefix + " " + ", ".join(addons) + "."
+    msg = prefix + " " + ", ".join(hints) + "."
 
     raise TypeError(msg)
 
