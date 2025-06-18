@@ -133,7 +133,7 @@ ts = TimeSeriesSplit(
 # We import ``skrub`` to access the skrub expressions and define a skrub |var|
 # to start with. We use |.skb.subsample| to reduce the size of the dataset used
 # in the preview to 100 rows, so that the notebook runs faster when developing.
-# When the models are trained, the expressions switch automatically to the full
+# During training, subsampling is disabled, and the expressions use the full
 # dataset.
 
 import skrub
