@@ -92,12 +92,6 @@ data = pl.from_pandas(data)
 # %%
 # As first step, we use the skrub |TableReport| to explore the data and get an idea
 # of the features we are working with.
-# In particular, we can see that the dataset contains a "date" column, and that
-# the "cnt" column is the target we want to predict. We can get a high level
-# overview of the features in the dataset by checking out the ``Stats`` tab in the
-# report. Among other things, we can see that the "date" column is a string column.
-# This is potentially problematic, and a good use case for the skrub |DatetimeEncoder|,
-# as we show in the rest of the example.
 
 from skrub import TableReport
 
@@ -105,6 +99,13 @@ TableReport(data)
 
 
 # %%
+# We can see that the dataset contains a "date" column, and that
+# the "cnt" column is the target we want to predict. We can get a high level
+# overview of the features in the dataset by checking out the ``Stats`` tab in the
+# report. Among other things, we can see that the "date" column is a string column.
+# This is potentially problematic, and a good use case for the skrub |DatetimeEncoder|,
+# as we show in the rest of the example.
+#
 # Prediction with datetime features
 # ---------------------------------
 #
@@ -112,10 +113,6 @@ TableReport(data)
 # Expressions to build a predictive pipeline
 # that pre-processes the data, performs feature engineering and executes
 # hyperparameter optimization to improve the prediction performance.
-# We will use a |RidgeCV| model as our learner. While it is not the most powerful
-# model, it will help us illustrate how feature engineering affects the prediction
-# performance.
-
 
 
 # Since we are working with time series, we need to use |TimeSeriesSplit| to perform
@@ -153,7 +150,11 @@ X
 
 
 # %%
-# We can use the |Cleaner| to clean the data and convert the date column to a
+# The first step is cleaning the data to ensure consistent data types and convert
+# the date column to datetime. This can be done with the |Cleaner|. Additionally,
+#
+# We can use the |Cleaner| to prepare the data by
+# clean the data and convert the date column to a
 # datetime column, as well as performing additional consistency and cleaning checks.
 # The updated ``X`` dataframe will have the "date" column converted to a datetime.
 
@@ -524,3 +525,5 @@ ax.legend(
 # results.
 # Finally, we plotted the predictions to observe the effectiveness of the different
 # preprocessing strategies.
+
+# %%
