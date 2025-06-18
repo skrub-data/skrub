@@ -117,11 +117,10 @@ TableReport(data)
 # performance.
 
 
-from sklearn.linear_model import RidgeCV
 
-# %%
-# Since we are working with timeseries, we need to use |TimeSeriesSplit| to perform
-# crossvalidation.
+# Since we are working with time series, we need to use |TimeSeriesSplit| to perform
+# cross-validation.
+from sklearn.linear_model import RidgeCV
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.pipeline import make_pipeline
 
