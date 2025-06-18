@@ -48,7 +48,7 @@ from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
-from ._choosing import get_chosen_or_default
+from ._choosing import BaseChoice, get_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
 
 __all__ = [
@@ -792,10 +792,10 @@ def check_name(name, is_var):
         )
 
 
-def check_value_type(value):
-    from ._evaluation import needs_eval
-
-    if needs_eval(value):
+def check_var_value(value):
+    """Checking that the value passed to a skrub variable is not an expression
+    or a choice."""
+    if isinstance(value, (BaseChoice, Expr)):
         raise TypeError(
             "The `value` of a `skrub.var()` must not be a skrub"
             f"expression or skrub choice. Got: {type(value)}."
@@ -927,7 +927,7 @@ def var(name, value=NULL):
     gallery.
     """
     check_name(name, is_var=True)
-    check_value_type(value)
+    check_var_value(value)
     return Expr(Var(name, value=value))
 
 
@@ -988,7 +988,7 @@ def X(value=NULL):
     >>> X.skb.is_X
     True
     """
-    check_value_type(value)
+    check_var_value(value)
     return Expr(Var("X", value=value)).skb.mark_as_X()
 
 
@@ -1050,7 +1050,7 @@ def y(value=NULL):
     >>> y.skb.is_y
     True
     """
-    check_value_type(value)
+    check_var_value(value)
     return Expr(Var("y", value=value)).skb.mark_as_y()
 
 
