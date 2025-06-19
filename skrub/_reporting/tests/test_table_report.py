@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from skrub import TableReport, ToDatetime
+from skrub import TableReport, ToDatetime, datasets
 from skrub import _dataframe as sbd
 
 
@@ -268,6 +268,12 @@ def test_minimal_mode(pd_module):
     assert "data-test-associations-skipped" in html
     assert 'id="column-summaries-panel"' not in html
     assert 'id="column-associations-panel"' not in html
+
+
+def test_error_input_type():
+    df = datasets.fetch_employee_salaries()
+    with pytest.raises(TypeError):
+        TableReport(df)
 
 
 def test_single_column_report(df_module):

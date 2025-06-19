@@ -7,6 +7,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import selectors as s
+from ._dataframe._common import _raise as _sbd_raise
 from ._dispatch import dispatch
 from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._wrap_transformer import wrap_transformer
@@ -18,7 +19,7 @@ _SAMPLE_SIZE = 30
 
 @dispatch
 def _get_time_zone(col):
-    raise NotImplementedError()
+    raise _sbd_raise(col, kind="Series")
 
 
 @_get_time_zone.specialize("pandas", argument_type="Column")
@@ -44,7 +45,7 @@ def _get_time_zone_polars(col):
 
 @dispatch
 def _convert_time_zone(col, time_zone):
-    raise NotImplementedError()
+    raise _sbd_raise(col, kind="Series")
 
 
 @_convert_time_zone.specialize("pandas", argument_type="Column")

@@ -65,6 +65,7 @@ Table Cell
 import pandas as pd
 
 from .. import _dataframe as sbd
+from .._dataframe._common import _raise as _sbd_raise
 from .._dispatch import dispatch
 
 __all__ = ["make_table"]
@@ -89,7 +90,7 @@ def make_table(df, max_top_slice_size=5, max_bottom_slice_size=5):
     A dictionary with all the information needed by the html template, see this
     module's docstring for details.
     """
-    raise NotImplementedError()
+    raise _sbd_raise(df, kind="DataFrame")
 
 
 @make_table.specialize("pandas", argument_type="DataFrame")
