@@ -38,23 +38,6 @@ def tabular_learner(estimator, *, n_jobs=None):
     :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default
     parameters.
 
-    ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
-    with several steps:
-
-    - A :obj:`TableVectorizer` transforms the tabular data into numeric
-      features. Its parameters are chosen depending on the provided
-      ``estimator``.
-    - An optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
-      by their mean and adds binary columns that indicate which values were
-      missing. This step is only added if the ``estimator`` cannot handle
-      missing values itself.
-    - An optional :obj:`~sklearn.preprocessing.StandardScaler` centers and
-      rescales the data. This step is not added (because it is unnecessary) when
-      the ``estimator`` is a tree ensemble such as random forest or gradient
-      boosting.
-    - The last step is the provided ``estimator``.
-
-    Read more in the :ref:`User Guide <table_vectorizer>`.
 
     .. note::
        ``tabular_learner`` is a recent addition and the heuristics used
@@ -91,6 +74,23 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Notes
     -----
+    ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
+    with several steps:
+
+    - A :obj:`TableVectorizer` transforms the tabular data into numeric
+      features. Its parameters are chosen depending on the provided
+      ``estimator``.
+    - An optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
+      by their mean and adds binary columns that indicate which values were
+      missing. This step is only added if the ``estimator`` cannot handle
+      missing values itself.
+    - An optional :obj:`~sklearn.preprocessing.StandardScaler` centers and
+      rescales the data. This step is not added (because it is unnecessary) when
+      the ``estimator`` is a tree ensemble such as random forest or gradient
+      boosting.
+    - The last step is the provided ``estimator``.
+
+    Read more in the :ref:`User Guide <table_vectorizer>`.
     The parameter values for the :obj:`TableVectorizer` might differ depending on the
     version of scikit-learn:
 
@@ -200,7 +200,7 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     >>> tabular_learner('classifier')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
-                     TableVectorizer(high_cardinality=MinHashEncoder(),
+                     TableVectorizer(high_cardinality=StringEncoder(),
                                      low_cardinality=ToCategorical())),
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
