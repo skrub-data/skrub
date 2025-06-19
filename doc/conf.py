@@ -74,6 +74,8 @@ extensions = [
     "sphinx_issues",
     "sphinx_copybutton",
     "sphinx_gallery.gen_gallery",
+    "autoshortsummary",
+    "sphinx_design",
 ]
 
 try:
@@ -569,3 +571,40 @@ copybutton_prompt_text = r">>> |\.\.\. |\$ "
 copybutton_prompt_is_regexp = True
 
 create_expression_report()
+
+# -- Convert .rst.template files to .rst ---------------------------------------
+
+from api_reference import API_REFERENCE
+
+rst_templates = [
+    (
+        "reference/index",
+        "reference/index",
+        {
+            "API_REFERENCE": sorted(API_REFERENCE.items(), key=lambda x: x[0]),
+        },
+    )
+]
+
+# Convert each module API reference page
+for module in API_REFERENCE:
+    rst_templates.append(
+        (
+            "reference/module",
+            f"reference/{module}",
+            {"module": module, "module_info": API_REFERENCE[module]},
+        )
+    )
+
+from pathlib import Path
+
+import jinja2
+
+for rst_template_name, rst_target_name, kwargs in rst_templates:
+    # Read the corresponding template file into jinja2
+    r_path = Path(".") / f"{rst_template_name}.rst.template"
+    t = jinja2.Template(r_path.read_text(encoding="utf-8"))
+
+    # Render the template and write to the target
+    w_path = Path(".") / f"{rst_target_name}.rst"
+    w_path.write_text(t.render(**kwargs), encoding="utf-8")

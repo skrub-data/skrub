@@ -60,6 +60,7 @@ dev = [
     "sphinx-gallery",
     "sphinxext-opengraph",
     "sphinx-autosummary-accessors",
+    "sphinx-design",
     "statsmodels",
 
     # lint
