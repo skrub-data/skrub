@@ -49,7 +49,7 @@ From shorter term to longer term:
 - Make the :class:`TableVectorizer` fast, robust, and easy to tune (in
   the sense of hyper-parameter tuning)
 
-- Better support time series
+- Better support for time series
 
 - Data namespaces, lazy data loading, out of core computing using
   database engines (e.g., duckdb)
