@@ -15,7 +15,11 @@
 {{ module }}
 {{ "=" * module|length }}
 
-.. automodule:: {{ skrub }}
+{% if module == "skrub" -%}
+.. currentmodule:: skrub
+{%- else -%}
+.. automodule:: {{ module }}
+{%- endif -%}
 
 {% if module_info["description"] %}
 {{ module_info["description"] }}

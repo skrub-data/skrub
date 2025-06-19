@@ -33,8 +33,12 @@ reference on concepts repeated across the API, see :ref:`glossary`.
 {% for section in module_info["sections"] %}
 {% for obj in section["autosummary"] %}
 {% set parts = obj.rsplit(".", 1) %}
-{% set full_module = "skrub" %}
-  * - :obj:`~{{ full_module }}.{{ obj }}`
+{% if parts|length > 1 %}
+{% set full_module = module + "." + parts[0] %}
+{% else %}
+{% set full_module = module %}
+{% endif %}
+  * - :obj:`~{{ module }}.{{ obj }}`
 
     - .. div:: sk-apisearch-desc
 

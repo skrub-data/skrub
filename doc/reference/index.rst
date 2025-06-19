@@ -16,7 +16,8 @@ reference on concepts repeated across the API, see :ref:`glossary`.
   :hidden:
 
 
-  encoder
+  skrub
+  skrub.selectors
 
 .. list-table::
   :header-rows: 1
@@ -24,6 +25,106 @@ reference on concepts repeated across the API, see :ref:`glossary`.
 
   * - Object
     - Description
+
+
+
+
+
+
+
+
+  * - :obj:`~skrub.tabular_learner`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.tabular_learner
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.TableVectorizer`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.TableVectorizer
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.Cleaner`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.Cleaner
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.SelectCols`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.SelectCols
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.DropCols`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.DropCols
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.DropUninformative`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.DropUninformative
+
+        .. div:: caption
+
+          :mod:`skrub`
+
 
 
 
@@ -44,6 +145,24 @@ reference on concepts repeated across the API, see :ref:`glossary`.
 
 
 
+
+
+  * - :obj:`~skrub.TextEncoder`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.TextEncoder
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
   * - :obj:`~skrub.MinHashEncoder`
 
     - .. div:: sk-apisearch-desc
@@ -55,6 +174,8 @@ reference on concepts repeated across the API, see :ref:`glossary`.
         .. div:: caption
 
           :mod:`skrub`
+
+
 
 
 
@@ -72,6 +193,8 @@ reference on concepts repeated across the API, see :ref:`glossary`.
 
 
 
+
+
   * - :obj:`~skrub.SimilarityEncoder`
 
     - .. div:: sk-apisearch-desc
@@ -83,6 +206,8 @@ reference on concepts repeated across the API, see :ref:`glossary`.
         .. div:: caption
 
           :mod:`skrub`
+
+
 
 
 
@@ -100,6 +225,8 @@ reference on concepts repeated across the API, see :ref:`glossary`.
 
 
 
+
+
   * - :obj:`~skrub.DatetimeEncoder`
 
     - .. div:: sk-apisearch-desc
@@ -114,6 +241,8 @@ reference on concepts repeated across the API, see :ref:`glossary`.
 
 
 
+
+
   * - :obj:`~skrub.ToDatetime`
 
     - .. div:: sk-apisearch-desc
@@ -125,6 +254,8 @@ reference on concepts repeated across the API, see :ref:`glossary`.
         .. div:: caption
 
           :mod:`skrub`
+
+
 
 
 
@@ -144,14 +275,520 @@ reference on concepts repeated across the API, see :ref:`glossary`.
 
 
 
-  * - :obj:`~skrub.TextEncoder`
+
+
+  * - :obj:`~skrub.TableReport`
 
     - .. div:: sk-apisearch-desc
 
         .. currentmodule:: skrub
 
-        .. autoshortsummary:: skrub.TextEncoder
+        .. autoshortsummary:: skrub.TableReport
 
         .. div:: caption
 
           :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.patch_display`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.patch_display
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.unpatch_display`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.unpatch_display
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.column_associations`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.column_associations
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+
+
+  * - :obj:`~skrub.deduplicate`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.deduplicate
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+
+
+  * - :obj:`~skrub.Joiner`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.Joiner
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.AggJoiner`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.AggJoiner
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.MultiAggJoiner`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.MultiAggJoiner
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.AggTarget`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.AggTarget
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.InterpolationJoiner`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.InterpolationJoiner
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+  * - :obj:`~skrub.fuzzy_join`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub
+
+        .. autoshortsummary:: skrub.fuzzy_join
+
+        .. div:: caption
+
+          :mod:`skrub`
+
+
+
+
+
+
+
+
+
+  * - :obj:`~skrub.selectors.all`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.all
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.any_date`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.any_date
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.boolean`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.boolean
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.cardinality_below`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.cardinality_below
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.categorical`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.categorical
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.cols`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.cols
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.Filter`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.Filter
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.filter`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.filter
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.filter_names`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.filter_names
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.float`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.float
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.glob`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.glob
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.has_nulls`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.has_nulls
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.integer`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.integer
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.inv`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.inv
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.make_selector`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.make_selector
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.NameFilter`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.NameFilter
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.numeric`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.numeric
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.regex`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.regex
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.select`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.select
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.Selector`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.Selector
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`
+
+
+
+
+
+  * - :obj:`~skrub.selectors.string`
+
+    - .. div:: sk-apisearch-desc
+
+        .. currentmodule:: skrub.selectors
+
+        .. autoshortsummary:: skrub.selectors.string
+
+        .. div:: caption
+
+          :mod:`skrub.selectors`

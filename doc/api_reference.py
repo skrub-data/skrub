@@ -86,14 +86,32 @@ under `sklearn.datasets`.
 """
 
 API_REFERENCE = {
-    "encoder": {
+    "skrub": {
         "short_summary": "Column-wise encoders",
-        "description": None,
+        "description": "",
         "sections": [
             {
+                "title": "Building a pipeline",
+                "description": (
+                    "See :ref:`end_to_end_pipeline <end_to_end_pipeline>` for "
+                    "further details. For more flexibility and control to build "
+                    "pipelines, see the :ref:`skrub expressions <expressions_ref>`."
+                ),
+                "autosummary": [
+                    "tabular_learner",
+                    "TableVectorizer",
+                    "Cleaner",
+                    "SelectCols",
+                    "DropCols",
+                    "DropUninformative",
+                ],
+            },
+            {
                 "title": "Encoding a column",
+                "description": "See :ref:`encoding <encoding>` for further details.",
                 "autosummary": [
                     "StringEncoder",
+                    "TextEncoder",
                     "MinHashEncoder",
                     "GapEncoder",
                     "SimilarityEncoder",
@@ -104,48 +122,136 @@ API_REFERENCE = {
                 ],
             },
             {
-                "title": "Deep learning",
-                "description": """
-    These encoders require installing additional dependencies around torch.
-    See the "deep learning dependencies" section in the :ref:`installation_instructions`
-    guide for more details.""",
+                "title": "Generating an HTML report",
+                "description": None,
                 "autosummary": [
-                    "TextEncoder",
+                    "TableReport",
+                    "patch_display",
+                    "unpatch_display",
+                    "column_associations",
+                ],
+            },
+            {
+                "title": "Cleaning a dataframe",
+                "description": None,
+                "autosummary": [
+                    "deduplicate",
+                ],
+            },
+            {
+                "title": "Joining dataframes",
+                "description": None,
+                "autosummary": [
+                    "Joiner",
+                    "AggJoiner",
+                    "MultiAggJoiner",
+                    "AggTarget",
+                    "InterpolationJoiner",
+                    "fuzzy_join",
                 ],
             },
         ],
     },
-    # "selectors": {
-    #     "short_summary": "Selecting columns in a DataFrame",
-    #     "description": (
-    #         """
-    # The srkub selectors provide a flexible way to specify the columns on which a
-    # transformation should be applied. They are meant to be used for the ``cols``
-    # argument of :meth:`Expr.skb.apply`, :meth:`Expr.skb.select`,
-    # :meth:`Expr.skb.drop`, :class:`SelectCols` or :class:`DropCols`."""
-    #     ),
-    #     "sections": [
-    #         "selectors.all",
-    #         "selectors.any_date",
-    #         "selectors.boolean",
-    #         "selectors.cardinality_below",
-    #         "selectors.categorical",
-    #         "selectors.cols",
-    #         "selectors.Filter",
-    #         "selectors.filter",
-    #         "selectors.filter_names",
-    #         "selectors.float",
-    #         "selectors.glob",
-    #         "selectors.has_nulls",
-    #         "selectors.integer",
-    #         "selectors.inv",
-    #         "selectors.make_selector",
-    #         "selectors.NameFilter",
-    #         "selectors.numeric",
-    #         "selectors.regex",
-    #         "selectors.select",
-    #         "selectors.Selector",
-    #         "selectors.string",
-    #     ],
-    # },
+    "skrub.selectors": {
+        "short_summary": "Selecting columns in a DataFrame",
+        "description": None,
+        "sections": [
+            {
+                "title": None,
+                "autosummary": [
+                    "all",
+                    "any_date",
+                    "boolean",
+                    "cardinality_below",
+                    "categorical",
+                    "cols",
+                    "Filter",
+                    "filter",
+                    "filter_names",
+                    "float",
+                    "glob",
+                    "has_nulls",
+                    "integer",
+                    "inv",
+                    "make_selector",
+                    "NameFilter",
+                    "numeric",
+                    "regex",
+                    "select",
+                    "Selector",
+                    "string",
+                ],
+            }
+        ],
+    },
+    "expressions": {
+        "short_summary": "",
+        "description": (
+            "Generalization the scikit-learn pipeline. "
+            "See :ref:`skrub expression <skrub_pipeline>` for further details."
+        ),
+        "autosummary": [
+            {
+                "title": "Creating expressions",
+                "description": None,
+                "autosummary": ["var", "X", "y", "as_expr", "deferred"],
+            },
+            {
+                "title": "Hyperparameters choices",
+                "description": (
+                    "Inline hyperparameters selection within your expressions."
+                ),
+                "autosummary": [
+                    "choose_bool",
+                    "choose_float",
+                    "choose_int",
+                    "choose_from",
+                    "optional",
+                ],
+            },
+            {
+                "title": "Evaluate your expressions",
+                "description": None,
+                "autosummary": ["cross_validate", "train_test_split", "eval_mode"],
+            },
+            {
+                "title": "Working with expressions",
+                "description": (
+                    "The ``skb`` accessor exposes all expressions methods and "
+                    "attributes."
+                ),
+                "autosummary": [
+                    "Expr.skb.apply",
+                    "Expr.skb.apply_func",
+                    "Expr.skb.clone",
+                    "Expr.skb.concat",
+                    "Expr.skb.cross_validate",
+                    "Expr.skb.describe_defaults",
+                    "Expr.skb.describe_param_grid",
+                    "Expr.skb.describe_steps",
+                    "Expr.skb.draw_graph",
+                    "Expr.skb.drop",
+                    "Expr.skb.eval",
+                    "Expr.skb.freeze_after_fit",
+                    "Expr.skb.full_report",
+                    "Expr.skb.get_data",
+                    "Expr.skb.get_pipeline",
+                    "Expr.skb.get_grid_search",
+                    "Expr.skb.get_randomized_search",
+                    "Expr.skb.if_else",
+                    "Expr.skb.iter_pipelines_grid",
+                    "Expr.skb.iter_pipelines_randomized",
+                    "Expr.skb.mark_as_X",
+                    "Expr.skb.mark_as_y",
+                    "Expr.skb.match",
+                    "Expr.skb.preview",
+                    "Expr.skb.select",
+                    "Expr.skb.set_description",
+                    "Expr.skb.set_name",
+                    "Expr.skb.subsample",
+                    "Expr.skb.train_test_split",
+                ],
+            },
+        ],
+    },
 }
