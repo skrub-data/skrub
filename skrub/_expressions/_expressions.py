@@ -792,8 +792,21 @@ def check_name(name, is_var):
         )
 
 
+def _check_var_value(value):
+    """Checking that the value passed to a skrub variable is not an expression
+    or a choice."""
+    from ._evaluation import needs_eval
+
+    if needs_eval(value):
+        raise TypeError(
+            "The `value` of a `skrub.var()` must not contain a skrub "
+            f"expression or skrub choice. Got object {value} of {type(value)}."
+        )
+
+
 class Var(ExprImpl):
     "A `skrub.var()` expression."
+
     _fields = ["name", "value"]
 
     def compute(self, e, mode, environment):
@@ -842,6 +855,11 @@ def var(name, value=NULL):
     Returns
     -------
     A skrub variable
+
+    Raises
+    ------
+    TypeError
+        If the provided value is a skrub expression or a skrub choose_* function.
 
     See also
     --------
@@ -911,6 +929,7 @@ def var(name, value=NULL):
     gallery.
     """
     check_name(name, is_var=True)
+    _check_var_value(value)
     return Expr(Var(name, value=value))
 
 
@@ -935,6 +954,11 @@ def X(value=NULL):
     Returns
     -------
     A skrub variable
+
+    Raises
+    ------
+    TypeError
+        If the provided value is a skrub expression or a skrub choose_* function.
 
     See also
     --------
@@ -966,6 +990,7 @@ def X(value=NULL):
     >>> X.skb.is_X
     True
     """
+    _check_var_value(value)
     return Expr(Var("X", value=value)).skb.mark_as_X()
 
 
@@ -991,6 +1016,11 @@ def y(value=NULL):
     Returns
     -------
     A skrub variable
+
+    Raises
+    ------
+    TypeError
+        If the provided value is a skrub expression or a skrub choose_* function.
 
     See also
     --------
@@ -1022,6 +1052,7 @@ def y(value=NULL):
     >>> y.skb.is_y
     True
     """
+    _check_var_value(value)
     return Expr(Var("y", value=value)).skb.mark_as_y()
 
 
