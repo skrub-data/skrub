@@ -7,9 +7,9 @@ Vision: where is skrub heading?
 Vision statement
 ================
 
-The goal of skrub is to facilitate building and deploying
+The goal of skrub is to facilitate machine learning on dataframes
 machine-learning models on tables: `pandas <https://pandas.pydata.org>`__
-dataframe, SQL databases...
+and `polars <https://pola.rs>`__ dataframes, SQL databases...
 
 |
 
@@ -49,20 +49,10 @@ From shorter term to longer term:
 - Make the :class:`TableVectorizer` fast, robust, and easy to tune (in
   the sense of hyper-parameter tuning)
 
-- Add a Join-aggregator object, to do feature augmentation on one-to-many
-  correspondences
-
-- Support polars
-
-- Support time series (eg in the aggregations)
-
-- Interpolator join to join across multiple columns without exact
-  correspondences in the keys
-
-- Release (yes we are not planning to release very soon)
+- Better support time series
 
 - Data namespaces, lazy data loading, out of core computing using
-  database engines (eg duckdb)
+  database engines (e.g., duckdb)
 
 - Join discovery to work in data lakes where the tables are not in a
   clean relational database
