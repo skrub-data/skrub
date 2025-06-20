@@ -1,0 +1,284 @@
+"""Configuration for the API reference documentation.
+
+CONFIGURING API_REFERENCE
+=========================
+
+API_REFERENCE maps each module name to a dictionary that consists of the following
+components:
+
+short_summary (required)
+    The text to be printed on the index page; it has nothing to do the API reference
+    page of each module.
+description (required, `None` if not needed)
+    The additional description for the module to be placed under the module
+    docstring, before the sections start.
+sections (required)
+    A list of sections, each of which consists of:
+    - title (required, `None` if not needed): the section title, commonly it should
+      not be `None` except for the first section of a module,
+    - description (optional): the optional additional description for the section,
+    - autosummary (required): an autosummary block, assuming current module is the
+      current module name.
+
+Essentially, the rendered page would look like the following:
+
+|---------------------------------------------------------------------------------|
+|     {{ module_name }}                                                           |
+|     =================                                                           |
+|     {{ module_docstring }}                                                      |
+|     {{ description }}                                                           |
+|                                                                                 |
+|     {{ section_title_1 }}   <-------------- Optional if one wants the first     |
+|     ---------------------                   section to directly follow          |
+|     {{ section_description_1 }}             without a second-level heading.     |
+|     {{ section_autosummary_1 }}                                                 |
+|                                                                                 |
+|     {{ section_title_2 }}                                                       |
+|     ---------------------                                                       |
+|     {{ section_description_2 }}                                                 |
+|     {{ section_autosummary_2 }}                                                 |
+|                                                                                 |
+|     More sections...                                                            |
+|---------------------------------------------------------------------------------|
+
+Hooks will be automatically generated for each module and each section. For a module,
+e.g., `sklearn.feature_extraction`, the hook would be `feature_extraction_ref`; for a
+section, e.g., "From text" under `sklearn.feature_extraction`, the hook would be
+`feature_extraction_ref-from-text`. However, note that a better way is to refer using
+the :mod: directive, e.g., :mod:`sklearn.feature_extraction` for the module and
+:mod:`sklearn.feature_extraction.text` for the section. Only in case that a section
+is not a particular submodule does the hook become useful, e.g., the "Loaders" section
+under `sklearn.datasets`.
+"""
+
+API_REFERENCE = {
+    "skrub": {
+        "short_summary": "Column-wise encoders",
+        "description": "",
+        "sections": [
+            {
+                "title": "Building a pipeline",
+                "description": (
+                    "See :ref:`end_to_end_pipeline <end_to_end_pipeline>` for "
+                    "further details. For more flexibility and control to build "
+                    "pipelines, see the :ref:`skrub expressions <expressions_ref>`."
+                ),
+                "autosummary": [
+                    "tabular_learner",
+                    "TableVectorizer",
+                    "Cleaner",
+                    "SelectCols",
+                    "DropCols",
+                    "DropUninformative",
+                ],
+            },
+            {
+                "title": "Encoding a column",
+                "description": "See :ref:`encoding <encoding>` for further details.",
+                "autosummary": [
+                    "StringEncoder",
+                    "TextEncoder",
+                    "MinHashEncoder",
+                    "GapEncoder",
+                    "SimilarityEncoder",
+                    "ToCategorical",
+                    "DatetimeEncoder",
+                    "ToDatetime",
+                    "to_datetime",
+                ],
+            },
+            {
+                "title": "Generating an HTML report",
+                "description": None,
+                "autosummary": [
+                    "TableReport",
+                    "patch_display",
+                    "unpatch_display",
+                    "column_associations",
+                ],
+            },
+            {
+                "title": "Cleaning a dataframe",
+                "description": None,
+                "autosummary": [
+                    "deduplicate",
+                ],
+            },
+            {
+                "title": "Joining dataframes",
+                "description": None,
+                "autosummary": [
+                    "Joiner",
+                    "AggJoiner",
+                    "MultiAggJoiner",
+                    "AggTarget",
+                    "InterpolationJoiner",
+                    "fuzzy_join",
+                ],
+            },
+        ],
+    },
+    "skrub.selectors": {
+        "short_summary": "Selecting columns in a DataFrame",
+        "description": None,
+        "sections": [
+            {
+                "title": None,
+                "autosummary": [
+                    "all",
+                    "any_date",
+                    "boolean",
+                    "cardinality_below",
+                    "categorical",
+                    "cols",
+                    "Filter",
+                    "filter",
+                    "filter_names",
+                    "float",
+                    "glob",
+                    "has_nulls",
+                    "integer",
+                    "inv",
+                    "make_selector",
+                    "NameFilter",
+                    "numeric",
+                    "regex",
+                    "select",
+                    "Selector",
+                    "string",
+                ],
+            }
+        ],
+    },
+    "expressions": {
+        "short_summary": "",
+        "description": (
+            "Generalization the scikit-learn pipeline. "
+            "See :ref:`skrub expression <skrub_pipeline>` for further details."
+        ),
+        "sections": [
+            {
+                "title": "Creating expressions",
+                "description": None,
+                "autosummary": ["var", "X", "y", "as_expr", "deferred"],
+                "template": "base.rst",
+            },
+            {
+                "title": None,
+                "description": "The expression object.",
+                "autosummary": ["Expr"],
+                "template": "expr_class.rst",
+            },
+            {
+                "title": "Hyperparameters choices",
+                "description": (
+                    "Inline hyperparameters selection within your expressions."
+                ),
+                "autosummary": [
+                    "choose_bool",
+                    "choose_float",
+                    "choose_int",
+                    "choose_from",
+                    "optional",
+                ],
+                "template": "base.rst",
+            },
+            {
+                "title": "Evaluate your expressions",
+                "description": None,
+                "autosummary": ["cross_validate", "train_test_split", "eval_mode"],
+                "template": "base.rst",
+            },
+            {
+                "title": "Working with expressions",
+                "description": (
+                    "The ``skb`` accessor exposes all expressions methods and "
+                    "attributes."
+                ),
+                "autosummary": [
+                    "Expr.skb.apply",
+                    "Expr.skb.apply_func",
+                    "Expr.skb.clone",
+                    "Expr.skb.concat",
+                    "Expr.skb.cross_validate",
+                    "Expr.skb.describe_defaults",
+                    "Expr.skb.describe_param_grid",
+                    "Expr.skb.describe_steps",
+                    "Expr.skb.draw_graph",
+                    "Expr.skb.drop",
+                    "Expr.skb.eval",
+                    "Expr.skb.freeze_after_fit",
+                    "Expr.skb.full_report",
+                    "Expr.skb.get_data",
+                    "Expr.skb.get_pipeline",
+                    "Expr.skb.get_grid_search",
+                    "Expr.skb.get_randomized_search",
+                    "Expr.skb.if_else",
+                    "Expr.skb.iter_pipelines_grid",
+                    "Expr.skb.iter_pipelines_randomized",
+                    "Expr.skb.mark_as_X",
+                    "Expr.skb.mark_as_y",
+                    "Expr.skb.match",
+                    "Expr.skb.preview",
+                    "Expr.skb.select",
+                    "Expr.skb.set_description",
+                    "Expr.skb.set_name",
+                    "Expr.skb.subsample",
+                    "Expr.skb.train_test_split",
+                ],
+                "template": "autosummary/accessor_method.rst",
+            },
+            {
+                "title": None,
+                "description": "Accessor attributes.",
+                "autosummary": [
+                    "Expr.skb.description",
+                    "Expr.skb.is_X",
+                    "Expr.skb.is_y",
+                    "Expr.skb.name",
+                    "Expr.skb.applied_estimator",
+                ],
+                "template": "autosummary/accessor_attribute.rst",
+            },
+            {
+                "title": None,
+                "description": "Objects generated by the expressions.",
+                "autosummary": [
+                    "SkrubPipeline",
+                    "ParamSearch",
+                ],
+                "template": "base.rst",
+            },
+        ],
+    },
+    "skrub.datasets": {
+        "short_summary": "",
+        "description": None,
+        "sections": [
+            {
+                "title": None,
+                "description": "Downloading a dataset.",
+                "autosummary": [
+                    "fetch_bike_sharing",
+                    "fetch_country_happiness",
+                    "fetch_credit_fraud",
+                    "fetch_drug_directory",
+                    "fetch_employee_salaries",
+                    "fetch_flight_delays",
+                    "fetch_ken_embeddings",
+                    "fetch_ken_table_aliases",
+                    "fetch_ken_types",
+                    "fetch_medical_charge",
+                    "fetch_midwest_survey",
+                    "fetch_movielens",
+                    "fetch_open_payments",
+                    "fetch_toxicity",
+                    "fetch_traffic_violations",
+                    "fetch_videogame_sales",
+                    "get_data_dir",
+                    "make_deduplication_data",
+                ],
+            }
+        ],
+    },
+}
