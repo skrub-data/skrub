@@ -95,7 +95,7 @@ def make_table(df, max_top_slice_size=5, max_bottom_slice_size=5):
 
 @make_table.specialize("pandas", argument_type="DataFrame")
 def _make_table_pandas(df, max_top_slice_size=5, max_bottom_slice_size=5, float_precision=None):
-     return _PandasTable(df, max_top_slice_size, max_bottom_slice_size, float_precision).table_data
+    return _PandasTable(df, max_top_slice_size, max_bottom_slice_size, float_precision).table_data
 
 
 @make_table.specialize("polars", argument_type="DataFrame")
