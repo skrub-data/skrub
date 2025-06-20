@@ -38,6 +38,10 @@ reference on concepts repeated across the API, see :ref:`glossary`.
 {% else %}
 {% set full_module = module %}
 {% endif %}
+{% if module == "expressions" %}
+{% set module = "skrub" %}
+{% set full_module = "skrub" %}
+{% endif %}
   * - :obj:`~{{ module }}.{{ obj }}`
 
     - .. div:: sk-apisearch-desc

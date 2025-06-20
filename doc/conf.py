@@ -581,17 +581,25 @@ rst_templates = [
         "reference/index",
         "reference/index",
         {
-            "API_REFERENCE": sorted(API_REFERENCE.items(), key=lambda x: x[0]),
+            "API_REFERENCE": sorted(
+                API_REFERENCE.items(),
+                key=lambda x: (x[0] if x[0] != "expressions" else "z" * 10),
+            )
         },
     )
 ]
 
 # Convert each module API reference page
 for module in API_REFERENCE:
+    if module == "expressions":
+        path_template = path_rendered = "reference/expressions"
+    else:
+        path_template = "reference/module"
+        path_rendered = f"reference/{module}"
     rst_templates.append(
         (
-            "reference/module",
-            f"reference/{module}",
+            path_template,
+            path_rendered,
             {"module": module, "module_info": API_REFERENCE[module]},
         )
     )
