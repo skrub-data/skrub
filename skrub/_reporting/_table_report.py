@@ -52,6 +52,8 @@ class TableReport:
         If the number of columns in the dataframe is greater than this value,
         the associations will not be computed. If None, the associations
         for all columns will be computed.
+    float_precision : int, default=None
+        Control the number of decimal places displayed for floating point values.
 
     See Also
     --------
@@ -127,6 +129,7 @@ class TableReport:
         verbose=1,
         max_plot_columns=30,
         max_association_columns=30,
+        float_precision=None,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
@@ -134,6 +137,7 @@ class TableReport:
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
             "verbose": verbose,
+            "float_precision": float_precision,
         }
         self._to_html_kwargs = {}
         self.title = title

@@ -19,6 +19,7 @@ def summarize_dataframe(
     max_top_slice_size=5,
     max_bottom_slice_size=5,
     verbose=1,
+    float_precision=None,
 ):
     """Collect information about a dataframe, used to produce reports.
 
@@ -57,6 +58,9 @@ def summarize_dataframe(
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
 
+    float_precision : int, default=None
+        Control the number of decimal places displayed for floating point values.
+
     Returns
     -------
     dict
@@ -76,6 +80,7 @@ def summarize_dataframe(
             df,
             max_top_slice_size=max_top_slice_size,
             max_bottom_slice_size=max_bottom_slice_size,
+            float_precision=float_precision,
         ),
     }
     if title is not None:

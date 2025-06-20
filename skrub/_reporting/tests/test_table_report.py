@@ -258,6 +258,24 @@ def test_max_plot_columns_parameter(df_module):
     assert not summary["plots_skipped"]
 
 
+def test_float_precision_parameter(df_module):
+    df = df_module.make_dataframe(
+        dict(
+            a=[1.23456, 2.34567, 3.14159],
+            b=[4.32109, 5.43210, 6.54321]
+        )
+    )
+
+    report = TableReport(df)
+    html = report.html()
+    assert "3.14159" in html
+    assert "3.142" not in html
+
+    report2 = TableReport(df, float_precision=3)
+    html2 = report2.html()
+    assert "3.142" in html2
+
+
 def test_minimal_mode(pd_module):
     # Check that flags are set properly and that the panels are not created
     df = pd_module.example_dataframe
