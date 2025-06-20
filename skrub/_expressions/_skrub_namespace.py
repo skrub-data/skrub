@@ -801,6 +801,26 @@ class SkrubNamespace:
         using the subsampling allows us to do a "dry run" of the
         cross-validation or model fitting much faster than when using the
         full data.
+
+        Sampling only one variable does not sample the other:
+
+        >>> data = skrub.var("data", df)
+        >>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
+        >>> X = X.skb.subsample(n=15)
+        >>> y = data["target"].skb.mark_as_y()
+        >>> X.shape
+        <GetAttr 'shape'>
+        Result (on a subsample):
+        ――――――――――――――――――――――――
+        (15, 10)
+        >>> y.shape
+        <GetAttr 'shape'>
+        Result:
+        ―――――――
+        (442,)
+
+        Read more about subsampling in the :ref:`User Guide <user_guide_subsampling_ref>`.
+
         """  # noqa : E501
         return Expr(SubsamplePreviews(self._expr, n=n, how=how))
 
