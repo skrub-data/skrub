@@ -3,7 +3,7 @@
 {% if module == "skrub" -%}
 {%- set module_hook = "skrub" -%}
 {%- elif module.startswith("skrub.") -%}
-{%- set module_hook = module[8:] -%}
+{%- set module_hook = module[6:] -%}
 {%- else -%}
 {%- set module_hook = None -%}
 {%- endif -%}

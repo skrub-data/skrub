@@ -42,13 +42,11 @@ Essentially, the rendered page would look like the following:
 |---------------------------------------------------------------------------------|
 
 Hooks will be automatically generated for each module and each section. For a module,
-e.g., `sklearn.feature_extraction`, the hook would be `feature_extraction_ref`; for a
-section, e.g., "From text" under `sklearn.feature_extraction`, the hook would be
-`feature_extraction_ref-from-text`. However, note that a better way is to refer using
-the :mod: directive, e.g., :mod:`sklearn.feature_extraction` for the module and
-:mod:`sklearn.feature_extraction.text` for the section. Only in case that a section
-is not a particular submodule does the hook become useful, e.g., the "Loaders" section
-under `sklearn.datasets`.
+e.g., `skrub.selectors`, the hook would be `selectors_ref`; for a
+section, e.g., "Building a pipeline" under `skrub`, the hook would be
+`_skrub_ref-building-a-pipeline`. However, note that a better way is to refer using
+the :mod: directive, e.g., :mod:`skrub.selectors` for the module and
+:mod:`skrub.text` for the section.
 """
 
 API_REFERENCE = {
