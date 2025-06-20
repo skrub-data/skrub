@@ -396,6 +396,8 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 - See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
   skrub pipelines.
 
+.. _user_guide_subsampling_ref:
+
 Subsampling to develop pipelines with reduced computation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
