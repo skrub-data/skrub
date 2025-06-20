@@ -11,17 +11,8 @@ __all__ = ["DropUninformative"]
 class DropUninformative(SingleColumnTransformer):
     """Drop column if it is found to be uninformative according to various criteria.
 
-    A column is considered to be "uninformative" if one or more of the following
-    issues are found:
-
-    - The fraction of missing values is larger than a certain fraction (by default,
-      all values must be null for the column to be dropped).
-    - The column includes only one unique value (the column is constant). Missing
-      values are considered a separate value.
-    - The number of unique values in the column is equal to the length of the
-      column, i.e., all values are unique. This is only considered for non-numeric
-      columns. Missing values are considered a separate value. Note that this
-      may lead to dropping columns that contain free-flowing text.
+    Columns are considered "uninformative" if the fraction of missing values is larger
+    than a threshold, if they contain one unique value, or if all values are unique.
 
     Parameters
     ----------
@@ -40,6 +31,18 @@ class DropUninformative(SingleColumnTransformer):
 
     Examples
     --------
+    A column is considered to be "uninformative" if one or more of the following
+    issues are found:
+
+    - The fraction of missing values is larger than a certain fraction (by default,
+      all values must be null for the column to be dropped).
+    - The column includes only one unique value (the column is constant). Missing
+      values are considered a separate value.
+    - The number of unique values in the column is equal to the length of the
+      column, i.e., all values are unique. This is only considered for non-numeric
+      columns. Missing values are considered a separate value. Note that this
+      may lead to dropping columns that contain free-flowing text.
+
     >>> from skrub import DropUninformative
     >>> import pandas as pd
     >>> df = pd.DataFrame({"col1": [None, None, None]})

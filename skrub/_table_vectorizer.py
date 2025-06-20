@@ -398,38 +398,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
-    Applies a different transformation to each of several kinds of columns:
-
-    - `numeric`: floats, integers, and booleans.
-    - `datetime`: datetimes and dates.
-    - `low_cardinality`: string and categorical columns with a count
-      of unique values smaller than a given threshold (40 by default). Category encoding
-      schemes such as one-hot encoding, ordinal encoding etc. are typically appropriate
-      for columns with few unique values.
-    - `high_cardinality`: string and categorical columns with many
-      unique values, such as free-form text. Such columns have so many distinct values
-      that it is not possible to assign a distinct representation to each: the dimension
-      would be too large and there would be too few examples of each category.
-      Representations designed for text, such as topic modelling
-      (:class:`~skrub.GapEncoder`) or locality-sensitive hashing
-      (:class:`~skrub.MinHash`) are more appropriate.
-
-    .. note::
-
-        Transformations are applied **independently on each column**. A
-        different transformer instance is used for each column separately;
-        multivariate transformations are therefore not supported.
-
-    The transformer for each kind of column can be configured with the corresponding
-    parameter. A transformer is expected to be a `compatible scikit-learn transformer
-    <https://scikit-learn.org/stable/glossary.html#term-transformer>`_. Special-cased
-    strings ``"drop"`` and ``"passthrough"`` are accepted as well, to indicate to drop
-    the columns or to pass them through untransformed, respectively.
-
-    Additionally, it is possible to specify transformers for specific columns,
-    overriding the categorization described above. This is done by providing a
-    list of pairs ``(transformer, list_of_columns)`` as the
-    ``specific_transformers`` parameter.
+    This transformer preprocesses the given dataframe by first cleaning the data
+    to ensure consistent numerical dtypes (float32), then encodes each column with
+    an encoder suitable for its dtype. Categorical features are encoded differently
+    depending on their cardinality.
 
     .. note::
 
@@ -558,6 +530,41 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Cleaner :
         Preprocesses each column of a dataframe with consistency checks and
         sanitization, e.g., of null values or dates.
+
+    Notes
+    -----
+    The TableVectorizer applies a different transformation to each of several kinds of columns:
+
+    - `numeric`: floats, integers, and booleans.
+    - `datetime`: datetimes and dates.
+    - `low_cardinality`: string and categorical columns with a count
+      of unique values smaller than a given threshold (40 by default). Category encoding
+      schemes such as one-hot encoding, ordinal encoding etc. are typically appropriate
+      for columns with few unique values.
+    - `high_cardinality`: string and categorical columns with many
+      unique values, such as free-form text. Such columns have so many distinct values
+      that it is not possible to assign a distinct representation to each: the dimension
+      would be too large and there would be too few examples of each category.
+      Representations designed for text, such as topic modelling
+      (:class:`~skrub.GapEncoder`) or locality-sensitive hashing
+      (:class:`~skrub.MinHash`) are more appropriate.
+
+    .. note::
+
+        Transformations are applied **independently on each column**. A
+        different transformer instance is used for each column separately;
+        multivariate transformations are therefore not supported.
+
+    The transformer for each kind of column can be configured with the corresponding
+    parameter. A transformer is expected to be a `compatible scikit-learn transformer
+    <https://scikit-learn.org/stable/glossary.html#term-transformer>`_. Special-cased
+    strings ``"drop"`` and ``"passthrough"`` are accepted as well, to indicate to drop
+    the columns or to pass them through untransformed, respectively.
+
+    Additionally, it is possible to specify transformers for specific columns,
+    overriding the categorization described above. This is done by providing a
+    list of pairs ``(transformer, list_of_columns)`` as the
+    ``specific_transformers`` parameter.
 
     Examples
     --------
