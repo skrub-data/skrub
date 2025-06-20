@@ -94,7 +94,6 @@ def tabular_learner(estimator, *, n_jobs=None):
       boosting.
     - The last step is the provided ``estimator``.
 
-    Read more in the :ref:`User Guide <table_vectorizer>`.
     The parameter values for the :obj:`TableVectorizer` might differ depending on the
     version of scikit-learn:
 
@@ -109,6 +108,8 @@ def tabular_learner(estimator, *, n_jobs=None):
       :class:`~sklearn.ensemble.RandomForestRegressor` was added in scikit-learn 1.4.
       Therefore, before this version, a :class:`~sklearn.impute.SimpleImputer` is used
       to impute missing values.
+
+    Read more in the :ref:`User Guide <table_vectorizer>`.
 
     Examples
     --------
@@ -197,7 +198,7 @@ def tabular_learner(estimator, *, n_jobs=None):
       to work well for a wide variety of downstream estimators. The configuration
       adds ``spline`` periodic features to datetime columns.
 
-    - A :obj:`~sklearn.imputation.SimpleImputer`, as the
+    - A :obj:`~sklearn.impute.SimpleImputer`, as the
       :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing values.
 
     - A :obj:`~sklearn.preprocessing.StandardScaler` for centering and standard
