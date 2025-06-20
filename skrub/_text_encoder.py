@@ -32,7 +32,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         dependencies for skrub. See the "deep learning dependencies" section
         in the :ref:`installation_instructions` guide for more details.
 
-
     Parameters
     ----------
     model_name : str, default="intfloat/e5-small-v2"
@@ -126,6 +125,17 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         The number of dimensions of the embeddings after dimensionality
         reduction.
 
+    See Also
+    --------
+    MinHashEncoder :
+        Encode string columns as a numeric array with the minhash method.
+    GapEncoder :
+        Encode string columns by constructing latent topics.
+    StringEncoder
+        Fast n-gram encoding of string columns.
+    SimilarityEncoder :
+        Encode string columns as a numeric array with n-gram string similarity.
+
     Notes
     -----
     This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
@@ -144,17 +154,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
 
     If memory usage is a concern, check the characteristics of your selected model.
-
-    See Also
-    --------
-    MinHashEncoder :
-        Encode string columns as a numeric array with the minhash method.
-    GapEncoder :
-        Encode string columns by constructing latent topics.
-    StringEncoder
-        Fast n-gram encoding of string columns.
-    SimilarityEncoder :
-        Encode string columns as a numeric array with n-gram string similarity.
 
     References
     ----------
