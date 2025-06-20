@@ -121,7 +121,7 @@ def _pick_slice_sizes(df, max_top_size, max_bottom_size):
 class _PolarsTable:
     """Helper for _make_table_polars."""
 
-    def __init__(self, df, max_top_slice_size, max_bottom_slice_size, float_precision=None):
+    def __init__(self, df, max_top_slice_size, max_bottom_slice_size, float_precision):
         self.df = df
         self.max_top_slice_size = max_top_slice_size
         self.max_bottom_slice_size = max_bottom_slice_size
@@ -342,7 +342,7 @@ class _PandasTable:
     stop_i, stop_j are one past the last i, j coords (df.shape[0], df.shape[1])
     """
 
-    def __init__(self, df, max_top_slice_size, max_bottom_slice_size, float_precision=None):
+    def __init__(self, df, max_top_slice_size, max_bottom_slice_size, float_precision):
         self.df = df
         self.max_top_slice_size = max_top_slice_size
         self.max_bottom_slice_size = max_bottom_slice_size
