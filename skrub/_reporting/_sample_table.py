@@ -64,7 +64,6 @@ Table Cell
 """
 import pandas as pd
 try:
-    import polars as pl
     from polars import selectors as cs
 except ImportError:
     pass
