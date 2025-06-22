@@ -63,6 +63,7 @@ Table Cell
   rowspan, colspan, scope: the values for the html attributes with the same names
 """
 import pandas as pd
+
 try:
     from polars import selectors as cs
 except ImportError:
@@ -110,9 +111,7 @@ def _make_table_polars(
     df, max_top_slice_size=5, max_bottom_slice_size=5, float_precision=None
 ):
     if float_precision is not None and float_precision < 0:
-        raise ValueError(
-            "Negative rounding precision is not supported for Polars."
-        )
+        raise ValueError("Negative rounding precision is not supported for Polars.")
     return _PolarsTable(
         df, max_top_slice_size, max_bottom_slice_size, float_precision
     ).table_data

@@ -260,10 +260,7 @@ def test_max_plot_columns_parameter(df_module):
 
 def test_float_precision_parameter(df_module):
     df = df_module.make_dataframe(
-        dict(
-            a=[1.23456, 2.34567, 3.14159],
-            b=[4.32109, 5.43210, 6.54321]
-        )
+        dict(a=[1.23456, 2.34567, 3.14159], b=[4.32109, 5.43210, 6.54321])
     )
 
     report = TableReport(df)
