@@ -86,6 +86,9 @@ Changes
 - The :class:`Cleaner` now exposes a parameter to convert numerical values to float32. :pr:`1440` by
   :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The :class:`TableReport` now accepts a ``float_precision`` parameter to control the number of decimal places displayed
+  for floating-point values. :pr:`1463` by :user:`George S <georgescutelnicu>`.
+
 
 Bugfixes
 --------

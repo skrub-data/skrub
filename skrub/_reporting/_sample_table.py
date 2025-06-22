@@ -63,7 +63,11 @@ Table Cell
   rowspan, colspan, scope: the values for the html attributes with the same names
 """
 import pandas as pd
-import polars as pl
+try:
+    import polars as pl
+    from polars import selectors as cs
+except ImportError:
+    pass
 
 from .. import _dataframe as sbd
 from .._dispatch import dispatch
@@ -94,13 +98,25 @@ def make_table(df, max_top_slice_size=5, max_bottom_slice_size=5):
 
 
 @make_table.specialize("pandas", argument_type="DataFrame")
-def _make_table_pandas(df, max_top_slice_size=5, max_bottom_slice_size=5, float_precision=None):
-    return _PandasTable(df, max_top_slice_size, max_bottom_slice_size, float_precision).table_data
+def _make_table_pandas(
+    df, max_top_slice_size=5, max_bottom_slice_size=5, float_precision=None
+):
+    return _PandasTable(
+        df, max_top_slice_size, max_bottom_slice_size, float_precision
+    ).table_data
 
 
 @make_table.specialize("polars", argument_type="DataFrame")
-def _make_table_polars(df, max_top_slice_size=5, max_bottom_slice_size=5, float_precision=None):
-    return _PolarsTable(df, max_top_slice_size, max_bottom_slice_size, float_precision).table_data
+def _make_table_polars(
+    df, max_top_slice_size=5, max_bottom_slice_size=5, float_precision=None
+):
+    if float_precision is not None and float_precision < 0:
+        raise ValueError(
+            "Negative rounding precision is not supported for Polars."
+        )
+    return _PolarsTable(
+        df, max_top_slice_size, max_bottom_slice_size, float_precision
+    ).table_data
 
 
 def _pick_slice_sizes(df, max_top_size, max_bottom_size):
@@ -173,11 +189,7 @@ class _PolarsTable:
 
     def add_table_body(self, sub_df, part_name, start_i):
         if self.float_precision is not None:
-            sub_df = sub_df.with_columns(
-                pl.col(col).round(self.float_precision)
-                for col, dtype in sub_df.schema.items()
-                if dtype in (pl.Float32, pl.Float64)
-            )
+            sub_df = sub_df.with_columns(cs.float().round(self.float_precision))
         tbody = {"name": part_name, "elem": "tbody", "rows": []}
         self.parts.append(tbody)
         for tr_count, df_row in enumerate(sub_df.iter_rows()):
