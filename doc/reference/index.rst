@@ -242,6 +242,19 @@ Generating an HTML report
    unpatch_display
    column_associations
 
+.. _configuration:
+
+Configuration
+=============
+
+.. autosummary::
+   :toctree: generated/
+   :template: base.rst
+   :nosignatures:
+
+   get_config
+   set_config
+   config_context
 
 .. _cleaning_a_dataframe_ref:
 

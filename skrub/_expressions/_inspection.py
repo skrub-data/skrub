@@ -13,6 +13,7 @@ from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
 from .. import datasets
+from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._utils import Repr, random_string, short_repr
@@ -42,6 +43,10 @@ def _get_template(template_name):
     return _get_jinja_env().get_template(template_name)
 
 
+def _use_tablereport_display():
+    return get_config()["use_tablereport_expr"]
+
+
 def node_report(expr, mode="preview", environment=None, **report_kwargs):
     result = evaluate(expr, mode=mode, environment=environment)
     if sbd.is_column(result):
@@ -51,7 +56,7 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
         result_df = sbd.make_dataframe_like(result, [result])
         result_df = sbd.copy_index(result, result_df)
         result = result_df
-    if sbd.is_dataframe(result):
+    if sbd.is_dataframe(result) and _use_tablereport_display():
         report_kwargs.setdefault("verbose", False)  # Hide the progress bar
         report = TableReport(result, **report_kwargs)
         report._set_minimal_mode()
