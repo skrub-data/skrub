@@ -63,6 +63,11 @@ Changes
 - The `packaging` dependency was removed.
   :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+- :class:`TextEncoder`, :class:`StringEncoder` and :class:`GapEncoder` now compute the
+  total standard deviation norm during training, which is a global constant, and
+  normalize the vector outputs by performing element-wise division on all entries.
+  :pr:`1274` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 - The :class:`DropIfTooManyNulls` transformer has been replaced by the
   :class:`DropUninformative` transformer and will be removed in a future release.
   :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`
