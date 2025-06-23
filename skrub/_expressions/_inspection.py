@@ -20,6 +20,7 @@ from . import _utils
 from ._choosing import BaseNumericChoice, Choice
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
+from ._subsampling import uses_subsampling
 
 
 def _get_jinja_env():
@@ -54,6 +55,8 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
         report_kwargs.setdefault("verbose", False)  # Hide the progress bar
         report = TableReport(result, **report_kwargs)
         report._set_minimal_mode()
+        if uses_subsampling(expr):
+            report._display_subsample_hint()
     else:
         try:
             report = result._repr_html_()
