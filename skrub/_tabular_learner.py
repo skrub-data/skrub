@@ -68,12 +68,6 @@ def tabular_learner(estimator, *, n_jobs=None):
     Notes
     -----
 
-    Instead of an actual estimator, ``estimator`` can also be the special-cased strings
-    ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'`` to use a
-    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or a
-    :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default
-    parameters.
-
     ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
     with several steps:
 
