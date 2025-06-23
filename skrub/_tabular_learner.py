@@ -67,10 +67,6 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Notes
     -----
-    Given a scikit-learn ``estimator``, the ``tabular_learner`` function creates a
-    machine-learning pipeline that preprocesses tabular data to extract numeric
-    features, impute missing values and scale the data if necessary, then applies the
-    ``estimator``.
 
     Instead of an actual estimator, ``estimator`` can also be the special-cased strings
     ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'`` to use a
