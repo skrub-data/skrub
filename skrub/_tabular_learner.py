@@ -27,7 +27,7 @@ _TREE_ENSEMBLE_CLASSES = (
 def tabular_learner(estimator, *, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
-    Given either a scikit-learn ``estimator`` or one of the special-cased strings
+    Given either a scikit-learn estimator or one of the special-cased strings
     ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'``, this
     function creates a machine-learning pipeline that preprocesses data, then
     applies the estimator.
