@@ -9,6 +9,8 @@ CONFIGURING API_REFERENCE
 API_REFERENCE maps each module name to a dictionary that consists of the following
 components:
 
+title (required)
+    The section title. It can't be `None`.
 short_summary (required)
     The text to be printed on the index page; it has nothing to do the API reference
     page of each module.
@@ -17,8 +19,6 @@ description (required, `None` if not needed)
     docstring, before the sections start.
 sections (required)
     A list of sections, each of which consists of:
-    - title (required, `None` if not needed): the section title, commonly it should
-      not be `None` except for the first section of a module,
     - description (optional): the optional additional description for the section,
     - autosummary (required): an autosummary block, assuming current module is the
       current module name.
@@ -26,18 +26,14 @@ sections (required)
 Essentially, the rendered page would look like the following:
 
 |---------------------------------------------------------------------------------|
-|     {{ module_name }}                                                           |
-|     =================                                                           |
+|     {{ module_title }}                                                          |
+|     ==================                                                          |
 |     {{ module_docstring }}                                                      |
 |     {{ description }}                                                           |
 |                                                                                 |
-|     {{ section_title_1 }}   <-------------- Optional if one wants the first     |
-|     ---------------------                   section to directly follow          |
-|     {{ section_description_1 }}             without a second-level heading.     |
+|     {{ section_description_1 }}                                                 |
 |     {{ section_autosummary_1 }}                                                 |
 |                                                                                 |
-|     {{ section_title_2 }}                                                       |
-|     ---------------------                                                       |
 |     {{ section_description_2 }}                                                 |
 |     {{ section_autosummary_2 }}                                                 |
 |                                                                                 |
@@ -54,11 +50,11 @@ the :mod: directive, e.g., :mod:`skrub.selectors` for the module and
 
 API_REFERENCE = {
     "pipeline": {
+        "title": "Building a pipeline",
         "short_summary": None,
         "description": None,
         "sections": [
             {
-                "title": "Building a pipeline",
                 "description": (
                     "See :ref:`end_to_end_pipeline <end_to_end_pipeline>` for "
                     "further details. For more flexibility and control to build "
@@ -76,11 +72,11 @@ API_REFERENCE = {
         ],
     },
     "encoders": {
+        "title": "Encoding a column",
         "short_summary": None,
         "description": None,
         "sections": [
             {
-                "title": "Encoding a column",
                 "description": "See :ref:`encoding <encoding>` for further details.",
                 "autosummary": [
                     "StringEncoder",
@@ -97,11 +93,11 @@ API_REFERENCE = {
         ],
     },
     "reporting": {
+        "title": "Exploring a dataframe",
         "short_summary": None,
         "description": None,
         "sections": [
             {
-                "title": "Exploring a dataframe",
                 "description": None,
                 "autosummary": [
                     "TableReport",
@@ -113,11 +109,11 @@ API_REFERENCE = {
         ],
     },
     "cleaning": {
+        "title": "Cleaning a dataframe",
         "short_summary": None,
         "description": None,
         "sections": [
             {
-                "title": "Cleaning a dataframe",
                 "description": None,
                 "autosummary": [
                     "deduplicate",
@@ -126,11 +122,11 @@ API_REFERENCE = {
         ],
     },
     "joining": {
+        "title": "Joining dataframes",
         "short_summary": None,
         "description": None,
         "sections": [
             {
-                "title": "Joining dataframes",
                 "description": None,
                 "autosummary": [
                     "Joiner",
@@ -144,11 +140,11 @@ API_REFERENCE = {
         ],
     },
     "selectors": {
+        "title": "Selectors",
         "short_summary": None,
         "description": None,
         "sections": [
             {
-                "title": "Selectors",
                 "description": (
                     "Contains method to select columns in a dataframe. "
                     "See the :ref:`selectors <selectors>` section for further details."
@@ -177,11 +173,11 @@ API_REFERENCE = {
         ],
     },
     "expressions": {
+        "title": "Expressions",
         "short_summary": None,
         "description": None,
         "sections": [
             {
-                "title": "Expressions",
                 "description": (
                     "Generalizing the scikit-learn pipeline. "
                     "See :ref:`skrub expression <skrub_pipeline>` for further details."
@@ -190,13 +186,11 @@ API_REFERENCE = {
                 "template": "base.rst",
             },
             {
-                "title": None,
                 "description": "The expression object.",
                 "autosummary": ["Expr"],
                 "template": "expr_class.rst",
             },
             {
-                "title": None,
                 "description": (
                     "Inline hyperparameters selection within your expressions."
                 ),
@@ -210,13 +204,11 @@ API_REFERENCE = {
                 "template": "base.rst",
             },
             {
-                "title": None,
                 "description": "Evaluate your expressions.",
                 "autosummary": ["cross_validate", "eval_mode"],
                 "template": "base.rst",
             },
             {
-                "title": None,
                 "description": (
                     "The ``skb`` accessor exposes all expressions methods and "
                     "attributes."
@@ -255,7 +247,6 @@ API_REFERENCE = {
                 "template": "autosummary/accessor_method.rst",
             },
             {
-                "title": None,
                 "description": "Accessor attributes.",
                 "autosummary": [
                     "Expr.skb.description",
@@ -267,7 +258,6 @@ API_REFERENCE = {
                 "template": "autosummary/accessor_attribute.rst",
             },
             {
-                "title": None,
                 "description": "Objects generated by the expressions.",
                 "autosummary": [
                     "SkrubPipeline",
@@ -278,11 +268,11 @@ API_REFERENCE = {
         ],
     },
     "datasets": {
+        "title": "Datasets",
         "short_summary": None,
         "description": None,
         "sections": [
             {
-                "title": "Datasets",
                 "description": "Downloading a dataset.",
                 "autosummary": [
                     "datasets.fetch_bike_sharing",
