@@ -12,8 +12,7 @@
 .. _{{ module_hook }}_ref:
 {% endif %}
 
-{{ module }}
-{{ "=" * module|length }}
+.. title:: {{ module }}
 
 {% if not module.startswith("skrub.") -%}
 {% set module = "skrub" %}

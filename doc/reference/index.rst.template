@@ -11,11 +11,11 @@ This is the class and function reference of skrub. Please refer to the
 classes and functions may not be enough to give full guidelines on their use.
 
 .. toctree::
-  :maxdepth: 2
+  :maxdepth: 1
   :hidden:
 
 {% for module, _ in API_REFERENCE %}
-  {{ module }}
+  {{ module }} <{{ module }}>
 {%- endfor %}
 {%- if DEPRECATED_API_REFERENCE %}
   deprecated

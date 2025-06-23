@@ -148,7 +148,7 @@ API_REFERENCE = {
         "description": None,
         "sections": [
             {
-                "title": None,
+                "title": "Selectors",
                 "description": (
                     "Contains method to select columns in a dataframe. "
                     "See the :ref:`selectors <selectors>` section for further details."
@@ -178,14 +178,14 @@ API_REFERENCE = {
     },
     "expressions": {
         "short_summary": None,
-        "description": (
-            "Generalizing the scikit-learn pipeline. "
-            "See :ref:`skrub expression <skrub_pipeline>` for further details."
-        ),
+        "description": None,
         "sections": [
             {
-                "title": "Creating expressions",
-                "description": None,
+                "title": "Expressions",
+                "description": (
+                    "Generalizing the scikit-learn pipeline. "
+                    "See :ref:`skrub expression <skrub_pipeline>` for further details."
+                ),
                 "autosummary": ["var", "X", "y", "as_expr", "deferred"],
                 "template": "base.rst",
             },
@@ -196,7 +196,7 @@ API_REFERENCE = {
                 "template": "expr_class.rst",
             },
             {
-                "title": "Hyperparameters choices",
+                "title": None,
                 "description": (
                     "Inline hyperparameters selection within your expressions."
                 ),
@@ -210,13 +210,13 @@ API_REFERENCE = {
                 "template": "base.rst",
             },
             {
-                "title": "Evaluate your expressions",
-                "description": None,
+                "title": None,
+                "description": "Evaluate your expressions.",
                 "autosummary": ["cross_validate", "eval_mode"],
                 "template": "base.rst",
             },
             {
-                "title": "Working with expressions",
+                "title": None,
                 "description": (
                     "The ``skb`` accessor exposes all expressions methods and "
                     "attributes."
@@ -282,7 +282,7 @@ API_REFERENCE = {
         "description": None,
         "sections": [
             {
-                "title": None,
+                "title": "Datasets",
                 "description": "Downloading a dataset.",
                 "autosummary": [
                     "datasets.fetch_bike_sharing",
