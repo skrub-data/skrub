@@ -29,8 +29,8 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Given either a scikit-learn estimator or one of the special-cased strings
     ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'``, this
-    function creates a machine-learning pipeline that preprocesses data, then
-    applies the estimator.
+    function creates a scikit-learn pipeline that extracts numeric features,
+    imputes missing values and scales the data if necessary, then applies the estimator.
 
     .. note::
        The heuristics used by the ``tabular_learner``
