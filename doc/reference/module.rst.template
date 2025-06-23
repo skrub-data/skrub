@@ -15,8 +15,9 @@
 {{ module }}
 {{ "=" * module|length }}
 
-{% if module == "skrub" -%}
-.. currentmodule:: skrub
+{% if not module.startswith("skrub.") -%}
+{% set module = "skrub" %}
+.. currentmodule:: {{ module }}
 {%- else -%}
 .. automodule:: {{ module }}
 {%- endif -%}
@@ -39,10 +40,16 @@
 {{ section["description"] }}
 {% endif %}
 
+{% if section["template"] %}
+{% set template = section["template"] %}
+{% else %}
+{% set template = "base.rst" %}
+{% endif %}
+
 .. autosummary::
   :nosignatures:
   :toctree: generated/
-  :template: base.rst
+  :template: {{ template }}
 
 {% for obj in section["autosummary"] %}
   {{ obj }}

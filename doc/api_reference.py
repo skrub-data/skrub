@@ -1,5 +1,8 @@
 """Configuration for the API reference documentation.
 
+This file controls the content and ordering of the API reference section of the
+documentation. Edit this file to edit the documentation.
+
 CONFIGURING API_REFERENCE
 =========================
 
@@ -50,9 +53,9 @@ the :mod: directive, e.g., :mod:`skrub.selectors` for the module and
 """
 
 API_REFERENCE = {
-    "skrub": {
-        "short_summary": "Column-wise encoders",
-        "description": "",
+    "pipeline": {
+        "short_summary": None,
+        "description": None,
         "sections": [
             {
                 "title": "Building a pipeline",
@@ -69,7 +72,13 @@ API_REFERENCE = {
                     "DropCols",
                     "DropUninformative",
                 ],
-            },
+            }
+        ],
+    },
+    "encoders": {
+        "short_summary": None,
+        "description": None,
+        "sections": [
             {
                 "title": "Encoding a column",
                 "description": "See :ref:`encoding <encoding>` for further details.",
@@ -84,9 +93,15 @@ API_REFERENCE = {
                     "ToDatetime",
                     "to_datetime",
                 ],
-            },
+            }
+        ],
+    },
+    "reporting": {
+        "short_summary": None,
+        "description": None,
+        "sections": [
             {
-                "title": "Generating an HTML report",
+                "title": "Exploring a dataframe",
                 "description": None,
                 "autosummary": [
                     "TableReport",
@@ -94,7 +109,13 @@ API_REFERENCE = {
                     "unpatch_display",
                     "column_associations",
                 ],
-            },
+            }
+        ],
+    },
+    "cleaning": {
+        "short_summary": None,
+        "description": None,
+        "sections": [
             {
                 "title": "Cleaning a dataframe",
                 "description": None,
@@ -102,6 +123,12 @@ API_REFERENCE = {
                     "deduplicate",
                 ],
             },
+        ],
+    },
+    "joining": {
+        "short_summary": None,
+        "description": None,
+        "sections": [
             {
                 "title": "Joining dataframes",
                 "description": None,
@@ -116,42 +143,43 @@ API_REFERENCE = {
             },
         ],
     },
-    "skrub.selectors": {
-        "short_summary": "Selecting columns in a DataFrame",
+    "selectors": {
+        "short_summary": None,
         "description": None,
         "sections": [
             {
                 "title": None,
+                "description": (
+                    "Contains method to select columns in a dataframe. "
+                    "See the :ref:`selectors <selectors>` section for further details."
+                ),
                 "autosummary": [
-                    "all",
-                    "any_date",
-                    "boolean",
-                    "cardinality_below",
-                    "categorical",
-                    "cols",
-                    "Filter",
-                    "filter",
-                    "filter_names",
-                    "float",
-                    "glob",
-                    "has_nulls",
-                    "integer",
-                    "inv",
-                    "make_selector",
-                    "NameFilter",
-                    "numeric",
-                    "regex",
-                    "select",
-                    "Selector",
-                    "string",
+                    "selectors.all",
+                    "selectors.any_date",
+                    "selectors.boolean",
+                    "selectors.cardinality_below",
+                    "selectors.categorical",
+                    "selectors.cols",
+                    "selectors.filter",
+                    "selectors.filter_names",
+                    "selectors.float",
+                    "selectors.glob",
+                    "selectors.has_nulls",
+                    "selectors.integer",
+                    "selectors.inv",
+                    "selectors.make_selector",
+                    "selectors.numeric",
+                    "selectors.regex",
+                    "selectors.select",
+                    "selectors.string",
                 ],
             }
         ],
     },
     "expressions": {
-        "short_summary": "",
+        "short_summary": None,
         "description": (
-            "Generalization the scikit-learn pipeline. "
+            "Generalizing the scikit-learn pipeline. "
             "See :ref:`skrub expression <skrub_pipeline>` for further details."
         ),
         "sections": [
@@ -184,7 +212,7 @@ API_REFERENCE = {
             {
                 "title": "Evaluate your expressions",
                 "description": None,
-                "autosummary": ["cross_validate", "train_test_split", "eval_mode"],
+                "autosummary": ["cross_validate", "eval_mode"],
                 "template": "base.rst",
             },
             {
@@ -249,32 +277,32 @@ API_REFERENCE = {
             },
         ],
     },
-    "skrub.datasets": {
-        "short_summary": "",
+    "datasets": {
+        "short_summary": None,
         "description": None,
         "sections": [
             {
                 "title": None,
                 "description": "Downloading a dataset.",
                 "autosummary": [
-                    "fetch_bike_sharing",
-                    "fetch_country_happiness",
-                    "fetch_credit_fraud",
-                    "fetch_drug_directory",
-                    "fetch_employee_salaries",
-                    "fetch_flight_delays",
-                    "fetch_ken_embeddings",
-                    "fetch_ken_table_aliases",
-                    "fetch_ken_types",
-                    "fetch_medical_charge",
-                    "fetch_midwest_survey",
-                    "fetch_movielens",
-                    "fetch_open_payments",
-                    "fetch_toxicity",
-                    "fetch_traffic_violations",
-                    "fetch_videogame_sales",
-                    "get_data_dir",
-                    "make_deduplication_data",
+                    "datasets.fetch_bike_sharing",
+                    "datasets.fetch_country_happiness",
+                    "datasets.fetch_credit_fraud",
+                    "datasets.fetch_drug_directory",
+                    "datasets.fetch_employee_salaries",
+                    "datasets.fetch_flight_delays",
+                    "datasets.fetch_ken_embeddings",
+                    "datasets.fetch_ken_table_aliases",
+                    "datasets.fetch_ken_types",
+                    "datasets.fetch_medical_charge",
+                    "datasets.fetch_midwest_survey",
+                    "datasets.fetch_movielens",
+                    "datasets.fetch_open_payments",
+                    "datasets.fetch_toxicity",
+                    "datasets.fetch_traffic_violations",
+                    "datasets.fetch_videogame_sales",
+                    "datasets.get_data_dir",
+                    "datasets.make_deduplication_data",
                 ],
             }
         ],

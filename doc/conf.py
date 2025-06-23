@@ -22,6 +22,9 @@ import shutil
 import sys
 import warnings
 from datetime import datetime
+from pathlib import Path
+
+import jinja2
 
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
@@ -581,32 +584,20 @@ rst_templates = [
         "reference/index",
         "reference/index",
         {
-            "API_REFERENCE": sorted(
-                API_REFERENCE.items(),
-                key=lambda x: (x[0] if x[0] != "expressions" else "z" * 10),
-            )
+            "API_REFERENCE": list(API_REFERENCE.items()),
         },
     )
 ]
 
 # Convert each module API reference page
 for module in API_REFERENCE:
-    if module == "expressions":
-        path_template = path_rendered = "reference/expressions"
-    else:
-        path_template = "reference/module"
-        path_rendered = f"reference/{module}"
     rst_templates.append(
         (
-            path_template,
-            path_rendered,
+            "reference/module",
+            f"reference/{module}",
             {"module": module, "module_info": API_REFERENCE[module]},
         )
     )
-
-from pathlib import Path
-
-import jinja2
 
 for rst_template_name, rst_target_name, kwargs in rst_templates:
     # Read the corresponding template file into jinja2

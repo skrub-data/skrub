@@ -1,9 +1,3 @@
-"""
-Contains method to select columns in a dataframe.
-
-See the :ref:`selectors <selectors>` section for further details.
-"""
-
 from . import _selectors
 from ._base import (
     Filter,

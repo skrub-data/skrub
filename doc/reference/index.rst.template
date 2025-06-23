@@ -28,20 +28,18 @@ classes and functions may not be enough to give full guidelines on their use.
   * - Object
     - Description
 
-{% for module, module_info in API_REFERENCE %}
+{% for _, module_info in API_REFERENCE %}
 {% for section in module_info["sections"] %}
 {% for obj in section["autosummary"] %}
+{% set module = "skrub" %}
 {% set parts = obj.rsplit(".", 1) %}
 {% if parts|length > 1 %}
 {% set full_module = module + "." + parts[0] %}
+{% set obj = parts[1] %}
 {% else %}
 {% set full_module = module %}
 {% endif %}
-{% if module == "expressions" %}
-{% set module = "skrub" %}
-{% set full_module = "skrub" %}
-{% endif %}
-  * - :obj:`~{{ module }}.{{ obj }}`
+  * - :obj:`~{{ full_module }}.{{ obj }}`
 
     - .. div:: sk-apisearch-desc
 
@@ -49,9 +47,6 @@ classes and functions may not be enough to give full guidelines on their use.
 
         .. autoshortsummary:: {{ full_module }}.{{ obj }}
 
-        .. div:: caption
-
-          :mod:`{{ full_module }}`
 {% endfor %}
 {% endfor %}
 {% endfor %}
