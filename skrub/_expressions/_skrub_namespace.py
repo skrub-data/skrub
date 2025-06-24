@@ -2076,7 +2076,8 @@ class SkrubNamespace:
     def set_name(self, name):
         """Give a name to this expression.
 
-        Returns a modified copy
+        Returns a modified copy.
+        
         The name is displayed in the graph and reports so this can be useful to
         mark relevant parts of the pipeline.
 
