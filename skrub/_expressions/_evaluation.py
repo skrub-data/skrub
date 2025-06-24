@@ -60,12 +60,21 @@ class _Computation:
     # >>> skrub.as_expr(d).skb.eval()
 
     def __init__(self, target, generator):
+        self.target = target
         self.target_id = id(target)
         self.generator = generator
 
 
 class CircularReferenceError(ValueError):
     pass
+
+
+def _run_gen(g):
+    try:
+        while True:
+            next(g)
+    except StopIteration as e:
+        return e.value
 
 
 class _ExprTraversal:
@@ -97,8 +106,12 @@ class _ExprTraversal:
     # _ExprTraversal subclass).
 
     def run(self, expr):
+        return _run_gen(self.iter_run(expr))
+
+    def iter_run(self, expr):
         stack = [expr]
         last_result = None
+        seen = set()
 
         def push(handler):
             top = stack.pop()
@@ -148,6 +161,9 @@ class _ExprTraversal:
                 # and PEPs linked within) for a refresher on generators
                 last_result = e.value
                 stack.pop()
+                if isinstance(top.target, Expr) and id(top.target) not in seen:
+                    seen.add(id(top.target))
+                    yield top.target, last_result
         return last_result
 
     def handle_expr(self, expr):
@@ -380,6 +396,14 @@ def evaluate(expr, mode="preview", environment=None, clear=False, callbacks=()):
         The signature is callback(expr, result) where expr is the expression
         that was just evaluated and result is the resulting value.
     """
+    return _run_gen(
+        iter_evaluate(
+            expr, mode=mode, environment=environment, clear=clear, callbacks=callbacks
+        )
+    )
+
+
+def iter_evaluate(expr, mode="preview", environment=None, clear=False, callbacks=()):
     requested_mode = mode
     mode = "fit_transform" if requested_mode == "fit" else requested_mode
     _check_environment(environment)
@@ -389,9 +413,9 @@ def evaluate(expr, mode="preview", environment=None, clear=False, callbacks=()):
     else:
         callbacks = ()
     try:
-        result = _Evaluator(
+        result = yield from _Evaluator(
             mode=mode, environment=environment, callbacks=callbacks
-        ).run(expr)
+        ).iter_run(expr)
         return expr if requested_mode == "fit" else result
     finally:
         if clear:
