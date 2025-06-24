@@ -1,11 +1,17 @@
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 
 from skrub import DatetimeEncoder
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._datetime_encoder import _CircularEncoder, _SplineEncoder
+from skrub._datetime_encoder import (
+    _CircularEncoder,
+    _get_dt_feature,
+    _is_date,
+    _SplineEncoder,
+)
 from skrub._on_each_column import OnEachColumn
 from skrub._to_float32 import ToFloat32
 
@@ -352,3 +358,9 @@ def test_error_checking_periodic_encoder(a_datetime_col):
 
     with pytest.raises(ValueError, match=r"Unsupported value (\S+) for (\S+)"):
         enc.fit_transform(a_datetime_col)
+
+
+@pytest.mark.parametrize("func", (_is_date, _get_dt_feature))
+def test_error_dispatch(func):
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        func(np.array([1]))

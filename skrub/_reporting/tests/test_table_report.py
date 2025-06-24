@@ -5,10 +5,12 @@ import re
 import warnings
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from skrub import TableReport, ToDatetime, datasets
 from skrub import _dataframe as sbd
+from skrub._reporting._sample_table import make_table
 
 
 def get_report_id(html):
@@ -283,3 +285,9 @@ def test_single_column_report(df_module):
     col_name = sbd.name(single_col)
     html = report.html()
     assert col_name in html
+
+
+def test_error_make_table():
+    # Make codecov happy
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
+        make_table(np.array([1]))
