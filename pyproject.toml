@@ -60,7 +60,6 @@ dev = [
     "sphinx-gallery",
     "sphinxext-opengraph",
     "sphinx-autosummary-accessors",
-    "sphinx-design",
     "statsmodels",
 
     # lint
@@ -118,7 +117,6 @@ sphinx-copybutton = "*"
 sphinx-gallery = "*"
 sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
-sphinx-design = "*"
 statsmodels = "*"
 
 [tool.pixi.feature.lint.dependencies]

@@ -78,7 +78,6 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_gallery.gen_gallery",
     "autoshortsummary",
-    "sphinx_design",
 ]
 
 try:
