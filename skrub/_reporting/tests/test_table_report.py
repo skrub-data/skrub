@@ -273,6 +273,16 @@ def test_float_precision_parameter(df_module):
     assert "3.142" in html2
 
 
+def test_float_precision_parameter_negative_value(pl_module):
+    df = pl_module.make_dataframe(
+        dict(a=[1.23456, 2.34567, 3.14159], b=[4.32109, 5.43210, 6.54321])
+    )
+    with pytest.raises(
+        ValueError, match="Negative rounding precision is not supported for Polars."
+    ):
+        TableReport(df, float_precision=-1).html()
+
+
 def test_minimal_mode(pd_module):
     # Check that flags are set properly and that the panels are not created
     df = pd_module.example_dataframe
