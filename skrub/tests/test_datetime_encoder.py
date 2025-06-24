@@ -1,3 +1,4 @@
+from functools import partial
 from types import SimpleNamespace
 
 import numpy as np
@@ -358,7 +359,7 @@ def test_error_checking_periodic_encoder(a_datetime_col):
         enc.fit_transform(a_datetime_col)
 
 
-@pytest.mark.parametrize("func", (_is_date, _get_dt_feature))
+@pytest.mark.parametrize("func", (_is_date, partial(_get_dt_feature, feature=None)))
 def test_error_dispatch(func):
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         func(np.array([1]))
