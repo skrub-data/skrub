@@ -7,8 +7,8 @@ Vision: where is skrub heading?
 Vision statement
 ================
 
-The goal of skrub is to facilitate machine learning on dataframes
-machine-learning models on tables: `pandas <https://pandas.pydata.org>`__
+The goal of skrub is to facilitate machine learning on dataframes:
+`pandas <https://pandas.pydata.org>`__
 and `polars <https://pola.rs>`__ dataframes, SQL databases...
 
 |
@@ -45,9 +45,6 @@ We however decided to communicate on what we would like to do in the next
 6 months to give a better idea of the vision.
 
 From shorter term to longer term:
-
-- Make the :class:`TableVectorizer` fast, robust, and easy to tune (in
-  the sense of hyper-parameter tuning)
 
 - Better support for time series
 
