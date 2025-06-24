@@ -173,3 +173,23 @@ def test_store_weights_in_pickle(df_module, encoder, store_weights_in_pickle):
     obj = pickle.dumps(encoder)
     encoder_unpickled = pickle.loads(obj)
     assert ("_estimator" in encoder_unpickled.__dict__) is store_weights_in_pickle
+
+
+def test_categorical_features(df_module, encoder):
+    cat_col = sbd.to_categorical(
+        df_module.make_column("cat", ["A", "B", "A", "C", "B", "D"])
+    )
+    data = {
+        "categorical": cat_col,
+        "numeric": [1, 2, 3, 4, 5, 6],
+    }
+    df = df_module.make_dataframe(data)
+
+    with pytest.raises(RejectColumn):
+        encoder.fit(df["numeric"])
+
+    out = encoder.fit_transform(df["categorical"])
+    assert len(sbd.column_names(out)) == 30
+
+    out = encoder.fit(df["categorical"][:4]).transform(df["categorical"][4:])
+    assert len(sbd.column_names(out)) == 30

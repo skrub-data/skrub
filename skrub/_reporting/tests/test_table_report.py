@@ -291,3 +291,10 @@ def test_error_make_table():
     # Make codecov happy
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
         make_table(np.array([1]))
+        
+        
+@pytest.mark.parametrize("arg", ["max_plot_columns", "max_association_columns"])
+def test_bad_cols_parameter(pd_module, arg):
+    df = pd_module.example_dataframe
+    with pytest.raises(ValueError):
+        TableReport(df, **{arg: -1})

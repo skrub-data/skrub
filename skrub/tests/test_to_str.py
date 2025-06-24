@@ -4,7 +4,6 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub._on_each_column import RejectColumn
-from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
 from skrub._to_str import ToStr
 
@@ -30,7 +29,7 @@ def test_to_str(df_module):
 def test_rejected_columns(df_module):
     columns = [
         ToDatetime().fit_transform(df_module.make_column("", ["2020-02-02"])),
-        ToCategorical().fit_transform(df_module.make_column("", ["a", "b"])),
+        sbd.to_categorical(df_module.make_column("", ["a", "b"])),
     ]
     for col in columns:
         with pytest.raises(RejectColumn):
@@ -50,3 +49,14 @@ def test_pandas_na():
     out = ToStr().fit_transform(s)
     assert out[1] is not pd.NA
     assert np.isnan(out[1])
+
+
+def test_convert_category(df_module):
+    col = sbd.to_categorical(df_module.make_column("", ["a", "b"]))
+
+    with pytest.raises(RejectColumn):
+        ToStr().fit_transform(col)
+
+    # force conversion
+    transformed = ToStr(convert_category=True).fit_transform(col)
+    assert sbd.is_string(transformed)

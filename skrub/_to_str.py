@@ -8,19 +8,16 @@ class ToStr(SingleColumnTransformer):
     """
     Convert a column to strings.
 
-    A numeric, datetime or categorical column is rejected with a
+    By default, a numeric, datetime or categorical column is rejected with a
     ``RejectColumn`` exception. This is to avoid accidentally converting a
     column that already has a more informative dtype.
 
     Any other column is converted to a column of strings. Null values are
     preserved, i.e. will still be nulls in the output.
 
-    For pandas, the output always has the ``object`` dtype (the old way of
-    representing strings in pandas), not the more recent ``StringDtype``
-    extension dtype, and null values are represented by ``np.nan``. This is due
-    to the fact that scikit-learn estimators and encoders do not yet handle
-    pandas extension dtypes, especially in the presence of missing values
-    (represented by ``pd.NA``).
+    If ``convert_categorical=True``, categorical columns are converted to strings,
+    and the additional information on categories is lost. Datetime columns are not
+    modified in any case.
 
     Examples
     --------
@@ -171,14 +168,35 @@ class ToStr(SingleColumnTransformer):
     Traceback (most recent call last):
         ...
     skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'Date' to strings.
+
+    If ``convert_category=True``, Categorical columns are converted:
+    >>> to_str = ToStr(convert_category=True)
+    >>> to_str.fit_transform(pd.Series(['a', 'b'], name='s', dtype='category'))
+    0    a
+    1    b
+    Name: s, dtype: object
+
+    Notes
+    -----
+
+    For pandas, the output always has the ``object`` dtype (the old way of
+    representing strings in pandas), not the more recent ``StringDtype``
+    extension dtype, and null values are represented by ``np.nan``. This is due
+    to the fact that scikit-learn estimators and encoders do not yet handle
+    pandas extension dtypes, especially in the presence of missing values
+    (represented by ``pd.NA``).
+
     """  # noqa: E501
+
+    def __init__(self, convert_category=False):
+        self.convert_category = convert_category
 
     def fit_transform(self, column, y=None):
         del y
         if (
-            sbd.is_numeric(column)
+            (sbd.is_categorical(column) and not self.convert_category)
+            or sbd.is_numeric(column)
             or sbd.is_any_date(column)
-            or sbd.is_categorical(column)
         ):
             raise RejectColumn(
                 f"Refusing to convert {sbd.name(column)!r} "

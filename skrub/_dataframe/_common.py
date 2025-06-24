@@ -332,6 +332,36 @@ def _all_null_like_polars(col, length=None, dtype=None, name=None):
     return pl.Series(name, [None] * length, dtype=dtype)
 
 
+def _check_same_type(objects):
+    is_df = np.array([is_dataframe(obj) for obj in objects])
+    is_col = np.array([is_column(obj) for obj in objects])
+    is_other = ~(is_df | is_col)
+
+    if is_df.all() or is_col.all() or is_other.all():
+        return
+
+    def _indices(array):
+        return np.argwhere(array).ravel()
+
+    prefix = "Mixing types is not allowed, got"
+    hints = []
+    if is_df.any():
+        hints.append(f"dataframes at position {_indices(is_df)}")
+
+    if is_col.any():
+        hints.append(f"series at position {_indices(is_col)}")
+
+    if is_other.any():
+        hints.append(
+            "types that are neither dataframes nor series at position "
+            f"{_indices(is_other)}"
+        )
+
+    msg = prefix + " " + ", ".join(hints) + "."
+
+    raise TypeError(msg)
+
+
 @dispatch
 def concat(*dataframes, axis=0):
     # This is accessed only when the first element of *dataframes is neither
@@ -339,8 +369,9 @@ def concat(*dataframes, axis=0):
     raise _raise(dataframes[0])
 
 
-@concat.specialize("pandas")
+@concat.specialize("pandas", argument_type="DataFrame")
 def _concat_pandas(*dataframes, axis=0):
+    _check_same_type(dataframes)
     kwargs = {"copy": False} if pandas_version < parse_version("3.0") else {}
     if axis == 0:
         return pd.concat(dataframes, axis=0, ignore_index=True, **kwargs)
@@ -353,13 +384,26 @@ def _concat_pandas(*dataframes, axis=0):
         return result
 
 
-@concat.specialize("polars")
+@concat.specialize("polars", argument_type="DataFrame")
 def _concat_polars(*dataframes, axis=0):
+    _check_same_type(dataframes)
     if axis == 0:
         return pl.concat(dataframes, how="diagonal_relaxed")
     else:  # axis == 1
         dataframes = _join_utils.make_column_names_unique(*dataframes)
         return pl.concat(dataframes, how="horizontal")
+
+
+@concat.specialize("pandas", argument_type="Column")
+def _concat_pandas_cols(*columns, axis=0):
+    _check_same_type(columns)
+    return _concat_pandas(*[to_frame(col) for col in columns], axis=axis)
+
+
+@concat.specialize("polars", argument_type="Column")
+def _concat_polars_cols(*columns, axis=0):
+    _check_same_type(columns)
+    return _concat_polars(*[to_frame(col) for col in columns], axis=axis)
 
 
 def is_column_list(obj):

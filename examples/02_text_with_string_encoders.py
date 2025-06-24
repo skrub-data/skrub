@@ -227,7 +227,7 @@ results.append(("TextEncoder", text_encoder_results))
 plot_box_results(results)
 
 # %%
-# SringEncoder
+# StringEncoder
 # ^^^^^^^^^^^^
 # |TextEncoder| embeddings are very strong, but they are also quite expensive to
 # use. A simpler, faster alternative for encoding strings is the |StringEncoder|,

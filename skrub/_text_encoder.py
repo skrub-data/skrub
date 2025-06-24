@@ -9,11 +9,9 @@ from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import RejectColumn, SingleColumnTransformer
-from ._utils import (
-    import_optional_dependency,
-    unique_strings,
-)
+from ._on_each_column import SingleColumnTransformer
+from ._to_str import ToStr
+from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
 
 
@@ -228,8 +226,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             The embedding representation of the input.
         """
         del y
-        if not sbd.is_string(column):
-            raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
+
+        self.to_str = ToStr(convert_category=True)
+        column = self.to_str.fit_transform(column)
 
         self._check_params()
 
@@ -287,8 +286,13 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         """
         check_is_fitted(self, "_estimator")
 
-        if not sbd.is_string(column):
-            raise ValueError(f"Column {sbd.name(column)!r} does not contain strings.")
+        # Error checking at fit time is done by the ToStr transformer,
+        # but after ToStr is fitted it does not check the input type anymore,
+        # while we want to ensure that the input column is a string or categorical
+        # so we need to add the check here.
+        if not (sbd.is_string(column) or sbd.is_categorical(column)):
+            raise ValueError("Input column does not contain strings.")
+        column = self.to_str.transform(column)
 
         X_out = self._vectorize(column)
 

@@ -93,6 +93,41 @@ def test_environment_no_values():
     assert e.skb.eval({"d": 2, "c": 3}) == 6
 
 
+def test_environment_wrong_values():
+    a = skrub.var(name="a", value=[1, 2, 3])
+    # Testing expr as value
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.var(name="wrongvar", value=a)
+
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.X(value=a)
+
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.y(value=a)
+
+    # Testing choice as value
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.var("wrongvar", skrub.choose_bool())
+
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.X(skrub.choose_bool())
+
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.y(skrub.choose_bool())
+
+
 def test_choice_in_environment():
     a = skrub.var("a", 100)
     b = skrub.var("b", 10)

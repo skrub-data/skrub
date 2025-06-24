@@ -24,14 +24,12 @@ _TIME_LEVELS = [
 ]
 
 _DEFAULT_ENCODING_PERIODS = {
-    "day_of_year": 366,
     "month": 12,
     "day": 30,
     "hour": 24,
     "weekday": 7,
 }
 _DEFAULT_ENCODING_SPLINES = {
-    "day_of_year": 12,
     "month": 12,
     "day": 4,
     "hour": 12,
@@ -164,7 +162,6 @@ class DatetimeEncoder(SingleColumnTransformer):
     The ``DatetimeEncoder`` uses hardcoded values for generating periodic features.
     The period of each feature is:
 
-    - ``day_of_year``: 366
     - ``month``: 12 (month in year)
     - ``day``: 30 (day in month)
     - ``hour``: 24 (hour in day)
@@ -173,7 +170,6 @@ class DatetimeEncoder(SingleColumnTransformer):
     Additionally, we specify the number of splines for each feature to avoid
     generating too many features:
 
-    - ``day_of_year``: 12
     - ``month``: 12
     - ``day``: 4
     - ``hour``: 12
@@ -394,11 +390,9 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Adding transformers for periodic encoding
         self._periodic_encoders = {}
         if self.periodic_encoding is not None:
-            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[1 : idx_level + 1]
+            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[0:idx_level]
             if self.add_weekday:
                 encoding_levels += ["weekday"]
-            if self.add_day_of_year:
-                encoding_levels = encoding_levels + ["day_of_year"]
             for enc_feature in encoding_levels:
                 if self.periodic_encoding == "circular":
                     self._periodic_encoders[enc_feature] = _CircularEncoder(
