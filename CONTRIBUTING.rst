@@ -367,3 +367,11 @@ specific examples, you can use the following command with a regex pattern:
     make html EXAMPLES_PATTERN=your_regex_goes_here make html
 
 This is especially helpful when you're only modifying or checking a few examples.
+
+
+Editing the API reference documentation
+---------------------------------------
+
+To add a new entry to the :ref:`API reference documentation<api_ref>` or change its
+content, head to ``doc/api_reference.py``. This data is then used by ``doc/conf.py``
+to render templates located at ``doc/reference/*.rst.template``.
