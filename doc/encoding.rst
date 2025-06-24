@@ -140,8 +140,6 @@ like any other pre-trained model. For more information, see the
 Encoding dates
 ===============
 
-Datetimes can be encoded in different ways: they can either be converted automatically
-from string to datetime, or they can be encoded as numerical features.
 
 The
 :meth:`to_datetime()` function and the :class:`ToDatetime` transformer parse
