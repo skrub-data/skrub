@@ -21,31 +21,27 @@ classes and functions may not be enough to give full guidelines on their use.
   deprecated
 {%- endif %}
 
-.. list-table::
-  :header-rows: 1
-  :class: apisearch-table
-
-  * - Object
-    - Description
+.. currentmodule:: skrub
 
 {% for _, module_info in API_REFERENCE %}
+
+{{ module_info["title"] }}
+{{ "-" * module_info["title"]|length }}
+
 {% for section in module_info["sections"] %}
-{% for obj in section["autosummary"] %}
-{% set module = "skrub" %}
-{% set parts = obj.rsplit(".", 1) %}
-{% if parts|length > 1 %}
-{% set full_module = module + "." + parts[0] %}
-{% set obj = parts[1] %}
+
+{% if section["template"] %}
+{% set template = section["template"] %}
 {% else %}
-{% set full_module = module %}
+{% set template = "base.rst" %}
 {% endif %}
-  * - :obj:`~{{ full_module }}.{{ obj }}`
 
-    - .. div:: sk-apisearch-desc
+.. autosummary::
+  :nosignatures:
+  :template: {{ template }}
 
-        .. currentmodule:: {{ full_module }}
-
-        .. autoshortsummary:: {{ full_module }}.{{ obj }}
+{% for obj in section["autosummary"] %}
+  {{ obj }}
 
 {% endfor %}
 {% endfor %}
