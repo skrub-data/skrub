@@ -602,17 +602,6 @@ rst_templates = [
 
 # Convert each module API reference page
 for module, module_info in API_REFERENCE.items():
-    # Sphinx hack: remove the module title and put it as title of the first section,
-    # so that we display:
-    # - the module name (e.g. "pipeline") as the sidebar title (left panel)
-    # - the module title (e.g. "Building a pipeline") as the module page title
-    for idx, section in enumerate(module_info["sections"]):
-        if idx == 0:
-            title = module_info.pop("title")
-        else:
-            title = None
-        section["title"] = title
-
     rst_templates.append(
         (
             "reference/module",
