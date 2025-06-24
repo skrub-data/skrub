@@ -7,7 +7,7 @@ Vision: where is skrub heading?
 Vision statement
 ================
 
-The goal of skrub is to facilitate machine learning on dataframes:
+The goal of skrub is to facilitate machine learning on tables:
 `pandas <https://pandas.pydata.org>`__
 and `polars <https://pola.rs>`__ dataframes, SQL databases...
 
