@@ -302,3 +302,10 @@ def test_single_column_report(df_module):
     col_name = sbd.name(single_col)
     html = report.html()
     assert col_name in html
+
+
+@pytest.mark.parametrize("arg", ["max_plot_columns", "max_association_columns"])
+def test_bad_cols_parameter(pd_module, arg):
+    df = pd_module.example_dataframe
+    with pytest.raises(ValueError):
+        TableReport(df, **{arg: -1})
