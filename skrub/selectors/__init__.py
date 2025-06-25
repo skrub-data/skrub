@@ -28,6 +28,16 @@ appropriate predicate and arguments; most selectors offered by this module are
 implemented with this approach.
 
 >>> from skrub import _dataframe as sbd
+>>> from skrub import selectors as s
+>>> import pandas as pd
+>>> df = pd.DataFrame(
+...     {
+...         "height_mm": [297.0, 420.0],
+...         "width_mm": [210.0, 297.0],
+...         "kind": ["A4", "A3"],
+...         "ID": [4, 3],
+...     }
+... )
 
 Defining a new class:
 
