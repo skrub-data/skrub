@@ -30,8 +30,7 @@
         </div>
         {{buttons.dismissbutton()}}
     </div>
-    {% endif %}
-
+    {% else %}
     <div class="horizontal-scroll padding-b-s">
 	<div class="column-summary-group">
 	    {% for column in summary.columns %}
@@ -40,6 +39,7 @@
 	    {% endfor %}
 	</div>
     </div>
+    {% endif %}
 </article>
 
 {% include "no-filter-matches.html" %}
