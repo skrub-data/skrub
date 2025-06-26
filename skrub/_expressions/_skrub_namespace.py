@@ -2002,7 +2002,7 @@ class SkrubNamespace:
 
     @check_expr
     def mark_as_y(self):
-        """Mark this expression as being the ``y`` vector.
+        """Mark this expression as being the ``y`` table.
 
         Returns a copy; the original expression is left unchanged.
 
