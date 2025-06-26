@@ -87,10 +87,11 @@ def format_number(number):
     if isinstance(number, numbers.Integral):
         return f"{number:,}"
     if isinstance(number, numbers.Real):
+        # Import placed here to avoid circular import related to dispatch
         from skrub._config import get_config
 
         var = get_config()["float_precision"]
-        return f"{number:#.{var}g}"
+        return f"{number:.{var}g}"
     return str(number)
 
 
