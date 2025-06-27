@@ -1021,17 +1021,19 @@ class SkrubNamespace:
     def freeze_after_fit(self):
         """Freeze the result during pipeline fitting.
 
-        Note this is an advanced functionality, and the need for it is usually
-        an indication that we need to define a custom scikit-learn transformer
-        that we can use with ``.skb.apply()``.
-
-        When we use ``freeze_after_fit()``, the result of the expression is
+        With ``freeze_after_fit()`` the result of the expression is
         computed during ``fit()``, and then reused (not recomputed) during
         ``transform()`` or ``predict()``.
 
         Returns
         -------
         The expression whose value does not change after ``fit()``
+
+        Notes
+        -----
+        This is an advanced functionality, and the need for it is usually
+        an indication that we need to define a custom scikit-learn transformer
+        that we can use with ``.skb.apply()``.
 
         Examples
         --------
@@ -1546,7 +1548,8 @@ class SkrubNamespace:
         This function returns a :class:`ParamSearch`, an object similar to
         scikit-learn's ``GridSearchCV``, where the main difference is that
         ``fit()`` and ``predict()`` accept a dictionary of inputs
-        rather than ``X`` and ``y``.
+        rather than ``X`` and ``y``. The best pipeline can
+        be returned by calling ``.best_pipeline_``.
 
         Parameters
         ----------
@@ -1574,7 +1577,7 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-            ``results_`` and ``plot_results()``.
+        ``results_``, ``plot_results()``, and ``best_pipeline_`.
 
         See also
         --------
@@ -1656,7 +1659,8 @@ class SkrubNamespace:
         This function returns a :class:`ParamSearch`, an object similar to
         scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where
         the main difference is ``fit()`` and ``predict()`` accept a
-        dictionary of inputs rather than ``X`` and ``y``.
+        dictionary of inputs rather than ``X`` and ``y``. The best pipeline can
+        be returned by calling ``.best_pipeline_``.
 
         Parameters
         ----------
@@ -1684,7 +1688,7 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-            ``results_`` and ``plot_results()``.
+            ``results_``, ``plot_results()``, and ``best_pipeline_`.
 
         See also
         --------
