@@ -141,13 +141,12 @@ Encoding dates
 ===============
 
 
-The
-:meth:`to_datetime()` function and the :class:`ToDatetime` transformer parse
+The :meth:`to_datetime()` function and the :class:`ToDatetime` transformer parse
 common datetime formats and convert columns from string to datetime; additionally,
 if you are working with a specific time format, both objects accept a custom
 ``format`` to use when converting.
 
-Feature engineering of datetime features can be done with the :class:``DatetimeEncoder``,
+Feature engineering of datetime features can be done with the :class:`DatetimeEncoder`,
 which converts datetime columns into separate columns that contain each part of
 the datetime (year, month, day etc.), as well as additional simple features like
 the number of seconds from epoch and the day of the week. Periodic features are
