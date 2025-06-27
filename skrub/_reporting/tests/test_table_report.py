@@ -5,10 +5,12 @@ import re
 import warnings
 from pathlib import Path
 
+import numpy as np
 import pytest
 
-from skrub import TableReport, ToDatetime
+from skrub import TableReport, ToDatetime, datasets
 from skrub import _dataframe as sbd
+from skrub._reporting._sample_table import make_table
 
 
 def get_report_id(html):
@@ -270,6 +272,12 @@ def test_minimal_mode(pd_module):
     assert 'id="column-associations-panel"' not in html
 
 
+def test_error_input_type():
+    df = datasets.fetch_employee_salaries()
+    with pytest.raises(TypeError):
+        TableReport(df)
+
+
 def test_single_column_report(df_module):
     # Check that single column report works
     single_col = df_module.example_column
@@ -277,3 +285,16 @@ def test_single_column_report(df_module):
     col_name = sbd.name(single_col)
     html = report.html()
     assert col_name in html
+
+
+def test_error_make_table():
+    # Make codecov happy
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
+        make_table(np.array([1]))
+
+
+@pytest.mark.parametrize("arg", ["max_plot_columns", "max_association_columns"])
+def test_bad_cols_parameter(pd_module, arg):
+    df = pd_module.example_dataframe
+    with pytest.raises(ValueError):
+        TableReport(df, **{arg: -1})

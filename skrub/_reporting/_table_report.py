@@ -1,13 +1,43 @@
 import codecs
 import functools
 import json
+import numbers
 from pathlib import Path
 
+from .. import _config
 from .. import _dataframe as sbd
 from ._html import to_html
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
+
+
+def _check_max_cols(max_plot_columns, max_association_columns):
+    max_plot_columns = (
+        max_plot_columns
+        if max_plot_columns is not None
+        else _config.get_config()["max_plot_columns"]
+    )
+    if not (isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0):
+        raise ValueError(
+            f"'max_plot_columns' must be a positive scalar, got {max_plot_columns!r}."
+        )
+
+    max_association_columns = (
+        max_association_columns
+        if max_association_columns is not None
+        else _config.get_config()["max_association_columns"]
+    )
+    if not (
+        isinstance(max_association_columns, numbers.Real)
+        and max_association_columns >= 0
+    ):
+        raise ValueError(
+            "'max_association_columns' must be a positive scalar, got "
+            f"{max_association_columns!r}."
+        )
+
+    return max_plot_columns, max_association_columns
 
 
 class TableReport:
@@ -47,11 +77,36 @@ class TableReport:
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> from skrub import set_config
+        >>> set_config(max_plot_columns=30)
+
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_MAX_PLOT_COLUMNS=30
+
     max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
         If the number of columns in the dataframe is greater than this value,
         the associations will not be computed. If None, the associations
         for all columns will be computed.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> from skrub import set_config
+        >>> set_config(max_association_columns=30)
+
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_MAX_ASSOCIATION_COLUMNS=30
 
     See Also
     --------
@@ -125,8 +180,8 @@ class TableReport:
         title=None,
         column_filters=None,
         verbose=1,
-        max_plot_columns=30,
-        max_association_columns=30,
+        max_plot_columns=None,
+        max_association_columns=None,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
@@ -139,8 +194,9 @@ class TableReport:
         self.title = title
         self.column_filters = column_filters
         self.verbose = verbose
-        self.max_plot_columns = max_plot_columns
-        self.max_association_columns = max_association_columns
+        self.max_plot_columns, self.max_association_columns = _check_max_cols(
+            max_plot_columns, max_association_columns
+        )
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
@@ -166,6 +222,9 @@ class TableReport:
         self._to_html_kwargs["minimal_report_mode"] = True
         self.max_association_columns = 0
         self.max_plot_columns = 0
+
+    def _display_subsample_hint(self):
+        self._summary["is_subsampled"] = True
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"

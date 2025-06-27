@@ -22,6 +22,9 @@ import shutil
 import sys
 import warnings
 from datetime import datetime
+from pathlib import Path
+
+import jinja2
 
 # Generate the table report html file for the homepage
 sys.path.append(os.path.relpath("."))
@@ -74,6 +77,7 @@ extensions = [
     "sphinx_issues",
     "sphinx_copybutton",
     "sphinx_gallery.gen_gallery",
+    "autoshortsummary",
 ]
 
 try:
@@ -440,6 +444,16 @@ def notebook_modification_function(notebook_content, notebook_filename):
     )
 
 
+import skrub
+
+default_global_config = skrub.get_config()
+
+
+def reset_skrub_config(gallery_conf, fname):
+    """Reset sklearn config to default values."""
+    skrub.set_config(**default_global_config)
+
+
 sphinx_gallery_conf = {
     "doc_module": "skrub",
     "backreferences_dir": os.path.join("reference/generated"),
@@ -463,6 +477,7 @@ sphinx_gallery_conf = {
         "use_jupyter_lab": True,
     },
     "default_thumb_file": "./_static/skrub.svg",
+    "reset_modules": (reset_skrub_config,),
 }
 if with_jupyterlite:
     sphinx_gallery_conf["jupyterlite"] = {
@@ -569,3 +584,36 @@ copybutton_prompt_text = r">>> |\.\.\. |\$ "
 copybutton_prompt_is_regexp = True
 
 create_expression_report()
+
+# -- Convert .rst.template files to .rst ---------------------------------------
+
+from api_reference import API_REFERENCE
+
+rst_templates = [
+    (
+        "reference/index",
+        "reference/index",
+        {
+            "API_REFERENCE": list(API_REFERENCE.items()),
+        },
+    )
+]
+
+# Convert each module API reference page
+for module, module_info in API_REFERENCE.items():
+    rst_templates.append(
+        (
+            "reference/module",
+            f"reference/{module}",
+            {"module": module, "module_info": API_REFERENCE[module]},
+        )
+    )
+
+for rst_template_name, rst_target_name, kwargs in rst_templates:
+    # Read the corresponding template file into jinja2
+    r_path = Path(".") / f"{rst_template_name}.rst.template"
+    t = jinja2.Template(r_path.read_text(encoding="utf-8"))
+
+    # Render the template and write to the target
+    w_path = Path(".") / f"{rst_target_name}.rst"
+    w_path.write_text(t.render(**kwargs), encoding="utf-8")
