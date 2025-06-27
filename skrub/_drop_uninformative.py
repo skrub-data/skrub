@@ -29,8 +29,8 @@ class DropUninformative(SingleColumnTransformer):
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
 
-    Examples
-    --------
+    Notes
+    -----
     A column is considered to be "uninformative" if one or more of the following
     issues are found:
 
@@ -43,6 +43,8 @@ class DropUninformative(SingleColumnTransformer):
       columns. Missing values are considered a separate value. Note that this
       may lead to dropping columns that contain free-flowing text.
 
+    Examples
+    --------
     >>> from skrub import DropUninformative
     >>> import pandas as pd
     >>> df = pd.DataFrame({"col1": [None, None, None]})
