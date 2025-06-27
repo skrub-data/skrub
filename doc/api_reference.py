@@ -269,6 +269,21 @@ API_REFERENCE = {
             },
         ],
     },
+    "config": {
+        "title": "Configuration",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "get_config",
+                    "set_config",
+                    "config_context",
+                ],
+            }
+        ],
+    },
     "datasets": {
         "title": "Datasets",
         "short_summary": None,
