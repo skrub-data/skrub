@@ -6,8 +6,9 @@ import pandas as pd
 import pytest
 from sklearn.utils.fixes import parse_version
 
-from skrub import ApplyToCols, RejectColumn
+from skrub import ApplyToCols
 from skrub import _dataframe as sbd
+from skrub._apply_to_each_column import RejectColumn
 from skrub._dispatch import dispatch
 from skrub._to_datetime import (
     ToDatetime,
