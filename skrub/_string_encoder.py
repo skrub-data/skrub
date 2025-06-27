@@ -9,7 +9,7 @@ from sklearn.feature_extraction.text import (
 from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._apply_to_each_column import SingleColumnTransformer
 from ._to_str import ToStr
 
 

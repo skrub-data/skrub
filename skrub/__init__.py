@@ -6,6 +6,8 @@ from pathlib import Path as _Path
 
 from . import selectors
 from ._agg_joiner import AggJoiner, AggTarget
+from ._apply_to_each_column import ApplyToCols
+from ._apply_to_frame import ApplyToFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
 from ._datetime_encoder import DatetimeEncoder
@@ -98,4 +100,6 @@ __all__ = [
     "get_config",
     "set_config",
     "config_context",
+    "ApplyToCols",
+    "ApplyToFrame",
 ]

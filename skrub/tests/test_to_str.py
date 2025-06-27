@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub._on_each_column import RejectColumn
+from skrub._apply_to_each_column import RejectColumn
 from skrub._to_datetime import ToDatetime
 from skrub._to_str import ToStr
 

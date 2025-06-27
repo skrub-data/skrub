@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 
 from skrub import GapEncoder
 from skrub import _dataframe as sbd
-from skrub._on_each_column import RejectColumn
+from skrub._apply_to_each_column import RejectColumn
 from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data as _gen_data
 

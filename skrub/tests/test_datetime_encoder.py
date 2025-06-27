@@ -2,11 +2,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from skrub import DatetimeEncoder
+from skrub import ApplyToCols, DatetimeEncoder
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._datetime_encoder import _CircularEncoder, _SplineEncoder
-from skrub._on_each_column import OnEachColumn
 from skrub._to_float32 import ToFloat32
 
 
@@ -109,7 +108,7 @@ def expected_features(df_module):
     }
 
     res = df_module.make_dataframe(values)
-    return OnEachColumn(ToFloat32()).fit_transform(res)
+    return ApplyToCols(ToFloat32()).fit_transform(res)
 
 
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):

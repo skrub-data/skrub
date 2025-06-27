@@ -1,7 +1,7 @@
 import pytest
 
+from skrub._apply_to_each_column import RejectColumn
 from skrub._clean_null_strings import CleanNullStrings
-from skrub._on_each_column import RejectColumn
 
 
 def test_clean_null_strings(df_module):

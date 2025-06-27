@@ -5,14 +5,14 @@ from . import _dataframe as sbd
 from . import _utils, selectors
 from ._join_utils import pick_column_names
 
-__all__ = ["OnSubFrame"]
+__all__ = ["ApplyToFrame"]
 
 
-class OnSubFrame(TransformerMixin, BaseEstimator):
+class ApplyToFrame(TransformerMixin, BaseEstimator):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
-    single input). This is different from ``OnEachColumn`` which fits a
+    single input). This is different from ``ApplyToCols`` which fits a
     separate clone of the transformer to each selected column independently.
 
     .. note::
@@ -78,8 +78,8 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     2  0.0   0.0  100.0     0.0
     3  0.0   0.0    0.0  1000.0
     >>> from sklearn.decomposition import PCA
-    >>> from skrub._on_subframe import OnSubFrame
-    >>> OnSubFrame(PCA(n_components=2)).fit_transform(df).round(2)
+    >>> from skrub._apply_to_frame import ApplyToFrame
+    >>> ApplyToFrame(PCA(n_components=2)).fit_transform(df).round(2)
          pca0   pca1
     0 -249.01 -33.18
     1 -249.04 -33.68
@@ -88,7 +88,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
 
     We can restrict the transformer to a subset of columns:
 
-    >>> pca = OnSubFrame(PCA(n_components=2), cols=["a", "b"])
+    >>> pca = ApplyToFrame(PCA(n_components=2), cols=["a", "b"])
     >>> pca.fit_transform(df).round(2)
            c       d  pca0  pca1
     0    0.0     0.0 -2.52  0.67
@@ -104,7 +104,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
 
     It is possible to rename the output columns:
 
-    >>> pca = OnSubFrame(
+    >>> pca = ApplyToFrame(
     ...     PCA(n_components=2), cols=["a", "b"], rename_columns='my_tag-{}'
     ... )
     >>> pca.fit_transform(df).round(2)
@@ -116,7 +116,7 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
 
     We can also force preserving the original columns in the output:
 
-    >>> pca = OnSubFrame(PCA(n_components=2), cols=["a", "b"], keep_original=True)
+    >>> pca = ApplyToFrame(PCA(n_components=2), cols=["a", "b"], keep_original=True)
     >>> pca.fit_transform(df).round(2)
          a     b      c       d  pca0  pca1
     0  1.0   0.0    0.0     0.0 -2.52  0.67
@@ -138,10 +138,40 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
         self.rename_columns = rename_columns
 
     def fit(self, X, y=None):
+        """Fit the transformer on all columns jointly.
+
+        Parameters
+        ----------
+        X : Pandas or Polars DataFrame
+            The data to transform.
+
+        y : Pandas or Polars Series or DataFrame, default=None
+            The target data.
+
+        Returns
+        -------
+        ApplyToFrame
+            The transformer itself.
+        """
         self.fit_transform(X, y)
         return self
 
     def fit_transform(self, X, y=None):
+        """Fit the transformer on all columns jointly and transform X.
+
+        Parameters
+        ----------
+        X : Pandas or Polars DataFrame
+            The data to transform.
+
+        y : Pandas or Polars Series or DataFrame, default=None
+            The target data.
+
+        Returns
+        -------
+        result : Pandas or Polars DataFrame
+            The transformed data.
+        """
         self.all_inputs_ = sbd.column_names(X)
         self._columns = selectors.make_selector(self.cols).expand(X)
         to_transform = selectors.select(X, self._columns)
@@ -183,6 +213,18 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
         return result
 
     def transform(self, X):
+        """Transform a dataframe.
+
+        Parameters
+        ----------
+        X : Pandas or Polars DataFrame
+            The column to transform.
+
+        Returns
+        -------
+        result : Pandas or Polars DataFrame
+            The transformed data.
+        """
         check_is_fitted(self, "transformer_")
 
         # do the selection even if self._columns is empty to raise if X doesn't
@@ -206,4 +248,12 @@ class OnSubFrame(TransformerMixin, BaseEstimator):
     # set_output api compatibility
 
     def get_feature_names_out(self):
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "all_outputs_")
         return self.all_outputs_

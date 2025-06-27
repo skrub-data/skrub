@@ -1,7 +1,7 @@
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 
 from . import selectors as s
-from ._on_each_column import SingleColumnTransformer
+from ._apply_to_each_column import SingleColumnTransformer
 
 
 class SelectCols(TransformerMixin, BaseEstimator):
@@ -77,6 +77,17 @@ class SelectCols(TransformerMixin, BaseEstimator):
         """
         return s.select(X, self._columns)
 
+    def get_feature_names_out(self):
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "_columns")
+        return self._columns
+
 
 class DropCols(TransformerMixin, BaseEstimator):
     """Drop a subset of a DataFrame's columns.
@@ -150,6 +161,17 @@ class DropCols(TransformerMixin, BaseEstimator):
             ``self.cols``.
         """
         return s.select(X, ~s.make_selector(self._columns))
+
+    def get_feature_names_out(self):
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "_columns")
+        return self._columns
 
 
 class Drop(SingleColumnTransformer):

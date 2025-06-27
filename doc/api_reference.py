@@ -66,6 +66,8 @@ API_REFERENCE = {
                     "Cleaner",
                     "SelectCols",
                     "DropCols",
+                    "ApplyToCols",
+                    "ApplyToFrame",
                     "DropUninformative",
                 ],
             }

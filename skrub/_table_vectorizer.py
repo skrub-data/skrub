@@ -11,12 +11,12 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
+from ._apply_to_each_column import SingleColumnTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
-from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
 from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
@@ -75,7 +75,7 @@ def _created_by_predicate(col, transformers):
 def _created_by(*transformers):
     """Selector for columns created by one of the provided transformers.
 
-    Each of ``transformers`` must be an instance of ``OnEachColumn``.
+    Each of ``transformers`` must be an instance of ``ApplyToCols``.
     A column is matched if it was created (or modified) by one of them, i.e. if
     it is listed in one of their ``created_outputs_`` fitted attributes.
 

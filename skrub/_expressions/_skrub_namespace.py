@@ -2244,14 +2244,14 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        OnSubFrame(transformer=TableVectorizer())
+        ApplyToFrame(transformer=TableVectorizer())
 
         Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``OnSubFrame`` or
-        ``OnEachColumn`` depending if the transformer is applied to each column
+        they will be wrapped in a meta-estimator ``ApplyToFrame`` or
+        ``ApplyToCols`` depending if the transformer is applied to each column
         separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``OnSubFrame`` or ``transformers_``
-        attribute of ``OnEachColumn`` (a dictionary mapping column names to the
+        ``transformer_`` attribute of ``ApplyToFrame`` or ``transformers_``
+        attribute of ``ApplyToCols`` (a dictionary mapping column names to the
         corresponding transformer).
 
         >>> fitted_vectorizer.transformer_
@@ -2278,7 +2278,7 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        OnEachColumn(cols=(string() - cols('date')),
+        ApplyToCols(cols=(string() - cols('date')),
                      transformer=StringEncoder(n_components=2))
         >>> fitted_vectorizer.transformers_
         <GetAttr 'transformers_'>
