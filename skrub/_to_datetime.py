@@ -86,15 +86,9 @@ class ToDatetime(SingleColumnTransformer):
     """
     Parse datetimes represented as strings and return ``Datetime`` columns.
 
-    An input column is converted to a column with dtype Datetime if possible,
-    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
-    Datetime, String, and pandas object columns are handled, other dtypes are
-    rejected with ``RejectColumn``.
-
-    Once a column is accepted, outputs of ``transform`` always have the same
-    Datetime dtype (including resolution and time zone). Once the transformer
-    is fitted, entries that fail to be converted during subsequent calls to
-    ``transform`` are replaced with nulls.
+    This transformer tries to convert the given column from string to datetime,
+    by either testing common datetime formats or using the ``format`` specified
+    by the user. Columns that are not strings, dates or datetimes raise an exception.
 
     Parameters
     ----------
@@ -127,6 +121,18 @@ class ToDatetime(SingleColumnTransformer):
         The time zone of the transformed column. If the output is time zone naive it
         is ``None``; otherwise it is the name of the time zone such as ``UTC`` or
         ``Europe/Paris``.
+
+    Notes
+    -----
+    An input column is converted to a column with dtype Datetime if possible,
+    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
+    Datetime, String, and pandas object columns are handled, other dtypes are
+    rejected with ``RejectColumn``.
+
+    Once a column is accepted, outputs of ``transform`` always have the same
+    Datetime dtype (including resolution and time zone). Once the transformer
+    is fitted, entries that fail to be converted during subsequent calls to
+    ``transform`` are replaced with nulls.
 
     Examples
     --------

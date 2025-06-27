@@ -32,23 +32,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         dependencies for skrub. See the "deep learning dependencies" section
         in the :ref:`installation_instructions` guide for more details.
 
-    This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
-    will not train or fine-tune the model. Instead, the model is loaded from disk,
-    and a PCA is fitted to reduce the dimension of the language model's output,
-    if ``n_components`` is not None.
-
-    When PCA is disabled, this class is essentially stateless, with loading the
-    pre-trained model from disk being the only difference between ``fit_transform``
-    and ``transform``.
-
-    Be aware that parallelizing this class (e.g., using
-    :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
-    expensive. This is because a copy of the pre-trained model is loaded into memory
-    for each thread. Therefore, we recommend you to let the default n_jobs=None
-    (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
-
-    If memory usage is a concern, check the characteristics of your selected model.
-
     Parameters
     ----------
     model_name : str, default="intfloat/e5-small-v2"
@@ -152,6 +135,25 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         Fast n-gram encoding of string columns.
     SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
+
+    Notes
+    -----
+    This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
+    will not train or fine-tune the model. Instead, the model is loaded from disk,
+    and a PCA is fitted to reduce the dimension of the language model's output,
+    if ``n_components`` is not None.
+
+    When PCA is disabled, this class is essentially stateless, with loading the
+    pre-trained model from disk being the only difference between ``fit_transform``
+    and ``transform``.
+
+    Be aware that parallelizing this class (e.g., using
+    :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
+    expensive. This is because a copy of the pre-trained model is loaded into memory
+    for each thread. Therefore, we recommend you to let the default n_jobs=None
+    (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
+
+    If memory usage is a concern, check the characteristics of your selected model.
 
     References
     ----------
