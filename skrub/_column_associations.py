@@ -17,8 +17,22 @@ def column_associations(df):
     """Get measures of statistical associations between all pairs of columns.
 
     Reported metrics include Cramer's V statistic and Pearson's Correlation
-    Coefficient. More may be added in the future.
+    Coefficient. The result is returned as a dataframe that contains the column
+    name and idx for the left and right table and both associations; results
+    are sorted in descending order by Cramer's V association.
 
+    Parameters
+    ----------
+    df : dataframe
+        The dataframe whose columns will be compared to each other.
+
+    Returns
+    -------
+    dataframe
+        The computed associations.
+
+    Notes
+    -----
     The result is returned as a dataframe with columns:
 
     ``['left_column_name', 'left_column_idx', 'right_column_name',
@@ -34,29 +48,15 @@ def column_associations(df):
     separate category, ie a separate row in the contingency table. Thus,
     associations between the values of 2 columns or between their missingness
     patterns may be captured.
-
-    To compute the Pearson's Correlation Coefficient, only numeric columns are
-    considered. The correlation is computed using the Pearson method used in
-    pandas or polars, depending on the dataframe. In both cases, lines containing NaNs
-    are dropped.
-
-    Parameters
-    ----------
-    df : dataframe
-        The dataframe whose columns will be compared to each other.
-
-    Returns
-    -------
-    dataframe
-        The computed associations.
-
-    Notes
-    -----
     Cramér's V is a measure of association between two nominal variables,
     giving a value between 0 and +1 (inclusive).
 
     * `Cramer's V <https://en.wikipedia.org/wiki/Cramér%27s_V>`_
 
+    To compute the Pearson's Correlation Coefficient, only numeric columns are
+    considered. The correlation is computed using the Pearson method used in
+    pandas or polars, depending on the dataframe. In both cases, lines containing NaNs
+    are dropped.
     Pearson's Correlation Coefficient is a measure of the linear correlation
     between two variables, giving a value between -1 and +1 (inclusive).
 

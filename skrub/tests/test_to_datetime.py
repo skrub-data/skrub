@@ -1,5 +1,7 @@
 from datetime import timezone
+from functools import partial
 
+import numpy as np
 import pandas as pd
 import pytest
 from sklearn.utils.fixes import parse_version
@@ -7,7 +9,12 @@ from sklearn.utils.fixes import parse_version
 from skrub import ApplyToCols, RejectColumn
 from skrub import _dataframe as sbd
 from skrub._dispatch import dispatch
-from skrub._to_datetime import ToDatetime, to_datetime
+from skrub._to_datetime import (
+    ToDatetime,
+    _convert_time_zone,
+    _get_time_zone,
+    to_datetime,
+)
 
 ISO = "%Y-%m-%dT%H:%M:%S"
 
@@ -212,3 +219,12 @@ def test_to_datetime_func(df_module, datetime_col):
     float_col = df_module.example_column
     assert sbd.is_float(float_col)
     assert to_datetime(float_col) is float_col
+
+
+@pytest.mark.parametrize(
+    "func", [partial(_convert_time_zone, time_zone=None), _get_time_zone]
+)
+def test_error_dispatch(func):
+    # Make codecov happy
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        func(np.array([1]))

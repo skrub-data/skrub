@@ -38,7 +38,7 @@ def test_not_implemented():
         func = getattr(ns, func_name)
         n_params = len(inspect.signature(func).parameters)
         params = [None] * n_params
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(TypeError):
             func(*params)
 
 
@@ -97,7 +97,7 @@ def test_to_numpy(df_module, example_data_dict):
 
 
 def test_to_pandas(df_module, pd_module):
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         ns.to_pandas(np.arange(3))
 
     if df_module.name == "pandas":

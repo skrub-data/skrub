@@ -8,7 +8,14 @@ class ToCategorical(SingleColumnTransformer):
     """
     Convert a string column to Categorical dtype.
 
-    The main benefit is that categorical columns can then be recognized by
+    This transformer ensures that a given string or categorical column has
+    Categorical dtype. This is done to mark columns to be treated as categorical
+    by downstream transformers and learners.
+
+    Notes
+    -----
+    The main benefit of converting columns to categorical is that categorical
+    columns can be recognized by
     scikit-learn's ``HistGradientBoostingRegressor`` and
     ``HistGradientBoostingClassifier`` with their
     ``categorical_features='from_dtype'`` option. This transformer is therefore

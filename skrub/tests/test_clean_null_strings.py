@@ -1,7 +1,8 @@
+import numpy as np
 import pytest
 
 from skrub._apply_to_each_column import RejectColumn
-from skrub._clean_null_strings import CleanNullStrings
+from skrub._clean_null_strings import CleanNullStrings, _trim_whitespace_only
 
 
 def test_clean_null_strings(df_module):
@@ -20,3 +21,9 @@ def test_reject_non_string_cols(df_module):
     out = cleaner.transform(df_module.example_column)
     # in this case no substitutions need to be made
     assert out is df_module.example_column
+
+
+def test_error_trim_whitespace_only():
+    # Make codecov happy
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        _trim_whitespace_only(np.array([1]))
