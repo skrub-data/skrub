@@ -62,6 +62,8 @@ def test_empty_selection(df_module, use_fit_transform):
 
 
 def test_empty_output(df_module, use_fit_transform):
+    if df_module.name == "polars":
+        pytest.xfail("Polars need at least one array to concatenate.")
     df = df_module.example_dataframe
     transformer = ApplyToFrame(SelectCols(()))
     if use_fit_transform:
