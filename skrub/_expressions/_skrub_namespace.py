@@ -380,10 +380,6 @@ class SkrubNamespace:
         If ``self`` evaluates to ``True``, the result will be
         ``value_if_true``, otherwise ``value_if_false``.
 
-        The branch which is not selected is not evaluated, which is the main
-        advantage compared to wrapping the conditional statement in a
-        ``@skrub.deferred`` function.
-
         Parameters
         ----------
         value_if_true
@@ -400,6 +396,12 @@ class SkrubNamespace:
         --------
         skrub.Expr.skb.match :
             Select based on the value of an expression.
+
+        Notes
+        -----
+        The branch which is not selected is not evaluated, which is the main
+        advantage compared to wrapping the conditional statement in a
+        ``@skrub.deferred`` function.
 
         Examples
         --------
@@ -438,11 +440,10 @@ class SkrubNamespace:
     def match(self, targets, default=NULL):
         """Select based on the value of an expression.
 
-        First, ``self`` is evaluated. Then, the result is compared to the keys
-        in the mapping ``targets``. If a key matches, the corresponding value
-        is evaluated and the result is returned. If there is no match and
-        ``default`` has been provided, ``default`` is evaluated and returned.
-        If there is no match and no default a ``KeyError`` is raised.
+        Evaluate ``self``, then compare the result to the keys in ``targets``.
+        If there is a match, evaluate the corresponding value and return it. If
+        there is no match and ``default`` has been provided, evaluate and return
+        ``default``. Otherwise, a ``KeyError`` is raised.
 
         Therefore, only one of the branches or the default is evaluated which
         is the main advantage compared to placing the selection inside a

@@ -1389,10 +1389,8 @@ def deferred(func):
 
     When this decorator is applied, the resulting function returns expressions.
     The returned expression wraps the call to the original function, and the
-    call is actually executed when the expression is evaluated.
-
-    This allows including a call to any function as a step in a pipeline,
-    rather than executing it immediately.
+    call is executed when the expression is evaluated. This allows including calls
+    to any function as a step in a pipeline, rather than executing it immediately.
 
     See the examples gallery for an in-depth explanation of skrub expressions
     and ``deferred``.
