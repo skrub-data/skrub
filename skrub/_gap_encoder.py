@@ -19,7 +19,7 @@ from sklearn.utils.extmath import row_norms, safe_sparse_dot
 from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
-from ._apply_to_each_column import RejectColumn, SingleColumnTransformer
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._utils import unique_strings
 
 

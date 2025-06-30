@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._apply_to_each_column import (
+from skrub._apply_to_cols import (
     ApplyToCols,
     RejectColumn,
     SingleColumnTransformer,

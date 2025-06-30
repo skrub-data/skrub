@@ -4,7 +4,7 @@ import pytest
 from pandas.testing import assert_series_equal
 
 from skrub import _dataframe as sbd
-from skrub._apply_to_each_column import RejectColumn
+from skrub._apply_to_cols import RejectColumn
 from skrub._clean_categories import CleanCategories, _with_string_categories
 
 

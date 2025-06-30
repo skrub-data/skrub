@@ -1,7 +1,7 @@
 import numpy as np
 
 from . import _dataframe as sbd
-from ._apply_to_each_column import RejectColumn, SingleColumnTransformer
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._dataframe._common import _raise as _sbd_raise
 from ._dispatch import dispatch
 
@@ -151,7 +151,7 @@ class CleanCategories(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._apply_to_each_column.RejectColumn: Column 'c' is not categorical.
+    skrub._apply_to_cols.RejectColumn: Column 'c' is not categorical.
 
     However once a column has been accepted, the output of ``transform`` will
     always have a categorical dtype:

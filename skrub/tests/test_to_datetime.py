@@ -8,7 +8,7 @@ from sklearn.utils.fixes import parse_version
 
 from skrub import ApplyToCols
 from skrub import _dataframe as sbd
-from skrub._apply_to_each_column import RejectColumn
+from skrub._apply_to_cols import RejectColumn
 from skrub._dispatch import dispatch
 from skrub._to_datetime import (
     ToDatetime,

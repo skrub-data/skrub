@@ -11,7 +11,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
-from ._apply_to_each_column import SingleColumnTransformer
+from ._apply_to_cols import SingleColumnTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings

@@ -1,4 +1,4 @@
-from ._apply_to_each_column import ApplyToCols
+from ._apply_to_cols import ApplyToCols
 from ._apply_to_frame import ApplyToFrame
 from .selectors import make_selector
 

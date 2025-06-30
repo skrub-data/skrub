@@ -42,7 +42,7 @@ class RejectColumn(ValueError):
     >>> ToDatetime().fit_transform(df['b'])
     Traceback (most recent call last):
         ...
-    skrub._apply_to_each_column.RejectColumn: Column 'b' does not contain strings.
+    skrub._apply_to_cols.RejectColumn: Column 'b' does not contain strings.
     """
 
     pass
@@ -363,7 +363,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
-    skrub._apply_to_each_column.RejectColumn: Could not find a datetime format for column 'city'.
+    skrub._apply_to_cols.RejectColumn: Could not find a datetime format for column 'city'.
 
     How these rejections are handled depends on the ``allow_reject`` parameter.
     By default, no special handling is performed and rejections are considered

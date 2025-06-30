@@ -1,7 +1,7 @@
 from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 
 from . import selectors as s
-from ._apply_to_each_column import SingleColumnTransformer
+from ._apply_to_cols import SingleColumnTransformer
 
 
 class SelectCols(TransformerMixin, BaseEstimator):

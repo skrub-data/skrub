@@ -12,7 +12,7 @@ from sklearn.utils import gen_even_slices, murmurhash3_32
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._apply_to_each_column import RejectColumn, SingleColumnTransformer
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
 from ._utils import LRUDict, unique_strings

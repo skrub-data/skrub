@@ -6,7 +6,7 @@ from sklearn.preprocessing import SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._apply_to_each_column import RejectColumn, SingleColumnTransformer
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._dispatch import dispatch
 from ._sklearn_compat import TransformerTags
 
@@ -257,7 +257,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> DatetimeEncoder().fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._apply_to_each_column.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
+    skrub._apply_to_cols.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
 
     :class:`ToDatetime`: can be used for converting strings to datetimes.
 
