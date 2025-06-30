@@ -59,6 +59,13 @@ def test_full_report():
 
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+def test_preview_subsample():
+    X = datasets.fetch_employee_salaries().X
+    preview = skrub.X(X).skb.subsample(n=3)._repr_html_()
+    assert "subsample" in preview
+
+
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_full_report_failed_apply():
     # Somewhat contrived example for the corner case where an Apply does not
     # have an easily identifiable estimator.
@@ -137,7 +144,7 @@ def test_describe_param_grid():
     >>> X = skrub.X()
     >>> y = skrub.y()
 
-    >>> imputed = X.skb.apply(skrub.optional(SimpleImputer, name="impute"))
+    >>> imputed = X.skb.apply(skrub.optional(SimpleImputer(), name="impute"))
     >>> dim_reduction = skrub.choose_from(
     ...     {
     ...         "PCA": PCA(),
@@ -182,40 +189,62 @@ def test_describe_param_grid():
     subgrids.
 
     >>> print(pred.skb.describe_param_grid())
-    - dim_reduction: ['PCA', 'SelectKBest']
-      impute: ['true', 'false']
-      classifier: 'logreg'
-      C: choose_float(0.001, 100, log=True, name='C')
+    - impute: [SimpleImputer(), None]
+      dim_reduction: ['PCA', 'SelectKBest']
       scaling: True
       scaling_kind: 'robust'
       robust_scaler__with_centering: [True, False]
-    - dim_reduction: ['PCA', 'SelectKBest']
-      impute: ['true', 'false']
       classifier: 'logreg'
       C: choose_float(0.001, 100, log=True, name='C')
-      scaling: True
-      scaling_kind: 'standard'
-    - dim_reduction: ['PCA', 'SelectKBest']
-      impute: ['true', 'false']
-      classifier: 'logreg'
-      C: choose_float(0.001, 100, log=True, name='C')
-      scaling: False
-    - dim_reduction: ['PCA', 'SelectKBest']
-      impute: ['true', 'false']
-      classifier: 'rf'
-      N 🌴: choose_int(20, 400, name='N 🌴')
+    - impute: [SimpleImputer(), None]
+      dim_reduction: ['PCA', 'SelectKBest']
       scaling: True
       scaling_kind: 'robust'
       robust_scaler__with_centering: [True, False]
-    - dim_reduction: ['PCA', 'SelectKBest']
-      impute: ['true', 'false']
       classifier: 'rf'
       N 🌴: choose_int(20, 400, name='N 🌴')
+    - impute: [SimpleImputer(), None]
+      dim_reduction: ['PCA', 'SelectKBest']
       scaling: True
       scaling_kind: 'standard'
-    - dim_reduction: ['PCA', 'SelectKBest']
-      impute: ['true', 'false']
+      classifier: 'logreg'
+      C: choose_float(0.001, 100, log=True, name='C')
+    - impute: [SimpleImputer(), None]
+      dim_reduction: ['PCA', 'SelectKBest']
+      scaling: True
+      scaling_kind: 'standard'
       classifier: 'rf'
       N 🌴: choose_int(20, 400, name='N 🌴')
+    - impute: [SimpleImputer(), None]
+      dim_reduction: ['PCA', 'SelectKBest']
       scaling: False
+      classifier: 'logreg'
+      C: choose_float(0.001, 100, log=True, name='C')
+    - impute: [SimpleImputer(), None]
+      dim_reduction: ['PCA', 'SelectKBest']
+      scaling: False
+      classifier: 'rf'
+      N 🌴: choose_int(20, 400, name='N 🌴')
     """
+
+
+def test_describe_params():
+    c1 = skrub.choose_float(0.0, 1.0)
+    c2 = skrub.choose_from((5.5, c1), name="c2")
+    c3 = skrub.choose_bool()
+    c4 = skrub.choose_from({"2": c2, "1": c1, "3": c3})
+    c5 = skrub.choose_int(10, 20, default=11, name="c5")
+    c6 = skrub.choose_from(["a", "b"])
+    c7 = skrub.choose_float(100.0, 200.0, default=110.5)
+    e = c6.match({"a": [c4, c2.as_expr() + c7], "b": c5}).as_expr()
+    print(e.skb.describe_defaults())
+    expected = {
+        "choose_from(['a', 'b'])": "a",
+        "choose_from({'2': …, '1': …, '3': …})": "2",
+        "c2": 5.5,
+        "choose_float(100.0, 200.0, default=110.5)": 110.5,
+    }
+
+    assert e.skb.describe_defaults() == expected
+    assert e.skb.get_pipeline().describe_params() == expected
+    assert skrub.X().skb.describe_defaults() == {}

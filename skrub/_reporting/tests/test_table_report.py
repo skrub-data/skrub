@@ -5,10 +5,12 @@ import re
 import warnings
 from pathlib import Path
 
+import numpy as np
 import pytest
 
-from skrub import TableReport, ToDatetime
+from skrub import TableReport, ToDatetime, datasets
 from skrub import _dataframe as sbd
+from skrub._reporting._sample_table import make_table
 
 
 def get_report_id(html):
@@ -23,6 +25,7 @@ def test_report(air_quality):
         }
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
+    assert report.max_association_columns == 30
     html = report.html()
     assert "the title" in html
     assert "With nulls" in html
@@ -44,9 +47,8 @@ def test_report(air_quality):
     assert "<skrub-table-report" in snippet
     data = json.loads(report.json())
     assert data["title"] == "the title"
-    assert report._get_summary()["title"] == "the title"
-    del report._summary_with_plots
-    assert report._get_summary()["title"] == "the title"
+    assert report._summary["title"] == "the title"
+    assert report._summary["title"] == "the title"
     snippet = report._repr_mimebundle_()["text/html"]
     report_id = get_report_id(snippet)
     all_report_ids.append(report_id)
@@ -224,35 +226,75 @@ def test_max_plot_columns_parameter(df_module):
     df = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
     )
-    summary = TableReport(df)._get_summary()
+    summary = TableReport(df)._summary
     assert not summary["plots_skipped"]
 
     df2 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(30)}
     )
-    summary = TableReport(df2)._get_summary()
+    summary = TableReport(df2)._summary
     assert not summary["plots_skipped"]
 
     df3 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
-    summary = TableReport(df3)._get_summary()
+    summary = TableReport(df3)._summary
     assert summary["plots_skipped"]
 
     df4 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df4, max_plot_columns=10)._get_summary()
+    summary = TableReport(df4, max_plot_columns=10)._summary
     assert summary["plots_skipped"]
 
     df5 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df5, max_plot_columns=15)._get_summary()
+    summary = TableReport(df5, max_plot_columns=15)._summary
     assert not summary["plots_skipped"]
 
     df6 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df6, max_plot_columns=None)._get_summary()
+    summary = TableReport(df6, max_plot_columns=None)._summary
     assert not summary["plots_skipped"]
+
+
+def test_minimal_mode(pd_module):
+    # Check that flags are set properly and that the panels are not created
+    df = pd_module.example_dataframe
+    report = TableReport(df)
+    report._set_minimal_mode()
+    html = report.html()
+    assert "data-test-plots-skipped" in html
+    assert "data-test-associations-skipped" in html
+    assert 'id="column-summaries-panel"' not in html
+    assert 'id="column-associations-panel"' not in html
+
+
+def test_error_input_type():
+    df = datasets.fetch_employee_salaries()
+    with pytest.raises(TypeError):
+        TableReport(df)
+
+
+def test_single_column_report(df_module):
+    # Check that single column report works
+    single_col = df_module.example_column
+    report = TableReport(single_col)
+    col_name = sbd.name(single_col)
+    html = report.html()
+    assert col_name in html
+
+
+def test_error_make_table():
+    # Make codecov happy
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
+        make_table(np.array([1]))
+
+
+@pytest.mark.parametrize("arg", ["max_plot_columns", "max_association_columns"])
+def test_bad_cols_parameter(pd_module, arg):
+    df = pd_module.example_dataframe
+    with pytest.raises(ValueError):
+        TableReport(df, **{arg: -1})

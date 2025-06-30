@@ -7,8 +7,8 @@ from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.utils.fixes import parse_version
 
 from ._datetime_encoder import DatetimeEncoder
-from ._minhash_encoder import MinHashEncoder
 from ._sklearn_compat import get_tags
+from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
 
@@ -27,39 +27,19 @@ _TREE_ENSEMBLE_CLASSES = (
 def tabular_learner(estimator, *, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
-    Given a scikit-learn ``estimator``, this function creates a
-    machine-learning pipeline that preprocesses tabular data to extract numeric
-    features, impute missing values and scale the data if necessary, then applies the
-    ``estimator``.
-
-    Instead of an actual estimator, ``estimator`` can also be the special-cased strings
-    ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'`` to use a
-    :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` or a
-    :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` with default
-    parameters.
-
-    ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
-    with several steps:
-
-    - A :obj:`TableVectorizer` transforms the tabular data into numeric
-      features. Its parameters are chosen depending on the provided
-      ``estimator``.
-    - An optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
-      by their mean and adds binary columns that indicate which values were
-      missing. This step is only added if the ``estimator`` cannot handle
-      missing values itself.
-    - An optional :obj:`~sklearn.preprocessing.StandardScaler` centers and
-      rescales the data. This step is not added (because it is unnecessary) when
-      the ``estimator`` is a tree ensemble such as random forest or gradient
-      boosting.
-    - The last step is the provided ``estimator``.
-
-    Read more in the :ref:`User Guide <table_vectorizer>`.
+    Given either a scikit-learn estimator or one of the special-cased strings
+    ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'``, this
+    function creates a scikit-learn pipeline that extracts numeric features,
+    imputes missing values and scales the data if necessary, then applies the estimator.
 
     .. note::
-       ``tabular_learner`` is a recent addition and the heuristics used
+       The heuristics used by the ``tabular_learner``
        to define an appropriate preprocessing based on the ``estimator`` may change
        in future releases.
+
+    .. versionchanged:: 0.6.0
+        The high cardinality encoder has been changed from
+        :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
 
     Parameters
     ----------
@@ -87,6 +67,23 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Notes
     -----
+
+    ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
+    with several steps:
+
+    - A :obj:`TableVectorizer` transforms the tabular data into numeric
+      features. Its parameters are chosen depending on the provided
+      ``estimator``.
+    - An optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values
+      by their mean and adds binary columns that indicate which values were
+      missing. This step is only added if the ``estimator`` cannot handle
+      missing values itself.
+    - An optional :obj:`~sklearn.preprocessing.StandardScaler` centers and
+      rescales the data. This step is not added (because it is unnecessary) when
+      the ``estimator`` is a tree ensemble such as random forest or gradient
+      boosting.
+    - The last step is the provided ``estimator``.
+
     The parameter values for the :obj:`TableVectorizer` might differ depending on the
     version of scikit-learn:
 
@@ -102,6 +99,8 @@ def tabular_learner(estimator, *, n_jobs=None):
       Therefore, before this version, a :class:`~sklearn.impute.SimpleImputer` is used
       to impute missing values.
 
+    Read more in the :ref:`User Guide <table_vectorizer>`.
+
     Examples
     --------
     >>> from skrub import tabular_learner
@@ -110,7 +109,7 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     >>> tabular_learner('regression')                                    # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
-                     TableVectorizer(high_cardinality=MinHashEncoder(),
+                     TableVectorizer(high_cardinality=StringEncoder(),
                                      low_cardinality=ToCategorical())),
                     ('histgradientboostingregressor',
                      HistGradientBoostingRegressor(categorical_features='from_dtype'))])
@@ -120,7 +119,7 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     >>> tabular_learner('classification')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
-                     TableVectorizer(high_cardinality=MinHashEncoder(),
+                     TableVectorizer(high_cardinality=StringEncoder(),
                                      low_cardinality=ToCategorical())),
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
@@ -183,32 +182,31 @@ def tabular_learner(estimator, *, n_jobs=None):
                     ('standardscaler', StandardScaler()),
                     ('logisticregression', LogisticRegression())])
 
-    We see that for the :obj:`~sklearn.linear_model.LogisticRegression` we get
-    a configuration of the :obj:`TableVectorizer` which is intended
-    to work well for a wide variety of downstream estimators. Moreover, as the
-    :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing
-    values, an imputation step is added. Finally, as many models require the
-    inputs to be centered and on the same scale, centering and standard scaling
-    is added.
+    For a :obj:`~sklearn.linear_model.LogisticRegression`, we get:
+
+    - a default configuration of the :obj:`TableVectorizer` which is intended
+      to work well for a wide variety of downstream estimators. The configuration
+      adds ``spline`` periodic features to datetime columns.
+
+    - A :obj:`~sklearn.impute.SimpleImputer`, as the
+      :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing values.
+
+    - A :obj:`~sklearn.preprocessing.StandardScaler` for centering and standard
+      scaling numerical features.
 
     On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
     (generated with the string ``"classifier"``):
 
     >>> tabular_learner('classifier')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
-                     TableVectorizer(high_cardinality=MinHashEncoder(),
+                     TableVectorizer(high_cardinality=StringEncoder(),
                                      low_cardinality=ToCategorical())),
                     ('histgradientboostingclassifier',
                      HistGradientBoostingClassifier(categorical_features='from_dtype'))])
 
-    - A :obj:`MinHashEncoder` is used as the
-      ``high_cardinality``. This encoder provides good
-      performance when the supervised estimator is based on a decision tree
-      or ensemble of trees, as is the case for the
-      :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`. Unlike the
-      default :obj:`GapEncoder`, the :obj:`MinHashEncoder` does not produce
-      interpretable features. However, it is much faster and uses less
-      memory.
+    - A :obj:`StringEncoder` is used as the ``high_cardinality`` encoder. This
+      encoder strikes a good balance between quality and performance in most
+      situations.
 
     - The ``low_cardinality`` does not one-hot encode features.
       The :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` has built-in
@@ -221,10 +219,8 @@ def tabular_learner(estimator, *, n_jobs=None):
     - There is no spline encoding of datetimes.
 
     - There is no missing-value imputation because the classifier has its own
-      (better) mechanism for dealing with missing values.
-
-    - There is no standard scaling which is unnecessary for trees and ensembles
-      of trees.
+      (better) mechanism for dealing with missing values, and no standard scaling
+      because it is unnecessary for tree ensembles.
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
@@ -265,7 +261,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     ):
         vectorizer.set_params(
             low_cardinality=ToCategorical(),
-            high_cardinality=MinHashEncoder(),
+            high_cardinality=StringEncoder(),
         )
     elif isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
         vectorizer.set_params(
@@ -273,7 +269,7 @@ def tabular_learner(estimator, *, n_jobs=None):
                 handle_unknown="use_encoded_value",
                 unknown_value=-1,
             ),
-            high_cardinality=MinHashEncoder(),
+            high_cardinality=StringEncoder(),
         )
     else:
         vectorizer.set_params(datetime=DatetimeEncoder(periodic_encoding="spline"))

@@ -12,20 +12,37 @@ Ongoing development
 New features
 ------------
 
-The skrub expressions are new mechanism for building machine-learning pipelines
-that handle multiple tables and easily describing their hyperparameter spaces.
-See :ref:`the examples <expressions_examples_ref>` for an introduction.
-:pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of work from other
-contributors is not directly visible on the pull request page: :user:`Vincent
-Maladiere <Vincent-Maladiere>` provided very important help by trying the
-expressions on many use-cases and datasets, providing feedback and suggesting
-improvements, improving the examples (including creating all the figures in the
-examples) and adding jitter to the parallel coordinate plots, :user:`Riccardo
-Cappuzzo<rcap107>` experimented with the expressions, suggested improvements and
-improved the examples, :user:`Gaël Varoquaux <gaelvaroquaux>` , :user:`Guillaume
-Lemaitre <glemaitre>`, :user:`Adrin Jalali <adrinjalali>`, :user:`Olivier Grisel
-<ogrisel>` and others participated through many discussions in defining the
-requirements and the public API.
+- The skrub expressions are new mechanism for building machine-learning
+  pipelines that handle multiple tables and easily describing their
+  hyperparameter spaces. See :ref:`the examples <expressions_examples_ref>` for
+  an introduction. :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of
+  work from other contributors is not directly visible on the pull request page:
+  :user:`Vincent Maladiere <Vincent-Maladiere>` provided very important help by
+  trying the expressions on many use-cases and datasets, providing feedback and
+  suggesting improvements, improving the examples (including creating all the
+  figures in the examples) and adding jitter to the parallel coordinate plots,
+  :user:`Riccardo Cappuzzo<rcap107>` experimented with the expressions,
+  suggested improvements and improved the examples, :user:`Gaël Varoquaux
+  <gaelvaroquaux>` , :user:`Guillaume Lemaitre <glemaitre>`, :user:`Adrin Jalali
+  <adrinjalali>`, :user:`Olivier Grisel <ogrisel>` and others participated
+  through many discussions in defining the requirements and the public API.
+
+- The :mod:`selectors` module provides utilities for selecting columns to which
+  a transformer should be applied in a flexible way. The module was created in
+  :pr:`895` by :user:`Jérôme Dockès <jeromedockes>` and added to the public API
+  in :pr:`1341` by :user:`Jérôme Dockès <jeromedockes>`.
+
+- The :class:`DropUninformative` transformer is now available. This transformer
+  employs different heuristics to detect columns that are not likely to bring
+  useful information for training a model.
+  The current implementation includes detection of columns that contain only a
+  single value (constant columns), only missing values, or all unique values (such
+  as IDs). :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- :func:`get_config`, :func:`set_config` and :func:`config_context` are now available
+  to configure settings for dataframes display and expressions. :func:`patch_display`
+  and :func:`unpatch_display` are deprecated and will be removed in the next release
+  of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 - Added the :class:`SquashingScaler` that
   robustly rescales and smoothly clips numerical columns,
@@ -35,9 +52,64 @@ requirements and the public API.
 
 Changes
 -------
+.. warning::
+  The default high cardinality encoder for both :class:`TableVectorizer` and
+  :meth:`tabular_learner` has been changed from :class:`GapEncoder` to
+  :class:`StringEncoder`. :pr:`1354` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- :class:`StringEncoder` now exposes the ``stop_words`` argument, which is passed to the
+  underlying vectorizer (:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
+  or :class:`~sklearn.feature_extraction.text.HashingVectorizer`). :pr:`1415` by
+  :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- A new parameter ``max_association_columns`` has been added to the
+  :class:`TableReport` to skip association computation when the number of columns
+  exceeds the specified value. :pr:`1304` by :user:`Victoria Shevchenko <victoris93>`.
+
+- The `packaging` dependency was removed.
+  :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+- The :class:`DropIfTooManyNulls` transformer has been replaced by the
+  :class:`DropUninformative` transformer and will be removed in a future release.
+  :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`
+
+- The :func:`concat_horizontal` function was replaced with :func:`concat`. Horizontal or vertical concatenation
+  is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`.
+- The :class:`TableVectorizer` and :class:`Cleaner` now accept a `datetime_format`
+  parameter for specifying the format to use when parsing datetime columns.
+  :pr:`1358` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The :class:`SimpleCleaner` has been removed. use :class:`Cleaner` instead. :pr:`1370` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The periodic encoding for the ``day_in_year`` has been removed from the :class:`DatetimeEncoder` as it was
+  redundant. The feature itself is still added if the flag is set to True. :pr:`1396` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The naming scheme used for the features generated by :class:`TextEncoder`, :class:`StringEncoder`, :class:`MinHashEncoder`,
+  :class:`DatetimeEncoder` has been standardized. Now features generated by all encoders have indices in the range
+  ``[0, n_components-1]``, rather than ``[1, n_components]``. Additionally, columns with empty name are assigned a default
+  name that depends on the encoder used. :pr:`1405` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The optional dependencies 'dev', 'doc', 'lint' and 'test' have been coalesced into
+  'dev'. :pr:`1404` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- The :class:`TableReport` now supports Series in addition to Dataframes. :pr:`1420` by :user:`Vitor Pohlenz<vitorpohlenz>`.
+
+- The :class:`Cleaner` now exposes a parameter to convert numerical values to float32. :pr:`1440` by
+  :user:`Riccardo Cappuzzo<rcap107>`.
+
 
 Bugfixes
 --------
+- Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
+  input column was a Categorical datatype. :pr:`1401` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Release 0.5.4
+=============
+
+Maintenance
+-----------
+* Make ``skrub`` compatible with scikit-learn 1.7.
+  :pr:`1434` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 
 Release 0.5.3
@@ -100,7 +172,6 @@ Changes
 - Optimize the :class:`StringEncoder`: lower memory footprint and faster execution in some cases.
   :pr:`1248` by :user:`Gaël Varoquaux <gaelvaroquaux>`
 
-=======
 Bug fixes
 ---------
 - :class:`StringEncoder` now works correctly in presence of null values.

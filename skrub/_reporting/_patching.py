@@ -1,4 +1,5 @@
 import importlib
+import warnings
 
 from ._table_report import TableReport
 
@@ -11,7 +12,7 @@ def _stashed_name(method_name):
     return f"_skrub_{method_name}"
 
 
-def _patch(cls, method_name, verbose, max_plot_columns):
+def _patch(cls, method_name, verbose, max_plot_columns, max_association_columns):
     if (original_method := getattr(cls, method_name, None)) is None:
         return
     stashed_name = _stashed_name(method_name)
@@ -21,7 +22,12 @@ def _patch(cls, method_name, verbose, max_plot_columns):
         cls,
         method_name,
         lambda df: getattr(
-            TableReport(df, verbose=verbose, max_plot_columns=max_plot_columns),
+            TableReport(
+                df,
+                verbose=verbose,
+                max_plot_columns=max_plot_columns,
+                max_association_columns=max_association_columns,
+            ),
             method_name,
         )(),
     )
@@ -55,8 +61,14 @@ def _get_to_patch(pandas, polars):
     return to_patch
 
 
-def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=30):
+def patch_display(
+    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
+):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
+
+    .. deprecated:: 0.6.0
+        The functionality provided by this function is now implemented in
+        :func:`~skrub.set_config`.
 
     This function replaces the HTML displays (what is shown when an object is
     the output of a jupyter notebook cell) of pandas and polars DataFrames
@@ -79,6 +91,11 @@ def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=30):
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
+    max_association_columns : int, default=30
+        Maximum number of columns for which associations should be computed.
+        If the number of columns in the dataframe is greater than this value,
+        the associations will not be computed. If None, the associations
+        for all columns will be computed.
 
     See Also
     --------
@@ -93,11 +110,35 @@ def patch_display(pandas=True, polars=True, verbose=1, max_plot_columns=30):
         _get_to_patch(pandas=pandas, polars=polars),
         verbose=verbose,
         max_plot_columns=max_plot_columns,
+        max_association_columns=max_association_columns,
+    )
+    warnings.warn(
+        (
+            "patch_display will be deprecated in the next release. "
+            "Equivalent functionality is available in skrub.set_config."
+        ),
+        category=FutureWarning,
+    )
+
+
+def _patch_display(
+    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
+):
+    _change_display(
+        _patch,
+        _get_to_patch(pandas=pandas, polars=polars),
+        verbose=verbose,
+        max_plot_columns=max_plot_columns,
+        max_association_columns=max_association_columns,
     )
 
 
 def unpatch_display(pandas=True, polars=True):
     """Undo the effect of ``skrub.patch_display()``.
+
+    .. deprecated:: 0.6.0
+        The functionality provided by this function is now implemented in
+        :func:`~skrub.set_config`.
 
     This function restores the default HTML displays of pandas and polars
     DataFrames.
@@ -117,4 +158,15 @@ def unpatch_display(pandas=True, polars=True):
     TableReport :
         Directly create a report from a dataframe.
     """
+    _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))
+    warnings.warn(
+        (
+            "unpatch_display will be deprecated in the next release. "
+            "Equivalent functionality is available in skrub.set_config."
+        ),
+        category=FutureWarning,
+    )
+
+
+def _unpatch_display(pandas=True, polars=True):
     _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))

@@ -65,7 +65,8 @@ def test_setattr():
 def test_func_returning_none():
     a = skrub.var("a", [])
     with pytest.warns(UserWarning, match=r"Calling '\.append\(\)' returned None"):
-        a.append(0)
+        out = a.append(0)
+    assert out.skb.eval() is None
 
 
 #
@@ -117,7 +118,7 @@ def test_pickling_preview_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        skrub.X([]) + [cls()]
+        (skrub.X([]) + [cls()]).skb.get_pipeline()
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
@@ -129,7 +130,7 @@ def test_pickling_estimator_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        e.skb.get_estimator()
+        e.skb.get_pipeline()
 
 
 #
@@ -165,6 +166,11 @@ def test_duplicate_choice_name():
         ValueError, match=r".*The name 'X' was used for 2 different objects"
     ):
         skrub.X() + skrub.var("X")
+
+    with pytest.raises(
+        ValueError, match=r"(?s).*2 different objects.*Jupyter notebook cell"
+    ):
+        skrub.as_expr([skrub.var("a"), skrub.var("a")])
 
 
 def test_duplicate_X():
@@ -263,11 +269,11 @@ def test_X_y_instead_of_environment():
     with pytest.raises(
         TypeError, match="`environment` should be a dictionary of input values"
     ):
-        skrub.X().skb.get_estimator().fit_transform(0)
+        skrub.X().skb.get_pipeline().fit_transform(0)
     with pytest.raises(TypeError):
         skrub.X().skb.eval(X=0)
     with pytest.raises(TypeError):
-        skrub.X().skb.get_estimator().fit_transform(X=0)
+        skrub.X().skb.get_pipeline().fit_transform(X=0)
 
 
 def test_expr_or_choice_in_environment():
@@ -311,15 +317,34 @@ def test_concat_horizontal_numpy():
     a = skrub.var("a", skrub.toy_orders().orders)
     b = skrub.var("b", np.eye(3))
     with pytest.raises(Exception, match=".*can only be used with dataframes"):
-        b.skb.concat_horizontal([a])
+        b.skb.concat([a], axis=1)
     with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat_horizontal([b])
+        a.skb.concat([b], axis=1)
 
 
-def test_concat_horizontal_needs_wrapping_in_list():
+def test_concat_vertical_numpy():
+    a = skrub.var("a", skrub.toy_orders().orders)
+    b = skrub.var("b", np.eye(3))
+    with pytest.raises(Exception, match=".*can only be used with dataframes"):
+        b.skb.concat([a], axis=0)
+    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+        a.skb.concat([b], axis=0)
+
+
+def test_concat_needs_wrapping_in_list():
     a = skrub.var("a", skrub.toy_orders().orders)
     with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
-        a.skb.concat_horizontal(a)
+        a.skb.concat(a, axis=1)
+    with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
+        a.skb.concat(a, axis=0)
+
+
+def test_concat_axis_undefined():
+    a = skrub.var("a", skrub.toy_orders().orders)
+    with pytest.raises(Exception, match=".*one of 0 or 1"):
+        a.skb.concat([a], axis=2)
+    with pytest.raises(Exception, match=".*one of 0 or 1"):
+        a.skb.concat([a], axis="foo")
 
 
 def test_apply_instead_of_skb_apply():
@@ -330,6 +355,44 @@ def test_apply_instead_of_skb_apply():
         a.apply(PassThrough())
     with pytest.raises(Exception, match=r"Evaluation of '.apply\(\)' failed\."):
         a.apply(int)
+
+
+def test_apply_instead_of_apply_func():
+    with pytest.raises(
+        Exception,
+        match=r".*Got a function instead.*Did you mean to use `\.skb\.apply_func\(\)`",
+    ):
+        skrub.X(0).skb.apply(lambda x: x)
+
+    class Func:
+        def __call__(self, x):
+            return x
+
+    with pytest.raises(
+        Exception,
+        match=r".*Got a callable object instead.*"
+        r"Did you mean to use `\.skb\.apply_func\(\)`",
+    ):
+        skrub.X(0).skb.apply(Func())
+
+
+def test_apply_class_not_instance():
+    with pytest.raises(Exception, match=r"Please provide an instance"):
+        skrub.X(0).skb.apply(skrub.TableVectorizer)
+
+
+def test_apply_bad_type():
+    with pytest.raises(
+        Exception, match=r".*should be `None`, the string 'passthrough' or"
+    ):
+        skrub.X(0).skb.apply(...)
+
+
+def test_apply_bad_string():
+    with pytest.raises(
+        Exception, match=r".*should be `None`, the string 'passthrough' or"
+    ):
+        skrub.X(0).skb.apply("pass through")
 
 
 def test_method_call_failure():
@@ -378,7 +441,7 @@ def test_pass_df_instead_of_expr():
         skrub.var("a").join(df, on="ID")
     # this one is raised by polars so we do not control the type or error
     # message but it fails early and is understandable
-    with pytest.raises(TypeError, match="expected .* to be a DataFrame"):
+    with pytest.raises(TypeError, match="expected .* to be a '?DataFrame'?"):
         df.join(skrub.var("a"), on="ID")
 
 

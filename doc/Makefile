@@ -46,3 +46,4 @@ html-noplot:
 
 clean:
 	rm -rf _build/ reference/generated/
+	rm -rf _build/ generated_for_index

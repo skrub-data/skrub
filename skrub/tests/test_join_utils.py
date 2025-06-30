@@ -188,3 +188,10 @@ def test_left_join_types_not_equal(df_module, left):
         _join_utils.left_join(
             left, right=right, left_on="left_key", right_on="right_key"
         )
+
+
+def test_error_do_left_join():
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
+        _join_utils._do_left_join(
+            np.array([1]), right=None, left_on=None, right_on=None
+        )

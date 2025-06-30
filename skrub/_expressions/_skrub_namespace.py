@@ -1,10 +1,11 @@
+import pickle
 import typing
 
 from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
-from ._estimator import ExprEstimator, ParamSearch, cross_validate, train_test_split
+from ._estimator import ParamSearch, SkrubPipeline, cross_validate, train_test_split
 from ._evaluation import (
     choices,
     clone,
@@ -15,13 +16,12 @@ from ._evaluation import (
 from ._expressions import (
     AppliedEstimator,
     Apply,
-    ConcatHorizontal,
+    Concat,
     Expr,
     FreezeAfterFit,
     IfElse,
     Match,
     Var,
-    check_can_be_pickled,
     check_expr,
     check_name,
     deferred,
@@ -31,6 +31,7 @@ from ._inspection import (
     draw_expr_graph,
     full_report,
 )
+from ._subsampling import SubsamplePreviews, env_with_subsampling, uses_subsampling
 from ._utils import NULL, attribute_error
 
 
@@ -41,6 +42,40 @@ def _var_values_provided(expr, environment):
     }
     intersection = names.intersection(environment.keys())
     return bool(intersection)
+
+
+def _check_keep_subsampling(fitted, keep_subsampling):
+    if not fitted and keep_subsampling:
+        raise ValueError(
+            "Subsampling is only applied when fitting the estimator "
+            "on the data already provided when initializing variables. "
+            "Please pass `fitted=True` or `keep_subsampling=False`."
+        )
+
+
+def _check_can_be_pickled(obj):
+    try:
+        dumped = pickle.dumps(obj)
+        pickle.loads(dumped)
+    except Exception as e:
+        msg = "The check to verify that the pipeline can be serialized failed."
+        if "recursion" in str(e).lower():
+            msg = (
+                f"{msg} Is a step in the pipeline holding a reference to "
+                "the full pipeline itself? For example a global variable "
+                "in a `@skrub.deferred` function?"
+            )
+        raise pickle.PicklingError(msg) from e
+
+
+def _check_grid_search_possible(expr):
+    for c in choices(expr).values():
+        if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
+            raise ValueError(
+                "Cannot use grid search with continuous numeric ranges. "
+                "Please use `get_randomized_search` or provide a number "
+                f"of steps for this range: {c}"
+            )
 
 
 class SkrubNamespace:
@@ -141,6 +176,11 @@ class SkrubNamespace:
             The transformed dataframe when ``estimator`` is a transformer, and
             the fitted ``estimator``'s predictions if it is a supervised
             predictor.
+
+        See also
+        --------
+        skrub.Expr.skb.get_pipeline :
+            Get a skrub pipeline for this expression.
 
         Examples
         --------
@@ -250,8 +290,8 @@ class SkrubNamespace:
         >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
-        >>> est = e.skb.get_estimator().fit({"X": X})
-        >>> est.predict({"X": X})  # doctest: +SKIP
+        >>> pipeline = e.skb.get_pipeline().fit({"X": X})
+        >>> pipeline.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
@@ -340,10 +380,6 @@ class SkrubNamespace:
         If ``self`` evaluates to ``True``, the result will be
         ``value_if_true``, otherwise ``value_if_false``.
 
-        The branch which is not selected is not evaluated, which is the main
-        advantage compared to wrapping the conditional statement in a
-        `@skrub.deferred` function.
-
         Parameters
         ----------
         value_if_true
@@ -355,6 +391,17 @@ class SkrubNamespace:
         Returns
         -------
         Conditional expression
+
+        See also
+        --------
+        skrub.Expr.skb.match :
+            Select based on the value of an expression.
+
+        Notes
+        -----
+        The branch which is not selected is not evaluated, which is the main
+        advantage compared to wrapping the conditional statement in a
+        ``@skrub.deferred`` function.
 
         Examples
         --------
@@ -393,11 +440,10 @@ class SkrubNamespace:
     def match(self, targets, default=NULL):
         """Select based on the value of an expression.
 
-        First, ``self`` is evaluated. Then, the result is compared to the keys
-        in the mapping ``targets``. If a key matches, the corresponding value
-        is evaluated and the result is returned. If there is no match and
-        ``default`` has been provided, ``default`` is evaluated and returned.
-        If there is no match and no default a ``KeyError`` is raised.
+        Evaluate ``self``, then compare the result to the keys in ``targets``.
+        If there is a match, evaluate the corresponding value and return it. If
+        there is no match and ``default`` has been provided, evaluate and return
+        ``default``. Otherwise, a ``KeyError`` is raised.
 
         Therefore, only one of the branches or the default is evaluated which
         is the main advantage compared to placing the selection inside a
@@ -417,6 +463,11 @@ class SkrubNamespace:
         Returns
         -------
         The value corresponding to the matching key or the default
+
+        See also
+        --------
+        skrub.deferred :
+            Wrap function calls in an expression :class:`Expr`.
 
         Examples
         --------
@@ -555,13 +606,17 @@ class SkrubNamespace:
         return self._apply(DropCols(cols), how="full_frame")
 
     @check_expr
-    def concat_horizontal(self, others):
-        """Concatenate dataframes horizontally.
+    def concat(self, others, axis=0):
+        """Concatenate dataframes vertically or horizontally.
 
         Parameters
         ----------
         others : list of dataframes
             The dataframes to stack horizontally with ``self``
+        axis : {0, 1}, default 0
+            The axis to concatenate along.
+            0: stack vertically (rows)
+            1: stack horizontally (columns)
 
         Returns
         -------
@@ -575,30 +630,200 @@ class SkrubNamespace:
         >>> a = skrub.var('a', pd.DataFrame({'a1': [0], 'a2': [1]}))
         >>> b = skrub.var('b', pd.DataFrame({'b1': [2], 'b2': [3]}))
         >>> c = skrub.var('c', pd.DataFrame({'c1': [4], 'c2': [5]}))
+        >>> d = skrub.var('d', pd.DataFrame({'c1': [6], 'c2': [7]}))
         >>> a
         <Var 'a'>
         Result:
         ―――――――
            a1  a2
         0   0   1
-        >>> a.skb.concat_horizontal([b, c])
-        <ConcatHorizontal: 3 dataframes>
+        >>> a.skb.concat([b, c], axis=1)
+        <Concat: 3 dataframes>
         Result:
         ―――――――
            a1  a2  b1  b2  c1  c2
         0   0   1   2   3   4   5
 
+        >>> c.skb.concat([d], axis=0)
+        <Concat: 2 dataframes>
+        Result:
+        ―――――――
+           c1  c2
+        0   4   5
+        1   6   7
+
+
         Note that even if we want to concatenate a single dataframe we must
         still put it in a list:
 
-        >>> a.skb.concat_horizontal([b])
-        <ConcatHorizontal: 2 dataframes>
+        >>> a.skb.concat([b], axis=1)
+        <Concat: 2 dataframes>
         Result:
         ―――――――
            a1  a2  b1  b2
         0   0   1   2   3
         """  # noqa: E501
-        return Expr(ConcatHorizontal(self._expr, others))
+        return Expr(Concat(self._expr, others, axis=axis))
+
+    @check_expr
+    def subsample(self, n=1000, *, how="head"):
+        """Configure subsampling of a dataframe or numpy array.
+
+        Enables faster development by computing the previews on a subsample of
+        the available data. Outside of previews, no subsampling takes place by
+        default but it can be turned on with the ``keep_subsampling`` parameter
+        -- see the Notes section for details.
+
+        Parameters
+        ----------
+        n : int, default=1000
+            Number of rows to keep.
+
+        how : 'head' or 'random'
+            How subsampling should be done (when it takes place). If 'head',
+            the first ``n`` rows are kept. If 'random', ``n`` rows are sampled
+            randomly, without maintaining order and without replacement.
+
+        Returns
+        -------
+        subsampled data
+            The subsampled dataframe, column or numpy array.
+
+        See Also
+        --------
+        Expr.skb.preview :
+            Access a preview of the result on the subsampled data.
+
+        Notes
+        -----
+        This method configures *how* the dataframe should be subsampled. If it
+        has been configured, subsampling actually only takes place in some
+        specific situations:
+
+        - When computing the previews (results displayed when printing an
+          expression and the output of :meth:`Expr.skb.preview`).
+        - When it is explicitly requested by passing ``keep_subsampling=True`` to one
+          of the functions that expose that parameter such as
+          :meth:`Expr.skb.get_randomized_search` or :func:`cross_validate`.
+
+        When subsampling has not been configured (``subsample`` has not
+        been called anywhere in the expression), no subsampling is ever done.
+
+        This method can only be used on steps that produce a dataframe, a
+        column (series) or a numpy array.
+
+        Note that subsampling is local to the variable that is being subsampled.
+        This means that, if two variables are meant to have the same number of
+        rows (e.g., ``X`` and ``y``), both should be subsampled with the same
+        strategy.
+
+        The seed for the ``random`` strategy is fixed, so the sampled rows are
+        constant when sampling across different variables.
+
+        Examples
+        --------
+        >>> from sklearn.datasets import load_diabetes
+        >>> from sklearn.linear_model import Ridge
+        >>> import skrub
+
+        >>> df = load_diabetes(as_frame=True)["frame"]
+        >>> df.shape
+        (442, 11)
+
+
+        >>> data = skrub.var("data", df).skb.subsample(n=15)
+
+        We can see that the previews use only a subsample of 15 rows:
+
+        >>> data.shape
+        <GetAttr 'shape'>
+        Result (on a subsample):
+        ――――――――――――――――――――――――
+        (15, 11)
+        >>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
+        >>> y = data["target"].skb.mark_as_y()
+        >>> pred = X.skb.apply(
+        ...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+        ... )
+
+        Here also, the preview for the predictions contains 15 rows:
+
+        >>> pred
+        <Apply Ridge>
+        Result (on a subsample):
+        ――――――――――――――――――――――――
+                target
+        0   142.866906
+        1   130.980765
+        2   138.555388
+        3   149.703363
+        4   136.015214
+        5   139.773213
+        6   134.110415
+        7   129.224783
+        8   140.161363
+        9   155.272033
+        10  139.552110
+        11  130.318783
+        12  135.956591
+        13  142.998060
+        14  132.511013
+
+        By default, model fitting and hyperparameter search are done on the
+        full data, so if we want the subsampling to take place we have to
+        pass ``keep_subsampling=True``:
+
+        >>> quick_search = pred.skb.get_randomized_search(
+        ...     keep_subsampling=True, fitted=True, n_iter=4, random_state=0
+        ... )
+        >>> quick_search.detailed_results_[["mean_test_score", "mean_fit_time", "α"]] # doctest: +SKIP
+           mean_test_score  mean_fit_time         α
+        0        -0.597596       0.004322  0.431171
+        1        -0.599036       0.004328  0.443038
+        2        -0.615900       0.004272  0.643117
+        3        -0.637498       0.004219  1.398196
+
+        Now that we have checked our pipeline works on a subsample, we can
+        fit the hyperparameter search on the full data:
+
+        >>> full_search = pred.skb.get_randomized_search(
+        ...     fitted=True, n_iter=4, random_state=0
+        ... )
+        >>> full_search.detailed_results_[["mean_test_score", "mean_fit_time", "α"]] # doctest: +SKIP
+           mean_test_score  mean_fit_time         α
+        0         0.457807       0.004791  0.431171
+        1         0.456808       0.004834  0.443038
+        2         0.439670       0.004849  0.643117
+        3         0.380719       0.004827  1.398196
+
+        This example dataset is so small that the subsampling does not change
+        the fit computation time but we can tell the second search used the
+        full data from the higher scores. For datasets of a realistic size
+        using the subsampling allows us to do a "dry run" of the
+        cross-validation or model fitting much faster than when using the
+        full data.
+
+        Sampling only one variable does not sample the other:
+
+        >>> data = skrub.var("data", df)
+        >>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
+        >>> X = X.skb.subsample(n=15)
+        >>> y = data["target"].skb.mark_as_y()
+        >>> X.shape
+        <GetAttr 'shape'>
+        Result (on a subsample):
+        ――――――――――――――――――――――――
+        (15, 10)
+        >>> y.shape
+        <GetAttr 'shape'>
+        Result:
+        ―――――――
+        (442,)
+
+        Read more about subsampling in the :ref:`User Guide <user_guide_subsampling_ref>`.
+
+        """  # noqa : E501
+        return Expr(SubsamplePreviews(self._expr, n=n, how=how))
 
     def clone(self, drop_values=True):
         """Get an independent clone of the expression.
@@ -642,11 +867,11 @@ class SkrubNamespace:
 
         Note that in that case the cache used for previews is still cleared. So
         if we want the preview we need to prime the new expression by
-        evaluating it once (either directly or by adding more steps to it):
+        accessing the preview once (either directly or by adding more steps to it):
 
         >>> clone
         <BinOp: add>
-        >>> clone.skb.eval()
+        >>> clone.skb.preview()
         1
         >>> clone
         <BinOp: add>
@@ -657,12 +882,12 @@ class SkrubNamespace:
 
         return clone(self._expr, drop_preview_data=drop_values)
 
-    def eval(self, environment=None):
+    def eval(self, environment=None, *, keep_subsampling=False):
         """Evaluate the expression.
 
         This returns the result produced by evaluating the expression, ie
-        running the corresponding pipeline. The result is **always** the output
-        of the pipeline's ``fit_transform`` -- the pipeline is refitted to the
+        running the corresponding pipeline. The result is always the output
+        of the pipeline's ``fit_transform`` -- a pipeline is refitted to the
         provided data.
 
         If no data is provided, the values passed when creating the variables
@@ -675,11 +900,23 @@ class SkrubNamespace:
             expression are used. If a dict, it must map the name of each
             variable to a corresponding value.
 
+        keep_subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
+
         Returns
         -------
         result
             The result of running the computation, ie of executing the
             pipeline's ``fit_transform`` on the provided data.
+
+        See Also
+        --------
+        Expr.skb.preview :
+            Access the preview of the result on the variables initial values,
+            with subsampling. Faster than ``eval`` but does not allow passing
+            new data and always applies subsampling.
 
         Examples
         --------
@@ -702,36 +939,101 @@ class SkrubNamespace:
                 "The `environment` passed to `eval()` should be None or a dictionary, "
                 f"got: '{type(environment)}'"
             )
+        if environment is None and (
+            keep_subsampling or not uses_subsampling(self._expr)
+        ):
+            # In this configuration the result is the same as the preview so
+            # we call preview() to benefit from the cached result.
+
+            # Before returning, we trigger an error if keep_subsampling=True was
+            # passed but no subsampling was configured:
+            _ = env_with_subsampling(self._expr, {}, keep_subsampling)
+            return self.preview()
         if environment is None:
-            mode = "preview"
-            clear = False
+            environment = self.get_data()
         else:
-            mode = "fit_transform"
-            clear = True
             environment = {
                 **environment,
                 "_skrub_use_var_values": not _var_values_provided(
                     self._expr, environment
                 ),
             }
+        environment = env_with_subsampling(self._expr, environment, keep_subsampling)
+        return evaluate(
+            self._expr, mode="fit_transform", environment=environment, clear=True
+        )
 
-        return evaluate(self._expr, mode=mode, environment=environment, clear=clear)
+    def preview(self):
+        """Get the value computed for previews (shown when printing the expression).
+
+        Returns
+        -------
+        preview result
+            The result of evaluating the expression on the data stored in its
+            variables.
+
+        See Also
+        --------
+        Expr.skb.subsample :
+            Specify how to subsample an intermediate result when computing
+            previews.
+
+        Expr.skb.eval :
+            Evaluate the expression. Unlike ``preview``, we can pass new data
+            rather than using the values that variables were initialized with,
+            but results are not cached, and no subsampling takes place by
+            default.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> a = skrub.var('a', 1)
+        >>> b = skrub.var('b', 2)
+        >>> c = a + b
+
+        When we display an expression, we see a preview of the result (``3`` in
+        this case):
+
+        >>> c
+        <BinOp: add>
+        Result:
+        ―――――――
+        3
+
+        If we want to actually access that value ``3``, rather than just seeing
+        it displayed, we can use ``.skb.preview()``:
+
+        >>> c.skb.preview()
+        3
+
+        This is the actual number ``3``, not an expression or just a display
+
+        >>> type(c.skb.preview())
+        <class 'int'>
+
+        Accessing the preview is usually faster than calling ``.skb.eval()``
+        because results are cached and subsampling is used by default.
+        """
+        return evaluate(self._expr, mode="preview", environment=None, clear=False)
 
     @check_expr
     def freeze_after_fit(self):
         """Freeze the result during pipeline fitting.
 
-        Note this is an advanced functionality, and the need for it is usually
-        an indication that we need to define a custom scikit-learn transformer
-        that we can use with ``.skb.apply()``.
-
-        When we use ``freeze_after_fit()``, the result of the expression is
+        With ``freeze_after_fit()`` the result of the expression is
         computed during ``fit()``, and then reused (not recomputed) during
         ``transform()`` or ``predict()``.
 
         Returns
         -------
         The expression whose value does not change after ``fit()``
+
+        Notes
+        -----
+        This is an advanced functionality, and the need for it is usually
+        an indication that we need to define a custom scikit-learn transformer
+        that we can use with ``.skb.apply()``.
 
         Examples
         --------
@@ -744,7 +1046,7 @@ class SkrubNamespace:
         2   3     cup         5  2020-04-04
         3   4   spoon         1  2020-04-05
         >>> n_products = skrub.X()['product'].nunique()
-        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer = n_products.skb.get_pipeline()
         >>> transformer.fit_transform({'X': X_df})
         3
 
@@ -758,7 +1060,7 @@ class SkrubNamespace:
         remembered during ``fit`` and reused during ``transform``:
 
         >>> n_products = skrub.X()['product'].nunique().skb.freeze_after_fit()
-        >>> transformer = n_products.skb.get_estimator()
+        >>> transformer = n_products.skb.get_pipeline()
         >>> transformer.fit_transform({'X': X_df})
         3
         >>> transformer.transform({'X': X_df.iloc[:2]})
@@ -831,13 +1133,13 @@ class SkrubNamespace:
         >>> c = a + b
         >>> d = c * c
         >>> print(d.skb.describe_steps())
-        VAR 'a'
-        VAR 'b'
-        BINOP: add
-        ( VAR 'a' )*
-        ( VAR 'b' )*
-        ( BINOP: add )*
-        BINOP: mul
+        Var 'a'
+        Var 'b'
+        BinOp: add
+        ( Var 'a' )*
+        ( Var 'b' )*
+        ( BinOp: add )*
+        BinOp: mul
         * Cached, not recomputed
 
         The above should be read from top to bottom as instructions for a
@@ -906,22 +1208,22 @@ class SkrubNamespace:
         ... )
         >>> pred = selected.skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_param_grid())
-        - classifier: 'logreg'
-          C: choose_float(0.001, 100, log=True, name='C')
-          dim_reduction: 'PCA'
+        - dim_reduction: 'PCA'
           n_components: choose_int(5, 100, log=True, name='n_components')
-        - classifier: 'logreg'
+          classifier: 'logreg'
           C: choose_float(0.001, 100, log=True, name='C')
-          dim_reduction: 'SelectKBest'
-          k: choose_int(5, 100, log=True, name='k')
-        - classifier: 'rf'
-          N 🌴: choose_int(20, 400, name='N 🌴')
-          dim_reduction: 'PCA'
+        - dim_reduction: 'PCA'
           n_components: choose_int(5, 100, log=True, name='n_components')
-        - classifier: 'rf'
+          classifier: 'rf'
           N 🌴: choose_int(20, 400, name='N 🌴')
-          dim_reduction: 'SelectKBest'
+        - dim_reduction: 'SelectKBest'
           k: choose_int(5, 100, log=True, name='k')
+          classifier: 'logreg'
+          C: choose_float(0.001, 100, log=True, name='C')
+        - dim_reduction: 'SelectKBest'
+          k: choose_int(5, 100, log=True, name='k')
+          classifier: 'rf'
+          N 🌴: choose_int(20, 400, name='N 🌴')
 
         Sampling a configuration for this pipeline starts by selecting an entry
         (marked by ``-``) in the list above, then a value for each of the
@@ -931,6 +1233,43 @@ class SkrubNamespace:
         """
 
         return describe_param_grid(self._expr)
+
+    def describe_defaults(self):
+        """Describe the hyper-parameters used by the default pipeline.
+
+        Returns a dict mapping choice names to a simplified representation of
+        the corresponding value in the default pipeline.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.datasets import make_classification
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.feature_selection import SelectKBest
+        >>> from sklearn.ensemble import RandomForestClassifier
+
+        >>> X, y = skrub.X(), skrub.y()
+        >>> selector = SelectKBest(k=skrub.choose_int(4, 20, log=True, name='k'))
+        >>> logistic = LogisticRegression(
+        ...     C=skrub.choose_float(0.1, 10.0, log=True, name="C"),
+        ... )
+        >>> rf = RandomForestClassifier(
+        ...     n_estimators=skrub.choose_int(3, 30, log=True, name="N 🌴"),
+        ...     random_state=0,
+        ... )
+        >>> classifier = skrub.choose_from(
+        ...     {"logistic": logistic, "rf": rf}, name="classifier"
+        ... )
+        >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
+        >>> print(pred.skb.describe_defaults())
+        {'k': 9, 'classifier': 'logistic', 'C': 1.000...}
+        """
+        from ._evaluation import choice_graph, chosen_or_default_outcomes
+        from ._inspection import describe_params
+
+        return describe_params(
+            chosen_or_default_outcomes(self._expr), choice_graph(self._expr)
+        )
 
     def full_report(
         self,
@@ -945,16 +1284,6 @@ class SkrubNamespace:
         intermediate computation, some information (such as the line of code
         where it was defined) and a display of the intermediate result (or
         error).
-
-        The pipeline is run doing a ``fit_transform``. If ``environment`` is
-        provided, it is used as the bindings for the variables in the
-        expression, and otherwise, the ``value`` attributes of the variables
-        are used.
-
-        At the moment, this creates a directory on the filesystem containing
-        HTML files. The report can be displayed by visiting the contained
-        ``index.html`` in a webbrowser, or passing ``open=True`` (the default)
-        to this method.
 
         Parameters
         ----------
@@ -984,6 +1313,18 @@ class SkrubNamespace:
             evaluation is in ``'result'`` and ``'error'`` is ``None``. Either
             way a report is stored at the location indicated by
             ``'report_path'``.
+
+        Notes
+        -----
+        The pipeline is run doing a ``fit_transform``. If ``environment`` is
+        provided, it is used as the bindings for the variables in the
+        expression, and otherwise, the ``value`` attributes of the variables
+        are used.
+
+        At the moment, this creates a directory on the filesystem containing
+        HTML files. The report can be displayed by visiting the contained
+        ``index.html`` in a webbrowser, or passing ``open=True`` (the default)
+        to this method.
 
         Examples
         --------
@@ -1032,35 +1373,43 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def get_estimator(self, fitted=False):
-        """Get a scikit-learn-like estimator for this expression.
+    def get_pipeline(self, *, fitted=False, keep_subsampling=False):
+        """Get a skrub pipeline for this expression.
 
-        Returns a :class:`ExprEstimator`.
+        Returns a :class:`SkrubPipeline` with a ``fit()`` method so it can be fit
+        to some training data and then apply it to unseen data by calling
+        ``transform()`` or ``predict()``. Unlike scikit-learn estimators, skrub
+        pipelines accept a dictionary of inputs rather than ``X`` and ``y`` arguments.
 
-        Please see the examples gallery for full information about expressions
-        and the estimators they generate.
+        .. warning::
 
-        Provides an estimator with a ``fit()`` method so we can fit it to some
-        training data and then apply it to unseen data by calling
-        ``transform()`` or ``predict()``.
-
-        An important difference is that those methods accept a dictionary of
-        inputs rather than ``X`` and ``y`` arguments (see examples below).
-
-        We can pass ``fitted=True`` to get an estimator fitted to the data
-        provided as the values in ``skrub.var("name", value=...)`` and
-        ``skrub.X(value)``.
+           If the expression contains choices (e.g. ``choose_from(...)``), this
+           pipeline uses the default value of each choice. To actually pick the
+           best value with hyperparameter tuning, use
+           :meth:`Expr.skb.get_randomized_search` or
+           :meth:`Expr.skb.get_grid_search` instead.
 
         Parameters
         ----------
         fitted : bool (default=False)
-            If true, the returned estimator is fitted to the data provided when
-            initializing variables in the expression.
+            If true, the returned pipeline is fitted to the data provided when
+            initializing variables in ``skrub.var("name", value=...)`` and
+            ``skrub.X(value)``.
+
+        keep_subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the estimator when ``fitted=True``,
+            subsequent use of the estimator is not affected by subsampling.
+            Therefore it is an error to pass ``keep_subsampling=True`` and
+            ``fitted=False`` (because ``keep_subsampling=True`` would have no
+            effect).
 
         Returns
         -------
-        estimator
-            An estimator with an interface similar to scikit-learn's, except
+        pipeline
+            A skrub pipeline with an interface similar to scikit-learn's, except
             that its methods accept a dictionary of named inputs rather than
             ``X`` and ``y`` arguments.
 
@@ -1084,34 +1433,37 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
-        >>> estimator = pred.skb.get_estimator(fitted=True)
+        >>> pipeline = pred.skb.get_pipeline(fitted=True)
         >>> new_orders_df = skrub.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
         4   5     cup         5  2020-04-11
         5   6    fork         2  2020-04-12
-        >>> estimator.predict({'orders': new_orders_df})
+        >>> pipeline.predict({'orders': new_orders_df})
         array([False, False])
 
         Note that the ``'orders'`` key in the dictionary passed to ``predict``
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
-        """
 
-        estimator = ExprEstimator(self.clone())
-        # We need to check here even if intermediate steps have been checked,
-        # because there might be in the expression some calls to functions that
-        # are pickled by value by cloudpickle and that reference global
-        # variables, and those global variables may have changed since the
-        # expression was created.
-        check_can_be_pickled(estimator)
+        Please see the examples gallery for full information about expressions
+        and the pipelines they generate.
+        """
+        _check_keep_subsampling(fitted, keep_subsampling)
+
+        pipeline = SkrubPipeline(self.clone())
+        _check_can_be_pickled(pipeline)
         if not fitted:
-            return estimator
-        return estimator.fit(self.get_data())
+            return pipeline
+        return pipeline.fit(
+            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+        )
 
     def train_test_split(
         self,
         environment=None,
+        *,
+        keep_subsampling=False,
         splitter=model_selection.train_test_split,
         **splitter_kwargs,
     ):
@@ -1123,6 +1475,11 @@ class SkrubNamespace:
             The environment (dict mapping variable names to values) containing the
             full data. If ``None`` (the default), the data is retrieved from the
             expression.
+
+        keep_subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
 
         splitter : function, optional
             The function used to split X and y once they have been computed. By
@@ -1166,34 +1523,33 @@ class SkrubNamespace:
         >>> split = delayed.skb.train_test_split(random_state=0)
         >>> split.keys()
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
-        >>> estimator = delayed.skb.get_estimator()
-        >>> estimator.fit(split["train"])
-        ExprEstimator(expr=<Apply DummyClassifier>)
-        >>> estimator.score(split["test"])
+        >>> pipeline = delayed.skb.get_pipeline()
+        >>> pipeline.fit(split["train"])
+        SkrubPipeline(expr=<Apply DummyClassifier>)
+        >>> pipeline.score(split["test"])
         0.0
-        >>> predictions = estimator.predict(split["test"])
+        >>> predictions = pipeline.predict(split["test"])
         >>> accuracy_score(split["y_test"], predictions)
         0.0
         """
         if environment is None:
             environment = self.get_data()
         return train_test_split(
-            self._expr, environment, splitter=splitter, **splitter_kwargs
+            self._expr,
+            environment,
+            keep_subsampling=keep_subsampling,
+            splitter=splitter,
+            **splitter_kwargs,
         )
 
-    def get_grid_search(self, *, fitted=False, **kwargs):
+    def get_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's ``GridSearchCV``. The main difference is that methods
-        such as ``fit()`` and ``predict()`` accept a dictionary of inputs
-        rather than ``X`` and ``y``. Please refer to the examples gallery for
-        an in-depth explanation.
-
-        If the expression contains some numeric ranges (``choose_float``,
-        ``choose_int``), either discretize them by providing the ``n_steps``
-        argument or use ``get_randomized_search`` instead of
-        ``get_grid_search``.
+        scikit-learn's ``GridSearchCV``, where the main difference is that
+        ``fit()`` and ``predict()`` accept a dictionary of inputs
+        rather than ``X`` and ``y``. The best pipeline can
+        be returned by calling ``.best_pipeline_``.
 
         Parameters
         ----------
@@ -1201,6 +1557,16 @@ class SkrubNamespace:
             If ``True``, the gridsearch is fitted on the data provided when
             initializing variables in this expression (the data returned by
             ``.skb.get_data()``).
+
+        keep_subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the grid search when ``fitted=True``,
+            subsequent use of the grid search is not affected by subsampling.
+            Therefore it is an error to pass ``keep_subsampling=True`` and
+            ``fitted=False`` (because ``keep_subsampling=True`` would have no
+            effect).
 
         kwargs : dict
             All other named arguments are forwarded to
@@ -1211,7 +1577,12 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-            ``results_`` and ``plot_results()``.
+        ``results_``, ``plot_results()``, and ``best_pipeline_`.
+
+        See also
+        --------
+        skrub.Expr.skb.get_randomized_search :
+            Find the best parameters with grid search.
 
         Examples
         --------
@@ -1241,36 +1612,55 @@ class SkrubNamespace:
 
         >>> search = pred.skb.get_grid_search(fitted=True)
         >>> search.results_
-           mean_test_score classifier     C   N 🌴
-        0             0.89         rf   NaN  30.0
-        1             0.84   logistic   0.1   NaN
-        2             0.80   logistic  10.0   NaN
-        3             0.65         rf   NaN   3.0
-        4             0.50      dummy   NaN   NaN
+              C   N 🌴 classifier mean_test_score
+        0   NaN  30.0         rf             0.89
+        1   0.1   NaN   logistic             0.84
+        2  10.0   NaN   logistic             0.80
+        3   NaN   3.0         rf             0.65
+        4   NaN   NaN      dummy             0.50
+
+        If the expression contains some numeric ranges (``choose_float``,
+        ``choose_int``), either discretize them by providing the ``n_steps``
+        argument or use ``get_randomized_search`` instead of
+        ``get_grid_search``.
+
+        >>> logistic = LogisticRegression(
+        ...     C=skrub.choose_float(0.1, 10.0, log=True, n_steps=5, name="C")
+        ... )
+        >>> pred = X.skb.apply(logistic, y=y)
+        >>> print(pred.skb.describe_param_grid())
+        - C: choose_float(0.1, 10.0, log=True, n_steps=5, name='C')
+        >>> search = pred.skb.get_grid_search(fitted=True)
+        >>> search.results_
+            C	mean_test_score
+        0	0.100000	0.84
+        1	0.316228	0.83
+        2	1.000000	0.81
+        3	3.162278	0.80
+        4	10.000000	0.80
+
+        Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
-        for c in choices(self._expr).values():
-            if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
-                raise ValueError(
-                    "Cannot use grid search with continuous numeric ranges. "
-                    "Please use `get_randomized_search` or provide a number "
-                    f"of steps for this range: {c}"
-                )
+        _check_keep_subsampling(fitted, keep_subsampling)
+        _check_grid_search_possible(self._expr)
 
         search = ParamSearch(
             self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
         )
         if not fitted:
             return search
-        return search.fit(self.get_data())
+        return search.fit(
+            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+        )
 
-    def get_randomized_search(self, *, fitted=False, **kwargs):
-        """Find the best parameters with grid search.
+    def get_randomized_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
+        """Find the best parameters with randomized search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's ``RandomizedSearchCV``. The main difference is that
-        methods such as ``fit()`` and ``predict()`` accept a dictionary of
-        inputs rather than ``X`` and ``y``. Please refer to the examples
-        gallery for an in-depth explanation.
+        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where
+        the main difference is ``fit()`` and ``predict()`` accept a
+        dictionary of inputs rather than ``X`` and ``y``. The best pipeline can
+        be returned by calling ``.best_pipeline_``.
 
         Parameters
         ----------
@@ -1279,16 +1669,31 @@ class SkrubNamespace:
             initializing variables in this expression (the data returned by
             ``.skb.get_data()``).
 
+        keep_subsampling : bool (default=False)
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            default subsampling is not applied and all the data is used. This
+            is only applied for fitting the randomized search when ``fitted=True``,
+            subsequent use of the randomized search is not affected by subsampling.
+            Therefore it is an error to pass ``keep_subsampling=True`` and
+            ``fitted=False`` (because ``keep_subsampling=True`` would have no
+            effect).
+
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.search.RandomizedSearchCV``.
+            :class:`~sklearn.search.RandomizedSearchCV`.
 
         Returns
         -------
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-            ``results_`` and ``plot_results()``.
+            ``results_``, ``plot_results()``, and ``best_pipeline_`.
+
+        See also
+        --------
+        skrub.Expr.skb.get_grid_search :
+            Find the best parameters with grid search.
 
         Examples
         --------
@@ -1323,30 +1728,187 @@ class SkrubNamespace:
 
         >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
         >>> search.results_
-           mean_test_score classifier         C   k   N 🌴
-        0             0.93         rf       NaN   6  20.0
-        1             0.92         rf       NaN   4  18.0
-        2             0.90         rf       NaN   7  12.0
-        3             0.84   logistic  0.109758  15   NaN
-        4             0.82   logistic  0.584633  14   NaN
-        5             0.82   logistic  9.062263  14   NaN
-        6             0.80   logistic  1.533519  15   NaN
-        7             0.50      dummy       NaN   4   NaN
-        8             0.50      dummy       NaN   9   NaN
-        9             0.50      dummy       NaN   5   NaN
+            k         C  N 🌴 classifier mean_test_score
+        0   4  4.626363  NaN   logistic             0.92
+        1  10       NaN  7.0         rf             0.89
+        2   7  3.832217  NaN   logistic             0.87
+        3  15       NaN  6.0         rf             0.86
+        4  10  4.881255  NaN   logistic             0.85
+        5  19  3.965675  NaN   logistic             0.80
+        6  14       NaN  3.0         rf             0.77
+        7   4       NaN  NaN      dummy             0.50
+        8   9       NaN  NaN      dummy             0.50
+        9   5       NaN  NaN      dummy             0.50
+
+        Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
+        _check_keep_subsampling(fitted, keep_subsampling)
 
         search = ParamSearch(
             self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
         )
         if not fitted:
             return search
-        return search.fit(self.get_data())
+        return search.fit(
+            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+        )
 
-    def cross_validate(self, environment=None, **kwargs):
+    def iter_pipelines_grid(self):
+        """Get pipelines with different parameter combinations.
+
+        This generator yields a :class:`SkrubPipeline` parametrized for each
+        possible combination of choices.
+
+        The choice outcomes used in each pipeline can be inspected with
+        :meth:`SkrubPipeline.describe_params()`.
+
+        See Also
+        --------
+        Expr.skb.iter_pipelines_randomized :
+            Similar function but for random sampling of the parameter space.
+            Must be used when the expression contains some numeric ranges built
+            with :func:`choose_float` or :func:`choose_int` with
+            ``n_steps=None``.
+
+        Expr.skb.get_grid_search :
+            Pipeline with built-in exhaustive exploration of the parameter grid
+            to select the best one.
+
+        Expr.skb.get_randomized_search :
+            Pipeline with built-in randomized exploration of the parameter grid
+            to select the best one.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from sklearn import preprocessing
+        >>> import skrub
+
+        >>> scaler = skrub.choose_from(
+        ...     [
+        ...         preprocessing.MinMaxScaler(),
+        ...         preprocessing.StandardScaler(),
+        ...         preprocessing.RobustScaler(),
+        ...         preprocessing.MaxAbsScaler(),
+        ...     ],
+        ...     name="scaler",
+        ... )
+        >>> out = skrub.X().skb.apply(scaler)
+
+        >>> X = np.asarray([-4.0, 3.0, 10.0])[:, None]
+
+        >>> for p in out.skb.iter_pipelines_grid():
+        ...     print("======================================")
+        ...     print("params:", p.describe_params())
+        ...     print("result:")
+        ...     print(p.fit_transform({"X": X}))
+        ======================================
+        params: {'scaler': 'MinMaxScaler()'}
+        result:
+        [[0. ]
+         [0.5]
+         [1. ]]
+        ======================================
+        params: {'scaler': 'StandardScaler()'}
+        result:
+        [[-1.22474487]
+         [ 0.        ]
+         [ 1.22474487]]
+        ======================================
+        params: {'scaler': 'RobustScaler()'}
+        result:
+        [[-1.]
+         [ 0.]
+         [ 1.]]
+        ======================================
+        params: {'scaler': 'MaxAbsScaler()'}
+        result:
+        [[-0.4]
+         [ 0.3]
+         [ 1. ]]
+        """
+        pipeline = self.get_pipeline()
+        grid = model_selection.ParameterGrid(pipeline.get_param_grid())
+        for params in grid:
+            new = self.get_pipeline()
+            new.set_params(**params)
+            yield new
+
+    def iter_pipelines_randomized(self, n_iter, *, random_state=None):
+        """Get pipelines with different parameter combinations.
+
+        This generator yields a :class:`SkrubPipeline` parametrized for each
+        possible combination of choices.
+
+        The choice outcomes used in each pipeline can be inspected with
+        :meth:`SkrubPipeline.describe_params()`.
+
+        See Also
+        --------
+        Expr.skb.iter_pipelines_grid :
+            Similar function but for exploring all the possible parameter
+            combinations. Cannot be used when the expression contains some
+            numeric ranges built with :func:`choose_float` or
+            :func:`choose_int` with ``n_steps=None``.
+
+        Expr.skb.get_grid_search :
+            Pipeline with built-in exhaustive exploration of the parameter grid
+            to select the best one.
+
+        Expr.skb.get_randomized_search :
+            Pipeline with built-in randomized exploration of the parameter grid
+            to select the best one.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from sklearn import preprocessing
+        >>> import skrub
+
+        >>> scaler = skrub.choose_from(
+        ...     [
+        ...         preprocessing.MinMaxScaler(),
+        ...         preprocessing.StandardScaler(),
+        ...         preprocessing.RobustScaler(),
+        ...         preprocessing.MaxAbsScaler(),
+        ...     ],
+        ...     name="scaler",
+        ... )
+        >>> out = skrub.X().skb.apply(scaler)
+
+        >>> X = np.asarray([-4.0, 3.0, 10.0])[:, None]
+
+        >>> for p in out.skb.iter_pipelines_randomized(n_iter=2, random_state=0):
+        ...     print("======================================")
+        ...     print("params:", p.describe_params())
+        ...     print("result:")
+        ...     print(p.fit_transform({"X": X}))
+        ======================================
+        params: {'scaler': 'RobustScaler()'}
+        result:
+        [[-1.]
+         [ 0.]
+         [ 1.]]
+        ======================================
+        params: {'scaler': 'MaxAbsScaler()'}
+        result:
+        [[-0.4]
+         [ 0.3]
+         [ 1. ]]
+        """
+        pipeline = self.get_pipeline()
+        sampler = model_selection.ParameterSampler(
+            pipeline.get_param_grid(), n_iter=n_iter, random_state=random_state
+        )
+        for params in sampler:
+            new = self.get_pipeline()
+            new.set_params(**params)
+            yield new
+
+    def cross_validate(self, environment=None, *, keep_subsampling=False, **kwargs):
         """Cross-validate the expression.
 
-        This generates the estimator (with default hyperparameters) and runs
+        This generates the pipeline with default hyperparameters and runs
         scikit-learn cross-validation.
 
         Parameters
@@ -1356,9 +1918,16 @@ class SkrubNamespace:
             provided, the ``value``s passed when initializing ``var()`` are
             used.
 
+        keep_subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
+
         kwargs : dict
             All other named arguments are forwarded to
-            ``sklearn.model_selection.cross_validate``.
+            ``sklearn.model_selection.cross_validate``, except that
+            scikit-learn's ``return_estimator`` parameter is named
+            ``return_pipeline`` here.
 
         Returns
         -------
@@ -1375,30 +1944,46 @@ class SkrubNamespace:
         >>> X, y = skrub.X(X_a), skrub.y(y_a)
         >>> pred = X.skb.apply(LogisticRegression(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.84, 0.78])
+        0    0.84
+        1    0.78
+        Name: test_score, dtype: float64
 
         Passing some data:
 
         >>> data = {'X': X_a, 'y': y_a}
         >>> pred.skb.cross_validate(data)['test_score']
-        array([0.75, 0.9 , 0.85, 0.65, 0.9 ])
+        0    0.75
+        1    0.90
+        2    0.85
+        3    0.65
+        4    0.90
+        Name: test_score, dtype: float64
         """
-
         if environment is None:
             environment = self.get_data()
 
-        return cross_validate(self.get_estimator(), environment, **kwargs)
+        return cross_validate(
+            self.get_pipeline(),
+            environment,
+            keep_subsampling=keep_subsampling,
+            **kwargs,
+        )
 
     @check_expr
     def mark_as_X(self):
         """Mark this expression as being the ``X`` table.
 
+        This is used for cross-validation and hyperparameter selection: operations
+        done before ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` are executed
+        on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original expression is left unchanged.
 
-        This is used for cross-validation and hyperparameter selection: the
-        nodes marked with ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` define
-        the cross-validation splits.
+        Returns
+        -------
+        The input expression, which has been marked as being ``X``
 
+        Notes
+        -----
         During cross-validation, all the previous steps are first executed,
         until X and y have been materialized. Then, those are split into
         training and testing sets. The following steps in the expression are
@@ -1413,13 +1998,7 @@ class SkrubNamespace:
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
 
-        Please see the examples gallery for more information.
-
         Note: this marks the expression in-place and also returns it.
-
-        Returns
-        -------
-        The input expression, which has been marked as being ``X``
 
         Examples
         --------
@@ -1446,12 +2025,16 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.66666667, 0.66666667])
+        0    0.666667
+        1    0.666667
+        Name: test_score, dtype: float64
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
         rest of the pipeline (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
+
+        Please see the examples gallery for more information.
         """
         new = self._expr._skrub_impl.__copy__()
         new.is_X = True
@@ -1464,14 +2047,19 @@ class SkrubNamespace:
 
     @check_expr
     def mark_as_y(self):
-        """Mark this expression as being the ``X`` table.
+        """Mark this expression as being the ``y`` table.
 
+        This is used for cross-validation and hyperparameter selection: operations
+        done before ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` are executed
+        on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original expression is left unchanged.
 
-        This is used for cross-validation and hyperparameter selection: the
-        nodes marked with ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` define
-        the cross-validation splits.
+        Returns
+        -------
+        The input expression, which has been marked as being ``y``
 
+        Notes
+        -----
         During cross-validation, all the previous steps are first executed,
         until X and y have been materialized. Then, those are split into
         training and testing sets. The following steps in the expression are
@@ -1486,13 +2074,7 @@ class SkrubNamespace:
         ``skrub.y(value)`` can be used as a shorthand for
         ``skrub.var('y', value).skb.mark_as_y()``.
 
-        Please see the examples gallery for more information.
-
         Note: this marks the expression in-place and also returns it.
-
-        Returns
-        -------
-        The input expression, which has been marked as being ``y``
 
         Examples
         --------
@@ -1516,12 +2098,16 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> pred = X.skb.apply(DummyClassifier(), y=y)
         >>> pred.skb.cross_validate(cv=2)['test_score']
-        array([0.66666667, 0.66666667])
+        0    0.666667
+        1    0.666667
+        Name: test_score, dtype: float64
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
         rest of the pipeline (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
+
+        Please see the examples gallery for more information.
         """
         new = self._expr._skrub_impl.__copy__()
         new.is_y = True
@@ -1536,7 +2122,8 @@ class SkrubNamespace:
     def set_name(self, name):
         """Give a name to this expression.
 
-        Returns a modified copy
+        Returns a modified copy.
+
         The name is displayed in the graph and reports so this can be useful to
         mark relevant parts of the pipeline.
 

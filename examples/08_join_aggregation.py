@@ -78,6 +78,7 @@ Each product has several attributes:
      :func:`~pandas.melt`
 
 """
+
 # %%
 from skrub import TableReport
 from skrub.datasets import fetch_credit_fraud
@@ -195,7 +196,7 @@ TableReport(products_transformed)
 # |MinHashEncoder|, for reasons that are out of the scope of this notebook.
 #
 from skrub import AggJoiner
-from skrub import _selectors as s
+from skrub import selectors as s
 
 # Skrub selectors allow us to select columns using regexes, which reduces
 # the boilerplate.
@@ -251,16 +252,21 @@ model = make_pipeline(
 model
 
 # %%
-# We tune the hyper-parameters of the |HGBC| to get a good performance.
+# We tune the hyper-parameters of the |HGBC| model using ``RandomizedSearchCV``.
+# By default, the |HGBC| applies early stopping when there are at least 10_000
+# samples so we don't need to explicitly tune the number of trees (``max_iter``).
+# Therefore we set this at a very high level of 1_000. We increase
+# ``n_iter_no_change`` to make sure early stopping does not kick in too early.
 from time import time
 
 from sklearn.model_selection import RandomizedSearchCV
 
 param_distributions = dict(
-    histgradientboostingclassifier__learning_rate=loguniform(1e-3, 1),
-    histgradientboostingclassifier__max_depth=randint(3, 9),
+    histgradientboostingclassifier__learning_rate=loguniform(1e-2, 5e-1),
+    histgradientboostingclassifier__min_samples_leaf=randint(2, 64),
     histgradientboostingclassifier__max_leaf_nodes=[None, 10, 30, 60, 90],
-    histgradientboostingclassifier__max_iter=randint(50, 500),
+    histgradientboostingclassifier__n_iter_no_change=[50],
+    histgradientboostingclassifier__max_iter=[1000],
 )
 
 tic = time()

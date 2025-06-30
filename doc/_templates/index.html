@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% set title = 'skrub: Machine Learning for dataframes' %}
+{% set title = 'skrub: Machine Learning with dataframes' %}
 
 {%- block extrahead %}
     {{ super() }}
@@ -32,12 +32,12 @@ still full-width (unlike the article) #}
 {% block docs_main %}
 <div class="container-fluid sk-landing-container">
   <div class="row row-padding-main-container">
-    <h1 class="hero-title">Machine learning for dataframes</h1>
+    <h1 class="hero-title">Machine learning with dataframes</h1>
     <p class="hero-description"><code>skrub</code> is a Python library to
       ease preprocessing and feature engineering for
       <strong>tabular machine learning</strong>.
       <br />
-      Our long-term goal is to directly connect database tables to machine learning estimators.
+      We directly connect database tables to machine learning.
     </p>
     <div class="text-center mt-4">
         <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">Get started →</a>
@@ -47,7 +47,7 @@ still full-width (unlike the article) #}
   <!-- Feature Section 1 -->
   <div class="row mb-0 row-padding-between-features">
     <div class="col-md-5 mb-5">
-      <h4 class="feature-title">Effortless Pipelines</h4>
+      <h4 class="feature-title">Effortless Tabular Learning</h4>
       <p class="feature-text">Create strong scikit-learn pipeline baselines effortlessly with
         <a class="reference internal"
         href="reference/generated/skrub.TableVectorizer.html#tablevectorizer"
@@ -72,17 +72,45 @@ still full-width (unlike the article) #}
   <!-- Feature Section 2 -->
   <div class="row mb-0 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-5">
-      <h4 class="feature-title">Powerful Feature Engineering</h4>
-      <p class="feature-text">Encode text and high cardinality categorical data with the
+      <h4 class="feature-title">Interactive Data Exploration</h4>
+      <p class="feature-text">Explore your dataframes interactively with
         <a class="reference internal"
-        href="reference/generated/skrub.GapEncoder.html#gapencoder"
-        title="skrub.GapEncoder"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">GapEncoder</span></code></a>
+        href="reference/generated/skrub.TableReport.html#tablereport"
+        title="skrub.TableReport"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">TableReport</span></code></a>.
+      </p>
+      {% include "demo_table_report_code.html" %}
+      <p class="feature-text-see-also">
+        <a href="https://skrub-data.org/skrub-reports/">Try it on your dataset →</a>
+      </p>
+      <div class="row">
+        <p class="click-table-report-hint"><i class="fa-solid
+fa-caret-left visible-large-screen"></i> Click anywhere on the table <i class="fa-solid
+fa-caret-down visible-small-screen"></i></p>
+      </div>
+    </div>
+    <div class="col-md-7">
+      {% include "demo_table_report_generated.html" %}
+    </div>
+  </div>
+
+  <!-- Feature Section 3 -->
+  <div class="row mb-0 row-padding-between-features">
+    <div class="col-md-5">
+      <h4 class="feature-title">Powerful Feature Engineering</h4>
+      <p class="feature-text">Encode text and high cardinality categorical data
+        (<a class="reference internal"
+        href="reference/generated/skrub.StringEncoder.html#stringencoder"
+        title="skrub.StringEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringEncoder</span></code></a>,
+	<a class="reference internal" href="reference/generated/skrub.TextEncoder.html#textencoder"
+        title="skrub.TextEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextEncoder</span></code></a>,
+	<a class="reference internal" href="reference/generated/skrub.GapEncoder.html#gapencoder"
+        title="skrub.GapEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">GapEncoder</span></code></a>,
         and
         <a class="reference internal"
         href="reference/generated/skrub.MinHashEncoder.html#minhashencoder"
         title="skrub.MinHashEncoder"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">MinHashEncoder</span></code></a>, and
+        literal notranslate"><span class="pre">MinHashEncoder</span></code></a>), or
         extract features from dates with the
         <a class="reference internal"
         href="reference/generated/skrub.DatetimeEncoder.html#datetimeencoder"
@@ -96,29 +124,50 @@ still full-width (unlike the article) #}
     </div>
   </div>
 
-  <!-- Feature Section 3 -->
-  <div class="row mb-0 row-padding-between-features">
+  <!-- Feature Section 4 -->
+  <div class="row mb-0 flex-md-row-reverse  row-padding-between-features">
     <div class="col-md-5">
-      <h4 class="feature-title">Interactive Data Exploration</h4>
-      <p class="feature-text">Explore your dataframes interactively with
-        <a class="reference internal"
-        href="reference/generated/skrub.TableReport.html#tablereport"
-        title="skrub.TableReport"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">TableReport</span></code></a>.
+      <h4 class="feature-title">Tune arbitrary data wrangling</h4>
+      <h5 class="feature-title">Inspect it, apply it to new data</h5>
+      <p class="feature-text">Chain an arbitrary set of operations to prepare,
+      transform, assemble <strong>multiple tables</strong> for machine
+      learning, and then <strong>tune the full pipeline,
+      inspect it</strong>, or apply it to new data.
       </p>
-      {% include "demo_table_report_code.html" %}
-      <p class="feature-text-see-also">
-        <a href="https://skrub-data.org/skrub-reports/">Try it on your dataset →</a>
+      <p class="feature-text">
+	Works with any computational or dataframe engine.
       </p>
-      <div class="row">
-        <p class="click-table-report-hint">Click anywhere on the table <i class="fa-solid fa-arrow-trend-down"></i> </p>
+      <div class="pipeline-img">
+	{% include "../generated_for_index/pipeline.svg" %}
       </div>
+      <p class="feature-text-see-also">
+        <a href="skrub_pipeline.html">Discover the skrub expressions →</a>
+      </p>
     </div>
     <div class="col-md-7">
-      {% include "demo_table_report_generated.html" %}
+        <details>
+          <summary>Given two input dataframes
+            <code class="docutils literal notranslate"><span
+class="pre">products_df</span></code> and <code class="docutils literal notranslate"><span
+class="pre">baskets_df</span></code>: <i>(expand for full code)</i></summary>
+	    {% include "../generated_for_index/code_block_0.html" %}
+	</details>
+	<div class="feature-flex" style="column-gap: 0.25em;">
+	    <div>
+		{% include "../generated_for_index/products.html" %}
+	    </div>
+	    <div>
+		{% include "../generated_for_index/baskets.html" %}
+	    </div>
+	</div>
+	{% include "../generated_for_index/code_block_2.html" %}
+	<div class="feature-img">
+	    {% include "../generated_for_index/parallel_coordinates.html" %}
+	</div>
     </div>
   </div>
 
+  <!-- Community Section -->
   <div class="row mt-5 flex-md-row-reverse row-padding-between-features">
     <div class="col-md-4 mb-4">
       <h4 class="feature-title">Our Community</h4>

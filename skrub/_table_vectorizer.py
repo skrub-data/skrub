@@ -1,5 +1,4 @@
 import reprlib
-import warnings
 from collections import UserDict
 from typing import Iterable
 
@@ -7,20 +6,20 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.utils._estimator_html_repr import _VisualBlock
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors as s
 from . import _utils
+from . import selectors as s
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
-from ._drop_if_too_many_nulls import DropIfTooManyNulls
-from ._gap_encoder import GapEncoder
+from ._drop_uninformative import DropUninformative
 from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
+from ._sklearn_compat import _VisualBlock
+from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
 from ._to_float32 import ToFloat32
 from ._to_str import ToStr
@@ -37,7 +36,7 @@ class PassThrough(SingleColumnTransformer):
         return column
 
 
-HIGH_CARDINALITY_TRANSFORMER = GapEncoder(n_components=30)
+HIGH_CARDINALITY_TRANSFORMER = StringEncoder(n_components=30)
 LOW_CARDINALITY_TRANSFORMER = OneHotEncoder(
     sparse_output=False,
     dtype="float32",
@@ -91,7 +90,7 @@ def _created_by(*transformers):
         attribute) ``_pipeline`` which is constructed and fitted during
         ``TableVectorizer.fit``, and is never cloned. ``_created_by`` is a
         private helper of ``TableVectorizer``, not meant to be generally useful
-        and it should not be moved to the ``skrub._selectors`` module.
+        and it should not be moved to the ``skrub.selectors`` module.
     """
     return s.Filter(
         _created_by_predicate,
@@ -113,12 +112,25 @@ def _check_transformer(transformer):
     return clone(transformer)
 
 
-def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
+def _get_preprocessors(
+    *,
+    cols,
+    drop_null_fraction,
+    drop_if_unique,
+    drop_if_constant,
+    n_jobs,
+    add_tofloat32=True,
+    datetime_format=None,
+):
     steps = [CheckInputDataFrame()]
     transformers = [
         CleanNullStrings(),
-        DropIfTooManyNulls(drop_null_fraction),
-        ToDatetime(),
+        DropUninformative(
+            drop_null_fraction=drop_null_fraction,
+            drop_if_constant=drop_if_constant,
+            drop_if_unique=drop_if_unique,
+        ),
+        ToDatetime(format=datetime_format),
     ]
     if add_tofloat32:
         transformers.append(ToFloat32())
@@ -141,23 +153,38 @@ def _get_preprocessors(*, cols, drop_null_fraction, n_jobs, add_tofloat32=True):
 
 
 class Cleaner(TransformerMixin, BaseEstimator):
-    """
-    A light transformer that preprocesses each column of a dataframe.
+    """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
-    such as detecting null values represented as strings (e.g. ``'N/A'``) or parsing
-    dates. See the "Notes" section for a full list.
+    such as detecting null values represented as strings (e.g. ``'N/A'``), parsing
+    dates, and removing uninformative columns. See the "Notes" section for a full list.
 
     Parameters
     ----------
     drop_null_fraction : float or None, default=1.0
-        Fraction of null above which the column is dropped. If `drop_null_fraction`
+        Fraction of null above which the column is dropped. If ``drop_null_fraction``
         is set to ``1.0``, the column is dropped if it contains only
-        nulls or NaNs (this is the default behavior). If `drop_null_fraction` is a
+        nulls or NaNs (this is the default behavior). If ``drop_null_fraction`` is a
         number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
-        is strictly larger than `drop_null_fraction`. If `drop_null_fraction` is
+        is strictly larger than ``drop_null_fraction``. If ``drop_null_fraction`` is
         ``None``, this selection is disabled: no columns are dropped based on the
         number of null values they contain.
+
+    drop_if_constant : bool, default=False
+        If set to true, drop columns that contain a single unique value. Note that
+        missing values are considered as one additional distinct value.
+
+    drop_if_unique : bool, default=False
+        If set to true, drop columns that contain only unique values, i.e., the number
+        of unique values is equal to the number of rows in the column. Numeric columns
+        are never dropped.
+
+    datetime_format : str, default=None
+        The format to use when parsing dates. If None, the format is inferred.
+
+    numeric_dtype : "float32" or None, default=None
+        If set to ``float32``, convert numeric columns to ``np.float32`` dtype. If
+        ``None``, numerical dtypes are not modified.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -170,29 +197,42 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Maps the name of each column to a list of all the processing steps that were
         applied to it.
 
+    See Also
+    --------
+    TableVectorizer :
+        Process columns of a dataframe and convert them to a numeric (vectorized)
+        representation.
+
     Notes
     -----
     The ``Cleaner`` performs the following set of transformations on each column:
 
-    - ``CleanNullStrings()``: replace strings used to represent null values
-    with actual null values.
+    - ``CleanNullStrings()``: replace strings used to represent missing values
+      with NA markers.
 
-    - ``DropIfTooManyNulls()``: drop the column if it contains too many null values.
+    - ``DropUninformative()``: drop the column if it is considered to be
+      "uninformative". A column is considered to be "uninformative" if it contains
+      only missing values (``drop_null_fraction``), only a constant value
+      (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      By default, the ``Cleaner`` keeps all columns, unless they contain only
+      missing values.
+      Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
+      that contain text.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
-    actual datetimes with the correct dtype.
+      actual datetimes with the correct dtype. If ``datetime_format`` is provided,
+      it is forwarded to ``ToDatetime()``. Otherwise, the format is inferred.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
-    library (Pandas or Polars) to force consistent typing and avoid issues downstream.
+      library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
     - ``ToStr()``: convert columns to strings, unless they are numerical,
-    categorical, or datetime.
+      categorical, or datetime.
 
-    The ``Cleaner`` object should only be used for preliminary sanitizing of
-    the data because it does not perform any transformations on numeric columns.
-    On the other hand, the ``TableVectorizer`` converts numeric columns to float32
-    and ensures that null values are represented with NaNs, which can be handled
-    correctly by downstream scikit-learn estimators.
+    If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
+    numeric columns to ``np.float32`` dtype, ensuring a consistent representation
+    of numbers and missing values. This can be useful if the ``Cleaner``
+    is used as a preprocessing step in a skrub pipeline.
 
     Examples
     --------
@@ -238,23 +278,40 @@ class Cleaner(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> cleaner.all_processing_steps_['A']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
+    [CleanNullStrings(), DropUninformative(), ToStr()]
     >>> cleaner.all_processing_steps_['B']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime()]
+    [CleanNullStrings(), DropUninformative(), ToDatetime()]
     >>> cleaner.all_processing_steps_['C']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToStr()]
+    [CleanNullStrings(), DropUninformative(), ToStr()]
     >>> cleaner.all_processing_steps_['D']
-    [DropIfTooManyNulls()]
+    [DropUninformative()]
 
     See Also:
     --------
     TableVectorizer :
         Process columns of a dataframe and convert them to a numeric (vectorized)
         representation.
+
+    ToFloat32 :
+        Convert numeric columns to ``np.float32``, to have consistent numeric
+        types and representation of missing values. More informative columns (e.g.,
+        categorical or datetime) are not converted.
     """
 
-    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
+    def __init__(
+        self,
+        drop_null_fraction=1.0,
+        drop_if_constant=False,
+        drop_if_unique=False,
+        datetime_format=None,
+        numeric_dtype=None,
+        n_jobs=1,
+    ):
         self.drop_null_fraction = drop_null_fraction
+        self.drop_if_constant = drop_if_constant
+        self.drop_if_unique = drop_if_unique
+        self.datetime_format = datetime_format
+        self.numeric_dtype = numeric_dtype
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -275,11 +332,22 @@ class Cleaner(TransformerMixin, BaseEstimator):
         dataframe
             The transformed input.
         """
+
+        add_tofloat32 = self.numeric_dtype == "float32"
+        if self.numeric_dtype not in (None, "float32"):
+            raise ValueError(
+                "`numeric_dtype` must be one of"
+                f"[`None`, `'float32'`]. Found {self.numeric_dtype}."
+            )
+
         all_steps = _get_preprocessors(
             cols=s.all(),
             drop_null_fraction=self.drop_null_fraction,
+            drop_if_constant=self.drop_if_constant,
+            drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=False,
+            add_tofloat32=add_tofloat32,
+            datetime_format=self.datetime_format,
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
@@ -327,53 +395,13 @@ class Cleaner(TransformerMixin, BaseEstimator):
         return self
 
 
-class SimpleCleaner(Cleaner):
-    def __init__(self, drop_null_fraction=1.0, n_jobs=1):
-        super().__init__(drop_null_fraction=drop_null_fraction, n_jobs=n_jobs)
-        warnings.warn(
-            (
-                "SimpleCleaner was renamed to Cleaner and will be removed in the "
-                "next release."
-            ),
-            category=DeprecationWarning,
-        )
-
-
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
-    Applies a different transformation to each of several kinds of columns:
-
-    - `numeric`: floats, integers, and booleans.
-    - `datetime`: datetimes and dates.
-    - `low_cardinality`: string and categorical columns with a count
-      of unique values smaller than a given threshold (40 by default). Category encoding
-      schemes such as one-hot encoding, ordinal encoding etc. are typically appropriate
-      for columns with few unique values.
-    - `high_cardinality`: string and categorical columns with many
-      unique values, such as free-form text. Such columns have so many distinct values
-      that it is not possible to assign a distinct representation to each: the dimension
-      would be too large and there would be too few examples of each category.
-      Representations designed for text, such as topic modelling
-      (:class:`~skrub.GapEncoder`) or locality-sensitive hashing
-      (:class:`~skrub.MinHash`) are more appropriate.
-
-    .. note::
-
-        Transformations are applied **independently on each column**. A
-        different transformer instance is used for each column separately;
-        multivariate transformations are therefore not supported.
-
-    The transformer for each kind of column can be configured with the corresponding
-    parameter. A transformer is expected to be a `compatible scikit-learn transformer
-    <https://scikit-learn.org/stable/glossary.html#term-transformer>`_. Special-cased
-    strings ``"drop"`` and ``"passthrough"`` are accepted as well, to indicate to drop
-    the columns or to pass them through untransformed, respectively.
-
-    Additionally, it is possible to specify transformers for specific columns,
-    overriding the categorization described above. This is done by providing a
-    list of pairs ``(transformer, list_of_columns)`` as the
-    ``specific_transformers`` parameter.
+    This transformer preprocesses the given dataframe by first cleaning the data
+    to ensure consistent numerical dtypes (float32), then encodes each column with
+    an encoder suitable for its dtype. Categorical features are encoded differently
+    depending on their cardinality.
 
     .. note::
 
@@ -396,11 +424,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         and drop one of the transformed columns if the feature contains only 2
         categories.
 
-    high_cardinality : transformer, "passthrough" or "drop", default=GapEncoder instance
+    high_cardinality : transformer, "passthrough" or "drop", default=StringEncoder instance
         The transformer for string or categorical columns with at least
         ``cardinality_threshold`` unique values. The default is a
-        :class:`~skrub.GapEncoder` with 30 components (30 output columns for each
+        :class:`~skrub.StringEncoder` with 30 components (30 output columns for each
         input).
+
+        .. versionchanged:: 0.6.0
+           The default ``high_cardinality`` encoder has been changed from
+           :class:`~skrub.GapEncoder` to :class:`~skrub.StringEncoder`.
 
     numeric : transformer, "passthrough" or "drop", default="passthrough"
         The transformer for numeric columns (floats, ints, booleans).
@@ -427,6 +459,18 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         is strictly larger than `drop_null_fraction`. If `drop_null_fraction` is ``None``,
         this selection is disabled: no columns are dropped based on the number
         of null values they contain.
+
+    drop_if_constant : bool, default=False
+        If set to true, drop columns that contain a single unique value. Note that
+        missing values are considered as one additional distinct value.
+
+    drop_if_unique : bool, default=False
+        If set to true, drop columns that contain only unique values, i.e., the number
+        of unique values is equal to the number of rows in the column. Numeric columns
+        are never dropped.
+
+    datetime_format : str, default=None
+        The format to use when parsing dates. If None, the format is inferred.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -482,6 +526,45 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         A function that accepts a scikit-learn estimator and creates a pipeline
         combining a ``TableVectorizer``, optional missing value imputation and
         the provided estimator.
+
+    Cleaner :
+        Preprocesses each column of a dataframe with consistency checks and
+        sanitization, e.g., of null values or dates.
+
+    Notes
+    -----
+    The TableVectorizer applies a different transformation to each of several kinds of columns:
+
+    - `numeric`: floats, integers, and booleans.
+    - `datetime`: datetimes and dates.
+    - `low_cardinality`: string and categorical columns with a count
+      of unique values smaller than a given threshold (40 by default). Category encoding
+      schemes such as one-hot encoding, ordinal encoding etc. are typically appropriate
+      for columns with few unique values.
+    - `high_cardinality`: string and categorical columns with many
+      unique values, such as free-form text. Such columns have so many distinct values
+      that it is not possible to assign a distinct representation to each: the dimension
+      would be too large and there would be too few examples of each category.
+      Representations designed for text, such as topic modelling
+      (:class:`~skrub.GapEncoder`) or locality-sensitive hashing
+      (:class:`~skrub.MinHash`) are more appropriate.
+
+    .. note::
+
+        Transformations are applied **independently on each column**. A
+        different transformer instance is used for each column separately;
+        multivariate transformations are therefore not supported.
+
+    The transformer for each kind of column can be configured with the corresponding
+    parameter. A transformer is expected to be a `compatible scikit-learn transformer
+    <https://scikit-learn.org/stable/glossary.html#term-transformer>`_. Special-cased
+    strings ``"drop"`` and ``"passthrough"`` are accepted as well, to indicate to drop
+    the columns or to pass them through untransformed, respectively.
+
+    Additionally, it is possible to specify transformers for specific columns,
+    overriding the categorization described above. This is done by providing a
+    list of pairs ``(transformer, list_of_columns)`` as the
+    ``specific_transformers`` parameter.
 
     Examples
     --------
@@ -549,10 +632,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     represented as strings. By default, columns that contain only null values are
     dropped. Moreover, a final post-processing step is applied to all
     non-categorical columns in the encoder's output to cast them to float32.
+    If ``datetime_format`` is provided, it will be used to parse all datetime
+    columns.
+
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), DropIfTooManyNulls(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), DropUninformative(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
 
     Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
@@ -627,7 +713,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropIfTooManyNulls(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 
@@ -651,6 +737,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         datetime=DATETIME_TRANSFORMER,
         specific_transformers=(),
         drop_null_fraction=1.0,
+        drop_if_constant=False,
+        drop_if_unique=False,
+        datetime_format=None,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -665,6 +754,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.specific_transformers = specific_transformers
         self.n_jobs = n_jobs
         self.drop_null_fraction = drop_null_fraction
+        self.drop_if_constant = drop_if_constant
+        self.drop_if_unique = drop_if_unique
+        self.datetime_format = datetime_format
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -778,10 +870,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self._preprocessors = [CheckInputDataFrame()]
 
         transformer_list = [CleanNullStrings()]
-        transformer_list.append(DropIfTooManyNulls(self.drop_null_fraction))
+        transformer_list.append(
+            DropUninformative(
+                self.drop_if_constant, self.drop_if_unique, self.drop_null_fraction
+            )
+        )
 
         transformer_list += [
-            ToDatetime(),
+            ToDatetime(format=self.datetime_format),
             ToFloat32(),
             CleanCategories(),
             ToStr(),

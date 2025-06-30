@@ -1,5 +1,6 @@
 import inspect
 
+import numpy as np
 import pytest
 
 import skrub
@@ -80,6 +81,10 @@ def test_repr_html():
     assert "add" in (skrub.var("thename", 0) + 2)._repr_html_()
     b = a.skb.apply_func(lambda x: x).skb.set_name("the name b")
     assert "the name b" in b._repr_html_()
+    a = skrub.X(np.ones((5, 2))) + 10
+    assert "on a subsample" not in a._repr_html_()
+    a = skrub.X(np.ones((5, 2))).skb.subsample(n=2) + 10
+    assert "on a subsample" in a._repr_html_()
 
 
 def test_repr():
@@ -194,13 +199,15 @@ def test_repr():
     2
 
     >>> X = skrub.X()
-    >>> X.skb.concat_horizontal([X, X])
-    <ConcatHorizontal: 3 dataframes>
+    >>> X.skb.concat([X, X],axis=1)
+    <Concat: 3 dataframes>
+    >>> X.skb.concat([X, X],axis=0)
+    <Concat: 3 dataframes>
 
     When we do not know the length of the list of dataframes to concatenate
 
-    >>> X.skb.concat_horizontal(skrub.as_expr([X, X]))
-    <ConcatHorizontal>
+    >>> X.skb.concat(skrub.as_expr([X, X]),axis=0)
+    <Concat>
 
     if we end up applying a OnEachColumn, seeing the inner transformer is more
     informative.
@@ -234,7 +241,37 @@ def test_repr():
     NULL
     >>> print(skrub.X()._skrub_impl.value)
     NULL
-    """
+
+    The preview indicates if subsampling took place:
+
+    >>> import numpy as np
+
+    >>> skrub.X(np.ones((5, 2))) + 10
+    <BinOp: add>
+    Result:
+    ―――――――
+    array([[11., 11.],
+           [11., 11.],
+           [11., 11.],
+           [11., 11.],
+           [11., 11.]])
+    >>> skrub.X(np.ones((5, 2))).skb.subsample(n=2) + 10
+    <BinOp: add>
+    Result (on a subsample):
+    ――――――――――――――――――――――――
+    array([[11., 11.],
+           [11., 11.]])
+
+
+    short_repr of choices:
+
+    >>> c1 = skrub.choose_float(10, 100)
+    >>> c2 = skrub.choose_float(1, 100, log=True, n_steps=100, default=10)
+    >>> e = skrub.var('x') + c1 + c2
+    >>> print(e.skb.describe_param_grid())
+    - choose_float(10, 100): choose_float(10, 100)
+      choose_float(1, 100, log=True, n_...): choose_float(1, 100, log=True, n_steps=100, default=10)
+    """  # noqa: E501
 
 
 def test_format():

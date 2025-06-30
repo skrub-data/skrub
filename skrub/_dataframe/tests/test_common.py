@@ -15,7 +15,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
-from skrub import _selectors as s
+from skrub import selectors as s
 from skrub._dataframe import _common as ns
 
 
@@ -38,7 +38,7 @@ def test_not_implemented():
         func = getattr(ns, func_name)
         n_params = len(inspect.signature(func).parameters)
         params = [None] * n_params
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(TypeError):
             func(*params)
 
 
@@ -97,7 +97,7 @@ def test_to_numpy(df_module, example_data_dict):
 
 
 def test_to_pandas(df_module, pd_module):
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(TypeError):
         ns.to_pandas(np.arange(3))
 
     if df_module.name == "pandas":
@@ -178,12 +178,12 @@ def test_all_null_like(df_module):
 def test_concat_horizontal(df_module, example_data_dict):
     df1 = df_module.make_dataframe(example_data_dict)
     df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
-    df = ns.concat_horizontal(df1, df2)
+    df = ns.concat(df1, df2, axis=1)
     assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
 
     # Test concatenating dataframes with the same column names
     df2 = df1
-    df = ns.concat_horizontal(df1, df2)
+    df = ns.concat(df1, df2, axis=1)
     assert ns.shape(df) == (4, 16)
     for n in ns.column_names(df)[8:]:
         assert re.match(r".*__skrub_[0-9a-f]+__", n)
@@ -192,10 +192,72 @@ def test_concat_horizontal(df_module, example_data_dict):
     if df_module.name == "pandas":
         df1 = df_module.DataFrame(data=[1.0, 2.0], columns=["a"], index=[10, 20])
         df2 = df_module.DataFrame(data=[3.0, 4.0], columns=["b"], index=[1, 2])
-        df = ns.concat_horizontal(df1, df2)
+        df = ns.concat(df1, df2, axis=1)
         assert ns.shape(df) == (2, 2)
         # Index of the first dataframe is kept
         assert_array_equal(df.index, [10, 20])
+
+
+def test_concat_vertical(df_module, example_data_dict):
+    df1 = df_module.make_dataframe(example_data_dict)
+    df2 = ns.set_column_names(df1, list(map("{}1".format, ns.column_names(df1))))
+    df = ns.concat(df1, df2, axis=1)
+    assert ns.column_names(df) == ns.column_names(df1) + ns.column_names(df2)
+
+    # Test concatenating dataframes with the same column names
+    df2 = df_module.make_dataframe(example_data_dict)  # it's a copy with same structure
+    df = ns.concat(df1, df2, axis=0)
+    assert ns.shape(df) == (8, 8)
+    assert ns.column_names(df) == ns.column_names(df1)
+
+    # Test concatenating pandas dataframes with different indexes (of same length)
+    if df_module.name == "pandas":
+        pd_df1 = pd.DataFrame(data=[1.0, 2.0], columns=["a"], index=[10, 20])
+        pd_df2 = pd.DataFrame(
+            data=[3.0, 4.0], columns=["a"], index=[1, 2]
+        )  # Same columns
+        df = ns.concat(pd_df1, pd_df2, axis=0)
+        assert ns.shape(df) == (4, 1)
+
+        # Test with overlapping index - should still concatenate
+        pd_df3 = pd.DataFrame(data=[5.0, 6.0], columns=["a"], index=[20, 30])
+        df = ns.concat(pd_df1, pd_df3, axis=0)
+        assert ns.shape(df) == (4, 1)
+        if isinstance(df, pd.DataFrame):
+            assert_array_equal(
+                df.index.to_numpy(),
+                np.array(range(len(df))),
+            )
+        else:
+            pass
+
+
+def test_concat_series(df_module):
+    df = df_module.example_dataframe
+    col = df_module.example_column
+
+    # Mixing types is not allowed
+    msg = r"got dataframes at position \[0\], series at position \[1\]"
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(df, col)
+
+    msg = r"got dataframes at position \[1\], series at position \[0\]."
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(col, df)
+
+    msg = (
+        r"got dataframes at position \[2\], series at position \[0\], "
+        r"types that are neither dataframes nor series at position \[1 3\]"
+    )
+    with pytest.raises(TypeError, match=msg):
+        ns.concat(col, 0, df, 1)
+
+    # Cols only is allowed
+    for axis in 0, 1:
+        assert (
+            ns.shape(ns.concat(col, col, axis=axis))[axis]
+            == ns.shape(ns.to_frame(col))[axis] * 2
+        )
 
 
 def test_is_column_list(df_module):
@@ -261,7 +323,7 @@ def test_col_by_idx_duplicate_columns(pd_module):
 
 
 #
-# Querying and modifying metadata
+# Querying, modifying metadata and shape
 # ===============================
 #
 
@@ -271,6 +333,11 @@ def test_shape(df_module):
     assert ns.shape(df_module.empty_dataframe) == (0, 0)
     assert ns.shape(df_module.example_column) == (4,)
     assert ns.shape(df_module.empty_column) == (0,)
+
+
+def test_to_frame(df_module):
+    col = df_module.example_column
+    assert ns.is_dataframe(ns.to_frame(col))
 
 
 @pytest.mark.parametrize("name", ["", "a\nname"])

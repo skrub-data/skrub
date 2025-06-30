@@ -1,4 +1,5 @@
 from .. import _dataframe as sbd
+from .._dataframe._common import _raise as _sbd_raise
 from .._dispatch import dispatch
 from .._utils import repr_args
 
@@ -8,7 +9,7 @@ def all():
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -37,7 +38,7 @@ def cols(*columns):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -97,7 +98,7 @@ def inv(obj):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -136,7 +137,7 @@ def make_selector(obj):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
 
     >>> s.make_selector('ID')
     cols('ID')
@@ -159,7 +160,7 @@ def make_selector(obj):
 
 @dispatch
 def _select_col_names(df, col_names):
-    raise NotImplementedError()
+    raise _sbd_raise(df, kind="DataFrame")
 
 
 @_select_col_names.specialize("pandas", argument_type="DataFrame")
@@ -180,7 +181,7 @@ def select(df, selector):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -408,7 +409,7 @@ def filter(predicate, *args, **kwargs):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {
@@ -471,7 +472,7 @@ def filter_names(predicate, *args, **kwargs):
 
     Examples
     --------
-    >>> from skrub import _selectors as s
+    >>> from skrub import selectors as s
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     {

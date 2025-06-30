@@ -1,0 +1,48 @@
+:html_theme.sidebar_secondary.remove:
+
+.. _api_ref:
+
+=============
+API Reference
+=============
+
+This is the class and function reference of skrub. Please refer to the
+:ref:`full user guide <user_guide>` for further details, as the raw specifications of
+classes and functions may not be enough to give full guidelines on their use.
+
+.. toctree::
+  :maxdepth: 1
+  :hidden:
+
+{% for module, _ in API_REFERENCE %}
+  {{ module }} <{{ module }}>
+{%- endfor %}
+{%- if DEPRECATED_API_REFERENCE %}
+  deprecated
+{%- endif %}
+
+.. currentmodule:: skrub
+
+{% for _, module_info in API_REFERENCE %}
+
+{{ module_info["title"] }}
+{{ "-" * module_info["title"]|length }}
+
+{% for section in module_info["sections"] %}
+
+{% if section["template"] %}
+{% set template = section["template"] %}
+{% else %}
+{% set template = "base.rst" %}
+{% endif %}
+
+.. autosummary::
+  :nosignatures:
+  :template: {{ template }}
+
+{% for obj in section["autosummary"] %}
+  {{ obj }}
+
+{% endfor %}
+{% endfor %}
+{% endfor %}

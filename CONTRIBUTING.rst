@@ -124,43 +124,17 @@ See the relevant sections above on how to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To contribute, you will first have to run through some steps:
+To setup your development environment, you need to follow the steps in "From Source" tab
+present in :ref:`Installing from source<installing_from_source>` page.
+After that, you can return to this page to continue.
 
-- Set up your environment by forking the repository (`Github doc on
-  forking and
-  cloning <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`__).
-- Create and activate a new virtual environment:
-
-  - With `venv <https://docs.python.org/3/library/venv.html>`__, create
-    the env with ``python -m venv env_skrub`` and then activate it with
-    ``source env_skrub/bin/activate``.
-  - With
-    `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__,
-    create the env with ``conda new -n env_skrub`` and activate it with
-    ``conda activate env_skrub``.
-  - While at the root of your local copy of skrub and within the new
-    env, install the required development dependencies by running
-    ``pip install --editable ".[dev, lint, test, doc]"``.
-
-- Run ``pre-commit install`` to activate some checks that will run every
-  time you do a ``git commit`` (mostly, formatting checks).
-
-If you want to make sure that everything runs properly, you can run all
-the tests with the command ``pytest -s skrub/tests``; note that this may
-take a long time. Some tests may raise warnings such as:
+Now that the development environment is ready, you may create a new branch and start working on
+the new issue.
 
 .. code:: sh
 
-  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
-    warnings.warn(
-
-This is expected, and you may proceed with the next steps without worrying about them. However, no tests should fail at this point: if they do fail, then let us know.
-
-Now that the development environment is ready, you may start working on
-the new issue by creating a new branch:
-
-.. code:: sh
-
+   # fetch latest updates and start from the current head
+   git fetch upstream
    git checkout -b my-branch-name-eg-fix-issue-123
    # make some changes
    git add ./the/file-i-changed
@@ -221,7 +195,7 @@ Additionally, you might have updated the internal dataframe API in
 ``amazing_function``.
 
 Run each updated test file using ``pytest``
-([pytest docs](https://docs.pytest.org/en/stable/)):
+(`pytest docs <https://docs.pytest.org/en/stable>`_):
 
 .. code:: sh
 
@@ -368,13 +342,6 @@ and addressing any issues.**
 First, make sure you have properly installed the development version of skrub.
 You can follow the :ref:`installation_instructions` > "From source" section, if needed.
 
-Building the documentation requires installing some additional packages:
-
-.. code:: bash
-
-    cd skrub
-    pip install '.[doc]'
-
 To build the documentation, you need to be in the ``doc`` folder:
 
 .. code:: bash
@@ -400,3 +367,17 @@ specific examples, you can use the following command with a regex pattern:
     make html EXAMPLES_PATTERN=your_regex_goes_here make html
 
 This is especially helpful when you're only modifying or checking a few examples.
+
+
+Editing the API reference documentation
+---------------------------------------
+
+To add a new entry to the :ref:`API reference documentation<api_ref>` or change its
+content, head to ``doc/api_reference.py``. This data is then used by ``doc/conf.py``
+to render templates located at ``doc/reference/*.rst.template``.
+
+|
+
+Note that **all public functions and classes must be documented in the API
+reference**, hence when adding a public function or class, a new entry must be
+added, as detailed just above.

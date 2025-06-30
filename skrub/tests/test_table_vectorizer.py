@@ -1,5 +1,6 @@
 import re
 import warnings
+from datetime import datetime
 
 import joblib
 import numpy as np
@@ -22,7 +23,6 @@ from skrub._gap_encoder import GapEncoder
 from skrub._minhash_encoder import MinHashEncoder
 from skrub._table_vectorizer import (
     Cleaner,
-    SimpleCleaner,
     TableVectorizer,
     _get_preprocessors,
 )
@@ -196,12 +196,22 @@ def _get_missing_values_dataframe(categorical_dtype="object"):
 def test_get_preprocessors():
     X = _get_clean_dataframe()
     steps = _get_preprocessors(
-        cols=X.columns, drop_null_fraction=1.0, n_jobs=1, add_tofloat32=True
+        cols=X.columns,
+        drop_null_fraction=1.0,
+        drop_if_constant=True,
+        drop_if_unique=False,
+        n_jobs=1,
+        add_tofloat32=True,
     )
     assert any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
 
     steps = _get_preprocessors(
-        cols=X.columns, drop_null_fraction=1.0, n_jobs=1, add_tofloat32=False
+        cols=X.columns,
+        drop_null_fraction=1.0,
+        drop_if_constant=True,
+        drop_if_unique=False,
+        n_jobs=1,
+        add_tofloat32=False,
     )
     assert not any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
 
@@ -379,14 +389,7 @@ def test_cleaner_dtypes(X, dict_expected_types):
                     assert dict_expected_types[col] == X_trans[col].dtype
 
 
-def test_simplecleaner_warning():
-    with pytest.warns(DeprecationWarning, match="SimpleCleaner was renamed to Cleaner"):
-        X = _get_clean_dataframe()
-        vectorizer = SimpleCleaner()
-        vectorizer.fit(X)
-
-
-def test_convert_float32():
+def test_convert_float32(df_module):
     """
     Test that the TableVectorizer converts float64 to float32
     when using the default parameters.
@@ -394,13 +397,27 @@ def test_convert_float32():
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer()
     out = vectorizer.fit_transform(X)
+    assert sbd.dtype(out["float"]) == "float32"
+    assert sbd.dtype(out["int"]) == "float32"
+
+    # default behavior: keep numeric type
+    vectorizer = Cleaner()
+    out = vectorizer.fit_transform(X)
+    assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
+    assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
+    assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
+    assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
+
+    vectorizer = Cleaner(numeric_dtype="float32")
+    out = vectorizer.fit_transform(X)
     assert out.dtypes["float"] == "float32"
     assert out.dtypes["int"] == "float32"
 
-    vectorizer = Cleaner()
-    out = vectorizer.fit_transform(X)
-    assert sbd.is_float(out["float"])
-    assert sbd.is_integer(out["int"])
+
+def test_cleaner_invalid_numeric_dtype():
+    X = _get_clean_dataframe()
+    with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
+        Cleaner(numeric_dtype="wrong").fit_transform(X)
 
 
 def test_auto_cast_missing_categories():
@@ -906,3 +923,47 @@ def test_drop_null_column():
     tv = TableVectorizer(drop_null_fraction=1.0)
     transformed = tv.fit_transform(X)
     assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)
+
+
+def test_date_format(df_module):
+    # Test that the date format is correctly inferred
+
+    X = df_module.make_dataframe(
+        {
+            "date": [
+                "22 April 2025",
+                "23 April 2025",
+                "24 April 2025",
+                "25 April 2025",
+                "26 April 2025",
+            ]
+        }
+    )
+
+    expected = df_module.make_dataframe(
+        {
+            "date_year": [2025.0, 2025.0, 2025.0, 2025.0, 2025.0],
+            "date_month": [4.0, 4.0, 4.0, 4.0, 4.0],
+            "date_day": [22.0, 23.0, 24.0, 25.0, 26.0],
+        }
+    )
+    datetime_encoder = DatetimeEncoder(add_total_seconds=False)
+    vectorizer = TableVectorizer(datetime_format="%d %B %Y", datetime=datetime_encoder)
+    transformed = vectorizer.fit_transform(X)
+    for col in transformed.columns:
+        df_module.assert_column_equal(transformed[col], sbd.to_float32(expected[col]))
+
+    expected = df_module.make_dataframe(
+        {
+            "date": [
+                datetime.fromisoformat("2025-04-22"),
+                datetime.fromisoformat("2025-04-23"),
+                datetime.fromisoformat("2025-04-24"),
+                datetime.fromisoformat("2025-04-25"),
+                datetime.fromisoformat("2025-04-26"),
+            ],
+        }
+    )
+    cleaner = Cleaner(datetime_format="%d %B %Y")
+    transformed = cleaner.fit_transform(X)
+    df_module.assert_column_equal(transformed["date"], expected["date"])

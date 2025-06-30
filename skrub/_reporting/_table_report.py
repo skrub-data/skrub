@@ -1,13 +1,43 @@
 import codecs
 import functools
 import json
+import numbers
 from pathlib import Path
 
+from .. import _config
 from .. import _dataframe as sbd
 from ._html import to_html
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
+
+
+def _check_max_cols(max_plot_columns, max_association_columns):
+    max_plot_columns = (
+        max_plot_columns
+        if max_plot_columns is not None
+        else _config.get_config()["max_plot_columns"]
+    )
+    if not (isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0):
+        raise ValueError(
+            f"'max_plot_columns' must be a positive scalar, got {max_plot_columns!r}."
+        )
+
+    max_association_columns = (
+        max_association_columns
+        if max_association_columns is not None
+        else _config.get_config()["max_association_columns"]
+    )
+    if not (
+        isinstance(max_association_columns, numbers.Real)
+        and max_association_columns >= 0
+    ):
+        raise ValueError(
+            "'max_association_columns' must be a positive scalar, got "
+            f"{max_association_columns!r}."
+        )
+
+    return max_plot_columns, max_association_columns
 
 
 class TableReport:
@@ -19,8 +49,8 @@ class TableReport:
 
     Parameters
     ----------
-    dataframe : pandas or polars DataFrame
-        The dataframe to summarize.
+    dataframe : pandas or polars Series or DataFrame
+        The dataframe or series to summarize.
     n_rows : int, default=10
         Maximum number of rows to show in the sample table. Half will be taken
         from the beginning (head) of the dataframe and half from the end
@@ -47,6 +77,36 @@ class TableReport:
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
         the plots will not be generated. If None, all columns will be plotted.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> from skrub import set_config
+        >>> set_config(max_plot_columns=30)
+
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_MAX_PLOT_COLUMNS=30
+
+    max_association_columns : int, default=30
+        Maximum number of columns for which associations should be computed.
+        If the number of columns in the dataframe is greater than this value,
+        the associations will not be computed. If None, the associations
+        for all columns will be computed.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> from skrub import set_config
+        >>> set_config(max_association_columns=30)
+
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_MAX_ASSOCIATION_COLUMNS=30
 
     See Also
     --------
@@ -120,7 +180,8 @@ class TableReport:
         title=None,
         column_filters=None,
         verbose=1,
-        max_plot_columns=30,
+        max_plot_columns=None,
+        max_association_columns=None,
     ):
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
@@ -129,36 +190,62 @@ class TableReport:
             "max_bottom_slice_size": n_rows // 2,
             "verbose": verbose,
         }
+        self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.dataframe = dataframe
         self.verbose = verbose
-        self.max_plot_columns = max_plot_columns
+        self.max_plot_columns, self.max_association_columns = _check_max_cols(
+            max_plot_columns, max_association_columns
+        )
+        self.dataframe = (
+            sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
+        )
+        self.n_columns = sbd.shape(self.dataframe)[1]
+
+    def _set_minimal_mode(self):
+        """Put the report in minimal mode.
+
+        This is meant to be called by other skrub functions, such as the
+        expressions  ``__repr__``.
+
+        In the minimal mode, the associations and distributions tabs are not
+        shown and the plots and associations are not computed.
+
+        Once set this cannot be undone.
+        """
+        try:
+            # delete the cached _summary if it already exists,
+            # as the summarize arguments have changed
+            delattr(self, "_summary")
+        except AttributeError:
+            pass
+        self._to_html_kwargs["minimal_report_mode"] = True
+        self.max_association_columns = 0
+        self.max_plot_columns = 0
+
+    def _display_subsample_hint(self):
+        self._summary["is_subsampled"] = True
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
 
     @functools.cached_property
-    def _summary_with_plots(self):
-        return summarize_dataframe(
-            self.dataframe, with_plots=True, title=self.title, **self._summary_kwargs
+    def _summary(self):
+        with_plots = (
+            self.max_plot_columns is None or self.max_plot_columns >= self.n_columns
+        )
+        with_associations = (
+            self.max_association_columns is None
+            or self.max_association_columns >= self.n_columns
         )
 
-    @functools.cached_property
-    def _summary_without_plots(self):
         return summarize_dataframe(
-            self.dataframe, with_plots=False, title=self.title, **self._summary_kwargs
+            self.dataframe,
+            with_plots=with_plots,
+            with_associations=with_associations,
+            title=self.title,
+            **self._summary_kwargs,
         )
-
-    def _get_summary(self):
-        if self.max_plot_columns is None:
-            summary = self._summary_with_plots
-        elif self.max_plot_columns >= sbd.shape(self.dataframe)[1]:
-            summary = self._summary_with_plots
-        else:
-            summary = self._summary_without_plots
-
-        return summary
 
     def html(self):
         """Get the report as a full HTML page.
@@ -169,9 +256,10 @@ class TableReport:
             The HTML page.
         """
         return to_html(
-            self._get_summary(),
+            self._summary,
             standalone=True,
             column_filters=self.column_filters,
+            **self._to_html_kwargs,
         )
 
     def html_snippet(self):
@@ -183,9 +271,10 @@ class TableReport:
             The HTML snippet.
         """
         return to_html(
-            self._get_summary(),
+            self._summary,
             standalone=False,
             column_filters=self.column_filters,
+            **self._to_html_kwargs,
         )
 
     def json(self):
@@ -197,9 +286,7 @@ class TableReport:
             The JSON data.
         """
         to_remove = ["dataframe", "sample_table"]
-        data = {
-            k: v for k, v in self._summary_without_plots.items() if k not in to_remove
-        }
+        data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
 
     def _repr_mimebundle_(self, include=None, exclude=None):

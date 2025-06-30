@@ -470,7 +470,7 @@ TableReport(products_transformed)
 from sklearn.pipeline import make_pipeline
 
 from skrub import AggJoiner
-from skrub import _selectors as s
+from skrub import selectors as s
 
 minhash_cols = "ID" | s.glob("item_*") | s.glob("model_*") | s.glob("make_*")
 single_cols = ["ID", "goods_code", "Nbr_of_prod_purchas", "cash_price"]

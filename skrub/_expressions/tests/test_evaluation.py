@@ -160,22 +160,22 @@ def test_empty_param_grid():
 
 
 def test_param_grid_nested_choices():
-    c0 = skrub.choose_from([10, 20], name="c0")
-    c1 = skrub.choose_from([11, 21], name="c1")
-    c2 = skrub.choose_from([12, 22], name="c2")
-    c3 = skrub.choose_from([{"C": c0}, {"C": c1}], name="c3")
-    e = skrub.as_expr([c3, c2])
+    c0 = skrub.choose_from([10, 20, 30], name="c0")
+    c1 = skrub.choose_from([11, 21, 22, 24], name="c1")
+    c2 = skrub.choose_from([{"C": c0}, {"C": c1}], name="c2")
+    c3 = skrub.choose_from([12, 22, 40, 50, 60], name="c3")
+    e = skrub.as_expr([c2, c3])
     assert e.skb.describe_param_grid() == """\
-- c2: [12, 22]
-  c3: {'C': choose_from([10, 20], name='c0')}
-  c0: [10, 20]
-- c2: [12, 22]
-  c3: {'C': choose_from([11, 21], name='c1')}
-  c1: [11, 21]
+- c3: [12, 22, 40, 50, 60]
+  c2: {'C': choose_from([10, 20, 30], name='c0')}
+  c0: [10, 20, 30]
+- c3: [12, 22, 40, 50, 60]
+  c2: {'C': choose_from([11, 21, 22, 24], name='c1')}
+  c1: [11, 21, 22, 24]
 """
     assert _evaluation.param_grid(e) == [
-        {3: [0, 1], 0: [0], 1: [0, 1]},
-        {3: [0, 1], 0: [1], 2: [0, 1]},
+        {2: [0], 0: [0, 1, 2], 3: [0, 1, 2, 3, 4]},
+        {2: [1], 1: [0, 1, 2, 3], 3: [0, 1, 2, 3, 4]},
     ]
 
 
@@ -223,6 +223,38 @@ def test_param_grid_choice_before_X():
 """
 
 
+def test_unnamed_choices():
+    """
+    >>> import skrub
+
+    >>> a = skrub.choose_bool()
+    >>> b = skrub.choose_bool()
+    >>> c = skrub.choose_bool()
+    >>> d = skrub.choose_from({'a': a, 'b': b, 'c': c})
+    >>> x = skrub.as_expr([a, b, c, d])
+    >>> print(x.skb.describe_param_grid())
+    - choose_bool(): [True, False]
+      choose_bool()_1: [True, False]
+      choose_bool()_2: [True, False]
+      choose_from({'a': …, 'b': …, 'c': …}): 'a'
+    - choose_bool(): [True, False]
+      choose_bool()_1: [True, False]
+      choose_bool()_2: [True, False]
+      choose_from({'a': …, 'b': …, 'c': …}): 'b'
+    - choose_bool(): [True, False]
+      choose_bool()_1: [True, False]
+      choose_bool()_2: [True, False]
+      choose_from({'a': …, 'b': …, 'c': …}): 'c'
+    """
+    a = skrub.choose_int(1, 5)
+    b = skrub.choose_int(1, 5)
+    c = skrub.choose_int(1, 5, name="c")
+    e = a.as_expr() + b + c
+    assert e.skb.eval() == 9
+    assert e.skb.eval({"c": 5}) == 11
+    assert _evaluation.param_grid(e) == [{0: a, 1: b, 2: c}]
+
+
 #
 # misc details mostly for code coverage
 #
@@ -251,32 +283,32 @@ def test_describe_steps():
     ...     func(a, skrub.var("b"))
     ...     .skb.apply(skrub.TableVectorizer())
     ...     .amethod(skrub.as_expr(10))
-    ...     .skb.concat_horizontal([b])
+    ...     .skb.concat([b], axis=1)
     ...     + skrub.choose_bool(name="?").as_expr()
     ...     + skrub.X().skb.if_else(3, b)[skrub.var("item")].b
     ... )
     >>> print(c.skb.describe_steps())
-    VAR 'a'
-    VAR 'b'
-    CALL 'func'
-    APPLY TableVectorizer
-    VALUE int
-    CALLMETHOD 'amethod'
-    ( VAR 'a' )*
-    ( VAR 'a' )*
-    BINOP: add
-    CONCATHORIZONTAL: 2 dataframes
-    VALUE BoolChoice
-    BINOP: add
-    VAR 'X'
-    ( VAR 'a' )*
-    ( VAR 'a' )*
-    ( BINOP: add )*
-    IFELSE <Var 'X'> ? 3 : <BinOp: add>
-    VAR 'item'
-    GETITEM <Var 'item'>
-    GETATTR 'b'
-    BINOP: add
+    Var 'a'
+    Var 'b'
+    Call 'func'
+    Apply TableVectorizer
+    Value int
+    CallMethod 'amethod'
+    ( Var 'a' )*
+    ( Var 'a' )*
+    BinOp: add
+    Concat: 2 dataframes
+    Value BoolChoice
+    BinOp: add
+    Var 'X'
+    ( Var 'a' )*
+    ( Var 'a' )*
+    ( BinOp: add )*
+    IfElse <Var 'X'> ? 3 : <BinOp: add>
+    Var 'item'
+    GetItem <Var 'item'>
+    GetAttr 'b'
+    BinOp: add
     * Cached, not recomputed
     """
 

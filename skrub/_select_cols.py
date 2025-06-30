@@ -1,22 +1,23 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from . import _selectors as s
+from . import selectors as s
 from ._on_each_column import SingleColumnTransformer
 
 
 class SelectCols(TransformerMixin, BaseEstimator):
     """Select a subset of a DataFrame's columns.
 
-    A ``ValueError`` is raised if any of the provided column names are not in
-    the dataframe.
+    A ``ValueError`` is raised if any of the provided column names are not in the
+    dataframe.
 
     Accepts :obj:`pandas.DataFrame` and :obj:`polars.DataFrame` inputs.
 
     Parameters
     ----------
-    cols : list of str or str
-        The columns to select. A single column name can be passed as a ``str``:
-        ``"col_name"`` is the same as ``["col_name"]``.
+    cols : list of str, str or :ref:`selector<selectors_ref>`
+        The columns to select, or a selector. A single column name can be passed as a
+        ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
+        :ref:`selectors<selectors>` user guide for more info on selectors.
 
     Examples
     --------
@@ -80,16 +81,17 @@ class SelectCols(TransformerMixin, BaseEstimator):
 class DropCols(TransformerMixin, BaseEstimator):
     """Drop a subset of a DataFrame's columns.
 
-    The other columns are kept in their original order. A ``ValueError`` is
-    raised if any of the provided column names are not in the dataframe.
+    The other columns are kept in their original order. A ``ValueError`` is raised if
+    any of the provided column names are not in the dataframe.
 
     Accepts :obj:`pandas.DataFrame` and :obj:`polars.DataFrame` inputs.
 
     Parameters
     ----------
-    cols : list of str or str
-        The columns to drop. A single column name can be passed as a ``str``:
-        ``"col_name"`` is the same as ``["col_name"]``.
+    cols : list of str, str or :ref:`selector<selectors_ref>`
+        The columns to drop, or a selector. A single column name can be passed as a
+        ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
+        :ref:`selectors<selectors>` user guide for more info on selectors.
 
     Examples
     --------

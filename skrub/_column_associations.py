@@ -17,28 +17,9 @@ def column_associations(df):
     """Get measures of statistical associations between all pairs of columns.
 
     Reported metrics include Cramer's V statistic and Pearson's Correlation
-    Coefficient. More may be added in the future.
-
-    The result is returned as a dataframe with columns:
-
-    ``['left_column_name', 'left_column_idx', 'right_column_name',
-    'right_column_idx', 'cramer_v', 'pearson_corr']``
-
-    As the function is commutative, each pair of columns appears only once
-    (either ``col_1``, ``col_2`` or ``col_2``, ``col_1`` but not both).
-    The results are sorted from most associated to least associated.
-
-    To compute the Cramer's V statistic, all columns are discretized. Numeric
-    columns are binned with 10 bins. For categorical columns, only the 10 most
-    frequent categories are considered. In both cases, nulls are treated as a
-    separate category, ie a separate row in the contingency table. Thus
-    associations between the values of 2 columns or between their missingness
-    patterns may be captured.
-
-    To compute the Pearson's Correlation Coefficient, only numeric columns are
-    considered. The correlation is computed using the Pearson method used in
-    pandas or polars, depending on the dataframe. In both case, lines containing NaNs
-    are dropped
+    Coefficient. The result is returned as a dataframe that contains the column
+    name and idx for the left and right table and both associations; results
+    are sorted in descending order by Cramer's V association.
 
     Parameters
     ----------
@@ -52,11 +33,30 @@ def column_associations(df):
 
     Notes
     -----
+    The result is returned as a dataframe with columns:
+
+    ``['left_column_name', 'left_column_idx', 'right_column_name',
+    'right_column_idx', 'cramer_v', 'pearson_corr']``
+
+    As the function is commutative, each pair of columns appears only once
+    (either ``col_1``, ``col_2`` or ``col_2``, ``col_1`` but not both).
+    The results are sorted from most associated to least associated.
+
+    To compute the Cramer's V statistic, all columns are discretized. Numeric
+    columns are binned with 10 bins. For categorical columns, only the 10 most
+    frequent categories are considered. In both cases, nulls are treated as a
+    separate category, ie a separate row in the contingency table. Thus,
+    associations between the values of 2 columns or between their missingness
+    patterns may be captured.
     Cramér's V is a measure of association between two nominal variables,
     giving a value between 0 and +1 (inclusive).
 
     * `Cramer's V <https://en.wikipedia.org/wiki/Cramér%27s_V>`_
 
+    To compute the Pearson's Correlation Coefficient, only numeric columns are
+    considered. The correlation is computed using the Pearson method used in
+    pandas or polars, depending on the dataframe. In both cases, lines containing NaNs
+    are dropped.
     Pearson's Correlation Coefficient is a measure of the linear correlation
     between two variables, giving a value between -1 and +1 (inclusive).
 

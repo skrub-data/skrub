@@ -1,27 +1,27 @@
 import datetime
 import html
 import io
+import numbers
 import re
 import shutil
 import webbrowser
 from pathlib import Path
 
 import jinja2
+import numpy as np
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
 from .. import datasets
+from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
 from .._utils import Repr, random_string, short_repr
 from . import _utils
-from ._choosing import BaseNumericChoice
-from ._evaluation import choices, clear_results, evaluate, graph, param_grid
+from ._choosing import BaseNumericChoice, Choice
+from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._expressions import Apply, Value, Var
-
-# TODO after merging the expressions do some refactoring and move this stuff to
-# _reporting. better to do it later to avoid conflicts with independent changes
-# to the _reporting module.
+from ._subsampling import uses_subsampling
 
 
 def _get_jinja_env():
@@ -43,6 +43,10 @@ def _get_template(template_name):
     return _get_jinja_env().get_template(template_name)
 
 
+def _use_tablereport_display():
+    return get_config()["use_tablereport_expr"]
+
+
 def node_report(expr, mode="preview", environment=None, **report_kwargs):
     result = evaluate(expr, mode=mode, environment=environment)
     if sbd.is_column(result):
@@ -52,8 +56,12 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
         result_df = sbd.make_dataframe_like(result, [result])
         result_df = sbd.copy_index(result, result_df)
         result = result_df
-    if sbd.is_dataframe(result):
+    if sbd.is_dataframe(result) and _use_tablereport_display():
+        report_kwargs.setdefault("verbose", False)  # Hide the progress bar
         report = TableReport(result, **report_kwargs)
+        report._set_minimal_mode()
+        if uses_subsampling(expr):
+            report._display_subsample_hint()
     else:
         try:
             report = result._repr_html_()
@@ -138,7 +146,8 @@ def _do_full_report(
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
         # TODO dump report in callback instead of evaluating full expression
-        # first, so that we can clear intermediate results
+        # first, so that we can clear intermediate results.
+        # See evaluate's `callback` parameter
         result = evaluate(expr, mode=mode, environment=environment, clear=False)
         evaluate_error = None
     except Exception as e:
@@ -261,11 +270,6 @@ class GraphDrawing:
 
 def _node_kwargs(expr, url=None):
     label = html.escape(_utils.simple_repr(expr))
-    if (
-        not isinstance(expr._skrub_impl, Var)
-        and (name := expr._skrub_impl.name) is not None
-    ):
-        label = f"{label}\n{name!r}"
     kwargs = {
         "shape": "box",
         "fontsize": 12,
@@ -340,17 +344,45 @@ def draw_expr_graph(expr, url=None, direction="TB"):
     return GraphDrawing(dot_graph)
 
 
+def describe_params(params, expr_choices):
+    description = {}
+    for choice_id, param in params.items():
+        choice = expr_choices["choices"][choice_id]
+        choice_name = expr_choices["choice_display_names"][choice_id]
+        if isinstance(choice, Choice):
+            # If we have a Choice we use the outcome name if there is one, and
+            # if there isn't, the value if it is a simple type otherwise a
+            # short repr
+            if choice.outcome_names is not None:
+                value = choice.outcome_names[param]
+            else:
+                value = choice.outcomes[param]
+                if not isinstance(
+                    value, (numbers.Number, bool, str, bytes, type(None))
+                ):
+                    value = short_repr(value)
+        else:
+            # If we have a NumericChoice we use the corresponding number. We
+            # convert numpy numbers to built-in types to avoid the long
+            # 'np.float64(5.0)' repr
+            value = param
+            if isinstance(value, np.number):
+                value = value.tolist()
+        description[choice_name] = value
+    return description
+
+
 def describe_param_grid(expr):
     grid = param_grid(expr)
-    expr_choices = choices(expr)
+    expr_choices = choice_graph(expr)
 
     buf = io.StringIO()
     for subgrid in grid:
         prefix = "- "
         for k, v in subgrid.items():
             assert isinstance(v, (BaseNumericChoice, list))
-            choice = expr_choices[k]
-            name = choice.name
+            choice = expr_choices["choices"][k]
+            name = expr_choices["choice_display_names"][k]
             buf.write(f"{prefix}{name}: ")
             if isinstance(choice, BaseNumericChoice):
                 buf.write(f"{v}\n")

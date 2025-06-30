@@ -93,6 +93,41 @@ def test_environment_no_values():
     assert e.skb.eval({"d": 2, "c": 3}) == 6
 
 
+def test_environment_wrong_values():
+    a = skrub.var(name="a", value=[1, 2, 3])
+    # Testing expr as value
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.var(name="wrongvar", value=a)
+
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.X(value=a)
+
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.y(value=a)
+
+    # Testing choice as value
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.var("wrongvar", skrub.choose_bool())
+
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.X(skrub.choose_bool())
+
+    with pytest.raises(
+        TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
+    ):
+        skrub.y(skrub.choose_bool())
+
+
 def test_choice_in_environment():
     a = skrub.var("a", 100)
     b = skrub.var("b", 10)
@@ -155,16 +190,16 @@ def test_predictor_as_transformer():
 def test_predictor_as_df_transformer():
     X = pd.DataFrame({"a": [1, 2, 3], "b": [10, 20, 30]})
     pred = skrub.X().skb.apply(DummyRegressor(), y=skrub.y())
-    estimator = pred.skb.get_estimator()
+    pipeline = pred.skb.get_pipeline()
     expected = pd.DataFrame({"a": [2.0, 2.0, 2.0], "b": [20.0, 20.0, 20.0]})
-    assert_frame_equal(estimator.fit_transform({"X": X, "y": X}), expected)
-    assert_frame_equal(estimator.transform({"X": X, "y": X}), expected)
+    assert_frame_equal(pipeline.fit_transform({"X": X, "y": X}), expected)
+    assert_frame_equal(pipeline.transform({"X": X, "y": X}), expected)
 
 
-def test_get_estimator():
-    e = (skrub.var("a", 0) + skrub.var("b", 1)).skb.get_estimator()
-    assert e.fit_transform({"a": 10, "b": 2}) == 12
-    assert e.transform({"a": 100, "b": 30}) == 130
+def test_get_pipeline():
+    p = (skrub.var("a", 0) + skrub.var("b", 1)).skb.get_pipeline()
+    assert p.fit_transform({"a": 10, "b": 2}) == 12
+    assert p.transform({"a": 100, "b": 30}) == 130
 
 
 @pytest.mark.parametrize("how", ["deepcopy", "sklearn", "skb"])
@@ -270,12 +305,30 @@ def test_apply_on_cols(use_choice):
 def test_concat_horizontal_duplicate_cols():
     X_df = pd.DataFrame({"a": [0, 1, 2], "b": [3, 4, 5]})
     X = skrub.X()
-    e = X.skb.concat_horizontal([X])
-    estimator = e.skb.get_estimator()
-    out_1 = estimator.fit_transform({"X": X_df})
-    out_2 = estimator.transform({"X": X_df})
+    e = X.skb.concat([X], axis=1)
+    pipeline = e.skb.get_pipeline()
+    out_1 = pipeline.fit_transform({"X": X_df})
+    out_2 = pipeline.transform({"X": X_df})
     assert len(set(out_1.columns)) == len(out_1.columns) == 4
     assert list(out_1.columns) == list(out_2.columns)
+
+
+def test_concat_vertical_duplicate_cols():
+    X_df1 = pd.DataFrame({"a": [0, 1], "b": [2, 3]})
+    X_df2 = pd.DataFrame({"a": [4, 5], "b": [6, 7]})  # Same columns
+    X1 = skrub.var("X1", pd.DataFrame({"a": [0, 1], "b": [2, 3]}))
+    X2 = skrub.var("X2", pd.DataFrame({"a": [4, 5], "b": [6, 7]}))
+
+    e = X1.skb.concat([X2], axis=0)
+    assert isinstance(e, skrub.Expr)
+
+    pipeline = e.skb.get_pipeline()
+    data_dict = {"X1": X_df1, "X2": X_df2}
+    out_1 = pipeline.fit_transform(data_dict)
+    out_2 = pipeline.transform(data_dict)
+
+    assert out_1.shape[1] == out_2.shape[1] == 2
+    assert out_1.shape[0] == out_2.shape[0] == 4
 
 
 def test_class_skb():
