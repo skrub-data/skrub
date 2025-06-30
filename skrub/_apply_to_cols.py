@@ -11,7 +11,7 @@ from . import _dataframe as sbd
 from . import _utils, selectors
 from ._join_utils import pick_column_names
 
-__all__ = ["OnEachColumn", "SingleColumnTransformer", "RejectColumn"]
+__all__ = ["ApplyToCols", "SingleColumnTransformer", "RejectColumn"]
 
 _SINGLE_COL_LINE = (
     "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
@@ -42,7 +42,7 @@ class RejectColumn(ValueError):
     >>> ToDatetime().fit_transform(df['b'])
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'b' does not contain strings.
+    skrub._apply_to_cols.RejectColumn: Column 'b' does not contain strings.
     """
 
     pass
@@ -52,11 +52,11 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``OnEachColumn``; see the docstring of ``OnEachColumn`` for more
+    ``ApplyToCols``; see the docstring of ``ApplyToCols`` for more
     information.
 
     Single-column transformers are not required to inherit from this class in
-    order to work with ``OnEachColumn``, however doing so avoids some
+    order to work with ``ApplyToCols``, however doing so avoids some
     boilerplate:
 
         - The required ``__single_column_transformer__`` attribute is set.
@@ -213,7 +213,7 @@ def _insert_after_first_paragraph(document, text_to_insert):
     return "".join(output_lines)
 
 
-class OnEachColumn(TransformerMixin, BaseEstimator):
+class ApplyToCols(TransformerMixin, BaseEstimator):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.
@@ -254,7 +254,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     allow_reject : bool, default=False
         Whether the transformer is allowed to reject a column by raising a
         ``RejectColumn`` exception. If ``True``, rejected columns will be
-        passed through unchanged by ``OnEachColumn`` and will not appear in
+        passed through unchanged by ``ApplyToCols`` and will not appear in
         attributes such as ``transformers_``, ``used_inputs_``, etc. If
         ``False``, column rejections are considered as errors and
         ``RejectColumn`` exceptions are propagated.
@@ -309,7 +309,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub._on_each_column import OnEachColumn
+    >>> from skrub import ApplyToCols
     >>> from sklearn.preprocessing import StandardScaler
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
     >>> df
@@ -319,7 +319,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
 
     Fit a StandardScaler to each column in df:
 
-    >>> scaler = OnEachColumn(StandardScaler())
+    >>> scaler = ApplyToCols(StandardScaler())
     >>> scaler.fit_transform(df)
          A    B    C
     0 -1.0 -1.0 -1.0
@@ -329,7 +329,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
 
     We can restrict the columns on which the transformation is applied:
 
-    >>> scaler = OnEachColumn(StandardScaler(), cols=["A", "B"])
+    >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"])
     >>> scaler.fit_transform(df)
          A    B     C
     0 -1.0 -1.0   0.0
@@ -363,13 +363,13 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Could not find a datetime format for column 'city'.
+    skrub._apply_to_cols.RejectColumn: Could not find a datetime format for column 'city'.
 
     How these rejections are handled depends on the ``allow_reject`` parameter.
     By default, no special handling is performed and rejections are considered
     to be errors:
 
-    >>> to_datetime = OnEachColumn(ToDatetime())
+    >>> to_datetime = ApplyToCols(ToDatetime())
     >>> to_datetime.fit_transform(df)
     Traceback (most recent call last):
         ...
@@ -381,7 +381,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     Therefore it might be sensible to try to parse all string columns but allow
     the transformer to reject those that, upon inspection, do not contain dates.
 
-    >>> to_datetime = OnEachColumn(ToDatetime(), allow_reject=True)
+    >>> to_datetime = ApplyToCols(ToDatetime(), allow_reject=True)
     >>> transformed = to_datetime.fit_transform(df)
     >>> transformed
         birthday    city
@@ -403,7 +403,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     The ``rename_columns`` parameter allows renaming output columns.
 
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[0., 100.]))
-    >>> scaler = OnEachColumn(StandardScaler(), rename_columns='{}_scaled')
+    >>> scaler = ApplyToCols(StandardScaler(), rename_columns='{}_scaled')
     >>> scaler.fit_transform(df)
        A_scaled  B_scaled
     0      -1.0      -1.0
@@ -412,19 +412,19 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     The renaming is only applied to columns selected by ``cols`` (and not
     rejected by the transformer when ``allow_reject`` is ``True``).
 
-    >>> scaler = OnEachColumn(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
+    >>> scaler = ApplyToCols(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
     >>> scaler.fit_transform(df)
        A_scaled      B
     0      -1.0    0.0
     1       1.0  100.0
 
     ``rename_columns`` can be particularly useful when ``keep_original`` is
-    ``True``. When a column is transformed, we can tell ``OnEachColumn`` to
+    ``True``. When a column is transformed, we can tell ``ApplyToCols`` to
     retain the original, untransformed column in the output. If the transformer
     produces a column with the same name, the transformation result is renamed
     to avoid a name clash.
 
-    >>> scaler = OnEachColumn(StandardScaler(), keep_original=True)
+    >>> scaler = ApplyToCols(StandardScaler(), keep_original=True)
     >>> scaler.fit_transform(df)                                    # doctest: +SKIP
           A  A__skrub_89725c56__      B  B__skrub_81cc7d00__
     0 -10.0                 -1.0    0.0                 -1.0
@@ -432,7 +432,7 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
 
     In this case we may want to set a more sensible name for the transformer's output:
 
-    >>> scaler = OnEachColumn(
+    >>> scaler = ApplyToCols(
     ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
     ... )
     >>> scaler.fit_transform(df)
@@ -458,10 +458,40 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
+        """Fit the transformer on each column independently.
+
+        Parameters
+        ----------
+        X : Pandas or Polars DataFrame
+            The data to transform.
+
+        y : Pandas or Polars Series or DataFrame, default=None
+            The target data.
+
+        Returns
+        -------
+        ApplyToCols
+            The transformer itself.
+        """
         self.fit_transform(X, y)
         return self
 
     def fit_transform(self, X, y=None):
+        """Fit the transformer on each column independently and transform X.
+
+        Parameters
+        ----------
+        X : Pandas or Polars DataFrame
+            The data to transform.
+
+        y : Pandas or Polars Series or DataFrame, default=None
+            The target data.
+
+        Returns
+        -------
+        result : Pandas or Polars DataFrame
+            The transformed data.
+        """
         self._columns = selectors.make_selector(self.cols).expand(X)
         results = []
         all_columns = sbd.column_names(X)
@@ -480,6 +510,18 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
         return self._process_fit_transform_results(results, X)
 
     def transform(self, X):
+        """Transform a dataframe.
+
+        Parameters
+        ----------
+        X : Pandas or Polars DataFrame
+            The column to transform.
+
+        Returns
+        -------
+        result : Pandas or Polars DataFrame
+            The transformed data.
+        """
         check_is_fitted(self, "transformers_")
         parallel = Parallel(n_jobs=self.n_jobs)
         func = delayed(_transform_column)
@@ -541,6 +583,14 @@ class OnEachColumn(TransformerMixin, BaseEstimator):
     # set_output api compatibility
 
     def get_feature_names_out(self):
+        """Get output feature names for transformation.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "all_outputs_")
         return self.all_outputs_
 
 

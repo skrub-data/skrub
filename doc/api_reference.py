@@ -66,6 +66,8 @@ API_REFERENCE = {
                     "Cleaner",
                     "SelectCols",
                     "DropCols",
+                    "ApplyToCols",
+                    "ApplyToFrame",
                     "DropUninformative",
                 ],
             }
@@ -265,6 +267,21 @@ API_REFERENCE = {
                 ],
                 "template": "base.rst",
             },
+        ],
+    },
+    "config": {
+        "title": "Configuration",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "get_config",
+                    "set_config",
+                    "config_context",
+                ],
+            }
         ],
     },
     "datasets": {
