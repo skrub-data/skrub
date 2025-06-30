@@ -90,7 +90,7 @@ data-spans__{{ i }}__{{ j }}
          (subsampled from more rows)
         {% endif %}
     </div>
-    <div class="keyboard-hints">
+    <div class="{{ 'keyboard-hints-when-subsampling' if 'is_subsampled' in summary }} keyboard-hints">
         <div>
             {{ kbd("Ctrl-C") }}
             {{ kbd("←") }}
