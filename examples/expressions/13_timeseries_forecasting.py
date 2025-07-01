@@ -316,7 +316,6 @@ search_rich_features.plot_results(min_score=0.0)
 def get_lagged_features(df):
     lagged_df = df.select(
         "cnt",
-        # *[pl.col("cnt").shift(i).alias(f"lagged_count_{i}h") for i in [1, 2, 3]],
         lagged_count_1d=pl.col("cnt").shift(24),
         lagged_count_1d_1h=pl.col("cnt").shift(24 + 1),
         lagged_count_7d=pl.col("cnt").shift(7 * 24),
