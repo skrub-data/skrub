@@ -32,18 +32,19 @@ that the features are not stored in the table that contains the labels.
 import skrub
 import skrub.datasets
 
-dataset = skrub.datasets.fetch_credit_fraud()
+dataset = skrub.datasets.fetch_credit_fraud()  # load labeled data
 skrub.TableReport(dataset.baskets)
 
 # %%
-# Each basket contains one or more products. Each row in the ``products`` table
-# corresponds to a type of product present in a basket. Products can
-# be associated with the corresponding basket through the ``"basket_ID"``
-# column.
+# We then load the ``products`` table, which contains one row per purchased product.
 
 # %%
 skrub.TableReport(dataset.products)
 
+# %%
+# Each basket contains one or more products, and products can
+# be associated with the corresponding basket through the ``"basket_ID"``
+# column.
 # %%
 # A design problem: how to combine tables while avoiding leakage?
 # ----------------------------
