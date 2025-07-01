@@ -167,11 +167,22 @@ X
 # a |StandardScaler| for numerical features and a |SimpleImputer| to handle
 # missing values. We will not modify this pipeline: we will instead focus on
 # pre-processing and feature engineering.
-
+# We can use the skrub |optional| method to add one additional step that adds
+# polynomial features to the pipeline.
+import numpy as np
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
-default_ridge_pipeline = make_pipeline(StandardScaler(), SimpleImputer(), RidgeCV())
+from skrub import optional
+
+default_ridge_pipeline = make_pipeline(
+    StandardScaler(),
+    SimpleImputer(),
+    optional(
+        PolynomialFeatures(interaction_only=True, include_bias=False), name="poly"
+    ),
+    RidgeCV(np.logspace(-6, 6, 15)),
+)
 
 # %%
 # The "base" variant of the pipeline uses the default |TableVectorizer|, with
@@ -189,6 +200,7 @@ from skrub import TableVectorizer
 
 vectorized = X.skb.apply(TableVectorizer())
 vectorized
+
 # %%
 predictions_base = vectorized.skb.apply(default_ridge_pipeline, y=y)
 search_base = predictions_base.skb.get_grid_search(fitted=True, cv=ts)
@@ -304,7 +316,7 @@ search_rich_features.plot_results(min_score=0.0)
 def get_lagged_features(df):
     lagged_df = df.select(
         "cnt",
-        *[pl.col("cnt").shift(i).alias(f"lagged_count_{i}h") for i in [1, 2, 3]],
+        # *[pl.col("cnt").shift(i).alias(f"lagged_count_{i}h") for i in [1, 2, 3]],
         lagged_count_1d=pl.col("cnt").shift(24),
         lagged_count_1d_1h=pl.col("cnt").shift(24 + 1),
         lagged_count_7d=pl.col("cnt").shift(7 * 24),
@@ -392,7 +404,7 @@ learners = [predictions_base, predictions_rich_features, predictions_lagged_feat
 dict_learners = dict(zip(["base", "rich", "lagged"], learners))
 
 for name, learner in dict_learners.items():
-    print(f"Working with learner {name}...")
+    print(f'Working with learner "{name}"...')
     split = learner.skb.train_test_split(
         environment=learner.skb.get_data(),
         splitter=split_function,
@@ -443,7 +455,7 @@ ax.xaxis.set_minor_formatter(mdates.DateFormatter("%Hh"))
 ax.xaxis.set_minor_locator(mdates.HourLocator(byhour=range(0, 24, 6)))
 ax.xaxis.set_major_locator(mdates.DayLocator())
 ax.tick_params(axis="x", which="minor", labelsize=8)
-ax.tick_params(axis="x", which="major", pad=10)
+ax.tick_params(axis="x", which="major", pad=10)  # %%
 
 ax.set_ylabel("Demand")
 ax.set_xlabel("")
