@@ -19,7 +19,7 @@ a numerical transformation to them.
 Finally, we fit a simple neural network and compare the R2 scores obtained with
 different numerical transformations.
 
-While we use a simple MLPRegressor here for simplicity,
+While we use a simple :class:`~sklearn.neural_network.MLPRegressor` here for simplicity,
 we generally recommend using better neural network implementations or tree-based models
 whenever low test errors are desired.
 """
@@ -27,14 +27,17 @@ whenever low test errors are desired.
 # %%
 # Comparing numerical preprocessings
 # ----------------------------------
-# We test the :class:`~skrub.SquashingScaler` vs the `StandardScaler`
-# and the `QuantileTransformer` from scikit-learn.
-# We put each of these together in a pipeline with a TableVectorizer
-# and a simple MLPRegressor.
-# In the end, we print the R2 scores of each fold's validation set
-# in a three-fold cross-validation.
+# We test the :class:`~skrub.SquashingScaler` against the
+# :class:`~sklearn.preprocessing.StandardScaler` and the
+# :class:`~sklearn.preprocessing.QuantileTransformer` from scikit-learn. We put each of
+# these together in a pipeline with a TableVectorizer and a simple MLPRegressor. In the
+# end, we print the R2 scores of each fold's validation set in a three-fold
+# cross-validation.
+import warnings
+
 import numpy as np
 from sklearn.compose import TransformedTargetRegressor
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import cross_validate
 from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import make_pipeline
@@ -55,11 +58,15 @@ for num_transformer in [
         TableVectorizer(datetime=DatetimeEncoder(periodic_encoding="circular")),
         num_transformer,
         TransformedTargetRegressor(
+            # We use lbfgs for faster convergence
             MLPRegressor(solver="lbfgs", max_iter=100),
             transformer=StandardScaler(),
         ),
     )
-    scores = cross_validate(pipeline, data.X, data.y, cv=3, scoring="r2")
+    with warnings.catch_warnings():
+        # Ignore warnings about the MLPRegressor not converging
+        warnings.simplefilter("ignore", category=ConvergenceWarning)
+        scores = cross_validate(pipeline, data.X, data.y, cv=3, scoring="r2")
 
     print(
         f"Cross-validation R2 scores for {num_transformer.__class__.__name__}"
@@ -67,8 +74,6 @@ for num_transformer in [
     )
 
 # %%
-# Result
-# ------
 # On the employee salaries dataset, the SquashingScaler performs
 # better than StandardScaler and QuantileTransformer on all
 # cross-validation folds.

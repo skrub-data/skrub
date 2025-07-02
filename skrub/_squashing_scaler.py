@@ -2,12 +2,28 @@ import numbers
 
 import numpy as np
 from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
-from sklearn.preprocessing import MinMaxScaler, RobustScaler
-from sklearn.utils._array_api import get_namespace
-from sklearn.utils.validation import check_is_fitted
+from sklearn.preprocessing import RobustScaler
+from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted, validate_data
 
 
-def _soft_clip(X, max_absolute_value=3.0):
+def _infinite_sign(X):
+    if (inf_sign := np.isinf(X)).any():
+        sign = np.sign(X)
+        X = np.where(inf_sign, np.nan, X)
+        # 0 when X is finite, 1 when X is +inf, -1 when X is -inf
+        inf_sign = inf_sign.astype(X.dtype) * sign
+
+    return X, inf_sign
+
+
+def _set_zeros(X, zero_cols):
+    mask = np.isfinite(X)
+    mask[:, ~zero_cols] = False
+    X[mask] = 0.0
+    return X
+
+
+def _soft_clip(X, max_absolute_value, inf_sign):
     """Apply a soft clipping to the data.
 
     Parameters
@@ -16,14 +32,49 @@ def _soft_clip(X, max_absolute_value=3.0):
         The data to be clipped.
     max_absolute_value : float, default=3.0
         Maximum absolute value that the transformed data can take.
+    mask_inf : array-like, shape (n_samples, n_features)
+        A mask indicating the positions of infinite values in the input data.
 
     Returns
     -------
     X_clipped : array-like, shape (n_samples, n_features)
         The clipped version of the input.
     """
-    xp, _ = get_namespace(X)
-    return X / xp.sqrt(1 + (X / max_absolute_value) ** 2)
+    X = X / np.sqrt(1 + (X / max_absolute_value) ** 2)
+    X = np.where(inf_sign == 1, max_absolute_value, X)
+    X = np.where(inf_sign == -1, -max_absolute_value, X)
+    return X
+
+
+class _MinMaxScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
+    """A variation of scikit-learn MinMaxScaler.
+
+    A simple min-max scaler that centers the median to zero and scales
+    the data to the range [-2, 2].
+
+    scikit-learn MinMaxScaler computes the following::
+
+        X_std = (X - X.min(axis=0)) / (X.max(axis=0) - X.min(axis=0))
+        X_scaled = X_std * (max - min) + min
+
+    This scaler computes the following::
+
+        X_std = (X - median) / (X.max(axis=0) - X.min(axis=0) + eps)
+        X_scaled = X_std * (max - min) + min
+
+    where we set min = 0 and max = 2.
+    """
+
+    def fit(self, X, y=None):
+        del y
+        eps = np.finfo("float32").tiny
+        self.median_ = np.nanmedian(X, axis=0)
+        self.scale_ = 2 / (np.nanmax(X, axis=0) - np.nanmin(X, axis=0) + eps)
+        return self
+
+    def transform(self, X):
+        check_is_fitted(self, ["median_", "scale_"])
+        return self.scale_ * (X - self.median_)
 
 
 class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
@@ -31,8 +82,8 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
     When features have large outliers, smooth clipping prevents the outliers from
     affecting the result too strongly, while robust scaling prevents the outliers from
-    affecting the inlier scaling. Infinite values are mapped to the corresponding boundaries of the interval. NaN
-    values are preserved.
+    affecting the inlier scaling. Infinite values are mapped to the corresponding
+    boundaries of the interval. NaN values are preserved.
 
     Parameters
     ----------
@@ -41,16 +92,16 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
     quantile_range : tuple of float, default=(0.25, 0.75)
         The quantiles used to compute the scaling factor. The first value is the lower
-        quantile and the second value is the upper quantile. The default values are
-        the 25th and 75th percentiles, respectively. The quantiles are used
-        to compute the scaling factor for the robust scaling step. The quantiles are
-        computed from the finite values in the input column. If the two quantiles are
-        equal, the scaling factor is computed from the 0th and 100th percentiles
-        (i.e., the minimum and maximum values of the finite values in the input column).
+        quantile and the second value is the upper quantile. The default values are the
+        25th and 75th percentiles, respectively. The quantiles are used to compute the
+        scaling factor for the robust scaling step. The quantiles are computed from the
+        finite values in the input column. If the two quantiles are equal, the scaling
+        factor is computed from the 0th and 100th percentiles (i.e., the minimum and
+        maximum values of the finite values in the input column).
 
     copy : bool, default=True
-        Whether to copy the input data or not. If set to False, the input data will
-        be modified in-place. This is useful for memory efficiency, but may lead to
+        Whether to copy the input data or not. If set to False, the input data will be
+        modified in-place. This is useful for memory efficiency, but may lead to
         unexpected results if the input data is used later in the code. If set to True,
         a copy of the input data will be made, and the original data will remain
         unchanged. This is the default behavior and is recommended for most use cases.
@@ -118,12 +169,32 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     def __init__(
         self,
         max_absolute_value=3.0,
-        quantile_range=(0.25, 0.75),
+        quantile_range=(25.0, 75.0),
         copy=True,
     ):
         self.max_absolute_value = max_absolute_value
         self.quantile_range = quantile_range
         self.copy = copy
+
+    def fit(self, X, y=None):
+        """Fit the transformer to a column.
+
+        Parameters
+        ----------
+        X : Pandas or Polars series
+            The column to transform.
+        y : None
+            Unused. Here for compatibility with scikit-learn.
+
+        Returns
+        -------
+        self : SquashingScaler
+            The fitted transformer.
+        """
+        del y
+
+        self.fit_transform(X)
+        return self
 
     def fit_transform(self, X, y=None):
         """Fit the transformer and transform a column.
@@ -144,39 +215,57 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         if not (
             isinstance(self.max_absolute_value, numbers.Number)
-            and self.max_absolute_value > 0
             and np.isfinite(self.max_absolute_value)
+            and self.max_absolute_value > 0
         ):
-            raise TypeError(
-                f"Got {self.max_absolute_value=!r}, but expected a positive finite "
-                "float."
+            raise ValueError(
+                f"Got max_absolute_value={self.max_absolute_value!r}, but expected a "
+                "positive finite number."
             )
-
-        self.robust_scaler_ = RobustScaler(
-            with_centering=True,
-            with_scaling=True,
-            quantile_range=self.quantile_range,
-            copy=self.copy,
+        X = validate_data(
+            self,
+            X,
+            reset=True,
+            dtype=FLOAT_DTYPES,
+            accept_sparse=False,
+            ensure_2d=True,
+            ensure_all_finite=False,
         )
-        X_tr = self.robust_scaler_.fit_transform(X)
+        X, inf_sign = _infinite_sign(X)
 
-        if (minmax_indices := np.argwhere(self.robust_scaler_.scale_ == 1)).any():
-            # if the scale is 1, we can use a min-max scaler to handle the edge cases
-            self.minmax_scaler_ = MinMaxScaler(
-                feature_range=(-1, 1),
-                copy=self.copy,
-                clip=False,
+        zero_cols = np.nanmax(X, axis=0) == np.nanmin(X, axis=0)
+        quantiles = np.nanpercentile(X, self.quantile_range, axis=0)
+        minmax_cols = quantiles[0, :] == quantiles[1, :]
+        minmax_cols = minmax_cols & ~zero_cols
+        robust_cols = ~(minmax_cols | zero_cols)
+
+        X_tr = X.copy()
+        if robust_cols.any():
+            self.robust_scaler_ = RobustScaler(
+                with_centering=True,
+                with_scaling=True,
+                quantile_range=self.quantile_range,
+                copy=True,
             )
-            X_tr[:, minmax_indices] = self.minmax_scaler_.fit_transform(
-                X_tr[:, minmax_indices]
-            )
-            self.minmax_indices_ = minmax_indices
+            X_tr[:, robust_cols] = self.robust_scaler_.fit_transform(X[:, robust_cols])
+        else:
+            self.robust_scaler_ = None
+        self.robust_cols_ = robust_cols
+
+        if minmax_cols.any():
+            # if the scale is 1, we use a min-max scaler to handle the edge cases
+            self.minmax_scaler_ = _MinMaxScaler()
+            X_tr[:, minmax_cols] = self.minmax_scaler_.fit_transform(X[:, minmax_cols])
         else:
             self.minmax_scaler_ = None
-            self.minmax_indices_ = None
+        self.minmax_cols_ = minmax_cols
 
-        print(X)
-        return _soft_clip(X_tr, self.max_absolute_value)
+        if zero_cols.any():
+            # if the scale is 0, we set the values to 0
+            X = _set_zeros(X, zero_cols)
+        self.zero_cols_ = zero_cols
+
+        return _soft_clip(X_tr, self.max_absolute_value, inf_sign)
 
     def transform(self, X):
         """Transform a column.
@@ -193,11 +282,28 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self, ["robust_scaler_", "minmax_scaler_"])
 
-        X_tr = self.robust_scaler_.transform(X)
+        X = validate_data(
+            self,
+            X,
+            reset=False,
+            dtype=FLOAT_DTYPES,
+            accept_sparse=False,
+            ensure_2d=True,
+            ensure_all_finite=False,
+        )
+        X, inf_sign = _infinite_sign(X)
 
-        if self.minmax_scaler_ is not None:
-            X_tr[:, self.minmax_indices_] = self.minmax_scaler_.transform(
-                X_tr[:, self.minmax_indices_]
+        X_tr = X.copy()
+        if self.robust_cols_.any():
+            X_tr[:, self.robust_cols_] = self.robust_scaler_.transform(
+                X[:, self.robust_cols_]
             )
+        if self.minmax_cols_.any():
+            X_tr[:, self.minmax_cols_] = self.minmax_scaler_.transform(
+                X[:, self.minmax_cols_]
+            )
+        if self.zero_cols_.any():
+            # if the scale is 0, we set the values to 0
+            X_tr = _set_zeros(X_tr, self.zero_cols_)
 
-        return _soft_clip(X_tr, self.max_absolute_value)
+        return _soft_clip(X_tr, self.max_absolute_value, inf_sign)

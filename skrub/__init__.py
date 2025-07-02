@@ -49,7 +49,6 @@ from .datasets import toy_orders
 with open(_Path(__file__).parent / "VERSION.txt") as _fh:
     __version__ = _fh.read().strip()
 
-
 __all__ = [
     "Expr",
     "var",
