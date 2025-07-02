@@ -37,6 +37,7 @@ from ._multi_agg_joiner import MultiAggJoiner
 from ._reporting import TableReport, patch_display, unpatch_display
 from ._select_cols import Drop, DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
+from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import Cleaner, TableVectorizer
 from ._tabular_learner import tabular_learner
@@ -47,7 +48,6 @@ from .datasets import toy_orders
 
 with open(_Path(__file__).parent / "VERSION.txt") as _fh:
     __version__ = _fh.read().strip()
-
 
 __all__ = [
     "Expr",
@@ -95,6 +95,7 @@ __all__ = [
     "StringEncoder",
     "column_associations",
     "toy_orders",
+    "SquashingScaler",
     "get_config",
     "set_config",
     "config_context",
