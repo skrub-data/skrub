@@ -7,6 +7,7 @@ from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted, validate_dat
 
 
 def _infinite_sign(X):
+    """Replace infinite values with NaN and return their sign."""
     if (inf_sign := np.isinf(X)).any():
         sign = np.sign(X)
         X = np.where(inf_sign, np.nan, X)
@@ -17,6 +18,7 @@ def _infinite_sign(X):
 
 
 def _set_zeros(X, zero_cols):
+    """Set the finite values of the specified columns to zero."""
     mask = np.isfinite(X)
     mask[:, ~zero_cols] = False
     X[mask] = 0.0
@@ -112,9 +114,9 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
     1. The first stage centers the median of the data to zero and multiply the data by a
        scaling factor determined from quantiles of the distribution, using
-        scikit-learn's :`~sklearn.preprocessing.RobustScaler`. It also handles
-        edge-cases in which the two quantiles are equal by following-up with a
-        :class:`~sklearn.preprocessing.MinMaxEncoder`.
+       scikit-learn's :class:`~sklearn.preprocessing.RobustScaler`. It also handles
+       edge-cases in which the two quantiles are equal by following-up with a
+       :class:`~sklearn.preprocessing.MinMaxScaler`.
     2. The second stage applies a soft clipping to the transformed data to limit the
        data to the interval ``[-max_absolute_value, max_absolute_value]`` in an
        injective way.
@@ -128,10 +130,10 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         \begin{align*}
             a &:= \begin{cases}
-                1/(q_{\beta} - q_{\alpha}) &\mathrm{if} q_{\beta} \neq q_{\alpha} \\
-                2/(q_1 - q_0) &\mathrm{if} q_{\beta} = q_{\alpha} \text{ and } q_1 \neq
-                q_0 \\ 0 &\mathrm{if} \text{ otherwise.}
-            \end{cases} \\ z &:= a(x - q_{1/2}), \\ x_{\mathrm{out}} &:=
+                1/(q_{\beta} - q_{\alpha}) &\text{if} \quad q_{\beta} \neq q_{\alpha} \\
+                2/(q_1 - q_0) &\text{if}\quad q_{\beta} = q_{\alpha} \text{ and } q_1 \neq
+                q_0 \\ 0 & \text{otherwise}
+            \end{cases} \\ z &:= a.(x - q_{1/2}), \\ x_{\text{out}} &:=
             \frac{z}{\sqrt{1 + (z/B)^2}},
         \end{align*}
 
@@ -140,14 +142,14 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     - :math:`x` is a value in the input column.
     - :math:`q_{\gamma}` is the :math:`\gamma`-quantile of the finite values in X,
     - :math:`B` is max_abs_value
-    - :math:`\alpha` is lower_quantile
-    - :math:`\beta` is upper_quantile.
+    - :math:`\alpha` is the lower quantile
+    - :math:`\beta` is the upper quantile.
 
     References
     ----------
     This method has been introduced as the robust scaling and smooth clipping transform
-    in `Better by default: Strong pre-tuned MLPs and boosted trees on tabular data
-    <https://arxiv.org/abs/2407.04491>`_ by Holzmüller, Grinsztajn, Steinwart (2024).
+    in
+    `Better by default (Holzmüller et al., 2024) <https://arxiv.org/abs/2407.04491>`_ .
 
     Examples
     --------
@@ -156,14 +158,14 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     >>> from skrub import SquashingScaler
     >>> X = pd.DataFrame(dict(a=[-100.0, 0.0, 8.0, 9.0, 10.0, 20.0, 100.0, np.nan]))
     >>> SquashingScaler().fit_transform(X)
-    array([[-2.98982558],
-          [-2.12132034],
-          [-0.33129458],
-          [ 0.        ],
-          [ 0.33129458],
-          [ 2.3218719 ],
-          [ 2.98543462],
-          [        nan]])
+    array([[-2.87129467],
+           [-0.78935222],
+           [-0.09086738],
+           [ 0.        ],
+           [ 0.09086738],
+           [ 0.9486833 ],
+           [ 2.82028405],
+           [        nan]])
     """  # noqa: E501
 
     def __init__(
@@ -181,8 +183,8 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : Pandas or Polars series
-            The column to transform.
+        X : numpy array, Pandas or Polars DataFrame of shape (n_samples, n_features)
+            The data to transform.
         y : None
             Unused. Here for compatibility with scikit-learn.
 
@@ -201,14 +203,14 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : Pandas or Polars series
-            The column to transform.
+        X : numpy array, Pandas or Polars DataFrame of shape (n_samples, n_features)
+            The data to transform.
         y : None
             Unused. Here for compatibility with scikit-learn.
 
         Returns
         -------
-        X_out: Pandas or Polars series with shape (len(X),)
+        X_out: numpy array, shape (n_samples, n_features)
             The transformed version of the input.
         """
         del y
@@ -272,12 +274,12 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : array-like, shape (n_samples, n_features)
+        X : numpy array, Pandas or Polars DataFrame of shape (n_samples, n_features)
             The data to transform.
 
         Returns
         -------
-        X_out: array-like, shape (n_samples, n_features)
+        X_out: numpy array of shape (n_samples, n_features)
             The transformed version of the input.
         """
         check_is_fitted(self, ["robust_scaler_", "minmax_scaler_"])

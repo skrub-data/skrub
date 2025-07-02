@@ -47,8 +47,8 @@ New features
 - Added the :class:`SquashingScaler` that
   robustly rescales and smoothly clips numerical columns,
   enabling more robust handling of numerical columns
-  with neural networks.
-  :pr:`1310` by :user:`David Holzmüller <dholzmueller>`.
+  with neural networks. :pr:`1310` by :user:`Vincent Maladiere <Vincent-Maladiere>` and
+  :user:`David Holzmüller <dholzmueller>`.
 
 Changes
 -------

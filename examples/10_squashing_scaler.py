@@ -1,6 +1,6 @@
 """
 SquashingScaler: Robust numerical preprocessing for neural networks
-==============================================================
+===================================================================
 
 The following example illustrates the use of the :class:`~skrub.SquashingScaler`, a
 transformer that can rescale and squash numerical features to a range that works well
