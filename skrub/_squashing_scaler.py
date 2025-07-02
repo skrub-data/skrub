@@ -219,7 +219,7 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
             )
         X = validate_data(
             self,
-            X,
+            X=X,
             reset=True,
             dtype=FLOAT_DTYPES,
             accept_sparse=False,
@@ -279,7 +279,7 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
 
         X = validate_data(
             self,
-            X,
+            X=X,
             reset=False,
             dtype=FLOAT_DTYPES,
             accept_sparse=False,
