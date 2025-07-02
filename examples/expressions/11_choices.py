@@ -4,10 +4,10 @@
 .. _example_tuning_pipelines:
 
 
-Tuning pipelines
-================
+Tuning Data Ops
+=================
 
-Our machine-learning pipeline typically contains some values or choices which
+A machine-learning pipeline typically contains some values or choices which
 may influence its prediction performance, such as hyperparameters (e.g. the
 regularization parameter ``alpha`` of a ``RidgeClassifier``, the
 ``learning_rate`` of a ``HistGradientBoostingClassifier``), which estimator to
@@ -18,7 +18,7 @@ or not).
 We want to tune those choices by trying several options and keeping those that
 give the best performance on a validation set.
 
-Skrub :ref:`expressions <skrub_pipeline>` provide a convenient way to specify
+Skrub :ref:`data ops <skrub_pipeline>` provide a convenient way to specify
 the range of possible values, by inserting it directly in place of the actual
 value. For example we can write:
 
@@ -29,7 +29,7 @@ instead of:
 ``RidgeClassifier(alpha=1.0)``.
 
 Skrub then inspects
-our pipeline to discover all the places where we used objects like
+our Data Plan to discover all the places where we used objects like
 ``skrub.choose_from()`` and builds a grid of hyperparameters for us.
 """
 
@@ -55,7 +55,8 @@ texts = data[["text"]]
 labels = data["is_toxic"]
 
 # %%
-# We mark the ``texts`` column as the input and the ``labels`` column as the target.
+# We mark the ``texts`` column as the input variable and the ``labels`` column as
+# the target variable.
 # See `the previous example <10_expressions.html>`_ for a more detailed explanation
 # of ``skrub.X`` and ``skrub.y``.
 # We then encode the text with a ``MinHashEncoder`` and fit a
@@ -84,7 +85,7 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 # ``RandomizedSearchCV``, we need to specify a grid of hyperparameters separately
 # from the estimator, with something similar to
 # ``GridSearchCV(my_pipeline, param_grid={"encoder__n_components: [5, 10, 20]"})``.
-# Instead, with skrub we can use
+# Instead, within a skrub Data Plan we can use
 # ``skrub.choose_from(...)`` directly where the actual value
 # would normally go. Skrub then takes care of constructing the
 # ``GridSearchCV``'s parameter grid for us.
@@ -98,17 +99,18 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 #   transformation step optional such as
 #   ``X.skb.apply(skrub.optional(StandardScaler()))``
 #
-# Choices can be given a name which is used to display hyperparameter search
-# results and plots or to override their outcome. The name is optional.
+# Choices can be given an optional name which is used to display hyperparameter
+# search results and plots, or to override their outcome (ADD A REFERENCE HERE).
 #
 # Note that :func:`skrub.choose_float()` and :func:`skrub.choose_int()` can be given a
-# ``log`` argument to sample in log scale.
+# ``log`` argument to sample in log scale, and that it is possible to specify the
+# number of steps with the ``n_steps`` argument.
 
 # %%
 X, y = skrub.X(texts), skrub.y(labels)
 
 encoder = skrub.MinHashEncoder(
-    n_components=skrub.choose_int(5, 15, name="N components")
+    n_components=skrub.choose_int(5, 15, n_steps=5, name="N components")
 )
 classifier = HistGradientBoostingClassifier(
     learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="lr")
@@ -116,11 +118,11 @@ classifier = HistGradientBoostingClassifier(
 pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 
 # %%
-# We can then obtain a pipeline that performs the hyperparameter search with
+# From here, the ``pred`` DataOp can be used to perform hyperparameter search with
 # ``.skb.get_grid_search()`` or ``.skb.get_randomized_search()``. They accept
-# the same arguments as their scikit-learn counterparts (e.g. ``scoring`` and
+# the same arguments as their scikit-learn counterparts (e.g. ``scoring``, ``cv``,
 # ``n_jobs``). Also, like ``.skb.get_pipeline()``, they accept a ``fitted``
-# argument and if it is ``True`` the search is fitted on the data we provided
+# argument: if``fitted=True``, the search is fitted on the data we provided
 # when initializing our pipeline's variables.
 
 search = pred.skb.get_randomized_search(n_iter=8, n_jobs=4, random_state=1, fitted=True)
@@ -154,7 +156,7 @@ search.plot_results()
 # example in previews or to get a quick first result before spending the
 # computation time to run the search. When we use :meth:`.skb.get_pipeline()
 # <Expr.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
-# and uses those default values. That default pipeline is the one used for
+# and uses those default values. this default pipeline is used for
 # :meth:`.skb.eval() <Expr.skb.eval>`.
 #
 # We can control what should be the default value for each choice. For
@@ -248,7 +250,7 @@ search = pred.skb.get_randomized_search(
 search.plot_results()
 
 # %%
-# Now that we have a more complex pipeline, we can draw more conclusions from the
+# Now that we have a more complex Data Plan, we can draw more conclusions from the
 # parallel coordinate plot. For example, we can see that the
 # ``HistGradientBoostingClassifier``
 # performs better than the ``RidgeClassifier`` in most cases, that the ``StringEncoder``
@@ -258,13 +260,13 @@ search.plot_results()
 # %%
 # Concluding, we have seen how to use skrub's ``choose_from`` objects to tune
 # hyperparameters, choose optional configurations, and nest choices. We then
-# looked at how the different choices affect the pipeline and the prediction
+# looked at how the different choices affect the data plan and the prediction
 # scores.
 #
 # There is more to say about skrub choices than what is covered in this
 # example. In particular, choices are not limited to choosing estimators and
-# their hyperparameters: they can be used anywhere an expression can be used,
+# their hyperparameters: they can be used anywhere a Data Op can be used,
 # such as the argument of a :func:`deferred` function, or the argument of
-# another expression's method or operator. Finally, choices can be
+# another Data Op's method or operator. Finally, choices can be
 # inter-dependent. Please find more information in the :ref:`user guide
 # <skrub_pipeline_validation>`.
