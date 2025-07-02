@@ -3,7 +3,9 @@ import numbers
 import numpy as np
 from sklearn.base import BaseEstimator, OneToOneFeatureMixin, TransformerMixin
 from sklearn.preprocessing import RobustScaler
-from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted, validate_data
+from sklearn.utils.validation import FLOAT_DTYPES, check_is_fitted
+
+from skrub._sklearn_compat import validate_data
 
 
 def _infinite_sign(X):
