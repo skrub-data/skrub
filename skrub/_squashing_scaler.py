@@ -103,13 +103,6 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         factor is computed from the 0th and 100th percentiles (i.e., the minimum and
         maximum values of the finite values in the input column).
 
-    copy : bool, default=True
-        Whether to copy the input data or not. If set to False, the input data will be
-        modified in-place. This is useful for memory efficiency, but may lead to
-        unexpected results if the input data is used later in the code. If set to True,
-        a copy of the input data will be made, and the original data will remain
-        unchanged. This is the default behavior and is recommended for most use cases.
-
     Notes
     -----
     This transformer is applied to each column independently. It uses two stages:
@@ -174,11 +167,9 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         self,
         max_absolute_value=3.0,
         quantile_range=(25.0, 75.0),
-        copy=True,
     ):
         self.max_absolute_value = max_absolute_value
         self.quantile_range = quantile_range
-        self.copy = copy
 
     def fit(self, X, y=None):
         """Fit the transformer to a column.
