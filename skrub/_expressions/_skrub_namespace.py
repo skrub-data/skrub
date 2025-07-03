@@ -186,7 +186,7 @@ class SkrubNamespace:
         --------
         >>> import skrub
 
-        >>> x = skrub.X(skrub.toy_orders().X)
+        >>> x = skrub.X(skrub.datasets.toy_orders().X)
         >>> x
         <Var 'X'>
         Result:
@@ -253,7 +253,7 @@ class SkrubNamespace:
         For supervised estimators, pass the targets as the argument for ``y``:
 
         >>> from sklearn.dummy import DummyClassifier
-        >>> y = skrub.y(skrub.toy_orders().y)
+        >>> y = skrub.y(skrub.datasets.toy_orders().y)
         >>> y
         <Var 'y'>
         Result:
@@ -521,7 +521,7 @@ class SkrubNamespace:
         --------
         >>> import skrub
         >>> from skrub import selectors as s
-        >>> X = skrub.X(skrub.toy_orders().X)
+        >>> X = skrub.X(skrub.datasets.toy_orders().X)
         >>> X
         <Var 'X'>
         Result:
@@ -574,7 +574,7 @@ class SkrubNamespace:
         --------
         >>> import skrub
         >>> from skrub import selectors as s
-        >>> X = skrub.X(skrub.toy_orders().X)
+        >>> X = skrub.X(skrub.datasets.toy_orders().X)
         >>> X
         <Var 'X'>
         Result:
@@ -1038,7 +1038,7 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-        >>> X_df = skrub.toy_orders().X
+        >>> X_df = skrub.datasets.toy_orders().X
         >>> X_df
            ID product  quantity        date
         0   1     pen         2  2020-04-03
@@ -1417,7 +1417,7 @@ class SkrubNamespace:
         --------
         >>> import skrub
         >>> from sklearn.dummy import DummyClassifier
-        >>> orders_df = skrub.toy_orders().orders
+        >>> orders_df = skrub.datasets.toy_orders().orders
         >>> orders = skrub.var('orders', orders_df)
         >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_X()
         >>> y = orders['delayed'].skb.mark_as_y()
@@ -1434,7 +1434,7 @@ class SkrubNamespace:
         2    False
         3    False
         >>> pipeline = pred.skb.get_pipeline(fitted=True)
-        >>> new_orders_df = skrub.toy_orders(split='test').X
+        >>> new_orders_df = skrub.datasets.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
         4   5     cup         5  2020-04-11
@@ -1513,7 +1513,7 @@ class SkrubNamespace:
         >>> from sklearn.dummy import DummyClassifier
         >>> from sklearn.metrics import accuracy_score
 
-        >>> orders = skrub.var("orders", skrub.toy_orders().orders)
+        >>> orders = skrub.var("orders", skrub.datasets.toy_orders().orders)
         >>> X = orders.skb.drop("delayed").skb.mark_as_X()
         >>> y = orders["delayed"].skb.mark_as_y()
         >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
@@ -2003,7 +2003,7 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-        >>> orders = skrub.var('orders', skrub.toy_orders(split='all').orders)
+        >>> orders = skrub.var('orders', skrub.datasets.toy_orders(split='all').orders)
         >>> features = orders.drop(columns='delayed', errors='ignore')
         >>> features.skb.is_X
         False
@@ -2079,7 +2079,7 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-        >>> orders = skrub.var('orders', skrub.toy_orders(split='all').orders)
+        >>> orders = skrub.var('orders', skrub.datasets.toy_orders(split='all').orders)
         >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_X()
         >>> delayed = orders['delayed']
         >>> delayed.skb.is_y
@@ -2256,7 +2256,7 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-        >>> orders_df = skrub.toy_orders().X
+        >>> orders_df = skrub.datasets.toy_orders().X
         >>> features = skrub.X(orders_df).skb.apply(skrub.TableVectorizer())
         >>> fitted_vectorizer = features.skb.applied_estimator
         >>> fitted_vectorizer
