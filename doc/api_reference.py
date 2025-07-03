@@ -293,6 +293,7 @@ API_REFERENCE = {
                     "datasets.fetch_videogame_sales",
                     "datasets.get_data_dir",
                     "datasets.make_deduplication_data",
+                    "datasets.toy_orders",
                 ],
             }
         ],
