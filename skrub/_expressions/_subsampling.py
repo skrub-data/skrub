@@ -1,6 +1,7 @@
 import numpy as np
 
 from .. import _dataframe as sbd
+from .._config import get_config
 from . import _evaluation, _expressions
 
 # The key in the evaluation environment that indicates if subsampling should
@@ -11,6 +12,11 @@ SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
 
 
 def _should_subsample(mode, environment):
+    enable_subsampling = get_config()["enable_subsampling"]
+    if enable_subsampling == "disable":
+        return False
+    if enable_subsampling == "force":
+        return True
     if mode == "preview":
         return True
     if "fit" not in mode:
@@ -60,8 +66,8 @@ def should_subsample():
     return _expressions.Expr(ShouldSubsample())
 
 
-def _sample_numpy(a, n):
-    rng = np.random.default_rng(0)
+def _sample_numpy(a, n, seed):
+    rng = np.random.default_rng(seed)
     idx = rng.choice(a.shape[0], size=n, replace=False)
     return a[idx]
 
@@ -93,10 +99,11 @@ class SubsamplePreviews(_expressions.ExprImpl):
         n = min(e.n, shape[0])
         if e.how == "head":
             return _head_numpy(e.target, n=n) if is_numpy else sbd.head(e.target, n=n)
+        seed = get_config()["subsampling_seed"]
         return (
-            _sample_numpy(e.target, n=n)
+            _sample_numpy(e.target, n=n, seed=seed)
             if is_numpy
-            else sbd.sample(e.target, n=n, seed=0)
+            else sbd.sample(e.target, n=n, seed=seed)
         )
 
 

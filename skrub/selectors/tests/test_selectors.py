@@ -2,10 +2,12 @@ import inspect
 import pickle
 import types
 
+import numpy as np
 import pytest
 
 from skrub import _dataframe as sbd
 from skrub import selectors as s
+from skrub.selectors._base import _select_col_names
 
 
 def test_repr():
@@ -135,3 +137,8 @@ def test_pickling_selectors_with_args(df_module):
     # attribute
     with pytest.raises(Exception):
         pickle.dumps(s.filter(lambda _: False))
+
+
+def test_error_select_col_names():
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
+        _select_col_names(np.array([1]), col_names=None)

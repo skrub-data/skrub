@@ -22,7 +22,8 @@ work titles, city names etc.) and free-flowing text (reviews, comments etc.),
 while being very efficient and quick to fit.
 
 :class:`GapEncoder` provides better performance on dirty categories, while
-:class:`TextEncoder` works better on free-flowing text or when external context helps. However, both encoders
+:class:`TextEncoder` works better on free-flowing text or when external context helps.
+However, both encoders
 are much slower to execute, and in the case of ``TextEncoder``, additional
 dependencies are needed.
 
@@ -139,6 +140,16 @@ like any other pre-trained model. For more information, see the
 Encoding dates
 ===============
 
-The :class:`DatetimeEncoder` encodes date and time: it represent them as
-time in seconds since a fixed date, but also added features useful to
-capture regularities: week of the day, month of the year...
+
+The :meth:`to_datetime()` function and the :class:`ToDatetime` transformer parse
+common datetime formats and convert columns from string to datetime; additionally,
+if you are working with a specific time format, both objects accept a custom
+``format`` to use when converting.
+
+Feature engineering of datetime features can be done with the :class:`DatetimeEncoder`,
+which converts datetime columns into separate columns that contain each part of
+the datetime (year, month, day etc.), as well as additional simple features like
+the number of seconds from epoch and the day of the week. Periodic features are
+also supported, and can be added by setting the ``periodic_encoding`` variable
+to either ``circular`` (for trigonometric features), or ``spline`` (for spline
+features).

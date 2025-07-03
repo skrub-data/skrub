@@ -41,6 +41,6 @@ essential to prevent data leakage and ensure generalization.
    encoding
    skrub_pipeline
    skrub_pipeline_validation
-   selectors
+   skrub_selectors
    assembling
    cleaning

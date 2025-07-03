@@ -7,6 +7,7 @@ from pathlib import Path as _Path
 from . import selectors
 from ._agg_joiner import AggJoiner, AggTarget
 from ._column_associations import column_associations
+from ._config import config_context, get_config, set_config
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import compute_ngram_distance, deduplicate
 from ._drop_uninformative import DropUninformative
@@ -92,4 +93,7 @@ __all__ = [
     "TextEncoder",
     "StringEncoder",
     "column_associations",
+    "get_config",
+    "set_config",
+    "config_context",
 ]

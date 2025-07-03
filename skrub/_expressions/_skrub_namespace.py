@@ -380,10 +380,6 @@ class SkrubNamespace:
         If ``self`` evaluates to ``True``, the result will be
         ``value_if_true``, otherwise ``value_if_false``.
 
-        The branch which is not selected is not evaluated, which is the main
-        advantage compared to wrapping the conditional statement in a
-        ``@skrub.deferred`` function.
-
         Parameters
         ----------
         value_if_true
@@ -400,6 +396,12 @@ class SkrubNamespace:
         --------
         skrub.Expr.skb.match :
             Select based on the value of an expression.
+
+        Notes
+        -----
+        The branch which is not selected is not evaluated, which is the main
+        advantage compared to wrapping the conditional statement in a
+        ``@skrub.deferred`` function.
 
         Examples
         --------
@@ -438,11 +440,10 @@ class SkrubNamespace:
     def match(self, targets, default=NULL):
         """Select based on the value of an expression.
 
-        First, ``self`` is evaluated. Then, the result is compared to the keys
-        in the mapping ``targets``. If a key matches, the corresponding value
-        is evaluated and the result is returned. If there is no match and
-        ``default`` has been provided, ``default`` is evaluated and returned.
-        If there is no match and no default a ``KeyError`` is raised.
+        Evaluate ``self``, then compare the result to the keys in ``targets``.
+        If there is a match, evaluate the corresponding value and return it. If
+        there is no match and ``default`` has been provided, evaluate and return
+        ``default``. Otherwise, a ``KeyError`` is raised.
 
         Therefore, only one of the branches or the default is evaluated which
         is the main advantage compared to placing the selection inside a
@@ -711,6 +712,14 @@ class SkrubNamespace:
         This method can only be used on steps that produce a dataframe, a
         column (series) or a numpy array.
 
+        Note that subsampling is local to the variable that is being subsampled.
+        This means that, if two variables are meant to have the same number of
+        rows (e.g., ``X`` and ``y``), both should be subsampled with the same
+        strategy.
+
+        The seed for the ``random`` strategy is fixed, so the sampled rows are
+        constant when sampling across different variables.
+
         Examples
         --------
         >>> from sklearn.datasets import load_diabetes
@@ -793,6 +802,26 @@ class SkrubNamespace:
         using the subsampling allows us to do a "dry run" of the
         cross-validation or model fitting much faster than when using the
         full data.
+
+        Sampling only one variable does not sample the other:
+
+        >>> data = skrub.var("data", df)
+        >>> X = data.drop("target", axis=1, errors="ignore").skb.mark_as_X()
+        >>> X = X.skb.subsample(n=15)
+        >>> y = data["target"].skb.mark_as_y()
+        >>> X.shape
+        <GetAttr 'shape'>
+        Result (on a subsample):
+        ――――――――――――――――――――――――
+        (15, 10)
+        >>> y.shape
+        <GetAttr 'shape'>
+        Result:
+        ―――――――
+        (442,)
+
+        Read more about subsampling in the :ref:`User Guide <user_guide_subsampling_ref>`.
+
         """  # noqa : E501
         return Expr(SubsamplePreviews(self._expr, n=n, how=how))
 
@@ -992,17 +1021,19 @@ class SkrubNamespace:
     def freeze_after_fit(self):
         """Freeze the result during pipeline fitting.
 
-        Note this is an advanced functionality, and the need for it is usually
-        an indication that we need to define a custom scikit-learn transformer
-        that we can use with ``.skb.apply()``.
-
-        When we use ``freeze_after_fit()``, the result of the expression is
+        With ``freeze_after_fit()`` the result of the expression is
         computed during ``fit()``, and then reused (not recomputed) during
         ``transform()`` or ``predict()``.
 
         Returns
         -------
         The expression whose value does not change after ``fit()``
+
+        Notes
+        -----
+        This is an advanced functionality, and the need for it is usually
+        an indication that we need to define a custom scikit-learn transformer
+        that we can use with ``.skb.apply()``.
 
         Examples
         --------
@@ -1254,16 +1285,6 @@ class SkrubNamespace:
         where it was defined) and a display of the intermediate result (or
         error).
 
-        The pipeline is run doing a ``fit_transform``. If ``environment`` is
-        provided, it is used as the bindings for the variables in the
-        expression, and otherwise, the ``value`` attributes of the variables
-        are used.
-
-        At the moment, this creates a directory on the filesystem containing
-        HTML files. The report can be displayed by visiting the contained
-        ``index.html`` in a webbrowser, or passing ``open=True`` (the default)
-        to this method.
-
         Parameters
         ----------
         environment : dict or None (default=None)
@@ -1292,6 +1313,18 @@ class SkrubNamespace:
             evaluation is in ``'result'`` and ``'error'`` is ``None``. Either
             way a report is stored at the location indicated by
             ``'report_path'``.
+
+        Notes
+        -----
+        The pipeline is run doing a ``fit_transform``. If ``environment`` is
+        provided, it is used as the bindings for the variables in the
+        expression, and otherwise, the ``value`` attributes of the variables
+        are used.
+
+        At the moment, this creates a directory on the filesystem containing
+        HTML files. The report can be displayed by visiting the contained
+        ``index.html`` in a webbrowser, or passing ``open=True`` (the default)
+        to this method.
 
         Examples
         --------
@@ -1343,22 +1376,10 @@ class SkrubNamespace:
     def get_pipeline(self, *, fitted=False, keep_subsampling=False):
         """Get a skrub pipeline for this expression.
 
-        Returns a :class:`SkrubPipeline`.
-
-        Please see the examples gallery for full information about expressions
-        and the pipelines they generate.
-
-        Provides a skrub pipeline with a ``fit()`` method so we can fit it to some
-        training data and then apply it to unseen data by calling
-        ``transform()`` or ``predict()``.
-
-        An important difference between skrub pipelines and scikit-learn
-        estimators is that ``fit()``, ``transform()`` etc. accept a dictionary
-        of inputs rather than ``X`` and ``y`` arguments (see examples below).
-
-        We can pass ``fitted=True`` to get a pipeline fitted to the data
-        provided as the values in ``skrub.var("name", value=...)`` and
-        ``skrub.X(value)``.
+        Returns a :class:`SkrubPipeline` with a ``fit()`` method so it can be fit
+        to some training data and then apply it to unseen data by calling
+        ``transform()`` or ``predict()``. Unlike scikit-learn estimators, skrub
+        pipelines accept a dictionary of inputs rather than ``X`` and ``y`` arguments.
 
         .. warning::
 
@@ -1372,7 +1393,8 @@ class SkrubNamespace:
         ----------
         fitted : bool (default=False)
             If true, the returned pipeline is fitted to the data provided when
-            initializing variables in the expression.
+            initializing variables in ``skrub.var("name", value=...)`` and
+            ``skrub.X(value)``.
 
         keep_subsampling : bool (default=False)
             If True, and if subsampling has been configured (see
@@ -1423,6 +1445,9 @@ class SkrubNamespace:
         Note that the ``'orders'`` key in the dictionary passed to ``predict``
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
+
+        Please see the examples gallery for full information about expressions
+        and the pipelines they generate.
         """
         _check_keep_subsampling(fitted, keep_subsampling)
 
@@ -1521,15 +1546,10 @@ class SkrubNamespace:
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's ``GridSearchCV``. The main difference is that methods
-        such as ``fit()`` and ``predict()`` accept a dictionary of inputs
-        rather than ``X`` and ``y``. Please refer to the examples gallery for
-        an in-depth explanation.
-
-        If the expression contains some numeric ranges (``choose_float``,
-        ``choose_int``), either discretize them by providing the ``n_steps``
-        argument or use ``get_randomized_search`` instead of
-        ``get_grid_search``.
+        scikit-learn's ``GridSearchCV``, where the main difference is that
+        ``fit()`` and ``predict()`` accept a dictionary of inputs
+        rather than ``X`` and ``y``. The best pipeline can
+        be returned by calling ``.best_pipeline_``.
 
         Parameters
         ----------
@@ -1557,7 +1577,7 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-            ``results_`` and ``plot_results()``.
+        ``results_``, ``plot_results()``, and ``best_pipeline_`.
 
         See also
         --------
@@ -1598,6 +1618,28 @@ class SkrubNamespace:
         2  10.0   NaN   logistic             0.80
         3   NaN   3.0         rf             0.65
         4   NaN   NaN      dummy             0.50
+
+        If the expression contains some numeric ranges (``choose_float``,
+        ``choose_int``), either discretize them by providing the ``n_steps``
+        argument or use ``get_randomized_search`` instead of
+        ``get_grid_search``.
+
+        >>> logistic = LogisticRegression(
+        ...     C=skrub.choose_float(0.1, 10.0, log=True, n_steps=5, name="C")
+        ... )
+        >>> pred = X.skb.apply(logistic, y=y)
+        >>> print(pred.skb.describe_param_grid())
+        - C: choose_float(0.1, 10.0, log=True, n_steps=5, name='C')
+        >>> search = pred.skb.get_grid_search(fitted=True)
+        >>> search.results_
+            C	mean_test_score
+        0	0.100000	0.84
+        1	0.316228	0.83
+        2	1.000000	0.81
+        3	3.162278	0.80
+        4	10.000000	0.80
+
+        Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
         _check_keep_subsampling(fitted, keep_subsampling)
         _check_grid_search_possible(self._expr)
@@ -1615,10 +1657,10 @@ class SkrubNamespace:
         """Find the best parameters with randomized search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`. The main
-        difference is that methods such as ``fit()`` and ``predict()`` accept a
-        dictionary of inputs rather than ``X`` and ``y``. Please refer to the examples
-        gallery for an in-depth explanation.
+        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where
+        the main difference is ``fit()`` and ``predict()`` accept a
+        dictionary of inputs rather than ``X`` and ``y``. The best pipeline can
+        be returned by calling ``.best_pipeline_``.
 
         Parameters
         ----------
@@ -1646,7 +1688,7 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-            ``results_`` and ``plot_results()``.
+            ``results_``, ``plot_results()``, and ``best_pipeline_`.
 
         See also
         --------
@@ -1697,6 +1739,8 @@ class SkrubNamespace:
         7   4       NaN  NaN      dummy             0.50
         8   9       NaN  NaN      dummy             0.50
         9   5       NaN  NaN      dummy             0.50
+
+        Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
         _check_keep_subsampling(fitted, keep_subsampling)
 
@@ -1929,12 +1973,17 @@ class SkrubNamespace:
     def mark_as_X(self):
         """Mark this expression as being the ``X`` table.
 
+        This is used for cross-validation and hyperparameter selection: operations
+        done before ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` are executed
+        on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original expression is left unchanged.
 
-        This is used for cross-validation and hyperparameter selection: the
-        nodes marked with ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` define
-        the cross-validation splits.
+        Returns
+        -------
+        The input expression, which has been marked as being ``X``
 
+        Notes
+        -----
         During cross-validation, all the previous steps are first executed,
         until X and y have been materialized. Then, those are split into
         training and testing sets. The following steps in the expression are
@@ -1949,13 +1998,7 @@ class SkrubNamespace:
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
 
-        Please see the examples gallery for more information.
-
         Note: this marks the expression in-place and also returns it.
-
-        Returns
-        -------
-        The input expression, which has been marked as being ``X``
 
         Examples
         --------
@@ -1990,6 +2033,8 @@ class SkrubNamespace:
         computed. Then, they are split into training and test sets. Then the
         rest of the pipeline (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
+
+        Please see the examples gallery for more information.
         """
         new = self._expr._skrub_impl.__copy__()
         new.is_X = True
@@ -2002,14 +2047,19 @@ class SkrubNamespace:
 
     @check_expr
     def mark_as_y(self):
-        """Mark this expression as being the ``X`` table.
+        """Mark this expression as being the ``y`` table.
 
+        This is used for cross-validation and hyperparameter selection: operations
+        done before ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` are executed
+        on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original expression is left unchanged.
 
-        This is used for cross-validation and hyperparameter selection: the
-        nodes marked with ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` define
-        the cross-validation splits.
+        Returns
+        -------
+        The input expression, which has been marked as being ``y``
 
+        Notes
+        -----
         During cross-validation, all the previous steps are first executed,
         until X and y have been materialized. Then, those are split into
         training and testing sets. The following steps in the expression are
@@ -2024,13 +2074,7 @@ class SkrubNamespace:
         ``skrub.y(value)`` can be used as a shorthand for
         ``skrub.var('y', value).skb.mark_as_y()``.
 
-        Please see the examples gallery for more information.
-
         Note: this marks the expression in-place and also returns it.
-
-        Returns
-        -------
-        The input expression, which has been marked as being ``y``
 
         Examples
         --------
@@ -2062,6 +2106,8 @@ class SkrubNamespace:
         computed. Then, they are split into training and test sets. Then the
         rest of the pipeline (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
+
+        Please see the examples gallery for more information.
         """
         new = self._expr._skrub_impl.__copy__()
         new.is_y = True
@@ -2076,7 +2122,8 @@ class SkrubNamespace:
     def set_name(self, name):
         """Give a name to this expression.
 
-        Returns a modified copy
+        Returns a modified copy.
+
         The name is displayed in the graph and reports so this can be useful to
         mark relevant parts of the pipeline.
 
