@@ -71,7 +71,7 @@ def test_repr_html():
     if "Please install" in r:
         pytest.skip("graphviz not installed")
     assert "thename" in r and "thevalue" in r
-    a = skrub.var("thename", skrub.toy_orders().orders)
+    a = skrub.var("thename", skrub.datasets.toy_orders().orders)
     r = a._repr_html_()
     assert "thename" in r and "table-report" in r
     r = a["quantity"]._repr_html_()
