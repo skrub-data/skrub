@@ -939,16 +939,6 @@ class SkrubNamespace:
                 "The `environment` passed to `eval()` should be None or a dictionary, "
                 f"got: '{type(environment)}'"
             )
-        if environment is None and (
-            keep_subsampling or not uses_subsampling(self._expr)
-        ):
-            # In this configuration the result is the same as the preview so
-            # we call preview() to benefit from the cached result.
-
-            # Before returning, we trigger an error if keep_subsampling=True was
-            # passed but no subsampling was configured:
-            _ = env_with_subsampling(self._expr, {}, keep_subsampling)
-            return self.preview()
         if environment is None:
             environment = self.get_data()
         else:
