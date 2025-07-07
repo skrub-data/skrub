@@ -46,11 +46,11 @@ it to |TableVectorizer|.
 |tabular_learner|
 ~~~~~~~~~~~~~~~~~~
 The |tabular_learner| is a function that, given a scikit-learn estimator or the
- name of the task (``regression``/``regressor``, ``classification``/``classifier``),
- returns a full scikit-learn pipeline that contains a |TableVectorizer|
- followed by the given estimator, or a
- |HistGradientBoostingRegressor|/|HistGradientBoostingClassifier| if only
- the name of the task is given.
+name of the task (``regression``/``regressor``, ``classification``/``classifier``),
+returns a full scikit-learn pipeline that contains a |TableVectorizer|
+followed by the given estimator, or a
+|HistGradientBoostingRegressor|/|HistGradientBoostingClassifier| if only
+the name of the task is given.
 
 .. code-block:: python
 
