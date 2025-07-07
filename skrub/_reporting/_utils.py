@@ -91,7 +91,7 @@ def format_number(number):
         from skrub._config import get_config
 
         var = get_config()["float_precision"]
-        return f"{number:.{var}g}"
+        return f"{number:#.{var}g}"
     return str(number)
 
 
