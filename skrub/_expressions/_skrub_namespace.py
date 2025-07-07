@@ -185,8 +185,8 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-
-        >>> x = skrub.X(skrub.datasets.toy_orders().X)
+        >>> data = skrub.datasets.toy_orders()
+        >>> x = skrub.X(data.X)
         >>> x
         <Var 'X'>
         Result:
@@ -253,7 +253,7 @@ class SkrubNamespace:
         For supervised estimators, pass the targets as the argument for ``y``:
 
         >>> from sklearn.dummy import DummyClassifier
-        >>> y = skrub.y(skrub.datasets.toy_orders().y)
+        >>> y = skrub.y(data.y)
         >>> y
         <Var 'y'>
         Result:
@@ -1417,7 +1417,7 @@ class SkrubNamespace:
         --------
         >>> import skrub
         >>> from sklearn.dummy import DummyClassifier
-        >>> orders_df = skrub.datasets.toy_orders().orders
+        >>> orders_df = skrub.datasets.toy_orders(split="train").orders
         >>> orders = skrub.var('orders', orders_df)
         >>> X = orders.drop(columns='delayed', errors='ignore').skb.mark_as_X()
         >>> y = orders['delayed'].skb.mark_as_y()
