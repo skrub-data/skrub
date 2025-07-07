@@ -6,9 +6,9 @@
 Subsampling for faster development
 ==================================
 
-Here we show how to use :meth:`.skb.subsample()
-<Expr.skb.subsample>` to speed-up interactive creation of skrub
-expressions by subsampling the data when computing preview results.
+Here we show how to use :meth:`.skb.subsample() <Expr.skb.subsample>` to speed-up
+interactive construction of a skrub data plan by computing previews on a subsampled
+version of the original data.
 """
 
 # %%
@@ -22,12 +22,12 @@ full_data = skrub.var("data", dataset)
 full_data
 
 # %%
-# We are working with a dataset of over 9K rows. As we build up our pipeline,
+# We are working with a dataset of over 9K rows. As we build up our Data Plan,
 # we see previews of the intermediate results so we can check that it behaves
 # as we expect. However, if some estimators are slow, fitting them and
 # computing results on the whole data can slow us down.
 #
-# Lightweight construction of the pipeline on a subsample
+# Lightweight construction of the Data Plan on a subsample
 # -------------------------------------------------------------------------------------
 #
 # We can tell skrub to subsample the data when computing the previews, with
@@ -38,19 +38,19 @@ data = full_data.skb.subsample(n=100)
 data
 
 # %%
-# The rest of the pipeline will now use only 100 points for its previews.
+# The rest of the Data Plan will now use only 100 points for its previews.
 #
 # .. topic:: Subsampling only applies to previews by default
 #
 #    By default subsampling is applied *only for previews*: the results
-#    shown when we display the expression, and the output of calling
+#    shown when we display the Data Plan, and the output of calling
 #    :meth:`.skb.preview() <Expr.skb.preview>`. For other methods such as
-#    :meth:`.skb.get_pipeline() <Expr.skb.get_pipeline>` or
+#    :meth:`.skb.get_learner() <Expr.skb.get_learner>` or
 #    :meth:`.skb.cross_validate() <Expr.skb.cross_validate>`, *no subsampling is
 #    done by default*. We can explicitly ask for it with ``keep_subsampling=True``
 #    as we will see below.
 #
-# To continue our pipeline we now define X and y:
+# To continue building our Data Plan, we now define X and y:
 
 # %%
 employees = data.drop(
@@ -74,14 +74,14 @@ predictions = employees.skb.apply(skrub.TableVectorizer()).skb.apply(
 #
 # All the lines above run very fast, including fitting the predictor above.
 #
-# When we display our ``predictions`` expression, we see that the preview is
+# When we display our ``predictions`` Data Op, we see that the preview is
 # computed on a subsample: the result column has only 100 entries.
 
 # %%
 predictions
 
 # %%
-# We can also turn on subsampling for other methods of the expression, such as
+# We can also turn on subsampling for other DataOps methods, such as
 # :meth:`.skb.cross_validate() <Expr.skb.cross_validate>`. Here we run the
 # cross-validation on the small subsample of 100 rows we configured. With such
 # a small subsample the scores will be very low but this might help us quickly
@@ -92,7 +92,7 @@ predictions.skb.cross_validate(keep_subsampling=True)
 
 # %%
 #
-# Evaluating the pipeline on the full data
+# Evaluating the Data Plan on the full data
 # --------------------------------------------------------
 # By default, when we do not explicitly ask for ``keep_subsampling=True``, no
 # subsampling takes place.
