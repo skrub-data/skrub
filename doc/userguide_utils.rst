@@ -1,4 +1,6 @@
 .. _`userguide_utils`:
+.. |set_config| replace:: :func:`~skrub.set_config`
+.. |config_context| replace:: :func:`~skrub.config_context`
 
 `skrub` example datasets, utilities and customization
 -----------------------------------
@@ -6,9 +8,9 @@
 Customizing ``skrub`` by changing the default configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``skrub`` includes a configuration manager that allows setting various parameters (see the ``set_config`` documentation for more detail).
+``skrub`` includes a configuration manager that allows setting various parameters (see the |set_config| documentation for more detail).
 
-It is possible to change configuration options using the ``set_config`` function:
+It is possible to change configuration options using the |set_config| function:
 
 .. code-block:: python
 
@@ -17,7 +19,7 @@ It is possible to change configuration options using the ``set_config`` function
 
 Each configuration parameter can also be modified by setting its environment variable.
 
-A ``config_context`` is also provided, which allows temporarily altering the configuration:
+A |config_context| is also provided, which allows temporarily altering the configuration:
 
 .. code-block:: python
 
