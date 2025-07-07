@@ -7,10 +7,12 @@
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 
-Encoding String and Text Data as Numerical Features
+Feature engineering for categorical data: encoding strings and text as numerical features
 --------------------------------------------------
 
-In ``skrub``, categorical features are all features not detected as numeric or datetimes: this includes strings, text, IDs, and features with dtype ``categorical`` (e.g., ``pd.Categorical``).
+In ``skrub``, categorical features are all features not detected as numeric or
+datetimes: this includes strings, text, IDs, and features with dtype ``categorical``
+(e.g., ``pd.Categorical``).
 
 High Cardinality and Low Cardinality Categorical Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

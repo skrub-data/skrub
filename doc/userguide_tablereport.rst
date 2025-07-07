@@ -1,6 +1,8 @@
 .. _userguide_tablereport:
 .. |TableReport| replace:: :class:`~skrub.TableReport`
 .. |set_config| replace:: :func:`~skrub.set_config`
+.. |column_associations| replace:: :func:`~skrub.column_associations`
+
 =========================================
 
 Using the |TableReport| to explore dataframes
@@ -15,7 +17,7 @@ Exploring and Reporting DataFrames with the |TableReport|
     TableReport(df)  # from a notebook cell
     TableReport(df).open()  # to open in a browser window
 
-The table report gives a high-level overview of the given dataframe, suitable for
+The |TableReport| gives a high-level overview of the given dataframe, suitable for
 quick exploratory analysis of series and dataframes. The report shows the first
 and last 5 rows of the dataframe (decided by the ``n_rows`` parameter), as well
 as additional information in other tabs.
@@ -45,7 +47,7 @@ Exporting and Sharing the |TableReport|
 
 The |TableReport| is a standalone object that does not require a running notebook
 to be accessed after generation: it can be exported in HTML format and opened
-directly in a browser as a HTML page:
+directly in a browser as a HTML page.
 
 .. code-block:: python
 
@@ -59,5 +61,5 @@ Finding Correlated Columns in a DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The |TableReport|'s **Associations** tab shows this information. It is also
-possible to use the ``column_associations`` function, which returns a dataframe
+possible to use the |column_associations| function, which returns a dataframe
 containing the associations.

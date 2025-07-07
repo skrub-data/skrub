@@ -32,9 +32,10 @@ are shown in the docstrings and in the ``examples`` section of the documentation
    :maxdepth: 2
 
    userguide_tablereport
-   userguide_encoders
-   userguide_tablevectorizer
-   userguide_datetimes
    userguide_data_cleaning
+   userguide_tablevectorizer
+   userguide_encoders
+   userguide_datetimes
+   userguide_selectors
    userguide_joining_tables
    userguide_utils

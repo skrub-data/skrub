@@ -7,6 +7,8 @@
 .. |tabular_learner| replace:: :func:`~skrub.tabular_learner`
 .. |HistGradientBoostingRegressor| replace:: :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 .. |HistGradientBoostingClassifier| replace:: :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
+.. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
+.. |SimpleImputer| replace:: :class:`~sklearn.impute.SimpleImputer`
 
 Building Strong Baselines with Robust Feature Engineering
 --------------------------------------------------------
@@ -18,19 +20,21 @@ The |TableVectorizer| performs feature engineering on dataframes by parsing the
 data type of each column and encoding columns according to their data type,
 producing new numeric features that can be used in machine learning models.
 
-The |TableVectorizer| splits columns into four categories:
+The |TableVectorizer| splits columns into four categories and applies a default encoder to each:
 
-- High-cardinality categorical columns: >40 unique values
-- Low-cardinality categorical columns: ≤40 unique values
-- Numerical columns
-- Datetime columns
-
-Then, the default encoders for each category are applied:
-
-- Numerical columns: left as is (``"passthrough"``)
-- Datetime columns: encoded with |DatetimeEncoder|
-- High cardinality: uses |StringEncoder|
-- Low cardinality: uses scikit-learn |OneHotEncoder|
++-------------------------------+---------------------------------------------+
+| Column category               | Default encoder                             |
++===============================+=============================================+
+| High-cardinality categorical  | |StringEncoder|                             |
+| columns (>40 unique values)   |                                             |
++-------------------------------+---------------------------------------------+
+| Low-cardinality categorical   | scikit-learn |OneHotEncoder|                |
+| columns (≤40 unique values)   |                                             |
++-------------------------------+---------------------------------------------+
+| Numerical columns             | "passthrough" (no transformation)           |
++-------------------------------+---------------------------------------------+
+| Datetime columns              | |DatetimeEncoder|                           |
++-------------------------------+---------------------------------------------+
 
 To change the encoder or alter default parameters, create a new encoder and pass
 it to |TableVectorizer|.
@@ -42,6 +46,12 @@ it to |TableVectorizer|.
     datetime_enc = DatetimeEncoder(periodic="circular")
     text_enc = TextEncoder()
     table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc)
+
+The |TableVectorizer| is used in :ref:`_example_string_encodings`, while the
+docstring of the class provides more details on the parameters and usage, as well
+as various examples.
+
+
 
 |tabular_learner|
 ~~~~~~~~~~~~~~~~~~
@@ -61,6 +71,6 @@ the name of the task is given.
     learner = tabular_learner(LinearRegression())
 
 If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
-|tabular_learner| adds a ``StandardScaler`` and a ``SimpleImputer`` to the pipeline.
+|tabular_learner| adds a |StandardScaler| and a |SimpleImputer| to the pipeline.
 The pipeline prepared by |tabular_learner| is a strong first baseline for most
 problems, but may not beat properly tuned ad-hoc pipelines.
