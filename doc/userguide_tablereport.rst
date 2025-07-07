@@ -1,11 +1,13 @@
 .. _userguide_tablereport:
+.. |TableReport| replace:: :class:`~skrub.TableReport`
+.. |set_config| replace:: :func:`~skrub.set_config`
 =========================================
 
-Using the ``TableReport`` to explore dataframes
------------------------------------------------
+Using the |TableReport| to explore dataframes
+---------------------------------------------
 
-Exploring and Reporting DataFrames with the ``TableReport``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Exploring and Reporting DataFrames with the |TableReport|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -27,23 +29,21 @@ In the **Distributions** tab, it is possible to select columns by clicking on th
 checkmark icon: the name of the column is added to the bar on top, so that it may
 be copied in a script.
 
-Altering the Appearance of the ``TableReport``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Altering the Appearance of the |TableReport|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-For performance reasons, the ``TableReport`` disables the computation of
+For performance reasons, the |TableReport| disables the computation of
 Distributions and Associations for tables with more than 30 columns. This behavior
 can be changed by modifying the ``max_plot_columns`` and ``max_association_columns``
-parameter, or by altering the configuration with ``set_config`` (refer to the
-``TableReport`` and ``set_config`` docs for more detail).
+parameter, or by altering the configuration with |set_config| (refer to the
+|TableReport| and |set_config| docs for more detail).
 
-More pre-computed examples are available at https://skrub-data.org/skrub-reports/examples/index.html.
-This doc example (add reference) showcases all the ``TableReport`` features on
-various datasets.
+More pre-computed examples are available `here <https://skrub-data.org/skrub-reports/examples/index.html>`_.
 
-Exporting and Sharing the ``TableReport``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Exporting and Sharing the |TableReport|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``TableReport`` is a standalone object that does not require a running notebook
+The |TableReport| is a standalone object that does not require a running notebook
 to be accessed after generation: it can be exported in HTML format and opened
 directly in a browser as a HTML page:
 
@@ -58,6 +58,6 @@ directly in a browser as a HTML page:
 Finding Correlated Columns in a DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``TableReport``'s **Associations** tab shows this information. It is also
+The |TableReport|'s **Associations** tab shows this information. It is also
 possible to use the ``column_associations`` function, which returns a dataframe
 containing the associations.
