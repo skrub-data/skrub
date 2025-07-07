@@ -173,7 +173,7 @@ def fetch_credit_fraud(data_home=None, split="train"):
     """Fetch the credit fraud dataset (classification) available at \
         https://github.com/skrub-data/skrub-data-files
 
-    This is an imbalanced binary classification use-case. This dataset consists in
+    This is an imbalanced binary classification use-case. This dataset consists of
     two tables:
 
     - baskets, containing the binary fraud target label
