@@ -91,6 +91,9 @@ Changes
 - The :class:`Cleaner` now exposes a parameter to convert numerical values to float32. :pr:`1440` by
   :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The ``tabular_learner`` function has been renamed :func:`tabular_pipeline` to honor
+  its scikit-learn pipeline cultural heritage, and remove the ambiguity with the data
+  ops Learner. :pr:`1493` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 Bugfixes
 --------
