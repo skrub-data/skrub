@@ -33,6 +33,32 @@ def tabular_learner(estimator, *, n_jobs=None):
         The functionality provided by this function is now implemented in
         :func:`~skrub.tabular_pipeline`.
 
+    Parameters
+    ----------
+    estimator : {"regressor", "regression", "classifier", "classification"} or
+    scikit-learn estimator
+        The estimator to use as the final step in the pipeline. Based on the type of
+        estimator, the previous preprocessing steps and their respective parameters are
+        chosen. The possible values are:
+
+        - ``'regressor'`` or ``'regression'``: a
+          :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` is used as the final
+          step;
+        - ``'classifier'`` or ``'classification'``: a
+          :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` is used as the final
+          step;
+        - a scikit-learn estimator: the provided estimator is used as the final step.
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
+        means 1 unless in a joblib ``parallel_backend`` context. ``-1`` means using all
+        processors.
+
+    Returns
+    -------
+    Pipeline
+        A scikit-learn :obj:`~sklearn.pipeline.Pipeline` chaining some preprocessing and
+        the provided ``estimator``.
     """
     warnings.warn(
         (
