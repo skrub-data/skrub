@@ -2,7 +2,7 @@
 
 User Guide
 ==========
-``skrub`` is a library that eases the preparation of tabular data in dataframes
+Skrub is a library that eases the preparation of tabular data in dataframes
 for machine learning.
 
 Starting from rich, complex data stored in one or several dataframes, it helps
