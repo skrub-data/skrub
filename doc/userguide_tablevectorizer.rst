@@ -10,7 +10,7 @@
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
 .. |SimpleImputer| replace:: :class:`~sklearn.impute.SimpleImputer`
 
-Building Strong Baselines with Robust Feature Engineering
+Strong baseline pipelines
 --------------------------------------------------------
 
 |TableVectorizer|
@@ -26,7 +26,7 @@ The |TableVectorizer| splits columns into four categories and applies a default 
 | Column category               | Default encoder                             |
 +===============================+=============================================+
 | High-cardinality categorical  | |StringEncoder|                             |
-| columns (>40 unique values)   |                                             |
+| columns (>40 unique values). This can be changed via the `cardinality_threshold` argument |                                             |
 +-------------------------------+---------------------------------------------+
 | Low-cardinality categorical   | scikit-learn |OneHotEncoder|                |
 | columns (≤40 unique values)   |                                             |
@@ -36,7 +36,7 @@ The |TableVectorizer| splits columns into four categories and applies a default 
 | Datetime columns              | |DatetimeEncoder|                           |
 +-------------------------------+---------------------------------------------+
 
-To change the encoder or alter default parameters, create a new encoder and pass
+To change the encoder or alter default parameters, instantiate an encoder and pass
 it to |TableVectorizer|.
 
 .. code-block:: python
@@ -47,7 +47,7 @@ it to |TableVectorizer|.
     text_enc = TextEncoder()
     table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc)
 
-The |TableVectorizer| is used in :ref:`_example_string_encodings`, while the
+The |TableVectorizer| is used in :ref:`example_string_encodings`, while the
 docstring of the class provides more details on the parameters and usage, as well
 as various examples.
 

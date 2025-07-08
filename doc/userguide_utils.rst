@@ -2,13 +2,13 @@
 .. |set_config| replace:: :func:`~skrub.set_config`
 .. |config_context| replace:: :func:`~skrub.config_context`
 
-`skrub` example datasets, utilities and customization
+Example datasets, utilities, and customization
 -----------------------------------
 
-Customizing ``skrub`` by changing the default configuration
+Customizing the default configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``skrub`` includes a configuration manager that allows setting various parameters (see the |set_config| documentation for more detail).
+Skrub includes a configuration manager that allows setting various parameters (see the |set_config| documentation for more detail).
 
 It is possible to change configuration options using the |set_config| function:
 
@@ -37,7 +37,7 @@ Fetching the example datasets used in ``skrub``
     from skrub.datasets import fetch_employee_salaries
     data = fetch_employee_salaries()
 
-Datasets are stored as ``Bunch`` objects, which include the full data, an ``X`` feature matrix, and a ``y`` target column with type ``pd.DataFrame``. Some datasets may have a different format depending on the use case.
+Datasets are stored as :class:`~sklearn.utils.Bunch` objects, which include the full data, an ``X`` feature matrix, and a ``y`` target column with type ``pd.DataFrame``. Some datasets may have a different format depending on the use case.
 
 Modifying the download location of ``skrub`` datasets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

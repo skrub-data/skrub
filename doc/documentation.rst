@@ -21,9 +21,8 @@ records the transformations that were applied to the training data and replays t
 when the pipeline makes predictions on unseen data: this is essential to prevent
 data leakage and ensure generalization.
 
-This guide showcases how to solve various problems using the features of ``skrub``.
-Short code snippets are provided to explain each operation. Additional examples
-are shown in the docstrings and in the ``examples`` section of the documentation.
+This guide demonstrates how to resolve various issues using Skrub's features.
+See the examples section for full code snippets.
 
 
 .. include:: includes/big_toc_css.rst

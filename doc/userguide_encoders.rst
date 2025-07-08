@@ -7,20 +7,18 @@
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 
-Feature engineering for categorical data: encoding strings and text as numerical features
+Feature engineering for categorical data
 --------------------------------------------------
 
-In ``skrub``, categorical features are all features not detected as numeric or
+In Skrub, categorical features are all features not detected as numeric or
 datetimes: this includes strings, text, IDs, and features with dtype ``categorical``
 (e.g., ``pd.Categorical``).
 
 High Cardinality and Low Cardinality Categorical Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In machine learning pipelines, these features are converted to numerical features
-using various encodings (|OneHotEncoder|, |OrdinalEncoder|, etc.). Typically,
-categorical features are encoded using |OneHotEncoder|, but this can cause issues
-when the number of unique values (the "cardinality") is very large.
+In tabular machine learning pipelines, categorical features are converted to numerical features
+using various encodings (|OneHotEncoder|, |OrdinalEncoder|, etc.).
 
 The |TableVectorizer| classifies categorical features with more than 40 unique
 values as *high cardinality*, and all others as *low cardinality*. Different
@@ -42,8 +40,8 @@ text. Applies tf-idf vectorization followed by truncated SVD
 |TextEncoder|
 ~~~~~~~~~~~~~
 
-Encodes string features using pretrained models from the HuggingFace Hub. It is a
-wrapper around ``SentenceTransformer`` compatible with the scikit-learn API and
+Encodes string features using pretrained language models from the HuggingFace Hub. It is a
+wrapper around :ref:`sentence-transformers <https://sbert.net/>`_ compatible with the scikit-learn API and
 usable in pipelines. Best for free-flowing text and when columns include context
 found in the pretrained model.
 
@@ -77,4 +75,4 @@ Comparison of the Categorical Encoders
 | MinHashEncoder   | Very fast     | Mediocre to good              | Mediocre               |                                      |
 +------------------+---------------+-------------------------------+------------------------+--------------------------------------+
 
-Example 2 (see :ref:`_example_string_encoders`) and this `blog post <https://skrub-data.org/skrub-materials/pages/notebooks/categorical-encoders/categorical-encoders.html>`_ include a more systematic analysis of each method.
+Example 2 (see :ref:`example_string_encoders`) and this `blog post <https://skrub-data.org/skrub-materials/pages/notebooks/categorical-encoders/categorical-encoders.html>`_ include a more systematic analysis of each method.

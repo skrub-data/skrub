@@ -10,11 +10,10 @@ Parsing and encoding datetimes
 Parsing Datetime Strings with |ToDatetime| and |to_datetime|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``skrub`` includes objects to help with parsing and encoding datetimes.
+Skrub provides helpers to parse datetime string columns automatically:
 
-- |to_datetime| and |ToDatetime| convert all columns in a dataframe that can be
-parsed as datetimes to the proper dtype.
-- |to_datetime| is a function; |ToDatetime| is a scikit-learn compatible transformer.
+- The |to_datetime| function converts all columns in a dataframe that can be parsed as datetimes. The format can be inferred or user-specified with the `format` argument.
+- The |ToDatetime| transformer follows the same logic during training and learns a mapping between columns and their formats. It then applies this mapping during the transform step. 
 
 .. code-block:: python
 
@@ -26,14 +25,13 @@ parsed as datetimes to the proper dtype.
 Encoding and Feature Engineering on Datetimes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once datetimes have been parsed, they can be encoded as numerical features with
-the |DatetimeEncoder|. This encoder extracts temporal features (year, month, day,
-hour, etc.) from datetime columns. No timezone conversion is done; the timezone
+Once datetime columns have been parsed, they can be encoded as numerical features with
+the |DatetimeEncoder|, by extracting temporal features (year, month, day,
+hour, etc.). No timezone conversion is done; the timezone
 in the feature is retained. The |DatetimeEncoder| rejects non-datetime columns,
 so it should only be applied after conversion using |ToDatetime|.
 
-Besides extracting datetime features, |DatetimeEncoder| can include additional
-time-based features, such as:
+Additionally, |DatetimeEncoder| can include the following features:
 
 - Number of seconds from epoch (``add_total_seconds``)
 - Day of the week (``add_weekday``)

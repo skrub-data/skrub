@@ -8,7 +8,7 @@
 Using the |TableReport| to explore dataframes
 ---------------------------------------------
 
-Exploring and Reporting DataFrames with the |TableReport|
+Usage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
@@ -35,7 +35,7 @@ Altering the Appearance of the |TableReport|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For performance reasons, the |TableReport| disables the computation of
-Distributions and Associations for tables with more than 30 columns. This behavior
+distributions and associations for tables with more than 30 columns. This behavior
 can be changed by modifying the ``max_plot_columns`` and ``max_association_columns``
 parameter, or by altering the configuration with |set_config| (refer to the
 |TableReport| and |set_config| docs for more detail).
@@ -60,6 +60,4 @@ directly in a browser as a HTML page.
 Finding Correlated Columns in a DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The |TableReport|'s **Associations** tab shows this information. It is also
-possible to use the |column_associations| function, which returns a dataframe
-containing the associations.
+In addition to |TableReport|'s **Associations** tab, you can compute associations using the |column_associations| function, which returns a dataframe containing the associations.
