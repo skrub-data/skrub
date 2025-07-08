@@ -24,7 +24,8 @@ as additional information in other tabs.
 
 - The **Stats** tab reports high-level statistics for each column.
 - The **Distribution** tab collects summary plots for each column (max 30 by default).
-- The **Associations** tab shows Cramer V and Pearson correlations between columns.
+- The **Associations** tab shows `Cramer V <https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_
+  and `Pearson correlation <https://en.wikipedia.org/wiki/Pearson_correlation_coefficient>`_ between columns.
 - Built-in filters allow selection of columns by dtype and other conditions.
 
 In the **Distributions** tab, it is possible to select columns by clicking on the
@@ -60,4 +61,5 @@ directly in a browser as a HTML page.
 Finding Correlated Columns in a DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In addition to |TableReport|'s **Associations** tab, you can compute associations using the |column_associations| function, which returns a dataframe containing the associations.
+In addition to |TableReport|'s **Associations** tab, you can compute associations
+using the |column_associations| function, which returns a dataframe containing the associations.

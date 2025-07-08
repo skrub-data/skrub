@@ -15,26 +15,34 @@ Strong baseline pipelines
 
 |TableVectorizer|
 ~~~~~~~~~~~~~~~~~
+In tabular machine learning pipelines, categorical features are converted to numerical features
+using various encodings (|OneHotEncoder|, |OrdinalEncoder|, etc.).
 
 The |TableVectorizer| performs feature engineering on dataframes by parsing the
 data type of each column and encoding columns according to their data type,
 producing new numeric features that can be used in machine learning models.
 
-The |TableVectorizer| splits columns into four categories and applies a default encoder to each:
+The |TableVectorizer| splits columns into four categories and applies a default
+encoder to each.
 
 +-------------------------------+---------------------------------------------+
 | Column category               | Default encoder                             |
 +===============================+=============================================+
 | High-cardinality categorical  | |StringEncoder|                             |
-| columns (>40 unique values). This can be changed via the `cardinality_threshold` argument |                                             |
+| columns.                      |                                             |
 +-------------------------------+---------------------------------------------+
 | Low-cardinality categorical   | scikit-learn |OneHotEncoder|                |
-| columns (≤40 unique values)   |                                             |
+| columns                       |                                             |
 +-------------------------------+---------------------------------------------+
 | Numerical columns             | "passthrough" (no transformation)           |
 +-------------------------------+---------------------------------------------+
 | Datetime columns              | |DatetimeEncoder|                           |
 +-------------------------------+---------------------------------------------+
+
+**High cardinality** categorical columns are those with more than 40 unique values,
+while all other categorical columns are considered **low cardinality**: the
+threshold can be changed by setting the ``cardinality_threshold`` parameter of
+|TableVectorizer|.
 
 To change the encoder or alter default parameters, instantiate an encoder and pass
 it to |TableVectorizer|.

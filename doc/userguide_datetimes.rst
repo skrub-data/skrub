@@ -13,7 +13,7 @@ Parsing Datetime Strings with |ToDatetime| and |to_datetime|
 Skrub provides helpers to parse datetime string columns automatically:
 
 - The |to_datetime| function converts all columns in a dataframe that can be parsed as datetimes. The format can be inferred or user-specified with the `format` argument.
-- The |ToDatetime| transformer follows the same logic during training and learns a mapping between columns and their formats. It then applies this mapping during the transform step. 
+- The |ToDatetime| transformer follows the same logic during training and learns a mapping between columns and their formats. It then applies this mapping during the transform step.
 
 .. code-block:: python
 
@@ -39,3 +39,10 @@ Additionally, |DatetimeEncoder| can include the following features:
 
 Periodic encoding is supported through trigonometric (circular) and spline
 encoding: set the ``periodic_encoding`` parameter to ``circular`` or ``spline``.
+
+.. figure:: /_static/periodic_features.png
+    :alt: Periodic encoding of datetime features
+    :align: center
+    :width: 70%
+
+    Example of periodic encoding of datetime features using circular and spline methods.

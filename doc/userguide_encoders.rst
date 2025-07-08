@@ -14,50 +14,39 @@ In Skrub, categorical features are all features not detected as numeric or
 datetimes: this includes strings, text, IDs, and features with dtype ``categorical``
 (e.g., ``pd.Categorical``).
 
-High Cardinality and Low Cardinality Categorical Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In tabular machine learning pipelines, categorical features are converted to numerical features
-using various encodings (|OneHotEncoder|, |OrdinalEncoder|, etc.).
-
-The |TableVectorizer| classifies categorical features with more than 40 unique
-values as *high cardinality*, and all others as *low cardinality*. Different
-encoding strategies are applied to each kind; the threshold can be modified with
-the ``cardinality_threshold`` parameter.
-
-- Low cardinality: encoded by default using scikit-learn |OneHotEncoder|
-- High cardinality: encoded using the |StringEncoder|
-
-Categorical encoding is applied only to columns that do not have a string or categorical dtype.
 
 |StringEncoder|
 ~~~~~~~~~~~~~~
 
 A strong and quick baseline for both short strings with high cardinality and long
-text. Applies tf-idf vectorization followed by truncated SVD
+text. This encoder computes the ngram frequency using tf-idf vectorization,
+followed by truncated SVD
 (`Latent Semantic Analysis <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_).
 
 |TextEncoder|
 ~~~~~~~~~~~~~
 
-Encodes string features using pretrained language models from the HuggingFace Hub. It is a
-wrapper around :ref:`sentence-transformers <https://sbert.net/>`_ compatible with the scikit-learn API and
-usable in pipelines. Best for free-flowing text and when columns include context
-found in the pretrained model.
+This encoder encodes string features using pretrained language models from the
+HuggingFace Hub. It is a wrapper around :ref:`sentence-transformers <https://sbert.net/>`_
+compatible with the scikit-learn API and usable in pipelines. Best for
+free-flowing text and when columns include context found in the pretrained model
+(e.g., name of cities etc.). Note that this encoder can take a very long time to
+train, especially on large datasets and on CPU.
 
 |MinHashEncoder|
 ~~~~~~~~~~~~~~~~
 
-Decomposes strings into ngrams, then applies the MinHash method to convert them
+This encoder ecomposes strings into ngrams, then applies the MinHash method to convert them
 into numerical features. Fast to train, but features may yield worse results
 compared to other methods.
 
 |GapEncoder|
 ~~~~~~~~~~~~
 
-Estimates "latent categories" on the training data, then encodes them as real
-numbers. Allows access to grouped features via ``.get_feature_names_out()``. May
-require a long time to train.
+The ``GapEncoder`` estimates "latent categories" on the training data by finding
+common ngrams between strings, then encodes the categories as real
+numbers. It allows access to grouped features via ``.get_feature_names_out()``,
+which allows for better interpretability. This encoder may require a long time to train.
 
 Comparison of the Categorical Encoders
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
