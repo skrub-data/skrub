@@ -24,7 +24,7 @@ _TREE_ENSEMBLE_CLASSES = (
 )
 
 
-def tabular_learner(estimator, *, n_jobs=None):
+def tabular_pipeline(estimator, *, n_jobs=None):
     """Get a simple machine-learning pipeline for tabular data.
 
     Given either a scikit-learn estimator or one of the special-cased strings
@@ -33,7 +33,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     imputes missing values and scales the data if necessary, then applies the estimator.
 
     .. note::
-       The heuristics used by the ``tabular_learner``
+       The heuristics used by the ``tabular_pipeline``
        to define an appropriate preprocessing based on the ``estimator`` may change
        in future releases.
 
@@ -68,7 +68,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     Notes
     -----
 
-    ``tabular_learner`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
+    ``tabular_pipeline`` returns a scikit-learn :obj:`~sklearn.pipeline.Pipeline`
     with several steps:
 
     - A :obj:`TableVectorizer` transforms the tabular data into numeric
@@ -103,11 +103,11 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     Examples
     --------
-    >>> from skrub import tabular_learner
+    >>> from skrub import tabular_pipeline
 
     We can easily get a default pipeline for regression or classification:
 
-    >>> tabular_learner('regression')                                    # doctest: +SKIP
+    >>> tabular_pipeline('regression')                                    # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality=StringEncoder(),
                                      low_cardinality=ToCategorical())),
@@ -117,7 +117,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     When requesting a ``'regression'``, the last step of the pipeline is set to a
     :obj:`~sklearn.ensemble.HistGradientBoostingRegressor`.
 
-    >>> tabular_learner('classification')                                   # doctest: +SKIP
+    >>> tabular_pipeline('classification')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality=StringEncoder(),
                                      low_cardinality=ToCategorical())),
@@ -146,7 +146,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     2  2024-12-05  paracetamol                     0               44
     3  2023-08-10   gliclazide                    17              137
 
-    >>> model = tabular_learner('classifier').fit(X, y)
+    >>> model = tabular_pipeline('classifier').fit(X, y)
     >>> model.predict(X)
     array([0, 0, 0, 0])
 
@@ -154,7 +154,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     estimator:
 
     >>> from sklearn.linear_model import LogisticRegression
-    >>> model = tabular_learner(LogisticRegression())
+    >>> model = tabular_pipeline(LogisticRegression())
     >>> model.fit(X, y)
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
@@ -175,7 +175,7 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     The parameters of the :obj:`TableVectorizer` depend on the provided ``estimator``.
 
-    >>> tabular_learner(LogisticRegression())
+    >>> tabular_pipeline(LogisticRegression())
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
@@ -197,7 +197,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
     (generated with the string ``"classifier"``):
 
-    >>> tabular_learner('classifier')                                   # doctest: +SKIP
+    >>> tabular_pipeline('classifier')                                   # doctest: +SKIP
     Pipeline(steps=[('tablevectorizer',
                      TableVectorizer(high_cardinality=StringEncoder(),
                                      low_cardinality=ToCategorical())),
@@ -230,12 +230,12 @@ def tabular_learner(estimator, *, n_jobs=None):
 
     if isinstance(estimator, str):
         if estimator in ("classifier", "classification"):
-            return tabular_learner(
+            return tabular_pipeline(
                 ensemble.HistGradientBoostingClassifier(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
         if estimator in ("regressor", "regression"):
-            return tabular_learner(
+            return tabular_pipeline(
                 ensemble.HistGradientBoostingRegressor(**cat_feat_kwargs),
                 n_jobs=n_jobs,
             )
@@ -245,13 +245,13 @@ def tabular_learner(estimator, *, n_jobs=None):
         )
     if isinstance(estimator, type) and issubclass(estimator, BaseEstimator):
         raise TypeError(
-            "tabular_learner expects a scikit-learn estimator as its first"
+            "tabular_pipeline expects a scikit-learn estimator as its first"
             f" argument. Pass an instance of {estimator.__name__} rather than the class"
             " itself."
         )
     if not isinstance(estimator, BaseEstimator):
         raise TypeError(
-            "tabular_learner expects a scikit-learn estimator, 'regressor',"
+            "tabular_pipeline expects a scikit-learn estimator, 'regressor',"
             " or 'classifier' as its first argument."
         )
 

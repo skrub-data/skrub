@@ -61,7 +61,7 @@ API_REFERENCE = {
                     "pipelines, see the :ref:`skrub expressions <expressions_ref>`."
                 ),
                 "autosummary": [
-                    "tabular_learner",
+                    "tabular_pipeline",
                     "TableVectorizer",
                     "Cleaner",
                     "SelectCols",
