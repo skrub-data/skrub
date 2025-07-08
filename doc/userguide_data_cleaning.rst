@@ -56,10 +56,10 @@ The |DropUninformative| transformer includes various heuristics to drop columns
 considered "uninformative":
 
 - Drops all columns that contain only missing values (threshold adjustable via
-``drop_null_fraction``)
+  ``drop_null_fraction``)
 - Drops columns with only a single value if ``drop_if_constant=True``
 - Drops string/categorical columns where each row is unique if
-``drop_if_unique=True`` (use with care)
+  ``drop_if_unique=True`` (use with care)
 
 |DropUninformative| is used by both |TableVectorizer| and |Cleaner|; both accept
 the same parameters to drop columns accordingly.

@@ -16,11 +16,6 @@ leverages the dataframe libraries to provide more high-level building blocks tha
 perform the data preprocessing steps that are typically needed in a machine learning
 pipeline.
 
-The transformations implemented by ``skrub`` are *stateful*: ``skrub``
-records the transformations that were applied to the training data and replays them
-when the pipeline makes predictions on unseen data: this is essential to prevent
-data leakage and ensure generalization.
-
 This guide demonstrates how to resolve various issues using Skrub's features.
 See the examples section for full code snippets.
 
