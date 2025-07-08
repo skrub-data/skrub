@@ -24,20 +24,12 @@ producing new numeric features that can be used in machine learning models.
 
 The |TableVectorizer| splits columns into four categories and applies a default
 encoder to each.
+The default encoders for each column category are:
 
-+-------------------------------+---------------------------------------------+
-| Column category               | Default encoder                             |
-+===============================+=============================================+
-| High-cardinality categorical  | |StringEncoder|                             |
-| columns.                      |                                             |
-+-------------------------------+---------------------------------------------+
-| Low-cardinality categorical   | scikit-learn |OneHotEncoder|                |
-| columns                       |                                             |
-+-------------------------------+---------------------------------------------+
-| Numerical columns             | "passthrough" (no transformation)           |
-+-------------------------------+---------------------------------------------+
-| Datetime columns              | |DatetimeEncoder|                           |
-+-------------------------------+---------------------------------------------+
+- **High-cardinality categorical columns**: |StringEncoder|
+- **Low-cardinality categorical columns**: scikit-learn |OneHotEncoder|
+- **Numerical columns**: "passthrough" (no transformation)
+- **Datetime columns**: |DatetimeEncoder|
 
 **High cardinality** categorical columns are those with more than 40 unique values,
 while all other categorical columns are considered **low cardinality**: the
@@ -55,7 +47,7 @@ it to |TableVectorizer|.
     text_enc = TextEncoder()
     table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc)
 
-The |TableVectorizer| is used in :ref:`example_string_encodings`, while the
+The |TableVectorizer| is used in :ref:`example_encodings`, while the
 docstring of the class provides more details on the parameters and usage, as well
 as various examples.
 

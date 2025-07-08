@@ -51,17 +51,34 @@ which allows for better interpretability. This encoder may require a long time t
 Comparison of the Categorical Encoders
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+------------------+---------------+-------------------------------+------------------------+--------------------------------------+
-|     Encoder      | Training time | Performance on categorical     | Performance on text    | Notes                                |
-|                  |               | data                          | data                   |                                      |
-+==================+===============+===============================+========================+======================================+
-| StringEncoder    | Fast          | Good                          | Good                   |                                      |
-+------------------+---------------+-------------------------------+------------------------+--------------------------------------+
-| TextEncoder      | Very slow     | Mediocre to good              | Very good              | Requires the ``transformers`` dep.   |
-+------------------+---------------+-------------------------------+------------------------+--------------------------------------+
-| GapEncoder       | Slow          | Good                          | Mediocre to good       | Interpretable                        |
-+------------------+---------------+-------------------------------+------------------------+--------------------------------------+
-| MinHashEncoder   | Very fast     | Mediocre to good              | Mediocre               |                                      |
-+------------------+---------------+-------------------------------+------------------------+--------------------------------------+
+.. list-table::
+    :header-rows: 1
+    :widths: 15 15 25 20 25
+
+    * - Encoder
+      - Training time
+      - Performance on categorical data
+      - Performance on text data
+      - Notes
+    * - StringEncoder
+      - Fast
+      - Good
+      - Good
+      -
+    * - TextEncoder
+      - Very slow
+      - Mediocre to good
+      - Very good
+      - Requires the ``transformers`` dep.
+    * - GapEncoder
+      - Slow
+      - Good
+      - Mediocre to good
+      - Interpretable
+    * - MinHashEncoder
+      - Very fast
+      - Mediocre to good
+      - Mediocre
+      -
 
 Example 2 (see :ref:`example_string_encoders`) and this `blog post <https://skrub-data.org/skrub-materials/pages/notebooks/categorical-encoders/categorical-encoders.html>`_ include a more systematic analysis of each method.
