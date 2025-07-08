@@ -7,7 +7,7 @@
 Parsing and encoding datetimes
 ------------------
 
-Parsing Datetime Strings in DataFrames with |ToDatetime| and |to_datetime|
+Parsing Datetime Strings with |ToDatetime| and |to_datetime|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``skrub`` includes objects to help with parsing and encoding datetimes.
