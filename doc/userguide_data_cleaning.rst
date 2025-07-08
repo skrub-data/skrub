@@ -16,7 +16,7 @@ Cleaning dataframes and parsing datatypes
     from skrub import Cleaner
     df_clean = Cleaner().fit_transform(df)
 
-The |Cleaner| sanitizes dataframes by:
+The |Cleaner| converts data types and Nan values in dataframes to ease downstream preprocessing. It includes:
 
 - Replacing strings that represent missing values with NA markers
 - Dropping uninformative columns (add cross reference)
