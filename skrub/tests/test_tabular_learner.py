@@ -10,6 +10,7 @@ from skrub import (
     StringEncoder,
     TableVectorizer,
     ToCategorical,
+    tabular_learner,
     tabular_pipeline,
 )
 
@@ -84,3 +85,9 @@ def test_from_dtype():
         ensemble.HistGradientBoostingRegressor(categorical_features="from_dtype")
     )
     assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, ToCategorical)
+
+
+def test_warning_table_learner():
+    msg = "tabular_learner will be deprecated in the next release"
+    with pytest.raises(FutureWarning, match=msg):
+        _ = tabular_learner("regressor")

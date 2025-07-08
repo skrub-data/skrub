@@ -39,7 +39,7 @@ from ._select_cols import Drop, DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import Cleaner, TableVectorizer
-from ._tabular_pipeline import tabular_pipeline
+from ._tabular_pipeline import tabular_learner, tabular_pipeline
 from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
@@ -63,6 +63,7 @@ __all__ = [
     "patch_display",
     "unpatch_display",
     "tabular_pipeline",
+    "tabular_learner",
     "DatetimeEncoder",
     "ToDatetime",
     "Joiner",

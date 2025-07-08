@@ -62,6 +62,7 @@ API_REFERENCE = {
                 ),
                 "autosummary": [
                     "tabular_pipeline",
+                    "tabular_learner",
                     "TableVectorizer",
                     "Cleaner",
                     "SelectCols",

@@ -1,3 +1,5 @@
+import warnings
+
 import sklearn
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
@@ -22,6 +24,24 @@ _TREE_ENSEMBLE_CLASSES = (
     ensemble.RandomForestClassifier,
     ensemble.RandomForestRegressor,
 )
+
+
+def tabular_learner(estimator, *, n_jobs=None):
+    """Get a simple machine-learning pipeline for tabular data.
+
+    .. deprecated:: 0.6.0
+        The functionality provided by this function is now implemented in
+        :func:`~skrub.tabular_pipeline`.
+
+    """
+    warnings.warn(
+        (
+            "tabular_learner will be deprecated in the next release. "
+            "Equivalent functionality is available in skrub.set_config."
+        ),
+        category=FutureWarning,
+    )
+    return tabular_pipeline(estimator, n_jobs=n_jobs)
 
 
 def tabular_pipeline(estimator, *, n_jobs=None):
