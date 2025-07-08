@@ -3,6 +3,7 @@
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
+.. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
 .. |tabular_learner| replace:: :func:`~skrub.tabular_learner`
 .. |HistGradientBoostingRegressor| replace:: :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
