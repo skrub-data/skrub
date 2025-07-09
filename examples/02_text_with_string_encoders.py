@@ -301,13 +301,23 @@ def plot_performance_tradeoff(results):
         ax.set_ylabel("ROC AUC")
         ax.set_title("Prediction performance / training time trade-off")
 
+    log_xlim = np.log10(ax.get_xlim())
+    x_log_range = log_xlim[1] - log_xlim[0]
+    y_range = ax.get_ylim()[1] - ax.get_ylim()[0]
+    arrow_tip_x_log = log_xlim[0] + 0.05 * x_log_range
+    arrow_tip_y = ax.get_ylim()[1] - 0.05 * y_range
+    arrow_start_x_log = arrow_tip_x_log + 0.04 * x_log_range
+    arrow_start_y = arrow_tip_y - 0.2 * y_range
+    arrow_tip_x = np.power(10, arrow_tip_x_log)
+    arrow_start_x = np.power(10, arrow_start_x_log)
+
     ax.annotate(
-        "",
-        xy=(1.5, 0.98),
-        xytext=(8.5, 0.90),
-        arrowprops=dict(arrowstyle="->", mutation_scale=15),
+        "Best time / \nperformance trade-off",
+        xy=(arrow_tip_x, arrow_tip_y),
+        xytext=(arrow_start_x + 0.2 * x_log_range, arrow_start_y),
+        arrowprops=dict(arrowstyle="->", lw=1.5, mutation_scale=15),
+        fontsize=9,
     )
-    ax.text(5.8, 0.86, "Best time / \nperformance trade-off")
     ax.legend(bbox_to_anchor=(1.02, 0.3))
     plt.show()
 
