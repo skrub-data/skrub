@@ -864,6 +864,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                 )
             )
             return steps[-1]
+
         cols = s.all() - self._specific_columns
         self._preprocessors = _get_preprocessors(
             cols=cols,
