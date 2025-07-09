@@ -142,10 +142,10 @@ def set_config(
         This configuration can also be set with the ``SKB_FLOAT_PRECISION``
         environment variable.
 
-    cardinality_threshold: int,  default=40
+    cardinality_threshold : int, default=40
+        Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
         Control the threshold value used to warn user if they have
-        high cardinality columns in there dataset. It's also used as the default
-        value of ``TableVectorizer`` `cardinality_threshold` parameter.
+        high cardinality columns in there dataset.
 
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
@@ -302,10 +302,10 @@ def config_context(
         This configuration can also be set with the ``SKB_FLOAT_PRECISION``
         environment variable.
 
-    cardinality_threshold: int,  default=40
+    cardinality_threshold : int, default=40
+        Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
         Control the threshold value used to warn user if they have
-        high cardinality columns in there dataset. It's also used as the default
-        value of ``TableVectorizer`` `cardinality_threshold` parameter.
+        high cardinality columns in there dataset.
 
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
