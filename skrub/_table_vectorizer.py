@@ -872,7 +872,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=True,  # Or False if you want to defer float32 to postprocessors
+            add_tofloat32=True,
             datetime_format=self.datetime_format,
         )
 
