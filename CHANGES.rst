@@ -44,6 +44,10 @@ New features
   and :func:`unpatch_display` are deprecated and will be removed in the next release
   of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- :func:`get_config`, :func:`set_config` and :func:`config_context` now have a new
+  parameter `cardinality_threshold` that controls the threshold value used to warn user if they have
+  high cardinality columns in there dataset. :pr:`1498` by :user:`rouk1 <rouk1>`.
+
 Changes
 -------
 .. warning::
