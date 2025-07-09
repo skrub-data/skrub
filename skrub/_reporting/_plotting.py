@@ -217,7 +217,7 @@ def _robust_hist(values, ax, color):
         else:
             ax.text(
                 bins[index] + 0.2 * (bins[index + 1] - bins[index]),
-                value + threshold_display * 0.05,
+                value + threshold_display * 0.1,
                 percentage_string,
                 rotation="vertical",
                 color=_TEXT_COLOR_PLACEHOLDER,
