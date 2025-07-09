@@ -538,8 +538,8 @@ def cross_validate(pipeline, environment, *, keep_subsampling=False, **kwargs):
     """Cross-validate a pipeline built from an expression.
 
     This runs cross-validation from a pipeline that was built from a skrub
-    expression with :func:`.skb.get_pipeline`, :func:`.skb.get_grid_search` or
-    :func:`.skb.get_randomized_search`.
+    expression with :func:`Expr.skb.get_pipeline`, :func:`Expr.skb.get_grid_search` or
+    :func:`Expr.skb.get_randomized_search`.
 
     It is useful to run nested cross-validation of a grid search or randomized
     search.

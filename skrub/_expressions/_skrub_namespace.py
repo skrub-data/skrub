@@ -1115,8 +1115,8 @@ class SkrubNamespace:
     def describe_steps(self):
         """Get a text representation of the computation graph.
 
-        Usually the graphical representation provided by :meth:`skb.draw_graph` or
-        :meth:`skb.full_report` is more useful. This is a fallback for inspecting the
+        Usually the graphical representation provided by :meth:`Expr.skb.draw_graph` or
+        :meth:`Expr.skb.full_report` is more useful. This is a fallback for inspecting the
         computation graph when only text output is available.
 
         Returns
@@ -1990,6 +1990,12 @@ class SkrubNamespace:
         -------
         The input expression, which has been marked as being ``X``
 
+        See also
+        --------
+        :func:`skrub.X`
+            ``skrub.X(value)`` can be used as a shorthand for
+            ``skrub.var('X', value).skb.mark_as_X()``.
+
         Notes
         -----
         During cross-validation, all the previous steps are first executed,
@@ -2079,15 +2085,13 @@ class SkrubNamespace:
         should be careful to start our pipeline by building X and y, and to use
         ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
 
-        ``skrub.y(value)`` can be used as a shorthand for
-        ``skrub.var('y', value).skb.mark_as_y()``.
-
         Note: this marks the expression in-place and also returns it.
 
         See also
         --------
-        :func:`skb.y`
-            Convenient shortcut to create a variable `y` and mark it as y.
+        :func:`skrub.y`
+            ``skrub.y(value)`` can be used as a shorthand for
+            ``skrub.var('y', value).skb.mark_as_y()``.
 
         Examples
         --------
