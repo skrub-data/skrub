@@ -12,7 +12,7 @@ def fetch_employee_salaries(data_home=None):
     Description of the dataset:
         Annual salary information including gross pay and overtime pay for all
         active, permanent employees of Montgomery County, MD paid in calendar
-        year 2016. This information will be published annually each year.
+        year 2016. This information will be published annually each year. Size on disk: 1.3Mo.
 
     Parameters
     ----------
@@ -24,10 +24,11 @@ def fetch_employee_salaries(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - employee_salaries : pd.DataFrame, the dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name, description, source and target
+        - ``employee_salaries`` : pd.DataFrame, the dataframe. Size 9228 rows x 9 columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
+          labels. Size 9228 rows x 8 columns.
+        - ``y : pd.DataFrame, target labels. Size 9228 rows x 1 column.
+        - ``metadata`` : a dictionary containing the name, description, source and target
     """
     return load_simple_dataset("employee_salaries", data_home)
 
@@ -45,6 +46,7 @@ def fetch_medical_charge(data_home=None):
         receive Medicare Inpatient Prospective Payment System (IPPS) payments.
         The PUF is organized by hospital and Medicare Severity Diagnosis
         Related Group (MS-DRG) and covers Fiscal Year (FY) 2011 through FY 2016.
+        Size on disk: 36Mo.
 
     Parameters
     ----------
@@ -56,10 +58,11 @@ def fetch_medical_charge(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - medical_charge : pd.DataFrame, the dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name, description, source and target
+        - ``medical_charge`` : pd.DataFrame, the dataframe. Size 163065 rows x 12 columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
+          labels. Size 163065 rows x 11 columns.
+        - ``y`` : pd.DataFrame, target labels. Size 163065 rows x 1 column.
+        - ``metadata`` : a dictionary containing the name, description, source and target
     """
     return load_simple_dataset("medical_charge", data_home)
 
@@ -69,7 +72,7 @@ def fetch_midwest_survey(data_home=None):
         https://github.com/skrub-data/skrub-data-files
 
     Description of the dataset:
-        Survey to know if people self-identify as Midwesterners.
+        Survey to know if people self-identify as Midwesterners. Size on disk: 504Ko.
 
     Parameters
     ----------
@@ -81,10 +84,11 @@ def fetch_midwest_survey(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - midwest_survey : pd.DataFrame, the dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name, description, source and target
+        - ``midwest_survey`` : pd.DataFrame, the dataframe. Size 2494 rows x 29 columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
+          labels. Size 2494 rows x 28 columns.
+        - ``y`` : pd.DataFrame, target labels. Size 2494 rows x 1 column.
+        - ``metadata`` : a dictionary containing the name, description, source and target
     """
     return load_simple_dataset("midwest_survey", data_home)
 
@@ -95,7 +99,7 @@ def fetch_open_payments(data_home=None):
 
     Description of the dataset:
         Payments given by healthcare manufacturing companies to medical doctors
-        or hospitals.
+        or hospitals. Size on disk: 8.7Mo.
 
     Parameters
     ----------
@@ -107,10 +111,13 @@ def fetch_open_payments(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - open_payments : pd.DataFrame, the dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name, description, source and target
+        - ``open_payments`` : pd.DataFrame, the dataframe. Size 73558 rows x 6
+          columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
+          labels. Size 73558 rows x 5 columns.
+        - ``y`` : pd.DataFrame, target labels. Size 73558 rows x 1 column.
+        - ``metadata`` : a dictionary containing the name, description, source
+          and target
     """
     return load_simple_dataset("open_payments", data_home)
 
@@ -123,7 +130,7 @@ def fetch_traffic_violations(data_home=None):
         This dataset contains traffic violation information from all electronic
         traffic violations issued in the Montgomery County, MD. Any information
         that can be used to uniquely identify the vehicle, the vehicle owner or
-        the officer issuing the violation will not be published.
+        the officer issuing the violation will not be published. Size on disk: 736Mo.
 
     Parameters
     ----------
@@ -135,10 +142,12 @@ def fetch_traffic_violations(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - traffic_violations : pd.DataFrame, the dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name, description, source and target
+        - ``traffic_violations`` : pd.DataFrame, the dataframe. Size 1578154
+          rows x 43 columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
+          labels. Size 1578154 rows x 42 columns.
+        - ``y`` : pd.DataFrame, target labels. Size 1578154 rows x 1 column.
+        - ``metadata`` : a dictionary containing the name, description, source and target
     """
     return load_simple_dataset("traffic_violations", data_home)
 
@@ -149,7 +158,7 @@ def fetch_drug_directory(data_home=None):
 
     Description of the dataset:
         Product listing data submitted to the U.S. FDA for all unfinished,
-        unapproved drugs.
+        unapproved drugs. Size on disk: 44Mo.
 
     Parameters
     ----------
@@ -161,10 +170,11 @@ def fetch_drug_directory(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - drug_directory : pd.DataFrame, the dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name, description, source and target
+        - ``drug_directory`` : pd.DataFrame, the dataframe. Size 120215 rows x 21 columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
+          labels. Size 120215 rows x 20 columns.
+        - ``y`` : pd.DataFrame, target labels. Size 120215 rows x 1 column.
+        - ``metadata`` : a dictionary containing the name, description, source and target
     """
     return load_simple_dataset("drug_directory", data_home)
 
@@ -181,6 +191,7 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
     Baskets contain at least one product each, so aggregation then joining operations
     are required to build a design matrix.
+    Size on disk: 16Mo.
 
     Parameters
     ----------
@@ -195,10 +206,11 @@ def fetch_credit_fraud(data_home=None, split="train"):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - baskets : pd.DataFrame, table containing baskets ID and target
-        - product : pd.DataFrame, table containing features about products contained in
-          baskets
-        - metadata : a dictionary containing the name, description, source and target
+        - ``baskets`` : pd.DataFrame, table containing baskets ID and target. Size
+          92790 rows x 2 columns.
+        - ``product`` : pd.DataFrame, table containing features about products contained in
+          baskets. Size 163357 rows x 7 columns.
+        - ``metadata`` : a dictionary containing the name, description, source and target
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -224,6 +236,7 @@ def fetch_toxicity(data_home=None):
     consists in only two columns:
     - `text`: the text of the comment
     - `is_toxic`: whether or not the comment is toxic
+    Size on disk: 220Ko.
 
     Parameters
     ----------
@@ -235,10 +248,11 @@ def fetch_toxicity(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - toxicity : pd.DataFrame, the dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name, description, source and target
+        - ``toxicity`` : pd.DataFrame, the dataframe. Size 1000 rows x 2 columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
+          labels. Size 1000 rows x 1 columns.
+        - ``y`` : pd.DataFrame, target labels. Size 1000 rows x 1 columns.
+        - ``metadata`` : a dictionary containing the name, description, source and target
     """
     return load_simple_dataset("toxicity", data_home)
 
@@ -249,7 +263,7 @@ def fetch_videogame_sales(data_home=None):
 
     This is a regression use-case, where the single table contains information
     about videogames such as the publisher and platform, and the goal is to
-    predict the number of sales worldwide.
+    predict the number of sales worldwide. Size on disk: 1.8Mo.
 
     .. warning::
 
@@ -268,10 +282,12 @@ def fetch_videogame_sales(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - videogame_sales : pd.DataFrame, the full dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name, source and target
+        - ``videogame_sales`` : pd.DataFrame, the full dataframe. Size 16572
+          rows x 11 columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
+          labels. Size 16572 rows x 5 columns.
+        - ``y`` : pd.DataFrame, target labels. Size 16572 rows x 1 column.
+        - ``metadata`` : a dictionary containing the name, source and target
     """
 
     result = load_simple_dataset("videogame_sales", data_home)
@@ -287,7 +303,7 @@ def fetch_bike_sharing(data_home=None):
 
     This is a regression use-case, where the goal is to predict demand for a
     bike-sharing service. The features are the dates and holiday and weather
-    information.
+    information. Size on disk: 1.3Mo.
 
     Parameters
     ----------
@@ -299,10 +315,10 @@ def fetch_bike_sharing(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - bike_sharing : pd.DataFrame, the full dataframe
-        - X : pd.DataFrame, features, i.e. the dataframe without the target labels
-        - y : pd.DataFrame, target labels
-        - metadata : a dictionary containing the name and target
+        - ``bike_sharing``: pd.DataFrame, the full dataframe. Size 17379 rows x 11 columns.
+        - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target labels. Size 17379 rows x 10 columns.
+        - ``y`` : pd.DataFrame, target labels. Size 17379 rows x 1 column.
+        - ``metadata`` : a dictionary containing the name and target
     """
 
     return load_simple_dataset("bike_sharing", data_home)
@@ -313,7 +329,7 @@ def fetch_movielens(data_home=None):
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict movie ratings.
-    More details are provided in the output's ``metadata['description']``.
+    More details are provided in the output's ``metadata['description']``. Size on disk: 3.6Mo.
 
     Parameters
     ----------
@@ -325,9 +341,11 @@ def fetch_movielens(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - movies : pd.DataFrame, movie ID, title and genres
-        - ratings: pd.DataFrame, user ID, movie ID, rating
-        - metadata : a dictionary containing the name source and description
+        - ``movies`` : pd.DataFrame, movie ID, title and genres. Size 9742 rows
+          x 3 columns.
+        - ``ratings``: pd.DataFrame, user ID, movie ID, rating. Size 100836
+          rows x 4 columns.
+        - ``metadata`` : a dictionary containing the name source and description
     """
 
     return load_dataset_files("movielens", data_home)
@@ -337,7 +355,7 @@ def fetch_flight_delays(data_home=None):
     """Fetch the flight delays dataset (regression) available at \
         https://github.com/skrub-data/skrub-data-files
 
-    This is a regression use-case, where the goal is to predict flight delays.
+    This is a regression use-case, where the goal is to predict flight delays. Size on disk: 657Mo.
 
     Parameters
     ----------
@@ -349,20 +367,20 @@ def fetch_flight_delays(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - flights: information about the flights, including departure and
-          arrival airports, and delay.
-        - airports: information about airports, such as city and coordinates.
+        - ``flights``: information about the flights, including departure and
+          arrival airports, and delay. Size 2370030 rows x 12 columns.
+        - ``airports``: information about airports, such as city and coordinates.
           The airport's ``iata`` can be matched to the flights' ``Origin`` and
-          ``Dest``.
-        - weather: weather data that could be used to help improve the delay
+          ``Dest``. Size 3376 rows x 7 columns.
+        - ``weather``: weather data that could be used to help improve the delay
           predictions. Note the weather data is not measured at the airports
           directly but at weather stations, whose location and information is
-          provided in ``stations``.
-        - stations: information about the weather stations. ``weather`` and
+          provided in ``stations``. Size 11282238 rows x 5 columns.
+        - ``stations``: information about the weather stations. ``weather`` and
           ``stations`` can be joined on their ``ID`` columns. Weather stations
           can only be matched to the nearest airport based on the latitude and
-          longitude.
-        - metadata : a dictionary containing the name  of the dataset.
+          longitude. Size 124245 rows x 9 columns.
+        - ``metadata`` : a dictionary containing the name  of the dataset.
     """
     return load_dataset_files("flight_delays", data_home)
 
@@ -374,20 +392,23 @@ def fetch_country_happiness(data_home=None):
     This is a regression use-case, where the goal is to predict the happiness
     index. The dataset contains data from the `2022 World Happiness Report
     <https://worldhappiness.report/>`_, and from `the World Bank open data
-    platform <https://data.worldbank.org/>`_.
+    platform <https://data.worldbank.org/>`_. Size on disk: 64Ko.
 
     Parameters
     ----------
     data_home: str or path, default=None
         The directory where to download and unzip the files.
 
-    Returns
+    Returnj
     -------
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``happiness_report``: dataframe, data from the world happiness report
-        - ``GDP_per_capita``, ``life_expectancy``, ``legal_rights_index``:
-          corresponding tables from the World Bank.
+        - ``happiness_report``: dataframe, data from the world happiness report. Size 146 rows x 12 columns.
+        - ``GDP_per_capita``: dataframe from the World Bank. Size 262 rows x 2 columns.
+        - ``life_expectancy``: dataframe from the World Bank. Size 260 rows x 2 columns.
+        - ``legal_rights_index``: dataframe from the World Bank. Size 238 rows x 2 columns.
+        - ``metadata`` : a dictionary containing the name of the dataset, a
+          description and the sources.
     """
     return load_dataset_files("country_happiness", data_home)
