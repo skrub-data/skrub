@@ -1116,8 +1116,8 @@ class SkrubNamespace:
         """Get a text representation of the computation graph.
 
         Usually the graphical representation provided by :meth:`Expr.skb.draw_graph` or
-        :meth:`Expr.skb.full_report` is more useful. This is a fallback for inspecting the
-        computation graph when only text output is available.
+        :meth:`Expr.skb.full_report` is more useful. This is a fallback for inspecting
+        the computation graph when only text output is available.
 
         Returns
         -------
