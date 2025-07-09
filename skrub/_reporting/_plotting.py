@@ -199,6 +199,17 @@ def _robust_hist(values, ax, color):
     n_high_outliers = (high < values).sum()
     n, bins, patches = ax.hist(inliers)
     n_out = n_low_outliers + n_high_outliers
+
+    # Display percentage on the bar of the histrogram
+    threshold_display = np.max(n) / 2
+    for x_, value in zip(bins, n):
+        percentage = value / np.sum(n)
+        percentage_string = _utils.format_percent(percentage)
+        if value > threshold_display:
+            ax.text(x_, value - threshold_display, percentage_string, rotation='vertical')
+        else:
+            ax.text(x_, value + threshold_display * 0.1, percentage_string, rotation='vertical')
+
     if not n_out:
         return 0, 0
     width = bins[1] - bins[0]
