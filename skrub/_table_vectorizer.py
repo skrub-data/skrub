@@ -8,8 +8,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 
+from . import _config, _utils
 from . import _dataframe as sbd
-from . import _utils
 from . import selectors as s
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
@@ -730,7 +730,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         *,
-        cardinality_threshold=40,
+        cardinality_threshold=_config.get_config()["cardinality_threshold"],
         low_cardinality=LOW_CARDINALITY_TRANSFORMER,
         high_cardinality=HIGH_CARDINALITY_TRANSFORMER,
         numeric=NUMERIC_TRANSFORMER,

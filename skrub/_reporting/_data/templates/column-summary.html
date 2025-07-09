@@ -78,6 +78,13 @@
                 <dt>(constant) String length</dt>
                 <dd>{{ column.constant_string_length }}</dd>
                 {% endif %}
+
+                <dt>Cardinality</dt>
+                {% set cardinality_class = "warning" if column.is_high_cardinality else "ok" %}
+                <dd class=" {{ cardinality_class }}">
+                    {{ "high" if column.is_high_cardinality else "low" }}
+                    ({{ ">" if column.is_high_cardinality else "<" }} {{ config["cardinality_threshold"] }})
+                </dd>
             </dl>
         </div>
 
@@ -88,7 +95,7 @@
             <div class="copybutton-grid">
                 <div class="box">
                     <pre id="{{ val_id }}"
-                         data-copy-text="{{ column.constant_value.__repr__() }}">{{ column.constant_value }}</pre>
+                        data-copy-text="{{ column.constant_value.__repr__() }}">{{ column.constant_value }}</pre>
                     {{ buttons.copybutton(val_id) }}
                 </div>
             </div>

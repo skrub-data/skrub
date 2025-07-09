@@ -19,6 +19,7 @@ def test_config_context():
         "subsampling_seed": 0,
         "enable_subsampling": "default",
         "float_precision": 3,
+        "cardinality_threshold": 40,
     }
 
     # Not using as a context manager affects nothing
