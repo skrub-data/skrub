@@ -2087,7 +2087,7 @@ class SkrubNamespace:
         See also
         --------
         :func:`skb.y`
-            Convenient shortcut to create a variable `y` and mark it as y. 
+            Convenient shortcut to create a variable `y` and mark it as y.
 
         Examples
         --------
