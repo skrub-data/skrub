@@ -206,9 +206,16 @@ def _robust_hist(values, ax, color):
         percentage = value / np.sum(n)
         percentage_string = _utils.format_percent(percentage)
         if value > threshold_display:
-            ax.text(x_, value - threshold_display, percentage_string, rotation='vertical')
+            ax.text(
+                x_, value - threshold_display, percentage_string, rotation="vertical"
+            )
         else:
-            ax.text(x_, value + threshold_display * 0.1, percentage_string, rotation='vertical')
+            ax.text(
+                x_,
+                value + threshold_display * 0.1,
+                percentage_string,
+                rotation="vertical",
+            )
 
     if not n_out:
         return 0, 0
