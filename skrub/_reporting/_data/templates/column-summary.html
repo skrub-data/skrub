@@ -98,7 +98,10 @@
         {% for plot_name in column.plot_names %}
         <div>
             <div class="margin-t-m" data-svg-needs-adjust-viewbox data-test="switch-display" data-manager="SwitchFigures" style="display: block;">
-                {{ column[plot_name] | safe }}
+                {{ column[plot_name][1] | safe }}
+            </div>
+            <div class="margin-t-m" data-svg-needs-adjust-viewbox data-test="switch-display" data-manager="SwitchFigures" style="display: none;">
+                {{ column[plot_name][0] | safe }}
             </div>
             {% if plot_name == "value_counts_plot" %}
             <details data-test="frequent-values-details">

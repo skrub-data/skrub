@@ -192,7 +192,7 @@ def _get_range(values, frac=0.2, factor=3.0):
     return low, high
 
 
-def _robust_hist(values, ax, color):
+def _robust_hist(values, ax, color, percentage):
     low, high = _get_range(values)
     inliers = values[(low <= values) & (values <= high)]
     n_low_outliers = (values < low).sum()
@@ -203,13 +203,15 @@ def _robust_hist(values, ax, color):
     # Display percentage on the bar of the histrogram
     threshold_display = np.max(n) / 2
     for index, value in enumerate(n):
-        percentage = value / np.sum(n)
-        percentage_string = _utils.format_percent(percentage)
+        if percentage:
+            string_label = _utils.format_percent(value / np.sum(n))
+        else:
+            string_label = _utils.format_number(value)
         if value > threshold_display:
             ax.text(
                 bins[index] + 0.2 * (bins[index + 1] - bins[index]),
                 value - threshold_display * 0.8,
-                percentage_string,
+                string_label,
                 rotation="vertical",
                 color="black",
                 fontsize=8,
@@ -218,7 +220,7 @@ def _robust_hist(values, ax, color):
             ax.text(
                 bins[index] + 0.2 * (bins[index + 1] - bins[index]),
                 value + threshold_display * 0.1,
-                percentage_string,
+                string_label,
                 rotation="vertical",
                 color=_TEXT_COLOR_PLACEHOLDER,
                 fontsize=8,
@@ -258,7 +260,7 @@ def _robust_hist(values, ax, color):
 
 
 @_plot
-def histogram(col, duration_unit=None, color=COLOR_0):
+def histogram(col, duration_unit=None, color=COLOR_0, percentage=True):
     """Histogram for a numeric column."""
     col = sbd.drop_nulls(col)
     if sbd.is_float(col):
@@ -269,7 +271,9 @@ def histogram(col, duration_unit=None, color=COLOR_0):
     values = sbd.to_numpy(col)
     fig, ax = plt.subplots()
     _despine(ax)
-    n_low_outliers, n_high_outliers = _robust_hist(values, ax, color=color)
+    n_low_outliers, n_high_outliers = _robust_hist(
+        values, ax, color=color, percentage=percentage
+    )
     if duration_unit is not None:
         ax.set_xlabel(f"{duration_unit.capitalize()}s")
     if sbd.is_any_date(col):
@@ -299,7 +303,7 @@ def line(x_col, y_col):
 
 
 @_plot
-def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
+def value_counts(value_counts, n_unique, n_rows, color=COLOR_0, percentage=True):
     """Bar plot of the frequencies of the most frequent values in a column.
 
     Parameters
@@ -332,13 +336,15 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     fig, ax = plt.subplots()
     _despine(ax)
     rects = ax.barh(list(map(str, range(len(values)))), counts, color=color)
-    percent = [_utils.format_percent(c / n_rows) for c in counts]
+    if percentage:
+        labels = [_utils.format_percent(c / n_rows) for c in counts]
+    else:
+        labels = [_utils.format_number(c) for c in counts]
+
     large_percent = [
-        f"{p: >6}" if c > counts[-1] / 2 else "" for (p, c) in zip(percent, counts)
+        f"{p: >6}" if c > counts[-1] / 2 else "" for (p, c) in zip(labels, counts)
     ]
-    small_percent = [
-        p if c <= counts[-1] / 2 else "" for (p, c) in zip(percent, counts)
-    ]
+    small_percent = [p if c <= counts[-1] / 2 else "" for (p, c) in zip(labels, counts)]
 
     # those are written on top of the orange bars so we write them in black
     ax.bar_label(rects, large_percent, padding=-30, color="black", fontsize=8)
