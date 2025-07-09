@@ -119,6 +119,7 @@ def test_float_precision():
         {"subsampling_seed": -1},
         {"enable_subsampling": "no"},
         {"float_precision": -1},
+        {"cardinality_threshold": -1},
     ],
 )
 def test_error(params):
