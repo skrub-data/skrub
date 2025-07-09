@@ -202,19 +202,26 @@ def _robust_hist(values, ax, color):
 
     # Display percentage on the bar of the histrogram
     threshold_display = np.max(n) / 2
-    for x_, value in zip(bins, n):
+    for index, value in enumerate(n):
         percentage = value / np.sum(n)
         percentage_string = _utils.format_percent(percentage)
         if value > threshold_display:
             ax.text(
-                x_, value - threshold_display, percentage_string, rotation="vertical"
+                bins[index] + 0.2 * (bins[index + 1] - bins[index]),
+                value - threshold_display * 0.8,
+                percentage_string,
+                rotation="vertical",
+                color="black",
+                fontsize=8,
             )
         else:
             ax.text(
-                x_,
-                value + threshold_display * 0.1,
+                bins[index] + 0.2 * (bins[index + 1] - bins[index]),
+                value + threshold_display * 0.05,
                 percentage_string,
                 rotation="vertical",
+                color=_TEXT_COLOR_PLACEHOLDER,
+                fontsize=8,
             )
 
     if not n_out:
