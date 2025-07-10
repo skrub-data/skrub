@@ -21,10 +21,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-
-    &:has(svg) {
-        padding: var(--spacing-s);
-    }
 }
 
 .toggletip > .toggletip-info {

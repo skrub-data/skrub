@@ -40,11 +40,9 @@
                     {% if column.is_high_cardinality %}
                     <span class="toggletip-wrapper">
                         <div class="toggletip" data-manager="Toggletip">
-                        <button type="button">
-                            {% include "icons/exclamation-triangle.svg" %}
-                        </button>
+                        <button type="button"><span>i</span></button>
                         <div class="toggletip-info box-shadow">
-                            This column as a high cardinality (> {{config["cardinality_threshold"]}}).
+                            This column has a high cardinality (> {{config["cardinality_threshold"]}}).
                         </div>
                     </span>
                     {% endif %}
