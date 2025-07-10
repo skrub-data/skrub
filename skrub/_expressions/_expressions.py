@@ -1187,6 +1187,38 @@ def _check_column_names(X):
     return cast_column_names_to_strings(X)
 
 
+def _check_subsampled_X_y_shape(X_expr, y_expr, X_value, y_value, mode, environment):
+    from ._subsampling import _should_subsample, uses_subsampling
+
+    if not isinstance(X_expr, Expr) or not isinstance(y_expr, Expr):
+        return
+    if not _should_subsample(mode, environment):
+        # no subsampling is taking place
+        return
+    try:
+        n_X, n_y = len(X_value), len(y_value)
+    except Exception:
+        # X or y is not an array (eg y is None), we cannot compare lengths
+        return
+    if n_X == n_y:
+        return
+    X_subsampled, y_subsampled = uses_subsampling(X_expr), uses_subsampling(y_expr)
+    if X_subsampled ^ y_subsampled:
+        sub, other = ("X", "y") if X_subsampled else ("y", "X")
+        raise ValueError(
+            f"`{sub}` was subsampled with `.skb.subsample()` but `{other}` was not, "
+            f"resulting in different sizes (X: {n_X}, y: {n_y})."
+        )
+    # Either both used subsampling or neither did, but subsampling could still
+    # be at fault eg if they used a different (non-default) random seed. We
+    # could investigate further but for simplicity we raise the usual
+    # scikit-learn message.
+    raise ValueError(
+        "Found input variables with inconsistent numbers of samples: "
+        f"X: {n_X}, y: {n_y}"
+    )
+
+
 class Apply(ExprImpl):
     """.skb.apply() nodes."""
 
@@ -1206,6 +1238,8 @@ class Apply(ExprImpl):
             y = yield self.y
         else:
             y = None
+
+        _check_subsampled_X_y_shape(self.X, self.y, X, y, mode, environment)
 
         X = _check_column_names(X)
 
