@@ -46,7 +46,7 @@ New features
 
 - :func:`get_config`, :func:`set_config` and :func:`config_context` now have a new
   parameter `cardinality_threshold` that controls the threshold value used to warn user if they have
-  high cardinality columns in there dataset. :pr:`1498` by :user:`rouk1 <rouk1>`.
+  high cardinality columns in their dataset. :pr:`1498` by :user:`rouk1 <rouk1>`.
 
 Changes
 -------
