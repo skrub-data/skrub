@@ -35,7 +35,20 @@
                 {% if not column.value_is_constant %}
                 {% if column.n_unique %}
                 <dt>Unique values</dt>
-                <dd>{{ column.n_unique | format_number }} ({{ column.unique_proportion | format_percent }})</dd>
+                <dd>
+                    {{ column.n_unique | format_number }} ({{ column.unique_proportion | format_percent }})
+                    {% if column.is_high_cardinality %}
+                    <span class="toggletip-wrapper">
+                        <div class="toggletip" data-manager="Toggletip">
+                        <button type="button">
+                            {% include "icons/exclamation-triangle.svg" %}
+                        </button>
+                        <div class="toggletip-info box-shadow">
+                            This column as a high cardinality (> {{config["cardinality_threshold"]}}).
+                        </div>
+                    </span>
+                    {% endif %}
+                </dd>
                 {% endif %}
 
                 {% if column["duration_unit"] %}
@@ -78,13 +91,6 @@
                 <dt>(constant) String length</dt>
                 <dd>{{ column.constant_string_length }}</dd>
                 {% endif %}
-
-                <dt>Cardinality</dt>
-                {% set cardinality_class = "warning" if column.is_high_cardinality else "ok" %}
-                <dd class=" {{ cardinality_class }}">
-                    {{ "high" if column.is_high_cardinality else "low" }}
-                    ({{ ">" if column.is_high_cardinality else "<" }} {{ config["cardinality_threshold"] }})
-                </dd>
             </dl>
         </div>
 
