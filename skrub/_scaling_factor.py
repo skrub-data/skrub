@@ -1,3 +1,8 @@
+"""
+Skrub encoders output vectors that don't have the same scale. Scaling using the
+standard deviation of the matrix help computational stability and downstream prediction
+performance.
+"""
 import numpy as np
 
 
@@ -53,54 +58,3 @@ def scaling_factor(X):
     scaling_factor = np.sqrt(np.nansum(np.nanvar(X, ddof=0, axis=0)))
 
     return _clip_epsilon(scaling_factor)
-
-
-def scaling_factor_batch(X, past_stats):
-    """Compute the batched version of the scaling factor.
-
-    This function is used to compute the scaling factor in ``GapEncoder.partial_fit``,
-    when the dataset is only accessed via batches coming one by one. This function
-    accumulates statistics obtained from previous partial fit to compute the
-    scaling factor.
-
-    Parameters
-    ----------
-    X : np.ndarray of shape (n_samples, n_features)
-        The batch to update the scaling factor with.
-
-    past_stats : defaultdict(Counter)
-        Past statistics container, where columns map their combined statistics.
-
-    Returns
-    -------
-    scaling_factor : float
-        The total standard deviation scaler, up to the last batch
-
-    past_stats : defaultdict(Counter)
-        Past statistics container, updated with the last batch.
-    """
-    scaling_factor_sq = 0
-
-    n2 = X.shape[0]
-    for j in range(X.shape[1]):
-        x_col = X[:, j]
-        mean2, var2 = x_col.mean(), x_col.var(ddof=0)
-        n1, mean1, var1 = (
-            past_stats[j]["n"],
-            past_stats[j]["mean"],
-            past_stats[j]["var"],
-        )
-        N = n1 + n2
-        delta = mean2 - mean1
-
-        combined_mean = (mean1 * n1 + mean2 * n2) / N
-        combined_var = (n1 * var1 + n2 * var2 + (n1 * n2 * delta**2) / N) / N
-
-        scaling_factor_sq += combined_var
-        past_stats[j] = {
-            "n": N,
-            "mean": combined_mean,
-            "var": combined_var,
-        }
-
-    return _clip_epsilon(np.sqrt(scaling_factor_sq)), past_stats

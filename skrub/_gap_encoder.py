@@ -467,6 +467,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         unq_X, unq_V, lookup = self._init_vars(X, is_null)
         n_batch = (len(X) - 1) // self.batch_size + 1
         n_samples = len(X)
+        del X
 
         # Get activations unq_H
         unq_H = self._get_H(unq_X)
@@ -692,9 +693,8 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
         self.H_dict_.update(zip(unq_X, unq_H))
 
         # XXX: Maybe we should accumulate unq_V or the scaling factor somehow?
-        scaling_factor = _gap_scaling_factor(unq_V)
-        if not hasattr(self, "scaling_factor_") or scaling_factor != 0:
-            self.scaling_factor_ = scaling_factor
+        if not hasattr(self, "scaling_factor_"):
+            self.scaling_factor_ = _gap_scaling_factor(unq_V)
 
         return self
 
