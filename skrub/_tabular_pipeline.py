@@ -33,6 +33,19 @@ def tabular_learner(estimator, *, n_jobs=None):
         The functionality provided by this function is now implemented in
         :func:`~skrub.tabular_pipeline`.
 
+    ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'``, this
+    function creates a scikit-learn pipeline that extracts numeric features, imputes
+    missing values and scales the data if necessary, then applies the estimator.
+
+    .. note::
+       The heuristics used by the ``tabular_pipeline``
+       to define an appropriate preprocessing based on the ``estimator`` may change
+       in future releases.
+
+    .. versionchanged:: 0.6.0
+        The high cardinality encoder has been changed from
+        :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
+
     Parameters
     ----------
     estimator : {"regressor", "regression", "classifier", "classification"} or
