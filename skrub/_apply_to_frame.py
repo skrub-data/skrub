@@ -12,7 +12,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
-    single input). This is different from ``ApplyToCols`` which fits a
+    single input). This is different from ``ApplyToCols``, which fits a
     separate clone of the transformer to each selected column independently.
 
     .. note::
@@ -78,7 +78,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
     2  0.0   0.0  100.0     0.0
     3  0.0   0.0    0.0  1000.0
     >>> from sklearn.decomposition import PCA
-    >>> from skrub._apply_to_frame import ApplyToFrame
+    >>> from skrub import ApplyToFrame
     >>> ApplyToFrame(PCA(n_components=2)).fit_transform(df).round(2)
          pca0   pca1
     0 -249.01 -33.18
