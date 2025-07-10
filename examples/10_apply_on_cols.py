@@ -5,8 +5,8 @@ Hands-On with Column Selection and Transformers
 In previous examples, we saw how skrub provides powerful abstractions like
 :class:`~skrub.TableVectorizer` and :func:`~skrub.tabular_learner` to create pipelines.
 
-In this new example, we show how to gain more flexibility with pipelines by selecting
-dataframe columns using arbitrary logic, and applying transformers to them.
+In this new example, we show how to create more flexible pipelines by selecting
+and transforming dataframe columns using arbitrary logic.
 """
 
 # %%
@@ -21,11 +21,11 @@ X, y = data.X, data.y
 X
 
 # %%
-# Our goal is now to apply a :class:`~skrub.StringEncoder` to two specific columns.
+# Our goal is now to apply a :class:`~skrub.StringEncoder` to two columns of our choosing: ``division`` and ``employee_position_title``.
 #
 # We can achieve this using :class:`~skrub.ApplyToCols`, whose job is to apply a
-# transformer to multiple columns independently, and to simply pass through unmatched
-# columns. This can be seen as a handy drop-in replacement of the
+# transformer to multiple columns independently, and let unmatched columns through without changes.
+# This can be seen as a handy drop-in replacement of the
 # :class:`~sklearn.compose.ColumnTransformer`.
 #
 # Since we selected two columns and set the number of components to ``30`` each,
@@ -43,15 +43,14 @@ Xt
 
 # %%
 # Let's now imagine that our two previous columns ``"division"``,
-# ``"employee_position_title"`` are highly correlated, and we want to reduce their
-# vector representations jointly.
+# ``"employee_position_title"`` are highly correlated, and we want to reduce 
+# the number of components of their vector representation jointly. 
 #
 # This time, we can use :class:`~skrub.ApplyToFrame`, which applies a transformer to
-# columns jointly, rather than separately like :class:`~skrub.ApplyToCols`.
+# a subset of columns jointly as a single dataframe, rather than separately like :class:`~skrub.ApplyToCols`.
 #
 # We apply a :class:`~sklearn.decomposition.PCA` via
-# :class:`~skrub.ApplyToFrame` to the ``60`` previous vector columns jointly. These
-# columns are easy to identify because they are all prefixed with ``"lsa"``.
+# :class:`~skrub.ApplyToFrame` jointly to the ``60`` previous vector columns, which can be identified easily because they are all prefixed with ``"lsa"``.
 #
 # To select them without hardcoding their names, we introduce skrub selectors,
 # which allow for flexible matching pattern and composable logic. See
