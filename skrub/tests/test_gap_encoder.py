@@ -145,7 +145,10 @@ def test_partial_fit(df_module, add_words, generate_data):
     X3 = generate_data(n_samples - 10, random_state=2)
     # Gap encoder with fit on one batch
     enc = GapEncoder(
-        random_state=42, batch_size=n_samples, max_iter=1, add_words=add_words
+        random_state=42,
+        batch_size=n_samples,
+        max_iter=1,
+        add_words=add_words,
     )
     X_enc = enc.fit_transform(X)
     # Gap encoder with partial fit

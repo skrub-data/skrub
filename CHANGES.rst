@@ -63,6 +63,11 @@ Changes
 - The `packaging` dependency was removed.
   :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
+- :class:`TextEncoder`, :class:`StringEncoder` and :class:`GapEncoder` now compute the
+  total standard deviation norm during training, which is a global constant, and
+  normalize the vector outputs by performing element-wise division on all entries.
+  :pr:`1274` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 - The :class:`DropIfTooManyNulls` transformer has been replaced by the
   :class:`DropUninformative` transformer and will be removed in a future release.
   :pr:`1313` by :user:`Riccardo Cappuzzo<rcap107>`
@@ -94,6 +99,9 @@ Changes
 - The ``tabular_learner`` function has been deprecated in favor of :func:`tabular_pipeline` to honor
   its scikit-learn pipeline cultural heritage, and remove the ambiguity with the data
   ops Learner. :pr:`1493` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+- A new parameter ``float_precision`` has been added to the global config to control the number of significant digits
+  displayed for floating-point values in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
 
 Bugfixes
 --------
