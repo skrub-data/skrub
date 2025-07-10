@@ -57,6 +57,7 @@ def test_summarize(
     assert c == {
         "idx": 0,
         "dtype": "string",
+        "is_ordered": False,
         "n_unique": 2,
         "name": "city",
         "null_count": 0,
