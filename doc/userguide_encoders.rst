@@ -43,7 +43,7 @@ compared to other methods.
 |GapEncoder|
 ~~~~~~~~~~~~
 
-The ``GapEncoder`` estimates "latent categories" on the training data by finding
+The |GapEncoder| estimates "latent categories" on the training data by finding
 common ngrams between strings, then encodes the categories as real
 numbers. It allows access to grouped features via ``.get_feature_names_out()``,
 which allows for better interpretability. This encoder may require a long time to train.
