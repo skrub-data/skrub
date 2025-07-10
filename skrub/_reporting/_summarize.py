@@ -172,7 +172,7 @@ def _summarize_column(
     )
     _add_datetime_summary(summary, column, with_plots=with_plots)
     summary["plot_names"] = [k for k in summary.keys() if k.endswith("_plot")]
-    _add_is_ordered(summary, column)
+    _add_is_sorted(summary, column)
 
     return summary
 
@@ -280,5 +280,5 @@ def _add_numeric_summary(
         summary["line_plot"] = _plotting.line(order_by_column, column)
 
 
-def _add_is_ordered(summary, column):
-    summary["is_ordered"] = sbd.is_ordered(column)
+def _add_is_sorted(summary, column):
+    summary["is_ordered"] = sbd.is_sorted(column)

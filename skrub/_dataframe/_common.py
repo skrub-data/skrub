@@ -107,7 +107,7 @@ __all__ = [
     "with_columns",
     "abs",
     "total_seconds",
-    "is_ordered",
+    "is_sorted",
 ]
 
 pandas_version = parse_version(parse_version(pd.__version__).base_version)
@@ -1391,16 +1391,16 @@ def _total_seconds_polars(col):
 
 
 @dispatch
-def is_ordered(col):
-    """Check if a column is ordered."""
+def is_sorted(col):
+    """Check if a column is sorted."""
     raise _raise(col, kind="Series")
 
 
-@is_ordered.specialize("pandas", argument_type="Column")
-def _is_ordered_pandas(col):
+@is_sorted.specialize("pandas", argument_type="Column")
+def _is_sorted_pandas(col):
     return col.is_monotonic_increasing or col.is_monotonic_decreasing
 
 
-@is_ordered.specialize("polars", argument_type="Column")
-def _is_ordered_polars(col):
+@is_sorted.specialize("polars", argument_type="Column")
+def _is_sorted_polars(col):
     return col.is_sorted()
