@@ -145,6 +145,7 @@ def _summarize_column(
         "name": sbd.name(column),
         "dtype": _utils.get_dtype_name(column),
         "value_is_constant": False,
+        "is_ordered": False,
     }
     _add_nulls_summary(summary, column, dataframe_summary=dataframe_summary)
     if summary["null_count"] == dataframe_summary["n_rows"]:
@@ -171,6 +172,8 @@ def _summarize_column(
     )
     _add_datetime_summary(summary, column, with_plots=with_plots)
     summary["plot_names"] = [k for k in summary.keys() if k.endswith("_plot")]
+    _add_is_ordered(summary, column)
+
     return summary
 
 
@@ -275,3 +278,7 @@ def _add_numeric_summary(
         )
     else:
         summary["line_plot"] = _plotting.line(order_by_column, column)
+
+
+def _add_is_ordered(summary, column):
+    summary["is_ordered"] = sbd.is_ordered(column)
