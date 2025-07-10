@@ -3,6 +3,7 @@ import typing
 
 from sklearn import model_selection
 
+from .. import _dataframe as sbd
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
 from ._estimator import ParamSearch, SkrubPipeline, cross_validate, train_test_split
@@ -76,6 +77,21 @@ def _check_grid_search_possible(expr):
                 "Please use `get_randomized_search` or provide a number "
                 f"of steps for this range: {c}"
             )
+
+
+def _repr_node_val(val):
+    if val is NULL:
+        return None
+    elif sbd.is_dataframe(val):
+        module = sbd.dataframe_module_name(val)
+        return f"{module} Dataframe, schema: {val.dtypes.apply(str).to_dict()}"
+    elif sbd.is_column(val):
+        module = sbd.dataframe_module_name(val)
+        return f"{module} Series, dtype: {str(val.dtype)}"
+    elif hasattr(val, "shape") and hasattr(val, "dtype"):
+        return f"{type(val)}, shape: {val.shape}, dtype: {val.dtype}"
+    else:
+        return type(val)
 
 
 class SkrubNamespace:
@@ -1086,14 +1102,18 @@ class SkrubNamespace:
         >>> e.skb.get_data()
         {'a': 0, 'b': 1}
         """
+        return {
+            impl.name: impl.value
+            for n in nodes(self._expr)
+            if isinstance((impl := n._skrub_impl), Var) and impl.value is not NULL
+        }
 
-        data = {}
-
-        for n in nodes(self._expr):
-            impl = n._skrub_impl
-            if isinstance(impl, Var) and impl.value is not NULL:
-                data[impl.name] = impl.value
-        return data
+    def get_data_schema(self):
+        return {
+            impl.name: _repr_node_val(impl.value)
+            for n in nodes(self._expr)
+            if isinstance((impl := n._skrub_impl), Var)
+        }
 
     def draw_graph(self):
         """Get an SVG string representing the computation graph.
