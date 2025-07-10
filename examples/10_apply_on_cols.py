@@ -21,10 +21,12 @@ X, y = data.X, data.y
 X
 
 # %%
-# Our goal is now to apply a :class:`~skrub.StringEncoder` to two columns of our choosing: ``division`` and ``employee_position_title``.
+# Our goal is now to apply a :class:`~skrub.StringEncoder` to two columns of our
+# choosing: ``division`` and ``employee_position_title``.
 #
 # We can achieve this using :class:`~skrub.ApplyToCols`, whose job is to apply a
-# transformer to multiple columns independently, and let unmatched columns through without changes.
+# transformer to multiple columns independently, and let unmatched columns through
+# without changes.
 # This can be seen as a handy drop-in replacement of the
 # :class:`~sklearn.compose.ColumnTransformer`.
 #
@@ -42,19 +44,14 @@ Xt = apply_string_encoder.fit_transform(X)
 Xt
 
 # %%
-# Let's now imagine that our two previous columns ``"division"``,
-# ``"employee_position_title"`` are highly correlated, and we want to reduce 
-# the number of components of their vector representation jointly. 
+# In addition to the :class:`~skrub.ApplyToCols` class, the
+# :class:`~skrub.ApplyToFrame` class is useful for transformers that work on multiple
+# columns at once, such as the :class:`~sklearn.decomposition.PCA` which reduces the
+# number of components.
 #
-# This time, we can use :class:`~skrub.ApplyToFrame`, which applies a transformer to
-# a subset of columns jointly as a single dataframe, rather than separately like :class:`~skrub.ApplyToCols`.
-#
-# We apply a :class:`~sklearn.decomposition.PCA` via
-# :class:`~skrub.ApplyToFrame` jointly to the ``60`` previous vector columns, which can be identified easily because they are all prefixed with ``"lsa"``.
-#
-# To select them without hardcoding their names, we introduce skrub selectors,
-# which allow for flexible matching pattern and composable logic. See
-# :ref:`selectors<selectors>` for further details.
+# To select columns without hardcoding their names, we introduce
+# :ref:`selectors<selectors>`, which allow for flexible matching pattern and composable
+# logic.
 #
 # The regex selector below will match all columns prefixed with ``"lsa"``, and pass them
 # to :class:`~skrub.ApplyToFrame` which will assemble these columns into a dataframe and
@@ -97,7 +94,9 @@ pipeline.fit_transform(Xt)
 # Suppose we want to apply an :class:`~sklearn.preprocessing.OrdinalEncoder` on
 # categorical columns with low cardinality (e.g., fewer than ``40`` unique values).
 #
-# We define a column filter using skrub selectors with a lambda function.
+# We define a column filter using skrub selectors with a lambda function. Note that
+# the same effect can be obtained directly by using
+# :func:`~srkub.selectors.cardinality_below`.
 from sklearn.preprocessing import OrdinalEncoder
 
 low_cardinality = s.filter(lambda col: col.nunique() < 40)
