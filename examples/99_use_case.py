@@ -3,6 +3,9 @@ Usecase: developing locally, and avoiding to repeat code in production
 =======================================================================
 
 We will imagine a use case here and try to use skrub to answer it.
+For now, we start with a simple "flat" use case.
+Next, we can imagine that the data scientist has to predict fraud in retail. The target
+is at the basket level, while most information is at the items level.
 
 """
 
@@ -45,7 +48,7 @@ def generate_id():
     return str(uuid.uuid4())
 
 
-def generate_sender():
+def generate_email():
     length = random.randint(5, 10)
     username = "".join(random.choice(string.ascii_lowercase) for _ in range(length))
     domain = ["google", "yahoo", "whatever"]
@@ -73,15 +76,30 @@ n_samples = 1000
 X = [
     {
         "id": generate_id(),
-        "sender": generate_sender(),
+        "sender": generate_email(),
         "title": generate_text(max_str_length=10, min_str_length=2),
         "content": generate_text(max_str_length=100, min_str_length=10),
         "date": generate_datetime(),
+        "cc_emails": [generate_email() for _ in range(random.randint(0, 5))],
     }
-    for i in range(n_samples)
+    for _ in range(n_samples)
 ]
 
 # generate array of 1 and 0
 y = np.random.binomial(n=1, p=0.9, size=[n_samples])
+
+# %%
+import skrub
+
+X = skrub.X(X)
+y = skrub.y(y)
+
+# %%
+import pandas as pd
+
+# %%
+vectorizer = skrub.TableVectorizer()
+# %%
+X.skb.apply_func(pd.DataFrame).skb.apply(vectorizer, y=y)
 
 # %%
