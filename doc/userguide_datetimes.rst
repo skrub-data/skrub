@@ -1,9 +1,8 @@
-.. _userguide_datetimes
 .. |ToDatetime| replace:: :class:`~skrub.ToDatetime`
 .. |to_datetime| replace:: :func:`~skrub.to_datetime`
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
-========================================
 
+.. _userguide_datetimes:
 Parsing and encoding datetimes
 ------------------
 

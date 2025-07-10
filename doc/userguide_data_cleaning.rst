@@ -1,10 +1,9 @@
-.. _userguide_data_cleaning:
-
 .. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
 .. |Cleaner| replace:: :class:`~skrub.Cleaner`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |deduplicate| replace:: :func:`~skrub.deduplicate`
 
+.. _userguide_data_cleaning:
 Data Preparation with the ``skrub`` Transformers
 ------------------------------------------------
 
