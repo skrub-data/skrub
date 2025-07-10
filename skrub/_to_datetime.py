@@ -145,7 +145,7 @@ class ToDatetime(SingleColumnTransformer):
     2    2024-05-07T13:17:52
     Name: when, dtype: object
 
-    >>> from skrub._to_datetime import ToDatetime
+    >>> from skrub import ToDatetime
 
     >>> to_dt = ToDatetime()
     >>> to_dt.fit_transform(s)

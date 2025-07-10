@@ -10,6 +10,7 @@ from sklearn.pipeline import Pipeline
 
 from . import _dataframe as sbd
 from ._apply_to_cols import SingleColumnTransformer
+from ._scaling_factor import scaling_factor
 from ._to_str import ToStr
 
 
@@ -115,10 +116,10 @@ class StringEncoder(SingleColumnTransformer):
 
     >>> enc.fit_transform(X) # doctest: +SKIP
        video comments_0  video comments_1
-    0      8.218069e-01      4.557474e-17
-    1      6.971618e-16      1.000000e+00
-    2      8.218069e-01     -3.046564e-16
-    """  # noqa: E501
+    0          1.322973         -0.163070
+    1          0.379688          1.659319
+    2          1.306400         -0.317120
+    """
 
     def __init__(
         self,
@@ -209,7 +210,10 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()  # To avoid a reference to X_out
         del X_out  # optimize memory: we no longer need X_out
 
-        self._is_fitted = True
+        # block normalize
+        self.scaling_factor_ = scaling_factor(result)
+        result /= self.scaling_factor_
+
         self.n_components_ = result.shape[1]
 
         self.input_name_ = sbd.name(X) or "string_enc"
@@ -248,6 +252,9 @@ class StringEncoder(SingleColumnTransformer):
             result = X_out[:, : self.n_components].toarray()
             result = result.copy()
         del X_out  # optimize memory: we no longer need X_out
+
+        # block normalize
+        result /= self.scaling_factor_
 
         return self._post_process(X, result)
 
