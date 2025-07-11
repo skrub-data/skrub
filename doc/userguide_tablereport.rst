@@ -19,6 +19,8 @@ Usage
 >>> TableReport(df)  # from a notebook cell
 <TableReport: use .open() to display>
 
+The command ``TableReport(df).open()`` opens the report in a browser window.
+
 The |TableReport| gives a high-level overview of the given dataframe, suitable for
 quick exploratory analysis of series and dataframes. The report shows the first
 and last 5 rows of the dataframe (decided by the ``n_rows`` parameter), as well
@@ -35,15 +37,7 @@ checkmark icon: the name of the column is added to the bar on top, so that it ma
 be copied in a script.
 
 The TableReport can be used in a notebook cell, or it can be opened in a browser
-window using the ``open`` method:
-
->>> from skrub import TableReport
->>> import pandas as pd
->>> df = pd.DataFrame({
-...     "id": [1, 2, 3],
-...     "value": [10, 20, 30],
-... })
->>> TableReport(df).open()  # to open in a browser window
+window using ``TableReport(df).open()``.
 
 Altering the Appearance of the |TableReport|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
