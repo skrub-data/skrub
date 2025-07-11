@@ -8,10 +8,6 @@ This example summarizes the use of skrub DataOps to build a ``Learner``:  record
 all the Data Operations involved in building a predictor starting from one or
 more tables, and then replays them on unseen data.
 
-Here, we consider the problem of predicting whether the e-commerce transactions
-in a dataset are fraudulent: to do so, we need to train a classifier that takes
-a decision based on the features of each transaction, with the additional complication
-that the features are not stored in the table that contains the labels.
 
 """
 
