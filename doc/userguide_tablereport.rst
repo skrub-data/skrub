@@ -40,9 +40,9 @@ window using the ``open`` method:
 >>> from skrub import TableReport
 >>> import pandas as pd
 >>> df = pd.DataFrame({
->>>     "id": [1, 2, 3],
->>>     "value": [10, 20, 30],
->>> })
+...     "id": [1, 2, 3],
+...     "value": [10, 20, 30],
+... })
 >>> TableReport(df).open()  # to open in a browser window
 
 Altering the Appearance of the |TableReport|
