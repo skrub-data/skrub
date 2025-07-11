@@ -10,9 +10,8 @@
 Feature engineering for categorical data
 --------------------------------------------------
 
-In Skrub, categorical features are all features not detected as numeric or
-datetimes: this includes strings, text, IDs, and features with dtype ``categorical``
-(e.g., ``pd.Categorical``).
+In Skrub, categorical features correspond to columns whose data type is neither numeric nor
+datetime. This includes string, categorical, and object data types.
 
 
 |StringEncoder|
@@ -27,7 +26,7 @@ followed by truncated SVD
 ~~~~~~~~~~~~~
 
 This encoder encodes string features using pretrained language models from the
-HuggingFace Hub. It is a wrapper around :ref:`sentence-transformers <https://sbert.net/>`_
+HuggingFace Hub. It is a wrapper around `sentence-transformers <https://sbert.net/>`_
 compatible with the scikit-learn API and usable in pipelines. Best for
 free-flowing text and when columns include context found in the pretrained model
 (e.g., name of cities etc.). Note that this encoder can take a very long time to
@@ -36,7 +35,7 @@ train, especially on large datasets and on CPU.
 |MinHashEncoder|
 ~~~~~~~~~~~~~~~~
 
-This encoder ecomposes strings into ngrams, then applies the MinHash method to convert them
+This encoder decomposes strings into ngrams, then applies the MinHash method to convert them
 into numerical features. Fast to train, but features may yield worse results
 compared to other methods.
 
@@ -81,4 +80,4 @@ Comparison of the Categorical Encoders
       - Mediocre
       -
 
-Example 2 (see :ref:`example_string_encoders`) and this `blog post <https://skrub-data.org/skrub-materials/pages/notebooks/categorical-encoders/categorical-encoders.html>`_ include a more systematic analysis of each method.
+:ref:`This example <example_string_encoders>`) and this `blog post <https://skrub-data.org/skrub-materials/pages/notebooks/categorical-encoders/categorical-encoders.html>`_ include a more systematic analysis of each method.

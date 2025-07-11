@@ -6,8 +6,8 @@
 Parsing and encoding datetimes
 ------------------
 
-Parsing Datetime Strings with |ToDatetime| and |to_datetime|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parsing Datetime Strings
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Skrub provides helpers to parse datetime string columns automatically:
 

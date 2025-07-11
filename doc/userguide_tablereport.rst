@@ -5,7 +5,7 @@
 
 =========================================
 
-Using the |TableReport| to explore dataframes
+Exploring dataframes with the |TableReport|
 ---------------------------------------------
 
 Usage

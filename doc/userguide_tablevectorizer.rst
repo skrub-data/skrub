@@ -16,7 +16,7 @@ Strong baseline pipelines
 
 |TableVectorizer|
 ~~~~~~~~~~~~~~~~~
-In tabular machine learning pipelines, categorical features are converted to numerical features
+In tabular machine learning pipelines, practioners often convert categorical features to numerical features
 using various encodings (|OneHotEncoder|, |OrdinalEncoder|, etc.).
 
 The |TableVectorizer| performs feature engineering on dataframes by parsing the
