@@ -19,13 +19,10 @@ Strong baseline pipelines
 In tabular machine learning pipelines, practioners often convert categorical features to numerical features
 using various encodings (|OneHotEncoder|, |OrdinalEncoder|, etc.).
 
-The |TableVectorizer| performs feature engineering on dataframes by parsing the
-data type of each column and encoding columns according to their data type,
-producing new numeric features that can be used in machine learning models.
+The |TableVectorizer| parses the data type of each column and maps each column to an encoder, in order
+to produce numeric features for machine learning models.
 
-The |TableVectorizer| splits columns into four categories and applies a default
-encoder to each.
-The default encoders for each column category are:
+More precisely, the |TableVectorizer| maps columns to one of the following four groups by default:
 
 - **High-cardinality categorical columns**: |StringEncoder|
 - **Low-cardinality categorical columns**: scikit-learn |OneHotEncoder|
