@@ -39,7 +39,7 @@ skrub.TableReport(dataset.baskets)
 skrub.TableReport(dataset.products)
 
 # %%
-# Each basket contains one or more products, and products can
+# Each basket contains at least one product, and products can
 # be associated with the corresponding basket through the ``"basket_ID"``
 # column.
 #
