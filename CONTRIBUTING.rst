@@ -364,10 +364,20 @@ specific examples, you can use the following command with a regex pattern:
 
 .. code:: bash
 
-    make html EXAMPLES_PATTERN=your_regex_goes_here make html
+    make html EXAMPLES_PATTERN=your_regex_goes_here
 
 This is especially helpful when you're only modifying or checking a few examples.
 
+It is also possible to build the documentation without running the examples
+by using the following command:
+
+.. code:: bash
+
+    make html-noplot
+
+This command generates the documentation without re-executing the examples, which
+can take a long time. This is useful if you are only modifying the
+documentation itself, such as fixing typos or improving explanations.
 
 Editing the API reference documentation
 ---------------------------------------
