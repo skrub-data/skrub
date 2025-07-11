@@ -4,9 +4,9 @@
 
 Building a predictive model by combining multiple tables with the skrub Data Plan
 ====================================================================
-This example summarizes the use of skrub DataOps to build a ``Learner``:  recording all the
-Data Operations involved in building a predictor starting from one or more tables,
-and then replays them on unseen data.
+This example summarizes the use of skrub DataOps to build a ``Learner``:  recording
+all the Data Operations involved in building a predictor starting from one or
+more tables, and then replays them on unseen data.
 
 Here, we consider the problem of predicting whether the e-commerce transactions
 in a dataset are fraudulent: to do so, we need to train a classifier that takes
