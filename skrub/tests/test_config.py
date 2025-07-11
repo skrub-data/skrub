@@ -18,6 +18,8 @@ def test_config_context():
         "max_association_columns": 30,
         "subsampling_seed": 0,
         "enable_subsampling": "default",
+        "float_precision": 3,
+        "cardinality_threshold": 40,
     }
 
     # Not using as a context manager affects nothing
@@ -87,6 +89,26 @@ def test_enable_subsampling():
             assert evaluate(expr.skb.subsample(n=3), mode="preview").shape[0] == 3
 
 
+def test_float_precision():
+    y = fetch_employee_salaries().y
+
+    # Default config: float_precision set to 3
+    report = TableReport(y)
+    mean = f"{report._summary['columns'][0]['mean']:#.3g}"
+    html = report._repr_html_()
+    assert mean in html
+
+    # Float precision set to 2
+    with config_context(float_precision=2):
+        report_2 = TableReport(y)
+        mean_2 = f"{report_2._summary['columns'][0]['mean']:#.2g}"
+        html_2 = report_2._repr_html_()
+        assert mean_2 in html_2
+
+    assert mean != mean_2
+    assert html != html_2
+
+
 @pytest.mark.parametrize(
     "params",
     [
@@ -96,6 +118,8 @@ def test_enable_subsampling():
         {"max_association_columns": "hello"},
         {"subsampling_seed": -1},
         {"enable_subsampling": "no"},
+        {"float_precision": -1},
+        {"cardinality_threshold": -1},
     ],
 )
 def test_error(params):
