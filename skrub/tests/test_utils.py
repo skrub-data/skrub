@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import skrub
 from skrub import _dataframe as sbd
 from skrub import _utils
 from skrub._utils import (
@@ -12,6 +11,7 @@ from skrub._utils import (
     import_optional_dependency,
     unique_strings,
 )
+from skrub.datasets import toy_orders
 
 
 def test_lrudict():
@@ -67,7 +67,7 @@ def test_short_repr():
     for i in range(10):
         d = {0: d}
     assert _utils.short_repr(d) == "{0: {0: {0: {0: {0: {0: {...}}}}}}}"
-    df = skrub.toy_orders().X
+    df = toy_orders().X
     assert _utils.short_repr(df) == "DataFrame(...)"
 
     class A:

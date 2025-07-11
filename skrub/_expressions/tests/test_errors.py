@@ -46,7 +46,7 @@ def test_setitem():
     a = skrub.var("a", {})
     with pytest.raises(TypeError, match="Do not modify an expression in-place"):
         a["one"] = 1
-    a = skrub.var("a", skrub.toy_orders().orders)
+    a = skrub.var("a", skrub.datasets.toy_orders().orders)
     with pytest.raises(
         TypeError, match=r"(?s)Do not modify an expression in-place.*df = df\.assign"
     ):
@@ -314,7 +314,7 @@ def test_attribute_errors():
 
 
 def test_concat_horizontal_numpy():
-    a = skrub.var("a", skrub.toy_orders().orders)
+    a = skrub.var("a", skrub.datasets.toy_orders().orders)
     b = skrub.var("b", np.eye(3))
     with pytest.raises(Exception, match=".*can only be used with dataframes"):
         b.skb.concat([a], axis=1)
@@ -323,7 +323,7 @@ def test_concat_horizontal_numpy():
 
 
 def test_concat_vertical_numpy():
-    a = skrub.var("a", skrub.toy_orders().orders)
+    a = skrub.var("a", skrub.datasets.toy_orders().orders)
     b = skrub.var("b", np.eye(3))
     with pytest.raises(Exception, match=".*can only be used with dataframes"):
         b.skb.concat([a], axis=0)
@@ -332,7 +332,7 @@ def test_concat_vertical_numpy():
 
 
 def test_concat_needs_wrapping_in_list():
-    a = skrub.var("a", skrub.toy_orders().orders)
+    a = skrub.var("a", skrub.datasets.toy_orders().orders)
     with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
         a.skb.concat(a, axis=1)
     with pytest.raises(Exception, match=".*should be passed a list of dataframes"):
@@ -340,7 +340,7 @@ def test_concat_needs_wrapping_in_list():
 
 
 def test_concat_axis_undefined():
-    a = skrub.var("a", skrub.toy_orders().orders)
+    a = skrub.var("a", skrub.datasets.toy_orders().orders)
     with pytest.raises(Exception, match=".*one of 0 or 1"):
         a.skb.concat([a], axis=2)
     with pytest.raises(Exception, match=".*one of 0 or 1"):
@@ -348,7 +348,7 @@ def test_concat_axis_undefined():
 
 
 def test_apply_instead_of_skb_apply():
-    a = skrub.var("a", skrub.toy_orders().orders)
+    a = skrub.var("a", skrub.datasets.toy_orders().orders)
     with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
         a.apply("passthrough")
     with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
@@ -428,7 +428,7 @@ def test_bad_names():
 
 
 def test_pass_df_instead_of_expr():
-    df = skrub.toy_orders().orders
+    df = skrub.datasets.toy_orders().orders
     with pytest.raises(TypeError, match="You passed an actual DataFrame"):
         skrub.var("a").merge(df, on="ID")
     # this one is raised by pandas so we do not control the type or error

@@ -44,6 +44,10 @@ New features
   and :func:`unpatch_display` are deprecated and will be removed in the next release
   of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- :func:`datasets.toy_order` is now available to create a toy dataframe and
+  corresponding targets for examples.
+  :pr:`1485` by :user:`Antoine Canaguier-Durand <canag>`.
+
 - :class:`ApplyToCols` and :class:`ApplyToFrame` are now available to apply transformers
   on a set of columns independently and jointly respectively.
   :pr:`1478` by :user:`Vincent Maladiere<Vincent-Maladiere>`.
