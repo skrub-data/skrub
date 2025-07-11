@@ -417,7 +417,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         are handled by the transformer ``high_cardinality``.
         Default value can be changed using this param or by tweaking global config's `cardinality_threshold`.
 
-
     low_cardinality : transformer, "passthrough" or "drop", \
             default=OneHotEncoder instance
         The transformer for string or categorical columns with strictly fewer than
