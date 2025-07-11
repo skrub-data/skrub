@@ -91,22 +91,22 @@ employees_df
 # --------------------------------------------------------------
 #
 # The goal of ``skrub`` is to ease tabular data preparation for machine learning.
-# The :func:`~skrub.tabular_learner` function provides an easy way to build a simple
+# The :func:`~skrub.tabular_pipeline` function provides an easy way to build a simple
 # but reliable machine-learning model, working well on most tabular data.
 
 
 # %%
 from sklearn.model_selection import cross_validate
 
-from skrub import tabular_learner
+from skrub import tabular_pipeline
 
-model = tabular_learner("regressor")
+model = tabular_pipeline("regressor")
 results = cross_validate(model, employees_df, salaries)
 results["test_score"]
 
 # %%
 # To handle rich tabular data and feed it to a machine-learning model, the
-# pipeline returned by :func:`~skrub.tabular_learner` preprocesses and encodes
+# pipeline returned by :func:`~skrub.tabular_pipeline` preprocesses and encodes
 # strings, categories and dates using the :class:`~skrub.TableVectorizer`.
 # See its documentation or :ref:`sphx_glr_auto_examples_01_encodings.py` for
 # more details. An overview of the chosen defaults is available in
