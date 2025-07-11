@@ -8,8 +8,8 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.utils.validation import check_is_fitted
 
-from . import _config, _utils
 from . import _dataframe as sbd
+from . import _utils
 from . import selectors as s
 from ._apply_to_cols import SingleColumnTransformer
 from ._check_input import CheckInputDataFrame
@@ -411,13 +411,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    cardinality_threshold : int, default=None
+    cardinality_threshold : int, default=40
         String and categorical columns with a number of unique values strictly smaller
         than this threshold are handled by the transformer ``low_cardinality``, the rest
         are handled by the transformer ``high_cardinality``.
-        If sets to ``None``, which is the default, value (40) comes from
-        global config ``cardinality_threshold`` and may
-        be tweaked using ``skrub.config.set_config(cardinality_threshold=...)``.
 
     low_cardinality : transformer, "passthrough" or "drop", \
             default=OneHotEncoder instance
@@ -733,7 +730,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         *,
-        cardinality_threshold=None,
+        cardinality_threshold=40,
         low_cardinality=LOW_CARDINALITY_TRANSFORMER,
         high_cardinality=HIGH_CARDINALITY_TRANSFORMER,
         numeric=NUMERIC_TRANSFORMER,
@@ -745,11 +742,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         datetime_format=None,
         n_jobs=None,
     ):
-        self.cardinality_threshold = (
-            cardinality_threshold
-            if cardinality_threshold is not None
-            else _config.get_config()["cardinality_threshold"]
-        )
+        self.cardinality_threshold = cardinality_threshold
         self.low_cardinality = _utils.clone_if_default(
             low_cardinality, LOW_CARDINALITY_TRANSFORMER
         )
