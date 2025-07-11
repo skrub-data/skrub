@@ -11,10 +11,19 @@ Data Preparation with ``skrub`` Transformers
 Cleaning dataframes and parsing datatypes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: python
-
-    from skrub import Cleaner
-    df_clean = Cleaner().fit_transform(df)
+>>> from skrub import Cleaner
+>>> import pandas as pd
+>>> df = pd.DataFrame({
+...     "id": [1, 2, 3],
+...     "all_missing": ["", "", ""],
+...     "date": ["2024-05-05", "2024-05-06", "2024-05-07"],
+... })
+>>> df_clean = Cleaner().fit_transform(df)
+>>> df_clean
+      id       date
+  0   1 2024-05-05
+  1   2 2024-05-06
+  2   3 2024-05-07
 
 The |Cleaner| converts data types and Nan values in dataframes to ease downstream preprocessing. It includes:
 
@@ -34,10 +43,8 @@ dtype for all numeric columns to guarantee compatibility between values.
 The |Cleaner| allows conversion of numeric features to ``float32`` by setting
 the ``numeric_dtype`` parameter:
 
-.. code-block:: python
-
-    from skrub import Cleaner
-    cleaner = Cleaner(numeric_dtype="float32")
+>>> from skrub import Cleaner
+>>> cleaner = Cleaner(numeric_dtype="float32")
 
 Setting the dtype to ``float32`` reduces RAM footprint for most use cases and
 ensures that all missing values have the same representation. This also ensures

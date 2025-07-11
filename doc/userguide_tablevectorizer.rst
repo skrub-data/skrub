@@ -37,11 +37,9 @@ threshold can be changed by setting the ``cardinality_threshold`` parameter of
 To change the encoder or alter default parameters, instantiate an encoder and pass
 it to |TableVectorizer|.
 
-.. code-block:: python
-
 >>> from skrub import TableVectorizer, DatetimeEncoder, TextEncoder
 
->>> datetime_enc = DatetimeEncoder(periodic="circular")
+>>> datetime_enc = DatetimeEncoder(periodic_encoding="circular")
 >>> text_enc = TextEncoder()
 >>> table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc)
 

@@ -15,9 +15,18 @@ Skrub provides helpers to parse datetime string columns automatically:
 - The |ToDatetime| transformer follows the same logic during training and learns a mapping between columns and their formats. It then applies this mapping during the transform step.
 
 >>> from skrub import to_datetime, ToDatetime
+>>> import pandas as pd
 >>> s = pd.Series(["2024-05-05T13:17:52", None, "2024-05-07T13:17:52"], name="when")
 >>> to_datetime(s)
+0   2024-05-05 13:17:52
+1                   NaT
+2   2024-05-07 13:17:52
+Name: when, dtype: datetime64[ns]
 >>> ToDatetime().fit_transform(s)
+0   2024-05-05 13:17:52
+1                   NaT
+2   2024-05-07 13:17:52
+Name: when, dtype: datetime64[ns]
 
 Encoding and Feature Engineering on Datetimes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

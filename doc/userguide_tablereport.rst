@@ -11,8 +11,13 @@ Usage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 >>> from skrub import TableReport
+>>> import pandas as pd
+>>> df = pd.DataFrame({
+...     "id": [1, 2, 3],
+...     "value": [10, 20, 30],
+... })
 >>> TableReport(df)  # from a notebook cell
->>> TableReport(df).open()  # to open in a browser window
+<TableReport: use .open() to display>
 
 The |TableReport| gives a high-level overview of the given dataframe, suitable for
 quick exploratory analysis of series and dataframes. The report shows the first
@@ -28,6 +33,20 @@ as additional information in other tabs.
 In the **Distributions** tab, it is possible to select columns by clicking on the
 checkmark icon: the name of the column is added to the bar on top, so that it may
 be copied in a script.
+
+The TableReport can be used in a notebook cell, or it can be opened in a browser
+window using the ``open`` method:
+
+.. code-block:: python
+
+    from skrub import TableReport
+    import pandas as pd
+    df = pd.DataFrame({
+        "id": [1, 2, 3],
+        "value": [10, 20, 30],
+    })
+
+    TableReport(df).open()  # to open in a browser window
 
 Altering the Appearance of the |TableReport|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,11 +66,12 @@ The |TableReport| is a standalone object that does not require a running noteboo
 to be accessed after generation: it can be exported in HTML format and opened
 directly in a browser as a HTML page.
 
->>> tr = TableReport(df)
->>> tr.write_html("report.html")  # save to file
->>> tr.html()  # get a string containing the HTML for a full page
->>> tr.html_snippet()  # get an HTML fragment to embed in a page
->>> tr.json()  # get the content of the report in JSON format
+.. code-block:: python
+    tr = TableReport(df)
+    tr.write_html("report.html")  # save to file
+    _ = tr.html()  # get a string containing the HTML for a full page
+    _ = tr.html_snippet()  # get an HTML fragment to embed in a page
+    tr_json = tr.json()  # get the content of the report in JSON format
 
 Finding Correlated Columns in a DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
