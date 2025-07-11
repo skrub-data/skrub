@@ -70,3 +70,40 @@ If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
 |tabular_learner| adds a |StandardScaler| and a |SimpleImputer| to the pipeline.
 The pipeline prepared by |tabular_learner| is a strong first baseline for most
 problems, but may not beat properly tuned ad-hoc pipelines.
+
+.. list-table:: Parameter values choice of :class:`TableVectorizer` when using the :func:`tabular_learner` function
+   :header-rows: 1
+
+   * -
+     - ``RandomForest`` models
+     - ``HistGradientBoosting`` models
+     - Linear models and others
+   * - Low-cardinality encoder
+     - :class:`~sklearn.preprocessing.OrdinalEncoder`
+     - Native support :sup:`(1)`
+     - :class:`~sklearn.preprocessing.OneHotEncoder`
+   * - High-cardinality encoder
+     - :class:`StringEncoder`
+     - :class:`StringEncoder`
+     - :class:`StringEncoder`
+   * - Numerical preprocessor
+     - No processing
+     - No processing
+     - :class:`~sklearn.preprocessing.StandardScaler`
+   * - Date preprocessor
+     - :class:`DatetimeEncoder`
+     - :class:`DatetimeEncoder`
+     - :class:`DatetimeEncoder` with spline encoding
+   * - Missing value strategy
+     - Native support :sup:`(2)`
+     - Native support
+     - :class:`~sklearn.impute.SimpleImputer`
+
+.. note::
+  :sup:`(1)` if scikit-learn installed is lower than 1.4, then
+  :class:`~sklearn.preprocessing.OrdinalEncoder` is used since native support
+  for categorical features is not available.
+
+  :sup:`(2)` if scikit-learn installed is lower than 1.4, then
+  :class:`~sklearn.impute.SimpleImputer` is used since native support
+  for missing values is not available.
