@@ -15,12 +15,12 @@ more tables, and then replays them on unseen data.
 # The credit fraud dataset
 # ------------------------
 #
-# This dataset comes from an e-commerce website. The information is found in two
-# separate tables: the "baskets" table contains the labeled orders (for which
-# we know whether they are legitimate or not); the "products" table, which
-# contains the content of all baskets, including those for which we do not have
-# a label. These "unlabeled" baskets represent our "unseen data", which is what
-# the predictor would encounter in practice after being put in production.
+# This dataset originates from an e-commerce website and is structured into two tables:
+#
+# - The "baskets" table contains order IDs, each representing a list of purchased products. 
+#   For a subset of these orders (the training set), a flag indicates whether the order was fraudulent. 
+#   This fraud flag is the target variable we aim to predict during inference.
+# - The "products" table provides the detailed contents of all baskets, including those without a known fraud label.
 # The ``baskets`` table contains a basket ID and a flag indicating if the order
 # was fraudulent or not.
 # We start by loading the ``baskets`` table, and exploring it with the ``TableReport``.
