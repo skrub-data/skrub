@@ -70,7 +70,7 @@ Xt
 # a :class:`~sklearn.pipeline.Pipeline`.
 from sklearn.pipeline import make_pipeline
 
-make_pipeline(
+model = make_pipeline(
     apply_string_encoder,
     apply_pca,
 ).fit_transform(X)
