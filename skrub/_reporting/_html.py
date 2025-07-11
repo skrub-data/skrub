@@ -8,6 +8,7 @@ import secrets
 import jinja2
 import pandas as pd
 
+from skrub import _config
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 
@@ -152,6 +153,7 @@ def to_html(summary, standalone=True, column_filters=None, minimal_report_mode=F
             "base64_column_filters": _b64_encode(column_filters),
             "report_id": f"report_{secrets.token_hex()[:8]}",
             "minimal_report_mode": minimal_report_mode,
+            "config": _config.get_config(),
         }
     )
 
