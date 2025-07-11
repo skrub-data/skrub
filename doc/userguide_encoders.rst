@@ -1,4 +1,3 @@
-.. _userguide_encoders
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
 .. |MinHashEncoder| replace:: :class:`~skrub.MinHashEncoder`
