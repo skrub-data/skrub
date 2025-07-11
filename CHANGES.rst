@@ -44,6 +44,10 @@ New features
   and :func:`unpatch_display` are deprecated and will be removed in the next release
   of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- :class:`ApplyToCols` and :class:`ApplyToFrame` are now available to apply transformers
+  on a set of columns independently and jointly respectively.
+  :pr:`1478` by :user:`Vincent Maladiere<Vincent-Maladiere>`.
+
 Changes
 -------
 .. warning::
@@ -62,6 +66,11 @@ Changes
 
 - The `packaging` dependency was removed.
   :pr:`1307` by :user:`Jovan Stojanovic <jovan-stojanovic>`
+
+- :class:`TextEncoder`, :class:`StringEncoder` and :class:`GapEncoder` now compute the
+  total standard deviation norm during training, which is a global constant, and
+  normalize the vector outputs by performing element-wise division on all entries.
+  :pr:`1274` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 - The :class:`DropIfTooManyNulls` transformer has been replaced by the
   :class:`DropUninformative` transformer and will be removed in a future release.
