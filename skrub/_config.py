@@ -217,7 +217,7 @@ def set_config(
         ):
             raise ValueError(
                 "'cardinality_threshold' must be a positive"
-                "integer, got {cardinality_threshold!r}"
+                f"integer, got {cardinality_threshold!r}"
             )
 
     _apply_external_patches(local_config)
