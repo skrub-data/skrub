@@ -69,8 +69,8 @@ directly in a browser as a HTML page.
 .. code-block:: python
     tr = TableReport(df)
     tr.write_html("report.html")  # save to file
-    _ = tr.html()  # get a string containing the HTML for a full page
-    _ = tr.html_snippet()  # get an HTML fragment to embed in a page
+    tr.html()  # get a string containing the HTML for a full page
+    tr.html_snippet()  # get an HTML fragment to embed in a page
     tr_json = tr.json()  # get the content of the report in JSON format
 
 Finding Correlated Columns in a DataFrame
