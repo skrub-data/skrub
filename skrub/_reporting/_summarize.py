@@ -209,11 +209,21 @@ def _add_value_counts(summary, column, *, dataframe_summary, with_plots):
     else:
         summary["value_is_constant"] = False
         if with_plots:
-            summary["value_counts_plot"] = _plotting.value_counts(
-                value_counts,
-                n_unique,
-                dataframe_summary["n_rows"],
-                color=_plotting.COLORS[1],
+            summary["value_counts_plot"] = (
+                _plotting.value_counts(
+                    value_counts,
+                    n_unique,
+                    dataframe_summary["n_rows"],
+                    color=_plotting.COLORS[1],
+                    percentage=False,
+                ),
+                _plotting.value_counts(
+                    value_counts,
+                    n_unique,
+                    dataframe_summary["n_rows"],
+                    color=_plotting.COLORS[1],
+                    percentage=True,
+                ),
             )
 
 
@@ -231,10 +241,14 @@ def _add_datetime_summary(summary, column, with_plots):
     summary["max"] = max_date.isoformat()
     if with_plots:
         (
-            summary["histogram_plot"],
+            histogram_raw,
             summary["n_low_outliers"],
             summary["n_high_outliers"],
-        ) = _plotting.histogram(column, color=_plotting.COLORS[0])
+        ) = _plotting.histogram(column, color=_plotting.COLORS[0], percentage=False)
+        hist_percentage, _, _ = _plotting.histogram(
+            column, color=_plotting.COLORS[0], percentage=True
+        )
+        summary["histogram_plot"] = (histogram_raw, hist_percentage)
 
 
 def _add_numeric_summary(
@@ -267,11 +281,22 @@ def _add_numeric_summary(
         return
     if order_by_column is None:
         (
-            summary["histogram_plot"],
+            histogram_raw,
             summary["n_low_outliers"],
             summary["n_high_outliers"],
         ) = _plotting.histogram(
-            column, duration_unit=duration_unit, color=_plotting.COLORS[0]
+            column,
+            duration_unit=duration_unit,
+            color=_plotting.COLORS[0],
+            percentage=False,
         )
+        (histogram_percentage, _, _) = _plotting.histogram(
+            column,
+            duration_unit=duration_unit,
+            color=_plotting.COLORS[0],
+            percentage=True,
+        )
+        summary["histogram_plot"] = (histogram_raw, histogram_percentage)
     else:
-        summary["line_plot"] = _plotting.line(order_by_column, column)
+        plot = _plotting.line(order_by_column, column)
+        summary["line_plot"] = (plot, plot)
