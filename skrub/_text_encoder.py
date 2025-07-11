@@ -9,7 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._apply_to_cols import SingleColumnTransformer
 from ._scaling_factor import scaling_factor
 from ._to_str import ToStr
 from ._utils import import_optional_dependency, unique_strings

@@ -11,7 +11,7 @@ from sklearn.pipeline import Pipeline
 
 from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
-from skrub._on_each_column import RejectColumn
+from skrub._apply_to_cols import RejectColumn
 from skrub._scaling_factor import scaling_factor
 
 
