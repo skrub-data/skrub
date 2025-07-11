@@ -113,7 +113,7 @@ ApplyToCols(OrdinalEncoder(), cols=s.string() & low_cardinality).fit_transform(X
 from sklearn.ensemble import HistGradientBoostingRegressor
 
 high_cardinality = ~low_cardinality
-make_pipeline(
+pipeline = make_pipeline(
     ApplyToCols(
         OrdinalEncoder(),
         cols=s.string() & low_cardinality,
@@ -124,7 +124,7 @@ make_pipeline(
     ),
     HistGradientBoostingRegressor(),
 ).fit(X, y)
-
+pipeline
 
 # %%
 # Interestingly, the pipeline above is similar to the datatype dispatching performed by
