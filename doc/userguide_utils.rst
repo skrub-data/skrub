@@ -1,6 +1,8 @@
-.. _`userguide_utils`:
+
 .. |set_config| replace:: :func:`~skrub.set_config`
 .. |config_context| replace:: :func:`~skrub.config_context`
+
+.. _userguide_utils:
 
 Example datasets, utilities, and customization
 -----------------------------------
