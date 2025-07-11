@@ -6,9 +6,10 @@ import pandas as pd
 import pytest
 from sklearn.utils.fixes import parse_version
 
+from skrub import ApplyToCols
 from skrub import _dataframe as sbd
+from skrub._apply_to_cols import RejectColumn
 from skrub._dispatch import dispatch
-from skrub._on_each_column import OnEachColumn, RejectColumn
 from skrub._to_datetime import (
     ToDatetime,
     _convert_time_zone,
@@ -214,9 +215,7 @@ def test_to_datetime_func(df_module, datetime_col):
     )
     df_module.assert_frame_equal(
         to_datetime(df_module.example_dataframe),
-        OnEachColumn(ToDatetime(), cols=cols).fit_transform(
-            df_module.example_dataframe
-        ),
+        ApplyToCols(ToDatetime(), cols=cols).fit_transform(df_module.example_dataframe),
     )
     float_col = df_module.example_column
     assert sbd.is_float(float_col)

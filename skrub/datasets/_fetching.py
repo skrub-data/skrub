@@ -12,7 +12,19 @@ def fetch_employee_salaries(data_home=None):
     Description of the dataset:
         Annual salary information including gross pay and overtime pay for all
         active, permanent employees of Montgomery County, MD paid in calendar
-        year 2016. This information will be published annually each year.
+        year 2016. This dataset is a copy of https://www.openml.org/d/42125
+        where some features are dropped to avoid data leaking.
+
+    .. note::
+
+        Some environments like Jupyterlite can run into networking issues when
+        connecting to a remote server, but OpenML provides CORS headers. To
+        download this dataset using OpenML instead of Github or Figshare, run:
+
+    .. code:: python
+
+        from sklearn.datasets import fetch_openml
+        df = fetch_openml(data_id=42125)
 
     Parameters
     ----------
