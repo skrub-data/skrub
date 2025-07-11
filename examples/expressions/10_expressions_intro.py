@@ -42,7 +42,7 @@ skrub.TableReport(dataset.products)
 # Each basket contains one or more products, and products can
 # be associated with the corresponding basket through the ``"basket_ID"``
 # column.
-# %%
+#
 # A design problem: how to combine tables while avoiding leakage?
 # ----------------------------
 #
