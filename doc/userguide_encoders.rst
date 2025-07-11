@@ -6,6 +6,8 @@
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 
+.. _userguide_encoders:
+
 Feature engineering for categorical data
 --------------------------------------------------
 
