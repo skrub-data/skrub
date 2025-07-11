@@ -1115,15 +1115,23 @@ class SkrubNamespace:
     def describe_steps(self):
         """Get a text representation of the computation graph.
 
-        Usually the graphical representation provided by ``draw_graph`` or
-        ``full_report`` is more useful. This is a fallback for inspecting the
-        computation graph when only text output is available.
+        Usually the graphical representation provided by :meth:`Expr.skb.draw_graph` or
+        :meth:`Expr.skb.full_report` is more useful. This is a fallback for inspecting
+        the computation graph when only text output is available.
 
         Returns
         -------
         str
             A string representing the different computation steps, one on each
             line.
+
+        See Also
+        --------
+        :func:`sklearn.model_selection.cross_validate`:
+            Evaluate metric(s) by cross-validation and also record fit/score times.
+
+        :func:`skrub.Expr.skb.get_pipeline`:
+            Get a skrub pipeline for this expression.
 
         Examples
         --------
@@ -1483,7 +1491,7 @@ class SkrubNamespace:
 
         splitter : function, optional
             The function used to split X and y once they have been computed. By
-            default, ``sklearn.train_test_split`` is used.
+            default, :func:`~sklearn.model_selection.train_test_split` is used.
 
         splitter_kwargs
             Additional named arguments to pass to the splitter.
@@ -1546,7 +1554,7 @@ class SkrubNamespace:
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's ``GridSearchCV``, where the main difference is that
+        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where the main difference is that
         ``fit()`` and ``predict()`` accept a dictionary of inputs
         rather than ``X`` and ``y``. The best pipeline can
         be returned by calling ``.best_pipeline_``.
@@ -1974,13 +1982,19 @@ class SkrubNamespace:
         """Mark this expression as being the ``X`` table.
 
         This is used for cross-validation and hyperparameter selection: operations
-        done before ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` are executed
+        done before :meth:`.skb.mark_as_X()` and :meth:`.skb.mark_as_y()` are executed
         on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original expression is left unchanged.
 
         Returns
         -------
         The input expression, which has been marked as being ``X``
+
+        See also
+        --------
+        :func:`skrub.X`
+            ``skrub.X(value)`` can be used as a shorthand for
+            ``skrub.var('X', value).skb.mark_as_X()``.
 
         Notes
         -----
@@ -2042,7 +2056,7 @@ class SkrubNamespace:
 
     @property
     def is_X(self):
-        """Whether this expression has been marked with ``.skb.mark_as_X()``."""
+        """Whether this expression has been marked with :meth:`.skb.mark_as_X()`."""
         return self._expr._skrub_impl.is_X
 
     @check_expr
@@ -2050,7 +2064,7 @@ class SkrubNamespace:
         """Mark this expression as being the ``y`` table.
 
         This is used for cross-validation and hyperparameter selection: operations
-        done before ``.skb.mark_as_X()`` and ``.skb.mark_as_y()`` are executed
+        done before :meth:`.skb.mark_as_X()` and :meth:`.skb.mark_as_y()` are executed
         on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original expression is left unchanged.
 
@@ -2071,10 +2085,13 @@ class SkrubNamespace:
         should be careful to start our pipeline by building X and y, and to use
         ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
 
-        ``skrub.y(value)`` can be used as a shorthand for
-        ``skrub.var('y', value).skb.mark_as_y()``.
-
         Note: this marks the expression in-place and also returns it.
+
+        See also
+        --------
+        :func:`skrub.y`
+            ``skrub.y(value)`` can be used as a shorthand for
+            ``skrub.var('y', value).skb.mark_as_y()``.
 
         Examples
         --------
@@ -2115,7 +2132,7 @@ class SkrubNamespace:
 
     @property
     def is_y(self):
-        """Whether this expression has been marked with ``.skb.mark_as_y()``."""
+        """Whether this expression has been marked with :meth:`.skb.mark_as_y()`."""
         return self._expr._skrub_impl.is_y
 
     @check_expr
@@ -2263,14 +2280,14 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        OnSubFrame(transformer=TableVectorizer())
+        ApplyToFrame(transformer=TableVectorizer())
 
         Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``OnSubFrame`` or
-        ``OnEachColumn`` depending if the transformer is applied to each column
+        they will be wrapped in a meta-estimator ``ApplyToFrame`` or
+        ``ApplyToCols`` depending if the transformer is applied to each column
         separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``OnSubFrame`` or ``transformers_``
-        attribute of ``OnEachColumn`` (a dictionary mapping column names to the
+        ``transformer_`` attribute of ``ApplyToFrame`` or ``transformers_``
+        attribute of ``ApplyToCols`` (a dictionary mapping column names to the
         corresponding transformer).
 
         >>> fitted_vectorizer.transformer_
@@ -2297,7 +2314,7 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        OnEachColumn(cols=(string() - cols('date')),
+        ApplyToCols(cols=(string() - cols('date')),
                      transformer=StringEncoder(n_components=2))
         >>> fitted_vectorizer.transformers_
         <GetAttr 'transformers_'>

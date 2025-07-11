@@ -61,11 +61,14 @@ API_REFERENCE = {
                     "pipelines, see the :ref:`skrub expressions <expressions_ref>`."
                 ),
                 "autosummary": [
+                    "tabular_pipeline",
                     "tabular_learner",
                     "TableVectorizer",
                     "Cleaner",
                     "SelectCols",
                     "DropCols",
+                    "ApplyToCols",
+                    "ApplyToFrame",
                     "DropUninformative",
                 ],
             }
@@ -265,6 +268,21 @@ API_REFERENCE = {
                 ],
                 "template": "base.rst",
             },
+        ],
+    },
+    "config": {
+        "title": "Configuration",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "get_config",
+                    "set_config",
+                    "config_context",
+                ],
+            }
         ],
     },
     "datasets": {

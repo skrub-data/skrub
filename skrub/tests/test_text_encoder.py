@@ -7,7 +7,7 @@ from sklearn.base import clone
 
 import skrub._dataframe as sbd
 from skrub import TableVectorizer, TextEncoder
-from skrub._on_each_column import RejectColumn
+from skrub._apply_to_cols import RejectColumn
 from skrub._text_encoder import ModelNotFound
 
 pytest.importorskip("sentence_transformers")

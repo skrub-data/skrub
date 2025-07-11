@@ -203,6 +203,7 @@ To ensure your environment is correctly set up, run the test suite:
 Testing should take about 5 minutes.
 
 If you see some warnings like:
+
 .. code:: sh
 
   UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
