@@ -11,6 +11,7 @@ from skrub import (
     TableVectorizer,
     ToCategorical,
     tabular_learner,
+    tabular_pipeline,
 )
 
 
@@ -18,7 +19,7 @@ from skrub import (
     "learner_kind", ["regressor", "regression", "classifier", "classification"]
 )
 def test_default_pipeline(learner_kind):
-    p = tabular_learner(learner_kind)
+    p = tabular_pipeline(learner_kind)
     tv, learner = [e for _, e in p.steps]
     assert isinstance(tv, TableVectorizer)
     assert isinstance(tv.high_cardinality, StringEncoder)
@@ -38,18 +39,18 @@ def test_bad_learner():
         ValueError,
         match=".*should be 'regressor', 'regression', 'classifier' or 'classification'",
     ):
-        tabular_learner("bad")
+        tabular_pipeline("bad")
     with pytest.raises(
         TypeError, match=".*Pass an instance of HistGradientBoostingRegressor"
     ):
-        tabular_learner(ensemble.HistGradientBoostingRegressor)
+        tabular_pipeline(ensemble.HistGradientBoostingRegressor)
     with pytest.raises(TypeError, match=".*expects a scikit-learn estimator"):
-        tabular_learner(object())
+        tabular_pipeline(object())
 
 
 def test_linear_learner():
     original_learner = Ridge()
-    p = tabular_learner(original_learner)
+    p = tabular_pipeline(original_learner)
     tv, imputer, scaler, learner = [e for _, e in p.steps]
     assert learner is original_learner
     assert isinstance(tv.high_cardinality, StringEncoder)
@@ -61,7 +62,7 @@ def test_linear_learner():
 
 def test_tree_learner():
     original_learner = ensemble.RandomForestClassifier()
-    p = tabular_learner(original_learner)
+    p = tabular_pipeline(original_learner)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         tv, impute, learner = [e for _, e in p.steps]
         assert isinstance(impute, SimpleImputer)
@@ -74,11 +75,19 @@ def test_tree_learner():
 
 
 def test_from_dtype():
-    p = tabular_learner(ensemble.HistGradientBoostingRegressor(categorical_features=()))
+    p = tabular_pipeline(
+        ensemble.HistGradientBoostingRegressor(categorical_features=())
+    )
     assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, OrdinalEncoder)
     if parse_version(sklearn.__version__) < parse_version("1.4"):
         return
-    p = tabular_learner(
+    p = tabular_pipeline(
         ensemble.HistGradientBoostingRegressor(categorical_features="from_dtype")
     )
     assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, ToCategorical)
+
+
+def test_warning_table_learner():
+    msg = "tabular_learner will be deprecated in the next release"
+    with pytest.raises(FutureWarning, match=msg):
+        _ = tabular_learner("regressor")

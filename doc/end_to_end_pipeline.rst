@@ -6,7 +6,7 @@ End-to-end predictive models
 
 .. currentmodule:: skrub
 
-.. _tabular_learner:
+.. _tabular_pipeline:
 
 Create baseline predictive models on heterogeneous dataset
 ----------------------------------------------------------
@@ -17,7 +17,7 @@ regarding the preprocessing steps that are are required ahead of the learner.
 Programmatically defining these steps is the part that requires the most expertise and
 that is cumbersome to write.
 
-The function :func:`tabular_learner` provides a factory function that, given a
+The function :func:`tabular_pipeline` provides a factory function that, given a
 scikit-learn estimator, returns a pipeline combining this estimator with the
 appropriate preprocessing steps. These steps correspond to a :class:`TableVectorizer`
 that handles heterogeneous data and, depending on the capabilities
@@ -27,7 +27,7 @@ In the next section, we provide more details regarding the :class:`TableVectoriz
 (:ref:`table_vectorizer`). The parameters of the :class:`TableVectorizer` are chosen
 based on the type of the final estimator.
 
-.. list-table:: Parameter values choice of :class:`TableVectorizer` when using the :func:`tabular_learner` function
+.. list-table:: Parameter values choice of :class:`TableVectorizer` when using the :func:`tabular_pipeline` function
    :header-rows: 1
 
    * -
@@ -121,7 +121,7 @@ Examples
 --------
 
 The following examples provide an in-depth look at how to use the
-:class:`~skrub.TableVectorizer` class and the :func:`~skrub.tabular_learner`
+:class:`~skrub.TableVectorizer` class and the :func:`~skrub.tabular_pipeline`
 function.
 
 - :ref:`sphx_glr_auto_examples_01_encodings.py`

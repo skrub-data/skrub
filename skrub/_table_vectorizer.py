@@ -522,7 +522,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     See Also
     --------
-    tabular_learner :
+    tabular_pipeline :
         A function that accepts a scikit-learn estimator and creates a pipeline
         combining a ``TableVectorizer``, optional missing value imputation and
         the provided estimator.
