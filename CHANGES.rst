@@ -91,6 +91,8 @@ Changes
 - The :class:`Cleaner` now exposes a parameter to convert numerical values to float32. :pr:`1440` by
   :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The :class:`TableReport` now shows if columns are sorted. :pr:`1512` by :user:`Dea María Léon<DeaMariaLeon>`.
+
 
 Bugfixes
 --------
