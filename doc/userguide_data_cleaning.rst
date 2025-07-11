@@ -4,8 +4,9 @@
 .. |deduplicate| replace:: :func:`~skrub.deduplicate`
 
 .. _userguide_data_cleaning:
-Data Preparation with the ``skrub`` Transformers
-------------------------------------------------
+
+Data Preparation with ``skrub`` Transformers
+---------------------------------------------
 
 Cleaning dataframes and parsing datatypes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
