@@ -3,10 +3,10 @@
 
 
 Building a predictive model by combining multiple tables with the skrub Data Plan
-==================================
-In this example, we give an overview of how we can use the skrub Data Plan to build
-a ``Learner``: an object that records all the Data Operations involved in building
-a predictor starting from one or more tables, and then replays them on unseen data.
+====================================================================
+This example summarizes the use of skrub DataOps to build a ``Learner``:  recording all the
+Data Operations involved in building a predictor starting from one or more tables,
+and then replays them on unseen data.
 
 Here, we consider the problem of predicting whether the e-commerce transactions
 in a dataset are fraudulent: to do so, we need to train a classifier that takes
@@ -96,7 +96,7 @@ skrub.TableReport(dataset.products)
 
 # %%
 # Data Ops make Data Plans
-# ---------------------
+# ------------------------
 # In the skrub Data Plan, we do not have an explicit, sequential list of
 # transformation steps. Instead, we perform "Data Operations" (or "Data Ops"),
 # that is, operations that act on variables and wrap user operations to keep track
@@ -224,7 +224,7 @@ augmented_baskets = baskets.merge(
 
 # %%
 # We can actually ask for a full report of the Data Plan and inspect the
-# results of each Data Op::
+# results of each DataOp::
 #
 #     predictions.skb.full_report()
 #

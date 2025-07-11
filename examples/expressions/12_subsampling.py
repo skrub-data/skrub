@@ -74,7 +74,7 @@ predictions = employees.skb.apply(skrub.TableVectorizer()).skb.apply(
 #
 # All the lines above run very fast, including fitting the predictor above.
 #
-# When we display our ``predictions`` Data Op, we see that the preview is
+# When we display our ``predictions`` DataOp, we see that the preview is
 # computed on a subsample: the result column has only 100 entries.
 
 # %%

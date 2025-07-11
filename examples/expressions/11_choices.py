@@ -4,8 +4,8 @@
 .. _example_tuning_pipelines:
 
 
-Tuning Data Ops
-=================
+Tuning DataOps
+================
 
 A machine-learning pipeline typically contains some values or choices which
 may influence its prediction performance, such as hyperparameters (e.g. the
@@ -18,7 +18,7 @@ or not).
 We want to tune those choices by trying several options and keeping those that
 give the best performance on a validation set.
 
-Skrub :ref:`data ops <skrub_pipeline>` provide a convenient way to specify
+Skrub :ref:`DataOps <skrub_pipeline>` provide a convenient way to specify
 the range of possible values, by inserting it directly in place of the actual
 value. For example we can write:
 
@@ -156,7 +156,7 @@ search.plot_results()
 # example in previews or to get a quick first result before spending the
 # computation time to run the search. When we use :meth:`.skb.get_pipeline()
 # <Expr.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
-# and uses those default values. this default pipeline is used for
+# and uses those default values. This default pipeline is used for
 # :meth:`.skb.eval() <Expr.skb.eval>`.
 #
 # We can control what should be the default value for each choice. For
@@ -265,8 +265,8 @@ search.plot_results()
 #
 # There is more to say about skrub choices than what is covered in this
 # example. In particular, choices are not limited to choosing estimators and
-# their hyperparameters: they can be used anywhere a Data Op can be used,
+# their hyperparameters: they can be used anywhere DataOps are used,
 # such as the argument of a :func:`deferred` function, or the argument of
-# another Data Op's method or operator. Finally, choices can be
+# other DataOps' method or operator. Finally, choices can be
 # inter-dependent. Please find more information in the :ref:`user guide
 # <skrub_pipeline_validation>`.
