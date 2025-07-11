@@ -37,16 +37,13 @@ be copied in a script.
 The TableReport can be used in a notebook cell, or it can be opened in a browser
 window using the ``open`` method:
 
-.. code-block:: python
-
-    from skrub import TableReport
-    import pandas as pd
-    df = pd.DataFrame({
-        "id": [1, 2, 3],
-        "value": [10, 20, 30],
-    })
-
-    TableReport(df).open()  # to open in a browser window
+>>> from skrub import TableReport
+>>> import pandas as pd
+>>> df = pd.DataFrame({
+>>>     "id": [1, 2, 3],
+>>>     "value": [10, 20, 30],
+>>> })
+>>> TableReport(df).open()  # to open in a browser window
 
 Altering the Appearance of the |TableReport|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,12 +63,13 @@ The |TableReport| is a standalone object that does not require a running noteboo
 to be accessed after generation: it can be exported in HTML format and opened
 directly in a browser as a HTML page.
 
-.. code-block:: python
-    tr = TableReport(df)
-    tr.write_html("report.html")  # save to file
-    tr.html()  # get a string containing the HTML for a full page
-    tr.html_snippet()  # get an HTML fragment to embed in a page
-    tr_json = tr.json()  # get the content of the report in JSON format
+>>> import io # to avoid writing to disk
+>>> tr = TableReport(df)
+>>> html_buffer = io.StringIO()
+>>> tr.write_html(html_buffer)  # save to file
+>>> html = tr.html()  # get a string containing the HTML for a full page
+>>> html_snippet = tr.html_snippet()  # get an HTML fragment to embed in a page
+>>> tr_json = tr.json()  # get the content of the report in JSON format
 
 Finding Correlated Columns in a DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
