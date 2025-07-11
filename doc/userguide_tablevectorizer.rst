@@ -39,11 +39,11 @@ it to |TableVectorizer|.
 
 .. code-block:: python
 
-    from skrub import TableVectorizer, DatetimeEncoder, TextEncoder
+>>> from skrub import TableVectorizer, DatetimeEncoder, TextEncoder
 
-    datetime_enc = DatetimeEncoder(periodic="circular")
-    text_enc = TextEncoder()
-    table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc)
+>>> datetime_enc = DatetimeEncoder(periodic="circular")
+>>> text_enc = TextEncoder()
+>>> table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc)
 
 The |TableVectorizer| is used in :ref:`example_encodings`, while the
 docstring of the class provides more details on the parameters and usage, as well
@@ -62,11 +62,11 @@ the name of the task is given.
 
 .. code-block:: python
 
-    from skrub import tabular_learner
-    from sklearn.linear_model import LinearRegression
+>>> from skrub import tabular_learner
+>>> from sklearn.linear_model import LinearRegression
 
-    learner = tabular_learner("regression")
-    learner = tabular_learner(LinearRegression())
+>>> learner = tabular_learner("regression")
+>>> learner = tabular_learner(LinearRegression())
 
 If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
 |tabular_learner| adds a |StandardScaler| and a |SimpleImputer| to the pipeline.

@@ -1,21 +1,18 @@
-.. _userguide_tablereport:
 .. |TableReport| replace:: :class:`~skrub.TableReport`
 .. |set_config| replace:: :func:`~skrub.set_config`
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
-=========================================
+.. _userguide_tablereport:
 
 Exploring dataframes with the |TableReport|
----------------------------------------------
+===========================================
 
 Usage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: python
-
-    from skrub import TableReport
-    TableReport(df)  # from a notebook cell
-    TableReport(df).open()  # to open in a browser window
+>>> from skrub import TableReport
+>>> TableReport(df)  # from a notebook cell
+>>> TableReport(df).open()  # to open in a browser window
 
 The |TableReport| gives a high-level overview of the given dataframe, suitable for
 quick exploratory analysis of series and dataframes. The report shows the first
@@ -50,13 +47,11 @@ The |TableReport| is a standalone object that does not require a running noteboo
 to be accessed after generation: it can be exported in HTML format and opened
 directly in a browser as a HTML page.
 
-.. code-block:: python
-
-    tr = TableReport(df)
-    tr.write_html("report.html")  # save to file
-    tr.html()  # get a string containing the HTML for a full page
-    tr.html_snippet()  # get an HTML fragment to embed in a page
-    tr.json()  # get the content of the report in JSON format
+>>> tr = TableReport(df)
+>>> tr.write_html("report.html")  # save to file
+>>> tr.html()  # get a string containing the HTML for a full page
+>>> tr.html_snippet()  # get an HTML fragment to embed in a page
+>>> tr.json()  # get the content of the report in JSON format
 
 Finding Correlated Columns in a DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

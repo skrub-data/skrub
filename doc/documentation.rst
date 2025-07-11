@@ -26,10 +26,12 @@ See the examples section for full code snippets.
    :maxdepth: 2
 
    userguide_tablereport
-   userguide_data_cleaning
-   userguide_tablevectorizer
    userguide_encoders
    userguide_datetimes
+   userguide_tablevectorizer
+   userguide_data_cleaning
    userguide_selectors
+   skrub_pipeline
+   skrub_pipeline_validation
    userguide_joining_tables
    userguide_utils
