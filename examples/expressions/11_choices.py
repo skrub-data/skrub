@@ -2,8 +2,6 @@
 .. currentmodule:: skrub
 
 .. _example_tuning_pipelines:
-
-
 Tuning DataOps
 ================
 
@@ -29,7 +27,7 @@ instead of:
 ``RidgeClassifier(alpha=1.0)``.
 
 Skrub then inspects
-our Data Plan to discover all the places where we used objects like
+our DataOps plan to discover all the places where we used objects like
 ``skrub.choose_from()`` and builds a grid of hyperparameters for us.
 """
 
@@ -85,7 +83,7 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 # ``RandomizedSearchCV``, we need to specify a grid of hyperparameters separately
 # from the estimator, with something similar to
 # ``GridSearchCV(my_pipeline, param_grid={"encoder__n_components: [5, 10, 20]"})``.
-# Instead, within a skrub Data Plan we can use
+# Instead, within a skrub DataOps plan we can use
 # ``skrub.choose_from(...)`` directly where the actual value
 # would normally go. Skrub then takes care of constructing the
 # ``GridSearchCV``'s parameter grid for us.
@@ -250,7 +248,7 @@ search = pred.skb.get_randomized_search(
 search.plot_results()
 
 # %%
-# Now that we have a more complex Data Plan, we can draw more conclusions from the
+# Now that we have a more complex DataOps plan, we can draw more conclusions from the
 # parallel coordinate plot. For example, we can see that the
 # ``HistGradientBoostingClassifier``
 # performs better than the ``RidgeClassifier`` in most cases, that the ``StringEncoder``
@@ -260,7 +258,7 @@ search.plot_results()
 # %%
 # Concluding, we have seen how to use skrub's ``choose_from`` objects to tune
 # hyperparameters, choose optional configurations, and nest choices. We then
-# looked at how the different choices affect the data plan and the prediction
+# looked at how the different choices affect the DataOps plan and the prediction
 # scores.
 #
 # There is more to say about skrub choices than what is covered in this
