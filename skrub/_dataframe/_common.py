@@ -218,7 +218,7 @@ def _to_list_polars(col):
 
 @dispatch
 def to_numpy(col):
-    raise _raise(col, kind="Series")
+    raise _raise(col, kind="object")
 
 
 @to_numpy.specialize("pandas", argument_type="Column")
@@ -231,6 +231,16 @@ def _to_numpy_pandas_column(col):
 @to_numpy.specialize("polars", argument_type="Column")
 def _to_numpy_polars_column(col):
     return col.to_numpy()
+
+
+@to_numpy.specialize("pandas", argument_type="DataFrame")
+def _to_numpy_pandas_table(df):
+    return df.to_numpy()
+
+
+@to_numpy.specialize("polars", argument_type="DataFrame")
+def _to_numpy_polars_table(df):
+    return df.to_numpy()
 
 
 @dispatch

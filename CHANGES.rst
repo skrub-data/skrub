@@ -44,6 +44,12 @@ New features
   and :func:`unpatch_display` are deprecated and will be removed in the next release
   of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- Added the :class:`SquashingScaler` that
+  robustly rescales and smoothly clips numerical columns,
+  enabling more robust handling of numerical columns
+  with neural networks. :pr:`1310` by :user:`Vincent Maladiere <Vincent-Maladiere>` and
+  :user:`David Holzmüller <dholzmueller>`.
+
 - :func:`datasets.toy_order` is now available to create a toy dataframe and
   corresponding targets for examples.
   :pr:`1485` by :user:`Antoine Canaguier-Durand <canag>`.
