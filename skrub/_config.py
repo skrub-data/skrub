@@ -174,7 +174,7 @@ def set_config(
                 "'use_tablereport_dataops' must be a boolean, got "
                 f"{use_tablereport_dataops!r}."
             )
-        local_config["use_tablereport_expr"] = use_tablereport_dataops
+        local_config["use_tablereport_dataops"] = use_tablereport_dataops
 
     if max_plot_columns is not None:
         if not isinstance(max_plot_columns, numbers.Real):
