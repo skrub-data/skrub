@@ -115,7 +115,7 @@ And we can obtain predictions on the test part:
 >>> from sklearn.metrics import r2_score
 
 >>> r2_score(test_y_true, test_pred)
-0.4409991492203592
+0.440999149220359
 
 Cross-validation
 ----------------
