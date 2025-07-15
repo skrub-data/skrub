@@ -14,6 +14,8 @@ _global_config = {
     "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
+    "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
+    "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
 }
 _threadlocal = threading.local()
 
@@ -70,6 +72,8 @@ def set_config(
     max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
+    float_precision=None,
+    cardinality_threshold=None,
 ):
     """Set global skrub configuration.
 
@@ -131,6 +135,21 @@ def set_config(
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
         environment variable.
 
+    float_precision : int, default=3
+        Control the number of significant digits shown when formatting floats.
+        Applies overall precision rather than fixed decimal places. Default is 3.
+
+        This configuration can also be set with the ``SKB_FLOAT_PRECISION``
+        environment variable.
+
+    cardinality_threshold : int, default=40
+        Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
+        Control the threshold value used to warn user if they have
+        high cardinality columns in there dataset.
+
+        This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
+        environment variable.
+
     See Also
     --------
     get_config : Retrieve current values for global configuration.
@@ -184,6 +203,23 @@ def set_config(
             )
         local_config["enable_subsampling"] = enable_subsampling
 
+    if float_precision is not None:
+        if not isinstance(float_precision, numbers.Integral) or float_precision <= 0:
+            raise ValueError(
+                f"'float_precision' must be a positive integer, got {float_precision!r}"
+            )
+        local_config["float_precision"] = float_precision
+
+    if cardinality_threshold is not None:
+        if (
+            not isinstance(cardinality_threshold, numbers.Integral)
+            or cardinality_threshold < 0
+        ):
+            raise ValueError(
+                "'cardinality_threshold' must be a positive"
+                f"integer, got {cardinality_threshold!r}"
+            )
+
     _apply_external_patches(local_config)
 
 
@@ -196,6 +232,8 @@ def config_context(
     max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
+    float_precision=None,
+    cardinality_threshold=None,
 ):
     """Context manager for global skrub configuration.
 
@@ -257,6 +295,21 @@ def config_context(
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
         environment variable.
 
+    float_precision : int, default=3
+        Control the number of significant digits shown when formatting floats.
+        Applies overall precision rather than fixed decimal places. Default is 3.
+
+        This configuration can also be set with the ``SKB_FLOAT_PRECISION``
+        environment variable.
+
+    cardinality_threshold : int, default=40
+        Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
+        Control the threshold value used to warn user if they have
+        high cardinality columns in there dataset.
+
+        This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
+        environment variable.
+
     Yields
     ------
     None.
@@ -280,6 +333,8 @@ def config_context(
         max_association_columns=max_association_columns,
         subsampling_seed=subsampling_seed,
         enable_subsampling=enable_subsampling,
+        float_precision=float_precision,
+        cardinality_threshold=cardinality_threshold,
     )
 
     try:

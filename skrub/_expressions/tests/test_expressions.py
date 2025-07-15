@@ -236,7 +236,7 @@ def test_expr_impl():
 def test_apply_bad_params(why_full_frame, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
     # dataframe) (or how='full_frame') the estimator can only be applied to the
-    # full input without wrapping in OnEachColumn or OnSubFrame. In this case
+    # full input without wrapping in ApplyToCols or ApplyToFrame. In this case
     # if the user passed a parameter that would require wrapping, such as
     # passing a value for `cols` that is not `all()`, or passing
     # how='columnwise' or allow_reject=True, we get an error.

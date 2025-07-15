@@ -192,7 +192,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         -------
         scikit-learn estimator
             The fitted estimator. Depending on the nature of the estimator it
-            may be wrapped in a ``skrub.OnEachColumn`` or ``skrub.OnSubFrame``,
+            may be wrapped in a ``skrub.ApplyToCols`` or ``skrub.ApplyToFrame``,
             see examples below.
 
         See also
@@ -210,7 +210,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         >>> import skrub
         >>> from skrub import selectors as s
 
-        >>> orders = skrub.toy_orders()
+        >>> orders = skrub.datasets.toy_orders()
         >>> X, y = skrub.X(), skrub.y()
         >>> pred = (
         ...     X.skb.apply(skrub.StringEncoder(n_components=2), cols=["product"])
@@ -240,7 +240,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
 
         Case 1: the ``StringEncoder`` is a skrub single-column transformer: it
         transforms a single column. In the pipeline it gets wrapped in a
-        ``skrub.OnEachColumn`` which independently fits a separate instance of the
+        ``skrub.ApplyToCols`` which independently fits a separate instance of the
         ``StringEncoder`` to each of the columns it transforms (in this case there is
         only one column, ``'product'``). The individual transformers can be found in the
         fitted attribute ``transformers_`` which maps column names to the corresponding
@@ -252,25 +252,25 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
         {' pe': 2, 'pen': 12, 'en ': 8, ' pen': 3, 'pen ': 13, ' cu': 0, 'cup': 6, 'up ': 18, ' cup': 1, 'cup ': 7, ' sp': 4, 'spo': 16, 'poo': 14, 'oon': 10, 'on ': 9, ' spo': 5, 'spoo': 17, 'poon': 15, 'oon ': 11}
 
-        This case (wrapping in ``OnEachColumn``) happens when the estimator is a skrub
+        This case (wrapping in ``ApplyToCols``) happens when the estimator is a skrub
         single-column transformer (it has a ``__single_column_transformer__``
         attribute), we pass ``.skb.apply(how='columnwise')`` or we pass
         ``.skb.apply(allow_reject=True)``.
 
         Case 2: the ``PCA`` is a regular scikit-learn transformer. In the pipeline it
-        gets wrapped in a ``skrub.OnSubFrame`` which applies it to the subset of columns
+        gets wrapped in a ``skrub.ApplyToFrame`` which applies it to the subset of columns
         in the dataframe selected by the ``cols`` argument passed to ``.skb.apply()``.
         The fitted ``PCA`` can be found in the fitted attribute ``transformer_``.
 
         >>> pca = pipeline.find_fitted_estimator('pca')
         >>> pca
-        OnSubFrame(cols=glob('date_*'), transformer=PCA(n_components=2))
+        ApplyToFrame(cols=glob('date_*'), transformer=PCA(n_components=2))
         >>> pca.transformer_
         PCA(n_components=2)
         >>> pca.transformer_.mean_
         array([2020.,    4.,    4.], dtype=float32)
 
-        This case (wrapping in ``OnSubFrame``) happens when the estimator is a
+        This case (wrapping in ``ApplyToFrame``) happens when the estimator is a
         scikit-learn transformer but not a single-column transformer.
 
         The ``DummyRegressor`` is a scikit-learn predictor. In the pipeline it gets
@@ -328,7 +328,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         >>> from sklearn.dummy import DummyClassifier
         >>> import skrub
 
-        >>> orders = skrub.toy_orders()
+        >>> orders = skrub.datasets.toy_orders()
         >>> X, y = skrub.X(), skrub.y()
         >>> pred = (
         ...     X.skb.apply(
@@ -368,7 +368,7 @@ class SkrubPipeline(_CloudPickleExpr, BaseEstimator):
         step:
 
         >>> pipeline.find_fitted_estimator("vectorizer")
-        OnSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
+        ApplyToFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
         node = find_node_by_name(self.expr, name)
         if node is None:
@@ -538,8 +538,8 @@ def cross_validate(pipeline, environment, *, keep_subsampling=False, **kwargs):
     """Cross-validate a pipeline built from an expression.
 
     This runs cross-validation from a pipeline that was built from a skrub
-    expression with ``.skb.get_pipeline()``, ``.skb.get_grid_search()`` or
-    ``.skb.get_randomized_search()``.
+    expression with :func:`Expr.skb.get_pipeline`, :func:`Expr.skb.get_grid_search` or
+    :func:`Expr.skb.get_randomized_search`.
 
     It is useful to run nested cross-validation of a grid search or randomized
     search.
