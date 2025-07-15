@@ -80,18 +80,29 @@ def _check_grid_search_possible(expr):
 
 
 def _repr_node_val(val):
+    """How to represent the value of the node when inspecting the data schema."""
     if val is NULL:
         return None
     elif sbd.is_dataframe(val):
         module = sbd.dataframe_module_name(val)
-        return f"{module} Dataframe, schema: {val.dtypes.apply(str).to_dict()}"
+        return {
+            "kind": f"{module} DataFrame",
+            "schema": val.dtypes.apply(str).to_dict(),
+        }
     elif sbd.is_column(val):
         module = sbd.dataframe_module_name(val)
-        return f"{module} Series, dtype: {str(val.dtype)}"
+        return {
+            "kind": f"{module} Series",
+            "schema": str(val.dtype),
+        }
     elif hasattr(val, "shape") and hasattr(val, "dtype"):
-        return f"{type(val)}, shape: {val.shape}, dtype: {val.dtype}"
+        return {
+            "kind": type(val),
+            "shape": val.shape,
+            "dtype": str(val.dtype),
+        }
     else:
-        return type(val)
+        return {"kind": str(type(val))}
 
 
 class SkrubNamespace:
@@ -1109,6 +1120,33 @@ class SkrubNamespace:
         }
 
     def get_data_schema(self):
+        """Collect the data schema of the variables contained in the expression.
+
+        Returns
+        -------
+        dict mapping variable names to their type, if they are bound to a value.
+            Variables bounded to dataframes and arrays have additional metadata.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a', 0)
+        >>> X = skrub.var('X', skrub.datasets.fetch_employee_salaries().X)
+        >>> c = skrub.var('c') # note no value
+        >>> e = a * X + c
+        >>> e.skb.get_data_schema()
+        {'a': {'kind': "<class 'int'>"},
+         'X': {'kind': 'pandas DataFrame',
+          'schema': {'gender': 'object',
+           'department': 'object',
+           'department_name': 'object',
+           'division': 'object',
+           'assignment_category': 'object',
+           'employee_position_title': 'object',
+           'date_first_hired': 'object',
+           'year_first_hired': 'int64'}},
+         'c': None}
+        """
         return {
             impl.name: _repr_node_val(impl.value)
             for n in nodes(self._expr)
