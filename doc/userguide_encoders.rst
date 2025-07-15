@@ -81,4 +81,4 @@ Comparison of the Categorical Encoders
       - Mediocre
       -
 
-:ref:`This example <example_string_encoders>`) and this `blog post <https://skrub-data.org/skrub-materials/pages/notebooks/categorical-encoders/categorical-encoders.html>`_ include a more systematic analysis of each method.
+:ref:`This example <example_string_encoders>` and this `blog post <https://skrub-data.org/skrub-materials/pages/notebooks/categorical-encoders/categorical-encoders.html>`_ include a more systematic analysis of each method.
