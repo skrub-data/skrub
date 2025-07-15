@@ -38,14 +38,15 @@ class BaseChoice:
 
     __hash__ = None
 
-    def as_expr(self):
-        """Wrap the choice in an expression.
+    def as_dataop(self):
+        """Wrap the choice in a DataOp.
 
-        ``choice.as_expr()`` is a convenience shorthand for ``skrub.as_expr(choice)``.
+        `choice.as_dataop()`` is a convenience shorthand for
+        ``skrub.as_dataop(choice)``.
         """
-        from ._expressions import as_expr
+        from ._dataops import as_dataop
 
-        return as_expr(self)
+        return as_dataop(self)
 
     # We provide the interface that enables dict unpacking with `**choice`:
     # `keys()` and `__getitem__`. This is to offer syntactic sugar to avoid
@@ -317,14 +318,14 @@ class Match:
         }
         return self.choice.match(mapping)
 
-    def as_expr(self):
-        """Wrap the match in an expression.
+    def as_dataop(self):
+        """Wrap the match in a DataOp.
 
-        ``match.as_expr()`` is a convenience shorthand for ``skrub.as_expr(match)``.
+        ``match.as_dataop()`` is a convenience shorthand for ``skrub.as_dataop(match)``.
         """
-        from ._expressions import as_expr
+        from ._dataops import as_dataop
 
-        return as_expr(self)
+        return as_dataop(self)
 
 
 def choose_from(outcomes, *, name=None):
@@ -396,7 +397,7 @@ def get_default(obj):
     If the input is a Choice, the default outcome is used.
     Otherwise returns the input.
 
-    >>> from skrub._expressions._choosing import choose_from, get_default
+    >>> from skrub._dataops._choosing import choose_from, get_default
     >>> choice = choose_from([1, 2], name='N')
     >>> choice
     choose_from([1, 2], name='N')
@@ -495,7 +496,9 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
     The constructed parameter grid will include a branch of the plan with the
     the PCA and one without:
 
-    >>> print(optional(PCA(), name='dim reduction').as_expr().skb.describe_param_grid())
+    >>> print(
+    ... optional(PCA(), name='dim reduction').as_dataop().skb.describe_param_grid()
+    ... )
     - dim reduction: [PCA(), None]
 
     When a learner that contains an ``optional`` step is used *without
@@ -589,7 +592,7 @@ def choose_bool(*, name=None, default=True):
     Examples
     --------
     >>> import skrub
-    >>> print(skrub.choose_bool().as_expr().skb.describe_param_grid())
+    >>> print(skrub.choose_bool().as_dataop().skb.describe_param_grid())
     - choose_bool(): [True, False]
     >>> skrub.choose_bool().default()
     True

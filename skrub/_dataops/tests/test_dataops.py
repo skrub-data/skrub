@@ -11,11 +11,11 @@ from sklearn.linear_model import LogisticRegression
 
 import skrub
 from skrub import selectors as s
-from skrub._dataops import _expressions
+from skrub._dataops import _dataops
 from skrub._utils import PassThrough
 
 
-def test_simple_expression():
+def test_simple_dataop():
     a = skrub.var("a")
     b = skrub.var("b")
     c = a + b
@@ -41,7 +41,7 @@ def test_slice():
 
 def test_estimator():
     c = skrub.var("c")
-    e = skrub.as_expr(LogisticRegression(C=c))
+    e = skrub.as_dataop(LogisticRegression(C=c))
     assert e.skb.eval({"c": 0.001}).C == 0.001
 
 
@@ -95,7 +95,7 @@ def test_environment_no_values():
 
 def test_environment_wrong_values():
     a = skrub.var(name="a", value=[1, 2, 3])
-    # Testing expr as value
+    # Testing dataop as value
     with pytest.raises(
         TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
     ):
@@ -220,12 +220,12 @@ def test_cloning_and_preview_data(how):
     assert clone.skb.eval({"a": 10, "b": 2}) == 12
 
 
-def test_expr_impl():
+def test_dataop_impl():
     # misc bits to make codecove happy
-    class A(_expressions.ExprImpl):
+    class A(_dataops.DataOpImpl):
         _fields = ()
 
-    a = _expressions.Expr(A())
+    a = _dataops.DataOp(A())
     assert repr(a) == "<A>"
     with pytest.raises(NotImplementedError):
         a.skb.eval()
@@ -292,12 +292,12 @@ def test_apply_on_cols(use_choice):
         transformer = skrub.choose_from([Mul(10), Mul(100)], name="t")
     else:
         transformer = Mul(10)
-    e = skrub.as_expr(X_df).skb.apply(transformer, cols=["b"])
+    e = skrub.as_dataop(X_df).skb.apply(transformer, cols=["b"])
     out = e.skb.eval()
     expected = np.arange(6).reshape(2, -1).T * [1, 10]
     assert (out.values == expected).all()
 
-    e = skrub.as_expr(X_df).skb.apply(transformer, exclude_cols=["a"])
+    e = skrub.as_dataop(X_df).skb.apply(transformer, exclude_cols=["a"])
     out = e.skb.eval()
     assert (out.values == expected).all()
 
@@ -320,7 +320,7 @@ def test_concat_vertical_duplicate_cols():
     X2 = skrub.var("X2", pd.DataFrame({"a": [4, 5], "b": [6, 7]}))
 
     e = X1.skb.concat([X2], axis=0)
-    assert isinstance(e, skrub.Expr)
+    assert isinstance(e, skrub.DataOp)
 
     learner = e.skb.get_learner()
     data_dict = {"X1": X_df1, "X2": X_df2}
@@ -334,4 +334,4 @@ def test_concat_vertical_duplicate_cols():
 def test_class_skb():
     from skrub._dataops._skrub_namespace import SkrubNamespace
 
-    assert skrub.Expr.skb is SkrubNamespace
+    assert skrub.DataOp.skb is SkrubNamespace

@@ -5,6 +5,19 @@ from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
+from ._dataops import (
+    AppliedEstimator,
+    Apply,
+    Concat,
+    DataOp,
+    FreezeAfterFit,
+    IfElse,
+    Match,
+    Var,
+    check_dataop,
+    check_name,
+    deferred,
+)
 from ._estimator import ParamSearch, SkrubLearner, cross_validate, train_test_split
 from ._evaluation import (
     choices,
@@ -13,30 +26,17 @@ from ._evaluation import (
     evaluate,
     nodes,
 )
-from ._expressions import (
-    AppliedEstimator,
-    Apply,
-    Concat,
-    Expr,
-    FreezeAfterFit,
-    IfElse,
-    Match,
-    Var,
-    check_expr,
-    check_name,
-    deferred,
-)
 from ._inspection import (
     describe_param_grid,
-    draw_expr_graph,
+    draw_dataop_graph,
     full_report,
 )
 from ._subsampling import SubsamplePreviews, env_with_subsampling, uses_subsampling
 from ._utils import NULL, attribute_error
 
 
-def _var_values_provided(expr, environment):
-    all_nodes = nodes(expr)
+def _var_values_provided(dataop, environment):
+    all_nodes = nodes(dataop)
     names = {
         node._skrub_impl.name for node in all_nodes if isinstance(node._skrub_impl, Var)
     }
@@ -68,8 +68,8 @@ def _check_can_be_pickled(obj):
         raise pickle.PicklingError(msg) from e
 
 
-def _check_grid_search_possible(expr):
-    for c in choices(expr).values():
+def _check_grid_search_possible(dataop):
+    for c in choices(dataop).values():
         if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
             raise ValueError(
                 "Cannot use grid search with continuous numeric ranges. "
@@ -79,16 +79,16 @@ def _check_grid_search_possible(expr):
 
 
 class SkrubNamespace:
-    """The expressions' ``.skb`` attribute."""
+    """The dataops' ``.skb`` attribute."""
 
-    # NOTE: if some expression types are given additional methods not
-    # available for all expressions (eg if some methods specific to
+    # NOTE: if some dataop types are given additional methods not
+    # available for all dataops (eg if some methods specific to
     # ``.skb.apply()`` nodes are added), we can create new namespace classes
     # derived from this one and return the appropriate one in
-    # ``_expressions._Skb.__get__``.
+    # ``_dataops._Skb.__get__``.
 
-    def __init__(self, expr):
-        self._expr = expr
+    def __init__(self, dataop):
+        self._dataop = dataop
 
     def _apply(
         self,
@@ -99,20 +99,20 @@ class SkrubNamespace:
         allow_reject=False,
         unsupervised=False,
     ):
-        expr = Expr(
+        dataop = DataOp(
             Apply(
                 estimator=estimator,
                 cols=cols,
-                X=self._expr,
+                X=self._dataop,
                 y=y,
                 how=how,
                 allow_reject=allow_reject,
                 unsupervised=unsupervised,
             )
         )
-        return expr
+        return dataop
 
-    @check_expr
+    @check_dataop
     def apply(
         self,
         estimator,
@@ -179,8 +179,8 @@ class SkrubNamespace:
 
         See also
         --------
-        skrub.Expr.skb.get_learner :
-            Get a skrub learner for this expression.
+        skrub.DataOp.skb.get_learner :
+            Get a skrub learner for this DataOp.
 
         Examples
         --------
@@ -318,7 +318,7 @@ class SkrubNamespace:
         Parameters
         ----------
         func : function
-            The function to apply to the expression.
+            The function to apply to the DataOp.
 
         args
             additional positional arguments passed to ``func``.
@@ -328,8 +328,8 @@ class SkrubNamespace:
 
         Returns
         -------
-        expression
-            The expression that evaluates to the result of calling ``func`` as
+        dataop
+            The DataOp that evaluates to the result of calling ``func`` as
             ``func(self, *args, **kwargs)``.
 
         Examples
@@ -371,11 +371,11 @@ class SkrubNamespace:
         ―――――――
         2
         """
-        return deferred(func)(self._expr, *args, **kwargs)
+        return deferred(func)(self._dataop, *args, **kwargs)
 
-    @check_expr
+    @check_dataop
     def if_else(self, value_if_true, value_if_false):
-        """Create a conditional expression.
+        """Create a conditional DataOp.
 
         If ``self`` evaluates to ``True``, the result will be
         ``value_if_true``, otherwise ``value_if_false``.
@@ -390,12 +390,12 @@ class SkrubNamespace:
 
         Returns
         -------
-        Conditional expression
+        Conditional DataOp
 
         See also
         --------
-        skrub.Expr.skb.match :
-            Select based on the value of an expression.
+        skrub.DataOp.skb.match :
+            Select based on the value of a DataOp.
 
         Notes
         -----
@@ -434,11 +434,11 @@ class SkrubNamespace:
         copying
         array([0, 1, 2])
         """
-        return Expr(IfElse(self._expr, value_if_true, value_if_false))
+        return DataOp(IfElse(self._dataop, value_if_true, value_if_false))
 
-    @check_expr
+    @check_dataop
     def match(self, targets, default=NULL):
-        """Select based on the value of an expression.
+        """Select based on the value of a DataOp.
 
         Evaluate ``self``, then compare the result to the keys in ``targets``.
         If there is a match, evaluate the corresponding value and return it. If
@@ -453,8 +453,8 @@ class SkrubNamespace:
         ----------
         targets : dict
             A dictionary providing which result to select. The keys must be
-            actual values, they **cannot** be expressions. The values can be
-            expressions or any object.
+            actual values, they **cannot** be DataOps. The values can be
+            DataOps or any object.
 
         default : object, optional
             If provided, the match falls back to the default when none of the
@@ -467,7 +467,7 @@ class SkrubNamespace:
         See also
         --------
         skrub.deferred :
-            Wrap function calls in an expression :class:`Expr`.
+            Wrap function calls in a :class:`DataOp`.
 
         Examples
         --------
@@ -497,9 +497,9 @@ class SkrubNamespace:
 
         Note that only one of the multiplications gets evaluated.
         """
-        return Expr(Match(self._expr, targets, default))
+        return DataOp(Match(self._dataop, targets, default))
 
-    @check_expr
+    @check_dataop
     def select(self, cols):
         """Select a subset of columns.
 
@@ -552,7 +552,7 @@ class SkrubNamespace:
         """
         return self._apply(SelectCols(cols), how="full_frame")
 
-    @check_expr
+    @check_dataop
     def drop(self, cols):
         """Drop some columns.
 
@@ -605,7 +605,7 @@ class SkrubNamespace:
         """
         return self._apply(DropCols(cols), how="full_frame")
 
-    @check_expr
+    @check_dataop
     def concat(self, others, axis=0):
         """Concatenate dataframes vertically or horizontally.
 
@@ -663,9 +663,9 @@ class SkrubNamespace:
            a1  a2  b1  b2
         0   0   1   2   3
         """  # noqa: E501
-        return Expr(Concat(self._expr, others, axis=axis))
+        return DataOp(Concat(self._dataop, others, axis=axis))
 
-    @check_expr
+    @check_dataop
     def subsample(self, n=1000, *, how="head"):
         """Configure subsampling of a dataframe or numpy array.
 
@@ -691,7 +691,7 @@ class SkrubNamespace:
 
         See Also
         --------
-        Expr.skb.preview :
+        DataOp.skb.preview :
             Access a preview of the result on the subsampled data.
 
         Notes
@@ -700,14 +700,14 @@ class SkrubNamespace:
         has been configured, subsampling actually only takes place in some
         specific situations:
 
-        - When computing the previews (results displayed when printing an
-          expression and the output of :meth:`Expr.skb.preview`).
+        - When computing the previews (results displayed when printing a
+          DataOp and the output of :meth:`DataOp.skb.preview`).
         - When it is explicitly requested by passing ``keep_subsampling=True`` to one
           of the functions that expose that parameter such as
-          :meth:`Expr.skb.get_randomized_search` or :func:`cross_validate`.
+          :meth:`DataOp.skb.get_randomized_search` or :func:`cross_validate`.
 
         When subsampling has not been configured (``subsample`` has not
-        been called anywhere in the expression), no subsampling is ever done.
+        been called anywhere in the DataOp plan), no subsampling is ever done.
 
         This method can only be used on steps that produce a dataframe, a
         column (series) or a numpy array.
@@ -823,22 +823,22 @@ class SkrubNamespace:
         Read more about subsampling in the :ref:`User Guide <user_guide_subsampling_ref>`.
 
         """  # noqa : E501
-        return Expr(SubsamplePreviews(self._expr, n=n, how=how))
+        return DataOp(SubsamplePreviews(self._dataop, n=n, how=how))
 
     def clone(self, drop_values=True):
-        """Get an independent clone of the expression.
+        """Get an independent clone of the DataOp.
 
         Parameters
         ----------
         drop_values : bool, default=True
             Whether to drop the initial values passed to ``skrub.var()``.
-            This is convenient for example to serialize expressions without
+            This is convenient for example to serialize DataOps without
             creating large files.
 
         Returns
         -------
         clone
-            A new expression which does not share its state (such as fitted
+            A new DataOp which does not share its state (such as fitted
             estimators) or cache with the original, and possibly without the
             variables' values.
 
@@ -866,7 +866,7 @@ class SkrubNamespace:
         {'a': 0, 'b': 1}
 
         Note that in that case the cache used for previews is still cleared. So
-        if we want the preview we need to prime the new expression by
+        if we want the preview we need to prime the new DataOp by
         accessing the preview once (either directly or by adding more steps to it):
 
         >>> clone
@@ -880,29 +880,29 @@ class SkrubNamespace:
         1
         """
 
-        return clone(self._expr, drop_preview_data=drop_values)
+        return clone(self._dataop, drop_preview_data=drop_values)
 
     def eval(self, environment=None, *, keep_subsampling=False):
-        """Evaluate the expression.
+        """Evaluate the DataOp.
 
-        This returns the result produced by evaluating the expression, ie
+        This returns the result produced by evaluating the DataOp, ie
         running the corresponding learner. The result is always the output
         of the learner's ``fit_transform`` -- a learner is refitted to the
         provided data.
 
         If no data is provided, the values passed when creating the variables
-        in the expression are used.
+        in the DataOp are used.
 
         Parameters
         ----------
         environment : dict or None, optional
             If ``None``, the initial values of the variables contained in the
-            expression are used. If a dict, it must map the name of each
+            DataOp are used. If a dict, it must map the name of each
             variable to a corresponding value.
 
         keep_subsampling : bool, default=False
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
         Returns
@@ -913,7 +913,7 @@ class SkrubNamespace:
 
         See Also
         --------
-        Expr.skb.preview :
+        DataOp.skb.preview :
             Access the preview of the result on the variables initial values,
             with subsampling. Faster than ``eval`` but does not allow passing
             new data and always applies subsampling.
@@ -940,14 +940,14 @@ class SkrubNamespace:
                 f"got: '{type(environment)}'"
             )
         if environment is None and (
-            keep_subsampling or not uses_subsampling(self._expr)
+            keep_subsampling or not uses_subsampling(self._dataop)
         ):
             # In this configuration the result is the same as the preview so
             # we call preview() to benefit from the cached result.
 
             # Before returning, we trigger an error if keep_subsampling=True was
             # passed but no subsampling was configured:
-            _ = env_with_subsampling(self._expr, {}, keep_subsampling)
+            _ = env_with_subsampling(self._dataop, {}, keep_subsampling)
             return self.preview()
         if environment is None:
             environment = self.get_data()
@@ -955,31 +955,31 @@ class SkrubNamespace:
             environment = {
                 **environment,
                 "_skrub_use_var_values": not _var_values_provided(
-                    self._expr, environment
+                    self._dataop, environment
                 ),
             }
-        environment = env_with_subsampling(self._expr, environment, keep_subsampling)
+        environment = env_with_subsampling(self._dataop, environment, keep_subsampling)
         return evaluate(
-            self._expr, mode="fit_transform", environment=environment, clear=True
+            self._dataop, mode="fit_transform", environment=environment, clear=True
         )
 
     def preview(self):
-        """Get the value computed for previews (shown when printing the expression).
+        """Get the value computed for previews (shown when printing the DataOp).
 
         Returns
         -------
         preview result
-            The result of evaluating the expression on the data stored in its
+            The result of evaluating the DataOp on the data stored in its
             variables.
 
         See Also
         --------
-        Expr.skb.subsample :
+        DataOp.skb.subsample :
             Specify how to subsample an intermediate result when computing
             previews.
 
-        Expr.skb.eval :
-            Evaluate the expression. Unlike ``preview``, we can pass new data
+        DataOp.skb.eval :
+            Evaluate the DataOp. Unlike ``preview``, we can pass new data
             rather than using the values that variables were initialized with,
             but results are not cached, and no subsampling takes place by
             default.
@@ -992,7 +992,7 @@ class SkrubNamespace:
         >>> b = skrub.var('b', 2)
         >>> c = a + b
 
-        When we display an expression, we see a preview of the result (``3`` in
+        When we display a DataOp, we see a preview of the result (``3`` in
         this case):
 
         >>> c
@@ -1007,7 +1007,7 @@ class SkrubNamespace:
         >>> c.skb.preview()
         3
 
-        This is the actual number ``3``, not an expression or just a display
+        This is the actual number ``3``, not a DataOp or just a display
 
         >>> type(c.skb.preview())
         <class 'int'>
@@ -1015,19 +1015,19 @@ class SkrubNamespace:
         Accessing the preview is usually faster than calling ``.skb.eval()``
         because results are cached and subsampling is used by default.
         """
-        return evaluate(self._expr, mode="preview", environment=None, clear=False)
+        return evaluate(self._dataop, mode="preview", environment=None, clear=False)
 
-    @check_expr
+    @check_dataop
     def freeze_after_fit(self):
         """Freeze the result during learner fitting.
 
-        With ``freeze_after_fit()`` the result of the expression is
+        With ``freeze_after_fit()`` the result of the DataOp is
         computed during ``fit()``, and then reused (not recomputed) during
         ``transform()`` or ``predict()``.
 
         Returns
         -------
-        The expression whose value does not change after ``fit()``
+        The DataOp whose value does not change after ``fit()``
 
         Notes
         -----
@@ -1066,10 +1066,10 @@ class SkrubNamespace:
         >>> transformer.transform({'X': X_df.iloc[:2]})
         3
         """
-        return Expr(FreezeAfterFit(self._expr))
+        return DataOp(FreezeAfterFit(self._dataop))
 
     def get_data(self):
-        """Collect the values of the variables contained in the expression.
+        """Collect the values of the variables contained in the DataOp.
 
         Returns
         -------
@@ -1089,7 +1089,7 @@ class SkrubNamespace:
 
         data = {}
 
-        for n in nodes(self._expr):
+        for n in nodes(self._dataop):
             impl = n._skrub_impl
             if isinstance(impl, Var) and impl.value is not NULL:
                 data[impl.name] = impl.value
@@ -1110,14 +1110,14 @@ class SkrubNamespace:
            display it in a browser window.
         """
 
-        return draw_expr_graph(self._expr)
+        return draw_dataop_graph(self._dataop)
 
     def describe_steps(self):
         """Get a text representation of the computation graph.
 
-        Usually the graphical representation provided by :meth:`Expr.skb.draw_graph` or
-        :meth:`Expr.skb.full_report` is more useful. This is a fallback for inspecting
-        the computation graph when only text output is available.
+        Usually the graphical representation provided by :meth:`DataOp.skb.draw_graph`
+        or :meth:`DataOp.skb.full_report` is more useful. This is a fallback for
+        inspecting the computation graph when only text output is available.
 
         Returns
         -------
@@ -1130,8 +1130,8 @@ class SkrubNamespace:
         :func:`sklearn.model_selection.cross_validate`:
             Evaluate metric(s) by cross-validation and also record fit/score times.
 
-        :func:`skrub.Expr.skb.get_learner`:
-            Get a skrub learner for this expression.
+        :func:`skrub.DataOp.skb.get_learner`:
+            Get a skrub learner for this DataOp.
 
         Examples
         --------
@@ -1158,15 +1158,15 @@ class SkrubNamespace:
         finally evaluate the multiplication.
         """
 
-        return describe_steps(self._expr)
+        return describe_steps(self._dataop)
 
     def describe_param_grid(self):
-        """Describe the hyper-parameters extracted from choices in the expression.
+        """Describe the hyper-parameters extracted from choices in the DataOp.
 
-        Expressions can contain choices, ranges of possible values to be tuned
+        DataOps can contain choices, ranges of possible values to be tuned
         by hyperparameter search. This function provides a description of the
         grid (set of combinations) of hyperparameters extracted from the
-        expression.
+        DataOp.
 
         Please refer to the examples gallery for a full explanation of choices
         and hyper-parameter tuning.
@@ -1175,7 +1175,7 @@ class SkrubNamespace:
         -------
         str
             A textual description of the different choices contained in this
-            expression.
+            DataOp.
 
         Examples
         --------
@@ -1276,7 +1276,7 @@ class SkrubNamespace:
         from ._inspection import describe_params
 
         return describe_params(
-            chosen_or_default_outcomes(self._expr), choice_graph(self._expr)
+            chosen_or_default_outcomes(self._dataop), choice_graph(self._dataop)
         )
 
     def full_report(
@@ -1286,7 +1286,7 @@ class SkrubNamespace:
         output_dir=None,
         overwrite=False,
     ):
-        """Generate a full report of the expression's evaluation.
+        """Generate a full report of the DataOp's evaluation.
 
         This creates a report showing the computation graph, and for each
         intermediate computation, some information (such as the line of code
@@ -1296,7 +1296,7 @@ class SkrubNamespace:
         Parameters
         ----------
         environment : dict or None (default=None)
-            Bindings for variables and choices contained in the expression. If
+            Bindings for variables and choices contained in the DataOp. If
             not provided, the variables' ``value`` and the choices default
             value are used.
 
@@ -1314,7 +1314,7 @@ class SkrubNamespace:
         Returns
         -------
         dict
-            The results of evaluating the expression. The keys are
+            The results of evaluating the DataOp. The keys are
             ``'result'``, ``'error'`` and ``'report_path'``. If the execution
             raised an exception, it is contained in ``'error'`` and
             ``'result'`` is ``None``. Otherwise the result produced by the
@@ -1326,7 +1326,7 @@ class SkrubNamespace:
         -----
         The learner is run doing a ``fit_transform``. If ``environment`` is
         provided, it is used as the bindings for the variables in the
-        expression, and otherwise, the ``value`` attributes of the variables
+        DataOp, and otherwise, the ``value`` attributes of the variables
         are used.
 
         At the moment, this creates a directory on the filesystem containing
@@ -1346,7 +1346,7 @@ class SkrubNamespace:
         0.5
         >>> report['error']
         >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_expr_report_.../index.html')
+        PosixPath('.../skrub_data/execution_reports/full_dataop_report_.../index.html')
 
         We pass data:
 
@@ -1361,7 +1361,7 @@ class SkrubNamespace:
         >>> report['error']
         ZeroDivisionError('division by zero')
         >>> report['report_path']
-        PosixPath('.../skrub_data/execution_reports/full_expr_report_.../index.html')
+        PosixPath('.../skrub_data/execution_reports/full_dataop_report_.../index.html')
         """  # noqa : E501
 
         if environment is None:
@@ -1372,7 +1372,7 @@ class SkrubNamespace:
             clear = True
 
         return full_report(
-            self._expr,
+            self._dataop,
             environment=environment,
             mode=mode,
             clear=clear,
@@ -1382,7 +1382,7 @@ class SkrubNamespace:
         )
 
     def get_learner(self, *, fitted=False, keep_subsampling=False):
-        """Get a skrub learner for this expression.
+        """Get a skrub learner for this DataOp.
 
         Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
         to some training data and then apply it to unseen data by calling
@@ -1391,11 +1391,11 @@ class SkrubNamespace:
 
         .. warning::
 
-           If the expression contains choices (e.g. ``choose_from(...)``), this
+           If the DataOp contains choices (e.g. ``choose_from(...)``), this
            learner uses the default value of each choice. To actually pick the
            best value with hyperparameter tuning, use
-           :meth:`Expr.skb.get_randomized_search` or
-           :meth:`Expr.skb.get_grid_search` instead.
+           :meth:`DataOp.skb.get_randomized_search` or
+           :meth:`DataOp.skb.get_grid_search` instead.
 
         Parameters
         ----------
@@ -1406,7 +1406,7 @@ class SkrubNamespace:
 
         keep_subsampling : bool (default=False)
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            :meth:`DataOp.skb.subsample`), fit on a subsample of the data. By
             default subsampling is not applied and all the data is used. This
             is only applied for fitting the estimator when ``fitted=True``,
             subsequent use of the estimator is not affected by subsampling.
@@ -1455,7 +1455,7 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
 
-        Please see the examples gallery for full information about expressions
+        Please see the examples gallery for full information about DataOps
         and the learners they generate.
         """
         _check_keep_subsampling(fitted, keep_subsampling)
@@ -1465,7 +1465,7 @@ class SkrubNamespace:
         if not fitted:
             return learner
         return learner.fit(
-            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._dataop, self.get_data(), keep_subsampling)
         )
 
     def train_test_split(
@@ -1483,11 +1483,11 @@ class SkrubNamespace:
         environment : dict, optional
             The environment (dict mapping variable names to values) containing the
             full data. If ``None`` (the default), the data is retrieved from the
-            expression.
+            DataOp.
 
         keep_subsampling : bool, default=False
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
         splitter : function, optional
@@ -1534,7 +1534,7 @@ class SkrubNamespace:
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
         >>> learner = delayed.skb.get_learner()
         >>> learner.fit(split["train"])
-        SkrubLearner(expr=<Apply DummyClassifier>)
+        SkrubLearner(dataop=<Apply DummyClassifier>)
         >>> learner.score(split["test"])
         0.0
         >>> predictions = learner.predict(split["test"])
@@ -1544,7 +1544,7 @@ class SkrubNamespace:
         if environment is None:
             environment = self.get_data()
         return train_test_split(
-            self._expr,
+            self._dataop,
             environment,
             keep_subsampling=keep_subsampling,
             splitter=splitter,
@@ -1564,12 +1564,12 @@ class SkrubNamespace:
         ----------
         fitted : bool (default=False)
             If ``True``, the gridsearch is fitted on the data provided when
-            initializing variables in this expression (the data returned by
+            initializing variables in this DataOp (the data returned by
             ``.skb.get_data()``).
 
         keep_subsampling : bool (default=False)
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            :meth:`DataOp.skb.subsample`), fit on a subsample of the data. By
             default subsampling is not applied and all the data is used. This
             is only applied for fitting the grid search when ``fitted=True``,
             subsequent use of the grid search is not affected by subsampling.
@@ -1586,11 +1586,11 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-        ``results_``, ``plot_results()``, and ``best_learner_`.
+        ``results_``, ``plot_results()``, and ``best_learner_``.
 
         See also
         --------
-        skrub.Expr.skb.get_randomized_search :
+        skrub.DataOp.skb.get_randomized_search :
             Find the best parameters with grid search.
 
         Examples
@@ -1628,7 +1628,7 @@ class SkrubNamespace:
         3   NaN   3.0         rf             0.65
         4   NaN   NaN      dummy             0.50
 
-        If the expression contains some numeric ranges (``choose_float``,
+        If the DataOp contains some numeric ranges (``choose_float``,
         ``choose_int``), either discretize them by providing the ``n_steps``
         argument or use ``get_randomized_search`` instead of
         ``get_grid_search``.
@@ -1651,7 +1651,7 @@ class SkrubNamespace:
         Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
         _check_keep_subsampling(fitted, keep_subsampling)
-        _check_grid_search_possible(self._expr)
+        _check_grid_search_possible(self._dataop)
 
         search = ParamSearch(
             self.clone(), model_selection.GridSearchCV(None, None, **kwargs)
@@ -1659,7 +1659,7 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._dataop, self.get_data(), keep_subsampling)
         )
 
     def get_randomized_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
@@ -1675,12 +1675,12 @@ class SkrubNamespace:
         ----------
         fitted : bool (default=False)
             If ``True``, the randomized search is fitted on the data provided when
-            initializing variables in this expression (the data returned by
+            initializing variables in this DataOp (the data returned by
             ``.skb.get_data()``).
 
         keep_subsampling : bool (default=False)
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample`), fit on a subsample of the data. By
+            :meth:`DataOp.skb.subsample`), fit on a subsample of the data. By
             default subsampling is not applied and all the data is used. This
             is only applied for fitting the randomized search when ``fitted=True``,
             subsequent use of the randomized search is not affected by subsampling.
@@ -1697,11 +1697,11 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-            ``results_``, ``plot_results()``, and ``best_learner_`.
+            ``results_``, ``plot_results()``, and ``best_learner_``.
 
         See also
         --------
-        skrub.Expr.skb.get_grid_search :
+        skrub.DataOp.skb.get_grid_search :
             Find the best parameters with grid search.
 
         Examples
@@ -1759,7 +1759,7 @@ class SkrubNamespace:
         if not fitted:
             return search
         return search.fit(
-            env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
+            env_with_subsampling(self._dataop, self.get_data(), keep_subsampling)
         )
 
     def iter_learners_grid(self):
@@ -1773,17 +1773,17 @@ class SkrubNamespace:
 
         See Also
         --------
-        Expr.skb.iter_learners_randomized :
+        DataOp.skb.iter_learners_randomized :
             Similar function but for random sampling of the parameter space.
-            Must be used when the expression contains some numeric ranges built
+            Must be used when the DataOp contains some numeric ranges built
             with :func:`choose_float` or :func:`choose_int` with
             ``n_steps=None``.
 
-        Expr.skb.get_grid_search :
+        DataOp.skb.get_grid_search :
             Learner with built-in exhaustive exploration of the parameter grid
             to select the best one.
 
-        Expr.skb.get_randomized_search :
+        DataOp.skb.get_randomized_search :
             Learner with built-in randomized exploration of the parameter grid
             to select the best one.
 
@@ -1854,17 +1854,17 @@ class SkrubNamespace:
 
         See Also
         --------
-        Expr.skb.iter_learners_grid :
+        DataOp.skb.iter_learners_grid :
             Similar function but for exploring all the possible parameter
-            combinations. Cannot be used when the expression contains some
+            combinations. Cannot be used when the DataOp contains some
             numeric ranges built with :func:`choose_float` or
             :func:`choose_int` with ``n_steps=None``.
 
-        Expr.skb.get_grid_search :
+        DataOp.skb.get_grid_search :
             Learner with built-in exhaustive exploration of the parameter grid
             to select the best one.
 
-        Expr.skb.get_randomized_search :
+        DataOp.skb.get_randomized_search :
             Learner with built-in randomized exploration of the parameter grid
             to select the best one.
 
@@ -1915,7 +1915,7 @@ class SkrubNamespace:
             yield new
 
     def cross_validate(self, environment=None, *, keep_subsampling=False, **kwargs):
-        """Cross-validate the expression.
+        """Cross-validate the DataOp plan.
 
         This generates the learner with default hyperparameters and runs
         scikit-learn cross-validation.
@@ -1923,13 +1923,13 @@ class SkrubNamespace:
         Parameters
         ----------
         environment : dict or None
-            Bindings for variables contained in the expression. If not
+            Bindings for variables contained in the DataOp plan. If not
             provided, the ``value``s passed when initializing ``var()`` are
             used.
 
         keep_subsampling : bool, default=False
             If True, and if subsampling has been configured (see
-            :meth:`Expr.skb.subsample`), use a subsample of the data. By
+            :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
         kwargs : dict
@@ -1978,18 +1978,18 @@ class SkrubNamespace:
             **kwargs,
         )
 
-    @check_expr
+    @check_dataop
     def mark_as_X(self):
-        """Mark this expression as being the ``X`` table.
+        """Mark this DataOp as being the ``X`` table.
 
         This is used for cross-validation and hyperparameter selection: operations
         done before :meth:`.skb.mark_as_X()` and :meth:`.skb.mark_as_y()` are executed
         on the entire data and cannot benefit from hyperparameter tuning.
-        Returns a copy; the original expression is left unchanged.
+        Returns a copy; the original DataOp is left unchanged.
 
         Returns
         -------
-        The input expression, which has been marked as being ``X``
+        The input DataOp, which has been marked as being ``X``
 
         See also
         --------
@@ -2001,7 +2001,7 @@ class SkrubNamespace:
         -----
         During cross-validation, all the previous steps are first executed,
         until X and y have been materialized. Then, those are split into
-        training and testing sets. The following steps in the expression are
+        training and testing sets. The following steps in the DataOp are
         fitted on the train data, and applied to test data, within each split.
 
         This means that any step that comes before ``mark_as_X()`` or
@@ -2013,7 +2013,7 @@ class SkrubNamespace:
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
 
-        Note: this marks the expression in-place and also returns it.
+        Note: this marks the DataOp in-place and also returns it.
 
         Examples
         --------
@@ -2051,33 +2051,33 @@ class SkrubNamespace:
 
         Please see the examples gallery for more information.
         """
-        new = self._expr._skrub_impl.__copy__()
+        new = self._dataop._skrub_impl.__copy__()
         new.is_X = True
-        return Expr(new)
+        return DataOp(new)
 
     @property
     def is_X(self):
-        """Whether this expression has been marked with :meth:`.skb.mark_as_X()`."""
-        return self._expr._skrub_impl.is_X
+        """Whether this DataOp has been marked with :meth:`.skb.mark_as_X()`."""
+        return self._dataop._skrub_impl.is_X
 
-    @check_expr
+    @check_dataop
     def mark_as_y(self):
-        """Mark this expression as being the ``y`` table.
+        """Mark this DataOp as being the ``y`` table.
 
         This is used for cross-validation and hyperparameter selection: operations
         done before :meth:`.skb.mark_as_X()` and :meth:`.skb.mark_as_y()` are executed
         on the entire data and cannot benefit from hyperparameter tuning.
-        Returns a copy; the original expression is left unchanged.
+        Returns a copy; the original DataOp is left unchanged.
 
         Returns
         -------
-        The input expression, which has been marked as being ``y``
+        The input DataOp, which has been marked as being ``y``
 
         Notes
         -----
         During cross-validation, all the previous steps are first executed,
         until X and y have been materialized. Then, those are split into
-        training and testing sets. The following steps in the expression are
+        training and testing sets. The following steps in the DataOp plan are
         fitted on the train data, and applied to test data, within each split.
 
         This means that any step that comes before ``mark_as_X()`` or
@@ -2086,7 +2086,7 @@ class SkrubNamespace:
         should be careful to start our learner by building X and y, and to use
         ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
 
-        Note: this marks the expression in-place and also returns it.
+        Note: this marks the DataOp in-place and also returns it.
 
         See also
         --------
@@ -2127,18 +2127,18 @@ class SkrubNamespace:
 
         Please see the examples gallery for more information.
         """
-        new = self._expr._skrub_impl.__copy__()
+        new = self._dataop._skrub_impl.__copy__()
         new.is_y = True
-        return Expr(new)
+        return DataOp(new)
 
     @property
     def is_y(self):
         """Whether this expression has been marked with :meth:`.skb.mark_as_y()`."""
-        return self._expr._skrub_impl.is_y
+        return self._dataop._skrub_impl.is_y
 
-    @check_expr
+    @check_dataop
     def set_name(self, name):
-        """Give a name to this expression.
+        """Give a name to this dataop.
 
         Returns a modified copy.
 
@@ -2157,7 +2157,7 @@ class SkrubNamespace:
 
         Returns
         -------
-        A new expression with the given name.
+        A new DataOp with the given name.
 
         Examples
         --------
@@ -2190,7 +2190,7 @@ class SkrubNamespace:
         >>> d.skb.eval({'c': -1}) # -1 * 10
         -10
 
-        For expressions that are not variables, the name can be set back to the
+        For DataOps that are not variables, the name can be set back to the
         default ``None``:
 
         >>> e = c.skb.set_name(None)
@@ -2198,23 +2198,23 @@ class SkrubNamespace:
         >>> c.skb.name
         'c'
         """
-        check_name(name, isinstance(self._expr._skrub_impl, Var))
-        new = self._expr._skrub_impl.__copy__()
+        check_name(name, isinstance(self._dataop._skrub_impl, Var))
+        new = self._dataop._skrub_impl.__copy__()
         new.name = name
-        return Expr(new)
+        return DataOp(new)
 
     @property
     def name(self):
-        """A user-chosen name for the expression.
+        """A user-chosen name for the DataOp.
 
         The name is used for display, to retrieve a specific node inside the
-        expression or to override its value. See :func:`Expr.skb.set_name` for
+        DataOp or to override its value. See :func:`DataOp.skb.set_name` for
         more information.
         """
-        return self._expr._skrub_impl.name
+        return self._dataop._skrub_impl.name
 
     def set_description(self, description):
-        """Give a description to this expression.
+        """Give a description to this DataOp.
 
         Returns a modified copy.
 
@@ -2229,7 +2229,7 @@ class SkrubNamespace:
 
         Returns
         -------
-        A new expression with the provided description.
+        A new DataOp with the provided description.
 
         Examples
         --------
@@ -2245,30 +2245,30 @@ class SkrubNamespace:
         >>> c.skb.description
         'the addition of a and b'
         """
-        new = self._expr._skrub_impl.__copy__()
+        new = self._dataop._skrub_impl.__copy__()
         new.description = description
-        return Expr(new)
+        return DataOp(new)
 
     @property
     def description(self):
-        """A user-defined description or comment about the expression.
+        """A user-defined description or comment about the DataOp.
 
         This can be set with ``.skb.set_description()`` and is displayed in the
         execution report.
         """
-        return self._expr._skrub_impl.description
+        return self._dataop._skrub_impl.description
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
     @property
-    @check_expr
+    @check_dataop
     def applied_estimator(self):
-        """Retrieve the estimator applied in the previous step, as an expression.
+        """Retrieve the estimator applied in the previous step, as a DataOp.
 
         Notes
         -----
-        This attribute only exists for expressions created with
+        This attribute only exists for DataOp created with
         ``.skb.apply()``.
 
         Examples
@@ -2323,13 +2323,13 @@ class SkrubNamespace:
         ―――――――
         {'product': StringEncoder(n_components=2), 'description': StringEncoder(n_components=2)}
         """  # noqa: E501
-        if not isinstance(self._expr._skrub_impl, Apply):
+        if not isinstance(self._dataop._skrub_impl, Apply):
             attribute_error(
                 self,
                 "applied_estimator",
                 (
                     "`.skb.applied_estimator` only exists "
-                    "on expressions created with ``.skb.apply()``"
+                    "on dataops created with ``.skb.apply()``"
                 ),
             )
-        return Expr(AppliedEstimator(self._expr))
+        return DataOp(AppliedEstimator(self._dataop))

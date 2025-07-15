@@ -19,8 +19,8 @@ from .._reporting._serve import open_in_browser
 from .._utils import Repr, random_string, short_repr
 from . import _utils
 from ._choosing import BaseNumericChoice, Choice
+from ._dataops import Apply, Value, Var
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
-from ._expressions import Apply, Value, Var
 from ._subsampling import uses_subsampling
 
 
@@ -31,7 +31,7 @@ def _get_jinja_env():
             / "_reporting"
             / "_data"
             / "templates"
-            / "expressions",
+            / "dataops",
             encoding="UTF-8",
         ),
         autoescape=True,
@@ -44,11 +44,11 @@ def _get_template(template_name):
 
 
 def _use_tablereport_display():
-    return get_config()["use_tablereport_expr"]
+    return get_config()["use_tablereport_dataop"]
 
 
-def node_report(expr, mode="preview", environment=None, **report_kwargs):
-    result = evaluate(expr, mode=mode, environment=environment)
+def node_report(dataop, mode="preview", environment=None, **report_kwargs):
+    result = evaluate(dataop, mode=mode, environment=environment)
     if sbd.is_column(result):
         # TODO say in page that it was a column not df
         # maybe this should be handled by tablereport? or we should have a
@@ -60,7 +60,7 @@ def node_report(expr, mode="preview", environment=None, **report_kwargs):
         report_kwargs.setdefault("verbose", False)  # Hide the progress bar
         report = TableReport(result, **report_kwargs)
         report._set_minimal_mode()
-        if uses_subsampling(expr):
+        if uses_subsampling(dataop):
             report._display_subsample_hint()
     else:
         try:
@@ -81,7 +81,7 @@ def _get_output_dir(output_dir, overwrite):
         output_dir = (
             datasets.get_data_dir()
             / "execution_reports"
-            / f"full_expr_report_{now}_{random_string()}"
+            / f"full_dataop_report_{now}_{random_string()}"
         )
     else:
         output_dir = Path(output_dir).expanduser().resolve()
@@ -97,9 +97,9 @@ def _get_output_dir(output_dir, overwrite):
     return output_dir
 
 
-def _node_status(expr_graph, mode):
+def _node_status(dataop_graph, mode):
     status = {}
-    for node_id, node in expr_graph["nodes"].items():
+    for node_id, node in dataop_graph["nodes"].items():
         if mode in node._skrub_impl.results:
             status[node_id] = "success"
         elif mode in node._skrub_impl.errors:
@@ -110,7 +110,7 @@ def _node_status(expr_graph, mode):
 
 
 def full_report(
-    expr,
+    dataop,
     environment=None,
     mode="preview",
     clear=True,
@@ -119,10 +119,10 @@ def full_report(
     overwrite=False,
 ):
     if clear:
-        clear_results(expr, mode)
+        clear_results(dataop, mode)
     try:
         return _do_full_report(
-            expr,
+            dataop,
             environment=environment,
             mode=mode,
             open=open,
@@ -131,11 +131,11 @@ def full_report(
         )
     finally:
         if clear:
-            clear_results(expr, mode)
+            clear_results(dataop, mode)
 
 
 def _do_full_report(
-    expr,
+    dataop,
     environment=None,
     mode="preview",
     open=True,
@@ -145,15 +145,15 @@ def _do_full_report(
     _check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
-        # TODO dump report in callback instead of evaluating full expression
+        # TODO dump report in callback instead of evaluating full dataop plan
         # first, so that we can clear intermediate results.
         # See evaluate's `callback` parameter
-        result = evaluate(expr, mode=mode, environment=environment, clear=False)
+        result = evaluate(dataop, mode=mode, environment=environment, clear=False)
         evaluate_error = None
     except Exception as e:
         result = None
         evaluate_error = e
-    g = graph(expr)
+    g = graph(dataop)
     node_status = _node_status(g, mode)
     node_rindex = {id(node): k for k, node in g["nodes"].items()}
 
@@ -163,7 +163,7 @@ def _do_full_report(
     def make_url(node):
         return node_name_to_url(node_rindex[id(node)])
 
-    svg = draw_expr_graph(expr, url=make_url).svg.decode("utf-8")
+    svg = draw_dataop_graph(dataop, url=make_url).svg.decode("utf-8")
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
         {"svg": svg, "node_status": node_status}
@@ -268,8 +268,8 @@ class GraphDrawing:
         return f"<{self.__class__.__name__}: use .open() to display>"
 
 
-def _node_kwargs(expr, url=None):
-    label = html.escape(_utils.simple_repr(expr))
+def _node_kwargs(dataop, url=None):
+    label = html.escape(_utils.simple_repr(dataop))
     kwargs = {
         "shape": "box",
         "fontsize": 12,
@@ -279,24 +279,24 @@ def _node_kwargs(expr, url=None):
         "fontname": "sans-serif",
         "color": "black",
     }
-    if expr._skrub_impl.is_X:
+    if dataop._skrub_impl.is_X:
         label = f"X: {label}"
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#c6d5f0"
-    elif expr._skrub_impl.is_y:
+    elif dataop._skrub_impl.is_y:
         label = f"y: {label}"
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#fad9c6"
-    if url is not None and (computed_url := url(expr)) is not None:
+    if url is not None and (computed_url := url(dataop)) is not None:
         kwargs["URL"] = computed_url
         label = label.replace("\n", "<br />")
         label = f'<<FONT COLOR="#1a0dab"><B>{label}</B></FONT>>'
     kwargs["label"] = label
-    tooltip = html.escape(expr._skrub_impl.creation_stack_last_line())
-    if description := expr._skrub_impl.description:
+    tooltip = html.escape(dataop._skrub_impl.creation_stack_last_line())
+    if description := dataop._skrub_impl.description:
         tooltip = f"{tooltip}\n\n{html.escape(description)}"
     kwargs["tooltip"] = tooltip
-    if isinstance(expr._skrub_impl, (Var, Value)):
+    if isinstance(dataop._skrub_impl, (Var, Value)):
         kwargs["peripheries"] = 2
     return kwargs
 
@@ -320,17 +320,17 @@ def _has_graphviz():
 def _check_graphviz():
     if _has_graphviz():
         return
-    raise ImportError("Please install pydot and graphviz to draw expression graphs.")
+    raise ImportError("Please install pydot and graphviz to draw dataop graphs.")
 
 
-def draw_expr_graph(expr, url=None, direction="TB"):
+def draw_dataop_graph(dataop, url=None, direction="TB"):
     # TODO if pydot or graphviz not available fallback on some other plotting
     # solution eg a vendored copy of mermaid? outputting html instead of svg
     _check_graphviz()
 
     import pydot
 
-    g = graph(expr)
+    g = graph(dataop)
     dot_graph = pydot.Dot(rankdir=direction)
     for node_id, e in g["nodes"].items():
         kwargs = _node_kwargs(e, url=url)
@@ -344,11 +344,11 @@ def draw_expr_graph(expr, url=None, direction="TB"):
     return GraphDrawing(dot_graph)
 
 
-def describe_params(params, expr_choices):
+def describe_params(params, dataop_choices):
     description = {}
     for choice_id, param in params.items():
-        choice = expr_choices["choices"][choice_id]
-        choice_name = expr_choices["choice_display_names"][choice_id]
+        choice = dataop_choices["choices"][choice_id]
+        choice_name = dataop_choices["choice_display_names"][choice_id]
         if isinstance(choice, Choice):
             # If we have a Choice we use the outcome name if there is one, and
             # if there isn't, the value if it is a simple type otherwise a
@@ -372,17 +372,17 @@ def describe_params(params, expr_choices):
     return description
 
 
-def describe_param_grid(expr):
-    grid = param_grid(expr)
-    expr_choices = choice_graph(expr)
+def describe_param_grid(dataop):
+    grid = param_grid(dataop)
+    dataop_choices = choice_graph(dataop)
 
     buf = io.StringIO()
     for subgrid in grid:
         prefix = "- "
         for k, v in subgrid.items():
             assert isinstance(v, (BaseNumericChoice, list))
-            choice = expr_choices["choices"][k]
-            name = expr_choices["choice_display_names"][k]
+            choice = dataop_choices["choices"][k]
+            name = dataop_choices["choice_display_names"][k]
             buf.write(f"{prefix}{name}: ")
             if isinstance(choice, BaseNumericChoice):
                 buf.write(f"{v}\n")

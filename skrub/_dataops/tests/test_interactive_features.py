@@ -9,7 +9,7 @@ import skrub
 def example_strings():
     return [
         skrub.var("a", "abc"),
-        skrub.as_expr("abc"),
+        skrub.as_dataop("abc"),
         skrub.var("a", "abc") + " def",
     ]
 
@@ -36,16 +36,16 @@ class _A:
 
 
 def test_missing_doc():
-    from skrub._dataops._expressions import _EXPR_INSTANCE_DOC
+    from skrub._dataops._dataops import _DATAOP_INSTANCE_DOC
 
-    assert skrub.X().__doc__ == _EXPR_INSTANCE_DOC
-    assert skrub.X(_A()).__doc__ == _EXPR_INSTANCE_DOC
+    assert skrub.X().__doc__ == _DATAOP_INSTANCE_DOC
+    assert skrub.X(_A()).__doc__ == _DATAOP_INSTANCE_DOC
 
 
 def test_expr_class_doc():
-    from skrub._dataops._expressions import _EXPR_CLASS_DOC, Expr
+    from skrub._dataops._dataops import _DATAOP_INSTANCE_DOC, DataOp
 
-    assert Expr.__doc__ == _EXPR_CLASS_DOC
+    assert DataOp.__doc__ == _DATAOP_INSTANCE_DOC
 
 
 @pytest.mark.parametrize("a", example_strings())
@@ -104,7 +104,7 @@ def test_repr():
     Result:
     ―――――――
     'one two'
-    >>> skrub.as_expr({'a': 0})
+    >>> skrub.as_dataop({'a': 0})
     <Value dict>
     Result:
     ―――――――
@@ -126,29 +126,29 @@ def test_repr():
     >>> skrub.X().skb.apply(
     ...     skrub.choose_from([RobustScaler(), StandardScaler()], name='scale'))
     <Apply RobustScaler>
-    >>> skrub.as_expr({'a': 0})['a']
+    >>> skrub.as_dataop({'a': 0})['a']
     <GetItem 'a'>
     Result:
     ―――――――
     0
-    >>> skrub.as_expr({'a': 0, 'b': 1})[skrub.choose_from(['a', 'b'], name='c')]
+    >>> skrub.as_dataop({'a': 0, 'b': 1})[skrub.choose_from(['a', 'b'], name='c')]
     <GetItem choose_from(['a', 'b'], name='c')>
     Result:
     ―――――――
     0
-    >>> skrub.as_expr({'a': 0, 'b': 1})[skrub.var('key', 'b')]
+    >>> skrub.as_dataop({'a': 0, 'b': 1})[skrub.var('key', 'b')]
     <GetItem <Var 'key'>>
     Result:
     ―――――――
     1
-    >>> skrub.as_expr('hello').upper()
+    >>> skrub.as_dataop('hello').upper()
     <CallMethod 'upper'>
     Result:
     ―――――――
     'HELLO'
     >>> a = skrub.var('a', 'hello')
     >>> b = skrub.var('b', 1)
-    >>> skrub.as_expr({0: a.upper, 1: a.title})[b]()
+    >>> skrub.as_dataop({0: a.upper, 1: a.title})[b]()
     <Call "{ ... }[<Var 'b'>]">
     Result:
     ―――――――
@@ -162,12 +162,12 @@ def test_repr():
     In cases that are hard to figure out we fall back on a less informative
     default
 
-    >>> skrub.choose_from([str.upper, str.title], name='f').as_expr()('abc')
+    >>> skrub.choose_from([str.upper, str.title], name='f').as_dataop()('abc')
     <Call 'Value'>
     Result:
     ―――――――
     'ABC'
-    >>> skrub.as_expr(str.upper)('abc')
+    >>> skrub.as_dataop(str.upper)('abc')
     <Call 'Value'>
     Result:
     ―――――――
@@ -206,7 +206,7 @@ def test_repr():
 
     When we do not know the length of the list of dataframes to concatenate
 
-    >>> X.skb.concat(skrub.as_expr([X, X]),axis=0)
+    >>> X.skb.concat(skrub.as_dataop([X, X]),axis=0)
     <Concat>
 
     if we end up applying a ApplyToCols, seeing the inner transformer is more

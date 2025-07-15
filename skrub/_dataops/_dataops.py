@@ -1,7 +1,7 @@
-# This module defines the Expr class, which represents skrub expressions.
+# This module defines the DataOp class, which represents skrub dataops.
 #
-# Accessing an attribute or method of an expression creates a new node in the
-# computation graph. Therefore the namespace of the Expr class must remain
+# Accessing an attribute or method of a dataop creates a new node in the
+# computation graph. Therefore the namespace of the DataOp class must remain
 # almost empty to avoid name clashes with methods users want to use in their
 # DataOps plan: if `e = skrub.var('x', pd.DataFrame(...))`, `e.groupby()` must
 # create a node that will call `pd.DataFrame.groupby`, not execute some skrub
@@ -10,20 +10,20 @@
 # Therefore, the actual skrub functionality is hidden away in the attribute
 # `_skrub_impl` (whose name is chosen to avoid any potential name clash). The
 # only public attribute is `.skb` which gives users access to the public API of
-# the expressions.
+# the dataops.
 #
-# Thus expressions are mostly an empty shell around their `_skrub_impl`, which
-# is of type `ExprImpl`. Each kind of node in the computation graph is
-# represented by a different subclass of `ExprImpl`: `Call` for function calls,
+# Thus dataops are mostly an empty shell around their `_skrub_impl`, which
+# is of type `DataOpImpl`. Each kind of node in the computation graph is
+# represented by a different subclass of `DataOpImpl`: `Call` for function calls,
 # `BinOp` for binary operators, `GetAttr` for attribute access etc.
-# See the docstring of `ExprImpl` for information on how to define a new node
+# See the docstring of `DataOpImpl` for information on how to define a new node
 # type.
 #
-# Most of the logic for manipulating and evaluating expressions is outside of
+# Most of the logic for manipulating and evaluating dataops is outside of
 # those classes, in the `_evaluation` module.
 #
 # The `_estimator` module provides the scikit-learn-like interface (with `fit`
-# and `predict`) to expressions. `_skrub_namespace` contains the definition of
+# and `predict`) to dataops. `_skrub_namespace` contains the definition of
 # the `.skb` attribute.
 
 import dis
@@ -55,9 +55,9 @@ __all__ = [
     "var",
     "X",
     "y",
-    "as_expr",
+    "as_dataop",
     "deferred",
-    "check_expr",
+    "check_dataop",
     "eval_mode",
 ]
 
@@ -93,8 +93,8 @@ _EXCLUDED_JUPYTER_ATTR = [
 
 _EXCLUDED_PANDAS_ATTR = [
     # used internally by pandas to check an argument is actually a dataframe.
-    # by raising an attributeerror when it is accessed we fail early when an
-    # expression is used where a DataFrame is expected eg
+    # by raising an attributeerror when it is accessed we fail early when a
+    # dataop is used where a DataFrame is expected eg
     # pd.DataFrame(...).merge(skrub.X(), ...)
     #
     # polars already fails with a good error message in that situation so it
@@ -141,14 +141,14 @@ _UNARY_OPS = [
 
 class UninitializedVariable(KeyError):
     """
-    Evaluating an expression and a value has not been provided for one of the variables.
+    Evaluating a dataop and a value has not been provided for one of the variables.
     """
 
 
 def _remove_shell_frames(stack):
     """
     Remove the uninformative frames that belong to the python shell itself from
-    traces displayed in reports or in "this expression was created here"
+    traces displayed in reports or in "this dataop was created here"
     messages.
     """
     shells = [
@@ -167,8 +167,8 @@ def _remove_shell_frames(stack):
     return stack
 
 
-def _format_expr_creation_stack():
-    "Call stack information used to tell users where an expression was defined."
+def _format_dataop_creation_stack():
+    "Call stack information used to tell users where a dataop was defined."
 
     # TODO use inspect.stack() instead of traceback.extract_stack() for more
     # context lines + within-line position of the instruction (dis.Positions
@@ -183,13 +183,13 @@ def _format_expr_creation_stack():
     return traceback.format_list(stack)
 
 
-class ExprImpl:
-    """Base class for all kinds of expressions (computation graph nodes).
+class DataOpImpl:
+    """Base class for all kinds of dataops (computation graph nodes).
 
-    Those types are used as `_skrub_impl` attributes of `Expr` instances. They
-    provide the expression's functionality.
+    Those types are used as `_skrub_impl` attributes of `DataOp` instances. They
+    provide the dataop's functionality.
 
-    Subclass `ExprImpl` to define a new type of node (such as `GetAttr`,
+    Subclass `DataOpImpl` to define a new type of node (such as `GetAttr`,
     `Apply`, etc.)
 
     Subclasses must _not_ define `__init__`. They must have a static attribute
@@ -197,9 +197,9 @@ class ExprImpl:
     this node. For example a binary operator will have `left` and `right`
     fields, `Call` will have `func`, `args` and `kwargs`, etc.
 
-    An ExprImpl subclass must implement the logic to compute its result, once
+    A DataOpImpl subclass must implement the logic to compute its result, once
     its children have been evaluated. The orchestration for evaluating the full
-    expression is the responsibility of the `_evaluation` module.
+    dataop is the responsibility of the `_evaluation` module.
 
     To implement the computation of the final result there are 2 possibilities:
     define `compute()` or define `eval()`.
@@ -218,7 +218,7 @@ class ExprImpl:
     evaluation, the class must define `eval()` (and not `compute` which is
     never call when `eval` exists). `eval` must be a generator function. It
     should `yield` objects that need to be evaluated for the computation to
-    continue (and the value of the yield expression will be the computed value
+    continue (and the value of the yield dataop will be the computed value
     of the yielded object). Finally it should `return` the computed result. See
     `IfElse` or `Match` in this module for simple examples.
 
@@ -240,7 +240,7 @@ class ExprImpl:
             self.results = {}
             self.errors = {}
             try:
-                self._creation_stack_lines = _format_expr_creation_stack()
+                self._creation_stack_lines = _format_dataop_creation_stack()
             except Exception:
                 self._creation_stack_lines = None
             self.is_X = False
@@ -288,32 +288,32 @@ class ExprImpl:
         return f"<{self.__class__.__name__}>"
 
 
-def _find_dataframe(expr, func_name):
-    # If a dataframe is found in an expression that is likely a mistake.
+def _find_dataframe(dataop, func_name):
+    # If a dataframe is found in a dataop that is likely a mistake.
     # Eg skrub.X().join(actual_df, ...) instead of skrub.X().join(skrub.var('Z'), ...)
     from ._evaluation import find_arg
 
-    df = find_arg(expr, lambda o: sbd.is_dataframe(o))
+    df = find_arg(dataop, lambda o: sbd.is_dataframe(o))
     if df is not None:
         return {
             "message": (
                 f"You passed an actual DataFrame (shown below) to `{func_name}`. "
-                "Did you mean to pass a skrub expression instead? "
+                "Did you mean to pass a skrub dataop instead? "
                 "Note: if you did intend to pass a DataFrame you can wrap it "
-                "with `skrub.as_expr(df)` to avoid this error. "
+                "with `skrub.as_dataop(df)` to avoid this error. "
                 f"Here is the dataframe:\n{df}"
             )
         }
     return None
 
 
-def check_expr(f):
-    """Check an expression and evaluate the preview.
+def check_dataop(f):
+    """Check a dataop and evaluate the preview.
 
-    We must decorate all the functions that create expressions rather than do
+    We must decorate all the functions that create dataops rather than do
     it in ``__init__`` to make tracebacks as short as possible: the second
     frame in the stack trace is the one in user code that created the
-    problematic expression. If the check was done in ``__init__`` it might be
+    problematic dataop. If the check was done in ``__init__`` it might be
     buried several calls deep, making it harder to understand those errors.
     """
 
@@ -321,21 +321,21 @@ def check_expr(f):
     def checked_call(*args, **kwargs):
         from ._evaluation import check_choices_before_Xy, evaluate, find_conflicts
 
-        expr = f(*args, **kwargs)
+        dataop = f(*args, **kwargs)
 
         try:
-            func_name = expr._skrub_impl.pretty_repr()
+            func_name = dataop._skrub_impl.pretty_repr()
         except Exception:
             func_name = f"{f.__name__}()"
 
-        conflicts = find_conflicts(expr)
+        conflicts = find_conflicts(dataop)
         if conflicts is not None:
             raise ValueError(conflicts["message"])
-        if (found_df := _find_dataframe(expr, func_name)) is not None:
+        if (found_df := _find_dataframe(dataop, func_name)) is not None:
             raise TypeError(found_df["message"])
-        check_choices_before_Xy(expr)
+        check_choices_before_Xy(dataop)
         try:
-            evaluate(expr, mode="preview", environment=None)
+            evaluate(dataop, mode="preview", environment=None)
         except UninitializedVariable:
             pass
         except Exception as e:
@@ -345,15 +345,15 @@ def check_expr(f):
                 f"You can see the full traceback above. The error message was:\n{msg}"
             ) from e
 
-        return expr
+        return dataop
 
     return checked_call
 
 
 def _get_preview(obj):
-    if isinstance(obj, Expr) and "preview" in obj._skrub_impl.results:
+    if isinstance(obj, DataOp) and "preview" in obj._skrub_impl.results:
         return obj._skrub_impl.results["preview"]
-    if isinstance(obj, Expr) and isinstance(obj._skrub_impl, (Var, Value)):
+    if isinstance(obj, DataOp) and isinstance(obj._skrub_impl, (Var, Value)):
         return obj._skrub_impl.value
     return obj
 
@@ -375,13 +375,13 @@ def _check_return_value(f):
 
     @functools.wraps(f)
     def check_call_return_value(*args, **kwargs):
-        expr = f(*args, **kwargs)
-        if "preview" not in expr._skrub_impl.results:
-            return expr
-        result = expr._skrub_impl.results["preview"]
+        dataop = f(*args, **kwargs)
+        if "preview" not in dataop._skrub_impl.results:
+            return dataop
+        result = dataop._skrub_impl.results["preview"]
         if result is not None:
-            return expr
-        func_name = expr._skrub_impl.pretty_repr()
+            return dataop
+        func_name = dataop._skrub_impl.pretty_repr()
         msg = (
             f"Calling {func_name!r} returned None. "
             "To enable chaining steps in a DataOps plan, do not use functions "
@@ -389,7 +389,7 @@ def _check_return_value(f):
             "their argument unchanged and return a new object."
         )
         warnings.warn(msg)
-        return expr
+        return dataop
 
     return check_call_return_value
 
@@ -405,9 +405,9 @@ class _Skb:
     # descriptor itself (as is usually done), we return the SkrubNamespace
     # class. This class contains all the methods & attributes that can be
     # accessed through ``.skb``, so sphinx can inspect it to find the
-    # docstrings: ``skrub.Expr.skb`` is ``SkrubNamespace`` and
-    # ``skrub.Expr.skb.get_grid_search`` exists. Without the custom descriptor
-    # ``skrub.Expr.skb`` would be a property object (with attributes
+    # docstrings: ``skrub.DataOp.skb`` is ``SkrubNamespace`` and
+    # ``skrub.DataOp.skb.get_grid_search`` exists. Without the custom descriptor
+    # ``skrub.DataOp.skb`` would be a property object (with attributes
     # ``deleter``, ``setter``, etc., not ``get_grid_search``).
     #
     # This is the approach used by pandas for its "accessors" such as
@@ -423,54 +423,54 @@ class _Skb:
         return _skrub_namespace.SkrubNamespace(instance)
 
 
-_EXPR_CLASS_DOC = """
+_DATAOP_CLASS_DOC = """
 Representation of a computation that can be used to build DataOps plans and learners.
 
 Please refer to the example gallery for an introduction to skrub
-expressions.
+dataops.
 
 This class is usually not instantiated manually, but through one of the functions
-:func:`var`, :func:`as_expr`, :func:`X` or :func:`y`, by applying a
+:func:`var`, :func:`as_dataop`, :func:`X` or :func:`y`, by applying a
 :func:`deferred` function, or by calling a method or applying an operator
-to an existing expression.
+to an existing dataop.
 """
 
-_EXPR_INSTANCE_DOC = """Skrub expression.
+_DATAOP_INSTANCE_DOC = """Skrub dataop.
 
 This object represents a computation and can be used to build DataOps plans and
 learners.
 
 Please refer to the example gallery for an introduction to skrub
-expressions.
+dataops.
 """
 
 
-class _ExprDoc:
-    """Descriptor for the expressions' docstring."""
+class _DataOpDoc:
+    """Descriptor for the dataops' docstring."""
 
-    # The docstring of expression instances is dynamic and shows the docstring of
+    # The docstring of dataop instances is dynamic and shows the docstring of
     # the preview's result if possible, so that if we do
 
     # ``help(skrub.var('a', [1, 2]))``
 
     # we get the help for lists. However when the docstring is looked
-    # up on the class, we want to return some information about the ``Expr``
+    # up on the class, we want to return some information about the ``DataOp``
     # class itself to be displayed in the sphinx documentation.
 
     def __get__(self, instance, owner=None):
         if instance is None:
-            return _EXPR_CLASS_DOC
+            return _DATAOP_CLASS_DOC
         preview = instance._skrub_impl.preview_if_available()
         if preview is NULL:
-            return _EXPR_INSTANCE_DOC
+            return _DATAOP_INSTANCE_DOC
         doc = getattr(preview, "__doc__", None)
         if doc is None:
-            return _EXPR_INSTANCE_DOC
-        return f"""Skrub expression.\nDocstring of the preview:\n{doc}"""
+            return _DATAOP_INSTANCE_DOC
+        return f"""Skrub dataop.\nDocstring of the preview:\n{doc}"""
 
 
-class Expr:
-    """A skrub expression."""
+class DataOp:
+    """A skrub dataop."""
 
     # This class is mostly an empty shell that captures all attribute accesses
     # in its `__getattr__` to add them to the computation graph. Its relevant
@@ -480,7 +480,7 @@ class Expr:
 
     __hash__ = None
 
-    __doc__ = _ExprDoc()
+    __doc__ = _DataOpDoc()
 
     skb = _Skb()
 
@@ -495,7 +495,7 @@ class Expr:
     def __sklearn_clone__(self):
         return self.__deepcopy__({})
 
-    @check_expr
+    @check_dataop
     def __getattr__(self, name):
         if name in [
             "_skrub_impl",
@@ -509,25 +509,25 @@ class Expr:
         # any special method is unlikely to do what we want.
         if name.startswith("__") and name.endswith("__"):
             attribute_error(self, name)
-        return Expr(GetAttr(self, name))
+        return DataOp(GetAttr(self, name))
 
-    @check_expr
+    @check_dataop
     def __getitem__(self, key):
-        return Expr(GetItem(self, key))
+        return DataOp(GetItem(self, key))
 
     @_check_return_value
-    @check_expr
+    @check_dataop
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
         if isinstance(impl, GetAttr):
-            return Expr(CallMethod(impl.source_object, impl.attr_name, args, kwargs))
-        return Expr(
+            return DataOp(CallMethod(impl.source_object, impl.attr_name, args, kwargs))
+        return DataOp(
             Call(self, args, kwargs, globals={}, closure=(), defaults=(), kwdefaults={})
         )
 
-    @check_expr
+    @check_dataop
     def __len__(self):
-        return Expr(GetAttr(self, "__len__"))()
+        return DataOp(GetAttr(self, "__len__"))()
 
     def __dir__(self):
         names = ["skb"]
@@ -559,7 +559,7 @@ class Expr:
 
     def __setitem__(self, key, value):
         msg = (
-            "Do not modify an expression in-place. "
+            "Do not modify a dataop in-place. "
             "Instead, use a function that returns a new value. "
             "This is necessary to allow chaining "
             "several steps in a sequence of transformations."
@@ -576,7 +576,7 @@ class Expr:
         if name == "_skrub_impl":
             return super().__setattr__(name, value)
         raise TypeError(
-            "Do not modify an expression in-place. "
+            "Do not modify a dataop in-place. "
             "Instead, use a function that returns a new value. "
             "This is necessary to allow chaining "
             "several steps in a sequence of transformations."
@@ -584,21 +584,21 @@ class Expr:
 
     def __bool__(self):
         raise TypeError(
-            "This object is an expression that will be evaluated later, "
+            "This object is a dataop that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
             "use its Boolean value now."
         )
 
     def __iter__(self):
         raise TypeError(
-            "This object is an expression that will be evaluated later, "
+            "This object is a dataop that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
             "iterate over it now."
         )
 
     def __contains__(self, item):
         raise TypeError(
-            "This object is an expression that will be evaluated later, "
+            "This object is a dataop that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
             "perform membership tests now."
         )
@@ -669,45 +669,45 @@ class Expr:
         return f"<div>\n{prefix}\n{report}\n</div>"
 
 
-# Dynamically generate the expression's dunder methods for arithmetic and
+# Dynamically generate the dataop's dunder methods for arithmetic and
 # bitwise operators
 
 
 def _make_bin_op(op_name):
     def op(self, right):
-        return Expr(BinOp(self, right, getattr(operator, op_name)))
+        return DataOp(BinOp(self, right, getattr(operator, op_name)))
 
     op.__name__ = op_name
-    return check_expr(op)
+    return check_dataop(op)
 
 
 for op_name in _BIN_OPS:
-    setattr(Expr, op_name, _make_bin_op(op_name))
+    setattr(DataOp, op_name, _make_bin_op(op_name))
 
 
 def _make_r_bin_op(op_name):
     def op(self, left):
-        return Expr(BinOp(left, self, getattr(operator, op_name)))
+        return DataOp(BinOp(left, self, getattr(operator, op_name)))
 
     op.__name__ = f"__r{op_name.strip('_')}__"
-    return check_expr(op)
+    return check_dataop(op)
 
 
 for op_name in _BIN_OPS:
     rop_name = f"__r{op_name.strip('_')}__"
-    setattr(Expr, rop_name, _make_r_bin_op(op_name))
+    setattr(DataOp, rop_name, _make_r_bin_op(op_name))
 
 
 def _make_unary_op(op_name):
     def op(self):
-        return Expr(UnaryOp(self, getattr(operator, op_name)))
+        return DataOp(UnaryOp(self, getattr(operator, op_name)))
 
     op.__name__ = op_name
-    return check_expr(op)
+    return check_dataop(op)
 
 
 for op_name in _UNARY_OPS:
-    setattr(Expr, op_name, _make_unary_op(op_name))
+    setattr(DataOp, op_name, _make_unary_op(op_name))
 
 
 def _check_wrap_params(cols, how, allow_reject, reason):
@@ -793,19 +793,19 @@ def check_name(name, is_var):
 
 
 def _check_var_value(value):
-    """Checking that the value passed to a skrub variable is not an expression
+    """Checking that the value passed to a skrub variable is not a dataop
     or a choice."""
     from ._evaluation import needs_eval
 
     if needs_eval(value):
         raise TypeError(
             "The `value` of a `skrub.var()` must not contain a skrub "
-            f"expression or skrub choice. Got object {value} of {type(value)}."
+            f"dataop or skrub choice. Got object {value} of {type(value)}."
         )
 
 
-class Var(ExprImpl):
-    "A `skrub.var()` expression."
+class Var(DataOpImpl):
+    "A `skrub.var()` dataop."
 
     _fields = ["name", "value"]
 
@@ -835,7 +835,7 @@ def var(name, value=NULL):
 
     Variables represent inputs to a DataOps plan, and the corresponding learner.
     They can be combined with other variables, constants, operators, function
-    calls etc. to build up complex expressions, which implicitly define the plan.
+    calls etc. to build up complex dataops, which implicitly define the plan.
 
     See the example gallery for more information about skrub DataOps.
 
@@ -859,7 +859,7 @@ def var(name, value=NULL):
     Raises
     ------
     TypeError
-        If the provided value is a skrub expression or a skrub choose_* function.
+        If the provided value is a skrub dataop or a skrub choose_* function.
 
     See also
     --------
@@ -930,7 +930,7 @@ def var(name, value=NULL):
     """
     check_name(name, is_var=True)
     _check_var_value(value)
-    return Expr(Var(name, value=value))
+    return DataOp(Var(name, value=value))
 
 
 def X(value=NULL):
@@ -958,7 +958,7 @@ def X(value=NULL):
     Raises
     ------
     TypeError
-        If the provided value is a skrub expression or a skrub choose_* function.
+        If the provided value is a skrub dataop or a skrub choose_* function.
 
     See also
     --------
@@ -968,8 +968,8 @@ def X(value=NULL):
     skrub.var :
         Create a skrub variable.
 
-    skrub.Expr.skb.mark_as_X :
-        Mark this expression as being the ``X`` table.
+    skrub.DataOp.skb.mark_as_X :
+        Mark this dataop as being the ``X`` table.
 
     Examples
     --------
@@ -991,7 +991,7 @@ def X(value=NULL):
     True
     """
     _check_var_value(value)
-    return Expr(Var("X", value=value)).skb.mark_as_X()
+    return DataOp(Var("X", value=value)).skb.mark_as_X()
 
 
 def y(value=NULL):
@@ -1020,7 +1020,7 @@ def y(value=NULL):
     Raises
     ------
     TypeError
-        If the provided value is a skrub expression or a skrub choose_* function.
+        If the provided value is a skrub dataop or a skrub choose_* function.
 
     See also
     --------
@@ -1030,8 +1030,8 @@ def y(value=NULL):
     skrub.var :
         Create a skrub variable.
 
-    skrub.Expr.skb.mark_as_y :
-        Mark this expression as being the ``y`` table.
+    skrub.DataOp.skb.mark_as_y :
+        Mark this dataop as being the ``y`` table.
 
     Examples
     --------
@@ -1053,13 +1053,13 @@ def y(value=NULL):
     True
     """
     _check_var_value(value)
-    return Expr(Var("y", value=value)).skb.mark_as_y()
+    return DataOp(Var("y", value=value)).skb.mark_as_y()
 
 
-class Value(ExprImpl):
-    """Wrap any object in an expression.
+class Value(DataOpImpl):
+    """Wrap any object in a dataop.
 
-    See `skrub.as_expr()` docstring.
+    See `skrub.as_dataop()` docstring.
     """
 
     _fields = ["value"]
@@ -1074,62 +1074,62 @@ class Value(ExprImpl):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"
 
 
-@check_expr
-def as_expr(value):
-    """Create an expression :class:`Expr` that evaluates to the given value.
+@check_dataop
+def as_dataop(value):
+    """Create a dataop :class:`DataOp` that evaluates to the given value.
 
-    This wraps any object in an expression. When the expression is evaluated,
+    This wraps any object in a dataop. When the dataop is evaluated,
     the result is the provided value. This has a similar role as :func:`deferred`,
     but for any object rather than for functions.
 
     Parameters
     ----------
     value : object
-        The result of evaluating the expression
+        The result of evaluating the dataop
 
     Returns
     -------
-    An expression that evaluates to the given value
+    a dataop that evaluates to the given value
 
     See also
     --------
     deferred :
-        Wrap function calls in an expression.
-    Expr :
+        Wrap function calls in a dataop.
+    DataOp :
         Representation of a computation that can be used to build ML estimators.
 
     Examples
     --------
     >>> import skrub
     >>> data_source = skrub.var('source')
-    >>> data_path = skrub.as_expr(
+    >>> data_path = skrub.as_dataop(
     ...     {"local": "data.parquet", "remote": "remote/data.parquet"}
     ... )[data_source]
     >>> data_path.skb.eval({'source': 'remote'})
     'remote/data.parquet'
 
-    Turning the dictionary into an expression defers the lookup of
+    Turning the dictionary into a dataop defers the lookup of
     ``data_source`` until it has been evaluated when the learner runs.
 
-    The example above is somewhat contrived, but ``as_expr`` is often useful
+    The example above is somewhat contrived, but ``as_dataop`` is often useful
     with choices.
 
     >>> x1 = skrub.var('x1')
     >>> x2 = skrub.var('x2')
     >>> features = skrub.choose_from({'x1': x1, 'x2': x2}, name='features')
-    >>> skrub.as_expr(features).skb.apply(skrub.TableVectorizer())
+    >>> skrub.as_dataop(features).skb.apply(skrub.TableVectorizer())
     <Apply TableVectorizer>
 
     In fact, this can even be shortened slightly by using the choice's method
-    ``as_expr``:
+    ``as_dataop``:
 
-    >>> features.as_expr().skb.apply(skrub.TableVectorizer())
+    >>> features.as_dataop().skb.apply(skrub.TableVectorizer())
     <Apply TableVectorizer>
     """
-    return Expr(Value(value))
+    return DataOp(Value(value))
 
 
-class IfElse(ExprImpl):
+class IfElse(DataOpImpl):
     """Node created by `.skb.if_else()`"""
 
     _fields = ["condition", "value_if_true", "value_if_false"]
@@ -1148,7 +1148,7 @@ class IfElse(ExprImpl):
         return f"<{self.__class__.__name__} {cond} ? {if_true} : {if_false}>"
 
 
-class Match(ExprImpl):
+class Match(DataOpImpl):
     """Node created by `.skb.match()`."""
 
     _fields = ["query", "targets", "default"]
@@ -1168,7 +1168,7 @@ class Match(ExprImpl):
         return f"<{self.__class__.__name__} {short_repr(self.query)}>"
 
 
-class FreezeAfterFit(ExprImpl):
+class FreezeAfterFit(DataOpImpl):
     _fields = ["target"]
 
     def eval(self, *, mode, environment):
@@ -1187,7 +1187,7 @@ def _check_column_names(X):
     return cast_column_names_to_strings(X)
 
 
-class Apply(ExprImpl):
+class Apply(DataOpImpl):
     """.skb.apply() nodes."""
 
     _fields = ["X", "estimator", "y", "cols", "how", "allow_reject", "unsupervised"]
@@ -1283,7 +1283,7 @@ class Apply(ExprImpl):
         return f"<{self.__class__.__name__} {name}>"
 
 
-class AppliedEstimator(ExprImpl):
+class AppliedEstimator(DataOpImpl):
     "Retrieve the estimator fitted in an apply step"
 
     _fields = ["target"]
@@ -1292,7 +1292,7 @@ class AppliedEstimator(ExprImpl):
         return self.target._skrub_impl.estimator_
 
 
-class GetAttr(ExprImpl):
+class GetAttr(DataOpImpl):
     _fields = ["source_object", "attr_name"]
 
     def compute(self, e, mode, environment):
@@ -1300,7 +1300,7 @@ class GetAttr(ExprImpl):
             return getattr(e.source_object, e.attr_name)
         except AttributeError:
             pass
-        if isinstance(self.source_object, Expr) and hasattr(
+        if isinstance(self.source_object, DataOp) and hasattr(
             self.source_object.skb, e.attr_name
         ):
             comment = f"Did you mean '.skb.{e.attr_name}'?"
@@ -1315,7 +1315,7 @@ class GetAttr(ExprImpl):
         return f".{_get_preview(self.attr_name)}"
 
 
-class GetItem(ExprImpl):
+class GetItem(DataOpImpl):
     _fields = ["container", "key"]
 
     def compute(self, e, mode, environment):
@@ -1328,7 +1328,7 @@ class GetItem(ExprImpl):
         return f"[{_get_preview(self.key)!r}]"
 
 
-class Call(ExprImpl):
+class Call(DataOpImpl):
     _fields = [
         "func",
         "args",
@@ -1342,10 +1342,10 @@ class Call(ExprImpl):
     def compute(self, e, mode, environment):
         func = e.func
         if e.globals or e.closure or e.defaults:
-            # The deferred function has skrub expressions (that need to be
+            # The deferred function has skrub dataops (that need to be
             # evaluated) in its global variables, free variables or default
             # arguments. In this case after those are evaluated, we recompile a
-            # new function in which the expressions have been replaced by their
+            # new function in which the dataops have been replaced by their
             # computed value. More details in the docstring of
             # `skrub.deferred`.
             func = types.FunctionType(
@@ -1381,7 +1381,7 @@ class Call(ExprImpl):
         return f"{name}()"
 
 
-class CallMethod(ExprImpl):
+class CallMethod(DataOpImpl):
     """This class allows squashing GetAttr + Call to simplify the graph."""
 
     _fields = ["obj", "method_name", "args", "kwargs"]
@@ -1416,14 +1416,14 @@ class CallMethod(ExprImpl):
 
 
 def deferred(func):
-    """Wrap function calls in an expression :class:`Expr`.
+    """Wrap function calls in a dataop :class:`DataOp`.
 
-    When this decorator is applied, the resulting function returns expressions.
-    The returned expression wraps the call to the original function, and the
-    call is executed when the expression is evaluated. This allows including calls
+    When this decorator is applied, the resulting function returns dataops.
+    The returned dataop wraps the call to the original function, and the
+    call is executed when the dataop is evaluated. This allows including calls
     to any function as a step in a learner, rather than executing it immediately.
 
-    See the examples gallery for an in-depth explanation of skrub expressions
+    See the examples gallery for an in-depth explanation of skrub dataops
     and ``deferred``.
 
     Parameters
@@ -1435,15 +1435,15 @@ def deferred(func):
     -------
     A new function
         When called, rather than applying the original function immediately, it
-        returns an expression. Evaluating the expression applies the original
+        returns a dataop. Evaluating the dataop applies the original
         function.
 
     See also
     --------
-    as_expr :
-        Create an expression that evaluates to the given value.
+    as_dataop :
+        Create a dataop that evaluates to the given value.
 
-    Expr :
+    DataOp :
         Representation of a computation that can be used to build ML estimators.
 
     Examples
@@ -1457,17 +1457,17 @@ def deferred(func):
     >>> import skrub
     >>> text = skrub.var('text')
 
-    Calling ``tokenize`` on a skrub expression raises an exception:
+    Calling ``tokenize`` on a skrub dataop raises an exception:
     ``tokenize`` tries to iterate immediately over the tokens to remove stop
     words, but the text will only be known when we run the learner.
 
     >>> tokens = tokenize(text)
     Traceback (most recent call last):
         ...
-    TypeError: This object is an expression that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
+    TypeError: This object is a dataop that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
 
     We can defer the call to ``tokenize`` until we are evaluating the
-    expression:
+    dataop:
 
     >>> tokens = skrub.deferred(tokenize)(text)
     >>> tokens
@@ -1491,7 +1491,7 @@ def deferred(func):
     Advanced examples
     -----------------
     As we saw in the last example above, the arguments passed to the function,
-    if they are expressions, are evaluated before calling it. This is also the
+    if they are dataops, are evaluated before calling it. This is also the
     case for global variables, default arguments and free variables.
 
     >>> a = skrub.var('a')
@@ -1555,14 +1555,14 @@ def deferred(func):
     """  # noqa : E501
     from ._evaluation import needs_eval
 
-    if isinstance(func, Expr) or getattr(func, "_skrub_is_deferred", False):
+    if isinstance(func, DataOp) or getattr(func, "_skrub_is_deferred", False):
         return func
 
     @_check_return_value
-    @check_expr
+    @check_dataop
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
-        return Expr(
+        return DataOp(
             Call(
                 func,
                 args,
@@ -1606,10 +1606,10 @@ def deferred(func):
         return deferred_func
 
     @_check_return_value
-    @check_expr
+    @check_dataop
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
-        return Expr(
+        return DataOp(
             Call(
                 func,
                 args,
@@ -1626,7 +1626,7 @@ def deferred(func):
     return deferred_func
 
 
-class Concat(ExprImpl):
+class Concat(DataOpImpl):
     """.skb.concat() nodes"""
 
     _fields = ["first", "others", "axis"]
@@ -1678,7 +1678,7 @@ class Concat(ExprImpl):
         return f"<{self.__class__.__name__}{detail}>"
 
 
-class BinOp(ExprImpl):
+class BinOp(DataOpImpl):
     _fields = ["left", "right", "op"]
 
     def compute(self, e, mode, environment):
@@ -1690,7 +1690,7 @@ class BinOp(ExprImpl):
         )
 
 
-class UnaryOp(ExprImpl):
+class UnaryOp(DataOpImpl):
     _fields = ["operand", "op"]
 
     def compute(self, e, mode, environment):
@@ -1702,21 +1702,21 @@ class UnaryOp(ExprImpl):
         )
 
 
-class EvalMode(ExprImpl):
+class EvalMode(DataOpImpl):
     _fields = []
 
     def compute(self, e, mode, environment):
         return mode
 
 
-@check_expr
+@check_dataop
 def eval_mode():
-    """Return the mode in which the expression is currently being evaluated.
+    """Return the mode in which the dataop is currently being evaluated.
 
     This can be:
 
     - 'preview': when the previews are being eagerly computed when the
-      expression is defined or when we call ``.skb.eval()`` without
+      dataop is defined or when we call ``.skb.eval()`` without
       arguments.
     - otherwise, the method we called on the learner such as ``'predict'``
       or ``'fit_transform'``.
@@ -1744,4 +1744,4 @@ def eval_mode():
     ―――――――
     2
     """
-    return Expr(EvalMode())
+    return DataOp(EvalMode())

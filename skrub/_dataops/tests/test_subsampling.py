@@ -121,9 +121,9 @@ def test_how(as_frame):
 
 def test_sample_errors():
     with pytest.raises(RuntimeError, match=".*`how` should be 'head' or 'random'"):
-        skrub.as_expr(np.eye(3)).skb.subsample(n=2, how="bad-how")
+        skrub.as_dataop(np.eye(3)).skb.subsample(n=2, how="bad-how")
     with pytest.raises(RuntimeError, match=".*the input should be a dataframe"):
-        skrub.as_expr(list(range(30))).skb.subsample(n=2)
+        skrub.as_dataop(list(range(30))).skb.subsample(n=2)
 
 
 def test_should_subsample():
@@ -181,19 +181,19 @@ def test_uses_subsampling():
 
 def test_subsampling_not_configured():
     with pytest.raises(ValueError, match=".*no subsampling has been configured"):
-        skrub.as_expr(np.ones(3)).skb.eval(keep_subsampling=True)
+        skrub.as_dataop(np.ones(3)).skb.eval(keep_subsampling=True)
     with pytest.raises(ValueError, match=".*no subsampling has been configured"):
-        skrub.as_expr(np.ones(3)).skb.get_learner(fitted=True, keep_subsampling=True)
+        skrub.as_dataop(np.ones(3)).skb.get_learner(fitted=True, keep_subsampling=True)
 
     # no problem if subsampling was configured
     assert (
-        skrub.as_expr(np.ones(3)).skb.subsample(n=2).skb.eval(keep_subsampling=True)
+        skrub.as_dataop(np.ones(3)).skb.subsample(n=2).skb.eval(keep_subsampling=True)
         == np.ones(2)
     ).all()
-    skrub.as_expr(np.ones(3)).skb.subsample(n=2).skb.get_learner(
+    skrub.as_dataop(np.ones(3)).skb.subsample(n=2).skb.get_learner(
         fitted=True, keep_subsampling=True
     )
 
     # no problem if we don't pass keep_subsampling=True
-    assert (skrub.as_expr(np.ones(3)).skb.eval() == np.ones(3)).all()
-    skrub.as_expr(np.ones(3)).skb.get_learner(fitted=True)
+    assert (skrub.as_dataop(np.ones(3)).skb.eval() == np.ones(3)).all()
+    skrub.as_dataop(np.ones(3)).skb.get_learner(fitted=True)

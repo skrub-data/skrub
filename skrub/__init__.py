@@ -11,11 +11,11 @@ from ._apply_to_frame import ApplyToFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
 from ._dataops import (
-    Expr,
+    DataOp,
     ParamSearch,
     SkrubLearner,
     X,
-    as_expr,
+    as_dataop,
     choose_bool,
     choose_float,
     choose_from,
@@ -51,13 +51,13 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
-    "Expr",
+    "DataOp",
     "var",
     "SkrubLearner",
     "ParamSearch",
     "X",
     "y",
-    "as_expr",
+    "as_dataop",
     "deferred",
     "eval_mode",
     "TableReport",

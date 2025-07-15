@@ -2,11 +2,11 @@ import numpy as np
 
 from .. import _dataframe as sbd
 from .._config import get_config
-from . import _evaluation, _expressions
+from . import _dataops, _evaluation
 
 # The key in the evaluation environment that indicates if subsampling should
-# take place or not. Subsampling can be turned on or off when evaluating an
-# expression by setting the corresponding value in the environment.
+# take place or not. Subsampling can be turned on or off when evaluating a
+# dataop by setting the corresponding value in the environment.
 
 SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
 
@@ -24,16 +24,16 @@ def _should_subsample(mode, environment):
     return environment.get(SHOULD_SUBSAMPLE_KEY, False)
 
 
-class ShouldSubsample(_expressions.ExprImpl):
+class ShouldSubsample(_dataops.DataOpImpl):
     _fields = []
 
     def compute(self, e, mode, environment):
         return _should_subsample(mode, environment)
 
 
-@_expressions.check_expr
+@_dataops.check_dataop
 def should_subsample():
-    """Expression indicating if subsampling should be applied.
+    """dataop indicating if subsampling should be applied.
 
     This is a helper for other skrub functions that need the information of
     whether they should apply any subsampling, depending on the current
@@ -42,7 +42,7 @@ def should_subsample():
     Examples
     --------
     >>> import skrub
-    >>> from skrub._expressions._subsampling import should_subsample
+    >>> from skrub._dataops._subsampling import should_subsample
 
     >>> @skrub.deferred
     ... def load_data(subsampling=should_subsample()):
@@ -58,12 +58,12 @@ def should_subsample():
     1.0
     >>> e.skb.get_learner(fitted=True)
     subsampling: False
-    SkrubLearner(expr=<Call 'load_data'>)
+    SkrubLearner(dataop=<Call 'load_data'>)
     >>> e.skb.get_learner(keep_subsampling=True, fitted=True)
     subsampling: True
-    SkrubLearner(expr=<Call 'load_data'>)
+    SkrubLearner(dataop=<Call 'load_data'>)
     """
-    return _expressions.Expr(ShouldSubsample())
+    return _dataops.DataOp(ShouldSubsample())
 
 
 def _sample_numpy(a, n, seed):
@@ -76,7 +76,7 @@ def _head_numpy(a, n):
     return a[:n]
 
 
-class SubsamplePreviews(_expressions.ExprImpl):
+class SubsamplePreviews(_dataops.DataOpImpl):
     """Optionally subsample a dataframe.
 
     See the docstring of ``.skb.subsample`` for details.
@@ -107,7 +107,7 @@ class SubsamplePreviews(_expressions.ExprImpl):
         )
 
 
-def env_with_subsampling(expr, environment, keep_subsampling):
+def env_with_subsampling(dataop, environment, keep_subsampling):
     """Update an environment with subsampling indication.
 
     Small private helper to add subsampling to an environment, if subsampling
@@ -118,17 +118,17 @@ def env_with_subsampling(expr, environment, keep_subsampling):
     """
     if not keep_subsampling:
         return environment
-    if not uses_subsampling(expr):
+    if not uses_subsampling(dataop):
         raise ValueError(
             "`keep_subsampling=True` was passed but no subsampling has been configured"
-            " anywhere in the expression. Either pass `keep_subsampling=False` (the"
+            " anywhere in the dataop. Either pass `keep_subsampling=False` (the"
             " default) or configure subsampling with `.skb.subsample()`."
         )
     return environment | {SHOULD_SUBSAMPLE_KEY: True}
 
 
-def uses_subsampling(expr):
-    """Find if subsampling is configured somewhere in the expression.
+def uses_subsampling(dataop):
+    """Find if subsampling is configured somewhere in the dataop.
 
     This can be used for example to notify the user that the preview they see
     comes from a subsample.
@@ -138,12 +138,12 @@ def uses_subsampling(expr):
     subsampling was done with ``subsample size >= data size`` and
     ``how='head'``, or if subsampling takes place in a path that was not used
     for the preview (e.g. the unused branch of a ``.skb.if_else()``
-    expression).
+    dataop).
     """
     return (
         _evaluation.find_node(
-            expr,
-            lambda e: isinstance(e, _expressions.Expr)
+            dataop,
+            lambda e: isinstance(e, _dataops.DataOp)
             and isinstance(e._skrub_impl, (SubsamplePreviews, ShouldSubsample)),
         )
         is not None

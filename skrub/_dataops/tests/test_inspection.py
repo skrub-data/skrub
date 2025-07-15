@@ -87,13 +87,13 @@ def test_full_report_failed_apply():
 def test_full_report_open(monkeypatch):
     mock = Mock()
     monkeypatch.setattr(webbrowser, "open", mock)
-    skrub.as_expr(0).skb.full_report()
+    skrub.as_dataop(0).skb.full_report()
     mock.assert_called_once()
 
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_draw_graph():
-    g = skrub.as_expr(0).skb.draw_graph()
+    g = skrub.as_dataop(0).skb.draw_graph()
     assert repr(g) == "<GraphDrawing: use .open() to display>"
     assert b"<svg" in g.svg
     assert "<svg" in g._repr_html_()
@@ -112,21 +112,21 @@ def test_no_pydot(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", _import)
     with pytest.raises(ImportError, match="Please install pydot"):
-        skrub.as_expr(0).skb.draw_graph()
+        skrub.as_dataop(0).skb.draw_graph()
 
 
 def test_no_graphviz(monkeypatch):
     pydot = pytest.importorskip("pydot")
     monkeypatch.setattr(pydot.Dot, "create_svg", Mock(side_effect=Exception()))
     with pytest.raises(ImportError, match="Please install pydot and graphviz"):
-        skrub.as_expr(0).skb.draw_graph()
+        skrub.as_dataop(0).skb.draw_graph()
 
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_draw_graph_open(monkeypatch):
     mock = Mock()
     monkeypatch.setattr(_inspection, "open_in_browser", mock)
-    skrub.as_expr(0).skb.draw_graph().open()
+    skrub.as_dataop(0).skb.draw_graph().open()
     mock.assert_called_once()
 
 
@@ -236,7 +236,7 @@ def test_describe_params():
     c5 = skrub.choose_int(10, 20, default=11, name="c5")
     c6 = skrub.choose_from(["a", "b"])
     c7 = skrub.choose_float(100.0, 200.0, default=110.5)
-    e = c6.match({"a": [c4, c2.as_expr() + c7], "b": c5}).as_expr()
+    e = c6.match({"a": [c4, c2.as_dataop() + c7], "b": c5}).as_dataop()
     print(e.skb.describe_defaults())
     expected = {
         "choose_from(['a', 'b'])": "a",

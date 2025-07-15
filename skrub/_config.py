@@ -9,7 +9,7 @@ from ._reporting import _patching
 
 _global_config = {
     "use_tablereport": os.environ.get("SKB_USE_TABLEREPORT", False),
-    "use_tablereport_expr": os.environ.get("SKB_USE_TABLEREPORT_EXPR", True),
+    "use_tablereport_dataops": os.environ.get("SKB_USE_TABLEREPORT_DATAOPS", True),
     "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
     "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
@@ -67,7 +67,7 @@ def _apply_external_patches(config):
 
 def set_config(
     use_tablereport=None,
-    use_tablereport_expr=None,
+    use_tablereport_dataops=None,
     max_plot_columns=None,
     max_association_columns=None,
     subsampling_seed=None,
@@ -90,15 +90,15 @@ def set_config(
         This configuration can also be set with the ``SKB_USE_TABLEREPORT``
         environment variable.
 
-    use_tablereport_expr : bool, default=None
+    use_tablereport_dataops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
-        expressions. Default is ``False``.
+        dataops. Default is ``False``.
 
         - If ``True``, :class:`~skrub.TableReport` will be used.
         - If ``False``, the original Pandas or Polars dataframe display will be
           used.
 
-        This configuration can also be set with the ``SKB_USE_TABLEREPORT_EXPR``
+        This configuration can also be set with the ``SKB_USE_TABLEREPORT_DATAOPS``
         environment variable.
 
     max_plot_columns : int, default=None
@@ -168,13 +168,13 @@ def set_config(
             )
         local_config["use_tablereport"] = use_tablereport
 
-    if use_tablereport_expr is not None:
-        if not isinstance(use_tablereport_expr, bool):
+    if use_tablereport_dataops is not None:
+        if not isinstance(use_tablereport_dataops, bool):
             raise ValueError(
-                "'use_tablereport_expr' must be a boolean, got "
-                f"{use_tablereport_expr!r}."
+                "'use_tablereport_dataops' must be a boolean, got "
+                f"{use_tablereport_dataops!r}."
             )
-        local_config["use_tablereport_expr"] = use_tablereport_expr
+        local_config["use_tablereport_expr"] = use_tablereport_dataops
 
     if max_plot_columns is not None:
         if not isinstance(max_plot_columns, numbers.Real):
@@ -227,7 +227,7 @@ def set_config(
 def config_context(
     *,
     use_tablereport=None,
-    use_tablereport_expr=None,
+    use_tablereport_dataops=None,
     max_plot_columns=None,
     max_association_columns=None,
     subsampling_seed=None,
@@ -250,7 +250,7 @@ def config_context(
         This configuration can also be set with the ``SKB_USE_TABLEREPORT``
         environment variable.
 
-    use_tablereport_expr : bool, default=None
+    use_tablereport_dataops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         expressions. Default is ``True``.
 
@@ -258,7 +258,7 @@ def config_context(
         - If ``False``, the original Pandas or Polars dataframe display will be
           used.
 
-        This configuration can also be set with the ``SKB_USE_TABLEREPORT_EXPR``
+        This configuration can also be set with the ``SKB_USE_TABLEREPORT_DATAOPS``
         environment variable.
 
     max_plot_columns : int, default=None
@@ -328,7 +328,7 @@ def config_context(
     original_config = get_config()
     set_config(
         use_tablereport=use_tablereport,
-        use_tablereport_expr=use_tablereport_expr,
+        use_tablereport_dataops=use_tablereport_dataops,
         max_plot_columns=max_plot_columns,
         max_association_columns=max_association_columns,
         subsampling_seed=subsampling_seed,

@@ -12,7 +12,7 @@ import skrub
 from skrub._utils import PassThrough
 
 #
-# Using eager statements on expressions
+# Using eager statements on dataops
 #
 
 
@@ -44,11 +44,11 @@ def test_contains():
 
 def test_setitem():
     a = skrub.var("a", {})
-    with pytest.raises(TypeError, match="Do not modify an expression in-place"):
+    with pytest.raises(TypeError, match="Do not modify a dataop in-place"):
         a["one"] = 1
     a = skrub.var("a", skrub.datasets.toy_orders().orders)
     with pytest.raises(
-        TypeError, match=r"(?s)Do not modify an expression in-place.*df = df\.assign"
+        TypeError, match=r"(?s)Do not modify a dataop in-place.*df = df\.assign"
     ):
         a["one"] = 1
 
@@ -58,7 +58,7 @@ def test_setattr():
         pass
 
     a = skrub.var("a", A())
-    with pytest.raises(TypeError, match="Do not modify an expression in-place"):
+    with pytest.raises(TypeError, match="Do not modify a dataop in-place"):
         a.b = 0
 
 
@@ -168,7 +168,7 @@ def test_duplicate_choice_name():
     with pytest.raises(
         ValueError, match=r"(?s).*2 different objects.*Jupyter notebook cell"
     ):
-        skrub.as_expr([skrub.var("a"), skrub.var("a")])
+        skrub.as_dataop([skrub.var("a"), skrub.var("a")])
 
 
 def test_duplicate_X():
@@ -191,11 +191,11 @@ def test_missing_X_or_y():
 
     X, y = skrub.var("X"), skrub.var("y")
     with pytest.raises(
-        ValueError, match=r'expr should have a node marked with "mark_as_X\(\)"'
+        ValueError, match=r'DataOp should have a node marked with "mark_as_X\(\)"'
     ):
         X.skb.apply(LogisticRegression(), y=y.skb.mark_as_y()).skb.cross_validate(env)
     with pytest.raises(
-        ValueError, match=r'expr should have a node marked with "mark_as_y\(\)"'
+        ValueError, match=r'DataOp should have a node marked with "mark_as_y\(\)"'
     ):
         X.skb.mark_as_X().skb.apply(LogisticRegression(), y=y).skb.cross_validate(env)
     # now both are correctly marked:
@@ -274,13 +274,13 @@ def test_X_y_instead_of_environment():
         skrub.X().skb.get_learner().fit_transform(X=0)
 
 
-def test_expr_or_choice_in_environment():
+def test_dataop_or_choice_in_environment():
     X = skrub.X()
     with pytest.raises(
         TypeError,
-        match="The `environment` dict contains a skrub expression: <Var 'X'>",
+        match="The `environment` dict contains a skrub dataop: <Var 'X'>",
     ):
-        # likely mistake: passing an expression instead of an actual value.
+        # likely mistake: passing a dataop instead of an actual value.
         X.skb.eval({"X": X})
 
     alpha = skrub.choose_from([1.0, 2.0], name="alpha")
@@ -425,7 +425,7 @@ def test_bad_names():
         skrub.var("_skrub_X")
 
 
-def test_pass_df_instead_of_expr():
+def test_pass_df_instead_of_dataop():
     df = skrub.datasets.toy_orders().orders
     with pytest.raises(TypeError, match="You passed an actual DataFrame"):
         skrub.var("a").merge(df, on="ID")
@@ -453,16 +453,14 @@ def test_get_grid_search_with_continuous_ranges():
         ).skb.get_grid_search()
 
 
-def test_expr_with_circular_ref():
-    # expressions are not allowed to contain circular references as it would
+def test_dataop_with_circular_ref():
+    # dataops are not allowed to contain circular references as it would
     # complicate the implementation and there is probably no use case. We want
     # to get an understandable error and not an infinite loop or memory error.
     e = {}
     e["a"] = [0, {"b": e}]
-    with pytest.raises(
-        ValueError, match="expressions cannot contain circular references"
-    ):
-        skrub.as_expr(e).skb.eval()
+    with pytest.raises(ValueError, match="dataops cannot contain circular references"):
+        skrub.as_dataop(e).skb.eval()
 
 
 @pytest.mark.parametrize(

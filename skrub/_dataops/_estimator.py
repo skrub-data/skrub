@@ -1,4 +1,4 @@
-# Scikit-learn-ish interface to the skrub expressions
+# Scikit-learn-ish interface to the skrub dataops
 
 import pandas as pd
 from sklearn import model_selection
@@ -8,6 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
 from ._choosing import BaseNumericChoice, get_default
+from ._dataops import Apply
 from ._evaluation import (
     choice_graph,
     chosen_or_default_outcomes,
@@ -21,7 +22,6 @@ from ._evaluation import (
     set_params,
     supported_modes,
 )
-from ._expressions import Apply
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
@@ -80,29 +80,29 @@ def _copy_attr(source, target, attributes):
             pass
 
 
-class _CloudPickleExpr(_CloudPickle):
+class _CloudPickleDataOp(_CloudPickle):
     """
-    Mixin to serialize the `expr` attribute with cloudpickle when pickling a
+    Mixin to serialize the `dataop` attribute with cloudpickle when pickling a
     learner.
     """
 
-    _cloudpickle_attributes = ["expr"]
+    _cloudpickle_attributes = ["dataop"]
 
 
-class SkrubLearner(_CloudPickleExpr, BaseEstimator):
-    """Learner that evaluates a skrub expression.
+class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
+    """Learner that evaluates a skrub dataop.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
-    objects are created by calling :meth:`Expr.skb.get_learner()` on an
-    expression.
+    objects are created by calling :meth:`DataOp.skb.get_learner()` on an
+    dataop.
     """
 
-    def __init__(self, expr):
-        self.expr = expr
+    def __init__(self, dataop):
+        self.dataop = dataop
 
     def __skrub_to_Xy_pipeline__(self, environment):
         """Convert to a fully scikit-learn compatible pipeline (fit takes X, y)."""
-        new = _XyPipeline(self.expr, _SharedDict(environment))
+        new = _XyPipeline(self.dataop, _SharedDict(environment))
         _copy_attr(self, new, ["_is_fitted"])
         return new
 
@@ -120,14 +120,14 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
     def _eval_in_mode(self, mode, environment):
         if mode not in _FITTING_METHODS:
             check_is_fitted(self)
-        result = evaluate(self.expr, mode, environment, clear=True)
+        result = evaluate(self.dataop, mode, environment, clear=True)
         self._set_is_fitted(mode)
         return result
 
     def report(self, *, environment, mode, **full_report_kwargs):
         """Call the method specified by `mode` and return the result and full report.
 
-        See :meth:`Expr.skb.full_report` for more information.
+        See :meth:`DataOp.skb.full_report` for more information.
         """
         from ._inspection import full_report
 
@@ -136,7 +136,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
 
         full_report_kwargs["clear"] = True
         result = full_report(
-            self.expr, environment=environment, mode=mode, **full_report_kwargs
+            self.dataop, environment=environment, mode=mode, **full_report_kwargs
         )
         if mode == "fit" and result["result"] is not None:
             result["result"] = self
@@ -144,7 +144,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         return result
 
     def __getattr__(self, name):
-        if name not in supported_modes(self.expr):
+        if name not in supported_modes(self.dataop):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
@@ -157,20 +157,22 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         params = super().get_params(deep=deep)
         if not deep:
             return params
-        params.update({f"expr__{k}": v for k, v in get_params(self.expr).items()})
+        params.update({f"dataop__{k}": v for k, v in get_params(self.dataop).items()})
         return params
 
     def set_params(self, **params):
-        if "expr" in params:
-            self.expr = params.pop("expr")
-        set_params(self.expr, {int(k.lstrip("expr__")): v for k, v in params.items()})
+        if "dataop" in params:
+            self.dataop = params.pop("dataop")
+        set_params(
+            self.dataop, {int(k.lstrip("dataop__")): v for k, v in params.items()}
+        )
         return self
 
     def get_param_grid(self):
-        grid = param_grid(self.expr)
+        grid = param_grid(self.dataop)
         new_grid = []
         for subgrid in grid:
-            subgrid = {f"expr__{k}": v for k, v in subgrid.items()}
+            subgrid = {f"dataop__{k}": v for k, v in subgrid.items()}
             new_grid.append(subgrid)
         return new_grid
 
@@ -197,10 +199,10 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
 
         See also
         --------
-        skrub.Expr.skb.set_name :
-            Give a name to this expression.
+        skrub.DataOp.skb.set_name :
+            Give a name to this dataop.
 
-        skrub.Expr.skb.apply :
+        skrub.DataOp.skb.apply :
             Apply a scikit-learn estimator to a dataframe or numpy array.
 
         Examples
@@ -224,7 +226,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         ... )
         >>> learner = pred.skb.get_learner()
         >>> learner.fit({'X': orders.X, 'y': orders.y})
-        SkrubLearner(expr=<classifier | Apply DummyClassifier>)
+        SkrubLearner(dataop=<classifier | Apply DummyClassifier>)
 
         We can retrieve the fitted transformer for a given step with
         ``find_fitted_estimator``:
@@ -286,7 +288,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         (not a transformer), the input is not a dataframe (e.g. it is a numpy array), or
         we pass ``.skb.apply(how='full_frame')``.
         """  # noqa: E501
-        node = find_node_by_name(self.expr, name)
+        node = find_node_by_name(self.dataop, name)
         if node is None:
             raise KeyError(name)
         impl = node._skrub_impl
@@ -339,7 +341,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         ... )
         >>> learner = pred.skb.get_learner()
         >>> learner.fit({"X": orders.X, "y": orders.y})
-        SkrubLearner(expr=<Apply DummyClassifier>)
+        SkrubLearner(dataop=<Apply DummyClassifier>)
         >>> learner.predict({"X": orders.X})
         array([False, False, False, False])
 
@@ -347,7 +349,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
 
         >>> vectorizer = learner.truncated_after("vectorizer")
         >>> vectorizer
-        SkrubLearner(expr=<vectorizer | Apply TableVectorizer>)
+        SkrubLearner(dataop=<vectorizer | Apply TableVectorizer>)
         >>> vectorizer.transform({"X": orders.X})
             ID  product_cup  product_pen  ...  date_year  date_month  date_day
         0  1.0          0.0          1.0  ...     2020.0         4.0       3.0
@@ -361,7 +363,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         This contains the full transformation up to the given step:
 
         >>> learner.truncated_after("vectorizer")
-        SkrubLearner(expr=<vectorizer | Apply TableVectorizer>)
+        SkrubLearner(dataop=<vectorizer | Apply TableVectorizer>)
 
         The result of ``find_fitted_estimator`` only contains the inner
         ``TableVectorizer`` that was fitted inside of the ``"vectorizer"``
@@ -370,7 +372,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         >>> learner.find_fitted_estimator("vectorizer")
         ApplyToFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
-        node = find_node_by_name(self.expr, name)
+        node = find_node_by_name(self.dataop, name)
         if node is None:
             raise KeyError(name)
         new = self.__class__(node)
@@ -382,10 +384,10 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
 
         Returns a human-readable description (in form of a dict) of the
         parameters (outcomes of `choose_*` objects contained in the
-        expression).
+        dataop).
         """
         return describe_params(
-            chosen_or_default_outcomes(self.expr), choice_graph(self.expr)
+            chosen_or_default_outcomes(self.dataop), choice_graph(self.dataop)
         )
 
 
@@ -399,14 +401,14 @@ def _to_env_learner(learner):
     return learner.__skrub_to_env_learner__()
 
 
-def _get_classes(expr):
-    first = find_first_apply(expr.expr)
+def _get_classes(dataop):
+    first = find_first_apply(dataop.dataop)
     if first is None:
-        attribute_error(expr, "classes_")
+        attribute_error(dataop, "classes_")
     try:
         estimator = first._skrub_impl.estimator_
     except AttributeError:
-        attribute_error(expr, "classes_")
+        attribute_error(dataop, "classes_")
     return estimator.classes_
 
 
@@ -419,7 +421,7 @@ class _XyPipelineMixin:
 
     @property
     def _estimator_type(self):
-        first = find_first_apply(self.expr)
+        first = find_first_apply(self.dataop)
         if first is None:
             return "transformer"
         try:
@@ -431,7 +433,7 @@ class _XyPipelineMixin:
         # scikit-learn >= 1.6
 
         def __sklearn_tags__(self):
-            first = find_first_apply(self.expr)
+            first = find_first_apply(self.dataop)
             if first is None:
                 return _default_sklearn_tags()
             return get_default(first._skrub_impl.estimator).__sklearn_tags__()
@@ -439,7 +441,7 @@ class _XyPipelineMixin:
     @property
     def classes_(self):
         try:
-            return _get_classes(self.expr)
+            return _get_classes(self.dataop)
         except AttributeError:
             attribute_error(self, "classes_")
 
@@ -454,19 +456,19 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
     with the scikit-learn fit(X, y). It exists only during cross-validation and
     is converted back to the skrub learner interface after (if the fitted
     learners are kept, e.g., in the `best_learner_`). It shares state (the
-    `expr`) with the `SkrubLearner` that it is converted to and from.
+    `dataop`) with the `SkrubLearner` that it is converted to and from.
 
     To make the evaluation environment (the {'baskets': ...} dict) available,
     that is stored as an attribute of type SharedDict (a dict type for which
     scikit-learn's clone incurs no copy).
     """
 
-    def __init__(self, expr, environment):
-        self.expr = expr
+    def __init__(self, dataop, environment):
+        self.dataop = dataop
         self.environment = environment
 
     def __skrub_to_env_learner__(self):
-        new = SkrubLearner(self.expr)
+        new = SkrubLearner(self.dataop)
         _copy_attr(self, new, ["_is_fitted"])
         return new
 
@@ -475,34 +477,34 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         return self
 
     def _eval_in_mode(self, mode, X, y=None):
-        result = evaluate(self.expr, mode, self._get_env(X, y), clear=True)
+        result = evaluate(self.dataop, mode, self._get_env(X, y), clear=True)
         self._set_is_fitted(mode)
         return result
 
 
-def _find_Xy(expr):
+def _find_Xy(dataop):
     """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
-    x_node = find_X(expr)
+    x_node = find_X(dataop)
     if x_node is None:
-        raise ValueError('expr should have a node marked with "mark_as_X()"')
+        raise ValueError('DataOp should have a node marked with "mark_as_X()"')
     result = {"X": x_node}
-    if (y_node := find_y(expr)) is not None:
+    if (y_node := find_y(dataop)) is not None:
         result["y"] = y_node
     else:
-        first = find_first_apply(expr)
+        first = find_first_apply(dataop)
         if first is None:
             return result
         if getattr(first._skrub_impl, "y", None) is not None:
             # the estimator requests a y so some node must have been
             # marked as y
-            raise ValueError('expr should have a node marked with "mark_as_y()"')
+            raise ValueError('DataOp should have a node marked with "mark_as_y()"')
     return result
 
 
-def _compute_Xy(expr, environment):
+def _compute_Xy(dataop, environment):
     """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
 
-    Xy = _find_Xy(expr.skb.clone())
+    Xy = _find_Xy(dataop.skb.clone())
     X = evaluate(
         Xy["X"],
         mode="fit_transform",
@@ -537,11 +539,11 @@ def _rename_cv_param_learner_to_estimator(kwargs):
 
 
 def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
-    """Cross-validate a learner built from an expression.
+    """Cross-validate a learner built from a dataop.
 
     This runs cross-validation from a learner that was built from a skrub
-    expression with :func:`Expr.skb.get_learner`, :func:`Expr.skb.get_grid_search` or
-    :func:`Expr.skb.get_randomized_search`.
+    dataop with :func:`DataOp.skb.get_learner`, :func:`DataOp.skb.get_grid_search` or
+    :func:`DataOp.skb.get_randomized_search`.
 
     It is useful to run nested cross-validation of a grid search or randomized
     search.
@@ -549,14 +551,14 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     Parameters
     ----------
     learner : skrub learner
-        A learner generated from a skrub expression.
+        A learner generated from a skrub dataop.
 
     environment : dict
-        Bindings for variables contained in the expression.
+        Bindings for variables contained in the dataop.
 
     keep_subsampling : bool, default=False
         If True, and if subsampling has been configured (see
-        :meth:`Expr.skb.subsample`), use a subsample of the data. By
+        :meth:`DataOp.skb.subsample`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
     kwargs : dict
@@ -574,13 +576,13 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     :func:`sklearn.model_selection.cross_validate`:
         Evaluate metric(s) by cross-validation and also record fit/score times.
 
-    :func:`skrub.Expr.skb.get_learner`:
-        Get a skrub learner for this expression.
+    :func:`skrub.DataOp.skb.get_learner`:
+        Get a skrub learner for this dataop.
 
-    :func:`skrub.Expr.skb.get_grid_search`:
+    :func:`skrub.DataOp.skb.get_grid_search`:
         Find the best parameters with grid search.
 
-    :func:`skrub.Expr.skb.get_randomized_search`:
+    :func:`skrub.DataOp.skb.get_randomized_search`:
         Find the best parameters with grid search.
 
     Examples
@@ -604,9 +606,9 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     4    0.85
     Name: test_score, dtype: float64
     """
-    environment = env_with_subsampling(learner.expr, environment, keep_subsampling)
+    environment = env_with_subsampling(learner.dataop, environment, keep_subsampling)
     kwargs = _rename_cv_param_learner_to_estimator(kwargs)
-    X, y = _compute_Xy(learner.expr, environment)
+    X, y = _compute_Xy(learner.dataop, environment)
     result = model_selection.cross_validate(
         _to_Xy_pipeline(learner, environment),
         X,
@@ -619,7 +621,7 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
 
 
 def train_test_split(
-    expr,
+    dataop,
     environment,
     *,
     keep_subsampling=False,
@@ -629,11 +631,11 @@ def train_test_split(
     """Split an environment into a training an testing environments.
 
     This functionality is exposed to users through the
-    ``Expr.skb.train_test_split()`` method. See the corresponding docstring for
+    ``DataOp.skb.train_test_split()`` method. See the corresponding docstring for
     details and examples.
     """
-    environment = env_with_subsampling(expr, environment, keep_subsampling)
-    X, y = _compute_Xy(expr, environment)
+    environment = env_with_subsampling(dataop, environment, keep_subsampling)
+    X, y = _compute_Xy(dataop, environment)
     if y is None:
         X_train, X_test = splitter(X, **splitter_kwargs)
     else:
@@ -654,33 +656,33 @@ def train_test_split(
     return result
 
 
-class ParamSearch(_CloudPickleExpr, BaseEstimator):
-    """Learner that evaluates a skrub expression with hyperparameter tuning.
+class ParamSearch(_CloudPickleDataOp, BaseEstimator):
+    """Learner that evaluates a skrub dataop with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``
-    objects are created by calling :meth:`Expr.skb.get_grid_search()` or
-    :meth:`Expr.skb.get_randomized_search()` on an expression.
+    objects are created by calling :meth:`DataOp.skb.get_grid_search()` or
+    :meth:`DataOp.skb.get_randomized_search()` on a dataop.
     """
 
-    def __init__(self, expr, search):
-        self.expr = expr
+    def __init__(self, dataop, search):
+        self.dataop = dataop
         self.search = search
 
     def __skrub_to_Xy_pipeline__(self, environment):
-        new = _XyParamSearch(self.expr, self.search, _SharedDict(environment))
+        new = _XyParamSearch(self.dataop, self.search, _SharedDict(environment))
         _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
         return new
 
     def fit(self, environment):
         search = clone(self.search)
-        search.estimator = _XyPipeline(self.expr, _SharedDict(environment))
+        search.estimator = _XyPipeline(self.dataop, _SharedDict(environment))
         param_grid = search.estimator.get_param_grid()
         if hasattr(search, "param_grid"):
             search.param_grid = param_grid
         else:
             assert hasattr(search, "param_distributions")
             search.param_distributions = param_grid
-        X, y = _compute_Xy(self.expr, environment)
+        X, y = _compute_Xy(self.dataop, environment)
         search.fit(X, y)
         _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
         try:
@@ -691,7 +693,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         return self
 
     def __getattr__(self, name):
-        if name not in supported_modes(self.expr):
+        if name not in supported_modes(self.dataop):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
@@ -737,15 +739,15 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
 
     def _get_cv_results_table(self, detailed=False):
         check_is_fitted(self, "cv_results_")
-        expr_choices = choice_graph(self.expr)
+        dataop_choices = choice_graph(self.dataop)
 
         all_rows = []
         for params in self.cv_results_["params"]:
-            params = {int(k.lstrip("expr__")): v for k, v in params.items()}
-            all_rows.append(describe_params(params, expr_choices))
+            params = {int(k.lstrip("dataop__")): v for k, v in params.items()}
+            all_rows.append(describe_params(params, dataop_choices))
 
         table = pd.DataFrame(
-            all_rows, columns=list(expr_choices["choice_display_names"].values())
+            all_rows, columns=list(dataop_choices["choice_display_names"].values())
         )
         if isinstance(self.scorer_, dict):
             metric_names = list(self.scorer_.keys())
@@ -768,7 +770,7 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         new_names = _join_utils.pick_column_names(table.columns, result_keys)
         renaming = dict(zip(table.columns, new_names))
         table.columns = new_names
-        metadata = _get_results_metadata(expr_choices)
+        metadata = _get_results_metadata(dataop_choices)
         metadata["log_scale_columns"] = [
             renaming[c] for c in metadata["log_scale_columns"]
         ]
@@ -829,12 +831,12 @@ class ParamSearch(_CloudPickleExpr, BaseEstimator):
         return plot_parallel_coord(cv_results, metadata, colorscale=colorscale)
 
 
-def _get_results_metadata(expr_choices):
+def _get_results_metadata(dataop_choices):
     log_scale_columns = set()
     int_columns = set()
-    for choice_id, choice in expr_choices["choices"].items():
+    for choice_id, choice in dataop_choices["choices"].items():
         if isinstance(choice, BaseNumericChoice):
-            choice_name = expr_choices["choice_display_names"][choice_id]
+            choice_name = dataop_choices["choice_display_names"][choice_id]
             if choice.log:
                 log_scale_columns.add(choice_name)
             if choice.to_int:
@@ -848,13 +850,13 @@ def _get_results_metadata(expr_choices):
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):
     # Similar to _XyPipeline but for ParamSearch. See _XyPipeline docstring.
 
-    def __init__(self, expr, search, environment):
-        self.expr = expr
+    def __init__(self, dataop, search, environment):
+        self.dataop = dataop
         self.search = search
         self.environment = environment
 
     def __skrub_to_env_learner__(self):
-        new = ParamSearch(self.expr, self.search)
+        new = ParamSearch(self.dataop, self.search)
         _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
         return new
 
@@ -863,7 +865,7 @@ class _XyParamSearch(_XyPipelineMixin, ParamSearch):
         if not hasattr(self, "best_learner_"):
             attribute_error(self, "classes_")
         try:
-            return _get_classes(self.best_learner_.expr)
+            return _get_classes(self.best_learner_.dataop)
         except AttributeError:
             attribute_error(self, "classes_")
 

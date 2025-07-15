@@ -5,15 +5,15 @@ from ._choosing import (
     choose_int,
     optional,
 )
+from ._dataops import DataOp, X, as_dataop, deferred, eval_mode, var, y
 from ._estimator import ParamSearch, SkrubLearner, cross_validate
-from ._expressions import Expr, X, as_expr, deferred, eval_mode, var, y
 
 __all__ = [
-    "Expr",
+    "DataOp",
     "var",
     "X",
     "y",
-    "as_expr",
+    "as_dataop",
     "deferred",
     "eval_mode",
     "cross_validate",
