@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import skrub
-from skrub._expressions import _choosing
+from skrub._dataops import _choosing
 
 
 @pytest.mark.parametrize("name", ["the_param", "my_description__the_param"])

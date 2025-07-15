@@ -21,8 +21,8 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
-from skrub._expressions._estimator import _SharedDict
-from skrub._expressions._inspection import _has_graphviz
+from skrub._dataops._estimator import _SharedDict
+from skrub._dataops._inspection import _has_graphviz
 
 #
 # testing utils

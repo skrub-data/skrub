@@ -11,7 +11,7 @@ from sklearn.linear_model import LogisticRegression
 
 import skrub
 from skrub import selectors as s
-from skrub._expressions import _expressions
+from skrub._dataops import _expressions
 from skrub._utils import PassThrough
 
 
@@ -332,6 +332,6 @@ def test_concat_vertical_duplicate_cols():
 
 
 def test_class_skb():
-    from skrub._expressions._skrub_namespace import SkrubNamespace
+    from skrub._dataops._skrub_namespace import SkrubNamespace
 
     assert skrub.Expr.skb is SkrubNamespace

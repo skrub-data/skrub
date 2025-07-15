@@ -1,7 +1,7 @@
 import pytest
 
 import skrub
-from skrub._expressions import _evaluation
+from skrub._dataops import _evaluation
 
 
 def test_caching():

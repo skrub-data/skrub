@@ -10,10 +10,7 @@ from ._apply_to_cols import ApplyToCols
 from ._apply_to_frame import ApplyToFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
-from ._datetime_encoder import DatetimeEncoder
-from ._deduplicate import compute_ngram_distance, deduplicate
-from ._drop_uninformative import DropUninformative
-from ._expressions import (
+from ._dataops import (
     Expr,
     ParamSearch,
     SkrubLearner,
@@ -30,6 +27,9 @@ from ._expressions import (
     var,
     y,
 )
+from ._datetime_encoder import DatetimeEncoder
+from ._deduplicate import compute_ngram_distance, deduplicate
+from ._drop_uninformative import DropUninformative
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._interpolation_joiner import InterpolationJoiner

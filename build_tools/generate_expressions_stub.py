@@ -45,7 +45,7 @@ import io
 import types
 
 import skrub
-from skrub._expressions import _expressions
+from skrub._dataops import _expressions
 
 file = io.StringIO()
 p = file.write
