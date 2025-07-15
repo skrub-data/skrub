@@ -60,10 +60,19 @@ the name of the task is given.
 
 
 >>> from skrub import tabular_pipeline
->>> from sklearn.linear_model import LinearRegression
+>>> tabular_pipeline("regression")
+Pipeline(steps=[('tablevectorizer',
+                 TableVectorizer(low_cardinality=ToCategorical())),
+                ('histgradientboostingregressor',
+                 HistGradientBoostingRegressor())])
 
->>> learner = tabular_pipeline("regression")
->>> learner = tabular_pipeline(LinearRegression())
+>>> from sklearn.linear_model import LinearRegression
+>>> tabular_pipeline(LinearRegression())
+Pipeline(steps=[('tablevectorizer',
+                 TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
+                ('simpleimputer', SimpleImputer(add_indicator=True)),
+                ('standardscaler', StandardScaler()),
+                ('linearregression', LinearRegression())])
 
 If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
 |tabular_pipeline| adds a |StandardScaler| and a |SimpleImputer| to the pipeline.
