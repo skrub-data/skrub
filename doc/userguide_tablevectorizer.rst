@@ -58,7 +58,6 @@ followed by the given estimator, or a
 |HistGradientBoostingRegressor|/|HistGradientBoostingClassifier| if only
 the name of the task is given.
 
-.. code-block:: python
 
 >>> from skrub import tabular_pipeline
 >>> from sklearn.linear_model import LinearRegression
