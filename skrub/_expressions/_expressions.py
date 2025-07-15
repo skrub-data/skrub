@@ -974,7 +974,7 @@ def X(value=NULL):
     Examples
     --------
     >>> import skrub
-    >>> df = skrub.toy_orders().orders_
+    >>> df = skrub.datasets.toy_orders().orders_
     >>> X = skrub.X(df)
     >>> X
     <Var 'X'>
@@ -1036,7 +1036,7 @@ def y(value=NULL):
     Examples
     --------
     >>> import skrub
-    >>> col = skrub.toy_orders().delayed
+    >>> col = skrub.datasets.toy_orders().delayed
     >>> y = skrub.y(col)
     >>> y
     <Var 'y'>
