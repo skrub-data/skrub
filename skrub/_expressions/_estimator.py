@@ -210,7 +210,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         >>> import skrub
         >>> from skrub import selectors as s
 
-        >>> orders = skrub.toy_orders()
+        >>> orders = skrub.datasets.toy_orders()
         >>> X, y = skrub.X(), skrub.y()
         >>> pred = (
         ...     X.skb.apply(skrub.StringEncoder(n_components=2), cols=["product"])
@@ -328,7 +328,7 @@ class SkrubLearner(_CloudPickleExpr, BaseEstimator):
         >>> from sklearn.dummy import DummyClassifier
         >>> import skrub
 
-        >>> orders = skrub.toy_orders()
+        >>> orders = skrub.datasets.toy_orders()
         >>> X, y = skrub.X(), skrub.y()
         >>> pred = (
         ...     X.skb.apply(

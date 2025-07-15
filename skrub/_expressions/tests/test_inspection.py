@@ -69,7 +69,7 @@ def test_preview_subsample():
 def test_full_report_failed_apply():
     # Somewhat contrived example for the corner case where an Apply does not
     # have an easily identifiable estimator.
-    orders = skrub.toy_orders()
+    orders = skrub.datasets.toy_orders()
     e = (
         skrub.X()
         .skb.apply(SelectKBest())  # error! missing y
