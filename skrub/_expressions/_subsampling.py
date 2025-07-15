@@ -56,12 +56,12 @@ def should_subsample():
     Result (on a subsample):
     ――――――――――――――――――――――――
     1.0
-    >>> e.skb.get_pipeline(fitted=True)
+    >>> e.skb.get_learner(fitted=True)
     subsampling: False
-    SkrubPipeline(expr=<Call 'load_data'>)
-    >>> e.skb.get_pipeline(keep_subsampling=True, fitted=True)
+    SkrubLearner(expr=<Call 'load_data'>)
+    >>> e.skb.get_learner(keep_subsampling=True, fitted=True)
     subsampling: True
-    SkrubPipeline(expr=<Call 'load_data'>)
+    SkrubLearner(expr=<Call 'load_data'>)
     """
     return _expressions.Expr(ShouldSubsample())
 

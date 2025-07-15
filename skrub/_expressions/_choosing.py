@@ -144,8 +144,8 @@ class Choice(BaseChoice):
         """Select a value depending on the outcome of the choice.
 
         This allows inserting several inter-dependent hyper-parameters in a
-        pipeline, which all depend on the outcome of the same choice. See the
-        examples below.
+        DataOps plan (and the resulting learner), which all depend on the outcome
+        of the same choice. See the examples below.
 
         Parameters
         ----------
@@ -168,9 +168,9 @@ class Choice(BaseChoice):
         --------
         Suppose we want to encode strings differently depending on the
         supervised estimator we use. the :class:`MinHashEncoder` can be a good
-        choice when the downstream learner is a tree-based model, but not when
-        it is a linear model. So we have 2 choices in our pipeline, the
-        encoding and the learner, but they are not independent: not all
+        choice when the downstream estimator is a tree-based model, but not when
+        it is a linear model. So we have 2 choices in our DataOps plan, the
+        encoder and the estimator, but they are not independent: not all
         combinations make sense.
 
         >>> from sklearn.linear_model import LogisticRegression
@@ -178,8 +178,8 @@ class Choice(BaseChoice):
         >>> from sklearn.feature_selection import SelectKBest
         >>> import skrub
 
-        >>> learner_kind = skrub.choose_from(["logistic", "hgb"], name="learner")
-        >>> encoder = learner_kind.match(
+        >>> estimator_kind = skrub.choose_from(["logistic", "hgb"], name="estimator")
+        >>> encoder = estimator_kind.match(
         ...     {
         ...         "logistic": skrub.StringEncoder(
         ...             **skrub.choose_int(5, 20, name="string__n_components")
@@ -190,7 +190,7 @@ class Choice(BaseChoice):
         ...     }
         ... )
         >>> vectorizer = skrub.TableVectorizer(high_cardinality=encoder)
-        >>> predictor = learner_kind.match(
+        >>> predictor = estimator_kind.match(
         ...     {
         ...         "logistic": LogisticRegression(
         ...             **skrub.choose_float(0.01, 10.0, log=True, name="C")
@@ -210,11 +210,11 @@ class Choice(BaseChoice):
 
         >>> print(pred.skb.describe_param_grid())
         - k: choose_int(15, 25, name='k')
-          learner: 'logistic'
+          estimator: 'logistic'
           string__n_components: choose_int(5, 20, name='string__n_components')
           C: choose_float(0.01, 10.0, log=True, name='C')
         - k: choose_int(15, 25, name='k')
-          learner: 'hgb'
+          estimator: 'hgb'
           minhash__n_components: choose_int(10, 30, name='minhash__n_components')
           learning_rate: choose_float(0.01, 0.9, log=True, name='learning_rate')
 
@@ -228,9 +228,9 @@ class Choice(BaseChoice):
         outcomes of the choice. However, some can be omitted when a default is
         provided.
 
-        >>> learner_kind.match({'logistic': 'linear', 'hgb': 'tree'}).outcome_mapping
+        >>> estimator_kind.match({'logistic': 'linear', 'hgb': 'tree'}).outcome_mapping
         {'logistic': 'linear', 'hgb': 'tree'}
-        >>> learner_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
+        >>> estimator_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
         {'logistic': 'linear', 'hgb': 'unknown'}
         """  # noqa : E501
         _check_match_keys(
@@ -297,8 +297,8 @@ class Match:
         --------
         >>> import skrub
 
-        >>> learner_kind = skrub.choose_from(["logistic", "random_forest", "hgb"], name="learner")
-        >>> is_linear = learner_kind.match({"logistic": True}, default=False)
+        >>> estimator_kind = skrub.choose_from(["logistic", "random_forest", "hgb"], name="estimator")
+        >>> is_linear = estimator_kind.match({"logistic": True}, default=False)
         >>> is_linear.outcome_mapping
         {'logistic': True, 'random_forest': False, 'hgb': False}
 
@@ -330,7 +330,7 @@ class Match:
 def choose_from(outcomes, *, name=None):
     """A choice among several possible outcomes.
 
-    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    When a learner is used *without hyperparameter tuning*, the outcome of
     this choice is the first value in the ``outcomes`` list or dict.
 
     Parameters
@@ -343,13 +343,13 @@ def choose_from(outcomes, *, name=None):
     name : str, optional (default=None)
         If not ``None``, ``name`` is used when displaying search results and
         can also be used to override the choice's value by setting it in the
-        environment containing a pipeline's inputs.
+        environment containing a learner's inputs.
 
     Returns
     -------
     Choice
         An object representing this choice, which can be used in a skrub
-        pipeline.
+        DataOps plan.
 
     See also
     --------
@@ -375,7 +375,7 @@ def choose_from(outcomes, *, name=None):
     >>> choose_from({'one': 1, 'two': 2}, name='the number')
     choose_from({'one': 1, 'two': 2}, name='the number')
 
-    When a pipeline containing a ``choose_from`` is used *without
+    When a skrub learner containing a ``choose_from`` is fitted *without
     hyperparameter tuning*, the default outcome for the choice is used.
     It is the first outcome in the provided list or dict:
 
@@ -454,7 +454,7 @@ class Optional(Choice):
 def optional(value, *, name=None, default=OPTIONAL_VALUE):
     """A choice between ``value`` and ``None``.
 
-    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    When a learner is fitted *without hyperparameter tuning*, the outcome of
     this choice is ``value``. Pass ``default=None`` to make ``None`` the
     default outcome.
 
@@ -466,11 +466,11 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
     name : str, optional (default=None)
         If not ``None``, ``name`` is used when displaying search results and
         can also be used to override the choice's value by setting it in the
-        environment containing a pipeline's inputs.
+        environment containing a learner's inputs.
 
     default : NoneType, optional
         An ``optional`` is a choice between the provided ``value`` and
-        ``None``. Normally, the default outcome when a pipeline is used
+        ``None``. Normally, the default outcome when a learner is used
         *without hyperparameter tuning* is the provided ``value``. Pass
         ``default=None`` to make the alternative outcome, ``None``, the
         default. ``None`` is the only allowed value for this parameter.
@@ -479,26 +479,26 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
     -------
     Choice
         An object representing this choice, which can be used in a skrub
-        pipeline.
+        learner.
 
     Examples
     --------
-    ``optional`` is useful for optional steps in a pipeline. If we want to try
-    our pipeline with or without dimensionality reduction, we can add a step
-    such as:
+    ``optional`` is useful for optional steps in a DataOps plan, or a learner.
+    If we want to try a learner with or without dimensionality reduction, we can
+    add a step such as:
 
     >>> from sklearn.decomposition import PCA
     >>> from skrub import optional
     >>> optional(PCA(), name='use dim reduction')
     optional(PCA(), name='use dim reduction')
 
-    The constructed parameter grid will include a version of the pipeline with
+    The constructed parameter grid will include a branch of the plan with the
     the PCA and one without:
 
     >>> print(optional(PCA(), name='dim reduction').as_expr().skb.describe_param_grid())
     - dim reduction: [PCA(), None]
 
-    When a pipeline containing an ``optional`` step is used *without
+    When a learner that contains an ``optional`` step is used *without
     hyperparameter tuning*, the default outcome is the provided ``value``.
 
     >>> print(optional(PCA()).default())
@@ -555,7 +555,7 @@ class BoolChoice(Choice):
 def choose_bool(*, name=None, default=True):
     """A choice between ``True`` and ``False``.
 
-    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    When a learner is fitted *without hyperparameter tuning*, the outcome of
     this choice is ``True``. Pass ``default=False`` to make ``False`` the
     default outcome.
 
@@ -564,7 +564,7 @@ def choose_bool(*, name=None, default=True):
     name : str, optional (default=None)
         If not ``None``, ``name`` is used when displaying search results and
         can also be used to override the choice's value by setting it in the
-        environment containing a pipeline's inputs.
+        environment containing a learner's inputs.
 
     default : bool, optional (default=True)
         Choice's default value when hyperparameter search is not used.
@@ -573,7 +573,7 @@ def choose_bool(*, name=None, default=True):
     -------
     BoolChoice
         An object representing this choice, which can be used in a skrub
-        pipeline.
+        learner.
 
     See also
     --------
@@ -753,7 +753,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
 def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None):
     """A choice of floating-point numbers from a numeric range.
 
-    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    When a learner is fitted *without hyperparameter tuning*, the outcome of
     this choice is the middle of the range (possibly on a ``log`` scale). Pass
     a float as the ``default`` argument to set the default outcome.
 
@@ -778,7 +778,7 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
     name : str, optional (default=None)
         If not ``None``, ``name`` is used when displaying search results and
         can also be used to override the choice's value by setting it in the
-        environment containing a pipeline's inputs.
+        environment containing a learner's inputs.
 
     default : float, optional (default=None)
         If provided, override the choice's default value when hyperparameter
@@ -790,7 +790,7 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
     -------
     numeric choice
         An object representing this choice, which can be used in a skrub
-        pipeline.
+        learner.
 
     See also
     --------
@@ -821,7 +821,7 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
 def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
     """A choice of integers from a numeric range.
 
-    When a pipeline is used *without hyperparameter tuning*, the outcome of
+    When a learner is fitted *without hyperparameter tuning*, the outcome of
     this choice is the middle of the range (possibly on a ``log`` scale). Pass
     an int as the ``default`` argument to set the default outcome.
 
@@ -846,7 +846,7 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
     name : str, optional (default=None)
         If not ``None``, ``name`` is used when displaying search results and
         can also be used to override the choice's value by setting it in the
-        environment containing a pipeline's inputs.
+        environment containing a learner's inputs.
 
     default : int, optional (default=None)
         If provided, override the choice's default value when hyperparameter
@@ -858,7 +858,7 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
     -------
     numeric choice
         An object representing this choice, which can be used in a skrub
-        pipeline.
+        learner.
 
     See also
     --------

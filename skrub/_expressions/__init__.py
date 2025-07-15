@@ -5,7 +5,7 @@ from ._choosing import (
     choose_int,
     optional,
 )
-from ._estimator import ParamSearch, SkrubPipeline, cross_validate
+from ._estimator import ParamSearch, SkrubLearner, cross_validate
 from ._expressions import Expr, X, as_expr, deferred, eval_mode, var, y
 
 __all__ = [
@@ -17,7 +17,7 @@ __all__ = [
     "deferred",
     "eval_mode",
     "cross_validate",
-    "SkrubPipeline",
+    "SkrubLearner",
     "ParamSearch",
     #
     "choose_bool",

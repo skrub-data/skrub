@@ -3,7 +3,7 @@
 # Accessing an attribute or method of an expression creates a new node in the
 # computation graph. Therefore the namespace of the Expr class must remain
 # almost empty to avoid name clashes with methods users want to use in their
-# pipeline: if `e = skrub.var('x', pd.DataFrame(...))`, `e.groupby()` must
+# DataOps plan: if `e = skrub.var('x', pd.DataFrame(...))`, `e.groupby()` must
 # create a node that will call `pd.DataFrame.groupby`, not execute some skrub
 # functionality.
 #
@@ -367,9 +367,9 @@ def _check_return_value(f):
     defining ``__setattr__ ``: ``mydict['a'] = 0``, ``mylist.append(0)``.
 
     We warn rather than raise an error because in some cases it might be
-    legitimate for a function in the pipeline to return None (if the None is
+    legitimate for a function in the DataOps plan to return None (if the None is
     the reused in the next step) so there may be false positives. Also there
-    will be many false negatives (eg ``pop()``) so it might be better to just
+    will be many false negatives (e.g. ``pop()``) so it might be better to just
     remove this check.
     """
 
@@ -384,7 +384,7 @@ def _check_return_value(f):
         func_name = expr._skrub_impl.pretty_repr()
         msg = (
             f"Calling {func_name!r} returned None. "
-            "To enable chaining steps in a pipeline, do not use functions "
+            "To enable chaining steps in a DataOps plan, do not use functions "
             "that modify objects in-place but rather functions that leave "
             "their argument unchanged and return a new object."
         )
@@ -424,7 +424,7 @@ class _Skb:
 
 
 _EXPR_CLASS_DOC = """
-Representation of a computation that can be used to build ML pipelines.
+Representation of a computation that can be used to build DataOps plans and learners.
 
 Please refer to the example gallery for an introduction to skrub
 expressions.
@@ -437,8 +437,8 @@ to an existing expression.
 
 _EXPR_INSTANCE_DOC = """Skrub expression.
 
-This object represents a computation and can be used to build machine-learning
-pipelines.
+This object represents a computation and can be used to build DataOps plans and
+learners.
 
 Please refer to the example gallery for an introduction to skrub
 expressions.
@@ -585,21 +585,21 @@ class Expr:
     def __bool__(self):
         raise TypeError(
             "This object is an expression that will be evaluated later, "
-            "when your pipeline runs. So it is not possible to eagerly "
+            "when your learner runs. So it is not possible to eagerly "
             "use its Boolean value now."
         )
 
     def __iter__(self):
         raise TypeError(
             "This object is an expression that will be evaluated later, "
-            "when your pipeline runs. So it is not possible to eagerly "
+            "when your learner runs. So it is not possible to eagerly "
             "iterate over it now."
         )
 
     def __contains__(self, item):
         raise TypeError(
             "This object is an expression that will be evaluated later, "
-            "when your pipeline runs. So it is not possible to eagerly "
+            "when your learner runs. So it is not possible to eagerly "
             "perform membership tests now."
         )
 
@@ -833,23 +833,23 @@ class Var(ExprImpl):
 def var(name, value=NULL):
     """Create a skrub variable.
 
-    Variables represent inputs to a machine-learning pipeline. They can be
-    combined with other variables, constants, operators, function calls etc. to
-    build up complex expressions, which implicitly define the pipeline.
+    Variables represent inputs to a DataOps plan, and the corresponding learner.
+    They can be combined with other variables, constants, operators, function
+    calls etc. to build up complex expressions, which implicitly define the plan.
 
-    See the example gallery for more information about skrub pipelines.
+    See the example gallery for more information about skrub DataOps.
 
     Parameters
     ----------
     name : str
         The name for this input. It corresponds to a key in the dictionary that
-        is passed to the pipeline's ``fit()`` method (see Examples below).
-        Names must be unique within a pipeline and must not start with
+        is passed to the learner's ``fit()`` method (see Examples below).
+        Names must be unique within a learner and must not start with
         ``"_skrub_"``
     value : object, optional
         Optionally, an initial value can be given to the variable. When it is
-        available, it is used to provide a preview of the pipeline's results,
-        to detect errors in the pipeline early, and to provide better help and
+        available, it is used to provide a preview of the learner's results,
+        to detect errors in the learner early, and to provide better help and
         tab-completion in interactive Python shells.
 
     Returns
@@ -891,13 +891,13 @@ def var(name, value=NULL):
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
 
-    And also to keys to the inputs to the pipeline:
+    And also to keys to the inputs to the DataOps plan:
 
-    >>> pipeline = c.skb.get_pipeline()
-    >>> pipeline.fit_transform({'a': 5, 'b': 4})
+    >>> learner = c.skb.get_learner()
+    >>> learner.fit_transform({'a': 5, 'b': 4})
     9
 
-    When providing a value, we see what the pipeline produces for the values we
+    When providing a value, we see what the learner produces for the values we
     provided:
 
     >>> a = skrub.var('a', 2)
@@ -920,7 +920,7 @@ def var(name, value=NULL):
     5
 
     But we can still override them. And inputs must be provided explicitly when
-    using the pipeline returned by ``.skb.get_pipeline()``.
+    using the learner returned by ``.skb.get_learner()``.
 
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
@@ -948,7 +948,7 @@ def X(value=NULL):
     ----------
     value : object
         The value passed to ``skrub.var()``, which is used for previews of the
-        pipeline's outputs, cross-validation etc. as described in the
+        learner's outputs, cross-validation etc. as described in the
         documentation for ``skrub.var()`` and the examples gallery.
 
     Returns
@@ -1010,7 +1010,7 @@ def y(value=NULL):
     ----------
     value : object
         The value passed to ``skrub.var()``, which is used for previews of the
-        pipeline's outputs, cross-validation etc. as described in the
+        learner's outputs, cross-validation etc. as described in the
         documentation for ``skrub.var()`` and the examples gallery.
 
     Returns
@@ -1109,7 +1109,7 @@ def as_expr(value):
     'remote/data.parquet'
 
     Turning the dictionary into an expression defers the lookup of
-    ``data_source`` until it has been evaluated when the pipeline runs.
+    ``data_source`` until it has been evaluated when the learner runs.
 
     The example above is somewhat contrived, but ``as_expr`` is often useful
     with choices.
@@ -1256,7 +1256,7 @@ class Apply(ExprImpl):
 
     def supported_modes(self):
         """
-        Used by SkrubPipeline and param search to decide if they have the
+        Used by SkrubLearner and param search to decide if they have the
         methods `predict`, `predict_proba` etc.
         """
         modes = ["preview", "fit_transform", "transform"]
@@ -1421,7 +1421,7 @@ def deferred(func):
     When this decorator is applied, the resulting function returns expressions.
     The returned expression wraps the call to the original function, and the
     call is executed when the expression is evaluated. This allows including calls
-    to any function as a step in a pipeline, rather than executing it immediately.
+    to any function as a step in a learner, rather than executing it immediately.
 
     See the examples gallery for an in-depth explanation of skrub expressions
     and ``deferred``.
@@ -1459,12 +1459,12 @@ def deferred(func):
 
     Calling ``tokenize`` on a skrub expression raises an exception:
     ``tokenize`` tries to iterate immediately over the tokens to remove stop
-    words, but the text will only be known when we run the pipeline.
+    words, but the text will only be known when we run the learner.
 
     >>> tokens = tokenize(text)
     Traceback (most recent call last):
         ...
-    TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.
+    TypeError: This object is an expression that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
 
     We can defer the call to ``tokenize`` until we are evaluating the
     expression:
@@ -1718,7 +1718,7 @@ def eval_mode():
     - 'preview': when the previews are being eagerly computed when the
       expression is defined or when we call ``.skb.eval()`` without
       arguments.
-    - otherwise, the method we called on the pipeline such as ``'predict'``
+    - otherwise, the method we called on the learner such as ``'predict'``
       or ``'fit_transform'``.
 
     Examples
@@ -1728,10 +1728,10 @@ def eval_mode():
     >>> mode = skrub.eval_mode()
     >>> mode.skb.eval()
     'preview'
-    >>> pipeline = mode.skb.get_pipeline()
-    >>> pipeline.fit_transform({})
+    >>> learner = mode.skb.get_learner()
+    >>> learner.fit_transform({})
     'fit_transform'
-    >>> pipeline.transform({})
+    >>> learner.transform({})
     'transform'
 
     ``eval_mode()`` can be particularly useful to have a different behavior in

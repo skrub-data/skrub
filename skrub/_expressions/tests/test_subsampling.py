@@ -28,10 +28,10 @@ def test_subsample(as_frame):
     )
     assert shapes == [(15, 13), (15,)]
     shapes = []
-    pred.skb.get_pipeline(fitted=True, keep_subsampling=True)
+    pred.skb.get_learner(fitted=True, keep_subsampling=True)
     assert shapes == [(15, 13), (15,)]
     shapes = []
-    pred.skb.get_pipeline(fitted=True)
+    pred.skb.get_learner(fitted=True)
     assert shapes == [(100, 13), (100,)]
     shapes = []
     pred.skb.get_grid_search(fitted=True, keep_subsampling=True, cv=3)
@@ -92,7 +92,7 @@ def test_subsample(as_frame):
         + [(100, 13), (100,)]
     )
     with pytest.raises(ValueError):
-        pred.skb.get_pipeline(fitted=False, keep_subsampling=True)
+        pred.skb.get_learner(fitted=False, keep_subsampling=True)
     with pytest.raises(ValueError):
         pred.skb.get_grid_search(fitted=False, keep_subsampling=True)
 
@@ -142,10 +142,10 @@ def test_should_subsample():
     )
     assert should == [True]
     should = []
-    pred.skb.get_pipeline(fitted=True, keep_subsampling=True)
+    pred.skb.get_learner(fitted=True, keep_subsampling=True)
     assert should == [True]
     should = []
-    pred.skb.get_pipeline(fitted=True)
+    pred.skb.get_learner(fitted=True)
     assert should == [False]
     should = []
     pred.skb.get_grid_search(fitted=True, keep_subsampling=True, cv=3)
@@ -183,17 +183,17 @@ def test_subsampling_not_configured():
     with pytest.raises(ValueError, match=".*no subsampling has been configured"):
         skrub.as_expr(np.ones(3)).skb.eval(keep_subsampling=True)
     with pytest.raises(ValueError, match=".*no subsampling has been configured"):
-        skrub.as_expr(np.ones(3)).skb.get_pipeline(fitted=True, keep_subsampling=True)
+        skrub.as_expr(np.ones(3)).skb.get_learner(fitted=True, keep_subsampling=True)
 
     # no problem if subsampling was configured
     assert (
         skrub.as_expr(np.ones(3)).skb.subsample(n=2).skb.eval(keep_subsampling=True)
         == np.ones(2)
     ).all()
-    skrub.as_expr(np.ones(3)).skb.subsample(n=2).skb.get_pipeline(
+    skrub.as_expr(np.ones(3)).skb.subsample(n=2).skb.get_learner(
         fitted=True, keep_subsampling=True
     )
 
     # no problem if we don't pass keep_subsampling=True
     assert (skrub.as_expr(np.ones(3)).skb.eval() == np.ones(3)).all()
-    skrub.as_expr(np.ones(3)).skb.get_pipeline(fitted=True)
+    skrub.as_expr(np.ones(3)).skb.get_learner(fitted=True)

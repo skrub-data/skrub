@@ -16,7 +16,7 @@ from ._drop_uninformative import DropUninformative
 from ._expressions import (
     Expr,
     ParamSearch,
-    SkrubPipeline,
+    SkrubLearner,
     X,
     as_expr,
     choose_bool,
@@ -54,7 +54,7 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 __all__ = [
     "Expr",
     "var",
-    "SkrubPipeline",
+    "SkrubLearner",
     "ParamSearch",
     "X",
     "y",

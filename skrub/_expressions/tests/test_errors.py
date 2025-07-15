@@ -104,12 +104,10 @@ class NoPickleRecursion(NoPickle):
 
 
 def _pickle_msg_pattern(cls):
-    pattern = r"The check to verify that the pipeline can be serialized failed\."
+    pattern = r"The check to verify that the learner can be serialized failed\."
     if cls is not NoPickleRecursion:
         return pattern
-    return (
-        pattern + " Is a step in the pipeline holding a reference to the full pipeline"
-    )
+    return pattern + " Is a step in the learner holding a reference to the full learner"
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
@@ -118,7 +116,7 @@ def test_pickling_preview_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        (skrub.X([]) + [cls()]).skb.get_pipeline()
+        (skrub.X([]) + [cls()]).skb.get_learner()
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
@@ -130,7 +128,7 @@ def test_pickling_estimator_failure(cls):
         pickle.PicklingError,
         match=_pickle_msg_pattern(cls),
     ):
-        e.skb.get_pipeline()
+        e.skb.get_learner()
 
 
 #
@@ -269,11 +267,11 @@ def test_X_y_instead_of_environment():
     with pytest.raises(
         TypeError, match="`environment` should be a dictionary of input values"
     ):
-        skrub.X().skb.get_pipeline().fit_transform(0)
+        skrub.X().skb.get_learner().fit_transform(0)
     with pytest.raises(TypeError):
         skrub.X().skb.eval(X=0)
     with pytest.raises(TypeError):
-        skrub.X().skb.get_pipeline().fit_transform(X=0)
+        skrub.X().skb.get_learner().fit_transform(X=0)
 
 
 def test_expr_or_choice_in_environment():

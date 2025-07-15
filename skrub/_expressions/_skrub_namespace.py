@@ -5,7 +5,7 @@ from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
-from ._estimator import ParamSearch, SkrubPipeline, cross_validate, train_test_split
+from ._estimator import ParamSearch, SkrubLearner, cross_validate, train_test_split
 from ._evaluation import (
     choices,
     clone,
@@ -58,11 +58,11 @@ def _check_can_be_pickled(obj):
         dumped = pickle.dumps(obj)
         pickle.loads(dumped)
     except Exception as e:
-        msg = "The check to verify that the pipeline can be serialized failed."
+        msg = "The check to verify that the learner can be serialized failed."
         if "recursion" in str(e).lower():
             msg = (
-                f"{msg} Is a step in the pipeline holding a reference to "
-                "the full pipeline itself? For example a global variable "
+                f"{msg} Is a step in the learner holding a reference to "
+                "the full learner itself? For example a global variable "
                 "in a `@skrub.deferred` function?"
             )
         raise pickle.PicklingError(msg) from e
@@ -179,8 +179,8 @@ class SkrubNamespace:
 
         See also
         --------
-        skrub.Expr.skb.get_pipeline :
-            Get a skrub pipeline for this expression.
+        skrub.Expr.skb.get_learner :
+            Get a skrub learner for this expression.
 
         Examples
         --------
@@ -290,8 +290,8 @@ class SkrubNamespace:
         >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
-        >>> pipeline = e.skb.get_pipeline().fit({"X": X})
-        >>> pipeline.predict({"X": X})  # doctest: +SKIP
+        >>> learner = e.skb.get_learner().fit({"X": X})
+        >>> learner.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
@@ -783,7 +783,7 @@ class SkrubNamespace:
         2        -0.615900       0.004272  0.643117
         3        -0.637498       0.004219  1.398196
 
-        Now that we have checked our pipeline works on a subsample, we can
+        Now that we have checked our learner works on a subsample, we can
         fit the hyperparameter search on the full data:
 
         >>> full_search = pred.skb.get_randomized_search(
@@ -886,8 +886,8 @@ class SkrubNamespace:
         """Evaluate the expression.
 
         This returns the result produced by evaluating the expression, ie
-        running the corresponding pipeline. The result is always the output
-        of the pipeline's ``fit_transform`` -- a pipeline is refitted to the
+        running the corresponding learner. The result is always the output
+        of the learner's ``fit_transform`` -- a learner is refitted to the
         provided data.
 
         If no data is provided, the values passed when creating the variables
@@ -909,7 +909,7 @@ class SkrubNamespace:
         -------
         result
             The result of running the computation, ie of executing the
-            pipeline's ``fit_transform`` on the provided data.
+            learner's ``fit_transform`` on the provided data.
 
         See Also
         --------
@@ -1019,7 +1019,7 @@ class SkrubNamespace:
 
     @check_expr
     def freeze_after_fit(self):
-        """Freeze the result during pipeline fitting.
+        """Freeze the result during learner fitting.
 
         With ``freeze_after_fit()`` the result of the expression is
         computed during ``fit()``, and then reused (not recomputed) during
@@ -1046,7 +1046,7 @@ class SkrubNamespace:
         2   3     cup         5  2020-04-04
         3   4   spoon         1  2020-04-05
         >>> n_products = skrub.X()['product'].nunique()
-        >>> transformer = n_products.skb.get_pipeline()
+        >>> transformer = n_products.skb.get_learner()
         >>> transformer.fit_transform({'X': X_df})
         3
 
@@ -1060,7 +1060,7 @@ class SkrubNamespace:
         remembered during ``fit`` and reused during ``transform``:
 
         >>> n_products = skrub.X()['product'].nunique().skb.freeze_after_fit()
-        >>> transformer = n_products.skb.get_pipeline()
+        >>> transformer = n_products.skb.get_learner()
         >>> transformer.fit_transform({'X': X_df})
         3
         >>> transformer.transform({'X': X_df.iloc[:2]})
@@ -1130,8 +1130,8 @@ class SkrubNamespace:
         :func:`sklearn.model_selection.cross_validate`:
             Evaluate metric(s) by cross-validation and also record fit/score times.
 
-        :func:`skrub.Expr.skb.get_pipeline`:
-            Get a skrub pipeline for this expression.
+        :func:`skrub.Expr.skb.get_learner`:
+            Get a skrub learner for this expression.
 
         Examples
         --------
@@ -1233,7 +1233,7 @@ class SkrubNamespace:
           classifier: 'rf'
           N 🌴: choose_int(20, 400, name='N 🌴')
 
-        Sampling a configuration for this pipeline starts by selecting an entry
+        Sampling a configuration for this learner starts by selecting an entry
         (marked by ``-``) in the list above, then a value for each of the
         hyperparameters listed (used) in that entry. For example note that the
         configurations that use the random forest do not list the
@@ -1243,10 +1243,10 @@ class SkrubNamespace:
         return describe_param_grid(self._expr)
 
     def describe_defaults(self):
-        """Describe the hyper-parameters used by the default pipeline.
+        """Describe the hyper-parameters used by the default learner.
 
         Returns a dict mapping choice names to a simplified representation of
-        the corresponding value in the default pipeline.
+        the corresponding value in the default learner.
 
         Examples
         --------
@@ -1324,7 +1324,7 @@ class SkrubNamespace:
 
         Notes
         -----
-        The pipeline is run doing a ``fit_transform``. If ``environment`` is
+        The learner is run doing a ``fit_transform``. If ``environment`` is
         provided, it is used as the bindings for the variables in the
         expression, and otherwise, the ``value`` attributes of the variables
         are used.
@@ -1381,18 +1381,18 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def get_pipeline(self, *, fitted=False, keep_subsampling=False):
-        """Get a skrub pipeline for this expression.
+    def get_learner(self, *, fitted=False, keep_subsampling=False):
+        """Get a skrub learner for this expression.
 
-        Returns a :class:`SkrubPipeline` with a ``fit()`` method so it can be fit
+        Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
         to some training data and then apply it to unseen data by calling
         ``transform()`` or ``predict()``. Unlike scikit-learn estimators, skrub
-        pipelines accept a dictionary of inputs rather than ``X`` and ``y`` arguments.
+        learners accept a dictionary of inputs rather than ``X`` and ``y`` arguments.
 
         .. warning::
 
            If the expression contains choices (e.g. ``choose_from(...)``), this
-           pipeline uses the default value of each choice. To actually pick the
+           learner uses the default value of each choice. To actually pick the
            best value with hyperparameter tuning, use
            :meth:`Expr.skb.get_randomized_search` or
            :meth:`Expr.skb.get_grid_search` instead.
@@ -1400,7 +1400,7 @@ class SkrubNamespace:
         Parameters
         ----------
         fitted : bool (default=False)
-            If true, the returned pipeline is fitted to the data provided when
+            If true, the returned learner is fitted to the data provided when
             initializing variables in ``skrub.var("name", value=...)`` and
             ``skrub.X(value)``.
 
@@ -1416,8 +1416,8 @@ class SkrubNamespace:
 
         Returns
         -------
-        pipeline
-            A skrub pipeline with an interface similar to scikit-learn's, except
+        learner
+            A skrub learner with an interface similar to scikit-learn's, except
             that its methods accept a dictionary of named inputs rather than
             ``X`` and ``y`` arguments.
 
@@ -1441,13 +1441,13 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
-        >>> pipeline = pred.skb.get_pipeline(fitted=True)
+        >>> learner = pred.skb.get_learner(fitted=True)
         >>> new_orders_df = skrub.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
         4   5     cup         5  2020-04-11
         5   6    fork         2  2020-04-12
-        >>> pipeline.predict({'orders': new_orders_df})
+        >>> learner.predict({'orders': new_orders_df})
         array([False, False])
 
         Note that the ``'orders'`` key in the dictionary passed to ``predict``
@@ -1455,15 +1455,15 @@ class SkrubNamespace:
         orders_df)`` above.
 
         Please see the examples gallery for full information about expressions
-        and the pipelines they generate.
+        and the learners they generate.
         """
         _check_keep_subsampling(fitted, keep_subsampling)
 
-        pipeline = SkrubPipeline(self.clone())
-        _check_can_be_pickled(pipeline)
+        learner = SkrubLearner(self.clone())
+        _check_can_be_pickled(learner)
         if not fitted:
-            return pipeline
-        return pipeline.fit(
+            return learner
+        return learner.fit(
             env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
         )
 
@@ -1531,12 +1531,12 @@ class SkrubNamespace:
         >>> split = delayed.skb.train_test_split(random_state=0)
         >>> split.keys()
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
-        >>> pipeline = delayed.skb.get_pipeline()
-        >>> pipeline.fit(split["train"])
-        SkrubPipeline(expr=<Apply DummyClassifier>)
-        >>> pipeline.score(split["test"])
+        >>> learner = delayed.skb.get_learner()
+        >>> learner.fit(split["train"])
+        SkrubLearner(expr=<Apply DummyClassifier>)
+        >>> learner.score(split["test"])
         0.0
-        >>> predictions = pipeline.predict(split["test"])
+        >>> predictions = learner.predict(split["test"])
         >>> accuracy_score(split["y_test"], predictions)
         0.0
         """
@@ -1556,8 +1556,8 @@ class SkrubNamespace:
         This function returns a :class:`ParamSearch`, an object similar to
         scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where the main difference is that
         ``fit()`` and ``predict()`` accept a dictionary of inputs
-        rather than ``X`` and ``y``. The best pipeline can
-        be returned by calling ``.best_pipeline_``.
+        rather than ``X`` and ``y``. The best learner can
+        be returned by calling ``.best_learner_``.
 
         Parameters
         ----------
@@ -1585,7 +1585,7 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-        ``results_``, ``plot_results()``, and ``best_pipeline_`.
+        ``results_``, ``plot_results()``, and ``best_learner_`.
 
         See also
         --------
@@ -1667,8 +1667,8 @@ class SkrubNamespace:
         This function returns a :class:`ParamSearch`, an object similar to
         scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where
         the main difference is ``fit()`` and ``predict()`` accept a
-        dictionary of inputs rather than ``X`` and ``y``. The best pipeline can
-        be returned by calling ``.best_pipeline_``.
+        dictionary of inputs rather than ``X`` and ``y``. The best learner can
+        be returned by calling ``.best_learner_``.
 
         Parameters
         ----------
@@ -1696,7 +1696,7 @@ class SkrubNamespace:
         ParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
-            ``results_``, ``plot_results()``, and ``best_pipeline_`.
+            ``results_``, ``plot_results()``, and ``best_learner_`.
 
         See also
         --------
@@ -1761,29 +1761,29 @@ class SkrubNamespace:
             env_with_subsampling(self._expr, self.get_data(), keep_subsampling)
         )
 
-    def iter_pipelines_grid(self):
-        """Get pipelines with different parameter combinations.
+    def iter_learners_grid(self):
+        """Get learners with different parameter combinations.
 
-        This generator yields a :class:`SkrubPipeline` parametrized for each
+        This generator yields a :class:`SkrubLearner` parametrized for each
         possible combination of choices.
 
-        The choice outcomes used in each pipeline can be inspected with
-        :meth:`SkrubPipeline.describe_params()`.
+        The choice outcomes used in each learner can be inspected with
+        :meth:`SkrubLearner.describe_params()`.
 
         See Also
         --------
-        Expr.skb.iter_pipelines_randomized :
+        Expr.skb.iter_learners_randomized :
             Similar function but for random sampling of the parameter space.
             Must be used when the expression contains some numeric ranges built
             with :func:`choose_float` or :func:`choose_int` with
             ``n_steps=None``.
 
         Expr.skb.get_grid_search :
-            Pipeline with built-in exhaustive exploration of the parameter grid
+            Learner with built-in exhaustive exploration of the parameter grid
             to select the best one.
 
         Expr.skb.get_randomized_search :
-            Pipeline with built-in randomized exploration of the parameter grid
+            Learner with built-in randomized exploration of the parameter grid
             to select the best one.
 
         Examples
@@ -1805,7 +1805,7 @@ class SkrubNamespace:
 
         >>> X = np.asarray([-4.0, 3.0, 10.0])[:, None]
 
-        >>> for p in out.skb.iter_pipelines_grid():
+        >>> for p in out.skb.iter_learners_grid():
         ...     print("======================================")
         ...     print("params:", p.describe_params())
         ...     print("result:")
@@ -1835,36 +1835,36 @@ class SkrubNamespace:
          [ 0.3]
          [ 1. ]]
         """
-        pipeline = self.get_pipeline()
-        grid = model_selection.ParameterGrid(pipeline.get_param_grid())
+        learner = self.get_learner()
+        grid = model_selection.ParameterGrid(learner.get_param_grid())
         for params in grid:
-            new = self.get_pipeline()
+            new = self.get_learner()
             new.set_params(**params)
             yield new
 
-    def iter_pipelines_randomized(self, n_iter, *, random_state=None):
-        """Get pipelines with different parameter combinations.
+    def iter_learners_randomized(self, n_iter, *, random_state=None):
+        """Get learners with different parameter combinations.
 
-        This generator yields a :class:`SkrubPipeline` parametrized for each
+        This generator yields a :class:`SkrubLearner` parametrized for each
         possible combination of choices.
 
-        The choice outcomes used in each pipeline can be inspected with
-        :meth:`SkrubPipeline.describe_params()`.
+        The choice outcomes used in each learner can be inspected with
+        :meth:`SkrubLearner.describe_params()`.
 
         See Also
         --------
-        Expr.skb.iter_pipelines_grid :
+        Expr.skb.iter_learners_grid :
             Similar function but for exploring all the possible parameter
             combinations. Cannot be used when the expression contains some
             numeric ranges built with :func:`choose_float` or
             :func:`choose_int` with ``n_steps=None``.
 
         Expr.skb.get_grid_search :
-            Pipeline with built-in exhaustive exploration of the parameter grid
+            Learner with built-in exhaustive exploration of the parameter grid
             to select the best one.
 
         Expr.skb.get_randomized_search :
-            Pipeline with built-in randomized exploration of the parameter grid
+            Learner with built-in randomized exploration of the parameter grid
             to select the best one.
 
         Examples
@@ -1886,7 +1886,7 @@ class SkrubNamespace:
 
         >>> X = np.asarray([-4.0, 3.0, 10.0])[:, None]
 
-        >>> for p in out.skb.iter_pipelines_randomized(n_iter=2, random_state=0):
+        >>> for p in out.skb.iter_learners_randomized(n_iter=2, random_state=0):
         ...     print("======================================")
         ...     print("params:", p.describe_params())
         ...     print("result:")
@@ -1904,19 +1904,19 @@ class SkrubNamespace:
          [ 0.3]
          [ 1. ]]
         """
-        pipeline = self.get_pipeline()
+        learner = self.get_learner()
         sampler = model_selection.ParameterSampler(
-            pipeline.get_param_grid(), n_iter=n_iter, random_state=random_state
+            learner.get_param_grid(), n_iter=n_iter, random_state=random_state
         )
         for params in sampler:
-            new = self.get_pipeline()
+            new = self.get_learner()
             new.set_params(**params)
             yield new
 
     def cross_validate(self, environment=None, *, keep_subsampling=False, **kwargs):
         """Cross-validate the expression.
 
-        This generates the pipeline with default hyperparameters and runs
+        This generates the learner with default hyperparameters and runs
         scikit-learn cross-validation.
 
         Parameters
@@ -1935,7 +1935,7 @@ class SkrubNamespace:
             All other named arguments are forwarded to
             ``sklearn.model_selection.cross_validate``, except that
             scikit-learn's ``return_estimator`` parameter is named
-            ``return_pipeline`` here.
+            ``return_learner`` here.
 
         Returns
         -------
@@ -1971,7 +1971,7 @@ class SkrubNamespace:
             environment = self.get_data()
 
         return cross_validate(
-            self.get_pipeline(),
+            self.get_learner(),
             environment,
             keep_subsampling=keep_subsampling,
             **kwargs,
@@ -2006,7 +2006,7 @@ class SkrubNamespace:
         This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
         full dataset and cannot benefit from hyperparameter tuning. So we
-        should be careful to start our pipeline by building X and y, and to use
+        should be careful to start our learner by building X and y, and to use
         ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
 
         ``skrub.X(value)`` can be used as a shorthand for
@@ -2045,7 +2045,7 @@ class SkrubNamespace:
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
-        rest of the pipeline (in this case the last step, the
+        rest of the learner (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
 
         Please see the examples gallery for more information.
@@ -2082,7 +2082,7 @@ class SkrubNamespace:
         This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
         full dataset and cannot benefit from hyperparameter tuning. So we
-        should be careful to start our pipeline by building X and y, and to use
+        should be careful to start our learner by building X and y, and to use
         ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
 
         Note: this marks the expression in-place and also returns it.
@@ -2121,7 +2121,7 @@ class SkrubNamespace:
 
         First (outside of the cross-validation loop) ``X`` and ``y`` are
         computed. Then, they are split into training and test sets. Then the
-        rest of the pipeline (in this case the last step, the
+        rest of the learner (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
 
         Please see the examples gallery for more information.
@@ -2142,7 +2142,7 @@ class SkrubNamespace:
         Returns a modified copy.
 
         The name is displayed in the graph and reports so this can be useful to
-        mark relevant parts of the pipeline.
+        mark relevant parts of the learner.
 
         Moreover, the evaluation of this step can be bypassed and the result
         provided directly by providing a value for this name to ``eval()``,
@@ -2151,7 +2151,7 @@ class SkrubNamespace:
         Parameters
         ----------
         name : str
-            The name for this step. Must be unique within a pipeline. Cannot
+            The name for this step. Must be unique within a learner. Cannot
             start with ``"_skrub_"``.
 
         Returns
@@ -2217,7 +2217,7 @@ class SkrubNamespace:
 
         Returns a modified copy.
 
-        The description can help document our pipeline. It is displayed in the
+        The description can help document our learner. It is displayed in the
         execution report and can be retrieved from the ``.skb.description``
         attribute.
 
