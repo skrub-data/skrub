@@ -17,10 +17,10 @@ from numpydoc.validate import validate
 
 DOCSTRING_TEMP_IGNORE_SET = {
     # TODO remove
-    "skrub._expressions",
-    "skrub._expressions._expressions",
-    "skrub._expressions._choosing",
-    "skrub._expressions._estimator",
+    "skrub._dataops",
+    "skrub._dataops._dataops",
+    "skrub._dataops._choosing",
+    "skrub._dataops._estimator",
     "skrub._select_cols.Drop",
     "skrub._table_vectorizer.SuperVectorizer",
     # The following are not documented in skrub (and thus are out of scope)
