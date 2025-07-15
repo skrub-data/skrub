@@ -1240,7 +1240,7 @@ class SkrubNamespace:
         hyperparameter ``C`` which is used only by the logistic regression.
         """
 
-        return describe_param_grid(self._expr)
+        return describe_param_grid(self._dataop)
 
     def describe_defaults(self):
         """Describe the hyper-parameters used by the default learner.
@@ -1441,9 +1441,8 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
-        refactor-learner
         >>> learner = pred.skb.get_learner(fitted=True)
-        >>> new_orders_df = skrub.toy_orders(split='test').X
+        >>> new_orders_df = skrub.datasets.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
         4   5     cup         5  2020-04-11

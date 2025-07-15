@@ -427,7 +427,7 @@ _DATAOP_CLASS_DOC = """
 Representation of a computation that can be used to build DataOps plans and learners.
 
 Please refer to the example gallery for an introduction to skrub
-dataops.
+DataOps.
 
 This class is usually not instantiated manually, but through one of the functions
 :func:`var`, :func:`as_dataop`, :func:`X` or :func:`y`, by applying a
@@ -435,7 +435,7 @@ This class is usually not instantiated manually, but through one of the function
 to an existing dataop.
 """
 
-_DATAOP_INSTANCE_DOC = """Skrub dataop.
+_DATAOP_INSTANCE_DOC = """Skrub DataOp.
 
 This object represents a computation and can be used to build DataOps plans and
 learners.
@@ -446,7 +446,7 @@ dataops.
 
 
 class _DataOpDoc:
-    """Descriptor for the dataops' docstring."""
+    """Descriptor for the DataOps' docstring."""
 
     # The docstring of dataop instances is dynamic and shows the docstring of
     # the preview's result if possible, so that if we do
@@ -466,7 +466,7 @@ class _DataOpDoc:
         doc = getattr(preview, "__doc__", None)
         if doc is None:
             return _DATAOP_INSTANCE_DOC
-        return f"""Skrub dataop.\nDocstring of the preview:\n{doc}"""
+        return f"""Skrub DataOp.\nDocstring of the preview:\n{doc}"""
 
 
 class DataOp:

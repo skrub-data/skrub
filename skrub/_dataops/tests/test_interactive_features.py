@@ -43,9 +43,9 @@ def test_missing_doc():
 
 
 def test_expr_class_doc():
-    from skrub._dataops._dataops import _DATAOP_INSTANCE_DOC, DataOp
+    from skrub._dataops._dataops import _DATAOP_CLASS_DOC, DataOp
 
-    assert DataOp.__doc__ == _DATAOP_INSTANCE_DOC
+    assert DataOp.__doc__ == _DATAOP_CLASS_DOC
 
 
 @pytest.mark.parametrize("a", example_strings())
