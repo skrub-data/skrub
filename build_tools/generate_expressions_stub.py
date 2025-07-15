@@ -59,7 +59,7 @@ p("""\
 
 from typing import Callable
 
-from skrub._expressions._skrub_namespace import SkrubNamespace
+from skrub._dataops._skrub_namespace import SkrubNamespace
 
 class Expr:
     skb: SkrubNamespace
