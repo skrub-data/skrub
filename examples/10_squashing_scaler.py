@@ -5,7 +5,7 @@ SquashingScaler: Robust numerical preprocessing for neural networks
 The following example illustrates the use of the :class:`~skrub.SquashingScaler`, a
 transformer that can rescale and squash numerical features to a range that works well
 with neural networks and perhaps also other related models. Its basic idea is to
-rescale the features based on quantile statistics, to be robust to outliers, and then
+rescale the features based on quantile statistics (to be robust to outliers), and then
 perform a smooth squashing function to limit the outputs to a pre-defined range.
 This transform has been found to even work well when applied to one-hot encoded
 features.
