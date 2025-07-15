@@ -108,7 +108,7 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     -----
     This transformer is applied to each column independently. It uses two stages:
 
-    1. The first stage centers the median of the data to zero and multiply the data by a
+    1. The first stage centers the median of the data to zero and multiplies the data by a
        scaling factor determined from quantiles of the distribution, using
        scikit-learn's :class:`~sklearn.preprocessing.RobustScaler`. It also handles
        edge-cases in which the two quantiles are equal by following-up with a
