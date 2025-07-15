@@ -61,7 +61,7 @@ from typing import Callable
 
 from skrub._dataops._skrub_namespace import SkrubNamespace
 
-class Expr:
+class DataOp:
     skb: SkrubNamespace
 """)
 
@@ -83,7 +83,7 @@ for name in sorted(skrub.DataOp.__dict__):
         "__weakref__",
         "skb",
     ]:
-        p(f"    def {name}(*args, **kwargs) -> Expr: ...\n")
+        p(f"    def {name}(*args, **kwargs) -> DataOp: ...\n")
 
 p("\n")
 
@@ -95,7 +95,7 @@ for name in sorted(set(_dataops.__dict__).intersection(skrub.__dict__)):
         continue
     if not isinstance(obj, types.FunctionType) or name in not_an_expression_factory:
         continue
-    p(f"def {name}(*args, **kwargs) -> Expr: ...\n")
+    p(f"def {name}(*args, **kwargs) -> DataOp: ...\n")
 
 p("def deferred(*args, **kwargs) -> Callable: ...\n")
 
