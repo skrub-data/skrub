@@ -64,12 +64,10 @@ API_REFERENCE = {
                     "tabular_pipeline",
                     "tabular_learner",
                     "TableVectorizer",
-                    "Cleaner",
                     "SelectCols",
                     "DropCols",
                     "ApplyToCols",
                     "ApplyToFrame",
-                    "DropUninformative",
                 ],
             }
         ],
@@ -120,6 +118,8 @@ API_REFERENCE = {
                 "description": None,
                 "autosummary": [
                     "deduplicate",
+                    "Cleaner",
+                    "DropUninformative",
                 ],
             },
         ],
