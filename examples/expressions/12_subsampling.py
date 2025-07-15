@@ -42,7 +42,7 @@ data
 # .. topic:: Subsampling only applies to previews by default
 #
 #    By default subsampling is applied *only for previews*: the results
-#    shown when we display the DataOps plan, and the output of calling
+#    shown when we display the plan, and the output of calling
 #    :meth:`.skb.preview() <Expr.skb.preview>`. For other methods such as
 #    :meth:`.skb.get_learner() <Expr.skb.get_learner>` or
 #    :meth:`.skb.cross_validate() <Expr.skb.cross_validate>`, *no subsampling is

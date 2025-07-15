@@ -3,7 +3,7 @@
 
 .. _example_expressions_intro:
 
-Building a predictive model by combining multiple tables with the skrub DataOps plan
+Building a predictive model by combining multiple tables with the skrub DataOps
 ====================================================================
 This example introduces the skrub DataOps, a powerful framework for building
 complex data processing pipelines that can handle multiple tables, hyperparameter
@@ -17,7 +17,7 @@ to make predictions on new data.
 Here we show the basics of the skrub DataOps in a two-table scenario: how to create
 DataOps, how to use them to leverage dataframe operations, how to combine them in
 a full DataOps plan, how to do simple hyperparameter tuning, and finally how to
-export the DataOps plan as a ``Learner``.
+export the plan as a ``Learner``.
 
 Following examples will explain how to tune hyperparameters in detail (see
 :ref:`example_tuning_pipelines`),
@@ -112,7 +112,7 @@ TableReport(dataset.products)
 # %%
 # DataOps make DataOps plans
 # --------------------------
-# In the skrub DataOps plan, we do not have an explicit, sequential list of
+# In a skrub DataOps plan, we do not have an explicit, sequential list of
 # transformation steps. Instead, we perform "Data Operations" (or "DataOps"):
 # operations that act on variables and wrap user operations to keep track
 # of their parameters.
@@ -121,7 +121,7 @@ TableReport(dataset.products)
 # scikit-learn estimators (such as a RandomForest with its hyperparameters),
 # or arbitrary code (for loading data, converting values, etc.).
 #
-# As we perform operations on skrub variables, the DataOps plan records each DataOp
+# As we perform operations on skrub variables, the plan records each DataOp
 # and its parameters. This record can later be synthesized into a standalone object
 # called a "learner", which can replay these operations on unseen data, ensuring
 # that the same operations and parameters are used.
@@ -132,7 +132,7 @@ TableReport(dataset.products)
 # objects.
 
 # %%
-# We start by creating skrub variables, which are the inputs to our DataOps plan.
+# We start by creating skrub variables, which are the inputs to our plan.
 # In our example, we create three variables: "products", "baskets", and "fraud flags":
 
 # %%
@@ -147,13 +147,13 @@ fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 # value, which is used to show previews of the result of each DataOp, detect errors
 # early, and provide data for cross-validation and hyperparameter search.
 #
-# Then, the DataOps plan is built by applying DataOps to those variables, that
+# Then, the plan is built by applying DataOps to those variables, that
 # is, by performing user operations that have been wrapped in a DataOp.
 #
 # Above, ``mark_as_X()`` and ``mark_as_y()`` indicate that the baskets and
 # flags are respectively our design matrix and target variables, that
 # should be split into training and testing sets for cross-validation. Here,
-# they are direct inputs to the DataOps plan, but any
+# they are direct inputs to the plan, but any
 # intermediate result could be marked as X or y.
 #
 # By setting products, baskets and fraud_flags as skrub variables, we can manipulate
@@ -185,7 +185,7 @@ products_with_total
 #    We recommend to assign each new skrub DataOp to a new variable name,
 #    as is done above. For example ``kept_products = products[...]`` instead of
 #    reusing the name ``products = products[...]``. This makes it easy to
-#    backtrack to any step of the DataOps plan and change the subsequent steps, and
+#    backtrack to any step of the plan and change the subsequent steps, and
 #    can avoid ending up in a confusing state in jupyter notebooks when the
 #    same cell might be re-executed several times.
 #
@@ -199,7 +199,7 @@ products_with_total
 # Skrub choices can be nested arbitrarily. They are not restricted to
 # parameters of a scikit-learn estimator, but can be anything: choosing
 # between different estimators, arguments to function calls, whole sections of
-# the DataOps plan etc.
+# the plan etc.
 #
 # In-depth information about choices and hyperparameter/model selection is
 # provided in the :ref:`Tuning Data Plans example <example_tuning_pipelines>`.
@@ -231,7 +231,7 @@ vectorized_products = products_with_total.skb.apply(
 # %%
 # Having access to the underlying dataframe's API, we can perform the
 # data-wrangling we need. Those transformations are being implicitly recorded
-# as DataOps in our DataOps plan.
+# as DataOps in our plan.
 
 # %%
 aggregated_products = vectorized_products.groupby("basket_ID").agg("mean").reset_index()
@@ -240,7 +240,7 @@ augmented_baskets = baskets.merge(
 ).drop(columns=["ID", "basket_ID"])
 
 # %%
-# We can actually ask for a full report of the DataOps plan and inspect the
+# We can actually ask for a full report of the plan and inspect the
 # results of each DataOp::
 #
 #     predictions.skb.full_report()
@@ -305,7 +305,7 @@ search.plot_results()
 # From the DataOps plan to the learner
 # -------------------------------
 # The learner is a standalone object that can replay all the DataOps recorded in
-# the DataOps plan, and can be used to make predictions on new, unseen data. The
+# the plan, and can be used to make predictions on new, unseen data. The
 # learner can be saved and loaded, allowing us to use it later without having to
 # rebuild the plan.
 # We would usually save the learner in a binary file, but to avoid accessing the
@@ -322,7 +322,7 @@ new_baskets = new_data.baskets[["ID"]]
 new_products = new_data.products
 
 # %%
-# Our learner expects the same variable names as the training DataOps plan, which is why
+# Our learner expects the same variable names as the training plan, which is why
 # we pass a dictionary that contains new dataframes and the same variable:
 loaded_model = pickle.loads(saved_model)
 loaded_model.predict({"baskets": new_baskets, "products": new_products})
@@ -332,5 +332,5 @@ loaded_model.predict({"baskets": new_baskets, "products": new_products})
 # ----------
 #
 # If you are curious to know more on how to build your own complex, multi-table
-# DataOps plans with easy hyperparameter tuning and transforming them into reusable
+# plans with easy hyperparameter tuning and transforming them into reusable
 # learners, please see the next examples for an in-depth tutorial.

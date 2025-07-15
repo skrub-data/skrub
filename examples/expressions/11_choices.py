@@ -248,7 +248,7 @@ search = pred.skb.get_randomized_search(
 search.plot_results()
 
 # %%
-# Now that we have a more complex DataOps plan, we can draw more conclusions from the
+# Now that we have a more complex plan, we can draw more conclusions from the
 # parallel coordinate plot. For example, we can see that the
 # ``HistGradientBoostingClassifier``
 # performs better than the ``RidgeClassifier`` in most cases, that the ``StringEncoder``
@@ -258,7 +258,7 @@ search.plot_results()
 # %%
 # Concluding, we have seen how to use skrub's ``choose_from`` objects to tune
 # hyperparameters, choose optional configurations, and nest choices. We then
-# looked at how the different choices affect the DataOps plan and the prediction
+# looked at how the different choices affect the plan and the prediction
 # scores.
 #
 # There is more to say about skrub choices than what is covered in this
