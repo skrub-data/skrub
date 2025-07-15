@@ -1,7 +1,7 @@
 .. _skrub_pipeline:
 
 ================================================================
-Skrub Pipeline: fit, tune, and validate arbitrary data wrangling
+Skrub DataOps: fit, tune, and validate arbitrary data wrangling
 ================================================================
 
 .. currentmodule:: skrub
@@ -40,10 +40,10 @@ What is the difference with scikit-learn :class:`~sklearn.pipeline.Pipeline`?
 Scikit-learn pipelines represent a linear sequence of transformations on one
 table with a fixed number of rows.
 
-.. image:: _static/sklearn_pipeline.svg
+.. image:: _static/sklearn_dataops.svg
     :width: 500
 
-Skrub expressions, on the other hand, can manipulate any number of variables.
+Skrub DataOps, on the other hand, can manipulate any number of variables.
 The transformation they perform is not a linear sequence but any Directed
 Acyclic Graph of computations.
 
@@ -56,22 +56,22 @@ Skrub pipelines are not an `orchestrator <https://huyenchip.com/2021/09/13/data-
 and do not offer capabilities for scheduling runs or provisioning resources and
 environments. Instead, they are a generalization of scikit-learn pipelines, which can still be used within an orchestrator.
 
-.. _expressions:
+.. _dataops:
 
-Skrub expressions
+Skrub DataOps
 ~~~~~~~~~~~~~~~~~
 
-Skrub pipelines are built using **expressions**: special objects that
-encapsulate computations that can be evaluated to produce a result. Expressions
+Skrub pipelines are built using **DataOps**: special objects that
+encapsulate computations that can be evaluated to produce a result. DataOps
 record the operations performed on them (such as applying operators or calling
 methods) allowing the entire computation graph to be retrieved later as a
 machine learning pipeline that can be fitted and applied to unseen data.
 
-The simplest expressions are **variables**, which represent inputs to our machine
+The simplest DataOps are **variables**, which represent inputs to our machine
 learning pipeline—such as "products" or "customers" tables or dataframes.
 
 These variables can be combined using operators and function calls to build more
-complex expressions. The pipeline is constructed implicitly as we apply these
+complex DataOps plans. The pipeline is constructed implicitly as we apply these
 operations, rather than by specifying an explicit list of transformations.
 
 We start by declaring inputs:
@@ -81,20 +81,20 @@ We start by declaring inputs:
 >>> a = skrub.var("a")
 >>> b = skrub.var("b")
 
-We then apply transformations, composing more complex expressions.
+We then apply transformations, composing more complex DataOps.
 
 >>> c = a + b
 >>> c
 <BinOp: add>
 
-Finally, we can evaluate an expression, by passing a dictionary mapping input
+Finally, we can evaluate a DataOp, by passing a dictionary mapping input
 (variable) names to values:
 
 >>> c.skb.eval({"a": 10, "b": 6})
 16
 
-As shown above, the special ``.skb`` attribute allows to interact with the expression
-object itself, and :meth:`.skb.eval() <Expr.skb.eval>` evaluates an expression.
+As shown above, the special ``.skb`` attribute allows to interact with the DataOp
+object itself, and :meth:`.skb.eval() <DataOp.skb.eval>` evaluates a DataOp.
 
 Access to any other attribute than ``.skb`` is simply added as a new operation
 in the computation graph:
@@ -105,19 +105,19 @@ in the computation graph:
 
 Finally, we can get a pipeline that can be fitted and applied to data.
 
->>> pipeline = c.skb.get_pipeline()
+>>> pipeline = c.skb.get_learner()
 >>> pipeline.fit_transform({"a": 10, "b": 7})
 17
 
 Previews
 ~~~~~~~~
 
-As we saw above, we can call :meth:`.skb.eval() <Expr.skb.eval>` with a dictionary of
+As we saw above, we can call :meth:`.skb.eval() <DataOp.skb.eval>` with a dictionary of
 bindings to compute the result of a pipeline. However, to make interactive
 development easier without having to call ``eval()`` repeatedly, Skrub provides a
-way to preview the result of an expression. When creating a variable, if we pass
+way to preview the result of a DataOp. When creating a variable, if we pass
 a value along with its name, Skrub will use that value to compute and preview
-the result of the expression.
+the result of the DataOp.
 
 >>> a = skrub.var("a", 10) # we pass the value 10 in addition to the name
 >>> b = skrub.var("b", 6)
@@ -136,10 +136,10 @@ one example dataset.
 >>> c.skb.eval({"a": 3, "b": 2})
 5
 
-Composing expressions
+Composing DataOps
 ~~~~~~~~~~~~~~~~~~~~~
 
-We create complex expressions by applying operations to simpler ones (like
+We create complex DataOps by applying operations to simpler ones (like
 variables). As the operations are replayed on the actual data when the pipeline
 runs, we can use (most of) the operations that are valid for the types we will
 pass to the pipeline.
@@ -213,7 +213,7 @@ Result:
 3  fork    2.2    4    8.8
 
 Note that the original ``orders`` pipeline is not modified by the operations
-above. Instead, each operation creates a new expression. Expressions cannot be
+above. Instead, each operation creates a new DataOp. DataOps cannot be
 modified in-place, all operations that we apply must produce a new value. We
 discuss this in more detail in a
 :ref:`later section <user_guide_deferred_evaluation_ref>`.
@@ -222,10 +222,10 @@ discuss this in more detail in a
 Applying machine-learning estimators
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As mentioned above, in addition to those usual operations, the expressions
+As mentioned above, in addition to those usual operations, the DataOps
 have a special attribute: ``.skb``, which gives access to the methods and objects
 provided by Skrub. A particularly important one is
-:meth:`.skb.apply() <Expr.skb.apply>`, which allows to add scikit-learn estimators to the pipeline.
+:meth:`.skb.apply() <DataOp.skb.apply>`, which allows to add scikit-learn estimators to the pipeline.
 
 >>> orders.skb.apply(skrub.TableVectorizer())
 <Apply TableVectorizer>
@@ -257,11 +257,11 @@ encapsulates the entire computation that produces the result we see. We are not 
 interested in the output for the example values we provided: we are building a machine
 learning pipeline that can be fitted and applied to unseen data.
 
-We can retrieve the pipeline with :meth:`.skb.get_pipeline()
-<Expr.skb.get_pipeline>`, fit it on the data we initially provided, and then
+We can retrieve the pipeline with :meth:`.skb.get_learner()
+<DataOp.skb.get_learner>`, fit it on the data we initially provided, and then
 apply it to new data:
 
->>> pipeline = vectorized_orders.skb.get_pipeline(fitted=True)
+>>> pipeline = vectorized_orders.skb.get_learner(fitted=True)
 >>> new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
 >>> pipeline.transform({"orders": new_orders}) # doctest: +SKIP
          item_0  item_1        item_2  price  qty
@@ -273,24 +273,24 @@ apply it to new data:
 Deferred evaluation
 ~~~~~~~~~~~~~~~~~~~
 
-An expression represents a computation that has not been executed yet, and will
-only be triggered when we call :meth:`.skb.eval() <Expr.skb.eval>`, or when we
-create the pipeline with :meth:`.skb.get_pipeline() <Expr.skb.get_pipeline>` and
+A DataOp represents a computation that has not been executed yet, and will
+only be triggered when we call :meth:`.skb.eval() <DataOp.skb.eval>`, or when we
+create the pipeline with :meth:`.skb.get_learner() <DataOp.skb.get_learner>` and
 call one of its methods such as ``fit()``.
 
 This means we cannot use standard Python control flow statements such as ``if``,
-``for``, ``with``, etc. with expressions, because those constructs would execute
+``for``, ``with``, etc. with DataOps, because those constructs would execute
 immediately.
 
 >>> for column in orders.columns:
 ...     pass
 Traceback (most recent call last):
     ...
-TypeError: This object is an expression that will be evaluated later, when your pipeline runs. So it is not possible to eagerly iterate over it now.
+TypeError: This object is a dataop that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
 
 We get an error because the ``for`` statement tries to iterate immediately
 over the columns. However, ``orders.columns`` is not an actual list of
-columns: it is a Skrub expression that will produce a list of columns, later,
+columns: it is a Skrub DataOp that will produce a list of columns, later,
 when we run the computation.
 
 This remains true even if we have provided a value for ``orders`` and we can
@@ -314,8 +314,8 @@ actually runs and ``orders.columns`` has been evaluated.
 We can achieve this by defining a function that contains the control flow logic
 we need, and decorating it with :func:`deferred`. This decorator defers the execution
 of the function: when we call it, it does not run immediately. Instead, it returns
-a Skrub expression that wraps the function call. The original function is only
-executed when the expression is evaluated.
+a Skrub DataOp that wraps the function call. The original function is only
+executed when the DataOp is evaluated.
 
 >>> @skrub.deferred
 ... def with_upper_columns(df):
@@ -335,9 +335,9 @@ Result:
 When the computation runs, ``orders`` will be evaluated first and the result (an
 actual dataframe) will be passed as the ``df`` argument to our function.
 
-When the first argument to our function is a skrub expression, rather than
+When the first argument to our function is a skrub DataOp, rather than
 applying ``deferred`` and calling the function as shown above we can use
-:meth:`.skb.apply_func() <Expr.skb.apply_func>`:
+:meth:`.skb.apply_func() <DataOp.skb.apply_func>`:
 
 >>> def with_upper_columns(df):
 ...     new_columns = [c.upper() for c in df.columns]
@@ -360,7 +360,7 @@ loading of a CSV file, we could write something like:
 >>> csv_path = skrub.var("csv_path")
 >>> data = skrub.deferred(pd.read_csv)(csv_path)
 
-Another consequence of the fact that expressions are evaluated lazily (we are
+Another consequence of the fact that DataOps are evaluated lazily (we are
 building a pipeline, not immediately computing a single result), any
 transformation that we apply must not modify its input, but leave it unchanged
 and return a new value.
@@ -371,7 +371,7 @@ result without modifying its input.
 >>> orders['total'] = orders['price'] * orders['qty']
 Traceback (most recent call last):
     ...
-TypeError: Do not modify an expression in-place. Instead, use a function that returns a new value. This is necessary to allow chaining several steps in a sequence of transformations.
+TypeError: Do not modify a dataop in-place. Instead, use a function that returns a new value. This is necessary to allow chaining several steps in a sequence of transformations.
 For example if df is a pandas DataFrame:
 df = df.assign(new_col=...) instead of df['new_col'] = ...
 
@@ -391,10 +391,10 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 
 .. rubric:: Examples
 
-- See :ref:`example_expressions_intro` for an example of skrub pipelines using
-  expressions on dataframes.
+- See :ref:`example_dataops_intro` for an example of skrub DataOps plans using
+  DataOps on dataframes.
 - See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
-  skrub pipelines.
+  skrub DataOps.
 
 .. _user_guide_subsampling_ref:
 
@@ -405,17 +405,17 @@ To speed-up the development of our pipeline, we can tell skrub to work on a
 subsample of our data.
 
 This is done with
-:meth:`.skb.subsample() <Expr.skb.subsample>`.
-When we use it, the previews shown when printing an expression and returned by
-:meth:`.skb.preview() <Expr.skb.preview>` are computed on a subsample.
+:meth:`.skb.subsample() <DataOp.skb.subsample>`.
+When we use it, the previews shown when printing a DataOp and returned by
+:meth:`.skb.preview() <DataOp.skb.preview>` are computed on a subsample.
 By default, subsampling is only applied for those previews.
 
 Subsampling **is turned off** by default when we call other methods such as
-:meth:`.skb.eval() <Expr.skb.eval>`,
-:meth:`.skb.cross_validate() <Expr.skb.cross_validate>`,
-:meth:`.skb.train_test_split <Expr.skb.train_test_split>`,
-:meth:`Expr.skb.get_pipeline`,
-:meth:`Expr.skb.get_randomized_search`, etc.
+:meth:`.skb.eval() <DataOp.skb.eval>`,
+:meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`,
+:meth:`.skb.train_test_split <DataOp.skb.train_test_split>`,
+:meth:`DataOp.skb.get_learner`,
+:meth:`DataOp.skb.get_randomized_search`, etc.
 However, all of those methods have a ``keep_subsampling`` parameter that we can
 set to ``True`` to force using the subsampling when we call them.
 
@@ -424,15 +424,15 @@ See more details in a :ref:`full example <example_subsampling>`.
 Using only a part of a pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We can give a name to any node with :meth:`.skb.set_name() <Expr.skb.set_name>`.
+We can give a name to any node with :meth:`.skb.set_name() <DataOp.skb.set_name>`.
 When this is done we can:
 
 - Bypass the computation of that node and override its result by passing it as a
   key in the ``environment`` argument.
 - Truncate the pipeline after this node to obtain the intermediate result with
-  :meth:`SkrubPipeline.truncated_after`.
+  :meth:`SkrubLearner.truncated_after`.
 - Retrieve that node and inspect the estimator that was fitted in it, if the
-  node was created with :meth:`.skb.apply() <Expr.skb.apply>`.
+  node was created with :meth:`.skb.apply() <DataOp.skb.apply>`.
 
 Here is a toy example with 3 steps:
 
@@ -463,12 +463,12 @@ Here is a toy example with 3 steps:
 Above, we give a name to each intermediate result with ``.skb.set_name()`` so
 that we can later refer to it when manipulating a fitted pipeline.
 
->>> pipeline = output.skb.get_pipeline()
+>>> pipeline = output.skb.get_learner()
 >>> pipeline.fit({"url": "file:///example.db"})
 load:  file:///example.db
 transform
 agg
-SkrubPipeline(expr=<Call 'agg'>)
+SkrubLearner(dataop=<Call 'agg'>)
 
 >>> pipeline.transform({"url": "file:///example.db"})
 load:  file:///example.db
