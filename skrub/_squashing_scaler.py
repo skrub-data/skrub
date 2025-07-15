@@ -167,7 +167,7 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
     When quantile ranges are equal, this scaler uses a customized MinMaxScaler:
 
     >>> X = pd.DataFrame(dict(col=[0, 1, 1, 1, 2, np.nan]))
-    >>> SquashingScaler(max_absolute_value=3).fit_transform(X)
+    >>> SquashingScaler().fit_transform(X)
     array([[-0.9486833],
            [ 0.       ],
            [ 0.       ],
@@ -175,7 +175,14 @@ class SquashingScaler(OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
            [ 0.9486833],
            [       nan]])
 
-    >>> X = pd.DataD
+    Finally, when the min and max are equal, this scaler fills the column with zeros:
+
+    >>> X = pd.DataFrame(dict(col=[1, 1, 1, np.nan]))
+    >>> SquashingScaler().fit_transform(X)
+    array([[ 0.],
+           [ 0.],
+           [ 0.],
+           [nan]])
     """  # noqa: E501
 
     def __init__(
