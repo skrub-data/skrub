@@ -814,7 +814,7 @@ class Var(ExprImpl):
             assert not environment
             if e.value is NULL:
                 raise UninitializedVariable(
-                    f"No value value has been provided for {e.name!r}"
+                    f"No value has been provided for {e.name!r}"
                 )
             return e.value
         if e.name in environment:
@@ -1726,8 +1726,10 @@ def eval_mode():
     >>> import skrub
 
     >>> mode = skrub.eval_mode()
-    >>> mode.skb.eval()
+    >>> mode.skb.preview()
     'preview'
+    >>> mode.skb.eval()
+    'fit_transform'
     >>> pipeline = mode.skb.get_pipeline()
     >>> pipeline.fit_transform({})
     'fit_transform'
