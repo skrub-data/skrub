@@ -175,7 +175,7 @@ API_REFERENCE = {
             }
         ],
     },
-    "dataops": {
+    "data_ops": {
         "title": "DataOps",
         "short_summary": None,
         "description": None,
@@ -183,15 +183,15 @@ API_REFERENCE = {
             {
                 "description": (
                     "Generalizing the scikit-learn pipeline. "
-                    "See :ref:`skrub dataops <skrub_pipeline>` for further details."
+                    "See :ref:`skrub data_ops <skrub_pipeline>` for further details."
                 ),
-                "autosummary": ["var", "X", "y", "as_dataop", "deferred"],
+                "autosummary": ["var", "X", "y", "as_data_op", "deferred"],
                 "template": "base.rst",
             },
             {
                 "description": "The expression object.",
                 "autosummary": ["DataOp"],
-                "template": "dataop_class.rst",
+                "template": "data_op_class.rst",
             },
             {
                 "description": "Inline hyperparameters selection in your DataOps plan.",
