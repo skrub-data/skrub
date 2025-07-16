@@ -105,7 +105,7 @@ in the computation graph:
 
 Finally, we can get a pipeline that can be fitted and applied to data.
 
->>> pipeline = c.skb.get_learner()
+>>> pipeline = c.skb.make_learner()
 >>> pipeline.fit_transform({"a": 10, "b": 7})
 17
 
@@ -257,11 +257,11 @@ encapsulates the entire computation that produces the result we see. We are not 
 interested in the output for the example values we provided: we are building a machine
 learning pipeline that can be fitted and applied to unseen data.
 
-We can retrieve the pipeline with :meth:`.skb.get_learner()
-<DataOp.skb.get_learner>`, fit it on the data we initially provided, and then
+We can retrieve the pipeline with :meth:`.skb.make_learner()
+<DataOp.skb.make_learner>`, fit it on the data we initially provided, and then
 apply it to new data:
 
->>> pipeline = vectorized_orders.skb.get_learner(fitted=True)
+>>> pipeline = vectorized_orders.skb.make_learner(fitted=True)
 >>> new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
 >>> pipeline.transform({"orders": new_orders}) # doctest: +SKIP
          item_0  item_1        item_2  price  qty
@@ -275,7 +275,7 @@ Deferred evaluation
 
 DataOps represent computations that have not been executed yet, and will
 only be triggered when we call :meth:`.skb.eval() <DataOp.skb.eval>`, or when we
-create the pipeline with :meth:`.skb.get_learner() <DataOp.skb.get_learner>` and
+create the pipeline with :meth:`.skb.make_learner() <DataOp.skb.make_learner>` and
 call one of its methods such as ``fit()``.
 
 This means we cannot use standard Python control flow statements such as ``if``,
@@ -414,8 +414,8 @@ Subsampling **is turned off** by default when we call other methods such as
 :meth:`.skb.eval() <DataOp.skb.eval>`,
 :meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`,
 :meth:`.skb.train_test_split <DataOp.skb.train_test_split>`,
-:meth:`DataOp.skb.get_learner`,
-:meth:`DataOp.skb.get_randomized_search`, etc.
+:meth:`DataOp.skb.make_learner`,
+:meth:`DataOp.skb.make_randomized_search`, etc.
 However, all of those methods have a ``keep_subsampling`` parameter that we can
 set to ``True`` to force using the subsampling when we call them.
 
@@ -463,7 +463,7 @@ Here is a toy example with 3 steps:
 Above, we give a name to each intermediate result with ``.skb.set_name()`` so
 that we can later refer to it when manipulating a fitted pipeline.
 
->>> pipeline = output.skb.get_learner()
+>>> pipeline = output.skb.make_learner()
 >>> pipeline.fit({"url": "file:///example.db"})
 load:  file:///example.db
 transform

@@ -102,7 +102,7 @@ We can now fit our pipeline on the training data:
 
 >>> pipeline = pred.skb.make_learner()
 >>> pipeline.fit(split["train"])
-SkrubLearner(dataop=<Apply Ridge>)
+SkrubLearner(data_op=<Apply Ridge>)
 
 Only the training part of ``X`` and ``y`` are used. The subsequent steps are
 evaluated, using this data, to fit the rest of the pipeline.
