@@ -168,7 +168,7 @@ def test_duplicate_choice_name():
     with pytest.raises(
         ValueError, match=r"(?s).*2 different objects.*Jupyter notebook cell"
     ):
-        skrub.as_dataop([skrub.var("a"), skrub.var("a")])
+        skrub.as_data_op([skrub.var("a"), skrub.var("a")])
 
 
 def test_duplicate_X():
@@ -460,7 +460,7 @@ def test_dataop_with_circular_ref():
     e = {}
     e["a"] = [0, {"b": e}]
     with pytest.raises(ValueError, match="dataops cannot contain circular references"):
-        skrub.as_dataop(e).skb.eval()
+        skrub.as_data_op(e).skb.eval()
 
 
 @pytest.mark.parametrize(

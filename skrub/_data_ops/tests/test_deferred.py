@@ -130,7 +130,7 @@ def test_deferred_closure(use_apply_func):
 @pytest.mark.parametrize("use_apply_func", [False, True])
 def test_deferred_builtin(use_apply_func):
     if use_apply_func:
-        a = skrub.as_dataop("12").skb.apply_func(int)
+        a = skrub.as_data_op("12").skb.apply_func(int)
     else:
         a = skrub.deferred(int)("12")
     assert a.skb.eval() == 12
@@ -139,7 +139,7 @@ def test_deferred_builtin(use_apply_func):
 @pytest.mark.parametrize("use_apply_func", [False, True])
 def test_deferred_method(use_apply_func):
     if use_apply_func:
-        a = skrub.as_dataop("ABC").skb.apply_func(str.lower)
+        a = skrub.as_data_op("ABC").skb.apply_func(str.lower)
     else:
         a = skrub.deferred(str.lower)("ABC")
     assert a.skb.eval() == "abc"

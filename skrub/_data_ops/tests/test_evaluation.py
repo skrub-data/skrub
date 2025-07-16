@@ -138,7 +138,7 @@ def test_find_node_by_name():
 def test_clone_preserves_structure():
     a = skrub.var("a")
     c = skrub.choose_from([1, 2], name="c")
-    e = skrub.as_dataop([c, c, a, a])
+    e = skrub.as_data_op([c, c, a, a])
     clone = e.skb.clone()
     assert clone.skb.describe_steps() == e.skb.describe_steps()
     assert clone.skb.describe_param_grid() == e.skb.describe_param_grid()
@@ -164,7 +164,7 @@ def test_param_grid_nested_choices():
     c1 = skrub.choose_from([11, 21, 22, 24], name="c1")
     c2 = skrub.choose_from([{"C": c0}, {"C": c1}], name="c2")
     c3 = skrub.choose_from([12, 22, 40, 50, 60], name="c3")
-    e = skrub.as_dataop([c2, c3])
+    e = skrub.as_data_op([c2, c3])
     assert e.skb.describe_param_grid() == """\
 - c3: [12, 22, 40, 50, 60]
   c2: {'C': choose_from([10, 20, 30], name='c0')}
@@ -231,7 +231,7 @@ def test_unnamed_choices():
     >>> b = skrub.choose_bool()
     >>> c = skrub.choose_bool()
     >>> d = skrub.choose_from({'a': a, 'b': b, 'c': c})
-    >>> x = skrub.as_dataop([a, b, c, d])
+    >>> x = skrub.as_data_op([a, b, c, d])
     >>> print(x.skb.describe_param_grid())
     - choose_bool(): [True, False]
       choose_bool()_1: [True, False]
@@ -249,7 +249,7 @@ def test_unnamed_choices():
     a = skrub.choose_int(1, 5)
     b = skrub.choose_int(1, 5)
     c = skrub.choose_int(1, 5, name="c")
-    e = a.as_dataop() + b + c
+    e = a.as_data_op() + b + c
     assert e.skb.eval() == 9
     assert e.skb.eval({"c": 5}) == 11
     assert _evaluation.param_grid(e) == [{0: a, 1: b, 2: c}]
@@ -282,9 +282,9 @@ def test_describe_steps():
     >>> c = (
     ...     func(a, skrub.var("b"))
     ...     .skb.apply(skrub.TableVectorizer())
-    ...     .amethod(skrub.as_dataop(10))
+    ...     .amethod(skrub.as_data_op(10))
     ...     .skb.concat([b], axis=1)
-    ...     + skrub.choose_bool(name="?").as_dataop()
+    ...     + skrub.choose_bool(name="?").as_data_op()
     ...     + skrub.X().skb.if_else(3, b)[skrub.var("item")].b
     ... )
     >>> print(c.skb.describe_steps())

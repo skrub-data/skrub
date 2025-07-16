@@ -55,7 +55,7 @@ __all__ = [
     "var",
     "X",
     "y",
-    "as_dataop",
+    "as_data_op",
     "deferred",
     "check_dataop",
     "eval_mode",
@@ -300,7 +300,7 @@ def _find_dataframe(dataop, func_name):
                 f"You passed an actual DataFrame (shown below) to `{func_name}`. "
                 "Did you mean to pass a skrub dataop instead? "
                 "Note: if you did intend to pass a DataFrame you can wrap it "
-                "with `skrub.as_dataop(df)` to avoid this error. "
+                "with `skrub.as_data_op(df)` to avoid this error. "
                 f"Here is the dataframe:\n{df}"
             )
         }
@@ -430,7 +430,7 @@ Please refer to the example gallery for an introduction to skrub
 DataOps.
 
 This class is usually not instantiated manually, but through one of the functions
-:func:`var`, :func:`as_dataop`, :func:`X` or :func:`y`, by applying a
+:func:`var`, :func:`as_data_op`, :func:`X` or :func:`y`, by applying a
 :func:`deferred` function, or by calling a method or applying an operator
 to an existing dataop.
 """
@@ -1059,7 +1059,7 @@ def y(value=NULL):
 class Value(DataOpImpl):
     """Wrap any object in a dataop.
 
-    See `skrub.as_dataop()` docstring.
+    See `skrub.as_data_op()` docstring.
     """
 
     _fields = ["value"]
@@ -1075,7 +1075,7 @@ class Value(DataOpImpl):
 
 
 @check_dataop
-def as_dataop(value):
+def as_data_op(value):
     """Create a dataop :class:`DataOp` that evaluates to the given value.
 
     This wraps any object in a dataop. When the dataop is evaluated,
@@ -1102,7 +1102,7 @@ def as_dataop(value):
     --------
     >>> import skrub
     >>> data_source = skrub.var('source')
-    >>> data_path = skrub.as_dataop(
+    >>> data_path = skrub.as_data_op(
     ...     {"local": "data.parquet", "remote": "remote/data.parquet"}
     ... )[data_source]
     >>> data_path.skb.eval({'source': 'remote'})
@@ -1111,19 +1111,19 @@ def as_dataop(value):
     Turning the dictionary into a dataop defers the lookup of
     ``data_source`` until it has been evaluated when the learner runs.
 
-    The example above is somewhat contrived, but ``as_dataop`` is often useful
+    The example above is somewhat contrived, but ``as_data_op`` is often useful
     with choices.
 
     >>> x1 = skrub.var('x1')
     >>> x2 = skrub.var('x2')
     >>> features = skrub.choose_from({'x1': x1, 'x2': x2}, name='features')
-    >>> skrub.as_dataop(features).skb.apply(skrub.TableVectorizer())
+    >>> skrub.as_data_op(features).skb.apply(skrub.TableVectorizer())
     <Apply TableVectorizer>
 
     In fact, this can even be shortened slightly by using the choice's method
-    ``as_dataop``:
+    ``as_data_op``:
 
-    >>> features.as_dataop().skb.apply(skrub.TableVectorizer())
+    >>> features.as_data_op().skb.apply(skrub.TableVectorizer())
     <Apply TableVectorizer>
     """
     return DataOp(Value(value))
@@ -1440,7 +1440,7 @@ def deferred(func):
 
     See also
     --------
-    as_dataop :
+    as_data_op :
         Create a dataop that evaluates to the given value.
 
     DataOp :

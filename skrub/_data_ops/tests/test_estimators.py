@@ -355,7 +355,7 @@ def test_when_last_step_is_not_apply(dataop, data):
             dataop.skb.apply_func(lambda x: x),
         ],
         name="model",
-    ).as_dataop()
+    ).as_data_op()
     search = new_dataop.skb.get_randomized_search(
         n_iter=3,
         random_state=0,
@@ -421,14 +421,14 @@ def test_train_test_split(with_y):
 
 
 def test_iter_learners():
-    e = skrub.choose_from([1, 2, 3], name="c").as_dataop()
+    e = skrub.choose_from([1, 2, 3], name="c").as_data_op()
     assert [p.describe_params() for p in e.skb.iter_learners_grid()] == [
         {"c": 1},
         {"c": 2},
         {"c": 3},
     ]
 
-    e = skrub.choose_int(0, 1000, name="c").as_dataop()
+    e = skrub.choose_int(0, 1000, name="c").as_data_op()
     assert [
         p.describe_params() for p in e.skb.iter_learners_randomized(3, random_state=0)
     ] == [{"c": 548}, {"c": 715}, {"c": 602}]
@@ -499,8 +499,8 @@ def test_caching():
     "e",
     [
         skrub.var("a").skb.apply_func(lambda x, f: x * f(), lambda: 2),
-        skrub.as_dataop(lambda x: x * 2)(skrub.var("a")),
-        (skrub.as_dataop([]) + [lambda x: x * 2])[0](skrub.var("a")),
+        skrub.as_data_op(lambda x: x * 2)(skrub.var("a")),
+        (skrub.as_data_op([]) + [lambda x: x * 2])[0](skrub.var("a")),
     ],
 )
 def test_pickling(e):
@@ -690,7 +690,7 @@ def test_estimator_type(estimator_type, expected, bury_apply):
         e = (
             skrub.choose_from(["a", "b"], name="model")
             .match({"a": e, "b": e})
-            .as_dataop()
+            .as_data_op()
         )
     for pipe in [
         e.skb.get_learner(),
@@ -732,7 +732,7 @@ def test_classes(bury_apply):
                 {"a": dataop.skb.apply_func(lambda x: x), "b": dataop},
                 name="model",
             )
-            .as_dataop()
+            .as_data_op()
             .skb.apply_func(lambda x: x)
         )
     logreg = LogisticRegression().fit(data["X"], data["y"])
@@ -769,7 +769,7 @@ def test_support_modes(bury_apply):
     )
     e = skrub.X().skb.apply(classif, y=skrub.y())
     if bury_apply:
-        e = skrub.as_dataop({"a": e})["a"]
+        e = skrub.as_data_op({"a": e})["a"]
     learner = e.skb.get_learner()
 
     # as in grid-search, before fitting the learner's capabilities are read

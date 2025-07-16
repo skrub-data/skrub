@@ -80,19 +80,19 @@ def test_bad_numeric_default():
     with pytest.raises(TypeError, match=".*must be an integer"):
         skrub.choose_int(0, 10, default=5.5)
     with pytest.raises(TypeError, match=".*must be a float"):
-        skrub.choose_float(0, 10, default=skrub.as_dataop(5.5))
+        skrub.choose_float(0, 10, default=skrub.as_data_op(5.5))
     assert skrub.choose_float(0, 10, default=5).default() == 5
 
 
-def test_as_dataop():
+def test_as_data_op():
     c = skrub.choose_from([10, 20, 30], name="c")
     m = c.match({10: "ten", 20: "twenty"}, default="?")
-    assert c.as_dataop().skb.eval() == 10
-    assert c.as_dataop().skb.eval({"c": 20}) == 20
-    assert m.as_dataop().skb.eval() == "ten"
-    assert m.as_dataop().skb.eval({"c": 30}) == "?"
+    assert c.as_data_op().skb.eval() == 10
+    assert c.as_data_op().skb.eval({"c": 20}) == 20
+    assert m.as_data_op().skb.eval() == "ten"
+    assert m.as_data_op().skb.eval({"c": 30}) == "?"
     with pytest.raises(KeyError):
-        assert m.as_dataop().skb.eval({"c": 40})
+        assert m.as_data_op().skb.eval({"c": 40})
 
 
 def test_get_chosen_or_default():
@@ -241,7 +241,7 @@ def test_choice_repr():
     choose_from([ndarray(...)])
     >>> skrub.choose_from([1, 2])
     choose_from([1, 2])
-    >>> skrub.as_dataop([skrub.choose_from([1, 2]), skrub.optional(np.eye(3))])
+    >>> skrub.as_data_op([skrub.choose_from([1, 2]), skrub.optional(np.eye(3))])
     <Value list>
     Result:
     ―――――――

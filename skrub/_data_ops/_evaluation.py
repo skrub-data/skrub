@@ -57,7 +57,7 @@ class _Computation:
     #
     # >>> d = {}
     # >>> d['oops!'] = d
-    # >>> skrub.as_dataop(d).skb.eval()
+    # >>> skrub.as_data_op(d).skb.eval()
 
     def __init__(self, target, generator):
         self.target_id = id(target)
@@ -755,7 +755,7 @@ def choice_graph(dataop, check_Xy=True):
     >>> e = choose_from(
     ...     [Ridge(alpha=choose_float(0.1, 1.0, name="alpha")), DummyRegressor()],
     ...     name="regressor",
-    ... ).as_dataop()
+    ... ).as_data_op()
 
     >>> pprint(choice_graph(e))
     {'Xy_choices': set(),
@@ -949,7 +949,7 @@ def chosen_or_default_outcomes(dataop):
     >>> e = choose_from(
     ...     [DummyRegressor(), Ridge(alpha=choose_float(0.1, 1.0, name="alpha"))],
     ...     name="regressor",
-    ... ).as_dataop()
+    ... ).as_data_op()
 
     All the choices found in the dataop: mapping from choice ID to the
     corresponding choice object:

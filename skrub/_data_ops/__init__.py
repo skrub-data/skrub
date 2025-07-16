@@ -5,7 +5,7 @@ from ._choosing import (
     choose_int,
     optional,
 )
-from ._data_ops import DataOp, X, as_dataop, deferred, eval_mode, var, y
+from ._data_ops import DataOp, X, as_data_op, deferred, eval_mode, var, y
 from ._estimator import ParamSearch, SkrubLearner, cross_validate
 
 __all__ = [
@@ -13,7 +13,7 @@ __all__ = [
     "var",
     "X",
     "y",
-    "as_dataop",
+    "as_data_op",
     "deferred",
     "eval_mode",
     "cross_validate",

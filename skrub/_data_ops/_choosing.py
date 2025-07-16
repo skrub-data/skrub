@@ -38,15 +38,15 @@ class BaseChoice:
 
     __hash__ = None
 
-    def as_dataop(self):
+    def as_data_op(self):
         """Wrap the choice in a DataOp.
 
-        `choice.as_dataop()`` is a convenience shorthand for
-        ``skrub.as_dataop(choice)``.
+        `choice.as_data_op()`` is a convenience shorthand for
+        ``skrub.as_data_op(choice)``.
         """
-        from ._data_ops import as_dataop
+        from ._data_ops import as_data_op
 
-        return as_dataop(self)
+        return as_data_op(self)
 
     # We provide the interface that enables dict unpacking with `**choice`:
     # `keys()` and `__getitem__`. This is to offer syntactic sugar to avoid
@@ -318,14 +318,15 @@ class Match:
         }
         return self.choice.match(mapping)
 
-    def as_dataop(self):
+    def as_data_op(self):
         """Wrap the match in a DataOp.
 
-        ``match.as_dataop()`` is a convenience shorthand for ``skrub.as_dataop(match)``.
+        ``match.as_data_op()`` is a convenience shorthand for
+        ``skrub.as_data_op(match)``.
         """
-        from ._data_ops import as_dataop
+        from ._data_ops import as_data_op
 
-        return as_dataop(self)
+        return as_data_op(self)
 
 
 def choose_from(outcomes, *, name=None):
@@ -497,7 +498,7 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
     the PCA and one without:
 
     >>> print(
-    ... optional(PCA(), name='dim reduction').as_dataop().skb.describe_param_grid()
+    ... optional(PCA(), name='dim reduction').as_data_op().skb.describe_param_grid()
     ... )
     - dim reduction: [PCA(), None]
 
@@ -592,7 +593,7 @@ def choose_bool(*, name=None, default=True):
     Examples
     --------
     >>> import skrub
-    >>> print(skrub.choose_bool().as_dataop().skb.describe_param_grid())
+    >>> print(skrub.choose_bool().as_data_op().skb.describe_param_grid())
     - choose_bool(): [True, False]
     >>> skrub.choose_bool().default()
     True
