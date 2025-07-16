@@ -1,6 +1,6 @@
-# This module defines the DataOp class, which represents skrub dataops.
+# This module defines the DataOp class, which represents skrub DataOps.
 #
-# Accessing an attribute or method of a dataop creates a new node in the
+# Accessing an attribute or method of a DataOp creates a new node in the
 # computation graph. Therefore the namespace of the DataOp class must remain
 # almost empty to avoid name clashes with methods users want to use in their
 # DataOps plan: if `e = skrub.var('x', pd.DataFrame(...))`, `e.groupby()` must
@@ -10,20 +10,20 @@
 # Therefore, the actual skrub functionality is hidden away in the attribute
 # `_skrub_impl` (whose name is chosen to avoid any potential name clash). The
 # only public attribute is `.skb` which gives users access to the public API of
-# the dataops.
+# the DataOps.
 #
-# Thus dataops are mostly an empty shell around their `_skrub_impl`, which
+# Thus DataOps are mostly an empty shell around their `_skrub_impl`, which
 # is of type `DataOpImpl`. Each kind of node in the computation graph is
 # represented by a different subclass of `DataOpImpl`: `Call` for function calls,
 # `BinOp` for binary operators, `GetAttr` for attribute access etc.
 # See the docstring of `DataOpImpl` for information on how to define a new node
 # type.
 #
-# Most of the logic for manipulating and evaluating dataops is outside of
+# Most of the logic for manipulating and evaluating DataOps is outside of
 # those classes, in the `_evaluation` module.
 #
 # The `_estimator` module provides the scikit-learn-like interface (with `fit`
-# and `predict`) to dataops. `_skrub_namespace` contains the definition of
+# and `predict`) to DataOps. `_skrub_namespace` contains the definition of
 # the `.skb` attribute.
 
 import dis
@@ -184,10 +184,10 @@ def _format_dataop_creation_stack():
 
 
 class DataOpImpl:
-    """Base class for all kinds of dataops (computation graph nodes).
+    """Base class for all kinds of DataOps (computation graph nodes).
 
     Those types are used as `_skrub_impl` attributes of `DataOp` instances. They
-    provide the dataop's functionality.
+    provide the DataOp's functionality.
 
     Subclass `DataOpImpl` to define a new type of node (such as `GetAttr`,
     `Apply`, etc.)
@@ -199,7 +199,7 @@ class DataOpImpl:
 
     A DataOpImpl subclass must implement the logic to compute its result, once
     its children have been evaluated. The orchestration for evaluating the full
-    dataop is the responsibility of the `_evaluation` module.
+    DataOp is the responsibility of the `_evaluation` module.
 
     To implement the computation of the final result there are 2 possibilities:
     define `compute()` or define `eval()`.
@@ -218,7 +218,7 @@ class DataOpImpl:
     evaluation, the class must define `eval()` (and not `compute` which is
     never call when `eval` exists). `eval` must be a generator function. It
     should `yield` objects that need to be evaluated for the computation to
-    continue (and the value of the yield dataop will be the computed value
+    continue (and the value of the yield DataOp will be the computed value
     of the yielded object). Finally it should `return` the computed result. See
     `IfElse` or `Match` in this module for simple examples.
 

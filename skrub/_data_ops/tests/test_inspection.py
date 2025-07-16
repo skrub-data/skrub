@@ -246,5 +246,5 @@ def test_describe_params():
     }
 
     assert e.skb.describe_defaults() == expected
-    assert e.skb.get_learner().describe_params() == expected
+    assert e.skb.make_learner().describe_params() == expected
     assert skrub.X().skb.describe_defaults() == {}

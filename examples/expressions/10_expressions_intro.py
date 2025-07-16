@@ -232,7 +232,7 @@ predictions
 print(predictions.skb.describe_param_grid())
 
 # %%
-search = predictions.skb.get_randomized_search(
+search = predictions.skb.make_randomized_search(
     scoring="roc_auc", n_iter=8, n_jobs=4, random_state=0, fitted=True
 )
 search.results_

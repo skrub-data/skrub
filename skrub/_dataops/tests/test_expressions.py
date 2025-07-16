@@ -41,7 +41,7 @@ def test_slice():
 
 def test_estimator():
     c = skrub.var("c")
-    e = skrub.as_data_op(LogisticRegression(C=c))
+    e = skrub.as_dataop(LogisticRegression(C=c))
     assert e.skb.eval({"c": 0.001}).C == 0.001
 
 
@@ -292,12 +292,12 @@ def test_apply_on_cols(use_choice):
         transformer = skrub.choose_from([Mul(10), Mul(100)], name="t")
     else:
         transformer = Mul(10)
-    e = skrub.as_data_op(X_df).skb.apply(transformer, cols=["b"])
+    e = skrub.as_dataop(X_df).skb.apply(transformer, cols=["b"])
     out = e.skb.eval()
     expected = np.arange(6).reshape(2, -1).T * [1, 10]
     assert (out.values == expected).all()
 
-    e = skrub.as_data_op(X_df).skb.apply(transformer, exclude_cols=["a"])
+    e = skrub.as_dataop(X_df).skb.apply(transformer, exclude_cols=["a"])
     out = e.skb.eval()
     assert (out.values == expected).all()
 

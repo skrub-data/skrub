@@ -123,7 +123,9 @@ pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 # argument and if it is ``True`` the search is fitted on the data we provided
 # when initializing our pipeline's variables.
 
-search = pred.skb.get_randomized_search(n_iter=8, n_jobs=4, random_state=1, fitted=True)
+search = pred.skb.make_randomized_search(
+    n_iter=8, n_jobs=4, random_state=1, fitted=True
+)
 search.results_
 
 # %%
@@ -242,7 +244,7 @@ pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 print(pred.skb.describe_param_grid())
 
 # %%
-search = pred.skb.get_randomized_search(
+search = pred.skb.make_randomized_search(
     n_iter=16, n_jobs=4, random_state=1, fitted=True
 )
 search.plot_results()

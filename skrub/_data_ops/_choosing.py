@@ -398,7 +398,7 @@ def get_default(obj):
     If the input is a Choice, the default outcome is used.
     Otherwise returns the input.
 
-    >>> from skrub._dataops._choosing import choose_from, get_default
+    >>> from skrub._data_ops._choosing import choose_from, get_default
     >>> choice = choose_from([1, 2], name='N')
     >>> choice
     choose_from([1, 2], name='N')

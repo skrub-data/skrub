@@ -1381,7 +1381,7 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def get_learner(self, *, fitted=False, keep_subsampling=False):
+    def make_learner(self, *, fitted=False, keep_subsampling=False):
         """Get a skrub learner for this DataOp.
 
         Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
@@ -1550,7 +1550,7 @@ class SkrubNamespace:
             **splitter_kwargs,
         )
 
-    def get_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
+    def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -1661,7 +1661,7 @@ class SkrubNamespace:
             env_with_subsampling(self._dataop, self.get_data(), keep_subsampling)
         )
 
-    def get_randomized_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
+    def make_randomized_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with randomized search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -1835,10 +1835,10 @@ class SkrubNamespace:
          [ 0.3]
          [ 1. ]]
         """
-        learner = self.get_learner()
+        learner = self.make_learner()
         grid = model_selection.ParameterGrid(learner.get_param_grid())
         for params in grid:
-            new = self.get_learner()
+            new = self.make_learner()
             new.set_params(**params)
             yield new
 
@@ -1904,12 +1904,12 @@ class SkrubNamespace:
          [ 0.3]
          [ 1. ]]
         """
-        learner = self.get_learner()
+        learner = self.make_learner()
         sampler = model_selection.ParameterSampler(
             learner.get_param_grid(), n_iter=n_iter, random_state=random_state
         )
         for params in sampler:
-            new = self.get_learner()
+            new = self.make_learner()
             new.set_params(**params)
             yield new
 
@@ -1971,7 +1971,7 @@ class SkrubNamespace:
             environment = self.get_data()
 
         return cross_validate(
-            self.get_learner(),
+            self.make_learner(),
             environment,
             keep_subsampling=keep_subsampling,
             **kwargs,

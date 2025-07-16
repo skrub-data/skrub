@@ -129,7 +129,7 @@ def n_jobs(request):
 
 def test_fit_predict():
     dataop, data = get_dataop_and_data("simple")
-    learner = dataop.skb.get_learner()
+    learner = dataop.skb.make_learner()
     X_train, X_test, y_train, y_test = train_test_split(
         data["X"], data["y"], shuffle=False
     )
@@ -204,7 +204,7 @@ def test_no_names():
         .skb.apply(StandardScaler(with_mean=skrub.choose_bool()))
         .skb.apply(StandardScaler(with_mean=skrub.choose_bool(name="m")))
         .skb.apply(LogisticRegression(), y=skrub.y(y))
-    ).skb.get_grid_search(fitted=True, cv=2)
+    ).skb.make_grid_search(fitted=True, cv=2)
     assert list(e.results_.columns) == [
         "choose_bool()",
         "choose_bool()_1",
@@ -240,7 +240,7 @@ def test_unsupervised_no_y():
     X = np.random.default_rng(0).normal(size=(30, 20))
     dataop = skrub.X(X).skb.apply(PCA(**skrub.choose_from([4, 8], name="n_components")))
     dataop_scores = skrub.cross_validate(
-        dataop.skb.get_grid_search(), dataop.skb.get_data()
+        dataop.skb.make_grid_search(), dataop.skb.get_data()
     )["test_score"]
     sklearn_search = GridSearchCV(PCA(), {"n_components": [4, 8]})
     sklearn_scores = cross_validate(sklearn_search, X)["test_score"]
@@ -254,7 +254,7 @@ def test_unsupervised():
     dataop_scores = e.skb.cross_validate()["test_score"]
     sklearn_scores = cross_validate(k_means, X, y)["test_score"]
     assert_allclose(sklearn_scores, dataop_scores)
-    dataop_k_means = e.skb.get_learner()
+    dataop_k_means = e.skb.make_learner()
     dataop_k_means.fit({"X": X})
     k_means.fit(X)
     assert (k_means.predict(X) == dataop_k_means.predict({"X": X})).all()
@@ -278,7 +278,7 @@ def test_multiclass():
         y=skrub.y(y),
     )
     dataop_scores = skrub.cross_validate(
-        dataop.skb.get_grid_search(), dataop.skb.get_data()
+        dataop.skb.make_grid_search(), dataop.skb.get_data()
     )["test_score"]
     sklearn_search = GridSearchCV(
         LogisticRegression(random_state=0), {"C": [0.001, 0.1]}
@@ -296,7 +296,7 @@ def test_multimetric():
             LogisticRegression(**skrub.choose_from([0.001, 0.1], name="C")),
             y=skrub.y(y),
         )
-        .skb.get_grid_search(fitted=True, scoring=scoring, refit="roc_auc")
+        .skb.make_grid_search(fitted=True, scoring=scoring, refit="roc_auc")
     )
     assert list(dataop_search.results_.columns) == [
         "C",
@@ -356,7 +356,7 @@ def test_when_last_step_is_not_apply(dataop, data):
         ],
         name="model",
     ).as_data_op()
-    search = new_dataop.skb.get_randomized_search(
+    search = new_dataop.skb.make_randomized_search(
         n_iter=3,
         random_state=0,
     ).fit(data)
@@ -527,7 +527,7 @@ def test_shared_dict():
 def test_plot_results():
     pytest.importorskip("plotly")
     dataop, data = get_dataop_and_data("simple")
-    search = dataop.skb.get_randomized_search(n_iter=2, cv=2, random_state=0)
+    search = dataop.skb.make_randomized_search(n_iter=2, cv=2, random_state=0)
     with pytest.raises(NotFittedError):
         search.plot_results()
     search.fit(data)
@@ -547,7 +547,7 @@ def test_plot_results():
 @pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
     dataop, data = get_dataop_and_data("simple")
-    pipe = dataop.skb.get_learner()
+    pipe = dataop.skb.make_learner()
     with pytest.raises(NotFittedError):
         pipe.report(mode="score", environment=data)
     fit_report = pipe.report(
@@ -591,7 +591,7 @@ def test_get_params():
         ),
         y=skrub.y(),
     )
-    learner = e.skb.get_learner()
+    learner = e.skb.make_learner()
     params = {
         "dataop",
         "dataop__0",
@@ -606,7 +606,7 @@ def test_get_params():
 def test_set_dataop_in_params():
     e1 = skrub.var("a") + skrub.var("b")
     e2 = skrub.var("a") - skrub.var("b")
-    learner = e1.skb.get_learner()
+    learner = e1.skb.make_learner()
     data = {"a": 10, "b": 20}
     assert learner.fit_transform(data) == 30
     learner.set_params(dataop=e2)
@@ -621,7 +621,7 @@ def test_find_fitted_estimator():
         .skb.set_name("scaler")
         .skb.apply(LogisticRegression(), y=skrub.y())
         .skb.set_name("predictor")
-        .skb.get_learner()
+        .skb.make_learner()
     )
     with pytest.raises(KeyError, match="'xyz'"):
         learner.find_fitted_estimator("xyz")
@@ -641,7 +641,7 @@ def test_truncated_after():
         .skb.apply(MinMaxScaler())
         .skb.set_name("scaling")
         .skb.apply(LogisticRegression(), y=skrub.y())
-        .skb.get_learner()
+        .skb.make_learner()
     )
     X = np.array([10.0, 5.0, 0.0])[:, None]
     y = np.array([1, 0, 1])
@@ -693,9 +693,9 @@ def test_estimator_type(estimator_type, expected, bury_apply):
             .as_data_op()
         )
     for pipe in [
-        e.skb.get_learner(),
-        e.skb.get_grid_search(),
-        e.skb.get_randomized_search(n_iter=2),
+        e.skb.make_learner(),
+        e.skb.make_grid_search(),
+        e.skb.make_randomized_search(n_iter=2),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert Xy_pipe._estimator_type == expected
@@ -709,9 +709,9 @@ def test_estimator_type(estimator_type, expected, bury_apply):
 def test_estimator_type_no_apply():
     e = skrub.X()
     for pipe in [
-        e.skb.get_learner(),
-        e.skb.get_grid_search(),
-        e.skb.get_randomized_search(n_iter=2),
+        e.skb.make_learner(),
+        e.skb.make_grid_search(),
+        e.skb.make_randomized_search(n_iter=2),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert Xy_pipe._estimator_type == "transformer"
@@ -737,9 +737,9 @@ def test_classes(bury_apply):
         )
     logreg = LogisticRegression().fit(data["X"], data["y"])
     for pipe in [
-        dataop.skb.get_learner(),
-        dataop.skb.get_grid_search(),
-        dataop.skb.get_randomized_search(n_iter=2),
+        dataop.skb.make_learner(),
+        dataop.skb.make_grid_search(),
+        dataop.skb.make_randomized_search(n_iter=2),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert not hasattr(Xy_pipe, "classes_")
@@ -750,9 +750,9 @@ def test_classes(bury_apply):
 def test_classes_no_apply():
     dataop = skrub.X() + skrub.choose_from([0.0, 1.0], name="_")
     for pipe in [
-        dataop.skb.get_learner(),
-        dataop.skb.get_grid_search(scoring=lambda e, X: 0),
-        dataop.skb.get_randomized_search(n_iter=2, scoring=lambda e, X: 0),
+        dataop.skb.make_learner(),
+        dataop.skb.make_grid_search(scoring=lambda e, X: 0),
+        dataop.skb.make_randomized_search(n_iter=2, scoring=lambda e, X: 0),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert not hasattr(Xy_pipe, "classes_")
@@ -770,7 +770,7 @@ def test_support_modes(bury_apply):
     e = skrub.X().skb.apply(classif, y=skrub.y())
     if bury_apply:
         e = skrub.as_data_op({"a": e})["a"]
-    learner = e.skb.get_learner()
+    learner = e.skb.make_learner()
 
     # as in grid-search, before fitting the learner's capabilities are read
     # from the default learner and after fitting from the fitted learner
@@ -783,7 +783,7 @@ def test_support_modes(bury_apply):
 
 
 def test_support_modes_no_apply():
-    learner = skrub.X().skb.get_learner()
+    learner = skrub.X().skb.make_learner()
     for a in ["predict", "predict_proba", "score", "decision_function"]:
         assert not hasattr(learner, a)
     for a in ["fit", "transform", "fit_transform"]:

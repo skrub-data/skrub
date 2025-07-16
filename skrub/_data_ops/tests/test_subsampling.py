@@ -183,17 +183,19 @@ def test_subsampling_not_configured():
     with pytest.raises(ValueError, match=".*no subsampling has been configured"):
         skrub.as_data_op(np.ones(3)).skb.eval(keep_subsampling=True)
     with pytest.raises(ValueError, match=".*no subsampling has been configured"):
-        skrub.as_data_op(np.ones(3)).skb.get_learner(fitted=True, keep_subsampling=True)
+        skrub.as_data_op(np.ones(3)).skb.make_learner(
+            fitted=True, keep_subsampling=True
+        )
 
     # no problem if subsampling was configured
     assert (
         skrub.as_data_op(np.ones(3)).skb.subsample(n=2).skb.eval(keep_subsampling=True)
         == np.ones(2)
     ).all()
-    skrub.as_data_op(np.ones(3)).skb.subsample(n=2).skb.get_learner(
+    skrub.as_data_op(np.ones(3)).skb.subsample(n=2).skb.make_learner(
         fitted=True, keep_subsampling=True
     )
 
     # no problem if we don't pass keep_subsampling=True
     assert (skrub.as_data_op(np.ones(3)).skb.eval() == np.ones(3)).all()
-    skrub.as_data_op(np.ones(3)).skb.get_learner(fitted=True)
+    skrub.as_data_op(np.ones(3)).skb.make_learner(fitted=True)
