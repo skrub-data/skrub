@@ -61,12 +61,13 @@ API_REFERENCE = {
                     "pipelines, see the :ref:`skrub expressions <expressions_ref>`."
                 ),
                 "autosummary": [
+                    "tabular_pipeline",
                     "tabular_learner",
                     "TableVectorizer",
-                    "Cleaner",
                     "SelectCols",
                     "DropCols",
-                    "DropUninformative",
+                    "ApplyToCols",
+                    "ApplyToFrame",
                 ],
             }
         ],
@@ -117,6 +118,8 @@ API_REFERENCE = {
                 "description": None,
                 "autosummary": [
                     "deduplicate",
+                    "Cleaner",
+                    "DropUninformative",
                 ],
             },
         ],
@@ -267,6 +270,21 @@ API_REFERENCE = {
             },
         ],
     },
+    "config": {
+        "title": "Configuration",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "get_config",
+                    "set_config",
+                    "config_context",
+                ],
+            }
+        ],
+    },
     "datasets": {
         "title": "Datasets",
         "short_summary": None,
@@ -293,6 +311,7 @@ API_REFERENCE = {
                     "datasets.fetch_videogame_sales",
                     "datasets.get_data_dir",
                     "datasets.make_deduplication_data",
+                    "datasets.toy_orders",
                 ],
             }
         ],

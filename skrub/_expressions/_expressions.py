@@ -748,7 +748,7 @@ def _check_estimator_type(estimator):
 
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
     """
-    Wrap the estimator passed to .skb.apply in OnEachColumn or OnSubFrame if
+    Wrap the estimator passed to .skb.apply in ApplyToCols or ApplyToFrame if
     needed.
     """
     if estimator in [None, "passthrough"]:
@@ -974,7 +974,7 @@ def X(value=NULL):
     Examples
     --------
     >>> import skrub
-    >>> df = skrub.toy_orders().orders_
+    >>> df = skrub.datasets.toy_orders().orders_
     >>> X = skrub.X(df)
     >>> X
     <Var 'X'>
@@ -1036,7 +1036,7 @@ def y(value=NULL):
     Examples
     --------
     >>> import skrub
-    >>> col = skrub.toy_orders().delayed
+    >>> col = skrub.datasets.toy_orders().delayed
     >>> y = skrub.y(col)
     >>> y
     <Var 'y'>
@@ -1271,7 +1271,7 @@ class Apply(ExprImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["OnEachColumn", "OnSubFrame"]:
+        if estimator.__class__.__name__ in ["ApplyToCols", "ApplyToFrame"]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):

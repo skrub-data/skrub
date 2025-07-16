@@ -1,7 +1,7 @@
 """Get information and plots for a dataframe, that are used to generate reports."""
 import sys
 
-from .. import _column_associations
+from .. import _column_associations, _config
 from .. import _dataframe as sbd
 from . import _plotting, _sample_table, _utils
 
@@ -145,6 +145,7 @@ def _summarize_column(
         "name": sbd.name(column),
         "dtype": _utils.get_dtype_name(column),
         "value_is_constant": False,
+        "is_ordered": False,
     }
     _add_nulls_summary(summary, column, dataframe_summary=dataframe_summary)
     if summary["null_count"] == dataframe_summary["n_rows"]:
@@ -154,6 +155,9 @@ def _summarize_column(
         summary["n_unique"] = sbd.n_unique(column)
         summary["unique_proportion"] = summary["n_unique"] / max(
             1, dataframe_summary["n_rows"]
+        )
+        summary["is_high_cardinality"] = (
+            summary["n_unique"] > _config.get_config()["cardinality_threshold"]
         )
     except Exception:
         # for some dtypes n_unique can fail eg with a typeerror for
@@ -171,6 +175,8 @@ def _summarize_column(
     )
     _add_datetime_summary(summary, column, with_plots=with_plots)
     summary["plot_names"] = [k for k in summary.keys() if k.endswith("_plot")]
+    _add_is_sorted(summary, column)
+
     return summary
 
 
@@ -275,3 +281,7 @@ def _add_numeric_summary(
         )
     else:
         summary["line_plot"] = _plotting.line(order_by_column, column)
+
+
+def _add_is_sorted(summary, column):
+    summary["is_ordered"] = sbd.is_sorted(column)

@@ -237,7 +237,7 @@ plot_box_results(results)
 # case, 30.
 from skrub import StringEncoder
 
-string_encoder = StringEncoder(ngram_range=(3, 4), analyzer="char_wb")
+string_encoder = StringEncoder(ngram_range=(3, 4), analyzer="char_wb", random_state=0)
 
 string_encoder_pipe = make_pipeline(
     TableVectorizer(high_cardinality=string_encoder),
@@ -302,12 +302,13 @@ def plot_performance_tradeoff(results):
         ax.set_title("Prediction performance / training time trade-off")
 
     ax.annotate(
-        "",
-        xy=(1.5, 0.98),
-        xytext=(8.5, 0.90),
-        arrowprops=dict(arrowstyle="->", mutation_scale=15),
+        "Best time / \nperformance trade-off",
+        xy=(0.05, 0.95),
+        xycoords="axes fraction",
+        xytext=(0.2, 0.8),
+        textcoords="axes fraction",
+        arrowprops=dict(arrowstyle="->", lw=1.5, mutation_scale=15),
     )
-    ax.text(5.8, 0.86, "Best time / \nperformance trade-off")
     ax.legend(bbox_to_anchor=(1.02, 0.3))
     plt.show()
 
