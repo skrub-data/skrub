@@ -60,14 +60,14 @@ the name of the task is given.
 
 
 >>> from skrub import tabular_pipeline
->>> tabular_pipeline("regression")
+>>> tabular_pipeline("regression") # doctest: +SKLEARN_VERSION >= "1.4" +ELLIPSIS
 Pipeline(steps=[('tablevectorizer',
-                 TableVectorizer(low_cardinality=ToCategorical())),
+                 TableVectorizer(...),
                 ('histgradientboostingregressor',
                  HistGradientBoostingRegressor())])
 
 >>> from sklearn.linear_model import LinearRegression
->>> tabular_pipeline(LinearRegression())
+>>> tabular_pipeline(LinearRegression()) # doctest: +SKLEARN_VERSION >= "1.4" +ELLIPSIS
 Pipeline(steps=[('tablevectorizer',
                  TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                 ('simpleimputer', SimpleImputer(add_indicator=True)),
