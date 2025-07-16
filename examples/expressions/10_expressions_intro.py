@@ -331,6 +331,6 @@ loaded_model.predict({"baskets": new_baskets, "products": new_products})
 # plans with easy hyperparameter tuning and transforming them into reusable
 # learners, please see the next examples for an in-depth tutorial.
 #
-# Indeed, the following examples will explain how to tune hyperparameters in detail (see :ref:`example_tuning_pipelines`),
-# and how to speed up development by subsampling preview data (see
-:ref:`example_subsampling`).
+# Indeed, the following examples will explain how to tune hyperparameters in detail (see
+# :ref:`example_tuning_pipelines`), and how to speed up development by subsampling
+# preview data (see :ref:`example_subsampling`).
