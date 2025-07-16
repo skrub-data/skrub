@@ -406,9 +406,9 @@ class _Skb:
     # class. This class contains all the methods & attributes that can be
     # accessed through ``.skb``, so sphinx can inspect it to find the
     # docstrings: ``skrub.DataOp.skb`` is ``SkrubNamespace`` and
-    # ``skrub.DataOp.skb.get_grid_search`` exists. Without the custom descriptor
+    # ``skrub.DataOp.skb.make_grid_search`` exists. Without the custom descriptor
     # ``skrub.DataOp.skb`` would be a property object (with attributes
-    # ``deleter``, ``setter``, etc., not ``get_grid_search``).
+    # ``deleter``, ``setter``, etc., not ``make_grid_search``).
     #
     # This is the approach used by pandas for its "accessors" such as
     # ``pd.DataFrame.dt``.
@@ -893,7 +893,7 @@ def var(name, value=NULL):
 
     And also to keys to the inputs to the DataOps plan:
 
-    >>> learner = c.skb.get_learner()
+    >>> learner = c.skb.make_learner()
     >>> learner.fit_transform({'a': 5, 'b': 4})
     9
 
@@ -920,7 +920,7 @@ def var(name, value=NULL):
     5
 
     But we can still override them. And inputs must be provided explicitly when
-    using the learner returned by ``.skb.get_learner()``.
+    using the learner returned by ``.skb.make_learner()``.
 
     >>> c.skb.eval({'a': 10, 'b': 6})
     16
@@ -1728,7 +1728,7 @@ def eval_mode():
     >>> mode = skrub.eval_mode()
     >>> mode.skb.eval()
     'preview'
-    >>> learner = mode.skb.get_learner()
+    >>> learner = mode.skb.make_learner()
     >>> learner.fit_transform({})
     'fit_transform'
     >>> learner.transform({})

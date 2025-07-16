@@ -28,13 +28,13 @@ def test_subsample(as_frame):
     )
     assert shapes == [(15, 13), (15,)]
     shapes = []
-    pred.skb.get_learner(fitted=True, keep_subsampling=True)
+    pred.skb.make_learner(fitted=True, keep_subsampling=True)
     assert shapes == [(15, 13), (15,)]
     shapes = []
-    pred.skb.get_learner(fitted=True)
+    pred.skb.make_learner(fitted=True)
     assert shapes == [(100, 13), (100,)]
     shapes = []
-    pred.skb.get_grid_search(fitted=True, keep_subsampling=True, cv=3)
+    pred.skb.make_grid_search(fitted=True, keep_subsampling=True, cv=3)
     assert (
         shapes
         == [
@@ -63,7 +63,7 @@ def test_subsample(as_frame):
         + [(15, 13), (15,)]
     )
     shapes = []
-    pred.skb.get_grid_search(fitted=True, cv=3)
+    pred.skb.make_grid_search(fitted=True, cv=3)
     assert (
         shapes
         == [
@@ -92,9 +92,9 @@ def test_subsample(as_frame):
         + [(100, 13), (100,)]
     )
     with pytest.raises(ValueError):
-        pred.skb.get_learner(fitted=False, keep_subsampling=True)
+        pred.skb.make_learner(fitted=False, keep_subsampling=True)
     with pytest.raises(ValueError):
-        pred.skb.get_grid_search(fitted=False, keep_subsampling=True)
+        pred.skb.make_grid_search(fitted=False, keep_subsampling=True)
 
 
 @pytest.mark.parametrize("as_frame", [False, True])
@@ -142,17 +142,17 @@ def test_should_subsample():
     )
     assert should == [True]
     should = []
-    pred.skb.get_learner(fitted=True, keep_subsampling=True)
+    pred.skb.make_learner(fitted=True, keep_subsampling=True)
     assert should == [True]
     should = []
-    pred.skb.get_learner(fitted=True)
+    pred.skb.make_learner(fitted=True)
     assert should == [False]
     should = []
-    pred.skb.get_grid_search(fitted=True, keep_subsampling=True, cv=3)
+    pred.skb.make_grid_search(fitted=True, keep_subsampling=True, cv=3)
     # train/test * 3 cv folds * 2 params + refit
     assert should == [True, False, True, False, True, False] * 2 + [True]
     should = []
-    pred.skb.get_grid_search(fitted=True, cv=3)
+    pred.skb.make_grid_search(fitted=True, cv=3)
     assert should == [False] * 12 + [False]
 
 

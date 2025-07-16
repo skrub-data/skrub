@@ -56,10 +56,10 @@ def should_subsample():
     Result (on a subsample):
     ――――――――――――――――――――――――
     1.0
-    >>> e.skb.get_learner(fitted=True)
+    >>> e.skb.make_learner(fitted=True)
     subsampling: False
     SkrubLearner(data_op=<Call 'load_data'>)
-    >>> e.skb.get_learner(keep_subsampling=True, fitted=True)
+    >>> e.skb.make_learner(keep_subsampling=True, fitted=True)
     subsampling: True
     SkrubLearner(data_op=<Call 'load_data'>)
     """

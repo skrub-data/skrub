@@ -93,7 +93,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
     """Learner that evaluates a skrub DataOp.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
-    objects are created by calling :meth:`DataOp.skb.get_learner()` on a
+    objects are created by calling :meth:`DataOp.skb.make_learner()` on a
     DataOp.
     """
 
@@ -224,7 +224,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         ...     .skb.apply(DummyClassifier(), y=y)
         ...     .skb.set_name("classifier")
         ... )
-        >>> learner = pred.skb.get_learner()
+        >>> learner = pred.skb.make_learner()
         >>> learner.fit({'X': orders.X, 'y': orders.y})
         SkrubLearner(data_op=<classifier | Apply DummyClassifier>)
 
@@ -339,7 +339,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         ...     .skb.set_name("vectorizer")
         ...     .skb.apply(DummyClassifier(), y=y)
         ... )
-        >>> learner = pred.skb.get_learner()
+        >>> learner = pred.skb.make_learner()
         >>> learner.fit({"X": orders.X, "y": orders.y})
         SkrubLearner(data_op=<Apply DummyClassifier>)
         >>> learner.predict({"X": orders.X})
@@ -542,8 +542,8 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     """Cross-validate a learner built from a DataOp.
 
     This runs cross-validation from a learner that was built from a skrub
-    DataOp with :func:`DataOp.skb.get_learner`, :func:`DataOp.skb.get_grid_search` or
-    :func:`DataOp.skb.get_randomized_search`.
+    DataOp with :func:`DataOp.skb.make_learner`, :func:`DataOp.skb.make_grid_search` or
+    :func:`DataOp.skb.make_randomized_search`.
 
     It is useful to run nested cross-validation of a grid search or randomized
     search.
@@ -576,13 +576,13 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     :func:`sklearn.model_selection.cross_validate`:
         Evaluate metric(s) by cross-validation and also record fit/score times.
 
-    :func:`skrub.DataOp.skb.get_learner`:
+    :func:`skrub.DataOp.skb.make_learner`:
         Get a skrub learner for this DataOp.
 
-    :func:`skrub.DataOp.skb.get_grid_search`:
+    :func:`skrub.DataOp.skb.make_grid_search`:
         Find the best parameters with grid search.
 
-    :func:`skrub.DataOp.skb.get_randomized_search`:
+    :func:`skrub.DataOp.skb.make_randomized_search`:
         Find the best parameters with grid search.
 
     Examples
@@ -597,7 +597,7 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     ...     **skrub.choose_float(0.01, 1.0, log=True, name="C")
     ... )
     >>> pred = X.skb.apply(log_reg, y=y)
-    >>> search = pred.skb.get_randomized_search(random_state=0)
+    >>> search = pred.skb.make_randomized_search(random_state=0)
     >>> skrub.cross_validate(search, pred.skb.get_data())['test_score'] # doctest: +SKIP
     0    0.75
     1    0.90
@@ -660,8 +660,8 @@ class ParamSearch(_CloudPickleDataOp, BaseEstimator):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``
-    objects are created by calling :meth:`DataOp.skb.get_grid_search()` or
-    :meth:`DataOp.skb.get_randomized_search()` on a DataOp.
+    objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
+    :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
     """
 
     def __init__(self, data_op, search):

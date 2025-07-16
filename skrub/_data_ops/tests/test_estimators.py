@@ -165,7 +165,7 @@ def test_return_estimator():
 
 
 def test_randomized_search(data_op, data, n_jobs):
-    search = data_op.skb.get_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
+    search = data_op.skb.make_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
     with pytest.raises(NotFittedError):
         search.predict(data)
     assert not hasattr(search, "results_")
@@ -188,7 +188,7 @@ def test_randomized_search(data_op, data, n_jobs):
 
 
 def test_grid_search(data_op, data, n_jobs):
-    search = data_op.skb.get_grid_search(n_jobs=n_jobs)
+    search = data_op.skb.make_grid_search(n_jobs=n_jobs)
     search.fit(data)
     search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
@@ -214,7 +214,7 @@ def test_no_names():
 
 
 def test_nested_cv(data_op, data, data_kind, n_jobs, monkeypatch):
-    search = data_op.skb.get_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
+    search = data_op.skb.make_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
     mock = Mock(side_effect=pd.read_csv)
     monkeypatch.setattr(pd, "read_csv", mock)
 
@@ -330,7 +330,7 @@ def test_multimetric():
 
 
 def test_no_refit(data_op, data):
-    search = data_op.skb.get_randomized_search(random_state=0, cv=2, refit=False).fit(
+    search = data_op.skb.make_randomized_search(random_state=0, cv=2, refit=False).fit(
         data
     )
     assert search.best_params_["data_op__0"] == pytest.approx(0.01)
@@ -343,7 +343,7 @@ def test_no_refit(data_op, data):
 
 
 def test_multimetric_no_refit(data_op, data):
-    search = data_op.skb.get_randomized_search(
+    search = data_op.skb.make_randomized_search(
         random_state=0, cv=2, refit=False, scoring=["accuracy", "roc_auc"]
     ).fit(data)
     assert not hasattr(search, "best_params_")
@@ -467,7 +467,7 @@ def test_caching():
         LogisticRegression(**skrub.choose_float(0.1, 1.0, name="C")), y=y
     )
     cv, search_iter, search_cv = 4, 3, 2
-    search = pred.skb.get_randomized_search(n_iter=search_iter, cv=search_cv)
+    search = pred.skb.make_randomized_search(n_iter=search_iter, cv=search_cv)
     data = {"load_counter": {}, "scale_counter": {}}
     skrub.cross_validate(search, data, cv=cv)
     assert data["load_counter"]["count"] == 1
@@ -506,7 +506,7 @@ def test_caching():
     ],
 )
 def test_pickling(e):
-    learner = pickle.loads(pickle.dumps(e.skb.get_learner()))
+    learner = pickle.loads(pickle.dumps(e.skb.make_learner()))
     assert learner.fit_transform({"a": 10}) == 20
 
 
