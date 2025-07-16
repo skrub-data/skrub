@@ -40,7 +40,7 @@ What is the difference with scikit-learn :class:`~sklearn.pipeline.Pipeline`?
 Scikit-learn pipelines represent a linear sequence of transformations on one
 table with a fixed number of rows.
 
-.. image:: _static/sklearn_dataops.svg
+.. image:: _static/sklearn_data_ops.svg
     :width: 500
 
 Skrub DataOps, on the other hand, can manipulate any number of variables.
@@ -56,7 +56,7 @@ Skrub pipelines are not an `orchestrator <https://huyenchip.com/2021/09/13/data-
 and do not offer capabilities for scheduling runs or provisioning resources and
 environments. Instead, they are a generalization of scikit-learn pipelines, which can still be used within an orchestrator.
 
-.. _dataops:
+.. _data_ops:
 
 Skrub DataOps
 ~~~~~~~~~~~~~~~~~
@@ -273,7 +273,7 @@ apply it to new data:
 Deferred evaluation
 ~~~~~~~~~~~~~~~~~~~
 
-A DataOp represents a computation that has not been executed yet, and will
+DataOps represent computations that have not been executed yet, and will
 only be triggered when we call :meth:`.skb.eval() <DataOp.skb.eval>`, or when we
 create the pipeline with :meth:`.skb.get_learner() <DataOp.skb.get_learner>` and
 call one of its methods such as ``fit()``.
@@ -391,7 +391,7 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 
 .. rubric:: Examples
 
-- See :ref:`example_dataops_intro` for an example of skrub DataOps plans using
+- See :ref:`example_data_ops_intro` for an example of skrub DataOps plans using
   DataOps on dataframes.
 - See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
   skrub DataOps.
@@ -406,7 +406,7 @@ subsample of our data.
 
 This is done with
 :meth:`.skb.subsample() <DataOp.skb.subsample>`.
-When we use it, the previews shown when printing a DataOp and returned by
+When we use it, the previews shown when printing DataOps and returned by
 :meth:`.skb.preview() <DataOp.skb.preview>` are computed on a subsample.
 By default, subsampling is only applied for those previews.
 
