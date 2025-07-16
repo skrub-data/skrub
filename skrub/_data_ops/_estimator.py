@@ -129,13 +129,13 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         See :meth:`DataOp.skb.full_report` for more information.
         """
-        from ._inspection import full_report
+        from ._inspection import make_data_ops_plan
 
         if mode not in _FITTING_METHODS:
             check_is_fitted(self)
 
         full_report_kwargs["clear"] = True
-        result = full_report(
+        result = make_data_ops_plan(
             self.data_op, environment=environment, mode=mode, **full_report_kwargs
         )
         if mode == "fit" and result["result"] is not None:

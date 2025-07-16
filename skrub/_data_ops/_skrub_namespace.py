@@ -29,7 +29,7 @@ from ._evaluation import (
 from ._inspection import (
     describe_param_grid,
     draw_data_op_graph,
-    full_report,
+    make_data_ops_plan,
 )
 from ._subsampling import SubsamplePreviews, env_with_subsampling, uses_subsampling
 from ._utils import NULL, attribute_error
@@ -1371,7 +1371,7 @@ class SkrubNamespace:
             mode = "fit_transform"
             clear = True
 
-        return full_report(
+        return make_data_ops_plan(
             self._data_op,
             environment=environment,
             mode=mode,

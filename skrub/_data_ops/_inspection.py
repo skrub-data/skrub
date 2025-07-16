@@ -109,7 +109,7 @@ def _node_status(data_op_graph, mode):
     return status
 
 
-def full_report(
+def make_data_ops_plan(
     data_op,
     environment=None,
     mode="preview",
@@ -121,7 +121,7 @@ def full_report(
     if clear:
         clear_results(data_op, mode)
     try:
-        return _do_full_report(
+        return _make_data_ops_plan(
             data_op,
             environment=environment,
             mode=mode,
@@ -134,7 +134,7 @@ def full_report(
             clear_results(data_op, mode)
 
 
-def _do_full_report(
+def _make_data_ops_plan(
     data_op,
     environment=None,
     mode="preview",
@@ -145,7 +145,7 @@ def _do_full_report(
     _check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
     try:
-        # TODO dump report in callback instead of evaluating full data_op plan
+        # TODO dump report in callback instead of evaluating full DataOps plan
         # first, so that we can clear intermediate results.
         # See evaluate's `callback` parameter
         result = evaluate(data_op, mode=mode, environment=environment, clear=False)
