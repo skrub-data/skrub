@@ -13,7 +13,7 @@ def _use_tablereport(obj):
 def test_config_context():
     assert get_config() == {
         "use_tablereport": False,
-        "use_tablereport_dataops": True,
+        "use_tablereport_data_ops": True,
         "max_plot_columns": 30,
         "max_association_columns": 30,
         "subsampling_seed": 0,
@@ -27,12 +27,12 @@ def test_config_context():
     assert get_config()["use_tablereport"] is False
 
 
-def test_use_tablereport_dataops():
+def test_use_tablereport_data_ops():
     X = skrub.X(fetch_employee_salaries().X)
 
-    with config_context(use_tablereport_dataops=True):
+    with config_context(use_tablereport_data_ops=True):
         assert _use_tablereport(X)
-        with config_context(use_tablereport_dataops=False):
+        with config_context(use_tablereport_data_ops=False):
             assert not _use_tablereport(X)
 
 
@@ -115,7 +115,7 @@ def test_float_precision():
     "params",
     [
         {"use_tablereport": "hello"},
-        {"use_tablereport_dataops": 1},
+        {"use_tablereport_data_ops": 1},
         {"max_plot_columns": "hello"},
         {"max_association_columns": "hello"},
         {"subsampling_seed": -1},

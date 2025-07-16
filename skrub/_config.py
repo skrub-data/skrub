@@ -9,7 +9,7 @@ from ._reporting import _patching
 
 _global_config = {
     "use_tablereport": os.environ.get("SKB_USE_TABLEREPORT", False),
-    "use_tablereport_dataops": os.environ.get("SKB_USE_TABLEREPORT_DATAOPS", True),
+    "use_tablereport_data_ops": os.environ.get("SKB_USE_TABLEREPORT_DATAOPS", True),
     "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
     "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
@@ -67,7 +67,7 @@ def _apply_external_patches(config):
 
 def set_config(
     use_tablereport=None,
-    use_tablereport_dataops=None,
+    use_tablereport_data_ops=None,
     max_plot_columns=None,
     max_association_columns=None,
     subsampling_seed=None,
@@ -90,7 +90,7 @@ def set_config(
         This configuration can also be set with the ``SKB_USE_TABLEREPORT``
         environment variable.
 
-    use_tablereport_dataops : bool, default=None
+    use_tablereport_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         dataops. Default is ``False``.
 
@@ -168,13 +168,13 @@ def set_config(
             )
         local_config["use_tablereport"] = use_tablereport
 
-    if use_tablereport_dataops is not None:
-        if not isinstance(use_tablereport_dataops, bool):
+    if use_tablereport_data_ops is not None:
+        if not isinstance(use_tablereport_data_ops, bool):
             raise ValueError(
-                "'use_tablereport_dataops' must be a boolean, got "
-                f"{use_tablereport_dataops!r}."
+                "'use_tablereport_data_ops' must be a boolean, got "
+                f"{use_tablereport_data_ops!r}."
             )
-        local_config["use_tablereport_dataops"] = use_tablereport_dataops
+        local_config["use_tablereport_data_ops"] = use_tablereport_data_ops
 
     if max_plot_columns is not None:
         if not isinstance(max_plot_columns, numbers.Real):
@@ -227,7 +227,7 @@ def set_config(
 def config_context(
     *,
     use_tablereport=None,
-    use_tablereport_dataops=None,
+    use_tablereport_data_ops=None,
     max_plot_columns=None,
     max_association_columns=None,
     subsampling_seed=None,
@@ -250,7 +250,7 @@ def config_context(
         This configuration can also be set with the ``SKB_USE_TABLEREPORT``
         environment variable.
 
-    use_tablereport_dataops : bool, default=None
+    use_tablereport_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         expressions. Default is ``True``.
 
@@ -328,7 +328,7 @@ def config_context(
     original_config = get_config()
     set_config(
         use_tablereport=use_tablereport,
-        use_tablereport_dataops=use_tablereport_dataops,
+        use_tablereport_data_ops=use_tablereport_data_ops,
         max_plot_columns=max_plot_columns,
         max_association_columns=max_association_columns,
         subsampling_seed=subsampling_seed,

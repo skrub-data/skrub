@@ -44,7 +44,7 @@ def _get_template(template_name):
 
 
 def _use_tablereport_display():
-    return get_config()["use_tablereport_dataops"]
+    return get_config()["use_tablereport_data_ops"]
 
 
 def node_report(dataop, mode="preview", environment=None, **report_kwargs):
