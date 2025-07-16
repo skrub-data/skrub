@@ -100,7 +100,7 @@ and :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`.
 
 We can now fit our pipeline on the training data:
 
->>> pipeline = pred.skb.get_learner()
+>>> pipeline = pred.skb.make_learner()
 >>> pipeline.fit(split["train"])
 SkrubLearner(dataop=<Apply Ridge>)
 
@@ -152,16 +152,16 @@ for ``alpha``.
 
 .. warning::
 
-   When we do :meth:`.skb.get_learner() <DataOp.skb.get_learner>`, the pipeline
+   When we do :meth:`.skb.make_learner() <DataOp.skb.make_learner>`, the pipeline
    we obtain does not perform any hyperparameter tuning. The pipeline we obtain
    uses default values for each of the choices. For numeric choices it is the
    middle of the range, and for :func:`choose_from` it is the first option we
    give it.
 
    To get a pipeline that runs an internal cross-validation to select the best
-   hyperparameters, we must use :meth:`.skb.get_grid_search()
-   <DataOp.skb.get_grid_search()>` or :meth:`.skb.get_randomized_search()
-   <DataOp.skb.get_randomized_search>`.
+   hyperparameters, we must use :meth:`.skb.make_grid_search()
+   <DataOp.skb.make_grid_search()>` or :meth:`.skb.make_randomized_search()
+   <DataOp.skb.make_randomized_search>`.
 
 
 Here are the different kinds of choices, along with their default outcome when
@@ -220,7 +220,7 @@ we are not using hyperparameter search:
 
 
 The default choices for an DataOp, those that get used when calling
-:meth:`.skb.get_learner() <DataOp.skb.get_learner>`, can be inspected with
+:meth:`.skb.make_learner() <DataOp.skb.make_learner>`, can be inspected with
 :meth:`.skb.describe_defaults() <DataOp.skb.describe_defaults>`:
 
 >>> pred.skb.describe_defaults()
@@ -228,7 +228,7 @@ The default choices for an DataOp, those that get used when calling
 
 We can then find the best hyperparameters.
 
->>> search = pred.skb.get_randomized_search(fitted=True)
+>>> search = pred.skb.make_randomized_search(fitted=True)
 >>> search.results_  # doctest: +SKIP
    mean_test_score         α
 0         0.478338  0.141359
@@ -266,7 +266,7 @@ single train-test split or with nested cross-validation.
 Single train-test split:
 
 >>> split = pred.skb.train_test_split()
->>> search = pred.skb.get_randomized_search()
+>>> search = pred.skb.make_randomized_search()
 >>> search.fit(split['train'])
 ParamSearch(dataop=<Apply Ridge>,
             search=RandomizedSearchCV(estimator=None, param_distributions=None))
@@ -278,7 +278,7 @@ For nested cross-validation we use :func:`skrub.cross_validate`, which accepts a
 :meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`
 which always uses the default hyperparameters):
 
->>> skrub.cross_validate(pred.skb.get_randomized_search(), pred.skb.get_data())  # doctest: +SKIP
+>>> skrub.cross_validate(pred.skb.make_randomized_search(), pred.skb.get_data())  # doctest: +SKIP
    fit_time  score_time  test_score
 0  0.891390    0.002768    0.412935
 1  0.889267    0.002773    0.519140
