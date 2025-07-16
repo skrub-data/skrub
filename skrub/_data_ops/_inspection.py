@@ -43,8 +43,8 @@ def _get_template(template_name):
     return _get_jinja_env().get_template(template_name)
 
 
-def _use_tablereport_display():
-    return get_config()["use_tablereport_data_ops"]
+def _use_table_report_display():
+    return get_config()["use_table_report_data_ops"]
 
 
 def node_report(data_op, mode="preview", environment=None, **report_kwargs):
@@ -56,7 +56,7 @@ def node_report(data_op, mode="preview", environment=None, **report_kwargs):
         result_df = sbd.make_dataframe_like(result, [result])
         result_df = sbd.copy_index(result, result_df)
         result = result_df
-    if sbd.is_dataframe(result) and _use_tablereport_display():
+    if sbd.is_dataframe(result) and _use_table_report_display():
         report_kwargs.setdefault("verbose", False)  # Hide the progress bar
         report = TableReport(result, **report_kwargs)
         report._set_minimal_mode()

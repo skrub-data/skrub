@@ -6,14 +6,14 @@ from skrub._data_ops._evaluation import evaluate
 from skrub.datasets import fetch_employee_salaries
 
 
-def _use_tablereport(obj):
+def _use_table_report(obj):
     return "SkrubTableReport" in obj._repr_html_()
 
 
 def test_config_context():
     assert get_config() == {
-        "use_tablereport": False,
-        "use_tablereport_data_ops": True,
+        "use_table_report": False,
+        "use_table_report_data_ops": True,
         "max_plot_columns": 30,
         "max_association_columns": 30,
         "subsampling_seed": 0,
@@ -23,26 +23,26 @@ def test_config_context():
     }
 
     # Not using as a context manager affects nothing
-    config_context(use_tablereport=True)
-    assert get_config()["use_tablereport"] is False
+    config_context(use_table_report=True)
+    assert get_config()["use_table_report"] is False
 
 
-def test_use_tablereport_data_ops():
+def test_use_table_report_data_ops():
     X = skrub.X(fetch_employee_salaries().X)
 
-    with config_context(use_tablereport_data_ops=True):
-        assert _use_tablereport(X)
-        with config_context(use_tablereport_data_ops=False):
-            assert not _use_tablereport(X)
+    with config_context(use_table_report_data_ops=True):
+        assert _use_table_report(X)
+        with config_context(use_table_report_data_ops=False):
+            assert not _use_table_report(X)
 
 
-def test_use_tablereport():
+def test_use_table_report():
     X = fetch_employee_salaries().X
-    assert not _use_tablereport(X)
-    with config_context(use_tablereport=True):
-        assert _use_tablereport(X)
-        with config_context(use_tablereport=False):
-            assert not _use_tablereport(X)
+    assert not _use_table_report(X)
+    with config_context(use_table_report=True):
+        assert _use_table_report(X)
+        with config_context(use_table_report=False):
+            assert not _use_table_report(X)
 
 
 def test_max_plot_columns():
@@ -64,7 +64,7 @@ def test_max_plot_columns():
 
     # Check that max_plot_columns can be set after patching the TableReport
     # repr_html.
-    with config_context(use_tablereport=True):
+    with config_context(use_table_report=True):
         with config_context(max_plot_columns=3):
             "Plotting was skipped" in X._repr_html_()
 
@@ -114,8 +114,8 @@ def test_float_precision():
 @pytest.mark.parametrize(
     "params",
     [
-        {"use_tablereport": "hello"},
-        {"use_tablereport_data_ops": 1},
+        {"use_table_report": "hello"},
+        {"use_table_report_data_ops": 1},
         {"max_plot_columns": "hello"},
         {"max_association_columns": "hello"},
         {"subsampling_seed": -1},
