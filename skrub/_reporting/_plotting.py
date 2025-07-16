@@ -3,6 +3,7 @@
 The figures are returned in the form of svg strings.
 """
 
+import copy
 import functools
 import io
 import re
@@ -192,42 +193,15 @@ def _get_range(values, frac=0.2, factor=3.0):
     return low, high
 
 
-def _robust_hist(values, ax, color, percentage):
+def _robust_hist(values, ax, color):
     low, high = _get_range(values)
     inliers = values[(low <= values) & (values <= high)]
     n_low_outliers = (values < low).sum()
     n_high_outliers = (high < values).sum()
     n, bins, patches = ax.hist(inliers)
     n_out = n_low_outliers + n_high_outliers
-
-    # Display percentage on the bar of the histrogram
-    threshold_display = np.max(n) / 2
-    for index, value in enumerate(n):
-        if percentage:
-            string_label = _utils.format_percent(value / np.sum(n))
-        else:
-            string_label = _utils.format_number(value)
-        if value > threshold_display:
-            ax.text(
-                bins[index] + 0.2 * (bins[index + 1] - bins[index]),
-                value - threshold_display * 0.8,
-                string_label,
-                rotation="vertical",
-                color="black",
-                fontsize=8,
-            )
-        else:
-            ax.text(
-                bins[index] + 0.2 * (bins[index + 1] - bins[index]),
-                value + threshold_display * 0.1,
-                string_label,
-                rotation="vertical",
-                color=_TEXT_COLOR_PLACEHOLDER,
-                fontsize=8,
-            )
-
     if not n_out:
-        return 0, 0
+        return n, bins, 0, 0
     width = bins[1] - bins[0]
     start, stop = bins[0], bins[-1]
     line_params = dict(color=_RED, linestyle="--", ymax=0.95)
@@ -256,11 +230,11 @@ def _robust_hist(values, ax, color, percentage):
         color=_RED,
     )
     ax.set_xlim(start, stop)
-    return n_low_outliers, n_high_outliers
+    return n, bins, n_low_outliers, n_high_outliers
 
 
 @_plot
-def histogram(col, duration_unit=None, color=COLOR_0, percentage=True):
+def histogram(col, duration_unit=None, color=COLOR_0):
     """Histogram for a numeric column."""
     col = sbd.drop_nulls(col)
     if sbd.is_float(col):
@@ -269,17 +243,48 @@ def histogram(col, duration_unit=None, color=COLOR_0, percentage=True):
         # version if there are inf or nan)
         col = sbd.to_float32(col)
     values = sbd.to_numpy(col)
-    fig, ax = plt.subplots()
+    fig_raw, ax = plt.subplots()
     _despine(ax)
-    n_low_outliers, n_high_outliers = _robust_hist(
-        values, ax, color=color, percentage=percentage
+    n, bins, n_low_outliers, n_high_outliers = _robust_hist(values, ax, color=color)
+    fig_percent = copy.deepcopy(fig_raw)
+    # Display label on the bar of the histrogram
+    for fig, raw in [(fig_raw, True), (fig_percent, False)]:
+        ax = fig.axes[0]
+        for index, value in enumerate(n):
+            if raw:
+                string_label = _utils.format_number(value)
+                threshold_display = np.max(n) * 0.6
+            else:
+                threshold_display = np.max(n) / 2
+                string_label = _utils.format_percent(value / np.sum(n))
+            if value > threshold_display:
+                ax.text(
+                    bins[index] + 0.2 * (bins[index + 1] - bins[index]),
+                    value - threshold_display * (0.8 + 0.15 * raw),
+                    string_label,
+                    rotation="vertical",
+                    color="black",
+                    fontsize=8,
+                )
+            else:
+                ax.text(
+                    bins[index] + 0.2 * (bins[index + 1] - bins[index]),
+                    value + threshold_display * 0.1,
+                    string_label,
+                    rotation="vertical",
+                    color=_TEXT_COLOR_PLACEHOLDER,
+                    fontsize=8,
+                )
+        if duration_unit is not None:
+            ax.set_xlabel(f"{duration_unit.capitalize()}s")
+        if sbd.is_any_date(col):
+            _rotate_ticklabels(ax)
+        _adjust_fig_size(fig, ax, 2.0, 1.0)
+    return (
+        (_serialize(fig_raw), _serialize(fig_percent)),
+        n_low_outliers,
+        n_high_outliers,
     )
-    if duration_unit is not None:
-        ax.set_xlabel(f"{duration_unit.capitalize()}s")
-    if sbd.is_any_date(col):
-        _rotate_ticklabels(ax)
-    _adjust_fig_size(fig, ax, 2.0, 1.0)
-    return _serialize(fig), n_low_outliers, n_high_outliers
 
 
 @_plot
@@ -299,11 +304,11 @@ def line(x_col, y_col):
     if sbd.is_any_date(x_col):
         _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
-    return _serialize(fig)
+    return (_serialize(fig), _serialize(fig))
 
 
 @_plot
-def value_counts(value_counts, n_unique, n_rows, color=COLOR_0, percentage=True):
+def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     """Bar plot of the frequencies of the most frequent values in a column.
 
     Parameters
@@ -333,30 +338,34 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0, percentage=True)
         title = f"{len(value_counts)} most frequent"
     else:
         title = None
-    fig, ax = plt.subplots()
+    fig_raw, ax = plt.subplots()
     _despine(ax)
     rects = ax.barh(list(map(str, range(len(values)))), counts, color=color)
-    if percentage:
-        labels = [_utils.format_percent(c / n_rows) for c in counts]
-    else:
-        labels = [_utils.format_number(c) for c in counts]
+    fig_percent = copy.deepcopy(fig_raw)
+    for fig, labels in [
+        (fig_raw, [_utils.format_number(c) for c in counts]),
+        (fig_percent, [_utils.format_percent(c / n_rows) for c in counts]),
+    ]:
+        ax = fig.axes[0]
+        large_percent = [
+            f"{p: >6}" if c > counts[-1] / 2 else "" for (p, c) in zip(labels, counts)
+        ]
+        small_percent = [
+            p if c <= counts[-1] / 2 else "" for (p, c) in zip(labels, counts)
+        ]
 
-    large_percent = [
-        f"{p: >6}" if c > counts[-1] / 2 else "" for (p, c) in zip(labels, counts)
-    ]
-    small_percent = [p if c <= counts[-1] / 2 else "" for (p, c) in zip(labels, counts)]
+        # those are written on top of the orange bars so we write them in black
+        ax.bar_label(rects, large_percent, padding=-30, color="black", fontsize=8)
+        # those are written on top of the background
+        # so we write them in foreground color
+        ax.bar_label(
+            rects, small_percent, padding=5, color=_TEXT_COLOR_PLACEHOLDER, fontsize=8
+        )
 
-    # those are written on top of the orange bars so we write them in black
-    ax.bar_label(rects, large_percent, padding=-30, color="black", fontsize=8)
-    # those are written on top of the background so we write them in foreground color
-    ax.bar_label(
-        rects, small_percent, padding=5, color=_TEXT_COLOR_PLACEHOLDER, fontsize=8
-    )
+        ax.set_yticks(ax.get_yticks())
+        ax.set_yticklabels(list(map(str, values)))
+        if title is not None:
+            ax.set_title(title)
 
-    ax.set_yticks(ax.get_yticks())
-    ax.set_yticklabels(list(map(str, values)))
-    if title is not None:
-        ax.set_title(title)
-
-    _adjust_fig_size(fig, ax, 1.0, 0.2 * len(values))
-    return _serialize(fig)
+        _adjust_fig_size(fig, ax, 1.0, 0.2 * len(values))
+    return _serialize(fig_raw), _serialize(fig_percent)
