@@ -96,8 +96,8 @@ class _DataOpTraversal:
     # children are evaluated first is handled by the evaluator (the
     # _DataOpTraversal subclass).
 
-    def run(self, dataop):
-        stack = [dataop]
+    def run(self, data_op):
+        stack = [data_op]
         last_result = None
 
         def push(handler):
@@ -119,13 +119,13 @@ class _DataOpTraversal:
                         # for handling such cases we raise an exception to
                         # avoid an infinite loop.
                         raise CircularReferenceError(
-                            "Skrub dataops cannot contain circular references. "
+                            "Skrub DataOps cannot contain circular references. "
                             f"A circular reference was found in this object: {new_top}"
                         )
                     stack.append(new_top)
                     last_result = None
                 elif isinstance(top, DataOp):
-                    push(self.handle_dataop)
+                    push(self.handle_data_op)
                 elif isinstance(top, _BUILTIN_MAP):
                     push(self.handle_mapping)
                 elif isinstance(top, _BUILTIN_SEQ):
@@ -150,18 +150,18 @@ class _DataOpTraversal:
                 stack.pop()
         return last_result
 
-    def handle_dataop(self, dataop):
-        impl = dataop._skrub_impl
+    def handle_data_op(self, data_op):
+        impl = data_op._skrub_impl
         evaluated_attributes = {}
         for name in impl._fields:
             attr = getattr(impl, name)
             evaluated_attributes[name] = yield attr
-        return self.compute_result(dataop, evaluated_attributes)
+        return self.compute_result(data_op, evaluated_attributes)
 
-    def compute_result(self, dataop, evaluated_attributes):
-        # Compute the result for an dataop, once all the children have already
+    def compute_result(self, data_op, evaluated_attributes):
+        # Compute the result for a DataOp, once all the children have already
         # been evaluated.
-        return dataop
+        return data_op
 
     def handle_estimator(self, estimator):
         params = yield estimator.get_params()
@@ -188,7 +188,7 @@ class _DataOpTraversal:
         return value
 
     def handle_seq(self, seq):
-        # Note set and frozenset cannot contain directly dataops and
+        # Note set and frozenset cannot contain directly DataOps and
         # choices which are not hashable but they could in theory contain an
         # estimator that contains a choice (scikit-learn estimators are
         # hashable regardless of their params) so we evaluate items for those
@@ -202,7 +202,7 @@ class _DataOpTraversal:
     def handle_mapping(self, mapping):
         new_mapping = {}
         for k, v in mapping.items():
-            # note evaluating the keys is not needed because dataops,
+            # note evaluating the keys is not needed because DataOps,
             # choices and matches are not hashable so we do not need to
             # (yield k).
             #
@@ -226,16 +226,16 @@ class _Evaluator(_DataOpTraversal):
         self.environment = {} if environment is None else environment
         self.callbacks = callbacks
 
-    def run(self, dataop):
-        self._dataop = dataop
-        return super().run(dataop)
+    def run(self, data_op):
+        self._data_op = data_op
+        return super().run(data_op)
 
-    def _fetch(self, dataop):
+    def _fetch(self, data_op):
         """Fetch the result from the cache or environment if possible.
 
         Raises a KeyError otherwise
         """
-        impl = dataop._skrub_impl
+        impl = data_op._skrub_impl
         if impl.is_X and X_NAME in self.environment:
             return self.environment[X_NAME]
         if impl.is_y and Y_NAME in self.environment:
@@ -251,26 +251,26 @@ class _Evaluator(_DataOpTraversal):
             return self.environment[impl.name]
         return impl.results[self.mode]
 
-    def _store(self, dataop, result):
+    def _store(self, data_op, result):
         """Store a result in the cache."""
-        dataop._skrub_impl.results[self.mode] = result
+        data_op._skrub_impl.results[self.mode] = result
 
-    def handle_dataop(self, dataop):
+    def handle_data_op(self, data_op):
         try:
-            return self._fetch(dataop)
+            return self._fetch(data_op)
         except KeyError:
             pass
-        result = yield from self._eval_dataop(dataop)
-        self._store(dataop, result)
+        result = yield from self._eval_data_op(data_op)
+        self._store(data_op, result)
         for cb in self.callbacks:
-            cb(dataop, result)
+            cb(data_op, result)
         return result
 
-    def _eval_dataop(self, dataop):
-        impl = dataop._skrub_impl
+    def _eval_data_op(self, data_op):
+        impl = data_op._skrub_impl
         if hasattr(impl, "eval"):
             return (yield from impl.eval(mode=self.mode, environment=self.environment))
-        return (yield from super().handle_dataop(dataop))
+        return (yield from super().handle_data_op(data_op))
 
     def handle_choice(self, choice):
         if choice.name is not None and choice.name in self.environment:
@@ -284,20 +284,20 @@ class _Evaluator(_DataOpTraversal):
         outcome = yield choice_match.choice
         return (yield choice_match.outcome_mapping[outcome])
 
-    def compute_result(self, dataop, evaluated_attributes):
+    def compute_result(self, data_op, evaluated_attributes):
         try:
-            return dataop._skrub_impl.compute(
+            return data_op._skrub_impl.compute(
                 SimpleNamespace(**evaluated_attributes),
                 mode=self.mode,
                 environment=self.environment,
             )
         except Exception as e:
-            dataop._skrub_impl.errors[self.mode] = e
+            data_op._skrub_impl.errors[self.mode] = e
             if self.mode == "preview":
                 raise
-            stack = dataop._skrub_impl.creation_stack_last_line()
+            stack = data_op._skrub_impl.creation_stack_last_line()
             msg = (
-                f"Evaluation of node {dataop._skrub_impl} failed. See above for full"
+                f"Evaluation of node {data_op._skrub_impl} failed. See above for full"
                 f" traceback. This node was defined here:\n{stack}"
             )
             if hasattr(e, "add_note"):
@@ -317,8 +317,8 @@ def _check_environment(environment):
             "{'X': features_df, 'other_table_name': other_df, ...}. "
             f"Got object of type: '{type(environment)}'"
         )
-    env_contains_dataop, found_node = needs_eval(environment, return_node=True)
-    if env_contains_dataop:
+    env_contains_data_op, found_node = needs_eval(environment, return_node=True)
+    if env_contains_data_op:
         if isinstance(found_node, DataOp):
             description = f"a skrub DataOp: {found_node._skrub_impl!r}"
         else:
@@ -354,7 +354,7 @@ def _check_environment(environment):
 # consistent with .skb.eval() in evaluate's params
 
 
-def evaluate(dataop, mode="preview", environment=None, clear=False, callbacks=()):
+def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=()):
     """Evaluate a DataOp.
 
     Parameters
@@ -377,25 +377,25 @@ def evaluate(dataop, mode="preview", environment=None, clear=False, callbacks=()
 
     callbacks : list of functions
         Each will be called, in the provided order, after evaluating each node.
-        The signature is callback(dataop, result) where dataop is the DataOp
+        The signature is callback(data_op, result) where data_op is the DataOp
         that was just evaluated and result is the resulting value.
     """
     requested_mode = mode
     mode = "fit_transform" if requested_mode == "fit" else requested_mode
     _check_environment(environment)
     if clear:
-        callbacks = (_cache_pruner(dataop, mode),) + tuple(callbacks)
-        clear_results(dataop, mode=mode)
+        callbacks = (_cache_pruner(data_op, mode),) + tuple(callbacks)
+        clear_results(data_op, mode=mode)
     else:
         callbacks = ()
     try:
         result = _Evaluator(
             mode=mode, environment=environment, callbacks=callbacks
-        ).run(dataop)
-        return dataop if requested_mode == "fit" else result
+        ).run(data_op)
+        return data_op if requested_mode == "fit" else result
     finally:
         if clear:
-            clear_results(dataop, mode=mode)
+            clear_results(data_op, mode=mode)
 
 
 class _Reachable(_DataOpTraversal):
@@ -413,23 +413,23 @@ class _Reachable(_DataOpTraversal):
     def __init__(self, mode):
         self.mode = mode
 
-    def run(self, dataop):
+    def run(self, data_op):
         self._reachable = {}
-        super().run(dataop)
+        super().run(data_op)
         return self._reachable
 
-    def handle_dataop(self, dataop):
-        self._reachable[id(dataop)] = dataop
-        if self.mode in dataop._skrub_impl.results:
-            return dataop
-        return (yield from super().handle_dataop(dataop))
+    def handle_data_op(self, data_op):
+        self._reachable[id(data_op)] = data_op
+        if self.mode in data_op._skrub_impl.results:
+            return data_op
+        return (yield from super().handle_data_op(data_op))
 
 
-def _cache_pruner(dataop, mode):
-    all_nodes = nodes(dataop)
+def _cache_pruner(data_op, mode):
+    all_nodes = nodes(data_op)
 
     def prune(*args, **kwargs):
-        reachable_nodes = _Reachable(mode).run(dataop)
+        reachable_nodes = _Reachable(mode).run(data_op)
         for node in all_nodes:
             if id(node) not in reachable_nodes:
                 node._skrub_impl.results.pop(mode, None)
@@ -440,27 +440,27 @@ def _cache_pruner(dataop, mode):
 class _Printer(_DataOpTraversal):
     """Helper for `describe_steps()`"""
 
-    def run(self, dataop):
+    def run(self, data_op):
         self._seen = set()
         self._lines = []
         self._cache_used = False
-        _ = super().run(dataop)
+        _ = super().run(data_op)
         if self._cache_used:
             self._lines.append("* Cached, not recomputed")
         return "\n".join(self._lines)
 
-    def compute_result(self, dataop, evaluated_attributes):
-        is_seen = id(dataop) in self._seen
-        line = simple_repr(dataop)
+    def compute_result(self, data_op, evaluated_attributes):
+        is_seen = id(data_op) in self._seen
+        line = simple_repr(data_op)
         if is_seen:
             line = f"( {line} )*"
             self._cache_used = True
         self._lines.append(line)
-        self._seen.add(id(dataop))
+        self._seen.add(id(data_op))
 
 
-def describe_steps(dataop):
-    return _Printer().run(dataop)
+def describe_steps(data_op):
+    return _Printer().run(data_op)
 
 
 class _Cloner(_DataOpTraversal):
@@ -476,9 +476,9 @@ class _Cloner(_DataOpTraversal):
         self.replace = replace
         self.drop_preview_data = drop_preview_data
 
-    def run(self, dataop):
+    def run(self, data_op):
         self._replace = {} if self.replace is None else dict(self.replace)
-        return super().run(dataop)
+        return super().run(data_op)
 
     def handle_choice(self, choice):
         if id(choice) in self._replace:
@@ -495,19 +495,19 @@ class _Cloner(_DataOpTraversal):
             return copy.deepcopy(value)
         return skl_clone(value, safe=False)
 
-    def compute_result(self, dataop, evaluated_attributes):
-        if id(dataop) in self._replace:
-            return self._replace[id(dataop)]
-        impl = dataop._skrub_impl
+    def compute_result(self, data_op, evaluated_attributes):
+        if id(data_op) in self._replace:
+            return self._replace[id(data_op)]
+        impl = data_op._skrub_impl
         new_impl = impl.__replace__(**evaluated_attributes)
         if isinstance(new_impl, Var) and self.drop_preview_data:
             new_impl.value = NULL
         clone = DataOp(new_impl)
-        self._replace[id(dataop)] = clone
+        self._replace[id(data_op)] = clone
         return clone
 
 
-def clone(dataop, replace=None, drop_preview_data=False):
+def clone(data_op, replace=None, drop_preview_data=False):
     """Clone a DataOp.
 
     Parameters
@@ -520,7 +520,7 @@ def clone(dataop, replace=None, drop_preview_data=False):
         Whether to drop the `value` attributes of `skrub.var(name, value)`
         nodes.
     """
-    return _Cloner(replace=replace, drop_preview_data=drop_preview_data).run(dataop)
+    return _Cloner(replace=replace, drop_preview_data=drop_preview_data).run(data_op)
 
 
 def _unique(seq):
@@ -543,12 +543,12 @@ def _simplify_graph(graph):
 class _Graph(_DataOpTraversal):
     """Helper for `graph()`"""
 
-    def run(self, dataop):
+    def run(self, data_op):
         self._nodes = {}
         self._children = defaultdict(list)
         self._parents = defaultdict(list)
-        self._current_dataop = []
-        _ = super().run(dataop)
+        self._current_data_op = []
+        _ = super().run(data_op)
         graph = {
             "nodes": self._nodes,
             "children": dict(self._children),
@@ -556,19 +556,19 @@ class _Graph(_DataOpTraversal):
         }
         return _simplify_graph(graph)
 
-    def handle_dataop(self, dataop):
-        if self._current_dataop:
-            child, parent = id(dataop), id(self._current_dataop[-1])
+    def handle_data_op(self, data_op):
+        if self._current_data_op:
+            child, parent = id(data_op), id(self._current_data_op[-1])
             self._children[parent].append(child)
             self._parents[child].append(parent)
-        self._current_dataop.append(dataop)
-        result = yield from super().handle_dataop(dataop)
-        self._current_dataop.pop()
-        self._nodes[id(dataop)] = dataop
+        self._current_data_op.append(data_op)
+        result = yield from super().handle_data_op(data_op)
+        self._current_data_op.pop()
+        self._nodes[id(data_op)] = data_op
         return result
 
 
-def graph(dataop):
+def graph(data_op):
     """Get a simple representation of a DataOp's structure.
 
     All the nodes (DataOps) contained in the DataOp are numbered
@@ -582,7 +582,7 @@ def graph(dataop):
 
     >>> import pprint
     >>> import skrub
-    >>> from skrub._dataops._evaluation import graph
+    >>> from skrub._data_ops._evaluation import graph
     >>> a = skrub.var('a')
     >>> b = skrub.var('b')
     >>> c = a + b
@@ -595,15 +595,15 @@ def graph(dataop):
     the node 3 (the multiplication) has 2 children: 2 (the addition) and 0
     (variable a)
     """
-    return _Graph().run(dataop)
+    return _Graph().run(data_op)
 
 
-def nodes(dataop):
-    return list(graph(dataop)["nodes"].values())
+def nodes(data_op):
+    return list(graph(data_op)["nodes"].values())
 
 
-def clear_results(dataop, mode=None):
-    for n in nodes(dataop):
+def clear_results(data_op, mode=None):
+    for n in nodes(data_op):
         if mode is None:
             n._skrub_impl.results = {}
             n._skrub_impl.errors = {}
@@ -646,12 +646,12 @@ def _choice_display_names(choices):
 class _ChoiceGraph(_DataOpTraversal):
     """Helper for `choice_graph()`."""
 
-    def run(self, dataop):
+    def run(self, data_op):
         self._choices = {}
         self._children = defaultdict(list)
         self._current_outcome = [None]
 
-        _ = super().run(dataop)
+        _ = super().run(data_op)
 
         short = {choice_id: i for i, choice_id in enumerate(self._choices.keys())}
         self._short_ids = short
@@ -700,7 +700,7 @@ class _ChoiceGraph(_DataOpTraversal):
         return choice_match
 
 
-def choice_graph(dataop, check_Xy=True):
+def choice_graph(data_op, check_Xy=True):
     """The graph of all the choices in a DataOp.
 
     All BaseChoice objects found are numbered from 0, 1, ...
@@ -713,7 +713,7 @@ def choice_graph(dataop, check_Xy=True):
 
     Parameters
     ----------
-    dataop : the DataOp to inspect
+    data_op : the DataOp to inspect
 
     check_Xy : bool
         Choices upstream of X and y, ie upstream of the train/test split cannot
@@ -750,7 +750,7 @@ def choice_graph(dataop, check_Xy=True):
     >>> from sklearn.dummy import DummyRegressor
     >>> import skrub
     >>> from skrub import choose_from, choose_float
-    >>> from skrub._dataops._evaluation import choice_graph
+    >>> from skrub._data_ops._evaluation import choice_graph
 
     >>> e = choose_from(
     ...     [Ridge(alpha=choose_float(0.1, 1.0, name="alpha")), DummyRegressor()],
@@ -773,7 +773,7 @@ def choice_graph(dataop, check_Xy=True):
     The choice 'regressor' has no parents so it is listed as a child of `None`
     """  # noqa: E501
     full_builder = _ChoiceGraph()
-    full_graph = full_builder.run(dataop)
+    full_graph = full_builder.run(data_op)
     if not check_Xy:
         return full_graph
     # identify which choices are used before the nodes marked as X or y. Those
@@ -781,7 +781,7 @@ def choice_graph(dataop, check_Xy=True):
     # they will be clamped to a single value (the chosen outcome if that has been
     # set otherwise the default)
     Xy_choices = set()
-    for node in [find_X(dataop), find_y(dataop)]:
+    for node in [find_X(data_op), find_y(data_op)]:
         if node is not None:
             node_graph = _ChoiceGraph().run(node)
             Xy_choices.update(
@@ -802,13 +802,13 @@ def choice_graph(dataop, check_Xy=True):
     return full_graph
 
 
-def choices(dataop):
-    return choice_graph(dataop, check_Xy=False)["choices"]
+def choices(data_op):
+    return choice_graph(data_op, check_Xy=False)["choices"]
 
 
-def check_choices_before_Xy(dataop):
+def check_choices_before_Xy(data_op):
     """Emit a warning if there are hyperparameters upstream of X or y."""
-    choice_graph(dataop)
+    choice_graph(data_op)
 
 
 def _expand_grid(graph, grid):
@@ -864,19 +864,19 @@ def _expand_grid(graph, grid):
     return subgrids
 
 
-def param_grid(dataop):
+def param_grid(data_op):
     """
     Build the parameter grid (for GridSearchCV and RandomizedSearchCV) for a
     DataOp.
     """
-    graph = choice_graph(dataop)
+    graph = choice_graph(data_op)
     return _expand_grid(graph, {})
 
 
-def get_params(dataop):
-    dataop_choices = choices(dataop)
+def get_params(data_op):
+    data_op_choices = choices(data_op)
     params = {}
-    for k, v in dataop_choices.items():
+    for k, v in data_op_choices.items():
         if isinstance(v, _choosing.Choice):
             params[k] = getattr(v, "chosen_outcome_idx", None)
         else:
@@ -884,10 +884,10 @@ def get_params(dataop):
     return params
 
 
-def set_params(dataop, params):
-    dataop_choices = choices(dataop)
+def set_params(data_op, params):
+    data_op_choices = choices(data_op)
     for k, v in params.items():
-        target = dataop_choices[k]
+        target = data_op_choices[k]
         if isinstance(target, _choosing.Choice):
             target.chosen_outcome_idx = v
         else:
@@ -897,10 +897,10 @@ def set_params(dataop, params):
 class _ChosenOrDefaultOutcomes(_DataOpTraversal):
     """Helper for `chosen_or_default_outcomes`."""
 
-    def run(self, dataop):
+    def run(self, data_op):
         self.chosen = {}
         self.results = {}
-        _ = super().run(dataop)
+        _ = super().run(data_op)
         return self.chosen
 
     def handle_choice(self, choice):
@@ -926,7 +926,7 @@ class _ChosenOrDefaultOutcomes(_DataOpTraversal):
         return (yield choice_match.outcome_mapping[outcome])
 
 
-def chosen_or_default_outcomes(dataop):
+def chosen_or_default_outcomes(data_op):
     """Get the selected or default outcomes for choices in the DataOp.
 
     Return a mapping from the choice's ID (0, 1, ... -- see `choice_graph`) to
@@ -944,7 +944,7 @@ def chosen_or_default_outcomes(dataop):
     >>> from sklearn.linear_model import Ridge
     >>> from sklearn.dummy import DummyRegressor
     >>> from skrub import choose_from, choose_float
-    >>> from skrub._dataops._evaluation import chosen_or_default_outcomes, choices
+    >>> from skrub._data_ops._evaluation import chosen_or_default_outcomes, choices
 
     >>> e = choose_from(
     ...     [DummyRegressor(), Ridge(alpha=choose_float(0.1, 1.0, name="alpha"))],
@@ -968,9 +968,9 @@ def chosen_or_default_outcomes(dataop):
     Here we only see that choice 'regressor' (ID 1) in chooses its first outcome
     (index 0), and the choice 'alpha' (ID 0) does not appear.
     """  # noqa: E501
-    dataop_choices = choices(dataop)
-    short_ids = {id(c): k for k, c in dataop_choices.items()}
-    outcomes = _ChosenOrDefaultOutcomes().run(dataop)
+    data_op_choices = choices(data_op)
+    short_ids = {id(c): k for k, c in data_op_choices.items()}
+    outcomes = _ChosenOrDefaultOutcomes().run(data_op)
     return {short_ids[k]: v for k, v in outcomes.items()}
 
 
@@ -983,10 +983,10 @@ class _FindNode(_DataOpTraversal):
     def __init__(self, predicate=None):
         self.predicate = predicate
 
-    def handle_dataop(self, e):
+    def handle_data_op(self, e):
         if self.predicate is None or self.predicate(e):
             raise _Found(e)
-        yield from super().handle_dataop(e)
+        yield from super().handle_data_op(e)
 
     def handle_choice(self, choice):
         if self.predicate is None or self.predicate(choice):
@@ -1007,21 +1007,21 @@ def find_node(obj, predicate=None):
     return None
 
 
-def find_X(dataop):
-    return find_node(dataop, lambda e: isinstance(e, DataOp) and e._skrub_impl.is_X)
+def find_X(data_op):
+    return find_node(data_op, lambda e: isinstance(e, DataOp) and e._skrub_impl.is_X)
 
 
-def find_y(dataop):
-    return find_node(dataop, lambda e: isinstance(e, DataOp) and e._skrub_impl.is_y)
+def find_y(data_op):
+    return find_node(data_op, lambda e: isinstance(e, DataOp) and e._skrub_impl.is_y)
 
 
-def find_node_by_name(dataop, name):
+def find_node_by_name(data_op, name):
     def pred(obj):
         if isinstance(obj, DataOp):
             return obj._skrub_impl.name == name
         return getattr(obj, "name", None) == name
 
-    return find_node(dataop, pred)
+    return find_node(data_op, pred)
 
 
 def needs_eval(obj, return_node=False):
@@ -1047,14 +1047,14 @@ class _FindConflicts(_DataOpTraversal):
         self._x = {}
         self._y = {}
 
-    def handle_dataop(self, e):
+    def handle_data_op(self, e):
         self._add(
             e,
             getattr(e._skrub_impl, "name", None),
             e._skrub_impl.is_X,
             e._skrub_impl.is_y,
         )
-        yield from super().handle_dataop(e)
+        yield from super().handle_data_op(e)
 
     def handle_choice(self, choice):
         self._add(choice, getattr(choice, "name", None), False, False)
@@ -1088,8 +1088,8 @@ class _FindConflicts(_DataOpTraversal):
             msg += (
                 "\nIs it possible that you accidentally added a transformation twice, "
                 "for example by re-running a Jupyter notebook cell that rebinds a "
-                "Python variable to a new skrub dataop "
-                "(eg `dataop = dataop.skb.apply(...)`)?"
+                "Python variable to a new skrub data_op "
+                "(eg `data_op = data_op.skb.apply(...)`)?"
             )
         return msg
 
@@ -1114,15 +1114,15 @@ class _FindConflicts(_DataOpTraversal):
         self._add_to_dict(self._names, name, obj, "name")
 
 
-def find_conflicts(dataop):
+def find_conflicts(data_op):
     """
     We use a function that returns the conflicts, rather than raises an
     exception, because we want the exception to be raised higher in the call
-    stack (in ``_dataops._check_dataop``) so that the user sees the line in
+    stack (in ``_data_ops._check_data_op``) so that the user sees the line in
     their code that created a problematic DataOp easily in the traceback.
     """
     try:
-        _FindConflicts().run(dataop)
+        _FindConflicts().run(data_op)
     except _Found as e:
         return e.value
     return None
@@ -1133,10 +1133,10 @@ class _FindArg(_DataOpTraversal):
         self.predicate = predicate
         self.skip_types = skip_types
 
-    def handle_dataop(self, dataop):
-        if isinstance(dataop._skrub_impl, self.skip_types):
-            return dataop
-        return (yield from super().handle_dataop(dataop))
+    def handle_data_op(self, data_op):
+        if isinstance(data_op._skrub_impl, self.skip_types):
+            return data_op
+        return (yield from super().handle_data_op(data_op))
 
     def handle_value(self, value):
         if self.predicate(value):
@@ -1144,13 +1144,13 @@ class _FindArg(_DataOpTraversal):
         return (yield from super().handle_value(value))
 
 
-def find_arg(dataop, predicate, skip_types=(Var, Value)):
+def find_arg(data_op, predicate, skip_types=(Var, Value)):
     # Find a node while ignoring certain DataOp types, used by
-    # _dataops._find_dataframe to detect when someone passed an actual
+    # _data_ops._find_dataframe to detect when someone passed an actual
     # DataFrame instead of a DataOp to a DataOp's method or to a
     # deferred function.
     try:
-        _FindArg(predicate, skip_types=skip_types).run(dataop)
+        _FindArg(predicate, skip_types=skip_types).run(data_op)
     except _Found as e:
         return e.value
     return None
@@ -1160,13 +1160,13 @@ class _FindFirstApply(_DataOpTraversal):
     def handle_choice(self, choice):
         return (yield choice.chosen_outcome_or_default())
 
-    def handle_dataop(self, dataop):
-        if isinstance(dataop._skrub_impl, Apply):
-            raise _Found(dataop)
-        return (yield from super().handle_dataop(dataop))
+    def handle_data_op(self, data_op):
+        if isinstance(data_op._skrub_impl, Apply):
+            raise _Found(data_op)
+        return (yield from super().handle_data_op(data_op))
 
 
-def find_first_apply(dataop):
+def find_first_apply(data_op):
     """Find the Apply() node closest to the DataOp's root.
 
     This is assumed to be the final/supervised learner and inspected in
@@ -1174,15 +1174,15 @@ def find_first_apply(dataop):
     attributes (eg whether it has predict_proba())
     """
     try:
-        _FindFirstApply().run(dataop)
+        _FindFirstApply().run(data_op)
     except _Found as first:
         return first.value
     return None
 
 
-def supported_modes(dataop):
+def supported_modes(data_op):
     """The evaluation modes that the final estimator supports."""
-    first = find_first_apply(dataop)
+    first = find_first_apply(data_op)
     if first is None:
         return ["preview", "fit_transform", "transform"]
     return first._skrub_impl.supported_modes()
