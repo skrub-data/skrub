@@ -117,6 +117,9 @@ Changes
 - A new parameter ``float_precision`` has been added to the global config to control the number of significant digits
   displayed for floating-point values in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
 
+- The display of :class:`TableReport` has the new capability to switch between display percentage and the value of
+  the histogram and the value_counts plot. :pr:`1506` by :user:`Lionel Kusch<lionelkusch>`.
+
 Bugfixes
 --------
 - Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
