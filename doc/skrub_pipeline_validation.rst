@@ -306,8 +306,8 @@ several ways to perform an aggregation on a pandas DataFrame:
 - rating_aggregation: ['median', 'mean']
 
 We can also choose between several completely different pipelines by turning a
-choice into an DataOp, via its ``as_dataop`` method (or by using
-:func:`as_dataop` on any object).
+choice into an DataOp, via its ``as_data_op`` method (or by using
+:func:`as_data_op` on any object).
 
 >>> from sklearn.preprocessing import StandardScaler
 >>> from sklearn.ensemble import RandomForestRegressor
