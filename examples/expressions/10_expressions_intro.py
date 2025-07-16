@@ -4,25 +4,20 @@
 .. _example_expressions_intro:
 
 Building a predictive model by combining multiple tables with the skrub DataOps
-====================================================================
-This example introduces the skrub DataOps, a powerful framework for building
-complex data processing pipelines that can handle multiple tables, hyperparameter
-tuning, and model selection.
+==============================================================================
 
-DataOps can be combined into a DataOps plan, which records all the operations
-performed on the data; the DataOps plan can be exported as a ``Learner``, which is
-a standalone object that can be saved on disk, loaded in a new environment, and used
-to make predictions on new data.
+This example introduces the skrub DataOps, that builds complex data processing pipelines 
+handling multiple tables, with hyperparameter tuning and model selection.
+
+DataOps form implicitly a "plan", which records all the operations performed on
+the data; the DataOps plan can be exported as a ``Learner``, a standalone object 
+that can be saved on disk, loaded in a new environment, and used to make predictions on new data.
 
 Here we show the basics of the skrub DataOps in a two-table scenario: how to create
 DataOps, how to use them to leverage dataframe operations, how to combine them in
 a full DataOps plan, how to do simple hyperparameter tuning, and finally how to
 export the plan as a ``Learner``.
 
-Following examples will explain how to tune hyperparameters in detail (see
-:ref:`example_tuning_pipelines`),
-and how to speed up development by subsampling preview data (see
-:ref:`example_subsampling`).
 
 """
 
