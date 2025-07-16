@@ -148,7 +148,7 @@ class UninitializedVariable(KeyError):
 def _remove_shell_frames(stack):
     """
     Remove the uninformative frames that belong to the python shell itself from
-    traces displayed in reports or in "this dataop was created here"
+    traces displayed in reports or in "this DataOp was created here"
     messages.
     """
     shells = [
