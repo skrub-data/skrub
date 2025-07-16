@@ -3,7 +3,6 @@
 The figures are returned in the form of svg strings.
 """
 
-import copy
 import functools
 import io
 import re
@@ -140,7 +139,6 @@ def _serialize(fig):
     out = re.sub(r'(width|height)="([0-9.]+)pt"', _to_em, out)
     out = re.sub(_TEXT_COLOR_PLACEHOLDER, "var(--color-text-primary)", out)
     out = re.sub(_BACKGROUND_COLOR_PLACEHOLDER, "var(--color-background-primary)", out)
-    plt.close(fig)
     return out
 
 
@@ -243,13 +241,19 @@ def histogram(col, duration_unit=None, color=COLOR_0):
         # version if there are inf or nan)
         col = sbd.to_float32(col)
     values = sbd.to_numpy(col)
-    fig_raw, ax = plt.subplots()
+    fig, ax = plt.subplots()
     _despine(ax)
     n, bins, n_low_outliers, n_high_outliers = _robust_hist(values, ax, color=color)
-    fig_percent = copy.deepcopy(fig_raw)
+    if duration_unit is not None:
+        ax.set_xlabel(f"{duration_unit.capitalize()}s")
+    if sbd.is_any_date(col):
+        _rotate_ticklabels(ax)
+    _adjust_fig_size(fig, ax, 2.0, 1.0)
+
     # Display label on the bar of the histrogram
-    for fig, raw in [(fig_raw, True), (fig_percent, False)]:
-        ax = fig.axes[0]
+    output_figure = []
+    for raw in [True, False]:
+        labels = []
         for index, value in enumerate(n):
             if raw:
                 string_label = _utils.format_number(value)
@@ -258,30 +262,34 @@ def histogram(col, duration_unit=None, color=COLOR_0):
                 threshold_display = np.max(n) / 2
                 string_label = _utils.format_percent(value / np.sum(n))
             if value > threshold_display:
-                ax.text(
-                    bins[index] + 0.2 * (bins[index + 1] - bins[index]),
-                    value - threshold_display * (0.8 + 0.15 * raw),
-                    string_label,
-                    rotation="vertical",
-                    color="black",
-                    fontsize=8,
+                labels.append(
+                    ax.text(
+                        bins[index] + 0.2 * (bins[index + 1] - bins[index]),
+                        value - threshold_display * (0.8 + 0.15 * raw),
+                        string_label,
+                        rotation="vertical",
+                        color="black",
+                        fontsize=8,
+                    )
                 )
             else:
-                ax.text(
-                    bins[index] + 0.2 * (bins[index + 1] - bins[index]),
-                    value + threshold_display * 0.1,
-                    string_label,
-                    rotation="vertical",
-                    color=_TEXT_COLOR_PLACEHOLDER,
-                    fontsize=8,
+                labels.append(
+                    ax.text(
+                        bins[index] + 0.2 * (bins[index + 1] - bins[index]),
+                        value + threshold_display * 0.1,
+                        string_label,
+                        rotation="vertical",
+                        color=_TEXT_COLOR_PLACEHOLDER,
+                        fontsize=8,
+                    )
                 )
-        if duration_unit is not None:
-            ax.set_xlabel(f"{duration_unit.capitalize()}s")
-        if sbd.is_any_date(col):
-            _rotate_ticklabels(ax)
-        _adjust_fig_size(fig, ax, 2.0, 1.0)
+        output_figure.append(_serialize(fig))
+        # remove labels:
+        for label in labels:
+            label.remove()
+    plt.close(fig)
     return (
-        (_serialize(fig_raw), _serialize(fig_percent)),
+        output_figure,  # 2 figures: raw labels and percentage labels
         n_low_outliers,
         n_high_outliers,
     )
@@ -304,7 +312,10 @@ def line(x_col, y_col):
     if sbd.is_any_date(x_col):
         _rotate_ticklabels(ax)
     _adjust_fig_size(fig, ax, 2.0, 1.0)
-    return (_serialize(fig), _serialize(fig))
+    output_figure = _serialize(fig)
+    plt.close(fig)
+    # 2 figures for raw and percentage labels
+    return (output_figure, output_figure)
 
 
 @_plot
@@ -338,13 +349,22 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
         title = f"{len(value_counts)} most frequent"
     else:
         title = None
-    fig_raw, ax = plt.subplots()
+    fig, ax = plt.subplots()
     _despine(ax)
     rects = ax.barh(list(map(str, range(len(values)))), counts, color=color)
-    fig_percent = copy.deepcopy(fig_raw)
-    for fig, labels in [
-        (fig_raw, [_utils.format_number(c) for c in counts]),
-        (fig_percent, [_utils.format_percent(c / n_rows) for c in counts]),
+
+    ax.set_yticks(ax.get_yticks())
+    ax.set_yticklabels(list(map(str, values)))
+    if title is not None:
+        ax.set_title(title)
+
+    _adjust_fig_size(fig, ax, 1.0, 0.2 * len(values))
+
+    # add the labels to the figure
+    output_figure = []
+    for labels in [
+        [_utils.format_number(c) for c in counts],
+        [_utils.format_percent(c / n_rows) for c in counts],
     ]:
         ax = fig.axes[0]
         large_percent = [
@@ -355,17 +375,23 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
         ]
 
         # those are written on top of the orange bars so we write them in black
-        ax.bar_label(rects, large_percent, padding=-30, color="black", fontsize=8)
+        labels = ax.bar_label(
+            rects, large_percent, padding=-30, color="black", fontsize=8
+        )
         # those are written on top of the background
         # so we write them in foreground color
-        ax.bar_label(
-            rects, small_percent, padding=5, color=_TEXT_COLOR_PLACEHOLDER, fontsize=8
+        labels.extend(
+            ax.bar_label(
+                rects,
+                small_percent,
+                padding=5,
+                color=_TEXT_COLOR_PLACEHOLDER,
+                fontsize=8,
+            )
         )
+        output_figure.append(_serialize(fig))
+        for label in labels:
+            label.remove()
+    plt.close(fig)
 
-        ax.set_yticks(ax.get_yticks())
-        ax.set_yticklabels(list(map(str, values)))
-        if title is not None:
-            ax.set_title(title)
-
-        _adjust_fig_size(fig, ax, 1.0, 0.2 * len(values))
-    return _serialize(fig_raw), _serialize(fig_percent)
+    return output_figure  # 2 figures: raw labels and percentage labels
