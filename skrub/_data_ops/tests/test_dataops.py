@@ -15,7 +15,7 @@ from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 
 
-def test_simple_dataop():
+def test_simple_data_op():
     a = skrub.var("a")
     b = skrub.var("b")
     c = a + b
@@ -95,7 +95,7 @@ def test_environment_no_values():
 
 def test_environment_wrong_values():
     a = skrub.var(name="a", value=[1, 2, 3])
-    # Testing dataop as value
+    # Testing data_op as value
     with pytest.raises(
         TypeError, match=r".*`value` of a `skrub.var\(\)` must not contain a skrub.*"
     ):
@@ -220,7 +220,7 @@ def test_cloning_and_preview_data(how):
     assert clone.skb.eval({"a": 10, "b": 2}) == 12
 
 
-def test_dataop_impl():
+def test_data_op_impl():
     # misc bits to make codecove happy
     class A(_data_ops.DataOpImpl):
         _fields = ()

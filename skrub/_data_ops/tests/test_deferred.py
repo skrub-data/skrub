@@ -157,8 +157,8 @@ def test_deferred_idempotent():
     assert result == 1
 
 
-def test_deferred_dataop():
-    # applying deferred when func is already a dataop
+def test_deferred_data_op():
+    # applying deferred when func is already a data_op
     a = skrub.var("a", "hello")
     b = skrub.deferred(a.upper)()
     result = b.skb.eval()
