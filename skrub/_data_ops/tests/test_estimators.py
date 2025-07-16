@@ -88,7 +88,7 @@ def _unprocessed_data_classifier():
     return _make_classifier(X, y)
 
 
-def get_dataop_and_data(data_kind):
+def get_data_op_and_data(data_kind):
     assert data_kind in ["simple", "unprocessed"]
     if data_kind == "simple":
         return _simple_data_classifier(), _simple_data()
@@ -96,25 +96,25 @@ def get_dataop_and_data(data_kind):
 
 
 @pytest.fixture(params=["simple", "unprocessed"])
-def _dataop_and_data(request):
+def _data_op_and_data(request):
     data_kind = request.param
-    dataop, data = get_dataop_and_data(data_kind)
-    return {"data_kind": data_kind, "dataop": dataop, "data": data}
+    data_op, data = get_data_op_and_data(data_kind)
+    return {"data_kind": data_kind, "data_op": data_op, "data": data}
 
 
 @pytest.fixture
-def dataop(_dataop_and_data):
-    return _dataop_and_data["dataop"]
+def data_op(_data_op_and_data):
+    return _data_op_and_data["data_op"]
 
 
 @pytest.fixture
-def data(_dataop_and_data):
-    return _dataop_and_data["data"]
+def data(_data_op_and_data):
+    return _data_op_and_data["data"]
 
 
 @pytest.fixture
-def data_kind(_dataop_and_data):
-    return _dataop_and_data["data_kind"]
+def data_kind(_data_op_and_data):
+    return _data_op_and_data["data_kind"]
 
 
 @pytest.fixture(params=[None, 1, 2])
@@ -128,8 +128,8 @@ def n_jobs(request):
 
 
 def test_fit_predict():
-    dataop, data = get_dataop_and_data("simple")
-    learner = dataop.skb.make_learner()
+    data_op, data = get_data_op_and_data("simple")
+    learner = data_op.skb.make_learner()
     X_train, X_test, y_train, y_test = train_test_split(
         data["X"], data["y"], shuffle=False
     )
@@ -145,8 +145,8 @@ def test_fit_predict():
     assert accuracy_score(y_test, predicted) == pytest.approx(0.84, abs=0.05)
 
 
-def test_cross_validate(dataop, data, n_jobs):
-    results = dataop.skb.cross_validate(data, n_jobs=n_jobs, return_learner=True)
+def test_cross_validate(data_op, data, n_jobs):
+    results = data_op.skb.cross_validate(data, n_jobs=n_jobs, return_learner=True)
     learners = results["learner"]
     assert len(learners) == 5
     for p in learners:
@@ -159,13 +159,13 @@ def test_cross_validate(dataop, data, n_jobs):
 
 
 def test_return_estimator():
-    dataop, data = get_dataop_and_data("simple")
+    data_op, data = get_data_op_and_data("simple")
     with pytest.raises(TypeError, match=".*return_learner"):
-        dataop.skb.cross_validate(data, return_estimator=True)
+        data_op.skb.cross_validate(data, return_estimator=True)
 
 
-def test_randomized_search(dataop, data, n_jobs):
-    search = dataop.skb.get_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
+def test_randomized_search(data_op, data, n_jobs):
+    search = data_op.skb.get_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
     with pytest.raises(NotFittedError):
         search.predict(data)
     assert not hasattr(search, "results_")
@@ -187,8 +187,8 @@ def test_randomized_search(dataop, data, n_jobs):
     assert train_score == pytest.approx(0.94)
 
 
-def test_grid_search(dataop, data, n_jobs):
-    search = dataop.skb.get_grid_search(n_jobs=n_jobs)
+def test_grid_search(data_op, data, n_jobs):
+    search = data_op.skb.get_grid_search(n_jobs=n_jobs)
     search.fit(data)
     search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
@@ -213,8 +213,8 @@ def test_no_names():
     ]
 
 
-def test_nested_cv(dataop, data, data_kind, n_jobs, monkeypatch):
-    search = dataop.skb.get_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
+def test_nested_cv(data_op, data, data_kind, n_jobs, monkeypatch):
+    search = data_op.skb.get_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
     mock = Mock(side_effect=pd.read_csv)
     monkeypatch.setattr(pd, "read_csv", mock)
 
@@ -238,29 +238,31 @@ def test_nested_cv(dataop, data, data_kind, n_jobs, monkeypatch):
 
 def test_unsupervised_no_y():
     X = np.random.default_rng(0).normal(size=(30, 20))
-    dataop = skrub.X(X).skb.apply(PCA(**skrub.choose_from([4, 8], name="n_components")))
-    dataop_scores = skrub.cross_validate(
-        dataop.skb.make_grid_search(), dataop.skb.get_data()
+    data_op = skrub.X(X).skb.apply(
+        PCA(**skrub.choose_from([4, 8], name="n_components"))
+    )
+    data_op_scores = skrub.cross_validate(
+        data_op.skb.make_grid_search(), data_op.skb.get_data()
     )["test_score"]
     sklearn_search = GridSearchCV(PCA(), {"n_components": [4, 8]})
     sklearn_scores = cross_validate(sklearn_search, X)["test_score"]
-    assert_allclose(sklearn_scores, dataop_scores)
+    assert_allclose(sklearn_scores, data_op_scores)
 
 
 def test_unsupervised():
     X, y = make_blobs(n_samples=10, random_state=0)
     k_means = KMeans(n_clusters=2, random_state=0, n_init=1)
     e = skrub.X(X).skb.apply(k_means, y=skrub.y(y), unsupervised=True)
-    dataop_scores = e.skb.cross_validate()["test_score"]
+    data_op_scores = e.skb.cross_validate()["test_score"]
     sklearn_scores = cross_validate(k_means, X, y)["test_score"]
-    assert_allclose(sklearn_scores, dataop_scores)
-    dataop_k_means = e.skb.make_learner()
-    dataop_k_means.fit({"X": X})
+    assert_allclose(sklearn_scores, data_op_scores)
+    data_op_k_means = e.skb.make_learner()
+    data_op_k_means.fit({"X": X})
     k_means.fit(X)
-    assert (k_means.predict(X) == dataop_k_means.predict({"X": X})).all()
-    assert_allclose(k_means.score(X, y), dataop_k_means.score({"X": X, "y": y}))
+    assert (k_means.predict(X) == data_op_k_means.predict({"X": X})).all()
+    assert_allclose(k_means.score(X, y), data_op_k_means.score({"X": X, "y": y}))
     with pytest.raises((KeyError, RuntimeError)):
-        dataop_k_means.score({"X": X})
+        data_op_k_means.score({"X": X})
 
 
 def test_no_apply_step():
@@ -273,24 +275,24 @@ def test_no_apply_step():
 
 def test_multiclass():
     X, y = make_classification(n_classes=5, n_informative=10, random_state=0)
-    dataop = skrub.X(X).skb.apply(
+    data_op = skrub.X(X).skb.apply(
         LogisticRegression(**skrub.choose_from([0.001, 0.1], name="C"), random_state=0),
         y=skrub.y(y),
     )
-    dataop_scores = skrub.cross_validate(
-        dataop.skb.make_grid_search(), dataop.skb.get_data()
+    data_op_scores = skrub.cross_validate(
+        data_op.skb.make_grid_search(), data_op.skb.get_data()
     )["test_score"]
     sklearn_search = GridSearchCV(
         LogisticRegression(random_state=0), {"C": [0.001, 0.1]}
     )
     sklearn_scores = cross_validate(sklearn_search, X, y)["test_score"]
-    assert_allclose(sklearn_scores, dataop_scores)
+    assert_allclose(sklearn_scores, data_op_scores)
 
 
 def test_multimetric():
     X, y = make_classification(random_state=0)
     scoring = ["accuracy", "roc_auc"]
-    dataop_search = (
+    data_op_search = (
         skrub.X(X)
         .skb.apply(
             LogisticRegression(**skrub.choose_from([0.001, 0.1], name="C")),
@@ -298,12 +300,12 @@ def test_multimetric():
         )
         .skb.make_grid_search(fitted=True, scoring=scoring, refit="roc_auc")
     )
-    assert list(dataop_search.results_.columns) == [
+    assert list(data_op_search.results_.columns) == [
         "C",
         "mean_test_accuracy",
         "mean_test_roc_auc",
     ]
-    assert list(dataop_search.detailed_results_.columns) == [
+    assert list(data_op_search.detailed_results_.columns) == [
         "C",
         "std_score_time",
         "mean_score_time",
@@ -324,14 +326,14 @@ def test_multimetric():
     )
     for metric in scoring:
         col = f"mean_test_{metric}"
-        assert np.allclose(sklearn_results[col], dataop_search.results_[col].values)
+        assert np.allclose(sklearn_results[col], data_op_search.results_[col].values)
 
 
-def test_no_refit(dataop, data):
-    search = dataop.skb.get_randomized_search(random_state=0, cv=2, refit=False).fit(
+def test_no_refit(data_op, data):
+    search = data_op.skb.get_randomized_search(random_state=0, cv=2, refit=False).fit(
         data
     )
-    assert search.best_params_["dataop__0"] == pytest.approx(0.01)
+    assert search.best_params_["data_op__0"] == pytest.approx(0.01)
     assert search.results_.shape == (10, 2)
     with pytest.raises(
         AttributeError,
@@ -340,23 +342,23 @@ def test_no_refit(dataop, data):
         search.predict(data)
 
 
-def test_multimetric_no_refit(dataop, data):
-    search = dataop.skb.get_randomized_search(
+def test_multimetric_no_refit(data_op, data):
+    search = data_op.skb.get_randomized_search(
         random_state=0, cv=2, refit=False, scoring=["accuracy", "roc_auc"]
     ).fit(data)
     assert not hasattr(search, "best_params_")
     assert search.results_.shape == (10, 3)
 
 
-def test_when_last_step_is_not_apply(dataop, data):
-    new_dataop = skrub.choose_from(
+def test_when_last_step_is_not_apply(data_op, data):
+    new_data_op = skrub.choose_from(
         [
-            dataop.skb.apply_func(lambda x: x),
-            dataop.skb.apply_func(lambda x: x),
+            data_op.skb.apply_func(lambda x: x),
+            data_op.skb.apply_func(lambda x: x),
         ],
         name="model",
     ).as_data_op()
-    search = new_dataop.skb.make_randomized_search(
+    search = new_data_op.skb.make_randomized_search(
         n_iter=3,
         random_state=0,
     ).fit(data)
@@ -526,8 +528,8 @@ def test_shared_dict():
 
 def test_plot_results():
     pytest.importorskip("plotly")
-    dataop, data = get_dataop_and_data("simple")
-    search = dataop.skb.make_randomized_search(n_iter=2, cv=2, random_state=0)
+    data_op, data = get_data_op_and_data("simple")
+    search = data_op.skb.make_randomized_search(n_iter=2, cv=2, random_state=0)
     with pytest.raises(NotFittedError):
         search.plot_results()
     search.fit(data)
@@ -546,8 +548,8 @@ def test_plot_results():
 
 @pytest.mark.skipif(not _has_graphviz(), reason="full report requires graphviz")
 def test_report(tmp_path):
-    dataop, data = get_dataop_and_data("simple")
-    pipe = dataop.skb.make_learner()
+    data_op, data = get_data_op_and_data("simple")
+    pipe = data_op.skb.make_learner()
     with pytest.raises(NotFittedError):
         pipe.report(mode="score", environment=data)
     fit_report = pipe.report(
@@ -593,23 +595,23 @@ def test_get_params():
     )
     learner = e.skb.make_learner()
     params = {
-        "dataop",
-        "dataop__0",
-        "dataop__1",
-        "dataop__2",
-        "dataop__3",
+        "data_op",
+        "data_op__0",
+        "data_op__1",
+        "data_op__2",
+        "data_op__3",
     }
     assert learner.get_params(deep=True).keys() == params
-    assert learner.get_params(deep=False).keys() == {"dataop"}
+    assert learner.get_params(deep=False).keys() == {"data_op"}
 
 
-def test_set_dataop_in_params():
+def test_set_data_op_in_params():
     e1 = skrub.var("a") + skrub.var("b")
     e2 = skrub.var("a") - skrub.var("b")
     learner = e1.skb.make_learner()
     data = {"a": 10, "b": 20}
     assert learner.fit_transform(data) == 30
-    learner.set_params(dataop=e2)
+    learner.set_params(data_op=e2)
     assert learner.fit_transform(data) == -10
 
 
@@ -725,11 +727,11 @@ def test_estimator_type_no_apply():
 
 @pytest.mark.parametrize("bury_apply", [False, True])
 def test_classes(bury_apply):
-    dataop, data = get_dataop_and_data("simple")
+    data_op, data = get_data_op_and_data("simple")
     if bury_apply:
-        dataop = (
+        data_op = (
             skrub.choose_from(
-                {"a": dataop.skb.apply_func(lambda x: x), "b": dataop},
+                {"a": data_op.skb.apply_func(lambda x: x), "b": data_op},
                 name="model",
             )
             .as_data_op()
@@ -737,9 +739,9 @@ def test_classes(bury_apply):
         )
     logreg = LogisticRegression().fit(data["X"], data["y"])
     for pipe in [
-        dataop.skb.make_learner(),
-        dataop.skb.make_grid_search(),
-        dataop.skb.make_randomized_search(n_iter=2),
+        data_op.skb.make_learner(),
+        data_op.skb.make_grid_search(),
+        data_op.skb.make_randomized_search(n_iter=2),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert not hasattr(Xy_pipe, "classes_")
@@ -748,11 +750,11 @@ def test_classes(bury_apply):
 
 
 def test_classes_no_apply():
-    dataop = skrub.X() + skrub.choose_from([0.0, 1.0], name="_")
+    data_op = skrub.X() + skrub.choose_from([0.0, 1.0], name="_")
     for pipe in [
-        dataop.skb.make_learner(),
-        dataop.skb.make_grid_search(scoring=lambda e, X: 0),
-        dataop.skb.make_randomized_search(n_iter=2, scoring=lambda e, X: 0),
+        data_op.skb.make_learner(),
+        data_op.skb.make_grid_search(scoring=lambda e, X: 0),
+        data_op.skb.make_randomized_search(n_iter=2, scoring=lambda e, X: 0),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert not hasattr(Xy_pipe, "classes_")
@@ -762,7 +764,7 @@ def test_classes_no_apply():
 
 @pytest.mark.parametrize("bury_apply", [False, True])
 def test_support_modes(bury_apply):
-    _, data = get_dataop_and_data("simple")
+    _, data = get_data_op_and_data("simple")
     choice = skrub.choose_from(["dummy", "logistic"], name="c")
     classif = choice.match(
         {"dummy": DummyClassifier(), "logistic": LogisticRegression()}

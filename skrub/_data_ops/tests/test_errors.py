@@ -12,7 +12,7 @@ import skrub
 from skrub._utils import PassThrough
 
 #
-# Using eager statements on dataops
+# Using eager statements on DataOps
 #
 
 
@@ -44,11 +44,11 @@ def test_contains():
 
 def test_setitem():
     a = skrub.var("a", {})
-    with pytest.raises(TypeError, match="Do not modify a dataop in-place"):
+    with pytest.raises(TypeError, match="Do not modify a DataOp in-place"):
         a["one"] = 1
     a = skrub.var("a", skrub.datasets.toy_orders().orders)
     with pytest.raises(
-        TypeError, match=r"(?s)Do not modify a dataop in-place.*df = df\.assign"
+        TypeError, match=r"(?s)Do not modify a DataOp in-place.*df = df\.assign"
     ):
         a["one"] = 1
 
@@ -58,7 +58,7 @@ def test_setattr():
         pass
 
     a = skrub.var("a", A())
-    with pytest.raises(TypeError, match="Do not modify a dataop in-place"):
+    with pytest.raises(TypeError, match="Do not modify a DataOp in-place"):
         a.b = 0
 
 
@@ -274,13 +274,13 @@ def test_X_y_instead_of_environment():
         skrub.X().skb.make_learner().fit_transform(X=0)
 
 
-def test_dataop_or_choice_in_environment():
+def test_data_op_or_choice_in_environment():
     X = skrub.X()
     with pytest.raises(
         TypeError,
-        match="The `environment` dict contains a skrub dataop: <Var 'X'>",
+        match="The `environment` dict contains a skrub DataOp: <Var 'X'>",
     ):
-        # likely mistake: passing a dataop instead of an actual value.
+        # likely mistake: passing a DataOp instead of an actual value.
         X.skb.eval({"X": X})
 
     alpha = skrub.choose_from([1.0, 2.0], name="alpha")
@@ -425,7 +425,7 @@ def test_bad_names():
         skrub.var("_skrub_X")
 
 
-def test_pass_df_instead_of_dataop():
+def test_pass_df_instead_of_data_op():
     df = skrub.datasets.toy_orders().orders
     with pytest.raises(TypeError, match="You passed an actual DataFrame"):
         skrub.var("a").merge(df, on="ID")
@@ -453,13 +453,13 @@ def test_get_grid_search_with_continuous_ranges():
         ).skb.make_grid_search()
 
 
-def test_dataop_with_circular_ref():
-    # dataops are not allowed to contain circular references as it would
+def test_data_op_with_circular_ref():
+    # DataOp are not allowed to contain circular references as it would
     # complicate the implementation and there is probably no use case. We want
     # to get an understandable error and not an infinite loop or memory error.
     e = {}
     e["a"] = [0, {"b": e}]
-    with pytest.raises(ValueError, match="dataops cannot contain circular references"):
+    with pytest.raises(ValueError, match="DataOps cannot contain circular references"):
         skrub.as_data_op(e).skb.eval()
 
 

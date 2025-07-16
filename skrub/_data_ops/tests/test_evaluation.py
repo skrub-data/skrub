@@ -45,7 +45,7 @@ def test_caching():
         assert d._skrub_impl.results == {"preview": 400, "fit_transform": 40}
         yield
 
-    # the preview cache has been filled eagerly when defining the dataop
+    # the preview cache has been filled eagerly when defining the DataOp
     assert a._skrub_impl.results == {"preview": 100}
     assert b._skrub_impl.results == {"preview": 200}
     assert c._skrub_impl.results == {"preview": 300}
@@ -79,8 +79,8 @@ def test_caching():
     assert d._skrub_impl.results == {}
 
 
-def test_caching_in_special_dataops():
-    # dataops that need to skip evaluation of some branches based on a
+def test_caching_in_special_data_ops():
+    # DataOp that need to skip evaluation of some branches based on a
     # condition like if_else and match are somewhat special cases so we check
     # here that their cache gets populated correctly as well.
     a = skrub.var("a")
@@ -98,7 +98,7 @@ def test_caching_in_special_dataops():
 
 def test_needs_eval():
     # needs_eval() is used to check if a collection contains some skrub
-    # dataop or choice. problems with cyclical references are handled
+    # DataOp or choice. problems with cyclical references are handled
     # separately, so when it finds one needs_eval must just return False.
     globals_ = {}
     globals_["globals_"] = globals_
