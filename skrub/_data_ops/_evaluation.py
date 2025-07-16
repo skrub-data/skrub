@@ -1,4 +1,4 @@
-# Utilities to manipulate dataops: evaluating, cloning, building parameter
+# Utilities to manipulate DataOps: evaluating, cloning, building parameter
 # grids etc.
 #
 # _DataOpTraversal provides the logic for performing a depth-first traversal of
@@ -69,7 +69,7 @@ class CircularReferenceError(ValueError):
 
 
 class _DataOpTraversal:
-    """Base class for objects that manipulate dataops."""
+    """Base class for objects that manipulate DataOps."""
 
     # We avoid the use of recursion which could make skrub code harder to debug
     # and more importantly cause very long and confusing traceback for users
@@ -219,7 +219,7 @@ class _DataOpTraversal:
 
 class _Evaluator(_DataOpTraversal):
     # Class used by the evaluate() function defined in this module to evaluate
-    # a dataop.
+    # a DataOp.
 
     def __init__(self, mode="preview", environment=None, callbacks=()):
         self.mode = mode
@@ -320,7 +320,7 @@ def _check_environment(environment):
     env_contains_dataop, found_node = needs_eval(environment, return_node=True)
     if env_contains_dataop:
         if isinstance(found_node, DataOp):
-            description = f"a skrub dataop: {found_node._skrub_impl!r}"
+            description = f"a skrub DataOp: {found_node._skrub_impl!r}"
         else:
             description = f"a skrub choice: {found_node}"
         raise TypeError(
@@ -332,18 +332,18 @@ def _check_environment(environment):
     #
     # - env ⊂ variables: in some cases we could check that there are no extra
     #   keys in `environment`, ie all keys in `environment` correspond to a
-    #   name in the dataop. However in other cases we naturally end up
+    #   name in the DataOp. However in other cases we naturally end up
     #   using a bigger environment than what is needed. For example we want tu
-    #   evaluate a sub-dataop (such as the `mark_as_X()` node), and to do
+    #   evaluate a sub-DataOp (such as the `mark_as_X()` node), and to do
     #   it we use the environment that was passed to evaluate the full
-    #   dataop. So if we want such a verification it should be a separate
+    #   DataOp. So if we want such a verification it should be a separate
     #   check done at a higher level (eg in the estimators' `fit`, `predict`
-    #   etc.) where we know we are not working with a sub-dataop.
+    #   etc.) where we know we are not working with a sub-DataOp.
     #
-    # - variables ⊂ env: we cannot check that all variables in the dataop
+    # - variables ⊂ env: we cannot check that all variables in the DataOp
     #   have a matching key in the `environment`, because depending on the
-    #   mode, choices, and result of dynamic conditional dataops such as
-    #   `.skb.if_else()` some variables in the dataop may not be required
+    #   mode, choices, and result of dynamic conditional DataOps such as
+    #   `.skb.if_else()` some variables in the DataOp may not be required
     #   for evaluation and those do not need a value and are allowed to be
     #   missing from the environment. For example if we are doing `predict` the
     #   variables used for the computation of `y` do not need to be provided in
@@ -355,7 +355,7 @@ def _check_environment(environment):
 
 
 def evaluate(dataop, mode="preview", environment=None, clear=False, callbacks=()):
-    """Evaluate a dataop.
+    """Evaluate a DataOp.
 
     Parameters
     ----------
@@ -365,7 +365,7 @@ def evaluate(dataop, mode="preview", environment=None, clear=False, callbacks=()
 
     environment : dict
         The dict passed by the user, containing binding for all the variables
-        contained in the dataop, e.g., {'users': ..., 'orders': ...}. May
+        contained in the DataOp, e.g., {'users': ..., 'orders': ...}. May
         contain some additional special keys starting with `_skrub` added by
         skrub to control some aspects of the evaluation, eg `_skrub_X` to
         override the value of the node marked with `mark_as_X()`.
@@ -377,7 +377,7 @@ def evaluate(dataop, mode="preview", environment=None, clear=False, callbacks=()
 
     callbacks : list of functions
         Each will be called, in the provided order, after evaluating each node.
-        The signature is callback(dataop, result) where dataop is the dataop
+        The signature is callback(dataop, result) where dataop is the DataOp
         that was just evaluated and result is the resulting value.
     """
     requested_mode = mode
@@ -405,7 +405,7 @@ class _Reachable(_DataOpTraversal):
 
     This is used to find which cached results are no longer needed and can be
     discarded to free the corresponding memory. For example if we have this
-    dataop: `b = a + a; c = b * b` and we want to evaluate `c`, once `b`
+    DataOp: `b = a + a; c = b * b` and we want to evaluate `c`, once `b`
     has been computed we no longer need `a` to compute `c` and we can clear its
     cache.
     """
@@ -508,7 +508,7 @@ class _Cloner(_DataOpTraversal):
 
 
 def clone(dataop, replace=None, drop_preview_data=False):
-    """Clone a dataop.
+    """Clone a DataOp.
 
     Parameters
     ----------
@@ -569,14 +569,14 @@ class _Graph(_DataOpTraversal):
 
 
 def graph(dataop):
-    """Get a simple representation of a dataop's structure.
+    """Get a simple representation of a DataOp's structure.
 
-    All the nodes (dataops) contained in the dataop are numbered
+    All the nodes (DataOps) contained in the DataOp are numbered
     starting from 0, 1, ...
 
     This returns a dict with 3 keys:
 
-    - nodes: maps the ID (0, 1, ...) to the corresponding dataop object
+    - nodes: maps the ID (0, 1, ...) to the corresponding DataOp object
     - children: maps the ID of a node to the list of IDs of its children.
     - parents:maps the ID of a node to the list of IDs of its parents.
 
@@ -615,7 +615,7 @@ def clear_results(dataop, mode=None):
 def _choice_display_names(choices):
     """
     Get display names (eg for parallel coord plots) for all choices in a
-    dataop.
+    DataOp.
 
     When the choice is given an explicit `name` by the user that is used,
     otherwise a shorted repr + number suffix to make them unique.
@@ -701,7 +701,7 @@ class _ChoiceGraph(_DataOpTraversal):
 
 
 def choice_graph(dataop, check_Xy=True):
-    """The graph of all the choices in a dataop.
+    """The graph of all the choices in a DataOp.
 
     All BaseChoice objects found are numbered from 0, 1, ...
     Those IDs are used to describe the nested choices structure and to define
@@ -713,7 +713,7 @@ def choice_graph(dataop, check_Xy=True):
 
     Parameters
     ----------
-    dataop : the dataop to inspect
+    dataop : the DataOp to inspect
 
     check_Xy : bool
         Choices upstream of X and y, ie upstream of the train/test split cannot
@@ -735,7 +735,7 @@ def choice_graph(dataop, check_Xy=True):
        param grid etc.
      - children :
        Helps identify nested choices. Choice instances (created by
-       `choose_from`) can have arbitrary objects (such as dataops,
+       `choose_from`) can have arbitrary objects (such as DataOps,
        scikit-learn estimators, choices) as their outcomes. Some of those
        outcomes may themselves contain choices. In this case the pair (choice
        ID, outcome index) is added as a key in the `children` mapping; the
@@ -866,8 +866,8 @@ def _expand_grid(graph, grid):
 
 def param_grid(dataop):
     """
-    Build the parameter grid (for GridSearchCV and RandomizedSearchCV) for an
-    dataop.
+    Build the parameter grid (for GridSearchCV and RandomizedSearchCV) for a
+    DataOp.
     """
     graph = choice_graph(dataop)
     return _expand_grid(graph, {})
@@ -927,7 +927,7 @@ class _ChosenOrDefaultOutcomes(_DataOpTraversal):
 
 
 def chosen_or_default_outcomes(dataop):
-    """Get the selected or default outcomes for choices in the dataop.
+    """Get the selected or default outcomes for choices in the DataOp.
 
     Return a mapping from the choice's ID (0, 1, ... -- see `choice_graph`) to
     the corresponding outcome.
@@ -951,7 +951,7 @@ def chosen_or_default_outcomes(dataop):
     ...     name="regressor",
     ... ).as_data_op()
 
-    All the choices found in the dataop: mapping from choice ID to the
+    All the choices found in the DataOp: mapping from choice ID to the
     corresponding choice object:
 
     >>> pprint(choices(e))
@@ -995,7 +995,7 @@ class _FindNode(_DataOpTraversal):
 
 
 def find_node(obj, predicate=None):
-    """Find a dataop or choice in the graph according to `predicate`.
+    """Find a DataOp or choice in the graph according to `predicate`.
 
     The first one that is found according to a deterministic traversal order is
     returned, None is returned if no such node is found.
@@ -1027,7 +1027,7 @@ def find_node_by_name(dataop, name):
 def needs_eval(obj, return_node=False):
     """
     Whether a python object contains any object that requires evaluation such
-    as a dataop or a choice.
+    as a DataOp or a choice.
     """
     try:
         node = find_node(obj)
@@ -1119,7 +1119,7 @@ def find_conflicts(dataop):
     We use a function that returns the conflicts, rather than raises an
     exception, because we want the exception to be raised higher in the call
     stack (in ``_dataops._check_dataop``) so that the user sees the line in
-    their code that created a problematic dataop easily in the traceback.
+    their code that created a problematic DataOp easily in the traceback.
     """
     try:
         _FindConflicts().run(dataop)
@@ -1145,9 +1145,9 @@ class _FindArg(_DataOpTraversal):
 
 
 def find_arg(dataop, predicate, skip_types=(Var, Value)):
-    # Find a node while ignoring certain dataop types, used by
+    # Find a node while ignoring certain DataOp types, used by
     # _dataops._find_dataframe to detect when someone passed an actual
-    # DataFrame instead of a dataop to a dataop's method or to a
+    # DataFrame instead of a DataOp to a DataOp's method or to a
     # deferred function.
     try:
         _FindArg(predicate, skip_types=skip_types).run(dataop)
@@ -1167,7 +1167,7 @@ class _FindFirstApply(_DataOpTraversal):
 
 
 def find_first_apply(dataop):
-    """Find the Apply() node closest to the dataop's root.
+    """Find the Apply() node closest to the DataOp's root.
 
     This is assumed to be the final/supervised learner and inspected in
     _estimator to determine its nature (regressor, classifier, transformer) and

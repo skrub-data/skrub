@@ -6,7 +6,7 @@ from . import _data_ops, _evaluation
 
 # The key in the evaluation environment that indicates if subsampling should
 # take place or not. Subsampling can be turned on or off when evaluating a
-# dataop by setting the corresponding value in the environment.
+# DataOp by setting the corresponding value in the environment.
 
 SHOULD_SUBSAMPLE_KEY = "_skrub_should_subsample"
 
@@ -31,9 +31,9 @@ class ShouldSubsample(_data_ops.DataOpImpl):
         return _should_subsample(mode, environment)
 
 
-@_data_ops.check_dataop
+@_data_ops.check_data_op
 def should_subsample():
-    """dataop indicating if subsampling should be applied.
+    """DataOp indicating if subsampling should be applied.
 
     This is a helper for other skrub functions that need the information of
     whether they should apply any subsampling, depending on the current
@@ -42,7 +42,7 @@ def should_subsample():
     Examples
     --------
     >>> import skrub
-    >>> from skrub._dataops._subsampling import should_subsample
+    >>> from skrub._data_ops._subsampling import should_subsample
 
     >>> @skrub.deferred
     ... def load_data(subsampling=should_subsample()):
@@ -58,10 +58,10 @@ def should_subsample():
     1.0
     >>> e.skb.get_learner(fitted=True)
     subsampling: False
-    SkrubLearner(dataop=<Call 'load_data'>)
+    SkrubLearner(data_op=<Call 'load_data'>)
     >>> e.skb.get_learner(keep_subsampling=True, fitted=True)
     subsampling: True
-    SkrubLearner(dataop=<Call 'load_data'>)
+    SkrubLearner(data_op=<Call 'load_data'>)
     """
     return _data_ops.DataOp(ShouldSubsample())
 
@@ -107,7 +107,7 @@ class SubsamplePreviews(_data_ops.DataOpImpl):
         )
 
 
-def env_with_subsampling(dataop, environment, keep_subsampling):
+def env_with_subsampling(data_op, environment, keep_subsampling):
     """Update an environment with subsampling indication.
 
     Small private helper to add subsampling to an environment, if subsampling
@@ -118,17 +118,17 @@ def env_with_subsampling(dataop, environment, keep_subsampling):
     """
     if not keep_subsampling:
         return environment
-    if not uses_subsampling(dataop):
+    if not uses_subsampling(data_op):
         raise ValueError(
             "`keep_subsampling=True` was passed but no subsampling has been configured"
-            " anywhere in the dataop. Either pass `keep_subsampling=False` (the"
+            " anywhere in the DataOp. Either pass `keep_subsampling=False` (the"
             " default) or configure subsampling with `.skb.subsample()`."
         )
     return environment | {SHOULD_SUBSAMPLE_KEY: True}
 
 
-def uses_subsampling(dataop):
-    """Find if subsampling is configured somewhere in the dataop.
+def uses_subsampling(data_op):
+    """Find if subsampling is configured somewhere in the DataOp.
 
     This can be used for example to notify the user that the preview they see
     comes from a subsample.
@@ -138,11 +138,11 @@ def uses_subsampling(dataop):
     subsampling was done with ``subsample size >= data size`` and
     ``how='head'``, or if subsampling takes place in a path that was not used
     for the preview (e.g. the unused branch of a ``.skb.if_else()``
-    dataop).
+    DataOp).
     """
     return (
         _evaluation.find_node(
-            dataop,
+            data_op,
             lambda e: isinstance(e, _data_ops.DataOp)
             and isinstance(e._skrub_impl, (SubsamplePreviews, ShouldSubsample)),
         )

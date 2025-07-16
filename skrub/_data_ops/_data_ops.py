@@ -57,7 +57,7 @@ __all__ = [
     "y",
     "as_data_op",
     "deferred",
-    "check_dataop",
+    "check_data_op",
     "eval_mode",
 ]
 
@@ -94,7 +94,7 @@ _EXCLUDED_JUPYTER_ATTR = [
 _EXCLUDED_PANDAS_ATTR = [
     # used internally by pandas to check an argument is actually a dataframe.
     # by raising an attributeerror when it is accessed we fail early when a
-    # dataop is used where a DataFrame is expected eg
+    # DataOp is used where a DataFrame is expected eg
     # pd.DataFrame(...).merge(skrub.X(), ...)
     #
     # polars already fails with a good error message in that situation so it
@@ -141,7 +141,7 @@ _UNARY_OPS = [
 
 class UninitializedVariable(KeyError):
     """
-    Evaluating a dataop and a value has not been provided for one of the variables.
+    Evaluating a DataOp and a value has not been provided for one of the variables.
     """
 
 
@@ -167,8 +167,8 @@ def _remove_shell_frames(stack):
     return stack
 
 
-def _format_dataop_creation_stack():
-    "Call stack information used to tell users where a dataop was defined."
+def _format_data_op_creation_stack():
+    "Call stack information used to tell users where a DataOp was defined."
 
     # TODO use inspect.stack() instead of traceback.extract_stack() for more
     # context lines + within-line position of the instruction (dis.Positions
@@ -189,7 +189,7 @@ class DataOpImpl:
     Those types are used as `_skrub_impl` attributes of `DataOp` instances. They
     provide the DataOp's functionality.
 
-    Subclass `DataOpImpl` to define a new type of node (such as `GetAttr`,
+    Subclass `DataOpsImpl` to define a new type of node (such as `GetAttr`,
     `Apply`, etc.)
 
     Subclasses must _not_ define `__init__`. They must have a static attribute
@@ -240,7 +240,7 @@ class DataOpImpl:
             self.results = {}
             self.errors = {}
             try:
-                self._creation_stack_lines = _format_dataop_creation_stack()
+                self._creation_stack_lines = _format_data_op_creation_stack()
             except Exception:
                 self._creation_stack_lines = None
             self.is_X = False
@@ -288,17 +288,17 @@ class DataOpImpl:
         return f"<{self.__class__.__name__}>"
 
 
-def _find_dataframe(dataop, func_name):
-    # If a dataframe is found in a dataop that is likely a mistake.
+def _find_dataframe(data_op, func_name):
+    # If a dataframe is found in a DataOp that is likely a mistake.
     # Eg skrub.X().join(actual_df, ...) instead of skrub.X().join(skrub.var('Z'), ...)
     from ._evaluation import find_arg
 
-    df = find_arg(dataop, lambda o: sbd.is_dataframe(o))
+    df = find_arg(data_op, lambda o: sbd.is_dataframe(o))
     if df is not None:
         return {
             "message": (
                 f"You passed an actual DataFrame (shown below) to `{func_name}`. "
-                "Did you mean to pass a skrub dataop instead? "
+                "Did you mean to pass a skrub DataOp instead? "
                 "Note: if you did intend to pass a DataFrame you can wrap it "
                 "with `skrub.as_data_op(df)` to avoid this error. "
                 f"Here is the dataframe:\n{df}"
@@ -307,13 +307,13 @@ def _find_dataframe(dataop, func_name):
     return None
 
 
-def check_dataop(f):
-    """Check a dataop and evaluate the preview.
+def check_data_op(f):
+    """Check a DataOp and evaluate the preview.
 
-    We must decorate all the functions that create dataops rather than do
+    We must decorate all the functions that create DataOps rather than do
     it in ``__init__`` to make tracebacks as short as possible: the second
     frame in the stack trace is the one in user code that created the
-    problematic dataop. If the check was done in ``__init__`` it might be
+    problematic DataOp. If the check was done in ``__init__`` it might be
     buried several calls deep, making it harder to understand those errors.
     """
 
@@ -321,21 +321,21 @@ def check_dataop(f):
     def checked_call(*args, **kwargs):
         from ._evaluation import check_choices_before_Xy, evaluate, find_conflicts
 
-        dataop = f(*args, **kwargs)
+        data_op = f(*args, **kwargs)
 
         try:
-            func_name = dataop._skrub_impl.pretty_repr()
+            func_name = data_op._skrub_impl.pretty_repr()
         except Exception:
             func_name = f"{f.__name__}()"
 
-        conflicts = find_conflicts(dataop)
+        conflicts = find_conflicts(data_op)
         if conflicts is not None:
             raise ValueError(conflicts["message"])
-        if (found_df := _find_dataframe(dataop, func_name)) is not None:
+        if (found_df := _find_dataframe(data_op, func_name)) is not None:
             raise TypeError(found_df["message"])
-        check_choices_before_Xy(dataop)
+        check_choices_before_Xy(data_op)
         try:
-            evaluate(dataop, mode="preview", environment=None)
+            evaluate(data_op, mode="preview", environment=None)
         except UninitializedVariable:
             pass
         except Exception as e:
@@ -345,7 +345,7 @@ def check_dataop(f):
                 f"You can see the full traceback above. The error message was:\n{msg}"
             ) from e
 
-        return dataop
+        return data_op
 
     return checked_call
 
@@ -375,13 +375,13 @@ def _check_return_value(f):
 
     @functools.wraps(f)
     def check_call_return_value(*args, **kwargs):
-        dataop = f(*args, **kwargs)
-        if "preview" not in dataop._skrub_impl.results:
-            return dataop
-        result = dataop._skrub_impl.results["preview"]
+        data_op = f(*args, **kwargs)
+        if "preview" not in data_op._skrub_impl.results:
+            return data_op
+        result = data_op._skrub_impl.results["preview"]
         if result is not None:
-            return dataop
-        func_name = dataop._skrub_impl.pretty_repr()
+            return data_op
+        func_name = data_op._skrub_impl.pretty_repr()
         msg = (
             f"Calling {func_name!r} returned None. "
             "To enable chaining steps in a DataOps plan, do not use functions "
@@ -389,7 +389,7 @@ def _check_return_value(f):
             "their argument unchanged and return a new object."
         )
         warnings.warn(msg)
-        return dataop
+        return data_op
 
     return check_call_return_value
 
@@ -432,23 +432,23 @@ DataOps.
 This class is usually not instantiated manually, but through one of the functions
 :func:`var`, :func:`as_data_op`, :func:`X` or :func:`y`, by applying a
 :func:`deferred` function, or by calling a method or applying an operator
-to an existing dataop.
+to an existing DataOp.
 """
 
-_DATAOP_INSTANCE_DOC = """Skrub DataOp.
+_DATA_OP_INSTANCE_DOC = """Skrub DataOp.
 
 This object represents a computation and can be used to build DataOps plans and
 learners.
 
 Please refer to the example gallery for an introduction to skrub
-dataops.
+DataOps.
 """
 
 
 class _DataOpDoc:
     """Descriptor for the DataOps' docstring."""
 
-    # The docstring of dataop instances is dynamic and shows the docstring of
+    # The docstring of DataOp instances is dynamic and shows the docstring of
     # the preview's result if possible, so that if we do
 
     # ``help(skrub.var('a', [1, 2]))``
@@ -462,15 +462,15 @@ class _DataOpDoc:
             return _DATA_OP_CLASS_DOC
         preview = instance._skrub_impl.preview_if_available()
         if preview is NULL:
-            return _DATAOP_INSTANCE_DOC
+            return _DATA_OP_INSTANCE_DOC
         doc = getattr(preview, "__doc__", None)
         if doc is None:
-            return _DATAOP_INSTANCE_DOC
+            return _DATA_OP_INSTANCE_DOC
         return f"""Skrub DataOp.\nDocstring of the preview:\n{doc}"""
 
 
 class DataOp:
-    """A skrub dataop."""
+    """A skrub DataOp."""
 
     # This class is mostly an empty shell that captures all attribute accesses
     # in its `__getattr__` to add them to the computation graph. Its relevant
@@ -495,7 +495,7 @@ class DataOp:
     def __sklearn_clone__(self):
         return self.__deepcopy__({})
 
-    @check_dataop
+    @check_data_op
     def __getattr__(self, name):
         if name in [
             "_skrub_impl",
@@ -511,12 +511,12 @@ class DataOp:
             attribute_error(self, name)
         return DataOp(GetAttr(self, name))
 
-    @check_dataop
+    @check_data_op
     def __getitem__(self, key):
         return DataOp(GetItem(self, key))
 
     @_check_return_value
-    @check_dataop
+    @check_data_op
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
         if isinstance(impl, GetAttr):
@@ -525,7 +525,7 @@ class DataOp:
             Call(self, args, kwargs, globals={}, closure=(), defaults=(), kwdefaults={})
         )
 
-    @check_dataop
+    @check_data_op
     def __len__(self):
         return DataOp(GetAttr(self, "__len__"))()
 
@@ -559,7 +559,7 @@ class DataOp:
 
     def __setitem__(self, key, value):
         msg = (
-            "Do not modify a dataop in-place. "
+            "Do not modify a DataOp in-place. "
             "Instead, use a function that returns a new value. "
             "This is necessary to allow chaining "
             "several steps in a sequence of transformations."
@@ -576,7 +576,7 @@ class DataOp:
         if name == "_skrub_impl":
             return super().__setattr__(name, value)
         raise TypeError(
-            "Do not modify a dataop in-place. "
+            "Do not modify a DataOp in-place. "
             "Instead, use a function that returns a new value. "
             "This is necessary to allow chaining "
             "several steps in a sequence of transformations."
@@ -584,21 +584,21 @@ class DataOp:
 
     def __bool__(self):
         raise TypeError(
-            "This object is a dataop that will be evaluated later, "
+            "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
             "use its Boolean value now."
         )
 
     def __iter__(self):
         raise TypeError(
-            "This object is a dataop that will be evaluated later, "
+            "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
             "iterate over it now."
         )
 
     def __contains__(self, item):
         raise TypeError(
-            "This object is a dataop that will be evaluated later, "
+            "This object is a DataOp that will be evaluated later, "
             "when your learner runs. So it is not possible to eagerly "
             "perform membership tests now."
         )
@@ -669,7 +669,7 @@ class DataOp:
         return f"<div>\n{prefix}\n{report}\n</div>"
 
 
-# Dynamically generate the dataop's dunder methods for arithmetic and
+# Dynamically generate the DataOp's dunder methods for arithmetic and
 # bitwise operators
 
 
@@ -678,7 +678,7 @@ def _make_bin_op(op_name):
         return DataOp(BinOp(self, right, getattr(operator, op_name)))
 
     op.__name__ = op_name
-    return check_dataop(op)
+    return check_data_op(op)
 
 
 for op_name in _BIN_OPS:
@@ -690,7 +690,7 @@ def _make_r_bin_op(op_name):
         return DataOp(BinOp(left, self, getattr(operator, op_name)))
 
     op.__name__ = f"__r{op_name.strip('_')}__"
-    return check_dataop(op)
+    return check_data_op(op)
 
 
 for op_name in _BIN_OPS:
@@ -703,7 +703,7 @@ def _make_unary_op(op_name):
         return DataOp(UnaryOp(self, getattr(operator, op_name)))
 
     op.__name__ = op_name
-    return check_dataop(op)
+    return check_data_op(op)
 
 
 for op_name in _UNARY_OPS:
@@ -793,19 +793,19 @@ def check_name(name, is_var):
 
 
 def _check_var_value(value):
-    """Checking that the value passed to a skrub variable is not a dataop
+    """Checking that the value passed to a skrub variable is not a DataOp
     or a choice."""
     from ._evaluation import needs_eval
 
     if needs_eval(value):
         raise TypeError(
             "The `value` of a `skrub.var()` must not contain a skrub "
-            f"dataop or skrub choice. Got object {value} of {type(value)}."
+            f"DataOp or skrub choice. Got object {value} of {type(value)}."
         )
 
 
 class Var(DataOpImpl):
-    "A `skrub.var()` dataop."
+    "A `skrub.var()` DataOp."
 
     _fields = ["name", "value"]
 
@@ -835,7 +835,7 @@ def var(name, value=NULL):
 
     Variables represent inputs to a DataOps plan, and the corresponding learner.
     They can be combined with other variables, constants, operators, function
-    calls etc. to build up complex dataops, which implicitly define the plan.
+    calls etc. to build up complex DataOps, which implicitly define the plan.
 
     See the example gallery for more information about skrub DataOps.
 
@@ -859,7 +859,7 @@ def var(name, value=NULL):
     Raises
     ------
     TypeError
-        If the provided value is a skrub dataop or a skrub choose_* function.
+        If the provided value is a skrub DataOp or a skrub choose_* function.
 
     See also
     --------
@@ -958,7 +958,7 @@ def X(value=NULL):
     Raises
     ------
     TypeError
-        If the provided value is a skrub dataop or a skrub choose_* function.
+        If the provided value is a skrub DataOp or a skrub choose_* function.
 
     See also
     --------
@@ -969,7 +969,7 @@ def X(value=NULL):
         Create a skrub variable.
 
     skrub.DataOp.skb.mark_as_X :
-        Mark this dataop as being the ``X`` table.
+        Mark this DataOp as being the ``X`` table.
 
     Examples
     --------
@@ -1020,7 +1020,7 @@ def y(value=NULL):
     Raises
     ------
     TypeError
-        If the provided value is a skrub dataop or a skrub choose_* function.
+        If the provided value is a skrub DataOp or a skrub choose_* function.
 
     See also
     --------
@@ -1031,7 +1031,7 @@ def y(value=NULL):
         Create a skrub variable.
 
     skrub.DataOp.skb.mark_as_y :
-        Mark this dataop as being the ``y`` table.
+        Mark this DataOp as being the ``y`` table.
 
     Examples
     --------
@@ -1057,7 +1057,7 @@ def y(value=NULL):
 
 
 class Value(DataOpImpl):
-    """Wrap any object in a dataop.
+    """Wrap any object in a DataOp.
 
     See `skrub.as_data_op()` docstring.
     """
@@ -1074,27 +1074,27 @@ class Value(DataOpImpl):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"
 
 
-@check_dataop
+@check_data_op
 def as_data_op(value):
-    """Create a dataop :class:`DataOp` that evaluates to the given value.
+    """Create a DataOp :class:`DataOp` that evaluates to the given value.
 
-    This wraps any object in a dataop. When the dataop is evaluated,
+    This wraps any object in a DataOp. When the DataOp is evaluated,
     the result is the provided value. This has a similar role as :func:`deferred`,
     but for any object rather than for functions.
 
     Parameters
     ----------
     value : object
-        The result of evaluating the dataop
+        The result of evaluating the DataOp
 
     Returns
     -------
-    a dataop that evaluates to the given value
+    a DataOp that evaluates to the given value
 
     See also
     --------
     deferred :
-        Wrap function calls in a dataop.
+        Wrap function calls in a DataOp.
     DataOp :
         Representation of a computation that can be used to build ML estimators.
 
@@ -1108,7 +1108,7 @@ def as_data_op(value):
     >>> data_path.skb.eval({'source': 'remote'})
     'remote/data.parquet'
 
-    Turning the dictionary into a dataop defers the lookup of
+    Turning the dictionary into a DataOp defers the lookup of
     ``data_source`` until it has been evaluated when the learner runs.
 
     The example above is somewhat contrived, but ``as_data_op`` is often useful
@@ -1342,10 +1342,10 @@ class Call(DataOpImpl):
     def compute(self, e, mode, environment):
         func = e.func
         if e.globals or e.closure or e.defaults:
-            # The deferred function has skrub dataops (that need to be
+            # The deferred function has skrub DataOps (that need to be
             # evaluated) in its global variables, free variables or default
             # arguments. In this case after those are evaluated, we recompile a
-            # new function in which the dataops have been replaced by their
+            # new function in which the DataOps have been replaced by their
             # computed value. More details in the docstring of
             # `skrub.deferred`.
             func = types.FunctionType(
@@ -1416,14 +1416,14 @@ class CallMethod(DataOpImpl):
 
 
 def deferred(func):
-    """Wrap function calls in a dataop :class:`DataOp`.
+    """Wrap function calls in a DataOp :class:`DataOp`.
 
-    When this decorator is applied, the resulting function returns dataops.
-    The returned dataop wraps the call to the original function, and the
-    call is executed when the dataop is evaluated. This allows including calls
+    When this decorator is applied, the resulting function returns DataOps.
+    The returned DataOp wraps the call to the original function, and the
+    call is executed when the DataOp is evaluated. This allows including calls
     to any function as a step in a learner, rather than executing it immediately.
 
-    See the examples gallery for an in-depth explanation of skrub dataops
+    See the examples gallery for an in-depth explanation of skrub DataOps
     and ``deferred``.
 
     Parameters
@@ -1435,13 +1435,13 @@ def deferred(func):
     -------
     A new function
         When called, rather than applying the original function immediately, it
-        returns a dataop. Evaluating the dataop applies the original
+        returns a DataOp. Evaluating the DataOp applies the original
         function.
 
     See also
     --------
     as_data_op :
-        Create a dataop that evaluates to the given value.
+        Create a DataOp that evaluates to the given value.
 
     DataOp :
         Representation of a computation that can be used to build ML estimators.
@@ -1457,17 +1457,17 @@ def deferred(func):
     >>> import skrub
     >>> text = skrub.var('text')
 
-    Calling ``tokenize`` on a skrub dataop raises an exception:
+    Calling ``tokenize`` on a skrub DataOp raises an exception:
     ``tokenize`` tries to iterate immediately over the tokens to remove stop
     words, but the text will only be known when we run the learner.
 
     >>> tokens = tokenize(text)
     Traceback (most recent call last):
         ...
-    TypeError: This object is a dataop that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
+    TypeError: This object is a DataOp that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
 
     We can defer the call to ``tokenize`` until we are evaluating the
-    dataop:
+    DataOp:
 
     >>> tokens = skrub.deferred(tokenize)(text)
     >>> tokens
@@ -1491,7 +1491,7 @@ def deferred(func):
     Advanced examples
     -----------------
     As we saw in the last example above, the arguments passed to the function,
-    if they are dataops, are evaluated before calling it. This is also the
+    if they are DataOps, are evaluated before calling it. This is also the
     case for global variables, default arguments and free variables.
 
     >>> a = skrub.var('a')
@@ -1559,7 +1559,7 @@ def deferred(func):
         return func
 
     @_check_return_value
-    @check_dataop
+    @check_data_op
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
         return DataOp(
@@ -1606,7 +1606,7 @@ def deferred(func):
         return deferred_func
 
     @_check_return_value
-    @check_dataop
+    @check_data_op
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
         return DataOp(
@@ -1709,14 +1709,14 @@ class EvalMode(DataOpImpl):
         return mode
 
 
-@check_dataop
+@check_data_op
 def eval_mode():
-    """Return the mode in which the dataop is currently being evaluated.
+    """Return the mode in which the DataOp is currently being evaluated.
 
     This can be:
 
     - 'preview': when the previews are being eagerly computed when the
-      dataop is defined or when we call ``.skb.eval()`` without
+      DataOp is defined or when we call ``.skb.eval()`` without
       arguments.
     - otherwise, the method we called on the learner such as ``'predict'``
       or ``'fit_transform'``.

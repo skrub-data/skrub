@@ -1,4 +1,4 @@
-# Scikit-learn-ish interface to the skrub dataops
+# Scikit-learn-ish interface to the skrub DataOps
 
 import pandas as pd
 from sklearn import model_selection
@@ -82,7 +82,7 @@ def _copy_attr(source, target, attributes):
 
 class _CloudPickleDataOp(_CloudPickle):
     """
-    Mixin to serialize the `dataop` attribute with cloudpickle when pickling a
+    Mixin to serialize the `DataOp` attribute with cloudpickle when pickling a
     learner.
     """
 
@@ -90,11 +90,11 @@ class _CloudPickleDataOp(_CloudPickle):
 
 
 class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
-    """Learner that evaluates a skrub dataop.
+    """Learner that evaluates a skrub DataOp.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
-    objects are created by calling :meth:`DataOp.skb.get_learner()` on an
-    dataop.
+    objects are created by calling :meth:`DataOp.skb.get_learner()` on a
+    DataOp.
     """
 
     def __init__(self, dataop):
@@ -200,7 +200,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         See also
         --------
         skrub.DataOp.skb.set_name :
-            Give a name to this dataop.
+            Give a name to this DataOp.
 
         skrub.DataOp.skb.apply :
             Apply a scikit-learn estimator to a dataframe or numpy array.
@@ -384,7 +384,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         Returns a human-readable description (in form of a dict) of the
         parameters (outcomes of `choose_*` objects contained in the
-        dataop).
+        DataOp).
         """
         return describe_params(
             chosen_or_default_outcomes(self.dataop), choice_graph(self.dataop)
@@ -539,10 +539,10 @@ def _rename_cv_param_learner_to_estimator(kwargs):
 
 
 def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
-    """Cross-validate a learner built from a dataop.
+    """Cross-validate a learner built from a DataOp.
 
     This runs cross-validation from a learner that was built from a skrub
-    dataop with :func:`DataOp.skb.get_learner`, :func:`DataOp.skb.get_grid_search` or
+    DataOp with :func:`DataOp.skb.get_learner`, :func:`DataOp.skb.get_grid_search` or
     :func:`DataOp.skb.get_randomized_search`.
 
     It is useful to run nested cross-validation of a grid search or randomized
@@ -551,10 +551,10 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     Parameters
     ----------
     learner : skrub learner
-        A learner generated from a skrub dataop.
+        A learner generated from a skrub DataOp.
 
     environment : dict
-        Bindings for variables contained in the dataop.
+        Bindings for variables contained in the DataOp.
 
     keep_subsampling : bool, default=False
         If True, and if subsampling has been configured (see
@@ -577,7 +577,7 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
         Evaluate metric(s) by cross-validation and also record fit/score times.
 
     :func:`skrub.DataOp.skb.get_learner`:
-        Get a skrub learner for this dataop.
+        Get a skrub learner for this DataOp.
 
     :func:`skrub.DataOp.skb.get_grid_search`:
         Find the best parameters with grid search.
@@ -657,11 +657,11 @@ def train_test_split(
 
 
 class ParamSearch(_CloudPickleDataOp, BaseEstimator):
-    """Learner that evaluates a skrub dataop with hyperparameter tuning.
+    """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``
     objects are created by calling :meth:`DataOp.skb.get_grid_search()` or
-    :meth:`DataOp.skb.get_randomized_search()` on a dataop.
+    :meth:`DataOp.skb.get_randomized_search()` on a DataOp.
     """
 
     def __init__(self, dataop, search):
