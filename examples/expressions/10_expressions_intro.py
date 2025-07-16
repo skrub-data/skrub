@@ -1,50 +1,70 @@
 """
+.. currentmodule:: skrub
+
 .. _example_expressions_intro:
 
+Building a predictive model by combining multiple tables with the skrub DataOps
+==============================================================================
 
-Building complex tabular pipelines
-==================================
+This example introduces the skrub DataOps, that builds complex data processing pipelines
+handling multiple tables, with hyperparameter tuning and model selection.
 
-In this example, we show a simple pipeline handling a dataset with 2 tables,
-which would be difficult to implement, validate, and deploy correctly without
-skrub.
+DataOps form implicitly a "plan", which records all the operations performed on
+the data; the DataOps plan can be exported as a ``Learner``, a standalone object
+that can be saved on disk, loaded in a new environment, and used to make predictions
+on new data.
+
+Here we show the basics of the skrub DataOps in a two-table scenario: how to create
+DataOps, how to use them to leverage dataframe operations, how to combine them in
+a full DataOps plan, how to do simple hyperparameter tuning, and finally how to
+export the plan as a ``Learner``.
+
+
 """
 
 # %%
 # The credit fraud dataset
 # ------------------------
 #
-# This dataset comes from an e-commerce website. We have a set of "baskets" (
-# orders that have been placed with the website). The task is to detect which
-# orders were fraudulent (the customer never made the payment).
+# This dataset originates from an e-commerce website and is structured into two tables:
+#
+# - The "baskets" table contains order IDs, each representing a list of purchased
+#   products.
+#   For a subset of these orders (the training set), a flag indicates whether
+#   the order was fraudulent.
+#   This fraud flag is the target variable we aim to predict during inference.
+# - The "products" table provides the detailed contents of all baskets, including
+#   those without a known fraud label.
 #
 # The ``baskets`` table contains a basket ID and a flag indicating if the order
 # was fraudulent or not.
+# We start by loading the ``baskets`` table, and exploring it with the ``TableReport``.
 
 # %%
-import skrub
 import skrub.datasets
+from skrub import TableReport
 
-dataset = skrub.datasets.fetch_credit_fraud()
-skrub.TableReport(dataset.baskets)
+dataset = skrub.datasets.fetch_credit_fraud()  # load labeled data
+TableReport(dataset.baskets)
 
 # %%
-# Each basket contains one or more products. Each row in the ``products`` table
-# corresponds to a type of product present in a basket. Products can
+# We then load the ``products`` table, which contains one row per purchased product.
+
+# %%
+TableReport(dataset.products)
+
+# %%
+# Each basket contains at least one product, and products can
 # be associated with the corresponding basket through the ``"basket_ID"``
 # column.
-
-# %%
-skrub.TableReport(dataset.products)
-
-# %%
-# A data-processing challenge
+#
+# A design problem: how to combine tables while avoiding leakage?
 # ----------------------------
 #
 # We want to fit a ``HistGradientBoostingClassifier`` to predict the fraud
-# flag (or ``y``). We build a design matrix with one row per basket (and thus per
-# fraud flag). Our ``baskets`` (or ``X``) table only contains IDs. We enrich it by
-# adding features from the ``products`` table.
+# flag (or ``y``). To do so, we build a design matrix where each row corresponds
+# to a basket, and we want to add features from the ``products`` table to
+# each basket.
 #
 # The general structure of the pipeline looks like this:
 #
@@ -54,10 +74,10 @@ skrub.TableReport(dataset.products)
 #
 # First, as the ``products`` table contains strings and categories (such as
 # ``"SAMSUNG"``), we vectorize those entries to extract numeric
-# features. This is easily done with skrub's ``TableVectorizer``. Then, as each
-# basket can contain several products, all the product lines corresponding to a
-# basket are aggregated into a single feature vector that can be
-# attached to the basket.
+# features. This is easily done with skrub's ``TableVectorizer``. Then, since each
+# basket can contain several products, we want to aggregate all the lines in
+# ``products`` that correspond to a single basket into a single vector that can
+# then be attached to the basket.
 #
 # The difficulty is that the vectorized ``products`` should be aggregated before joining
 # to ``baskets``, and, in order to compute a meaningful aggregation, must
@@ -74,8 +94,7 @@ skrub.TableReport(dataset.products)
 # However, because it is dissociated from the main estimator which handles
 # ``X`` (the baskets), we have to manage this transformer ourselves. We lose
 # the scikit-learn machinery for grouping all transformation steps,
-# storing fitted estimators, splitting the input data and cross-validation, and
-# hyper-parameter tuning.
+# storing fitted estimators, cross-validating the data, and tuning hyper-parameters.
 #
 # Moreover, we might need some Pandas code to perform the aggregation and join.
 # Again, as this transformation is not in a scikit-learn estimator, it is error-prone.
@@ -87,17 +106,29 @@ skrub.TableReport(dataset.products)
 # more flexible pipelines.
 
 # %%
-# A solution with skrub
-# ---------------------
+# DataOps make DataOps plans
+# --------------------------
+# In a skrub DataOps plan, we do not have an explicit, sequential list of
+# transformation steps. Instead, we perform "Data Operations" (or "DataOps"):
+# operations that act on variables and wrap user operations to keep track
+# of their parameters.
 #
-# In a skrub pipeline, we do not provide an explicit list of
-# transformation steps. Rather, we manipulate skrub objects representing
-# intermediate results. The pipeline is built implicitly as we perform
+# User operations could be dataframe operations (selection, merge, group by, etc.),
+# scikit-learn estimators (such as a RandomForest with its hyperparameters),
+# or arbitrary code (for loading data, converting values, etc.).
+#
+# As we perform operations on skrub variables, the plan records each DataOp
+# and its parameters. This record can later be synthesized into a standalone object
+# called a "learner", which can replay these operations on unseen data, ensuring
+# that the same operations and parameters are used.
+#
+# In a DataOps plan, we manipulate skrub objects representing
+# intermediate results. The plan is built implicitly as we perform
 # operations (such as applying operators or calling functions) on those
 # objects.
 
 # %%
-# We start by creating skrub variables, which are the inputs to our pipeline.
+# We start by creating skrub variables, which are the inputs to our plan.
 # In our example, we create three variables: "products", "baskets", and "fraud flags":
 
 # %%
@@ -108,24 +139,27 @@ baskets = full_baskets[["ID"]].skb.mark_as_X()
 fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
-# They are given a name and an (optional) initial
-# value, used to show previews of the pipeline's output, detect errors
+# Variables are given a name and an (optional) initial
+# value, which is used to show previews of the result of each DataOp, detect errors
 # early, and provide data for cross-validation and hyperparameter search.
 #
-# We then build the pipeline by applying transformations to those inputs.
+# Then, the plan is built by applying DataOps to those variables, that
+# is, by performing user operations that have been wrapped in a DataOp.
 #
 # Above, ``mark_as_X()`` and ``mark_as_y()`` indicate that the baskets and
 # flags are respectively our design matrix and target variables, that
 # should be split into training and testing sets for cross-validation. Here,
-# they are direct inputs to the pipeline but any
+# they are direct inputs to the plan, but any
 # intermediate result could be marked as X or y.
 #
-# Because our pipeline expects dataframes for products, baskets and fraud
-# flags, we manipulate those objects as we would manipulate dataframes.
-# All attribute accesses are transparently forwarded to the actual input
-# dataframes when we run the pipeline.
+# By setting products, baskets and fraud_flags as skrub variables, we can manipulate
+# those objects as if they were dataframes, while keeping track of all the operations
+# that are performed on them. Additionally, skrub variables and DataOps provide
+# their own
+# set of methods, which are
+# accessible through the ``skb`` attribute of any skrub variable and DataOp.
 #
-# For instance, we filter products to keep only those that match one of the
+# For instance, we can filter products to keep only those that match one of the
 # baskets in the ``baskets`` table, and then add a column containing the total
 # amount for each kind of product in a basket:
 
@@ -140,33 +174,34 @@ products_with_total
 # We see previews of the output of intermediate results. For
 # example, the added ``"total_price"`` column is in the output above.
 # The "Show graph" dropdown at the top allows us to check the
-# structure of the pipeline and all the steps it contains.
+# structure of the DataOps plan and all the DataOps it contains.
 #
 # .. note::
 #
-#    We recommend to assign each new skrub expression to a new variable name,
+#    We recommend to assign each new skrub DataOp to a new variable name,
 #    as is done above. For example ``kept_products = products[...]`` instead of
 #    reusing the name ``products = products[...]``. This makes it easy to
-#    backtrack to any step of the pipeline and change the subsequent steps, and
+#    backtrack to any step of the plan and change the subsequent steps, and
 #    can avoid ending up in a confusing state in jupyter notebooks when the
 #    same cell might be re-executed several times.
 #
-# With skrub, we do not need to specify a grid of hyperparameters separately
-# from the pipeline. Instead, we replace a parameter's value with a skrub
-# "choice" which indicates the range of values we consider during
+# A major advantage of the skrub DataOps plan is that it allows to specify a
+# grid of hyperparameter choices where the parameter is defined, improving code
+# readability and maintainability.
+# We do so by replacing a parameter's value with a skrub
+# "choice", which indicates the range of values we consider during
 # hyperparameter selection.
 #
 # Skrub choices can be nested arbitrarily. They are not restricted to
 # parameters of a scikit-learn estimator, but can be anything: choosing
 # between different estimators, arguments to function calls, whole sections of
-# the pipeline etc.
+# the plan etc.
 #
 # In-depth information about choices and hyperparameter/model selection is
-# provided in the :ref:`Tuning Pipelines example <example_tuning_pipelines>`.
+# provided in the :ref:`Tuning Data Plans example <example_tuning_pipelines>`.
 #
-# We build a skrub ``TableVectorizer`` with different choices of:
-# the type of encoder for high-cardinality categorical or string columns, and
-# the number of components it uses.
+# Here, we build a skrub ``TableVectorizer`` with choices for the high-cardinality
+# encoder, and the number of components it uses.
 
 # %%
 n = skrub.choose_int(5, 15, name="n_components")
@@ -191,8 +226,8 @@ vectorized_products = products_with_total.skb.apply(
 
 # %%
 # Having access to the underlying dataframe's API, we can perform the
-# data-wrangling we need. Those transformations are being implicitly added
-# as steps in our machine-learning pipeline.
+# data-wrangling we need. Those transformations are being implicitly recorded
+# as DataOps in our plan.
 
 # %%
 aggregated_products = vectorized_products.groupby("basket_ID").agg("mean").reset_index()
@@ -201,8 +236,8 @@ augmented_baskets = baskets.merge(
 ).drop(columns=["ID", "basket_ID"])
 
 # %%
-# We can actually ask for a full report of the pipeline and inspect the
-# results at every step::
+# We can actually ask for a full report of the plan and inspect the
+# results of each DataOp::
 #
 #     predictions.skb.full_report()
 #
@@ -222,9 +257,9 @@ predictions = augmented_baskets.skb.apply(hgb, y=fraud_flags)
 predictions
 
 # %%
-# And our pipeline is complete!
+# And our DataOps plan is complete!
 #
-# From the choices we inserted at different locations in our pipeline, skrub
+# From the choices we inserted at different locations in our plan, skrub
 # can build a grid of hyperparameters and run the hyperparameter search for us,
 # backed by scikit-learn's ``GridSearchCV`` or ``RandomizedSearchCV``.
 
@@ -263,23 +298,27 @@ search.plot_results()
 # It seems here that using the LSA as an encoder brings better test scores,
 # but at the expense of training and scoring time.
 #
-# Serializing
-# -----------
-# We would usually save this model in a binary file, but to avoid accessing the
-# filesystem with this example notebook, we serialize the model in memory instead.
+# From the DataOps plan to the learner
+# ------------------------------------------
+# The learner is a standalone object that can replay all the DataOps recorded in
+# the plan, and can be used to make predictions on new, unseen data. The
+# learner can be saved and loaded, allowing us to use it later without having to
+# rebuild the plan.
+# We would usually save the learner in a binary file, but to avoid accessing the
+# filesystem with this example notebook, we serialize the learner in memory instead.
 import pickle
 
-saved_model = pickle.dumps(search.best_pipeline_)
+saved_model = pickle.dumps(search.best_pipeline_)  # This gives us our learner
 
 # %%
-# Let's say we got some new data, and we want to use the model we just saved
+# Let's say we got some new data, and we want to use the learner we just saved
 # to make predictions on them:
 new_data = skrub.datasets.fetch_credit_fraud(split="test")
 new_baskets = new_data.baskets[["ID"]]
 new_products = new_data.products
 
 # %%
-# Our pipeline expects the same variable names as the training pipeline, which is why
+# Our learner expects the same variable names as the training plan, which is why
 # we pass a dictionary that contains new dataframes and the same variable:
 loaded_model = pickle.loads(saved_model)
 loaded_model.predict({"baskets": new_baskets, "products": new_products})
@@ -289,5 +328,9 @@ loaded_model.predict({"baskets": new_baskets, "products": new_products})
 # ----------
 #
 # If you are curious to know more on how to build your own complex, multi-table
-# pipelines with easy hyperparameter tuning, please see the next examples for an
-# in-depth tutorial.
+# plans with easy hyperparameter tuning and transforming them into reusable
+# learners, please see the next examples for an in-depth tutorial.
+#
+# Indeed, the following examples will explain how to tune hyperparameters in detail (see
+# :ref:`example_tuning_pipelines`), and how to speed up development by subsampling
+# preview data (see :ref:`example_subsampling`).
