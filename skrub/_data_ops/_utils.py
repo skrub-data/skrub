@@ -24,8 +24,8 @@ NULL = Sentinels.NULL
 OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
 
 
-def simple_repr(dataop):
-    return repr(dataop).splitlines()[0].removeprefix("<").removesuffix(">")
+def simple_repr(data_op):
+    return repr(data_op).splitlines()[0].removeprefix("<").removesuffix(">")
 
 
 def attribute_error(obj, name, comment=None):

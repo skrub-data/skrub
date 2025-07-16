@@ -73,7 +73,7 @@ def _check_grid_search_possible(data_op):
         if hasattr(c, "rvs") and not isinstance(c, typing.Sequence):
             raise ValueError(
                 "Cannot use grid search with continuous numeric ranges. "
-                "Please use `get_randomized_search` or provide a number "
+                "Please use `make_randomized_search` or provide a number "
                 f"of steps for this range: {c}"
             )
 
@@ -179,7 +179,7 @@ class SkrubNamespace:
 
         See also
         --------
-        skrub.DataOp.skb.get_learner :
+        skrub.DataOp.skb.make_learner :
             Get a skrub learner for this DataOp.
 
         Examples
@@ -290,7 +290,7 @@ class SkrubNamespace:
         >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
         array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
                 -4.85785541])
-        >>> learner = e.skb.get_learner().fit({"X": X})
+        >>> learner = e.skb.make_learner().fit({"X": X})
         >>> learner.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
         """  # noqa: E501
@@ -704,7 +704,7 @@ class SkrubNamespace:
           DataOp and the output of :meth:`DataOp.skb.preview`).
         - When it is explicitly requested by passing ``keep_subsampling=True`` to one
           of the functions that expose that parameter such as
-          :meth:`DataOp.skb.get_randomized_search` or :func:`cross_validate`.
+          :meth:`DataOp.skb.make_randomized_search` or :func:`cross_validate`.
 
         When subsampling has not been configured (``subsample`` has not
         been called anywhere in the DataOp plan), no subsampling is ever done.
@@ -773,7 +773,7 @@ class SkrubNamespace:
         full data, so if we want the subsampling to take place we have to
         pass ``keep_subsampling=True``:
 
-        >>> quick_search = pred.skb.get_randomized_search(
+        >>> quick_search = pred.skb.make_randomized_search(
         ...     keep_subsampling=True, fitted=True, n_iter=4, random_state=0
         ... )
         >>> quick_search.detailed_results_[["mean_test_score", "mean_fit_time", "α"]] # doctest: +SKIP
@@ -786,7 +786,7 @@ class SkrubNamespace:
         Now that we have checked our learner works on a subsample, we can
         fit the hyperparameter search on the full data:
 
-        >>> full_search = pred.skb.get_randomized_search(
+        >>> full_search = pred.skb.make_randomized_search(
         ...     fitted=True, n_iter=4, random_state=0
         ... )
         >>> full_search.detailed_results_[["mean_test_score", "mean_fit_time", "α"]] # doctest: +SKIP
@@ -1046,7 +1046,7 @@ class SkrubNamespace:
         2   3     cup         5  2020-04-04
         3   4   spoon         1  2020-04-05
         >>> n_products = skrub.X()['product'].nunique()
-        >>> transformer = n_products.skb.get_learner()
+        >>> transformer = n_products.skb.make_learner()
         >>> transformer.fit_transform({'X': X_df})
         3
 
@@ -1060,7 +1060,7 @@ class SkrubNamespace:
         remembered during ``fit`` and reused during ``transform``:
 
         >>> n_products = skrub.X()['product'].nunique().skb.freeze_after_fit()
-        >>> transformer = n_products.skb.get_learner()
+        >>> transformer = n_products.skb.make_learner()
         >>> transformer.fit_transform({'X': X_df})
         3
         >>> transformer.transform({'X': X_df.iloc[:2]})
@@ -1130,7 +1130,7 @@ class SkrubNamespace:
         :func:`sklearn.model_selection.cross_validate`:
             Evaluate metric(s) by cross-validation and also record fit/score times.
 
-        :func:`skrub.DataOp.skb.get_learner`:
+        :func:`skrub.DataOp.skb.make_learner`:
             Get a skrub learner for this DataOp.
 
         Examples
@@ -1394,8 +1394,8 @@ class SkrubNamespace:
            If the DataOp contains choices (e.g. ``choose_from(...)``), this
            learner uses the default value of each choice. To actually pick the
            best value with hyperparameter tuning, use
-           :meth:`DataOp.skb.get_randomized_search` or
-           :meth:`DataOp.skb.get_grid_search` instead.
+           :meth:`DataOp.skb.make_randomized_search` or
+           :meth:`DataOp.skb.make_grid_search` instead.
 
         Parameters
         ----------
@@ -1441,7 +1441,7 @@ class SkrubNamespace:
         1    False
         2    False
         3    False
-        >>> learner = pred.skb.get_learner(fitted=True)
+        >>> learner = pred.skb.make_learner(fitted=True)
         >>> new_orders_df = skrub.datasets.toy_orders(split='test').X
         >>> new_orders_df
            ID product  quantity        date
@@ -1531,7 +1531,7 @@ class SkrubNamespace:
         >>> split = delayed.skb.train_test_split(random_state=0)
         >>> split.keys()
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
-        >>> learner = delayed.skb.get_learner()
+        >>> learner = delayed.skb.make_learner()
         >>> learner.fit(split["train"])
         SkrubLearner(data_op=<Apply DummyClassifier>)
         >>> learner.score(split["test"])
@@ -1589,7 +1589,7 @@ class SkrubNamespace:
 
         See also
         --------
-        skrub.DataOp.skb.get_randomized_search :
+        skrub.DataOp.skb.make_randomized_search :
             Find the best parameters with grid search.
 
         Examples
@@ -1618,7 +1618,7 @@ class SkrubNamespace:
           N 🌴: [3, 30]
         - classifier: 'dummy'
 
-        >>> search = pred.skb.get_grid_search(fitted=True)
+        >>> search = pred.skb.make_grid_search(fitted=True)
         >>> search.results_
               C   N 🌴 classifier mean_test_score
         0   NaN  30.0         rf             0.89
@@ -1629,8 +1629,8 @@ class SkrubNamespace:
 
         If the DataOp contains some numeric ranges (``choose_float``,
         ``choose_int``), either discretize them by providing the ``n_steps``
-        argument or use ``get_randomized_search`` instead of
-        ``get_grid_search``.
+        argument or use ``make_randomized_search`` instead of
+        ``make_grid_search``.
 
         >>> logistic = LogisticRegression(
         ...     C=skrub.choose_float(0.1, 10.0, log=True, n_steps=5, name="C")
@@ -1638,7 +1638,7 @@ class SkrubNamespace:
         >>> pred = X.skb.apply(logistic, y=y)
         >>> print(pred.skb.describe_param_grid())
         - C: choose_float(0.1, 10.0, log=True, n_steps=5, name='C')
-        >>> search = pred.skb.get_grid_search(fitted=True)
+        >>> search = pred.skb.make_grid_search(fitted=True)
         >>> search.results_
             C	mean_test_score
         0	0.100000	0.84
@@ -1700,7 +1700,7 @@ class SkrubNamespace:
 
         See also
         --------
-        skrub.DataOp.skb.get_grid_search :
+        skrub.DataOp.skb.make_grid_search :
             Find the best parameters with grid search.
 
         Examples
@@ -1734,7 +1734,7 @@ class SkrubNamespace:
         - k: choose_int(4, 20, log=True, name='k')
           classifier: 'dummy'
 
-        >>> search = pred.skb.get_randomized_search(fitted=True, random_state=0)
+        >>> search = pred.skb.make_randomized_search(fitted=True, random_state=0)
         >>> search.results_
             k         C  N 🌴 classifier mean_test_score
         0   4  4.626363  NaN   logistic             0.92
@@ -1778,11 +1778,11 @@ class SkrubNamespace:
             with :func:`choose_float` or :func:`choose_int` with
             ``n_steps=None``.
 
-        DataOp.skb.get_grid_search :
+        DataOp.skb.make_grid_search :
             Learner with built-in exhaustive exploration of the parameter grid
             to select the best one.
 
-        DataOp.skb.get_randomized_search :
+        DataOp.skb.make_randomized_search :
             Learner with built-in randomized exploration of the parameter grid
             to select the best one.
 
@@ -1859,11 +1859,11 @@ class SkrubNamespace:
             numeric ranges built with :func:`choose_float` or
             :func:`choose_int` with ``n_steps=None``.
 
-        DataOp.skb.get_grid_search :
+        DataOp.skb.make_grid_search :
             Learner with built-in exhaustive exploration of the parameter grid
             to select the best one.
 
-        DataOp.skb.get_randomized_search :
+        DataOp.skb.make_randomized_search :
             Learner with built-in randomized exploration of the parameter grid
             to select the best one.
 
