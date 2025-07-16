@@ -11,7 +11,8 @@ handling multiple tables, with hyperparameter tuning and model selection.
 
 DataOps form implicitly a "plan", which records all the operations performed on
 the data; the DataOps plan can be exported as a ``Learner``, a standalone object
-that can be saved on disk, loaded in a new environment, and used to make predictions on new data.
+that can be saved on disk, loaded in a new environment, and used to make predictions
+on new data.
 
 Here we show the basics of the skrub DataOps in a two-table scenario: how to create
 DataOps, how to use them to leverage dataframe operations, how to combine them in
