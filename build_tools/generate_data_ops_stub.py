@@ -1,15 +1,15 @@
 # ruff: noqa
 
 # This script generates a .pyi (stub) file for skrub/_data_ops/_data_ops.py.
-# Expr have attributes, in particular the methods for most operators, generated
+# DataOps have attributes, in particular the methods for most operators, generated
 # dynamically. This can cause static type checkers to report spurious errors
-# saying that those operators are not defined for Expr objects. To avoid this,
+# saying that those operators are not defined for DataOp objects. To avoid this,
 # we create a stub file in which we explicitly list all the dynamically
 # generated attributes. The presence of a __getattr__ should also prevent
 # checkers for complaining about regular (non-special, not __*__) attributes.
 #
 # When a stub file exists, checkers will not look at the actual module.
-# Therefore besides the Expr class, any other functions defined in the same
+# Therefore besides the DataOp class, any other functions defined in the same
 # module should also have their signature listed in the stub. Another option
 # would be to make sure no public functions are defined in _data_ops.py,
 # however that seems more constraining
@@ -21,18 +21,18 @@
 # skrub/_data_ops/_data_ops.pyi
 #
 # If the output of the script changes, for example because an attribute has
-# been added or removed to the Expr class, the check will fail and we have to
+# been added or removed to the DataOp class, the check will fail and we have to
 # decide if we just need to regenerate the file or to edit the script (for
 # example to exclude the new attribute from the generated annotations).
 #
 # Because the type of the result of an expression, and thus the operations that
 # will be valid, is only known during execution, we don't expect that static
-# checkers can produce useful output for data_ops. Therefore we just provide
+# checkers can produce useful output for DataOps. Therefore we just provide
 # the minimal annotations to silence errors -- for example we don't detail the
 # arguments but just put *args, **kwargs everywhere.
 #
 # A simpler solution to silence type errors would be to annotate all functions
-# that create data_ops as returning Any. However, this would prevent some
+# that create DataOps as returning Any. However, this would prevent some
 # tools for providing autocompletion on the .skb attribute (both for .skb and
 # for all the attributes of .skb). So we prefer to use the stub file.
 

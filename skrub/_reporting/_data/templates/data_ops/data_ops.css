@@ -15,7 +15,7 @@ pre, code {
     transform: translateY(2px);
 }
 
-.expression-node-wrapper {
+.data_op-node-wrapper {
     overflow-x: auto;
 }
 
@@ -25,18 +25,18 @@ pre, code {
     list-style-type: none;
 }
 
-.expression-node {
+.data_op-node {
     display: flex;
     height: calc(100vh - 24px - 24px);
 }
 
-.expression-node > * {
+.data_op-node > * {
     padding: 1rem;
     max-height: 100%;
     overflow-y: auto;
 }
 
-.expression-node > nav.main-nav {
+.data_op-node > nav.main-nav {
     padding-top: 24px;
     border-right: 2px solid #ccc;
     flex-shrink: 0;
