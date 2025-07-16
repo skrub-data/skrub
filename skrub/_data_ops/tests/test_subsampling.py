@@ -6,7 +6,7 @@ from sklearn.dummy import DummyRegressor
 
 import skrub
 from skrub import _dataframe as sbd
-from skrub._dataops import _subsampling
+from skrub._data_ops import _subsampling
 
 
 @pytest.mark.parametrize("as_frame", [False, True])

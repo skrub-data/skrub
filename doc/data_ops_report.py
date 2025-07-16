@@ -7,7 +7,7 @@ import skrub.datasets
 from skrub import selectors as s
 
 
-def create_dataop_report():
+def create_data_ops_report():
     output_dir = (
         Path(__file__).parent / "_build" / "html" / "_static" / "credit_fraud_report"
     )

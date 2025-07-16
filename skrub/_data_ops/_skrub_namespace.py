@@ -5,7 +5,7 @@ from sklearn import model_selection
 
 from .. import selectors as s
 from .._select_cols import DropCols, SelectCols
-from ._dataops import (
+from ._data_ops import (
     AppliedEstimator,
     Apply,
     Concat,

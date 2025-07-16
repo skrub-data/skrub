@@ -36,14 +36,14 @@ class _A:
 
 
 def test_missing_doc():
-    from skrub._dataops._dataops import _DATAOP_INSTANCE_DOC
+    from skrub._data_ops._data_ops import _DATAOP_INSTANCE_DOC
 
     assert skrub.X().__doc__ == _DATAOP_INSTANCE_DOC
     assert skrub.X(_A()).__doc__ == _DATAOP_INSTANCE_DOC
 
 
 def test_expr_class_doc():
-    from skrub._dataops._dataops import _DATAOP_CLASS_DOC, DataOp
+    from skrub._data_ops._data_ops import _DATAOP_CLASS_DOC, DataOp
 
     assert DataOp.__doc__ == _DATAOP_CLASS_DOC
 

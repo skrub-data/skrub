@@ -18,7 +18,7 @@ from sklearn.base import BaseEstimator
 from sklearn.base import clone as skl_clone
 
 from . import _choosing
-from ._dataops import (
+from ._data_ops import (
     Apply,
     DataOp,
     Value,

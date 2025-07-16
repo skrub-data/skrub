@@ -11,7 +11,7 @@ from sklearn.linear_model import LogisticRegression
 
 import skrub
 from skrub import selectors as s
-from skrub._dataops import _dataops
+from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 
 
@@ -222,10 +222,10 @@ def test_cloning_and_preview_data(how):
 
 def test_dataop_impl():
     # misc bits to make codecove happy
-    class A(_dataops.DataOpImpl):
+    class A(_data_ops.DataOpImpl):
         _fields = ()
 
-    a = _dataops.DataOp(A())
+    a = _data_ops.DataOp(A())
     assert repr(a) == "<A>"
     with pytest.raises(NotImplementedError):
         a.skb.eval()
@@ -332,6 +332,6 @@ def test_concat_vertical_duplicate_cols():
 
 
 def test_class_skb():
-    from skrub._dataops._skrub_namespace import SkrubNamespace
+    from skrub._data_ops._skrub_namespace import SkrubNamespace
 
     assert skrub.DataOp.skb is SkrubNamespace

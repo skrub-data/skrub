@@ -423,7 +423,7 @@ class _Skb:
         return _skrub_namespace.SkrubNamespace(instance)
 
 
-_DATAOP_CLASS_DOC = """
+_DATA_OP_CLASS_DOC = """
 Representation of a computation that can be used to build DataOps plans and learners.
 
 Please refer to the example gallery for an introduction to skrub
@@ -459,7 +459,7 @@ class _DataOpDoc:
 
     def __get__(self, instance, owner=None):
         if instance is None:
-            return _DATAOP_CLASS_DOC
+            return _DATA_OP_CLASS_DOC
         preview = instance._skrub_impl.preview_if_available()
         if preview is NULL:
             return _DATAOP_INSTANCE_DOC

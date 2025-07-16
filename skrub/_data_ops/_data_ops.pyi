@@ -6,7 +6,7 @@
 
 from typing import Callable
 
-from skrub._dataops._skrub_namespace import SkrubNamespace
+from skrub._data_ops._skrub_namespace import SkrubNamespace
 
 class DataOp:
     skb: SkrubNamespace

@@ -8,7 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
 from ._choosing import BaseNumericChoice, get_default
-from ._dataops import Apply
+from ._data_ops import Apply
 from ._evaluation import (
     choice_graph,
     chosen_or_default_outcomes,

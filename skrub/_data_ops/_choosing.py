@@ -44,7 +44,7 @@ class BaseChoice:
         `choice.as_dataop()`` is a convenience shorthand for
         ``skrub.as_dataop(choice)``.
         """
-        from ._dataops import as_dataop
+        from ._data_ops import as_dataop
 
         return as_dataop(self)
 
@@ -323,7 +323,7 @@ class Match:
 
         ``match.as_dataop()`` is a convenience shorthand for ``skrub.as_dataop(match)``.
         """
-        from ._dataops import as_dataop
+        from ._data_ops import as_dataop
 
         return as_dataop(self)
 

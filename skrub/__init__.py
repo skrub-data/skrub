@@ -10,7 +10,7 @@ from ._apply_to_cols import ApplyToCols
 from ._apply_to_frame import ApplyToFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
-from ._dataops import (
+from ._data_ops import (
     DataOp,
     ParamSearch,
     SkrubLearner,

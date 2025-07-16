@@ -19,7 +19,7 @@ from .._reporting._serve import open_in_browser
 from .._utils import Repr, random_string, short_repr
 from . import _utils
 from ._choosing import BaseNumericChoice, Choice
-from ._dataops import Apply, Value, Var
+from ._data_ops import Apply, Value, Var
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._subsampling import uses_subsampling
 

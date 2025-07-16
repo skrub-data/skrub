@@ -45,7 +45,7 @@ import io
 import types
 
 import skrub
-from skrub._dataops import _dataops
+from skrub._data_ops import _data_ops
 
 file = io.StringIO()
 p = file.write
@@ -89,8 +89,8 @@ p("\n")
 
 not_an_expression_factory = ["deferred"]
 
-for name in sorted(set(_dataops.__dict__).intersection(skrub.__dict__)):
-    obj = getattr(_dataops, name)
+for name in sorted(set(_data_ops.__dict__).intersection(skrub.__dict__)):
+    obj = getattr(_data_ops, name)
     if obj is not getattr(skrub, name):
         continue
     if not isinstance(obj, types.FunctionType) or name in not_an_expression_factory:

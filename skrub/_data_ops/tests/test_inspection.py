@@ -9,7 +9,7 @@ from sklearn.feature_selection import SelectKBest
 
 import skrub
 from skrub import datasets
-from skrub._dataops import _inspection
+from skrub._data_ops import _inspection
 
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")

@@ -2,7 +2,7 @@ import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
-from skrub._dataops._evaluation import evaluate
+from skrub._data_ops._evaluation import evaluate
 from skrub.datasets import fetch_employee_salaries
 
 

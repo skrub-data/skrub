@@ -2,7 +2,7 @@ import numpy as np
 
 from .. import _dataframe as sbd
 from .._config import get_config
-from . import _dataops, _evaluation
+from . import _data_ops, _evaluation
 
 # The key in the evaluation environment that indicates if subsampling should
 # take place or not. Subsampling can be turned on or off when evaluating a
@@ -24,14 +24,14 @@ def _should_subsample(mode, environment):
     return environment.get(SHOULD_SUBSAMPLE_KEY, False)
 
 
-class ShouldSubsample(_dataops.DataOpImpl):
+class ShouldSubsample(_data_ops.DataOpImpl):
     _fields = []
 
     def compute(self, e, mode, environment):
         return _should_subsample(mode, environment)
 
 
-@_dataops.check_dataop
+@_data_ops.check_dataop
 def should_subsample():
     """dataop indicating if subsampling should be applied.
 
@@ -63,7 +63,7 @@ def should_subsample():
     subsampling: True
     SkrubLearner(dataop=<Call 'load_data'>)
     """
-    return _dataops.DataOp(ShouldSubsample())
+    return _data_ops.DataOp(ShouldSubsample())
 
 
 def _sample_numpy(a, n, seed):
@@ -76,7 +76,7 @@ def _head_numpy(a, n):
     return a[:n]
 
 
-class SubsamplePreviews(_dataops.DataOpImpl):
+class SubsamplePreviews(_data_ops.DataOpImpl):
     """Optionally subsample a dataframe.
 
     See the docstring of ``.skb.subsample`` for details.
@@ -143,7 +143,7 @@ def uses_subsampling(dataop):
     return (
         _evaluation.find_node(
             dataop,
-            lambda e: isinstance(e, _dataops.DataOp)
+            lambda e: isinstance(e, _data_ops.DataOp)
             and isinstance(e._skrub_impl, (SubsamplePreviews, ShouldSubsample)),
         )
         is not None
