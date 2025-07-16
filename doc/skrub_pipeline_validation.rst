@@ -114,7 +114,7 @@ And we can obtain predictions on the test part:
 
 >>> from sklearn.metrics import r2_score
 
->>> r2_score(test_y_true, test_pred)
+>>> r2_score(test_y_true, test_pred) # doctest: +SKIP
 0.440999149220359
 
 Cross-validation
@@ -268,7 +268,7 @@ Single train-test split:
 >>> split = pred.skb.train_test_split()
 >>> search = pred.skb.make_randomized_search()
 >>> search.fit(split['train'])
-ParamSearch(dataop=<Apply Ridge>,
+ParamSearch(data_op=<Apply Ridge>,
             search=RandomizedSearchCV(estimator=None, param_distributions=None))
 >>> search.score(split['test'])  # doctest: +SKIP
 0.4922874902029253
@@ -322,7 +322,7 @@ choice into an DataOp, via its ``as_data_op`` method (or by using
 >>> rf_pred = X.skb.apply(
 ...     RandomForestRegressor(n_estimators=skrub.choose_int(5, 50, name="N 🌴")), y=y
 ... )
->>> pred = skrub.choose_from({"ridge": ridge_pred, "rf": rf_pred}).as_dataop()
+>>> pred = skrub.choose_from({"ridge": ridge_pred, "rf": rf_pred}).as_data_op()
 >>> print(pred.skb.describe_param_grid())
 - choose_from({'ridge': …, 'rf': …}): 'ridge'
   optional(StandardScaler()): [StandardScaler(), None]

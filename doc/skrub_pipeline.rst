@@ -286,7 +286,7 @@ immediately.
 ...     pass
 Traceback (most recent call last):
     ...
-TypeError: This object is a dataop that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
+TypeError: This object is a DataOp that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
 
 We get an error because the ``for`` statement tries to iterate immediately
 over the columns. However, ``orders.columns`` is not an actual list of
@@ -371,7 +371,7 @@ result without modifying its input.
 >>> orders['total'] = orders['price'] * orders['qty']
 Traceback (most recent call last):
     ...
-TypeError: Do not modify a dataop in-place. Instead, use a function that returns a new value. This is necessary to allow chaining several steps in a sequence of transformations.
+TypeError: Do not modify a DataOp in-place. Instead, use a function that returns a new value. This is necessary to allow chaining several steps in a sequence of transformations.
 For example if df is a pandas DataFrame:
 df = df.assign(new_col=...) instead of df['new_col'] = ...
 
@@ -468,7 +468,7 @@ that we can later refer to it when manipulating a fitted pipeline.
 load:  file:///example.db
 transform
 agg
-SkrubLearner(dataop=<Call 'agg'>)
+SkrubLearner(data_op=<Call 'agg'>)
 
 >>> pipeline.transform({"url": "file:///example.db"})
 load:  file:///example.db
