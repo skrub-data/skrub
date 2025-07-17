@@ -20,7 +20,9 @@ and then use it to make predictions on new data.
 
 from skrub.datasets import fetch_employee_salaries
 
-training_data = fetch_employee_salaries()
+full_data = fetch_employee_salaries().employee_salaries
+training_data = full_data[:8000]
+unseen_data = full_data[8000:]
 
 # %%
 # We can take a look at the dataset using the `TableReport`.
