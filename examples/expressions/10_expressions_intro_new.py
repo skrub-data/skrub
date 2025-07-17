@@ -127,7 +127,8 @@ loaded_model = pickle.loads(saved_model)
 # where each key is the name of one of the skrub variables in the plan.
 #
 # We can now get the test set of the employee salaries dataset:
-unseen_data = fetch_employee_salaries(split="test")
+unseen_data = fetch_employee_salaries()
+unseen_data = unseen_data.employee_salaries[8000:]
 
 # %%
 # Then, we can use the loaded model to make predictions on the unseen data by
