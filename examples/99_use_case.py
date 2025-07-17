@@ -73,7 +73,7 @@ def generate_text(min_str_length, max_str_length):
 
 n_samples = 1000
 
-X = [
+X_dict = [
     {
         "id": generate_id(),
         "sender": generate_email(),
@@ -86,20 +86,54 @@ X = [
 ]
 
 # generate array of 1 and 0
-y = np.random.binomial(n=1, p=0.9, size=[n_samples])
+y_np = np.random.binomial(n=1, p=0.9, size=[n_samples])
 
 # %%
 import skrub
 
-X = skrub.X(X)
-y = skrub.y(y)
+X = skrub.X(X_dict)
+y = skrub.y(y_np)
 
 # %%
 import pandas as pd
 
 # %%
 vectorizer = skrub.TableVectorizer()
-# %%
-X.skb.apply_func(pd.DataFrame).skb.apply(vectorizer, y=y)
+# %%i
+df = X.skb.apply_func(pd.DataFrame)
+full_data_ops = df.skb.apply(vectorizer, y=y)
 
+# %%
+# is that how we are supposed to do it?
+# it's how I found it in https://skrub-data.org/dev/reference/generated/skrub.Expr.skb.apply.html#skrub.Expr.skb.apply,
+# but it seems very heavy to me.
+# Why do I have to regive X, it's supposed to have been defined before?
+# Apparently not, because it's buggy.
+# full_data_ops.skb.get_pipeline().fit({"X": X_dict})
+
+# %%
+# Other test
+trained_pipeline = full_data_ops.skb.get_pipeline().fit({"X": X_dict, "y": y_np})
+# %%
+import pickle
+
+saved_model = pickle.dumps(trained_pipeline)
+
+# %%
+# in my microservice:
+X_input = {
+    "id": generate_id(),
+    "sender": generate_email(),
+    "title": generate_text(max_str_length=10, min_str_length=2),
+    "content": generate_text(max_str_length=100, min_str_length=10),
+    "date": generate_datetime(),
+    "cc_emails": [generate_email() for _ in range(random.randint(0, 5))],
+}
+
+loaded_model = pickle.loads(saved_model)
+# here I'm quite puzzled, because none of two options work.
+# while it's what is described in
+# https://skrub-data.org/dev/auto_examples/expressions/10_expressions_intro.html
+loaded_model.predict({"X": X_input})
+loaded_model.skb.predict({"X": X_input})
 # %%
