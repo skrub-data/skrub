@@ -1,4 +1,4 @@
-.. _expressions_examples_ref:
+.. _data_ops_examples_ref:
 
-Skrub expressions
+Skrub DataOps
 =================
