@@ -18,9 +18,9 @@
 Building multi-table machine learning pipelines with DataOps
 ==================================
 
-In this example, we show how to build a pipeline that handles pre-processing,
-validation and hyperparameter tuning of a dataset with multiple tables using
-skrub's DataOps.
+In this example, we show how to build a DataOps plan: a pipeline that handles
+pre-processing, validation and hyperparameter tuning of a dataset with multiple
+tables using skrub's DataOps.
 
 We consider the credit fraud dataset, which contains two tables: one for
 baskets (orders) and one for products. The goal is to predict whether a basket
@@ -58,7 +58,7 @@ skrub.TableReport(dataset.products)
 # %%
 # A data-processing challenge
 # ----------------------------
-# The general structure of the pipeline we want to build looks like this:
+# The general structure of the DataOps plan we want to build looks like this:
 #
 # .. image:: ../../_static/credit_fraud_diagram.svg
 #    :width: 300
@@ -76,7 +76,7 @@ skrub.TableReport(dataset.products)
 # then need to aggregate the resulting vectors to have a single row per ``basket``.
 # If we wanted to use a scikit-learn ``Pipeline``, we would need to fit the
 # |TableVectorizer| on a table that does not have the same number of rows
-# as the target ``y`` (the ``baskets`` table), which is not allowed.
+# as the target ``y`` (the ``baskets`` table), which is not allowed by scikit-learn.
 #
 # While we could fit the |TableVectorizer| ourselves, we would then lose the
 # scikit-learn machinery for grouping all transformation steps, storing fitted
@@ -85,13 +85,13 @@ skrub.TableReport(dataset.products)
 # using Pandas code, which is error-prone.
 #
 # Fortunately, skrub DataOps provide a powerful alternative for building flexible
-# pipelines that address these problems.
+# plans that address these problems.
 
 # %%
-# Building a multi-table pipeline with skrub DataOps
+# Building a multi-table DataOps plan
 # ---------------------
 #
-# We start by creating skrub variables, which are the inputs to our pipeline.
+# We start by creating skrub variables, which are the inputs to our plan.
 # In our example, we create three skrub |var| objects: ``products``, ``baskets``,
 # and ``fraud_flags``:
 
@@ -106,9 +106,9 @@ fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 # We mark the "baskets" variable as ``X`` and the "fraud flags" variable as ``y``,
 # so that skrub knows that they are the design matrix and target variable, and
 # should be split into training and testing sets for cross-validation.
-# We then build the pipeline by applying transformations to those inputs.
+# We then build the plan by applying transformations to those inputs.
 #
-# Because our pipeline expects dataframes for products, baskets and fraud
+# Since our DataOps expect dataframes for products, baskets and fraud
 # flags, we manipulate those objects as we would manipulate dataframes.
 # For instance, we filter products to keep only those that match one of the
 # baskets in the ``baskets`` table, and then add a column containing the total
@@ -127,10 +127,10 @@ products_with_total
 # the number of components it uses.
 #
 # With skrub, we do not need to specify a grid of hyperparameters separately
-# from the pipeline. Instead, we replace a parameter's value with one of skrub's
-# ``choose_*``` functions, which indicate the range of values we consider during
-# hyperparameter selection. Here, we use |choose_int| to choose the
-# number of components for the encoder, and |choose_from| to choose
+# from the pipeline. Instead, within a DataOps plan we can replace a parameter's
+# value with one of skrub's ``choose_*``` functions, which indicate the range of
+# values we consider during hyperparameter selection. Here, we use |choose_int|
+# to choose the number of components for the encoder, and |choose_from| to choose
 # the type of encoder to use.
 
 # %%
@@ -160,7 +160,7 @@ vectorized_products = products_with_total.skb.apply(
 # vectorized products by basket ID, and then merge the aggregated products
 # with the baskets table.
 # Those transformations are being implicitly added
-# as steps in our machine-learning pipeline.
+# as steps in our plan.
 
 # %%
 aggregated_products = vectorized_products.groupby("basket_ID").agg("mean").reset_index()
@@ -182,7 +182,7 @@ predictions = augmented_baskets.skb.apply(hgb, y=fraud_flags)
 predictions
 
 # %%
-# And our pipeline is complete!
+# And our DataOps plan is complete!
 #
 # We can now use |get_randomized_search| to perform hyperparameter
 # tuning and find the best hyperparameters for our model.
@@ -208,11 +208,11 @@ search.plot_results()
 # Conclusion
 # ----------
 # In this example, we have shown how to build a multi-table machine learning
-# pipeline with skrub DataOps. We have seen how DataOps allow us to use Pandas
+# pipeline with the skrub DataOps. We have seen how DataOps allow us to use Pandas
 # to manipulate dataframes, and how we can build a DataOps plan that can make use
 # of multiple tables, and perform hyperparameter tuning on the resulting pipeline.
 #
 # If you are curious to know more on how to tune hyperparameters using the skrub
-# DataOps,please see
+# DataOps, please see
 # :ref:`Tuning Pipelines example <example_tuning_pipelines>` for an
 # in-depth tutorial.

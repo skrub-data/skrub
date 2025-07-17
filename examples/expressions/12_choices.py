@@ -98,7 +98,8 @@ pred.skb.cross_validate(n_jobs=4)["test_score"]
 #   transformation step optional such as
 #   ``X.skb.apply(skrub.optional(StandardScaler()))``
 #
-# Choices can be given a name which is used to display hyperparameter search
+# Choices can be given a name, which is used to
+# display hyperparameter search
 # results and plots or to override their outcome. The name is optional.
 #
 # Note that :func:`skrub.choose_float()` and :func:`skrub.choose_int()` can be given a
