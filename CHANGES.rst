@@ -9,19 +9,39 @@ Release history
 Ongoing development
 ===================
 
+Highlights
+------------
+- The skrub DataOps are now available! DataOps represent a powerful new way of
+  combining dataframe transformations over multiple tables, and machine learning
+  pipelines. DataOps can be combined to form compled data plans, that can be used
+  to train and tune machine learning models. Then, the DataOps plans can be exported
+  as ``Learners`` (:class:`skrub.SkrubPipeline`), standalone objects that can be
+  used on new data. More detail about the DataOps can be found in the
+  :ref:`User guide <dataops>` and in the :ref:`examples <example_expressions_intro>`.
+
+- The :class:`TableReport` has been improved with many new features. Series are
+  now supported directly. It is now
+  possible to skip computing column associations and generating plots when the
+  number of columns in the dataframe exceeds a user-defined threshold. Columns with
+  high cardinality and sorted columns are now highlighted in the report.
+
+- :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
+  providing utilities for selecting columns to which a transformer should be applied
+  in a flexible way. For more details, see the :ref:`User guide <selectors>`.
+
 New features
 ------------
 
-- The skrub expressions are new mechanism for building machine-learning
-  pipelines that handle multiple tables and easily describing their
-  hyperparameter spaces. See :ref:`the examples <expressions_examples_ref>` for
+- The skrub DataOps are a new mechanism for building machine-learning
+  pipelines that can handle multiple tables and easily describe
+  hyperparameter spaces. See :ref:`the examples <example_expressions_intro>` for
   an introduction. :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of
   work from other contributors is not directly visible on the pull request page:
   :user:`Vincent Maladiere <Vincent-Maladiere>` provided very important help by
-  trying the expressions on many use-cases and datasets, providing feedback and
+  trying the DataOps on many use-cases and datasets, providing feedback and
   suggesting improvements, improving the examples (including creating all the
   figures in the examples) and adding jitter to the parallel coordinate plots,
-  :user:`Riccardo Cappuzzo<rcap107>` experimented with the expressions,
+  :user:`Riccardo Cappuzzo<rcap107>` experimented with the DataOps,
   suggested improvements and improved the examples, :user:`Gaël Varoquaux
   <gaelvaroquaux>` , :user:`Guillaume Lemaitre <glemaitre>`, :user:`Adrin Jalali
   <adrinjalali>`, :user:`Olivier Grisel <ogrisel>` and others participated
@@ -43,6 +63,12 @@ New features
   to configure settings for dataframes display and expressions. :func:`patch_display`
   and :func:`unpatch_display` are deprecated and will be removed in the next release
   of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+  The global configuration includes the parameter `cardinality_threshold` that
+  controls the threshold value used to warn user if they have high cardinality
+  columns in their dataset. :pr:`1498` by :user:`rouk1 <rouk1>`.
+  The parameter ``float_precision``
+  controls the number of significant digits displayed for floating-point values
+  in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
 
 - :func:`datasets.toy_order` is now available to create a toy dataframe and
   corresponding targets for examples.
@@ -52,9 +78,6 @@ New features
   on a set of columns independently and jointly respectively.
   :pr:`1478` by :user:`Vincent Maladiere<Vincent-Maladiere>`.
 
-- :func:`get_config`, :func:`set_config` and :func:`config_context` now have a new
-  parameter `cardinality_threshold` that controls the threshold value used to warn user if they have
-  high cardinality columns in their dataset. :pr:`1498` by :user:`rouk1 <rouk1>`.
 
 Changes
 -------
@@ -62,6 +85,10 @@ Changes
   The default high cardinality encoder for both :class:`TableVectorizer` and
   :meth:`tabular_learner` has been changed from :class:`GapEncoder` to
   :class:`StringEncoder`. :pr:`1354` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The ``tabular_learner`` function has been deprecated in favor of :func:`tabular_pipeline` to honor
+  its scikit-learn pipeline cultural heritage, and remove the ambiguity with the data
+  ops Learner. :pr:`1493` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 - :class:`StringEncoder` now exposes the ``stop_words`` argument, which is passed to the
   underlying vectorizer (:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
@@ -86,6 +113,7 @@ Changes
 
 - The :func:`concat_horizontal` function was replaced with :func:`concat`. Horizontal or vertical concatenation
   is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`.
+
 - The :class:`TableVectorizer` and :class:`Cleaner` now accept a `datetime_format`
   parameter for specifying the format to use when parsing datetime columns.
   :pr:`1358` by :user:`Riccardo Cappuzzo<rcap107>`.
@@ -110,17 +138,23 @@ Changes
 
 - The :class:`TableReport` now shows if columns are sorted. :pr:`1512` by :user:`Dea María Léon<DeaMariaLeon>`.
 
-- The ``tabular_learner`` function has been deprecated in favor of :func:`tabular_pipeline` to honor
-  its scikit-learn pipeline cultural heritage, and remove the ambiguity with the data
-  ops Learner. :pr:`1493` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
-
-- A new parameter ``float_precision`` has been added to the global config to control the number of significant digits
-  displayed for floating-point values in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
 
 Bugfixes
 --------
 - Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
   input column was a Categorical datatype. :pr:`1401` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Documentation
+---------
+A large number of improvements to the examples, docstrings, and the documentation
+website have been made. Contributors include :user:`Vincent Maladiere <Vincent-Maladiere>`,
+:user:`Riccardo Cappuzzo<rcap107>`, :user:`Jérôme Dockès <jeromedockes>`,
+:user:`Gael Varoquaux <gaelvaroquaux>`, :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`,
+:user:`Sylvain Combettes <sylvaincom>`, :user:`Frits Hermans <fritshermans>`,
+:user:`Vitor Pohlenz <vitorpohlenz>`, :user:`Arturo Amor Quiroz <ArturoAmorQ>`,
+:user:`Marie Sacksick <MarieSacksick>`, :user:`Emilien Battel <emilienbattel09>`,
+:user:`<gmhaber>`, :user:`<canag>`, and :user:`Lionel Kusch <lionelkusch>`.
+
 
 Release 0.5.4
 =============
