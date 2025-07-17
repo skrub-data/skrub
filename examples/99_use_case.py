@@ -119,5 +119,6 @@ X_input = {
 }
 
 loaded_model = pickle.loads(saved_model)
-loaded_model.predict({"X": X_input})
+prediction = loaded_model.predict({"X": X_input})
+prediction
 # %%
