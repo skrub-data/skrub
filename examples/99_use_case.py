@@ -95,29 +95,17 @@ X = skrub.X(X_dict)
 y = skrub.y(y_np)
 
 # %%
+learner = skrub.tabular_learner("classification")
+# %%
 import pandas as pd
 
-# %%
-vectorizer = skrub.TableVectorizer()
-# %%i
 df = X.skb.apply_func(pd.DataFrame)
-full_data_ops = df.skb.apply(vectorizer, y=y)
+predictions = df.skb.apply(learner, y=y)
 
-# %%
-# is that how we are supposed to do it?
-# it's how I found it in https://skrub-data.org/dev/reference/generated/skrub.Expr.skb.apply.html#skrub.Expr.skb.apply,
-# but it seems very heavy to me.
-# Why do I have to regive X, it's supposed to have been defined before?
-# Apparently not, because it's buggy.
-# full_data_ops.skb.get_pipeline().fit({"X": X_dict})
-
-# %%
-# Other test
-trained_pipeline = full_data_ops.skb.get_pipeline().fit({"X": X_dict, "y": y_np})
 # %%
 import pickle
 
-saved_model = pickle.dumps(trained_pipeline)
+saved_model = pickle.dumps(predictions.skb.get_pipeline(fitted=True))
 
 # %%
 # in my microservice:
@@ -131,9 +119,5 @@ X_input = {
 }
 
 loaded_model = pickle.loads(saved_model)
-# here I'm quite puzzled, because none of two options work.
-# while it's what is described in
-# https://skrub-data.org/dev/auto_examples/expressions/10_expressions_intro.html
 loaded_model.predict({"X": X_input})
-loaded_model.skb.predict({"X": X_input})
 # %%
