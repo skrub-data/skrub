@@ -155,9 +155,9 @@ search.plot_results()
 # expression contains such choices we can still use it without tuning, for
 # example in previews or to get a quick first result before spending the
 # computation time to run the search. When we use :meth:`.skb.get_pipeline()
-# <Expr.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
+# <DataOp.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
 # and uses those default values. This default pipeline is used for
-# :meth:`.skb.eval() <Expr.skb.eval>`.
+# :meth:`.skb.eval() <DataOp.skb.eval>`.
 #
 # We can control what should be the default value for each choice. For
 # :func:`choose_int`, :func:`choose_float` and :func:`choose_bool`, we can use

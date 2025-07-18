@@ -5,7 +5,7 @@
 Subsampling for faster development
 ==================================
 
-Here we show how to use :meth:`.skb.subsample() <Expr.skb.subsample>` to speed-up
+Here we show how to use :meth:`.skb.subsample() <DataOp.skb.subsample>` to speed-up
 interactive construction of a skrub DataOps plan by computing previews on a subsampled
 version of the original data.
 """
@@ -30,7 +30,7 @@ full_data
 # -------------------------------------------------------------------------------------
 #
 # We can tell skrub to subsample the data when computing the previews, with
-# :meth:`.skb.subsample() <Expr.skb.subsample>`.
+# :meth:`.skb.subsample() <DataOp.skb.subsample>`.
 
 # %%
 data = full_data.skb.subsample(n=100)
@@ -43,9 +43,9 @@ data
 #
 #    By default subsampling is applied *only for previews*: the results
 #    shown when we display the plan, and the output of calling
-#    :meth:`.skb.preview() <Expr.skb.preview>`. For other methods such as
-#    :meth:`.skb.get_learner() <Expr.skb.get_learner>` or
-#    :meth:`.skb.cross_validate() <Expr.skb.cross_validate>`, *no subsampling is
+#    :meth:`.skb.preview() <DataOp.skb.preview>`. For other methods such as
+#    :meth:`.skb.get_learner() <DataOp.skb.get_learner>` or
+#    :meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`, *no subsampling is
 #    done by default*. We can explicitly ask for it with ``keep_subsampling=True``
 #    as we will see below.
 #
@@ -81,7 +81,7 @@ predictions
 
 # %%
 # We can also turn on subsampling for other DataOps methods, such as
-# :meth:`.skb.cross_validate() <Expr.skb.cross_validate>`. Here we run the
+# :meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`. Here we run the
 # cross-validation on the small subsample of 100 rows we configured. With such
 # a small subsample the scores will be very low but this might help us quickly
 # detect errors in our cross-validation scheme.
