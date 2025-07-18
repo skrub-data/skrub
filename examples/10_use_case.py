@@ -24,8 +24,10 @@ is at the basket level, while most information is at the items level.
 # depending on how likely it is that the email is a spam.
 #
 # To avoid having to recode the pipeline once the model is validated into the
-# microservice, which is both error-prone and troublesome, I would like to have the
-# skrub pipeline ready, and just have to load it. Working in this way is also helpful,
+# microservice, which is both error-prone and troublesome, I would like to be
+# able to load an object that executes the same operations as the pipeline:
+# the skrub learner can help with this.
+# Working in this way is also helpful,
 # because it forces me to know beforehand what kind of data I will have at the entrance
 # of the microservice, and avoids building a model based on information that is not
 # accessible yet in this part of the product pipeline. For instance, in my use case,
