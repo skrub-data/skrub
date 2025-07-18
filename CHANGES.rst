@@ -14,7 +14,7 @@ New features
 
 - The skrub expressions are new mechanism for building machine-learning
   pipelines that handle multiple tables and easily describing their
-  hyperparameter spaces. See :ref:`the examples <expressions_examples_ref>` for
+  hyperparameter spaces. See :ref:`the examples <data_ops_examples_ref>` for
   an introduction. :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of
   work from other contributors is not directly visible on the pull request page:
   :user:`Vincent Maladiere <Vincent-Maladiere>` provided very important help by
