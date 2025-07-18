@@ -1,13 +1,17 @@
 from pathlib import Path
 
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
 
 import skrub
 import skrub.datasets
+from skrub import TableVectorizer
 from skrub import selectors as s
 
 
-def create_expression_report():
+def create_credit_fraud_report():
     output_dir = (
         Path(__file__).parent / "_build" / "html" / "_static" / "credit_fraud_report"
     )
@@ -55,3 +59,37 @@ def create_expression_report():
         overwrite=True,
         open=False,
     )
+
+
+def create_employee_salaries_report():
+    output_dir = (
+        Path(__file__).parent
+        / "_build"
+        / "html"
+        / "_static"
+        / "employee_salaries_report"
+    )
+    if output_dir.exists():
+        return
+
+    dataset = skrub.datasets.fetch_employee_salaries(split="train").employee_salaries
+    data_var = skrub.var("data", dataset)
+    X = data_var.drop("current_annual_salary", axis=1).skb.mark_as_X()
+    y = data_var["current_annual_salary"].skb.mark_as_y()
+
+    vectorizer = TableVectorizer()
+    X_vec = X.skb.apply(vectorizer)
+
+    hgb = HistGradientBoostingRegressor()
+    predictor = X_vec.skb.apply(hgb, y=y)
+
+    predictor.skb.full_report(
+        output_dir=output_dir,
+        overwrite=True,
+        open=False,
+    )
+
+
+def create_expression_report():
+    create_credit_fraud_report()
+    create_employee_salaries_report()

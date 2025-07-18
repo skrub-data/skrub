@@ -1,4 +1,6 @@
 """
+.. currentmodule:: skrub
+
 .. _example_expressions_intro:
 
 
@@ -23,9 +25,7 @@ and then use it to make predictions on new data.
 
 from skrub.datasets import fetch_employee_salaries
 
-full_data = fetch_employee_salaries().employee_salaries
-training_data = full_data[:8000]
-unseen_data = full_data[8000:]
+training_data = fetch_employee_salaries(split="train").employee_salaries
 
 # %%
 # We can take a look at the dataset using the `TableReport`.
@@ -94,10 +94,16 @@ predictor
 
 # %%
 # Now that we have built our entire plan, we can have explore it in more detail
-# with the ``.skb.full_report()`` method. This method evaluates each step in
+# with the ``.skb.full_report()`` method::
+#
+#     predictions.skb.full_report()
+#
+# This produces a folder on disk rather than displaying inline in a notebook so
+# we do not run it here. But you can
+# `see the output here <../../_static/employee_salaries_report/index.html>`_.
+#
+# This method evaluates each step in
 # the plan and shows detailed information about the operations that are being performed.
-# The full plan is shown in a browser window and saved on disk.
-predictor.skb.full_report()
 
 # %%
 # Turning the DataOps plan to a learner, for later reuse
@@ -134,8 +140,7 @@ loaded_model = pickle.loads(saved_model)
 # where each key is the name of one of the skrub variables in the plan.
 #
 # We can now get the test set of the employee salaries dataset:
-unseen_data = fetch_employee_salaries()
-unseen_data = unseen_data.employee_salaries[8000:]
+unseen_data = fetch_employee_salaries(split="test").employee_salaries
 
 # %%
 # Then, we can use the loaded model to make predictions on the unseen data by
