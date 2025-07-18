@@ -140,7 +140,7 @@ X_input = {
 with open("learner.pkl", "rb") as f:
     loaded_learner = joblib.load(f)
 
-prediction = loaded_model.predict({"X": [X_input]})
+prediction = loaded_learner.predict({"X": [X_input]})
 prediction
 
 # %%
