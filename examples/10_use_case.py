@@ -25,9 +25,9 @@ is at the basket level, while most information is at the items level.
 # It is also helpful, because it forces me to know before hand what kind of data I will
 # or can have at the entrance of the microservice, and avoid to build a model based on
 # information that is not accessible yet, in this part of the product pipeline.
-# For instance, in my use case, I want to detect a spam before it reaches the receiver
-# mailbox. Therefore, I cannot use a feature which would use it the receiver opens the
-# email.
+# For instance, in my use case, I want to detect a spam email before it reaches the receiver
+# mailbox. Therefore, I cannot use a feature which is available only when the receiver opens 
+# the email.
 
 # %%
 ###############################################################################
