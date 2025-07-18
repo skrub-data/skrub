@@ -122,7 +122,7 @@ predictions.skb.draw_graph()
 # To end the explorative work, I can save the model to a file somewhere.
 import joblib
 
-with open("model.pkl", "wb") as f:
+with open("learner.pkl", "wb") as f:
     joblib.dump(predictions.skb.get_pipeline(fitted=True), f, protocol=5)
 
 # %%
