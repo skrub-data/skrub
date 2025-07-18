@@ -1,7 +1,7 @@
 """
 .. currentmodule:: skrub
 
-.. _example_expressions_intro:
+.. _example_data_ops_intro:
 
 
 Introduction to machine learning pipelines with skrub DataOps
@@ -211,6 +211,5 @@ saved_model = pickle.dumps(best_learner)
 # shown how to save and load the trained model, and how to make predictions on new
 # data using the trained model.
 #
-# However, skrub DataOps are significantly more powerful than what we have shown here.
-# The following examples cover specific use cases, such as multi-table machine
-# learning, complex hyperparameter tuning, and sampling, in more detail.
+# However, skrub DataOps are significantly more powerful than what we have shown here:
+# for more advanced examples, see :ref:`_data_ops_examples_ref`.

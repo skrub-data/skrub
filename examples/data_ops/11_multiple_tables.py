@@ -12,7 +12,7 @@
    :class:`sklearn.ensemble.HistGradientBoostingClassifier`
 .. |get_randomized_search| replace:: :meth:`skrub.Expr.get_randomized_search`
 
-.. _example_expressions_intro:
+.. _example_data_ops_multiple_tables:
 
 
 Multiples tables: building machine learning pipelines with DataOps
