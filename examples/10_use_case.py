@@ -119,7 +119,7 @@ predictions = df.skb.apply(learner, y=y)
 predictions.skb.draw_graph()
 
 # %%
-# To end the explorative work, I can save the model to a file somewhere.
+# To end the explorative work, I can save the fitted learner to a file somewhere.
 import joblib
 
 with open("learner.pkl", "wb") as f:
