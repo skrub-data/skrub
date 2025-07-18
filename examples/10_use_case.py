@@ -2,11 +2,6 @@
 Usecase: developing locally, and avoiding to repeat code in production
 =======================================================================
 
-We will imagine a use case here and try to use skrub to answer it.
-For now, we start with a simple "flat" use case.
-Next, we can imagine that the data scientist has to predict fraud in retail. The target
-is at the basket level, while most information is at the items level.
-
 """
 
 # %%
@@ -17,6 +12,7 @@ is at the basket level, while most information is at the items level.
 # As a data scientist, I'm given a project where I have to predict if an email is fishy.
 # I am developing and testing my models locally: in a notebook or a python script.
 # Once I'm happy, I want to deploy my model.
+#
 # In this use case, every time the email provider receives an email, before actually
 # displaying it into the receiver mailbox, they want to check if it's a spam or not.
 # To do this, they want to use a machine learning model, contained into a microservice.
@@ -95,7 +91,7 @@ X = [
 
 
 # generate array of 1 and 0 to represent the target variable
-y = np.random.binomial(n=1, p=0.9, size=[n_samples])
+y = np.random.binomial(n=1, p=0.9, size=n_samples)
 
 # %%
 # Let's start our skrub DataPlan by indicating what are the features and the target
@@ -120,6 +116,7 @@ tab_pipeline = skrub.tabular_pipeline("classification")
 # We can now apply the predictive model to the data.
 # The DataOps plan is ready after applying the model to the data.
 predictions = df.skb.apply(tab_pipeline, y=y)
+
 # We can then explore the full plan:
 predictions.skb.draw_graph()
 
