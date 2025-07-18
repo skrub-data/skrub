@@ -52,7 +52,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 predictions = features.skb.apply(ExtraTreesClassifier(), y=fraud_flags)
 
 # Now use skrub to tune hyperparameters of the above pipeline
-search = predictions.skb.get_grid_search(fitted=True, scoring="roc_auc")
+search = predictions.skb.make_grid_search(fitted=True, scoring="roc_auc")
 search.plot_results()
 
 # %%
