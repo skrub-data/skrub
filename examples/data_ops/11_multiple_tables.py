@@ -21,7 +21,7 @@ is fraudulent or not, based on the products it contains.
 .. |TableReport| replace:: :class:`skrub.TableReport`
 .. |HistGradientBoostingClassifier| replace::
    :class:`sklearn.ensemble.HistGradientBoostingClassifier`
-.. |get_randomized_search| replace:: :meth:`skrub.Expr.get_randomized_search`
+.. |make_randomized_search| replace:: :meth:`skrub.Expr.make_randomized_search`
 
 .. currentmodule:: skrub
 
@@ -183,14 +183,14 @@ predictions
 # %%
 # And our DataOps plan is complete!
 #
-# We can now use |get_randomized_search| to perform hyperparameter
+# We can now use |make_randomized_search| to perform hyperparameter
 # tuning and find the best hyperparameters for our model.
 
 # %%
 print(predictions.skb.describe_param_grid())
 
 # %%
-search = predictions.skb.get_randomized_search(
+search = predictions.skb.make_randomized_search(
     scoring="roc_auc", n_iter=8, n_jobs=4, random_state=0, fitted=True
 )
 search.results_
