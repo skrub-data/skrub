@@ -5,7 +5,7 @@ Fetching functions to retrieve example datasets from GitHub and OSF.
 from ._utils import load_dataset_files, load_simple_dataset
 
 
-def fetch_employee_salaries(data_home=None):
+def fetch_employee_salaries(data_home=None, split="all"):
     """Fetches the employee salaries dataset (regression), available at \
         https://github.com/skrub-data/skrub-data-files
 
@@ -31,6 +31,9 @@ def fetch_employee_salaries(data_home=None):
     data_home: str or path, default=None
         The directory where to download and unzip the files.
 
+    split : str, default="all"
+        The split to load. Can be either "train", "test", or "all".
+
     Returns
     -------
     bunch : sklearn.utils.Bunch
@@ -41,7 +44,22 @@ def fetch_employee_salaries(data_home=None):
         - y : pd.DataFrame, target labels
         - metadata : a dictionary containing the name, description, source and target
     """
-    return load_simple_dataset("employee_salaries", data_home)
+    if split not in ["train", "test", "all"]:
+        raise ValueError(
+            f"`split` must be one of ['train', 'test', 'all'], got: {split!r}."
+        )
+    dataset = load_simple_dataset("employee_salaries", data_home)
+
+    id_split = 8000  # noqa
+    if split == "train":
+        dataset["employee_salaries"] = dataset["employee_salaries"][:id_split]
+        dataset["X"] = dataset["X"][:id_split]
+        dataset["y"] = dataset["y"][:id_split]
+    elif split == "test":
+        dataset["employee_salaries"] = dataset["employee_salaries"][id_split:]
+        dataset["X"] = dataset["X"][id_split:]
+        dataset["y"] = dataset["y"][id_split:]
+    return dataset
 
 
 def fetch_medical_charge(data_home=None):
