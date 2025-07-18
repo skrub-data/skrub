@@ -148,7 +148,7 @@ prediction
 # Conclusion
 # ----------
 #
-# Thanks to skrub pipeline, I have the insurance that all the transformations and
+# Thanks to the skrub DataOps and learner, I have the insurance that all the transformations and
 # preprocessing done when developing the models are similar to the ones done in
 # production.
 # The code in production becomes very lightweight, and it's straightforward to deploy.
