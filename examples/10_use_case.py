@@ -136,9 +136,9 @@ X_input = {
     "cc_emails": [generate_email() for _ in range(random.randint(0, 5))],
 }
 
-# I just have to load the model and use it to predict the score for this input.
-with open("model.pkl", "rb") as f:
-    loaded_model = joblib.load(f)
+# I just have to load the learner and use it to predict the score for this input.
+with open("learner.pkl", "rb") as f:
+    loaded_learner = joblib.load(f)
 
 prediction = loaded_model.predict({"X": [X_input]})
 prediction
