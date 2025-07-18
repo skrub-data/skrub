@@ -117,9 +117,6 @@ Changes
 - A new parameter ``float_precision`` has been added to the global config to control the number of significant digits
   displayed for floating-point values in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
 
-- The :func:`fetch_employee_salaries` function can now take a ``split`` parameter to return a training or testing split
-  of the dataset. :pr:`1524` by :user:`Riccardo Cappuzzo<rcap107>`.
-
 Bugfixes
 --------
 - Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
