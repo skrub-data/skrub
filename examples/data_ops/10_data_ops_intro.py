@@ -1,8 +1,4 @@
 """
-.. currentmodule:: skrub
-
-.. _example_data_ops_intro:
-
 
 Introduction to machine learning pipelines with skrub DataOps
 ==============================================================
@@ -12,6 +8,23 @@ pipeline that pre-processes data, trains a model, and allows for hyperparameter 
 on a simple dataset. We will also show how to save the model, load it back,
 and then use it to make predictions on new data.
 
+.. currentmodule:: skrub
+
+.. |fetch_employee_salaries| replace:: :func:`datasets.fetch_employee_salaries`
+.. |TableReport| replace:: :class:`TableReport`
+.. |var| replace:: :func:`var`
+.. |skb.mark_as_X| replace:: :meth:`DataOp.skb.mark_as_X`
+.. |skb.mark_as_y| replace:: :meth:`DataOp.skb.mark_as_y`
+.. |TableVectorizer| replace:: :class:`TableVectorizer`
+.. |skb.apply| replace:: :meth:`.skb.apply() <DataOp.skb.apply>`
+.. |HistGradientBoostingRegressor| replace::
+   :class:`sklearn.ensemble.HistGradientBoostingRegressor`
+.. |.skb.full_report()| replace:: :meth:`.skb.eval() <DataOp.skb.full_report>`
+.. |choose_float| replace:: :func:`choose_float`
+.. |make_randomized_search| replace::
+   :meth:`.skb.make_randomized_search <DataOp.skb.make_randomized_search>`
+
+# :meth:`.skb.eval() <DataOp.skb.eval>`.
 """
 
 # %%
@@ -20,7 +33,7 @@ and then use it to make predictions on new data.
 #
 # We begin by loading the employee salaries dataset, which is a regression dataset
 # that contains information about employees and their current annual salaries.
-# By default, the ``fetch_employee_salaries`` function returns the training set.
+# By default, the |fetch_employee_salaries| function returns the training set.
 # We will load the test set later, to evaluate our model on unseen data.
 
 from skrub.datasets import fetch_employee_salaries
@@ -28,7 +41,7 @@ from skrub.datasets import fetch_employee_salaries
 training_data = fetch_employee_salaries(split="train").employee_salaries
 
 # %%
-# We can take a look at the dataset using the `TableReport`.
+# We can take a look at the dataset using the |TableReport|.
 # This dataset contains numerical, categorical, and datetime features. The column
 # `current_annual_salary` is the target variable we want to predict.
 #
@@ -45,7 +58,7 @@ skrub.TableReport(training_data)
 # objects into a single DataOps plan, which will allow us to preprocess the data,
 # train a model, and tune hyperparameters.
 #
-# We begin by defining a skrub variable, which is the entry point for our DataOps plan.
+# We begin by defining a skrub |var|, which is the entry point for our DataOps plan.
 # Additionally, we use the subsample function to limit the number of rows that
 # are used to produce previews of each step in the plan. This is useful to speed up
 # the development process. At training time, the DataOps will automatically
@@ -55,7 +68,7 @@ data_var = skrub.var("data", training_data).skb.subsample()
 
 # %%
 # Next, we define the initial features ``X`` and the target variable ``y``.
-# We use the `skb.mark_as_X` and `skb.mark_as_y` methods to mark these variables
+# We use the |skb.mark_as_X| and |skb.mark_as_y| methods to mark these variables
 # in the DataOps plan. This allows skrub to properly split these objects into
 # training and validation steps when executing cross-validation or hyperparameter
 # tuning.
@@ -64,9 +77,9 @@ X = data_var.drop("current_annual_salary", axis=1).skb.mark_as_X()
 y = data_var["current_annual_salary"].skb.mark_as_y()
 # %%
 # Our first step is to vectorize the features in ``X``. We will use the
-# `TableVectorizer` to convert the categorical and numerical features into a
+# |TableVectorizer| to convert the categorical and numerical features into a
 # numerical format that can be used by machine learning algorithms.
-# We apply the vectorizer to ``X`` using the `skb.apply` method, which allows us to
+# We apply the vectorizer to ``X`` using the |skb.apply| method, which allows us to
 # apply any scikit-learn compatible transformer to the skrub variable.
 
 from skrub import TableVectorizer
@@ -79,7 +92,7 @@ X_vec
 # By clicking on ``Show graph``, we can see the DataOps plan that has been created:
 # the plan shows the steps that have been applied to the data so far.
 # Now that we have the vectorized features, we can proceed to train a model.
-# We use a scikit-learn `HistGradientBoostingRegressor` to predict the target variable.
+# We use a scikit-learn |HistGradientBoostingRegressor| to predict the target variable.
 # We apply the model to the vectorized features using ``.skb.apply``, and pass
 # ``y`` as the target variable.
 # Note that the resulting ``predictor`` will show the prediction results on the
@@ -94,7 +107,7 @@ predictor
 
 # %%
 # Now that we have built our entire plan, we can have explore it in more detail
-# with the ``.skb.full_report()`` method::
+# with the |.skb.full_report()| method::
 #
 #     predictions.skb.full_report()
 #
@@ -113,14 +126,14 @@ predictor
 # standalone object that contains all the steps in the DataOps plan. We fit the
 # learner, so that it can be used to make predictions on new data.
 
-trained_learner = predictor.skb.get_pipeline(fitted=True)
+trained_learner = predictor.skb.make_learner(fitted=True)
 
 # %%
 # A big advantage of the learner is that it can be pickled and saved to disk,
 # allowing us to reuse the trained model later without needing to retrain it.
 # The learner contains all steps in the DataOps plan, including the fitted
-# vectorizer and the trained model. We can save it using Python's `pickle` module:
-# here we use `pickle.dumps` to serialize the learner object into a byte string.
+# vectorizer and the trained model. We can save it using Python's ``pickle`` module:
+# here we use ``pickle.dumps`` to serialize the learner object into a byte string.
 
 import pickle
 
@@ -161,9 +174,9 @@ loaded_model.score({"data": unseen_data})
 # So far, we have seen how to build a simple machine learning pipeline using skrub's
 # DataOps. However, a major part of optimizing a machine learning model is
 # hyperparameter tuning. Skrub's DataOps allow us to easily add hyperparameters
-# right where we define the model, by using one of the `choose_*` functions.
-# Here, we will use `choose_float` to add a learning rate hyperparameter
-# to the `HistGradientBoostingRegressor`.
+# right where we define the model, by using one of the ``choose_*`` functions.
+# Here, we will use |choose_float| to add a learning rate hyperparameter
+# to the |HistGradientBoostingRegressor|.
 
 hgb = HistGradientBoostingRegressor(
     learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="learning_rate")
@@ -172,11 +185,11 @@ predictor = X_vec.skb.apply(hgb, y=y)
 predictor
 
 # %%
-# Since now we have can tune the learning rate, we can use the `get_randomized_search`
+# Since now we have can tune the learning rate, we can use the |make_randomized_search|
 # method to perform hyperparameter tuning. This method will automatically
 # create a randomized search over the hyperparameters defined in the DataOps plan.
 
-search = predictor.skb.get_randomized_search(
+search = predictor.skb.make_randomized_search(
     n_iter=4,
     n_jobs=4,
     random_state=0,
@@ -201,7 +214,7 @@ search.plot_results()
 # to disk. This learner will contain the best hyperparameter configuration
 # found during the search, and can be used to make predictions on new data.
 
-best_learner = search.best_pipeline_
+best_learner = search.best_learner_
 saved_model = pickle.dumps(best_learner)
 
 # %%
@@ -212,4 +225,4 @@ saved_model = pickle.dumps(best_learner)
 # data using the trained model.
 #
 # However, skrub DataOps are significantly more powerful than what we have shown here:
-# for more advanced examples, see :ref:`_data_ops_examples_ref`.
+# for more advanced examples, see :ref:`data_ops_examples_ref`.

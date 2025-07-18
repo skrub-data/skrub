@@ -1,5 +1,16 @@
 """
 
+Multiples tables: building machine learning pipelines with DataOps
+==================================================================
+
+In this example, we show how to build a DataOps plan to handle
+pre-processing, validation and hyperparameter tuning of a dataset with multiple
+tables.
+
+We consider the credit fraud dataset, which contains two tables: one for
+baskets (orders) and one for products. The goal is to predict whether a basket
+is fraudulent or not, based on the products it contains.
+
 .. |choose_from| replace:: :func:`skrub.choose_from`
 .. |choose_int| replace:: :func:`skrub.choose_int`
 .. |choose_float| replace:: :func:`skrub.choose_float`
@@ -12,19 +23,7 @@
    :class:`sklearn.ensemble.HistGradientBoostingClassifier`
 .. |get_randomized_search| replace:: :meth:`skrub.Expr.get_randomized_search`
 
-.. _example_data_ops_multiple_tables:
-
-
-Multiples tables: building machine learning pipelines with DataOps
-==================================================================
-
-In this example, we show how to build a DataOps plan to handle
-pre-processing, validation and hyperparameter tuning of a dataset with multiple
-tables.
-
-We consider the credit fraud dataset, which contains two tables: one for
-baskets (orders) and one for products. The goal is to predict whether a basket
-is fraudulent or not, based on the products it contains.
+.. currentmodule:: skrub
 
 """
 

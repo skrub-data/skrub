@@ -90,6 +90,6 @@ def create_employee_salaries_report():
     )
 
 
-def create_expression_report():
+def create_data_ops_report():
     create_credit_fraud_report()
     create_employee_salaries_report()
