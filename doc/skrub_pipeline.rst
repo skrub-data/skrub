@@ -40,7 +40,7 @@ What is the difference with scikit-learn :class:`~sklearn.pipeline.Pipeline`?
 Scikit-learn pipelines represent a linear sequence of transformations on one
 table with a fixed number of rows.
 
-.. image:: _static/sklearn_data_ops.svg
+.. image:: _static/sklearn_pipeline.svg
     :width: 500
 
 Skrub DataOps, on the other hand, can manipulate any number of variables.
