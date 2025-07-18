@@ -139,7 +139,7 @@ X_input = {
 # I just have to load the learner and use it to predict the score for this input.
 with open("learner.pkl", "rb") as f:
     loaded_learner = joblib.load(f)
-
+# ``X_input`` must be passed as a list so that it can be parsed correctly as a dataframe by Pandas. 
 prediction = loaded_learner.predict({"X": [X_input]})
 prediction
 
