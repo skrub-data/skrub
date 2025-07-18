@@ -443,7 +443,7 @@ def test_pass_df_instead_of_data_op():
         df.join(skrub.var("a"), on="ID")
 
 
-def test_get_grid_search_with_continuous_ranges():
+def test_make_grid_search_with_continuous_ranges():
     with pytest.raises(
         ValueError, match="Cannot use grid search with continuous numeric ranges"
     ):

@@ -117,20 +117,20 @@ def set_config(
 
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`, when ``how="random"`` is passed.
+        :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
         Control the activation of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`. Default is ``"default"``.
+        :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
-        - If ``"default"``, the behavior of :func:`skrub.Expr.skb.subsample` is used.
+        - If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample` is used.
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
         - If ``"force"``, subsampling is used in all expression evaluation modes
-          (:func:`~skrub.Expr.skb.eval`, fit_transform, etc.).
+          (:func:`~skrub.DataOp.skb.eval`, fit_transform, etc.).
 
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
         environment variable.
@@ -277,16 +277,16 @@ def config_context(
 
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`, when ``how="random"`` is passed.
+        :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
         Control the activation of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`. Default is ``"default"``.
+        :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
-        - If ``"default"``, the behavior of :func:`skrub.Expr.skb.subsample` is used.
+        - If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample` is used.
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
         - If ``"force"``, subsampling is used in all expression evaluation modes

@@ -1,4 +1,4 @@
-.. _skrub_pipeline:
+.. _skrub_data_ops:
 
 ================================================================
 Skrub DataOps: fit, tune, and validate arbitrary data wrangling
