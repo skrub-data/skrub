@@ -75,14 +75,14 @@ TableReport(employees_df)
 
 from skrub import set_config
 
-set_config(use_tablereport=True)
+set_config(use_table_report=True)
 
 employees_df
 
 # %%
 # This setting can easily be reverted:
 
-set_config(use_tablereport=False)
+set_config(use_table_report=False)
 
 employees_df
 
