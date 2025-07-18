@@ -128,7 +128,7 @@ predictions.skb.draw_graph()
 import joblib
 
 with open("learner.pkl", "wb") as f:
-    joblib.dump(predictions.skb.get_pipeline(fitted=True), f, protocol=5)
+    joblib.dump(predictions.skb.make_learner(fitted=True), f)
 
 # %%
 # In my microservice, I receive a payload in json format.
