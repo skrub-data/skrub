@@ -21,13 +21,12 @@ is at the basket level, while most information is at the items level.
 # score for each row. The microservice receives a payload in a json.
 # To avoid having to recode the pipeline once the model is validated into the
 # microservice, which is both error-prone and troublesome, I would like to have the
-# skrub pipeline ready, and just have to load it.
-# Working in this way is also helpful, because it forces me to know beforehand what kind 
-# of data I will have at the entrance of the microservice, and avoids building a model based on
-# information that is not accessible yet in this part of the product pipeline.
-# For instance, in my use case, I want to detect a spam email before it reaches the receiver
-# mailbox. Therefore, I cannot use a feature which is available only when the receiver opens 
-# the email.
+# skrub pipeline ready, and just have to load it. Working in this way is also helpful,
+# because it forces me to know beforehand what kind of data I will have at the entrance
+# of the microservice, and avoids building a model based on information that is not
+# accessible yet in this part of the product pipeline. For instance, in my use case,
+# I want to detect a spam email before it reaches the receiver mailbox. Therefore, I
+# cannot use a feature which is available only when the receiver opens the email.
 
 # %%
 ###############################################################################
@@ -110,12 +109,12 @@ df = X.skb.apply_func(pd.DataFrame)
 
 # %%
 # For this example, we will use a strong baseline, with a tabular pipeline.
-model = skrub.tabular_pipeline("classification")
+tab_pipeline = skrub.tabular_pipeline("classification")
 
 # We can now apply the predictive model to the data.
 # The DataOps plan is ready after applying the model to the data.
-predictions = df.skb.apply(learner, y=y)
-# We can then explore the full plan: 
+predictions = df.skb.apply(tab_pipeline, y=y)
+# We can then explore the full plan:
 predictions.skb.draw_graph()
 
 # %%
@@ -139,7 +138,8 @@ X_input = {
 # I just have to load the learner and use it to predict the score for this input.
 with open("learner.pkl", "rb") as f:
     loaded_learner = joblib.load(f)
-# ``X_input`` must be passed as a list so that it can be parsed correctly as a dataframe by Pandas. 
+# ``X_input`` must be passed as a list so that it can be parsed correctly as a dataframe
+# by Pandas.
 prediction = loaded_learner.predict({"X": [X_input]})
 prediction
 
@@ -148,7 +148,7 @@ prediction
 # Conclusion
 # ----------
 #
-# Thanks to the skrub DataOps and learner, I have the insurance that all the transformations and
-# preprocessing done when developing the models are similar to the ones done in
-# production.
-# The code in production becomes very lightweight, and it's straightforward to deploy.
+# Thanks to the skrub DataOps and learner, I have the insurance that all the
+# transformations and preprocessing done when developing the models are similar to the
+# ones done in production.
+# It becomes easy and straightforward to deploy.
