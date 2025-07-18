@@ -63,25 +63,19 @@ skrub.TableReport(dataset.products)
 #    :width: 300
 #
 # We want to fit a |HistGradientBoostingClassifier| to predict the fraud
-# flag (or ``y``), but since the features used by each ``basket`` are in the
-# ``products`` table, we want to build a design matrix (or ``X``) that assigns to
-# a feature vector to each ``basket``, based on the products it contains.
+# flag (y). However, since the features for each basket are stored in
+# the products table, we need to extract these features, aggregate them
+# at the basket level, and merge the result with the basket data.
 #
-# To do so, we want to vectorize the ``products`` to extract numeric features, and
-# then aggregate the resulting feature vectors by basket ID, so that we have a
-# single row per ``basket`` in the design matrix.
+# We can use the |TableVectorizer| to vectorize the products, but we
+# then need to aggregate the resulting vectors to obtain a single row per basket.
+# Using a scikit-learn Pipeline is tricky because the |TableVectorizer| would be
+# fitted on a table with a different number of rows than the target y (the baskets table),
+# which scikit-learn does not allow.
 #
-# We can use the |TableVectorizer| to easily vectorize the ``products``, but we
-# then need to aggregate the resulting vectors to have a single row per ``basket``.
-# If we wanted to use a scikit-learn ``Pipeline``, we would need to fit the
-# |TableVectorizer| on a table that does not have the same number of rows
-# as the target ``y`` (the ``baskets`` table), which is not allowed by scikit-learn.
-#
-# While we could fit the |TableVectorizer| ourselves, we would then lose the
-# scikit-learn machinery for grouping all transformation steps, storing fitted
-# estimators, splitting the input data and cross-validation, and hyper-parameter tuning.
-# We would also need to manage the aggregation and join ourselves, possibly
-# using Pandas code, which is error-prone.
+# While we could fit the |TableVectorizer| manually, this would forfeit scikit-learn’s tooling for managing
+# transformations, storing fitted estimators, splitting data, cross-validation, and hyper-parameter tuning.
+# We would also have to handle the aggregation and join ourselves, likely with error-prone Pandas code.
 #
 # Fortunately, skrub DataOps provide a powerful alternative for building flexible
 # plans that address these problems.
@@ -102,13 +96,12 @@ baskets = full_baskets[["ID"]].skb.mark_as_X()
 fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
-# We mark the "baskets" variable as ``X`` and the "fraud flags" variable as ``y``,
-# so that skrub knows that they are the design matrix and target variable, and
-# should be split into training and testing sets for cross-validation.
+# We mark the "baskets" variable as ``X`` and the "fraud flags" variable as ``y``
+# so that DataOps can use their indices for train-test splitting and cross-validation.
 # We then build the plan by applying transformations to those inputs.
 #
 # Since our DataOps expect dataframes for products, baskets and fraud
-# flags, we manipulate those objects as we would manipulate dataframes.
+# flags, we manipulate those objects as we would manipulate pandas dataframes.
 # For instance, we filter products to keep only those that match one of the
 # baskets in the ``baskets`` table, and then add a column containing the total
 # amount for each kind of product in a basket:
@@ -154,12 +147,8 @@ vectorized_products = products_with_total.skb.apply(
 )
 
 # %%
-# Having access to the underlying dataframe's API, we can then use Pandas functions
-# # to aggregate the
-# vectorized products by basket ID, and then merge the aggregated products
+# We then aggregate the vectorized products by basket ID, and then merge the result
 # with the baskets table.
-# Those transformations are being implicitly added
-# as steps in our plan.
 
 # %%
 aggregated_products = vectorized_products.groupby("basket_ID").agg("mean").reset_index()
