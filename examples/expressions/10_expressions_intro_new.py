@@ -2,8 +2,8 @@
 .. _example_expressions_intro:
 
 
-Building powerful machine learning pipelines with the skrub DataOps
-=========================
+Introduction to machine learning pipelines with skrub DataOps
+==============================================================
 
 In this example, we show how we can use skrub's DataOps to build a machine learning
 pipeline that pre-processes data, trains a model, and allows for hyperparameter tuning
@@ -13,6 +13,9 @@ and then use it to make predictions on new data.
 """
 
 # %%
+# The data
+# ---------
+#
 # We begin by loading the employee salaries dataset, which is a regression dataset
 # that contains information about employees and their current annual salaries.
 # By default, the ``fetch_employee_salaries`` function returns the training set.
@@ -30,10 +33,13 @@ unseen_data = full_data[8000:]
 # `current_annual_salary` is the target variable we want to predict.
 #
 
-from skrub import TableReport
+import skrub
 
-TableReport(training_data)
+skrub.TableReport(training_data)
 # %%
+# Assembling our DataOps plan
+# ----------------------------
+#
 # Our goal is to predict the `current_annual_salary` of employees based on their
 # other features. We will use skrub's DataOps to combine both skrub and scikit-learn
 # objects into a single DataOps plan, which will allow us to preprocess the data,
@@ -45,13 +51,11 @@ TableReport(training_data)
 # the development process. At training time, the DataOps will automatically
 # use the full dataset.
 
-import skrub
-
 data_var = skrub.var("data", training_data).skb.subsample()
 
 # %%
-# Next, we define the starting feature matrix ``X`` and the target variable ``y``.
-# We will use the `skb.mark_as_X` and `skb.mark_as_y` methods to mark these variables
+# Next, we define the initial features ``X`` and the target variable ``y``.
+# We use the `skb.mark_as_X` and `skb.mark_as_y` methods to mark these variables
 # in the DataOps plan. This allows skrub to properly split these objects into
 # training and validation steps when executing cross-validation or hyperparameter
 # tuning.
@@ -96,6 +100,9 @@ predictor
 predictor.skb.full_report()
 
 # %%
+# Turning the DataOps plan to a learner, for later reuse
+# -------------------------------------------------------
+#
 # Now that we have defined the predictor, we can create a ``learner``, a
 # standalone object that contains all the steps in the DataOps plan. We fit the
 # learner, so that it can be used to make predictions on new data.
@@ -143,6 +150,9 @@ predicted_values
 loaded_model.score({"data": unseen_data})
 
 # %%
+# Hyper-parameter tuning on the DataOps plan
+# -------------------------------------------
+#
 # So far, we have seen how to build a simple machine learning pipeline using skrub's
 # DataOps. However, a major part of optimizing a machine learning model is
 # hyperparameter tuning. Skrub's DataOps allow us to easily add hyperparameters
