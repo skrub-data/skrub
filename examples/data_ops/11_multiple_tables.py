@@ -70,12 +70,14 @@ skrub.TableReport(dataset.products)
 # We can use the |TableVectorizer| to vectorize the products, but we
 # then need to aggregate the resulting vectors to obtain a single row per basket.
 # Using a scikit-learn Pipeline is tricky because the |TableVectorizer| would be
-# fitted on a table with a different number of rows than the target y (the baskets table),
-# which scikit-learn does not allow.
+# fitted on a table with a different number of rows than the target y (the baskets
+# table), which scikit-learn does not allow.
 #
-# While we could fit the |TableVectorizer| manually, this would forfeit scikit-learn’s tooling for managing
-# transformations, storing fitted estimators, splitting data, cross-validation, and hyper-parameter tuning.
-# We would also have to handle the aggregation and join ourselves, likely with error-prone Pandas code.
+# While we could fit the |TableVectorizer| manually, this would forfeit
+# scikit-learn’s tooling for managing transformations, storing fitted estimators,
+# splitting data, cross-validation, and hyper-parameter tuning.
+# We would also have to handle the aggregation and join ourselves, likely with
+# error-prone Pandas code.
 #
 # Fortunately, skrub DataOps provide a powerful alternative for building flexible
 # plans that address these problems.
