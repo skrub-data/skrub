@@ -112,8 +112,8 @@ df = X.skb.apply_func(pd.DataFrame)
 # For this example, we will use a strong baseline, with a tabular learner.
 learner = skrub.tabular_learner("classification")
 
-# We can now apply the learner to the data.
-# The pipeline is fitted when applying the learner to the data.
+# We can now apply the predictive model to the data.
+# The DataOps plan is ready after applying the model to the data.
 predictions = df.skb.apply(learner, y=y)
 
 predictions.skb.draw_graph()
