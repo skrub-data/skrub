@@ -17,8 +17,12 @@ is at the basket level, while most information is at the items level.
 # As a data scientist, I'm given a project where I have to predict if an email is fishy.
 # I am developing and testing my models locally: in a notebook or a python script.
 # Once I'm happy, I want to deploy my model.
-# In this use case, the model is used in a microservice, and the model has to return the
-# score for each row. The microservice receives a payload in a json.
+# In this use case, every time the email provider receives an email, before actually
+# displaying it into the receiver mailbox, they want to check if it's a spam or not.
+# To do this, they want to use a machine learning model, contained into a microservice.
+# The microservice receives a payload in a json, and returns a score between 0 and 1,
+# depending on how likely it is that the email is a spam.
+#
 # To avoid having to recode the pipeline once the model is validated into the
 # microservice, which is both error-prone and troublesome, I would like to have the
 # skrub pipeline ready, and just have to load it. Working in this way is also helpful,
