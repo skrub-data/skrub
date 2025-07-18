@@ -35,6 +35,8 @@ is at the basket level, while most information is at the items level.
 # ------------------
 #
 # Given my use case, the data set is not a dataframe, but a list of dict.
+# We are going to generate a fully random data set. We will not have a look at the
+# quality of the prediction, we want to focus on the pipeline construction.
 
 import random
 import string
@@ -71,9 +73,10 @@ def generate_text(min_str_length, max_str_length):
     return random_text
 
 
+# %%
 n_samples = 1000
 
-X_dict = [
+X = [
     {
         "id": generate_id(),
         "sender": generate_email(),
@@ -85,30 +88,45 @@ X_dict = [
     for _ in range(n_samples)
 ]
 
-# generate array of 1 and 0
-y_np = np.random.binomial(n=1, p=0.9, size=[n_samples])
+
+# generate array of 1 and 0 to represent the target variable
+y = np.random.binomial(n=1, p=0.9, size=[n_samples])
 
 # %%
+# Let's start our skrub DataPlan by indicating what are the features and the target
+# variable.
 import skrub
 
-X = skrub.X(X_dict)
-y = skrub.y(y_np)
+X = skrub.X(X)
+y = skrub.y(y)
 
 # %%
-learner = skrub.tabular_learner("classification")
-# %%
+# The variable X for now is a list of dicts. It's not something that an estimator can
+# handle directly.
+# Let's convert it to a pandas DataFrame.
 import pandas as pd
 
 df = X.skb.apply_func(pd.DataFrame)
+
+# %%
+# For this example, we will use a strong baseline, with a tabular learner.
+learner = skrub.tabular_learner("classification")
+
+# We can now apply the learner to the data.
+# The pipeline is fitted when applying the learner to the data.
 predictions = df.skb.apply(learner, y=y)
 
-# %%
-import pickle
-
-saved_model = pickle.dumps(predictions.skb.get_pipeline(fitted=True))
+predictions.skb.draw_graph()
 
 # %%
-# in my microservice:
+# To end the explorative work, I can save the model to a file somewhere.
+import joblib
+
+with open("model.pkl", "wb") as f:
+    joblib.dump(predictions.skb.get_pipeline(fitted=True), f, protocol=5)
+
+# %%
+# In my microservice, I receive a payload in json format.
 X_input = {
     "id": generate_id(),
     "sender": generate_email(),
@@ -118,7 +136,19 @@ X_input = {
     "cc_emails": [generate_email() for _ in range(random.randint(0, 5))],
 }
 
-loaded_model = pickle.loads(saved_model)
-prediction = loaded_model.predict({"X": X_input})
+# I just have to load the model and use it to predict the score for this input.
+with open("model.pkl", "rb") as f:
+    loaded_model = joblib.load(f)
+
+prediction = loaded_model.predict({"X": [X_input]})
 prediction
+
 # %%
+###############################################################################
+# Conclusion
+# ----------
+#
+# Thanks to skrub pipeline, I have the insurance that all the transformations and
+# preprocessing done when developing the models are similar to the ones done in
+# production.
+# The code in production becomes very lightweight, and it's straightforward to deploy.
