@@ -15,7 +15,7 @@ is at the basket level, while most information is at the items level.
 # ------------------
 #
 # As a data scientist, I'm given a project where I have to predict if an email is fishy.
-# I am developing and testing my models locally, whether in a notebook or in a script.
+# I am developing and testing my models locally: in a notebook or a python script.
 # Once I'm happy, I want to deploy my model.
 # In this use case, the model is used in a microservice, and the model has to return the
 # score for each row. The microservice receives a payload in a json.
