@@ -5,19 +5,34 @@ Fetching functions to retrieve example datasets from GitHub and OSF.
 from ._utils import load_dataset_files, load_simple_dataset
 
 
-def fetch_employee_salaries(data_home=None):
+def fetch_employee_salaries(data_home=None, split="all"):
     """Fetches the employee salaries dataset (regression), available at \
         https://github.com/skrub-data/skrub-data-files
 
     Description of the dataset:
         Annual salary information including gross pay and overtime pay for all
         active, permanent employees of Montgomery County, MD paid in calendar
-        year 2016. This information will be published annually each year.
+        year 2016. This dataset is a copy of https://www.openml.org/d/42125
+        where some features are dropped to avoid data leaking.
+
+    .. note::
+
+        Some environments like Jupyterlite can run into networking issues when
+        connecting to a remote server, but OpenML provides CORS headers. To
+        download this dataset using OpenML instead of Github or Figshare, run:
+
+    .. code:: python
+
+        from sklearn.datasets import fetch_openml
+        df = fetch_openml(data_id=42125)
 
     Parameters
     ----------
     data_home: str or path, default=None
         The directory where to download and unzip the files.
+
+    split : str, default="all"
+        The split to load. Can be either "train", "test", or "all".
 
     Returns
     -------
@@ -29,7 +44,22 @@ def fetch_employee_salaries(data_home=None):
         - y : pd.DataFrame, target labels
         - metadata : a dictionary containing the name, description, source and target
     """
-    return load_simple_dataset("employee_salaries", data_home)
+    if split not in ["train", "test", "all"]:
+        raise ValueError(
+            f"`split` must be one of ['train', 'test', 'all'], got: {split!r}."
+        )
+    dataset = load_simple_dataset("employee_salaries", data_home)
+
+    id_split = 8000  # noqa
+    if split == "train":
+        dataset["employee_salaries"] = dataset["employee_salaries"][:id_split]
+        dataset["X"] = dataset["X"][:id_split]
+        dataset["y"] = dataset["y"][:id_split]
+    elif split == "test":
+        dataset["employee_salaries"] = dataset["employee_salaries"][id_split:]
+        dataset["X"] = dataset["X"][id_split:]
+        dataset["y"] = dataset["y"][id_split:]
+    return dataset
 
 
 def fetch_medical_charge(data_home=None):

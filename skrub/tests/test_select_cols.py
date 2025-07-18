@@ -3,6 +3,7 @@ import pandas.testing
 import pytest
 
 from skrub import DropCols, SelectCols
+from skrub import selectors as s
 from skrub._dataframe import _common as ns
 from skrub._select_cols import Drop
 
@@ -61,3 +62,12 @@ def test_drop(df_module):
     col = df_module.example_column
     assert Drop().fit_transform(col) == []
     assert Drop().fit(col).transform(col) == []
+
+
+def test_get_feature_names_out(df_module):
+    df = df_module.example_dataframe
+    select = SelectCols(cols=s.all()).fit(df)
+    assert len(select.get_feature_names_out()) == ns.shape(df)[1]
+
+    drop = DropCols(cols=[]).fit(df)
+    assert drop.get_feature_names_out() == []

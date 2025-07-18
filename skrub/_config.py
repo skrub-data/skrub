@@ -8,13 +8,14 @@ import numpy as np
 from ._reporting import _patching
 
 _global_config = {
-    "use_tablereport": os.environ.get("SKB_USE_TABLEREPORT", False),
-    "use_tablereport_expr": os.environ.get("SKB_USE_TABLEREPORT_EXPR", True),
+    "use_table_report": os.environ.get("SKB_USE_TABLE_REPORT", False),
+    "use_table_report_data_ops": os.environ.get("SKB_USE_TABLE_REPORT_DATA_OPS", True),
     "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
     "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
+    "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
 }
 _threadlocal = threading.local()
 
@@ -54,7 +55,7 @@ def get_config():
 
 
 def _apply_external_patches(config):
-    if config["use_tablereport"]:
+    if config["use_table_report"]:
         _patching._patch_display(
             max_plot_columns=config["max_plot_columns"],
             max_association_columns=config["max_plot_columns"],
@@ -65,19 +66,20 @@ def _apply_external_patches(config):
 
 
 def set_config(
-    use_tablereport=None,
-    use_tablereport_expr=None,
+    use_table_report=None,
+    use_table_report_data_ops=None,
     max_plot_columns=None,
     max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
+    cardinality_threshold=None,
 ):
     """Set global skrub configuration.
 
     Parameters
     ----------
-    use_tablereport : bool, default=None
+    use_table_report : bool, default=None
         The type of display used for dataframes. Default is ``True``.
 
         - If ``True``, replace the default DataFrame HTML displays with
@@ -85,18 +87,18 @@ def set_config(
         - If ``False``, the original Pandas or Polars dataframe HTML representation
           will be used.
 
-        This configuration can also be set with the ``SKB_USE_TABLEREPORT``
+        This configuration can also be set with the ``SKB_USE_TABLE_REPORT``
         environment variable.
 
-    use_tablereport_expr : bool, default=None
+    use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
-        expressions. Default is ``False``.
+        DataOps. Default is ``False``.
 
         - If ``True``, :class:`~skrub.TableReport` will be used.
         - If ``False``, the original Pandas or Polars dataframe display will be
           used.
 
-        This configuration can also be set with the ``SKB_USE_TABLEREPORT_EXPR``
+        This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
 
     max_plot_columns : int, default=None
@@ -115,20 +117,20 @@ def set_config(
 
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`, when ``how="random"`` is passed.
+        :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
         Control the activation of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`. Default is ``"default"``.
+        :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
-        - If ``"default"``, the behavior of :func:`skrub.Expr.skb.subsample` is used.
+        - If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample` is used.
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
         - If ``"force"``, subsampling is used in all expression evaluation modes
-          (:func:`~skrub.Expr.skb.eval`, fit_transform, etc.).
+          (:func:`~skrub.DataOp.skb.eval`, fit_transform, etc.).
 
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
         environment variable.
@@ -140,6 +142,14 @@ def set_config(
         This configuration can also be set with the ``SKB_FLOAT_PRECISION``
         environment variable.
 
+    cardinality_threshold : int, default=40
+        Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
+        Control the threshold value used to warn user if they have
+        high cardinality columns in there dataset.
+
+        This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
+        environment variable.
+
     See Also
     --------
     get_config : Retrieve current values for global configuration.
@@ -148,23 +158,23 @@ def set_config(
     Examples
     --------
     >>> from skrub import set_config
-    >>> set_config(use_tablereport=True)  # doctest: +SKIP
+    >>> set_config(use_table_report=True)  # doctest: +SKIP
     """
     local_config = _get_threadlocal_config()
-    if use_tablereport is not None:
-        if not isinstance(use_tablereport, bool):
+    if use_table_report is not None:
+        if not isinstance(use_table_report, bool):
             raise ValueError(
-                f"'use_tablereport' must be a boolean, got {use_tablereport!r}."
+                f"'use_table_report' must be a boolean, got {use_table_report!r}."
             )
-        local_config["use_tablereport"] = use_tablereport
+        local_config["use_table_report"] = use_table_report
 
-    if use_tablereport_expr is not None:
-        if not isinstance(use_tablereport_expr, bool):
+    if use_table_report_data_ops is not None:
+        if not isinstance(use_table_report_data_ops, bool):
             raise ValueError(
-                "'use_tablereport_expr' must be a boolean, got "
-                f"{use_tablereport_expr!r}."
+                "'use_table_report_data_ops' must be a boolean, got "
+                f"{use_table_report_data_ops!r}."
             )
-        local_config["use_tablereport_expr"] = use_tablereport_expr
+        local_config["use_table_report_data_ops"] = use_table_report_data_ops
 
     if max_plot_columns is not None:
         if not isinstance(max_plot_columns, numbers.Real):
@@ -200,25 +210,36 @@ def set_config(
             )
         local_config["float_precision"] = float_precision
 
+    if cardinality_threshold is not None:
+        if (
+            not isinstance(cardinality_threshold, numbers.Integral)
+            or cardinality_threshold < 0
+        ):
+            raise ValueError(
+                "'cardinality_threshold' must be a positive"
+                f"integer, got {cardinality_threshold!r}"
+            )
+
     _apply_external_patches(local_config)
 
 
 @contextmanager
 def config_context(
     *,
-    use_tablereport=None,
-    use_tablereport_expr=None,
+    use_table_report=None,
+    use_table_report_data_ops=None,
     max_plot_columns=None,
     max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
+    cardinality_threshold=None,
 ):
     """Context manager for global skrub configuration.
 
     Parameters
     ----------
-    use_tablereport : bool, default=None
+    use_table_report : bool, default=None
         The type of display used for dataframes. Default is ``False``.
 
         - If ``True``, replace the default DataFrame HTML displays with
@@ -226,10 +247,10 @@ def config_context(
         - If ``False``, the original Pandas or Polars dataframe HTML representation
           will be used.
 
-        This configuration can also be set with the ``SKB_USE_TABLEREPORT``
+        This configuration can also be set with the ``SKB_USE_TABLE_REPORT``
         environment variable.
 
-    use_tablereport_expr : bool, default=None
+    use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         expressions. Default is ``True``.
 
@@ -237,7 +258,7 @@ def config_context(
         - If ``False``, the original Pandas or Polars dataframe display will be
           used.
 
-        This configuration can also be set with the ``SKB_USE_TABLEREPORT_EXPR``
+        This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
 
     max_plot_columns : int, default=None
@@ -256,16 +277,16 @@ def config_context(
 
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`, when ``how="random"`` is passed.
+        :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
         Control the activation of subsampling in skrub expressions
-        :func:`skrub.Expr.skb.subsample`. Default is ``"default"``.
+        :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
-        - If ``"default"``, the behavior of :func:`skrub.Expr.skb.subsample` is used.
+        - If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample` is used.
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
         - If ``"force"``, subsampling is used in all expression evaluation modes
@@ -279,6 +300,14 @@ def config_context(
         Applies overall precision rather than fixed decimal places. Default is 3.
 
         This configuration can also be set with the ``SKB_FLOAT_PRECISION``
+        environment variable.
+
+    cardinality_threshold : int, default=40
+        Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
+        Control the threshold value used to warn user if they have
+        high cardinality columns in there dataset.
+
+        This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
     Yields
@@ -298,13 +327,14 @@ def config_context(
     """
     original_config = get_config()
     set_config(
-        use_tablereport=use_tablereport,
-        use_tablereport_expr=use_tablereport_expr,
+        use_table_report=use_table_report,
+        use_table_report_data_ops=use_table_report_data_ops,
         max_plot_columns=max_plot_columns,
         max_association_columns=max_association_columns,
         subsampling_seed=subsampling_seed,
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
+        cardinality_threshold=cardinality_threshold,
     )
 
     try:
