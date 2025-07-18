@@ -115,7 +115,7 @@ model = skrub.tabular_pipeline("classification")
 # We can now apply the predictive model to the data.
 # The DataOps plan is ready after applying the model to the data.
 predictions = df.skb.apply(learner, y=y)
-
+# We can then explore the full plan: 
 predictions.skb.draw_graph()
 
 # %%
