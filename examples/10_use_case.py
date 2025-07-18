@@ -109,8 +109,8 @@ import pandas as pd
 df = X.skb.apply_func(pd.DataFrame)
 
 # %%
-# For this example, we will use a strong baseline, with a tabular learner.
-learner = skrub.tabular_learner("classification")
+# For this example, we will use a strong baseline, with a tabular pipeline.
+model = skrub.tabular_pipeline("classification")
 
 # We can now apply the predictive model to the data.
 # The DataOps plan is ready after applying the model to the data.
