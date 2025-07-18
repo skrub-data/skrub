@@ -10,15 +10,12 @@ from ._apply_to_cols import ApplyToCols
 from ._apply_to_frame import ApplyToFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
-from ._datetime_encoder import DatetimeEncoder
-from ._deduplicate import compute_ngram_distance, deduplicate
-from ._drop_uninformative import DropUninformative
-from ._expressions import (
-    Expr,
+from ._data_ops import (
+    DataOp,
     ParamSearch,
-    SkrubPipeline,
+    SkrubLearner,
     X,
-    as_expr,
+    as_data_op,
     choose_bool,
     choose_float,
     choose_from,
@@ -30,6 +27,9 @@ from ._expressions import (
     var,
     y,
 )
+from ._datetime_encoder import DatetimeEncoder
+from ._deduplicate import compute_ngram_distance, deduplicate
+from ._drop_uninformative import DropUninformative
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._interpolation_joiner import InterpolationJoiner
@@ -45,20 +45,19 @@ from ._tabular_pipeline import tabular_learner, tabular_pipeline
 from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
-from .datasets import toy_orders
 
 with open(_Path(__file__).parent / "VERSION.txt") as _fh:
     __version__ = _fh.read().strip()
 
 
 __all__ = [
-    "Expr",
+    "DataOp",
     "var",
-    "SkrubPipeline",
+    "SkrubLearner",
     "ParamSearch",
     "X",
     "y",
-    "as_expr",
+    "as_data_op",
     "deferred",
     "eval_mode",
     "TableReport",
@@ -97,7 +96,6 @@ __all__ = [
     "TextEncoder",
     "StringEncoder",
     "column_associations",
-    "toy_orders",
     "get_config",
     "set_config",
     "config_context",

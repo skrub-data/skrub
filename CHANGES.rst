@@ -14,7 +14,7 @@ New features
 
 - The skrub expressions are new mechanism for building machine-learning
   pipelines that handle multiple tables and easily describing their
-  hyperparameter spaces. See :ref:`the examples <expressions_examples_ref>` for
+  hyperparameter spaces. See :ref:`the examples <data_ops_examples_ref>` for
   an introduction. :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of
   work from other contributors is not directly visible on the pull request page:
   :user:`Vincent Maladiere <Vincent-Maladiere>` provided very important help by
@@ -44,9 +44,17 @@ New features
   and :func:`unpatch_display` are deprecated and will be removed in the next release
   of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- :func:`datasets.toy_order` is now available to create a toy dataframe and
+  corresponding targets for examples.
+  :pr:`1485` by :user:`Antoine Canaguier-Durand <canag>`.
+
 - :class:`ApplyToCols` and :class:`ApplyToFrame` are now available to apply transformers
   on a set of columns independently and jointly respectively.
   :pr:`1478` by :user:`Vincent Maladiere<Vincent-Maladiere>`.
+
+- :func:`get_config`, :func:`set_config` and :func:`config_context` now have a new
+  parameter `cardinality_threshold` that controls the threshold value used to warn user if they have
+  high cardinality columns in their dataset. :pr:`1498` by :user:`rouk1 <rouk1>`.
 
 Changes
 -------
@@ -99,6 +107,8 @@ Changes
 
 - The :class:`Cleaner` now exposes a parameter to convert numerical values to float32. :pr:`1440` by
   :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The :class:`TableReport` now shows if columns are sorted. :pr:`1512` by :user:`Dea María Léon<DeaMariaLeon>`.
 
 - The ``tabular_learner`` function has been deprecated in favor of :func:`tabular_pipeline` to honor
   its scikit-learn pipeline cultural heritage, and remove the ambiguity with the data
