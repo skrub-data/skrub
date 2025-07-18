@@ -15,8 +15,8 @@
 .. _example_expressions_intro:
 
 
-Building multi-table machine learning pipelines with DataOps
-==================================
+Multiples tables: building machine learning pipelines with DataOps
+==================================================================
 
 In this example, we show how to build a DataOps plan to handle
 pre-processing, validation and hyperparameter tuning of a dataset with multiple
@@ -89,7 +89,7 @@ skrub.TableReport(dataset.products)
 
 # %%
 # Building a multi-table DataOps plan
-# ---------------------
+# ------------------------------------
 #
 # We start by creating skrub variables, which are the inputs to our plan.
 # In our example, we create three skrub |var| objects: ``products``, ``baskets``,
