@@ -52,6 +52,19 @@ def test_fetch_credit_fraud():
         skrub.datasets.fetch_credit_fraud(split=None)
 
 
+def test_fetch_employee_salaries():
+    data = skrub.datasets.fetch_employee_salaries()
+    assert data.employee_salaries.shape == (9228, 9)
+    data = skrub.datasets.fetch_employee_salaries(split="train")
+    assert data.employee_salaries.shape == (8000, 9)
+    data = skrub.datasets.fetch_employee_salaries(split="test")
+    assert data.employee_salaries.shape == (1228, 9)
+    data = skrub.datasets.fetch_employee_salaries(split="all")
+    assert data.employee_salaries.shape == (9228, 9)
+    with pytest.raises(ValueError, match=".*got: None"):
+        skrub.datasets.fetch_employee_salaries(split=None)
+
+
 def test_fetching_wrong_checksum(monkeypatch):
     dataset_info = _utils.DATASET_INFO["employee_salaries"]
     monkeypatch.setitem(dataset_info, "sha256", "bad_checksum")
