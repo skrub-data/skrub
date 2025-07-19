@@ -1,4 +1,5 @@
 import pickle
+import re
 
 import numpy as np
 import pandas as pd
@@ -237,6 +238,65 @@ def test_warn_if_choice_before_X_or_y():
                 skrub.var("y", y_a) + skrub.choose_from([1, -1], name="z")
             ).skb.mark_as_y(),
         )
+
+
+def test_inconsistent_subsampling():
+    X_a, y_a = make_classification(random_state=0)
+
+    # X subsampled but not y
+    X, y = skrub.var("X", X_a).skb.subsample(n=10), skrub.var("y", y_a)
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "`X` was subsampled with `.skb.subsample()` but `y` was not, resulting in"
+            " different sizes (X: 10, y: 100)"
+        ),
+    ):
+        X.skb.apply(LogisticRegression(), y=y)
+
+    # y subsampled but not X
+    X, y = skrub.var("X", X_a), skrub.var("y", y_a).skb.subsample(n=10)
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "`y` was subsampled with `.skb.subsample()` but `X` was not, resulting in"
+            " different sizes (X: 100, y: 10)"
+        ),
+    ):
+        X.skb.apply(LogisticRegression(), y=y)
+
+    # Same without previews
+    X, y = skrub.var("X"), skrub.var("y").skb.subsample(n=10)
+    pred = X.skb.apply(LogisticRegression(), y=y)
+    # evaluating without subsampling works
+    pred.skb.eval({"X": X_a, "y": y_a})
+    # evaluating with subsampling raises
+    with pytest.raises(ValueError, match="`y` was subsampled.*`X` was not"):
+        pred.skb.eval({"X": X_a, "y": y_a}, keep_subsampling=True)
+
+    # Both are subsampled but X is subsampled after splitting and y is subsampled before
+    X = skrub.var("X", X_a).skb.mark_as_X().skb.subsample(n=10)
+    y = skrub.var("y", y_a).skb.subsample(n=10).skb.mark_as_y()
+    pred = X.skb.apply(LogisticRegression(), y=y)
+
+    # computing preview and eval works as there is no splitting
+    assert pred.shape.skb.preview() == (10,)
+    assert pred.shape.skb.eval() == (100,)
+    msg = re.escape(
+        "`y` was subsampled with `.skb.subsample()` but `X` was not, resulting in"
+        " different sizes (X: 100, y: 10).\nIs the order of `.skb.subsample()` and"
+        " `.skb.mark_as_*()` different for X and y?"
+    )
+    # splitting with subsampling disabled works
+    pred.skb.train_test_split()
+    # but splitting with subsampling enabled raises
+    with pytest.raises(ValueError, match=msg):
+        pred.skb.train_test_split(keep_subsampling=True)
+
+    # same for cross-validation
+    pred.skb.cross_validate()
+    with pytest.raises(ValueError, match=msg):
+        pred.skb.cross_validate(keep_subsampling=True)
 
 
 #

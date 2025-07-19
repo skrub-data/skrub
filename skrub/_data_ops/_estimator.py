@@ -518,7 +518,13 @@ def _compute_Xy(data_op, environment):
             environment=environment,
             clear=False,
         )
-        check_subsampled_X_y_shape(Xy["X"], Xy["y"], X, y, "fit_transform", environment)
+        msg = (
+            "\nIs the order of `.skb.subsample()` and `.skb.mark_as_*()` different for"
+            " X and y?"
+        )
+        check_subsampled_X_y_shape(
+            Xy["X"], Xy["y"], X, y, "fit_transform", environment, msg=msg
+        )
     else:
         y = None
     return X, y

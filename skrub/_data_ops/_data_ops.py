@@ -1187,7 +1187,7 @@ def _check_column_names(X):
     return cast_column_names_to_strings(X)
 
 
-def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment):
+def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment, msg=""):
     from ._subsampling import _should_subsample, uses_subsampling
 
     if not isinstance(X_op, DataOp) or not isinstance(y_op, DataOp):
@@ -1207,7 +1207,7 @@ def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment):
         sub, other = ("X", "y") if X_subsampled else ("y", "X")
         raise ValueError(
             f"`{sub}` was subsampled with `.skb.subsample()` but `{other}` was not, "
-            f"resulting in different sizes (X: {n_X}, y: {n_y})."
+            f"resulting in different sizes (X: {n_X}, y: {n_y}).{msg}"
         )
     # Either both used subsampling or neither did, but subsampling could still
     # be at fault eg if they used a different (non-default) random seed. We
