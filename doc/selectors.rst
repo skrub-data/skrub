@@ -55,7 +55,7 @@ to be embedded in scikit-learn pipelines:
 0      297.0     210.0
 1      420.0     297.0
 
-Last but not least, selectors can be passed to skrub expressions when applying an
+Last but not least, selectors can be passed to skrub DataOps when applying an
 estimator with the :func:`skrub.DataOp.skb.apply` function:
 
 >>> import skrub

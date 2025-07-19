@@ -206,7 +206,7 @@ class TableReport:
         """Put the report in minimal mode.
 
         This is meant to be called by other skrub functions, such as the
-        expressions  ``__repr__``.
+        DataOps  ``__repr__``.
 
         In the minimal mode, the associations and distributions tabs are not
         shown and the plots and associations are not computed.

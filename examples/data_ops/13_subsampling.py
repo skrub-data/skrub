@@ -1,13 +1,16 @@
 """
-.. currentmodule:: skrub
 
 .. _example_subsampling:
+
 Subsampling for faster development
 ==================================
 
 Here we show how to use :meth:`.skb.subsample() <DataOp.skb.subsample>` to speed-up
 interactive construction of a skrub DataOps plan by computing previews on a subsampled
 version of the original data.
+
+.. currentmodule:: skrub
+
 """
 
 # %%
