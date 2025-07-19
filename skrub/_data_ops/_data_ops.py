@@ -1210,7 +1210,7 @@ def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment, 
             f"resulting in different sizes (X: {n_X}, y: {n_y}).{msg}"
         )
     # Either both used subsampling or neither did, but subsampling could still
-    # be at fault eg if they used a different (non-default) random seed. We
+    # be at fault eg if they used a different number of samples. We
     # could investigate further but for simplicity we raise the usual
     # scikit-learn message.
     raise ValueError(

@@ -274,6 +274,24 @@ def test_inconsistent_subsampling():
     with pytest.raises(ValueError, match="`y` was subsampled.*`X` was not"):
         pred.skb.eval({"X": X_a, "y": y_a}, keep_subsampling=True)
 
+    # In the following case subsampling is consistent but the shapes don't
+    # match for some other reason
+    msg = re.escape(
+        "Found input variables with inconsistent numbers of samples: X: 99, y: 100"
+    )
+    X = skrub.var("X", X_a[:-1]).skb.subsample(n=1000)
+    y = skrub.var("y", y_a).skb.subsample(n=1000)
+    with pytest.raises(RuntimeError, match=msg):
+        X.skb.apply(LogisticRegression(), y=y)
+    X = skrub.var("X", X_a[:-1])
+    y = skrub.var("y", y_a)
+    with pytest.raises(RuntimeError, match=msg):
+        X.skb.apply(LogisticRegression(), y=y)
+
+
+def test_inconsistent_subsampling_and_split_order():
+    X_a, y_a = make_classification(random_state=0)
+
     # Both are subsampled but X is subsampled after splitting and y is subsampled before
     X = skrub.var("X", X_a).skb.mark_as_X().skb.subsample(n=10)
     y = skrub.var("y", y_a).skb.subsample(n=10).skb.mark_as_y()
@@ -297,6 +315,16 @@ def test_inconsistent_subsampling():
     pred.skb.cross_validate()
     with pytest.raises(ValueError, match=msg):
         pred.skb.cross_validate(keep_subsampling=True)
+
+    # subsampling OK but mismatch for some other reason
+    msg = re.escape(
+        "Found input variables with inconsistent numbers of samples: X: 99, y: 100"
+    )
+    X = skrub.var("X").skb.subsample(n=1000).skb.mark_as_X()
+    y = skrub.var("y").skb.subsample(n=1000).skb.mark_as_y()
+    pred = X.skb.apply(LogisticRegression(), y=y)
+    with pytest.raises(ValueError, match=msg):
+        pred.skb.train_test_split({"X": X_a[:-1], "y": y_a}, keep_subsampling=True)
 
 
 #
