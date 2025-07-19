@@ -3,7 +3,7 @@ import numbers
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._apply_to_cols import SingleColumnTransformer
 
 __all__ = ["DropUninformative"]
 
@@ -11,17 +11,8 @@ __all__ = ["DropUninformative"]
 class DropUninformative(SingleColumnTransformer):
     """Drop column if it is found to be uninformative according to various criteria.
 
-    A column is considered to be "uninformative" if one or more of the following
-    issues are found:
-
-    - The fraction of missing values is larger than a certain fraction (by default,
-      all values must be null for the column to be dropped).
-    - The column includes only one unique value (the column is constant). Missing
-      values are considered a separate value.
-    - The number of unique values in the column is equal to the length of the
-      column, i.e., all values are unique. This is only considered for non-numeric
-      columns. Missing values are considered a separate value. Note that this
-      may lead to dropping columns that contain free-flowing text.
+    Columns are considered "uninformative" if the fraction of missing values is larger
+    than a threshold, if they contain one unique value, or if all values are unique.
 
     Parameters
     ----------
@@ -37,6 +28,20 @@ class DropUninformative(SingleColumnTransformer):
     drop_null_fraction : float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
+
+    Notes
+    -----
+    A column is considered to be "uninformative" if one or more of the following
+    issues are found:
+
+    - The fraction of missing values is larger than a certain fraction (by default,
+      all values must be null for the column to be dropped).
+    - The column includes only one unique value (the column is constant). Missing
+      values are considered a separate value.
+    - The number of unique values in the column is equal to the length of the
+      column, i.e., all values are unique. This is only considered for non-numeric
+      columns. Missing values are considered a separate value. Note that this
+      may lead to dropping columns that contain free-flowing text.
 
     Examples
     --------

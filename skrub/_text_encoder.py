@@ -9,7 +9,8 @@ from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._apply_to_cols import SingleColumnTransformer
+from ._scaling_factor import scaling_factor
 from ._to_str import ToStr
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
@@ -31,23 +32,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         To use this class, you need to install the optional ``transformers``
         dependencies for skrub. See the "deep learning dependencies" section
         in the :ref:`installation_instructions` guide for more details.
-
-    This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
-    will not train or fine-tune the model. Instead, the model is loaded from disk,
-    and a PCA is fitted to reduce the dimension of the language model's output,
-    if ``n_components`` is not None.
-
-    When PCA is disabled, this class is essentially stateless, with loading the
-    pre-trained model from disk being the only difference between ``fit_transform``
-    and ``transform``.
-
-    Be aware that parallelizing this class (e.g., using
-    :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
-    expensive. This is because a copy of the pre-trained model is loaded into memory
-    for each thread. Therefore, we recommend you to let the default n_jobs=None
-    (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
-
-    If memory usage is a concern, check the characteristics of your selected model.
 
     Parameters
     ----------
@@ -153,6 +137,25 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 
+    Notes
+    -----
+    This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
+    will not train or fine-tune the model. Instead, the model is loaded from disk,
+    and a PCA is fitted to reduce the dimension of the language model's output,
+    if ``n_components`` is not None.
+
+    When PCA is disabled, this class is essentially stateless, with loading the
+    pre-trained model from disk being the only difference between ``fit_transform``
+    and ``transform``.
+
+    Be aware that parallelizing this class (e.g., using
+    :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
+    expensive. This is because a copy of the pre-trained model is loaded into memory
+    for each thread. Therefore, we recommend you to let the default n_jobs=None
+    (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
+
+    If memory usage is a concern, check the characteristics of your selected model.
+
     References
     ----------
     .. [1]  L. Grinsztajn, M. Kim, E. Oyallon, G. Varoquaux
@@ -167,7 +170,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
     Let's encode video comments using only 2 embedding dimensions:
 
-    >>> enc = TextEncoder(model_name='intfloat/e5-small-v2', n_components=2)
+    >>> enc = TextEncoder(
+    ...    model_name='intfloat/e5-small-v2', n_components=2
+    ... )
     >>> X = pd.Series([
     ...   "The professor snatched a good interview out of the jaws of these questions.",
     ...   "Bookmarking this to watch later.",
@@ -260,6 +265,10 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 # number of dimensions of X_out.
                 X_out = X_out[:, : self.n_components]
 
+        # block normalize
+        self.scaling_factor_ = scaling_factor(X_out)
+        X_out /= self.scaling_factor_
+
         self.n_components_ = X_out.shape[1]
 
         cols = self.get_feature_names_out()
@@ -300,6 +309,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             X_out = self.pca_.transform(X_out)
         elif self.n_components is not None:
             X_out = X_out[:, : self.n_components]
+
+        # block scale
+        X_out /= self.scaling_factor_
 
         cols = self.get_feature_names_out()
         X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))

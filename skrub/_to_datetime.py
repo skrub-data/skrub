@@ -7,8 +7,9 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from . import selectors as s
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
+from ._dataframe._common import _raise as _sbd_raise
 from ._dispatch import dispatch
-from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._wrap_transformer import wrap_transformer
 
 __all__ = ["ToDatetime", "to_datetime"]
@@ -18,7 +19,7 @@ _SAMPLE_SIZE = 30
 
 @dispatch
 def _get_time_zone(col):
-    raise NotImplementedError()
+    raise _sbd_raise(col, kind="Series")
 
 
 @_get_time_zone.specialize("pandas", argument_type="Column")
@@ -44,7 +45,7 @@ def _get_time_zone_polars(col):
 
 @dispatch
 def _convert_time_zone(col, time_zone):
-    raise NotImplementedError()
+    raise _sbd_raise(col, kind="Series")
 
 
 @_convert_time_zone.specialize("pandas", argument_type="Column")
@@ -85,15 +86,9 @@ class ToDatetime(SingleColumnTransformer):
     """
     Parse datetimes represented as strings and return ``Datetime`` columns.
 
-    An input column is converted to a column with dtype Datetime if possible,
-    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
-    Datetime, String, and pandas object columns are handled, other dtypes are
-    rejected with ``RejectColumn``.
-
-    Once a column is accepted, outputs of ``transform`` always have the same
-    Datetime dtype (including resolution and time zone). Once the transformer
-    is fitted, entries that fail to be converted during subsequent calls to
-    ``transform`` are replaced with nulls.
+    This transformer tries to convert the given column from string to datetime,
+    by either testing common datetime formats or using the ``format`` specified
+    by the user. Columns that are not strings, dates or datetimes raise an exception.
 
     Parameters
     ----------
@@ -127,6 +122,18 @@ class ToDatetime(SingleColumnTransformer):
         is ``None``; otherwise it is the name of the time zone such as ``UTC`` or
         ``Europe/Paris``.
 
+    Notes
+    -----
+    An input column is converted to a column with dtype Datetime if possible,
+    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
+    Datetime, String, and pandas object columns are handled, other dtypes are
+    rejected with ``RejectColumn``.
+
+    Once a column is accepted, outputs of ``transform`` always have the same
+    Datetime dtype (including resolution and time zone). Once the transformer
+    is fitted, entries that fail to be converted during subsequent calls to
+    ``transform`` are replaced with nulls.
+
     Examples
     --------
     >>> import pandas as pd
@@ -138,7 +145,7 @@ class ToDatetime(SingleColumnTransformer):
     2    2024-05-07T13:17:52
     Name: when, dtype: object
 
-    >>> from skrub._to_datetime import ToDatetime
+    >>> from skrub import ToDatetime
 
     >>> to_dt = ToDatetime()
     >>> to_dt.fit_transform(s)
@@ -169,7 +176,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
+    skrub._apply_to_cols.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
 
     Columns that already have ``Datetime`` ``dtype`` are not modified (but
     they are accepted); for those columns the provided format, if any, is ignored.
@@ -199,7 +206,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'year' does not contain strings.
+    skrub._apply_to_cols.RejectColumn: Column 'year' does not contain strings.
 
     String columns that do not appear to contain datetimes or for some other reason
     fail to be converted are also rejected.
@@ -208,7 +215,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Could not find a datetime format for column 'when'.
+    skrub._apply_to_cols.RejectColumn: Could not find a datetime format for column 'when'.
 
     Once ``ToDatetime`` was successfully fitted, ``transform`` will always try to
     parse datetimes with the same format and output the same ``dtype``. Entries that

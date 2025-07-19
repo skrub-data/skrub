@@ -25,13 +25,13 @@
     <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between"
         data-manager="AlertDismissable">
         <div class="alert-content shrinkable-text">
-            Plotting was skipped because the dataframe has many columns.
-            See TableReport's <code>max_plot_columns</code> parameter.
+            Plotting was skipped as the dataframe exceeded the
+            <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>max_plot_columns</code></a>
+            limit set for the TableReport during report creation.
         </div>
         {{buttons.dismissbutton()}}
     </div>
-    {% endif %}
-
+    {% else %}
     <div class="horizontal-scroll padding-b-s">
 	<div class="column-summary-group">
 	    {% for column in summary.columns %}
@@ -40,6 +40,7 @@
 	    {% endfor %}
 	</div>
     </div>
+    {% endif %}
 </article>
 
 {% include "no-filter-matches.html" %}

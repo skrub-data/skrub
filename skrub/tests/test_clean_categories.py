@@ -1,10 +1,11 @@
+import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_series_equal
 
 from skrub import _dataframe as sbd
-from skrub._clean_categories import CleanCategories
-from skrub._on_each_column import RejectColumn
+from skrub._apply_to_cols import RejectColumn
+from skrub._clean_categories import CleanCategories, _with_string_categories
 
 
 def test_clean_categories_polars():
@@ -47,3 +48,9 @@ def test_clean_categories(df_module):
     cleaner = CleanCategories().fit(s)
     for vals in ["x", "y", None], [1.1, 2.2, None]:
         assert sbd.is_categorical(cleaner.transform(df_module.make_column("c", vals)))
+
+
+def test_error_with_string_categories():
+    # Make codecov happy
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
+        _with_string_categories(np.array([1]))

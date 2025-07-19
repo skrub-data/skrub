@@ -1,5 +1,5 @@
 from . import _dataframe as sbd
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToCategorical"]
 
@@ -8,7 +8,14 @@ class ToCategorical(SingleColumnTransformer):
     """
     Convert a string column to Categorical dtype.
 
-    The main benefit is that categorical columns can then be recognized by
+    This transformer ensures that a given string or categorical column has
+    Categorical dtype. This is done to mark columns to be treated as categorical
+    by downstream transformers and learners.
+
+    Notes
+    -----
+    The main benefit of converting columns to categorical is that categorical
+    columns can be recognized by
     scikit-learn's ``HistGradientBoostingRegressor`` and
     ``HistGradientBoostingClassifier`` with their
     ``categorical_features='from_dtype'`` option. This transformer is therefore
@@ -79,7 +86,7 @@ class ToCategorical(SingleColumnTransformer):
     >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'c' does not contain strings.
+    skrub._apply_to_cols.RejectColumn: Column 'c' does not contain strings.
 
     ``object`` columns that do not contain only strings are also rejected:
 
@@ -87,7 +94,7 @@ class ToCategorical(SingleColumnTransformer):
     >>> to_cat.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'c' does not contain strings.
+    skrub._apply_to_cols.RejectColumn: Column 'c' does not contain strings.
 
     No special handling of ``StringDtype`` vs ``object`` columns is done, the
     behavior is the same as ``pd.astype('category')``: if the input uses the

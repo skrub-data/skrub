@@ -56,7 +56,7 @@ to be embedded in scikit-learn pipelines:
 1      420.0     297.0
 
 Last but not least, selectors can be passed to skrub expressions when applying an
-estimator with the :func:`skrub.Expr.skb.apply` function:
+estimator with the :func:`skrub.DataOp.skb.apply` function:
 
 >>> import skrub
 >>> from sklearn.preprocessing import StandardScaler

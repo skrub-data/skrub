@@ -43,12 +43,12 @@ predictions on unlabelled data, the "target" column will not be available.
 
 >>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
 
-We use :meth:`.skb.mark_as_X() <Expr.skb.mark_as_X>` to indicate that this
+We use :meth:`.skb.mark_as_X() <DataOp.skb.mark_as_X>` to indicate that this
 intermediate result (the dataframe obtained after dropping "target") is the
 ``X`` design matrix. This is the dataframe that will be split into a training
 and a testing part when we split our dataset or perform cross-validation.
 
-Similarly for ``y``, we use :meth:`.skb.mark_as_y() <Expr.skb.mark_as_y>`:
+Similarly for ``y``, we use :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`:
 
 >>> y = data["target"].skb.mark_as_y()
 
@@ -80,10 +80,10 @@ is able to split the dataset and perform cross-validation.
 Splitting
 ---------
 
-We can use :meth:`.skb.train_test_split() <Expr.skb.train_test_split>` to
-perform a single train-test split. Skrub first evaluates the expressions on
-which we used :meth:`.skb.mark_as_X() <Expr.skb.mark_as_X>` and
-:meth:`.skb.mark_as_y() <Expr.skb.mark_as_y>`: the first few steps of the
+We can use :meth:`.skb.train_test_split() <DataOp.skb.train_test_split>` to
+perform a single train-test split. Skrub first evaluates the DataOps on
+which we used :meth:`.skb.mark_as_X() <DataOp.skb.mark_as_X>` and
+:meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`: the first few steps of the
 pipeline are executed until we have a value for ``X`` and for ``y``. Then, those
 dataframes are split using the provided splitter function (by default
 scikit-learn's :func:`sklearn.model_selection.train_test_split`).
@@ -95,14 +95,14 @@ dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
 ``train`` and ``test`` are the full dictionaries corresponding to the training
 and testing data. The corresponding ``X`` and ``y`` are the values, in those
 dictionaries, for the nodes marked with
-:meth:`.skb.mark_as_X() <Expr.skb.mark_as_X>`
-and :meth:`.skb.mark_as_y() <Expr.skb.mark_as_y>`.
+:meth:`.skb.mark_as_X() <DataOp.skb.mark_as_X>`
+and :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`.
 
 We can now fit our pipeline on the training data:
 
->>> pipeline = pred.skb.get_pipeline()
+>>> pipeline = pred.skb.make_learner()
 >>> pipeline.fit(split["train"])
-SkrubPipeline(expr=<Apply Ridge>)
+SkrubLearner(data_op=<Apply Ridge>)
 
 Only the training part of ``X`` and ``y`` are used. The subsequent steps are
 evaluated, using this data, to fit the rest of the pipeline.
@@ -114,7 +114,7 @@ And we can obtain predictions on the test part:
 
 >>> from sklearn.metrics import r2_score
 
->>> r2_score(test_y_true, test_pred)
+>>> r2_score(test_y_true, test_pred) # doctest: +SKIP
 0.440999149220359
 
 Cross-validation
@@ -123,7 +123,7 @@ Cross-validation
 We can increase our confidence in our score by using cross-validation instead of
 a single split. The same mechanism is used but we now fit and evaluate the model
 on several splits. This is done with :meth:`.skb.cross_validate()
-<Expr.skb.cross_validate>`.
+<DataOp.skb.cross_validate>`.
 
 >>> pred.skb.cross_validate() # doctest: +SKIP
    fit_time  score_time  test_score
@@ -152,16 +152,16 @@ for ``alpha``.
 
 .. warning::
 
-   When we do :meth:`.skb.get_pipeline() <Expr.skb.get_pipeline>`, the pipeline
+   When we do :meth:`.skb.make_learner() <DataOp.skb.make_learner>`, the pipeline
    we obtain does not perform any hyperparameter tuning. The pipeline we obtain
    uses default values for each of the choices. For numeric choices it is the
    middle of the range, and for :func:`choose_from` it is the first option we
    give it.
 
    To get a pipeline that runs an internal cross-validation to select the best
-   hyperparameters, we must use :meth:`.skb.get_grid_search()
-   <Expr.skb.get_grid_search()>` or :meth:`.skb.get_randomized_search()
-   <Expr.skb.get_randomized_search>`.
+   hyperparameters, we must use :meth:`.skb.make_grid_search()
+   <DataOp.skb.make_grid_search()>` or :meth:`.skb.make_randomized_search()
+   <DataOp.skb.make_randomized_search>`.
 
 
 Here are the different kinds of choices, along with their default outcome when
@@ -219,16 +219,16 @@ we are not using hyperparameter search:
        (here steps are ``[1, 5, 22, 100]``)
 
 
-The default choices for an expression, those that get used when calling
-:meth:`.skb.get_pipeline() <Expr.skb.get_pipeline>`, can be inspected with
-:meth:`.skb.describe_defaults() <Expr.skb.describe_defaults>`:
+The default choices for an DataOp, those that get used when calling
+:meth:`.skb.make_learner() <DataOp.skb.make_learner>`, can be inspected with
+:meth:`.skb.describe_defaults() <DataOp.skb.describe_defaults>`:
 
 >>> pred.skb.describe_defaults()
 {'α': 0.316...}
 
 We can then find the best hyperparameters.
 
->>> search = pred.skb.get_randomized_search(fitted=True)
+>>> search = pred.skb.make_randomized_search(fitted=True)
 >>> search.results_  # doctest: +SKIP
    mean_test_score         α
 0         0.478338  0.141359
@@ -245,13 +245,13 @@ We can then find the best hyperparameters.
 Rather than fitting a randomized or grid search to find the best combination, it is also
 possible to obtain an iterator over different parameter combinations, to inspect
 their outputs or to have manual control over the model selection, using
-:meth:`.skb.iter_pipelines_grid() <Expr.skb.iter_pipelines_grid>` or
-:meth:`.skb.iter_pipelines_randomized() <Expr.skb.iter_pipelines_randomized>`.
+:meth:`.skb.iter_pipelines_grid() <DataOp.skb.iter_pipelines_grid>` or
+:meth:`.skb.iter_pipelines_randomized() <DataOp.skb.iter_pipelines_randomized>`.
 Those yield the candidate pipelines that are explored by the grid and randomized
 search respectively.
 
 A human-readable description of parameters for a pipeline can be obtained with
-:meth:`SkrubPipeline.describe_params`:
+:meth:`SkrubLearner.describe_params`:
 
 >>> search.best_pipeline_.describe_params() # doctest: +SKIP
 {'α': 0.054...}
@@ -266,19 +266,19 @@ single train-test split or with nested cross-validation.
 Single train-test split:
 
 >>> split = pred.skb.train_test_split()
->>> search = pred.skb.get_randomized_search()
+>>> search = pred.skb.make_randomized_search()
 >>> search.fit(split['train'])
-ParamSearch(expr=<Apply Ridge>,
+ParamSearch(data_op=<Apply Ridge>,
             search=RandomizedSearchCV(estimator=None, param_distributions=None))
 >>> search.score(split['test'])  # doctest: +SKIP
 0.4922874902029253
 
 For nested cross-validation we use :func:`skrub.cross_validate`, which accepts a
 ``pipeline`` parameter (as opposed to
-:meth:`.skb.cross_validate() <Expr.skb.cross_validate>`
+:meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`
 which always uses the default hyperparameters):
 
->>> skrub.cross_validate(pred.skb.get_randomized_search(), pred.skb.get_data())  # doctest: +SKIP
+>>> skrub.cross_validate(pred.skb.make_randomized_search(), pred.skb.get_data())  # doctest: +SKIP
    fit_time  score_time  test_score
 0  0.891390    0.002768    0.412935
 1  0.889267    0.002773    0.519140
@@ -290,9 +290,9 @@ Choices beyond estimator hyperparameters
 ----------------------------------------
 
 Choices are not limited to scikit-learn hyperparameters: we can use choices
-wherever we use expressions. The choice of the estimator to use, any argument of
-an expression's method or :func:`deferred` function call, etc. can be replaced
-with choices. We can also choose between several expressions to compare
+wherever we use DataOps. The choice of the estimator to use, any argument of
+an DataOp's method or :func:`deferred` function call, etc. can be replaced
+with choices. We can also choose between several DataOps to compare
 different pipelines.
 
 As an example of choices outside of scikit-learn estimators, we can consider
@@ -306,8 +306,8 @@ several ways to perform an aggregation on a pandas DataFrame:
 - rating_aggregation: ['median', 'mean']
 
 We can also choose between several completely different pipelines by turning a
-choice into an expression, via its ``as_expr`` method (or by using
-:func:`as_expr` on any object).
+choice into an DataOp, via its ``as_data_op`` method (or by using
+:func:`as_data_op` on any object).
 
 >>> from sklearn.preprocessing import StandardScaler
 >>> from sklearn.ensemble import RandomForestRegressor
@@ -322,7 +322,7 @@ choice into an expression, via its ``as_expr`` method (or by using
 >>> rf_pred = X.skb.apply(
 ...     RandomForestRegressor(n_estimators=skrub.choose_int(5, 50, name="N 🌴")), y=y
 ... )
->>> pred = skrub.choose_from({"ridge": ridge_pred, "rf": rf_pred}).as_expr()
+>>> pred = skrub.choose_from({"ridge": ridge_pred, "rf": rf_pred}).as_data_op()
 >>> print(pred.skb.describe_param_grid())
 - choose_from({'ridge': …, 'rf': …}): 'ridge'
   optional(StandardScaler()): [StandardScaler(), None]

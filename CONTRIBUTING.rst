@@ -364,6 +364,30 @@ specific examples, you can use the following command with a regex pattern:
 
 .. code:: bash
 
-    make html EXAMPLES_PATTERN=your_regex_goes_here make html
+    make html EXAMPLES_PATTERN=your_regex_goes_here
 
 This is especially helpful when you're only modifying or checking a few examples.
+
+It is also possible to build the documentation without running the examples
+by using the following command:
+
+.. code:: bash
+
+    make html-noplot
+
+This command generates the documentation without re-executing the examples, which
+can take a long time. This is useful if you are only modifying the
+documentation itself, such as fixing typos or improving explanations.
+
+Editing the API reference documentation
+---------------------------------------
+
+To add a new entry to the :ref:`API reference documentation<api_ref>` or change its
+content, head to ``doc/api_reference.py``. This data is then used by ``doc/conf.py``
+to render templates located at ``doc/reference/*.rst.template``.
+
+|
+
+Note that **all public functions and classes must be documented in the API
+reference**, hence when adding a public function or class, a new entry must be
+added, as detailed just above.

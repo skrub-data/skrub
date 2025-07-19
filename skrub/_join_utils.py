@@ -263,7 +263,12 @@ def left_join(left, right, left_on, right_on, rename_right_cols="{}"):
 
 @dispatch
 def _do_left_join(left, right, left_on, right_on):
-    raise NotImplementedError()
+    # This function is accessed only when the first argument is neither
+    # a pandas or polars DataFrame.
+    # To avoid circular import:
+    from skrub._dataframe._common import _raise as _sbd_raise
+
+    raise _sbd_raise(left, kind="DataFrame")
 
 
 @_do_left_join.specialize("pandas", argument_type="DataFrame")
