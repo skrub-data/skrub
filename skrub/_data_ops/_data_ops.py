@@ -1187,7 +1187,7 @@ def _check_column_names(X):
     return cast_column_names_to_strings(X)
 
 
-def _check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment):
+def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment):
     from ._subsampling import _should_subsample, uses_subsampling
 
     if not isinstance(X_op, DataOp) or not isinstance(y_op, DataOp):
@@ -1239,7 +1239,7 @@ class Apply(DataOpImpl):
         else:
             y = None
 
-        _check_subsampled_X_y_shape(self.X, self.y, X, y, mode, environment)
+        check_subsampled_X_y_shape(self.X, self.y, X, y, mode, environment)
 
         X = _check_column_names(X)
 

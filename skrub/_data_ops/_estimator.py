@@ -8,7 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply
+from ._data_ops import Apply, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     chosen_or_default_outcomes,
@@ -518,6 +518,7 @@ def _compute_Xy(data_op, environment):
             environment=environment,
             clear=False,
         )
+        check_subsampled_X_y_shape(Xy["X"], Xy["y"], X, y, "fit_transform", environment)
     else:
         y = None
     return X, y
