@@ -76,7 +76,7 @@ class TableReport:
     max_plot_columns : int, default=30
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If None, all columns will be plotted.
+        the plots will not be generated. If "all", all columns will be plotted.
 
         To avoid having to set this parameter at each call of ``TableReport``, you can
         change the default using :func:`set_config`:
@@ -93,7 +93,7 @@ class TableReport:
     max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
         If the number of columns in the dataframe is greater than this value,
-        the associations will not be computed. If None, the associations
+        the associations will not be computed. If "all", the associations
         for all columns will be computed.
 
         To avoid having to set this parameter at each call of ``TableReport``, you can
@@ -232,10 +232,10 @@ class TableReport:
     @functools.cached_property
     def _summary(self):
         with_plots = (
-            self.max_plot_columns is None or self.max_plot_columns >= self.n_columns
+            self.max_plot_columns == "all" or self.max_plot_columns >= self.n_columns
         )
         with_associations = (
-            self.max_association_columns is None
+            self.max_association_columns == "all"
             or self.max_association_columns >= self.n_columns
         )
 
