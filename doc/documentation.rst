@@ -31,7 +31,7 @@ See the examples section for full code snippets.
    userguide_tablevectorizer
    userguide_data_cleaning
    userguide_selectors
-   skrub_pipeline
+   userguide_skrub_data_ops
    skrub_pipeline_validation
    userguide_joining_tables
    userguide_utils
