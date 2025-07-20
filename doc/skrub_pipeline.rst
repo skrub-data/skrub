@@ -47,7 +47,7 @@ Skrub DataOps, on the other hand, can manipulate any number of variables.
 The transformation they perform is not a linear sequence but any Directed
 Acyclic Graph of computations.
 
-.. image:: _static/skrub_expressions.svg
+.. image:: _static/skrub_data_ops.svg
 
 What is the difference with orchestrators like Apache Airflow?
 ==============================================================
