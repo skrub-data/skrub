@@ -115,7 +115,7 @@ import pandas as pd
 df = X.skb.apply_func(pd.DataFrame)
 
 # %%
-# For this example, we will use a strong baseline, with a tabular pipeline.
+# For this example, we will use a strong baseline, with skrub's :func:`tabular_pipeline() <tabular_pipeline>`.
 tab_pipeline = skrub.tabular_pipeline("classification")
 
 # We can now apply the predictive model to the data.
