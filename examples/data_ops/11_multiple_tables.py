@@ -17,7 +17,7 @@ based on the products it contains.
 .. |choose_float| replace:: :func:`skrub.choose_float`
 .. |MinHashEncoder| replace:: :class:`skrub.MinHashEncoder`
 .. |StringEncoder| replace:: :class:`skrub.StringEncoder`
-.. |TableVectorizer| replace:: :class:`skrub.TableVectorizer`
+.. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |var| replace:: :func:`skrub.var`
 .. |TableReport| replace:: :class:`skrub.TableReport`
 .. |HistGradientBoostingClassifier| replace::
@@ -84,18 +84,17 @@ skrub.TableReport(dataset.products)
 # ------------------------------------
 #
 # We start by creating skrub variables, which are the inputs to our plan.
-# In our example, we create three skrub |var| objects: ``products``, ``baskets``,
-# and ``fraud_flags``:
+# In our example, we create two skrub |var| objects: ``products`` and ``baskets``:
 
 # %%
 products = skrub.var("products", dataset.products)
-full_baskets = skrub.var("baskets", dataset.baskets)
+baskets = skrub.var("baskets", dataset.baskets)
 
-baskets = full_baskets[["ID"]].skb.mark_as_X()
-fraud_flags = full_baskets["fraud_flag"].skb.mark_as_y()
+baskets_ids = baskets[["ID"]].skb.mark_as_X()
+fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
-# We mark the "baskets" variable as ``X`` and the "fraud flags" variable as ``y``
+# We mark the "baskets_ids" variable as ``X`` and the "fraud flags" variable as ``y``
 # so that DataOps can use their indices for train-test splitting and cross-validation.
 # We then build the plan by applying transformations to those inputs.
 #
@@ -117,12 +116,11 @@ products_with_total
 # the type of encoder for high-cardinality categorical or string columns, and
 # the number of components it uses.
 #
-# With skrub, we do not need to specify a grid of hyperparameters separately
-# from the pipeline. Instead, within a DataOps plan we can replace a parameter's
-# value with one of skrub's ``choose_*``` functions, which indicate the range of
-# values we consider during hyperparameter selection. Here, we use |choose_int|
-# to choose the number of components for the encoder, and |choose_from| to choose
-# the type of encoder to use.
+# With skrub, there’s no need to specify a separate grid of hyperparameters outside the pipeline.
+# Instead, within a DataOps plan, we can directly replace a parameter’s value using one
+# of skrub’s ``choose_*`` functions, which define the range of values to consider during
+# hyperparameter selection. In this example, we use ``choose_int`` to select the number of components
+# for the encoder and ``choose_from`` to select the type of encoder.
 
 # %%
 n = skrub.choose_int(5, 15, name="n_components")
@@ -172,12 +170,14 @@ predictions
 # And our DataOps plan is complete!
 #
 # We can now use |make_randomized_search| to perform hyperparameter
-# tuning and find the best hyperparameters for our model.
+# tuning and find the best hyperparameters for our model. We present below the hyperparameter combinations that define our search space.
 
 # %%
 print(predictions.skb.describe_param_grid())
 
 # %%
+# |make_randomized_search| returns a :class:`~skrub.ParamSearch` object, which contains
+# our search result and some plotting logic.
 search = predictions.skb.make_randomized_search(
     scoring="roc_auc", n_iter=8, n_jobs=4, random_state=0, fitted=True
 )
@@ -190,6 +190,27 @@ search.plot_results()
 # %%
 # It seems here that using the LSA as an encoder brings better test scores,
 # but at the expense of training and scoring time.
+#
+# We can get the best performing :class:`~skrub.SkrubLearner` via ``search.best_learner_``,
+# and use it for inference on new data with:
+# %%
+import pandas as pd
+
+new_baskets = pd.DataFrame([dict(ID="abc")])
+new_products = pd.DataFrame(
+    [
+        dict(
+            basket_ID="abc",
+            item="COMPUTER",
+            cash_price=200,
+            make="APPLE",
+            model="XXX-X",
+            goods_code="239246782",
+            Nbr_of_prod_purchas=1,
+        )
+    ]
+)
+search.best_learner_.predict_proba({"baskets": new_baskets, "products": new_products})
 
 # %%
 # Conclusion
