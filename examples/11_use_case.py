@@ -109,8 +109,7 @@ y = skrub.y(y)
 # %%
 # The variable X for now is a list of dicts. It's not something that an estimator can
 # handle directly.
-# Let's convert it to a pandas DataFrame using
-# :meth:`.skb.apply_func() <DataOp.skb.apply_func>`
+# Let's convert it to a pandas DataFrame using :func:`~skrub.DataOp.skb.apply_func`.
 import pandas as pd
 
 df = X.skb.apply_func(pd.DataFrame)
