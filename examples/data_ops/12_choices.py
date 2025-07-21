@@ -4,7 +4,7 @@
 .. _example_tuning_pipelines:
 
 Hyperparameter tuning with DataOps
-================
+==================================
 
 A machine-learning pipeline typically contains some values or choices which
 may influence its prediction performance, such as hyperparameters (e.g. the
