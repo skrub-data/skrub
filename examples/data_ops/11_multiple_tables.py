@@ -9,7 +9,8 @@ tables**.
 
 We consider the credit fraud dataset, which contains two tables: one for
 baskets (orders) and one for products. The goal is to predict whether a basket
-is fraudulent or not, based on the products it contains.
+(a single order that has been placed with the website) is fraudulent or not,
+based on the products it contains.
 
 .. |choose_from| replace:: :func:`skrub.choose_from`
 .. |choose_int| replace:: :func:`skrub.choose_int`
@@ -31,12 +32,8 @@ is fraudulent or not, based on the products it contains.
 # The credit fraud dataset
 # ------------------------
 #
-# This dataset comes from an e-commerce website. We have a set of "baskets"
-# (orders that have been placed with the website). The task is to detect which
-# orders were fraudulent (the customer never made the payment).
-#
-# The baskets table contains a basket ID and a flag indicating if the order
-# was fraudulent or not.
+# The ``baskets`` table contains a basket ID and a flag indicating if the order
+# was fraudulent or not (the customer never made the payment).
 
 # %%
 import skrub
