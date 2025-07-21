@@ -260,8 +260,20 @@ class _Evaluator(_DataOpTraversal):
             return self._fetch(data_op)
         except KeyError:
             pass
+        result = yield from self._eval_data_op(data_op)
+        self._store(data_op, result)
+        for cb in self.callbacks:
+            cb(data_op, result)
+        return result
+
+    def _eval_data_op(self, data_op):
+        impl = data_op._skrub_impl
         try:
-            result = yield from self._eval_data_op(data_op)
+            if hasattr(impl, "eval"):
+                return (
+                    yield from impl.eval(mode=self.mode, environment=self.environment)
+                )
+            return (yield from super().handle_data_op(data_op))
         except Exception as e:
             data_op._skrub_impl.errors[self.mode] = e
             if self.mode == "preview":
@@ -277,16 +289,6 @@ class _Evaluator(_DataOpTraversal):
             # python < 3.11 : we cannot add note to exception so fall back on chaining
             # note this changes the type of exception
             raise RuntimeError(msg) from e
-        self._store(data_op, result)
-        for cb in self.callbacks:
-            cb(data_op, result)
-        return result
-
-    def _eval_data_op(self, data_op):
-        impl = data_op._skrub_impl
-        if hasattr(impl, "eval"):
-            return (yield from impl.eval(mode=self.mode, environment=self.environment))
-        return (yield from super().handle_data_op(data_op))
 
     def handle_choice(self, choice):
         if choice.name is not None and choice.name in self.environment:
