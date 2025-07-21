@@ -2,39 +2,44 @@
 .. currentmodule:: skrub
 
 .. _example_tuning_pipelines:
+
 Tuning DataOps
-================
+==============
 
 A machine-learning pipeline typically contains some values or choices which
 may influence its prediction performance, such as hyperparameters (e.g. the
-regularization parameter ``alpha`` of a ``RidgeClassifier``, the
-``learning_rate`` of a ``HistGradientBoostingClassifier``), which estimator to
-use (e.g. ``RidgeClassifier`` or ``HistGradientBoostingClassifier``), or which
-steps to include (e.g. should we join a table to bring additional information
+regularization parameter ``alpha`` of a :class:`~sklearn.linear_model.RidgeClassifier`,
+the ``learning_rate`` of a :class:`~sklearn.ensemble.HistGradientBoostingClassifier`),
+which estimator to use (e.g. ``RidgeClassifier`` or ``HistGradientBoostingClassifier``),
+or which steps to include (e.g. should we join a table to bring additional information
 or not).
 
 We want to tune those choices by trying several options and keeping those that
 give the best performance on a validation set.
 
-Skrub :ref:`DataOps <skrub_pipeline>` provide a convenient way to specify
+Skrub :ref:`DataOps<skrub_data_ops>` provide a convenient way to specify
 the range of possible values, by inserting it directly in place of the actual
 value. For example we can write:
-
-``RidgeClassifier(alpha=skrub.choose_from([0.1, 1.0, 10.0], name='α'))``
-
-instead of:
-
-``RidgeClassifier(alpha=1.0)``.
-
-Skrub then inspects
-our DataOps plan to discover all the places where we used objects like
-``skrub.choose_from()`` and builds a grid of hyperparameters for us.
 """
+# %%
+from sklearn.linear_model import RidgeClassifier
+
+import skrub
+
+RidgeClassifier(alpha=skrub.choose_from([0.1, 1.0, 10.0], name="α"))
 
 # %%
+# instead of:
+
+RidgeClassifier(alpha=1.0)
+
+# %%
+# Skrub then inspects our DataOps plan to discover all the places where we used objects
+# like :func:`~skrub.choose_from()` and builds a grid of hyperparameters for us.
+#
 # We will illustrate hyperparameter tuning on the "toxicity" dataset. This
-#  dataset contains 1,000 texts and the task is to predict if they are
-#  flagged as being toxic or not.
+# dataset contains 1,000 texts and the task is to predict if they are
+# flagged as being toxic or not.
 #
 # We start from a very simple pipeline without any hyperparameters.
 
@@ -55,10 +60,12 @@ labels = data["is_toxic"]
 # %%
 # We mark the ``texts`` column as the input variable and the ``labels`` column as
 # the target variable.
+#
 # See `the previous example <10_expressions.html>`_ for a more detailed explanation
-# of ``skrub.X`` and ``skrub.y``.
-# We then encode the text with a ``MinHashEncoder`` and fit a
-# ``HistGradientBoostingClassifier`` on the resulting features.
+# of :func:`skrub.X` and :func:`skrub.y`.
+#
+# We then encode the text with a :class:`~skrub.MinHashEncoder` and fit a
+# :class:`~sklearn.ensemble.HistGradientBoostingClassifier` on the resulting features.
 
 # %%
 X = skrub.X(texts)
@@ -72,33 +79,23 @@ y
 pred = X.skb.apply(skrub.MinHashEncoder()).skb.apply(
     HistGradientBoostingClassifier(), y=y
 )
-
 pred.skb.cross_validate(n_jobs=4)["test_score"]
 
 # %%
-# For the sake of the example, we will focus on the number of ``MinHashEncoder``
-# components and the ``learning_rate`` of the ``HistGradientBoostingClassifier``
-# to illustrate the ``skrub.choose_from(...)`` objects.
-# When we use a scikit-learn hyperparameter-tuner like ``GridSearchCV`` or
-# ``RandomizedSearchCV``, we need to specify a grid of hyperparameters separately
-# from the estimator, with something similar to
+# In this example, we will focus on the ``n_components`` of the
+# ``MinHashEncoder`` and the ``learning_rate`` of the ``HistGradientBoostingClassifier``
+# to illustrate the choices objects.
+#
+# When we use a scikit-learn hyperparameter-tuner like
+# :class:`~sklearn.model_selection.GridSearchCV` or
+# :class:`~sklearn.model_selection.RandomizedSearchCV`, we need to specify a grid of
+# hyperparameters separately from the estimator, with something similar to
 # ``GridSearchCV(my_pipeline, param_grid={"encoder__n_components: [5, 10, 20]"})``.
+#
 # Instead, within a skrub DataOps plan we can use
 # ``skrub.choose_from(...)`` directly where the actual value
 # would normally go. Skrub then takes care of constructing the
-# ``GridSearchCV``'s parameter grid for us.
-#
-# Several utilities are available:
-#
-# - :func:`choose_from` to choose from a discrete set of values
-# - :func:`choose_float` and :func:`choose_int` to sample numbers in a given range
-# - :func:`choose_bool` to choose between ``True`` and ``False``
-# - :func:`optional` to choose between something and ``None``; typically to make a
-#   transformation step optional such as
-#   ``X.skb.apply(skrub.optional(StandardScaler()))``
-#
-# Choices can be given an optional name which is used to display hyperparameter
-# search results and plots, or to override their outcome (ADD A REFERENCE HERE).
+# :class:`~sklearn.model_selection.GridSearchCV`'s parameter grid for us.
 #
 # Note that :func:`skrub.choose_float()` and :func:`skrub.choose_int()` can be given a
 # ``log`` argument to sample in log scale, and that it is possible to specify the
@@ -130,20 +127,21 @@ search.results_
 
 # %%
 # If the plotly library is installed, we can visualize the results of the
-# hyperparameter search with ``.plot_results()``.
+# hyperparameter search with :func:`~skrub.ParamSearch.plot_results`.
 # In the plot below, each line represents a combination of hyperparameters (in
 # this case, only ``N components`` and ``learning rate``), and each column of
 # points represents either a hyperparameter, or the score of a given
 # combination of hyperparameters.
+#
 # The color of the line represents the score of the combination of hyperparameters.
 # The plot is interactive, and it is  possible to select only a subset of the
 # hyperparameters to visualize by dragging the mouse over each column to select
 # the desired range.
+#
 # This is particularly useful when there are many combinations of hyperparameters,
 # and we are interested in understanding which hyperparameters have the largest
 # impact on the score.
 
-# %%
 search.plot_results()
 
 # %%
