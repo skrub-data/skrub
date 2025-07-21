@@ -40,8 +40,8 @@ Usecase: developing locally, and avoiding to repeat code in production
 # quality of the prediction, we want to focus on the pipeline construction.
 # Generating the training data
 # --------------------
-# In this section, we define a few functions that help us with generating the 
-# training data in dictionary form. 
+# In this section, we define a few functions that help us with generating the
+# training data in dictionary form.
 import random
 import string
 import uuid
@@ -78,7 +78,7 @@ def generate_text(min_str_length, max_str_length):
 
 
 # %%
-# We generate 1000 training samples and store them in a list of dictionaries: 
+# We generate 1000 training samples and store them in a list of dictionaries:
 
 n_samples = 1000
 
@@ -109,13 +109,15 @@ y = skrub.y(y)
 # %%
 # The variable X for now is a list of dicts. It's not something that an estimator can
 # handle directly.
-# Let's convert it to a pandas DataFrame using :meth:`.skb.apply_func() <DataOp.skb.apply_func>`
+# Let's convert it to a pandas DataFrame using
+# :meth:`.skb.apply_func() <DataOp.skb.apply_func>`
 import pandas as pd
 
 df = X.skb.apply_func(pd.DataFrame)
 
 # %%
-# For this example, we will use a strong baseline, with skrub's :func:`tabular_pipeline() <tabular_pipeline>`.
+# For this example, we will use a strong baseline, with skrub's
+# :func:`tabular_pipeline() <tabular_pipeline>`.
 tab_pipeline = skrub.tabular_pipeline("classification")
 
 # We can now apply the predictive model to the data.
@@ -126,10 +128,11 @@ predictions = df.skb.apply(tab_pipeline, y=y)
 predictions.skb.draw_graph()
 
 # %%
-# To end the explorative work, we need to build the learner, fit it, and save it to a file. 
+# To end the explorative work, we need to build the learner, fit it, and save it to a
+# file.
 # Passing ``fitted=True`` to the :meth:`.skb.make_learner() <DataOp.skb.make_learner>`
-# function makes it so that the learner is fitted on the data that has been passed to the 
-# variables of the DataOps plan. 
+# function makes it so that the learner is fitted on the data that has been passed to
+# the variables of the DataOps plan.
 import joblib
 
 with open("learner.pkl", "wb") as f:
@@ -159,7 +162,7 @@ prediction
 # Conclusion
 # ----------
 #
-# Thanks to the skrub DataOps and learner, I am assured that all the 
-# transformations and preprocessing done during model development
-#  are the exactly the same that are done in production.
+# Thanks to the skrub DataOps and learner, I am assured that all the transformations and
+# preprocessing done during model development are exactly the same that are done in
+# production.
 # It becomes easy and straightforward to deploy.
