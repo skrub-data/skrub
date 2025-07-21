@@ -27,17 +27,14 @@ Usecase: developing locally, and avoiding to repeat code in production
 # we want to detect a spam email before it reaches the receiver mailbox. Therefore, we
 # cannot use a feature which is available only when the receiver opens the email.
 #
-# In this use case, the emails to be tested when the model is put in production
-# are not contained in a dataframe, but in a json. As a result, our training data
-# should also be contained in a list of dictionaries
-# We are going to generate a fully random data set. We will not have a look at the
-# quality of the prediction, since this use case focuses on the pipeline construction.
+# We will not have a look at the
+# quality of the prediction, since this example focuses on the pipeline construction.
 
 # %%
 # Generating the training data
-# --------------------
+# ----------------------------
 # In this section, we define a few functions that help us with generating the
-# training data in dictionary form.
+# training data in dictionary form. We are going to generate a fully random data set.
 import random
 import string
 import uuid
@@ -78,6 +75,11 @@ def generate_text(min_str_length, max_str_length):
 
 n_samples = 1000
 
+# %%
+# In this use case, the emails to be tested when the model is put in production
+# are not contained in a dataframe, but in a json. As a result, our training data
+# should also be contained in a list of dictionaries.
+
 X = [
     {
         "id": generate_id(),
@@ -96,7 +98,7 @@ y = np.random.binomial(n=1, p=0.9, size=n_samples)
 
 # %%
 # Building the DataOps plan
-# ---------------------------
+# -------------------------
 # Let's start our DataOps plan by indicating what are the features and the target
 # variable.
 import skrub
@@ -137,6 +139,9 @@ with open("learner.pkl", "wb") as f:
     joblib.dump(predictions.skb.make_learner(fitted=True), f)
 
 # %%
+# Production phase
+# ----------------
+#
 # In our microservice, we receive a payload in json format.
 X_input = {
     "id": generate_id(),
