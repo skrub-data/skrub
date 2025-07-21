@@ -90,7 +90,7 @@ skrub.TableReport(dataset.products)
 products = skrub.var("products", dataset.products)
 baskets = skrub.var("baskets", dataset.baskets)
 
-baskets_ids = baskets[["ID"]].skb.mark_as_X()
+basket_ids = baskets[["ID"]].skb.mark_as_X()
 fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
@@ -105,7 +105,7 @@ fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 # amount for each kind of product in a basket:
 
 # %%
-kept_products = products[products["basket_ID"].isin(baskets["ID"])]
+kept_products = products[products["basket_ID"].isin(basket_ids["ID"])]
 products_with_total = kept_products.assign(
     total_price=kept_products["Nbr_of_prod_purchas"] * kept_products["cash_price"]
 )
@@ -151,7 +151,7 @@ vectorized_products = products_with_total.skb.apply(
 
 # %%
 aggregated_products = vectorized_products.groupby("basket_ID").agg("mean").reset_index()
-augmented_baskets = baskets.merge(
+augmented_baskets = basket_ids.merge(
     aggregated_products, left_on="ID", right_on="basket_ID"
 ).drop(columns=["ID", "basket_ID"])
 
@@ -214,7 +214,6 @@ new_products = pd.DataFrame(
     ]
 )
 search.best_learner_.predict_proba({"baskets": new_baskets, "products": new_products})
-
 # %%
 # Conclusion
 # ----------
