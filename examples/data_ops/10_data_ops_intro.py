@@ -53,7 +53,7 @@ skrub.TableReport(training_data)
 # Assembling our DataOps plan
 # ----------------------------
 #
-# Our goal is to predict the `current_annual_salary` of employees based on their
+# Our goal is to predict the ``current_annual_salary`` of employees based on their
 # other features. We will use skrub's DataOps to combine both skrub and scikit-learn
 # objects into a single DataOps plan, which will allow us to preprocess the data,
 # train a model, and tune hyperparameters.
