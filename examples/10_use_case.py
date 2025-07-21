@@ -78,6 +78,8 @@ def generate_text(min_str_length, max_str_length):
 
 
 # %%
+# We generate 1000 training samples and store them in a list of dictionaries: 
+
 n_samples = 1000
 
 X = [
