@@ -126,7 +126,10 @@ predictions = df.skb.apply(tab_pipeline, y=y)
 predictions.skb.draw_graph()
 
 # %%
-# To end the explorative work, I can save the fitted learner to a file somewhere.
+# To end the explorative work, we need to build the learner, fit it, and save it to a file. 
+# Passing ``fitted=True`` to the :meth:`.skb.make_learner() <DataOp.skb.make_learner>`
+# function makes it so that the learner is fitted on the data that has been passed to the 
+# variables of the DataOps plan. 
 import joblib
 
 with open("learner.pkl", "wb") as f:
