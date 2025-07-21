@@ -5,28 +5,31 @@ Usecase: developing locally, and avoiding to repeat code in production
 """
 
 # %%
-# As a team of data scientists, we are tasked with a project to predict whether an email is potentially 
-# malicious (i.e., spam or phishing). We develop and test our models locally, either in a Jupyter
-# notebook or within a Python script. Once we are satisfied with the model's performance, we move
-# on to deploying it.
+# As a team of data scientists, we are tasked with a project to predict whether an email
+# is potentially malicious (i.e., spam or phishing). We develop and test our models
+# locally, either in a Jupyter notebook or within a Python script. Once we are satisfied
+# with the model's performance, we move on to deploying it.
 #
-# In this use case, every time the email provider receives a new email, they want to verify whether
-# it is spam before displaying it in the recipient’s inbox. To achieve this, they plan to integrate
-# a machine learning model within a microservice. This microservice will accept an email’s data as
-# a JSON payload and return a score between 0 and 1, indicating the likelihood that the email is spam.
+# In this use case, every time the email provider receives a new email, they want to
+# verify whether it is spam before displaying it in the recipient’s inbox. To achieve
+# this, they plan to integrate a machine learning model within a microservice. This
+# microservice will accept an email’s data as a JSON payload and return a score between
+# 0 and 1, indicating the likelihood that the email is spam.
 #
-# To avoid rewriting the entire data pipeline when moving from model validation to production
-# deployment, which is both error-prone and inefficient, we prefer to load an object that
-# encapsulates the same processing pipeline used during model development. This is where the
-# :class:`~skrub.SkrubLearner` can help.
+# To avoid rewriting the entire data pipeline when moving from model validation to
+# production deployment, which is both error-prone and inefficient, we prefer to load an
+# object that encapsulates the same processing pipeline used during model development.
+# This is where the :class:`~skrub.SkrubLearner` can help.
 #
-# Adopting this workflow also has the benefit of forcing us to clearly define the type of data
-# that will be available at the input of the microservice. It helps ensure we build models that
-# rely only on information accessible at this specific point in the product pipeline. For
-# example, since we want to detect spam before the email reaches the recipient’s inbox,
-# we cannot use features that are only available after the recipient opens the email.
+# Adopting this workflow also has the benefit of forcing us to clearly define the type
+# of data that will be available at the input of the microservice. It helps ensure we
+# build models that rely only on information accessible at this specific point in the
+# product pipeline. For example, since we want to detect spam before the email reaches
+# the recipient’s inbox, we cannot use features that are only available after the
+# recipient opens the email.
 #
-# Since this example is focused on the pipeline construction itself, we won't look at our model performance.
+# Since this example is focused on the pipeline construction itself, we won't look at
+# our model performance.
 
 # %%
 # Generating the training data
