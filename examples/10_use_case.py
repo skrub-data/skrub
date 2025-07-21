@@ -39,7 +39,7 @@ Usecase: developing locally, and avoiding to repeat code in production
 # are not contained in a dataframe, but in a json. As a result, our training data
 # should also be contained in a list of dictionaries
 # We are going to generate a fully random data set. We will not have a look at the
-# quality of the prediction, since we want to focus on the pipeline construction.
+# quality of the prediction, since this use case focuses on the pipeline construction.
 # Generating the training data
 # --------------------
 # In this section, we define a few functions that help us with generating the
