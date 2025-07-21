@@ -139,7 +139,7 @@ new data:
 >>> learner.fit_transform({"a": 10, "b": 7})
 17
 
-Using previews and subsampling for easier development and debugging
+Using previews for easier development and debugging
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To make interactive development easier without having to call ``eval()`` after
@@ -265,5 +265,5 @@ modified in-place, all operations that we apply must produce a new value. We
 discuss this in more detail in a
 :ref:`later section <user_guide_deferred_evaluation_ref>`.
 
-Control flow in DataOps
+Control flow in DataOps: eager and deferred evaluation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

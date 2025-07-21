@@ -13,6 +13,17 @@ DataOps can also be used to apply machine-learning estimators from
 scikit-learn or Skrub to the data. This is done through the
 :meth:`.skb.apply() <DataOp.skb.apply>` method:
 
+>>> import pandas as pd
+>>> import skrub
+>>> orders_df = pd.DataFrame(
+...     {
+...         "item": ["pen", "cup", "pen", "fork"],
+...         "price": [1.5, None, 1.5, 2.2],
+...         "qty": [1, 1, 2, 4],
+...     }
+... )
+>>> orders = skrub.var("orders", orders_df)
+
 >>> orders.skb.apply(skrub.TableVectorizer())
 <Apply TableVectorizer>
 Result:
@@ -51,9 +62,100 @@ Note that here the learner is fitted on the preview data, but in general it can
 be exported without fitting, and then fitted on new data provided as an environment
 dictionary.
 
+Applying different transformers using Skrub selectors and DataOps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is possible to use Skrub selectors to define which columns to apply
+transformers to, and then apply different transformers to different subsets of
+the data.
+
+For example, this can be useful to apply :class:`~skrub.TextEncoder` to columns
+that contain free-flowing text, and :class:`~skrub.StringEncoder` to other string
+columns that contain categorical data such as country names.
+
+>>> from skrub import selectors as s
+>>> high_cardinality = s.string() - s.cardinality_below(2)
+>>> has_nulls = s.has_nulls()
+>>> leftover = s.all() - high_cardinality - has_nulls
+
+>>> vectorizer = skrub.StringEncoder(n_components=2)
+>>> vectorized_items = orders.skb.select(high_cardinality).skb.apply(vectorizer)
+>>> vectorized_items # doctest: +SKIP
+<Apply StringEncoder>
+Result:
+―――――――
+          item_0        item_1  price  qty
+0  1.511858e+00  9.380015e-08    1.5    1
+1 -1.704687e-07  1.511858e+00    NaN    1
+2  1.511858e+00  9.380015e-08    1.5    2
+3 -5.458670e-09 -6.917769e-08    2.2    4
+
+>>> vectorized_has_nulls = orders.skb.select(cols=has_nulls) * 11
+>>> vectorized_has_nulls
+    <BinOp: mul>
+    Result:
+    ―――――――
+       price
+    0   16.5
+    1    NaN
+    2   16.5
+    3   24.2
+>>> everything_else = orders.skb.select(cols=leftover).skb.apply(skrub.TableVectorizer())
+
+After encoding the columns, the resulting DataOps can be concatenated together
+to obtain the final result:
+
+>>> encoded = (
+...   everything_else.skb.concat([vectorized_items, vectorized_has_nulls], axis=1)
+... )
+>>> encoded # doctest: +SKIP
+   qty        item_0        item_1  price
+0  1.0  1.594282e+00 -1.224524e-07   16.5
+1  1.0  9.228692e-08  1.473794e+00    NaN
+2  2.0  1.594282e+00 -1.224524e-07   16.5
+3  4.0  7.643604e-09  6.080018e-01   24.2
+
+Documenting the DataOps plan with node names and descriptions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We can improve the readability of the DataOps plan by giving names and descriptions
+to the nodes in the plan. This is done with :meth:`.skb.set_name() <DataOp.skb.set_name>`
+and :meth:`.skb.set_description() <DataOp.skb.set_description>`.
+
+>>> import skrub
+>>> a = skrub.var('a', 1)
+>>> b = skrub.var('b', 2)
+>>> c = (a + b).skb.set_description('the addition of a and b')
+>>> c.skb.description
+'the addition of a and b'
+>>> d = c.skb.set_name('d')
+>>> d.skb.name
+'d'
+
+Both names and descriptions can be used to mark relevant parts of the learner, and
+they can be accessed from the computational graph and the plan report.
+
+Additionally, names can be used to bypass the computation of a node and override its
+result by passing it as a key in the ``environment`` dictionary.
+
+>>> e = d * 10
+>>> e
+<BinOp: mul>
+Result:
+―――――――
+30
+>>> e.skb.eval()
+30
+>>> e.skb.eval({'a': 10, 'b': 5})
+150
+>>> e.skb.eval({'d': -1}) # -1 * 10
+-10
+
+More info can be found in section :ref:`user_guide_truncating_dataplan_ref`.
+
 .. _user_guide_deferred_evaluation_ref:
 
-Arbitrary code and deferred evaluation in pipelines: ``deferred``, ``apply_func``, and ``as_expr``
+Arbitrary code and deferred evaluation: ``deferred``, ``apply_func``, and ``as_expr``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 DataOps represent computations that have not been executed yet, and will
@@ -179,12 +281,13 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 - See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
   skrub DataOps.
 
+.. _user_guide_truncating_dataplan_ref:
 
-Using only a part of a pipeline
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using only a part of a DataOps plan
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We can give a name to any node with :meth:`.skb.set_name() <DataOp.skb.set_name>`.
-When this is done we can:
+Besides documenting a DataOps plan, the :meth:`.skb.set_name() <DataOp.skb.set_name>`
+has additional functions. By setting a name, we can:
 
 - Bypass the computation of that node and override its result by passing it as a
   key in the ``environment`` argument.

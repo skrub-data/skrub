@@ -77,8 +77,8 @@ Result:
 Once a pipeline is defined and the ``X`` and ``y`` nodes are identified, skrub
 is able to split the dataset and perform cross-validation.
 
-Splitting
----------
+Splitting the data in train and test sets
+-----------------------------------------
 
 We can use :meth:`.skb.train_test_split() <DataOp.skb.train_test_split>` to
 perform a single train-test split. Skrub first evaluates the DataOps on
@@ -100,8 +100,8 @@ and :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`.
 
 We can now fit our pipeline on the training data:
 
->>> pipeline = pred.skb.make_learner()
->>> pipeline.fit(split["train"])
+>>> learner = pred.skb.make_learner()
+>>> learner.fit(split["train"])
 SkrubLearner(data_op=<Apply Ridge>)
 
 Only the training part of ``X`` and ``y`` are used. The subsequent steps are
@@ -117,8 +117,11 @@ And we can obtain predictions on the test part:
 >>> r2_score(test_y_true, test_pred) # doctest: +SKIP
 0.440999149220359
 
-Cross-validation
-----------------
+It is possible to define a custom splitter function to use instead of
+:func:`sklearn.model_selection.train_test_split`.
+
+Improving the confidence in our score through cross-validation
+------------------------------------------------
 
 We can increase our confidence in our score by using cross-validation instead of
 a single split. The same mechanism is used but we now fit and evaluate the model
@@ -133,8 +136,8 @@ on several splits. This is done with :meth:`.skb.cross_validate()
 3  0.002748    0.001321    0.424661
 4  0.002649    0.001309    0.441961
 
-Tuning choices
---------------
+Using the Skrub ``choose_*`` functions to tune hyperparameters
+--------------------------------------------------------------
 
 Skrub provides a convenient way to declare ranges of possible values, and tune
 those choices to keep the values that give the best predictions on a validation
@@ -334,8 +337,8 @@ Also note that as seen above, choices can be nested arbitrarily. For example it
 is frequent to choose between several estimators, each of which contains choices
 in its hyperparameters.
 
-Linking choices
----------------
+Linking choices depending on other choices
+--------------------------------------
 
 Choices can depend on another choice made with :func:`choose_from`,
 :func:`choose_bool` or :func:`optional` through those objects' ``.match()``
