@@ -156,8 +156,8 @@ search.plot_results()
 # validation metrics with randomized or grid search. However, even when our
 # expression contains such choices we can still use it without tuning, for
 # example in previews or to get a quick first result before spending the
-# computation time to run the search. When we use :meth:`.skb.get_pipeline()
-# <DataOp.skb.get_pipeline>`, we get a pipeline that does not perform any tuning
+# computation time to run the search. When we use :meth:`.skb.make_learner()
+# <DataOp.skb.make_learner>`, we get a pipeline that does not perform any tuning
 # and uses those default values. This default pipeline is used for
 # :meth:`.skb.eval() <DataOp.skb.eval>`.
 #

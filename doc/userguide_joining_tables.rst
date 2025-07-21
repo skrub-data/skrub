@@ -1,5 +1,5 @@
 
-.. _assembling:
+.. _userguide_joining_tables:
 
 ====================================
 Assembling: joining multiple tables
@@ -75,9 +75,9 @@ always easy to find the right one for your analysis.
 skrub has some very helpful methods that gives you easy
 access to embeddings, or vectorial representations of an entity,
 of all common entities from Wikipedia.
-You can use :func:`datasets.get_ken_embeddings` to search for the right
+You can use :func:`datasets.fetch_ken_embeddings` to search for the right
 embeddings and download them.
 
-Other methods, such as :func:`datasets.fetch_world_bank_indicator` to
+Other methods, such as :func:`datasets.fetch_country_happiness` to
 fetch data of a World Bank indicator can also help you retrieve
 useful data that will be joined to another table.
