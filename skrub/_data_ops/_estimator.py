@@ -519,8 +519,8 @@ def _compute_Xy(data_op, environment):
             clear=False,
         )
         msg = (
-            "\nIs the order of `.skb.subsample()` and `.skb.mark_as_*()` different for"
-            " X and y?"
+            "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"
+            " for both X and y?"
         )
         check_subsampled_X_y_shape(
             Xy["X"], Xy["y"], X, y, "fit_transform", environment, msg=msg

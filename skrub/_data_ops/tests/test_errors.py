@@ -302,8 +302,9 @@ def test_inconsistent_subsampling_and_split_order():
     assert pred.shape.skb.eval() == (100,)
     msg = re.escape(
         "`y` was subsampled with `.skb.subsample()` but `X` was not, resulting in"
-        " different sizes (X: 100, y: 10).\nIs the order of `.skb.subsample()` and"
-        " `.skb.mark_as_*()` different for X and y?"
+        " different sizes (X: 100, y: 10)."
+        "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"
+        " for both X and y?"
     )
     # splitting with subsampling disabled works
     pred.skb.train_test_split()
