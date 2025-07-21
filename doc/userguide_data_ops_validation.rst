@@ -109,7 +109,7 @@ evaluated, using this data, to fit the rest of the pipeline.
 
 And we can obtain predictions on the test part:
 
->>> test_pred = pipeline.predict(split["test"])
+>>> test_pred = learner.predict(split["test"])
 >>> test_y_true = split["y_test"]
 
 >>> from sklearn.metrics import r2_score
