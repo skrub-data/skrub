@@ -39,9 +39,9 @@ based on the type of the final estimator.
      - Native support :sup:`(1)`
      - :class:`~sklearn.preprocessing.OneHotEncoder`
    * - High-cardinality encoder
-     - :class:`MinHashEncoder`
-     - :class:`MinHashEncoder`
-     - :class:`GapEncoder`
+     - :class:`StringEncoder`
+     - :class:`StringEncoder`
+     - :class:`StringEncoder`
    * - Numerical preprocessor
      - No processing
      - No processing
