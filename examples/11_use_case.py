@@ -129,7 +129,7 @@ predictions.skb.draw_graph()
 # %%
 # To end the explorative work, we need to build the learner, fit it, and save it to a
 # file.
-# Passing ``fitted=True`` to the :meth:`.skb.make_learner() <DataOp.skb.make_learner>`
+# Passing ``fitted=True`` to the :func:`~skrub.DataOp.skb.make_learner`
 # function makes it so that the learner is fitted on the data that has been passed to
 # the variables of the DataOps plan.
 import joblib
