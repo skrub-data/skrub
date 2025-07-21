@@ -24,7 +24,6 @@ and then use it to make predictions on new data.
 .. |make_randomized_search| replace::
    :meth:`.skb.make_randomized_search <DataOp.skb.make_randomized_search>`
 
-# :meth:`.skb.eval() <DataOp.skb.eval>`.
 """
 
 # %%
@@ -59,12 +58,8 @@ skrub.TableReport(training_data)
 # train a model, and tune hyperparameters.
 #
 # We begin by defining a skrub |var|, which is the entry point for our DataOps plan.
-# Additionally, we use the subsample function to limit the number of rows that
-# are used to produce previews of each step in the plan. This is useful to speed up
-# the development process. At training time, the DataOps will automatically
-# use the full dataset.
 
-data_var = skrub.var("data", training_data).skb.subsample()
+data_var = skrub.var("data", training_data)
 
 # %%
 # Next, we define the initial features ``X`` and the target variable ``y``.
