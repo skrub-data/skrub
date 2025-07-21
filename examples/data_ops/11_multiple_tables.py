@@ -4,8 +4,8 @@ Multiples tables: building machine learning pipelines with DataOps
 ==================================================================
 
 In this example, we show how to build a DataOps plan to handle
-pre-processing, validation and hyperparameter tuning of a dataset with multiple
-tables.
+pre-processing, validation and hyperparameter tuning of a dataset with **multiple
+tables**.
 
 We consider the credit fraud dataset, which contains two tables: one for
 baskets (orders) and one for products. The goal is to predict whether a basket
