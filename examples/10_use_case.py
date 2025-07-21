@@ -159,7 +159,7 @@ prediction
 # Conclusion
 # ----------
 #
-# Thanks to the skrub DataOps and learner, I have the insurance that all the
-# transformations and preprocessing done when developing the models are similar to the
-# ones done in production.
+# Thanks to the skrub DataOps and learner, I am assured that all the 
+# transformations and preprocessing done during model development
+#  are the exactly the same that are done in production.
 # It becomes easy and straightforward to deploy.
