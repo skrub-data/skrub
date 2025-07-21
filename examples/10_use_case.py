@@ -99,7 +99,9 @@ X = [
 y = np.random.binomial(n=1, p=0.9, size=n_samples)
 
 # %%
-# Let's start our skrub DataPlan by indicating what are the features and the target
+# Building the DataOps plan
+# ---------------------------
+# Let's start our DataOps plan by indicating what are the features and the target
 # variable.
 import skrub
 
