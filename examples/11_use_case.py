@@ -5,10 +5,6 @@ Usecase: developing locally, and avoiding to repeat code in production
 """
 
 # %%
-###############################################################################
-# A typical use case
-# ------------------
-#
 # As a team of data scientists, we are given a project where we have to predict if an
 # email is fishy.
 # We am developing and testing our models locally: in a notebook or a python script.
@@ -30,18 +26,14 @@ Usecase: developing locally, and avoiding to repeat code in production
 # accessible yet in this part of the product pipeline. For instance, in this use case,
 # we want to detect a spam email before it reaches the receiver mailbox. Therefore, we
 # cannot use a feature which is available only when the receiver opens the email.
-
-# %%
-###############################################################################
-# Let's create the data set
-# ------------------
 #
 # In this use case, the emails to be tested when the model is put in production
 # are not contained in a dataframe, but in a json. As a result, our training data
 # should also be contained in a list of dictionaries
 # We are going to generate a fully random data set. We will not have a look at the
 # quality of the prediction, since this use case focuses on the pipeline construction.
-#
+
+# %%
 # Generating the training data
 # --------------------
 # In this section, we define a few functions that help us with generating the
@@ -164,7 +156,6 @@ prediction = loaded_learner.predict({"X": [X_input]})
 prediction
 
 # %%
-###############################################################################
 # Conclusion
 # ----------
 #
