@@ -18,7 +18,7 @@ and then use it to make predictions on new data.
 .. |TableVectorizer| replace:: :class:`TableVectorizer`
 .. |skb.apply| replace:: :meth:`.skb.apply() <DataOp.skb.apply>`
 .. |HistGradientBoostingRegressor| replace::
-   :class:`sklearn.ensemble.HistGradientBoostingRegressor`
+   :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 .. |.skb.full_report()| replace:: :meth:`.skb.eval() <DataOp.skb.full_report>`
 .. |choose_float| replace:: :func:`choose_float`
 .. |make_randomized_search| replace::
@@ -52,7 +52,7 @@ skrub.TableReport(training_data)
 # Assembling our DataOps plan
 # ----------------------------
 #
-# Our goal is to predict the `current_annual_salary` of employees based on their
+# Our goal is to predict the ``current_annual_salary`` of employees based on their
 # other features. We will use skrub's DataOps to combine both skrub and scikit-learn
 # objects into a single DataOps plan, which will allow us to preprocess the data,
 # train a model, and tune hyperparameters.
