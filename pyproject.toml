@@ -189,7 +189,7 @@ lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-
 
 [tool.pixi.feature.check-pyi-diff.tasks]
 # Note: this only works on Unix
-check = { cmd = "python build_tools/generate_expressions_stub.py | diff - skrub/_expressions/_expressions.pyi" }
+check = { cmd = "python build_tools/generate_data_ops_stub.py | diff - skrub/_data_ops/_data_ops.pyi" }
 
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }

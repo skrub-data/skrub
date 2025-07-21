@@ -15,7 +15,7 @@ and transforming dataframe columns using arbitrary logic.
 import skrub
 from skrub.datasets import fetch_employee_salaries
 
-skrub.set_config(use_tablereport=True)
+skrub.set_config(use_table_report=True)
 data = fetch_employee_salaries()
 X, y = data.X, data.y
 X
