@@ -38,7 +38,10 @@ Usecase: developing locally, and avoiding to repeat code in production
 # Given my use case, the data set is not a dataframe, but a list of dict.
 # We are going to generate a fully random data set. We will not have a look at the
 # quality of the prediction, we want to focus on the pipeline construction.
-
+# Generating the training data
+# --------------------
+# In this section, we define a few functions that help us with generating the 
+# training data in dictionary form. 
 import random
 import string
 import uuid
