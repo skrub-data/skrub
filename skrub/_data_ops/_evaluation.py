@@ -260,7 +260,23 @@ class _Evaluator(_DataOpTraversal):
             return self._fetch(data_op)
         except KeyError:
             pass
-        result = yield from self._eval_data_op(data_op)
+        try:
+            result = yield from self._eval_data_op(data_op)
+        except Exception as e:
+            data_op._skrub_impl.errors[self.mode] = e
+            if self.mode == "preview":
+                raise
+            stack = data_op._skrub_impl.creation_stack_last_line()
+            msg = (
+                f"Evaluation of node {data_op._skrub_impl} failed. See above for full"
+                f" traceback. This node was defined here:\n{stack}"
+            )
+            if hasattr(e, "add_note"):
+                e.add_note(msg)
+                raise
+            # python < 3.11 : we cannot add note to exception so fall back on chaining
+            # note this changes the type of exception
+            raise RuntimeError(msg) from e
         self._store(data_op, result)
         for cb in self.callbacks:
             cb(data_op, result)
@@ -285,27 +301,11 @@ class _Evaluator(_DataOpTraversal):
         return (yield choice_match.outcome_mapping[outcome])
 
     def compute_result(self, data_op, evaluated_attributes):
-        try:
-            return data_op._skrub_impl.compute(
-                SimpleNamespace(**evaluated_attributes),
-                mode=self.mode,
-                environment=self.environment,
-            )
-        except Exception as e:
-            data_op._skrub_impl.errors[self.mode] = e
-            if self.mode == "preview":
-                raise
-            stack = data_op._skrub_impl.creation_stack_last_line()
-            msg = (
-                f"Evaluation of node {data_op._skrub_impl} failed. See above for full"
-                f" traceback. This node was defined here:\n{stack}"
-            )
-            if hasattr(e, "add_note"):
-                e.add_note(msg)
-                raise
-            # python < 3.11 : we cannot add note to exception so fall back on chaining
-            # note this changes the type of exception
-            raise RuntimeError(msg) from e
+        return data_op._skrub_impl.compute(
+            SimpleNamespace(**evaluated_attributes),
+            mode=self.mode,
+            environment=self.environment,
+        )
 
 
 def _check_environment(environment):
