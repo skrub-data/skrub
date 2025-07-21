@@ -58,9 +58,9 @@ def test_max_plot_columns():
         assert report.max_plot_columns == 1
 
         # Argument takes precedence over default configuration
-        report = TableReport(X, max_association_columns=12)
-        assert report.max_association_columns == 12
-        assert report.max_plot_columns == 1
+        report = TableReport(X, max_association_columns="all", max_plot_columns="all")
+        assert report.max_association_columns == "all"
+        assert report.max_plot_columns == "all"
 
     # Check that max_plot_columns can be set after patching the TableReport
     # repr_html.
@@ -73,10 +73,11 @@ def test_enable_subsampling():
     X = fetch_employee_salaries().X
     dataop = skrub.X(X)
 
-    # Default: no subsampling during fit mode
+    # No subsampling by default with fit_transform mode
     assert dataop.skb.subsample(n=3).skb.eval().shape[0] == X.shape[0]
+    assert dataop.skb.subsample(n=3).skb.eval(keep_subsampling=True).shape[0] == 3
 
-    # Force subsampling
+    # Force subsampling during fit_transform
     with config_context(enable_subsampling="force"):
         assert dataop.skb.subsample(n=3).skb.eval().shape[0] == 3
 

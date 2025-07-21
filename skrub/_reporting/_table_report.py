@@ -18,9 +18,12 @@ def _check_max_cols(max_plot_columns, max_association_columns):
         if max_plot_columns is not None
         else _config.get_config()["max_plot_columns"]
     )
-    if not (isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0):
+    if (max_plot_columns != "all") and not (
+        isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0
+    ):
         raise ValueError(
-            f"'max_plot_columns' must be a positive scalar, got {max_plot_columns!r}."
+            "'max_plot_columns' must be a positive scalar or 'all', got"
+            f" {max_plot_columns!r}."
         )
 
     max_association_columns = (
@@ -28,12 +31,12 @@ def _check_max_cols(max_plot_columns, max_association_columns):
         if max_association_columns is not None
         else _config.get_config()["max_association_columns"]
     )
-    if not (
+    if (max_association_columns != "all") and not (
         isinstance(max_association_columns, numbers.Real)
         and max_association_columns >= 0
     ):
         raise ValueError(
-            "'max_association_columns' must be a positive scalar, got "
+            "'max_association_columns' must be a positive scalar or 'all', got "
             f"{max_association_columns!r}."
         )
 
