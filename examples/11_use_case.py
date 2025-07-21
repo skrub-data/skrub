@@ -135,7 +135,8 @@ predictions.skb.draw_graph()
 import joblib
 
 with open("learner.pkl", "wb") as f:
-    joblib.dump(predictions.skb.make_learner(fitted=True), f)
+    learner = predictions.skb.make_learner(fitted=True)
+    joblib.dump(learner, f)
 
 # %%
 # Production phase
