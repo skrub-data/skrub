@@ -61,12 +61,13 @@ API_REFERENCE = {
                     "pipelines, see the :ref:`skrub expressions <expressions_ref>`."
                 ),
                 "autosummary": [
+                    "tabular_pipeline",
                     "tabular_learner",
                     "TableVectorizer",
-                    "Cleaner",
                     "SelectCols",
                     "DropCols",
-                    "DropUninformative",
+                    "ApplyToCols",
+                    "ApplyToFrame",
                 ],
             }
         ],
@@ -117,6 +118,8 @@ API_REFERENCE = {
                 "description": None,
                 "autosummary": [
                     "deduplicate",
+                    "Cleaner",
+                    "DropUninformative",
                 ],
             },
         ],
@@ -172,28 +175,26 @@ API_REFERENCE = {
             }
         ],
     },
-    "expressions": {
-        "title": "Expressions",
+    "data_ops": {
+        "title": "DataOps",
         "short_summary": None,
         "description": None,
         "sections": [
             {
                 "description": (
                     "Generalizing the scikit-learn pipeline. "
-                    "See :ref:`skrub expression <skrub_pipeline>` for further details."
+                    "See :ref:`skrub data_ops <skrub_data_ops>` for further details."
                 ),
-                "autosummary": ["var", "X", "y", "as_expr", "deferred"],
+                "autosummary": ["var", "X", "y", "as_data_op", "deferred"],
                 "template": "base.rst",
             },
             {
-                "description": "The expression object.",
-                "autosummary": ["Expr"],
-                "template": "expr_class.rst",
+                "description": "The DataOp object.",
+                "autosummary": ["DataOp"],
+                "template": "data_op_class.rst",
             },
             {
-                "description": (
-                    "Inline hyperparameters selection within your expressions."
-                ),
+                "description": "Inline hyperparameters selection in your DataOps plan.",
                 "autosummary": [
                     "choose_bool",
                     "choose_float",
@@ -204,67 +205,81 @@ API_REFERENCE = {
                 "template": "base.rst",
             },
             {
-                "description": "Evaluate your expressions.",
+                "description": "Evaluate your DataOps plan.",
                 "autosummary": ["cross_validate", "eval_mode"],
                 "template": "base.rst",
             },
             {
                 "description": (
-                    "The ``skb`` accessor exposes all expressions methods and "
-                    "attributes."
+                    "The ``skb`` accessor exposes all DataOps methods and attributes."
                 ),
                 "autosummary": [
-                    "Expr.skb.apply",
-                    "Expr.skb.apply_func",
-                    "Expr.skb.clone",
-                    "Expr.skb.concat",
-                    "Expr.skb.cross_validate",
-                    "Expr.skb.describe_defaults",
-                    "Expr.skb.describe_param_grid",
-                    "Expr.skb.describe_steps",
-                    "Expr.skb.draw_graph",
-                    "Expr.skb.drop",
-                    "Expr.skb.eval",
-                    "Expr.skb.freeze_after_fit",
-                    "Expr.skb.full_report",
-                    "Expr.skb.get_data",
-                    "Expr.skb.get_pipeline",
-                    "Expr.skb.get_grid_search",
-                    "Expr.skb.get_randomized_search",
-                    "Expr.skb.if_else",
-                    "Expr.skb.iter_pipelines_grid",
-                    "Expr.skb.iter_pipelines_randomized",
-                    "Expr.skb.mark_as_X",
-                    "Expr.skb.mark_as_y",
-                    "Expr.skb.match",
-                    "Expr.skb.preview",
-                    "Expr.skb.select",
-                    "Expr.skb.set_description",
-                    "Expr.skb.set_name",
-                    "Expr.skb.subsample",
-                    "Expr.skb.train_test_split",
+                    "DataOp.skb.apply",
+                    "DataOp.skb.apply_func",
+                    "DataOp.skb.clone",
+                    "DataOp.skb.concat",
+                    "DataOp.skb.cross_validate",
+                    "DataOp.skb.describe_defaults",
+                    "DataOp.skb.describe_param_grid",
+                    "DataOp.skb.describe_steps",
+                    "DataOp.skb.draw_graph",
+                    "DataOp.skb.drop",
+                    "DataOp.skb.eval",
+                    "DataOp.skb.freeze_after_fit",
+                    "DataOp.skb.full_report",
+                    "DataOp.skb.get_data",
+                    "DataOp.skb.make_learner",
+                    "DataOp.skb.make_grid_search",
+                    "DataOp.skb.make_randomized_search",
+                    "DataOp.skb.if_else",
+                    "DataOp.skb.iter_learners_grid",
+                    "DataOp.skb.iter_learners_randomized",
+                    "DataOp.skb.mark_as_X",
+                    "DataOp.skb.mark_as_y",
+                    "DataOp.skb.match",
+                    "DataOp.skb.preview",
+                    "DataOp.skb.select",
+                    "DataOp.skb.set_description",
+                    "DataOp.skb.set_name",
+                    "DataOp.skb.subsample",
+                    "DataOp.skb.train_test_split",
                 ],
                 "template": "autosummary/accessor_method.rst",
             },
             {
                 "description": "Accessor attributes.",
                 "autosummary": [
-                    "Expr.skb.description",
-                    "Expr.skb.is_X",
-                    "Expr.skb.is_y",
-                    "Expr.skb.name",
-                    "Expr.skb.applied_estimator",
+                    "DataOp.skb.description",
+                    "DataOp.skb.is_X",
+                    "DataOp.skb.is_y",
+                    "DataOp.skb.name",
+                    "DataOp.skb.applied_estimator",
                 ],
                 "template": "autosummary/accessor_attribute.rst",
             },
             {
                 "description": "Objects generated by the expressions.",
                 "autosummary": [
-                    "SkrubPipeline",
+                    "SkrubLearner",
                     "ParamSearch",
                 ],
                 "template": "base.rst",
             },
+        ],
+    },
+    "config": {
+        "title": "Configuration",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "get_config",
+                    "set_config",
+                    "config_context",
+                ],
+            }
         ],
     },
     "datasets": {
@@ -293,6 +308,7 @@ API_REFERENCE = {
                     "datasets.fetch_videogame_sales",
                     "datasets.get_data_dir",
                     "datasets.make_deduplication_data",
+                    "datasets.toy_orders",
                 ],
             }
         ],

@@ -11,12 +11,12 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
+from ._apply_to_cols import SingleColumnTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
-from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
 from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
@@ -75,7 +75,7 @@ def _created_by_predicate(col, transformers):
 def _created_by(*transformers):
     """Selector for columns created by one of the provided transformers.
 
-    Each of ``transformers`` must be an instance of ``OnEachColumn``.
+    Each of ``transformers`` must be an instance of ``ApplyToCols``.
     A column is matched if it was created (or modified) by one of them, i.e. if
     it is listed in one of their ``created_outputs_`` fitted attributes.
 
@@ -522,7 +522,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     See Also
     --------
-    tabular_learner :
+    tabular_pipeline :
         A function that accepts a scikit-learn estimator and creates a pipeline
         combining a ``TableVectorizer``, optional missing value imputation and
         the provided estimator.
@@ -866,25 +866,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             return steps[-1]
 
         cols = s.all() - self._specific_columns
-
-        self._preprocessors = [CheckInputDataFrame()]
-
-        transformer_list = [CleanNullStrings()]
-        transformer_list.append(
-            DropUninformative(
-                self.drop_if_constant, self.drop_if_unique, self.drop_null_fraction
-            )
+        self._preprocessors = _get_preprocessors(
+            cols=cols,
+            drop_null_fraction=self.drop_null_fraction,
+            drop_if_constant=self.drop_if_constant,
+            drop_if_unique=self.drop_if_unique,
+            n_jobs=self.n_jobs,
+            add_tofloat32=True,
+            datetime_format=self.datetime_format,
         )
-
-        transformer_list += [
-            ToDatetime(format=self.datetime_format),
-            ToFloat32(),
-            CleanCategories(),
-            ToStr(),
-        ]
-
-        for transformer in transformer_list:
-            add_step(self._preprocessors, transformer, cols, allow_reject=True)
 
         self._encoders = []
         self._named_encoders = {}

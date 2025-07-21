@@ -66,7 +66,7 @@ data-spans__{{ i }}__{{ j }}
                 {% endif %}
                 >
                 {%- if not (cell["value"]) | is_null -%}
-                {{ cell["value"] }}
+                {{ cell["value"] | format_number }}
                 {%-  if cell["role"] == "columns-level-name" -%}
                 <div class="arrow-icon">{% include "icons/arrow-right.svg" %}</div>
                 {%- endif -%}
