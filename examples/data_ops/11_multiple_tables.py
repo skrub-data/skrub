@@ -21,7 +21,7 @@ based on the products it contains.
 .. |var| replace:: :func:`skrub.var`
 .. |TableReport| replace:: :class:`skrub.TableReport`
 .. |HistGradientBoostingClassifier| replace::
-   :class:`sklearn.ensemble.HistGradientBoostingClassifier`
+   :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
 .. |make_randomized_search| replace:: :meth:`skrub.Expr.make_randomized_search`
 
 .. currentmodule:: skrub
