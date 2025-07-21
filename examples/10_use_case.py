@@ -24,7 +24,7 @@ Usecase: developing locally, and avoiding to repeat code in production
 # able to load an object that executes the same operations as the pipeline:
 # the skrub learner can help with this.
 # Working in this way is also helpful,
-# because it forces me to know beforehand what kind of data I will have at the entrance
+# because it forces me to know beforehand what kind of data I have at the entrance
 # of the microservice, and avoids building a model based on information that is not
 # accessible yet in this part of the product pipeline. For instance, in my use case,
 # I want to detect a spam email before it reaches the receiver mailbox. Therefore, I
