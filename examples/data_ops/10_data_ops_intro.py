@@ -18,7 +18,7 @@ and then use it to make predictions on new data.
 .. |TableVectorizer| replace:: :class:`TableVectorizer`
 .. |skb.apply| replace:: :meth:`.skb.apply() <DataOp.skb.apply>`
 .. |HistGradientBoostingRegressor| replace::
-   :class:`sklearn.ensemble.HistGradientBoostingRegressor`
+   :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 .. |.skb.full_report()| replace:: :meth:`.skb.eval() <DataOp.skb.full_report>`
 .. |choose_float| replace:: :func:`choose_float`
 .. |make_randomized_search| replace::
