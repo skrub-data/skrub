@@ -60,6 +60,8 @@ def create_credit_fraud_report():
         open=False,
     )
 
+    return output_dir
+
 
 def create_employee_salaries_report():
     output_dir = (
@@ -89,7 +91,12 @@ def create_employee_salaries_report():
         open=False,
     )
 
+    return output_dir
+
 
 def create_data_ops_report():
-    create_credit_fraud_report()
-    create_employee_salaries_report()
+    credit_fraud_folder = create_credit_fraud_report()
+    employee_salary_folder = create_employee_salaries_report()
+
+    assert (credit_fraud_folder / "index.html").exists()
+    assert (employee_salary_folder / "index.html").exists()
