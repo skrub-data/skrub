@@ -17,7 +17,7 @@ It is possible to change configuration options using the |set_config| function:
 .. code-block:: python
 
     from skrub import set_config
-    set_config(use_tablereport=True)
+    set_config(use_table_report=True)
 
 Each configuration parameter can also be modified by setting its environment variable.
 
