@@ -15,7 +15,7 @@ def create_credit_fraud_report():
     output_dir = (
         Path(__file__).parent / "_build" / "html" / "_static" / "credit_fraud_report"
     )
-    if output_dir.exists():
+    if (output_dir / "index.html").exists():
         return output_dir
 
     dataset = skrub.datasets.fetch_credit_fraud()
@@ -71,7 +71,7 @@ def create_employee_salaries_report():
         / "_static"
         / "employee_salaries_report"
     )
-    if output_dir.exists():
+    if (output_dir / "index.html").exists():
         return output_dir
 
     dataset = skrub.datasets.fetch_employee_salaries(split="train").employee_salaries
