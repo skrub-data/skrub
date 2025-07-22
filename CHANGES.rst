@@ -17,7 +17,8 @@ Highlights
   to train and tune machine learning models. Then, the DataOps plans can be exported
   as ``Learners`` (:class:`skrub.SkrubLearner`), standalone objects that can be
   used on new data. More detail about the DataOps can be found in the
-  :ref:`User guide <dataops>` and in the :ref:`examples <example_expressions_intro>`.
+  :ref:`User guide <userguide_data_ops>` and in the
+  :ref:`examples <data_ops_examples_ref>`.
 
 - The :class:`TableReport` has been improved with many new features. Series are
   now supported directly. It is now
