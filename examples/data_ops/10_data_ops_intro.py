@@ -43,7 +43,7 @@ training_data = fetch_employee_salaries(split="train").employee_salaries
 # %%
 # We can take a look at the dataset using the |TableReport|.
 # This dataset contains numerical, categorical, and datetime features. The column
-# `current_annual_salary` is the target variable we want to predict.
+# ``current_annual_salary`` is the target variable we want to predict.
 #
 
 import skrub
