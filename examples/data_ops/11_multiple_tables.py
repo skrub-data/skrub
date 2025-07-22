@@ -12,19 +12,20 @@ baskets (orders) and one for products. The goal is to predict whether a basket
 (a single order that has been placed with the website) is fraudulent or not,
 based on the products it contains.
 
+.. currentmodule:: skrub
+
 .. |choose_from| replace:: :func:`skrub.choose_from`
 .. |choose_int| replace:: :func:`skrub.choose_int`
 .. |choose_float| replace:: :func:`skrub.choose_float`
-.. |MinHashEncoder| replace:: :class:`skrub.MinHashEncoder`
-.. |StringEncoder| replace:: :class:`skrub.StringEncoder`
+.. |MinHashEncoder| replace:: :class:`~skrub.MinHashEncoder`
+.. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |var| replace:: :func:`skrub.var`
-.. |TableReport| replace:: :class:`skrub.TableReport`
+.. |TableReport| replace:: :class:`~skrub.TableReport`
 .. |HistGradientBoostingClassifier| replace::
    :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
-.. |make_randomized_search| replace:: :meth:`skrub.Expr.make_randomized_search`
+.. |make_randomized_search| replace:: :func:`~skrub.DataOp.skb.make_randomized_search`
 
-.. currentmodule:: skrub
 
 """
 
@@ -120,8 +121,8 @@ products_with_total
 # the pipeline.
 # Instead, within a DataOps plan, we can directly replace a parameter’s value using
 # one of skrub’s ``choose_*`` functions, which define the range of values to consider
-# during hyperparameter selection. In this example, we use ``choose_int`` to select
-# the number of components for the encoder and ``choose_from`` to select the type
+# during hyperparameter selection. In this example, we use |choose_int| to select
+# the number of components for the encoder and |choose_from| to select the type
 # of encoder.
 
 # %%
@@ -195,7 +196,7 @@ search.plot_results()
 # but at the expense of training and scoring time.
 #
 # We can get the best performing :class:`~skrub.SkrubLearner` via
-# ``search.best_learner_``, and use it for inference on new data with:
+# ``best_learner_``, and use it for inference on new data with:
 
 import pandas as pd
 
