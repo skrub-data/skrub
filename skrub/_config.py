@@ -116,20 +116,20 @@ def set_config(
         environment variable.
 
     subsampling_seed : int, default=None
-        Set the random seed of subsampling in skrub expressions
+        Set the random seed of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
-        Control the activation of subsampling in skrub expressions
+        Control the activation of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
         - If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample` is used.
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
-        - If ``"force"``, subsampling is used in all expression evaluation modes
+        - If ``"force"``, subsampling is used in all DataOps evaluation modes
           (:func:`~skrub.DataOp.skb.eval`, fit_transform, etc.).
 
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
@@ -252,7 +252,7 @@ def config_context(
 
     use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
-        expressions. Default is ``True``.
+        DataOps. Default is ``True``.
 
         - If ``True``, :class:`~skrub.TableReport` will be used.
         - If ``False``, the original Pandas or Polars dataframe display will be
@@ -276,20 +276,20 @@ def config_context(
         environment variable.
 
     subsampling_seed : int, default=None
-        Set the random seed of subsampling in skrub expressions
+        Set the random seed of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
-        Control the activation of subsampling in skrub expressions
+        Control the activation of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
         - If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample` is used.
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
-        - If ``"force"``, subsampling is used in all expression evaluation modes
+        - If ``"force"``, subsampling is used in all DataOps evaluation modes
           (preview, fit_transform, etc.).
 
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``

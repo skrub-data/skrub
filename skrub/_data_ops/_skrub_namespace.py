@@ -2132,7 +2132,7 @@ class SkrubNamespace:
 
     @property
     def is_y(self):
-        """Whether this expression has been marked with :meth:`.skb.mark_as_y()`."""
+        """Whether this DataOp has been marked with :meth:`.skb.mark_as_y()`."""
         return self._data_op._skrub_impl.is_y
 
     @check_data_op

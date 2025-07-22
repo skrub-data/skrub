@@ -3,12 +3,12 @@ from unittest.mock import Mock
 
 import skrub
 
-# This test has to be outside of the `_expressions` module (and thus out of
-# _expressions/tests/, as we place the tests inside the package), because to
+# This test has to be outside of the `_data_ops` module (and thus out of
+# _data_ops/tests/, as we place the tests inside the package), because to
 # avoid clutter in the printed stack trace all lines that are inside of the
-# _expressions module are removed: we want the trace of the user's line of code
-# where they create the expression, not what happens inside of skrub when they
-# do. So if this test was in _expressions/tests/ the stack description would be
+# data_ops module are removed: we want the trace of the user's line of code
+# where they create the DataOp, not what happens inside of skrub when they
+# do. So if this test was in data_ops/tests/ the stack description would be
 # empty.
 
 

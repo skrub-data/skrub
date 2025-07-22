@@ -33,9 +33,9 @@ from table_report import generate_demo
 
 generate_demo()
 
-# Generate the HTML snippets for the pipeline demo on the homepage:
+# Generate the HTML snippets for the DataOps demo on the homepage:
 if not os.path.exists("generated_for_index/code_block_2.html"):
-    runpy.run_path("generate_pipeline_for_index.py")
+    runpy.run_path("generate_data_ops_example_for_index.py")
 
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory
