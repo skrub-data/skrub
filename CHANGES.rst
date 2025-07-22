@@ -27,7 +27,8 @@ Highlights
 
 - :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
   providing utilities for selecting columns to which a transformer should be applied
-  in a flexible way. For more details, see the :ref:`User guide <selectors>`.
+  in a flexible way. For more details, see the :ref:`User guide <userguide_selectors>`
+  and the :ref:`example <sphx_glr_auto_examples_10_apply_on_cols.py>`.
 
 New features
 ------------
@@ -153,7 +154,7 @@ website have been made. Contributors include :user:`Vincent Maladiere <Vincent-M
 :user:`Sylvain Combettes <sylvaincom>`, :user:`Frits Hermans <fritshermans>`,
 :user:`Vitor Pohlenz <vitorpohlenz>`, :user:`Arturo Amor Quiroz <ArturoAmorQ>`,
 :user:`Marie Sacksick <MarieSacksick>`, :user:`Emilien Battel <emilienbattel09>`,
-:user:`<gmhaber>`, :user:`Antoine Canaguier-Durand <canag>`, and
+:user:`George El Haber <gmhaber>`, :user:`Antoine Canaguier-Durand <canag>`, and
 :user:`Lionel Kusch <lionelkusch>`.
 
 
