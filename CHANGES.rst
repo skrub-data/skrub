@@ -32,9 +32,9 @@ Highlights
 New features
 ------------
 
-- The skrub DataOps are a new mechanism for building machine-learning
-  pipelines that can handle multiple tables and easily describe
-  hyperparameter spaces. See :ref:`the examples <example_expressions_intro>` for
+- The skrub expressions are new mechanism for building machine-learning
+  pipelines that handle multiple tables and easily describing their
+  hyperparameter spaces. See :ref:`the examples <data_ops_examples_ref>` for
   an introduction. :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of
   work from other contributors is not directly visible on the pull request page:
   :user:`Vincent Maladiere <Vincent-Maladiere>` provided very important help by

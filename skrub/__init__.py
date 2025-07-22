@@ -10,15 +10,12 @@ from ._apply_to_cols import ApplyToCols
 from ._apply_to_frame import ApplyToFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
-from ._datetime_encoder import DatetimeEncoder
-from ._deduplicate import compute_ngram_distance, deduplicate
-from ._drop_uninformative import DropUninformative
-from ._expressions import (
-    Expr,
+from ._data_ops import (
+    DataOp,
     ParamSearch,
-    SkrubPipeline,
+    SkrubLearner,
     X,
-    as_expr,
+    as_data_op,
     choose_bool,
     choose_float,
     choose_from,
@@ -30,6 +27,9 @@ from ._expressions import (
     var,
     y,
 )
+from ._datetime_encoder import DatetimeEncoder
+from ._deduplicate import compute_ngram_distance, deduplicate
+from ._drop_uninformative import DropUninformative
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
 from ._interpolation_joiner import InterpolationJoiner
@@ -51,13 +51,13 @@ with open(_Path(__file__).parent / "VERSION.txt") as _fh:
 
 
 __all__ = [
-    "Expr",
+    "DataOp",
     "var",
-    "SkrubPipeline",
+    "SkrubLearner",
     "ParamSearch",
     "X",
     "y",
-    "as_expr",
+    "as_data_op",
     "deferred",
     "eval_mode",
     "TableReport",
