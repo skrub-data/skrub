@@ -15,7 +15,7 @@ Highlights
   combining dataframe transformations over multiple tables, and machine learning
   pipelines. DataOps can be combined to form compled data plans, that can be used
   to train and tune machine learning models. Then, the DataOps plans can be exported
-  as ``Learners`` (:class:`skrub.SkrubPipeline`), standalone objects that can be
+  as ``Learners`` (:class:`skrub.SkrubLearner`), standalone objects that can be
   used on new data. More detail about the DataOps can be found in the
   :ref:`User guide <dataops>` and in the :ref:`examples <example_expressions_intro>`.
 
