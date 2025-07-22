@@ -58,7 +58,7 @@ API_REFERENCE = {
                 "description": (
                     "See :ref:`end_to_end_pipeline <end_to_end_pipeline>` for "
                     "further details. For more flexibility and control to build "
-                    "pipelines, see the :ref:`skrub DataOps <skrub_data_ops>`."
+                    "pipelines, see the :ref:`skrub DataOps <data_ops_examples_ref>`."
                 ),
                 "autosummary": [
                     "tabular_pipeline",
@@ -149,8 +149,9 @@ API_REFERENCE = {
         "sections": [
             {
                 "description": (
-                    "Contains method to select columns in a dataframe. "
-                    "See the :ref:`selectors <selectors>` section for further details."
+                    "Contains method to select columns in a dataframe. See the"
+                    " :ref:`selectors <userguide_selectors>` section for further"
+                    " details."
                 ),
                 "autosummary": [
                     "selectors.all",

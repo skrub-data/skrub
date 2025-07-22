@@ -37,8 +37,7 @@ dataset = fetch_employee_salaries()
 employees_df, salaries = dataset.X, dataset.y
 
 # %%
-# Explore all the available datasets in :ref:`downloading_a_dataset_ref`.
-
+# Explore all the available datasets in :ref:`datasets_ref`.
 
 # %%
 # Generating an interactive report for a dataframe
@@ -187,7 +186,7 @@ agg_joiner.fit_transform(airports)
 # For joining multiple auxiliary tables on a main table at once, use the
 # :class:`~skrub.MultiAggJoiner`.
 #
-# See other ways to join multiple tables in :ref:`assembling`.
+# See other ways to join multiple tables in :ref:`userguide_joining_tables`.
 
 
 # %%

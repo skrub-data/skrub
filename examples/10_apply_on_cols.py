@@ -50,8 +50,8 @@ Xt
 # number of components.
 #
 # To select columns without hardcoding their names, we introduce
-# :ref:`selectors<selectors>`, which allow for flexible matching pattern and composable
-# logic.
+# :ref:`selectors<userguide_selectors>`, which allow for flexible matching pattern
+# and composable logic.
 #
 # The regex selector below will match all columns prefixed with ``"lsa"``, and pass them
 # to :class:`~skrub.ApplyToFrame` which will assemble these columns into a dataframe and
