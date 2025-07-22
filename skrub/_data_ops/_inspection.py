@@ -121,7 +121,7 @@ def full_report(
     if clear:
         clear_results(data_op, mode)
     try:
-        return _make_data_ops_plan(
+        return _make_full_report(
             data_op,
             environment=environment,
             mode=mode,
@@ -134,7 +134,7 @@ def full_report(
             clear_results(data_op, mode)
 
 
-def _make_data_ops_plan(
+def _make_full_report(
     data_op,
     environment=None,
     mode="preview",
