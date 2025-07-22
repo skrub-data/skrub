@@ -131,19 +131,19 @@ def test_error(params):
 
 def test_subsampling_seed():
     X = fetch_employee_salaries().X
-    expr = skrub.X(X)
+    data_op = skrub.X(X)
 
     with config_context(subsampling_seed=0):
         index = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
         index_identical = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
 
     with config_context(subsampling_seed=1):
         index_different = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
 
     assert index == index_identical
