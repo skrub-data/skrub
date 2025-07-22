@@ -164,59 +164,9 @@ predicted_values
 loaded_model.score({"data": unseen_data})
 
 # %%
-# Hyper-parameter tuning on the DataOps plan
-# -------------------------------------------
-#
-# So far, we have seen how to build a simple machine learning pipeline using skrub's
-# DataOps. However, a major part of optimizing a machine learning model is
-# hyperparameter tuning. Skrub's DataOps allow us to easily add hyperparameters
-# right where we define the model, by using one of the ``choose_*`` functions.
-# Here, we will use |choose_float| to add a learning rate hyperparameter
-# to the |HistGradientBoostingRegressor|.
-
-hgb = HistGradientBoostingRegressor(
-    learning_rate=skrub.choose_float(0.01, 0.9, log=True, name="learning_rate")
-)
-predictor = X_vec.skb.apply(hgb, y=y)
-predictor
-
-# %%
-# Since now we have can tune the learning rate, we can use the |make_randomized_search|
-# method to perform hyperparameter tuning. This method will automatically
-# create a randomized search over the hyperparameters defined in the DataOps plan.
-
-search = predictor.skb.make_randomized_search(
-    n_iter=4,
-    n_jobs=4,
-    random_state=0,
-    scoring="neg_mean_absolute_error",
-    fitted=True,
-)
-
-# %%
-# We can print the results of the search, along with various hyperparameter
-# configurations. In this case, we only have one hyperparameter: the learning rate.
-
-search.results_
-# %%
-# Another powerful tool to find the best hyperparameters provided by the skrub
-# DataOps is the parallel coordinates plot. This plot allows to visualize each
-# hyperparameter configuration as a line that connects the hyperparameter values
-# to the corresponding score.
-
-search.plot_results()
-# %%
-# Finally, we can retrieve the best learner from the search results, and save it
-# to disk. This learner will contain the best hyperparameter configuration
-# found during the search, and can be used to make predictions on new data.
-
-best_learner = search.best_learner_
-saved_model = pickle.dumps(best_learner)
-
-# %%
 # In this example, we have briefly introduced the skrub DataOps, and how they can
 # be used to build powerful machine learning pipelines. We have seen how to preprocess
-# data, train a model, and tune hyperparameters using skrub's DataOps. We have also
+# data, train a model. We have also
 # shown how to save and load the trained model, and how to make predictions on new
 # data using the trained model.
 #

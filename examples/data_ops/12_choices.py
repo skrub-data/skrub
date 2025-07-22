@@ -147,6 +147,15 @@ search.results_
 
 # %%
 search.plot_results()
+# %%
+# Finally, we can retrieve the best learner from the search results, and save it
+# to disk. This learner will contain the best hyperparameter configuration
+# found during the search, and can be used to make predictions on new data.
+
+import pickle
+
+best_learner = search.best_learner_
+saved_model = pickle.dumps(best_learner)
 
 # %%
 # Default choice values
