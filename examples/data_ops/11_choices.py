@@ -3,7 +3,7 @@
 
 .. _example_tuning_pipelines:
 
-Tuning DataOps
+Hyperparameter tuning with DataOps
 ==============
 
 A machine-learning pipeline typically contains some values or choices which
