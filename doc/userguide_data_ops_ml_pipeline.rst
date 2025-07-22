@@ -1,4 +1,4 @@
-.. _skrub_data_ops_pipelines:
+.. _userguide_data_ops_ml_pipeline:
 ========================================================
 Assembling Skrub DataOps into complex machine learning pipelines
 ========================================================

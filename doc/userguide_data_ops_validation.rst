@@ -1,6 +1,6 @@
 .. currentmodule:: skrub
 
-.. _skrub_data_ops_validation:
+.. _userguide_data_ops_validation:
 
 =====================================
 Tuning and validating Skrub Pipelines
