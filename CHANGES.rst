@@ -153,7 +153,8 @@ website have been made. Contributors include :user:`Vincent Maladiere <Vincent-M
 :user:`Sylvain Combettes <sylvaincom>`, :user:`Frits Hermans <fritshermans>`,
 :user:`Vitor Pohlenz <vitorpohlenz>`, :user:`Arturo Amor Quiroz <ArturoAmorQ>`,
 :user:`Marie Sacksick <MarieSacksick>`, :user:`Emilien Battel <emilienbattel09>`,
-:user:`<gmhaber>`, :user:`<canag>`, and :user:`Lionel Kusch <lionelkusch>`.
+:user:`<gmhaber>`, :user:`Antoine Canaguier-Durand <canag>`, and
+:user:`Lionel Kusch <lionelkusch>`.
 
 
 Release 0.5.4
