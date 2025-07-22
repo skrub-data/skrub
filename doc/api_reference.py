@@ -149,8 +149,9 @@ API_REFERENCE = {
         "sections": [
             {
                 "description": (
-                    "Contains method to select columns in a dataframe. "
-                    "See the :ref:`selectors <selectors>` section for further details."
+                    "Contains method to select columns in a dataframe. See the"
+                    " :ref:`selectors <userguide_selectors>` section for further"
+                    " details."
                 ),
                 "autosummary": [
                     "selectors.all",
