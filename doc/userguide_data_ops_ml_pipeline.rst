@@ -63,7 +63,7 @@ be exported without fitting, and then fitted on new data provided as an environm
 dictionary.
 
 Applying different transformers using Skrub selectors and DataOps
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to use Skrub selectors to define which columns to apply
 transformers to, and then apply different transformers to different subsets of
@@ -72,6 +72,10 @@ the data.
 For example, this can be useful to apply :class:`~skrub.TextEncoder` to columns
 that contain free-flowing text, and :class:`~skrub.StringEncoder` to other string
 columns that contain categorical data such as country names.
+
+In the example below, we apply a :class:`~skrub.StringEncoder` to columns
+with high cardinality, a mathematical operation to columns with nulls, and a
+:class:`~skrub.TableVectorizer` to all other columns.
 
 >>> from skrub import selectors as s
 >>> high_cardinality = s.string() - s.cardinality_below(2)
@@ -115,8 +119,12 @@ to obtain the final result:
 2  2.0  1.594282e+00 -1.224524e-07   16.5
 3  4.0  7.643604e-09  6.080018e-01   24.2
 
+More info can be found in :ref:`userguide_selectors` and example
+:ref:`_sphx_glr_auto_examples_10_apply_on_cols.py`.
+
+
 Documenting the DataOps plan with node names and descriptions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We can improve the readability of the DataOps plan by giving names and descriptions
 to the nodes in the plan. This is done with :meth:`.skb.set_name() <DataOp.skb.set_name>`
@@ -153,133 +161,31 @@ Result:
 
 More info can be found in section :ref:`user_guide_truncating_dataplan_ref`.
 
-.. _user_guide_deferred_evaluation_ref:
+Evaluating and debugging the DataOps plan with :meth:`.skb.full_report() <DataOp.skb.full_report>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Arbitrary code and deferred evaluation: ``deferred``, ``apply_func``, and ``as_expr``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+All operations on DataOps are recorded in a computational graph, which can be
+inspected with :meth:`.skb.full_report() <DataOp.skb.full_report>`. This method
+generates a html report that shows the full plan, including all nodes,
+their names, descriptions, and the transformations applied to the data.
 
-DataOps represent computations that have not been executed yet, and will
-only be triggered when we call :meth:`.skb.eval() <DataOp.skb.eval>`, or when we
-create the pipeline with :meth:`.skb.make_learner() <DataOp.skb.make_learner>` and
-call one of its methods such as ``fit()``.
+An example of the report can be found
+`here <../../_static/credit_fraud_report/index.html>`_.
 
-This means we cannot use standard Python control flow statements such as ``if``,
-``for``, ``with``, etc. with DataOps, because those constructs would execute
-immediately.
+For each node in the plan, the report shows:
+- The name and the description of the node, if present.
+- Predecessor and successor nodes in the computational graph.
+- Where the code relative to the node is defined.
+- The estimator fitted in the node along with its parameters (if applicable).
+- The preview of the data at that node.
 
->>> for column in orders.columns:
-...     pass
-Traceback (most recent call last):
-    ...
-TypeError: This object is a DataOp that will be evaluated later, when your learner runs. So it is not possible to eagerly iterate over it now.
+Additionally, if computations fail in the plan, the report shows the offending
+node and the error message, which can help in debugging the plan.
 
-We get an error because the ``for`` statement tries to iterate immediately
-over the columns. However, ``orders.columns`` is not an actual list of
-columns: it is a Skrub DataOp that will produce a list of columns, later,
-when we run the computation.
-
-This remains true even if we have provided a value for ``orders`` and we can
-see a result for that value:
-
->>> orders.columns
-<GetAttr 'columns'>
-Result:
-―――――――
-Index(['item', 'price', 'qty'], dtype='object')
-
-The "result" we see is an *example* result that the computation produces for the
-data we provided. But we want to fit our pipeline and apply it to different
-datasets, for which it will return a new object every time. So even if we see a
-preview of the output on the data we provided, ``orders.columns`` still
-represents a future computation that remains to be evaluated.
-
-Therefore, we must delay the execution of the ``for`` statement until the computation
-actually runs and ``orders.columns`` has been evaluated.
-
-We can achieve this by defining a function that contains the control flow logic
-we need, and decorating it with :func:`deferred`. This decorator defers the execution
-of the function: when we call it, it does not run immediately. Instead, it returns
-a Skrub DataOp that wraps the function call. The original function is only
-executed when the DataOp is evaluated.
-
->>> @skrub.deferred
-... def with_upper_columns(df):
-...     new_columns = [c.upper() for c in df.columns]
-...     return df.set_axis(new_columns, axis="columns")
-
->>> with_upper_columns(orders)
-<Call 'with_upper_columns'>
-Result:
-―――――――
-   ITEM  PRICE  QTY
-0   pen    1.5    1
-1   cup    NaN    1
-2   pen    1.5    2
-3  fork    2.2    4
-
-When the computation runs, ``orders`` will be evaluated first and the result (an
-actual dataframe) will be passed as the ``df`` argument to our function.
-
-When the first argument to our function is a skrub DataOp, rather than
-applying ``deferred`` and calling the function as shown above we can use
-:meth:`.skb.apply_func() <DataOp.skb.apply_func>`:
-
->>> def with_upper_columns(df):
-...     new_columns = [c.upper() for c in df.columns]
-...     return df.set_axis(new_columns, axis="columns")
-
->>> orders.skb.apply_func(with_upper_columns)
-<Call 'with_upper_columns'>
-Result:
-―――――――
-   ITEM  PRICE  QTY
-0   pen    1.5    1
-1   cup    NaN    1
-2   pen    1.5    2
-3  fork    2.2    4
-
-:func:`deferred` is useful not only for our own functions, but also when we
-need to call module-level functions from a library. For example, to delay the
-loading of a CSV file, we could write something like:
-
->>> csv_path = skrub.var("csv_path")
->>> data = skrub.deferred(pd.read_csv)(csv_path)
-
-Another consequence of the fact that DataOps are evaluated lazily (we are
-building a pipeline, not immediately computing a single result), any
-transformation that we apply must not modify its input, but leave it unchanged
-and return a new value.
-
-Consider the transformers in a scikit-learn pipeline: each computes a new
-result without modifying its input.
-
->>> orders['total'] = orders['price'] * orders['qty']
-Traceback (most recent call last):
-    ...
-TypeError: Do not modify a DataOp in-place. Instead, use a function that returns a new value. This is necessary to allow chaining several steps in a sequence of transformations.
-For example if df is a pandas DataFrame:
-df = df.assign(new_col=...) instead of df['new_col'] = ...
-
-Note the suggestion in the error message: using :meth:`pandas.DataFrame.assign`.
-When we do need assignments or in-place transformations, we can put them in a
-:func:`deferred` function. But we should make a (shallow) copy of the inputs and
-return a new value.
-
-Finally, there are other situations where using :func:`deferred` can be helpful:
-
-- When we have many nodes in our graph and want to collapse a sequence of steps into
-  a single function call that appears as a single node.
-- When certain function calls need to be deferred until the full computation
-  runs, because they depend on the runtime environment, or on objects that
-  cannot be pickled with the rest of the computation graph (for example, opening
-  and reading a file).
-
-.. rubric:: Examples
-
-- See :ref:`example_data_ops_intro` for an example of skrub DataOps plans using
-  DataOps on dataframes.
-- See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
-  skrub DataOps.
+By default, reports are saved in the ``skrub_data/execution_reports`` directory, but
+they can be saved to a different location with the ``ouptut_dir`` parameter.
+Note that the default path can be altered with the
+``SKRUB_DATA_DIR`` environment variable. See :ref:`userguide_utils` for more details.
 
 .. _user_guide_truncating_dataplan_ref:
 
@@ -382,6 +288,8 @@ Subsampling **is turned off** by default when we call other methods such as
 :meth:`DataOp.skb.make_learner`,
 :meth:`DataOp.skb.make_randomized_search`, etc.
 However, all of those methods have a ``keep_subsampling`` parameter that we can
-set to ``True`` to force using the subsampling when we call them.
+set to ``True`` to force using the subsampling when we call them. Note that
+even if we set ``keep_subsampling=True``, subsampling is not applied when using
+``predict``.
 
 See more details in a :ref:`full example <example_subsampling>`.

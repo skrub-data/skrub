@@ -1301,7 +1301,7 @@ class SkrubNamespace:
             value are used.
 
         open : bool (default=True)
-            Whether to open the report in a webbrowser once computed.
+            Whether to open the report in a web browser once computed.
 
         output_dir : str or Path or None (default=None)
             Directory where to store the report. If ``None``, a timestamped
