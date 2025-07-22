@@ -2,6 +2,7 @@ import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
+from skrub._config import _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
 from skrub.datasets import fetch_employee_salaries
 
@@ -149,3 +150,20 @@ def test_subsampling_seed():
 
     assert index == index_identical
     assert index != index_different
+
+
+def test_parsing(monkeypatch):
+    assert _parse_env_bool("MY_VAR", default=True)
+
+    with monkeypatch.context() as m:
+        m.setenv("MY_VAR", "False")
+        assert not _parse_env_bool("MY_VAR", default=True)
+
+    with monkeypatch.context() as m:
+        m.setenv("MY_VAR", "True")
+        assert _parse_env_bool("MY_VAR", default=False)
+
+    with pytest.raises(ValueError):
+        with monkeypatch.context() as m:
+            m.setenv("MY_VAR", "hello")
+            _parse_env_bool("MY_VAR", default=False)
