@@ -3,8 +3,9 @@
 Introduction to machine learning pipelines with skrub DataOps
 ==============================================================
 
-In this example, we show how we can use skrub's DataOps to build a machine learning
-pipeline that pre-processes data, trains a model, and allows for hyperparameter tuning
+In this example, we show how we can use Skrub's :ref:`DataOps <skrub_data_ops>`
+to build a machine learning pipeline that pre-processes data, trains a model, and
+allows for hyperparameter tuning
 on a simple dataset. We will also show how to save the model, load it back,
 and then use it to make predictions on new data.
 
