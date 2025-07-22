@@ -109,7 +109,7 @@ def _node_status(data_op_graph, mode):
     return status
 
 
-def make_data_ops_plan(
+def full_report(
     data_op,
     environment=None,
     mode="preview",
