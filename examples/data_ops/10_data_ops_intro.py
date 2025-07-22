@@ -115,7 +115,7 @@ predictor
 # the plan and shows detailed information about the operations that are being performed.
 
 # %%
-# Turning the DataOps plan to a learner, for later reuse
+# Turning the DataOps plan into a learner, for later reuse
 # -------------------------------------------------------
 #
 # Now that we have defined the predictor, we can create a ``learner``, a
@@ -164,6 +164,9 @@ predicted_values
 loaded_model.score({"data": unseen_data})
 
 # %%
+# Conclusion
+# ----------
+#
 # In this example, we have briefly introduced the skrub DataOps, and how they can
 # be used to build powerful machine learning pipelines. We have seen how to preprocess
 # data, train a model. We have also

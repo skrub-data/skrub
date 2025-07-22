@@ -196,7 +196,7 @@ search.plot_results()
 #
 # We can get the best performing :class:`~skrub.SkrubLearner` via
 # ``search.best_learner_``, and use it for inference on new data with:
-# %%
+
 import pandas as pd
 
 new_baskets = pd.DataFrame([dict(ID="abc")])
@@ -217,6 +217,7 @@ search.best_learner_.predict_proba({"baskets": new_baskets, "products": new_prod
 # %%
 # Conclusion
 # ----------
+#
 # In this example, we have shown how to build a multi-table machine learning
 # pipeline with the skrub DataOps. We have seen how DataOps allow us to use Pandas
 # to manipulate dataframes, and how we can build a DataOps plan that can make use
