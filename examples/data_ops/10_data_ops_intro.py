@@ -1,6 +1,6 @@
 """
 
-Introduction to machine learning pipelines with skrub DataOps
+Introduction to machine-learning pipelines with skrub DataOps
 ==============================================================
 
 In this example, we show how we can use Skrub's :ref:`DataOps <skrub_data_ops>`
