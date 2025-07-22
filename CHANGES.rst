@@ -32,7 +32,7 @@ Highlights
 New features
 ------------
 
-- The skrub expressions are new mechanism for building machine-learning
+- The Skrub DataOps are new mechanism for building machine-learning
   pipelines that handle multiple tables and easily describing their
   hyperparameter spaces. See :ref:`the examples <data_ops_examples_ref>` for
   an introduction. :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of
