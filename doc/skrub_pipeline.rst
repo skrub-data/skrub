@@ -391,9 +391,9 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 
 .. rubric:: Examples
 
-- See :ref:`example_data_ops_intro` for an example of skrub DataOps plans using
+- See :ref:`sphx_glr_auto_examples_data_ops_10_data_ops_intro.py` for an example of skrub DataOps plans using
   DataOps on dataframes.
-- See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
+- See :ref:`sphx_glr_auto_examples_data_ops_12_choices.py` for an example of hyper-parameter tuning using
   skrub DataOps.
 
 .. _user_guide_subsampling_ref:

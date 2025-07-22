@@ -4,7 +4,7 @@
 .. _example_tuning_pipelines:
 
 Hyperparameter tuning with DataOps
-==============
+==================================
 
 A machine-learning pipeline typically contains some values or choices which
 may influence its prediction performance, such as hyperparameters (e.g. the
@@ -17,7 +17,7 @@ or not).
 We want to tune those choices by trying several options and keeping those that
 give the best performance on a validation set.
 
-Skrub :ref:`DataOps<skrub_data_ops>` provide a convenient way to specify
+Skrub :ref:`DataOps <skrub_data_ops>` provide a convenient way to specify
 the range of possible values, by inserting it directly in place of the actual
 value. For example we can write:
 """
@@ -143,6 +143,15 @@ search.results_
 # impact on the score.
 
 search.plot_results()
+# %%
+# Finally, we can retrieve the best learner from the search results, and save it
+# to disk. This learner will contain the best hyperparameter configuration
+# found during the search, and can be used to make predictions on new data.
+
+import pickle
+
+best_learner = search.best_learner_
+saved_model = pickle.dumps(best_learner)
 
 # %%
 # Default choice values
