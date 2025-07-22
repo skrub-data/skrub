@@ -11,7 +11,7 @@ Ongoing development
 
 Highlights
 ------------
-- The skrub DataOps are now available! DataOps represent a powerful new way of
+- Major feature! Skrub DataOps are a powerful new way to
   combining dataframe transformations over multiple tables, and machine learning
   pipelines. DataOps can be combined to form compled data plans, that can be used
   to train and tune machine learning models. Then, the DataOps plans can be exported
@@ -146,7 +146,7 @@ Bugfixes
   input column was a Categorical datatype. :pr:`1401` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Documentation
----------
+-------------
 A large number of improvements to the examples, docstrings, and the documentation
 website have been made. Contributors include :user:`Vincent Maladiere <Vincent-Maladiere>`,
 :user:`Riccardo Cappuzzo<rcap107>`, :user:`Jérôme Dockès <jeromedockes>`,
