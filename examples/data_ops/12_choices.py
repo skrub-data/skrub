@@ -17,7 +17,7 @@ or not).
 We want to tune those choices by trying several options and keeping those that
 give the best performance on a validation set.
 
-Skrub :ref:`DataOps <skrub_pipeline>` provide a convenient way to specify
+Skrub :ref:`DataOps <skrub_data_ops>` provide a convenient way to specify
 the range of possible values, by inserting it directly in place of the actual
 value. For example we can write:
 
