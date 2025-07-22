@@ -605,7 +605,7 @@ for module, module_info in API_REFERENCE.items():
         (
             "reference/module",
             f"reference/{module}",
-            {"module": module, "module_info": API_REFERENCE[module]},
+            {"module": module, "module_info": module_info},
         )
     )
 
