@@ -709,6 +709,10 @@ class SkrubNamespace:
         When subsampling has not been configured (``subsample`` has not
         been called anywhere in the DataOp plan), no subsampling is ever done.
 
+        Subsampling is never performed during inference (using the ``predict`` or ``score`` methods), as this would
+        lead to inconsistent shapes (number of samples) between the predictions
+        and the ground truth labels.
+
         This method can only be used on steps that produce a dataframe, a
         column (series) or a numpy array.
 
