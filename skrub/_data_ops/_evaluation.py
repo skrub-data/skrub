@@ -268,9 +268,27 @@ class _Evaluator(_DataOpTraversal):
 
     def _eval_data_op(self, data_op):
         impl = data_op._skrub_impl
-        if hasattr(impl, "eval"):
-            return (yield from impl.eval(mode=self.mode, environment=self.environment))
-        return (yield from super().handle_data_op(data_op))
+        try:
+            if hasattr(impl, "eval"):
+                return (
+                    yield from impl.eval(mode=self.mode, environment=self.environment)
+                )
+            return (yield from super().handle_data_op(data_op))
+        except Exception as e:
+            data_op._skrub_impl.errors[self.mode] = e
+            if self.mode == "preview":
+                raise
+            stack = data_op._skrub_impl.creation_stack_last_line()
+            msg = (
+                f"Evaluation of node {data_op._skrub_impl} failed. See above for full"
+                f" traceback. This node was defined here:\n{stack}"
+            )
+            if hasattr(e, "add_note"):
+                e.add_note(msg)
+                raise
+            # python < 3.11 : we cannot add note to exception so fall back on chaining.
+            # Note this changes the type of exception.
+            raise RuntimeError(msg) from e
 
     def handle_choice(self, choice):
         if choice.name is not None and choice.name in self.environment:
@@ -285,27 +303,11 @@ class _Evaluator(_DataOpTraversal):
         return (yield choice_match.outcome_mapping[outcome])
 
     def compute_result(self, data_op, evaluated_attributes):
-        try:
-            return data_op._skrub_impl.compute(
-                SimpleNamespace(**evaluated_attributes),
-                mode=self.mode,
-                environment=self.environment,
-            )
-        except Exception as e:
-            data_op._skrub_impl.errors[self.mode] = e
-            if self.mode == "preview":
-                raise
-            stack = data_op._skrub_impl.creation_stack_last_line()
-            msg = (
-                f"Evaluation of node {data_op._skrub_impl} failed. See above for full"
-                f" traceback. This node was defined here:\n{stack}"
-            )
-            if hasattr(e, "add_note"):
-                e.add_note(msg)
-                raise
-            # python < 3.11 : we cannot add note to exception so fall back on chaining
-            # note this changes the type of exception
-            raise RuntimeError(msg) from e
+        return data_op._skrub_impl.compute(
+            SimpleNamespace(**evaluated_attributes),
+            mode=self.mode,
+            environment=self.environment,
+        )
 
 
 def _check_environment(environment):

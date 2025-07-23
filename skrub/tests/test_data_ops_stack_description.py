@@ -1,9 +1,12 @@
 import traceback
 from unittest.mock import Mock
 
+import pytest
+from sklearn.preprocessing import FunctionTransformer
+
 import skrub
 
-# This test has to be outside of the `_data_ops` module (and thus out of
+# Those tests have to be outside of the `_data_ops` module (and thus out of
 # _data_ops/tests/, as we place the tests inside the package), because to
 # avoid clutter in the printed stack trace all lines that are inside of the
 # _data_ops module are removed: we want the trace of the user's line of code
@@ -29,3 +32,49 @@ def test_creation_stack_description(monkeypatch):
     a = skrub.var("a")
     assert a._skrub_impl.creation_stack_description() == ""
     assert a._skrub_impl.creation_stack_last_line() == ""
+
+
+@pytest.fixture(params=[False, True])
+def eval_data_op(request):
+    """Fixture to try evaluation both with .skb.eval() and through the learner."""
+    if request.param:
+
+        def eval_data_op(data_op, env):
+            return data_op.skb.make_learner().fit_transform(env)
+
+    else:
+
+        def eval_data_op(data_op, env):
+            return data_op.skb.eval(env)
+
+    return eval_data_op
+
+
+# Check error message shows where the data_op was defined
+def test_apply_eval_failure(eval_data_op):
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = a / b
+    d = c.skb.apply(FunctionTransformer(lambda x: x * 10))
+    e = d.skb.apply(FunctionTransformer(lambda x: x + 0.5))
+    assert eval_data_op(e, {"a": 1.0, "b": 2.0}) == 5.5
+    # error outside of the Apply
+    with pytest.raises(
+        (ZeroDivisionError, RuntimeError),
+        match=(
+            r"(?ms).*This node was defined here:.*"
+            r"^.*test_data_ops_stack_description\.py.*^.*c = a / b"
+        ),
+    ):
+        eval_data_op(e, {"a": 1.0, "b": 0.0})
+
+    # error in the Apply
+    d = c.skb.apply(FunctionTransformer(lambda x: x + "string"))
+    e = d.skb.apply(FunctionTransformer(lambda x: x + "something else"))
+    with pytest.raises(
+        (TypeError, RuntimeError),
+        match=r"(?ms).*This node was defined here:.*"
+        r"^.*test_data_ops_stack_description\.py.*"
+        r'^.*d = c\.skb\.apply\(FunctionTransformer\(lambda x: x \+ "string"\)\)',
+    ):
+        eval_data_op(e, {"a": 1.0, "b": 2.0})

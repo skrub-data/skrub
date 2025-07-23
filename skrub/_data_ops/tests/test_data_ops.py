@@ -168,7 +168,7 @@ def test_match():
     assert d.skb.eval({"a": "right", "c": 3}) == 3
 
     # if there is no match we get KeyError:
-    with pytest.raises(KeyError):
+    with pytest.raises((KeyError, RuntimeError)):
         d.skb.eval({"a": "missing key", "b": 0, "c": 0})
 
     # unless we provide a default:

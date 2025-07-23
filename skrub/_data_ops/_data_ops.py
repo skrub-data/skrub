@@ -189,7 +189,7 @@ class DataOpImpl:
     Those types are used as `_skrub_impl` attributes of `DataOp` instances. They
     provide the DataOp's functionality.
 
-    Subclass `DataOpsImpl` to define a new type of node (such as `GetAttr`,
+    Subclass `DataOpImpl` to define a new type of node (such as `GetAttr`,
     `Apply`, etc.)
 
     Subclasses must _not_ define `__init__`. They must have a static attribute
@@ -223,7 +223,7 @@ class DataOpImpl:
     `IfElse` or `Match` in this module for simple examples.
 
     `eval` and `yield` both get arguments `environment` (the dict of variable
-    values passed by the user) and `mode` (the current evaluatiion mode such as
+    values passed by the user) and `mode` (the current evaluation mode such as
     "preview", "fit", "predict", ...)
     """
 
