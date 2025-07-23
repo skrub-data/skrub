@@ -31,7 +31,7 @@ from ._inspection import (
     draw_data_op_graph,
     full_report,
 )
-from ._subsampling import SubsamplePreviews, env_with_subsampling, uses_subsampling
+from ._subsampling import SubsamplePreviews, env_with_subsampling
 from ._utils import NULL, attribute_error
 
 
@@ -709,6 +709,10 @@ class SkrubNamespace:
         When subsampling has not been configured (``subsample`` has not
         been called anywhere in the DataOp plan), no subsampling is ever done.
 
+        Subsampling is never performed during inference (using the ``predict`` or ``score`` methods), as this would
+        lead to inconsistent shapes (number of samples) between the predictions
+        and the ground truth labels.
+
         This method can only be used on steps that produce a dataframe, a
         column (series) or a numpy array.
 
@@ -939,16 +943,6 @@ class SkrubNamespace:
                 "The `environment` passed to `eval()` should be None or a dictionary, "
                 f"got: '{type(environment)}'"
             )
-        if environment is None and (
-            keep_subsampling or not uses_subsampling(self._data_op)
-        ):
-            # In this configuration the result is the same as the preview so
-            # we call preview() to benefit from the cached result.
-
-            # Before returning, we trigger an error if keep_subsampling=True was
-            # passed but no subsampling was configured:
-            _ = env_with_subsampling(self._data_op, {}, keep_subsampling)
-            return self.preview()
         if environment is None:
             environment = self.get_data()
         else:

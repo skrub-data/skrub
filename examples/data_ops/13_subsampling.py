@@ -50,7 +50,8 @@ data
 #    :meth:`.skb.get_learner() <DataOp.skb.get_learner>` or
 #    :meth:`.skb.cross_validate() <DataOp.skb.cross_validate>`, *no subsampling is
 #    done by default*. We can explicitly ask for it with ``keep_subsampling=True``
-#    as we will see below.
+#    as we will see below. Even when ``keep_subsampling=True``, subsampling is
+#    not applied to the ``predict`` method.
 #
 # To continue building our plan, we now define X and y:
 
