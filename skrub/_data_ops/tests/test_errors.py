@@ -108,7 +108,9 @@ def _pickle_msg_pattern(cls):
     pattern = r"The check to verify that the learner can be serialized failed\."
     if cls is not NoPickleRecursion:
         return pattern
-    return pattern + " Is a step in the learner holding a reference to the full learner"
+    return (
+        pattern + " Is a step in the learner holding a reference to the full learner"
+    )
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
@@ -404,6 +406,28 @@ def test_attribute_errors():
         AttributeError, match=r"`.skb.applied_estimator` only exists on"
     ):
         skrub.X().skb.applied_estimator
+
+
+def test_call_method_errors():
+    # In this case we have a preview value, so the access to `mark_as_X` fails
+    # right away, before we add the call (when creating a GetAttr node)
+    a = skrub.var("a", 0)
+    with pytest.raises(
+        (AttributeError, RuntimeError),
+        match=r"(?sm).*^Did you mean `\.skb\.mark_as_X`",
+    ):
+        a.mark_as_X()
+    a = skrub.var("a").mark_as_X()
+
+    # In this case we have no preview value so the error only happens when we
+    # call `.skb.eval()` and provide a value. By then the GetAttr + Call have
+    # been collapsed in the graph into a CallMethod node, so the error
+    # originates from a different place but it should provide the same info.
+    with pytest.raises(
+        (AttributeError, RuntimeError),
+        match=r"(?sm).*^Did you mean `\.skb\.mark_as_X`",
+    ):
+        a.skb.eval({"a": 0})
 
 
 def test_concat_horizontal_numpy():
