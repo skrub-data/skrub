@@ -31,6 +31,10 @@ Highlights
   in a flexible way. For more details, see the :ref:`User guide <userguide_selectors>`
   and the :ref:`example <sphx_glr_auto_examples_10_apply_on_cols.py>`.
 
+- The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
+  clips numerical columns, enabling more robust handling of numerical columns
+  with neural networks. See the :ref:`example <sphx_glr_auto_examples_11_squashing_scaler.py>`
+
 New features
 ------------
 
