@@ -34,6 +34,5 @@ See the examples section for full code snippets.
    userguide_data_ops
    userguide_data_ops_ml_pipeline
    userguide_data_ops_validation
-   skrub_pipeline_validation
    userguide_joining_tables
    userguide_utils

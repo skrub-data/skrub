@@ -56,9 +56,9 @@ API_REFERENCE = {
         "sections": [
             {
                 "description": (
-                    "See :ref:`end_to_end_pipeline <end_to_end_pipeline>` for "
+                    "See :ref:`End-to-End pipeline <userguide_tablevectorizer>` for "
                     "further details. For more flexibility and control to build "
-                    "pipelines, see the :ref:`skrub DataOps <data_ops_examples_ref>`."
+                    "pipelines, see the :ref:`skrub DataOps <userguide_data_ops>`."
                 ),
                 "autosummary": [
                     "tabular_pipeline",
@@ -78,7 +78,9 @@ API_REFERENCE = {
         "description": None,
         "sections": [
             {
-                "description": "See :ref:`encoding <encoding>` for further details.",
+                "description": (
+                    "See :ref:`encoding <userguide_encoders>` for further details."
+                ),
                 "autosummary": [
                     "StringEncoder",
                     "TextEncoder",

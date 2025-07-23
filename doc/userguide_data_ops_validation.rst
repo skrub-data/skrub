@@ -433,6 +433,7 @@ This will fit the learner on the data used for previews when the variables are d
 
 Alternatively, the learner can be fitted on a different dataset by passing
 the data to the ``fit()`` method:
+
 >>> new_orders_df = pd.DataFrame(
 ...     {
 ...         "item": ["pen", "cup", "spoon"],
@@ -459,5 +460,5 @@ or in a different environment:
 >>> loaded_learner.fit({"orders": new_orders_df})
 SkrubLearner(data_op=<Apply TableVectorizer>)
 
-See :ref:`_sphx_glr_auto_examples_data_ops_13_use_case.py` for an example of how
+See :ref:`sphx_glr_auto_examples_data_ops_13_use_case.py` for an example of how
 to use the learner in a microservice.

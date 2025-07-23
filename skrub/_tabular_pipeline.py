@@ -75,7 +75,7 @@ def tabular_learner(estimator, *, n_jobs=None):
     warnings.warn(
         (
             "tabular_learner will be deprecated in the next release. "
-            "Equivalent functionality is available in skrub.set_config."
+            "Equivalent functionality is available in skrub.tabular_pipeline."
         ),
         category=FutureWarning,
     )
@@ -155,7 +155,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
       1.4. Therefore, before this version, a :class:`~sklearn.impute.SimpleImputer` is
       used to impute missing values.
 
-    Read more in the :ref:`User Guide <table_vectorizer>`.
+    Read more in the :ref:`User Guide <userguide_tablevectorizer>`.
 
     Examples
     --------

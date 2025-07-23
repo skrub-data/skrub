@@ -11,7 +11,7 @@ Ongoing development
 
 Highlights
 ------------
-- Major feature! Skrub DataOps are a powerful new way to
+- Major feature! Skrub DataOps are a powerful new way of
   combining dataframe transformations over multiple tables, and machine learning
   pipelines. DataOps can be combined to form compled data plans, that can be used
   to train and tune machine learning models. Then, the DataOps plans can be exported
@@ -265,6 +265,7 @@ Release 0.4.1
 
 Changes
 -------
+
 * :class: `TableReport` has `write_html` method
   :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
 
