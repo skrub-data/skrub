@@ -17,7 +17,7 @@ Highlights
   to train and tune machine learning models. Then, the DataOps plans can be exported
   as ``Learners`` (:class:`skrub.SkrubLearner`), standalone objects that can be
   used on new data. More detail about the DataOps can be found in the
-  :ref:`User guide <dataops>` and in the :ref:`examples <example_expressions_intro>`.
+  :ref:`User guide <>` and in the :ref:`examples <example_expressions_intro>`.
 
 - The :class:`TableReport` has been improved with many new features. Series are
   now supported directly. It is now
@@ -29,6 +29,10 @@ Highlights
   providing utilities for selecting columns to which a transformer should be applied
   in a flexible way. For more details, see the :ref:`User guide <userguide_selectors>`
   and the :ref:`example <sphx_glr_auto_examples_10_apply_on_cols.py>`.
+
+- The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
+  clips numerical columns, enabling more robust handling of numerical columns
+  with neural networks. See the :ref:`example <sphx_glr_auto_examples_11_squashing_scaler.py>`
 
 New features
 ------------
