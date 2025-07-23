@@ -173,6 +173,7 @@ immediately they to spot errors early on:
 
 Next, we use the pandas ``drop`` column and try to drop a column without
 specifying the axis:
+
 >>> a.drop("col") # doctest: +IGNORE_EXCEPTION_DETAIL +ELLIPSIS
 Traceback (most recent call last):
     ...
@@ -373,6 +374,7 @@ loading of a CSV file, we could write something like:
 >>> data = skrub.deferred(pd.read_csv)(csv_path)
 
 or, with ``apply_func``:
+
 >>> data = csv_path.skb.apply_func(pd.read_csv)
 
 Another consequence of the fact that DataOps are evaluated lazily (we are

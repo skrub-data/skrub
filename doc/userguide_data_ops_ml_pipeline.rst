@@ -119,7 +119,8 @@ to obtain the final result:
 2  2.0  1.594282e+00 -1.224524e-07   16.5
 3  4.0  7.643604e-09  6.080018e-01   24.2
 
-More info can be found in :ref:`userguide_selectors` and example
+More info on advanced column selection and manipulation be found in
+:ref:`userguide_selectors` and example
 :ref:`sphx_glr_auto_examples_10_apply_on_cols.py`.
 
 
@@ -173,6 +174,7 @@ An example of the report can be found
 `here <../../_static/credit_fraud_report/index.html>`_.
 
 For each node in the plan, the report shows:
+
 - The name and the description of the node, if present.
 - Predecessor and successor nodes in the computational graph.
 - Where the code relative to the node is defined.
