@@ -29,7 +29,7 @@ from ._evaluation import (
 from ._inspection import (
     describe_param_grid,
     draw_data_op_graph,
-    make_data_ops_plan,
+    full_report,
 )
 from ._subsampling import SubsamplePreviews, env_with_subsampling
 from ._utils import NULL, attribute_error
@@ -1361,7 +1361,7 @@ class SkrubNamespace:
             mode = "fit_transform"
             clear = True
 
-        return make_data_ops_plan(
+        return full_report(
             self._data_op,
             environment=environment,
             mode=mode,
@@ -2122,7 +2122,7 @@ class SkrubNamespace:
 
     @property
     def is_y(self):
-        """Whether this expression has been marked with :meth:`.skb.mark_as_y()`."""
+        """Whether this DataOp has been marked with :meth:`.skb.mark_as_y()`."""
         return self._data_op._skrub_impl.is_y
 
     @check_data_op

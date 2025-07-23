@@ -1,4 +1,5 @@
 import pickle
+import re
 
 import numpy as np
 import pandas as pd
@@ -239,6 +240,94 @@ def test_warn_if_choice_before_X_or_y():
         )
 
 
+def test_inconsistent_subsampling():
+    X_a, y_a = make_classification(random_state=0)
+
+    # X subsampled but not y
+    X, y = skrub.var("X", X_a).skb.subsample(n=10), skrub.var("y", y_a)
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "`X` was subsampled with `.skb.subsample()` but `y` was not, resulting in"
+            " different sizes (X: 10, y: 100)"
+        ),
+    ):
+        X.skb.apply(LogisticRegression(), y=y)
+
+    # y subsampled but not X
+    X, y = skrub.var("X", X_a), skrub.var("y", y_a).skb.subsample(n=10)
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape(
+            "`y` was subsampled with `.skb.subsample()` but `X` was not, resulting in"
+            " different sizes (X: 100, y: 10)"
+        ),
+    ):
+        X.skb.apply(LogisticRegression(), y=y)
+
+    # Same without previews
+    X, y = skrub.var("X"), skrub.var("y").skb.subsample(n=10)
+    pred = X.skb.apply(LogisticRegression(), y=y)
+    # evaluating without subsampling works
+    pred.skb.eval({"X": X_a, "y": y_a})
+    # evaluating with subsampling raises
+    with pytest.raises(ValueError, match="`y` was subsampled.*`X` was not"):
+        pred.skb.eval({"X": X_a, "y": y_a}, keep_subsampling=True)
+
+    # In the following case subsampling is consistent but the shapes don't
+    # match for some other reason
+    msg = re.escape(
+        "Found input variables with inconsistent numbers of samples: X: 99, y: 100"
+    )
+    X = skrub.var("X", X_a[:-1]).skb.subsample(n=1000)
+    y = skrub.var("y", y_a).skb.subsample(n=1000)
+    with pytest.raises(RuntimeError, match=msg):
+        X.skb.apply(LogisticRegression(), y=y)
+    X = skrub.var("X", X_a[:-1])
+    y = skrub.var("y", y_a)
+    with pytest.raises(RuntimeError, match=msg):
+        X.skb.apply(LogisticRegression(), y=y)
+
+
+def test_inconsistent_subsampling_and_split_order():
+    X_a, y_a = make_classification(random_state=0)
+
+    # Both are subsampled but X is subsampled after splitting and y is subsampled before
+    X = skrub.var("X", X_a).skb.mark_as_X().skb.subsample(n=10)
+    y = skrub.var("y", y_a).skb.subsample(n=10).skb.mark_as_y()
+    pred = X.skb.apply(LogisticRegression(), y=y)
+
+    # computing preview and eval works as there is no splitting
+    assert pred.shape.skb.preview() == (10,)
+    assert pred.shape.skb.eval() == (100,)
+    msg = re.escape(
+        "`y` was subsampled with `.skb.subsample()` but `X` was not, resulting in"
+        " different sizes (X: 100, y: 10)."
+        "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"
+        " for both X and y?"
+    )
+    # splitting with subsampling disabled works
+    pred.skb.train_test_split()
+    # but splitting with subsampling enabled raises
+    with pytest.raises(ValueError, match=msg):
+        pred.skb.train_test_split(keep_subsampling=True)
+
+    # same for cross-validation
+    pred.skb.cross_validate()
+    with pytest.raises(ValueError, match=msg):
+        pred.skb.cross_validate(keep_subsampling=True)
+
+    # subsampling OK but mismatch for some other reason
+    msg = re.escape(
+        "Found input variables with inconsistent numbers of samples: X: 99, y: 100"
+    )
+    X = skrub.var("X").skb.subsample(n=1000).skb.mark_as_X()
+    y = skrub.var("y").skb.subsample(n=1000).skb.mark_as_y()
+    pred = X.skb.apply(LogisticRegression(), y=y)
+    with pytest.raises(ValueError, match=msg):
+        pred.skb.train_test_split({"X": X_a[:-1], "y": y_a}, keep_subsampling=True)
+
+
 #
 # Bad arguments passed to eval()
 #
@@ -303,7 +392,7 @@ def test_attribute_errors():
     ):
         skrub.X(0).something
     # added suggestion when the name exists in the .skb namespace
-    with pytest.raises(Exception, match=r"(?s).*Did you mean '\.skb\.apply"):
+    with pytest.raises(Exception, match=r"(?sm).*^Did you mean `\.skb\.apply`"):
         skrub.X(0).apply
     with pytest.raises(
         AttributeError, match=r"`.skb.applied_estimator` only exists on"
@@ -347,9 +436,13 @@ def test_concat_axis_undefined():
 
 def test_apply_instead_of_skb_apply():
     a = skrub.var("a", skrub.datasets.toy_orders().orders)
-    with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
+    with pytest.raises(
+        Exception, match=r"(?sm).*^Did you mean `\.skb\.apply\('passthrough'\)`"
+    ):
         a.apply("passthrough")
-    with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
+    with pytest.raises(
+        Exception, match=r"(?sm).*^Did you mean `\.skb\.apply\(PassThrough\(\)\)`"
+    ):
         a.apply(PassThrough())
     with pytest.raises(Exception, match=r"Evaluation of '.apply\(\)' failed\."):
         a.apply(int)
@@ -358,7 +451,10 @@ def test_apply_instead_of_skb_apply():
 def test_apply_instead_of_apply_func():
     with pytest.raises(
         Exception,
-        match=r".*Got a function instead.*Did you mean to use `\.skb\.apply_func\(\)`",
+        match=(
+            r"(?sm).*Got a function instead.*^Did you mean to use"
+            r" `\.skb\.apply_func\(\)`"
+        ),
     ):
         skrub.X(0).skb.apply(lambda x: x)
 
@@ -368,8 +464,8 @@ def test_apply_instead_of_apply_func():
 
     with pytest.raises(
         Exception,
-        match=r".*Got a callable object instead.*"
-        r"Did you mean to use `\.skb\.apply_func\(\)`",
+        match=r"(?sm).*Got a callable object instead.*"
+        r"^Did you mean to use `\.skb\.apply_func\(\)`",
     ):
         skrub.X(0).skb.apply(Func())
 

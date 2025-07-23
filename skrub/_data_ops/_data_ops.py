@@ -649,8 +649,8 @@ class DataOp:
             return f"<div>{graph}</div>"
         if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
-                f"<strong><samp>Name: {html.escape(repr(impl.name))}</samp></strong><br"
-                " />\n"
+                "<strong><samp>Name:"
+                f" {html.escape(repr(impl.name))}</samp></strong><br />\n"
             )
         else:
             name_line = ""
@@ -735,7 +735,7 @@ def _check_estimator_type(estimator):
         kind = "function" if inspect.isroutine(estimator) else "callable object"
         raise TypeError(
             "The `estimator` passed to `.skb.apply()` should be "
-            f"a scikit-learn-like estimator. Got a {kind} instead: {estimator!r}. "
+            f"a scikit-learn-like estimator. Got a {kind} instead: {estimator!r}.\n"
             "Did you mean to use `.skb.apply_func()` rather than `.skb.apply()`?"
         )
     raise TypeError(
@@ -1187,6 +1187,38 @@ def _check_column_names(X):
     return cast_column_names_to_strings(X)
 
 
+def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment, msg=""):
+    from ._subsampling import _should_subsample, uses_subsampling
+
+    if not isinstance(X_op, DataOp) or not isinstance(y_op, DataOp):
+        return
+    if not _should_subsample(mode, environment):
+        # no subsampling is taking place
+        return
+    try:
+        n_X, n_y = len(X_value), len(y_value)
+    except Exception:
+        # X or y is not an array (eg y is None), we cannot compare lengths
+        return
+    if n_X == n_y:
+        return
+    X_subsampled, y_subsampled = uses_subsampling(X_op), uses_subsampling(y_op)
+    if X_subsampled ^ y_subsampled:
+        sub, other = ("X", "y") if X_subsampled else ("y", "X")
+        raise ValueError(
+            f"`{sub}` was subsampled with `.skb.subsample()` but `{other}` was not, "
+            f"resulting in different sizes (X: {n_X}, y: {n_y}).{msg}"
+        )
+    # Either both used subsampling or neither did, but subsampling could still
+    # be at fault eg if they used a different number of samples. We
+    # could investigate further but for simplicity we raise the usual
+    # scikit-learn message.
+    raise ValueError(
+        "Found input variables with inconsistent numbers of samples: "
+        f"X: {n_X}, y: {n_y}"
+    )
+
+
 class Apply(DataOpImpl):
     """.skb.apply() nodes."""
 
@@ -1206,6 +1238,8 @@ class Apply(DataOpImpl):
             y = yield self.y
         else:
             y = None
+
+        check_subsampled_X_y_shape(self.X, self.y, X, y, mode, environment)
 
         X = _check_column_names(X)
 
@@ -1303,7 +1337,7 @@ class GetAttr(DataOpImpl):
         if isinstance(self.source_object, DataOp) and hasattr(
             self.source_object.skb, e.attr_name
         ):
-            comment = f"Did you mean '.skb.{e.attr_name}'?"
+            comment = f"Did you mean `.skb.{e.attr_name}` and forget the `.skb`?"
         else:
             comment = None
         attribute_error(e.source_object, e.attr_name, comment)
@@ -1392,17 +1426,19 @@ class CallMethod(DataOpImpl):
         except Exception as err:
             # Better error message if we used the pandas DataFrame's `apply()`
             # but we meant `.skb.apply()`
-            if e.method_name == "apply" and e.args:
-                if isinstance(e.args[0], BaseEstimator):
-                    raise TypeError(
-                        f"Calling `.apply()` with an estimator: `{e.args[0]!r}` "
-                        "failed with the error above. Did you mean `.skb.apply()`?"
-                    ) from err
-                if e.args[0] in [None, "passthrough"]:
-                    raise TypeError(
-                        f"Calling `.apply()` with the argument: `{e.args[0]!r}` "
-                        "failed with the error above. Did you mean `.skb.apply()`?"
-                    ) from err
+            if (
+                e.method_name == "apply"
+                and e.args
+                and (
+                    isinstance(e.args[0], BaseEstimator)
+                    or e.args[0] in [None, "passthrough"]
+                )
+            ):
+                arg = short_repr(e.args[0])
+                raise TypeError(
+                    f"Calling `.apply({arg})` failed with the error above.\n"
+                    f"Did you mean `.skb.apply({arg})` and forget the `.skb`?"
+                ) from err
             raise
 
     def get_func_name(self):
