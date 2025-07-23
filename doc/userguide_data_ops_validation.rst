@@ -121,7 +121,7 @@ It is possible to define a custom splitter function to use instead of
 :func:`sklearn.model_selection.train_test_split`.
 
 Improving the confidence in our score through cross-validation
-------------------------------------------------
+--------------------------------------------------------------
 
 We can increase our confidence in our score by using cross-validation instead of
 a single split. The same mechanism is used but we now fit and evaluate the model
@@ -338,7 +338,7 @@ is frequent to choose between several estimators, each of which contains choices
 in its hyperparameters.
 
 Linking choices depending on other choices
---------------------------------------
+------------------------------------------
 
 Choices can depend on another choice made with :func:`choose_from`,
 :func:`choose_bool` or :func:`optional` through those objects' ``.match()``

@@ -62,18 +62,23 @@ How do Skrub DataOps differ from other Skrub objects, like :func:`~skrub.tabular
 Skrub DataOps are built to maximize flexibility in the construction of complex
 pre-processing and machine learning pipelines. On the other hand, the main intent
 of Skrub objects such as :func:`~skrub.tabular_pipeline` and
-:class:`~skrub.TableVectorizer` is to provide simple and robust baselines for
-machine learning tasks. As a result, these objects are more opinionated and
+:class:`~skrub.TableVectorizer` is to provide interfaces that for common
+pre-processing tasks, and simple and robust baselines for
+machine learning. As a result, these objects are more opinionated and
 less flexible than DataOps.
 
 However, it is possible to combine DataOps and regular Skrub and scikit-learn
 transformers to improve their flexibility, particularly in multi-table scenarios.
 
-Can I use x/y library with Skrub DataOps?
+Can I use library "x" with Skrub DataOps?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Yes, Skrub DataOps are designed to be "transparent", so that any method used by
 the underlying data structures (e.g., Pandas or Polars) can be accessed directly:
 check :ref:`user_guide_direct_access_ref` for more details.
+All DataOps-specific operations are available through the ``.skb`` attribute,
+which provides access to the DataOps namespace. Other library-specfic methods
+are available directly from the DataOp object, as if it were a regular object
+(like a Pandas or Polars DataFrame or Series).
 
 Basics of DataOps: the DataOps plan, variables, and learners
 ===============================================================
@@ -337,6 +342,11 @@ the code inside a deferred function is completely equivalent to eager code, so
 it is possible to use any Python control flow statement inside it, as well as
 act on the data as if it were a regular DataFrame.
 
+Within a function decorated with :func:`deferred`, objects are evaluated eagerly,
+so it is possible to use standard Python control flow statements such as
+``if``, ``for``, and it is possible to treat the inputs as if they were
+regular objects (e.g., a Pandas DataFrame or Series).
+
 When the first argument to our function is a skrub DataOp, rather than
 applying ``deferred`` and calling the function as shown above we can use
 :meth:`.skb.apply_func() <DataOp.skb.apply_func>`:
@@ -361,6 +371,9 @@ loading of a CSV file, we could write something like:
 
 >>> csv_path = skrub.var("csv_path")
 >>> data = skrub.deferred(pd.read_csv)(csv_path)
+
+or, with ``apply_func``:
+>>> data = csv_path.skb.apply_func(pd.read_csv)
 
 Another consequence of the fact that DataOps are evaluated lazily (we are
 building a pipeline, not immediately computing a single result), any
@@ -397,3 +410,62 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
   DataOps on dataframes.
 - See :ref:`example_tuning_pipelines` for an example of hyper-parameter tuning using
   skrub DataOps.
+
+.. _user_guide_exporting_data_ops_ref:
+
+Exporting the DataOps plan as a learner and reusing it
+========================================================
+DataOps are designed to build complex pipelines that can be reused on new, unseen
+data in potentially different environments from where they were created. This can
+be achieved by exporting the DataOps plan as a **learner**: the learner is special
+transformer that is similar to a scikit-learn estimator, but that takes as input
+the **environment** that should be used to execute the operations. The environment
+is a dictionary of variables rather than a single design matrix
+``X`` and a target array ``y``.
+
+>>> import pandas as pd
+>>> orders_df = pd.DataFrame(
+...     {
+...         "item": ["pen", "cup", "pen", "fork"],
+...         "price": [1.5, None, 1.5, 2.2],
+...         "qty": [1, 1, 2, 4],
+...     }
+... )
+>>> from skrub import TableVectorizer
+>>> orders = skrub.var("orders", orders_df)
+>>> transformed_orders = orders.skb.apply(TableVectorizer())
+>>> learner = transformed_orders.skb.make_learner()
+
+The learner can be fitted as it is exported by setting ``fitted=True`` when
+creating it with :meth:`.skb.make_learner() <DataOp.skb.make_learner>`.
+This will fit the learner on the data used for previews when the variables are defined
+(``orders_df`` in the case above):
+>>> learner = transformed_orders.skb.make_learner(fitted=True)
+
+Alternatively, the learner can be fitted on a different dataset by passing
+the data to the ``fit()`` method:
+>>> new_orders_df = pd.DataFrame(
+...     {
+...         "item": ["pen", "cup", "spoon"],
+...         "price": [1.5, 2.0, 1.0   ],
+...         "qty": [1, 2, 3],
+...     }
+... )
+>>> learner.fit({"orders": new_orders_df})
+
+The learner can be fitted and applied to new data
+using the same methods as a scikit-learn estimator, such as ``fit()``,
+``fit_transform()``, and ``predict()``.
+
+The learner can be pickled and saved to disk, so that it can be reused later
+or in a different environment:
+
+>>> import pickle
+>>> with open("learner.pkl", "wb") as f:
+...     pickle.dump(learner, f)
+>>> with open("learner.pkl", "rb") as f:
+...     loaded_learner = pickle.load(f)
+>>> loaded_learner.fit({"orders": new_orders_df})
+
+See :ref:`_sphx_glr_auto_examples_data_ops_13_use_case.py` for an example of how
+to use the learner in a microservice.
