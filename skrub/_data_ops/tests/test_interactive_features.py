@@ -42,7 +42,7 @@ def test_missing_doc():
     assert skrub.X(_A()).__doc__ == _DATA_OP_INSTANCE_DOC
 
 
-def test_expr_class_doc():
+def test_data_op_class_doc():
     from skrub._data_ops._data_ops import _DATA_OP_CLASS_DOC, DataOp
 
     assert DataOp.__doc__ == _DATA_OP_CLASS_DOC

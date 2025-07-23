@@ -2,6 +2,7 @@ import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
+from skrub._config import _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
 from skrub.datasets import fetch_employee_salaries
 
@@ -58,9 +59,9 @@ def test_max_plot_columns():
         assert report.max_plot_columns == 1
 
         # Argument takes precedence over default configuration
-        report = TableReport(X, max_association_columns=12)
-        assert report.max_association_columns == 12
-        assert report.max_plot_columns == 1
+        report = TableReport(X, max_association_columns="all", max_plot_columns="all")
+        assert report.max_association_columns == "all"
+        assert report.max_plot_columns == "all"
 
     # Check that max_plot_columns can be set after patching the TableReport
     # repr_html.
@@ -73,10 +74,11 @@ def test_enable_subsampling():
     X = fetch_employee_salaries().X
     dataop = skrub.X(X)
 
-    # Default: no subsampling during fit mode
+    # No subsampling by default with fit_transform mode
     assert dataop.skb.subsample(n=3).skb.eval().shape[0] == X.shape[0]
+    assert dataop.skb.subsample(n=3).skb.eval(keep_subsampling=True).shape[0] == 3
 
-    # Force subsampling
+    # Force subsampling during fit_transform
     with config_context(enable_subsampling="force"):
         assert dataop.skb.subsample(n=3).skb.eval().shape[0] == 3
 
@@ -131,20 +133,37 @@ def test_error(params):
 
 def test_subsampling_seed():
     X = fetch_employee_salaries().X
-    expr = skrub.X(X)
+    data_op = skrub.X(X)
 
     with config_context(subsampling_seed=0):
         index = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
         index_identical = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
 
     with config_context(subsampling_seed=1):
         index_different = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
 
     assert index == index_identical
     assert index != index_different
+
+
+def test_parsing(monkeypatch):
+    assert _parse_env_bool("MY_VAR", default=True)
+
+    with monkeypatch.context() as m:
+        m.setenv("MY_VAR", "False")
+        assert not _parse_env_bool("MY_VAR", default=True)
+
+    with monkeypatch.context() as m:
+        m.setenv("MY_VAR", "True")
+        assert _parse_env_bool("MY_VAR", default=False)
+
+    with pytest.raises(ValueError):
+        with monkeypatch.context() as m:
+            m.setenv("MY_VAR", "hello")
+            _parse_env_bool("MY_VAR", default=False)

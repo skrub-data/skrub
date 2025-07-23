@@ -1,18 +1,22 @@
 from pathlib import Path
 
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
 
 import skrub
 import skrub.datasets
+from skrub import TableVectorizer
 from skrub import selectors as s
 
 
-def create_data_ops_report():
+def create_credit_fraud_report():
     output_dir = (
         Path(__file__).parent / "_build" / "html" / "_static" / "credit_fraud_report"
     )
-    if output_dir.exists():
-        return
+    if (output_dir / "index.html").exists():
+        return output_dir
 
     dataset = skrub.datasets.fetch_credit_fraud()
 
@@ -55,3 +59,44 @@ def create_data_ops_report():
         overwrite=True,
         open=False,
     )
+
+    return output_dir
+
+
+def create_employee_salaries_report():
+    output_dir = (
+        Path(__file__).parent
+        / "_build"
+        / "html"
+        / "_static"
+        / "employee_salaries_report"
+    )
+    if (output_dir / "index.html").exists():
+        return output_dir
+
+    dataset = skrub.datasets.fetch_employee_salaries(split="train").employee_salaries
+    data_var = skrub.var("data", dataset)
+    X = data_var.drop("current_annual_salary", axis=1).skb.mark_as_X()
+    y = data_var["current_annual_salary"].skb.mark_as_y()
+
+    vectorizer = TableVectorizer()
+    X_vec = X.skb.apply(vectorizer)
+
+    hgb = HistGradientBoostingRegressor()
+    predictor = X_vec.skb.apply(hgb, y=y)
+
+    predictor.skb.full_report(
+        output_dir=output_dir,
+        overwrite=True,
+        open=False,
+    )
+
+    return output_dir
+
+
+def create_data_ops_report():
+    credit_fraud_folder = create_credit_fraud_report()
+    employee_salary_folder = create_employee_salaries_report()
+
+    assert (credit_fraud_folder / "index.html").exists()
+    assert (employee_salary_folder / "index.html").exists()

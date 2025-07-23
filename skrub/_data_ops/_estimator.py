@@ -8,7 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply
+from ._data_ops import Apply, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     chosen_or_default_outcomes,
@@ -129,13 +129,13 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         See :meth:`DataOp.skb.full_report` for more information.
         """
-        from ._inspection import make_data_ops_plan
+        from ._inspection import full_report
 
         if mode not in _FITTING_METHODS:
             check_is_fitted(self)
 
         full_report_kwargs["clear"] = True
-        result = make_data_ops_plan(
+        result = full_report(
             self.data_op, environment=environment, mode=mode, **full_report_kwargs
         )
         if mode == "fit" and result["result"] is not None:
@@ -517,6 +517,13 @@ def _compute_Xy(data_op, environment):
             mode="fit_transform",
             environment=environment,
             clear=False,
+        )
+        msg = (
+            "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"
+            " for both X and y?"
+        )
+        check_subsampled_X_y_shape(
+            Xy["X"], Xy["y"], X, y, "fit_transform", environment, msg=msg
         )
     else:
         y = None

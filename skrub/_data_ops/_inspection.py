@@ -109,7 +109,7 @@ def _node_status(data_op_graph, mode):
     return status
 
 
-def make_data_ops_plan(
+def full_report(
     data_op,
     environment=None,
     mode="preview",
@@ -121,7 +121,7 @@ def make_data_ops_plan(
     if clear:
         clear_results(data_op, mode)
     try:
-        return _make_data_ops_plan(
+        return _make_full_report(
             data_op,
             environment=environment,
             mode=mode,
@@ -134,7 +134,7 @@ def make_data_ops_plan(
             clear_results(data_op, mode)
 
 
-def _make_data_ops_plan(
+def _make_full_report(
     data_op,
     environment=None,
     mode="preview",

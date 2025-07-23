@@ -259,6 +259,9 @@ def test_max_plot_columns_parameter(df_module):
     summary = TableReport(df6, max_plot_columns=None)._summary
     assert not summary["plots_skipped"]
 
+    summary = TableReport(df6, max_plot_columns="all")._summary
+    assert not summary["plots_skipped"]
+
 
 def test_minimal_mode(pd_module):
     # Check that flags are set properly and that the panels are not created

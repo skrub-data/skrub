@@ -25,7 +25,7 @@
 # decide if we just need to regenerate the file or to edit the script (for
 # example to exclude the new attribute from the generated annotations).
 #
-# Because the type of the result of an expression, and thus the operations that
+# Because the type of the result of a DataOp, and thus the operations that
 # will be valid, is only known during execution, we don't expect that static
 # checkers can produce useful output for DataOps. Therefore we just provide
 # the minimal annotations to silence errors -- for example we don't detail the
@@ -87,13 +87,13 @@ for name in sorted(skrub.DataOp.__dict__):
 
 p("\n")
 
-not_an_expression_factory = ["deferred"]
+not_a_data_op_factory = ["deferred"]
 
 for name in sorted(set(_data_ops.__dict__).intersection(skrub.__dict__)):
     obj = getattr(_data_ops, name)
     if obj is not getattr(skrub, name):
         continue
-    if not isinstance(obj, types.FunctionType) or name in not_an_expression_factory:
+    if not isinstance(obj, types.FunctionType) or name in not_a_data_op_factory:
         continue
     p(f"def {name}(*args, **kwargs) -> DataOp: ...\n")
 

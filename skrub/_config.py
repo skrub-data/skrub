@@ -7,9 +7,24 @@ import numpy as np
 
 from ._reporting import _patching
 
+
+def _parse_env_bool(env_variable_name, default):
+    value = os.getenv(env_variable_name, default)
+    if isinstance(value, bool):
+        return value
+    if value == "True":
+        return True
+    elif value == "False":
+        return False
+    else:
+        raise ValueError(
+            f"{env_variable_name!r} must be either 'True' or 'False', got {value}."
+        )
+
+
 _global_config = {
-    "use_table_report": os.environ.get("SKB_USE_TABLE_REPORT", False),
-    "use_table_report_data_ops": os.environ.get("SKB_USE_TABLE_REPORT_DATA_OPS", True),
+    "use_table_report": _parse_env_bool("SKB_USE_TABLE_REPORT", False),
+    "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
     "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
     "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
@@ -103,33 +118,33 @@ def set_config(
 
     max_plot_columns : int, default=None
         Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30.
+        Default is 30. If "all", all columns will be plotted.
 
         This configuration can also be set with the ``SKB_MAX_PLOT_COLUMNS``
         environment variable.
 
     max_association_columns : int, default=None
         Set the ``max_association_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30.
+        Default is 30. If "all", all columns will be plotted.
 
         This configuration can also be set with the ``SKB_MAX_ASSOCIATION_COLUMNS``
         environment variable.
 
     subsampling_seed : int, default=None
-        Set the random seed of subsampling in skrub expressions
+        Set the random seed of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
-        Control the activation of subsampling in skrub expressions
+        Control the activation of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
         - If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample` is used.
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
-        - If ``"force"``, subsampling is used in all expression evaluation modes
+        - If ``"force"``, subsampling is used in all DataOps evaluation modes
           (:func:`~skrub.DataOp.skb.eval`, fit_transform, etc.).
 
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
@@ -177,16 +192,20 @@ def set_config(
         local_config["use_table_report_data_ops"] = use_table_report_data_ops
 
     if max_plot_columns is not None:
-        if not isinstance(max_plot_columns, numbers.Real):
+        if not isinstance(max_plot_columns, numbers.Real) and max_plot_columns != "all":
             raise ValueError(
-                f"'max_plot_columns' should be a number, got {type(max_plot_columns)!r}"
+                "'max_plot_columns' must be a number or 'all', got "
+                f"{type(max_plot_columns)!r}"
             )
         local_config["max_plot_columns"] = max_plot_columns
 
     if max_association_columns is not None:
-        if not isinstance(max_association_columns, numbers.Real):
+        if (
+            not isinstance(max_association_columns, numbers.Real)
+            and max_plot_columns != "all"
+        ):
             raise ValueError(
-                "'max_association_columns' should be a number, got "
+                "'max_association_columns' must be a number or 'all', got "
                 f"{type(max_association_columns)!r}"
             )
         local_config["max_association_columns"] = max_association_columns
@@ -252,7 +271,7 @@ def config_context(
 
     use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
-        expressions. Default is ``True``.
+        DataOps. Default is ``True``.
 
         - If ``True``, :class:`~skrub.TableReport` will be used.
         - If ``False``, the original Pandas or Polars dataframe display will be
@@ -263,33 +282,33 @@ def config_context(
 
     max_plot_columns : int, default=None
         Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30.
+        Default is 30. If "all", all columns will be plotted.
 
         This configuration can also be set with the ``SKB_MAX_PLOT_COLUMNS``
         environment variable.
 
     max_association_columns : int, default=None
         Set the ``max_association_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30.
+        Default is 30. If "all", all columns will be plotted.
 
         This configuration can also be set with the ``SKB_MAX_ASSOCIATION_COLUMNS``
         environment variable.
 
     subsampling_seed : int, default=None
-        Set the random seed of subsampling in skrub expressions
+        Set the random seed of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
 
         This configuration can also be set with the ``SKB_SUBSAMPLING_SEED`` environment
         variable.
 
     enable_subsampling : {'default', 'disable', 'force'}, default=None
-        Control the activation of subsampling in skrub expressions
+        Control the activation of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`. Default is ``"default"``.
 
         - If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample` is used.
         - If ``"disable"``, subsampling is never used, so ``skb.subsample`` becomes a
           no-op.
-        - If ``"force"``, subsampling is used in all expression evaluation modes
+        - If ``"force"``, subsampling is used in all DataOps evaluation modes
           (preview, fit_transform, etc.).
 
         This configuration can also be set with the ``SKB_ENABLE_SUBSAMPLING``
@@ -341,3 +360,8 @@ def config_context(
         yield
     finally:
         set_config(**original_config)
+
+
+# Apply patching set by environment variables. Without it, setting SKB_USE_TABLE_REPORT
+# or SKB_USE_TABLE_REPORT_DATA_OPS would not have an effect.
+_apply_external_patches(get_config())
