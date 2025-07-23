@@ -286,8 +286,8 @@ class _Evaluator(_DataOpTraversal):
             if hasattr(e, "add_note"):
                 e.add_note(msg)
                 raise
-            # python < 3.11 : we cannot add note to exception so fall back on chaining
-            # note this changes the type of exception
+            # python < 3.11 : we cannot add note to exception so fall back on chaining.
+            # Note this changes the type of exception.
             raise RuntimeError(msg) from e
 
     def handle_choice(self, choice):
