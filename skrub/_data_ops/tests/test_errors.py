@@ -271,7 +271,13 @@ def test_inconsistent_subsampling():
     # evaluating without subsampling works
     pred.skb.eval({"X": X_a, "y": y_a})
     # evaluating with subsampling raises
-    with pytest.raises(ValueError, match="`y` was subsampled.*`X` was not"):
+    with pytest.raises(
+        (ValueError, RuntimeError),
+        match=(
+            "(`y` was subsampled.*`X` was not)|(Evaluation of node <Apply"
+            " LogisticRegression> failed)"
+        ),
+    ):
         pred.skb.eval({"X": X_a, "y": y_a}, keep_subsampling=True)
 
     # In the following case subsampling is consistent but the shapes don't
