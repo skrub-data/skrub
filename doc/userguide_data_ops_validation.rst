@@ -259,6 +259,14 @@ A human-readable description of parameters for a pipeline can be obtained with
 >>> search.best_pipeline_.describe_params() # doctest: +SKIP
 {'α': 0.054...}
 
+It is also possible to use :meth:`ParamSearch.plot_results` to visualize the results
+of the search using a parallel coordinates plot.
+
+A full example of how to use hyperparameter search is available in
+:ref:`sphx_glr_auto_examples_data_ops_12_choices.py`.
+
+
+
 Validating hyperparameter search with nested cross-validation
 -------------------------------------------------------------
 
@@ -289,8 +297,8 @@ which always uses the default hyperparameters):
 3  0.890453    0.002732    0.428337
 4  0.889162    0.002773    0.536168
 
-Choices beyond estimator hyperparameters
-----------------------------------------
+Going beyond estimator hyperparameters: nesting choices and choosing pipelines
+------------------------------------------------------------------------------
 
 Choices are not limited to scikit-learn hyperparameters: we can use choices
 wherever we use DataOps. The choice of the estimator to use, any argument of
@@ -389,6 +397,7 @@ imputation but not for scaling.
 In addition to ``match``, choices created with :func:`choose_bool` have an
 ``if_else()`` method which is a convenience helper equivalent to
 ``match({True: ..., False: ...})``.
+
 
 .. _user_guide_exporting_data_ops_ref:
 
