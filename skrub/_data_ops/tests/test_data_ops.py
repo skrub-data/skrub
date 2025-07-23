@@ -213,7 +213,11 @@ def test_cloning_and_preview_data(how):
         clone = e.skb.clone()
     assert clone._skrub_impl.results == {}
     if how == "skb":
-        with pytest.raises(Exception, match="No value has been provided for 'a'"):
+        # This outputting "Evaluation of node..." in < Python 3.11
+        msg = (
+            "(No value has been provided for 'a')|(Evaluation of node <Var 'a'> failed)"
+        )
+        with pytest.raises(Exception, match=msg):
             clone.skb.eval()
     else:
         assert clone.skb.eval() == 1
@@ -227,7 +231,8 @@ def test_data_op_impl():
 
     a = _data_ops.DataOp(A())
     assert repr(a) == "<A>"
-    with pytest.raises(NotImplementedError):
+    # This is raising a RuntimeError in < Python 3.11
+    with pytest.raises((NotImplementedError, RuntimeError)):
         a.skb.eval()
 
 
