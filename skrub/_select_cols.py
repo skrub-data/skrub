@@ -77,8 +77,13 @@ class SelectCols(TransformerMixin, BaseEstimator):
         """
         return s.select(X, self._columns)
 
-    def get_feature_names_out(self):
+    def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
 
         Returns
         -------
@@ -162,8 +167,13 @@ class DropCols(TransformerMixin, BaseEstimator):
         """
         return s.select(X, ~s.make_selector(self._columns))
 
-    def get_feature_names_out(self):
+    def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
 
         Returns
         -------
