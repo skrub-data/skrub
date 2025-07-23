@@ -1,4 +1,3 @@
-.. _userguide_tablevectorizer:
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
@@ -10,6 +9,8 @@
 .. |HistGradientBoostingClassifier| replace:: :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
 .. |SimpleImputer| replace:: :class:`~sklearn.impute.SimpleImputer`
+
+.. _userguide_tablevectorizer:
 
 Strong baseline pipelines
 --------------------------------------------------------
