@@ -392,7 +392,7 @@ def test_attribute_errors():
     ):
         skrub.X(0).something
     # added suggestion when the name exists in the .skb namespace
-    with pytest.raises(Exception, match=r"(?s).*Did you mean '\.skb\.apply"):
+    with pytest.raises(Exception, match=r"(?sm).*^Did you mean `\.skb\.apply`"):
         skrub.X(0).apply
     with pytest.raises(
         AttributeError, match=r"`.skb.applied_estimator` only exists on"
@@ -436,9 +436,13 @@ def test_concat_axis_undefined():
 
 def test_apply_instead_of_skb_apply():
     a = skrub.var("a", skrub.datasets.toy_orders().orders)
-    with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
+    with pytest.raises(
+        Exception, match=r"(?sm).*^Did you mean `\.skb\.apply\('passthrough'\)`"
+    ):
         a.apply("passthrough")
-    with pytest.raises(Exception, match=r".*Did you mean `\.skb\.apply\(\)`"):
+    with pytest.raises(
+        Exception, match=r"(?sm).*^Did you mean `\.skb\.apply\(PassThrough\(\)\)`"
+    ):
         a.apply(PassThrough())
     with pytest.raises(Exception, match=r"Evaluation of '.apply\(\)' failed\."):
         a.apply(int)
@@ -447,7 +451,10 @@ def test_apply_instead_of_skb_apply():
 def test_apply_instead_of_apply_func():
     with pytest.raises(
         Exception,
-        match=r".*Got a function instead.*Did you mean to use `\.skb\.apply_func\(\)`",
+        match=(
+            r"(?sm).*Got a function instead.*^Did you mean to use"
+            r" `\.skb\.apply_func\(\)`"
+        ),
     ):
         skrub.X(0).skb.apply(lambda x: x)
 
@@ -457,8 +464,8 @@ def test_apply_instead_of_apply_func():
 
     with pytest.raises(
         Exception,
-        match=r".*Got a callable object instead.*"
-        r"Did you mean to use `\.skb\.apply_func\(\)`",
+        match=r"(?sm).*Got a callable object instead.*"
+        r"^Did you mean to use `\.skb\.apply_func\(\)`",
     ):
         skrub.X(0).skb.apply(Func())
 
