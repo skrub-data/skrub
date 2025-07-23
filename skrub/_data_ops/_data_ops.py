@@ -649,8 +649,8 @@ class DataOp:
             return f"<div>{graph}</div>"
         if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
-                f"<strong><samp>Name: {html.escape(repr(impl.name))}</samp></strong><br"
-                " />\n"
+                "<strong><samp>Name:"
+                f" {html.escape(repr(impl.name))}</samp></strong><br />\n"
             )
         else:
             name_line = ""
@@ -735,7 +735,7 @@ def _check_estimator_type(estimator):
         kind = "function" if inspect.isroutine(estimator) else "callable object"
         raise TypeError(
             "The `estimator` passed to `.skb.apply()` should be "
-            f"a scikit-learn-like estimator. Got a {kind} instead: {estimator!r}. "
+            f"a scikit-learn-like estimator. Got a {kind} instead: {estimator!r}.\n"
             "Did you mean to use `.skb.apply_func()` rather than `.skb.apply()`?"
         )
     raise TypeError(
@@ -1337,7 +1337,7 @@ class GetAttr(DataOpImpl):
         if isinstance(self.source_object, DataOp) and hasattr(
             self.source_object.skb, e.attr_name
         ):
-            comment = f"Did you mean '.skb.{e.attr_name}'?"
+            comment = f"Did you mean `.skb.{e.attr_name}` and forget the `.skb`?"
         else:
             comment = None
         attribute_error(e.source_object, e.attr_name, comment)
@@ -1426,17 +1426,19 @@ class CallMethod(DataOpImpl):
         except Exception as err:
             # Better error message if we used the pandas DataFrame's `apply()`
             # but we meant `.skb.apply()`
-            if e.method_name == "apply" and e.args:
-                if isinstance(e.args[0], BaseEstimator):
-                    raise TypeError(
-                        f"Calling `.apply()` with an estimator: `{e.args[0]!r}` "
-                        "failed with the error above. Did you mean `.skb.apply()`?"
-                    ) from err
-                if e.args[0] in [None, "passthrough"]:
-                    raise TypeError(
-                        f"Calling `.apply()` with the argument: `{e.args[0]!r}` "
-                        "failed with the error above. Did you mean `.skb.apply()`?"
-                    ) from err
+            if (
+                e.method_name == "apply"
+                and e.args
+                and (
+                    isinstance(e.args[0], BaseEstimator)
+                    or e.args[0] in [None, "passthrough"]
+                )
+            ):
+                arg = short_repr(e.args[0])
+                raise TypeError(
+                    f"Calling `.apply({arg})` failed with the error above.\n"
+                    f"Did you mean `.skb.apply({arg})` and forget the `.skb`?"
+                ) from err
             raise
 
     def get_func_name(self):
