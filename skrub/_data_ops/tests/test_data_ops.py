@@ -213,7 +213,7 @@ def test_cloning_and_preview_data(how):
         clone = e.skb.clone()
     assert clone._skrub_impl.results == {}
     if how == "skb":
-        with pytest.raises(Exception, match="No value value has been provided for 'a'"):
+        with pytest.raises(Exception, match="No value has been provided for 'a'"):
             clone.skb.eval()
     else:
         assert clone.skb.eval() == 1
