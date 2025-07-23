@@ -117,6 +117,7 @@ API_REFERENCE = {
             {
                 "description": None,
                 "autosummary": [
+                    "SquashingScaler",
                     "deduplicate",
                     "Cleaner",
                     "DropUninformative",

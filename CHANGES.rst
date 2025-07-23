@@ -71,6 +71,12 @@ New features
   controls the number of significant digits displayed for floating-point values
   in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
 
+- Added the :class:`SquashingScaler` that
+  robustly rescales and smoothly clips numerical columns,
+  enabling more robust handling of numerical columns
+  with neural networks. :pr:`1310` by :user:`Vincent Maladiere <Vincent-Maladiere>` and
+  :user:`David Holzmüller <dholzmueller>`.
+
 - :func:`datasets.toy_order` is now available to create a toy dataframe and
   corresponding targets for examples.
   :pr:`1485` by :user:`Antoine Canaguier-Durand <canag>`.
