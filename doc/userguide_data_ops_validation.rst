@@ -1,13 +1,13 @@
 .. currentmodule:: skrub
 
-.. _skrub_pipeline_validation:
+.. _userguide_data_ops_validation:
 
 =====================================
 Tuning and validating Skrub Pipelines
 =====================================
 
-To evaluate the prediction performance of our pipeline, we can fit it on a training dataset, then obtaining prediction
-on an unseen, test dataset.
+To evaluate the prediction performance of our pipeline, we can fit it on a training
+dataset, then obtaining prediction on an unseen, test dataset.
 
 In scikit-learn, we pass to estimators and pipelines an ``X`` and ``y`` matrix
 with one row per observation from the start. Therefore, we can split the
@@ -77,8 +77,8 @@ Result:
 Once a pipeline is defined and the ``X`` and ``y`` nodes are identified, skrub
 is able to split the dataset and perform cross-validation.
 
-Splitting
----------
+Splitting the data in train and test sets
+-----------------------------------------
 
 We can use :meth:`.skb.train_test_split() <DataOp.skb.train_test_split>` to
 perform a single train-test split. Skrub first evaluates the DataOps on
@@ -100,8 +100,8 @@ and :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`.
 
 We can now fit our pipeline on the training data:
 
->>> pipeline = pred.skb.make_learner()
->>> pipeline.fit(split["train"])
+>>> learner = pred.skb.make_learner()
+>>> learner.fit(split["train"])
 SkrubLearner(data_op=<Apply Ridge>)
 
 Only the training part of ``X`` and ``y`` are used. The subsequent steps are
@@ -109,7 +109,7 @@ evaluated, using this data, to fit the rest of the pipeline.
 
 And we can obtain predictions on the test part:
 
->>> test_pred = pipeline.predict(split["test"])
+>>> test_pred = learner.predict(split["test"])
 >>> test_y_true = split["y_test"]
 
 >>> from sklearn.metrics import r2_score
@@ -117,8 +117,11 @@ And we can obtain predictions on the test part:
 >>> r2_score(test_y_true, test_pred) # doctest: +SKIP
 0.440999149220359
 
-Cross-validation
-----------------
+It is possible to define a custom splitter function to use instead of
+:func:`sklearn.model_selection.train_test_split`.
+
+Improving the confidence in our score through cross-validation
+--------------------------------------------------------------
 
 We can increase our confidence in our score by using cross-validation instead of
 a single split. The same mechanism is used but we now fit and evaluate the model
@@ -133,8 +136,8 @@ on several splits. This is done with :meth:`.skb.cross_validate()
 3  0.002748    0.001321    0.424661
 4  0.002649    0.001309    0.441961
 
-Tuning choices
---------------
+Using the Skrub ``choose_*`` functions to tune hyperparameters
+--------------------------------------------------------------
 
 Skrub provides a convenient way to declare ranges of possible values, and tune
 those choices to keep the values that give the best predictions on a validation
@@ -256,6 +259,14 @@ A human-readable description of parameters for a pipeline can be obtained with
 >>> search.best_pipeline_.describe_params() # doctest: +SKIP
 {'α': 0.054...}
 
+It is also possible to use :meth:`ParamSearch.plot_results` to visualize the results
+of the search using a parallel coordinates plot.
+
+A full example of how to use hyperparameter search is available in
+:ref:`sphx_glr_auto_examples_data_ops_12_choices.py`.
+
+
+
 Validating hyperparameter search with nested cross-validation
 -------------------------------------------------------------
 
@@ -286,8 +297,8 @@ which always uses the default hyperparameters):
 3  0.890453    0.002732    0.428337
 4  0.889162    0.002773    0.536168
 
-Choices beyond estimator hyperparameters
-----------------------------------------
+Going beyond estimator hyperparameters: nesting choices and choosing pipelines
+------------------------------------------------------------------------------
 
 Choices are not limited to scikit-learn hyperparameters: we can use choices
 wherever we use DataOps. The choice of the estimator to use, any argument of
@@ -334,8 +345,8 @@ Also note that as seen above, choices can be nested arbitrarily. For example it
 is frequent to choose between several estimators, each of which contains choices
 in its hyperparameters.
 
-Linking choices
----------------
+Linking choices depending on other choices
+------------------------------------------
 
 Choices can depend on another choice made with :func:`choose_from`,
 :func:`choose_bool` or :func:`optional` through those objects' ``.match()``
@@ -386,3 +397,68 @@ imputation but not for scaling.
 In addition to ``match``, choices created with :func:`choose_bool` have an
 ``if_else()`` method which is a convenience helper equivalent to
 ``match({True: ..., False: ...})``.
+
+
+.. _user_guide_exporting_data_ops_ref:
+
+Exporting the DataOps plan as a learner and reusing it
+========================================================
+
+DataOps are designed to build complex pipelines that can be reused on new, unseen
+data in potentially different environments from where they were created. This can
+be achieved by exporting the DataOps plan as a **learner**: the learner is special
+transformer that is similar to a scikit-learn estimator, but that takes as input
+the **environment** that should be used to execute the operations. The environment
+is a dictionary of variables rather than a single design matrix
+``X`` and a target array ``y``.
+
+>>> import pandas as pd
+>>> orders_df = pd.DataFrame(
+...     {
+...         "item": ["pen", "cup", "pen", "fork"],
+...         "price": [1.5, None, 1.5, 2.2],
+...         "qty": [1, 1, 2, 4],
+...     }
+... )
+>>> from skrub import TableVectorizer
+>>> orders = skrub.var("orders", orders_df)
+>>> transformed_orders = orders.skb.apply(TableVectorizer())
+>>> learner = transformed_orders.skb.make_learner()
+
+The learner can be fitted as it is exported by setting ``fitted=True`` when
+creating it with :meth:`.skb.make_learner() <DataOp.skb.make_learner>`.
+This will fit the learner on the data used for previews when the variables are defined
+(``orders_df`` in the case above):
+>>> learner = transformed_orders.skb.make_learner(fitted=True)
+
+Alternatively, the learner can be fitted on a different dataset by passing
+the data to the ``fit()`` method:
+
+>>> new_orders_df = pd.DataFrame(
+...     {
+...         "item": ["pen", "cup", "spoon"],
+...         "price": [1.5, 2.0, 1.0   ],
+...         "qty": [1, 2, 3],
+...     }
+... )
+>>> learner.fit({"orders": new_orders_df})
+SkrubLearner(data_op=<Apply TableVectorizer>)
+
+
+The learner can be fitted and applied to new data
+using the same methods as a scikit-learn estimator, such as ``fit()``,
+``fit_transform()``, and ``predict()``.
+
+The learner can be pickled and saved to disk, so that it can be reused later
+or in a different environment:
+
+>>> import pickle
+>>> with open("learner.pkl", "wb") as f:
+...     pickle.dump(learner, f)
+>>> with open("learner.pkl", "rb") as f:
+...     loaded_learner = pickle.load(f)
+>>> loaded_learner.fit({"orders": new_orders_df})
+SkrubLearner(data_op=<Apply TableVectorizer>)
+
+See :ref:`sphx_glr_auto_examples_data_ops_13_use_case.py` for an example of how
+to use the learner in a microservice.

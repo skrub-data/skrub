@@ -109,7 +109,7 @@ results["test_score"]
 # strings, categories and dates using the :class:`~skrub.TableVectorizer`.
 # See its documentation or :ref:`sphx_glr_auto_examples_01_encodings.py` for
 # more details. An overview of the chosen defaults is available in
-# :ref:`end_to_end_pipeline`.
+# :ref:`userguide_tablevectorizer`.
 
 
 # %%
@@ -242,7 +242,7 @@ encoded
 # The higher the activation, the closer the row to the latent topic. These
 # columns can now be understood by a machine-learning model.
 #
-# The other encoders are presented in :ref:`encoding`.
+# The other encoders are presented in :ref:`userguide_encoders`.
 
 
 # %%

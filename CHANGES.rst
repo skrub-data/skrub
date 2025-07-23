@@ -11,13 +11,14 @@ Ongoing development
 
 Highlights
 ------------
-- Major feature! Skrub DataOps are a powerful new way to
+- Major feature! Skrub DataOps are a powerful new way of
   combining dataframe transformations over multiple tables, and machine learning
   pipelines. DataOps can be combined to form compled data plans, that can be used
   to train and tune machine learning models. Then, the DataOps plans can be exported
   as ``Learners`` (:class:`skrub.SkrubLearner`), standalone objects that can be
   used on new data. More detail about the DataOps can be found in the
-  :ref:`User guide <>` and in the :ref:`examples <example_expressions_intro>`.
+  :ref:`User guide <userguide_data_ops>` and in the
+  :ref:`examples <data_ops_examples_ref>`.
 
 - The :class:`TableReport` has been improved with many new features. Series are
   now supported directly. It is now
@@ -274,6 +275,7 @@ Release 0.4.1
 
 Changes
 -------
+
 * :class: `TableReport` has `write_html` method
   :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
 
