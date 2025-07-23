@@ -6,8 +6,8 @@
 Tuning and validating Skrub Pipelines
 =====================================
 
-To evaluate the prediction performance of our pipeline, we can fit it on a training dataset, then obtaining prediction
-on an unseen, test dataset.
+To evaluate the prediction performance of our pipeline, we can fit it on a training
+dataset, then obtaining prediction on an unseen, test dataset.
 
 In scikit-learn, we pass to estimators and pipelines an ``X`` and ``y`` matrix
 with one row per observation from the start. Therefore, we can split the

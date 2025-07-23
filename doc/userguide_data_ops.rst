@@ -452,6 +452,8 @@ the data to the ``fit()`` method:
 ...     }
 ... )
 >>> learner.fit({"orders": new_orders_df})
+SkrubLearner(data_op=<Apply TableVectorizer>)
+
 
 The learner can be fitted and applied to new data
 using the same methods as a scikit-learn estimator, such as ``fit()``,
@@ -466,6 +468,7 @@ or in a different environment:
 >>> with open("learner.pkl", "rb") as f:
 ...     loaded_learner = pickle.load(f)
 >>> loaded_learner.fit({"orders": new_orders_df})
+SkrubLearner(data_op=<Apply TableVectorizer>)
 
 See :ref:`_sphx_glr_auto_examples_data_ops_13_use_case.py` for an example of how
 to use the learner in a microservice.
