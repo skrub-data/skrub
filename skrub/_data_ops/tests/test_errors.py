@@ -1,5 +1,6 @@
 import pickle
 import re
+import traceback
 
 import numpy as np
 import pandas as pd
@@ -423,11 +424,11 @@ def test_call_method_errors():
     # call `.skb.eval()` and provide a value. By then the GetAttr + Call have
     # been collapsed in the graph into a CallMethod node, so the error
     # originates from a different place but it should provide the same info.
-    with pytest.raises(
-        (AttributeError, RuntimeError),
-        match=r"(?sm).*^Did you mean `\.skb\.mark_as_X`",
-    ):
+    with pytest.raises((AttributeError, RuntimeError)) as exc:
         a.skb.eval({"a": 0})
+    assert "Did you mean `.skb.mark_as_X` and forget the `.skb`?" in "\n".join(
+        traceback.format_exception(exc.value)
+    )
 
 
 def test_concat_horizontal_numpy():
