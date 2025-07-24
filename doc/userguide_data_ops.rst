@@ -45,9 +45,21 @@ table with a fixed number of rows.
 
 Skrub DataOps, on the other hand, can manipulate any number of variables.
 The transformation they perform is not a linear sequence but any Directed
-Acyclic Graph of computations.
+Acyclic Graph of computations. Take the following example, where our task is to predict
+item price in dollars:
 
-.. image:: _static/skrub_data_ops.svg
+.. image:: _static/dataops_graph.svg
+
+- Here we use three input variables: two tables ("Items" and "Prices") and a
+  float ("euro_dollar_rate").
+- For this regression task, we have declared which intermediary step can be
+  considered as the design matrix X (shown in blue) and as the target y
+  (shown in orange).
+- Akin to scikit-learn pipelines, we apply an estimator (Ridge) at the end of the
+  processing.
+
+The rest of this user guide will detail how the DataOps work.
+
 
 How do Skrub DataOps differ from orchestrators like Apache Airflow?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
