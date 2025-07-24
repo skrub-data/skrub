@@ -287,7 +287,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     [DropUninformative()]
 
     See Also:
-    --------
+    ---------
     TableVectorizer :
         Process columns of a dataframe and convert them to a numeric (vectorized)
         representation.

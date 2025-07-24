@@ -120,7 +120,7 @@ predictor
 
 # %%
 # Turning the DataOps plan into a learner, for later reuse
-# -------------------------------------------------------
+# ---------------------------------------------------------
 #
 # Now that we have defined the predictor, we can create a ``learner``, a
 # standalone object that contains all the steps in the DataOps plan. We fit the
