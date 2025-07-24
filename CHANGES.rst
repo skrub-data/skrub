@@ -9,6 +9,9 @@ Release history
 Ongoing development
 ===================
 
+0.6.0
+=====
+
 Highlights
 ------------
 - Major feature! Skrub DataOps are a powerful new way of
