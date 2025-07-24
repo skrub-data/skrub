@@ -46,7 +46,7 @@ The TableReport can be used in a notebook cell, or it can be opened in a browser
 window using ``TableReport(df).open()``.
 
 Altering the Appearance of the |TableReport|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For performance reasons, the |TableReport| disables the computation of
 distributions and associations for tables with more than 30 columns. This behavior

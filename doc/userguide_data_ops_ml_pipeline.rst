@@ -268,6 +268,7 @@ load:  file:///example.db
 transform
 [10, 20, 30, 40]
 
+.. _user_guide_subsampling:
 
 Subsampling data for easier development and debugging
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -16,7 +16,7 @@ datetime. This includes string, categorical, and object data types.
 
 
 |StringEncoder|
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 A strong and quick baseline for both short strings with high cardinality and long
 text. This encoder computes the ngram frequency using tf-idf vectorization,
