@@ -1326,21 +1326,22 @@ class AppliedEstimator(DataOpImpl):
         return self.target._skrub_impl.estimator_
 
 
+def _checked_get_attr(obj, obj_value, attr_name):
+    try:
+        return getattr(obj_value, attr_name)
+    except AttributeError:
+        if isinstance(obj, DataOp) and hasattr(obj.skb, attr_name):
+            comment = f"Did you mean `.skb.{attr_name}` and forget the `.skb`?"
+        else:
+            comment = None
+        attribute_error(obj_value, attr_name, comment)
+
+
 class GetAttr(DataOpImpl):
     _fields = ["source_object", "attr_name"]
 
     def compute(self, e, mode, environment):
-        try:
-            return getattr(e.source_object, e.attr_name)
-        except AttributeError:
-            pass
-        if isinstance(self.source_object, DataOp) and hasattr(
-            self.source_object.skb, e.attr_name
-        ):
-            comment = f"Did you mean `.skb.{e.attr_name}` and forget the `.skb`?"
-        else:
-            comment = None
-        attribute_error(e.source_object, e.attr_name, comment)
+        return _checked_get_attr(self.source_object, e.source_object, e.attr_name)
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {short_repr(self.attr_name)}>"
@@ -1421,8 +1422,9 @@ class CallMethod(DataOpImpl):
     _fields = ["obj", "method_name", "args", "kwargs"]
 
     def compute(self, e, mode, environment):
+        method = _checked_get_attr(self.obj, e.obj, e.method_name)
         try:
-            return getattr(e.obj, e.method_name)(*e.args, **e.kwargs)
+            return method(*e.args, **e.kwargs)
         except Exception as err:
             # Better error message if we used the pandas DataFrame's `apply()`
             # but we meant `.skb.apply()`
