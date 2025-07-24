@@ -109,9 +109,7 @@ def _pickle_msg_pattern(cls):
     pattern = r"The check to verify that the learner can be serialized failed\."
     if cls is not NoPickleRecursion:
         return pattern
-    return (
-        pattern + " Is a step in the learner holding a reference to the full learner"
-    )
+    return pattern + " Is a step in the learner holding a reference to the full learner"
 
 
 @pytest.mark.parametrize("cls", [NoPickle, NoPickleRecursion])
@@ -427,7 +425,7 @@ def test_call_method_errors():
     with pytest.raises((AttributeError, RuntimeError)) as exc:
         a.skb.eval({"a": 0})
     assert "Did you mean `.skb.mark_as_X` and forget the `.skb`?" in "\n".join(
-        traceback.format_exception(exc.value)
+        traceback.format_exception(exc.value, exc.value, exc.tb)
     )
 
 
