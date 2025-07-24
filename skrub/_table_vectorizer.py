@@ -203,6 +203,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Process columns of a dataframe and convert them to a numeric (vectorized)
         representation.
 
+    ToFloat32 :
+        Convert numeric columns to ``np.float32``, to have consistent numeric
+        types and representation of missing values. More informative columns (e.g.,
+        categorical or datetime) are not converted.
+
     Notes
     -----
     The ``Cleaner`` performs the following set of transformations on each column:
@@ -285,17 +290,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
     [CleanNullStrings(), DropUninformative(), ToStr()]
     >>> cleaner.all_processing_steps_['D']
     [DropUninformative()]
-
-    See Also:
-    ---------
-    TableVectorizer :
-        Process columns of a dataframe and convert them to a numeric (vectorized)
-        representation.
-
-    ToFloat32 :
-        Convert numeric columns to ``np.float32``, to have consistent numeric
-        types and representation of missing values. More informative columns (e.g.,
-        categorical or datetime) are not converted.
     """
 
     def __init__(
