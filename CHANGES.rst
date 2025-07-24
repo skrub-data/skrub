@@ -9,11 +9,11 @@ Release history
 Ongoing development
 ===================
 
-0.6.0
-=====
+Release 0.6.0
+=============
 
 Highlights
-------------
+----------
 - Major feature! Skrub DataOps are a powerful new way of
   combining dataframe transformations over multiple tables, and machine learning
   pipelines. DataOps can be combined to form compled data plans, that can be used
