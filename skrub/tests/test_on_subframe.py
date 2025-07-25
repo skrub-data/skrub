@@ -4,13 +4,16 @@ import numpy as np
 import pandas as pd
 import pytest
 from pandas.testing import assert_index_equal
+from scipy import sparse as sp
 from sklearn.base import BaseEstimator
+from sklearn.feature_extraction.text import HashingVectorizer
 from sklearn.preprocessing import FunctionTransformer
 
 from skrub import SelectCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._apply_to_frame import ApplyToFrame
+from skrub.datasets import toy_orders
 
 
 class Dummy(BaseEstimator):
@@ -116,3 +119,12 @@ def test_output_index(cols):
     assert_index_equal(transformer.fit_transform(df).index, df.index)
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
     assert_index_equal(transformer.transform(df).index, df.index)
+
+
+def test_sparse_output():
+    X = toy_orders().X
+    X_t = ApplyToFrame(HashingVectorizer()).fit_transform(X)
+    assert sp.issparse(X_t)
+
+    with pytest.raises(ValueError):
+        _ = ApplyToFrame(HashingVectorizer(), cols=[X.columns[0]]).fit_transform(X)
