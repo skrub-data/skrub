@@ -1,5 +1,6 @@
 import pickle
 import re
+import traceback
 
 import numpy as np
 import pandas as pd
@@ -404,6 +405,28 @@ def test_attribute_errors():
         AttributeError, match=r"`.skb.applied_estimator` only exists on"
     ):
         skrub.X().skb.applied_estimator
+
+
+def test_call_method_errors():
+    # In this case we have a preview value, so the access to `mark_as_X` fails
+    # right away, before we add the call (when creating a GetAttr node)
+    a = skrub.var("a", 0)
+    with pytest.raises(
+        (AttributeError, RuntimeError),
+        match=r"(?sm).*^Did you mean `\.skb\.mark_as_X`",
+    ):
+        a.mark_as_X()
+    a = skrub.var("a").mark_as_X()
+
+    # In this case we have no preview value so the error only happens when we
+    # call `.skb.eval()` and provide a value. By then the GetAttr + Call have
+    # been collapsed in the graph into a CallMethod node, so the error
+    # originates from a different place but it should provide the same info.
+    with pytest.raises((AttributeError, RuntimeError)) as exc:
+        a.skb.eval({"a": 0})
+    assert "Did you mean `.skb.mark_as_X` and forget the `.skb`?" in "\n".join(
+        traceback.format_exception(exc.value, exc.value, exc.tb)
+    )
 
 
 def test_concat_horizontal_numpy():
