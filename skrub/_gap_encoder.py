@@ -531,6 +531,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         Parameters
         ----------
+        input_features : None
+            The input features. Ignored, only here for compatibility.
+
         n_labels : int, default=3
             The number of labels used to describe each topic.
 
