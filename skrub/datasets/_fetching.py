@@ -40,8 +40,8 @@ def fetch_employee_salaries(data_home=None):
         - ``employee_salaries`` : pd.DataFrame, the dataframe. Size 9228 rows x 9
           columns.
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Size 9228 rows x 8 columns.
-        - ``y : pd.DataFrame, target labels. Size 9228 rows x 1 column.
+          labels. Shape: (9228, 8)
+        - ``y`` : pd.DataFrame, target labels. Size 9228 rows x 1 column.
         - ``metadata`` : a dictionary containing the name, description, source and
           target
     """
@@ -61,7 +61,7 @@ def fetch_medical_charge(data_home=None):
         receive Medicare Inpatient Prospective Payment System (IPPS) payments.
         The PUF is organized by hospital and Medicare Severity Diagnosis
         Related Group (MS-DRG) and covers Fiscal Year (FY) 2011 through FY 2016.
-        Size on disk: 36Mo.
+        Size on disk: 36MB.
 
     Parameters
     ----------
@@ -89,7 +89,7 @@ def fetch_midwest_survey(data_home=None):
         https://github.com/skrub-data/skrub-data-files
 
     Description of the dataset:
-        Survey to know if people self-identify as Midwesterners. Size on disk: 504Ko.
+        Survey to know if people self-identify as Midwesterners. Size on disk: 504KB.
 
     Parameters
     ----------
@@ -117,7 +117,7 @@ def fetch_open_payments(data_home=None):
 
     Description of the dataset:
         Payments given by healthcare manufacturing companies to medical doctors
-        or hospitals. Size on disk: 8.7Mo.
+        or hospitals. Size on disk: 8.7MB.
 
     Parameters
     ----------
@@ -148,7 +148,7 @@ def fetch_traffic_violations(data_home=None):
         This dataset contains traffic violation information from all electronic
         traffic violations issued in the Montgomery County, MD. Any information
         that can be used to uniquely identify the vehicle, the vehicle owner or
-        the officer issuing the violation will not be published. Size on disk: 736Mo.
+        the officer issuing the violation will not be published. Size on disk: 736MB.
 
     Parameters
     ----------
@@ -177,7 +177,7 @@ def fetch_drug_directory(data_home=None):
 
     Description of the dataset:
         Product listing data submitted to the U.S. FDA for all unfinished,
-        unapproved drugs. Size on disk: 44Mo.
+        unapproved drugs. Size on disk: 44MB.
 
     Parameters
     ----------
@@ -212,7 +212,7 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
     Baskets contain at least one product each, so aggregation then joining operations
     are required to build a design matrix.
-    Size on disk: 16Mo.
+    Size on disk: 16MB.
 
     Parameters
     ----------
@@ -258,7 +258,7 @@ def fetch_toxicity(data_home=None):
     consists in only two columns:
     - `text`: the text of the comment
     - `is_toxic`: whether or not the comment is toxic
-    Size on disk: 220Ko.
+    Size on disk: 220KB.
 
     Parameters
     ----------
@@ -286,7 +286,7 @@ def fetch_videogame_sales(data_home=None):
 
     This is a regression use-case, where the single table contains information
     about videogames such as the publisher and platform, and the goal is to
-    predict the number of sales worldwide. Size on disk: 1.8Mo.
+    predict the number of sales worldwide. Size on disk: 1.8MB.
 
     .. warning::
 
@@ -326,7 +326,7 @@ def fetch_bike_sharing(data_home=None):
 
     This is a regression use-case, where the goal is to predict demand for a
     bike-sharing service. The features are the dates and holiday and weather
-    information. Size on disk: 1.3Mo.
+    information. Size on disk: 1.3MB.
 
     Parameters
     ----------
@@ -355,7 +355,7 @@ def fetch_movielens(data_home=None):
 
     This is a regression use-case, where the goal is to predict movie ratings.
     More details are provided in the output's ``metadata['description']``. Size on disk:
-        3.6Mo.
+        3.6MB.
 
     Parameters
     ----------
@@ -382,7 +382,7 @@ def fetch_flight_delays(data_home=None):
         https://github.com/skrub-data/skrub-data-files
 
     This is a regression use-case, where the goal is to predict flight delays. Size on
-    disk: 657Mo.
+    disk: 657MB.
 
     Parameters
     ----------
@@ -419,7 +419,7 @@ def fetch_country_happiness(data_home=None):
     This is a regression use-case, where the goal is to predict the happiness
     index. The dataset contains data from the `2022 World Happiness Report
     <https://worldhappiness.report/>`_, and from `the World Bank open data
-    platform <https://data.worldbank.org/>`_. Size on disk: 64Ko.
+    platform <https://data.worldbank.org/>`_. Size on disk: 64KB.
 
     Parameters
     ----------
