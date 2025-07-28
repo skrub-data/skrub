@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from sklearn.compose import make_column_transformer
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
@@ -172,8 +173,6 @@ def test_get_feature_names_out(df_module, generate_data):
     feature_names = enc.get_feature_names_out()
     assert len(feature_names) == 3
     assert feature_names[0].startswith("some col: ")
-
-    from sklearn.compose import make_column_transformer
 
     preprocessing = make_column_transformer(
         (GapEncoder(n_components=3), "some col"),
