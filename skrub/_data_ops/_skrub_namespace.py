@@ -824,7 +824,7 @@ class SkrubNamespace:
         ―――――――
         (442,)
 
-        Read more about subsampling in the :ref:`User Guide <user_guide_subsampling_ref>`.
+        Read more about subsampling in the :ref:`User Guide <user_guide_subsampling>`.
 
         """  # noqa : E501
         return DataOp(SubsamplePreviews(self._data_op, n=n, how=how))

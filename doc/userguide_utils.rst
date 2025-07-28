@@ -5,7 +5,8 @@
 .. _userguide_utils:
 
 Example datasets, utilities, and customization
------------------------------------
+==============================================
+
 
 Customizing the default configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

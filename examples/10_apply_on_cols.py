@@ -3,7 +3,7 @@ Hands-On with Column Selection and Transformers
 ===============================================
 
 In previous examples, we saw how skrub provides powerful abstractions like
-:class:`~skrub.TableVectorizer` and :func:`~skrub.tabular_learner` to create pipelines.
+:class:`~skrub.TableVectorizer` and :func:`~skrub.tabular_pipeline` to create pipelines.
 
 In this new example, we show how to create more flexible pipelines by selecting
 and transforming dataframe columns using arbitrary logic.
@@ -128,11 +128,11 @@ pipeline
 
 # %%
 # Interestingly, the pipeline above is similar to the datatype dispatching performed by
-# :class:`~skrub.TableVectorizer`, also used in :func:`~skrub.tabular_learner`.
+# :class:`~skrub.TableVectorizer`, also used in :func:`~skrub.tabular_pipeline`.
 #
 # Click on the dropdown arrows next to the datatype to see the columns are mapped to
 # the different transformers in :class:`~skrub.TableVectorizer`.
-from skrub import tabular_learner
+from skrub import tabular_pipeline
 
-tabular_learner("regressor").fit(X, y)
+tabular_pipeline("regressor").fit(X, y)
 # %%

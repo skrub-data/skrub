@@ -3,8 +3,9 @@
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
 
 .. _userguide_datetimes:
+
 Parsing and encoding datetimes
-------------------
+------------------------------
 
 Parsing Datetime Strings
 ~~~~~~~~~~~~~~~~~~~~~~~~
