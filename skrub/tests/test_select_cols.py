@@ -67,7 +67,6 @@ def test_drop(df_module):
 
 
 def test_get_feature_names_out(df):
-    # df = df_module.example_dataframe
     select = SelectCols(cols=s.all()).fit(df)
     assert select.get_feature_names_out() == ["A", "B", "C"]
 
