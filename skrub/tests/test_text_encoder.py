@@ -193,3 +193,32 @@ def test_categorical_features(df_module, encoder):
 
     out = encoder.fit(df["categorical"][:4]).transform(df["categorical"][4:])
     assert len(sbd.column_names(out)) == 30
+
+
+def test_use_inference_cache(df_module, encoder, tmpdir):
+    X = df_module.make_column("", ["hello", "hola", "guttentag"])
+
+    # No cache
+    encoder.set_params(cache_folder=str(tmpdir))
+    _ = encoder.fit_transform(X)
+    assert not (encoder.cache_folder_ / "joblib").exists()
+
+    # Caching
+    encoder.set_params(use_inference_cache=True)
+    _ = encoder.fit_transform(X)
+    assert (encoder.cache_folder_ / "joblib").exists()
+    assert hasattr(encoder, "_memory")
+    assert len(encoder._memory.store_backend.get_items()) == 1
+    assert encoder._memory.store_backend.get_items()[0].size > 0
+
+    _ = encoder.fit_transform(sbd.slice(X, 0, 1))
+    assert len(encoder._memory.store_backend.get_items()) == 2
+
+    # Another instance, same inference cache.
+    encoder = clone(encoder)
+    _ = encoder.fit_transform(sbd.slice(X, 0, 2))
+    assert len(encoder._memory.store_backend.get_items()) == 3
+
+    # Clear
+    encoder.clear_inference_cache()
+    assert len(encoder._memory.store_backend.get_items()) == 0
