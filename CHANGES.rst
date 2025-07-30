@@ -13,7 +13,7 @@ New feature
 -----------
 - :class:`TextEncoder` has now the ``use_inference_cache`` option to cache precomputed
   embeddings. This is useful to speed-up cross-validation without shuffling.
-  :pr:`?` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+  :pr:`1555` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 Release 0.6.0
 =============
