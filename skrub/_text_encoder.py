@@ -4,6 +4,7 @@ import os
 import warnings
 from pathlib import Path
 
+import joblib
 from sklearn.base import TransformerMixin
 from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
@@ -30,8 +31,8 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     .. warning::
 
         To use this class, you need to install the optional ``transformers``
-        dependencies for skrub. See the "deep learning dependencies" section
-        in the :ref:`installation_instructions` guide for more details.
+        dependencies for skrub. See the "deep learning dependencies" section in the
+        :ref:`installation_instructions` guide for more details.
 
     Parameters
     ----------
@@ -39,9 +40,8 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
         - If a filepath on disk is passed, this class loads the model from that path.
         - Otherwise, it first tries to download a pre-trained
-          :class:`~sentence_transformers.SentenceTransformer` model.
-          If that fails, tries to construct a model from Huggingface models repository
-          with that name.
+          :class:`~sentence_transformers.SentenceTransformer` model. If that fails,
+          tries to construct a model from Huggingface models repository with that name.
 
         The following models have a good performance/memory usage tradeoff:
 
@@ -52,58 +52,67 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         You can find more options on the `sentence-transformers documentation
         <https://www.sbert.net/docs/pretrained_models.html#model-overview>`_.
 
-        The default model is a shrunk version of e5-v2, which has shown good
-        performance in the benchmark of [1]_.
+        The default model is a shrunk version of e5-v2, which has shown good performance
+        in the benchmark of [1]_.
 
     n_components : int or None, default=30,
         The number of embedding dimensions. As the number of dimensions is different
         across embedding models, this class uses a :class:`~sklearn.decomposition.PCA`
-        to set the number of embedding to ``n_components`` during ``transform``.
-        Set ``n_components=None`` to skip the PCA dimension reduction mechanism.
+        to set the number of embedding to ``n_components`` during ``transform``. Set
+        ``n_components=None`` to skip the PCA dimension reduction mechanism.
 
-        See [1]_ for more details on the choice of the PCA and default
-        ``n_components``.
+        See [1]_ for more details on the choice of the PCA and default ``n_components``.
 
     device : str, default=None
-        Device (e.g. "cpu", "cuda", "mps") that should be used for computation.
-        If None, checks if a GPU can be used.
-        Note that macOS ARM64 users can enable the GPU on their local machine
-        by setting ``device="mps"``.
+        Device (e.g. "cpu", "cuda", "mps") that should be used for computation. If None,
+        checks if a GPU can be used. Note that macOS ARM64 users can enable the GPU on
+        their local machine by setting ``device="mps"``.
 
     batch_size : int, default=32
         The batch size to use during ``transform``.
 
     token_env_variable : str, default=None
         The name of the environment variable which stores your HuggingFace
-        authentication token to download private models.
-        Note that we only store the name of the variable but not the token itself.
+        authentication token to download private models. Note that we only store the
+        name of the variable but not the token itself.
 
     cache_folder : str, default=None
-        Path to store models. By default ``~/skrub_data``.
-        See :func:`skrub.datasets._utils.get_data_dir`.
-        Note that when unpickling ``TextEncoder`` on another machine,
-        the ``cache_folder`` path needs to be accessible to store the downloaded model.
+        Path to store models, and inference cache if ``use_inference_cache=True``. By
+        default ``~/skrub_data``. See :func:`skrub.datasets._utils.get_data_dir`. Note
+        that when unpickling ``TextEncoder`` on another machine, the ``cache_folder``
+        path needs to be accessible to store the downloaded model.
+
+    use_inference_cache : bool, default=False
+        Whether to reuse precomputed embeddings during 'transform', before the PCA
+        dimension reduction. The cache keys are the triples ('model_name', 'batch_size',
+        input data X). This means that for a given 'model_name' and 'batch_size', if X
+        has unseen entries or order, the computation is triggered and the results
+        cached. Otherwise, the results are fetched from the cache. Practically, this
+        also means that cross-validating the PCA ``n_components`` can be accelerated by
+        using e.g. KFoldCV without shuffling.
+
+        The inference cache will be created at ``self.cache_folder_ / "joblib"``, and
+        can be reused for different instances of this class. As the cache disk footprint
+        can grow large, it's important to clear the cache regularly with
+        :func:`TextEncoder.clear_cache`.
 
     store_weights_in_pickle : bool, default=False
-        Whether or not to keep the loaded sentence-transformers model
-        in the ``TextEncoder`` when pickling.
+        Whether or not to keep the loaded sentence-transformers model in the
+        ``TextEncoder`` when pickling.
 
-        - When set to False, the ``_estimator`` property is removed from
-          the object to pickle, which significantly reduces the size of
-          the serialized object. Note that when the serialized object is
-          unpickled on another machine, the ``TextEncoder`` will try to download
-          the sentence-transformer model again from HuggingFace Hub.
-          This process could fail if, for example, the machine doesn't have
-          internet access. Additionally, if you use weights stored on disk
-          that are *not* on the HuggingFace Hub (by passing a path to
-          ``model_name``), these weights will not be pickled either.
-          Therefore you would need to copy them to the machine where you
-          unpickle the ``TextEncoder``.
-        - When set to True, the ``_estimator`` property is included in
-          the serialized object. Users deploying fine-tuned models stored on
-          disk are recommended to use this option. Note that the machine
-          where the ``TextEncoder`` is unpickled must have the same device than
-          the machine where it was pickled.
+        - When set to False, the ``_estimator`` property is removed from the object to
+          pickle, which significantly reduces the size of the serialized object. Note
+          that when the serialized object is unpickled on another machine, the
+          ``TextEncoder`` will try to download the sentence-transformer model again from
+          HuggingFace Hub. This process could fail if, for example, the machine doesn't
+          have internet access. Additionally, if you use weights stored on disk that are
+          *not* on the HuggingFace Hub (by passing a path to ``model_name``), these
+          weights will not be pickled either. Therefore you would need to copy them to
+          the machine where you unpickle the ``TextEncoder``.
+        - When set to True, the ``_estimator`` property is included in the serialized
+          object. Users deploying fine-tuned models stored on disk are recommended to
+          use this option. Note that the machine where the ``TextEncoder`` is unpickled
+          must have the same device than the machine where it was pickled.
 
     random_state : int, RandomState instance or None, default=None
         Used when the PCA dimension reduction mechanism is used, for reproducible
@@ -123,8 +132,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         see the ``n_components`` parameter).
 
     n_components_ : int
-        The number of dimensions of the embeddings after dimensionality
-        reduction.
+        The number of dimensions of the embeddings after dimensionality reduction.
 
     See Also
     --------
@@ -139,20 +147,20 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
     Notes
     -----
-    This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
-    will not train or fine-tune the model. Instead, the model is loaded from disk,
-    and a PCA is fitted to reduce the dimension of the language model's output,
-    if ``n_components`` is not None.
+    This class uses a pre-trained model, so calling ``fit`` or ``fit_transform`` will
+    not train or fine-tune the model. Instead, the model is loaded from disk, and a PCA
+    is fitted to reduce the dimension of the language model's output, if
+    ``n_components`` is not None.
 
     When PCA is disabled, this class is essentially stateless, with loading the
-    pre-trained model from disk being the only difference between ``fit_transform``
-    and ``transform``.
+    pre-trained model from disk being the only difference between ``fit_transform`` and
+    ``transform``.
 
-    Be aware that parallelizing this class (e.g., using
-    :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
-    expensive. This is because a copy of the pre-trained model is loaded into memory
-    for each thread. Therefore, we recommend you to let the default n_jobs=None
-    (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
+    Be aware that parallelizing this class (e.g., using :class:`~skrub.TableVectorizer`
+    with ``n_jobs`` > 1) may be computationally expensive. This is because a copy of the
+    pre-trained model is loaded into memory for each thread. Therefore, we recommend you
+    to let the default n_jobs=None (or set to 1) of the TableVectorizer and let pytorch
+    handle parallelism.
 
     If memory usage is a concern, check the characteristics of your selected model.
 
@@ -160,8 +168,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     ----------
     .. [1]  L. Grinsztajn, M. Kim, E. Oyallon, G. Varoquaux
             "Vectorizing string entries for data processing on tables: when are larger
-            language models better?", 2023.
-            https://hal.science/hal-04345931
+            language models better?", 2023. https://hal.science/hal-04345931
 
     Examples
     --------
@@ -179,8 +186,8 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     ...   "When you don't know the lyrics of the song except the chorus",
     ... ], name='video comments')
 
-    Fitting does not train the underlying pre-trained deep-learning model,
-    but ensure various checks and enable dimension reduction.
+    Fitting does not train the underlying pre-trained deep-learning model, but ensure
+    various checks and enable dimension reduction.
 
     >>> enc.fit_transform(X) # doctest: +SKIP
        video comments_0  video comments_1
@@ -197,6 +204,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         batch_size=32,
         token_env_variable=None,
         cache_folder=None,
+        use_inference_cache=False,
         store_weights_in_pickle=False,
         random_state=None,
         verbose=False,
@@ -207,6 +215,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         self.batch_size = batch_size
         self.token_env_variable = token_env_variable
         self.cache_folder = cache_folder
+        self.use_inference_cache = use_inference_cache
         self.store_weights_in_pickle = store_weights_in_pickle
         self.random_state = random_state
         self.verbose = verbose
@@ -320,18 +329,32 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         return X_out
 
     def _vectorize(self, column):
-        is_null = sbd.to_numpy(sbd.is_null(column))
-        column = sbd.to_numpy(column)
-        unique_x, indices_x = unique_strings(column, is_null)
+        estimator = self._estimator
+        verbose = self.verbose
 
-        # sentence-transformers deals with converting a torch tensor
-        # to a numpy array, on CPU.
-        return self._estimator.encode(
-            unique_x,
-            normalize_embeddings=False,
-            batch_size=self.batch_size,
-            show_progress_bar=self.verbose,
-        )[indices_x]
+        # We pass the estimator using a closure to prevent joblib from hashing
+        # the model in the arguments. Instead, we pass the model name to differentiate
+        # between caches from different architectures.
+        def do_vectorize(model_name, batch_size, column):
+            del model_name  # only needed as a cache identifier in the arguments.
+            is_null = sbd.to_numpy(sbd.is_null(column))
+            column = sbd.to_numpy(column)
+            unique_x, indices_x = unique_strings(column, is_null)
+
+            # sentence-transformers deals with converting a torch tensor
+            # to a numpy array, on CPU.
+            return estimator.encode(
+                unique_x,
+                normalize_embeddings=False,
+                batch_size=batch_size,
+                show_progress_bar=verbose,
+            )[indices_x]
+
+        if self.use_inference_cache:
+            self._memory = joblib.Memory(self.cache_folder_ / "joblib", verbose=0)
+            do_vectorize = self._memory.cache(do_vectorize)
+
+        return do_vectorize(self.model_name, self.batch_size, column)
 
     @functools.cached_property
     def _estimator(self):
@@ -342,8 +365,11 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             )
             st = import_optional_dependency("sentence_transformers")
 
-        self._cache_folder = get_data_dir(
-            name=self.model_name, data_home=self.cache_folder
+        # We use a prefix "text_encoder__" because setting cache_folder="." raises an
+        # error when loading the model for the second time, since sentence-encoder
+        # use the cache_folder path as the model itself by mistake.
+        self.cache_folder_ = get_data_dir(
+            name=f"text_encoder__{self.model_name}", data_home=self.cache_folder
         )
 
         if self.token_env_variable is not None:
@@ -355,7 +381,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             estimator = st.SentenceTransformer(
                 self.model_name,
                 device=self.device,
-                cache_folder=self._cache_folder,
+                cache_folder=self.cache_folder_,
                 token=token,
             )
         except OSError as e:
@@ -368,6 +394,19 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 "`token_env_variable=<your_token_env_variable>`"
             ) from e
         return estimator
+
+    def clear_inference_cache(self):
+        """Remove all cached objects located at the path 'self.cache_folder_'.
+
+        When use_inference_cache=True, clearing the inference cache regularly is
+        important as disk footprint can grow quite large overtime.
+
+        This function raises a warning if the inference cache doesn't exist.
+        """
+        if hasattr(self, "_memory"):
+            self._memory.clear()
+        else:
+            warnings.warn("No cache to clear.")
 
     def _check_params(self):
         # XXX: Use sklearn _parameter_constraints instead?
@@ -400,11 +439,11 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Always dump self._cache_folder because it is overwritten when the model
+        # Always dump self.cache_folder_ because it is overwritten when the model
         # is loaded, and it shows an absolute path on the user machine.
         # However, we have to include self.cache_folder in the serialized object
         # because that is a parameter provided by the user.
-        remove_props = ["_cache_folder"]
+        remove_props = ["cache_folder_"]
         if not self.store_weights_in_pickle:
             remove_props.append("_estimator")
 
