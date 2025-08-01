@@ -203,7 +203,7 @@ if sklearn_version < parse_version("1.4"):
                 original_type = type(X)
                 X = X.to_pandas()
 
-            result = _original_fit_transform(self, X, y)
+            result = _original_fit_transform(X, y)
             if original_type is not None:
                 # Convert back if it was originally a Polars DataFrame
                 if original_type == "pl.DataFrame":
@@ -221,7 +221,7 @@ if sklearn_version < parse_version("1.4"):
                 original_type = type(X)
                 X = X.to_pandas()
 
-            result = _original_transform(self, X, y)
+            result = _original_transform(X, y)
             if original_type is not None:
                 # Convert back if it was originally a Polars DataFrame
                 if original_type == "pl.DataFrame":
