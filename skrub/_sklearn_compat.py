@@ -189,54 +189,54 @@ if sklearn_version < parse_version("1.4"):
         ]
         return len(fitted_attrs) > 0
 
-    import polars as pl
-    from sklearn.compose._column_transformer import ColumnTransformer, _check_X
+    try:
+        import polars as pl
+        from sklearn.compose._column_transformer import ColumnTransformer
 
-    # Store original methods before patching
-    _original_check_X = _check_X
-    _original_fit_transform = ColumnTransformer.fit_transform
-    _original_transform = ColumnTransformer.transform
+        _original_fit_transform = ColumnTransformer.fit_transform
+        _original_transform = ColumnTransformer.transform
 
-    def _patched_fit_transform(self, X, y=None):
-        """Patched version of fit_transform that handles polars DataFrames"""
-        original_type = None
-        if isinstance(X, (pl.DataFrame, pl.Series)):
-            original_type = type(X)
-            X = X.to_pandas()
+        def _patched_fit_transform(self, X, y=None):
+            """Patched version of fit_transform that handles polars DataFrames"""
+            original_type = None
+            if isinstance(X, (pl.DataFrame, pl.Series)):
+                original_type = type(X)
+                X = X.to_pandas()
 
-        result = _original_fit_transform(self, X, y)
-        if original_type is not None:
-            # Convert back to Polars DataFrame if it was originally a Polars DataFrame
-            if original_type == "pl.DataFrame":
-                return pl.DataFrame(result)
-            elif original_type == "pl.Series":
-                return pl.DataFrame(result)
-        else:
-            # If the result is not a DataFrame or Series, return as is
-            return result
+            result = _original_fit_transform(self, X, y)
+            if original_type is not None:
+                # Convert back if it was originally a Polars DataFrame
+                if original_type == "pl.DataFrame":
+                    return pl.DataFrame(result)
+                elif original_type == "pl.Series":
+                    return pl.DataFrame(result)
+            else:
+                # If the result is not a DataFrame or Series, return as is
+                return result
 
-    def _patched_transform(self, X, y=None):
-        """Patched version of fit_transform that handles polars DataFrames"""
-        original_type = None
-        if isinstance(X, (pl.DataFrame, pl.Series)):
-            original_type = type(X)
-            X = X.to_pandas()
+        def _patched_transform(self, X, y=None):
+            """Patched version of fit_transform that handles polars DataFrames"""
+            original_type = None
+            if isinstance(X, (pl.DataFrame, pl.Series)):
+                original_type = type(X)
+                X = X.to_pandas()
 
-        result = _original_transform(self, X, y)
-        if original_type is not None:
-            # Convert back to Polars DataFrame if it was originally a Polars DataFrame
-            if original_type == "pl.DataFrame":
-                return pl.DataFrame(result)
-            elif original_type == "pl.Series":
-                return pl.DataFrame(result)
-        else:
-            # If the result is not a DataFrame or Series, return as is
-            return result
+            result = _original_transform(self, X, y)
+            if original_type is not None:
+                # Convert back if it was originally a Polars DataFrame
+                if original_type == "pl.DataFrame":
+                    return pl.DataFrame(result)
+                elif original_type == "pl.Series":
+                    return pl.DataFrame(result)
+            else:
+                # If the result is not a DataFrame or Series, return as is
+                return result
 
-    ColumnTransformer.fit_transform = _patched_fit_transform
-    ColumnTransformer.transform = _patched_transform
+        ColumnTransformer.fit_transform = _patched_fit_transform
+        ColumnTransformer.transform = _patched_transform
+    except ImportError:
+        pass
 else:
-    from sklearn.utils import _get_column_indices  # noqa: F401
     from sklearn.utils.validation import _is_fitted  # noqa: F401
 
 ########################################################################################
