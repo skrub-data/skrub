@@ -201,7 +201,13 @@ if sklearn_version < parse_version("1.4"):
                     X = X.to_pandas()
                 if isinstance(y, (pl.DataFrame, pl.Series)):
                     y = y.to_pandas()
-                result = func(self, X, y, *args, **kwargs)
+                # Check if the function is 'transform' (does not take y)
+                if func.__name__ == "transform":
+                    result = func(self, X, *args, **kwargs)
+                else:
+                    # For fit_transform and others, pass y if present
+                    result = func(self, X, *args, **kwargs)
+
                 if original_type is not None:
                     # Convert back if it was originally a Polars DataFrame or Series
                     return pl.DataFrame(result)
