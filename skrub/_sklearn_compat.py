@@ -193,8 +193,8 @@ if sklearn_version < parse_version("1.4"):
         import polars as pl
         from sklearn.compose._column_transformer import ColumnTransformer
 
-        _original_fit_transform = ColumnTransformer.fit_transform
-        _original_transform = ColumnTransformer.transform
+        ColumnTransformer.original_fit_transform = ColumnTransformer.fit_transform
+        ColumnTransformer.original_transform = ColumnTransformer.transform
 
         def _patched_fit_transform(self, X, y=None):
             """Patched version of fit_transform that handles polars DataFrames"""
@@ -203,7 +203,7 @@ if sklearn_version < parse_version("1.4"):
                 original_type = type(X)
                 X = X.to_pandas()
 
-            result = _original_fit_transform(X, y)
+            result = self.original_fit_transform(X, y)
             if original_type is not None:
                 # Convert back if it was originally a Polars DataFrame
                 if original_type == "pl.DataFrame":
@@ -221,7 +221,7 @@ if sklearn_version < parse_version("1.4"):
                 original_type = type(X)
                 X = X.to_pandas()
 
-            result = _original_transform(X, y)
+            result = self.original_transform(X)
             if original_type is not None:
                 # Convert back if it was originally a Polars DataFrame
                 if original_type == "pl.DataFrame":
