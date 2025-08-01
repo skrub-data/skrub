@@ -193,47 +193,27 @@ if sklearn_version < parse_version("1.4"):
         import polars as pl
         from sklearn.compose._column_transformer import ColumnTransformer
 
-        ColumnTransformer.original_fit_transform = ColumnTransformer.fit_transform
-        ColumnTransformer.original_transform = ColumnTransformer.transform
-
-        def _patched_fit_transform(self, X, y=None):
-            """Patched version of fit_transform that handles polars DataFrames"""
-            original_type = None
-            if isinstance(X, (pl.DataFrame, pl.Series)):
-                original_type = type(X)
-                X = X.to_pandas()
-
-            result = self.original_fit_transform(X, y)
-            if original_type is not None:
-                # Convert back if it was originally a Polars DataFrame
-                if original_type == "pl.DataFrame":
+        def wrap_to_pandas(func):
+            def wrapper(self, X, y=None, *args, **kwargs):
+                original_type = None
+                if isinstance(X, (pl.DataFrame, pl.Series)):
+                    original_type = type(X)
+                    X = X.to_pandas()
+                if isinstance(y, (pl.DataFrame, pl.Series)):
+                    y = y.to_pandas()
+                result = func(self, X, y, *args, **kwargs)
+                if original_type is not None:
+                    # Convert back if it was originally a Polars DataFrame or Series
                     return pl.DataFrame(result)
-                elif original_type == "pl.Series":
-                    return pl.DataFrame(result)
-            else:
-                # If the result is not a DataFrame or Series, return as is
                 return result
 
-        def _patched_transform(self, X, y=None):
-            """Patched version of fit_transform that handles polars DataFrames"""
-            original_type = None
-            if isinstance(X, (pl.DataFrame, pl.Series)):
-                original_type = type(X)
-                X = X.to_pandas()
+            return wrapper
 
-            result = self.original_transform(X)
-            if original_type is not None:
-                # Convert back if it was originally a Polars DataFrame
-                if original_type == "pl.DataFrame":
-                    return pl.DataFrame(result)
-                elif original_type == "pl.Series":
-                    return pl.DataFrame(result)
-            else:
-                # If the result is not a DataFrame or Series, return as is
-                return result
+        ColumnTransformer.fit_transform = wrap_to_pandas(
+            ColumnTransformer.fit_transform
+        )
+        ColumnTransformer.transform = wrap_to_pandas(ColumnTransformer.transform)
 
-        ColumnTransformer.fit_transform = _patched_fit_transform
-        ColumnTransformer.transform = _patched_transform
     except ImportError:
         pass
 else:
