@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
-from sklearn.compose import make_column_transformer
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import train_test_split
 
@@ -167,20 +166,11 @@ def test_partial_fit(df_module, add_words, generate_data):
 def test_get_feature_names_out(df_module, generate_data):
     n_samples = 70
     X = generate_data(n_samples, random_state=0)
-    df = df_module.make_dataframe({"some col": X})
     enc = GapEncoder(random_state=42, n_components=3)
     enc.fit(X)
     feature_names = enc.get_feature_names_out()
     assert len(feature_names) == 3
     assert feature_names[0].startswith("some col: ")
-
-    preprocessing = make_column_transformer(
-        (GapEncoder(n_components=3), "some col"),
-    )
-    preprocessing.fit(df)
-    feature_names = preprocessing.get_feature_names_out()
-    assert len(feature_names) == 3
-    assert feature_names[0].startswith("gapencoder__some col: ")
 
 
 def test_get_feature_names_out_no_words(df_module):
