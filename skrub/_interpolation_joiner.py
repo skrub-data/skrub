@@ -20,7 +20,7 @@ DEFAULT_CLASSIFIER = HistGradientBoostingClassifier()
 DEFAULT_VECTORIZER = TableVectorizer(high_cardinality=MinHashEncoder())
 
 
-class InterpolationJoiner(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class InterpolationJoiner(TransformerMixin, BaseEstimator):
     """Join with a table augmented by machine-learning predictions.
 
     This is similar to a usual equi-join, but instead of looking for actual

@@ -16,7 +16,7 @@ def _is_iterable_of_iterable_of_str(x):
     )
 
 
-class MultiAggJoiner(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class MultiAggJoiner(TransformerMixin, BaseEstimator):
     """Extension of the :class:`AggJoiner` to multiple auxiliary tables.
 
     Apply numerical and categorical aggregation operations on the `cols`

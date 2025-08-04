@@ -169,7 +169,7 @@ def check_other_inputs(operations, suffix):
     return operations, suffix
 
 
-class AggJoiner(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class AggJoiner(TransformerMixin, BaseEstimator):
     """Aggregate an auxiliary dataframe before joining it on a base dataframe.
 
     Apply numerical and categorical aggregation operations on the columns (i.e. `cols`)
@@ -394,7 +394,7 @@ class AggJoiner(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         return self.all_outputs_
 
 
-class AggTarget(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class AggTarget(TransformerMixin, BaseEstimator):
     """Aggregate a target `y` before joining its aggregation on a base dataframe.
 
     Accepts :obj:`pandas.DataFrame` or :class:`polars.DataFrame` inputs.

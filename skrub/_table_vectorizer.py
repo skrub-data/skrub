@@ -152,7 +152,7 @@ def _get_preprocessors(
     return steps
 
 
-class Cleaner(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class Cleaner(TransformerMixin, BaseEstimator):
     """Column-wise consistency checks and sanitization of dtypes, null values and dates.
 
     The ``Cleaner`` performs some consistency checks and basic preprocessing
@@ -389,7 +389,7 @@ class Cleaner(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         return self
 
 
-class TableVectorizer(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     This transformer preprocesses the given dataframe by first cleaning the data

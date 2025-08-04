@@ -4,7 +4,7 @@ from . import selectors as s
 from ._apply_to_cols import SingleColumnTransformer
 
 
-class SelectCols(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class SelectCols(TransformerMixin, BaseEstimator):
     """Select a subset of a DataFrame's columns.
 
     A ``ValueError`` is raised if any of the provided column names are not in the
@@ -94,7 +94,7 @@ class SelectCols(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
         return self._columns
 
 
-class DropCols(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class DropCols(TransformerMixin, BaseEstimator):
     """Drop a subset of a DataFrame's columns.
 
     The other columns are kept in their original order. A ``ValueError`` is raised if

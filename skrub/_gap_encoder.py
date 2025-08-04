@@ -23,7 +23,7 @@ from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._utils import unique_strings
 
 
-class GapEncoder(TransformerMixin, SingleColumnTransformer, auto_wrap_output_keys=()):
+class GapEncoder(TransformerMixin, SingleColumnTransformer):
     """Encode string columns by constructing latent topics.
 
     This encoder can be understood as a continuous encoding on a set of latent

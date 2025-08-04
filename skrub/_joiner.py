@@ -89,7 +89,7 @@ def _make_vectorizer(table, string_encoder, rescale):
     return make_pipeline(skrubber, make_column_transformer(*transformers))
 
 
-class Joiner(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class Joiner(TransformerMixin, BaseEstimator):
     """Augment features in a main table by fuzzy-joining an auxiliary table to it.
 
     This transformer is initialized with an auxiliary table `aux_table`. It

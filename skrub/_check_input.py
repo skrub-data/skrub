@@ -80,7 +80,7 @@ def _collect_lazyframe(df):
     return sbd.collect(df)
 
 
-class CheckInputDataFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
+class CheckInputDataFrame(TransformerMixin, BaseEstimator):
     """Check the dataframe entering a skrub pipeline.
 
     This transformer ensures that:
