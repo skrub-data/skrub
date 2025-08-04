@@ -20,7 +20,9 @@ from ._utils import LRUDict, unique_strings
 NoneType = type(None)
 
 
-class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
+class MinHashEncoder(
+    TransformerMixin, SingleColumnTransformer, auto_wrap_output_keys=()
+):
     """Encode string categorical features by applying the MinHash method to n-gram \
     decompositions of strings.
 

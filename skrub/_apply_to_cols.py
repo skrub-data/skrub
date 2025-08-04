@@ -218,7 +218,7 @@ def _insert_after_first_paragraph(document, text_to_insert):
     return "".join(output_lines)
 
 
-class ApplyToCols(TransformerMixin, BaseEstimator):
+class ApplyToCols(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.

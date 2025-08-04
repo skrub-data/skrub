@@ -8,7 +8,7 @@ from ._join_utils import pick_column_names
 __all__ = ["ApplyToFrame"]
 
 
-class ApplyToFrame(TransformerMixin, BaseEstimator):
+class ApplyToFrame(TransformerMixin, BaseEstimator, auto_wrap_output_keys=()):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a

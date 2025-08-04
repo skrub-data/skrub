@@ -189,39 +189,6 @@ if sklearn_version < parse_version("1.4"):
         ]
         return len(fitted_attrs) > 0
 
-    try:
-        import polars as pl
-        from sklearn.compose._column_transformer import ColumnTransformer
-
-        def wrap_to_pandas(func):
-            def wrapper(self, X, y=None, *args, **kwargs):
-                original_type = None
-                if isinstance(X, (pl.DataFrame, pl.Series)):
-                    original_type = type(X)
-                    X = X.to_pandas()
-                if isinstance(y, (pl.DataFrame, pl.Series)):
-                    y = y.to_pandas()
-                # Check if the function is 'transform' (does not take y)
-                if func.__name__ == "transform":
-                    result = func(self, X, *args, **kwargs)
-                else:
-                    # For fit_transform and others, pass y if present
-                    result = func(self, X, *args, **kwargs)
-
-                if original_type is not None:
-                    # Convert back if it was originally a Polars DataFrame or Series
-                    return pl.DataFrame(result)
-                return result
-
-            return wrapper
-
-        ColumnTransformer.fit_transform = wrap_to_pandas(
-            ColumnTransformer.fit_transform
-        )
-        ColumnTransformer.transform = wrap_to_pandas(ColumnTransformer.transform)
-
-    except ImportError:
-        pass
 else:
     from sklearn.utils.validation import _is_fitted  # noqa: F401
 
