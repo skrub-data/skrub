@@ -176,8 +176,8 @@ Result:
 ―――――――
 16
 
-Previews are eager computations on the current data, and as they are computed
-immediately they to spot errors early on:
+Previews are eager computations on the current data, and since they are computed
+immediately they can spot errors early on:
 
 >>> import pandas as pd
 >>> df = pd.DataFrame({"col": [1, 2, 3]})
