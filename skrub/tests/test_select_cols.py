@@ -1,6 +1,8 @@
 import pandas
 import pandas.testing
 import pytest
+from sklearn.dummy import DummyClassifier
+from sklearn.pipeline import make_pipeline
 
 from skrub import DropCols, SelectCols
 from skrub import selectors as s
@@ -64,10 +66,18 @@ def test_drop(df_module):
     assert Drop().fit(col).transform(col) == []
 
 
-def test_get_feature_names_out(df_module):
-    df = df_module.example_dataframe
+def test_get_feature_names_out(df):
     select = SelectCols(cols=s.all()).fit(df)
-    assert len(select.get_feature_names_out()) == ns.shape(df)[1]
+    assert select.get_feature_names_out() == ["A", "B", "C"]
 
     drop = DropCols(cols=[]).fit(df)
-    assert drop.get_feature_names_out() == []
+    assert drop.get_feature_names_out() == ["A", "B", "C"]
+
+    # Testing with a pipeline
+    pipeline = make_pipeline(SelectCols(cols=["A", "B"]), DummyClassifier())
+    pipeline.fit(df, df["C"])
+    assert pipeline[:-1].get_feature_names_out() == ["A", "B"]
+
+    pipeline = make_pipeline(DropCols(cols=["A", "B"]), DummyClassifier())
+    pipeline.fit(df, df["C"])
+    assert pipeline[:-1].get_feature_names_out() == ["C"]

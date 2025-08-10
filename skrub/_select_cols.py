@@ -148,7 +148,9 @@ class DropCols(TransformerMixin, BaseEstimator):
         DropCols
             The transformer itself.
         """
-        self._columns = s.make_selector(self.cols).expand(X)
+        selector = s.make_selector(self.cols)
+        self._kept_cols = (~selector).expand(X)
+        self._dropped_cols = selector.expand(X)
         return self
 
     def transform(self, X):
@@ -165,7 +167,7 @@ class DropCols(TransformerMixin, BaseEstimator):
             The input DataFrame ``X`` after dropping the columns listed in
             ``self.cols``.
         """
-        return s.select(X, ~s.make_selector(self._columns))
+        return s.select(X, s.make_selector(self._kept_cols))
 
     def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
@@ -180,8 +182,8 @@ class DropCols(TransformerMixin, BaseEstimator):
         feature_names_out : ndarray of str objects
             Transformed feature names.
         """
-        check_is_fitted(self, "_columns")
-        return self._columns
+        check_is_fitted(self, "_kept_cols")
+        return self._kept_cols
 
 
 class Drop(SingleColumnTransformer):

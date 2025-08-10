@@ -130,6 +130,11 @@ class SingleColumnTransformer(BaseEstimator):
         is the name of the input column, or a default name for the encoder, and
         ``n_component`` is the idx of the specific feature.
 
+        Parameters
+        ----------
+        input_features : None
+            The input features. Ignored, only here for compatibility.
+
         Returns
         -------
         list of str
