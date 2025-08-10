@@ -106,7 +106,7 @@ predictor = X_vec.skb.apply(hgb, y=y)
 predictor
 
 # %%
-# Now that we have built our entire plan, we can have explore it in more detail
+# Now that we have built our entire plan, we can explore it in more detail
 # with the |.skb.full_report()| method::
 #
 #     predictions.skb.full_report()
@@ -140,7 +140,7 @@ import pickle
 saved_model = pickle.dumps(trained_learner)
 
 # %%
-# We can now load the saved model back into memory using `pickle.loads`.
+# We can now load the saved model back into memory using ``pickle.loads``.
 loaded_model = pickle.loads(saved_model)
 
 # %%
