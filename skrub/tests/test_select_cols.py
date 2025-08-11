@@ -67,6 +67,12 @@ def test_drop(df_module):
 
 
 def test_get_feature_names_out(df):
+    """Check the behaviour of `get_feature_names_out`.
+
+    Non-regression test for:
+    https://github.com/skrub-data/skrub/issues/1256
+    https://github.com/skrub-data/skrub/issues/1540
+    """
     select = SelectCols(cols=s.all()).fit(df)
     assert select.get_feature_names_out() == ["A", "B", "C"]
 
