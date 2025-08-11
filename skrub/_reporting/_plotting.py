@@ -221,8 +221,8 @@ def _robust_hist(values, ax, color):
     # add the percentage of each bar on the top of the figure
     ax_percentage = ax.twiny()
     ax_percentage.set_xlim(ax.get_xlim())
-    ax_percentage.set_xticks(
-        ticks=bins[:-1] + 0.5 * np.diff(bins),
+    ax_percentage.set_xticks(ticks=bins[:-1] + 0.5 * np.diff(bins))
+    ax_percentage.set_xticklabels(
         labels=percentages,
         color=_TEXT_COLOR_PLACEHOLDER,
         fontsize=8,
@@ -357,8 +357,8 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     # add the percentage of each bar on the top of the figure
     ax_percentage = ax.twinx()
     ax_percentage.set_ylim(ax.get_ylim())
-    ax_percentage.set_yticks(
-        ticks=range(len(counts)),
+    ax_percentage.set_yticks(ticks=range(len(counts)))
+    ax_percentage.set_yticklabels(
         labels=percent,
         color=_TEXT_COLOR_PLACEHOLDER,
         fontsize=8,
