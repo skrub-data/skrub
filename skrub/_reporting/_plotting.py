@@ -200,29 +200,34 @@ def _robust_hist(values, ax, color):
     n, bins, patches = ax.hist(inliers)
     n_out = n_low_outliers + n_high_outliers
 
-    # Display percentage on the bar of the histrogram
-    threshold_display = np.max(n) / 2
+    # Display number on the bar of the histrogram
+    percentages = []
     for index, value in enumerate(n):
+        string_label = _utils.format_number(value)
+        ax.text(
+            bins[index] + 0.2 * (bins[index + 1] - bins[index]),
+            value + np.max(n) * 0.1,
+            string_label,
+            rotation="vertical",
+            color=_TEXT_COLOR_PLACEHOLDER,
+            fontsize=8,
+        )
         percentage = value / np.sum(n)
-        percentage_string = _utils.format_percent(percentage)
-        if value > threshold_display:
-            ax.text(
-                bins[index] + 0.2 * (bins[index + 1] - bins[index]),
-                value - threshold_display * 0.8,
-                percentage_string,
-                rotation="vertical",
-                color="black",
-                fontsize=8,
-            )
-        else:
-            ax.text(
-                bins[index] + 0.2 * (bins[index + 1] - bins[index]),
-                value + threshold_display * 0.1,
-                percentage_string,
-                rotation="vertical",
-                color=_TEXT_COLOR_PLACEHOLDER,
-                fontsize=8,
-            )
+        percentages.append(_utils.format_percent(percentage))
+
+    # set max of y axis for include the text in the graphic
+    ax.set_ylim(ax.get_ylim()[0], ax.get_ylim()[1] * 2.2)
+
+    # add the percentage of each bar on the top of the figure
+    ax_percentage = ax.twiny()
+    ax_percentage.set_xlim(ax.get_xlim())
+    ax_percentage.set_xticks(
+        ticks=bins[:-1] + 0.5 * np.diff(bins),
+        labels=percentages,
+        color=_TEXT_COLOR_PLACEHOLDER,
+        fontsize=8,
+        rotation="vertical",
+    )
 
     if not n_out:
         return 0, 0
@@ -254,6 +259,7 @@ def _robust_hist(values, ax, color):
         color=_RED,
     )
     ax.set_xlim(start, stop)
+    ax_percentage.set_xlim(ax.get_xlim())
     return n_low_outliers, n_high_outliers
 
 
@@ -274,7 +280,7 @@ def histogram(col, duration_unit=None, color=COLOR_0):
         ax.set_xlabel(f"{duration_unit.capitalize()}s")
     if sbd.is_any_date(col):
         _rotate_ticklabels(ax)
-    _adjust_fig_size(fig, ax, 2.0, 1.0)
+    _adjust_fig_size(fig, ax, 2.0, 1.2)
     return _serialize(fig), n_low_outliers, n_high_outliers
 
 
@@ -332,19 +338,30 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     fig, ax = plt.subplots()
     _despine(ax)
     rects = ax.barh(list(map(str, range(len(values)))), counts, color=color)
-    percent = [_utils.format_percent(c / n_rows) for c in counts]
-    large_percent = [
-        f"{p: >6}" if c > counts[-1] / 2 else "" for (p, c) in zip(percent, counts)
+    string_value = [_utils.format_number(c) for c in counts]
+    large_string = [
+        f"{s: >6}" if c > counts[-1] / 2 else "" for (s, c) in zip(string_value, counts)
     ]
-    small_percent = [
-        p if c <= counts[-1] / 2 else "" for (p, c) in zip(percent, counts)
+    small_string = [
+        s if c <= counts[-1] / 2 else "" for (s, c) in zip(string_value, counts)
     ]
 
     # those are written on top of the orange bars so we write them in black
-    ax.bar_label(rects, large_percent, padding=-30, color="black", fontsize=8)
+    ax.bar_label(rects, large_string, padding=-30, color="black", fontsize=8)
     # those are written on top of the background so we write them in foreground color
     ax.bar_label(
-        rects, small_percent, padding=5, color=_TEXT_COLOR_PLACEHOLDER, fontsize=8
+        rects, small_string, padding=5, color=_TEXT_COLOR_PLACEHOLDER, fontsize=8
+    )
+
+    percent = [_utils.format_percent(c / n_rows) for c in counts]
+    # add the percentage of each bar on the top of the figure
+    ax_percentage = ax.twinx()
+    ax_percentage.set_ylim(ax.get_ylim())
+    ax_percentage.set_yticks(
+        ticks=range(len(counts)),
+        labels=percent,
+        color=_TEXT_COLOR_PLACEHOLDER,
+        fontsize=8,
     )
 
     ax.set_yticks(ax.get_yticks())
@@ -352,5 +369,5 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     if title is not None:
         ax.set_title(title)
 
-    _adjust_fig_size(fig, ax, 1.0, 0.2 * len(values))
+    _adjust_fig_size(fig, ax, 1.3, 0.2 * len(values))
     return _serialize(fig)
