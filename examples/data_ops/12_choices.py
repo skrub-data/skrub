@@ -61,7 +61,8 @@ labels = data["is_toxic"]
 # We mark the ``texts`` column as the input variable and the ``labels`` column as
 # the target variable.
 #
-# See `the previous example <10_expressions.html>`_ for a more detailed explanation
+# See `the previous example <10_data_ops_intro.html>`_
+# for a more detailed explanation
 # of :func:`skrub.X` and :func:`skrub.y`.
 #
 # We then encode the text with a :class:`~skrub.MinHashEncoder` and fit a
