@@ -6,6 +6,18 @@ Release history
 
 .. currentmodule:: skrub
 
+Release 0.6.1
+=============
+
+Bugfixes
+--------
+
+- ``get_feature_names_out`` now works correctly when used by :class:`GapEncoder`,
+  :class:`DropCols`, :class:`SelectCols:` from within a scikit-learn ``Pipeline``. In
+  addition, :class:`DropCols`'s ``get_feature_names_out`` method now returns the
+  names of the columns that are not dropped, rather than the names of the columns
+  that are dropped. :pr:`1543` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Release 0.6.0
 =============
 
