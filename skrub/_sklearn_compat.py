@@ -192,7 +192,6 @@ if sklearn_version < parse_version("1.4"):
 else:
     from sklearn.utils.validation import _is_fitted  # noqa: F401
 
-
 ########################################################################################
 # Upgrading for scikit-learn 1.5
 ########################################################################################
