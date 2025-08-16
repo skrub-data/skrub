@@ -5,8 +5,8 @@
         "url": "https://skrub-data.org/dev/"
     },
     {
-        "name": "0.6.0 (stable)",
-        "version": "0.6.0",
+        "name": "0.6.1 (stable)",
+        "version": "0.6.1",
         "url": "https://skrub-data.org/stable/",
         "preferred": true
     }
