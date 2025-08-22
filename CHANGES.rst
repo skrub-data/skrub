@@ -9,6 +9,15 @@ Release history
 Ongoing development
 ===================
 
+Changes
+-------
+
+- The objects ``tabular_learner`` and ``DropIfTooManyNulls`` were removed. Use
+  :func:`tabular_pipeline` and :class:`DropUninformative` instead.
+  Additionally, ``patch_display`` and ``unpatch_display`` were removed. Use
+  :func:`get_config`, :func:`set_config` and :func:`config_context` instead.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Bugfixes
 --------
 
