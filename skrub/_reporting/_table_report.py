@@ -182,7 +182,7 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
-        verbose=1,
+        verbose=None,
         max_plot_columns=None,
         max_association_columns=None,
     ):
@@ -196,7 +196,7 @@ class TableReport:
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.verbose = verbose
+        self.verbose = _config.get_config()["table_report_verbosity"]
         self.max_plot_columns, self.max_association_columns = _check_max_cols(
             max_plot_columns, max_association_columns
         )
