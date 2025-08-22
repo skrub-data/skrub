@@ -36,13 +36,13 @@ from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
-from ._reporting import TableReport, patch_display, unpatch_display
+from ._reporting import TableReport
 from ._select_cols import Drop, DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import Cleaner, TableVectorizer
-from ._tabular_pipeline import tabular_learner, tabular_pipeline
+from ._tabular_pipeline import tabular_pipeline
 from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
