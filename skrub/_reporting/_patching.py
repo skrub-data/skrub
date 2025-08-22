@@ -1,9 +1,6 @@
 import importlib
-import warnings
 
 from ._table_report import TableReport
-
-__all__ = ["patch_display", "unpatch_display"]
 
 _METHODS_TO_PATCH = ["_repr_mimebundle_", "_repr_html_"]
 
@@ -61,66 +58,6 @@ def _get_to_patch(pandas, polars):
     return to_patch
 
 
-def patch_display(
-    pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
-):
-    """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
-
-    .. deprecated:: 0.6.0
-        The functionality provided by this function is now implemented in
-        :func:`~skrub.set_config`.
-
-    This function replaces the HTML displays (what is shown when an object is
-    the output of a jupyter notebook cell) of pandas and polars DataFrames
-    with a TableReport.
-
-    It can be undone with ``skrub.unpatch_display()``.
-
-    Parameters
-    ----------
-    pandas : bool, optional (default=True)
-        If False, do not override the displays for pandas dataframes.
-    polars : bool, optional (default=True)
-        If False, do not override the displays for polars dataframes.
-    verbose : int, default = 1
-        Whether to print progress information while table report is being generated.
-
-        * verbose = 1 prints how many columns have been processed so far.
-        * verbose = 0 silences the output.
-    max_plot_columns : int, default=30
-        Maximum number of columns for which plots should be generated.
-        If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If None, all columns will be plotted.
-    max_association_columns : int, default=30
-        Maximum number of columns for which associations should be computed.
-        If the number of columns in the dataframe is greater than this value,
-        the associations will not be computed. If None, the associations
-        for all columns will be computed.
-
-    See Also
-    --------
-    unpatch_display :
-        Undo the change made by this function.
-
-    TableReport :
-        Directly create a report from a dataframe.
-    """
-    _change_display(
-        _patch,
-        _get_to_patch(pandas=pandas, polars=polars),
-        verbose=verbose,
-        max_plot_columns=max_plot_columns,
-        max_association_columns=max_association_columns,
-    )
-    warnings.warn(
-        (
-            "patch_display will be deprecated in the next release. "
-            "Equivalent functionality is available in skrub.set_config."
-        ),
-        category=FutureWarning,
-    )
-
-
 def _patch_display(
     pandas=True, polars=True, verbose=1, max_plot_columns=30, max_association_columns=30
 ):
@@ -130,41 +67,6 @@ def _patch_display(
         verbose=verbose,
         max_plot_columns=max_plot_columns,
         max_association_columns=max_association_columns,
-    )
-
-
-def unpatch_display(pandas=True, polars=True):
-    """Undo the effect of ``skrub.patch_display()``.
-
-    .. deprecated:: 0.6.0
-        The functionality provided by this function is now implemented in
-        :func:`~skrub.set_config`.
-
-    This function restores the default HTML displays of pandas and polars
-    DataFrames.
-
-    Parameters
-    ----------
-    pandas : bool, optional (default=True)
-        If False, do not restore the displays for pandas dataframes.
-    polars : bool, optional (default=True)
-        If False, do not restore the displays for polars dataframes.
-
-    See Also
-    --------
-    patch_display :
-        Replace the default dataframe display with a TableReport.
-
-    TableReport :
-        Directly create a report from a dataframe.
-    """
-    _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))
-    warnings.warn(
-        (
-            "unpatch_display will be deprecated in the next release. "
-            "Equivalent functionality is available in skrub.set_config."
-        ),
-        category=FutureWarning,
     )
 
 
