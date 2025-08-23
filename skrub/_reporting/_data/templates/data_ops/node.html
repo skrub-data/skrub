@@ -70,12 +70,14 @@
 
                 <div>
                     <h3>Where was this step created?</h3>
-                    <pre>
-                <code class="node-creation-stack">
-{{ node_creation_stack_description }}
-                </code>
-            </pre>
+                    <pre><code class="node-creation-stack">{{ node_creation_stack_description }}</code></pre>
                 </div>
+                {% if eval_duration is not none %}
+                <div>
+                    <h3>Computation time</h3>
+                    {{ "{:.2g}".format(eval_duration) }} s
+                </div>
+                {% endif %}
                 {% if estimator_html_repr %}
                 <div>
                     <h3>Estimator fitted in this step:</h3>
@@ -101,7 +103,7 @@
                 <div>
                     <h2> This step did not run. </h2>
                     <p>
-                        This step was not executed because its result was supplied directly in the input data (thus short-circuiting its computation) or a previous step that it requires has failed.
+                        This step was not executed because its result was not needed, was supplied directly in the input data (thus short-circuiting its computation) or a previous step that it requires has failed.
                     </p>
                 </div>
                 {% endif %}
