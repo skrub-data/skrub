@@ -24,8 +24,8 @@ jobs:
         ]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.8
+      - uses: actions/checkout@v5
+      - uses: prefix-dev/setup-pixi@v0.9.0
         with:
           pixi-version: v0.41.3
           environments: ${{ matrix.environment }}
@@ -40,7 +40,7 @@ jobs:
         run: pixi run -e ${{ matrix.environment }} test-user-guide
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: skrub-data/skrub
@@ -50,7 +50,7 @@ jobs:
     outputs:
       run: ${{ github.event_name == 'schedule' || contains(steps.get_head_commit_message.outputs.COMMIT_MSG, '[deps nightly]') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - id: get_head_commit_message
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     name: test against nighlty dependencies
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
             python-version: "3.11"
