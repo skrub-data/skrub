@@ -19,7 +19,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -31,7 +30,7 @@ requires-python = ">=3.9"
 dependencies = [
     "numpy>=1.23.5",
     "pandas>=1.5.3",
-    "scikit-learn>=1.2.1",
+    "scikit-learn>=1.4.2",
     "scipy>=1.9.3",
     "jinja2>=3.1.2",
     "matplotlib>=3.4.3",
@@ -96,7 +95,7 @@ platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 [tool.pixi.dependencies]
 numpy = ">=1.23.5"
 pandas = ">=1.5.3"
-scikit-learn = ">=1.2.1"
+scikit-learn = ">=1.4.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.4.3"
@@ -155,7 +154,7 @@ skrub = { path = ".", editable = true }
 [tool.pixi.feature.min-dependencies.dependencies]
 numpy = "==1.23.5"
 pandas = "==1.5.3"
-scikit-learn = "==1.2.1"
+scikit-learn = "==1.4.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.4.3"
@@ -167,8 +166,8 @@ pyarrow = "==15.0.2"
 polars = "==0.20.15"
 plotly = "*"
 
-[tool.pixi.feature.py309.dependencies]
-python = "~=3.9.0"
+[tool.pixi.feature.py310.dependencies]
+python = "~=3.10.0"
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
@@ -201,8 +200,8 @@ check-pyi-diff = ["check-pyi-diff"]
 doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
-ci-py309-min-deps = ["py309", "min-dependencies", "test"]
-ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
+ci-py310-min-deps = ["py310", "min-dependencies", "test"]
+ci-py310-min-optional-deps = ["py310", "min-dependencies", "min-optional-dependencies", "test"]
 ci-py311-transformers = ["py311", "transformers", "test"]
 ci-py312-latest-deps = ["py312", "test"]
 ci-py312-latest-optional-deps = ["py312", "optional", "test"]
