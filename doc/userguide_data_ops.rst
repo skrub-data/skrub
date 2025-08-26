@@ -34,54 +34,6 @@ a solution:
   intermediate results allows for a short feedback loop and early discovery of
   errors.
 
-How do Skrub DataOps differ from :class:`sklearn.pipeline.Pipeline`?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Scikit-learn pipelines represent a linear sequence of transformations on one
-table with a fixed number of rows.
-
-.. image:: _static/sklearn_pipeline.svg
-    :width: 500
-
-Skrub DataOps, on the other hand, can manipulate any number of variables.
-The transformation they perform is not a linear sequence but any Directed
-Acyclic Graph of computations. Take the following example, where our task is to predict
-item price in dollars:
-
-.. image:: _static/dataops_graph.svg
-
-- Here we use three input variables: two tables ("Items" and "Prices") and a
-  float ("euro_dollar_rate").
-- For this regression task, we have declared which intermediary step can be
-  considered as the design matrix X (shown in blue) and as the target y
-  (shown in orange).
-- Akin to scikit-learn pipelines, we apply an estimator (Ridge) at the end of the
-  processing.
-
-The rest of this user guide will detail how the DataOps work.
-
-
-How do Skrub DataOps differ from orchestrators like Apache Airflow?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Skrub pipelines are not an `orchestrator <https://huyenchip.com/2021/09/13/data-science-infrastructure.html#workflow>`_
-and do not offer capabilities for scheduling runs or provisioning resources and
-environments. Instead, they are a generalization of scikit-learn pipelines, which can still be used within an orchestrator.
-
-How do Skrub DataOps differ from other Skrub objects, like :func:`~skrub.tabular_pipeline`?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Skrub DataOps are built to maximize flexibility in the construction of complex
-pre-processing and machine learning pipelines. On the other hand, the main intent
-of Skrub objects such as :func:`~skrub.tabular_pipeline` and
-:class:`~skrub.TableVectorizer` is to provide interfaces that for common
-pre-processing tasks, and simple and robust baselines for
-machine learning. As a result, these objects are more opinionated and
-less flexible than DataOps.
-
-However, it is possible to combine DataOps and regular Skrub and scikit-learn
-transformers to improve their flexibility, particularly in multi-table scenarios.
-
 Can I use library "x" with Skrub DataOps?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Yes, Skrub DataOps are designed to be "transparent", so that any method used by
@@ -122,7 +74,7 @@ special object akin to a scikit-learn estimator, but that takes as input a
 dictionary of variables rather than a single design matrix ``X`` and a target array ``y``.
 
 Building a simple DataOps plan
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's build a simple DataOps plan that adds two variables together.
 
@@ -159,6 +111,55 @@ new data:
 >>> learner = c.skb.make_learner()
 >>> learner.fit_transform({"a": 10, "b": 7})
 17
+
+When using Data Ops, it is important to ensure that all operations are being tracked
+by acting on the Data Ops, rather than (for example) the starting dataframe.
+Consider the following example:
+
+>>> import pandas as pd
+>>> df = pd.DataFrame({"col": [1, 2, 3]})
+>>> df
+   col
+0    1
+1    2
+2    3
+>>> df_do = skrub.var("df", df)
+>>> df_do
+<Var 'df'>
+Result:
+―――――――
+   col
+0    1
+1    2
+2    3
+
+``df_do`` is a Data Op that wraps ``df``, so its preview shows the content of ``df``.
+Then, if we now modify ``df_do`` by doubling the column, we can see that both steps
+(the creation of the variable, and the doubling) are now tracked by the final
+Data Op.
+
+>>> df_doubled = df_do.assign(col=df_do["col"]*2)
+>>> df_doubled
+<CallMethod 'assign'>
+Result:
+―――――――
+   col
+0    2
+1    4
+2    6
+>>> print(df_doubled.skb.describe_steps())
+Var 'df'
+( Var 'df' )*
+GetItem 'col'
+BinOp: mul
+CallMethod 'assign'
+* Cached, not recomputed
+
+On the other hand, working directly on ``df`` leads us to the same result, but
+the actual operations are not being tracked.
+By working only on Data Ops we ensure that all the operations done on the data
+are added correctly to the computational graph, which then allows the resulting
+learner to execute all steps as intended.
 
 Using previews for easier development and debugging
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -426,3 +427,51 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
   of how Skrub DataOps can be used to process multiple tables using dataframe APIs.
 - See :ref:`sphx_glr_auto_examples_data_ops_12_choices.py` for an example of
   hyper-parameter tuning using Skrub DataOps.
+
+How do Skrub DataOps differ from :class:`sklearn.pipeline.Pipeline`?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Scikit-learn pipelines represent a linear sequence of transformations on one
+table with a fixed number of rows.
+
+.. image:: _static/sklearn_pipeline.svg
+    :width: 500
+
+Skrub DataOps, on the other hand, can manipulate any number of variables.
+The transformation they perform is not a linear sequence but any Directed
+Acyclic Graph of computations. Take the following example, where our task is to predict
+item price in dollars:
+
+.. image:: _static/dataops_graph.svg
+
+- Here we use three input variables: two tables ("Items" and "Prices") and a
+  float ("euro_dollar_rate").
+- For this regression task, we have declared which intermediary step can be
+  considered as the design matrix X (shown in blue) and as the target y
+  (shown in orange).
+- Akin to scikit-learn pipelines, we apply an estimator (Ridge) at the end of the
+  processing.
+
+The rest of this user guide will detail how the DataOps work.
+
+
+How do Skrub DataOps differ from orchestrators like Apache Airflow?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Skrub pipelines are not an `orchestrator <https://huyenchip.com/2021/09/13/data-science-infrastructure.html#workflow>`_
+and do not offer capabilities for scheduling runs or provisioning resources and
+environments. Instead, they are a generalization of scikit-learn pipelines, which can still be used within an orchestrator.
+
+How do Skrub DataOps differ from other Skrub objects, like :func:`~skrub.tabular_pipeline`?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Skrub DataOps are built to maximize flexibility in the construction of complex
+pre-processing and machine learning pipelines. On the other hand, the main intent
+of Skrub objects such as :func:`~skrub.tabular_pipeline` and
+:class:`~skrub.TableVectorizer` is to provide interfaces that for common
+pre-processing tasks, and simple and robust baselines for
+machine learning. As a result, these objects are more opinionated and
+less flexible than DataOps.
+
+However, it is possible to combine DataOps and regular Skrub and scikit-learn
+transformers to improve their flexibility, particularly in multi-table scenarios.
