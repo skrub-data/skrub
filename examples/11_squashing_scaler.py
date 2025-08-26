@@ -10,18 +10,15 @@ perform a smooth squashing function to limit the outputs to a pre-defined range.
 This transform has been found to even work well when applied to one-hot encoded
 features.
 
-In this example, we want to fit a neural network to predict employee salaries.
-The dataset contains numerical features, categorical features, text features, and dates.
-These features are first converted to numerical features using
-:class:`~skrub.TableVectorizer`. Since the encoded features are not normalized, we apply
-a numerical transformation to them.
+We first generate some synthetic data with outliers to show how different scalers
+transform the data, then we show how the choice of the scaler affect the prediction
+performance of a simple neural network.
 
-Finally, we fit a simple neural network and compare the R2 scores obtained with
-different numerical transformations.
+.. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
+.. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
+.. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
+.. |QuantileTransformer| replace:: :class:`~sklearn.preprocessing.QuantileTransformer`
 
-While we use a simple :class:`~sklearn.neural_network.MLPRegressor` here for simplicity,
-we generally recommend using better neural network implementations or tree-based models
-whenever low test errors are desired.
 """
 
 # %%
