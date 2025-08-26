@@ -60,7 +60,7 @@ robust_scaled = robust_scaler.fit_transform(values)
 standard_scaler = StandardScaler()
 standard_scaled = standard_scaler.fit_transform(values)
 
-quantile_transformer = QuantileTransformer()
+quantile_transformer = QuantileTransformer(n_quantiles=100)
 quantile_scaled = quantile_transformer.fit_transform(values)
 
 
@@ -76,7 +76,7 @@ import matplotlib.pyplot as plt
 
 x = np.arange(values.shape[0])
 
-fig, axs = plt.subplots(1, 2, layout="constrained", figsize=(12, 6))
+fig, axs = plt.subplots(1, 2, layout="constrained", figsize=(10, 5))
 
 ax = axs[0]
 ax.plot(x, sorted(values), label="Original Values", linewidth=2.5)
