@@ -1,9 +1,4 @@
 """
-.. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
-.. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
-.. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
-.. |QuantileTransformer| replace:: :class:`~sklearn.preprocessing.QuantileTransformer`
-
 SquashingScaler: Robust numerical preprocessing for neural networks
 ===================================================================
 
@@ -18,6 +13,12 @@ features.
 We first generate some synthetic data with outliers to show how different scalers
 transform the data, then we show how the choice of the scaler affect the prediction
 performance of a simple neural network.
+
+.. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
+.. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
+.. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
+.. |QuantileTransformer| replace:: :class:`~sklearn.preprocessing.QuantileTransformer`
+
 """
 
 # %%
@@ -86,7 +87,7 @@ ax.plot(x, sorted(quantile_scaled), label="QuantileTransformer")
 
 # Add a horizontal band in [-4, +4]
 ax.axhspan(-4, 4, color="gray", alpha=0.15)
-ax.set(title="Original data", xlim=[0, values.shape[0]])
+ax.set(title="Original data", xlim=[0, values.shape[0]], xlabel="Percentile")
 ax.legend()
 
 ax = axs[1]
@@ -97,7 +98,7 @@ ax.plot(x, sorted(standard_scaled), label="StandardScaler")
 ax.plot(x, sorted(quantile_scaled), label="QuantileTransformer")
 
 ax.set(ylim=[-4, 4])
-ax.set(title="In range [-4, 4]", xlim=[0, values.shape[0]])
+ax.set(title="In range [-4, 4]", xlim=[0, values.shape[0]], xlabel="Percentile")
 
 # Highlight the bounds of the SquashingScaler
 ax.axhline(y=3, alpha=0.2)
@@ -106,6 +107,7 @@ ax.axhline(y=-3, alpha=0.2)
 fig.suptitle(
     "Comparison of different scalers on sorted data with outliers", fontsize=20
 )
+fig.supylabel("Value")
 
 # %%
 # The figure on the left immediately shows how the scale of the data may be completely
@@ -124,8 +126,8 @@ fig.suptitle(
 # where ``max_absolute_value`` is a parameter specified by the user (3 by default).
 
 # %%
-# Comparing the effect of different numeric pre-processing on a neural network
-# ----------------------------------------------------------------------------
+# Comparing the effect of different numeric pre-processing methods on a neural network
+# ------------------------------------------------------------------------------------
 #
 # In the second part of the example, we want to fit a neural network to predict
 # employee salaries.

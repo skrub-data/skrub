@@ -80,12 +80,12 @@ useful when features include outliers (including infinite values).
 The |SquashingScaler| centers and scales the data in such a way that outliers are
 less likely to skew the final result compared to alternative methods.
 
-The scaler initially defines the quantile range of the data (a value that can be
-modified with the ``quantile_range`` parameter). It then scales the inliers (data
-points within the quantile range) using the scikit-learn |RobustScaler|, and
-clips the outliers to the value set by the parameter ``max_absolute_value``, so that
-all values (including infinite) are in the range
-``[-max_absolute_value, +max_absolute_value]``.
+Based on the specified quantile_range parameter, the scaler employs a scikit-learn
+|RobustScaler| to rescale the values in a way that the quantile range occupies
+interval of length two, centering the median to zero. It therefore ensures that
+inliers are spread to a reasonable range. Afterwards, it uses a smooth clipping
+function to ensure all values (including outliers and infinite values) are in the
+range [-max_absolute_value, +max_absolute_value].
 
 More information about the theory behind the scaler is available in the
 |SquashingScaler| documentation, and a working example that compares different
@@ -98,4 +98,3 @@ Deduplicate categorical data with |deduplicate|
 If you have a series containing strings with typos, the |deduplicate| function
 may be used to remove some typos by creating a mapping between the typo strings
 and the correct strings. See the documentation for caveats and more detail.
-with vim, how can I create u
