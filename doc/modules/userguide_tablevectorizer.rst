@@ -46,7 +46,7 @@ it to |TableVectorizer|.
 >>> datetime_enc = DatetimeEncoder(periodic_encoding="circular")
 >>> text_enc = TextEncoder()
 >>> num_enc = SquashingScaler()
->>> table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc, numerical=num_enc)
+>>> table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc, numeric=num_enc)
 
 The |TableVectorizer| is used in :ref:`example_encodings`, while the
 docstring of the class provides more details on the parameters and usage, as well
