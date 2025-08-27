@@ -37,39 +37,44 @@ are available by using
 dict_keys(['use_table_report', 'use_table_report_data_ops', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold'])
 
 These are the parameters currently available in the global configuration:
-- **use_table_report**  (env variable: ``SKB_USE_TABLE_REPORT``)
-  Default: ``False``. If set to ``True``, the html representation of Pandas and
-  Polars dataframes is replaced with the :class:`~skrub.TableReport`.
 
-- **use_table_report_data_ops** (env variable: ``SKB_USE_TABLE_REPORT_DATA_OPS``)
-  Default: ``True``. Set the HTML representation used for the Data Ops previews.
-  If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default
-  Pandas or Polars representation.
+.. list-table:: Skrub Configuration Parameters
+   :header-rows: 1
+   :widths: 20 15 25 40
 
-- **max_plot_columns** (env variable: ``SKB_MAX_PLOT_COLUMNS``)
-  Default: 30. If a dataframe has more columns than the value set here, the
-  :class:`~skrub.TableReport` will skip generating the plots.
-
-- **max_association_columns**  (env variable: ``SKB_MAX_ASSOCIATION_COLUMNS``)
-  Default: 30. If a dataframe has more columns than the value set here, the
-  :class:`~skrub.TableReport` will skip computing the associations.
-
-- **subsampling_seed**  (env variable: ``SKB_SUBSAMPLING_SEED``)
-  Set the random seed of subsampling in :func:`skrub.DataOp.skb.subsample()`,
-  when ``how="random"`` is passed.
-
-- **enable_subsampling**  (env variable: ``SKB_ENABLE_SUBSAMPLING``)
-  Default: ``"default"``. Control the activation of subsampling in
-  :func:`skrub.DataOp.skb.subsample()`.
-  If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample()` is used.
-  If ``"disable"``, subsampling is never used, so skb.subsample becomes a no-op.
-  If ``"force"``, subsampling is used in all DataOps evaluation modes (eval(), fit_transform, etc.).
-
-- **float_precision**  (env variable: ``SKB_FLOAT_PRECISION``)
-  Default: 3. Control the number of significant digits shown when formatting floats.
-  Applies overall precision rather than fixed decimal places.
-
-- **cardinality_threshold**  (env variable: ``SKB_CARDINALITY_THRESHOLD``)
-  Default: 40. Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
-  Additionally, set the threshold for warning the user about high cardinality
-  features in the :class:`~skrub.TableReport`.
+   * - Parameter Name
+     - Default Value
+     - Env Variable
+     - Description
+   * - ``use_table_report``
+     - ``False``
+     - ``SKB_USE_TABLE_REPORT``
+     - If set to ``True``, the html representation of Pandas and Polars dataframes is replaced with the :class:`~skrub.TableReport`.
+   * - ``use_table_report_data_ops``
+     - ``True``
+     - ``SKB_USE_TABLE_REPORT_DATA_OPS``
+     - Set the HTML representation used for the Data Ops previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
+   * - ``max_plot_columns``
+     - 30
+     - ``SKB_MAX_PLOT_COLUMNS``
+     - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip generating the plots.
+   * - ``max_association_columns``
+     - 30
+     - ``SKB_MAX_ASSOCIATION_COLUMNS``
+     - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip computing the associations.
+   * - ``subsampling_seed``
+     - 0
+     - ``SKB_SUBSAMPLING_SEED``
+     - Set the random seed of subsampling in :func:`skrub.DataOp.skb.subsample()`, when ``how="random"`` is passed.
+   * - ``enable_subsampling``
+     - ``"default"``
+     - ``SKB_ENABLE_SUBSAMPLING``
+     - Control the activation of subsampling in :func:`skrub.DataOp.skb.subsample()`. If ``"default"``, the behavior of :func:`skrub.DataOp.skb.subsample()` is used. If ``"disable"``, subsampling is never used, so skb.subsample becomes a no-op. If ``"force"``, subsampling is used in all DataOps evaluation modes (eval(), fit_transform, etc.).
+   * - ``float_precision``
+     - 3
+     - ``SKB_FLOAT_PRECISION``
+     - Control the number of significant digits shown when formatting floats. Applies overall precision rather than fixed decimal places.
+   * - ``cardinality_threshold``
+     - 40
+     - ``SKB_CARDINALITY_THRESHOLD``
+     - Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`. Additionally, set the threshold for warning the user about high cardinality features in the :class:`~skrub.TableReport`.
