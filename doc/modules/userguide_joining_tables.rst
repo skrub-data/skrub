@@ -52,6 +52,15 @@ In addition, skrub also enable more advanced analysis:
 - :class:`MultiAggJoiner`: extension of the :class:`AggJoiner` that joins multiple
   auxiliary tables onto the main table.
 
+Using the :class:`InterpolationJoiner` to join tables using ML predictions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The :class:`InterpolationJoiner` is a transformer that performs an operation similar
+to that of a regular equi-join, but that can handle the presence of missing rows
+in the right table (the table to be added). This is done by estimating the value
+that the missing rows would have by training a machine learning model on the data
+we have access to.
+
+This transformer is explored in more detail in :ref:`this example <sphx_glr_auto_examples_09_interpolation_join.py>`.
 
 Column selection inside a pipeline
 ----------------------------------
@@ -63,21 +72,3 @@ skrub provides transformers to perform such an operation:
 
 - :class:`SelectCols` allows specifying the columns we want to keep.
 - Conversely :class:`DropCols` allows specifying the columns we want to discard.
-
-Going further: embeddings for better analytics
-----------------------------------------------
-
-Data collection comes before joining, but is also an
-essential process of table assembling.
-Although many datasets are available on the internet, it is not
-always easy to find the right one for your analysis.
-
-skrub has some very helpful methods that gives you easy
-access to embeddings, or vectorial representations of an entity,
-of all common entities from Wikipedia.
-You can use :func:`datasets.fetch_ken_embeddings` to search for the right
-embeddings and download them.
-
-Other methods, such as :func:`datasets.fetch_country_happiness` to
-fetch data of a World Bank indicator can also help you retrieve
-useful data that will be joined to another table.

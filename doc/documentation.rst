@@ -23,16 +23,14 @@ See the examples section for full code snippets.
 .. include:: includes/big_toc_css.rst
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   userguide_tablereport
-   userguide_encoders
-   userguide_datetimes
-   userguide_tablevectorizer
-   userguide_data_cleaning
-   userguide_selectors
-   userguide_data_ops
-   userguide_data_ops_ml_pipeline
-   userguide_data_ops_validation
-   userguide_joining_tables
-   userguide_utils
+   exploring_a_dataframe
+   cleaning_a_dataframe
+   encoding_a_column
+   building_a_pipeline
+   selectors
+   joining_dataframes
+   dataops
+   configuration
+   datasets

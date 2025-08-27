@@ -85,7 +85,7 @@ Based on the specified quantile_range parameter, the scaler employs a scikit-lea
 interval of length two, centering the median to zero. It therefore ensures that
 inliers are spread to a reasonable range. Afterwards, it uses a smooth clipping
 function to ensure all values (including outliers and infinite values) are in the
-range [-max_absolute_value, +max_absolute_value].
+range ``[-max_absolute_value, +max_absolute_value]``.
 
 More information about the theory behind the scaler is available in the
 |SquashingScaler| documentation, and a working example that compares different

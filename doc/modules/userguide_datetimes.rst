@@ -7,8 +7,8 @@
 Parsing and encoding datetimes
 ------------------------------
 
-Parsing Datetime Strings
-~~~~~~~~~~~~~~~~~~~~~~~~
+Parsing Datetime Strings with |ToDatetime|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Skrub provides helpers to parse datetime string columns automatically:
 
@@ -29,8 +29,8 @@ Name: when, dtype: datetime64[ns]
 2   2024-05-07 13:17:52
 Name: when, dtype: datetime64[ns]
 
-Encoding and Feature Engineering on Datetimes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Encoding and Feature Engineering with |DatetimeEncoder|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once datetime columns have been parsed, they can be encoded as numerical features with
 the |DatetimeEncoder|, by extracting temporal features (year, month, day,
@@ -38,7 +38,7 @@ hour, etc.). No timezone conversion is done; the timezone
 in the feature is retained. The |DatetimeEncoder| rejects non-datetime columns,
 so it should only be applied after conversion using |ToDatetime|.
 
-Additionally, |DatetimeEncoder| can include the following features:
+Additionally, the |DatetimeEncoder| can include the following features:
 
 - Number of seconds from epoch (``add_total_seconds``)
 - Day of the week (``add_weekday``)

@@ -17,13 +17,15 @@ Strong baseline pipelines
 
 |TableVectorizer|
 ~~~~~~~~~~~~~~~~~
-In tabular machine learning pipelines, practitioners often convert categorical features to numerical features
-using various encodings (|OneHotEncoder|, |OrdinalEncoder|, etc.).
+In tabular machine learning pipelines, practitioners often convert categorical
+features to numerical features using various encodings (|OneHotEncoder|, |OrdinalEncoder|,
+etc.).
 
-The |TableVectorizer| parses the data type of each column and maps each column to an encoder, in order
-to produce numeric features for machine learning models.
+The |TableVectorizer| parses the data type of each column and maps each column to
+an encoder, in order to produce numeric features for machine learning models.
 
-More precisely, the |TableVectorizer| maps columns to one of the following four groups by default:
+More precisely, the |TableVectorizer| maps columns to one of the following four
+groups by default:
 
 - **High-cardinality categorical columns**: |StringEncoder|
 - **Low-cardinality categorical columns**: scikit-learn |OneHotEncoder|
@@ -33,16 +35,18 @@ More precisely, the |TableVectorizer| maps columns to one of the following four 
 **High cardinality** categorical columns are those with more than 40 unique values,
 while all other categorical columns are considered **low cardinality**: the
 threshold can be changed by setting the ``cardinality_threshold`` parameter of
-|TableVectorizer|.
+|TableVectorizer|, or by changing the configuration parameter with the same name
+using :func:`~skrub.set_config`.
 
 To change the encoder or alter default parameters, instantiate an encoder and pass
 it to |TableVectorizer|.
 
->>> from skrub import TableVectorizer, DatetimeEncoder, TextEncoder
+>>> from skrub import TableVectorizer, DatetimeEncoder, TextEncoder, SquashingScaler
 
 >>> datetime_enc = DatetimeEncoder(periodic_encoding="circular")
 >>> text_enc = TextEncoder()
->>> table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc)
+>>> num_enc = SquashingScaler()
+>>> table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc, numerical=num_enc)
 
 The |TableVectorizer| is used in :ref:`example_encodings`, while the
 docstring of the class provides more details on the parameters and usage, as well
@@ -80,7 +84,7 @@ If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
 The pipeline prepared by |tabular_pipeline| is a strong first baseline for most
 problems, but may not beat properly tuned ad-hoc pipelines.
 
-.. list-table:: Parameter values choice of :class:`TableVectorizer` when using the :func:`tabular_pipeline` function
+.. list-table:: Parameter values choice of :class:`TableVectorizer` when usingthe :func:`tabular_pipeline` function
    :header-rows: 1
 
    * -
