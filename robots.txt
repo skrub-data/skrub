@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /dev/
-
-Sitemap: https://skrub-data.org/stable/sitemap.xml
