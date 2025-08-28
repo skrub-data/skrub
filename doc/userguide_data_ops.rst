@@ -74,7 +74,7 @@ How do Skrub DataOps differ from other Skrub objects, like :func:`~skrub.tabular
 Skrub DataOps are built to maximize flexibility in the construction of complex
 pre-processing and machine learning pipelines. On the other hand, the main intent
 of Skrub objects such as :func:`~skrub.tabular_pipeline` and
-:class:`~skrub.TableVectorizer` is to provide interfaces that for common
+:class:`~skrub.TableVectorizer` is to provide interfaces that simplify common
 pre-processing tasks, and simple and robust baselines for
 machine learning. As a result, these objects are more opinionated and
 less flexible than DataOps.
@@ -88,7 +88,7 @@ Yes, Skrub DataOps are designed to be "transparent", so that any method used by
 the underlying data structures (e.g., Pandas or Polars) can be accessed directly:
 check :ref:`user_guide_direct_access_ref` for more details.
 All DataOps-specific operations are available through the ``.skb`` attribute,
-which provides access to the DataOps namespace. Other library-specfic methods
+which provides access to the DataOps namespace. Other library-specific methods
 are available directly from the DataOp object, as if it were a regular object
 (like a Pandas or Polars DataFrame or Series).
 
@@ -426,3 +426,7 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
   of how Skrub DataOps can be used to process multiple tables using dataframe APIs.
 - See :ref:`sphx_glr_auto_examples_data_ops_12_choices.py` for an example of
   hyper-parameter tuning using Skrub DataOps.
+- See :ref:`sphx_glr_auto_examples_data_ops_13_subsampling.py` for an example of
+  how to speed up development by subsampling preview data.
+- See :ref:`sphx_glr_auto_examples_data_ops_14_use_case.py` for an example use
+  case on how to use DataOps in a microservice that detects spam emails.
