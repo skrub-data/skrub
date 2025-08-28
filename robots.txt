@@ -3,4 +3,3 @@ Allow: /
 Disallow: /dev/
 
 Sitemap: https://skrub-data.org/stable/sitemap.xml
-Sitemap: https://skrub-data.org/dev/sitemap.xml
