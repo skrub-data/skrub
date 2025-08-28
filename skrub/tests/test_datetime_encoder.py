@@ -119,6 +119,8 @@ def expected_features(df_module):
 
 
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):
+    import inspect
+
     enc = DatetimeEncoder()
     if use_fit_transform:
         res = enc.fit_transform(a_datetime_col)
@@ -128,7 +130,11 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
         expected_features,
         [f"{f}" for f in enc.all_outputs_],
     )
-    df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
+    sig = inspect.signature(df_module.assert_frame_equal)
+    if "rel_tol" in sig.parameters:
+        df_module.assert_frame_equal(res, expected_features, rel_tol=1e-4)
+    else:
+        df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
 
 
 @pytest.mark.parametrize(

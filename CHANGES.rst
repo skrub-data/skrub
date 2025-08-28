@@ -6,8 +6,18 @@ Release history
 
 .. currentmodule:: skrub
 
+Ongoing Development
+===================
+
+
+Bugfixes
+--------
+
+- Fixed a compatibility bug with Polars 1.32.3 that may cause `ToFloat32` to fail
+  when applied to categorical columns. :pr:`1570` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Release 0.6.1
-=============
+===================
 
 Bugfixes
 --------
