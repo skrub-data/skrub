@@ -28,7 +28,7 @@ Cleaning dataframes and parsing datatypes
 The |Cleaner| converts data types and Nan values in dataframes to ease downstream preprocessing. It includes:
 
 - Replacing strings that represent missing values with NA markers
-- Dropping uninformative columns (add cross reference)
+- Dropping uninformative columns (see |DropUninformative|)
 - Parsing datetimes from datetime strings
 - Forcing consistent categorical typing
 - Converting columns to string, unless they have a more informative datatype (numerical, datetime, categorical)
