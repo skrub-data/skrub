@@ -182,21 +182,21 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
-        verbose=None,
+        verbose=1,
         max_plot_columns=None,
         max_association_columns=None,
     ):
         n_rows = max(1, n_rows)
+        self.verbose = _config.get_config()["table_report_verbosity"]
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
-            "verbose": verbose,
+            "verbose": self.verbose,
         }
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.verbose = _config.get_config()["table_report_verbosity"]
         self.max_plot_columns, self.max_association_columns = _check_max_cols(
             max_plot_columns, max_association_columns
         )
