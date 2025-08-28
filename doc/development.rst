@@ -14,4 +14,5 @@ facilitate learning on databases.
     vision
     about
     CONTRIBUTING
+    tutorial_example
     RELEASE_PROCESS
