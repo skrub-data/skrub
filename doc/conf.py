@@ -112,7 +112,7 @@ try:
     html_baseurl = "https://skrub-data.org/stable/"
     sitemap_url_scheme = "{link}"
 except ImportError:
-    print("ERROR: sphinxext.opengraph import failed")
+    print("ERROR: sphinx_sitemap import failed")
 
 
 # The suffix(es) of source filenames.
