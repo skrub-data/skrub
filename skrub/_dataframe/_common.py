@@ -786,6 +786,8 @@ def _to_float32_pandas(col, strict=True):
 def _to_float32_polars(col, strict=True):
     if col.dtype == pl.Float32:
         return col
+    if col.dtype == pl.Categorical:
+        return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
     return col.cast(pl.Float32, strict=strict)
 
 

@@ -1,7 +1,7 @@
 .. _userguide_data_ops_ml_pipeline:
-========================================================
+=======================================================================
 Assembling Skrub DataOps into complex machine learning pipelines
-========================================================
+=======================================================================
 
 .. currentmodule:: skrub
 
@@ -52,9 +52,9 @@ Result:
 Then, we can export the transformation as a learner with
 :meth:`.skb.make_learner() <DataOp.skb.make_learner>`
 
->>> pipeline = vectorized_orders.skb.make_learner(fitted=True)
+>>> learner = vectorized_orders.skb.make_learner(fitted=True)
 >>> new_orders = pd.DataFrame({"item": ["fork"], "price": [2.2], "qty": [5]})
->>> pipeline.transform({"orders": new_orders}) # doctest: +SKIP
+>>> learner.transform({"orders": new_orders}) # doctest: +SKIP
          item_0  item_1        item_2  price  qty
 0  5.984116e-09     1.0 -1.323546e-07    2.2    5
 
@@ -171,7 +171,7 @@ generates a html report that shows the full plan, including all nodes,
 their names, descriptions, and the transformations applied to the data.
 
 An example of the report can be found
-`here <../../_static/credit_fraud_report/index.html>`_.
+`here <../_static/credit_fraud_report/index.html>`_.
 
 For each node in the plan, the report shows:
 
@@ -199,7 +199,7 @@ has additional functions. By setting a name, we can:
 
 - Bypass the computation of that node and override its result by passing it as a
   key in the ``environment`` argument.
-- Truncate the pipeline after this node to obtain the intermediate result with
+- Truncate the computational graph after this node to obtain the intermediate result with
   :meth:`SkrubLearner.truncated_after`.
 - Retrieve that node and inspect the estimator that was fitted in it, if the
   node was created with :meth:`.skb.apply() <DataOp.skb.apply>`.
@@ -231,16 +231,16 @@ Here is a toy example with 3 steps:
 ... )
 
 Above, we give a name to each intermediate result with ``.skb.set_name()`` so
-that we can later refer to it when manipulating a fitted pipeline.
+that we can later refer to it when manipulating a fitted learner.
 
->>> pipeline = output.skb.make_learner()
->>> pipeline.fit({"url": "file:///example.db"})
+>>> learner = output.skb.make_learner()
+>>> learner.fit({"url": "file:///example.db"})
 load:  file:///example.db
 transform
 agg
 SkrubLearner(data_op=<Call 'agg'>)
 
->>> pipeline.transform({"url": "file:///example.db"})
+>>> learner.transform({"url": "file:///example.db"})
 load:  file:///example.db
 transform
 agg
@@ -252,17 +252,17 @@ skipped and the provided value is used instead. We can see that
 ``"load: ..."`` is not printed and that the rest of the computation proceeds
 using ``[6, 5, 4]`` (instead of ``[1, 2, 3, 4]`` as before).
 
->>> pipeline.transform({"loaded": [6, 5, 4]})
+>>> learner.transform({"loaded": [6, 5, 4]})
 transform
 agg
 60
 
 Now we show how to stop at the result we named ``"transformed"``. With
-``truncated_after``, we obtain a pipeline that computes that intermediate result
+``truncated_after``, we obtain a learner that computes that intermediate result
 and returns it instead of applying the last transformation; note that ``"agg"``
 is not printed and we get the output of ``transform()``, not of ``agg()``:
 
->>> truncated = pipeline.truncated_after("transformed")
+>>> truncated = learner.truncated_after("transformed")
 >>> truncated.transform({"url": "file:///example.db"})
 load:  file:///example.db
 transform
