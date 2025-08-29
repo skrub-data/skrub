@@ -65,7 +65,7 @@ the name of the task is given.
 Pipeline(steps=[('tablevectorizer',
                  TableVectorizer(...),
                 ('histgradientboostingregressor',
-                 HistGradientBoostingRegressor())])
+                 HistGradientBoostingRegressor(...))])
 
 >>> from sklearn.linear_model import LinearRegression
 >>> tabular_pipeline(LinearRegression()) # doctest: +SKLEARN_VERSION >= "1.4" +ELLIPSIS
