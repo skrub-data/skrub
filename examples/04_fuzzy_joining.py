@@ -1,4 +1,6 @@
 """
+.. _example_fuzzy_joining:
+
 Fuzzy joining dirty tables with the Joiner
 ==========================================
 
@@ -177,7 +179,7 @@ augmented_df = fuzzy_join(
 augmented_df.sort_values("skrub_Joiner_rescaled_distance", ascending=False).head()
 
 ###############################################################################
-# Matches that are not available (or precise enough) are marked as `NaN`.
+# Matches that are not available (or precise enough) are marked as ``NaN``.
 # We will remove them using the ``drop_unmatched`` parameter:
 
 augmented_df = fuzzy_join(
@@ -331,7 +333,7 @@ print(f"Mean R² score is {cv_r2_t.mean():.2f} +- {cv_r2_t.std():.2f}")
 # We have a satisfying first result: an R² of 0.63!
 #
 # Data cleaning varies from dataset to dataset: there are as
-# many ways to clean a table as there are errors. |fj|
+# many ways to clean a table as there are errors. The |fj|
 # method is generalizable across all datasets.
 #
 # Data transformation is also often very costly in both time and resources.

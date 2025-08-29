@@ -5,9 +5,9 @@
 Deduplicating misspelled categories
 ===================================
 
-Real world datasets often come with misspellings, for instance
+Real-world datasets often come with misspellings, for instance
 in manually inputted categorical variables.
-Such misspelling break data analysis steps that require
+Such misspellings break data analysis steps that require
 exact matching, such as a ``GROUP BY`` operation.
 
 Merging multiple variants of the same category is known as

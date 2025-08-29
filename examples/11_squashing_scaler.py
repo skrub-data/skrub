@@ -11,7 +11,7 @@ This transform has been found to even work well when applied to one-hot encoded
 features.
 
 We first generate some synthetic data with outliers to show how different scalers
-transform the data, then we show how the choice of the scaler affect the prediction
+transform the data, then we show how the choice of the scaler affects the prediction
 performance of a simple neural network.
 
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
@@ -126,8 +126,8 @@ fig.supylabel("Value")
 # where ``max_absolute_value`` is a parameter specified by the user (3 by default).
 
 # %%
-# Comparing the effect of different numeric pre-processing methods on a neural network
-# ------------------------------------------------------------------------------------
+# Comparing numerical pre-processing methods on a neural network
+# --------------------------------------------------------------
 #
 # In the second part of the example, we want to fit a neural network to predict
 # employee salaries.
