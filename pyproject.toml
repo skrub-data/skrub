@@ -34,7 +34,7 @@ dependencies = [
     "scipy>=1.9.3",
     "jinja2>=3.1.2",
     "matplotlib>=3.4.3",
-    "requests>=2.25.0",
+    "requests>=2.27.1",
     "pydot",
 ]
 
@@ -100,7 +100,7 @@ scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.4.3"
 pydot = "*"
-requests = ">=2.25.0"
+requests = ">=2.27.1"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
@@ -161,7 +161,7 @@ scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.4.3"
 pydot = "*"
-requests = "==2.25.0"
+requests = "==2.27.1"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
