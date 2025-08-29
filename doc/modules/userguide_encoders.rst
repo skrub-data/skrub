@@ -15,16 +15,16 @@ In Skrub, categorical features correspond to columns whose data type is neither 
 datetime. This includes string, categorical, and object data types.
 
 
-|StringEncoder|
-~~~~~~~~~~~~~~~
+|StringEncoder|: the default encoder, strong in most cases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A strong and quick baseline for both short strings with high cardinality and long
 text. This encoder computes the ngram frequency using tf-idf vectorization,
 followed by truncated SVD
 (`Latent Semantic Analysis <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_).
 
-|TextEncoder|
-~~~~~~~~~~~~~
+|TextEncoder|: language model-based, strong on text but expensive to run
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This encoder encodes string features using pretrained language models from the
 HuggingFace Hub. It is a wrapper around `sentence-transformers <https://sbert.net/>`_
@@ -33,15 +33,15 @@ free-flowing text and when columns include context found in the pretrained model
 (e.g., name of cities etc.). Note that this encoder can take a very long time to
 train, especially on large datasets and on CPU.
 
-|MinHashEncoder|
-~~~~~~~~~~~~~~~~
+|MinHashEncoder|: very fast encoder, but not as effective as the others
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This encoder decomposes strings into ngrams, then applies the MinHash method to convert them
 into numerical features. Fast to train, but features may yield worse results
 compared to other methods.
 
-|GapEncoder|
-~~~~~~~~~~~~
+|GapEncoder|: an interpretable, if slower encoder
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The |GapEncoder| estimates "latent categories" on the training data by finding
 common ngrams between strings, then encodes the categories as real

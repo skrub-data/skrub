@@ -4,8 +4,8 @@
 
 .. _userguide_tablereport:
 
-Exploring dataframes with the |TableReport|
-===========================================
+Exploring dataframes interactively with the |TableReport|
+=========================================================
 
 Usage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -75,4 +75,5 @@ Finding Correlated Columns in a DataFrame
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition to |TableReport|'s **Associations** tab, you can compute associations
-using the |column_associations| function, which returns a dataframe containing the associations.
+using the |column_associations| function, which returns a dataframe containing the
+associations.

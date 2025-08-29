@@ -4,6 +4,8 @@
 .. |deduplicate| replace:: :func:`~skrub.deduplicate`
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
 .. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
+.. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
+.. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
 
 .. _userguide_data_cleaning:
 
