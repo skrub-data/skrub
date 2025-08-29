@@ -1264,7 +1264,7 @@ class SkrubNamespace:
         ... )
         >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_defaults())
-        {'k': 9, 'classifier': 'logistic', 'C': 1.000...}
+        {'k': 9, 'classifier': 'logistic', 'C': 1.0...}
         """
         from ._evaluation import choice_graph, chosen_or_default_outcomes
         from ._inspection import describe_params
