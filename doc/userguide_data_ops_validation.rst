@@ -3,10 +3,10 @@
 .. _userguide_data_ops_validation:
 
 =====================================
-Tuning and validating Skrub Pipelines
+Tuning and validating Skrub DataOps plans
 =====================================
 
-To evaluate the prediction performance of our pipeline, we can fit it on a training
+To evaluate the prediction performance of our plan, we can fit it on a training
 dataset, then obtaining prediction on an unseen, test dataset.
 
 In scikit-learn, we pass to estimators and pipelines an ``X`` and ``y`` matrix
@@ -172,12 +172,12 @@ we are not using hyperparameter search:
 
 .. _choice-defaults-table:
 
-.. list-table:: default choice outcomes
+.. list-table:: Default choice outcomes
    :header-rows: 1
 
-   * - choosing function
-     - description
-     - default outcome
+   * - Choosing function
+     - Description
+     - Default outcome
    * - :func:`choose_from([10, 20]) <choose_from>`
      - choose between the listed options 10 and 20
      - first outcome in the list: ``10``
@@ -216,8 +216,10 @@ we are not using hyperparameter search:
      - sample a float on a logarithmically-spaced grid.
      - the step closest to the middle of the range on a log scale: ``4.64``
        (here steps are ``[1.0, 4.64, 21.54, 100.0]``)
-   * - :func:`choose_float(1.0, 100.0, log=True) <choose_int>`
+   * - :func:`choose_int(1, 100, log=True, n_steps=4) <choose_int>`
      - sample an int on a logarithmically-spaced grid.
+     - the step closest to the middle of the range on a log scale: ``5``
+       (here steps are ``[1, 5, 22, 100]``)
      - the (integer) step closest to the middle of the range on a log scale: ``5``
        (here steps are ``[1, 5, 22, 100]``)
 
@@ -248,15 +250,15 @@ We can then find the best hyperparameters.
 Rather than fitting a randomized or grid search to find the best combination, it is also
 possible to obtain an iterator over different parameter combinations, to inspect
 their outputs or to have manual control over the model selection, using
-:meth:`.skb.iter_pipelines_grid() <DataOp.skb.iter_pipelines_grid>` or
-:meth:`.skb.iter_pipelines_randomized() <DataOp.skb.iter_pipelines_randomized>`.
+:meth:`.skb.iter_learners_grid() <DataOp.skb.iter_learners_grid>` or
+:meth:`.skb.iter_learners_randomized() <DataOp.skb.iter_learners_randomized>`.
 Those yield the candidate pipelines that are explored by the grid and randomized
 search respectively.
 
 A human-readable description of parameters for a pipeline can be obtained with
 :meth:`SkrubLearner.describe_params`:
 
->>> search.best_pipeline_.describe_params() # doctest: +SKIP
+>>> search.best_learner_.describe_params() # doctest: +SKIP
 {'α': 0.054...}
 
 It is also possible to use :meth:`ParamSearch.plot_results` to visualize the results
@@ -460,5 +462,5 @@ or in a different environment:
 >>> loaded_learner.fit({"orders": new_orders_df})
 SkrubLearner(data_op=<Apply TableVectorizer>)
 
-See :ref:`sphx_glr_auto_examples_data_ops_13_use_case.py` for an example of how
+See :ref:`sphx_glr_auto_examples_data_ops_14_use_case.py` for an example of how
 to use the learner in a microservice.
