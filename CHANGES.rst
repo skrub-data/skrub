@@ -9,6 +9,13 @@ Release history
 Ongoing Development
 ===================
 
+Changes
+-------
+- Ken embeddings are now deprecated, the functions :func:`datasets.get_ken_embeddings`,
+  :func:`datasets.get_ken_table_aliases`, and :func:`datasets.get_ken_types` will be
+  removed in the next release of skrub.
+  :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
 
 Bugfixes
 --------
