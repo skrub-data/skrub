@@ -136,6 +136,7 @@ flights.drop(columns=["TailNum", "FlightNum"])
 # - We will combine all the information from our pool of tables into "flights",
 # our main table.
 # - We will use this main table to model the prediction of flight delay.
+#
 
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import make_pipeline

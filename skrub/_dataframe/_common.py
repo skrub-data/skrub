@@ -107,6 +107,7 @@ __all__ = [
     "with_columns",
     "abs",
     "total_seconds",
+    "is_sorted",
 ]
 
 pandas_version = parse_version(parse_version(pd.__version__).base_version)
@@ -217,7 +218,7 @@ def _to_list_polars(col):
 
 @dispatch
 def to_numpy(col):
-    raise _raise(col, kind="Series")
+    raise _raise(col, kind="object")
 
 
 @to_numpy.specialize("pandas", argument_type="Column")
@@ -230,6 +231,16 @@ def _to_numpy_pandas_column(col):
 @to_numpy.specialize("polars", argument_type="Column")
 def _to_numpy_polars_column(col):
     return col.to_numpy()
+
+
+@to_numpy.specialize("pandas", argument_type="DataFrame")
+def _to_numpy_pandas_table(df):
+    return df.to_numpy()
+
+
+@to_numpy.specialize("polars", argument_type="DataFrame")
+def _to_numpy_polars_table(df):
+    return df.to_numpy()
 
 
 @dispatch
@@ -775,6 +786,8 @@ def _to_float32_pandas(col, strict=True):
 def _to_float32_polars(col, strict=True):
     if col.dtype == pl.Float32:
         return col
+    if col.dtype == pl.Categorical:
+        return col.cast(pl.Int32, strict=strict).cast(pl.Float32)
     return col.cast(pl.Float32, strict=strict)
 
 
@@ -1387,3 +1400,19 @@ def _total_seconds_pandas(col):
 @total_seconds.specialize("polars", argument_type="Column")
 def _total_seconds_polars(col):
     return col.dt.total_microseconds().cast(float) * 1e-6
+
+
+@dispatch
+def is_sorted(col):
+    """Check if a column is sorted."""
+    raise _raise(col, kind="Series")
+
+
+@is_sorted.specialize("pandas", argument_type="Column")
+def _is_sorted_pandas(col):
+    return col.is_monotonic_increasing or col.is_monotonic_decreasing
+
+
+@is_sorted.specialize("polars", argument_type="Column")
+def _is_sorted_polars(col):
+    return col.is_sorted()

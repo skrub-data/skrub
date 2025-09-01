@@ -3,7 +3,7 @@ Hands-On with Column Selection and Transformers
 ===============================================
 
 In previous examples, we saw how skrub provides powerful abstractions like
-:class:`~skrub.TableVectorizer` and :func:`~skrub.tabular_learner` to create pipelines.
+:class:`~skrub.TableVectorizer` and :func:`~skrub.tabular_pipeline` to create pipelines.
 
 In this new example, we show how to create more flexible pipelines by selecting
 and transforming dataframe columns using arbitrary logic.
@@ -15,7 +15,7 @@ and transforming dataframe columns using arbitrary logic.
 import skrub
 from skrub.datasets import fetch_employee_salaries
 
-skrub.set_config(use_tablereport=True)
+skrub.set_config(use_table_report=True)
 data = fetch_employee_salaries()
 X, y = data.X, data.y
 X
@@ -50,8 +50,8 @@ Xt
 # number of components.
 #
 # To select columns without hardcoding their names, we introduce
-# :ref:`selectors<selectors>`, which allow for flexible matching pattern and composable
-# logic.
+# :ref:`selectors<userguide_selectors>`, which allow for flexible matching pattern
+# and composable logic.
 #
 # The regex selector below will match all columns prefixed with ``"lsa"``, and pass them
 # to :class:`~skrub.ApplyToFrame` which will assemble these columns into a dataframe and
@@ -70,7 +70,7 @@ Xt
 # a :class:`~sklearn.pipeline.Pipeline`.
 from sklearn.pipeline import make_pipeline
 
-make_pipeline(
+model = make_pipeline(
     apply_string_encoder,
     apply_pca,
 ).fit_transform(X)
@@ -128,11 +128,11 @@ pipeline
 
 # %%
 # Interestingly, the pipeline above is similar to the datatype dispatching performed by
-# :class:`~skrub.TableVectorizer`, also used in :func:`~skrub.tabular_learner`.
+# :class:`~skrub.TableVectorizer`, also used in :func:`~skrub.tabular_pipeline`.
 #
 # Click on the dropdown arrows next to the datatype to see the columns are mapped to
 # the different transformers in :class:`~skrub.TableVectorizer`.
-from skrub import tabular_learner
+from skrub import tabular_pipeline
 
-tabular_learner("regressor").fit(X, y)
+tabular_pipeline("regressor").fit(X, y)
 # %%

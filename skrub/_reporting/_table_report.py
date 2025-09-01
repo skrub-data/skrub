@@ -18,9 +18,12 @@ def _check_max_cols(max_plot_columns, max_association_columns):
         if max_plot_columns is not None
         else _config.get_config()["max_plot_columns"]
     )
-    if not (isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0):
+    if (max_plot_columns != "all") and not (
+        isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0
+    ):
         raise ValueError(
-            f"'max_plot_columns' must be a positive scalar, got {max_plot_columns!r}."
+            "'max_plot_columns' must be a positive scalar or 'all', got"
+            f" {max_plot_columns!r}."
         )
 
     max_association_columns = (
@@ -28,12 +31,12 @@ def _check_max_cols(max_plot_columns, max_association_columns):
         if max_association_columns is not None
         else _config.get_config()["max_association_columns"]
     )
-    if not (
+    if (max_association_columns != "all") and not (
         isinstance(max_association_columns, numbers.Real)
         and max_association_columns >= 0
     ):
         raise ValueError(
-            "'max_association_columns' must be a positive scalar, got "
+            "'max_association_columns' must be a positive scalar or 'all', got "
             f"{max_association_columns!r}."
         )
 
@@ -76,7 +79,7 @@ class TableReport:
     max_plot_columns : int, default=30
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If None, all columns will be plotted.
+        the plots will not be generated. If "all", all columns will be plotted.
 
         To avoid having to set this parameter at each call of ``TableReport``, you can
         change the default using :func:`set_config`:
@@ -93,7 +96,7 @@ class TableReport:
     max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
         If the number of columns in the dataframe is greater than this value,
-        the associations will not be computed. If None, the associations
+        the associations will not be computed. If "all", the associations
         for all columns will be computed.
 
         To avoid having to set this parameter at each call of ``TableReport``, you can
@@ -206,7 +209,7 @@ class TableReport:
         """Put the report in minimal mode.
 
         This is meant to be called by other skrub functions, such as the
-        expressions  ``__repr__``.
+        DataOps  ``__repr__``.
 
         In the minimal mode, the associations and distributions tabs are not
         shown and the plots and associations are not computed.
@@ -232,10 +235,10 @@ class TableReport:
     @functools.cached_property
     def _summary(self):
         with_plots = (
-            self.max_plot_columns is None or self.max_plot_columns >= self.n_columns
+            self.max_plot_columns == "all" or self.max_plot_columns >= self.n_columns
         )
         with_associations = (
-            self.max_association_columns is None
+            self.max_association_columns == "all"
             or self.max_association_columns >= self.n_columns
         )
 

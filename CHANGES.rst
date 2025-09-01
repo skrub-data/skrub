@@ -6,26 +6,77 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
+Ongoing Development
 ===================
+
+
+Bugfixes
+--------
+
+- Fixed a compatibility bug with Polars 1.32.3 that may cause `ToFloat32` to fail
+  when applied to categorical columns. :pr:`1570` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Release 0.6.1
+===================
+
+Bugfixes
+--------
+
+- ``get_feature_names_out`` now works correctly when used by :class:`GapEncoder`,
+  :class:`DropCols`, :class:`SelectCols:` from within a scikit-learn ``Pipeline``. In
+  addition, :class:`DropCols`'s ``get_feature_names_out`` method now returns the
+  names of the columns that are not dropped, rather than the names of the columns
+  that are dropped. :pr:`1543` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+
+Release 0.6.0
+=============
+
+Highlights
+----------
+- Major feature! Skrub DataOps are a powerful new way of
+  combining dataframe transformations over multiple tables, and machine learning
+  pipelines. DataOps can be combined to form compled data plans, that can be used
+  to train and tune machine learning models. Then, the DataOps plans can be exported
+  as ``Learners`` (:class:`skrub.SkrubLearner`), standalone objects that can be
+  used on new data. More detail about the DataOps can be found in the
+  :ref:`User guide <userguide_data_ops>` and in the
+  :ref:`examples <data_ops_examples_ref>`.
+
+- The :class:`TableReport` has been improved with many new features. Series are
+  now supported directly. It is now
+  possible to skip computing column associations and generating plots when the
+  number of columns in the dataframe exceeds a user-defined threshold. Columns with
+  high cardinality and sorted columns are now highlighted in the report.
+
+- :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
+  providing utilities for selecting columns to which a transformer should be applied
+  in a flexible way. For more details, see the :ref:`User guide <userguide_selectors>`
+  and the :ref:`example <sphx_glr_auto_examples_10_apply_on_cols.py>`.
+
+- The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
+  clips numerical columns, enabling more robust handling of numerical columns
+  with neural networks. See the :ref:`example <sphx_glr_auto_examples_11_squashing_scaler.py>`
 
 New features
 ------------
 
-- The skrub expressions are new mechanism for building machine-learning
+- The Skrub DataOps are new mechanism for building machine-learning
   pipelines that handle multiple tables and easily describing their
-  hyperparameter spaces. See :ref:`the examples <expressions_examples_ref>` for
-  an introduction. :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`. A lot of
-  work from other contributors is not directly visible on the pull request page:
+  hyperparameter spaces. Main PR: :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`.
+  Additional work from other contributors can be found
+  `here <https://github.com/skrub-data/skrub/issues?q=merged%3A%3C2025-07-24%20label%3Adata_ops>`_:
   :user:`Vincent Maladiere <Vincent-Maladiere>` provided very important help by
-  trying the expressions on many use-cases and datasets, providing feedback and
+  trying the DataOps on many use-cases and datasets, providing feedback and
   suggesting improvements, improving the examples (including creating all the
   figures in the examples) and adding jitter to the parallel coordinate plots,
-  :user:`Riccardo Cappuzzo<rcap107>` experimented with the expressions,
+  :user:`Riccardo Cappuzzo<rcap107>` experimented with the DataOps,
   suggested improvements and improved the examples, :user:`Gaël Varoquaux
   <gaelvaroquaux>` , :user:`Guillaume Lemaitre <glemaitre>`, :user:`Adrin Jalali
   <adrinjalali>`, :user:`Olivier Grisel <ogrisel>` and others participated
   through many discussions in defining the requirements and the public API.
+  See :ref:`the examples <data_ops_examples_ref>` for
+  an introduction.
 
 - The :mod:`selectors` module provides utilities for selecting columns to which
   a transformer should be applied in a flexible way. The module was created in
@@ -43,17 +94,39 @@ New features
   to configure settings for dataframes display and expressions. :func:`patch_display`
   and :func:`unpatch_display` are deprecated and will be removed in the next release
   of skrub. :pr:`1427` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+  The global configuration includes the parameter ``cardinality_threshold`` that
+  controls the threshold value used to warn user if they have high cardinality
+  columns in their dataset. :pr:`1498` by :user:`rouk1 <rouk1>`.
+  Additionally, the parameter ``float_precision``
+  controls the number of significant digits displayed for floating-point values
+  in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
+
+- Added the :class:`SquashingScaler`, a transformer that
+  robustly rescales and smoothly clips numerical columns,
+  enabling more robust handling of numerical columns
+  with neural networks. :pr:`1310` by :user:`Vincent Maladiere <Vincent-Maladiere>` and
+  :user:`David Holzmüller <dholzmueller>`.
+
+- :func:`datasets.toy_order` is now available to create a toy dataframe and
+  corresponding targets for examples.
+  :pr:`1485` by :user:`Antoine Canaguier-Durand <canag>`.
 
 - :class:`ApplyToCols` and :class:`ApplyToFrame` are now available to apply transformers
   on a set of columns independently and jointly respectively.
   :pr:`1478` by :user:`Vincent Maladiere<Vincent-Maladiere>`.
 
+
 Changes
 -------
 .. warning::
   The default high cardinality encoder for both :class:`TableVectorizer` and
-  :meth:`tabular_learner` has been changed from :class:`GapEncoder` to
-  :class:`StringEncoder`. :pr:`1354` by :user:`Riccardo Cappuzzo<rcap107>`.
+  :meth:`tabular_learner` (now :meth:`tabular_pipeline`) has been changed from
+  :class:`GapEncoder` to :class:`StringEncoder`. :pr:`1354` by
+  :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The ``tabular_learner`` function has been deprecated in favor of :func:`tabular_pipeline` to honor
+  its scikit-learn pipeline cultural heritage, and remove the ambiguity with the data
+  ops Learner. :pr:`1493` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
 - :class:`StringEncoder` now exposes the ``stop_words`` argument, which is passed to the
   underlying vectorizer (:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
@@ -78,6 +151,7 @@ Changes
 
 - The :func:`concat_horizontal` function was replaced with :func:`concat`. Horizontal or vertical concatenation
   is now controlled by the `axis` parameter. :pr:`1334` by :user:`Parasa V Prajwal <pvprajwal>`.
+
 - The :class:`TableVectorizer` and :class:`Cleaner` now accept a `datetime_format`
   parameter for specifying the format to use when parsing datetime columns.
   :pr:`1358` by :user:`Riccardo Cappuzzo<rcap107>`.
@@ -85,7 +159,7 @@ Changes
 - The :class:`SimpleCleaner` has been removed. use :class:`Cleaner` instead. :pr:`1370` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 - The periodic encoding for the ``day_in_year`` has been removed from the :class:`DatetimeEncoder` as it was
-  redundant. The feature itself is still added if the flag is set to True. :pr:`1396` by :user:`Riccardo Cappuzzo<rcap107>`.
+  redundant. The feature itself is still added if the flag is set to ``True``. :pr:`1396` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 - The naming scheme used for the features generated by :class:`TextEncoder`, :class:`StringEncoder`, :class:`MinHashEncoder`,
   :class:`DatetimeEncoder` has been standardized. Now features generated by all encoders have indices in the range
@@ -100,13 +174,26 @@ Changes
 - The :class:`Cleaner` now exposes a parameter to convert numerical values to float32. :pr:`1440` by
   :user:`Riccardo Cappuzzo<rcap107>`.
 
-- A new parameter ``float_precision`` has been added to the global config to control the number of significant digits
-  displayed for floating-point values in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
+- The :class:`TableReport` now shows if columns are sorted. :pr:`1512` by :user:`Dea María Léon<DeaMariaLeon>`.
+
 
 Bugfixes
 --------
 - Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
   input column was a Categorical datatype. :pr:`1401` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Documentation
+-------------
+A large number of improvements to the examples, docstrings, and the documentation
+website have been made. Contributors include :user:`Vincent Maladiere <Vincent-Maladiere>`,
+:user:`Riccardo Cappuzzo<rcap107>`, :user:`Jérôme Dockès <jeromedockes>`,
+:user:`Gael Varoquaux <gaelvaroquaux>`, :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`,
+:user:`Sylvain Combettes <sylvaincom>`, :user:`Frits Hermans <fritshermans>`,
+:user:`Vitor Pohlenz <vitorpohlenz>`, :user:`Arturo Amor Quiroz <ArturoAmorQ>`,
+:user:`Marie Sacksick <MarieSacksick>`, :user:`Emilien Battel <emilienbattel09>`,
+:user:`George El Haber <gmhaber>`, :user:`Antoine Canaguier-Durand <canag>`, and
+:user:`Lionel Kusch <lionelkusch>`.
+
 
 Release 0.5.4
 =============
@@ -214,6 +301,7 @@ Release 0.4.1
 
 Changes
 -------
+
 * :class: `TableReport` has `write_html` method
   :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
 

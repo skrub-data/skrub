@@ -57,6 +57,7 @@ def test_summarize(
     assert c == {
         "idx": 0,
         "dtype": "string",
+        "is_ordered": False,
         "n_unique": 2,
         "name": "city",
         "null_count": 0,
@@ -69,6 +70,7 @@ def test_summarize(
         "most_frequent_values": ["Paris", "London"],
         "value_is_constant": False,
         "is_duration": False,
+        "is_high_cardinality": False,
     }
 
     assert summary["columns"][4]["constant_value"] == "no2"
@@ -252,3 +254,16 @@ def test_duplicate_columns(pd_module):
     assert cols[0]["mean"] == 1.5
     assert cols[1]["name"] == "a"
     assert cols[1]["mean"] == 3.5
+
+
+def test_high_cardinality_columns(df_module):
+    df = df_module.make_dataframe(
+        {
+            "low-cardinality": [0] * 100,
+            "high-cardinality": range(100),
+        }
+    )
+    summary = summarize_dataframe(df)
+    cols = summary["columns"]
+    assert not cols[0]["is_high_cardinality"]
+    assert cols[1]["is_high_cardinality"]

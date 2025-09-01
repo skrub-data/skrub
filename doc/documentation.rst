@@ -1,46 +1,38 @@
 .. _user_guide:
 
-User guide
+User Guide
 ==========
-
-Skrub eases preparing tables for machine learning.
+Skrub is a library that eases machine learning with dataframes
+for machine learning.
 
 Starting from rich, complex data stored in one or several dataframes, it helps
 performing the data wrangling necessary to produce a numeric array that is fed
 to a machine-learning model. This wrangling comprises joining tables (possibly
-with inexact matches), parsing text into structured data such as dates,
-extracting numeric features, etc.
+with inexact matches), parsing structured data such as datetimes from text,
+and extracting numeric features from non-numeric data.
 
-For those tasks, skrub does not replace a dataframe library. Instead, it
-leverages polars or pandas to provide more high-level building blocks that are
-typically needed in a machine-learning pipeline.
+For those tasks, skrub does not replace pandas or polars. Instead, it
+leverages the dataframe libraries to provide more high-level building blocks that
+perform the data preprocessing steps that are typically needed in a machine learning
+pipeline.
 
-Crucially, the transformations implemented by skrub are *stateful*: skrub
-records the transformations that were applied to the training data and replays the
-same operations when the pipeline is applied to make predictions on unseen
-data. Implementing data-wrangling steps as transformers that can be fitted is
-essential to prevent data leakage and ensure generalization.
+This guide demonstrates how to resolve various issues using Skrub's features.
+See the examples section for full code snippets.
 
-.. topic:: Skrub highlights:
-
- - eases separating the train and test operations, allowing to tune
-   preprocessing steps to the data and improving the generalization of tabular
-   machine-learning models.
-
- - enables statistical and imperfect assembly, as machine-learning models
-   can typically retrieve signals even in noisy data.
-
-|
 
 .. include:: includes/big_toc_css.rst
 
 .. toctree::
    :maxdepth: 2
 
-   end_to_end_pipeline
-   encoding
-   skrub_pipeline
-   skrub_pipeline_validation
-   skrub_selectors
-   assembling
-   cleaning
+   userguide_tablereport
+   userguide_encoders
+   userguide_datetimes
+   userguide_tablevectorizer
+   userguide_data_cleaning
+   userguide_selectors
+   userguide_data_ops
+   userguide_data_ops_ml_pipeline
+   userguide_data_ops_validation
+   userguide_joining_tables
+   userguide_utils

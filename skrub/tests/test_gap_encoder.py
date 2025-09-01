@@ -163,7 +163,7 @@ def test_partial_fit(df_module, add_words, generate_data):
         df_module.assert_frame_equal(X_enc, X_enc_partial2)
 
 
-def test_get_feature_names_out(generate_data):
+def test_get_feature_names_out(df_module, generate_data):
     n_samples = 70
     X = generate_data(n_samples, random_state=0)
     enc = GapEncoder(random_state=42, n_components=3)

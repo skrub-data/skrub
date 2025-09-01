@@ -523,7 +523,7 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         return self
 
-    def get_feature_names_out(self, n_labels=3):
+    def get_feature_names_out(self, input_features=None, n_labels=3):
         """
         Return the labels that best summarize the learned components/topics.
 
@@ -531,6 +531,9 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
 
         Parameters
         ----------
+        input_features : None
+            The input features. Ignored, only here for compatibility.
+
         n_labels : int, default=3
             The number of labels used to describe each topic.
 
