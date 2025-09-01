@@ -29710,8 +29710,8 @@ packages:
   timestamp: 1733381032766
 - pypi: ./
   name: skrub
-  version: 0.6.dev0
-  sha256: 8c01bace6a426751de8e9428006f928b8df1f2ece2908543b0e9e6188a9db8c3
+  version: 0.7.dev0
+  sha256: 7cb3d64d5b4f1fe19f3dea8ba9b827982213d1be9f281f5fa601092f15f91d02
   requires_dist:
   - numpy>=1.23.5
   - pandas>=1.5.3

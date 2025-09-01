@@ -37,3 +37,9 @@ Note that seeing results for the values we provided does *not* change the fact
 that we are building a pipeline that we want to reuse, not just computing the
 result for a fixed input. The displayed result is only preview of the output on
 one example dataset.
+
+>>> c.skb.eval({"a": 3, "b": 2})
+5
+
+It is not necessary to provide a value for every variable: it is however advisable
+to do so when possible, as it allows to catch errors early on.

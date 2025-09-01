@@ -15,9 +15,7 @@ Skrub DataOps: fit, tune, and validate arbitrary data wrangling
    modules/dataops/basics/using_previews
    modules/dataops/basics/direct_access_methods
    modules/dataops/basics/control_flow
-   modules/dataops/basics/dataops_vs_pipeline
-   modules/dataops/basics/dataops_vs_airflow
-   modules/dataops/basics/dataops_vs_other_skrub
+   modules/dataops/basics/dataops_vs_alternatives
 
 Building a complex pipeline with the skrub Data Ops
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,4 +41,5 @@ Tuning and validating Skrub DataOps plans
    modules/dataops/validation/cross_validation
    modules/dataops/validation/hyperparameter_tuning
    modules/dataops/validation/nested_cross_validation
+   modules/dataops/validation/nesting_choices_choosing_pipelines
    modules/dataops/validation/exporting_dataops
