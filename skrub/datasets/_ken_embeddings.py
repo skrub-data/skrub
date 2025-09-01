@@ -321,6 +321,10 @@ def _fetch_figshare(
 def fetch_ken_table_aliases():
     """Get the supported aliases of embedded KEN entities tables.
 
+    .. deprecated:: 0.7.0
+        Ken embeddings are deprecated and will be removed in the next release,
+        therefore this function is also deprecated.
+
     These aliases can be using in subsequent functions (see section *See Also*).
 
     Returns
@@ -344,9 +348,16 @@ def fetch_ken_table_aliases():
     Let's see what are the current KEN subtables available
     for download:
 
-    >>> sorted(fetch_ken_table_aliases())
+    >>> sorted(fetch_ken_table_aliases())  # doctest: +SKIP
     ['albums', 'all_entities', 'companies', 'games', 'movies', 'schools']
     """
+    warnings.warn(
+        (
+            "Ken embeddings are deprecated and will be removed in the next release, "
+            "therefore fetch_ken_table_aliases is also deprecated."
+        ),
+        category=FutureWarning,
+    )
     correspondence = pd.read_csv(_correspondence_table_url)
     return set(["all_entities"] + list(correspondence["table"].values))
 
@@ -358,6 +369,10 @@ def fetch_ken_types(
     embedding_table_id="all_entities",
 ):
     """Helper function to search for KEN entity types.
+
+    .. deprecated:: 0.7.0
+        Ken embeddings are deprecated and will be removed in the next release,
+        therefore this function is also deprecated.
 
     The result can then be used with fetch_ken_embeddings.
 
@@ -418,6 +433,13 @@ def fetch_ken_types(
     3       wikicat_20th-century_american_male_musicians
     4  wikicat_alumni_of_the_london_academy_of_music_...
     """
+    warnings.warn(
+        (
+            "Ken embeddings are deprecated and will be removed in the next release, "
+            "therefore fetch_ken_types is also deprecated."
+        ),
+        category=FutureWarning,
+    )
     correspondence = pd.read_csv(_correspondence_table_url)
     if embedding_table_id not in fetch_ken_table_aliases():
         raise ValueError(
@@ -447,6 +469,10 @@ def fetch_ken_embeddings(
     suffix="",
 ):
     """Download Wikipedia embeddings by type.
+
+    .. deprecated:: 0.7.0
+        Ken embeddings are deprecated and will be removed in the next release,
+        therefore this function is also deprecated.
 
     More details on the embeddings can be found on
     https://soda-inria.github.io/ken_embeddings/.
@@ -546,6 +572,13 @@ def fetch_ken_embeddings(
     types have been carefully filtered out.
     For a list of pre-filtered tables, see func:`fetch_ken_table_aliases`.
     """
+    warnings.warn(
+        (
+            "Ken embeddings are deprecated and will be removed in the next release, "
+            "therefore fetch_ken_embeddings is also deprecated."
+        ),
+        category=FutureWarning,
+    )
     if embedding_table_id in fetch_ken_table_aliases():
         correspondence = pd.read_csv(_correspondence_table_url)
         embeddings_id = correspondence[correspondence["table"] == embedding_table_id][
