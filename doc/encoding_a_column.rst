@@ -7,5 +7,11 @@ and datetime columns.
 .. toctree::
    :maxdepth: 2
 
-   modules/userguide_encoders
-   modules/userguide_datetimes
+   modules/encoders/feature_engineering_categorical
+   modules/encoders/stringencoder
+   modules/encoders/textencoder
+   modules/encoders/minhashencoder
+   modules/encoders/gapencoder
+   modules/encoders/comparison
+   modules/datetimes/parsing_datetimes
+   modules/datetimes/encoding_features

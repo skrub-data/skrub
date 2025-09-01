@@ -1,10 +1,12 @@
 Joining Dataframes
 ==================
 
-This section covers transformers used for joining dataframes using fuzzy matching,
-or with the generation of additional features.
+This section covers the various methods provided by skrub to join dataframes.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   modules/userguide_joining_tables
+   modules/joining_tables/fuzzy_joining_tables
+   modules/joining_tables/joining_external_tables
+   modules/joining_tables/interpolation_joiner
+   modules/joining_tables/column_selection_pipeline

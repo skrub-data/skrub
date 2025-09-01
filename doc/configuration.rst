@@ -6,4 +6,5 @@ This section covers configuration options and utilities.
 .. toctree::
    :maxdepth: 3
 
-   modules/userguide_utils
+   modules/configuration/customizing_configuration
+   modules/configuration/configuration_parameters

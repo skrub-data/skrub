@@ -2,13 +2,8 @@
 .. |set_config| replace:: :func:`~skrub.set_config`
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
-.. _userguide_tablereport:
-
 Exploring dataframes interactively with the |TableReport|
 =========================================================
-
-Usage
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 >>> from skrub import TableReport
 >>> import pandas as pd
@@ -44,36 +39,3 @@ be copied in a script.
 
 The TableReport can be used in a notebook cell, or it can be opened in a browser
 window using ``TableReport(df).open()``.
-
-Altering the Appearance of the |TableReport|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-For performance reasons, the |TableReport| disables the computation of
-distributions and associations for tables with more than 30 columns. This behavior
-can be changed by modifying the ``max_plot_columns`` and ``max_association_columns``
-parameter, or by altering the configuration with |set_config| (refer to the
-|TableReport| and |set_config| docs for more detail).
-
-More pre-computed examples are available `here <https://skrub-data.org/skrub-reports/examples/index.html>`_.
-
-Exporting and Sharing the |TableReport|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The |TableReport| is a standalone object that does not require a running notebook
-to be accessed after generation: it can be exported in HTML format and opened
-directly in a browser as a HTML page.
-
->>> import io # to avoid writing to disk
->>> tr = TableReport(df)
->>> html_buffer = io.StringIO()
->>> tr.write_html(html_buffer)  # save to file
->>> html = tr.html()  # get a string containing the HTML for a full page
->>> html_snippet = tr.html_snippet()  # get an HTML fragment to embed in a page
->>> tr_json = tr.json()  # get the content of the report in JSON format
-
-Finding Correlated Columns in a DataFrame
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In addition to |TableReport|'s **Associations** tab, you can compute associations
-using the |column_associations| function, which returns a dataframe containing the
-associations.

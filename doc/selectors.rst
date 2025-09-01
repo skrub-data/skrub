@@ -7,4 +7,6 @@ target specific columns based on various conditions.
 .. toctree::
    :maxdepth: 2
 
-   modules/userguide_selectors
+   modules/selectors/usage
+   modules/selectors/type_of_selectors
+   modules/selectors/advanced_selectors

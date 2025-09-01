@@ -7,4 +7,7 @@ and understanding your dataframes.
 .. toctree::
    :maxdepth: 3
 
-   modules/userguide_tablereport
+   modules/tablereport/exploring_dataframes_interactively
+   modules/tablereport/altering_appearance
+   modules/tablereport/exporting_and_sharing
+   modules/tablereport/finding_correlated_columns

@@ -6,4 +6,6 @@ This section covers how to build machine learning pipelines with skrub.
 .. toctree::
    :maxdepth: 3
 
-   modules/userguide_tablevectorizer
+   modules/tablevectorizer/overview
+   modules/tablevectorizer/usage_examples
+   modules/tablevectorizer/advanced_features
