@@ -1,5 +1,7 @@
 .. _tutorial_write_example:
 
+.. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
+
 How to write an example for the skrub gallery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This page explains how to write examples for the skrub gallery. The main intention
@@ -23,7 +25,7 @@ additional content from it.
 The name of the file should start with a number, followed by an underscore,
 and then a short description of the example. The number is used to order the examples
 in the documentation. For instance, if your example is about using the
-``TableVectorizer`` class, you might want to name the file ``01_table_vectorizer.py``.
+|TableVectorizer| class, you might want to name the file ``01_table_vectorizer.py``.
 
 Note that the ``examples/`` folder is covered by the ``pre-commit`` hooks, which
 means that various checks will be performed on the code when you try to commit it:
@@ -69,9 +71,9 @@ This is an example of what the beginning of your example may look like:
 
     """
 
-Then, you can start writing the code for the example. The content of your python script
+Then, you can start writing the code for the example. The content of your Python script
 should be a sequence of code cells, each delimited by a line starting with ``# %%``.
-Code cells may contain comments, which will be rendered as markdown in the final
+These code cells may contain comments, which will be rendered as Markdown in the final
 documentation.
 
 .. code-block:: python
@@ -120,9 +122,9 @@ There are various ways to add cross-references in the docstring and comments of 
 - You can also add references to other sections of the documentation using the
   ``:ref:`label``` directive, where ``label`` is the label of the section you want to reference.
 
-For example, if your example uses the ``TableVectorizer`` class multiple times, you can
+For example, if your example uses the |TableVectorizer| class multiple times, you can
 define a replacement at the top of the docstring. Then, you might want to add a
-reference to the user guide section about the ``TableVectorizer`` class. This can be
+reference to the user guide section about the |TableVectorizer| class. This can be
 done as follows:
 
 .. code-block:: python
@@ -162,14 +164,14 @@ generate the new documentation to see how it looks. This can be done in two ways
   it automatically sets up a virtual environment with the necessary dependencies, so you
   don't need to worry about installing them manually.
 
-The difference between ``make html`` and ``make html-noplot`` (or between
-``pixi run -e doc build-doc`` and ``pixi run -e doc build-doc-quick``) is that the
-``-noplot`` or ``-quick`` versions do not execute the code in the examples, which
-makes the documentation generation much faster. This is useful if you only want
-to check the formatting of your example, rather than the actual output of the code
-(it is assumed that you have already run the code while writing it).
-Since the CI is set up to run the full documentation generation in any case,
-you can safely use the ``-noplot`` or ``-quick`` versions for local testing.
+The ``make html`` and ``pixi run -e doc build-doc`` commands generate complete
+documentation by executing all example code. The ``-noplot`` (or ``-quick``)
+versions skip code execution, making documentation generation much faster. Use
+these faster versions to check formatting when you've already tested your example
+code locally.
+
+The CI pipeline will always run the full documentation build, so you can safely
+use ``make html-noplot`` or ``pixi run -e doc build-doc-quick`` for local testing.
 
 After generating the documentation, you can use a web browser to open the
 ``index.html`` file in the ``doc/_build/html/`` folder and see how it looks.
@@ -189,13 +191,15 @@ After generating the documentation, you can start adding references to your exam
 in other relevant parts of the documentation. This helps users to find your example
 when they are reading about related topics.
 
-The reason this is done after generating the documentation is that you need to know
-the name of your example as it appears in the documentation, which is defined
-dynamically based on the name of the file. Assuming that the name of your example
-is ``99_my_example.py``, you can find the generated files in ``doc/auto_examples``,
-and the reference in the file  ``doc/auto_examples/99_my_example.rst``: the correct
-reference looks like ``.. _sphx_glr_auto_examples_99_my_example.py``, and the correct
-way of referencing it is:
+This step is done after generating the documentation because you need the final reference name,
+which is created dynamically from your file name. For example, if your file is named
+``99_my_example.py``:
+
+1. The generated files will be in ``doc/auto_examples``
+2. A reference file will be created at ``doc/auto_examples/99_my_example.rst``
+3. The reference label will be ``.. _sphx_glr_auto_examples_99_my_example.py``
+
+To link to your example from other documentation pages, use:
 
 .. code-block:: rst
 
