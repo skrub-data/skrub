@@ -1,6 +1,6 @@
 """
-Usecase: developing locally, and avoiding to repeat code in production
-======================================================================
+Use case: developing locally and deploying to production
+=======================================================
 
 """
 
@@ -11,9 +11,9 @@ Usecase: developing locally, and avoiding to repeat code in production
 # with the model's performance, we move on to deploying it.
 #
 # In this use case, every time the email provider receives a new email, they want to
-# verify whether it is spam before displaying it in the recipient’s inbox. To achieve
+# verify whether it is spam before displaying it in the recipient's inbox. To achieve
 # this, they plan to integrate a machine learning model within a microservice. This
-# microservice will accept an email’s data as a JSON payload and return a score between
+# microservice will accept an email's data as a JSON payload and return a score between
 # 0 and 1, indicating the likelihood that the email is spam.
 #
 # To avoid rewriting the entire data pipeline when moving from model validation to
@@ -25,7 +25,7 @@ Usecase: developing locally, and avoiding to repeat code in production
 # of data that will be available at the input of the microservice. It helps ensure we
 # build models that rely only on information accessible at this specific point in the
 # product pipeline. For example, since we want to detect spam before the email reaches
-# the recipient’s inbox, we cannot use features that are only available after the
+# the recipient's inbox, we cannot use features that are only available after the
 # recipient opens the email.
 #
 # Since this example is focused on the pipeline construction itself, we won't look at
@@ -78,7 +78,7 @@ n_samples = 1000
 
 # %%
 # In this use case, the emails to be tested when the model is put in production
-# are not contained in a dataframe, but in a json. As a result, our training data
+# are not contained in a dataframe, but in a JSON. As a result, our training data
 # should also be contained in a list of dictionaries.
 
 X = [
@@ -100,17 +100,17 @@ y = np.random.binomial(n=1, p=0.9, size=n_samples)
 # %%
 # Building the DataOps plan
 # -------------------------
-# Let's start our DataOps plan by indicating what are the features and the target
-# variable.
+# Let's start our DataOps plan by indicating what the features and the target
+# variables are.
 import skrub
 
 X = skrub.X(X)
 y = skrub.y(y)
 
 # %%
-# The variable X for now is a list of dicts. It's not something that an estimator can
-# handle directly.
-# Let's convert it to a pandas DataFrame using :func:`~skrub.DataOp.skb.apply_func`.
+# The variable X is currently a list of dictionaries, which estimators cannot
+# handle directly. Let's convert it to a pandas DataFrame using
+# :func:`~skrub.DataOp.skb.apply_func`.
 import pandas as pd
 
 df = X.skb.apply_func(pd.DataFrame)
@@ -143,7 +143,7 @@ with open("learner.pkl", "wb") as f:
 # Production phase
 # ----------------
 #
-# In our microservice, we receive a payload in json format.
+# In our microservice, we receive a payload in JSON format.
 X_input = {
     "id": generate_id(),
     "sender": generate_email(),
@@ -165,7 +165,7 @@ prediction
 # Conclusion
 # ----------
 #
-# Thanks to the skrub DataOps and learner, we are assured that all the transformations
-# and preprocessing done during model development are exactly the same that are done in
-# production.
-# It becomes easy and straightforward to deploy.
+# Thanks to the skrub DataOps and learner, we ensure that all the transformations
+# and preprocessing done during model development are exactly the same as those done in
+# production. This makes deployment straightforward and reduces the risk of errors
+# when moving from development to production environments.

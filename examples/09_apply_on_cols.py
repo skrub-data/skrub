@@ -96,7 +96,7 @@ pipeline.fit_transform(Xt)
 #
 # We define a column filter using skrub selectors with a lambda function. Note that
 # the same effect can be obtained directly by using
-# :func:`~srkub.selectors.cardinality_below`.
+# :func:`~skrub.selectors.cardinality_below`.
 from sklearn.preprocessing import OrdinalEncoder
 
 low_cardinality = s.filter(lambda col: col.nunique() < 40)
