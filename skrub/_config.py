@@ -61,8 +61,8 @@ def get_config():
 
     Examples
     --------
-    >>> import sklearn
-    >>> config = sklearn.get_config()
+    >>> import skrub
+    >>> config = skrub.get_config()
     >>> config.keys()
     dict_keys([...])
     """

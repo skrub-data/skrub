@@ -33,4 +33,3 @@ See the examples section for full code snippets.
    joining_dataframes
    dataops
    configuration
-   datasets

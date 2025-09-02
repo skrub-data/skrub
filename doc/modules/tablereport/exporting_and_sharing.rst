@@ -1,6 +1,4 @@
 .. |TableReport| replace:: :class:`~skrub.TableReport`
-.. |set_config| replace:: :func:`~skrub.set_config`
-.. |column_associations| replace:: :func:`~skrub.column_associations`
 
 Exporting and Sharing the |TableReport|
 =======================================
@@ -9,7 +7,7 @@ The |TableReport| is a standalone object that does not require a running noteboo
 to be accessed after generation: it can be exported in HTML format and opened
 directly in a browser as a HTML page.
 
->>> import io # to avoid writing to disk
+>>> import io # to avoid writing to disk in the example
 >>> tr = TableReport(df)
 >>> html_buffer = io.StringIO()
 >>> tr.write_html(html_buffer)  # save to file

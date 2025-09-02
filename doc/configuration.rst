@@ -1,10 +1,10 @@
 Configuration
 =============
 
-This section covers configuration options and utilities.
+This section covers the skrub global configurations and dataset utilities.
 
 .. toctree::
    :maxdepth: 3
 
    modules/configuration/customizing_configuration
-   modules/configuration/configuration_parameters
+   modules/datasets/fetching_datasets
