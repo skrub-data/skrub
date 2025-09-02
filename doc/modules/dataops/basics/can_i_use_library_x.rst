@@ -1,7 +1,7 @@
 .. _can_i_use_library_x:
 
 Can I use library "x" with Skrub DataOps?
-=========================================
+==========================================
 
 Yes, Skrub DataOps are designed to be "transparent", so that any method used by
 the underlying data structures (e.g., Pandas or Polars) can be accessed directly:

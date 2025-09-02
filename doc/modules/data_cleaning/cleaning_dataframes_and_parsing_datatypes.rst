@@ -24,7 +24,7 @@ each column:
   only missing values (``drop_null_fraction``), only a constant value
   (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
   By default, the |Cleaner| keeps all columns, unless they contain only
-  missing values. Refer to :ref:`removing_unneded_columns` for more detail on this
+  missing values. Refer to :ref:`removing_unneeded_columns` for more detail on this
   operation.
 
 .. note::

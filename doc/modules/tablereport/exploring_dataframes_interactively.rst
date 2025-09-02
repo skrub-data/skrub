@@ -31,7 +31,8 @@ The |TableReport| of a table can be generated as follows:
 The command ``TableReport(df).open()`` opens the report in a browser window.
 
 A demo of the |TableReport|
-Pre-computed examples of of the |TableReport| are available
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Pre-computed examples of the |TableReport| are available
 `here <https://skrub-data.org/skrub-reports/examples/index.html>`_, and you can
 try it out on your data `here <https://skrub-data.org/skrub-reports/index.html>`_.
 

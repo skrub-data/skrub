@@ -69,7 +69,7 @@ We want to drop constant columns, and columns that contain only single values.
 2  2  6
 
 Applying |DropUninformative| only to a subset of columns
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to combine the |DropUninformative| transformer to a subset of columns
 using |ApplyToCols|.

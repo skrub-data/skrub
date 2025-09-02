@@ -1,7 +1,6 @@
 .. _user_guide_tabular_pipeline:
 
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
-.. |tabular_pipeline| replace:: :class:`~skrub.tabular_pipeline`
 .. |tabular_pipeline| replace:: :func:`~skrub.tabular_pipeline`
 .. |HistGradientBoostingRegressor| replace:: :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 .. |HistGradientBoostingClassifier| replace:: :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
