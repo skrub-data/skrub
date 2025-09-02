@@ -17,8 +17,8 @@ as additional information in other tabs.
   between columns.
 - Built-in filters allow selection of columns by dtype and other conditions.
 
-
 The |TableReport| of a table can be generated as follows:
+
 >>> from skrub import TableReport
 >>> import pandas as pd
 >>> df = pd.DataFrame({
