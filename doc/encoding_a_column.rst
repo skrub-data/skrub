@@ -12,5 +12,4 @@ categorical and datetime columns.
    :maxdepth: 2
 
    modules/encoders/feature_engineering_categorical
-   modules/datetimes/parsing_datetimes
-   modules/datetimes/encoding_datetime_features
+   modules/datetimes/feature_engineering_datetimes

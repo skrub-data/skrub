@@ -193,6 +193,7 @@ dtype: datetime64[...]
 >>> to_dt.format_
 '%m/%d/%Y'
 
+.. _user_guide_datetime_encoder:
 
 Encoding and Feature Engineering with |DatetimeEncoder|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
