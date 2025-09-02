@@ -11,6 +11,5 @@ This section describes the usage of both objects.
 .. toctree::
    :maxdepth: 3
 
-   modules/tablevectorizer/overview
-   modules/tablevectorizer/usage_examples
-   modules/tablevectorizer/advanced_features
+   modules/build_pipeline/table_vectorizer
+   modules/build_pipeline/tabular_pipeline
