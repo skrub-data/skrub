@@ -1,8 +1,9 @@
-Cleaning a Dataframe
-====================
+Pre-processing a Dataframe
+==========================
 
-This section covers the various objects provided by skrub to help with cleaning
-dataframes by removing uninformative columns and scaling numerical features.
+This section covers the various objects provided by Skrub to help with cleaning
+dataframes by parsing specific dtypes, removing uninformative columns, scaling
+numerical features, and potentially removing typos and unneeded duplicates.
 
 .. toctree::
    :maxdepth: 3

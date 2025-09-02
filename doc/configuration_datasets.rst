@@ -1,5 +1,5 @@
-Configuration
-=============
+Skrub configuration and dataset utilities
+=========================================
 
 This section covers the skrub global configurations and dataset utilities.
 

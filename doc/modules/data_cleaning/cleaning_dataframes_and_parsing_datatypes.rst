@@ -1,14 +1,57 @@
 .. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
 .. |Cleaner| replace:: :class:`~skrub.Cleaner`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
-.. |deduplicate| replace:: :func:`~skrub.deduplicate`
+.. |ToDatetime| replace:: :class:`~skrub.ToDatetime`
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
 .. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
-.. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
 
 Cleaning dataframes and parsing datatypes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------------
+
+Very often, the first steps involved in preparing the data contained in a dataframe
+for further use involve understanding the datatypes that are contained in the data,
+potentially parsing them in a more suitable format (e.g., from string to number,
+or to datetime).
+
+The |Cleaner| aids with this by running the following set of transformations on
+each column:
+
+- ``CleanNullStrings()``: replace strings typically used to represent missing values
+  with a null value suitable for the column under consideration.
+
+- |DropUninformative()|: drop the column if it is considered to be
+  "uninformative". A column is considered to be "uninformative" if it contains
+  only missing values (``drop_null_fraction``), only a constant value
+  (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+  By default, the |Cleaner| keeps all columns, unless they contain only
+  missing values. Refer to :ref:`removing_unneded_columns` for more detail on this
+  operation.
+
+.. note::
+
+  Setting ``drop_if_unique`` to ``True`` may lead to dropping columns
+  that contain text or IDs.
+
+- |ToDatetime()|: parse datetimes represented as strings and return them as
+  actual datetimes with the correct dtype. If ``datetime_format`` is provided,
+  it is forwarded to |ToDatetime()|. Otherwise, the format is guessed according
+  to common datetime formats.
+
+- ``CleanCategories()``: if the dtype of the column is detected to be "Categorical",
+  process it depending on the dataframe library (Pandas or Polars) to force
+  consistent typing and avoid issues downstream.
+
+- ``ToStr()``: convert columns to strings, unless they have a more informative dtype,
+  i.e., they are numerical, categorical, or datetime.
+
+If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
+numeric columns to ``np.float32`` dtype, ensuring a consistent representation
+of numbers and missing values. This can be useful if the ``Cleaner``
+is used as a preprocessing step at the beginning of a ML pipeline.
+
+
+The |Cleaner| is a scikit-learn compatible transformer:
 
 >>> from skrub import Cleaner
 >>> import pandas as pd
@@ -23,11 +66,10 @@ Cleaning dataframes and parsing datatypes
   0   1 2024-05-05
   1   2 2024-05-06
   2   3 2024-05-07
+>>> df_clean.dtypes
+id               int64
+date    datetime64[ns]
+dtype: object
 
-The |Cleaner| converts data types and Nan values in dataframes to ease downstream preprocessing. It includes:
-
-- Replacing strings that represent missing values with NA markers
-- Dropping uninformative columns (see |DropUninformative|)
-- Parsing datetimes from datetime strings
-- Forcing consistent categorical typing
-- Converting columns to string, unless they have a more informative datatype (numerical, datetime, categorical)
+Note that the ``"all_missing"`` column has been dropped, and that the ``"date"``
+column has correctly been parsed as a datetime column.

@@ -10,7 +10,7 @@
 Converting numeric dtypes to ``float32`` with the |Cleaner|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, the |Cleaner| parses numeric datatypes and does not cast them to a
+By default, the |Cleaner| tries to parse numeric datatypes even if  and does not cast them to a
 different dtype. In some cases, it may be beneficial to have the same numeric
 dtype for all numeric columns to guarantee compatibility between values.
 

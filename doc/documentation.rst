@@ -32,4 +32,4 @@ See the examples section for full code snippets.
    selectors
    joining_dataframes
    dataops
-   configuration
+   configuration_datasets

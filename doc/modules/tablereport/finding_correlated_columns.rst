@@ -14,3 +14,6 @@ and `Pearson’s Correlation Coefficient <https://en.wikipedia.org/wiki/Pearson_
 The result is returned as a dataframe that contains the column name and idx for the
 left and right table and both associations; results are sorted in descending order
 by Cramer’s V association.
+
+This can be useful to have access to the information used in the |TableReport|
+for later use (e.g., to select which columns to drop).

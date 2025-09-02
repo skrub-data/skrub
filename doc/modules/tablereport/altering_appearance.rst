@@ -15,5 +15,6 @@ parameter.
 It is also possible to specify the floating point precision by setting the appropriate
 ``float_precision`` parameter.
 
-or by altering the configuration with |set_config| (refer to the
-|TableReport| and |set_config| docs for more detail).
+Parameters can be made permanent in a script by altering the configuration with
+|set_config|, or by setting the respective environment variables. Refer to
+:ref:`skrub_configuration_parameters` for more detail.
