@@ -5,14 +5,14 @@
 .. _userguide_datetimes:
 
 Handling datetimes: parsing from strings and encoding as numbers
-----------------------------------------------------------------
+================================================================
 Depending on the input data, timestamps and dates can cause issues, or require
 specific parsing. For example, reading input data stored in ``csv`` format results
 in datetime columns that are treated as strings.
 
 In such cases, parsing columns that contain timestamps or dates so that they are
 treated as datetime objects allows to make use of advanced functionalities available
-both in the standard Python library, and in Pandas and Polars.
+in the standard Python library, Pandas and Polars.
 
 Skrub provides objects that help with parsing such data (|ToDatetime|), as well
 as the |DatetimeEncoder|, a datetime-specific encoder that feature engineers
@@ -24,12 +24,11 @@ Parsing Datetime Strings with |ToDatetime|
 
 Skrub provides helpers to parse datetime string columns automatically:
 
-- The |ToDatetime| transformer learns a
-mapping between columns and their formats. It then applies this mapping during the
-transform step.
-- The |to_datetime| function applies the |ToDatetime| transformer to all columns in
-the dataframe, and tries to parse them as datetimes.  The format can be inferred
-or user-specified with the `format` argument.
+- The |ToDatetime| transformer learns a mapping between columns and their formats.
+  It then applies this mapping during the transform step.
+- The |to_datetime| function applies the |ToDatetime| transformer to all columns
+  in the dataframe, and tries to parse them as datetimes. The format can be
+  inferred or user-specified with the ``format`` argument.
 
 
 >>> import pandas as pd
@@ -139,7 +138,7 @@ Here the timezone is "Europe/London" and the times are offset by 1 hour. During
 dtype: datetime64[..., Europe/Paris]
 
 Moreover, we may have to transform a timezone-naive column whereas the
-transformer was fitted on a timezone-aware column. Note that is somewhat a
+transformer was fitted on a timezone-aware column. Note that this is somewhat a
 corner case unlikely to happen in practice if the inputs to ``fit`` and
 ``transform`` come from the same dataframe.
 
@@ -174,7 +173,7 @@ dtype: datetime64[...]
 >>> to_dt.format_
 '%m/%d/%Y'
 
-Here we could infer ``'%m/%d/%Y'`` because there are not 23 months in a year.
+Here we could infer ``'%m/%d/%Y'`` because there is no 23rd month in a year.
 Similarly,
 
 >>> s = pd.Series(["23/05/2024"])
@@ -184,7 +183,7 @@ dtype: datetime64[...]
 >>> to_dt.format_
 '%d/%m/%Y'
 
-In the case it cannot be inferred, the USA convention is used:
+In the case where it cannot be inferred, the USA convention is used:
 
 >>> s = pd.Series(["03/05/2024"])
 >>> to_dt.fit_transform(s)
@@ -203,9 +202,8 @@ the |DatetimeEncoder|, by extracting temporal features (year, month, day,
 hour, etc.). No timezone conversion is done; the timezone
 in the feature is retained. The |DatetimeEncoder| rejects non-datetime columns,
 so it should only be applied after conversion using |ToDatetime|.
-No timezone conversion is performed: if the input column is timezone aware, the
-extracted features will be in the column's timezone; this is normally the case
-when the datetime column has been encoded with |ToDatetime|.
+If the input column is timezone aware, the extracted features will be in the column's
+timezone; this is normally the case when the datetime column has been encoded with |ToDatetime|.
 
 >>> import pandas as pd
 >>> login = pd.to_datetime(
@@ -233,6 +231,7 @@ Additionally, the |DatetimeEncoder| can include the following features:
 
 Periodic encoding is supported through trigonometric (circular) and spline
 encoding: set the ``periodic_encoding`` parameter to ``circular`` or ``spline``.
+
 .. figure:: /_static/periodic_features.png
     :alt: Periodic encoding of datetime features
     :align: center
@@ -243,10 +242,12 @@ encoding: set the ``periodic_encoding`` parameter to ``circular`` or ``spline``.
 Note that if ``periodic_encoding`` is set, the respective features are removed
 to reduce redundancy:
 
+>>> encoder = DatetimeEncoder()
 >>> encoder.fit_transform(login).columns
 Index(['login_year', 'login_month', 'login_day', 'login_hour',
        'login_total_seconds'],
       dtype='object')
+>>> from sklearn.pipeline import make_pipeline
 >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
 >>> encoder.fit_transform(login).columns
 Index(['login_year', 'login_total_seconds', 'login_month_circular_0',

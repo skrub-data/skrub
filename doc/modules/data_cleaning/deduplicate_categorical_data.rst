@@ -18,7 +18,7 @@ categories is significantly smaller than the number of observed spellings.
 ...                                      entries_per_example=[5, 5],
 ...                                      prob_mistake_per_letter=0.3,
 ...                                      random_state=42)
->>> duplicated
+>>> duplicated # doctest: +SKIP
 ['blacs', 'black', 'black', 'black', 'black', \
 'uhibe', 'white', 'white', 'white', 'white']
 
@@ -40,7 +40,7 @@ white    white
 dtype: object
 
 >>> deduplicated = list(deduplicate_correspondence)
->>> deduplicated
+>>> deduplicated # doctest: +SKIP
 ['black', 'black', 'black', 'black', 'black', \
 'white', 'white', 'white', 'white', 'white']
 

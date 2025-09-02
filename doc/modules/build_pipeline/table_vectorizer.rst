@@ -63,6 +63,7 @@ it to |TableVectorizer|.
 >>> text_enc = TextEncoder()
 >>> num_enc = SquashingScaler()
 >>> table_vec = TableVectorizer(datetime=datetime_enc, high_cardinality=text_enc, numeric=num_enc)
+>>> table_vec
 TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='circular'),
                 high_cardinality=TextEncoder(), numeric=SquashingScaler())
 
@@ -71,6 +72,7 @@ Besides the transformers provided by Skrub, the |TableVectorizer| can also take
 user-specified transformers that are applied to given columns.
 
 >>> from sklearn.preprocessing import OrdinalEncoder
+>>> import pandas as pd
 >>> encoder = OrdinalEncoder()
 >>> df = pd.DataFrame({
 ...     "values": ["A", "B", "C"]

@@ -10,55 +10,54 @@
 Encoding string and text columns as numerical features
 ======================================================
 
-In skrub, categorical features are features that are not parsed to be either numbers,
+In skrub, categorical features are features that are not parsed as either numbers
 or datetimes. They may have a Categorical datatype, or they may simply be strings.
 These features are very common in practice, and there are various strategies that
-can be employed.
+can be employed to handle them.
 
 A common approach is to use the |OneHotEncoder| or the |OrdinalEncoder| on
 categorical features, but both approaches have limitations. The |OneHotEncoder|
-becomes expensive when the number of distinct features becomes large, while the
+becomes expensive when the number of distinct values becomes large, while the
 |OrdinalEncoder| introduces order in features that may not have an inherent ordering.
 
-To address these shortcomings, and generalize to more columns, skrub implements
-four different transformers, each with pros and cons.
+To address these shortcomings and generalize to more columns, skrub implements
+four different transformers, each with its own pros and cons.
 
 - **|StringEncoder|: the default encoder, strong in most cases**: A strong and quick
-baseline for both short strings with high cardinality and long text. This encoder
-computes the ngram frequency using tf-idf vectorization, followed by truncated SVD
-(`Latent Semantic Analysis <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_).
-This is the default encoder used by the |TableVectorizer| and the |tabular_pipeline|.
+  baseline for both short strings with high cardinality and long text. This encoder
+  computes the n-gram frequency using tf-idf vectorization, followed by truncated SVD
+  (`Latent Semantic Analysis <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_).
+  This is the default encoder used by the |TableVectorizer| and the |tabular_pipeline|.
 
 - **|TextEncoder|: language model-based, strong on text but expensive to run**:
-This encoder encodes string features using pretrained language models from the
-HuggingFace Hub. It is a wrapper around `sentence-transformers <https://sbert.net/>`_
-compatible with the scikit-learn API and usable in pipelines. Best for free-flowing
-text and when columns include context found in the pretrained model (e.g., name of
-cities etc.). Note that this encoder can take a very long time to train, especially
-on large datasets and on CPU. The |TextEncoder| has additional dependencies that
-are not included in the standard skrub installation.
-Refer to :ref:`installation_instructions` for info on how to prepare the
-environment.
+  This encoder encodes string features using pretrained language models from the
+  HuggingFace Hub. It is a wrapper around `sentence-transformers <https://sbert.net/>`_
+  compatible with the scikit-learn API and usable in pipelines. Best for free-flowing
+  text and when columns include context found in the pretrained model (e.g., names of
+  cities etc.). Note that this encoder can take a very long time to train, especially
+  on large datasets and on CPU. The |TextEncoder| has additional dependencies that
+  are not included in the standard skrub installation.
+  Refer to :ref:`installation_instructions` for info on how to prepare the
+  environment.
 
 - **|MinHashEncoder|: very fast encoder, but not as effective as the others**:
-This encoder decomposes strings into ngrams, then applies the MinHash method to
-convert them into numerical features. Fast to train, but features may yield worse
-results compared to other methods.
+  This encoder decomposes strings into n-grams, then applies the MinHash method to
+  convert them into numerical features. Fast to train, but features may yield worse
+  results compared to other methods.
 
 - **|GapEncoder|: an interpretable, if slower encoder**: The |GapEncoder| estimates
-"latent categories" on the training data by finding common ngrams between strings,
-then encodes the categories as real numbers. It allows access to grouped features
-via ``.get_feature_names_out()``, which allows for better interpretability. This
-encoder may require a long time to train.
+  "latent categories" on the training data by finding common n-grams between strings,
+  then encodes the categories as real numbers. It allows access to grouped features
+  via ``.get_feature_names_out()``, which allows for better interpretability. This
+  encoder may require a long time to train.
 
 All encoders work like regular scikit-learn transformers. All encoders
 take a parameter ``n_components`` to specify how many features should
-be generated for each feature.
+be generated for each input feature.
 
 >>> import pandas as pd
 >>> from skrub import StringEncoder
 
->>> enc = StringEncoder(n_components=2)
 >>> X = pd.Series([
 ...   "The professor snatched a good interview out of the jaws of these questions.",
 ...   "Bookmarking this to watch later.",
@@ -70,10 +69,10 @@ be generated for each feature.
 The result of the ``.fit_transform`` is a new dataframe that contains as many columns
 as the number of components specified (here, 2).
 Features generated by each encoder (except the |GapEncoder|) are always named after
-the name of the column (here, ``"video comments"``), followed by the index of the
+the original column name (here, ``"video comments"``), followed by the index of the
 resulting feature.
 
->>> encoder.fit_transform(X)# +docstring: SKIP+
+>>> encoder.fit_transform(X) # doctest: +SKIP
    video comments_0  video comments_1
 0          1.322969         -0.163066
 1          0.379689          1.659318
@@ -81,11 +80,11 @@ resulting feature.
 
 The |GapEncoder| names the columns after the categories it estimates from the
 data, which are built by capturing combinations of substrings that frequently co-occur.
-More info on the functioning and the theoretical background of the |GapEncoder|
-are available in the documentation of the encoder.
+More information on the functioning and the theoretical background of the |GapEncoder|
+is available in the documentation of the encoder itself.
 
 >>> from skrub import GapEncoder
->>> GapEncoder(n_components=2).fit_transform(X) # +docstring: SKIP+
+>>> GapEncoder(n_components=2).fit_transform(X) # doctest: +SKIP
    video comments: bookmarking, except, lyrics  video comments: professor, questions, interview
 0                                     0.000786                                         1.360704
 1                                     0.559531                                         0.000717
@@ -128,4 +127,4 @@ Comparing the categorical encoders included in skrub
 :ref:`This example <example_string_encoders>` and this
 `blog post <https://skrub-data.org/skrub-materials/pages/notebooks/categorical-encoders/categorical-encoders.html>`_
 include a more systematic analysis of each method.
-The docstrings of each encoder provide additional context on how they work.
+The docstrings of each encoder provide additional details on how they work.

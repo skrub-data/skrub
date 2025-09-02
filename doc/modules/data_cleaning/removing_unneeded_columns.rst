@@ -7,38 +7,34 @@
 
 Removing unneeded columns with |DropUninformative| and |Cleaner|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Tables may include columns that do not carry useful information. These columns
-increase computational cost and may reduce downstream performance.
 
-The |DropUninformative| transformer is used to remove features that do not
-provide useful information for the analysis or model, by using various heuristics
-to select columns that may be considered "uninformative", and thus potentially
-problematic.
+Data tables often include columns that do not provide meaningful information.
+These columns increase computational cost and may reduce downstream performance.
 
-The heuristics used include:
+The |DropUninformative| transformer removes features that are deemed "uninformative"
+using various heuristics. These heuristics include:
 
-- Dropping all columns that contain a fraction of missing values larger than the given
-  threshold. By default, the threshold is 1, so that only columns that contain
-  only missing values are dropped. The threshold can be adjusted by setting the
-  ``drop_null_fraction`` parameter to be lower than 1. Setting ``drop_null_fraction``
-  to ``None`` disables this check and keeps all columns.
-- Dropping constant columns, that is columns that contain only a single value. This
-  check is controlled by the ``drop_if_constant`` parameter, and is set to ``False``
-  by default. Note that missing values are considered as an additional distinct value
-  by this heuristic, so a constant column that contains missing values *will not
-  be dropped*.
-- Dropping string/categorical columns where each row has a unique value. This may
-  be useful if a column is an alphanumeric ID that does not bring information.
-  By default, the relative parameter ``drop_if_unique`` is set to ``False``. Note
-  that setting this parameter to ``True`` may lead to dropping columns that contain
-  free-flowing text. Additionally, this check is done only on string/categorical
-  columns to avoid dropping numerical columns by mistake.
+- **Dropping columns with excessive missing values**: Columns are dropped if the
+  fraction of missing values exceeds the specified threshold. By default, the
+  threshold is 1, meaning only columns with all missing values are dropped. Adjust
+  this behavior by setting the ``drop_null_fraction`` parameter. Setting it to
+  ``None`` disables this check entirely.
 
-|DropUninformative| is used by both |TableVectorizer| and |Cleaner|; both accept
-the same parameters to drop columns accordingly.
+- **Dropping constant columns**: Columns containing only a single unique value are
+  removed. This behavior is controlled by the ``drop_if_constant`` parameter, which
+  is set to ``False`` by default. Note that missing values are treated as distinct
+  values, so constant columns with missing values will not be dropped.
 
+- **Dropping unique string/categorical columns**: Columns where each row has a
+  unique value (e.g., alphanumeric IDs) can be dropped. This is controlled by the
+  ``drop_if_unique`` parameter, which is ``False`` by default. Be cautious when
+  enabling this option, as it may remove columns containing free-flowing text.
+
+|DropUninformative| is used by both |TableVectorizer| and |Cleaner|, and both
+accept the same parameters for dropping columns.
 
 Consider the following example:
+
 >>> import numpy as np
 >>> import pandas as pd
 >>> from skrub import Cleaner
@@ -57,8 +53,7 @@ Consider the following example:
 1          1  3         x  5      NaN
 2          1  2         x  6      NaN
 
-
-We want to drop constant columns, and columns that contain only single values.
+To drop constant columns and those with only single values:
 
 >>> cleaner = Cleaner(drop_if_constant=True)
 >>> df_cleaned = cleaner.fit_transform(df)
@@ -69,10 +64,10 @@ We want to drop constant columns, and columns that contain only single values.
 2  2  6
 
 Applying |DropUninformative| only to a subset of columns
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is possible to combine the |DropUninformative| transformer to a subset of columns
-using |ApplyToCols|.
+You can apply the |DropUninformative| transformer to specific columns using
+|ApplyToCols|.
 
 >>> from skrub import ApplyToCols
 >>> df = pd.DataFrame({
@@ -85,15 +80,15 @@ using |ApplyToCols|.
 1         A2          bar
 2         A3          baz
 
-Dropping unique columns in this dataframe returns an empty dataframe:
+Dropping unique columns in this dataframe results in an empty dataframe:
+
 >>> cleaner = Cleaner(drop_if_unique=True)
 >>> cleaner.fit_transform(df)
 Empty DataFrame
 Columns: []
 Index: [0, 1, 2]
 
-In order to apply the transformer only on the ``id_to_drop`` column, we can use
-|ApplyToCols|:
+To apply the transformer only to the ``id_to_drop`` column, use |ApplyToCols|:
 
 >>> ApplyToCols(cleaner, cols="id_to_drop")
 ApplyToCols(cols='id_to_drop', transformer=Cleaner(drop_if_unique=True))
@@ -103,7 +98,6 @@ ApplyToCols(cols='id_to_drop', transformer=Cleaner(drop_if_unique=True))
 1          bar
 2          baz
 
-It is possible to apply complex filtering operations in order to apply transformers
-only to specific subsets of columns:
-refer to User Guide on :ref:`user_guide_selectors`  and the documentation of
-|ApplyToCols| for more detail on how to apply transformers to specific columns.
+For more advanced filtering operations, refer to the User Guide on
+:ref:`user_guide_selectors` and the |ApplyToCols| documentation for details
+on applying transformers to specific columns.

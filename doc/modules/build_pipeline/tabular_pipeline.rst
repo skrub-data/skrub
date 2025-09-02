@@ -17,6 +17,7 @@ If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
 |tabular_pipeline| adds a |StandardScaler| and a |SimpleImputer| to the pipeline.
 
 >>> from sklearn.linear_model import LinearRegression
+>>> from skrub import tabular_pipeline
 >>> tabular_pipeline(LinearRegression()) # doctest: +SKLEARN_VERSION >= "1.4" +ELLIPSIS
 Pipeline(steps=[('tablevectorizer',
                  TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),

@@ -18,17 +18,16 @@ It is possible to change configuration options using the |set_config| function:
 This alters the behavior of skrub in the current script. Each configuration parameter
 has an environment variable that can be used to set it permanently.
 
-Additionally, a |config_context| is provided to allows temporarily altering the
+Additionally, a |config_context| is provided to allow temporarily altering the
 configuration:
 
 >>> import skrub
 >>> with skrub.config_context(max_plot_columns=1):
 ...     pass
 
-With the context, only the code called from within the ``with`` statement is
-altered.
+Within this context, only the code executed inside the ``with`` statement is affected.
 
-The |get_config| function allows to retrieve the current configuration.
+The |get_config| function allows retrieving the current configuration.
 
 Configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -54,7 +53,7 @@ These are the parameters currently available in the global configuration:
    * - ``use_table_report``
      - ``False``
      - ``SKB_USE_TABLE_REPORT``
-     - If set to ``True``, the html representation of Pandas and Polars dataframes is replaced with the :class:`~skrub.TableReport`.
+     - If set to ``True``, the HTML representation of Pandas and Polars dataframes is replaced with the :class:`~skrub.TableReport`.
    * - ``use_table_report_data_ops``
      - ``True``
      - ``SKB_USE_TABLE_REPORT_DATA_OPS``

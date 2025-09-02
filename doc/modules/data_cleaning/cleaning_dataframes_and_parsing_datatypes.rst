@@ -8,47 +8,44 @@
 Cleaning dataframes and parsing datatypes
 -----------------------------------------
 
-Very often, the first steps involved in preparing the data contained in a dataframe
-for further use involve understanding the datatypes that are contained in the data,
-potentially parsing them in a more suitable format (e.g., from string to number,
-or to datetime).
+Very often, the first steps in preparing a dataframe for further use involve
+understanding the datatypes in the data and parsing them into a more suitable format
+(e.g., from string to number or datetime).
 
 The |Cleaner| aids with this by running the following set of transformations on
 each column:
 
-- ``CleanNullStrings()``: replace strings typically used to represent missing values
+- ``CleanNullStrings()``: Replace strings typically used to represent missing values
   with a null value suitable for the column under consideration.
 
-- |DropUninformative()|: drop the column if it is considered to be
-  "uninformative". A column is considered to be "uninformative" if it contains
-  only missing values (``drop_null_fraction``), only a constant value
-  (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
-  By default, the |Cleaner| keeps all columns, unless they contain only
-  missing values. Refer to :ref:`removing_unneeded_columns` for more detail on this
-  operation.
+- |DropUninformative()|: Drop the column if it is considered "uninformative."
+  A column is considered "uninformative" if it contains only missing values
+  (``drop_null_fraction``), only a constant value (``drop_if_constant``), or if all
+  values are distinct (``drop_if_unique``). By default, the |Cleaner| keeps all columns
+  unless they contain only missing values. Refer to :ref:`removing_unneeded_columns`
+  for more detail on this operation.
 
 .. note::
 
   Setting ``drop_if_unique`` to ``True`` may lead to dropping columns
   that contain text or IDs.
 
-- |ToDatetime()|: parse datetimes represented as strings and return them as
+- |ToDatetime()|: Parse datetimes represented as strings and return them as
   actual datetimes with the correct dtype. If ``datetime_format`` is provided,
   it is forwarded to |ToDatetime()|. Otherwise, the format is guessed according
   to common datetime formats.
 
-- ``CleanCategories()``: if the dtype of the column is detected to be "Categorical",
-  process it depending on the dataframe library (Pandas or Polars) to force
-  consistent typing and avoid issues downstream.
+- ``CleanCategories()``: If the dtype of the column is detected as "Categorical",
+  process it based on the dataframe library (Pandas or Polars) to ensure
+  consistent typing and avoid downstream issues.
 
-- ``ToStr()``: convert columns to strings, unless they have a more informative dtype,
-  i.e., they are numerical, categorical, or datetime.
+- ``ToStr()``: Convert columns to strings unless they have a more informative dtype,
+  such as numerical, categorical, or datetime.
 
 If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
 numeric columns to ``np.float32`` dtype, ensuring a consistent representation
 of numbers and missing values. This can be useful if the ``Cleaner``
-is used as a preprocessing step at the beginning of a ML pipeline.
-
+is used as a preprocessing step at the beginning of an ML pipeline.
 
 The |Cleaner| is a scikit-learn compatible transformer:
 
@@ -71,7 +68,7 @@ date    datetime64[ns]
 dtype: object
 
 Note that the ``"all_missing"`` column has been dropped, and that the ``"date"``
-column has correctly been parsed as a datetime column.
+column has been correctly parsed as a datetime column.
 
 Converting numeric dtypes to ``float32`` with the |Cleaner|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,7 +94,6 @@ dtype: object
 >>> df_cleaned.dtypes
 id    float32
 dtype: object
-
 
 Setting the dtype to ``float32`` reduces RAM footprint for most use cases and
 ensures that all missing values have the same representation. This also ensures

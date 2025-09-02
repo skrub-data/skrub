@@ -8,6 +8,12 @@ to be accessed after generation: it can be exported in HTML format and opened
 directly in a browser as a HTML page.
 
 >>> import io # to avoid writing to disk in the example
+>>> from skrub import TableReport
+>>> import pandas as pd
+>>> df = pd.DataFrame({
+...     "id": [1, 2, 3],
+...     "value": [10, 20, 30],
+... })
 >>> tr = TableReport(df)
 >>> html_buffer = io.StringIO()
 >>> tr.write_html(html_buffer)  # save to file
