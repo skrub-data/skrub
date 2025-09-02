@@ -1,10 +1,9 @@
+.. _cleaning_dataframes:
+
 .. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
 .. |Cleaner| replace:: :class:`~skrub.Cleaner`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |ToDatetime| replace:: :class:`~skrub.ToDatetime`
-.. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
-.. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
-.. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
 
 Cleaning dataframes and parsing datatypes
 -----------------------------------------
@@ -73,3 +72,33 @@ dtype: object
 
 Note that the ``"all_missing"`` column has been dropped, and that the ``"date"``
 column has correctly been parsed as a datetime column.
+
+Converting numeric dtypes to ``float32`` with the |Cleaner|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, when the |Cleaner| encounters numerical dtypes (e.g., ``int8``,
+``float64``), it leaves them as-is. In some cases, it may be beneficial to have
+the same numeric dtype for all numeric columns to guarantee compatibility between
+values.
+
+The |Cleaner| allows conversion of numeric features to ``float32`` by setting
+the ``numeric_dtype`` parameter:
+
+>>> from skrub import Cleaner
+>>> cleaner = Cleaner(numeric_dtype="float32")
+>>> import pandas as pd
+>>> df = pd.DataFrame({
+...     "id": [1, 2, 3],
+... })
+>>> df.dtypes
+id    int64
+dtype: object
+>>> df_cleaned = cleaner.fit_transform(df)
+>>> df_cleaned.dtypes
+id    float32
+dtype: object
+
+
+Setting the dtype to ``float32`` reduces RAM footprint for most use cases and
+ensures that all missing values have the same representation. This also ensures
+compatibility with scikit-learn transformers.

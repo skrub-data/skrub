@@ -1,9 +1,3 @@
-.. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
-.. |Cleaner| replace:: :class:`~skrub.Cleaner`
-.. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
-.. |deduplicate| replace:: :func:`~skrub.deduplicate`
-.. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
-.. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
 .. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
 
@@ -20,7 +14,21 @@ Based on the specified ``quantile_range`` parameter, the scaler employs a scikit
 interval of length two, centering the median to zero. It therefore ensures that
 inliers are spread to a reasonable range. Afterwards, it uses a smooth clipping
 function to ensure all values (including outliers and infinite values) are in the
-range ``[-max_absolute_value, max_absolute_value]``.
+range ``[-max_absolute_value, max_absolute_value]``. By default,
+``max_absolute_value=3``.
+
+>>> import pandas as pd
+>>> import numpy as np
+>>> from skrub import SquashingScaler
+
+>>> X = pd.DataFrame(dict(col=[np.inf, -np.inf, 3, -1, np.nan, 2]))
+>>> SquashingScaler(max_absolute_value=3).fit_transform(X)
+array([[ 3.        ],
+        [-3.        ],
+        [ 0.49319696],
+        [-1.34164079],
+        [        nan],
+        [ 0.        ]])
 
 More information about the theory behind the scaler is available in the
 |SquashingScaler| documentation, while this
