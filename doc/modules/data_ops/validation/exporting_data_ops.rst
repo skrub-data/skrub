@@ -1,4 +1,4 @@
-.. _user_guide_exporting_data_ops_ref:
+.. _user_guide_data_ops_exporting:
 
 Exporting the DataOps plan as a learner and reusing it
 ========================================================
@@ -59,5 +59,5 @@ or in a different environment:
 >>> loaded_learner.fit({"orders": new_orders_df})
 SkrubLearner(data_op=<Apply TableVectorizer>)
 
-See :ref:`sphx_glr_auto_examples_data_ops_14_use_case.py` for an example of how
+See :ref:`sphx_glr_auto_examples_data_ops_15_use_case.py` for an example of how
 to use the learner in a microservice.

@@ -1,4 +1,4 @@
-.. _applying_different_transformers:
+.. _user_guide_data_ops_applying_different_transformers:
 
 Applying different transformers using Skrub selectors and DataOps
 =================================================================
@@ -11,9 +11,73 @@ For example, this can be useful to apply :class:`~skrub.TextEncoder` to columns
 that contain free-flowing text, and :class:`~skrub.StringEncoder` to other string
 columns that contain categorical data such as country names.
 
-In the example below, we apply a :class:`~skrub.StringEncoder` to columns
+Or, a string column may need to be encoded in an ordered way, like in the following
+example with grades.
+
+>>> import skrub
+>>> import pandas as pd
+>>> data = {
+>>>     "subject": ["Math", "English", "History", "Science", "Art"],
+>>>     "grade": ["A", "B", "C", "A", "B"]
+>>> }
+>>> df = pd.DataFrame(data)
+>>> grades = skrub.var("grades", df)
+>>> grades
+<Var 'grades'>
+Result:
+―――――――
+   subject grade
+0     Math     A
+1  English     B
+2  History     C
+3  Science     A
+4      Art     B
+
+We encode the subjects with the :class:`~skrub.StringEncoder`:
+>>> from skrub import StringEncoder
+>>> enc_subject = grades.skb.select(cols="subject").skb.apply(StringEncoder(n_components=2))
+
+For the grades, we define a :func:`~skrub.deferred`: function that maps the strings
+to the order we want:
+>>> @skrub.deferred
+>>> def encode_ordered(df):
+...     grade_order = {"A": 3, "B": 2, "C": 1}
+...     return df[["grade"]].map(grade_order)
+>>> enc_grades = grades.skb.apply_func(encode_ordered)
+>>> enc_grades
+<Call 'encode_ordered'>
+Result:
+―――――――
+0    3
+1    2
+2    1
+3    3
+4    2
+Name: grade, dtype: int64
+
+Finally, we combine the resulting dataframe and series using another deferred
+function. Remember that objects inside deferred functions are regular Python
+objects (more detail in :ref:`user_guide_data_ops_control_flow`).
+>>> @skrub.deferred
+... def combine(subjects, grades):
+...     subjects["grade"] = grades
+...     return subjects
+>>> combine(enc_subject, enc_grades) # DOCTEST +SKIP
+<Call 'combine'>
+Result:
+―――――――
+      subject_0     subject_1  grade
+0  1.800470e-07  1.704487e+00      3
+1  1.675736e-07 -1.998386e-08      2
+2  1.615310e+00  2.142048e-07      1
+3 -4.709333e-08  5.155605e-08      3
+4 -5.441046e-01  4.167525e-09      2
+
+
+In the next example, we apply a :class:`~skrub.StringEncoder` to columns
 with high cardinality, a mathematical operation to columns with nulls, and a
-:class:`~skrub.TableVectorizer` to all other columns.
+:class:`~skrub.TableVectorizer` to all other columns. We use the skrub
+:ref:`selectors <selectors_ref>` to select the columns based on our requirements.
 
 >>> from skrub import selectors as s
 >>> high_cardinality = s.string() - s.cardinality_below(2)
@@ -58,5 +122,5 @@ to obtain the final result:
 3  4.0  7.643604e-09  6.080018e-01   24.2
 
 More info on advanced column selection and manipulation be found in
-:ref:`userguide_selectors` and example
-:ref:`sphx_glr_auto_examples_10_apply_on_cols.py`.
+:ref:`user_guide_selectors` and example
+:ref:`sphx_glr_auto_examples_09_apply_to_cols.py`.

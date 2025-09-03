@@ -26,6 +26,7 @@ Suppose we want to process dataframes that look like this:
 
 We can create a skrub variable to represent that input:
 
+>>> import skrub
 >>> orders = skrub.var("orders", orders_df)
 
 Because we know that a dataframe will be provided as input to the computation, we

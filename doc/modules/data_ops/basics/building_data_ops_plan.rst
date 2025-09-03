@@ -1,3 +1,5 @@
+.. _user_guide_data_ops_plan:
+
 Building a simple DataOps plan
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -85,3 +87,6 @@ the actual operations are not being tracked.
 By working only on Data Ops we ensure that all the operations done on the data
 are added correctly to the computational graph, which then allows the resulting
 learner to execute all steps as intended.
+
+See :ref:`sphx_glr_auto_examples_data_ops_11_data_ops_intro.py` for an introductory
+example on how to use Skrub DataOps on a single dataframe.

@@ -1,4 +1,4 @@
-.. _hyperparameter_tuning:
+.. _user_guide_data_ops_hyperparameter_tuning:
 
 Using the Skrub ``choose_*`` functions to tune hyperparameters
 ==============================================================
@@ -125,4 +125,4 @@ It is also possible to use :meth:`ParamSearch.plot_results` to visualize the res
 of the search using a parallel coordinates plot.
 
 A full example of how to use hyperparameter search is available in
-:ref:`sphx_glr_auto_examples_data_ops_12_choices.py`.
+:ref:`sphx_glr_auto_examples_data_ops_13_choices.py`.

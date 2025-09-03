@@ -1,4 +1,4 @@
-.. _user_guide_truncating_dataplan_ref:
+.. _user_guide_data_ops_truncating_dataplan:
 
 Using only a part of a DataOps plan
 ===================================

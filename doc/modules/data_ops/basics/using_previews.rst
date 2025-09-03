@@ -1,4 +1,4 @@
-.. _using_previews:
+.. _user_guide_data_ops_using_previews:
 
 Using previews for easier development and debugging
 ===================================================
@@ -7,6 +7,7 @@ To make interactive development easier without having to call ``eval()`` after
 each step, it is possible to preview the result of a DataOp by passing a value
 along with its name when creating a variable.
 
+>>> import skrub
 >>> a = skrub.var("a", 10) # we pass the value 10 in addition to the name
 >>> b = skrub.var("b", 6)
 >>> c = a + b

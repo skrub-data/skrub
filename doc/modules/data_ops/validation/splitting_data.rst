@@ -1,4 +1,4 @@
-.. _splitting_data:
+.. _user_guide_data_ops_splitting_data:
 
 Splitting the data in train and test sets
 =========================================

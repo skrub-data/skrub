@@ -1,4 +1,4 @@
-.. _evaluating_debugging_dataops:
+.. _user_guide_data_ops_evaluating_debugging_dataops:
 
 Evaluating and debugging the DataOps plan with :meth:`.skb.full_report() <DataOp.skb.full_report>`
 ===============================================================================================
@@ -25,4 +25,5 @@ node and the error message, which can help in debugging the plan.
 By default, reports are saved in the ``skrub_data/execution_reports`` directory, but
 they can be saved to a different location with the ``ouptut_dir`` parameter.
 Note that the default path can be altered with the
-``SKRUB_DATA_DIR`` environment variable. See :ref:`userguide_utils` for more details.
+``SKRUB_DATA_DIR`` environment variable. See :ref:`user_guide_configuration_parameters`
+for more details.

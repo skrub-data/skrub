@@ -1,4 +1,4 @@
-.. _applying_ml_estimators:
+.. _user_guide_data_ops_applying_ml_estimators:
 
 Applying machine-learning estimators
 =====================================

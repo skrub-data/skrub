@@ -1,4 +1,4 @@
-.. _control_flow_dataops:
+.. _user_guide_data_ops_control_flow:
 
 Control flow in DataOps: eager and deferred evaluation
 ======================================================
@@ -12,6 +12,15 @@ This means we cannot use standard Python control flow statements such as ``if``,
 ``for``, ``with``, etc. with DataOps, because those constructs would execute
 immediately.
 
+>>> import pandas as pd
+>>> orders_df = pd.DataFrame(
+...     {
+...         "item": ["pen", "cup", "pen", "fork"],
+...         "price": [1.5, None, 1.5, 2.2],
+...         "qty": [1, 1, 2, 4],
+...     }
+... )
+>>> orders = skrub.var("orders", orders_df)
 >>> for column in orders.columns:
 ...     pass
 Traceback (most recent call last):
@@ -133,9 +142,9 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 
 .. rubric:: Examples
 
-- See :ref:`sphx_glr_auto_examples_data_ops_10_data_ops_intro.py` for an introductory
+- See :ref:`sphx_glr_auto_examples_data_ops_11_data_ops_intro.py` for an introductory
   example on how to use Skrub DataOps on a single dataframe.
-- See :ref:`sphx_glr_auto_examples_data_ops_11_multiple_tables.py` for an example
+- See :ref:`sphx_glr_auto_examples_data_ops_12_multiple_tables.py` for an example
   of how Skrub DataOps can be used to process multiple tables using dataframe APIs.
-- See :ref:`sphx_glr_auto_examples_data_ops_12_choices.py` for an example of
+- See :ref:`sphx_glr_auto_examples_data_ops_13_choices.py` for an example of
   hyper-parameter tuning using Skrub DataOps.

@@ -1,4 +1,4 @@
-.. _documenting_dataops_plan:
+.. _user_guide_documenting_data_ops_plan:
 
 Documenting the DataOps plan with node names and descriptions
 =============================================================
@@ -36,4 +36,4 @@ Result:
 >>> e.skb.eval({'d': -1}) # -1 * 10
 -10
 
-More info can be found in section :ref:`user_guide_truncating_dataplan_ref`.
+More info can be found in section :ref:`user_guide_data_ops_truncating_dataplan`.

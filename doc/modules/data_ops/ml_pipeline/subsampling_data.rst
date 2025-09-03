@@ -1,4 +1,4 @@
-.. _user_guide_subsampling:
+.. _user_guide_data_ops_subsampling:
 
 Subsampling data for easier development and debugging
 =====================================================
@@ -25,4 +25,4 @@ set to ``True`` to force using the subsampling when we call them. Note that
 even if we set ``keep_subsampling=True``, subsampling is not applied when using
 ``predict``.
 
-See more details in a :ref:`full example <sphx_glr_auto_examples_data_ops_13_subsampling.py>`.
+See more details in a :ref:`full example <sphx_glr_auto_examples_data_ops_14_subsampling.py>`.
