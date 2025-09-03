@@ -11,7 +11,6 @@ Skrub DataOps: fit, tune, and validate arbitrary data wrangling
    :maxdepth: 3
 
    modules/data_ops/basics/what_are_data_ops
-   modules/data_ops/basics/basics_of_data_ops
    modules/data_ops/basics/building_data_ops_plan
    modules/data_ops/basics/can_i_use_library_x
    modules/data_ops/basics/using_previews
@@ -40,7 +39,6 @@ Tuning and validating Skrub DataOps plans
 
    modules/data_ops/validation/tuning_validating_data_ops
    modules/data_ops/validation/splitting_data
-   modules/data_ops/validation/cross_validation
    modules/data_ops/validation/hyperparameter_tuning
    modules/data_ops/validation/nested_cross_validation
    modules/data_ops/validation/nesting_choices_choosing_pipelines

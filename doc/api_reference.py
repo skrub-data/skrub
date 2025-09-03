@@ -187,8 +187,8 @@ API_REFERENCE = {
         "sections": [
             {
                 "description": (
-                    "Generalizing the scikit-learn pipeline. "
-                    "See :ref:`skrub DataOps <userguide_data_ops>` for further details."
+                    "Generalizing the scikit-learn pipeline. See :ref:`skrub DataOps"
+                    " <user_guide_data_ops_index>` for further details."
                 ),
                 "autosummary": ["var", "X", "y", "as_data_op", "deferred"],
                 "template": "base.rst",
