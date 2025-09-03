@@ -1,16 +1,18 @@
-.. _user_guide_table_vectorizer:
 
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
+.. |Cleaner| replace:: :class:`~skrub.Cleaner`
+.. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
-.. |ApplyOnCols| replace:: :class:`~skrub.ApplyOnCols`
+.. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 
+.. _user_guide_table_vectorizer:
 
 Putting the skrub transformers together: |TableVectorizer|
---------------------------------------------------------
+----------------------------------------------------------
 
 In tabular machine learning pipelines, practitioners often convert categorical
 features to numerical features using various encodings (|OneHotEncoder|, |OrdinalEncoder|,
@@ -93,8 +95,8 @@ transformer without any modification, which means that the transformer must be
 able to handle the content of the column on its own.
 
 If you need to define complex transformers to pass to a single instance of
-|TableVectorizer|, consider using the :ref:`Skrub Data Ops <userguide_data_ops>`,
-|ApplyToCols|, or the :ref:`skrub selectors <userguide_selectors>` instead, as
+|TableVectorizer|, consider using the :ref:`Skrub Data Ops <user_guide_data_ops_index>`,
+|ApplyToCols|, or the :ref:`skrub selectors <user_guide_selectors>` instead, as
 they are more versatile and allow a higher degree
 of control over which operations are applied to which columns.
 

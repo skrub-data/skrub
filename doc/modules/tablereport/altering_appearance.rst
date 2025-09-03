@@ -1,6 +1,8 @@
 .. |TableReport| replace:: :class:`~skrub.TableReport`
 .. |set_config| replace:: :func:`~skrub.set_config`
 
+.. _user_guide_table_report_customize:
+
 Altering the Appearance of the |TableReport|
 ============================================
 
@@ -17,4 +19,4 @@ It is also possible to specify the floating point precision by setting the appro
 
 Parameters can be made permanent in a script by altering the configuration with
 |set_config|, or by setting the respective environment variables. Refer to
-:ref:`skrub_configuration_parameters` for more detail.
+:ref:`user_guide_configuration_parameters` for more detail.

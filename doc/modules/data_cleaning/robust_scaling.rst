@@ -1,6 +1,8 @@
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
 .. |RobustScaler| replace:: :class:`~sklearn.preprocessing.RobustScaler`
 
+.. _user_guide_squashing_scaler:
+
 Robust scaling of numerical features using |SquashingScaler|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The |SquashingScaler| is a robust scaler for numerical features, particularly

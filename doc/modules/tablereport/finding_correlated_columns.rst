@@ -1,7 +1,7 @@
 .. |TableReport| replace:: :class:`~skrub.TableReport`
-.. |set_config| replace:: :func:`~skrub.set_config`
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
+.. _user_guide_table_report_associations:
 Finding Correlated Columns in a DataFrame
 =========================================
 

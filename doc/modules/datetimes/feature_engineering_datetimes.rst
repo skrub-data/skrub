@@ -2,7 +2,7 @@
 .. |to_datetime| replace:: :func:`~skrub.to_datetime`
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
 
-.. _userguide_datetimes:
+.. _user_guide_feature_engineering_datetimes:
 
 Handling datetimes: parsing from strings and encoding as numbers
 ================================================================

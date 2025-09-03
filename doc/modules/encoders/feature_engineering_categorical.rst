@@ -1,3 +1,4 @@
+
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
 .. |MinHashEncoder| replace:: :class:`~skrub.MinHashEncoder`
@@ -6,6 +7,8 @@
 .. |tabular_pipeline| replace:: :func:`~skrub.tabular_pipeline`
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
+
+.. _user_guide_feature_engineering_categorical:
 
 Encoding string and text columns as numerical features
 ======================================================

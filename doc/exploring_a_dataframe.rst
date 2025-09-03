@@ -1,3 +1,5 @@
+.. _user_guide_exploring_a_dataframe_index:
+
 Exploring a Dataframe
 =====================
 

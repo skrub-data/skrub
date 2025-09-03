@@ -43,49 +43,45 @@ we are not using hyperparameter search:
      - Description
      - Default outcome
    * - :func:`choose_from([10, 20]) <choose_from>`
-     - choose between the listed options 10 and 20
-     - first outcome in the list: ``10``
+     - Choose between the listed options (10 and 20).
+     - First outcome in the list: ``10``
    * - :func:`choose_from({"a_name": 10, "b_name": 20}) <choose_from>`
-     - choose between the listed options 10 and 20, dictionary keys are names
-       for the options.
-     - first outcome in the dict: ``10``
+     - Choose between the listed options (10 and 20). Dictionary keys serve as
+       names for the options.
+     - First outcome in the dictionary: ``10``
    * - :func:`optional(10) <optional>`
-     - choose between the provided value and ``None`` (useful for optional
-       transformations in a pipeline eg ``optional(StandardScaler())``).
-     - the provided ``value``: ``10``
+     - Choose between the provided value and ``None`` (useful for optional
+       transformations in a pipeline, e.g., ``optional(StandardScaler())``).
+     - The provided ``value``: ``10``
    * - :func:`choose_bool() <choose_bool>`
-     - choose between True and False.
+     - Choose between True and False.
      - ``True``
    * - :func:`choose_float(1.0, 100.0) <choose_float>`
-     - sample a floating-point number in a range.
-     - the middle of the range: ``50.5``
+     - Sample a floating-point number in a range.
+     - The middle of the range: ``50.5``
    * - :func:`choose_int(1, 100) <choose_int>`
-     - sample an integer in a range.
-     - the int closest to the middle of the range: ``50``
+     - Sample an integer in a range.
+     - The integer closest to the middle of the range: ``50``
    * - :func:`choose_float(1.0, 100.0, log=True) <choose_float>`
-     - sample a float in a range on a logarithmic scale.
-     - the middle of the range on a log scale: ``10.0``
+     - Sample a float in a range on a logarithmic scale.
+     - The middle of the range on a log scale: ``10.0``
    * - :func:`choose_int(1, 100, log=True) <choose_int>`
-     - sample an int in a range on a logarithmic scale.
-     - the int closest to the middle of the range on a log scale: ``10``
+     - Sample an integer in a range on a logarithmic scale.
+     - The integer closest to the middle of the range on a log scale: ``10``
    * - :func:`choose_float(1.0, 100.0, n_steps=4) <choose_float>`
-     - sample a float on a grid.
-     - the step closest to the middle of the range: ``34.0`` (here steps are
-       ``[1.0, 34.0, 67.0, 100.0]``)
+     - Sample a float on a grid.
+     - The step closest to the middle of the range: ``34.0`` (steps: ``[1.0, 34.0, 67.0, 100.0]``)
    * - :func:`choose_int(1, 100, n_steps=4) <choose_int>`
-     - sample an int on a grid.
-     - the (integer) step closest to the middle of the range: ``34`` (here steps are
-       ``[1, 34, 67, 100]``)
+     - Sample an integer on a grid.
+     - The step closest to the middle of the range: ``34`` (steps: ``[1, 34, 67, 100]``)
    * - :func:`choose_float(1.0, 100.0, log=True, n_steps=4) <choose_float>`
-     - sample a float on a logarithmically-spaced grid.
-     - the step closest to the middle of the range on a log scale: ``4.64``
-       (here steps are ``[1.0, 4.64, 21.54, 100.0]``)
+     - Sample a float on a logarithmically spaced grid.
+     - The step closest to the middle of the range on a log scale: ``4.64``
+       (steps: ``[1.0, 4.64, 21.54, 100.0]``)
    * - :func:`choose_int(1, 100, log=True, n_steps=4) <choose_int>`
-     - sample an int on a logarithmically-spaced grid.
-     - the step closest to the middle of the range on a log scale: ``5``
-       (here steps are ``[1, 5, 22, 100]``)
-     - the (integer) step closest to the middle of the range on a log scale: ``5``
-       (here steps are ``[1, 5, 22, 100]``)
+     - Sample an integer on a logarithmically spaced grid.
+     - The step closest to the middle of the range on a log scale: ``5``
+       (steps: ``[1, 5, 22, 100]``)
 
 
 The default choices for an DataOp, those that get used when calling

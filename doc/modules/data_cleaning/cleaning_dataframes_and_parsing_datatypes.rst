@@ -1,9 +1,10 @@
-.. _cleaning_dataframes:
 
 .. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
 .. |Cleaner| replace:: :class:`~skrub.Cleaner`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |ToDatetime| replace:: :class:`~skrub.ToDatetime`
+
+.. _user_guide_cleaning_dataframes:
 
 Cleaning dataframes and parsing datatypes
 -----------------------------------------
@@ -18,11 +19,11 @@ each column:
 - ``CleanNullStrings()``: Replace strings typically used to represent missing values
   with a null value suitable for the column under consideration.
 
-- |DropUninformative()|: Drop the column if it is considered "uninformative."
+- |DropUninformative|: Drop the column if it is considered "uninformative."
   A column is considered "uninformative" if it contains only missing values
   (``drop_null_fraction``), only a constant value (``drop_if_constant``), or if all
   values are distinct (``drop_if_unique``). By default, the |Cleaner| keeps all columns
-  unless they contain only missing values. Refer to :ref:`removing_unneeded_columns`
+  unless they contain only missing values. Refer to :ref:`user_guide_drop_uninformative`
   for more detail on this operation.
 
 .. note::
@@ -30,9 +31,9 @@ each column:
   Setting ``drop_if_unique`` to ``True`` may lead to dropping columns
   that contain text or IDs.
 
-- |ToDatetime()|: Parse datetimes represented as strings and return them as
+- |ToDatetime|: Parse datetimes represented as strings and return them as
   actual datetimes with the correct dtype. If ``datetime_format`` is provided,
-  it is forwarded to |ToDatetime()|. Otherwise, the format is guessed according
+  it is forwarded to |ToDatetime|. Otherwise, the format is guessed according
   to common datetime formats.
 
 - ``CleanCategories()``: If the dtype of the column is detected as "Categorical",

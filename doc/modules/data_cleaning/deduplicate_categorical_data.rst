@@ -1,5 +1,7 @@
 .. |deduplicate| replace:: :func:`~skrub.deduplicate`
 
+.. _user_guide_deduplicate:
+
 Deduplicate categorical data with |deduplicate|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

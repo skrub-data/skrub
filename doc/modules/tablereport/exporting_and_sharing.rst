@@ -1,5 +1,7 @@
 .. |TableReport| replace:: :class:`~skrub.TableReport`
 
+.. _user_guide_table_report_sharing:
+
 Exporting and Sharing the |TableReport|
 =======================================
 

@@ -1,3 +1,5 @@
+.. _user_guide_joining_dataframes:
+
 Joining Dataframes
 ==================
 

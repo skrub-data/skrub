@@ -1,12 +1,14 @@
-.. _skrub_configuration_parameters:
 
 .. |set_config| replace:: :func:`~skrub.set_config`
 .. |get_config| replace:: :func:`~skrub.get_config`
 .. |config_context| replace:: :func:`~skrub.config_context`
 
+.. _user_guide_configuration_parameters:
 
-Customizing the global configuration of skrub
-===========================================================
+====================================
+Customizing the global configuration
+====================================
+
 
 Skrub includes a configuration manager that allows setting various parameters
 (see the |set_config| documentation for more detail).

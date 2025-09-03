@@ -2,6 +2,8 @@
 .. |set_config| replace:: :func:`~skrub.set_config`
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
+.. _user_guide_table_report_start:
+
 Exploring dataframes interactively with the |TableReport|
 =========================================================
 

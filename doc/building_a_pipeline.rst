@@ -1,3 +1,9 @@
+.. _user_guide_building_pipeline_index:
+
+.. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
+.. |tabular_pipeline| replace:: :func:`~skrub.tabular_pipeline`
+
+
 Building a robust machine-learning pipeline
 ===========================================
 

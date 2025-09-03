@@ -47,7 +47,7 @@ Highlights
   to train and tune machine learning models. Then, the DataOps plans can be exported
   as ``Learners`` (:class:`skrub.SkrubLearner`), standalone objects that can be
   used on new data. More detail about the DataOps can be found in the
-  :ref:`User guide <userguide_data_ops>` and in the
+  :ref:`User guide <user_guide_data_ops_index>` and in the
   :ref:`examples <data_ops_examples_ref>`.
 
 - The :class:`TableReport` has been improved with many new features. Series are
@@ -58,12 +58,12 @@ Highlights
 
 - :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
   providing utilities for selecting columns to which a transformer should be applied
-  in a flexible way. For more details, see the :ref:`User guide <userguide_selectors>`
-  and the :ref:`example <sphx_glr_auto_examples_10_apply_on_cols.py>`.
+  in a flexible way. For more details, see the :ref:`User guide <user_guide_selectors>`
+  and the :ref:`example <sphx_glr_auto_examples_09_apply_on_cols.py>`.
 
 - The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
   clips numerical columns, enabling more robust handling of numerical columns
-  with neural networks. See the :ref:`example <sphx_glr_auto_examples_11_squashing_scaler.py>`
+  with neural networks. See the :ref:`example <sphx_glr_auto_examples_10_squashing_scaler.py>`
 
 New features
 ------------
@@ -309,8 +309,7 @@ Release 0.4.1
 Changes
 -------
 
-* :class: `TableReport` has `write_html` method
-  :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
+* :class:`TableReport` has `write_html` method. :pr:`1190` by :user:`Mojdeh Rastgoo<mrastgoo>`.
 
 * A new parameter ``verbose`` has been added to the :class:`TableReport` to toggle on or off the
   printing of progress information when a report is being generated.

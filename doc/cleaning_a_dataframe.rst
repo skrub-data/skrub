@@ -1,3 +1,5 @@
+.. _user_guide_cleaning_dataframe_index:
+
 Pre-processing a Dataframe
 ==========================
 

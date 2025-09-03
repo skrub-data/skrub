@@ -1,7 +1,7 @@
-Working with the example datasets provided by ``skrub``
+Working with the example datasets provided by skrub
 -------------------------------------------------------
 
-``skrub`` includes a number of datasets used for running examples. Each dataset
+skrub includes a number of datasets used for running examples. Each dataset
 can be downloaded using its ``fetch_*`` function, provided in the ``skrub.datasets``
 namespace:
 
@@ -23,3 +23,6 @@ the location that ``skrub`` uses to store data.
 
 If needed, it is possible to change this location by modifying the environment
 variable ``SKRUB_DATA_DIRECTORY`` to an **absolute directory path**.
+
+See :ref:`user_guide_configuration_parameters` for more info on the global skrub
+configuration.

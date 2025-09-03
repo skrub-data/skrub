@@ -1,3 +1,5 @@
+.. _user_guide_encoders_index:
+
 Encoding a Column
 =================
 

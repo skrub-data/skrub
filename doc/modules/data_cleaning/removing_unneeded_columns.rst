@@ -1,10 +1,10 @@
-.. _removing_unneeded_columns:
 
 .. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 .. |Cleaner| replace:: :class:`~skrub.Cleaner`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 
+.. _user_guide_drop_uninformative:
 Removing unneeded columns with |DropUninformative| and |Cleaner|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
