@@ -1,4 +1,3 @@
-
 .. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
 .. |Cleaner| replace:: :class:`~skrub.Cleaner`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`

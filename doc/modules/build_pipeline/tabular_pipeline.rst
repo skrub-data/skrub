@@ -1,4 +1,3 @@
-.. _user_guide_tabular_pipeline:
 
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |tabular_pipeline| replace:: :func:`~skrub.tabular_pipeline`
@@ -8,8 +7,11 @@
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
 .. |SimpleImputer| replace:: :class:`~sklearn.impute.SimpleImputer`
 
-|tabular_pipeline|
-~~~~~~~~~~~~~~~~~~
+.. _user_guide_tabular_pipeline:
+
+Building robust ML baselines with |tabular_pipeline|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The |tabular_pipeline| is a function that, given a scikit-learn estimator,
 returns a full scikit-learn |Pipeline| that contains a |TableVectorizer|
 followed by the given estimator.

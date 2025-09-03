@@ -1,4 +1,3 @@
-
 .. |set_config| replace:: :func:`~skrub.set_config`
 .. |get_config| replace:: :func:`~skrub.get_config`
 .. |config_context| replace:: :func:`~skrub.config_context`

@@ -5,6 +5,7 @@
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 
 .. _user_guide_drop_uninformative:
+
 Removing unneeded columns with |DropUninformative| and |Cleaner|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
