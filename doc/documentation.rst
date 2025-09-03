@@ -30,6 +30,6 @@ See the examples section for full code snippets.
    encoding_a_column
    building_a_pipeline
    selectors
-   dataops
+   data_ops
    configuration_datasets
    joining_dataframes
