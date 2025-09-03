@@ -14,6 +14,7 @@ implement many of the other selectors provided in this module.
 ``True`` if the column should be selected.
 
 >>> import pandas as pd
+>>> import skrub.selectors as s
 >>> df = pd.DataFrame(
 ...     {
 ...         "height_mm": [297.0, 420.0],
@@ -57,6 +58,7 @@ selector and finally transform the dataframe.
 ... "not a lot": [1, 1, 1, 2, 2],
 ... "too_many":  [1,2,3,4,5]})
 
+>>> from skrub import DropCols
 >>> DropCols(cols=~s.cardinality_below(3)).fit_transform(df)
    not a lot
 0          1
@@ -72,9 +74,9 @@ Consider the following example:
 
 >>> import pandas as pd
 >>> data = {
->>>     "subject": ["Math", "English", "History", "Science", "Art"],
->>>     "grade": [5, 4, 3, 4, 3]
->>> }
+...     "subject": ["Math", "English", "History", "Science", "Art"],
+...     "grade": [5, 4, 3, 4, 3]
+... }
 >>> df = pd.DataFrame(data)
 >>> df
    subject grade
@@ -88,6 +90,7 @@ We might want to apply the |StandardScaler| only to the numerical column. We can
 do this like this:
 
 >>> from skrub import ApplyToCols
+>>> from sklearn.preprocessing import StandardScaler
 >>> ApplyToCols(StandardScaler(), cols=s.numeric()).fit_transform(df)
    subject     grade
 0     Math  1.603567

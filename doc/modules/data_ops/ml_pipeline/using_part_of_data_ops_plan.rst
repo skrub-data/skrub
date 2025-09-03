@@ -30,6 +30,7 @@ Here is a toy example with 4 steps:
 ...     return max(x)
 
 
+>>> import skrub
 >>> url = skrub.var("url")
 >>> output = (
 ...     url.skb.apply_func(load_data)

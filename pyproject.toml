@@ -193,7 +193,7 @@ check = { cmd = "python build_tools/generate_data_ops_stub.py | diff - skrub/_da
 
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
-test-user-guide = { cmd = "pytest doc/*/*.rst" }
+test-user-guide = { cmd = "pytest doc/**/*.rst" }
 
 [tool.pixi.environments]
 lint = ["lint"]

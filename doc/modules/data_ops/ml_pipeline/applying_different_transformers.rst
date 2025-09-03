@@ -17,9 +17,9 @@ example with grades.
 >>> import skrub
 >>> import pandas as pd
 >>> data = {
->>>     "subject": ["Math", "English", "History", "Science", "Art"],
->>>     "grade": ["A", "B", "C", "A", "B"]
->>> }
+...     "subject": ["Math", "English", "History", "Science", "Art"],
+...     "grade": ["A", "B", "C", "A", "B"]
+... }
 >>> df = pd.DataFrame(data)
 >>> grades = skrub.var("grades", df)
 >>> grades
@@ -37,12 +37,14 @@ We encode the subjects with the :class:`~skrub.StringEncoder`:
 >>> from skrub import StringEncoder
 >>> enc_subject = grades.skb.select(cols="subject").skb.apply(StringEncoder(n_components=2))
 
-For the grades, we define a :func:`~skrub.deferred`: function that maps the strings
-to the order we want:
+For the grades, we define a :func:`~skrub.deferred` function that maps the strings
+to the order we want.
+Remember that objects inside deferred functions are regular Python
+objects (more detail in :ref:`user_guide_data_ops_control_flow`).
 >>> @skrub.deferred
->>> def encode_ordered(df):
+... def encode_ordered(df):
 ...     grade_order = {"A": 3, "B": 2, "C": 1}
-...     return df[["grade"]].map(grade_order)
+...     return df["grade"].map(grade_order)
 >>> enc_grades = grades.skb.apply_func(encode_ordered)
 >>> enc_grades
 <Call 'encode_ordered'>
@@ -56,13 +58,12 @@ Result:
 Name: grade, dtype: int64
 
 Finally, we combine the resulting dataframe and series using another deferred
-function. Remember that objects inside deferred functions are regular Python
-objects (more detail in :ref:`user_guide_data_ops_control_flow`).
+function.
 >>> @skrub.deferred
 ... def combine(subjects, grades):
 ...     subjects["grade"] = grades
 ...     return subjects
->>> combine(enc_subject, enc_grades) # DOCTEST +SKIP
+>>> combine(enc_subject, enc_grades) # doctest: +SKIP
 <Call 'combine'>
 Result:
 ―――――――
@@ -79,6 +80,27 @@ with high cardinality, a mathematical operation to columns with nulls, and a
 :class:`~skrub.TableVectorizer` to all other columns. We use the skrub
 :ref:`selectors <selectors_ref>` to select the columns based on our requirements.
 
+>>> import pandas as pd
+>>> import skrub
+>>> orders_df = pd.DataFrame(
+...     {
+...         "item": ["pen", "cup", "pen", "fork"],
+...         "price": [1.5, None, 1.5, 2.2],
+...         "qty": [1, 1, 2, 4],
+...     }
+... )
+>>> orders = skrub.var("orders", orders_df)
+>>> orders
+<Var 'orders'>
+Result:
+―――――――
+   item  price  qty
+0   pen    1.5    1
+1   cup    NaN    1
+2   pen    1.5    2
+3  fork    2.2    4
+
+We create some selectors with different conditions:
 >>> from skrub import selectors as s
 >>> high_cardinality = s.string() - s.cardinality_below(2)
 >>> has_nulls = s.has_nulls()

@@ -7,6 +7,18 @@ To avoid overfitting hyperparameters, the best combination must be evaluated on
 data that has not been used to select hyperparameters. This can be done with a
 single train-test split or with nested cross-validation.
 
+Using the same examples as the previous sections:
+>>> from sklearn.datasets import load_diabetes
+>>> from sklearn.linear_model import Ridge
+>>> import skrub
+>>> diabetes_df = load_diabetes(as_frame=True)["frame"]
+>>> data = skrub.var("data", diabetes_df)
+>>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
+>>> y = data["target"].skb.mark_as_y()
+>>> pred = X.skb.apply(
+...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+... )
+
 Single train-test split:
 
 >>> split = pred.skb.train_test_split()

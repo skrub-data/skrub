@@ -12,6 +12,7 @@ different pipelines.
 As an example of choices outside of scikit-learn estimators, we can consider
 several ways to perform an aggregation on a pandas DataFrame:
 
+>>> import skrub
 >>> ratings = skrub.var("ratings")
 >>> agg_ratings = ratings.groupby("movieId")["rating"].agg(
 ...     skrub.choose_from(["median", "mean"], name="rating_aggregation")
@@ -25,7 +26,10 @@ choice into an DataOp, via its ``as_data_op`` method (or by using
 
 >>> from sklearn.preprocessing import StandardScaler
 >>> from sklearn.ensemble import RandomForestRegressor
-
+>>> from sklearn.datasets import load_diabetes
+>>> from sklearn.linear_model import Ridge
+>>> import skrub
+>>> diabetes_df = load_diabetes(as_frame=True)["frame"]
 >>> data = skrub.var("data", diabetes_df)
 >>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
 >>> y = data["target"].skb.mark_as_y()

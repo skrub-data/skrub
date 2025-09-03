@@ -19,6 +19,7 @@ is a dictionary of variables rather than a single design matrix
 ...         "qty": [1, 1, 2, 4],
 ...     }
 ... )
+>>> import skrub
 >>> from skrub import TableVectorizer
 >>> orders = skrub.var("orders", orders_df)
 >>> transformed_orders = orders.skb.apply(TableVectorizer())

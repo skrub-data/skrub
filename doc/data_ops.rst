@@ -38,7 +38,6 @@ Tuning and validating Skrub DataOps plans
    :maxdepth: 2
 
    modules/data_ops/validation/tuning_validating_data_ops
-   modules/data_ops/validation/splitting_data
    modules/data_ops/validation/hyperparameter_tuning
    modules/data_ops/validation/nested_cross_validation
    modules/data_ops/validation/nesting_choices_choosing_pipelines

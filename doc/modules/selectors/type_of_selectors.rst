@@ -7,6 +7,7 @@ arguments since it keeps all columns:
 
 >>> import pandas as pd
 >>> from skrub import SelectCols
+>>> import skrub.selectors as s
 >>> df = pd.DataFrame(
 ...     {
 ...         "height_mm": [297.0, 420.0],

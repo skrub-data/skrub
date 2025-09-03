@@ -8,10 +8,24 @@ those choices to keep the values that give the best predictions on a validation
 set.
 
 Rather than specifying a grid of hyperparameters separately from the pipeline,
-we simply insert special skrub objects in place of the value. For example we
+we simply insert special skrub objects in place of the value.
+
+We define the same set of operations as before:
+>>> from sklearn.datasets import load_diabetes
+>>> from sklearn.linear_model import Ridge
+>>> import skrub
+>>> diabetes_df = load_diabetes(as_frame=True)["frame"]
+>>> data = skrub.var("data", diabetes_df)
+>>> X = data.drop(columns="target", errors="ignore").skb.mark_as_X()
+>>> y = data["target"].skb.mark_as_y()
+>>> pred = X.skb.apply(Ridge(), y=y)
+
+Now, we can
 replace the hyperparameter ``alpha`` (which should be a float) with a range
 created by :func:`skrub.choose_float`. Skrub can use it to select the best value
 for ``alpha``.
+
+
 
 >>> pred = X.skb.apply(
 ...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y

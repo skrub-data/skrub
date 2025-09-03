@@ -13,6 +13,7 @@ This means we cannot use standard Python control flow statements such as ``if``,
 immediately.
 
 >>> import pandas as pd
+>>> import skrub
 >>> orders_df = pd.DataFrame(
 ...     {
 ...         "item": ["pen", "cup", "pen", "fork"],
