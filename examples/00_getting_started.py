@@ -109,7 +109,7 @@ results["test_score"]
 # strings, categories and dates using the :class:`~skrub.TableVectorizer`.
 # See its documentation or :ref:`sphx_glr_auto_examples_01_encodings.py` for
 # more details. An overview of the chosen defaults is available in
-# :ref:`userguide_tablevectorizer`.
+# :ref:`user_guide_tabular_pipeline`.
 
 
 # %%
@@ -186,7 +186,7 @@ agg_joiner.fit_transform(airports)
 # For joining multiple auxiliary tables on a main table at once, use the
 # :class:`~skrub.MultiAggJoiner`.
 #
-# See other ways to join multiple tables in :ref:`userguide_joining_tables`.
+# See other ways to join multiple tables in :ref:`user_guide_joining_dataframes`.
 
 
 # %%
@@ -242,7 +242,7 @@ encoded
 # The higher the activation, the closer the row to the latent topic. These
 # columns can now be understood by a machine-learning model.
 #
-# The other encoders are presented in :ref:`userguide_encoders`.
+# The other encoders are presented in :ref:`user_guide_encoders_index`.
 
 
 # %%

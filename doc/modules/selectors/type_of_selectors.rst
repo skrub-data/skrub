@@ -73,7 +73,7 @@ Selectors based on column data types
 - :func:`~skrub.selectors.boolean`: Select columns with boolean data types
 
 Selectors based on column content and properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - :func:`~skrub.selectors.cardinality_below`: Select columns with fewer unique
   values than a threshold
@@ -81,7 +81,7 @@ Selectors based on column content and properties
   null value
 
 Selectors based on column names
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - :func:`~skrub.selectors.cols`: Select columns explicitly by name
 - :func:`~skrub.selectors.glob`: Select columns by name using Unix shell-style
