@@ -56,13 +56,13 @@ API_REFERENCE = {
         "sections": [
             {
                 "description": (
-                    "See :ref:`End-to-End pipeline <userguide_tablevectorizer>` for "
-                    "further details. For more flexibility and control to build "
-                    "pipelines, see the :ref:`skrub DataOps <userguide_data_ops>`."
+                    "See :ref:`End-to-End pipeline"
+                    " <user_guide_building_pipeline_index>` for further details. For"
+                    " more flexibility and control to build pipelines, see the"
+                    " :ref:`skrub DataOps <user_guide_data_ops_index>`."
                 ),
                 "autosummary": [
                     "tabular_pipeline",
-                    "tabular_learner",
                     "TableVectorizer",
                     "SelectCols",
                     "DropCols",
@@ -79,7 +79,8 @@ API_REFERENCE = {
         "sections": [
             {
                 "description": (
-                    "See :ref:`encoding <userguide_encoders>` for further details."
+                    "See :ref:`encoding <user_guide_encoders_index>` for further"
+                    " details."
                 ),
                 "autosummary": [
                     "StringEncoder",
@@ -153,7 +154,7 @@ API_REFERENCE = {
             {
                 "description": (
                     "Contains method to select columns in a dataframe. See the"
-                    " :ref:`selectors <userguide_selectors>` section for further"
+                    " :ref:`selectors <user_guide_selectors>` section for further"
                     " details."
                 ),
                 "autosummary": [

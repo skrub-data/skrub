@@ -59,7 +59,7 @@ Highlights
 - :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
   providing utilities for selecting columns to which a transformer should be applied
   in a flexible way. For more details, see the :ref:`User guide <user_guide_selectors>`
-  and the :ref:`example <sphx_glr_auto_examples_09_apply_on_cols.py>`.
+  and the :ref:`example <sphx_glr_auto_examples_09_apply_to_cols.py>`.
 
 - The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
   clips numerical columns, enabling more robust handling of numerical columns
