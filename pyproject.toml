@@ -138,7 +138,6 @@ platforms = ["linux-64", "osx-arm64", "win-64"]
 pytorch = { version = ">=2.4.1,<3" }
 transformers = "*"
 sentence-transformers = ">=3.0,<5"
-pyarrow = "<21"
 
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
