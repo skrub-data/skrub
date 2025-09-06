@@ -22,6 +22,8 @@ Bugfixes
 
 - Fixed a compatibility bug with Polars 1.32.3 that may cause `ToFloat32` to fail
   when applied to categorical columns. :pr:`1570` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Fixed the display of DataOp objects in google colab cell outputs (no output
+  was displayed). :pr:`1590` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.6.1
 ===================

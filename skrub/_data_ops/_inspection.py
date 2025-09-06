@@ -249,7 +249,7 @@ class GraphDrawing:
     def svg(self):
         svg = self.graph.create_svg(encoding="utf-8")
         svg = re.sub(b"<title>.*?</title>", b"", svg)
-        if 'google.colab' in sys.modules:
+        if "google.colab" in sys.modules:
             # Fix for #1589
             # google colab does not accept <a> without target in svg
             svg = svg.replace(b"<a xlink:title", b'<a target="_blank" xlink:title')
