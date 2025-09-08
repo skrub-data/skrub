@@ -186,6 +186,15 @@ def make_column_names_unique(*dataframes):
     used = set()
     result = []
     for df in dataframes:
+        column_names = sbd.column_names(df)
+        if not all(isinstance(c) is str for c in column_names):
+            msg = "All column names must be strings."
+            if sbd.is_pandas(df):
+                msg += (
+                    " If you defined a Dataframe using pd.Series.to_frame(), make"
+                    " sure to pass a column name (e.g. pd.Series.to_frame('my_col'))."
+                )
+            raise TypeError(msg)
         new_names = pick_column_names(sbd.column_names(df), forbidden_names=used)
         result.append(sbd.set_column_names(df, new_names))
         used.update(new_names)
