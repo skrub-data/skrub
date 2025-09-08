@@ -364,7 +364,7 @@ specific examples, you can use the following command with a regex pattern:
 
 .. code:: bash
 
-    make html EXAMPLES_PATTERN=your_regex_goes_here make html
+    make html EXAMPLES_PATTERN=your_regex_goes_here
 
 This is especially helpful when you're only modifying or checking a few examples.
 
