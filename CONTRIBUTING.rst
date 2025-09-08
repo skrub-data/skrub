@@ -368,6 +368,8 @@ specific examples, you can use the following command with a regex pattern:
 
 This is especially helpful when you're only modifying or checking a few examples.
 
+It is also possible to build the documentation without running the examples
+
 **Using pixi**
 
 From the repository root:
