@@ -102,6 +102,7 @@ def test_draw_graph():
     assert g._repr_png_().startswith(b"\x89PNG")
 
 
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_svg_anchor_google_colab(monkeypatch):
     """non-regression test for #1589"""
     monkeypatch.setitem(sys.modules, "google.colab", None)
