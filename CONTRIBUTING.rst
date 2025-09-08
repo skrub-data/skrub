@@ -384,7 +384,7 @@ From the repository root:
     pixi run clean-doc
 
 The documentation will be generated in the ``doc/_build/html/`` directory.
-You can view it by opening the local ``_build/html/index.html`` file.
+You can view it by opening the local ``doc/_build/html/index.html`` file.
 
 .. warning::
 
