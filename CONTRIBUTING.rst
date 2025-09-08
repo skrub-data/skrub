@@ -364,20 +364,35 @@ specific examples, you can use the following command with a regex pattern:
 
 .. code:: bash
 
-    make html EXAMPLES_PATTERN=your_regex_goes_here
+    make html EXAMPLES_PATTERN=your_regex_goes_here make html
 
 This is especially helpful when you're only modifying or checking a few examples.
 
-It is also possible to build the documentation without running the examples
-by using the following command:
+**Using pixi**
+
+From the repository root:
 
 .. code:: bash
 
-    make html-noplot
+    # Build documentation without running examples (faster)
+    pixi run build-doc-quick
 
-This command generates the documentation without re-executing the examples, which
-can take a long time. This is useful if you are only modifying the
-documentation itself, such as fixing typos or improving explanations.
+    # Build the full documentation, including examples
+    pixi run build-doc
+
+    # Clean previously built documentation
+    pixi run clean-doc
+
+The documentation will be generated in the ``_build/html/`` directory.
+You can view it by opening the local ``_build/html/index.html`` file.
+
+.. warning::
+
+   On Intel-based macOS systems (``osx-64``), some pixi environments may not
+   resolve correctly due to missing upstream package builds (e.g., for PyTorch).
+   If you encounter issues, you can always fall back to using ``make`` as
+   described above.
+
 
 Editing the API reference documentation
 ---------------------------------------
