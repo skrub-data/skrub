@@ -1704,7 +1704,15 @@ class Concat(DataOpImpl):
                 f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
             )
 
-        result = sbd.concat(e.first, *e.others, axis=e.axis)
+        if e.axis == 1:
+            first = _check_column_names(e.first)
+            others = list(map(_check_column_names, e.others))
+        else:
+            # No need to sanitize column names if concatenating vertically.
+            first = e.first
+            others = e.others
+
+        result = sbd.concat(first, *others, axis=e.axis)
 
         if e.axis == 1:
             if mode == "preview" or "fit" in mode:
