@@ -182,12 +182,15 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
-        verbose=1,
+        verbose=None,
         max_plot_columns=None,
         max_association_columns=None,
     ):
         n_rows = max(1, n_rows)
-        self.verbose = _config.get_config()["table_report_verbosity"]
+        if verbose is None:
+            self.verbose = _config.get_config()["table_report_verbosity"]
+        else:
+            self.verbose = verbose
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),

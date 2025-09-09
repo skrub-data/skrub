@@ -2,7 +2,9 @@ import pickle
 
 import pytest
 
-from skrub import config_context, set_config
+from skrub import config_context, get_config, set_config
+
+base_config = get_config()
 
 
 @pytest.mark.parametrize("repeat_patch", [1, 2])
@@ -54,6 +56,9 @@ def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
 
 
 def test_max_plot_max_assoc_columns_parameter(pd_module):
+    set_config(**base_config)  # Reset to base config
+    set_config(use_table_report=True)
+
     df = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
     )
