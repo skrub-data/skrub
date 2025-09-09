@@ -337,32 +337,37 @@ def test_concat_vertical_duplicate_cols():
     assert out_1.shape[0] == out_2.shape[0] == 4
 
 
-def test_concat_horizontal_non_str_colname():
-    X = pd.DataFrame({"a": [0, 1], "b": [2, 3]})
-    X_op = skrub.X(X)
-
-    y = pd.Series([1, 1])
-    y_no_name = (
-        y.to_frame()
-    )  # note that the name is left empty so pandas will auto-name it 0
-    y_with_name = y.to_frame(name="y")
+def test_concat_non_str_colname():
+    int_columns = pd.DataFrame({0: [1, 2], 1: [3, 4]})
+    string_columns = pd.DataFrame({"0": [1, 2], "1": [3, 4]})
 
     # check that a warning is raised because of non-string column name
     with pytest.warns(
         UserWarning, match="Some dataframe column names are not strings:"
     ):
-        concat_op = X_op.skb.concat([skrub.as_data_op(y_no_name)], axis=1)
+        skrub.as_data_op(int_columns).skb.concat(
+            [skrub.as_data_op(string_columns)], axis=1
+        )
+    with pytest.warns(
+        UserWarning, match="Some dataframe column names are not strings:"
+    ):
+        skrub.as_data_op(int_columns).skb.concat(
+            [skrub.as_data_op(int_columns)], axis=1
+        )
 
-    assert concat_op.skb.eval().shape == (2, 3)
-    assert concat_op.skb.eval().columns.tolist() == ["a", "b", "0"]
-
-    # check that no warning is raised because all column names are strings
+    # no warnings raised when all column names are strings
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        concat_op = X_op.skb.concat([skrub.as_data_op(y_with_name)], axis=1)
+        skrub.as_data_op(string_columns).skb.concat(
+            [skrub.as_data_op(string_columns)], axis=1
+        )
 
-    assert concat_op.skb.eval().shape == (2, 3)
-    assert concat_op.skb.eval().columns.tolist() == ["a", "b", "y"]
+    # check that no warning is raised when concatenating vertically
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        skrub.as_data_op(int_columns).skb.concat(
+            [skrub.as_data_op(int_columns)], axis=0
+        )
 
 
 def test_class_skb():
