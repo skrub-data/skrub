@@ -589,7 +589,16 @@ def test_data_op_with_circular_ref():
 
 
 @pytest.mark.parametrize(
-    "attribute", ["__copy__", "__float__", "__int__", "__reversed__"]
+    "attribute",
+    [
+        "__copy__",
+        "__float__",
+        "__int__",
+        "__reversed__",
+        "_ipython_display_",
+        "_ipython_canary_method_should_not_exist_",
+        "_repr_intrinsic_type_",
+    ],
 )
 def test_bad_attr(attribute):
     with pytest.raises(AttributeError):
