@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -334,6 +335,38 @@ def test_concat_vertical_duplicate_cols():
 
     assert out_1.shape[1] == out_2.shape[1] == 2
     assert out_1.shape[0] == out_2.shape[0] == 4
+
+
+def test_concat_vertical_non_str_colname():
+    X = pd.DataFrame(
+        np.random.rand(100, 5), columns=[f"Feature number {i}" for i in range(5)]
+    )
+    X_op = skrub.X(X)
+
+    y = pd.Series(np.ones(100))
+    y_no_name = (
+        y.to_frame()
+    )  # note that the name is left empty so pandas will auto-name it 0
+    y_with_name = y.to_frame(name="y")
+
+    # check that a warning is raised because of non-string column name
+    with pytest.warns(
+        UserWarning, match="Some dataframe column names are not strings:"
+    ):
+        concat_op = X_op.skb.concat([skrub.as_data_op(y_no_name)], axis=1)
+
+    expected_columns = [f"Feature number {i}" for i in range(5)] + ["0"]
+    assert concat_op.skb.eval().shape == (100, 6)
+    assert concat_op.skb.eval().columns.tolist() == expected_columns
+
+    # check that no warning is raised because all column names are strings
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        concat_op = X_op.skb.concat([skrub.as_data_op(y_with_name)], axis=1)
+
+    expected_columns = [f"Feature number {i}" for i in range(5)] + ["y"]
+    assert concat_op.skb.eval().shape == (100, 6)
+    assert concat_op.skb.eval().columns.tolist() == expected_columns
 
 
 def test_class_skb():
