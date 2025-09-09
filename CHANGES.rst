@@ -24,6 +24,8 @@ Bugfixes
   when applied to categorical columns. :pr:`1570` by :user:`Riccardo Cappuzzo<rcap107>`.
 - Fixed the display of DataOp objects in google colab cell outputs (no output
   was displayed). :pr:`1590` by :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed an error that occurred when using ``.skb.concat`` with a pandas dataframe
+  with column names that aren't strings. :pr:`1594` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Release 0.6.1
 ===================
