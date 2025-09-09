@@ -1,4 +1,5 @@
 import builtins
+import re
 import sys
 import webbrowser
 from unittest.mock import Mock
@@ -99,6 +100,14 @@ def test_draw_graph():
     assert "<svg" in g._repr_html_()
     assert g.png.startswith(b"\x89PNG")
     assert g._repr_png_().startswith(b"\x89PNG")
+
+
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+def test_svg_anchor_google_colab(monkeypatch):
+    """non-regression test for #1589"""
+    monkeypatch.setitem(sys.modules, "google.colab", None)
+    svg = skrub.as_data_op(0).skb.set_description("SOME TEXT").skb.draw_graph().svg
+    assert re.search(rb'<a target="_blank" xlink:title=".*SOME TEXT', svg)
 
 
 def test_no_pydot(monkeypatch):
