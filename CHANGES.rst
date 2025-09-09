@@ -6,7 +6,26 @@ Release history
 
 .. currentmodule:: skrub
 
-Ongoing development
+Ongoing Development
+===================
+
+Changes
+-------
+- Ken embeddings are now deprecated, the functions :func:`datasets.get_ken_embeddings`,
+  :func:`datasets.get_ken_table_aliases`, and :func:`datasets.get_ken_types` will be
+  removed in the next release of skrub.
+  :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+
+
+Bugfixes
+--------
+
+- Fixed a compatibility bug with Polars 1.32.3 that may cause `ToFloat32` to fail
+  when applied to categorical columns. :pr:`1570` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Fixed the display of DataOp objects in google colab cell outputs (no output
+  was displayed). :pr:`1590` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Release 0.6.1
 ===================
 
 Changes
