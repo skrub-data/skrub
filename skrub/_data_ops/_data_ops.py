@@ -509,6 +509,11 @@ class DataOp:
         # any special method is unlikely to do what we want.
         if name.startswith("__") and name.endswith("__"):
             attribute_error(self, name)
+        # also exclude any ipython display methods that may be added in the
+        # future or similar non-standard methods like the _repr_intrinsic_type_
+        # called by google colab
+        if name.startswith("_repr_") and name.endswith("_"):
+            attribute_error(self, name)
         return DataOp(GetAttr(self, name))
 
     @check_data_op
