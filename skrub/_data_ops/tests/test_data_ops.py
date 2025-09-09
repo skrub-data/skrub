@@ -337,13 +337,11 @@ def test_concat_vertical_duplicate_cols():
     assert out_1.shape[0] == out_2.shape[0] == 4
 
 
-def test_concat_vertical_non_str_colname():
-    X = pd.DataFrame(
-        np.random.rand(100, 5), columns=[f"Feature number {i}" for i in range(5)]
-    )
+def test_concat_horizontal_non_str_colname():
+    X = pd.DataFrame({"a": [0, 1], "b": [2, 3]})
     X_op = skrub.X(X)
 
-    y = pd.Series(np.ones(100))
+    y = pd.Series([1, 1])
     y_no_name = (
         y.to_frame()
     )  # note that the name is left empty so pandas will auto-name it 0
@@ -355,18 +353,16 @@ def test_concat_vertical_non_str_colname():
     ):
         concat_op = X_op.skb.concat([skrub.as_data_op(y_no_name)], axis=1)
 
-    expected_columns = [f"Feature number {i}" for i in range(5)] + ["0"]
-    assert concat_op.skb.eval().shape == (100, 6)
-    assert concat_op.skb.eval().columns.tolist() == expected_columns
+    assert concat_op.skb.eval().shape == (2, 3)
+    assert concat_op.skb.eval().columns.tolist() == ["a", "b", "0"]
 
     # check that no warning is raised because all column names are strings
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         concat_op = X_op.skb.concat([skrub.as_data_op(y_with_name)], axis=1)
 
-    expected_columns = [f"Feature number {i}" for i in range(5)] + ["y"]
-    assert concat_op.skb.eval().shape == (100, 6)
-    assert concat_op.skb.eval().columns.tolist() == expected_columns
+    assert concat_op.skb.eval().shape == (2, 3)
+    assert concat_op.skb.eval().columns.tolist() == ["a", "b", "y"]
 
 
 def test_class_skb():
