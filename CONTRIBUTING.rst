@@ -383,6 +383,8 @@ typos or improving explanations.
 
 **Using pixi**
 
+You can download and install pixi from `here <https://pixi.sh/latest/>`_.
+
 From the repository root:
 
 .. code:: bash
