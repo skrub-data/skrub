@@ -39,6 +39,10 @@ Bugfixes
   names of the columns that are not dropped, rather than the names of the columns
   that are dropped. :pr:`1543` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- DataOp hyperparameter search would raise an error when doing classification
+  and using the ``scoring`` parameter, when the dataop contained no variables.
+  Fixed in :pr:`1601` by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Release 0.6.0
 =============
