@@ -121,7 +121,7 @@ to obtain the final result:
 
 More info on advanced column selection and manipulation be found in
 :ref:`userguide_selectors` and example
-:ref:`sphx_glr_auto_examples_10_apply_on_cols.py`.
+:ref:`sphx_glr_auto_examples_09_apply_on_cols.py`.
 
 
 Documenting the DataOps plan with node names and descriptions
@@ -295,4 +295,4 @@ set to ``True`` to force using the subsampling when we call them. Note that
 even if we set ``keep_subsampling=True``, subsampling is not applied when using
 ``predict``.
 
-See more details in a :ref:`full example <sphx_glr_auto_examples_data_ops_13_subsampling.py>`.
+See more details in a :ref:`full example <sphx_glr_auto_examples_data_ops_14_subsampling.py>`.

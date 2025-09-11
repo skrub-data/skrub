@@ -265,7 +265,7 @@ It is also possible to use :meth:`ParamSearch.plot_results` to visualize the res
 of the search using a parallel coordinates plot.
 
 A full example of how to use hyperparameter search is available in
-:ref:`sphx_glr_auto_examples_data_ops_12_choices.py`.
+:ref:`sphx_glr_auto_examples_data_ops_13_choices.py`.
 
 
 
@@ -462,5 +462,5 @@ or in a different environment:
 >>> loaded_learner.fit({"orders": new_orders_df})
 SkrubLearner(data_op=<Apply TableVectorizer>)
 
-See :ref:`sphx_glr_auto_examples_data_ops_14_use_case.py` for an example of how
+See :ref:`sphx_glr_auto_examples_data_ops_15_use_case.py` for an example of how
 to use the learner in a microservice.

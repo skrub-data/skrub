@@ -90,7 +90,7 @@ range ``[-max_absolute_value, max_absolute_value]``.
 
 More information about the theory behind the scaler is available in the
 |SquashingScaler| documentation, while this
-:ref:`working example <sphx_glr_auto_examples_11_squashing_scaler.py>` compares
+:ref:`working example <sphx_glr_auto_examples_10_squashing_scaler.py>` compares
 different scalers when used on data that include outliers.
 
 Deduplicate categorical data with |deduplicate|
