@@ -17,7 +17,7 @@ from .. import datasets
 from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
-from .._utils import Repr, random_string, short_repr
+from .._utils import Repr, format_duration, random_string, short_repr
 from . import _utils
 from ._choosing import BaseNumericChoice, Choice
 from ._data_ops import Apply, Value, Var
@@ -37,6 +37,7 @@ def _get_jinja_env():
         ),
         autoescape=True,
     )
+    env.filters["format_duration"] = format_duration
     return env
 
 

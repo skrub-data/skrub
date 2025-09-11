@@ -75,7 +75,7 @@
                 {% if eval_duration is not none %}
                 <div>
                     <h3>Computation time</h3>
-                    {{ "{:.2g}".format(eval_duration) }} s
+                    <code>{{ eval_duration | format_duration }}</code>
                 </div>
                 {% endif %}
                 {% if estimator_html_repr %}
