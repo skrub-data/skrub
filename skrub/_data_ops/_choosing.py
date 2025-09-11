@@ -675,7 +675,7 @@ class NumericChoice(BaseNumericChoice):
         if self.log:
             self._distrib = stats.loguniform(self.low, self.high)
         else:
-            self._distrib = stats.uniform(self.low, self.high)
+            self._distrib = stats.uniform(self.low, self.high - self.low)
 
     def rvs(self, size=None, random_state=None):
         value = self._distrib.rvs(size=size, random_state=random_state)
