@@ -341,15 +341,15 @@ def test_eval_duration():
         time.sleep(duration)
         return obj
 
-    a = skrub.as_data_op(1).skb.apply_func(after, 0.1)
-    b = skrub.as_data_op(2).skb.apply_func(after, 0.2)
+    a = skrub.as_data_op(1).skb.apply_func(after, 1.0)
+    b = skrub.as_data_op(2).skb.apply_func(after, 2.0)
     c = a + b
-    d = (a + b + c).skb.apply_func(after, 0.15)
+    d = (a + b + c).skb.apply_func(after, 1.0)
 
     def get_duration(dop):
         return dop._skrub_impl.metadata["preview"]["eval_duration"]
 
-    assert get_duration(a) == pytest.approx(0.1, abs=1e-2)
-    assert get_duration(b) == pytest.approx(0.2, abs=1e-2)
-    assert get_duration(c) == pytest.approx(0.0, abs=1e-2)
-    assert get_duration(d) == pytest.approx(0.15, abs=1e-2)
+    assert get_duration(a) == pytest.approx(1.0, abs=1e-1)
+    assert get_duration(b) == pytest.approx(2.0, abs=1e-1)
+    assert get_duration(c) == pytest.approx(0.0, abs=1e-1)
+    assert get_duration(d) == pytest.approx(1.0, abs=1e-1)

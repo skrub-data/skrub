@@ -9,6 +9,11 @@ Release history
 Ongoing Development
 ===================
 
+New features
+------------
+- The :meth:`DataOp.skb.full_report` now displays the time each node took to
+  evaluate. :pr:`1596` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Changes
 -------
 - Ken embeddings are now deprecated, the functions :func:`datasets.get_ken_embeddings`,
