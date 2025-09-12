@@ -402,7 +402,7 @@ def _to_env_learner(learner):
 
 
 def _get_classes(data_op):
-    first = find_first_apply(data_op.data_op)
+    first = find_first_apply(data_op)
     if first is None:
         attribute_error(data_op, "classes_")
     try:
