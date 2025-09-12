@@ -17,7 +17,7 @@ from .. import datasets
 from .._config import get_config
 from .._reporting import TableReport
 from .._reporting._serve import open_in_browser
-from .._utils import Repr, random_string, short_repr
+from .._utils import Repr, format_duration, random_string, short_repr
 from . import _utils
 from ._choosing import BaseNumericChoice, Choice
 from ._data_ops import Apply, Value, Var
@@ -37,6 +37,7 @@ def _get_jinja_env():
         ),
         autoescape=True,
     )
+    env.filters["format_duration"] = format_duration
     return env
 
 
@@ -182,6 +183,11 @@ def _make_full_report(
             error_msg = "".join(_utils.format_exception_only(e))
             if hasattr(e, "__notes__"):
                 error_msg = error_msg.removesuffix("\n".join(e.__notes__) + "\n")
+        try:
+            eval_duration = node._skrub_impl.metadata[mode]["eval_duration"]
+        except KeyError:
+            # the node was not evaluated
+            eval_duration = None
         if isinstance(report, TableReport):
             print(f"Generating report for node {i}")
             report = report.html_snippet()
@@ -221,6 +227,7 @@ def _make_full_report(
                 report=report,
                 error=error,
                 error_msg=error_msg,
+                eval_duration=eval_duration,
                 node_creation_stack_description=node._skrub_impl.creation_stack_description(),
                 node_description=node._skrub_impl.description,
                 node_name=node._skrub_impl.name,
