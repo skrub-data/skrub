@@ -16,6 +16,8 @@ Changes
   removed in the next release of skrub.
   :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- Improved error messages when a DataOp is being sent to dispatched functions.
+  :pr:`1607` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bugfixes
 --------
