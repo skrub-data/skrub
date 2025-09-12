@@ -117,6 +117,7 @@ sphinx-copybutton = "*"
 sphinx-gallery = "*"
 sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
+sphinx-sitemap = "*"
 statsmodels = "*"
 
 [tool.pixi.feature.lint.dependencies]
