@@ -213,6 +213,8 @@ def test_cloning_and_preview_data(how):
     else:
         clone = e.skb.clone()
     assert clone._skrub_impl.results == {}
+    assert clone._skrub_impl.errors == {}
+    assert clone._skrub_impl.metadata == {}
     if how == "skb":
         # This outputting "Evaluation of node..." in < Python 3.11
         msg = (

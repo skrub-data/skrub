@@ -91,3 +91,13 @@ def test_passthrough():
     assert p.transform(X) is X
     X = [4, 5, 6]
     assert p.transform(X) is X
+
+
+def test_format_duration():
+    assert _utils.format_duration(2 * 3600 + 17 * 60 + 3.5) == "2h 17m 3.5s"
+    assert _utils.format_duration(17 * 60 + 3.5) == "0h 17m 3.5s"
+    assert _utils.format_duration(3.5) == "0h 0m 3.5s"
+    assert _utils.format_duration(3.5279e-5) == "0h 0m 3.5e-05s"
+    assert _utils.format_duration(0) == "0h 0m 0s"
+    with pytest.raises(ValueError, match=".*only handles non-negative durations"):
+        _utils.format_duration(-1)

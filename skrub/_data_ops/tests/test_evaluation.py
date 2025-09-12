@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 import skrub
@@ -332,3 +334,21 @@ def test_as_gen():
         return 1
 
     assert _evaluation._as_gen(g) is g
+
+
+def test_eval_duration():
+    def after(obj, duration):
+        time.sleep(duration)
+        return obj
+
+    a = skrub.as_data_op(1)
+    b = skrub.as_data_op(2).skb.apply_func(after, 3.0)
+    c = a + b
+
+    def get_duration(dop):
+        return dop._skrub_impl.metadata["preview"]["eval_duration"]
+
+    # timing has large variance in CI, prob. due to not having 100% of CPU
+    assert get_duration(a) == pytest.approx(0.0, abs=0.5)
+    assert get_duration(b) == pytest.approx(3.0, abs=0.5)
+    assert get_duration(c) == pytest.approx(0.0, abs=0.5)
