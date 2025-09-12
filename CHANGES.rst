@@ -26,6 +26,10 @@ Bugfixes
   was displayed). :pr:`1590` by :user:`Jérôme Dockès <jeromedockes>`.
 - Fixed an error that occurred when using ``.skb.concat`` with a pandas dataframe
   with column names that aren't strings. :pr:`1594` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Fixed the range from which :func:`choose_float` and :func:`choose_int` sample
+  values when ``log=False`` and ``n_steps`` is ``None``. It was between ``low``
+  and ``low + high``, now it is between ``low`` and ``high``. :pr:`1603` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 - DataOp hyperparameter search would raise an error when doing classification
   and using the ``scoring`` parameter, when the dataop contained no variables.
   Fixed in :pr:`1601` by :user:`Jérôme Dockès <jeromedockes>`.
