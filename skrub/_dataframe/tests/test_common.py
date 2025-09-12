@@ -15,6 +15,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
+import skrub
 from skrub import selectors as s
 from skrub._dataframe import _common as ns
 
@@ -40,6 +41,12 @@ def test_not_implemented():
         params = [None] * n_params
         with pytest.raises(TypeError):
             func(*params)
+        dop = [skrub.var("a")] * n_params
+        with pytest.raises(
+            TypeError,
+            match=r"Operation not supported on DataOps.*Expecting a Pandas*",
+        ):
+            func(*dop)
 
 
 #
