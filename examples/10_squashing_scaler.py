@@ -147,10 +147,11 @@ fig.supylabel("Value")
 # %%
 # We test the :class:`~skrub.SquashingScaler` against the
 # :class:`~sklearn.preprocessing.StandardScaler` and the
-# :class:`~sklearn.preprocessing.QuantileTransformer` from scikit-learn. We put each of
-# these together in a pipeline with a TableVectorizer and a simple MLPRegressor. In the
-# end, we print the R2 scores of each fold's validation set in a three-fold
+# :class:`~sklearn.preprocessing.QuantileTransformer` from scikit-learn. We put
+# each of these together in a pipeline with a TableVectorizer and a simple MLPRegressor.
+# In the end, we print the R2 scores of each fold's validation set in a three-fold
 # cross-validation.
+
 import warnings
 
 import numpy as np
@@ -192,6 +193,8 @@ for num_transformer in [
     )
 
 # %%
-# On the employee salaries dataset, the SquashingScaler performs
-# better than StandardScaler and QuantileTransformer on all
+# On the employee salaries dataset, the |SquashingScaler| performs
+# better than |StandardScaler| and |QuantileTransformer| on all
 # cross-validation folds.
+
+# %%

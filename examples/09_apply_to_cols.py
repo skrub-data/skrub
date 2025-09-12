@@ -50,7 +50,7 @@ Xt
 # number of components.
 #
 # To select columns without hardcoding their names, we introduce
-# :ref:`selectors<userguide_selectors>`, which allow for flexible matching pattern
+# :ref:`selectors<user_guide_selectors>`, which allow for flexible matching pattern
 # and composable logic.
 #
 # The regex selector below will match all columns prefixed with ``"lsa"``, and pass them

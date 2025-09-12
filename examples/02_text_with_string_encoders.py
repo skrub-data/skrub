@@ -228,7 +228,7 @@ plot_box_results(results)
 
 # %%
 # StringEncoder
-# ^^^^^^^^^^^^
+# ^^^^^^^^^^^^^
 # |TextEncoder| embeddings are very strong, but they are also quite expensive to
 # use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
 # which works by first performing a tf-idf (computing vectors of rescaled word

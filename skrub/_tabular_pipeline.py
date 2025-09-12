@@ -155,7 +155,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
       1.4. Therefore, before this version, a :class:`~sklearn.impute.SimpleImputer` is
       used to impute missing values.
 
-    Read more in the :ref:`User Guide <userguide_tablevectorizer>`.
+    Read more in the :ref:`User Guide <user_guide_building_pipeline_index>`.
 
     Examples
     --------

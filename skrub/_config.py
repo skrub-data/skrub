@@ -61,8 +61,8 @@ def get_config():
 
     Examples
     --------
-    >>> import sklearn
-    >>> config = sklearn.get_config()
+    >>> import skrub
+    >>> config = skrub.get_config()
     >>> config.keys()
     dict_keys([...])
     """
@@ -324,7 +324,7 @@ def config_context(
     cardinality_threshold : int, default=40
         Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`.
         Control the threshold value used to warn user if they have
-        high cardinality columns in there dataset.
+        high cardinality columns in their dataset.
 
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
