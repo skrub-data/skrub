@@ -119,6 +119,14 @@ pandas_version = parse_version(parse_version(pd.__version__).base_version)
 
 
 def _raise(obj, kind="object"):
+    from .._data_ops._data_ops import DataOp
+
+    if isinstance(obj, DataOp):
+        raise TypeError(
+            "Operation not supported on DataOps. Expecting a Pandas or Polars "
+            f"{kind}, but got a DataOp. You may want to use `.skb.eval()` to "
+            "evaluate the DataOp and obtain a dataframe."
+        )
     raise TypeError(
         "Operation not supported on this object. Expecting a Pandas or Polars "
         f"{kind}, but got an object of type {type(obj)}."
