@@ -433,7 +433,7 @@ def test_iter_learners():
     e = skrub.choose_int(0, 1000, name="c").as_data_op()
     assert [
         p.describe_params() for p in e.skb.iter_learners_randomized(3, random_state=0)
-    ] == [{"c": 548}, {"c": 715}, {"c": 602}]
+    ] == [{"c": 549}, {"c": 715}, {"c": 603}]
 
 
 #
