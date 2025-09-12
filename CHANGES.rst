@@ -26,6 +26,9 @@ Bugfixes
   was displayed). :pr:`1590` by :user:`Jérôme Dockès <jeromedockes>`.
 - Fixed an error that occurred when using ``.skb.concat`` with a pandas dataframe
   with column names that aren't strings. :pr:`1594` by :user:`Riccardo Cappuzzo<rcap107>`.
+- DataOp hyperparameter search would raise an error when doing classification
+  and using the ``scoring`` parameter, when the dataop contained no variables.
+  Fixed in :pr:`1601` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.6.1
 ===================

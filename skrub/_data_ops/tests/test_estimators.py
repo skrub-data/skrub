@@ -790,3 +790,19 @@ def test_support_modes_no_apply():
         assert not hasattr(learner, a)
     for a in ["fit", "transform", "fit_transform"]:
         assert hasattr(learner, a)
+
+
+def test_random_search_no_vars():
+    # non-regression test for #1600
+
+    @skrub.deferred
+    def load_data():
+        X, y = make_classification(n_samples=10)
+        return {"X": X, "y": y}
+
+    data = load_data()
+    X = data["X"].skb.mark_as_X()
+    y = data["y"].skb.mark_as_y()
+    pred = X.skb.apply(DummyClassifier(), y=y)
+    search = pred.skb.make_grid_search(scoring="roc_auc").fit({})
+    assert search.results_.shape[0] == 1
