@@ -30,6 +30,9 @@ Bugfixes
   values when ``log=False`` and ``n_steps`` is ``None``. It was between ``low``
   and ``low + high``, now it is between ``low`` and ``high``. :pr:`1603` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- DataOp hyperparameter search would raise an error when doing classification
+  and using the ``scoring`` parameter, when the dataop contained no variables.
+  Fixed in :pr:`1601` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.6.1
 ===================
