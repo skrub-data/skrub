@@ -141,8 +141,8 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         full_report_kwargs : dict
             See :meth:`DataOp.skb.full_report`
 
-        Result
-        ------
+        Returns
+        -------
         dict
             The result of ``DataOp.skb.full_report``: a dict containing
             ``'result'``, ``'error'`` and ``'report_path'``.
