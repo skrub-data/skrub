@@ -340,3 +340,13 @@ class PassThrough(BaseEstimator):
 
     def transform(self, X):
         return X
+
+
+def format_duration(seconds):
+    if seconds < 0:
+        raise ValueError(
+            f"format_duration only handles non-negative durations, got: {seconds}"
+        )
+    hours, rest = divmod(seconds, 3600)
+    minutes, rest = divmod(rest, 60)
+    return f"{hours:.0f}h {minutes:.0f}m {rest:.2g}s"

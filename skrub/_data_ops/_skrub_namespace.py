@@ -1283,9 +1283,9 @@ class SkrubNamespace:
         """Generate a full report of the DataOp's evaluation.
 
         This creates a report showing the computation graph, and for each
-        intermediate computation, some information (such as the line of code
-        where it was defined) and a display of the intermediate result (or
-        error).
+        intermediate computation, some information (the line of code where it
+        was defined, the time it took to run, and more) and a display of the
+        intermediate result (or error).
 
         Parameters
         ----------
@@ -1316,12 +1316,20 @@ class SkrubNamespace:
             way a report is stored at the location indicated by
             ``'report_path'``.
 
+        See Also
+        --------
+        :meth:`SkrubLearner.report` :
+            Generate a report for a call to any of the methods of the
+            :class:`SkrubLearner` such as ``transform()``, ``predict()``,
+            ``predict_proba()`` etc.
+
         Notes
         -----
-        The learner is run doing a ``fit_transform``. If ``environment`` is
-        provided, it is used as the bindings for the variables in the
-        DataOp, and otherwise, the ``value`` attributes of the variables
-        are used.
+        The learner is run doing a ``fit_transform``. To get a report for other
+        methods (e.g. ``predict``, see :meth:`SkrubLearner.report`). If
+        ``environment`` is provided, it is used as the bindings for the
+        variables in the DataOp, and otherwise, the ``value`` attributes of the
+        variables are used.
 
         At the moment, this creates a directory on the filesystem containing
         HTML files. The report can be displayed by visiting the contained
