@@ -306,7 +306,7 @@ directly modified by the pull request are executed.
 CI is testing all possible configurations supported by skrub, so tests may fail
 with configurations different from what you are developing with. If this is the
 case,  it is possible to run the tests in the environment that is failing by
-using pixi. For example if the env is ``ci-py309-min-optional-deps``, it is
+using `pixi <https://pixi.sh/latest/>`_. For example if the env is ``ci-py309-min-optional-deps``, it is
 possible to replicate it using the following command:
 
 .. code:: sh
@@ -382,6 +382,8 @@ typos or improving explanations.
 
 
 **Using pixi**
+
+You can download and install pixi from `here <https://pixi.sh/latest/>`_.
 
 From the repository root:
 
