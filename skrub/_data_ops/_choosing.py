@@ -674,13 +674,15 @@ class NumericChoice(BaseNumericChoice):
         _check_default_numeric_outcome(self.default_outcome, self.to_int)
 
         # if choose_int, sampled values will be truncated to produce int so we
-        # sample in [low, high +1[ (otherwise high would be excluded from the
+        # sample in [ low, high+1 [ (otherwise high would be excluded from the
         # range)
         offset = 1 - 1e-6 if self.to_int else 0
 
         if self.log:
+            # loguniform(a, b).support() -> (a, b)
             self._distrib = stats.loguniform(self.low, self.high + offset)
         else:
+            # uniform(a, b).support() -> (a, a + b)
             self._distrib = stats.uniform(self.low, self.high - self.low + offset)
 
     def rvs(self, size=None, random_state=None):
