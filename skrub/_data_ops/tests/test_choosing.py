@@ -289,4 +289,8 @@ def test_choice_bounds(func, log):
     # non-regression for #1602
     low, high = 10.0, 100.0
     c = func(low, high, log=log)
-    assert c._distrib.support() == (low, high)
+    sample = c.rvs(size=1_000_000, random_state=0)
+    sample_min, sample_max = sample.min(), sample.max()
+    assert sample_min == pytest.approx(low, abs=0.001)
+    assert sample_max == pytest.approx(high, abs=0.001)
+    assert low <= sample_min <= sample_max <= high
