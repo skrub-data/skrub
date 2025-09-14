@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 from sklearn.base import BaseEstimator
-from sklearn.datasets import make_classification
+from sklearn.datasets import make_classification, make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -236,6 +236,55 @@ def test_predictor_outputs():
     assert 0.0 <= score <= 1.0
     assert LogReg.n_predict_calls == 2
     assert seen_modes == ["fit", "predict", "score"]
+
+
+def test_predictor_output_formatting():
+    X, y = make_regression(n_samples=20, n_targets=3)
+    X_df = pd.DataFrame(X, columns=[f"x_{i}" for i in range(X.shape[1])])
+    y_df = pd.DataFrame(y, columns=[f"y_{i}" for i in range(y.shape[1])])
+    pred = skrub.X().skb.apply(DummyRegressor(), y=skrub.y())
+
+    # When X or y is not a column or dataframe, no post-processing
+    out = pred.skb.eval({"X": X, "y": y})
+    assert isinstance(out, np.ndarray)
+    out = pred.skb.eval({"X": X_df, "y": y})
+    assert isinstance(out, np.ndarray)
+    out = pred.skb.eval({"X": X, "y": y_df})
+    assert isinstance(out, np.ndarray)
+
+    # When ytrain was a dataframe, we get a dataframe
+    out = pred.skb.eval({"X": X_df, "y": y_df})
+    assert isinstance(out, pd.DataFrame)
+    assert list(out.columns) == list(y_df.columns)
+
+    # Also true when it is a dataframe with only 1 column
+    out = pred.skb.eval({"X": X_df, "y": y_df["y_0"]})
+    assert isinstance(out, pd.Series)
+    assert out.name == "y_0"
+
+    # When ytrain was a column, we get a column
+    out = pred.skb.eval({"X": X_df, "y": y_df[["y_0"]]})
+    assert isinstance(out, pd.DataFrame)
+    assert list(out.columns) == ["y_0"]
+
+    # When the estimator returns something else than a numpy array, no post-processing
+    class DfPredictor(DummyRegressor):
+        def predict(self, X):
+            y = super().predict(X)
+            return pd.DataFrame(y, columns=[f"dfpred_{i}" for i in range(y.shape[1])])
+
+    pred = skrub.X().skb.apply(DfPredictor(), y=skrub.y())
+    out = pred.skb.eval({"X": X_df, "y": y_df})
+    assert list(out.columns) == ["dfpred_0", "dfpred_1", "dfpred_2"]
+
+    # When the prediction does not have the expected shape, no post-processing
+    class WrongShape(DummyRegressor):
+        def predict(self, X):
+            return super().predict(X)[:, :-1]
+
+    pred = skrub.X().skb.apply(WrongShape(), y=skrub.y())
+    out = pred.skb.eval({"X": X_df, "y": y_df})
+    assert isinstance(out, np.ndarray)
 
 
 def test_get_learner():

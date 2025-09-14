@@ -1297,17 +1297,17 @@ class Apply(DataOpImpl):
 
     def _store_y_format(self, y):
         if sbd.is_dataframe(y):
-            self._y_col_names = sbd.column_names(y)
+            self._y_col_names = list(map(str, sbd.column_names(y)))
             self._y_type = "dataframe"
         elif sbd.is_column(y):
-            self._y_col_names = sbd.name(y)
+            self._y_col_names = str(sbd.name(y))
             self._y_type = "column"
         else:
             self._y_col_names = None
             self._y_type = None
 
     def _format_predictions(self, X, pred):
-        if self._y_type is None:
+        if self._y_type is None or not (sbd.is_dataframe(X) or sbd.is_column(X)):
             return pred
         if not isinstance(pred, np.ndarray):
             return pred
