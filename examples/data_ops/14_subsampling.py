@@ -1,5 +1,4 @@
 """
-
 .. _example_subsampling:
 
 Subsampling for faster development

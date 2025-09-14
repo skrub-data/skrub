@@ -113,10 +113,6 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
     def __sklearn_is_fitted__(self):
         return getattr(self, "_is_fitted", False)
 
-    def fit(self, environment):
-        _ = self.fit_transform(environment)
-        return self
-
     def _eval_in_mode(self, mode, environment):
         if mode not in _FITTING_METHODS:
             check_is_fitted(self)
@@ -166,7 +162,8 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
-            return self._eval_in_mode(name, *args, **kwargs)
+            result = self._eval_in_mode(name, *args, **kwargs)
+            return self if name == "fit" else result
 
         f.__name__ = name
         return f
@@ -489,10 +486,6 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         new = SkrubLearner(self.data_op)
         _copy_attr(self, new, ["_is_fitted"])
         return new
-
-    def fit(self, X, y=None):
-        _ = self.fit_transform(X, y=y)
-        return self
 
     def _eval_in_mode(self, mode, X, y=None):
         result = evaluate(self.data_op, mode, self._get_env(X, y), clear=True)

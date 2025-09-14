@@ -769,7 +769,7 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     if how == "full_frame":
         _check("`how` is 'full_frame'")
         return estimator
-    if not hasattr(estimator, "transform"):
+    if hasattr(estimator, "predict") or not hasattr(estimator, "transform"):
         _check("`estimator` is a predictor (not a transformer)")
         return estimator
     if not sbd.is_dataframe(X):
@@ -1237,8 +1237,13 @@ class Apply(DataOpImpl):
 
     def eval(self, *, mode, environment):
         if mode not in self.supported_modes():
+            # We are not the final estimator, e.g. mode is 'predict' and we are
+            # a transformer that comes before the predictor.
             mode = "fit_transform" if "fit" in mode else "transform"
         method_name = "fit_transform" if mode == "preview" else mode
+
+        # 1. Collect the necessary arguments: X and possibly y and the estimator
+        # (depending on the mode).
 
         X = yield self.X
         if ("fit" in method_name and not self.unsupervised) or method_name == "score":
@@ -1247,7 +1252,6 @@ class Apply(DataOpImpl):
             y = None
 
         check_subsampled_X_y_shape(self.X, self.y, X, y, mode, environment)
-
         X = _check_column_names(X)
 
         if "fit" in method_name:
@@ -1263,29 +1267,20 @@ class Apply(DataOpImpl):
                 X=X,
             )
 
-        if "transform" in method_name and not hasattr(self.estimator_, "transform"):
-            if "fit" in method_name:
+        # 2. Call the appropriate estimator method
+
+        if "transform" in method_name and not hasattr(self.estimator_, method_name):
+            # We are a predictor and the mode is 'transform' or 'fit_transform' (as in
+            # `.skb.preview()` or `.skb.eval()`). We replace `.transform()`
+            # with `.predict()`
+            if method_name == "fit_transform":
                 self.estimator_.fit(X, y)
-                if sbd.is_column(y):
-                    self._all_outputs = [sbd.name(y)]
-                elif sbd.is_dataframe(y):
-                    self._all_outputs = sbd.column_names(y)
-                else:
-                    self._all_outputs = None
-            pred = self.estimator_.predict(X)
-            if not sbd.is_dataframe(X) and self._all_outputs is None:
-                return pred
-            if len(pred.shape) == 1:
-                col_name = "y" if self._all_outputs is None else self._all_outputs[0]
-                result = sbd.make_dataframe_like(X, {col_name: pred})
-            else:
-                col_names = (
-                    [f"y{i}" for i in range(pred.shape[1])]
-                    if self._all_outputs is None
-                    else self._all_outputs
-                )
-                result = sbd.make_dataframe_like(X, dict(zip(col_names, pred.T)))
-            return sbd.copy_index(X, result)
+            return self.estimator_.predict(X)
+
+        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
+            # We are a transformer in 'fit' mode. Rather than `fit()` we call
+            # `fit_transform()` so that subsequent steps can be fitted as well.
+            method_name = "fit_transform"
 
         if "fit" in method_name:
             y_arg = () if self.unsupervised else (y,)
@@ -1300,7 +1295,7 @@ class Apply(DataOpImpl):
         Used by SkrubLearner and param search to decide if they have the
         methods `predict`, `predict_proba` etc.
         """
-        modes = ["preview", "fit_transform", "transform"]
+        modes = ["preview", "fit", "fit_transform", "transform"]
         try:
             estimator = self.estimator_
         except AttributeError:

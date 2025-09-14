@@ -1,5 +1,4 @@
 """
-
 Introduction to machine-learning pipelines with skrub DataOps
 ==============================================================
 
