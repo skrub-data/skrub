@@ -20,6 +20,12 @@ Changes
   :func:`datasets.get_ken_table_aliases`, and :func:`datasets.get_ken_types` will be
   removed in the next release of skrub.
   :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
+- :class:`SkrubLearner` used to do a prediction on the train set during
+  ``fit()``, this has been fixed. When the DataOp contains a predictor (an
+  estimator with ``predict()``), :meth:`DataOp.skb.preview` and
+  :meth:`DataOp.skb.eval` now return the raw prediction numpy array directly,
+  without turning it into a DataFrame.
+  :pr:`1610` by :user:`Jérôme Dockès <jeromedockes>`.
 
 
 Bugfixes
