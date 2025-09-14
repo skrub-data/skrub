@@ -180,12 +180,17 @@ class _DataOpTraversal:
                 last_result = node_durations[stack[-1].target_id]
             elif isinstance(top, DataOp):
                 push_computation(self.handle_data_op)
-            elif isinstance(top, _BUILTIN_MAP):
+
+            # We recurse into built-in collections but not their subclasses (we
+            # would not know how to reconstruct a collection from the items'
+            # values). Thus we compare types directly rather than using isinstance.
+            elif type(top) in _BUILTIN_MAP:
                 push_computation(self.handle_mapping)
-            elif isinstance(top, _BUILTIN_SEQ):
+            elif type(top) in _BUILTIN_SEQ:
                 push_computation(self.handle_seq)
-            elif isinstance(top, slice):
+            elif type(top) is slice:
                 push_computation(self.handle_slice)
+
             elif isinstance(top, _choosing.BaseChoice):
                 push_computation(self.handle_choice)
             elif isinstance(top, _choosing.Match):
