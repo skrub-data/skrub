@@ -215,10 +215,10 @@ class SkrubNamespace:
         Result:
         ―――――――
            ID     product_0     product_1  quantity        date
-        0   1  4.849834e-08  1.511858e+00         2  2020-04-03
-        1   2  1.511858e+00 -4.661362e-08         3  2020-04-04
-        2   3  1.511858e+00 -4.661362e-08         5  2020-04-04
-        3   4 -4.172602e-08  6.928808e-09         1  2020-04-05
+        0   1 -2.560113e-16  1.000000e+00         2  2020-04-03
+        1   2  1.000000e+00  7.447602e-17         3  2020-04-04
+        2   3  1.000000e+00  7.447602e-17         5  2020-04-04
+        3   4 -3.955170e-16 -8.326673e-17         1  2020-04-05
 
         Transform all but the ``'ID'`` and ``'quantity'`` columns:
 
@@ -229,10 +229,10 @@ class SkrubNamespace:
         Result:
         ―――――――
            ID     product_0     product_1  quantity    date_0    date_1
-        0   1  7.041722e-08  3.100987e-08         2  2.022157 -1.073115
-        1   2  1.511858e+00  1.535357e-07         3  2.490838  0.871195
-        2   3  1.511858e+00  1.535357e-07         5  2.490838  0.871195
-        3   4 -2.455689e-07  1.511858e+00         1  2.022157 -1.073114
+        0   1  9.775252e-08  7.830415e-01         2  0.766318 -0.406667
+        1   2  9.999999e-01  0.000000e+00         3  0.943929  0.330148
+        2   3  9.999998e-01 -1.490116e-08         5  0.943929  0.330149
+        3   4  9.910963e-08 -6.219692e-01         1  0.766318 -0.406668
 
         More complex selection of the columns to transform, here all numeric
         columns except the ``'ID'``:
@@ -268,7 +268,11 @@ class SkrubNamespace:
         <Apply DummyClassifier>
         Result:
         ―――――――
-        array([False, False, False, False])
+        0    False
+        1    False
+        2    False
+        3    False
+        Name: delayed, dtype: bool
 
         Sometimes we want to pass a value for ``y`` because it is required for
         scoring and cross-validation, but it is not needed for fitting the
@@ -756,10 +760,22 @@ class SkrubNamespace:
         <Apply Ridge>
         Result (on a subsample):
         ――――――――――――――――――――――――
-        array([142.86690576, 130.98076498, 138.55538814, 149.70336267,
-               136.01521429, 139.77321339, 134.11041546, 129.22478258,
-               140.16136323, 155.27203282, 139.5521098 , 130.31878305,
-               135.95659081, 142.99805988, 132.51101314])
+        0     142.866906
+        1     130.980765
+        2     138.555388
+        3     149.703363
+        4     136.015214
+        5     139.773213
+        6     134.110415
+        7     129.224783
+        8     140.161363
+        9     155.272033
+        10    139.552110
+        11    130.318783
+        12    135.956591
+        13    142.998060
+        14    132.511013
+        Name: target, dtype: float64
 
         By default, model fitting and hyperparameter search are done on the
         full data, so if we want the subsampling to take place we have to
@@ -1425,7 +1441,11 @@ class SkrubNamespace:
         <Apply DummyClassifier>
         Result:
         ―――――――
-        array([False, False, False, False])
+        0    False
+        1    False
+        2    False
+        3    False
+        Name: delayed, dtype: bool
         >>> learner = pred.skb.make_learner(fitted=True)
         >>> new_orders_df = skrub.datasets.toy_orders(split='test').X
         >>> new_orders_df

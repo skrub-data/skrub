@@ -39,6 +39,7 @@ import traceback
 import types
 import warnings
 
+import numpy as np
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
@@ -1266,6 +1267,7 @@ class Apply(DataOpImpl):
                 allow_reject=allow_reject,
                 X=X,
             )
+            self._store_y_format(y)
 
         # 2. Call the appropriate estimator method
 
@@ -1275,7 +1277,10 @@ class Apply(DataOpImpl):
             # with `.predict()`
             if method_name == "fit_transform":
                 self.estimator_.fit(X, y)
-            return self.estimator_.predict(X)
+            pred = self.estimator_.predict(X)
+            # In `(fit_)transform` mode only, format the predictions as a
+            # dataframe or column if y was one during `fit()`
+            return self._format_predictions(X, pred)
 
         if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
             # We are a transformer in 'fit' mode. Rather than `fit()` we call
@@ -1289,6 +1294,43 @@ class Apply(DataOpImpl):
         else:
             y_arg = ()
         return getattr(self.estimator_, method_name)(X, *y_arg)
+
+    def _store_y_format(self, y):
+        if sbd.is_dataframe(y):
+            self._y_col_names = sbd.column_names(y)
+            self._y_type = "dataframe"
+        elif sbd.is_column(y):
+            self._y_col_names = sbd.name(y)
+            self._y_type = "column"
+        else:
+            self._y_col_names = None
+            self._y_type = None
+
+    def _format_predictions(self, X, pred):
+        if self._y_type is None:
+            return pred
+        if not isinstance(pred, np.ndarray):
+            return pred
+        if self._y_type == "column" and np.ndim(pred) == 1 and pred.shape[0] == len(X):
+            pred = sbd.make_column_like(X, pred, self._y_col_names)
+            return sbd.copy_index(X, pred)
+        if (
+            self._y_type == "dataframe"
+            and np.ndim(pred) == 1
+            and len(self._y_col_names) == 1
+            and pred.shape[0] == len(X)
+        ):
+            pred = sbd.make_dataframe_like(X, {self._y_col_names[0]: pred})
+            return sbd.copy_index(X, pred)
+        if (
+            self._y_type == "dataframe"
+            and np.ndim(pred) == 2
+            and pred.shape[1] == len(self._y_col_names)
+            and pred.shape[0] == len(X)
+        ):
+            pred = sbd.make_dataframe_like(X, dict(zip(self._y_col_names, pred.T)))
+            return sbd.copy_index(X, pred)
+        return pred
 
     def supported_modes(self):
         """

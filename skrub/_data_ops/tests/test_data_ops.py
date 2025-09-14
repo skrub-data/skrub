@@ -4,6 +4,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyRegressor
@@ -190,9 +191,9 @@ def test_predictor_as_transformer():
     X = pd.DataFrame({"a": [1, 2, 3], "b": [10, 20, 30]})
     pred = skrub.X().skb.apply(DummyRegressor(), y=skrub.y())
     learner = pred.skb.make_learner()
-    expected = np.asarray([[2.0, 2.0, 2.0], [20.0, 20.0, 20.0]]).T
-    assert (learner.fit_transform({"X": X, "y": X}) == expected).all()
-    assert (learner.transform({"X": X, "y": X}) == expected).all()
+    expected = pd.DataFrame({"a": [2.0, 2.0, 2.0], "b": [20.0, 20.0, 20.0]})
+    assert_frame_equal(learner.fit_transform({"X": X, "y": X}), expected)
+    assert_frame_equal(learner.transform({"X": X, "y": X}), expected)
 
 
 def test_predictor_outputs():
