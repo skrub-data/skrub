@@ -96,7 +96,7 @@ def plot_gap_feature_importance(X_trans):
     topic_labels = [x.replace("text: ", "") for x in X_trans.columns]
     labels = x_samples.str[:50].values + "..."
 
-    # We clip large outliers to makes activations more visible.
+    # We clip large outliers to make activations more visible.
     X_trans = np.clip(X_trans, a_min=None, a_max=200)
 
     plt.figure(figsize=(10, 10), dpi=200)
@@ -228,7 +228,7 @@ plot_box_results(results)
 
 # %%
 # StringEncoder
-# ^^^^^^^^^^^^
+# ^^^^^^^^^^^^^
 # |TextEncoder| embeddings are very strong, but they are also quite expensive to
 # use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
 # which works by first performing a tf-idf (computing vectors of rescaled word
@@ -317,7 +317,7 @@ plot_performance_tradeoff(results)
 
 # %%
 # The black points represent the average time to fit and AUC for each vectorizer,
-# and the width of the bars represents one standard deviation
+# and the width of the bars represents one standard deviation.
 #
 # The green outlier dot on the right side of the plot corresponds to the first time
 # the Sentence Transformers model was downloaded and loaded into memory.

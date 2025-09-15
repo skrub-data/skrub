@@ -178,7 +178,7 @@ vectorizer.output_to_input_["department_BOA"]
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Note that ``"date_first_hired"`` has been recognized and processed as a datetime
-# ßcolumn.
+# column.
 
 vectorizer.column_to_kind_["date_first_hired"]
 
@@ -194,7 +194,7 @@ employees["date_first_hired"]
 #
 # For example, strings commonly used to represent missing values such as ``"N/A"`` are
 # replaced with actual ``null``. As we saw above, columns containing strings that
-# represent dates (e.g. ``'2024-05-15'``) are detected and converted  to proper
+# represent dates (e.g. ``'2024-05-15'``) are detected and converted to proper
 # datetimes.
 #
 # We can inspect the list of steps that were applied to a given column:
