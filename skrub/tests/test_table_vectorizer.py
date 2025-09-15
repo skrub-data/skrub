@@ -485,7 +485,7 @@ def test_auto_cast_missing_categories():
     assert dict(out.dtypes) == expected_type_per_column
 
 
-def test_get_feature_names_out():
+def test_get_feature_names_out(df_module):
     expected_features = [
         "int",
         "float",
@@ -502,7 +502,15 @@ def test_get_feature_names_out():
         "cat2_50K+",
         "cat2_60K+",
     ]
-    X = _get_clean_dataframe()
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     rng = np.random.default_rng(42)
     y = rng.integers(0, 2, size=X.shape[0])
     vectorizer = TableVectorizer().fit(X)
@@ -577,10 +585,28 @@ inputs = [
 ]
 
 
-def test_handle_unknown_category():
+def test_handle_unknown_category(df_module):
+    # data = {
+    #     "int": [15, 56, 63, 12, 44],
+    #     "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+    #     "str1": ["public", "private", "private", "private", "public"],
+    #     "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+    #     "cat1": ["yes", "yes", "no", "yes", "no"],
+    #     "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    # }
+    # X = df_module.make_dataframe(data)
     X = _get_clean_dataframe()
     # Treat all columns as having few unique values
     table_vec = TableVectorizer(cardinality_threshold=7).fit(X)
+    # data_unknown = {
+    #     "int": [3, 1],
+    #     "float": [2.1, 4.3],
+    #     "str1": ["semi-private", "public"],
+    #     "str2": ["researcher", "chef"],
+    #     "cat1": ["maybe", "yes"],
+    #     "cat2": ["70K+", "20K+"],
+    # }
+    # X_unknown = df_module.make_dataframe(data_unknown)
     X_unknown = pd.DataFrame(
         {
             "int": pd.Series([3, 1], dtype="int"),
@@ -591,6 +617,15 @@ def test_handle_unknown_category():
             "cat2": pd.Series(["70K+", "20K+"], dtype="category"),
         }
     )
+    # data_known = {
+    #     "int": [1, 4],
+    #     "float": [4.3, 3.3],
+    #     "str1": ["public", "private"],
+    #     "str2": ["chef", "chef"],
+    #     "cat1": ["yes", "no"],
+    #     "cat2": ["30K+", "20K+"],
+    # }
+    # X_known = df_module.make_dataframe(data_known)
     X_known = pd.DataFrame(
         {
             "int": pd.Series([1, 4], dtype="int"),
@@ -611,6 +646,9 @@ def test_handle_unknown_category():
 
     # +2 for binary columns which get one category dropped
     n_zeroes = X["str2"].nunique() + X["cat2"].nunique() + 2
+    # n_zeroes = ((X["str2"].nunique() if df_module.name != "polars" else X["str2"].n_unique())
+    #      + (X["cat2"].nunique() if df_module.name != "polars" else X["cat2"].n_unique())
+    #      + 2)
     assert_array_equal(
         X_trans_unknown.iloc[0, 2:n_zeroes],
         np.zeros_like(X_trans_unknown.iloc[0, 2:n_zeroes]),
@@ -632,24 +670,39 @@ def test_handle_unknown_category():
         ),
     ],
 )
-def test_deterministic(pipeline):
+def test_deterministic(pipeline, df_module):
     """
     Tests that running the same TableVectorizer multiple times with the same
     (deterministic) components results in the same output.
     """
-    X = _get_dirty_dataframe()
+    # X = _get_dirty_dataframe()
+    data = {
+        "int": [15, 56, None, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, None],
+        "str1": ["public", None, "private", "private", "public"],
+        "str2": ["officer", "manager", None, "chef", "teacher"],
+        "cat1": [None, "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", None],
+    }
+    X = df_module.make_dataframe(data)
     X_trans_1 = pipeline.fit_transform(X)
     X_trans_2 = pipeline.fit_transform(X)
     assert_array_equal(X_trans_1, X_trans_2)
 
 
-def test_mixed_types():
+def test_mixed_types(df_module):
     """
     Check that the types are correctly inferred.
     """
     if parse_version(pd.__version__) < parse_version("2.0.0"):
         pytest.xfail("pandas is_string_dtype incorrect in old pandas")
-    X = _get_mixed_types_dataframe()
+    data = {
+            "int_str": ["1", "2", 3, "3", 5],
+            "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
+            "int_float": [1, 2, 3.0, 3, 5.0],
+            "bool_str": ["True", False, True, "False", "True"],
+        }
+    X = df_module.make_dataframe(data)
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
     expected_transformer_types = {
@@ -734,14 +787,22 @@ def test_changing_types_int_float():
     assert_array_almost_equal(X_trans, expected_X_trans)
 
 
-def test_column_by_column():
+def test_column_by_column(df_module):
     """
     Test that the TableVectorizer gives the same result
     when applied column by column.
     """
     if parse_version(pd.__version__) < parse_version("2.0.0"):
         pytest.xfail("pandas is_string_dtype incorrect in old pandas")
-    X = _get_clean_dataframe()
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     vectorizer = TableVectorizer(
         high_cardinality=GapEncoder(n_components=2, random_state=0),
         cardinality_threshold=4,
@@ -767,8 +828,16 @@ def test_column_by_column():
         MinHashEncoder(n_components=2),
     ],
 )
-def test_parallelism(high_cardinality):
-    X = _get_clean_dataframe()
+def test_parallelism(high_cardinality, df_module):
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     params = dict(
         high_cardinality=high_cardinality,
         cardinality_threshold=4,
@@ -811,8 +880,16 @@ def test_pandas_sparse_array():
         TableVectorizer().fit(df)
 
 
-def test_wrong_transformer():
-    X = _get_clean_dataframe()
+def test_wrong_transformer(df_module):
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     with pytest.raises(ValueError):
         TableVectorizer(high_cardinality="passthroughtypo").fit(X)
     with pytest.raises(TypeError):
@@ -921,8 +998,16 @@ def test_bad_specific_cols():
         TableVectorizer(specific_transformers=[(None, [0])]).fit(None)
 
 
-def test_sk_visual_block():
-    X = _get_clean_dataframe()
+def test_sk_visual_block(df_module):
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     vectorizer = TableVectorizer()
     unfitted_repr = vectorizer._repr_html_()
     assert "TableVectorizer" in unfitted_repr
