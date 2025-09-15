@@ -193,8 +193,16 @@ def _get_missing_values_dataframe(categorical_dtype="object"):
     )
 
 
-def test_get_preprocessors():
-    X = _get_clean_dataframe()
+def test_get_preprocessors(df_module):
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     steps = _get_preprocessors(
         cols=X.columns,
         drop_null_fraction=1.0,
@@ -216,8 +224,16 @@ def test_get_preprocessors():
     assert not any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
 
 
-def test_fit_default_transform():
-    X = _get_clean_dataframe()
+def test_fit_default_transform(df_module):
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
 
@@ -394,6 +410,15 @@ def test_convert_float32(df_module):
     Test that the TableVectorizer converts float64 to float32
     when using the default parameters.
     """
+    # data = {
+    #     "int": [15, 56, 63, 12, 44],
+    #     "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+    #     "str1": ["public", "private", "private", "private", "public"],
+    #     "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+    #     "cat1": ["yes", "yes", "no", "yes", "no"],
+    #     "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    # }
+    # X = df_module.make_dataframe(data)
     X = _get_clean_dataframe()
     vectorizer = TableVectorizer()
     out = vectorizer.fit_transform(X)
@@ -414,8 +439,16 @@ def test_convert_float32(df_module):
     assert out.dtypes["int"] == "float32"
 
 
-def test_cleaner_invalid_numeric_dtype():
-    X = _get_clean_dataframe()
+def test_cleaner_invalid_numeric_dtype(df_module):
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
         Cleaner(numeric_dtype="wrong").fit_transform(X)
 
