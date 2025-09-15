@@ -94,7 +94,7 @@ basket_ids = baskets[["ID"]].skb.mark_as_X()
 fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
-# We mark the "baskets_ids" variable as ``X`` and the "fraud flags" variable as ``y``
+# We mark the ``basket_ids`` variable as ``X`` and the ``fraud_flags`` variable as ``y``
 # so that DataOps can use their indices for train-test splitting and cross-validation.
 # We then build the plan by applying transformations to those inputs.
 #
@@ -172,7 +172,7 @@ predictions
 # And our DataOps plan is complete!
 #
 # We can now use |make_randomized_search| to perform hyperparameter
-# tuning and find the best hyperparameters for our model. We present below the
+# tuning and find the best hyperparameters for our model. Below, we display the
 # hyperparameter combinations that define our search space.
 
 # %%
@@ -219,11 +219,11 @@ search.best_learner_.predict_proba({"baskets": new_baskets, "products": new_prod
 # ----------
 #
 # In this example, we have shown how to build a multi-table machine learning
-# pipeline with the skrub DataOps. We have seen how DataOps allow us to use Pandas
-# to manipulate dataframes, and how we can build a DataOps plan that can make use
-# of multiple tables, and perform hyperparameter tuning on the resulting pipeline.
+# pipeline with skrub DataOps. We have seen how DataOps allow us to use familiar
+# Pandas operations to manipulate dataframes, and how we can build a DataOps plan
+# that works with multiple tables and performs hyperparameter tuning on the
+# resulting pipeline.
 #
-# If you are curious to know more on how to tune hyperparameters using the skrub
-# DataOps, please see
-# :ref:`Tuning Pipelines example <example_tuning_pipelines>` for an
+# If you want to learn more about tuning hyperparameters using skrub DataOps, see
+# the :ref:`Tuning Pipelines example <example_tuning_pipelines>` for an
 # in-depth tutorial.

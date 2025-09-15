@@ -7,20 +7,21 @@
 Hyperparameter tuning with DataOps
 ==================================
 
-A machine-learning pipeline typically contains some values or choices which
-may influence its prediction performance, such as hyperparameters (e.g. the
+A machine-learning pipeline typically contains values or choices which
+may influence its prediction performance, such as hyperparameters (e.g., the
 regularization parameter ``alpha`` of a :class:`~sklearn.linear_model.RidgeClassifier`,
 the ``learning_rate`` of a :class:`~sklearn.ensemble.HistGradientBoostingClassifier`),
-which estimator to use (e.g. ``RidgeClassifier`` or ``HistGradientBoostingClassifier``),
-or which steps to include (e.g. should we join a table to bring additional information
+which estimator to use (e.g., ``RidgeClassifier`` or
+``HistGradientBoostingClassifier``),
+or which steps to include (e.g., should we join a table to bring additional information
 or not).
 
-We want to tune those choices by trying several options and keeping those that
+We want to tune these choices by trying several options and keeping those that
 give the best performance on a validation set.
 
 Skrub :ref:`DataOps <userguide_data_ops>` provide a convenient way to specify
-the range of possible values, by inserting it directly in place of the actual
-value. For example we can write:
+the range of possible values by inserting them directly in place of the actual
+value. For example, we can write:
 """
 # %%
 from sklearn.linear_model import RidgeClassifier
@@ -117,9 +118,9 @@ pred = X.skb.apply(encoder).skb.apply(classifier, y=y)
 # %%
 # From here, the ``pred`` DataOp can be used to perform hyperparameter search with
 # ``.skb.make_grid_search()`` or ``.skb.make_randomized_search()``. They accept
-# the same arguments as their scikit-learn counterparts (e.g. ``scoring``, ``cv``,
+# the same arguments as their scikit-learn counterparts (e.g., ``scoring``, ``cv``,
 # ``n_jobs``). Also, like ``.skb.make_learner()``, they accept a ``fitted``
-# argument: if``fitted=True``, the search is fitted on the data we provided
+# argument: if ``fitted=True``, the search is fitted on the data we provided
 # when initializing our pipeline's variables.
 
 search = pred.skb.make_randomized_search(
@@ -132,16 +133,16 @@ search.results_
 # hyperparameter search with :func:`~skrub.ParamSearch.plot_results`.
 # In the plot below, each line represents a combination of hyperparameters (in
 # this case, only ``N components`` and ``learning rate``), and each column of
-# points represents either a hyperparameter, or the score of a given
+# points represents either a hyperparameter or the score of a given
 # combination of hyperparameters.
 #
 # The color of the line represents the score of the combination of hyperparameters.
-# The plot is interactive, and it is  possible to select only a subset of the
+# The plot is interactive, and you can select only a subset of the
 # hyperparameters to visualize by dragging the mouse over each column to select
 # the desired range.
 #
 # This is particularly useful when there are many combinations of hyperparameters,
-# and we are interested in understanding which hyperparameters have the largest
+# and we want to understand which hyperparameters have the largest
 # impact on the score.
 
 search.plot_results()
@@ -267,15 +268,14 @@ search.plot_results()
 # feature does not have a significant impact on the score.
 
 # %%
-# Concluding, we have seen how to use skrub's ``choose_from`` objects to tune
+# In this example, we've seen how to use skrub's ``choose_from`` objects to tune
 # hyperparameters, choose optional configurations, and nest choices. We then
-# looked at how the different choices affect the plan and the prediction
-# scores.
+# examined how different choices affect the plan and prediction scores.
 #
-# There is more to say about skrub choices than what is covered in this
-# example. In particular, choices are not limited to choosing estimators and
+# There is more to learn about skrub choices than what is covered here.
+# In particular, choices are not limited to choosing estimators and
 # their hyperparameters: they can be used anywhere DataOps are used,
 # such as the argument of a :func:`deferred` function, or the argument of
-# other DataOps' method or operator. Finally, choices can be
-# inter-dependent. Please find more information in the :ref:`user guide
+# other DataOps' methods or operators. Additionally, choices can be
+# inter-dependent. Find more information in the :ref:`user guide
 # <userguide_data_ops_validation>`.

@@ -22,10 +22,10 @@ Cleaning dataframes and parsing datatypes
 ... })
 >>> df_clean = Cleaner().fit_transform(df)
 >>> df_clean
-      id       date
-  0   1 2024-05-05
-  1   2 2024-05-06
-  2   3 2024-05-07
+   id        date
+0   1  2024-05-05
+1   2  2024-05-06
+2   3  2024-05-07
 
 The |Cleaner| converts data types and Nan values in dataframes to ease downstream preprocessing. It includes:
 
