@@ -1,4 +1,5 @@
 import time
+from collections import namedtuple
 
 import pytest
 
@@ -352,3 +353,32 @@ def test_eval_duration():
     assert get_duration(a) == pytest.approx(0.0, abs=0.5)
     assert get_duration(b) == pytest.approx(3.0, abs=0.5)
     assert get_duration(c) == pytest.approx(0.0, abs=0.5)
+
+
+def test_eval_builtin_sequence_subclass():
+    # eval() recurses into some built-in collections. When evaluating a list,
+    # we evaluate each of the items then construct a new list with the items'
+    # values. We should not do it for the collection's subclasses because their
+    # initialization may work differently, we do not know enough to safely
+    # reconstruct the collection of values. For example tuple subclasses
+    # created with namedtuple cannot be initialized with a sequence.
+    # subclasses.
+
+    Pair = namedtuple("Pair", ["first", "second"])
+    p = Pair(1, 2)
+    assert skrub.as_data_op(p).skb.eval() is p
+    # this means items only get evaluated if they are stored in a builtin
+    # collection
+    p = Pair(skrub.as_data_op(1) + skrub.as_data_op(2), skrub.as_data_op(3))
+    first = skrub.as_data_op(p).skb.eval()[0]
+    assert isinstance(first, skrub.DataOp)
+    first = skrub.as_data_op(tuple(p)).skb.eval()[0]
+    assert isinstance(first, int)
+    assert first == 3
+
+    # same for dicts
+    class Dict(dict):
+        pass
+
+    d = Dict()
+    assert skrub.as_data_op(d).skb.eval() is d
