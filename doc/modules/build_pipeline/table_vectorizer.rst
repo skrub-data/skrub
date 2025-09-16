@@ -80,9 +80,11 @@ user-specified transformers that are applied to given columns.
 ... })
 
 We define the list of column-specific transformers:
+
 >>> specific_transformers=[(encoder, ["values"])]
 
 We can then encode the result:
+
 >>> TableVectorizer(specific_transformers=specific_transformers).fit_transform(df)
    values
 0     0.0

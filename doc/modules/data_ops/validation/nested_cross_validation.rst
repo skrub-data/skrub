@@ -8,6 +8,7 @@ data that has not been used to select hyperparameters. This can be done with a
 single train-test split or with nested cross-validation.
 
 Using the same examples as the previous sections:
+
 >>> from sklearn.datasets import load_diabetes
 >>> from sklearn.linear_model import Ridge
 >>> import skrub

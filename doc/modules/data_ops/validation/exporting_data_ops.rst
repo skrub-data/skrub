@@ -29,6 +29,7 @@ The learner can be fitted as it is exported by setting ``fitted=True`` when
 creating it with :meth:`.skb.make_learner() <DataOp.skb.make_learner>`.
 This will fit the learner on the data used for previews when the variables are defined
 (``orders_df`` in the case above):
+
 >>> learner = transformed_orders.skb.make_learner(fitted=True)
 
 Alternatively, the learner can be fitted on a different dataset by passing

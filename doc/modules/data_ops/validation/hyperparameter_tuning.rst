@@ -11,6 +11,7 @@ Rather than specifying a grid of hyperparameters separately from the pipeline,
 we simply insert special skrub objects in place of the value.
 
 We define the same set of operations as before:
+
 >>> from sklearn.datasets import load_diabetes
 >>> from sklearn.linear_model import Ridge
 >>> import skrub

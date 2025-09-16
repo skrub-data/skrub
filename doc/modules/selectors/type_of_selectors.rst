@@ -51,6 +51,7 @@ Selectors can be inverted with ``~``, or :func:`~skrub.selectors.inv`:
 
 Selectors can work on the column names. For example, to select the columns that
 end with ``_mm`` we can do:
+
 >>> SelectCols(s.glob('*_mm')).fit_transform(df)
    height_mm  width_mm
 0      297.0     210.0

@@ -34,6 +34,7 @@ Result:
 4      Art     B
 
 We encode the subjects with the :class:`~skrub.StringEncoder`:
+
 >>> from skrub import StringEncoder
 >>> enc_subject = grades.skb.select(cols="subject").skb.apply(StringEncoder(n_components=2))
 
@@ -41,6 +42,7 @@ For the grades, we define a :func:`~skrub.deferred` function that maps the strin
 to the order we want.
 Remember that objects inside deferred functions are regular Python
 objects (more detail in :ref:`user_guide_data_ops_control_flow`).
+
 >>> @skrub.deferred
 ... def encode_ordered(df):
 ...     grade_order = {"A": 3, "B": 2, "C": 1}
@@ -59,6 +61,7 @@ Name: grade, dtype: int64
 
 Finally, we combine the resulting dataframe and series using another deferred
 function.
+
 >>> @skrub.deferred
 ... def combine(subjects, grades):
 ...     subjects["grade"] = grades
@@ -101,6 +104,7 @@ Result:
 3  fork    2.2    4
 
 We create some selectors with different conditions:
+
 >>> from skrub import selectors as s
 >>> high_cardinality = s.string() - s.cardinality_below(2)
 >>> has_nulls = s.has_nulls()
