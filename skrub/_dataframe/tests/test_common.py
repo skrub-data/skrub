@@ -44,7 +44,7 @@ def test_not_implemented():
         dop = [skrub.var("a")] * n_params
         with pytest.raises(
             TypeError,
-            match=r"Operation not supported on DataOps.*Expecting a Pandas*",
+            match=r"This operation is not supported on DataOps..*It expects a Pandas*",
         ):
             func(*dop)
 

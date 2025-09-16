@@ -123,7 +123,7 @@ def _raise(obj, kind="object"):
 
     if isinstance(obj, DataOp):
         raise TypeError(
-            "This operation is not supported on DataOps. It Expects a Pandas or Polars "
+            "This operation is not supported on DataOps. It expects a Pandas or Polars "
             f"{kind}, but got a DataOp. You may want to use `.skb.eval()` to "
             "evaluate the DataOp into a dataframe and run your operation on it."
         )
