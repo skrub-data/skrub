@@ -21,6 +21,15 @@ Changes
   removed in the next release of skrub.
   :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
+- The objects ``tabular_learner`` and ``DropIfTooManyNulls`` were removed. Use
+  :func:`tabular_pipeline` and :class:`DropUninformative` instead.
+  Additionally, ``patch_display`` and ``unpatch_display`` were removed. Use
+  :func:`get_config`, :func:`set_config` and :func:`config_context` instead.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+- The skrub global configuration now includes a parameter for setting the default
+  verbosity of the :class:`TableReport`.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bugfixes
 --------
