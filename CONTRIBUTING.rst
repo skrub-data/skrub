@@ -306,7 +306,7 @@ directly modified by the pull request are executed.
 CI is testing all possible configurations supported by skrub, so tests may fail
 with configurations different from what you are developing with. If this is the
 case,  it is possible to run the tests in the environment that is failing by
-using pixi. For example if the env is ``ci-py309-min-optional-deps``, it is
+using `pixi <https://pixi.sh/latest/>`_. For example if the env is ``ci-py309-min-optional-deps``, it is
 possible to replicate it using the following command:
 
 .. code:: sh
@@ -369,15 +369,45 @@ specific examples, you can use the following command with a regex pattern:
 This is especially helpful when you're only modifying or checking a few examples.
 
 It is also possible to build the documentation without running the examples
-by using the following command:
+without running the examples by using the following command:
 
 .. code:: bash
 
     make html-noplot
 
-This command generates the documentation without re-executing the examples, which
-can take a long time. This is useful if you are only modifying the
-documentation itself, such as fixing typos or improving explanations.
+This command generates the documentation without re-executing the examples, which can
+take a long time. This is useful if you are only modifying the documentation itself, such as fixing
+typos or improving explanations.
+
+
+
+**Using pixi**
+
+You can download and install pixi from `here <https://pixi.sh/latest/>`_.
+
+From the repository root:
+
+.. code:: bash
+
+    # Build documentation without running examples (faster)
+    pixi run build-doc-quick
+
+    # Build the full documentation, including examples
+    pixi run build-doc
+
+    # Clean previously built documentation
+    pixi run clean-doc
+
+The documentation will be generated in the ``doc/_build/html/`` directory.
+You can view it by opening the local ``doc/_build/html/index.html`` file.
+
+.. warning::
+
+   On Intel-based macOS systems (``osx-64``), some pixi environments may not
+   resolve correctly due to missing upstream package builds (e.g., for PyTorch).
+   If you encounter issues, you can always fall back to using ``make`` as
+   described above.
+
 
 Editing the API reference documentation
 ---------------------------------------
