@@ -1,3 +1,6 @@
+import warnings
+
+from scipy import sparse as sp
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
@@ -173,6 +176,11 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
             The transformed data.
         """
         self.all_inputs_ = sbd.column_names(X)
+
+        # for sklearn
+        self.feature_names_in_ = self.all_inputs_
+        self.n_features_in_ = len(self.all_inputs_)
+
         self._columns = selectors.make_selector(self.cols).expand(X)
         to_transform = selectors.select(X, self._columns)
         if self.keep_original:
@@ -184,6 +192,18 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
             self.transformer_ = clone(self.transformer)
             _utils.set_output(self.transformer_, X)
             transformed = self.transformer_.fit_transform(to_transform, y)
+            if sp.issparse(transformed):
+                warnings.warn(
+                    f"The output of {type(self.transformer_).__name__!r} is a sparse"
+                    " array or sparse matrix."
+                )
+                if sbd.column_names(to_transform) != sbd.column_names(X):
+                    raise ValueError(
+                        "When a transformer outputs a sparse array or sparse matrix,"
+                        " all columns of the input dataframe must beselected. Got"
+                        f" cols={self.cols!r} instead of skrub.selectors.all()."
+                    )
+                return transformed
             transformed = _utils.check_output(
                 self.transformer_, to_transform, transformed, allow_column_list=False
             )
@@ -205,9 +225,6 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         self.used_inputs_ = self._columns
         self.created_outputs_ = self._transformed_output_names
         self.all_outputs_ = passthrough_names + self._transformed_output_names
-        # for sklearn
-        self.feature_names_in_ = self.all_inputs_
-        self.n_features_in_ = len(self.all_inputs_)
 
         result = sbd.copy_index(X, result)
         return result
