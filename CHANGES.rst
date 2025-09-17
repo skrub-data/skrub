@@ -21,7 +21,6 @@ Changes
   removed in the next release of skrub.
   :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
 
-
 Bugfixes
 --------
 
@@ -38,6 +37,9 @@ Bugfixes
 - DataOp hyperparameter search would raise an error when doing classification
   and using the ``scoring`` parameter, when the dataop contained no variables.
   Fixed in :pr:`1601` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner` used to do a prediction on the train set during
+  ``fit()``, this has been fixed.
+  :pr:`1610` by :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`DataOp` would raise errors when containing subclasses of list, tuple
   or dict that cannot be initialized with an instance of the builtin type (such
   as classes created by ``collections.namedtuple``), this has been fixed.
@@ -45,6 +47,7 @@ Bugfixes
   (not into their subclasses). If you need the items evaluated (ie if they
   contain DataOps or Choices), store them in one of the builtin collections.
   :pr:`1612` by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Release 0.6.1
 ===================
