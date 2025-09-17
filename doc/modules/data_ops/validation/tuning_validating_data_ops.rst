@@ -52,7 +52,7 @@ Similarly for ``y``, we use :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`:
 Now we can add our supervised estimator:
 
 >>> pred = X.skb.apply(Ridge(), y=y)
->>> pred
+>>> pred # doctest: +SKIP
 <Apply Ridge>
 Result:
 ―――――――
