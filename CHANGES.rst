@@ -27,6 +27,10 @@ Changes
   :func:`get_config`, :func:`set_config` and :func:`config_context` instead.
   :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
 
+- The skrub global configuration now includes a parameter for setting the default
+  verbosity of the :class:`TableReport`.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 Bugfixes
 --------
 
