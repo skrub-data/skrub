@@ -1,7 +1,7 @@
 .. _user_guide_data_ops_index:
 
-Build and validate complex multi-table pipelines with Data Ops
-==============================================================
+Complex multi-table pipelines with Data Ops
+===========================================
 
 Skrub provides an easy way to build complex, flexible machine learning pipelines.
 There are several needs that are not easily addressed with standard scikit-learn
