@@ -1,11 +1,13 @@
 .. _user_guide_cleaning_dataframe_index:
 
-Pre-processing a Dataframe
-==========================
+Wrangling data with good defaults
+=================================
 
-This section covers the various objects provided by Skrub to help with cleaning
-dataframes by parsing specific dtypes, removing uninformative columns, scaling
-numerical features, and potentially removing typos and unneeded duplicates.
+This section covers how to build a predictive pipeline starting from a dataframe.
+The skrub objects described in this section can be used as strong defaults for
+building baseline pipelines, and can be customized for specific use cases.
+
+.. include:: includes/big_toc_css.rst
 
 .. toctree::
    :maxdepth: 3
