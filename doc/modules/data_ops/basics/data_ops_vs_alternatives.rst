@@ -1,7 +1,11 @@
 .. _user_guide_data_ops_vs_alternatives:
 
-How do Skrub DataOps differ from :class:`sklearn.pipeline.Pipeline`?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How do skrub Data Ops differ from the alternatives?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Skrub DataOps and scikit-learn :class:`sklearn.pipeline.Pipeline`
+====================================================================
 
 Scikit-learn pipelines represent a linear sequence of transformations on one
 table with a fixed number of rows.
@@ -27,16 +31,16 @@ item price in dollars:
 The rest of this user guide will detail how the DataOps work.
 
 
-How do Skrub DataOps differ from orchestrators like Apache Airflow?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Skrub DataOps and orchestrators like Apache Airflow
+===================================================================
 
 Skrub pipelines are not an `orchestrator <https://huyenchip.com/2021/09/13/data-science-infrastructure.html#workflow>`_
 and do not offer capabilities for scheduling runs or provisioning resources and
 environments. Instead, they are a generalization of scikit-learn pipelines, which
 can still be used within an orchestrator.
 
-How do Skrub DataOps differ from other Skrub objects, like :func:`~skrub.tabular_pipeline`?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Skrub DataOps and other Skrub objects, like :func:`~skrub.tabular_pipeline`
+===============================================================================
 
 Skrub DataOps are built to maximize flexibility in the construction of complex
 pre-processing and machine learning pipelines. On the other hand, the main intent

@@ -9,7 +9,7 @@ generates a html report that shows the full plan, including all nodes,
 their names, descriptions, and the transformations applied to the data.
 
 An example of the report can be found
-`here <./_static/credit_fraud_report/index.html>`_.
+`here <../../../_static/dataop_report/index.html>`_.
 
 For each node in the plan, the report shows:
 

@@ -6,7 +6,7 @@ Applying machine-learning estimators
 In addition to working directly with the API provided by the underlying data,
 DataOps can also be used to apply machine-learning estimators from
 scikit-learn or skrub to the data. This is done through the
-:meth:`.skb.apply() <DataOp.skb.apply>` method:
+:func:`.skb.apply() <DataOp.skb.apply>` method:
 
 >>> import pandas as pd
 >>> import skrub
@@ -29,7 +29,10 @@ Result:
 2       0.0        0.0       1.0    1.5  2.0
 3       0.0        1.0       0.0    2.2  4.0
 
-It is also possible to apply a transformer to a subset of the columns:
+It is also possible to apply a transformer to a subset of the columns. The ``cols``
+parameter can also use a skrub :ref:`selector <user_guide_selectors>` for finer
+grained control.
+Note that any column that is not selected is passed through unchanged, like below:
 
 >>> vectorized_orders = orders.skb.apply(
 ...     skrub.StringEncoder(n_components=3), cols="item"
@@ -53,6 +56,10 @@ Then, we can export the transformation as a learner with
          item_0  item_1        item_2  price  qty
 0  5.984116e-09     1.0 -1.323546e-07    2.2    5
 
-Note that here the learner is fitted on the preview data, but in general it can
+Note that here the learner is **fitted** on the preview data, but in general it can
 be exported without fitting, and then fitted on new data provided as an environment
-dictionary.
+dictionary. By default, the learner is returned without fitting.
+
+>>> learner = vectorized_orders.skb.make_learner()
+>>> learner.fit({"orders": orders_df})
+SkrubLearner(data_op=<Apply StringEncoder>)
