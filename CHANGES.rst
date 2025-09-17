@@ -9,6 +9,11 @@ Release history
 Ongoing Development
 ===================
 
+New features
+------------
+- The :meth:`DataOp.skb.full_report` now displays the time each node took to
+  evaluate. :pr:`1596` by :user:`Jérôme Dockès <jeromedockes>`.
+
 Changes
 -------
 - Ken embeddings are now deprecated, the functions :func:`datasets.get_ken_embeddings`,
@@ -22,6 +27,24 @@ Bugfixes
 
 - Fixed a compatibility bug with Polars 1.32.3 that may cause `ToFloat32` to fail
   when applied to categorical columns. :pr:`1570` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Fixed the display of DataOp objects in google colab cell outputs (no output
+  was displayed). :pr:`1590` by :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed an error that occurred when using ``.skb.concat`` with a pandas dataframe
+  with column names that aren't strings. :pr:`1594` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Fixed the range from which :func:`choose_float` and :func:`choose_int` sample
+  values when ``log=False`` and ``n_steps`` is ``None``. It was between ``low``
+  and ``low + high``, now it is between ``low`` and ``high``. :pr:`1603` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- DataOp hyperparameter search would raise an error when doing classification
+  and using the ``scoring`` parameter, when the dataop contained no variables.
+  Fixed in :pr:`1601` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`DataOp` would raise errors when containing subclasses of list, tuple
+  or dict that cannot be initialized with an instance of the builtin type (such
+  as classes created by ``collections.namedtuple``), this has been fixed.
+  DataOps now only recurse into the builtin collections to evaluate their items
+  (not into their subclasses). If you need the items evaluated (ie if they
+  contain DataOps or Choices), store them in one of the builtin collections.
+  :pr:`1612` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.6.1
 ===================

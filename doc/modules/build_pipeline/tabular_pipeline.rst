@@ -44,8 +44,9 @@ problems, but may not beat properly tuned ad-hoc pipelines.
 
 .. list-table:: Parameter values choice of :class:`TableVectorizer` when using  the :func:`tabular_pipeline` function
    :header-rows: 1
+   :widths: 25 25 25 25
 
-   * -
+   * - Parameter
      - ``RandomForest`` models
      - ``HistGradientBoosting`` models
      - Linear models and others

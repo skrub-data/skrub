@@ -1,5 +1,5 @@
 """
-.. _example_multiple_key_join :
+.. _example_multiple_key_join:
 
 Spatial join for flight data: Joining across multiple columns
 =============================================================
@@ -39,7 +39,7 @@ pool of tables are combined for machine learning.
 ###############################################################################
 # The main table: flights dataset
 # ...............................
-#     - The `flights` datasets. It contains all US flights date, origin
+#     - The `flights` dataset. It contains all US flights date, origin
 #       and destination airports and flight time.
 #       Here, we consider only flights from 2008.
 

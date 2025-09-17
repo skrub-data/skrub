@@ -239,6 +239,7 @@ class DataOpImpl:
             self.__dict__.update(bound.arguments)
             self.results = {}
             self.errors = {}
+            self.metadata = {}
             try:
                 self._creation_stack_lines = _format_data_op_creation_stack()
             except Exception:
@@ -265,6 +266,7 @@ class DataOpImpl:
         new = self.__replace__()
         new.results = self.results.copy()
         new.errors = self.errors.copy()
+        new.metadata = self.metadata.copy()
         return new
 
     def compute(self, e, mode, environment):
@@ -508,6 +510,11 @@ class DataOp:
         # besides the explicitly excluded attributes, returning a GetAttr for
         # any special method is unlikely to do what we want.
         if name.startswith("__") and name.endswith("__"):
+            attribute_error(self, name)
+        # also exclude any ipython display methods that may be added in the
+        # future or similar non-standard methods like the _repr_intrinsic_type_
+        # called by google colab
+        if name.startswith("_repr_") and name.endswith("_"):
             attribute_error(self, name)
         return DataOp(GetAttr(self, name))
 
@@ -1699,7 +1706,15 @@ class Concat(DataOpImpl):
                 f"Invalid axis value {e.axis!r} for concat. Expected one of 0 or 1."
             )
 
-        result = sbd.concat(e.first, *e.others, axis=e.axis)
+        if e.axis == 1:
+            first = _check_column_names(e.first)
+            others = list(map(_check_column_names, e.others))
+        else:
+            # No need to sanitize column names if concatenating vertically.
+            first = e.first
+            others = e.others
+
+        result = sbd.concat(first, *others, axis=e.axis)
 
         if e.axis == 1:
             if mode == "preview" or "fit" in mode:

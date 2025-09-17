@@ -1,4 +1,5 @@
 import copy
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -212,6 +213,8 @@ def test_cloning_and_preview_data(how):
     else:
         clone = e.skb.clone()
     assert clone._skrub_impl.results == {}
+    assert clone._skrub_impl.errors == {}
+    assert clone._skrub_impl.metadata == {}
     if how == "skb":
         # This outputting "Evaluation of node..." in < Python 3.11
         msg = (
@@ -334,6 +337,39 @@ def test_concat_vertical_duplicate_cols():
 
     assert out_1.shape[1] == out_2.shape[1] == 2
     assert out_1.shape[0] == out_2.shape[0] == 4
+
+
+def test_concat_non_str_colname():
+    int_columns = pd.DataFrame({0: [1, 2], 1: [3, 4]})
+    string_columns = pd.DataFrame({"0": [1, 2], "1": [3, 4]})
+
+    # check that a warning is raised because of non-string column name
+    with pytest.warns(
+        UserWarning, match="Some dataframe column names are not strings:"
+    ):
+        skrub.as_data_op(int_columns).skb.concat(
+            [skrub.as_data_op(string_columns)], axis=1
+        )
+    with pytest.warns(
+        UserWarning, match="Some dataframe column names are not strings:"
+    ):
+        skrub.as_data_op(int_columns).skb.concat(
+            [skrub.as_data_op(int_columns)], axis=1
+        )
+
+    # no warnings raised when all column names are strings
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        skrub.as_data_op(string_columns).skb.concat(
+            [skrub.as_data_op(string_columns)], axis=1
+        )
+
+    # check that no warning is raised when concatenating vertically
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        skrub.as_data_op(int_columns).skb.concat(
+            [skrub.as_data_op(int_columns)], axis=0
+        )
 
 
 def test_class_skb():

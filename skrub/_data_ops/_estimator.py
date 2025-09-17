@@ -125,9 +125,27 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         return result
 
     def report(self, *, environment, mode, **full_report_kwargs):
-        """Call the method specified by `mode` and return the result and full report.
+        """Call the method specified by ``mode`` and return the result and full report.
 
         See :meth:`DataOp.skb.full_report` for more information.
+
+        Parameters
+        ----------
+        environment : dict
+            Bindings for variables contained in the :class:`DataOp` that was
+            used to create this learner
+            (e.g. ``{"X": X_df, "other_table": df, ...}``).
+        mode : str
+            The method to call in order to generate the report, such as
+            ``"fit"``, ``"predict"``, etc.
+        full_report_kwargs : dict
+            See :meth:`DataOp.skb.full_report`
+
+        Returns
+        -------
+        dict
+            The result of ``DataOp.skb.full_report``: a dict containing
+            ``'result'``, ``'error'`` and ``'report_path'``.
         """
         from ._inspection import full_report
 
@@ -402,7 +420,7 @@ def _to_env_learner(learner):
 
 
 def _get_classes(data_op):
-    first = find_first_apply(data_op.data_op)
+    first = find_first_apply(data_op)
     if first is None:
         attribute_error(data_op, "classes_")
     try:

@@ -14,7 +14,7 @@ authors = [
     {name = "Gael Varoquaux"},
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
@@ -117,6 +117,7 @@ sphinx-copybutton = "*"
 sphinx-gallery = "*"
 sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
+sphinx-sitemap = "*"
 statsmodels = "*"
 
 [tool.pixi.feature.lint.dependencies]

@@ -10,7 +10,7 @@ pre-processing data and training a model. We will also show how to save the mode
 load it back, and then use it to make predictions on new, unseen data.
 
 This example is meant to be an introduction to Skrub DataOps, and as such it
-will not cover all the features: further examples in the gallery
+will not cover all the features. Further examples in the gallery
 :ref:`data_ops_examples_ref` will go into more detail on how to use Skrub DataOps
 for more complex tasks.
 
@@ -25,7 +25,7 @@ for more complex tasks.
 .. |skb.apply| replace:: :meth:`.skb.apply() <DataOp.skb.apply>`
 .. |HistGradientBoostingRegressor| replace::
    :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
-.. |.skb.full_report()| replace:: :meth:`.skb.eval() <DataOp.skb.full_report>`
+.. |.skb.full_report()| replace:: :meth:`.skb.full_report() <DataOp.skb.full_report>`
 .. |choose_float| replace:: :func:`choose_float`
 .. |make_randomized_search| replace::
    :meth:`.skb.make_randomized_search <DataOp.skb.make_randomized_search>`
@@ -96,8 +96,8 @@ X_vec
 # We use a scikit-learn |HistGradientBoostingRegressor| to predict the target variable.
 # We apply the model to the vectorized features using ``.skb.apply``, and pass
 # ``y`` as the target variable.
-# Note that the resulting ``predictor`` will show the prediction results on the
-# preview subsample, but the actual model has not been fitted yet.
+# Note that the resulting ``predictor`` variable shows prediction results on the
+# preview subsample, but the model will be properly fitted when we create the learner.
 
 from sklearn.ensemble import HistGradientBoostingRegressor
 
@@ -133,8 +133,8 @@ trained_learner = predictor.skb.make_learner(fitted=True)
 # A big advantage of the learner is that it can be pickled and saved to disk,
 # allowing us to reuse the trained model later without needing to retrain it.
 # The learner contains all steps in the DataOps plan, including the fitted
-# vectorizer and the trained model. We can save it using Python's ``pickle`` module:
-# here we use ``pickle.dumps`` to serialize the learner object into a byte string.
+# vectorizer and the trained model. We can save it using Python's ``pickle`` module.
+# Here we use ``pickle.dumps`` to serialize the learner object into a byte string.
 
 import pickle
 
@@ -150,15 +150,16 @@ loaded_model = pickle.loads(saved_model)
 # We don't have to create a new variable, as this will be done internally by the
 # learner.
 # In fact, the ``learner`` is similar to a scikit-learn estimator, but rather
-# than taking ``X`` and ``y`` as inputs, it takes a dictionary (the "environment"),
-# where each key is the name of one of the skrub variables in the plan.
+# than taking ``X`` and ``y`` as inputs, it takes a dictionary (the "environment")
+# where each key corresponds to the name of a skrub variable in the plan (in this
+# case, "data").
 #
 # We can now get the test set of the employee salaries dataset:
 unseen_data = fetch_employee_salaries(split="test").employee_salaries
 
 # %%
 # Then, we can use the loaded model to make predictions on the unseen data by
-# passing the environment as dictionary.
+# passing a dictionary with the variable name as the key.
 
 predicted_values = loaded_model.predict({"data": unseen_data})
 predicted_values
@@ -172,11 +173,10 @@ loaded_model.score({"data": unseen_data})
 # Conclusion
 # ----------
 #
-# In this example, we have briefly introduced the skrub DataOps, and how they can
-# be used to build powerful machine learning pipelines. We have seen how to preprocess
-# data, train a model. We have also
-# shown how to save and load the trained model, and how to make predictions on new
-# data using the trained model.
+# In this example, we have briefly introduced the skrub DataOps and how they can
+# be used to build powerful machine learning pipelines. We have shown how to preprocess
+# data and train a model. We have also demonstrated how to save and load the trained
+# model, and how to make predictions on new data.
 #
-# However, skrub DataOps are significantly more powerful than what we have shown here:
-# for more advanced examples, see :ref:`data_ops_examples_ref`.
+# However, skrub DataOps are significantly more powerful than what we have shown here.
+# For more advanced examples, see :ref:`data_ops_examples_ref`.
