@@ -1,4 +1,5 @@
 """
+
 .. currentmodule:: skrub
 
 .. _example_tuning_pipelines:
