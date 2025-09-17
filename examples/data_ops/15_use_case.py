@@ -1,7 +1,6 @@
 """
 Use case: developing locally and deploying to production
 =======================================================
-
 """
 
 # %%

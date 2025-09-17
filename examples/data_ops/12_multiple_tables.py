@@ -1,5 +1,4 @@
 """
-
 Multiples tables: building machine learning pipelines with DataOps
 ==================================================================
 
