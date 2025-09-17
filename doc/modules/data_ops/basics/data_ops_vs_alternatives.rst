@@ -48,3 +48,14 @@ less flexible than DataOps.
 
 However, it is possible to combine DataOps and regular Skrub and scikit-learn
 transformers to improve their flexibility, particularly in multi-table scenarios.
+
+Can I use library "x" with Skrub DataOps?
+==========================================
+
+Yes, Skrub DataOps are designed to be "transparent", so that any method used by
+the underlying data structures (e.g., Pandas or Polars) can be accessed directly:
+check :ref:`user_guide_direct_access_ref` for more details.
+All DataOps-specific operations are available through the ``.skb`` attribute,
+which provides access to the DataOps namespace. Other library-specific methods
+are available directly from the DataOp object, as if it were a regular object
+(like a Pandas or Polars DataFrame or Series).
