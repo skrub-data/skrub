@@ -1,7 +1,7 @@
 .. _user_guide_data_ops_index:
 
-Dataops
-=======
+Data Ops
+========
 
 
 Skrub DataOps: fit, tune, and validate arbitrary data wrangling

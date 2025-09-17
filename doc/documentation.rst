@@ -26,10 +26,9 @@ See the examples section for full code snippets.
    :maxdepth: 3
 
    exploring_a_dataframe
-   cleaning_a_dataframe
-   encoding_a_column
-   building_a_pipeline
-   selectors
+   default_wrangling
+   column_level_featurizing
+   multi_column_operations
    data_ops
-   configuration_datasets
+   configuration_and_datasets
    joining_dataframes

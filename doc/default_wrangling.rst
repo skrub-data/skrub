@@ -12,7 +12,7 @@ building baseline pipelines, and can be customized for specific use cases.
 .. toctree::
    :maxdepth: 3
 
-   modules/data_cleaning/cleaning_dataframes_and_parsing_datatypes
-   modules/data_cleaning/removing_unneeded_columns
-   modules/data_cleaning/robust_scaling
-   modules/data_cleaning/deduplicate_categorical_data
+   modules/default_wrangling/cleaning_dataframes
+   modules/default_wrangling/table_vectorizer
+   modules/default_wrangling/tabular_pipeline
+   modules/default_wrangling/deduplicate_categorical_data
