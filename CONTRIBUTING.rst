@@ -1,3 +1,5 @@
+.. _contributing:
+
 Contributing to skrub
 =====================
 
@@ -58,6 +60,15 @@ To help us resolve the issue quickly, please include:
 - Any **additional details** where the bug might occur or doesn't occur unexpectedly.
 - A **code snippet** that reproduces the issue, if applicable.
 - **Version information** for Python, skrub, and relevant dependencies (e.g., scikit-learn, numpy, pandas).
+
+How to write an example?
+^^^^^^^^^^^^^^^^^^^^^^^^^
+We highly encourage contributors to add examples to the documentation
+when they add new features, or if they have a use case that is not yet covered
+in the documentation.
+
+You can find a guide on how to write examples in the :ref:`example guide <tutorial_write_example>`.
+
 
 Suggesting enhancements
 ~~~~~~~~~~~~~~~~~~~~~~~
