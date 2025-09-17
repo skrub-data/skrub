@@ -1,10 +1,14 @@
 .. |TableReport| replace:: :class:`~skrub.TableReport`
+
+Customizing and sharing the |TableReport|
+=========================================
+
 .. |set_config| replace:: :func:`~skrub.set_config`
 
 .. _user_guide_table_report_customize:
 
 Altering the Appearance of the |TableReport|
-============================================
+--------------------------------------------
 
 The skrub global configuration includes various parameters that allow to tweak
 the HTML representation of the |TableReport|.
@@ -26,7 +30,7 @@ Parameters can be made permanent in a script by altering the configuration with
 .. _user_guide_table_report_sharing:
 
 Exporting and Sharing the |TableReport|
-=======================================
+---------------------------------------
 
 The |TableReport| is a standalone object that does not require a running notebook
 to be accessed after generation: it can be exported in HTML format and opened

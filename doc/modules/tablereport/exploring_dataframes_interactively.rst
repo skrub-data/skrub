@@ -45,4 +45,5 @@ be copied in a script.
 The TableReport can be used in a notebook cell, or it can be opened in a browser
 window using ``TableReport(df).open()``.
 
-It is also possible to export the |TableReport| in HTML or JSON format.
+It is also possible to export the |TableReport| in HTML or JSON format: see
+:ref:`user_guide_table_report_sharing` for more detail.
