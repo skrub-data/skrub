@@ -7,8 +7,8 @@
 Exploring dataframes interactively with the |TableReport|
 =========================================================
 
-The |TableReport| gives a high-level overview of the given dataframe, suitable for
-quick exploratory analysis of series and dataframes. The report shows the first
+The |TableReport| gives a high-level overview of a Dataframe or Series, suitable for
+quick exploratory analysis. The report shows the first
 and last 5 rows of the dataframe (decided by the ``n_rows`` parameter), as well
 as additional information in other tabs.
 
