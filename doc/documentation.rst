@@ -11,7 +11,7 @@ to a machine-learning model. This wrangling comprises joining tables (possibly
 with inexact matches), parsing structured data such as datetimes from text,
 and extracting numeric features from non-numeric data.
 
-For those tasks, skrub does not replace pandas or polars. Instead, it
+Skrub does not replace pandas or polars. Instead, it
 leverages the dataframe libraries to provide more high-level building blocks that
 perform the data preprocessing steps that are typically needed in a machine learning
 pipeline.
