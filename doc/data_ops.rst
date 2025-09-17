@@ -4,6 +4,8 @@ Data Ops
 ========
 
 
+.. include:: includes/big_toc_css.rst
+
 Skrub DataOps: fit, tune, and validate arbitrary data wrangling
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -6,7 +6,6 @@ Exploring a Dataframe
 This section covers the :class:`~skrub.TableReport` and how it can be used for exploring
 and understanding your dataframes.
 
-.. include:: includes/big_toc_css.rst
 
 .. toctree::
    :maxdepth: 3

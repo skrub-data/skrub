@@ -1,4 +1,4 @@
-.. _user_guide_selectors_base:
+.. _user_guide_selectors:
 
 Skrub Selectors: helpers for selecting columns in a dataframe
 =============================================================

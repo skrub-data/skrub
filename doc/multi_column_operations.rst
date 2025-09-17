@@ -6,6 +6,8 @@ Multi-column operations
 Skrub provides various tools to extend the use of single column transformers to
 multiple columns.
 
+.. include:: includes/big_toc_css.rst
+
 .. toctree::
    :maxdepth: 3
 

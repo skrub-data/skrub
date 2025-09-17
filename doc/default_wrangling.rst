@@ -1,4 +1,4 @@
-.. _user_guide_cleaning_dataframe_index:
+.. _user_guide_building_pipeline_index:
 
 Wrangling data with good defaults
 =================================
@@ -7,7 +7,6 @@ This section covers how to build a predictive pipeline starting from a dataframe
 The skrub objects described in this section can be used as strong defaults for
 building baseline pipelines, and can be customized for specific use cases.
 
-.. include:: includes/big_toc_css.rst
 
 .. toctree::
    :maxdepth: 3

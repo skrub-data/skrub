@@ -1,4 +1,6 @@
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
+.. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
+
 
 .. _user_guide_advanced_selectors:
 

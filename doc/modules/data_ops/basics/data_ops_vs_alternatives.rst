@@ -6,7 +6,7 @@ How do Skrub DataOps differ from :class:`sklearn.pipeline.Pipeline`?
 Scikit-learn pipelines represent a linear sequence of transformations on one
 table with a fixed number of rows.
 
-.. image:: _static/sklearn_pipeline.svg
+.. image:: ../../../_static/sklearn_pipeline.svg
     :width: 500
 
 Skrub DataOps, on the other hand, can manipulate any number of variables.
@@ -14,7 +14,7 @@ The transformation they perform is not a linear sequence but any Directed
 Acyclic Graph of computations. Take the following example, where our task is to predict
 item price in dollars:
 
-.. image:: _static/dataops_graph.svg
+.. image:: ../../../_static/dataops_graph.svg
 
 - Here we use three input variables: two tables ("Items" and "Prices") and a
   float ("euro_dollar_rate").
