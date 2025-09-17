@@ -4,8 +4,8 @@ Control flow in DataOps: eager and deferred evaluation
 ======================================================
 
 DataOps represent computations that have not been executed yet, and will
-only be triggered when we call :meth:`.skb.eval() <DataOp.skb.eval>`, or when we
-create the pipeline with :meth:`.skb.make_learner() <DataOp.skb.make_learner>` and
+only be triggered when we call :func:`.skb.eval() <DataOp.skb.eval>`, or when we
+create the pipeline with :func:`.skb.make_learner() <DataOp.skb.make_learner>` and
 call one of its methods such as ``fit()``.
 
 This means we cannot use standard Python control flow statements such as ``if``,
@@ -30,7 +30,7 @@ TypeError: This object is a DataOp that will be evaluated later, when your learn
 
 We get an error because the ``for`` statement tries to iterate immediately
 over the columns. However, ``orders.columns`` is not an actual list of
-columns: it is a Skrub DataOp that will produce a list of columns, later,
+columns: it is a skrub DataOp that will produce a list of columns, later,
 when we run the computation.
 
 This remains true even if we have provided a value for ``orders`` and we can
@@ -54,7 +54,7 @@ actually runs and ``orders.columns`` has been evaluated.
 We can achieve this by defining a function that contains the control flow logic
 we need, and decorating it with :func:`deferred`. This decorator defers the execution
 of the function: when we call it, it does not run immediately. Instead, it returns
-a Skrub DataOp that wraps the function call. The original function is only
+a skrub DataOp that wraps the function call. The original function is only
 executed when the DataOp is evaluated, and will return the result as a DataOp.
 
 >>> @skrub.deferred
@@ -144,8 +144,8 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 .. rubric:: Examples
 
 - See :ref:`sphx_glr_auto_examples_data_ops_11_data_ops_intro.py` for an introductory
-  example on how to use Skrub DataOps on a single dataframe.
+  example on how to use skrub DataOps on a single dataframe.
 - See :ref:`sphx_glr_auto_examples_data_ops_12_multiple_tables.py` for an example
-  of how Skrub DataOps can be used to process multiple tables using dataframe APIs.
+  of how skrub DataOps can be used to process multiple tables using dataframe APIs.
 - See :ref:`sphx_glr_auto_examples_data_ops_13_choices.py` for an example of
-  hyper-parameter tuning using Skrub DataOps.
+  hyper-parameter tuning using skrub DataOps.

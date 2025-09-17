@@ -1,6 +1,6 @@
 .. _user_guide_data_ops_tuning_validating_dataops:
 
-Tuning and validating Skrub DataOps plans
+Tuning and validating skrub DataOps plans
 =========================================
 
 To evaluate the prediction performance of our plan, we can fit it on a training
@@ -96,7 +96,7 @@ Splitting the data in train and test sets
 =========================================
 
 We can use :meth:`.skb.train_test_split() <DataOp.skb.train_test_split>` to
-perform a single train-test split. Skrub first evaluates the DataOps on
+perform a single train-test split. skrub first evaluates the DataOps on
 which we used :meth:`.skb.mark_as_X() <DataOp.skb.mark_as_X>` and
 :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`: the first few steps of the
 pipeline are executed until we have a value for ``X`` and for ``y``.

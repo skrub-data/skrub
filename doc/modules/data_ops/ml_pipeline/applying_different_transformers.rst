@@ -1,9 +1,9 @@
 .. _user_guide_data_ops_applying_different_transformers:
 
-Applying different transformers using Skrub selectors and DataOps
+Applying different transformers using skrub selectors and DataOps
 =================================================================
 
-It is possible to use Skrub selectors to define which columns to apply
+It is possible to use skrub selectors to define which columns to apply
 transformers to, and then apply different transformers to different subsets of
 the data.
 

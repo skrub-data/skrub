@@ -26,8 +26,8 @@ to their values.
 16
 
 As shown above, the special ``.skb`` attribute allows to interact with the DataOp
-object itself, and :meth:`.skb.eval() <DataOp.skb.eval>` evaluates the DataOp plan.
-By default, :meth:`.skb.eval() <DataOp.skb.eval>` uses the values passed in the
+object itself, and :func:`.skb.eval() <DataOp.skb.eval>` evaluates the DataOp plan.
+By default, :func:`.skb.eval() <DataOp.skb.eval>` uses the values passed in the
 variable definitions, but it can also take an explicit environment
 dictionary as an argument.
 
@@ -89,4 +89,4 @@ are added correctly to the computational graph, which then allows the resulting
 learner to execute all steps as intended.
 
 See :ref:`sphx_glr_auto_examples_data_ops_11_data_ops_intro.py` for an introductory
-example on how to use Skrub DataOps on a single dataframe.
+example on how to use skrub DataOps on a single dataframe.

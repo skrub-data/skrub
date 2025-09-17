@@ -1,9 +1,9 @@
 .. _user_guide_data_ops_hyperparameter_tuning:
 
-Using the Skrub ``choose_*`` functions to tune hyperparameters
+Using the skrub ``choose_*`` functions to tune hyperparameters
 ==============================================================
 
-Skrub provides a convenient way to declare ranges of possible values, and tune
+skrub provides a convenient way to declare ranges of possible values, and tune
 those choices to keep the values that give the best predictions on a validation
 set.
 
@@ -23,7 +23,7 @@ We define the same set of operations as before:
 
 Now, we can
 replace the hyperparameter ``alpha`` (which should be a float) with a range
-created by :func:`skrub.choose_float`. Skrub can use it to select the best value
+created by :func:`skrub.choose_float`. skrub can use it to select the best value
 for ``alpha``.
 
 

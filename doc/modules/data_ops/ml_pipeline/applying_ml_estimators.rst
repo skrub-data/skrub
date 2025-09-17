@@ -5,7 +5,7 @@ Applying machine-learning estimators
 
 In addition to working directly with the API provided by the underlying data,
 DataOps can also be used to apply machine-learning estimators from
-scikit-learn or Skrub to the data. This is done through the
+scikit-learn or skrub to the data. This is done through the
 :meth:`.skb.apply() <DataOp.skb.apply>` method:
 
 >>> import pandas as pd

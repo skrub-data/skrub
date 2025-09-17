@@ -69,7 +69,7 @@ TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='circular'),
                 high_cardinality=TextEncoder(), numeric=SquashingScaler())
 
 
-Besides the transformers provided by Skrub, the |TableVectorizer| can also take
+Besides the transformers provided by skrub, the |TableVectorizer| can also take
 user-specified transformers that are applied to given columns.
 
 >>> from sklearn.preprocessing import OrdinalEncoder
@@ -96,7 +96,7 @@ transformer without any modification, which means that the transformer must be
 able to handle the content of the column on its own.
 
 If you need to define complex transformers to pass to a single instance of
-|TableVectorizer|, consider using the :ref:`Skrub Data Ops <user_guide_data_ops_index>`,
+|TableVectorizer|, consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>`,
 |ApplyToCols|, or the :ref:`skrub selectors <user_guide_selectors>` instead, as
 they are more versatile and allow a higher degree
 of control over which operations are applied to which columns.
