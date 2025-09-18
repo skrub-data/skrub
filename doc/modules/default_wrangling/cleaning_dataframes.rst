@@ -9,7 +9,7 @@
 ---------------------------------
 
 Very often, the first steps in preparing a dataframe for further use involve
-understanding the datatypes in the data and parsing them into a more suitable format
+understanding the datatypes in the data and changing them into a more suitable format
 (e.g., from string to number or datetime).
 
 The |Cleaner| aids with this by running the following set of transformations on

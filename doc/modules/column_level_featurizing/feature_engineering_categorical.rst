@@ -115,7 +115,7 @@ Comparing the categorical encoders included in skrub
       - Very slow
       - Mediocre to good
       - Very good
-      - Requires the ``transformers`` dep.
+      - Requires the ``transformers`` package to be installed
     * - |GapEncoder|
       - Slow
       - Good

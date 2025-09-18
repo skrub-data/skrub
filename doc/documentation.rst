@@ -20,8 +20,8 @@ Various :ref:`multi-column transformers <user_guide_building_pipeline_index>` an
 provide a high degree of control over which columns should be modified.
 
 More complex, multi-table scenarios can make use of the skrub :ref:`Data Ops <user_guide_data_ops_index>`,
-a development framework for constructing and validating pipelines that involve
-multiple dataframes and hyperparameter tuning of parameters.
+which enable constructing and validating pipelines that involve
+multiple dataframes and hyperparameter tuning.
 
 Skrub does not replace pandas or polars. Instead, it
 leverages the dataframe libraries to provide more high-level building blocks that
