@@ -8,7 +8,7 @@
 User Guide
 ==========
 Skrub is a library that eases machine learning with dataframes, from exploring
-dataframes to validating a pipeline.
+dataframes to validating a machine-learning pipeline.
 
 The |TableReport| is a powerful data exploration tool, which can be followed by
 data sanitization and feature engineering tools in the |Cleaner| and |TableVectorizer|.
