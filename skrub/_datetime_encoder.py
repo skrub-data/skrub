@@ -460,6 +460,8 @@ class DatetimeEncoder(SingleColumnTransformer):
         X_out = sbd.copy_index(column, sbd.make_dataframe_like(column, all_extracted))
         X_out = sbd.concat(X_out, *new_features, axis=1)
 
+        self.all_outputs_ = sbd.column_names(X_out)
+
         # Censoring all the null features
         X_out = sbd.where_row(X_out, not_nulls, null_mask)
 
