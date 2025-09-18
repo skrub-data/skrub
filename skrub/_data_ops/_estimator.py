@@ -113,10 +113,6 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
     def __sklearn_is_fitted__(self):
         return getattr(self, "_is_fitted", False)
 
-    def fit(self, environment):
-        _ = self.fit_transform(environment)
-        return self
-
     def _eval_in_mode(self, mode, environment):
         if mode not in _FITTING_METHODS:
             check_is_fitted(self)
@@ -125,9 +121,27 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         return result
 
     def report(self, *, environment, mode, **full_report_kwargs):
-        """Call the method specified by `mode` and return the result and full report.
+        """Call the method specified by ``mode`` and return the result and full report.
 
         See :meth:`DataOp.skb.full_report` for more information.
+
+        Parameters
+        ----------
+        environment : dict
+            Bindings for variables contained in the :class:`DataOp` that was
+            used to create this learner
+            (e.g. ``{"X": X_df, "other_table": df, ...}``).
+        mode : str
+            The method to call in order to generate the report, such as
+            ``"fit"``, ``"predict"``, etc.
+        full_report_kwargs : dict
+            See :meth:`DataOp.skb.full_report`
+
+        Returns
+        -------
+        dict
+            The result of ``DataOp.skb.full_report``: a dict containing
+            ``'result'``, ``'error'`` and ``'report_path'``.
         """
         from ._inspection import full_report
 
@@ -148,7 +162,8 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
-            return self._eval_in_mode(name, *args, **kwargs)
+            result = self._eval_in_mode(name, *args, **kwargs)
+            return self if name == "fit" else result
 
         f.__name__ = name
         return f
@@ -471,10 +486,6 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         new = SkrubLearner(self.data_op)
         _copy_attr(self, new, ["_is_fitted"])
         return new
-
-    def fit(self, X, y=None):
-        _ = self.fit_transform(X, y=y)
-        return self
 
     def _eval_in_mode(self, mode, X, y=None):
         result = evaluate(self.data_op, mode, self._get_env(X, y), clear=True)

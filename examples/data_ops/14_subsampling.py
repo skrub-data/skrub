@@ -1,11 +1,10 @@
 """
-
 .. _example_subsampling:
 
 Subsampling for faster development
 ==================================
 
-Here we show how to use :meth:`.skb.subsample() <DataOp.skb.subsample>` to speed-up
+Here we show how to use :meth:`.skb.subsample() <DataOp.skb.subsample>` to speed up
 interactive construction of a skrub DataOps plan by computing previews on a subsampled
 version of the original data.
 
@@ -26,13 +25,13 @@ full_data
 # %%
 # We are working with a dataset of over 9K rows. As we build up our plan,
 # we see previews of the intermediate results so we can check that it behaves
-# as we expect. However, if some estimators are slow, fitting them and
+# as expected. However, if some estimators are slow, fitting them and
 # computing results on the whole data can slow us down.
 #
 # Lightweight construction of the DataOps plan on a subsample
-# -------------------------------------------------------------------------------------
+# ----------------------------------------------------------
 #
-# We can tell skrub to subsample the data when computing the previews, with
+# We can tell skrub to subsample the data when computing the previews with
 # :meth:`.skb.subsample() <DataOp.skb.subsample>`.
 
 # %%
@@ -94,9 +93,8 @@ predictions
 predictions.skb.cross_validate(keep_subsampling=True)
 
 # %%
-#
 # Evaluating the DataOps plan on the full data
-# --------------------------------------------------------
+# -------------------------------------------
 # By default, when we do not explicitly ask for ``keep_subsampling=True``, no
 # subsampling takes place.
 #

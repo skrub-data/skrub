@@ -2,12 +2,12 @@
 
 .. _userguide_data_ops_validation:
 
-=====================================
+======================================
 Tuning and validating Skrub DataOps plans
-=====================================
+======================================
 
 To evaluate the prediction performance of our plan, we can fit it on a training
-dataset, then obtaining prediction on an unseen, test dataset.
+dataset, then obtain predictions on an unseen, test dataset.
 
 In scikit-learn, we pass to estimators and pipelines an ``X`` and ``y`` matrix
 with one row per observation from the start. Therefore, we can split the
@@ -59,19 +59,18 @@ Now we can add our supervised estimator:
 <Apply Ridge>
 Result:
 ―――――――
-         target
-0    182.673354
-1     90.998607
-2    166.113476
-3    156.034880
-4    133.659575
-..          ...
-437  180.323365
-438  135.798908
-439  139.855630
-440  182.645829
-441   83.564413
-[442 rows x 1 columns]
+0      182.673354
+1       90.998607
+2      166.113476
+3      156.034880
+4      133.659575
+          ...
+437    180.323365
+438    135.798908
+439    139.855630
+440    182.645829
+441     83.564413
+Name: target, Length: 442, dtype: float64
 
 
 Once a pipeline is defined and the ``X`` and ``y`` nodes are identified, skrub
