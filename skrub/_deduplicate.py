@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from scipy.cluster.hierarchy import fcluster, linkage
-from scipy.spatial.distance import pdist, squareform
 from scipy.sparse import csr_array
+from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
 
