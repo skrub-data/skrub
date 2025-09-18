@@ -47,7 +47,8 @@ Bugfixes
   (not into their subclasses). If you need the items evaluated (ie if they
   contain DataOps or Choices), store them in one of the builtin collections.
   :pr:`1612` by :user:`Jérôme Dockès <jeromedockes>`.
-
+- Fixed a bug that happened when ``get_feature_names_out`` was called on instances
+  of the :class:`DatetimeEncoder`. :pr:`1622` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Release 0.6.1
 ===================
