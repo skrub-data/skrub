@@ -434,7 +434,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         transformed : DataFrame
             The extracted features.
         """
-        check_is_fitted(self, "extracted_features_")
+        check_is_fitted(self, "all_outputs_")
         name = sbd.name(column)
 
         # Checking again which values are null if calling only transform
@@ -491,6 +491,22 @@ class DatetimeEncoder(SingleColumnTransformer):
         tags = super().__sklearn_tags__()
         tags.transformer_tags = TransformerTags(preserves_dtype=[])
         return tags
+
+    def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return self.all_outputs_
 
 
 class _SplineEncoder(SingleColumnTransformer):
