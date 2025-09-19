@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_documenting_data_ops_plan:
 
 Documenting the DataOps plan with node names and descriptions

@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_tuning_validating_dataops:
 
 Tuning and validating skrub DataOps plans

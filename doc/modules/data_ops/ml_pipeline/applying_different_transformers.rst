@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_applying_different_transformers:
 
 Applying different transformers using skrub selectors and DataOps

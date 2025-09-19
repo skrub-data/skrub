@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_nesting_choices:
 
 Going beyond estimator hyperparameters: nesting choices and choosing pipelines

@@ -2,7 +2,7 @@
 
 .. _user_guide_deduplicate:
 
-Deduplicate categorical data with |deduplicate|
+Deduplicating categorical data with |deduplicate|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you have a series or list that contains strings with typos, the |deduplicate|

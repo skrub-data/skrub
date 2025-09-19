@@ -3,6 +3,14 @@
 Assembling: joining multiple tables
 ===================================
 
+Assembling is the process of collecting and joining together tables. Good analytics
+requires including as much information as possible, often from different sources.
+
+Skrub allows you to join tables on keys of different types (string, numerical,
+datetime) with imprecise correspondence.
+
+
+
 Joining external tables for machine learning
 --------------------------------------------
 

@@ -38,6 +38,7 @@ Data Ops basic concepts
 .. toctree::
    :maxdepth: 3
 
+   modules/data_ops/basics/what_are_data_ops
    modules/data_ops/basics/building_data_ops_plan
    modules/data_ops/basics/using_previews
    modules/data_ops/basics/direct_access_methods

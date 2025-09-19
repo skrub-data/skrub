@@ -14,4 +14,3 @@ building baseline pipelines, and can be customized for specific use cases.
    modules/default_wrangling/cleaning_dataframes
    modules/default_wrangling/table_vectorizer
    modules/default_wrangling/tabular_pipeline
-   modules/default_wrangling/deduplicate_categorical_data

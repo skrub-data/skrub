@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_direct_access_ref:
 
 DataOps allow direct access to methods of the underlying data

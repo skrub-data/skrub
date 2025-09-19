@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_truncating_dataplan:
 
 Using only a part of a DataOps plan

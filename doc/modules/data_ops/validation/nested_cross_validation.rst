@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_nested_cross_validation:
 
 Validating hyperparameter search with nested cross-validation

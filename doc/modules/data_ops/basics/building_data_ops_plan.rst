@@ -1,3 +1,5 @@
+.. currentmodule:: skrub
+
 .. _user_guide_data_ops_plan:
 
 Building a simple DataOps plan
@@ -26,8 +28,8 @@ to their values.
 16
 
 As shown above, the special ``.skb`` attribute allows to interact with the DataOp
-object itself, and :func:`.skb.eval() <DataOp.skb.eval>` evaluates the DataOp plan.
-By default, :func:`.skb.eval() <DataOp.skb.eval>` uses the values passed in the
+object itself, and :meth:`.skb.eval() <DataOp.skb.eval>` evaluates the DataOp plan.
+By default, :meth:`.skb.eval() <DataOp.skb.eval>` uses the values passed in the
 variable definitions, but it can also take an explicit environment
 dictionary as an argument.
 

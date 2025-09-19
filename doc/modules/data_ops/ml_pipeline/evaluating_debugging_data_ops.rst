@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_evaluating_debugging_dataops:
 
 Evaluating and debugging the DataOps plan with :meth:`.skb.full_report() <DataOp.skb.full_report>`

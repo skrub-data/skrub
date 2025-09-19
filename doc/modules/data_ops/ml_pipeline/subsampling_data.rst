@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_subsampling:
 
 Subsampling data for easier development and debugging

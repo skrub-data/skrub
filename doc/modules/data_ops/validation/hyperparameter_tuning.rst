@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_hyperparameter_tuning:
 
 Using the skrub ``choose_*`` functions to tune hyperparameters

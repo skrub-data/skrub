@@ -40,5 +40,5 @@ pipeline.
    column_level_featurizing
    multi_column_operations
    data_ops
-   configuration_and_datasets
+   configuration_and_utils
    joining_dataframes

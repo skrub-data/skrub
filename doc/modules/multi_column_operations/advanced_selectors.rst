@@ -1,23 +1,25 @@
+.. currentmodule :: skrub.selectors
+
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
-.. |filter| replace:: :func:`skrub.selectors.filter`
-.. |filter_names| replace:: :func:`skrub.selectors.filter_names`
+.. |filter| replace:: :func:`filter`
+.. |filter_names| replace:: :func:`filter_names`
 
 .. _user_guide_advanced_selectors:
 
 Advanced selectors: |filter| and |filter_names|
 -------------------------------------------
 
-:func:`skrub.selectors.filter` and :func:`skrub.selectors.filter_names` allow
+:func:`filter` and :func:`filter_names` allow
 selecting columns based on arbitrary user-defined criteria. These are also used to
 implement many of the other selectors provided in this module.
 
-:func:`skrub.selectors.filter` accepts a function which will be called on a column
+:func:`filter` accepts a function which will be called on a column
 (i.e., a Pandas or polars Series). This function, called a predicate, must return
 ``True`` if the column should be selected.
 
 >>> import pandas as pd
->>> import skrub.selectors as s
+>>> import as s
 >>> df = pd.DataFrame(
 ...     {
 ...         "height_mm": [297.0, 420.0],
@@ -31,7 +33,7 @@ implement many of the other selectors provided in this module.
 0   A4
 1   A3
 
-:func:`skrub.selectors.filter_names` accepts a predicate that is passed the column name,
+:func:`filter_names` accepts a predicate that is passed the column name,
 instead of the column.
 
 >>> s.select(df, s.filter_names(lambda name: name.endswith('mm')))
@@ -53,7 +55,7 @@ Skrub transformers are designed to be used in conjunction with other transformer
 that operate on columns to improve their versatility.
 
 For example, we can drop columns that have more unique values than a certain amount
-by combining :func:`skrub.selectors.cardinality_below` with :class:`skrub.DropCols`.
+by combining :func:`cardinality_below` with :class:`skrub.DropCols`.
 We first select the columns that have more than 3 unique values, then we invert the
 selector and finally transform the dataframe.
 

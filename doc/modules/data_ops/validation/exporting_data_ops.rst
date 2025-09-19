@@ -1,3 +1,4 @@
+.. currentmodule:: skrub
 .. _user_guide_data_ops_exporting:
 
 Exporting the DataOps plan as a learner and reusing it
