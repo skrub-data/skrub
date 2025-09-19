@@ -197,7 +197,7 @@ dtype: datetime64[...]
 Encoding and Feature Engineering with |DatetimeEncoder|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once datetime columns have been parsed, they can be encoded as numerical features with
+Once datetime columns have been parsed, they can be encoded as numeric features with
 the |DatetimeEncoder|, by extracting temporal features (year, month, day,
 hour, etc.). No timezone conversion is done; the timezone
 in the feature is retained. The |DatetimeEncoder| rejects non-datetime columns,
@@ -273,4 +273,4 @@ generating too many features:
 - ``hour``: 12
 - ``weekday``: 7
 
-All extracted features are provided as float32 columns.
+All extracted features are provided as ``float32`` columns.

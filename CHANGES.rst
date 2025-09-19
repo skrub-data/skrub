@@ -88,7 +88,7 @@ Highlights
   and the :ref:`example <sphx_glr_auto_examples_09_apply_to_cols.py>`.
 
 - The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
-  clips numerical columns, enabling more robust handling of numerical columns
+  clips numeric columns, enabling more robust handling of numeric columns
   with neural networks. See the :ref:`example <sphx_glr_auto_examples_10_squashing_scaler.py>`
 
 New features
@@ -135,8 +135,8 @@ New features
   in reports. :pr:`1470` by :user:`George S <georgescutelnicu>`.
 
 - Added the :class:`SquashingScaler`, a transformer that
-  robustly rescales and smoothly clips numerical columns,
-  enabling more robust handling of numerical columns
+  robustly rescales and smoothly clips numeric columns,
+  enabling more robust handling of numeric columns
   with neural networks. :pr:`1310` by :user:`Vincent Maladiere <Vincent-Maladiere>` and
   :user:`David Holzmüller <dholzmueller>`.
 
@@ -204,7 +204,7 @@ Changes
 
 - The :class:`TableReport` now supports Series in addition to Dataframes. :pr:`1420` by :user:`Vitor Pohlenz<vitorpohlenz>`.
 
-- The :class:`Cleaner` now exposes a parameter to convert numerical values to float32. :pr:`1440` by
+- The :class:`Cleaner` now exposes a parameter to convert numeric values to float32. :pr:`1440` by
   :user:`Riccardo Cappuzzo<rcap107>`.
 
 - The :class:`TableReport` now shows if columns are sorted. :pr:`1512` by :user:`Dea María Léon<DeaMariaLeon>`.
@@ -803,7 +803,7 @@ Minor changes
   - `check_is_fitted` now looks at `"transformers_"` rather than `"columns_"`
   - the default of the `remainder` parameter in the docstring is now `"passthrough"`
     instead of `"drop"` to match the implementation.
-  - uint8 and int8 dtypes are now considered as numerical columns.
+  - uint8 and int8 dtypes are now considered as numeric columns.
 
 * Removed the leading "<" and trailing ">" symbols from KEN entities
   and types.
@@ -853,10 +853,10 @@ Dirty-cat release 0.4.1
 
 Major changes
 -------------
-* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on numerical columns based on the euclidean distance.
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can now join on numeric columns based on the euclidean distance.
   :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
-* :func:`fuzzy_join` and :class:`FeatureAugmenter` can perform many-to-many joins on lists of numerical or string key columns.
+* :func:`fuzzy_join` and :class:`FeatureAugmenter` can perform many-to-many joins on lists of numeric or string key columns.
   :pr:`530` by :user:`Jovan Stojanovic <jovan-stojanovic>`
 
 * :func:`GapEncoder.transform` will not continue fitting of the instance anymore.
@@ -946,7 +946,7 @@ Dirty-cat Release 0.3.0
 Major changes
 -------------
 
-* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numerical columns
+* New encoder: :class:`DatetimeEncoder` can transform a datetime column into several numeric columns
   (year, month, day, hour, minute, second, ...). It is now the default transformer used
   in the :class:`TableVectorizer` for datetime columns. :pr:`239` by :user:`Leo Grinsztajn <LeoGrin>`
 

@@ -1,4 +1,6 @@
 
+.. currentmodule:: skrub
+
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 .. |tabular_pipeline| replace:: :func:`~skrub.tabular_pipeline`
 .. |HistGradientBoostingRegressor| replace:: :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
@@ -58,7 +60,7 @@ problems, but may not beat properly tuned ad-hoc pipelines.
      - :class:`StringEncoder`
      - :class:`StringEncoder`
      - :class:`StringEncoder`
-   * - Numerical preprocessor
+   * - Numeric preprocessor
      - No processing
      - No processing
      - :class:`~sklearn.preprocessing.StandardScaler`

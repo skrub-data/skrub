@@ -11,5 +11,4 @@ and understanding your dataframes.
    :maxdepth: 3
 
    modules/tablereport/exploring_dataframes_interactively
-   modules/tablereport/exporting_and_sharing
    modules/tablereport/finding_correlated_columns

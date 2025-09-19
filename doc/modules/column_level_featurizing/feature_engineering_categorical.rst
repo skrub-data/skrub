@@ -10,7 +10,7 @@
 
 .. _user_guide_feature_engineering_categorical:
 
-Encoding string and text columns as numerical features
+Encoding string and text columns as numeric features
 ======================================================
 
 In skrub, categorical features are features that are not parsed as either numbers
@@ -45,7 +45,7 @@ four different transformers, each with its own pros and cons.
 
 - |MinHashEncoder|: **very fast encoder, but not as effective as the others**:
   This encoder decomposes strings into n-grams, then applies the MinHash method to
-  convert them into numerical features. Fast to train, but features may yield worse
+  convert them into numeric features. Fast to train, but features may yield worse
   results compared to other methods.
 
 - |GapEncoder|: **an interpretable, if slower encoder**: The |GapEncoder| estimates

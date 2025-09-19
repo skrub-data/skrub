@@ -3,9 +3,9 @@
 
 .. _user_guide_squashing_scaler:
 
-Robust scaling of numerical features using |SquashingScaler|
+Robust scaling of numeric features using |SquashingScaler|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The |SquashingScaler| is a robust scaler for numerical features, particularly
+The |SquashingScaler| is a robust scaler for numeric features, particularly
 useful when features include outliers (such as infinite values); missing values
 are left unchanged (they are not interpolated).
 The |SquashingScaler| centers and scales the data in such a way that outliers are

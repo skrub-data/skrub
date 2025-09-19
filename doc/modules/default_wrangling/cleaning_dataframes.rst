@@ -15,7 +15,7 @@ understanding the datatypes in the data and changing them into a more suitable f
 The |Cleaner| aids with this by running the following set of transformations on
 each column:
 
-- ``CleanNullStrings()``: Replace strings typically used to represent missing values
+- Clean null strings: Replace strings typically used to represent missing values
   with a null value suitable for the column under consideration.
 
 - |DropUninformative|: Drop the column if it is considered "uninformative."
@@ -28,19 +28,19 @@ each column:
 .. note::
 
   Setting ``drop_if_unique`` to ``True`` may lead to dropping columns
-  that contain text or IDs. Numerical columns are never dropped by ``drop_if_unique``.
+  that contain text or IDs. Numeric columns are never dropped by ``drop_if_unique``.
 
 - |ToDatetime|: Parse datetimes represented as strings and return them as
   actual datetimes with the correct dtype. If ``datetime_format`` is provided,
   it is forwarded to |ToDatetime|. Otherwise, the format is guessed according
   to common datetime formats.
 
-- ``CleanCategories()``: If the dtype of the column is detected as "Categorical",
+- Clean categories: If the dtype of the column is detected as "Categorical",
   process it based on the dataframe library (Pandas or Polars) to ensure
   consistent typing and avoid downstream issues.
 
-- ``ToStr()``: Convert columns to strings unless they have a more informative dtype,
-  such as numerical, categorical, or datetime.
+- Convert to strings: Convert columns to strings unless they have a more informative
+  dtype, such as numeric, categorical, or datetime.
 
 If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
 numeric columns to ``np.float32`` dtype, ensuring a consistent representation
@@ -73,7 +73,7 @@ column has been correctly parsed as a datetime column.
 Converting numeric dtypes to ``float32`` with the |Cleaner|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, when the |Cleaner| encounters numerical dtypes (e.g., ``int8``,
+By default, when the |Cleaner| encounters numeric dtypes (e.g., ``int8``,
 ``float64``), it leaves them as-is. In some cases, it may be beneficial to have
 the same numeric dtype for all numeric columns to guarantee compatibility between
 values.

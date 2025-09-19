@@ -4,7 +4,7 @@ Skrub Selectors: helpers for selecting columns in a dataframe
 =============================================================
 
 In Skrub, a selector represents a column selection rule, such as "all columns
-that have numerical data types, except the column ``'User ID'``".
+that have numeric data types, except the column ``'User ID'``".
 
 Selectors have two main benefits:
 
@@ -14,6 +14,10 @@ Selectors have two main benefits:
   that is not yet available. For example, without selectors, it is not possible to
   instantiate a :class:`~skrub.SelectCols` that selects all columns except those with
   the suffix 'ID' if the data on which it will be fitted is not yet available.
+
+
+- :class:`SelectCols` allows specifying the columns we want to keep.
+- Conversely :class:`DropCols` allows specifying the columns we want to discard.
 
 Here is an example dataframe. Note that selectors support both Pandas and Polars
 dataframes:

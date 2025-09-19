@@ -1,10 +1,11 @@
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
-
+.. |filter| replace:: :func:`skrub.selectors.filter`
+.. |filter_names| replace:: :func:`skrub.selectors.filter_names`
 
 .. _user_guide_advanced_selectors:
 
-Advanced selectors: filter and filter_names
+Advanced selectors: |filter| and |filter_names|
 -------------------------------------------
 
 :func:`skrub.selectors.filter` and :func:`skrub.selectors.filter_names` allow
@@ -88,7 +89,7 @@ Consider the following example:
 3  Science     4
 4      Art     3
 
-We might want to apply the |StandardScaler| only to the numerical column. We can
+We might want to apply the |StandardScaler| only to the numeric column. We can
 do this like this:
 
 >>> from skrub import ApplyToCols

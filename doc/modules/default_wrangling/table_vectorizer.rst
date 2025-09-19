@@ -10,11 +10,11 @@
 
 .. _user_guide_table_vectorizer:
 
-Putting the skrub transformers together: |TableVectorizer|
-----------------------------------------------------------
+Transforming a table into an array of numeric features: |TableVectorizer|
+-------------------------------------------------------------------------
 
 In tabular machine learning pipelines, practitioners often convert categorical
-features to numerical features using various encodings (|OneHotEncoder|, |OrdinalEncoder|,
+features to numeric features using various encodings (|OneHotEncoder|, |OrdinalEncoder|,
 etc.).
 
 The objective of the |TableVectorizer| is to take any dataframe as input, and
@@ -25,9 +25,9 @@ column to an encoder, in order to produce numeric features for machine learning
 models.
 
 Parsing is handled internally by running a |Cleaner| on the input data.
-Note that in this  case numerical values are always converted to ``float32``
+Note that in this  case numeric values are always converted to ``float32``
 (whereas the default |Cleaner| behavior is to keep the original datatype): this
-is to ensure that the numerical dtype (including that of the missing values) is
+is to ensure that the numeric dtype (including that of the missing values) is
 consistent for the downstream methods. For most applications, ``float32`` has a
 sufficient precision, and reduces the memory footprint of the resulting features.
 
@@ -46,7 +46,7 @@ are the following:
 
 - **High-cardinality categorical columns**: |StringEncoder|
 - **Low-cardinality categorical columns**: scikit-learn |OneHotEncoder|
-- **Numerical columns**: "passthrough" (no transformation)
+- **Numeric columns**: "passthrough" (no transformation)
 - **Datetime columns**: |DatetimeEncoder|
 
 **High cardinality** categorical columns are those with more than 40 unique values,
