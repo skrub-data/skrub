@@ -16,9 +16,6 @@ Selectors have two main benefits:
   the suffix 'ID' if the data on which it will be fitted is not yet available.
 
 
-- :class:`SelectCols` allows specifying the columns we want to keep.
-- Conversely :class:`DropCols` allows specifying the columns we want to discard.
-
 Here is an example dataframe. Note that selectors support both Pandas and Polars
 dataframes:
 

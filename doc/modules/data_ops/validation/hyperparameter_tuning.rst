@@ -150,3 +150,53 @@ Feature selection with skrub :class:`SelectCols` and :class:`DropCols`
 It is possible to combine :class:`SelectCols` and :class:`DropCols` with
 :func:`choose_from` to perform feature selection by dropping specific columns
 and evaluating how this affects the downstream performance.
+
+Consider this example. We first define the variable:
+
+>>> import pandas as pd
+>>> import skrub.selectors as s
+>>> from sklearn.preprocessing import StandardScaler, OneHotEncoder
+>>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
+>>> X = skrub.X(df)
+
+Then, we use the :ref:`skrub selectors <user_guide_selectors>` to encode each
+column with a different transformer:
+
+>>> X_enc = X.skb.apply(StandardScaler(), cols=s.numeric()).skb.apply(
+...     OneHotEncoder(sparse_output=False), cols=s.string()
+... )
+>>> X_enc
+<Apply OneHotEncoder>
+Result:
+―――――――
+     number  text_bar  text_baz  text_foo
+0 -1.224745       0.0       0.0       1.0
+1  0.000000       1.0       0.0       0.0
+2  1.224745       0.0       1.0       0.0
+
+Now we can use :class:`skrub.DropCols` to define two possible selection strategies:
+first, we drop the column ``number``, then we drop all columns that start with
+``text``. We rely again on the skrub selectors for this:
+
+>>> from skrub import DropCols
+>>> drop = DropCols(cols=skrub.choose_from(
+...     {"number": s.cols("number"), "text": s.glob("text_*")})
+... )
+>>> X_enc.skb.apply(drop)
+<Apply DropCols>
+Result:
+―――――――
+   text_bar  text_baz  text_foo
+0       0.0       0.0       1.0
+1       1.0       0.0       0.0
+2       0.0       1.0       0.0
+
+We can see the generated parameter grid with :func:`DataOps.skb.describe_param_grid()`.
+
+>>> X_enc.skb.apply(drop).skb.describe_param_grid()
+"- choose_from({'number': …, 'text': …}): ['number', 'text']\n"
+
+A more advanced application of this technique is used in
+:ref:`this tutorial on forecasting timeseries <https://skrub-data.org/EuroSciPy2025/content/notebooks/single_horizon_prediction.html>_`,
+along with the feature engineering required to prepare the columns, and the
+analysis of the results.
