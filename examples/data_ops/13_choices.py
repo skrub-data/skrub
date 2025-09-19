@@ -19,7 +19,7 @@ or not).
 We want to tune these choices by trying several options and keeping those that
 give the best performance on a validation set.
 
-Skrub :ref:`DataOps <userguide_data_ops>` provide a convenient way to specify
+Skrub :ref:`DataOps <user_guide_data_ops_index>` provide a convenient way to specify
 the range of possible values by inserting them directly in place of the actual
 value. For example, we can write:
 """
@@ -278,4 +278,4 @@ search.plot_results()
 # such as the argument of a :func:`deferred` function, or the argument of
 # other DataOps' methods or operators. Additionally, choices can be
 # inter-dependent. Find more information in the :ref:`user guide
-# <userguide_data_ops_validation>`.
+# <user_guide_data_ops_tuning_validating_dataops>`.

@@ -2,7 +2,8 @@
 Introduction to machine-learning pipelines with skrub DataOps
 ==============================================================
 
-In this example, we show how we can use Skrub's :ref:`DataOps <userguide_data_ops>`
+In this example, we show how we can use Skrub's
+:ref:`DataOps <user_guide_data_ops_index>`
 to build a machine learning pipeline that records all the operations involved in
 pre-processing data and training a model. We will also show how to save the model,
 load it back, and then use it to make predictions on new, unseen data.
