@@ -2,6 +2,7 @@ import builtins
 import re
 import sys
 import webbrowser
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -82,6 +83,25 @@ def test_full_report_failed_apply():
     )
     report = e.skb.full_report({"X": orders.X, "y": orders.y}, open=False)
     assert report["error"] is not None
+
+
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+def test_report_fit_mode():
+    # non-regression: in fit mode the individual node pages used to show the
+    # dataop itself as the output instead of the result of fit_transform for
+    # intermediate nodes.
+    learner = (
+        skrub.var("a")
+        .skb.apply_func(lambda x: x[::-1])
+        .skb.apply_func(lambda x: x.upper())
+        .skb.make_learner()
+    )
+    report = learner.report(environment={"a": "hello"}, mode="fit", open=False)
+    report_dir = Path(report["report_path"]).parent
+    node_1_report = (report_dir / "node_1.html").read_text("utf-8")
+    # the page does display the actual output rather than the repr of the node
+    # ('hello'[::-1] = 'olleh')
+    assert "olleh" in node_1_report
 
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")

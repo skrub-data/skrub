@@ -50,6 +50,9 @@ Bugfixes
   (not into their subclasses). If you need the items evaluated (ie if they
   contain DataOps or Choices), store them in one of the builtin collections.
   :pr:`1612` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`SkrubLearner.report` with ``mode="fit"`` used to display the dataops
+  themselves, rather than their outputs, in the report. This has been fixed in
+  :pr:`1623` by :user:`Jérôme Dockès <jeromedockes>`.
 
 
 Release 0.6.1

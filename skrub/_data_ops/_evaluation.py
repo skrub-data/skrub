@@ -444,10 +444,9 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
     else:
         callbacks = ()
     try:
-        result = _Evaluator(
-            mode=mode, environment=environment, callbacks=callbacks
-        ).run(data_op)
-        return data_op if mode == "fit" else result
+        return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
+            data_op
+        )
     finally:
         if clear:
             clear_results(data_op, mode=mode)
