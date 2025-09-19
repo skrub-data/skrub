@@ -11,6 +11,7 @@ multiple columns.
 .. toctree::
    :maxdepth: 3
 
+   modules/multi_column_operations/multi_column_operations
    modules/multi_column_operations/drop_uninformative
    modules/multi_column_operations/selectors
    modules/multi_column_operations/type_of_selectors

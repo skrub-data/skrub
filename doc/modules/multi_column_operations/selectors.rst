@@ -3,7 +3,7 @@
 Skrub Selectors: helpers for selecting columns in a dataframe
 =============================================================
 
-In Skrub, a selector represents a column selection rule, such as "all columns
+In skrub, a selector represents a column selection rule, such as "all columns
 that have numeric data types, except the column ``'User ID'``".
 
 Selectors have two main benefits:

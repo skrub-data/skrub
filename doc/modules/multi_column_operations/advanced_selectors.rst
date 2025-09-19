@@ -19,7 +19,7 @@ implement many of the other selectors provided in this module.
 ``True`` if the column should be selected.
 
 >>> import pandas as pd
->>> import as s
+>>> import skrub.selectors as s
 >>> df = pd.DataFrame(
 ...     {
 ...         "height_mm": [297.0, 420.0],
