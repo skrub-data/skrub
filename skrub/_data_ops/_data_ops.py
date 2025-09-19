@@ -1442,10 +1442,10 @@ class Call(DataOpImpl):
             name = getattr(self.func, "__name__", repr(self.func))
         else:
             impl = self.func._skrub_impl
-            if isinstance(impl, GetItem):
-                name = f"{{ ... }}[{short_repr(impl.key)}]"
-            elif isinstance(impl, Var):
+            if impl.name is not None:
                 name = impl.name
+            elif isinstance(impl, GetItem):
+                name = f"{{ ... }}[{short_repr(impl.key)}]"
             else:
                 name = type(impl).__name__
         return name
