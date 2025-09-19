@@ -184,6 +184,9 @@ python = "~=3.13.0"
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
+linkcheck = { cmd = "make linkcheck", cwd = "doc" }
+linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
+
 
 [tool.pixi.feature.lint.tasks]
 lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
