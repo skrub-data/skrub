@@ -50,7 +50,10 @@ def _use_table_report_display():
 
 
 def node_report(data_op, mode="preview", environment=None, **report_kwargs):
-    result = evaluate(data_op, mode=mode, environment=environment)
+    if mode in data_op._skrub_impl.results:
+        result = data_op._skrub_impl.results[mode]
+    else:
+        result = evaluate(data_op, mode=mode, environment=environment)
     if sbd.is_column(result):
         # TODO say in page that it was a column not df
         # maybe this should be handled by tablereport? or we should have a
