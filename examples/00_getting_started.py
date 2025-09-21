@@ -123,7 +123,7 @@ results["test_score"]
 # strings, categories and dates using the :class:`~skrub.TableVectorizer`.
 # See its documentation or :ref:`sphx_glr_auto_examples_01_encodings.py` for
 # more details. An overview of the chosen defaults is available in
-# :ref:`userguide_tablevectorizer`.
+# :ref:`user_guide_tabular_pipeline`.
 
 
 # %%
