@@ -353,7 +353,7 @@ texinfo_documents = [
         "skrub Documentation",
         author,
         "skrub",
-        "Prepping tables for machine learning.",
+        "Machine learning with dataframes",
         "Data Science",
     ),
 ]
@@ -397,7 +397,7 @@ def notebook_modification_function(notebook_content, notebook_filename):
             "</div>",
         ]
     )
-
+    # TODO: remove this when we remove KEN embeddings
     if "06_ken_embeddings_example" in notebook_filename:
         message_class = "danger"
         message = (
