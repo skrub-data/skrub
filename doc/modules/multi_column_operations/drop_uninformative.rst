@@ -63,6 +63,8 @@ To drop constant columns and those with only single values:
 1  3  5
 2  2  6
 
+|
+
 Applying |DropUninformative| only to a subset of columns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

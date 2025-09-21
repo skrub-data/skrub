@@ -53,6 +53,9 @@ Also note that as seen above, choices can be nested arbitrarily. For example it
 is frequent to choose between several estimators, each of which contains choices
 in its hyperparameters.
 
+|
+
+
 Linking choices depending on other choices
 ------------------------------------------
 

@@ -143,10 +143,13 @@ of the search using a parallel coordinates plot.
 A full example of how to use hyperparameter search is available in
 :ref:`sphx_glr_auto_examples_data_ops_13_choices.py`.
 
+|
+
+
 .. _user_guide_data_ops_feature_selection:
 
 Feature selection with skrub :class:`SelectCols` and :class:`DropCols`
-==================================================================
+=======================================================================
 It is possible to combine :class:`SelectCols` and :class:`DropCols` with
 :func:`choose_from` to perform feature selection by dropping specific columns
 and evaluating how this affects the downstream performance.

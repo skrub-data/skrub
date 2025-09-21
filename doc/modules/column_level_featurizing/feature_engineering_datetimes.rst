@@ -58,7 +58,7 @@ dtype('<M8[...]')
 >>> to_dt.output_time_zone_ is None
 True
 
-Once ``ToDatetime`` was successfully fitted, ``transform`` will always try to
+Once |ToDatetime| was successfully fitted, ``transform`` will always try to
 parse datetimes with the same format and output the same ``dtype``. Entries that
 fail to be converted result in a null value:
 
@@ -162,7 +162,7 @@ dtype: datetime64[...]
 
 Caveats when dealing with month first/day first conventions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-When parsing strings in one of the formats above, ``ToDatetime`` tries to guess
+When parsing strings in one of the formats above, |ToDatetime| tries to guess
 if the month comes first (USA convention) or the day (rest of the world) from
 the data.
 

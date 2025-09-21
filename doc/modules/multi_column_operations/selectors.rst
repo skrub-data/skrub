@@ -52,7 +52,6 @@ Last but not least, selectors can be passed to
 estimator with the :func:`skrub.DataOp.skb.apply` function:
 
 >>> import skrub
->>> from skrub import SelectCols
 >>> from sklearn.preprocessing import StandardScaler
 >>> skrub.X(df).skb.apply(StandardScaler(), cols=mm_cols)
 <Apply StandardScaler>
@@ -61,6 +60,10 @@ Result:
   kind  ID  height_mm  width_mm
 0   A4   4       -1.0      -1.0
 1   A3   3        1.0       1.0
+
+Selectors can be used within the :class:`skrub.SelectCols` class, implementing `fit` and `transform`, as demoed below::
+
+  >>> from skrub import SelectCols
 
 Type of selectors
 -----------------

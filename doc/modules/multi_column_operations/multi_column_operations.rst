@@ -44,7 +44,7 @@ Skrub provides alternative transformers that can achieve the same results:
 - |ApplyToCols| maps a transformer to columns in a dataframe, so that all
   columns that satisfy a certain condition are transformed, while the others are
   left untouched.
-- |ApplyToFrame| applies a transformer to a collection of columns _at once_.
+- |ApplyToFrame| applies a transformer to a collection of columns *at once*.
   This is different from |ApplyToCols|, which instead transforms each column
   one at a time.
 - |SelectCols| allows specifying which columns should be kept.

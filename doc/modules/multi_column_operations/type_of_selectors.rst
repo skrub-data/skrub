@@ -38,6 +38,7 @@ name, data type, contents, or according to arbitrary user-provided rules.
 1      420.0     297.0   3
 
 Selectors can be inverted with ``~``, or :func:`~skrub.selectors.inv`:
+
 >>> SelectCols(~s.numeric()).fit_transform(df)
   kind
 0   A4
@@ -56,6 +57,8 @@ end with ``_mm`` we can do:
    height_mm  width_mm
 0      297.0     210.0
 1      420.0     297.0
+
+|
 
 Categories of selectors
 -----------------------
