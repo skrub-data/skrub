@@ -577,56 +577,56 @@ inputs = [
 
 
 def test_handle_unknown_category(df_module):
-    # data = {
-    #     "int": [15, 56, 63, 12, 44],
-    #     "float": [5.2, 2.4, 6.2, 10.45, 9.0],
-    #     "str1": ["public", "private", "private", "private", "public"],
-    #     "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
-    #     "cat1": ["yes", "yes", "no", "yes", "no"],
-    #     "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
-    # }
-    # X = df_module.make_dataframe(data)
-    X = _get_clean_dataframe()
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
+    # X = _get_clean_dataframe()
     # Treat all columns as having few unique values
     table_vec = TableVectorizer(cardinality_threshold=7).fit(X)
-    # data_unknown = {
-    #     "int": [3, 1],
-    #     "float": [2.1, 4.3],
-    #     "str1": ["semi-private", "public"],
-    #     "str2": ["researcher", "chef"],
-    #     "cat1": ["maybe", "yes"],
-    #     "cat2": ["70K+", "20K+"],
-    # }
-    # X_unknown = df_module.make_dataframe(data_unknown)
-    X_unknown = pd.DataFrame(
-        {
-            "int": pd.Series([3, 1], dtype="int"),
-            "float": pd.Series([2.1, 4.3], dtype="float"),
-            "str1": pd.Series(["semi-private", "public"], dtype="string"),
-            "str2": pd.Series(["researcher", "chef"], dtype="string"),
-            "cat1": pd.Series(["maybe", "yes"], dtype="category"),
-            "cat2": pd.Series(["70K+", "20K+"], dtype="category"),
-        }
-    )
-    # data_known = {
-    #     "int": [1, 4],
-    #     "float": [4.3, 3.3],
-    #     "str1": ["public", "private"],
-    #     "str2": ["chef", "chef"],
-    #     "cat1": ["yes", "no"],
-    #     "cat2": ["30K+", "20K+"],
-    # }
-    # X_known = df_module.make_dataframe(data_known)
-    X_known = pd.DataFrame(
-        {
-            "int": pd.Series([1, 4], dtype="int"),
-            "float": pd.Series([4.3, 3.3], dtype="float"),
-            "str1": pd.Series(["public", "private"], dtype="string"),
-            "str2": pd.Series(["chef", "chef"], dtype="string"),
-            "cat1": pd.Series(["yes", "no"], dtype="category"),
-            "cat2": pd.Series(["30K+", "20K+"], dtype="category"),
-        }
-    )
+    data_unknown = {
+        "int": [3, 1],
+        "float": [2.1, 4.3],
+        "str1": ["semi-private", "public"],
+        "str2": ["researcher", "chef"],
+        "cat1": ["maybe", "yes"],
+        "cat2": ["70K+", "20K+"],
+    }
+    X_unknown = df_module.make_dataframe(data_unknown)
+    # X_unknown = pd.DataFrame(
+    #     {
+    #         "int": pd.Series([3, 1], dtype="int"),
+    #         "float": pd.Series([2.1, 4.3], dtype="float"),
+    #         "str1": pd.Series(["semi-private", "public"], dtype="string"),
+    #         "str2": pd.Series(["researcher", "chef"], dtype="string"),
+    #         "cat1": pd.Series(["maybe", "yes"], dtype="category"),
+    #         "cat2": pd.Series(["70K+", "20K+"], dtype="category"),
+    #     }
+    # )
+    data_known = {
+        "int": [1, 4],
+        "float": [4.3, 3.3],
+        "str1": ["public", "private"],
+        "str2": ["chef", "chef"],
+        "cat1": ["yes", "no"],
+        "cat2": ["30K+", "20K+"],
+    }
+    X_known = df_module.make_dataframe(data_known)
+    # X_known = pd.DataFrame(
+    #     {
+    #         "int": pd.Series([1, 4], dtype="int"),
+    #         "float": pd.Series([4.3, 3.3], dtype="float"),
+    #         "str1": pd.Series(["public", "private"], dtype="string"),
+    #         "str2": pd.Series(["chef", "chef"], dtype="string"),
+    #         "cat1": pd.Series(["yes", "no"], dtype="category"),
+    #         "cat2": pd.Series(["30K+", "20K+"], dtype="category"),
+    #     }
+    # )
 
     # Default behavior is "handle_unknown='ignore'",
     # so unknown categories are encoded as all zeros
@@ -636,19 +636,18 @@ def test_handle_unknown_category(df_module):
     assert X_trans_unknown.shape == X_trans_known.shape
 
     # +2 for binary columns which get one category dropped
-    n_zeroes = X["str2"].nunique() + X["cat2"].nunique() + 2
-    # n_zeroes = ((X["str2"].nunique() if df_module.name != "polars" else X["str2"].n_unique())
-    #      + (X["cat2"].nunique() if df_module.name != "polars" else X["cat2"].n_unique())
-    #      + 2)
+    n_zeroes = sbd.n_unique(X["str2"]) + sbd.n_unique(X["cat2"]) + 2
+    
+    colnames = sbd.column_names(X_trans_unknown)[2:n_zeroes]
     assert_array_equal(
-        X_trans_unknown.iloc[0, 2:n_zeroes],
-        np.zeros_like(X_trans_unknown.iloc[0, 2:n_zeroes]),
+        sbd.slice(X_trans_unknown[colnames], 0, 1).to_numpy().squeeze(),
+        np.zeros_like(X_trans_unknown)[0, 2:n_zeroes],  
     )
     assert_raises(
         AssertionError,
         assert_array_equal,
-        X_trans_known.iloc[0, :n_zeroes],
-        np.zeros_like(X_trans_known.iloc[0, :n_zeroes]),
+        sbd.slice(X_trans_known, 0, 1).to_numpy().squeeze(),
+        np.zeros_like(X_trans_unknown)[0, :n_zeroes] 
     )
 
 
