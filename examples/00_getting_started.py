@@ -2,12 +2,16 @@
 Getting Started
 ===============
 
-This guide showcases the features of ``skrub``, an open-source package that aims at
-bridging the gap between tabular data sources and machine-learning models.
+This guide showcases some of the features of ``skrub``, an open-source package
+that aims at bridging the gap between tabular data stored in Pandas or Polars
+dataframes, and machine-learning models.
 
+Much of ``skrub`` revolves around simplifying many of the tasks that are involved
+in pre-processing raw data into a format that shallow or classic machine-learning
+models can understand, that is, numerical data.
 
-Much of ``skrub`` revolves around vectorizing, assembling, and encoding tabular data,
-to prepare data in a format that shallow or classic machine-learning models understand.
+``skrub`` does this by vectorizing, assembling, and encoding tabular data through
+a number of features that we present in this example and the following.
 """
 
 # %%
@@ -40,16 +44,25 @@ employees_df, salaries = dataset.X, dataset.y
 # Explore all the available datasets in :ref:`datasets_ref`.
 
 # %%
-# Generating an interactive report for a dataframe
+# Preliminary exploration and parsing of data
 # -------------------------------------------------
-#
-# The :class:`~skrub.Cleaner` allows to clean the
-# dataframe, parsing nulls, dates, and dropping columns with too many nulls.
+# Typically, the first operations that are done on new data involve data exploration
+# and parsing.
 # To quickly get an overview of a dataframe's contents, use the
 # :class:`~skrub.TableReport`.
+# Here, we also use the :class:`~skrub.Cleaner`, a transformer that cleans the
+# dataframe by parsing nulls and dates, and by dropping "uninformative" columns
+# (e.g., that contain too many nulls, or that are constant).
+#
 
 # %%
 from skrub import Cleaner, TableReport
+
+TableReport(employees_df)
+
+# %%
+# From the Report above, we can see that there are datetime columns, so we use the
+# :class:`~skrub.Cleaner` to parse them.
 
 employees_df = Cleaner().fit_transform(employees_df)
 TableReport(employees_df)
@@ -69,8 +82,9 @@ TableReport(employees_df)
 #    .. _demo: https://skrub-data.org/skrub-reports/
 
 # %%
-# It is also possible to tell skrub to replace the default pandas & polars
-# displays with ``TableReport``.
+# It is also possible to tell ``skrub`` to replace the default pandas & polars
+# displays with ``TableReport`` by modifying the global config with
+# :func:`~skrub.set_config`.
 
 from skrub import set_config
 
@@ -91,7 +105,7 @@ employees_df
 #
 # The goal of ``skrub`` is to ease tabular data preparation for machine learning.
 # The :func:`~skrub.tabular_pipeline` function provides an easy way to build a simple
-# but reliable machine-learning model, working well on most tabular data.
+# but reliable machine learning model that works well on most tabular data.
 
 
 # %%
@@ -104,20 +118,20 @@ results = cross_validate(model, employees_df, salaries)
 results["test_score"]
 
 # %%
-# To handle rich tabular data and feed it to a machine-learning model, the
+# To handle rich tabular data and feed it to a machine learning model, the
 # pipeline returned by :func:`~skrub.tabular_pipeline` preprocesses and encodes
 # strings, categories and dates using the :class:`~skrub.TableVectorizer`.
 # See its documentation or :ref:`sphx_glr_auto_examples_01_encodings.py` for
 # more details. An overview of the chosen defaults is available in
-# :ref:`userguide_tablevectorizer`.
+# :ref:`user_guide_tabular_pipeline`.
 
 
 # %%
 # Assembling data
 # ---------------
 #
-# ``Skrub`` allows imperfect assembly of data, such as joining dataframes
-# on columns that contain typos. ``Skrub``'s joiners have ``fit`` and
+# ``skrub`` allows imperfect assembly of data, such as joining dataframes
+# on columns that contain typos. ``skrub``'s joiners have ``fit`` and
 # ``transform`` methods, storing information about the data across calls.
 #
 # The :class:`~skrub.Joiner` allows fuzzy-joining multiple tables, each row of
@@ -141,7 +155,7 @@ airports = pd.DataFrame(
         "city": ["Paris", "Roma"],
     }
 )
-# notice the "Rome" instead of "Roma"
+# Notice the "Rome" instead of "Roma"
 capitals = pd.DataFrame(
     {"capital": ["Berlin", "Paris", "Rome"], "country": ["Germany", "France", "Italy"]}
 )
@@ -157,93 +171,96 @@ joiner.fit_transform(airports)
 # %%
 # Information about countries have been added, even if the rows aren't exactly matching.
 #
-# It's also possible to augment data by joining and aggregating multiple
-# dataframes with the :class:`~skrub.AggJoiner`. This is particularly useful to
-# summarize information scattered across tables, for instance adding statistics
-# about flights to the dataframe of airports:
+# ``skrub`` allows to aggregate multiple tables according to various strategies: you
+# can see other ways to join multiple tables in :ref:`userguide_joining_tables`.
 
 # %%
-from skrub import AggJoiner
+# Encoding any data as numerical features
+# ---------------------------------------
+#
+# Tabular data can contain a variety of datatypes, ranging from numerical, to
+# datetimes, to categories, strings, and text. Encoding features in a meaningful
+# way requires a lot of effort and is a major part of the feature engineering
+# process that is required to properly train machine learning models.
+#
+# ``skrub`` helps with this by providing various transformers that automatically
+# encode different datatypes into ``float32`` features.
+#
+# For **numerical features**, the :class:`~skrub.SquashingScaler` applies a robust
+# scaling technique that is less sensitive to outliers. Check the
+# :ref:`relative example <sphx_glr_auto_examples_11_squashing_scaler.py>`
+# for more information on the feature.
+#
+# For **datetime columns**, ``skrub`` provides the :class:`~skrub.DatetimeEncoder`
+# which can extract useful features such as year, month, day, as well as additional
+# features such as weekday or day of year. Periodic encoding with trigonometric
+# or spline features is also available. Refer to the :class:`~skrub.DatetimeEncoder`
+# documentation for more detail.
+#
 
-flights = pd.DataFrame(
+# %%
+import pandas as pd
+
+data = pd.DataFrame(
     {
-        "flight_id": range(1, 7),
-        "from_airport": [1, 1, 1, 2, 2, 2],
-        "total_passengers": [90, 120, 100, 70, 80, 90],
-        "company": ["DL", "AF", "AF", "DL", "DL", "TR"],
+        "event": ["A", "B", "C"],
+        "date_1": ["2020-01-01", "2020-06-15", "2021-03-22"],
+        "date_2": ["2020-01-15", "2020-07-01", "2021-04-05"],
     }
 )
-agg_joiner = AggJoiner(
-    aux_table=flights,
-    main_key="airport_id",
-    aux_key="from_airport",
-    cols=["total_passengers"],  # the cols to perform aggregation on
-    operations=["mean", "std"],  # the operations to compute
+data = Cleaner().fit_transform(data)
+TableReport(data)
+# %%
+# ``skrub`` transformers are applied column-by-column, but it is possible to use
+# the :class:`~skrub.ApplyToCols` meta-transformer to apply a transformer to
+# multiple columns at once. Complex column selection is possible using
+# :ref:`skrub's column selectors <userguide_selectors>`.
+
+from skrub import ApplyToCols, DatetimeEncoder
+
+ApplyToCols(
+    DatetimeEncoder(add_total_seconds=False), cols=["date_1", "date_2"]
+).fit_transform(data)
+
+# %%
+# Finally, when a column contains **categorical or string data**, it can be
+# encoded using various encoders provided by ``skrub``. The default encoder is
+# the :class:`~skrub.StringEncoder`, which encodes categories using
+# `Latent Semantic Analysis (LSA) <https://scikit-learn.org/stable/modules/decomposition.html#about-truncated-svd-and-latent-semantic-analysis-(lsa)>`_.
+# It is a simple and efficient way to encode categories, and works well in
+# practice.
+
+data = pd.DataFrame(
+    {
+        "city": ["Paris", "London", "Berlin", "Madrid", "Rome"],
+        "country": ["France", "UK", "Germany", "Spain", "Italy"],
+    }
 )
-agg_joiner.fit_transform(airports)
+TableReport(data)
+from skrub import StringEncoder
+
+StringEncoder(n_components=3).fit_transform(data["city"])
 
 # %%
-# For joining multiple auxiliary tables on a main table at once, use the
-# :class:`~skrub.MultiAggJoiner`.
-#
-# See other ways to join multiple tables in :ref:`userguide_joining_tables`.
-
-
-# %%
-# Encoding data
-# -------------
-#
-# When a column contains categories with variations and typos, it can
-# be encoded using one of ``skrub``'s encoders, such as the
-# :class:`~skrub.GapEncoder`.
-#
-# The :class:`~skrub.GapEncoder` creates a continuous encoding, based on
-# the activation of latent categories. It will create the encoding based on
-# combinations of substrings which frequently co-occur.
-#
-# For instance, we might want to encode a column ``X`` that contains
-# information about cities, being either Madrid or Rome :
+# If your data includes a lot of text, you may want to use the
+# :class:`~skrub.TextEncoder`,
+# which uses pre-trained language models retrieved from the HuggingFace hub to
+# create meaningful text embeddings.
+# See :ref:`userguide_encoders` for more details on all the categorical encoders
+# provided by ``skrub``, and :ref:`sphx_glr_auto_examples_01_encodings.py` for a
+# comparison between the different methods.
 
 # %%
-from skrub import GapEncoder
-
-X = pd.Series(
-    [
-        "Rome, Italy",
-        "Rome",
-        "Roma, Italia",
-        "Madrid, SP",
-        "Madrid, spain",
-        "Madrid",
-        "Romq",
-        "Rome, It",
-    ],
-    name="city",
-)
-enc = GapEncoder(n_components=2, random_state=0)  # 2 topics in the data
-enc.fit(X)
-
-# %%
-# The :class:`~skrub.GapEncoder` has found the following two topics:
-
-# %%
-enc.get_feature_names_out()
-
-# %%
-# Which correspond to the two cities.
-#
-# Let's see the activation of each topic depending on the rows of ``X``:
-
-# %%
-encoded = enc.fit_transform(X).assign(original=X)
-encoded
-
-# %%
-# The higher the activation, the closer the row to the latent topic. These
-# columns can now be understood by a machine-learning model.
-#
-# The other encoders are presented in :ref:`userguide_encoders`.
-
+# Advanced use cases
+# ----------------------
+# If your use case involves more complex data preparation, hyperparameter tuning,
+# or model selection, if you want to build a multi-table pipeline that requires
+# assembling and preparing multiple tables, or if you want to make sure that the
+# data preparation can be reproduced exactly, you can use the ``skrub`` Data Ops,
+# a powerful framework which provides tools to build complex data processing pipelines.
+# See the relative :ref:`user guide <userguide_data_ops>` and the
+# :ref:`data_ops_examples_ref`
+# examples for more details.
 
 # %%
 # Next steps
@@ -251,9 +268,10 @@ encoded
 #
 # We have briefly covered pipeline creation, vectorizing, assembling, and encoding
 # data. We presented the main functionalities of ``skrub``, but there is much
-# more to it !
+# more to it!
 #
 # Please refer to our :ref:`user_guide` for a more in-depth presentation of
 # ``skrub``'s concepts, or visit our
 # `examples <https://skrub-data.org/stable/auto_examples>`_ for more
-# illustrations of the tools that we provide !
+# illustrations of the tools that we provide!
+#

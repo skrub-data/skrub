@@ -268,11 +268,11 @@ class SkrubNamespace:
         <Apply DummyClassifier>
         Result:
         ―――――――
-           delayed
         0    False
         1    False
         2    False
         3    False
+        Name: delayed, dtype: bool
 
         Sometimes we want to pass a value for ``y`` because it is required for
         scoring and cross-validation, but it is not needed for fitting the
@@ -288,8 +288,12 @@ class SkrubNamespace:
         ...     unsupervised=True,
         ... )
         >>> e.skb.cross_validate()["test_score"]  # doctest: +SKIP
-        array([-19.43734833, -12.46393769, -11.80428789, -37.23883226,
-                -4.85785541])
+        0   -19.437348
+        1   -12.463938
+        2   -11.804288
+        3   -37.238832
+        4    -4.857855
+        Name: test_score, dtype: float64
         >>> learner = e.skb.make_learner().fit({"X": X})
         >>> learner.predict({"X": X})  # doctest: +SKIP
         array([0, 0, 0, 0, 0, 0, 1, 0, 0, 0], dtype=int32)
@@ -756,22 +760,22 @@ class SkrubNamespace:
         <Apply Ridge>
         Result (on a subsample):
         ――――――――――――――――――――――――
-                target
-        0   142.866906
-        1   130.980765
-        2   138.555388
-        3   149.703363
-        4   136.015214
-        5   139.773213
-        6   134.110415
-        7   129.224783
-        8   140.161363
-        9   155.272033
-        10  139.552110
-        11  130.318783
-        12  135.956591
-        13  142.998060
-        14  132.511013
+        0     142.866906
+        1     130.980765
+        2     138.555388
+        3     149.703363
+        4     136.015214
+        5     139.773213
+        6     134.110415
+        7     129.224783
+        8     140.161363
+        9     155.272033
+        10    139.552110
+        11    130.318783
+        12    135.956591
+        13    142.998060
+        14    132.511013
+        Name: target, dtype: float64
 
         By default, model fitting and hyperparameter search are done on the
         full data, so if we want the subsampling to take place we have to
@@ -824,7 +828,7 @@ class SkrubNamespace:
         ―――――――
         (442,)
 
-        Read more about subsampling in the :ref:`User Guide <user_guide_subsampling>`.
+        Read more about subsampling in the :ref:`User Guide <user_guide_data_ops_subsampling>`.
 
         """  # noqa : E501
         return DataOp(SubsamplePreviews(self._data_op, n=n, how=how))
@@ -1283,9 +1287,9 @@ class SkrubNamespace:
         """Generate a full report of the DataOp's evaluation.
 
         This creates a report showing the computation graph, and for each
-        intermediate computation, some information (such as the line of code
-        where it was defined) and a display of the intermediate result (or
-        error).
+        intermediate computation, some information (the line of code where it
+        was defined, the time it took to run, and more) and a display of the
+        intermediate result (or error).
 
         Parameters
         ----------
@@ -1316,12 +1320,20 @@ class SkrubNamespace:
             way a report is stored at the location indicated by
             ``'report_path'``.
 
+        See Also
+        --------
+        :meth:`SkrubLearner.report` :
+            Generate a report for a call to any of the methods of the
+            :class:`SkrubLearner` such as ``transform()``, ``predict()``,
+            ``predict_proba()`` etc.
+
         Notes
         -----
-        The learner is run doing a ``fit_transform``. If ``environment`` is
-        provided, it is used as the bindings for the variables in the
-        DataOp, and otherwise, the ``value`` attributes of the variables
-        are used.
+        The learner is run doing a ``fit_transform``. To get a report for other
+        methods (e.g. ``predict``, see :meth:`SkrubLearner.report`). If
+        ``environment`` is provided, it is used as the bindings for the
+        variables in the DataOp, and otherwise, the ``value`` attributes of the
+        variables are used.
 
         At the moment, this creates a directory on the filesystem containing
         HTML files. The report can be displayed by visiting the contained
@@ -1430,11 +1442,11 @@ class SkrubNamespace:
         <Apply DummyClassifier>
         Result:
         ―――――――
-           delayed
         0    False
         1    False
         2    False
         3    False
+        Name: delayed, dtype: bool
         >>> learner = pred.skb.make_learner(fitted=True)
         >>> new_orders_df = skrub.datasets.toy_orders(split='test').X
         >>> new_orders_df
@@ -1730,16 +1742,16 @@ class SkrubNamespace:
 
         >>> search = pred.skb.make_randomized_search(fitted=True, random_state=0)
         >>> search.results_
-            k         C  N 🌴 classifier mean_test_score
+            k         C  N 🌴 classifier  mean_test_score
         0   4  4.626363  NaN   logistic             0.92
-        1  10       NaN  7.0         rf             0.89
-        2   7  3.832217  NaN   logistic             0.87
-        3  15       NaN  6.0         rf             0.86
+        1  16       NaN  6.0         rf             0.90
+        2  11       NaN  7.0         rf             0.88
+        3   7  3.832217  NaN   logistic             0.87
         4  10  4.881255  NaN   logistic             0.85
-        5  19  3.965675  NaN   logistic             0.80
+        5  20  3.965675  NaN   logistic             0.80
         6  14       NaN  3.0         rf             0.77
         7   4       NaN  NaN      dummy             0.50
-        8   9       NaN  NaN      dummy             0.50
+        8  10       NaN  NaN      dummy             0.50
         9   5       NaN  NaN      dummy             0.50
 
         Please refer to the examples gallery for an in-depth explanation.

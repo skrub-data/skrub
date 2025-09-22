@@ -119,6 +119,18 @@ pandas_version = parse_version(parse_version(pd.__version__).base_version)
 
 
 def _raise(obj, kind="object"):
+    from .._data_ops._data_ops import DataOp
+
+    if isinstance(obj, DataOp):
+        raise TypeError(
+            """Expected a Pandas or Polars DataFrame, but got a skrub DataOp.
+A function that expects an actual value cannot be applied directly to a DataOp;
+you may want to (i) use op.skb.eval() or op.skb.preview() to evaluate the
+dataop and turn it into an actual value or (ii) use op.skb.apply_func() or
+op.skb.apply() to schedule the operation for later execution (when the dataop is
+evaluated) rather than computing it immediately.
+ """
+        )
     raise TypeError(
         "Operation not supported on this object. Expecting a Pandas or Polars "
         f"{kind}, but got an object of type {type(obj)}."
