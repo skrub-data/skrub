@@ -299,6 +299,7 @@ def test_all_outputs_choice(datetime_cols, params, all_outputs):
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
     assert enc.all_outputs_ == [f"when_{f}" for f in all_outputs]
+    assert enc.get_feature_names_out() == [f"when_{f}" for f in all_outputs]
     assert sbd.column_names(res) == [f"{f}" for f in enc.all_outputs_]
 
 
