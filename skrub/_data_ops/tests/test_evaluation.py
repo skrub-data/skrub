@@ -382,3 +382,12 @@ def test_eval_builtin_sequence_subclass():
 
     d = Dict()
     assert skrub.as_data_op(d).skb.eval() is d
+
+
+def test_eval_fit():
+    # evaluate() does no special handling of "fit" mode.
+    # the learner's fit() discards the result and returns self.
+    dop = skrub.as_data_op(1)
+    assert _evaluation.evaluate(dop, mode="fit") == 1
+    learner = dop.skb.make_learner()
+    assert learner.fit({}) is learner
