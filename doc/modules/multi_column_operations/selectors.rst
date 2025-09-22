@@ -1,22 +1,20 @@
-.. _userguide_selectors:
+.. _user_guide_selectors:
 
 Skrub Selectors: helpers for selecting columns in a dataframe
 =============================================================
 
-In Skrub, a selector represents a column selection rule, such as "all columns that have
-numerical data types, except the column ``'User ID'``".
+In skrub, a selector represents a column selection rule, such as "all columns
+that have numeric data types, except the column ``'User ID'``".
 
 Selectors have two main benefits:
 
-- Expressing complex selection rules in a simple and concise way by combining selectors
-  with operators. A range of useful selectors is provided by this module.
+- Expressing complex selection rules in a simple and concise way by combining
+  selectors with operators. A range of useful selectors is provided by this module.
 - Delayed selection: passing a selection rule which will evaluated later on a dataframe
   that is not yet available. For example, without selectors, it is not possible to
   instantiate a :class:`~skrub.SelectCols` that selects all columns except those with
   the suffix 'ID' if the data on which it will be fitted is not yet available.
 
-Usage
------
 
 Here is an example dataframe. Note that selectors support both Pandas and Polars
 dataframes:
@@ -49,13 +47,8 @@ This selector can then be passed to a :func:`~skrub.selectors.select` function:
 It can also be passed to :class:`~skrub.SelectCols` or :class:`~skrub.DropCols`
 to be embedded in scikit-learn pipelines:
 
->>> from skrub import SelectCols
->>> SelectCols(cols=mm_cols).fit_transform(df)
-   height_mm  width_mm
-0      297.0     210.0
-1      420.0     297.0
-
-Last but not least, selectors can be passed to skrub DataOps when applying an
+Last but not least, selectors can be passed to
+:ref:`skrub DataOps <user_guide_data_ops_index>` when applying an
 estimator with the :func:`skrub.DataOp.skb.apply` function:
 
 >>> import skrub
@@ -68,6 +61,9 @@ Result:
 0   A4   4       -1.0      -1.0
 1   A3   3        1.0       1.0
 
+Selectors can be used within the :class:`skrub.SelectCols` class, implementing `fit` and `transform`, as demoed below::
+
+  >>> from skrub import SelectCols
 
 Type of selectors
 -----------------
@@ -136,36 +132,3 @@ following selector won't compute the cardinality of non-categorical columns:
 
 >>> s.categorical() & s.cardinality_below(10)
 (categorical() & cardinality_below(10))
-
-
-Advanced selectors: filter and filter_names
--------------------------------------------
-
-:func:`skrub.selectors.filter` and :func:`skrub.selectors.filter_names` allow
-selecting columns based on arbitrary user-defined criteria. These are also used to
-implement many of the other selectors provided in this module.
-
-:func:`skrub.selectors.filter` accepts a function which will be called on a column
-(i.e., a Pandas or polars Series). This function, called a predicate, must return
-``True`` if the column should be selected.
-
->>> s.select(df, s.filter(lambda col: "A4" in col.tolist()))
-  kind
-0   A4
-1   A3
-
-:func:`skrub.selectors.filter_names` accepts a predicate that is passed the column name,
-instead of the column.
-
->>> s.select(df, s.filter_names(lambda name: name.endswith('mm')))
-   height_mm  width_mm
-0      297.0     210.0
-1      420.0     297.0
-
-We can pass args and kwargs that will be forwarded to the predicate, to help avoid
-lambda or local functions and thus ensure the selector is picklable.
-
->>> s.select(df, s.filter_names(str.endswith, 'mm'))
-   height_mm  width_mm
-0      297.0     210.0
-1      420.0     297.0
