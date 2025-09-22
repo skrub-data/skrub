@@ -754,11 +754,34 @@ def _check_estimator_type(estimator):
     )
 
 
+def _check_apply_how(how):
+    valid = ["auto", "cols", "frame", "no_wrap"]
+    if how in valid:
+        return how
+
+    # TODO remove when the old names are completely dropped in 0.7.0
+    translate = {"columnwise": "cols", "sub_frame": "frame", "full_frame": "no_wrap"}
+    if how in translate:
+        new = translate[how]
+        warnings.warn(
+            (
+                f"{how!r} has been renamed to {new!r}: use .skb.apply(how={new!r})"
+                " instead."
+            ),
+            FutureWarning,
+        )
+        return new
+
+    raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
+
+
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
     """
     Wrap the estimator passed to .skb.apply in ApplyToCols or ApplyToFrame if
     needed.
     """
+    how = _check_apply_how(how)
+
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
 
@@ -1227,27 +1250,6 @@ def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment, 
     )
 
 
-def _check_apply_how(apply_op, how):
-    valid = ["auto", "cols", "frame", "no_wrap"]
-    if how in valid:
-        return how
-
-    # TODO remove when the old names are completely dropped in 0.7.0
-    translate = {"columnwise": "cols", "sub_frame": "frame", "full_frame": "no_wrap"}
-    if how in translate:
-        new = translate[how]
-        warnings.warn(
-            (
-                f"{how!r} has been renamed to {new!r}: use .skb.apply(how={new!r})"
-                " instead."
-            ),
-            FutureWarning,
-        )
-        return new
-
-    raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
-
-
 class Apply(DataOpImpl):
     """.skb.apply() nodes."""
 
@@ -1280,7 +1282,6 @@ class Apply(DataOpImpl):
             estimator = yield self.estimator
             cols = yield self.cols
             how = yield self.how
-            how = _check_apply_how(self, how)
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
