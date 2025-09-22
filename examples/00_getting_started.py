@@ -55,14 +55,13 @@ TableReport(employees_df)
 #
 #    .. _example reports: https://skrub-data.org/skrub-reports/examples/
 #    .. _demo: https://skrub-data.org/skrub-reports/
-# %%
+#
 # From the Report above, we can see that there are datetime columns, so we use the
 # |Cleaner| to parse them.
 
 # %%
 # Sanitizing data with the |Cleaner|
 # ----------------------------------
-
 # Here, we use the |Cleaner|, a transformer that cleans the
 # dataframe by parsing nulls and dates, and by dropping "uninformative" columns
 # (e.g., columns with too many nulls or that are constant).
@@ -75,7 +74,7 @@ TableReport(employees_df)
 
 # %%
 # It is also possible to tell skrub to replace the default pandas & polars
-# displays with ``TableReport`` by modifying the global config with
+# displays with |TableReport| by modifying the global config with
 # |set_config|.
 
 from skrub import set_config
@@ -164,7 +163,7 @@ joiner.fit_transform(airports)
 # Information about countries has been added, even if the rows aren't exactly matching.
 #
 # Skrub allows you to aggregate multiple tables according to various strategies. You
-# can see other ways to join multiple tables in :ref:`userguide_joining_tables`.
+# can see other ways to join multiple tables in :ref:`user_guide_joining_dataframes`.
 
 # %%
 # Encoding any data as numerical features
@@ -180,7 +179,7 @@ joiner.fit_transform(airports)
 #
 # For **numerical features**, the |SquashingScaler| applies a robust
 # scaling technique that is less sensitive to outliers. Check the
-# :ref:`relative example <sphx_glr_auto_examples_11_squashing_scaler.py>`
+# :ref:`relative example <sphx_glr_auto_examples_10_squashing_scaler.py>`
 # for more information on the feature.
 #
 # For **datetime columns**, skrub provides the |DatetimeEncoder|
@@ -206,7 +205,7 @@ TableReport(data)
 # Skrub transformers are applied column-by-column, but it's possible to use
 # the |ApplyToCols| meta-transformer to apply a transformer to
 # multiple columns at once. Complex column selection is possible using
-# :ref:`skrub's column selectors <userguide_selectors>`.
+# :ref:`skrub's column selectors <user_guide_selectors>`.
 
 from skrub import ApplyToCols, DatetimeEncoder
 
@@ -238,7 +237,7 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # |TextEncoder|,
 # which uses pre-trained language models retrieved from the HuggingFace hub to
 # create meaningful text embeddings.
-# See :ref:`userguide_encoders` for more details on all the categorical encoders
+# See :ref:`user_guide_encoders_index` for more details on all the categorical encoders
 # provided by skrub, and :ref:`sphx_glr_auto_examples_01_encodings.py` for a
 # comparison between the different methods.
 
@@ -250,7 +249,7 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # assembling and preparing multiple tables, or if you want to ensure that the
 # data preparation can be reproduced exactly, you can use the skrub Data Ops,
 # a powerful framework that provides tools to build complex data processing pipelines.
-# See the related :ref:`user guide <userguide_data_ops>` and the
+# See the related :ref:`user guide <user_guide_data_ops_index>` and the
 # :ref:`data_ops_examples_ref`
 # examples for more details.
 
