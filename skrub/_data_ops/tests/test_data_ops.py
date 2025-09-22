@@ -12,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 
 import skrub
+from skrub import ApplyToCols
 from skrub import selectors as s
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
@@ -333,11 +334,11 @@ def test_data_op_impl():
 @pytest.mark.parametrize("bad_param", ["cols", "how", "allow_reject"])
 def test_apply_bad_params(why_full_frame, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
-    # dataframe) (or how='full_frame') the estimator can only be applied to the
+    # dataframe) (or how='no_wrap') the estimator can only be applied to the
     # full input without wrapping in ApplyToCols or ApplyToFrame. In this case
     # if the user passed a parameter that would require wrapping, such as
     # passing a value for `cols` that is not `all()`, or passing
-    # how='columnwise' or allow_reject=True, we get an error.
+    # how='cols' or allow_reject=True, we get an error.
 
     if why_full_frame == bad_param == "how":
         return
@@ -366,6 +367,19 @@ def test_apply_bad_params(why_full_frame, bad_param):
 
     with pytest.raises((ValueError, RuntimeError), match=""):
         X.skb.apply(estimator, y=y, how=how, allow_reject=allow_reject, cols=cols)
+
+
+def test_apply_invalid_how():
+    df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+    X = skrub.var("X", df)
+    t = PassThrough()
+    for how in ["auto", "cols", "frame", "no_wrap"]:
+        assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
+    with pytest.raises(RuntimeError, match="`how` must be one of"):
+        X.skb.apply(t, how="bad value")
+    with pytest.warns(FutureWarning, match="'columnwise' has been renamed to 'cols'"):
+        wrapper = X.skb.apply(t, how="columnwise").skb.applied_estimator.skb.eval()
+        assert isinstance(wrapper, ApplyToCols)
 
 
 class Mul(BaseEstimator):

@@ -722,8 +722,8 @@ def _check_wrap_params(cols, how, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
-    elif how not in ["auto", "full_frame"]:
-        msg = f"`how` must be 'auto' (the default) or 'full_frame' when {reason}"
+    elif how not in ["auto", "no_wrap"]:
+        msg = f"`how` must be 'auto' (the default) or 'no_wrap' when {reason}"
     elif allow_reject:
         msg = f"`allow_reject` must be False (the default) when {reason}"
     if msg is not None:
@@ -767,8 +767,8 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     def _check(reason):
         _check_wrap_params(cols, how, allow_reject, reason)
 
-    if how == "full_frame":
-        _check("`how` is 'full_frame'")
+    if how == "no_wrap":
+        _check("`how` is 'no_wrap'")
         return estimator
     if hasattr(estimator, "predict") or not hasattr(estimator, "transform"):
         _check("`estimator` is a predictor (not a transformer)")
@@ -776,7 +776,7 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    columnwise = {"auto": "auto", "columnwise": True, "sub_frame": False}[how]
+    columnwise = {"auto": "auto", "cols": True, "frame": False}[how]
     return wrap_transformer(
         estimator, cols, allow_reject=allow_reject, columnwise=columnwise
     )
@@ -1186,7 +1186,7 @@ class FreezeAfterFit(DataOpImpl):
 
 
 def _check_column_names(X):
-    # NOTE: could allow int column names when how='full_frame', prob. not worth
+    # NOTE: could allow int column names when how='no_wrap', prob. not worth
     # the added complexity.
     #
     # TODO: maybe also forbid duplicates? use a reduced version of
@@ -1227,6 +1227,27 @@ def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment, 
     )
 
 
+def _check_apply_how(apply_op, how):
+    valid = ["auto", "cols", "frame", "no_wrap"]
+    if how in valid:
+        return how
+
+    # TODO remove when the old names are completely dropped in 0.7.0
+    translate = {"columnwise": "cols", "sub_frame": "frame", "full_frame": "no_wrap"}
+    if how in translate:
+        new = translate[how]
+        warnings.warn(
+            (
+                f"{how!r} has been renamed to {new!r}: use .skb.apply(how={new!r})"
+                " instead."
+            ),
+            FutureWarning,
+        )
+        return new
+
+    raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
+
+
 class Apply(DataOpImpl):
     """.skb.apply() nodes."""
 
@@ -1259,6 +1280,7 @@ class Apply(DataOpImpl):
             estimator = yield self.estimator
             cols = yield self.cols
             how = yield self.how
+            how = _check_apply_how(self, how)
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
