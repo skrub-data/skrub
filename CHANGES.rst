@@ -20,9 +20,15 @@ Changes
   :func:`datasets.get_ken_table_aliases`, and :func:`datasets.get_ken_types` will be
   removed in the next release of skrub.
   :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
-
 - Improved error messages when a DataOp is being sent to dispatched functions.
   :pr:`1607` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The accepted values for the parameter ``how`` of :meth:`DataOp.skb.apply` have
+  changed. The new values are ``"auto"`` (unchanged), ``"cols"`` to wrap the
+  transformer in :class:`ApplyToCols`, ``"frame"`` to wrap the transformer in
+  :class:`ApplyToFrame`, or ``"no_wrap"`` for no wrapping. The old values are
+  deprecated and will result in an error in a future release.
+  :pr:`1628` by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Bugfixes
 --------
