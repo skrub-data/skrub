@@ -5,10 +5,12 @@
 How to write an example for the gallery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This tutorial explains to new contributors how to format their examples so that they are properly rendered in the skrub documentation gallery.
+This tutorial explains to new contributors how to format their examples so that
+they are properly rendered in the skrub documentation gallery.
 
 While examples are written in plain Python code, there are some quirks to be aware of
-when writing them, due to the way Sphinx and the sphinx-gallery extension work. This tutorial explains these quirks and how to work around them.
+when writing them, due to the way Sphinx and the sphinx-gallery extension work.
+This tutorial explains these quirks and how to work around them.
 
 Location of the examples
 -----------------------
@@ -42,11 +44,11 @@ Writing the example
 -----------------------
 Your python script should start with a docstring that briefly explains what the example
 is about. This docstring can contain multiple paragraphs and will be rendered
-as a ``.rst`` file in the documentation, so you can use ``.rst`` syntax
+as a RST file in the documentation, so you can use RST syntax
 in it.
 
 Importantly, the first line of the docstring should be the title of the example,
-not an ``.rst`` directive (such as ``.. replace::`` or ``.. note::``). Sphinx
+not an RST directive (such as ``.. replace::`` or ``.. note::``). Sphinx
 adds a reference to the example at the top of the page using the file name as the
 title. Adding a directive at the top of the docstring would prevent proper HTML
 rendering.
@@ -60,11 +62,11 @@ This is an example of what the beginning of your example may look like:
     ====================
 
     This is a brief description of the example. It can contain multiple paragraphs,
-    and it can use ``.rst`` syntax.
+    and it can use RST syntax.
 
     .. note::
 
-        You can use ``.rst`` directives in the docstring, such as ``.. note::``,
+        You can use RST directives in the docstring, such as ``.. note::``,
         ``.. warning::``, ``.. seealso::``, etc.
 
     After the definition of the title, you may also add directives such as
@@ -88,7 +90,8 @@ rendered as RST in the final documentation.
 
     # %%
     # This is a comment that will be rendered as markdown in the final documentation.
-    # You can use multiple lines for comments, and you can use ``.rst`` syntax in them.
+    # You can use multiple lines for comments, and you can use RST syntax in them.
+
     import pandas as pd
     from skrub import TableVectorizer
 
@@ -119,9 +122,9 @@ Adding cross-references
 
 Adding cross-references to the documentation helps users find more information
 about the concepts and functions used in your example. This step is optional, and
-you may ask the maintainers for help on which cross-references to add.
-
-
+you may ask the maintainers for help on which cross-references to add. Good
+cross-references include relevant user guide sections, the documentation of the
+objects used in the example (like the |TableVectorizer|), or other examples.
 
 You can add cross-references in the docstring and comments of your example in several ways:
 
@@ -148,7 +151,7 @@ to the user guide section about the |TableVectorizer| class. This can be done as
 
     This example demonstrates how to use the |TableVectorizer| class to vectorize a dataframe.
 
-    See the :ref:`userguide_tablevectorizer` guide for more information about the |TableVectorizer| class.
+    See the :ref:`user_guide_building_pipeline_index` guide for more information about the |TableVectorizer| class.
     """
 
     # %%
