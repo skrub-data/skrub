@@ -143,13 +143,24 @@ class SkrubNamespace:
             _not_ be applied. The columns that are matched by ``cols`` AND not
             matched by ``exclude_cols`` are transformed.
 
-        how : "auto", "columnwise", "subframe" or "full_frame", optional
-            The mode in which it is applied. In the vast majority of cases the
-            default "auto" is appropriate. "columnwise" means a separate clone
-            of the transformer is applied to each column. "subframe" means it
-            is applied to a subset of the columns, passed as a single
-            dataframe. "full_frame" means the whole input dataframe is passed
-            directly to the provided ``estimator``.
+        how : "auto", "cols", "frame" or "no_wrap", optional
+            How the estimator is applied. In most cases the default "auto"
+            is appropriate.
+            - "cols" means `estimator` is wrapped in a :class:`ApplyToCols`
+              transformer, which fits a separate clone of `estimator` each
+              column in `cols`. `estimator` must be a transformer (have a
+              ``fit_transform`` method).
+            - "frame" means `estimator` is wrapped in a :class:`ApplyToFrame`
+              transformer, which fits a single clone of `estimator` to the
+              selected part of the input dataframe. `estimator` must be a
+              transformer.
+            - "no_wrap" means no wrapping, `estimator` is applied directly to
+              the unmodified input.
+            - "auto" chooses the wrapping depending on the input and estimator.
+              If the input is not a dataframe or the estimator is not a
+              transformer, the "no_wrap" strategy is chosen. Otherwise if the
+              estimator has a ``__single_column_transformer__`` attribute,
+              "cols" is chosen. Otherwise "frame" is chosen.
 
         allow_reject : bool, optional
             Whether the transformer can refuse to transform columns for which
@@ -181,6 +192,12 @@ class SkrubNamespace:
         --------
         skrub.DataOp.skb.make_learner :
             Get a skrub learner for this DataOp.
+        skrub.ApplyToCols :
+            Transformer that applies a given transformer separately to each
+            selected column.
+        skrub.ApplyToFrame:
+            Transformer that applies a given transformer to part of a
+            dataframe.
 
         Examples
         --------
@@ -554,7 +571,7 @@ class SkrubNamespace:
         2     cup  2020-04-04
         3   spoon  2020-04-05
         """
-        return self._apply(SelectCols(cols), how="full_frame")
+        return self._apply(SelectCols(cols), how="no_wrap")
 
     @check_data_op
     def drop(self, cols):
@@ -607,7 +624,7 @@ class SkrubNamespace:
         2   3         5
         3   4         1
         """
-        return self._apply(DropCols(cols), how="full_frame")
+        return self._apply(DropCols(cols), how="no_wrap")
 
     @check_data_op
     def concat(self, others, axis=0):

@@ -12,6 +12,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 
 import skrub
+from skrub import ApplyToCols
 from skrub import selectors as s
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
@@ -329,43 +330,63 @@ def test_data_op_impl():
         a.skb.eval()
 
 
-@pytest.mark.parametrize("why_full_frame", ["numpy", "predictor", "how"])
+@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "how"])
 @pytest.mark.parametrize("bad_param", ["cols", "how", "allow_reject"])
-def test_apply_bad_params(why_full_frame, bad_param):
+def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
-    # dataframe) (or how='full_frame') the estimator can only be applied to the
+    # dataframe) (or how='no_wrap') the estimator can only be applied to the
     # full input without wrapping in ApplyToCols or ApplyToFrame. In this case
     # if the user passed a parameter that would require wrapping, such as
     # passing a value for `cols` that is not `all()`, or passing
-    # how='columnwise' or allow_reject=True, we get an error.
+    # how='cols' or allow_reject=True, we get an error.
 
-    if why_full_frame == bad_param == "how":
+    if why_no_wrap == bad_param == "how":
         return
     X_a, y_a = make_classification(random_state=0)
     X_df = pd.DataFrame(X_a, columns=[f"col_{i}" for i in range(X_a.shape[1])])
 
-    X = skrub.X(X_a) if why_full_frame == "numpy" else skrub.X(X_df)
-    if why_full_frame == "predictor":
+    X = skrub.X(X_a) if why_no_wrap == "numpy" else skrub.X(X_df)
+    if why_no_wrap == "predictor":
         estimator = LogisticRegression()
         y = skrub.y(y_a)
     else:
         estimator = PassThrough()
         y = None
-    how = "full_frame" if why_full_frame == "how" else "auto"
-    # X is a numpy array: how must be full_frame and selecting columns is not
+    how = "no_wrap" if why_no_wrap == "how" else "auto"
+    # X is a numpy array: how must be no_wrap and selecting columns is not
     # allowed.
     if bad_param == "cols":
-        if why_full_frame == "numpy":
+        if why_no_wrap == "numpy":
             cols = [0, 1]
         else:
             cols = ["col_0", "col_1"]
     else:
         cols = s.all()
-    how = "columnwise" if bad_param == "how" else how
+    how = "cols" if bad_param == "how" else how
     allow_reject = True if bad_param == "allow_reject" else False
 
-    with pytest.raises((ValueError, RuntimeError), match=""):
+    with pytest.raises(
+        (ValueError, RuntimeError),
+        match=(
+            r"(`cols` must be `all\(\)`|`how` must be 'auto'|`allow_reject` must be"
+            r" False)"
+        ),
+    ):
         X.skb.apply(estimator, y=y, how=how, allow_reject=allow_reject, cols=cols)
+
+
+def test_apply_invalid_how():
+    df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+    X = skrub.var("X", df)
+    t = PassThrough()
+    for how in ["auto", "cols", "frame", "no_wrap"]:
+        assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
+    with pytest.raises(RuntimeError, match="`how` must be one of"):
+        X.skb.apply(t, how="bad value")
+    # TODO: remove when old names are dropped in 0.7.0
+    with pytest.warns(FutureWarning, match="'columnwise' has been renamed to 'cols'"):
+        wrapper = X.skb.apply(t, how="columnwise").skb.applied_estimator.skb.eval()
+        assert isinstance(wrapper, ApplyToCols)
 
 
 class Mul(BaseEstimator):
