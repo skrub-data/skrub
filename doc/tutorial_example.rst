@@ -167,7 +167,7 @@ to the user guide section about the |TableVectorizer| class. This can be done as
     print(X)
 
 You may find more information on the cross-references in the
-:ref:`official Sphinx documentation <https://www.sphinx-doc.org/en/master/usage/referencing.html>_`.
+`official Sphinx documentation <https://www.sphinx-doc.org/en/master/usage/referencing.html>`_.
 
 
 Generating the new documentation
