@@ -43,8 +43,11 @@ from skrub import TableReport
 TableReport(employees_df)
 
 # %%
-#
 # You can use the interactive display above to explore the dataset visually.
+#
+# It is also possible to tell skrub to replace the default pandas & polars
+# displays with |TableReport| by modifying the global config with
+# |set_config|.
 #
 # .. note::
 #
@@ -73,24 +76,6 @@ employees_df = Cleaner().fit_transform(employees_df)
 TableReport(employees_df)
 
 # %%
-# It is also possible to tell skrub to replace the default pandas & polars
-# displays with |TableReport| by modifying the global config with
-# |set_config|.
-
-from skrub import set_config
-
-set_config(use_table_report=True)
-
-employees_df
-
-# %%
-# This setting can easily be reverted:
-
-set_config(use_table_report=False)
-
-employees_df
-
-# %%
 # Easily building a strong baseline for tabular machine learning
 # --------------------------------------------------------------
 #
@@ -116,54 +101,6 @@ results["test_score"]
 # more details. An overview of the chosen defaults is available in
 # :ref:`user_guide_tabular_pipeline`.
 
-
-# %%
-# Assembling data
-# ---------------
-#
-# Skrub allows imperfect assembly of data, such as joining dataframes
-# on columns that contain typos. Skrub's joiners have ``fit`` and
-# ``transform`` methods, storing information about the data across calls.
-#
-# The |Joiner| allows fuzzy-joining multiple tables, where each row of
-# a main table will be augmented with values from the best match in the auxiliary table.
-# You can control how distant fuzzy-matches are allowed to be with the
-# ``max_dist`` parameter.
-
-# %%
-# In the following, we add information about countries to a table containing
-# airports and the cities they are in:
-
-# %%
-import pandas as pd
-
-from skrub import Joiner
-
-airports = pd.DataFrame(
-    {
-        "airport_id": [1, 2],
-        "airport_name": ["Charles de Gaulle", "Aeroporto Leonardo da Vinci"],
-        "city": ["Paris", "Roma"],
-    }
-)
-# Notice the "Rome" instead of "Roma"
-capitals = pd.DataFrame(
-    {"capital": ["Berlin", "Paris", "Rome"], "country": ["Germany", "France", "Italy"]}
-)
-joiner = Joiner(
-    capitals,
-    main_key="city",
-    aux_key="capital",
-    max_dist=0.8,
-    add_match_info=False,
-)
-joiner.fit_transform(airports)
-
-# %%
-# Information about countries has been added, even if the rows aren't exactly matching.
-#
-# Skrub allows you to aggregate multiple tables according to various strategies. You
-# can see other ways to join multiple tables in :ref:`user_guide_joining_dataframes`.
 
 # %%
 # Encoding any data as numerical features
@@ -240,6 +177,54 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # See :ref:`user_guide_encoders_index` for more details on all the categorical encoders
 # provided by skrub, and :ref:`sphx_glr_auto_examples_01_encodings.py` for a
 # comparison between the different methods.
+
+# %%
+# Assembling data
+# ---------------
+#
+# Skrub allows imperfect assembly of data, such as joining dataframes
+# on columns that contain typos. Skrub's joiners have ``fit`` and
+# ``transform`` methods, storing information about the data across calls.
+#
+# The |Joiner| allows fuzzy-joining multiple tables, where each row of
+# a main table will be augmented with values from the best match in the auxiliary table.
+# You can control how distant fuzzy-matches are allowed to be with the
+# ``max_dist`` parameter.
+
+# %%
+# In the following, we add information about countries to a table containing
+# airports and the cities they are in:
+
+# %%
+import pandas as pd
+
+from skrub import Joiner
+
+airports = pd.DataFrame(
+    {
+        "airport_id": [1, 2],
+        "airport_name": ["Charles de Gaulle", "Aeroporto Leonardo da Vinci"],
+        "city": ["Paris", "Roma"],
+    }
+)
+# Notice the "Rome" instead of "Roma"
+capitals = pd.DataFrame(
+    {"capital": ["Berlin", "Paris", "Rome"], "country": ["Germany", "France", "Italy"]}
+)
+joiner = Joiner(
+    capitals,
+    main_key="city",
+    aux_key="capital",
+    max_dist=0.8,
+    add_match_info=False,
+)
+joiner.fit_transform(airports)
+
+# %%
+# Information about countries has been added, even if the rows aren't exactly matching.
+#
+# Skrub allows you to aggregate multiple tables according to various strategies. You
+# can see other ways to join multiple tables in :ref:`user_guide_joining_dataframes`.
 
 # %%
 # Advanced use cases
