@@ -39,6 +39,16 @@ html-noplot:
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 
+linkcheck:
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+	@echo
+	@echo "Linkcheck finished. Results are in $(BUILDDIR)/linkcheck."
+
+linkcheck-noplot:
+	$(SPHINXBUILD) -D plot_gallery=0 -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck-noplot
+	@echo
+	@echo "Linkcheck (no plot) finished. Results are in $(BUILDDIR)/linkcheck-noplot."
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
