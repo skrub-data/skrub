@@ -383,6 +383,7 @@ def test_apply_invalid_how():
         assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
     with pytest.raises(RuntimeError, match="`how` must be one of"):
         X.skb.apply(t, how="bad value")
+    # TODO: remove when old names are dropped in 0.7.0
     with pytest.warns(FutureWarning, match="'columnwise' has been renamed to 'cols'"):
         wrapper = X.skb.apply(t, how="columnwise").skb.applied_estimator.skb.eval()
         assert isinstance(wrapper, ApplyToCols)
