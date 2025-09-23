@@ -102,7 +102,7 @@ which we used :meth:`.skb.mark_as_X() <DataOp.skb.mark_as_X>` and
 :meth:`.skb.mark_as_y() <DataOp.skb.mark_as_y>`: the first few steps of the
 pipeline are executed until we have a value for ``X`` and for ``y``.
 Then, those
-dataframes are split using the provided splitter function (by default
+dataframes are split using the provided split function (by default
 scikit-learn's :func:`sklearn.model_selection.train_test_split`).
 
 >>> split = pred.skb.train_test_split(shuffle=False)
@@ -134,5 +134,5 @@ And we can obtain predictions on the test part:
 >>> r2_score(test_y_true, test_pred) # doctest: +SKIP
 0.440999149220359
 
-It is possible to define a custom splitter function to use instead of
+It is possible to define a custom split function to use instead of
 :func:`sklearn.model_selection.train_test_split`.

@@ -422,6 +422,19 @@ def test_train_test_split(with_y):
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
 
 
+def test_train_test_split_splitter_renaming():
+    # TODO remove when `splitter` is removed in 0.7.0
+    X = skrub.X(list(range(10)))
+
+    def split(X, shuffle):
+        return train_test_split(X, shuffle=shuffle)
+
+    with pytest.warns(FutureWarning, match="`splitter`.*has been renamed"):
+        assert X.skb.train_test_split(splitter=split, shuffle=False)["X_train"] == list(
+            range(7)
+        )
+
+
 def test_iter_learners():
     e = skrub.choose_from([1, 2, 3], name="c").as_data_op()
     assert [p.describe_params() for p in e.skb.iter_learners_grid()] == [
