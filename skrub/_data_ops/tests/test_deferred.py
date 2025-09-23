@@ -71,6 +71,17 @@ def test_deferred_callables_repr():
     Result:
     ―――――――
     20
+    >>> @skrub.deferred
+    ... def add(x):
+    ...     return lambda y: x + y
+    >>> a = skrub.var("a", 1)
+    >>> b = skrub.var("b", 2)
+    >>> c = add(a).skb.set_name("add a")(b)
+    >>> c
+    <Call 'add a'>
+    Result:
+    ―――――――
+    3
     """
 
 
