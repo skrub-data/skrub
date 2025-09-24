@@ -346,6 +346,7 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     ax_percentage = ax.twinx()
     ax_percentage.set_ylim(ax.get_ylim())
     ax_percentage.set_yticks(ticks=range(len(counts)))
+    ax_percentage.tick_params(axis="both", length=0)
     ax_percentage.set_yticklabels(
         labels=percent,
         color=_TEXT_COLOR_PLACEHOLDER,
@@ -354,6 +355,8 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
 
     ax.set_yticks(ax.get_yticks())
     ax.set_yticklabels(list(map(str, values)))
+    ax.spines[["right", "top"]].set_visible(False)
+    ax_percentage.spines[["right", "top"]].set_visible(False)
     if title is not None:
         ax.set_title(title)
 
