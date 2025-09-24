@@ -32,13 +32,15 @@ pushing.
 Dealing with typos in the example
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-If your code includes any kind of typo (for example, in user reviews), the
+If your code includes any kind of intentional typo, for example if you are trying
+to correct names by replacing a string with a typo with the new one, the
 ``codespell`` hook will block your commit. To bypass this, update ``pyproject.toml``
 by adding the typo to the ``ignore-word-list`` entry in the ``tool.codespell``
-section. After this, you can use ``git commit --no-verify`` to bypass local checks.
+section. After this, commit the updated ``pyproject.toml`` file using
+``git commit --no-verify`` to bypass local checks so that following commits will
+ignore the typos.
 Note that without updating ``pyproject.toml``, the CI will still reject commits
-with typos, as it runs the same hooks.
+with typos, as it runs the same hooks that are run locally.
 
 Writing the example
 -----------------------
