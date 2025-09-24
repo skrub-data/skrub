@@ -644,8 +644,8 @@ def train_test_split(
     environment,
     *,
     keep_subsampling=False,
-    splitter=model_selection.train_test_split,
-    **splitter_kwargs,
+    split_func=model_selection.train_test_split,
+    **split_func_kwargs,
 ):
     """Split an environment into a training an testing environments.
 
@@ -656,9 +656,9 @@ def train_test_split(
     environment = env_with_subsampling(data_op, environment, keep_subsampling)
     X, y = _compute_Xy(data_op, environment)
     if y is None:
-        X_train, X_test = splitter(X, **splitter_kwargs)
+        X_train, X_test = split_func(X, **split_func_kwargs)
     else:
-        X_train, X_test, y_train, y_test = splitter(X, y, **splitter_kwargs)
+        X_train, X_test, y_train, y_test = split_func(X, y, **split_func_kwargs)
     train_env = {**environment, X_NAME: X_train}
     test_env = {**environment, X_NAME: X_test}
     result = {
