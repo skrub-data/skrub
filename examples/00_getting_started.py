@@ -177,6 +177,7 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # See :ref:`user_guide_encoders_index` for more details on all the categorical encoders
 # provided by skrub, and :ref:`sphx_glr_auto_examples_01_encodings.py` for a
 # comparison between the different methods.
+#
 
 # %%
 # Assembling data
@@ -191,39 +192,8 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # You can control how distant fuzzy-matches are allowed to be with the
 # ``max_dist`` parameter.
 
-# %%
-# In the following, we add information about countries to a table containing
-# airports and the cities they are in:
-
-# %%
-import pandas as pd
-
-from skrub import Joiner
-
-airports = pd.DataFrame(
-    {
-        "airport_id": [1, 2],
-        "airport_name": ["Charles de Gaulle", "Aeroporto Leonardo da Vinci"],
-        "city": ["Paris", "Roma"],
-    }
-)
-# Notice the "Rome" instead of "Roma"
-capitals = pd.DataFrame(
-    {"capital": ["Berlin", "Paris", "Rome"], "country": ["Germany", "France", "Italy"]}
-)
-joiner = Joiner(
-    capitals,
-    main_key="city",
-    aux_key="capital",
-    max_dist=0.8,
-    add_match_info=False,
-)
-joiner.fit_transform(airports)
-
-# %%
-# Information about countries has been added, even if the rows aren't exactly matching.
-#
-# Skrub allows you to aggregate multiple tables according to various strategies. You
+# Skrub also allows you to aggregate multiple tables according to various strategies.
+# You
 # can see other ways to join multiple tables in :ref:`user_guide_joining_dataframes`.
 
 # %%
