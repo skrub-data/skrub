@@ -22,7 +22,7 @@
 .. |skb.cross_validate| replace:: :meth:`~skrub.DataOp.skb.cross_validate`
 .. |skb.full_report| replace:: :meth:`~skrub.DataOp.skb.full_report`
 
-Getting Started with Data Ops
+Data Ops crash course
 =============================
 
 What are Data Ops?
