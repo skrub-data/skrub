@@ -1,4 +1,3 @@
-.. _getting_started_with_data_ops:
 
 .. currentmodule:: skrub
 
@@ -22,11 +21,13 @@
 .. |skb.cross_validate| replace:: :meth:`~skrub.DataOp.skb.cross_validate`
 .. |skb.full_report| replace:: :meth:`~skrub.DataOp.skb.full_report`
 
+.. _getting_started_with_data_ops:
+
 Data Ops crash course
 =============================
 
 What are Data Ops?
------------------
+------------------
 
 **Data Ops** provide a powerful framework for building complex, flexible machine
 learning pipelines with tabular data. They allow you to express data transformations
@@ -121,7 +122,7 @@ Key Features of Data Ops
   :ref:`user_guide_data_ops_applying_different_transformers`.
 
 Getting Started
---------------
+---------------
 
 To start using Data Ops, begin by creating variables with |var| (or the
 shortcuts |X| and |y|) and access the Data Ops
@@ -148,7 +149,7 @@ standard scikit-learn pipelines, allowing your models to accept arbitrary inputs
 beyond just DataFrames or arrays.
 
 Common Usage Patterns
---------------------
+---------------------
 
 **Basic Single-Table Pipeline**
   Start with a DataFrame, mark features and target, apply transformers, and train a model:
@@ -192,7 +193,7 @@ Common Usage Patterns
 
 
 Learn More
----------
+----------
 
 For a comprehensive exploration of Data Ops capabilities, refer to the following resources:
 
