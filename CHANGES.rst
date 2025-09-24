@@ -28,6 +28,8 @@ Changes
   :class:`ApplyToFrame`, or ``"no_wrap"`` for no wrapping. The old values are
   deprecated and will result in an error in a future release.
   :pr:`1628` by :user:`Jérôme Dockès <jeromedockes>`.
+- The parameter ``splitter`` of :meth:`DataOp.skb.train_test_split` has been
+  renamed ``split_func``. :pr:`1630` by :user:`Jérôme Dockès <jeromedockes>`.
 
 
 Bugfixes

@@ -1,5 +1,6 @@
 import pickle
 import typing
+import warnings
 
 from sklearn import model_selection
 
@@ -1495,8 +1496,8 @@ class SkrubNamespace:
         environment=None,
         *,
         keep_subsampling=False,
-        splitter=model_selection.train_test_split,
-        **splitter_kwargs,
+        split_func=model_selection.train_test_split,
+        **split_func_kwargs,
     ):
         """Split an environment into a training an testing environments.
 
@@ -1512,12 +1513,12 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        splitter : function, optional
+        split_func : function, optional
             The function used to split X and y once they have been computed. By
             default, :func:`~sklearn.model_selection.train_test_split` is used.
 
-        splitter_kwargs
-            Additional named arguments to pass to the splitter.
+        split_func_kwargs
+            Additional named arguments to pass to the splitting function.
 
         Returns
         -------
@@ -1563,14 +1564,24 @@ class SkrubNamespace:
         >>> accuracy_score(split["y_test"], predictions)
         0.0
         """
+        if (splitter := split_func_kwargs.pop("splitter", None)) is not None:
+            warnings.warn(
+                (
+                    "The `splitter` parameter of `.skb.train_test_split` has been"
+                    " renamed `split_func`. Using it will raise an error in a future"
+                    " release of skrub."
+                ),
+                category=FutureWarning,
+            )
+            split_func = splitter
         if environment is None:
             environment = self.get_data()
         return train_test_split(
             self._data_op,
             environment,
             keep_subsampling=keep_subsampling,
-            splitter=splitter,
-            **splitter_kwargs,
+            split_func=split_func,
+            **split_func_kwargs,
         )
 
     def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
