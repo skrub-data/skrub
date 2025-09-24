@@ -191,7 +191,7 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # a main table will be augmented with values from the best match in the auxiliary table.
 # You can control how distant fuzzy-matches are allowed to be with the
 # ``max_dist`` parameter.
-
+#
 # Skrub also allows you to aggregate multiple tables according to various strategies.
 # You
 # can see other ways to join multiple tables in :ref:`user_guide_joining_dataframes`.
