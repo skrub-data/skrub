@@ -218,17 +218,6 @@ def _robust_hist(values, ax, color):
     # set max of y axis for include the text in the graphic
     ax.set_ylim(ax.get_ylim()[0], ax.get_ylim()[1] * 2.2)
 
-    # add the percentage of each bar on the top of the figure
-    ax_percentage = ax.twiny()
-    ax_percentage.set_xlim(ax.get_xlim())
-    ax_percentage.set_xticks(ticks=bins[:-1] + 0.5 * np.diff(bins))
-    ax_percentage.set_xticklabels(
-        labels=percentages,
-        color=_TEXT_COLOR_PLACEHOLDER,
-        fontsize=8,
-        rotation="vertical",
-    )
-
     if not n_out:
         return 0, 0
     width = bins[1] - bins[0]
@@ -259,7 +248,6 @@ def _robust_hist(values, ax, color):
         color=_RED,
     )
     ax.set_xlim(start, stop)
-    ax_percentage.set_xlim(ax.get_xlim())
     return n_low_outliers, n_high_outliers
 
 
