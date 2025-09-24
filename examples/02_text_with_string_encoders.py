@@ -96,7 +96,7 @@ def plot_gap_feature_importance(X_trans):
     topic_labels = [x.replace("text: ", "") for x in X_trans.columns]
     labels = x_samples.str[:50].values + "..."
 
-    # We clip large outliers to makes activations more visible.
+    # We clip large outliers to make activations more visible.
     X_trans = np.clip(X_trans, a_min=None, a_max=200)
 
     plt.figure(figsize=(10, 10), dpi=200)
@@ -228,7 +228,7 @@ plot_box_results(results)
 
 # %%
 # StringEncoder
-# ^^^^^^^^^^^^
+# ^^^^^^^^^^^^^
 # |TextEncoder| embeddings are very strong, but they are also quite expensive to
 # use. A simpler, faster alternative for encoding strings is the |StringEncoder|,
 # which works by first performing a tf-idf (computing vectors of rescaled word
@@ -237,7 +237,7 @@ plot_box_results(results)
 # case, 30.
 from skrub import StringEncoder
 
-string_encoder = StringEncoder(ngram_range=(3, 4), analyzer="char_wb")
+string_encoder = StringEncoder(ngram_range=(3, 4), analyzer="char_wb", random_state=0)
 
 string_encoder_pipe = make_pipeline(
     TableVectorizer(high_cardinality=string_encoder),
@@ -302,12 +302,13 @@ def plot_performance_tradeoff(results):
         ax.set_title("Prediction performance / training time trade-off")
 
     ax.annotate(
-        "",
-        xy=(1.5, 0.98),
-        xytext=(8.5, 0.90),
-        arrowprops=dict(arrowstyle="->", mutation_scale=15),
+        "Best time / \nperformance trade-off",
+        xy=(0.05, 0.95),
+        xycoords="axes fraction",
+        xytext=(0.2, 0.8),
+        textcoords="axes fraction",
+        arrowprops=dict(arrowstyle="->", lw=1.5, mutation_scale=15),
     )
-    ax.text(5.8, 0.86, "Best time / \nperformance trade-off")
     ax.legend(bbox_to_anchor=(1.02, 0.3))
     plt.show()
 
@@ -316,7 +317,7 @@ plot_performance_tradeoff(results)
 
 # %%
 # The black points represent the average time to fit and AUC for each vectorizer,
-# and the width of the bars represents one standard deviation
+# and the width of the bars represents one standard deviation.
 #
 # The green outlier dot on the right side of the plot corresponds to the first time
 # the Sentence Transformers model was downloaded and loaded into memory.

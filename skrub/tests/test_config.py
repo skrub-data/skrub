@@ -2,46 +2,48 @@ import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
-from skrub._expressions._evaluation import evaluate
+from skrub._config import _parse_env_bool
+from skrub._data_ops._evaluation import evaluate
 from skrub.datasets import fetch_employee_salaries
 
 
-def _use_tablereport(obj):
+def _use_table_report(obj):
     return "SkrubTableReport" in obj._repr_html_()
 
 
 def test_config_context():
     assert get_config() == {
-        "use_tablereport": False,
-        "use_tablereport_expr": True,
+        "use_table_report": False,
+        "use_table_report_data_ops": True,
         "max_plot_columns": 30,
         "max_association_columns": 30,
         "subsampling_seed": 0,
         "enable_subsampling": "default",
         "float_precision": 3,
+        "cardinality_threshold": 40,
     }
 
     # Not using as a context manager affects nothing
-    config_context(use_tablereport=True)
-    assert get_config()["use_tablereport"] is False
+    config_context(use_table_report=True)
+    assert get_config()["use_table_report"] is False
 
 
-def test_use_tablereport_expr():
+def test_use_table_report_data_ops():
     X = skrub.X(fetch_employee_salaries().X)
 
-    with config_context(use_tablereport_expr=True):
-        assert _use_tablereport(X)
-        with config_context(use_tablereport_expr=False):
-            assert not _use_tablereport(X)
+    with config_context(use_table_report_data_ops=True):
+        assert _use_table_report(X)
+        with config_context(use_table_report_data_ops=False):
+            assert not _use_table_report(X)
 
 
-def test_use_tablereport():
+def test_use_table_report():
     X = fetch_employee_salaries().X
-    assert not _use_tablereport(X)
-    with config_context(use_tablereport=True):
-        assert _use_tablereport(X)
-        with config_context(use_tablereport=False):
-            assert not _use_tablereport(X)
+    assert not _use_table_report(X)
+    with config_context(use_table_report=True):
+        assert _use_table_report(X)
+        with config_context(use_table_report=False):
+            assert not _use_table_report(X)
 
 
 def test_max_plot_columns():
@@ -57,35 +59,38 @@ def test_max_plot_columns():
         assert report.max_plot_columns == 1
 
         # Argument takes precedence over default configuration
-        report = TableReport(X, max_association_columns=12)
-        assert report.max_association_columns == 12
-        assert report.max_plot_columns == 1
+        report = TableReport(X, max_association_columns="all", max_plot_columns="all")
+        assert report.max_association_columns == "all"
+        assert report.max_plot_columns == "all"
 
     # Check that max_plot_columns can be set after patching the TableReport
     # repr_html.
-    with config_context(use_tablereport=True):
+    with config_context(use_table_report=True):
         with config_context(max_plot_columns=3):
             "Plotting was skipped" in X._repr_html_()
 
 
 def test_enable_subsampling():
     X = fetch_employee_salaries().X
-    expr = skrub.X(X)
+    dataop = skrub.X(X)
 
-    # Default: no subsampling during fit mode
-    assert expr.skb.subsample(n=3).skb.eval().shape[0] == X.shape[0]
+    # No subsampling by default with fit_transform mode
+    assert dataop.skb.subsample(n=3).skb.eval().shape[0] == X.shape[0]
+    assert dataop.skb.subsample(n=3).skb.eval(keep_subsampling=True).shape[0] == 3
 
-    # Force subsampling
+    # Force subsampling during fit_transform
     with config_context(enable_subsampling="force"):
-        assert expr.skb.subsample(n=3).skb.eval().shape[0] == 3
+        assert dataop.skb.subsample(n=3).skb.eval().shape[0] == 3
 
     # Default: subsampling during preview mode
-    assert evaluate(expr.skb.subsample(n=3), mode="preview").shape[0] == 3
+    assert evaluate(dataop.skb.subsample(n=3), mode="preview").shape[0] == 3
 
     with config_context(enable_subsampling="disable"):
-        assert evaluate(expr.skb.subsample(n=3), mode="preview").shape[0] == X.shape[0]
+        assert (
+            evaluate(dataop.skb.subsample(n=3), mode="preview").shape[0] == X.shape[0]
+        )
         with config_context(enable_subsampling="default"):
-            assert evaluate(expr.skb.subsample(n=3), mode="preview").shape[0] == 3
+            assert evaluate(dataop.skb.subsample(n=3), mode="preview").shape[0] == 3
 
 
 def test_float_precision():
@@ -111,13 +116,14 @@ def test_float_precision():
 @pytest.mark.parametrize(
     "params",
     [
-        {"use_tablereport": "hello"},
-        {"use_tablereport_expr": 1},
+        {"use_table_report": "hello"},
+        {"use_table_report_data_ops": 1},
         {"max_plot_columns": "hello"},
         {"max_association_columns": "hello"},
         {"subsampling_seed": -1},
         {"enable_subsampling": "no"},
         {"float_precision": -1},
+        {"cardinality_threshold": -1},
     ],
 )
 def test_error(params):
@@ -127,20 +133,37 @@ def test_error(params):
 
 def test_subsampling_seed():
     X = fetch_employee_salaries().X
-    expr = skrub.X(X)
+    data_op = skrub.X(X)
 
     with config_context(subsampling_seed=0):
         index = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
         index_identical = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
 
     with config_context(subsampling_seed=1):
         index_different = evaluate(
-            expr.skb.subsample(n=3, how="random"), mode="preview"
+            data_op.skb.subsample(n=3, how="random"), mode="preview"
         ).index.tolist()
 
     assert index == index_identical
     assert index != index_different
+
+
+def test_parsing(monkeypatch):
+    assert _parse_env_bool("MY_VAR", default=True)
+
+    with monkeypatch.context() as m:
+        m.setenv("MY_VAR", "False")
+        assert not _parse_env_bool("MY_VAR", default=True)
+
+    with monkeypatch.context() as m:
+        m.setenv("MY_VAR", "True")
+        assert _parse_env_bool("MY_VAR", default=False)
+
+    with pytest.raises(ValueError):
+        with monkeypatch.context() as m:
+            m.setenv("MY_VAR", "hello")
+            _parse_env_bool("MY_VAR", default=False)

@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
+from skrub._apply_to_cols import RejectColumn
 from skrub._clean_null_strings import CleanNullStrings, _trim_whitespace_only
-from skrub._on_each_column import RejectColumn
 
 
 def test_clean_null_strings(df_module):

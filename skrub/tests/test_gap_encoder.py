@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 
 from skrub import GapEncoder
 from skrub import _dataframe as sbd
-from skrub._on_each_column import RejectColumn
+from skrub._apply_to_cols import RejectColumn
 from skrub.datasets import fetch_midwest_survey
 from skrub.tests.utils import generate_data as _gen_data
 
@@ -145,7 +145,10 @@ def test_partial_fit(df_module, add_words, generate_data):
     X3 = generate_data(n_samples - 10, random_state=2)
     # Gap encoder with fit on one batch
     enc = GapEncoder(
-        random_state=42, batch_size=n_samples, max_iter=1, add_words=add_words
+        random_state=42,
+        batch_size=n_samples,
+        max_iter=1,
+        add_words=add_words,
     )
     X_enc = enc.fit_transform(X)
     # Gap encoder with partial fit
@@ -160,7 +163,7 @@ def test_partial_fit(df_module, add_words, generate_data):
         df_module.assert_frame_equal(X_enc, X_enc_partial2)
 
 
-def test_get_feature_names_out(generate_data):
+def test_get_feature_names_out(df_module, generate_data):
     n_samples = 70
     X = generate_data(n_samples, random_state=0)
     enc = GapEncoder(random_state=42, n_components=3)

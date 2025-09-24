@@ -6,8 +6,8 @@ from sklearn.preprocessing import SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._dispatch import dispatch
-from ._on_each_column import RejectColumn, SingleColumnTransformer
 from ._sklearn_compat import TransformerTags
 
 __all__ = ["DatetimeEncoder"]
@@ -257,7 +257,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> DatetimeEncoder().fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
+    skrub._apply_to_cols.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
 
     :class:`ToDatetime`: can be used for converting strings to datetimes.
 
@@ -434,7 +434,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         transformed : DataFrame
             The extracted features.
         """
-        check_is_fitted(self, "extracted_features_")
+        check_is_fitted(self, "all_outputs_")
         name = sbd.name(column)
 
         # Checking again which values are null if calling only transform
@@ -459,6 +459,8 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Setting the index back to that of the input column (pandas shenanigans)
         X_out = sbd.copy_index(column, sbd.make_dataframe_like(column, all_extracted))
         X_out = sbd.concat(X_out, *new_features, axis=1)
+
+        self.all_outputs_ = sbd.column_names(X_out)
 
         # Censoring all the null features
         X_out = sbd.where_row(X_out, not_nulls, null_mask)
@@ -491,6 +493,22 @@ class DatetimeEncoder(SingleColumnTransformer):
         tags = super().__sklearn_tags__()
         tags.transformer_tags = TransformerTags(preserves_dtype=[])
         return tags
+
+    def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return self.all_outputs_
 
 
 class _SplineEncoder(SingleColumnTransformer):
