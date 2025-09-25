@@ -369,3 +369,11 @@ def test_error_checking_periodic_encoder(a_datetime_col):
 def test_error_dispatch(func):
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         func(np.array([1]))
+
+
+def test_n_splines_default_value(df_module):
+    """Check that when `n_splines is None`, it defaults to the `period` value."""
+    period = 15
+    enc = _SplineEncoder(period=period)
+    result = enc.fit_transform(df_module.make_column("when", [20, 20, 20]))
+    assert sbd.column_names(result) == [f"when_spline_{i:02d}" for i in range(period)]
