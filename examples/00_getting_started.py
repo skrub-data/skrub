@@ -63,6 +63,7 @@ TableReport(employees_df)
 # Datatypes not being parsed correctly is a scenario that occurs commonly after
 # reading a table. We can use the |Cleaner| to address this.
 # In the next section, we show that this transformer does additional cleaning.
+
 # %%
 # Sanitizing data with the |Cleaner|
 # ----------------------------------
