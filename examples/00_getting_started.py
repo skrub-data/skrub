@@ -23,7 +23,6 @@ the features we present in this example and the following ones.
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
 """
 
-# %%
 
 # %%
 # Preliminary exploration with the |TableReport|
@@ -45,7 +44,7 @@ TableReport(employees_df)
 # %%
 # You can use the interactive display above to explore the dataset visually.
 #
-# It is also possible to tell skrub to replace the default pandas & polars
+# It is also possible to tell skrub to replace the default pandas and polars
 # displays with |TableReport| by modifying the global config with
 # |set_config|.
 #
@@ -193,8 +192,8 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # ``max_dist`` parameter.
 #
 # Skrub also allows you to aggregate multiple tables according to various strategies.
-# You
-# can see other ways to join multiple tables in :ref:`user_guide_joining_dataframes`.
+# You can see other ways to join multiple tables in
+# :ref:`user_guide_joining_dataframes`.
 
 # %%
 # Advanced use cases
