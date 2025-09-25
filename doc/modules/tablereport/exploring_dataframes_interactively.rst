@@ -45,14 +45,6 @@ be copied in a script.
 The TableReport can be used in a notebook cell, or it can be opened in a browser
 window using ``TableReport(df).open()``.
 
-It is also possible to export the |TableReport| in HTML or JSON format: see
-:ref:`user_guide_table_report_sharing` for more detail.
-
-Customizing and sharing the |TableReport|
-=========================================
-
-.. |set_config| replace:: :func:`~skrub.set_config`
-
 .. _user_guide_table_report_customize:
 
 Altering the Appearance of the |TableReport|
@@ -72,8 +64,6 @@ It is also possible to specify the floating point precision by setting the appro
 Parameters can be made permanent in a script by altering the configuration with
 |set_config|, or by setting the respective environment variables. Refer to
 :ref:`user_guide_configuration_parameters` for more detail.
-
-.. |TableReport| replace:: :class:`~skrub.TableReport`
 
 .. _user_guide_table_report_sharing:
 
