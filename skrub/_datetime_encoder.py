@@ -573,9 +573,8 @@ class _SplineEncoder(_BasePeriodicEncoder):
         self.degree = degree
 
     def _periodic_spline_transformer(self):
-        if self.n_splines is None:
-            self.n_splines = self.period
-        n_knots = self.n_splines + 1  # periodic and include_bias is True
+        n_splines = self.period if self.n_splines is None else self.n_splines
+        n_knots = n_splines + 1  # periodic and include_bias is True
         return SplineTransformer(
             degree=self.degree,
             n_knots=n_knots,
