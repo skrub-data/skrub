@@ -200,6 +200,6 @@ We can see the generated parameter grid with :func:`DataOps.skb.describe_param_g
 "- choose_from({'number': …, 'text': …}): ['number', 'text']\n"
 
 A more advanced application of this technique is used in
-:ref:`this tutorial on forecasting timeseries <https://skrub-data.org/EuroSciPy2025/content/notebooks/single_horizon_prediction.html>_`,
+`this tutorial on forecasting timeseries <https://skrub-data.org/EuroSciPy2025/content/notebooks/single_horizon_prediction.html>`_,
 along with the feature engineering required to prepare the columns, and the
 analysis of the results.
