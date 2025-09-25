@@ -58,13 +58,15 @@ TableReport(employees_df)
 #    .. _example reports: https://skrub-data.org/skrub-reports/examples/
 #    .. _demo: https://skrub-data.org/skrub-reports/
 #
-# From the Report above, we can see that there are datetime columns, so we use the
-# |Cleaner| to parse them.
-
+# From the report above, we see that there are columns with date and time stored
+# as `object` dtype (cf. "Stats" tab of the report).
+# Datatypes not being parsed correctly is a scenario that occurs commonly after
+# reading a table. We can use the |Cleaner| to address this.
+# In the next section, we show that this transformer does additional cleaning.
 # %%
 # Sanitizing data with the |Cleaner|
 # ----------------------------------
-# Here, we use the |Cleaner|, a transformer that cleans the
+# Here, we use the |Cleaner|, a transformer that sanitizing the
 # dataframe by parsing nulls and dates, and by dropping "uninformative" columns
 # (e.g., columns with too many nulls or that are constant).
 #
@@ -73,6 +75,10 @@ from skrub import Cleaner
 
 employees_df = Cleaner().fit_transform(employees_df)
 TableReport(employees_df)
+
+# %%
+# We can see from the "Stats" tab that now the column `date_first_hired` has been
+# parsed correctly as a Datetime.
 
 # %%
 # Easily building a strong baseline for tabular machine learning
@@ -89,6 +95,8 @@ from sklearn.model_selection import cross_validate
 from skrub import tabular_pipeline
 
 model = tabular_pipeline("regressor")
+model
+# %%
 results = cross_validate(model, employees_df, salaries)
 results["test_score"]
 
