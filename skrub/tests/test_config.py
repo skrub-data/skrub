@@ -15,6 +15,7 @@ def test_config_context():
     assert get_config() == {
         "use_table_report": False,
         "use_table_report_data_ops": True,
+        "table_report_verbosity": 1,
         "max_plot_columns": 30,
         "max_association_columns": 30,
         "subsampling_seed": 0,

@@ -1,5 +1,3 @@
-import warnings
-
 import sklearn
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
@@ -24,62 +22,6 @@ _TREE_ENSEMBLE_CLASSES = (
     ensemble.RandomForestClassifier,
     ensemble.RandomForestRegressor,
 )
-
-
-def tabular_learner(estimator, *, n_jobs=None):
-    """Get a simple machine-learning pipeline for tabular data.
-
-    .. deprecated:: 0.6.0
-        The functionality provided by this function is now implemented in
-        :func:`~skrub.tabular_pipeline`.
-
-    ``'regressor'``, ``'regression'``, ``'classifier'``, ``'classification'``, this
-    function creates a scikit-learn pipeline that extracts numeric features, imputes
-    missing values and scales the data if necessary, then applies the estimator.
-
-    .. note::
-       The heuristics used by the ``tabular_pipeline``
-       to define an appropriate preprocessing based on the ``estimator`` may change
-       in future releases.
-
-    .. versionchanged:: 0.6.0
-        The high cardinality encoder has been changed from
-        :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
-
-    Parameters
-    ----------
-    estimator : {"regressor", "regression", "classifier", "classification"} or sklearn.base.BaseEstimator
-        The estimator to use as the final step in the pipeline. Based on the type of
-        estimator, the previous preprocessing steps and their respective parameters are
-        chosen. The possible values are:
-
-        - ``'regressor'`` or ``'regression'``: a
-          :obj:`~sklearn.ensemble.HistGradientBoostingRegressor` is used as the final
-          step;
-        - ``'classifier'`` or ``'classification'``: a
-          :obj:`~sklearn.ensemble.HistGradientBoostingClassifier` is used as the final
-          step;
-        - a scikit-learn estimator: the provided estimator is used as the final step.
-
-    n_jobs : int, default=None
-        Number of jobs to run in parallel in the :obj:`TableVectorizer` step. ``None``
-        means 1 unless in a joblib ``parallel_backend`` context. ``-1`` means using all
-        processors.
-
-    Returns
-    -------
-    Pipeline
-        A scikit-learn :obj:`~sklearn.pipeline.Pipeline` chaining some preprocessing and
-        the provided ``estimator``.
-    """  # noqa: E501
-    warnings.warn(
-        (
-            "tabular_learner will be deprecated in the next release. "
-            "Equivalent functionality is available in skrub.tabular_pipeline."
-        ),
-        category=FutureWarning,
-    )
-    return tabular_pipeline(estimator, n_jobs=n_jobs)
 
 
 def tabular_pipeline(estimator, *, n_jobs=None):
