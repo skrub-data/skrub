@@ -1493,6 +1493,10 @@ class SkrubNamespace:
             What to do if the output directory already exists. If
             ``overwrite``, replace it, otherwise raise an exception.
 
+        title: str (default=None)
+            Title to display at the top of the report. If ``None``, no title will be
+            displayed.
+
         Returns
         -------
         dict
