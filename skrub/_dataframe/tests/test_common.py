@@ -104,6 +104,7 @@ def test_to_numpy(df_module, example_data_dict):
     assert_array_equal(array[2:], np.asarray(example_data_dict["str-col"])[2:])
 
 
+@polars_installed_without_pyarrow
 def test_to_pandas(df_module, pd_module):
     with pytest.raises(TypeError):
         ns.to_pandas(np.arange(3))
