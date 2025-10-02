@@ -410,24 +410,30 @@ def test_convert_float32(df_module):
     Test that the TableVectorizer converts float64 to float32
     when using the default parameters.
     """
-    X = _get_clean_dataframe()
+    data = {
+        "int": [15, 56, 63, 12, 44],
+        "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+        "str1": ["public", "private", "private", "private", "public"],
+        "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+        "cat1": ["yes", "yes", "no", "yes", "no"],
+        "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    }
+    X = df_module.make_dataframe(data)
     vectorizer = TableVectorizer()
     out = vectorizer.fit_transform(X)
-    assert sbd.dtype(out["float"]) == "float32"
-    assert sbd.dtype(out["int"]) == "float32"
+    assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
+    assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
 
     # default behavior: keep numeric type
     vectorizer = Cleaner()
     out = vectorizer.fit_transform(X)
     assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
     assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
-    assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
-    assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
     vectorizer = Cleaner(numeric_dtype="float32")
     out = vectorizer.fit_transform(X)
-    assert out.dtypes["float"] == "float32"
-    assert out.dtypes["int"] == "float32"
+    assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
+    assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
 
 
 def test_cleaner_invalid_numeric_dtype(df_module):
@@ -444,8 +450,30 @@ def test_cleaner_invalid_numeric_dtype(df_module):
         Cleaner(numeric_dtype="wrong").fit_transform(X)
 
 
-def test_auto_cast_missing_categories():
-    X = _get_dirty_dataframe("category")
+def test_auto_cast_missing_categories(df_module):
+    # X = _get_dirty_dataframe("category")
+    categorical_dtype = "category"
+    X = pd.DataFrame(
+        {
+            "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
+            "float": pd.Series([5.2, 2.4, 6.2, 10.45, np.nan], dtype="Float64"),
+            "str1": pd.Series(
+                ["public", np.nan, "private", "private", "public"],
+                dtype=categorical_dtype,
+            ),
+            "str2": pd.Series(
+                ["officer", "manager", None, "chef", "teacher"],
+                dtype=categorical_dtype,
+            ),
+            "cat1": pd.Series(
+                [np.nan, "yes", "no", "yes", "no"], dtype=categorical_dtype
+            ),
+            "cat2": pd.Series(
+                ["20K+", "40K+", "60K+", "30K+", np.nan], dtype=categorical_dtype
+            ),
+        }
+    )
+    # X = df_module.make_dataframe(data)
     vectorizer = passthrough_vectorizer()
     out = vectorizer.fit_transform(X)
 
@@ -467,7 +495,28 @@ def test_auto_cast_missing_categories():
     }
     assert dict(out.dtypes) == expected_type_per_column
 
-    X = _get_dirty_dataframe("category")
+    # X = _get_dirty_dataframe("category")
+    # X = df_module.make_dataframe(data)
+    X = pd.DataFrame(
+        {
+            "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
+            "float": pd.Series([5.2, 2.4, 6.2, 10.45, np.nan], dtype="Float64"),
+            "str1": pd.Series(
+                ["public", np.nan, "private", "private", "public"],
+                dtype=categorical_dtype,
+            ),
+            "str2": pd.Series(
+                ["officer", "manager", None, "chef", "teacher"],
+                dtype=categorical_dtype,
+            ),
+            "cat1": pd.Series(
+                [np.nan, "yes", "no", "yes", "no"], dtype=categorical_dtype
+            ),
+            "cat2": pd.Series(
+                ["20K+", "40K+", "60K+", "30K+", np.nan], dtype=categorical_dtype
+            ),
+        }
+    )
     X_train = X.head(3).reset_index(drop=True)
     X_test = X.tail(2).reset_index(drop=True)
     _ = vectorizer.fit_transform(X_train)
@@ -637,17 +686,17 @@ def test_handle_unknown_category(df_module):
 
     # +2 for binary columns which get one category dropped
     n_zeroes = sbd.n_unique(X["str2"]) + sbd.n_unique(X["cat2"]) + 2
-    
+
     colnames = sbd.column_names(X_trans_unknown)[2:n_zeroes]
     assert_array_equal(
         sbd.slice(X_trans_unknown[colnames], 0, 1).to_numpy().squeeze(),
-        np.zeros_like(X_trans_unknown)[0, 2:n_zeroes],  
+        np.zeros_like(X_trans_unknown)[0, 2:n_zeroes],
     )
     assert_raises(
         AssertionError,
         assert_array_equal,
         sbd.slice(X_trans_known, 0, 1).to_numpy().squeeze(),
-        np.zeros_like(X_trans_unknown)[0, :n_zeroes] 
+        np.zeros_like(X_trans_unknown)[0, :n_zeroes],
     )
 
 
@@ -687,11 +736,11 @@ def test_mixed_types(df_module):
     if parse_version(pd.__version__) < parse_version("2.0.0"):
         pytest.xfail("pandas is_string_dtype incorrect in old pandas")
     data = {
-            "int_str": ["1", "2", 3, "3", 5],
-            "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
-            "int_float": [1, 2, 3.0, 3, 5.0],
-            "bool_str": ["True", False, True, "False", "True"],
-        }
+        "int_str": ["1", "2", 3, "3", 5],
+        "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
+        "int_float": [1, 2, 3.0, 3, 5.0],
+        "bool_str": ["True", False, True, "False", "True"],
+    }
     X = df_module.make_dataframe(data)
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
