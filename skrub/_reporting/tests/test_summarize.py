@@ -9,12 +9,13 @@ from skrub import _column_associations
 from skrub import _dataframe as sbd
 from skrub._reporting import _sample_table
 from skrub._reporting._summarize import summarize_dataframe
+from skrub.conftest import polars_installed_without_pyarrow
 
 
 @pytest.mark.parametrize("order_by", [None, "date.utc", "value"])
 @pytest.mark.parametrize("with_plots", [False, True])
 @pytest.mark.parametrize("with_associations", [False, True])
-@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
+@polars_installed_without_pyarrow
 def test_summarize(
     monkeypatch, df_module, air_quality, order_by, with_plots, with_associations
 ):
@@ -115,7 +116,7 @@ def test_high_cardinality_column(pd_module):
     assert "10 most frequent" in summary["columns"][0]["value_counts_plot"]
 
 
-@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
+@polars_installed_without_pyarrow
 def test_all_null(df_module):
     df = df_module.make_dataframe(
         {
@@ -144,7 +145,7 @@ def small_df_summary(df_module):
     return make_summary
 
 
-@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
+@polars_installed_without_pyarrow
 def test_small_df(small_df_summary):
     summary = small_df_summary(11)
     thead, first_slice, ellipsis, last_slice = summary["sample_table"]["parts"]
@@ -259,7 +260,7 @@ def test_duplicate_columns(pd_module):
     assert cols[1]["mean"] == 3.5
 
 
-@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
+@polars_installed_without_pyarrow
 def test_high_cardinality_columns(df_module):
     df = df_module.make_dataframe(
         {

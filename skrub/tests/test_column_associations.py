@@ -5,9 +5,10 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub import column_associations
+from skrub.conftest import polars_installed_without_pyarrow
 
 
-@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
+@polars_installed_without_pyarrow
 def test_column_associations(df_module):
     x = (np.ones((7, 3)) * np.arange(3)).ravel()
     y = 2 - 3 * x
@@ -27,7 +28,7 @@ def test_column_associations(df_module):
     )
 
 
-@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
+@polars_installed_without_pyarrow
 def test_infinite(df_module):
     # non-regression test for https://github.com/skrub-data/skrub/issues/1133
     # (column associations would raise an exception on low-cardinality float

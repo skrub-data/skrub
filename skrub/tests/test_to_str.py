@@ -6,6 +6,7 @@ from skrub import _dataframe as sbd
 from skrub._apply_to_cols import RejectColumn
 from skrub._to_datetime import ToDatetime
 from skrub._to_str import ToStr
+from skrub.conftest import polars_installed_without_pyarrow
 
 
 def test_to_str(df_module):
@@ -26,7 +27,7 @@ def test_to_str(df_module):
     df_module.assert_column_equal(sbd.is_null(out), sbd.is_null(expected))
 
 
-@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
+@polars_installed_without_pyarrow
 def test_rejected_columns(df_module):
     columns = [
         ToDatetime().fit_transform(df_module.make_column("", ["2020-02-02"])),
