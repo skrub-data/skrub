@@ -44,7 +44,7 @@ def test_not_implemented():
         dop = [skrub.var("a")] * n_params
         with pytest.raises(
             TypeError,
-            match=r"Expected a Pandas or Polars DataFrame, but got a skrub DataOp",
+            match=r"Expected a Pandas or Polars .*, but got a skrub DataOp",
         ):
             func(*dop)
 
