@@ -1,7 +1,6 @@
 from . import _dataframe as sbd
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
-from ._dataframe._common import _raise_dispatch_unregistered_type as _sbd_raise
-from ._dispatch import dispatch
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 
 __all__ = ["CleanNullStrings"]
 
@@ -32,7 +31,7 @@ STR_NA_VALUES = [
 
 @dispatch
 def _trim_whitespace_only(col):
-    _sbd_raise(col, kind="Series")
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_trim_whitespace_only.specialize("pandas", argument_type="Column")

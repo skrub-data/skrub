@@ -16,8 +16,7 @@ from sklearn.utils.validation import check_is_fitted
 from skrub import _dataframe as sbd
 from skrub import _join_utils, _utils
 from skrub import selectors as s
-from skrub._dataframe._common import _raise_dispatch_unregistered_type as _sbd_raise
-from skrub._dispatch import dispatch
+from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
 from ._check_input import CheckInputDataFrame
 
@@ -91,7 +90,7 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
 
 @dispatch
 def perform_groupby(table, key, cols_to_agg, operations):
-    _sbd_raise(table, kind="DataFrame")
+    raise_dispatch_unregistered_type(table, kind="DataFrame")
 
 
 @perform_groupby.specialize("pandas", argument_type="DataFrame")
