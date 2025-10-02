@@ -1,5 +1,6 @@
 import enum
 import os
+import shutil
 import time
 import traceback
 
@@ -69,18 +70,14 @@ def prune_folder(path: str):
     if not os.path.exists(path):
         return
 
-    files = sorted(
-        (
-            (f, os.path.getmtime(os.path.join(path, f)))
-            for f in os.listdir(path)
-            if os.path.isfile(os.path.join(path, f))
-        ),
-        key=lambda f: f[1],
-        reverse=True,
+    folders = (
+        (f, os.path.getmtime(os.path.join(path, f)))
+        for f in os.listdir(path)
+        if os.path.isdir(os.path.join(path, f))
     )
-    for f in files:
+    for dir in folders:
         try:
-            if f[1] < time_threshold and f[0].startswith("full_data_op_report_"):
-                os.remove(os.path.join(path, f[0]))
+            if dir[1] < time_threshold and dir[0].startswith("full_data_op_report_"):
+                shutil.rmtree(os.path.join(path, dir[0]))
         except Exception:
             pass
