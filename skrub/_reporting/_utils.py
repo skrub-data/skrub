@@ -7,7 +7,7 @@ import unicodedata
 import numpy as np
 
 from skrub import _dataframe as sbd
-from skrub._dataframe._common import _raise as _sbd_raise
+from skrub._dataframe._common import _raise_if_unregistered_type as _sbd_raise
 from skrub._dispatch import dispatch
 
 

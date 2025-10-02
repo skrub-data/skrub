@@ -65,7 +65,7 @@ Table Cell
 import pandas as pd
 
 from .. import _dataframe as sbd
-from .._dataframe._common import _raise as _sbd_raise
+from .._dataframe._common import _raise_if_unregistered_type as _sbd_raise
 from .._dispatch import dispatch
 
 __all__ = ["make_table"]

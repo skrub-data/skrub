@@ -1,6 +1,6 @@
 from . import _dataframe as sbd
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
-from ._dataframe._common import _raise as _sbd_raise
+from ._dataframe._common import _raise_if_unregistered_type as _sbd_raise
 from ._dispatch import dispatch
 
 __all__ = ["CleanNullStrings"]
