@@ -3,7 +3,7 @@ import sklearn
 from sklearn import ensemble
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.utils.fixes import parse_version
 
 from skrub import (
@@ -12,6 +12,7 @@ from skrub import (
     ToCategorical,
     tabular_learner,
     tabular_pipeline,
+    SquashingScaler
 )
 
 
@@ -56,7 +57,7 @@ def test_linear_learner():
     assert isinstance(tv.high_cardinality, StringEncoder)
     assert isinstance(tv.low_cardinality, OneHotEncoder)
     assert isinstance(imputer, SimpleImputer)
-    assert isinstance(scaler, StandardScaler)
+    assert isinstance(scaler, SquashingScaler)
     assert tv.datetime.periodic_encoding == "spline"
 
 
