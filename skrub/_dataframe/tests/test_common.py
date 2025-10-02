@@ -725,6 +725,7 @@ def test_mean(df_module):
     )
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_corr(df_module):
     df = df_module.example_dataframe
 
