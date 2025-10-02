@@ -267,3 +267,10 @@ def test_high_cardinality_columns(df_module):
     cols = summary["columns"]
     assert not cols[0]["is_high_cardinality"]
     assert cols[1]["is_high_cardinality"]
+
+
+def test_bool_column_mean(df_module):
+    df = df_module.make_dataframe({"a": [True, False, True, True, False, True]})
+    summary = summarize_dataframe(df)
+    cols = summary["columns"]
+    assert "mean" in cols[0]
