@@ -271,7 +271,7 @@ def _to_pandas_polars(obj):
 
 
 @to_pandas.specialize("polars", argument_type="Column")
-def _to_pandas_polars(obj):
+def _to_pandas_polars_column(obj):
     """Convert a polars Series to a pandas Series, through numpy when pyarrow is not
     installed."""
     try:
