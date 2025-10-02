@@ -11,6 +11,12 @@ Ongoing Development
 
 New features
 ------------
+- :meth:`DataOp.skb.get_vars` allows inspecting all the variables, or all the
+  named dataops, in a :class:`DataOp`. This lets us easily know what keys should
+  be present in the ``environment`` dictionary we pass to
+  :meth:`DataOp.skb.eval` or to :meth:`SkrubLearner.fit`,
+  :meth:`SkrubLearner.predict`, etc. .
+  :pr:`1646` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
