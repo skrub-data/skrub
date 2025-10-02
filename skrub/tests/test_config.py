@@ -143,7 +143,7 @@ def test_error(params):
         set_config(**params)
 
 
-def test_subsampling_seed():
+def test_subsampling_seed(simple_df):
     data_op = skrub.X(simple_df)
 
     with config_context(subsampling_seed=0):
