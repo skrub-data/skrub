@@ -1389,6 +1389,8 @@ def _select_rows_pandas(obj, idx):
 def _select_rows_polars(obj, idx):
     idx = list(idx)
     if not idx:
+        # polars changed from interpreting indexing with an empty list as list
+        # of columns to list of row indices at some point.
         return obj.head(0)
     return obj[idx]
 
