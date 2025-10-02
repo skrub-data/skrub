@@ -95,6 +95,21 @@ try:
 except ImportError:
     _POLARS_INSTALLED = False
 
+if _POLARS_INSTALLED:
+    try:
+        import pyarrow  # noqa: F401
+
+        _polars_installed_without_pyarrow = False
+    except ImportError:
+        _polars_installed_without_pyarrow = True
+else:
+    _polars_installed_without_pyarrow = False
+
+polars_installed_without_pyarrow = pytest.mark.skipif(
+    _polars_installed_without_pyarrow=False,
+    reason="When polars is installed, requires pyarrow to be installed too",
+)
+
 
 def _pl_from_dict(data):
     import polars as pl
