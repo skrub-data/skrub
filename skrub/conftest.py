@@ -95,6 +95,13 @@ try:
 except ImportError:
     _POLARS_INSTALLED = False
 
+try:
+    import pyarrow  # noqa: F401
+
+    _PYARROW_INSTALLED = True
+except ImportError:
+    _PYARROW_INSTALLED = False
+
 
 def _pl_from_dict(data):
     import polars as pl
