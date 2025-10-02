@@ -15,6 +15,12 @@ New features
   estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
   etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
 
+Changes
+-------
+
+Bugfixes
+--------
+
 Release 0.6.2
 =============
 
