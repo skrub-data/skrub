@@ -221,7 +221,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('squashingScaler', SquashingScaler()),
+                    ('squashingscaler', SquashingScaler()),
                     ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data that is
@@ -241,7 +241,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('squashingScaler', SquashingScaler()),
+                    ('squashingscaler', SquashingScaler()),
                     ('logisticregression', LogisticRegression())])
 
     For a :obj:`~sklearn.linear_model.LogisticRegression`, we get:
