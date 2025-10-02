@@ -109,6 +109,7 @@ def test_nat(df_module):
     TableReport(df).html()
 
 
+@polars_installed_without_pyarrow
 def test_bool_column_mean(df_module):
     df = df_module.make_dataframe({"a": [True, False, True, True, False, True]})
     html = TableReport(df).html()
