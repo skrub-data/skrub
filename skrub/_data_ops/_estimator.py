@@ -4,9 +4,10 @@ import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
-from sklearn.model_selection import check_cv
+from sklearn.model_selection import KFold, check_cv
 from sklearn.utils.validation import check_is_fitted
 
+from .. import _dataframe as sbd
 from .. import _join_utils
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, check_subsampled_X_y_shape
@@ -26,7 +27,7 @@ from ._evaluation import (
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
-from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
+from ._utils import KFOLD_5, X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -676,12 +677,20 @@ def train_test_split(
     return result
 
 
-def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=5):
+def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=KFOLD_5):
+    """Yield splits of an environment into training an testing environments.
+
+    This functionality is exposed to users through the
+    ``DataOp.skb.iter_cv_splits()`` method. See the corresponding docstring for
+    details and examples.
+    """
+    if cv is KFOLD_5:
+        cv = KFold(5)
     cv = check_cv(cv)
     environment = env_with_subsampling(data_op, environment, keep_subsampling)
     X, y = _compute_Xy(data_op, environment)
     for train_idx, test_idx in cv.split(X, y):
-        X_train, X_test = X[train_idx], X[test_idx]
+        X_train, X_test = sbd.select_rows(X, train_idx), sbd.select_rows(X, test_idx)
         train_env = {**environment, X_NAME: X_train}
         test_env = {**environment, X_NAME: X_test}
         split_info = {
@@ -691,7 +700,9 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=5):
             "X_test": X_test,
         }
         if y is not None:
-            y_train, y_test = y[train_idx], y[test_idx]
+            y_train, y_test = sbd.select_rows(y, train_idx), sbd.select_rows(
+                y, test_idx
+            )
             train_env[Y_NAME] = y_train
             test_env[Y_NAME] = y_test
             split_info["y_train"] = y_train

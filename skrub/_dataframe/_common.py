@@ -103,6 +103,7 @@ __all__ = [
     "sample",
     "head",
     "slice",
+    "select_rows",
     "replace",
     "with_columns",
     "abs",
@@ -1372,6 +1373,21 @@ def _slice_pandas(obj, *start_stop):
 def _slice_polars(obj, *start_stop):
     start, stop, _ = builtins.slice(*start_stop).indices(shape(obj)[0])
     return obj.slice(start, stop - start)
+
+
+@dispatch
+def select_rows(obj, idx):
+    return np.asarray(obj)[list(idx)]
+
+
+@select_rows.specialize("pandas")
+def _select_rows_pandas(obj, idx):
+    return obj.iloc[list(idx)]
+
+
+@select_rows.specialize("polars")
+def _select_rows_polars(obj, idx):
+    return obj[list(idx)]
 
 
 @dispatch

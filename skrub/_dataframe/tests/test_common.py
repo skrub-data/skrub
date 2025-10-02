@@ -34,6 +34,7 @@ def test_not_implemented():
         "copy_index",
         "index",
         "with_columns",
+        "select_rows",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)
@@ -781,6 +782,23 @@ def test_slice(df_module, obj, s):
     out = ns.to_numpy(out)
     expected = ns.to_numpy(df_module.example_column)[slice(*s)]
     assert_array_equal(out, expected)
+
+
+@pytest.mark.parametrize("obj", ["column", "dataframe"])
+@pytest.mark.parametrize("idx", [[], [1], [2, 1]])
+def test_select_rows(df_module, obj, idx):
+    out = ns.select_rows(getattr(df_module, f"example_{obj}"), idx)
+    if obj == "dataframe":
+        out = ns.col(out, "float-col")
+    out = ns.to_numpy(out)
+    expected = ns.to_numpy(df_module.example_column)[idx]
+    assert_array_equal(out, expected)
+
+
+def test_select_rows_array():
+    a = np.arange(6).reshape((3, 2))
+    assert_array_equal(ns.select_rows(a, (2, 1)), a[[2, 1], :])
+    assert_array_equal(ns.select_rows(a[0], (1, 0)), a[0, [1, 0]])
 
 
 def test_is_null(df_module):
