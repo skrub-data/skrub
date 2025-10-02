@@ -11,6 +11,15 @@ Ongoing Development
 
 New features
 ------------
+- :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
+  estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
+  etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Release 0.6.2
+=============
+
+New features
+------------
 - The :meth:`DataOp.skb.full_report` now displays the time each node took to
   evaluate. :pr:`1596` by :user:`Jérôme Dockès <jeromedockes>`.
 
