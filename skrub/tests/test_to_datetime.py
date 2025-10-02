@@ -44,6 +44,7 @@ def datetime_col(df_module):
     return sbd.col(df_module.example_dataframe, "datetime-col")
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 @pytest.mark.parametrize(
     "format",
     [
@@ -85,6 +86,7 @@ def test_datetime_to_datetime(datetime_col):
     assert encoder.format_ is None
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_rejected_columns(df_module):
     with pytest.raises(ValueError, match=".*does not contain strings"):
         ToDatetime().fit_transform(sbd.col(df_module.example_dataframe, "float-col"))
@@ -96,6 +98,7 @@ def test_rejected_columns(df_module):
         )
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_transform_failures(datetime_col, df_module):
     encoder = ToDatetime().fit(strftime(datetime_col, ISO))
     test_col = df_module.make_column(
@@ -106,6 +109,7 @@ def test_transform_failures(datetime_col, df_module):
     assert sbd.to_list(sbd.fill_nulls(strftime(transformed, ISO), "????")) == expected
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_mixed_offsets(df_module):
     s = df_module.make_column(
         "when", ["2020-01-02T08:00:01+02:00", "2020-01-02T08:00:01+04:00"]

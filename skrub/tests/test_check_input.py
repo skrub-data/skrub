@@ -38,6 +38,7 @@ def test_input_is_an_array():
         check.fit_transform(np.ones((2,)))
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_wrong_dataframe_library_in_transform():
     pl = pytest.importorskip("polars")
     df = pl.DataFrame({"a": [0, 1], "b": [10, 20]})

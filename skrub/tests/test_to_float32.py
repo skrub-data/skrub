@@ -30,6 +30,7 @@ def test_to_float_32(values, df_module):
     assert is_float32(df_module, out)
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_rejected_columns(df_module):
     columns = [
         df_module.make_column("c", ["1", "2", "hello"]),

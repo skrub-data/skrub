@@ -237,6 +237,7 @@ def test_numerical_column(df_module):
     assert ns.shape(fj_num3) == (2, n_cols)
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_datetime_column(df_module):
     """
     Testing that ``fuzzy_join`` works with datetime columns.
@@ -292,6 +293,7 @@ def test_datetime_column(df_module):
     assert ns.shape(fj_time3) == (2, n_cols)
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_mixed_joins(df_module):
     """
     Test fuzzy joining on mixed and multiple column types.

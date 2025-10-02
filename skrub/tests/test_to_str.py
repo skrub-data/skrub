@@ -26,6 +26,7 @@ def test_to_str(df_module):
     df_module.assert_column_equal(sbd.is_null(out), sbd.is_null(expected))
 
 
+@pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
 def test_rejected_columns(df_module):
     columns = [
         ToDatetime().fit_transform(df_module.make_column("", ["2020-02-02"])),
