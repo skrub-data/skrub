@@ -44,10 +44,11 @@ def test_config_context():
 
 
 def test_use_table_report_data_ops(simple_df):
+    X = skrub.X(simple_df)
     with config_context(use_table_report_data_ops=True):
-        assert _use_table_report(simple_df)
+        assert _use_table_report(X)
         with config_context(use_table_report_data_ops=False):
-            assert not _use_table_report(simple_df)
+            assert not _use_table_report(X)
 
 
 def test_use_table_report(simple_df):
