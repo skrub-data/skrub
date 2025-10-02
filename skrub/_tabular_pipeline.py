@@ -47,10 +47,6 @@ def tabular_learner(estimator, *, n_jobs=None):
         The high cardinality encoder has been changed from
         :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
 
-    .. versionchanged:: 0.7.0
-        The :class:`~skrub.SquashingScaler` is now used instead of
-        :class:`~sklearn.preprocessing.StandardScaler` for centering and scaling
-        numerical features.
 
     Parameters
     ----------
@@ -104,6 +100,11 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     .. versionchanged:: 0.6.0
         The high cardinality encoder has been changed from
         :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
+
+    .. versionchanged:: 0.7.0
+        The :class:`~skrub.SquashingScaler` with `max_absolute_value=10` is now used instead of
+        :class:`~sklearn.preprocessing.StandardScaler` for centering and scaling
+        numerical features.
 
     Parameters
     ----------
@@ -221,7 +222,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('squashingscaler', SquashingScaler()),
+                    ('squashingscaler', SquashingScaler(max_absolute_value=10)),
                     ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data that is
@@ -241,7 +242,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('squashingscaler', SquashingScaler()),
+                    ('squashingscaler', SquashingScaler(max_absolute_value=10)),
                     ('logisticregression', LogisticRegression())])
 
     For a :obj:`~sklearn.linear_model.LogisticRegression`, we get:
@@ -337,6 +338,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     if not get_tags(estimator).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
     if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
-        steps.append(SquashingScaler())
+        steps.append(SquashingScaler(max_absolute_value=10))
     steps.append(estimator)
     return make_pipeline(*steps)
