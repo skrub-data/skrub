@@ -1,14 +1,29 @@
+import pandas as pd
 import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
 from skrub._config import _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
-from skrub.datasets import fetch_employee_salaries
 
 
 def _use_table_report(obj):
     return "SkrubTableReport" in obj._repr_html_()
+
+
+@pytest.fixture
+def simple_df():
+    return pd.DataFrame(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "a", "b", "c"],
+        }
+    )
+
+
+@pytest.fixture
+def simple_series():
+    return pd.Series([1, 2, 3, 4, 5], name="A")
 
 
 def test_config_context():
@@ -28,38 +43,36 @@ def test_config_context():
     assert get_config()["use_table_report"] is False
 
 
-def test_use_table_report_data_ops():
-    X = skrub.X(fetch_employee_salaries().X)
-
+def test_use_table_report_data_ops(simple_df):
     with config_context(use_table_report_data_ops=True):
-        assert _use_table_report(X)
+        assert _use_table_report(simple_df)
         with config_context(use_table_report_data_ops=False):
-            assert not _use_table_report(X)
+            assert not _use_table_report(simple_df)
 
 
-def test_use_table_report():
-    X = fetch_employee_salaries().X
-    assert not _use_table_report(X)
+def test_use_table_report(simple_df):
+    assert not _use_table_report(simple_df)
     with config_context(use_table_report=True):
-        assert _use_table_report(X)
+        assert _use_table_report(simple_df)
         with config_context(use_table_report=False):
-            assert not _use_table_report(X)
+            assert not _use_table_report(simple_df)
 
 
-def test_max_plot_columns():
-    X = fetch_employee_salaries().X
-    report = TableReport(X)
+def test_max_plot_columns(simple_df):
+    report = TableReport(simple_df)
     assert report.max_association_columns == 30
     assert report.max_plot_columns == 30
 
     # Set default to 1
     with config_context(max_plot_columns=1):
-        report = TableReport(X)
+        report = TableReport(simple_df)
         assert report.max_association_columns == 30
         assert report.max_plot_columns == 1
 
         # Argument takes precedence over default configuration
-        report = TableReport(X, max_association_columns="all", max_plot_columns="all")
+        report = TableReport(
+            simple_df, max_association_columns="all", max_plot_columns="all"
+        )
         assert report.max_association_columns == "all"
         assert report.max_plot_columns == "all"
 
@@ -67,15 +80,14 @@ def test_max_plot_columns():
     # repr_html.
     with config_context(use_table_report=True):
         with config_context(max_plot_columns=3):
-            "Plotting was skipped" in X._repr_html_()
+            "Plotting was skipped" in simple_df._repr_html_()
 
 
-def test_enable_subsampling():
-    X = fetch_employee_salaries().X
-    dataop = skrub.X(X)
+def test_enable_subsampling(simple_df):
+    dataop = skrub.X(simple_df)
 
     # No subsampling by default with fit_transform mode
-    assert dataop.skb.subsample(n=3).skb.eval().shape[0] == X.shape[0]
+    assert dataop.skb.subsample(n=3).skb.eval().shape[0] == simple_df.shape[0]
     assert dataop.skb.subsample(n=3).skb.eval(keep_subsampling=True).shape[0] == 3
 
     # Force subsampling during fit_transform
@@ -87,24 +99,23 @@ def test_enable_subsampling():
 
     with config_context(enable_subsampling="disable"):
         assert (
-            evaluate(dataop.skb.subsample(n=3), mode="preview").shape[0] == X.shape[0]
+            evaluate(dataop.skb.subsample(n=3), mode="preview").shape[0]
+            == simple_df.shape[0]
         )
         with config_context(enable_subsampling="default"):
             assert evaluate(dataop.skb.subsample(n=3), mode="preview").shape[0] == 3
 
 
-def test_float_precision():
-    y = fetch_employee_salaries().y
-
+def test_float_precision(simple_series):
     # Default config: float_precision set to 3
-    report = TableReport(y)
+    report = TableReport(simple_series)
     mean = f"{report._summary['columns'][0]['mean']:#.3g}"
     html = report._repr_html_()
     assert mean in html
 
     # Float precision set to 2
     with config_context(float_precision=2):
-        report_2 = TableReport(y)
+        report_2 = TableReport(simple_series)
         mean_2 = f"{report_2._summary['columns'][0]['mean']:#.2g}"
         html_2 = report_2._repr_html_()
         assert mean_2 in html_2
@@ -132,8 +143,7 @@ def test_error(params):
 
 
 def test_subsampling_seed():
-    X = fetch_employee_salaries().X
-    data_op = skrub.X(X)
+    data_op = skrub.X(simple_df)
 
     with config_context(subsampling_seed=0):
         index = evaluate(
