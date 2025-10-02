@@ -90,7 +90,7 @@ class SingleColumnTransformer(BaseEstimator):
         y : column or dataframe
             Prediction targets.
 
-        kwargs :
+        **kwargs
             Extra named arguments are passed to ``self.fit_transform()``.
 
         Returns
@@ -455,7 +455,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         y : Pandas or Polars Series or DataFrame, default=None
             The target data.
 
-        kwargs :
+        **kwargs
             Extra named arguments are passed to the ``fit_transform()`` method of
             the individual column transformers (the clones of ``self.transformer``).
 
@@ -478,7 +478,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         y : Pandas or Polars Series or DataFrame, default=None
             The target data.
 
-        kwargs :
+        **kwargs
             Extra named arguments are passed to the ``fit_transform()`` method of
             the individual column transformers (the clones of ``self.transformer``).
 
@@ -513,7 +513,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         X : Pandas or Polars DataFrame
             The column to transform.
 
-        kwargs :
+        **kwargs
             Extra named arguments are passed to the ``transform()`` method of
             the fitted individual column transformers (the values of
             ``self.transformers_``, which are clones of ``self.transformer``).

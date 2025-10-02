@@ -148,7 +148,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         y : Pandas or Polars Series or DataFrame, default=None
             The target data.
 
-        kwargs :
+        **kwargs
             Extra named arguments are passed to the ``fit_transform()`` method
             of ``self.transformer``.
 
@@ -171,7 +171,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         y : Pandas or Polars Series or DataFrame, default=None
             The target data.
 
-        kwargs :
+        **kwargs
             Extra named arguments are passed to the ``fit_transform()`` method
             of ``self.transformer``.
 
@@ -228,7 +228,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         X : Pandas or Polars DataFrame
             The column to transform.
 
-        kwargs :
+        **kwargs
             Extra named arguments are passed to the ``transform()`` method
             of ``self.transformer_``.
 
