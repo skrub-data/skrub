@@ -1309,6 +1309,11 @@ class SkrubNamespace:
         was defined, the time it took to run, and more) and a display of the
         intermediate result (or error).
 
+        By default the report is stored in the skrub data folder.
+        TODO complete the documentation!! write a note for the rest.
+
+        note: reports older then one week are deleted in the skrub data folder
+
         Parameters
         ----------
         environment : dict or None (default=None)
