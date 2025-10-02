@@ -14,6 +14,8 @@ New features
 - :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
   estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
   etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
+- TableReport now displays the mean statistic for boolean columns.
+  :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
 
 Changes
 -------
