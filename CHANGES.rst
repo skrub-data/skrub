@@ -11,6 +11,10 @@ Ongoing Development
 
 New features
 ------------
+- :meth:`DataOp.skb.iter_cv_splits` iterates over the training and testing
+  environments produced from a CV splitter -- similar to
+  :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
+  :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
