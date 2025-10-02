@@ -5,7 +5,7 @@ from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils.fixes import parse_version
 
 from ._datetime_encoder import DatetimeEncoder
@@ -13,6 +13,7 @@ from ._sklearn_compat import get_tags
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
+from ._squashing_scaler import SquashingScaler
 
 _HGBT_CLASSES = (
     ensemble.HistGradientBoostingClassifier,
@@ -136,7 +137,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     - An optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values by their
       mean and adds binary columns that indicate which values were missing. This step is
       only added if the ``estimator`` cannot handle missing values itself.
-    - An optional :obj:`~sklearn.preprocessing.StandardScaler` centers and rescales the
+    - An optional :obj:`~skrub.SquashingScaler` centers and rescales the
       data. This step is not added (because it is unnecessary) when the ``estimator`` is
       a tree ensemble such as random forest or gradient boosting.
     - The last step is the provided ``estimator``.
@@ -215,7 +216,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('standardscaler', StandardScaler()),
+                    ('squashingScaler', SquashingScaler()),
                     ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data that is
@@ -235,7 +236,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('standardscaler', StandardScaler()),
+                    ('squashingScaler', SquashingScaler()),
                     ('logisticregression', LogisticRegression())])
 
     For a :obj:`~sklearn.linear_model.LogisticRegression`, we get:
@@ -247,7 +248,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     - A :obj:`~sklearn.impute.SimpleImputer`, as the
       :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing values.
 
-    - A :obj:`~sklearn.preprocessing.StandardScaler` for centering and standard scaling
+    - A :obj:`~skrub.SquashingScaler` for centering and standard scaling
       numerical features.
 
     On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
@@ -331,6 +332,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     if not get_tags(estimator).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
     if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
-        steps.append(StandardScaler())
+        steps.append(SquashingScaler())
     steps.append(estimator)
     return make_pipeline(*steps)
