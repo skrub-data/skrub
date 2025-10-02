@@ -1,5 +1,5 @@
 from .. import _dataframe as sbd
-from .._dataframe._common import _raise as _sbd_raise
+from .._dataframe._common import _raise_dispatch_unregistered_type as _sbd_raise
 from .._dispatch import dispatch
 from .._utils import repr_args
 
@@ -160,7 +160,7 @@ def make_selector(obj):
 
 @dispatch
 def _select_col_names(df, col_names):
-    raise _sbd_raise(df, kind="DataFrame")
+    _sbd_raise(df, kind="DataFrame")
 
 
 @_select_col_names.specialize("pandas", argument_type="DataFrame")
