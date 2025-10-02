@@ -7,12 +7,12 @@ from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.utils.fixes import parse_version
 
 from skrub import (
+    SquashingScaler,
     StringEncoder,
     TableVectorizer,
     ToCategorical,
     tabular_learner,
     tabular_pipeline,
-    SquashingScaler
 )
 
 

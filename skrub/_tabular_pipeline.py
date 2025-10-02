@@ -10,10 +10,10 @@ from sklearn.utils.fixes import parse_version
 
 from ._datetime_encoder import DatetimeEncoder
 from ._sklearn_compat import get_tags
+from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
-from ._squashing_scaler import SquashingScaler
 
 _HGBT_CLASSES = (
     ensemble.HistGradientBoostingClassifier,
@@ -46,6 +46,11 @@ def tabular_learner(estimator, *, n_jobs=None):
     .. versionchanged:: 0.6.0
         The high cardinality encoder has been changed from
         :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
+
+    .. versionchanged:: 0.7.0
+        The :class:`~skrub.SquashingScaler` is now used instead of
+        :class:`~sklearn.preprocessing.StandardScaler` for centering and scaling
+        numerical features.
 
     Parameters
     ----------
