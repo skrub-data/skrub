@@ -19,7 +19,13 @@ from ._data_ops import (
     check_name,
     deferred,
 )
-from ._estimator import ParamSearch, SkrubLearner, cross_validate, train_test_split
+from ._estimator import (
+    ParamSearch,
+    SkrubLearner,
+    cross_validate,
+    iter_cv_splits,
+    train_test_split,
+)
 from ._evaluation import (
     choices,
     clone,
@@ -1582,6 +1588,13 @@ class SkrubNamespace:
             keep_subsampling=keep_subsampling,
             split_func=split_func,
             **split_func_kwargs,
+        )
+
+    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=5):
+        if environment is None:
+            environment = self.get_data()
+        yield from iter_cv_splits(
+            self._data_op, environment, keep_subsampling=keep_subsampling, cv=cv
         )
 
     def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):

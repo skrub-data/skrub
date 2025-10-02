@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import check_cv
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
@@ -673,6 +674,29 @@ def train_test_split(
         result["y_train"] = y_train
         result["y_test"] = y_test
     return result
+
+
+def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=5):
+    cv = check_cv(cv)
+    environment = env_with_subsampling(data_op, environment, keep_subsampling)
+    X, y = _compute_Xy(data_op, environment)
+    for train_idx, test_idx in cv.split(X, y):
+        X_train, X_test = X[train_idx], X[test_idx]
+        train_env = {**environment, X_NAME: X_train}
+        test_env = {**environment, X_NAME: X_test}
+        split_info = {
+            "train": train_env,
+            "test": test_env,
+            "X_train": X_train,
+            "X_test": X_test,
+        }
+        if y is not None:
+            y_train, y_test = y[train_idx], y[test_idx]
+            train_env[Y_NAME] = y_train
+            test_env[Y_NAME] = y_test
+            split_info["y_train"] = y_train
+            split_info["y_test"] = y_test
+        yield split_info
 
 
 class ParamSearch(_CloudPickleDataOp, BaseEstimator):
