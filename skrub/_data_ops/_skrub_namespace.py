@@ -1466,6 +1466,7 @@ class SkrubNamespace:
         open=True,
         output_dir=None,
         overwrite=False,
+        title=None,
     ):
         """Generate a full report of the DataOp's evaluation.
 
@@ -1568,6 +1569,7 @@ class SkrubNamespace:
             open=open,
             output_dir=output_dir,
             overwrite=overwrite,
+            title=title,
         )
 
     def make_learner(self, *, fitted=False, keep_subsampling=False):
