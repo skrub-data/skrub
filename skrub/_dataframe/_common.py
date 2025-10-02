@@ -1387,7 +1387,10 @@ def _select_rows_pandas(obj, idx):
 
 @select_rows.specialize("polars")
 def _select_rows_polars(obj, idx):
-    return obj[list(idx)]
+    idx = list(idx)
+    if not idx:
+        return obj.head(0)
+    return obj[idx]
 
 
 @dispatch
