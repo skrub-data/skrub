@@ -265,9 +265,20 @@ def _to_pandas_pandas(obj):
     return obj
 
 
-@to_pandas.specialize("polars")
+@to_pandas.specialize("polars", argument_type="DataFrame")
 def _to_pandas_polars(obj):
     return obj.to_pandas()
+
+
+@to_pandas.specialize("polars", argument_type="Column")
+def _to_pandas_polars_column(obj):
+    """Convert a polars Series to a pandas Series, through numpy when pyarrow is not
+    installed."""
+    try:
+        return obj.to_pandas()
+    except ImportError:
+        # pyarrow is needed for polars .to_pandas() and may not be installed
+        return pd.Series(to_numpy(obj))
 
 
 @dispatch
