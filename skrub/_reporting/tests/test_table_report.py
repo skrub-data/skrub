@@ -6,11 +6,28 @@ import warnings
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
+from sklearn.utils import Bunch
 
-from skrub import TableReport, ToDatetime, datasets
+from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
 from skrub._reporting._sample_table import make_table
+
+
+@pytest.fixture
+def simple_df():
+    return pd.DataFrame(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "a", "b", "c"],
+        }
+    )
+
+
+@pytest.fixture
+def simple_series():
+    return pd.Series([1, 2, 3, 4, 5], name="A")
 
 
 def get_report_id(html):
@@ -282,8 +299,8 @@ def test_minimal_mode(pd_module):
     assert 'id="column-associations-panel"' not in html
 
 
-def test_error_input_type():
-    df = datasets.fetch_employee_salaries()
+def test_error_input_type(simple_df, simple_series):
+    df = Bunch(X=simple_df, y=simple_series)
     with pytest.raises(TypeError):
         TableReport(df)
 
