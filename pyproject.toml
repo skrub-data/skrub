@@ -169,7 +169,7 @@ polars = "==0.20.15"
 plotly = "*"
 
 [tool.pixi.feature.polars-without-pyarrow.dependencies]
-polars = "==0.20.15"
+polars = "*"
 plotly = "*"
 
 [tool.pixi.feature.py309.dependencies]
