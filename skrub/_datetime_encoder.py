@@ -40,9 +40,9 @@ _DEFAULT_ENCODING_SPLINES = {
 @dispatch
 def _is_date(col):
     # Avoid circular import
-    from skrub._dataframe._common import _raise
+    from skrub._dataframe._common import _raise_dispatch_unregistered_type
 
-    raise _raise(col, kind="Series")
+    _raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_is_date.specialize("pandas", argument_type="Column")
@@ -59,9 +59,9 @@ def _is_date_polars(col):
 @dispatch
 def _get_dt_feature(col, feature):
     # Avoid circular import
-    from skrub._dataframe._common import _raise
+    from skrub._dataframe._common import _raise_dispatch_unregistered_type
 
-    raise _raise(col, kind="Series")
+    _raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_get_dt_feature.specialize("pandas", argument_type="Column")
