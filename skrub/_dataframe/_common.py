@@ -277,6 +277,7 @@ def _to_pandas_polars_column(obj):
     try:
         return obj.to_pandas()
     except ImportError:
+        # pyarrow is needed for polars .to_pandas() and may not be installed
         return pd.Series(to_numpy(obj))
 
 
