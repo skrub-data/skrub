@@ -103,6 +103,13 @@ def test_nat(df_module):
     TableReport(df).html()
 
 
+def test_bool_column_mean(df_module):
+    df = df_module.make_dataframe({"a": [True, False, True, True, False, True]})
+    html = TableReport(df).html()
+    assert "Mean" in html
+    assert "0.667" in html
+
+
 def test_duplicate_columns(pd_module):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     df.columns = ["a", "a"]
