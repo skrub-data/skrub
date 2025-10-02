@@ -11,6 +11,8 @@ Ongoing Development
 
 New features
 ------------
+- TableReport now displays the mean statistic for boolean columns.
+  :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
 - :meth:`DataOp.skb.iter_cv_splits` iterates over the training and testing
   environments produced from a CV splitter -- similar to
   :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
@@ -29,8 +31,6 @@ New features
 ------------
 - The :meth:`DataOp.skb.full_report` now displays the time each node took to
   evaluate. :pr:`1596` by :user:`Jérôme Dockès <jeromedockes>`.
-- TableReport now displays the mean statistic for boolean columns.
-  :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
 
 Changes
 -------

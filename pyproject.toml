@@ -168,6 +168,10 @@ pyarrow = "==15.0.2"
 polars = "==0.20.15"
 plotly = "*"
 
+[tool.pixi.feature.polars-without-pyarrow.dependencies]
+polars = "*"
+plotly = "*"
+
 [tool.pixi.feature.py309.dependencies]
 python = "~=3.9.0"
 
@@ -211,6 +215,7 @@ ci-py311-transformers = ["py311", "transformers", "test"]
 ci-py312-latest-deps = ["py312", "test"]
 ci-py312-latest-optional-deps = ["py312", "optional", "test"]
 ci-py313-latest-deps = ["py313", "test"]
+ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
 ci-py313-latest-optional-deps = ["py313", "optional", "test"]
 
 [tool.black]
