@@ -11,6 +11,18 @@ Ongoing Development
 
 New features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Release 0.6.2
+=============
+
+New features
+------------
 - The :meth:`DataOp.skb.full_report` now displays the time each node took to
   evaluate. :pr:`1596` by :user:`Jérôme Dockès <jeromedockes>`.
 
