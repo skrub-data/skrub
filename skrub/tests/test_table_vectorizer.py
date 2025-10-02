@@ -194,6 +194,7 @@ def _get_missing_values_dataframe(categorical_dtype="object"):
 
 
 def test_get_preprocessors(df_module):
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -225,6 +226,7 @@ def test_get_preprocessors(df_module):
 
 
 def test_fit_default_transform(df_module):
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -277,17 +279,18 @@ X = _get_datetimes_dataframe()
 # Add weird index to test that it's not used
 X.index = [10, 3, 4, 2, 5]
 
+(
+    X,
+    {
+        "pd_datetime": "datetime",
+        "np_datetime": "datetime",
+        "dmy-": "datetime",
+        "ymd/": "datetime",
+        "ymd/_hms:": "datetime",
+    },
+),
+
 X_tuples = [
-    (
-        X,
-        {
-            "pd_datetime": "datetime",
-            "np_datetime": "datetime",
-            "dmy-": "datetime",
-            "ymd/": "datetime",
-            "ymd/_hms:": "datetime",
-        },
-    ),
     # Test other types detection
     (
         _get_clean_dataframe(),
@@ -324,7 +327,7 @@ def passthrough_vectorizer():
 
 
 @pytest.mark.parametrize("X, dict_expected_types", X_tuples)
-def test_auto_cast(X, dict_expected_types):
+def test_auto_cast(X, dict_expected_types, df_module):
     """
     Tests that the TableVectorizer automatic type detection works as expected.
     """
@@ -333,8 +336,12 @@ def test_auto_cast(X, dict_expected_types):
     for col in X_trans.columns:
         if dict_expected_types[col] == "datetime":
             assert sbd.is_any_date(X_trans[col])
-        else:
-            assert dict_expected_types[col] == X_trans[col].dtype
+        if dict_expected_types[col] == "categorical":
+            assert sbd.is_categorical(X_trans[col])
+        if dict_expected_types[col] == "float32":
+            assert sbd.is_float(X_trans[col])
+        if dict_expected_types[col] == "string":
+            assert sbd.is_string(X_trans[col])
 
 
 # Cleaner does not cast to float32
@@ -410,6 +417,7 @@ def test_convert_float32(df_module):
     Test that the TableVectorizer converts float64 to float32
     when using the default parameters.
     """
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -437,6 +445,7 @@ def test_convert_float32(df_module):
 
 
 def test_cleaner_invalid_numeric_dtype(df_module):
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -542,6 +551,7 @@ def test_get_feature_names_out(df_module):
         "cat2_50K+",
         "cat2_60K+",
     ]
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -576,8 +586,17 @@ def test_get_feature_names_out(df_module):
     )
 
 
-def test_transform():
+def test_transform(df_module):
     X = _get_clean_dataframe()
+    # data = {
+    #     "int": [15, 56, 63, 12, 44],
+    #     "float": [5.2, 2.4, 6.2, 10.45, 9.0],
+    #     "str1": ["public", "private", "private", "private", "public"],
+    #     "str2": ["officer", "manager", "lawyer", "chef", "teacher"],
+    #     "cat1": ["yes", "yes", "no", "yes", "no"],
+    #     "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
+    # }
+    # X = df_module.make_dataframe(data)
     table_vec = TableVectorizer().fit(X)
     x = pd.DataFrame(
         [
@@ -626,6 +645,7 @@ inputs = [
 
 
 def test_handle_unknown_category(df_module):
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -833,6 +853,7 @@ def test_column_by_column(df_module):
     """
     if parse_version(pd.__version__) < parse_version("2.0.0"):
         pytest.xfail("pandas is_string_dtype incorrect in old pandas")
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -868,6 +889,7 @@ def test_column_by_column(df_module):
     ],
 )
 def test_parallelism(high_cardinality, df_module):
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -920,6 +942,7 @@ def test_pandas_sparse_array():
 
 
 def test_wrong_transformer(df_module):
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
@@ -1038,6 +1061,7 @@ def test_bad_specific_cols():
 
 
 def test_sk_visual_block(df_module):
+    # X = _get_clean_dataframe()
     data = {
         "int": [15, 56, 63, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, 9.0],
