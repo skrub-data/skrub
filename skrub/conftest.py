@@ -110,8 +110,6 @@ polars_installed_without_pyarrow = pytest.mark.skipif(
     reason="When polars is installed, requires pyarrow to be installed too",
 )
 
-pytest.mark.skipif(_PYARROW_INSTALLED=False, reason="requires pyarrow to be installed")
-
 
 def _pl_from_dict(data):
     import polars as pl
