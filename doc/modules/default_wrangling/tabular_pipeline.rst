@@ -6,7 +6,7 @@
 .. |HistGradientBoostingRegressor| replace:: :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
 .. |HistGradientBoostingClassifier| replace:: :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
 .. |Pipeline| replace:: :class:`~sklearn.pipeline.Pipeline`
-.. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
+.. |SquashingScaler| replace:: :class:`~sklearn.preprocessing.SquashingScaler`
 .. |SimpleImputer| replace:: :class:`~sklearn.impute.SimpleImputer`
 
 .. _user_guide_tabular_pipeline:
@@ -18,7 +18,7 @@ The |tabular_pipeline| is a function that, given a scikit-learn estimator,
 returns a full scikit-learn |Pipeline| that contains a |TableVectorizer|
 followed by the given estimator.
 If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
-|tabular_pipeline| adds a |StandardScaler| and a |SimpleImputer| to the pipeline.
+|tabular_pipeline| adds a |SquashingScaler| and a |SimpleImputer| to the pipeline.
 
 >>> from sklearn.linear_model import LinearRegression
 >>> from skrub import tabular_pipeline
@@ -26,7 +26,7 @@ If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
 Pipeline(steps=[('tablevectorizer',
                  TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                 ('simpleimputer', SimpleImputer(add_indicator=True)),
-                ('standardscaler', StandardScaler()),
+                ('squashingscaler', SquashingScaler()),
                 ('linearregression', LinearRegression())])
 
 It is also possible to call the function with the name of the task that must be
@@ -63,7 +63,7 @@ problems, but may not beat properly tuned ad-hoc pipelines.
    * - Numeric preprocessor
      - No processing
      - No processing
-     - :class:`~sklearn.preprocessing.StandardScaler`
+     - :class:`~sklearn.preprocessing.SquashingScaler`
    * - Date preprocessor
      - :class:`DatetimeEncoder`
      - :class:`DatetimeEncoder`
