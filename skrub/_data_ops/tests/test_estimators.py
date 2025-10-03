@@ -422,6 +422,31 @@ def test_train_test_split(with_y):
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
 
 
+def test_iter_cv_splits():
+    X = skrub.X(np.arange(5) * 10)
+    splits = X.skb.iter_cv_splits()
+    s = next(splits)
+    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30, 40]
+    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
+    s = next(splits)
+    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30, 40]
+    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
+
+    X = skrub.X(np.arange(4) * 10)
+    y = skrub.y(np.arange(4) * -10)
+    splits = skrub.as_data_op((X, y)).skb.iter_cv_splits(cv=4)
+    s = next(splits)
+    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30]
+    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
+    assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [-10, -20, -30]
+    assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [0]
+    s = next(splits)
+    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30]
+    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
+    assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [0, -20, -30]
+    assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [-10]
+
+
 def test_train_test_split_splitter_renaming():
     # TODO remove when `splitter` is removed in 0.7.0
     X = skrub.X(list(range(10)))
