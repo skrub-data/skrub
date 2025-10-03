@@ -103,7 +103,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     .. versionchanged:: 0.7.0
         The :class:`~skrub.SquashingScaler` with `max_absolute_value=10` is now used instead of
         :class:`~sklearn.preprocessing.StandardScaler` for centering and scaling
-        numerical features.
+        numerical features when using linear models. 
 
     Parameters
     ----------
