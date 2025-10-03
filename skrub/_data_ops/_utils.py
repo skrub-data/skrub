@@ -1,4 +1,7 @@
 import enum
+import os
+import shutil
+import time
 import traceback
 
 from joblib.externals import cloudpickle
@@ -60,3 +63,21 @@ def format_exception(e):
 def format_exception_only(e):
     """compatibility for python < 3.10"""
     return traceback.format_exception_only(type(e), e)
+
+
+def prune_folder(path: str):
+    if not os.path.exists(path):
+        return
+    time_threshold = time.time() - 7 * 24 * 3600  # 7 days ago
+
+    folders = (
+        (f, os.path.getmtime(os.path.join(path, f)))
+        for f in os.listdir(path)
+        if os.path.isdir(os.path.join(path, f))
+    )
+    for dir in folders:
+        try:
+            if dir[1] < time_threshold and dir[0].startswith("full_data_op_report_"):
+                shutil.rmtree(os.path.join(path, dir[0]))
+        except Exception:
+            pass
