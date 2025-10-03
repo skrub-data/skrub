@@ -753,6 +753,34 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(SelectAllVisibleColumns);
 
+    class PercentageDisplay extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.elem.addEventListener("change", () => {
+                this.exchange.send({
+                    kind: "SWITCH_FIGURES"
+                });
+            });
+        }
+    }
+    SkrubTableReport.register(PercentageDisplay);
+
+    class SwitchFigures extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+        }
+
+        SWITCH_FIGURES() {
+            if (this.elem.style.display === 'none') {
+                this.elem.style.display = 'block'; // Show the div
+            } else {
+                this.elem.style.display = 'none'; // Hide the div
+            }
+        }
+    }
+    SkrubTableReport.register(SwitchFigures);
+
+
 
     class Toggletip extends Manager {
         constructor(elem, exchange) {
@@ -817,7 +845,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         const refElement = document.getElementById(refElementId);
         const color = window.getComputedStyle(refElement, null).getPropertyValue('color');
         const match = color.match(/^rgb\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)\s*$/i);
-        if(match){
+        if (match) {
             const [r, g, b] = [match[1], match[2], match[3]];
 
             // https://en.wikipedia.org/wiki/HSL_and_HSV#Lightness
@@ -827,7 +855,7 @@ if (customElements.get('skrub-table-report') === undefined) {
                 // If the text is very bright we have a dark theme
                 return 'dark';
             }
-            if (luma < 75 ) {
+            if (luma < 75) {
                 // If the text is very dark we have a light theme
                 return 'light';
             }
