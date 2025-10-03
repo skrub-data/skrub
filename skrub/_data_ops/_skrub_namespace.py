@@ -99,7 +99,10 @@ class SkrubNamespace:
         how="auto",
         allow_reject=False,
         unsupervised=False,
+        kwargs=None,
     ):
+        if kwargs is None:
+            kwargs = {}
         data_op = DataOp(
             Apply(
                 estimator=estimator,
@@ -109,6 +112,7 @@ class SkrubNamespace:
                 how=how,
                 allow_reject=allow_reject,
                 unsupervised=unsupervised,
+                kwargs=kwargs,
             )
         )
         return data_op
@@ -124,6 +128,13 @@ class SkrubNamespace:
         how="auto",
         allow_reject=False,
         unsupervised=False,
+        fit_kwargs=None,
+        fit_transform_kwargs=None,
+        transform_kwargs=None,
+        predict_kwargs=None,
+        predict_proba_kwargs=None,
+        decision_function_kwargs=None,
+        score_kwargs=None,
     ):
         """
         Apply a scikit-learn estimator to a dataframe or numpy array.
@@ -181,6 +192,30 @@ class SkrubNamespace:
             transformer, or when we are not interested in scoring with
             ground-truth labels), simply leave the default ``y=None`` and there
             is no need to pass a value for ``unsupervised``.
+
+        fit_kwargs : dict, optional, default=None
+            Extra named arguments to pass to the estimator's ``fit()`` method,
+            for example ``fit_kwargs={'sample_weights': [.1, .5, .4]}``. May be
+            (or contain) a DataOp, which will be evaluated before passing the
+            kwargs to ``fit``.
+        fit_transform_kwargs : dict, optional, default=None
+            Extra named arguments for ``fit_transform``. See the description of
+            the ``fit_kwargs`` parameter.
+        transform_kwargs : dict, optional, default=None
+            Extra named arguments for ``transform``. See the description of the
+            ``fit_kwargs`` parameter.
+        predict_kwargs : dict, optional, default=None
+            Extra named arguments for ``predict``. See the description of the
+            ``fit_kwargs`` parameter.
+        predict_proba_kwargs : dict, optional, default=None
+            Extra named arguments for ``predict_proba``. See the description of
+            the ``fit_kwargs`` parameter.
+        decision_function_kwargs : dict, optional, default=None
+            Extra named arguments for ``decision_function``. See the
+            description of the ``fit_kwargs`` parameter.
+        score_kwargs : dict, optional, default=None
+            Extra named arguments for ``score``. See the description of the
+            ``fit_kwargs`` parameter.
 
         Returns
         -------
@@ -329,6 +364,15 @@ class SkrubNamespace:
             how=how,
             allow_reject=allow_reject,
             unsupervised=unsupervised,
+            kwargs={
+                "fit": fit_kwargs,
+                "fit_transform": fit_transform_kwargs,
+                "transform": transform_kwargs,
+                "predict": predict_kwargs,
+                "predict_proba": predict_proba_kwargs,
+                "decision_function": decision_function_kwargs,
+                "score": score_kwargs,
+            },
         )
 
     def apply_func(self, func, *args, **kwargs):
