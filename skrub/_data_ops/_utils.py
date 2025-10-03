@@ -66,9 +66,9 @@ def format_exception_only(e):
 
 
 def prune_folder(path: str):
-    time_threshold = time.time() - 7 * 24 * 3600  # 7 days ago
     if not os.path.exists(path):
         return
+    time_threshold = time.time() - 7 * 24 * 3600  # 7 days ago
 
     folders = (
         (f, os.path.getmtime(os.path.join(path, f)))
