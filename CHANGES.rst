@@ -14,6 +14,8 @@ New features
 
 Changes
 -------
+- The :meth: `DataOp.skb.full_report` method now deletes reports created with
+  ``output_dir=None`` after 7 days. :pr:`1657` by :user: `Simon Dierickx <simon.dierickx>`.
 
 Bugfixes
 --------
