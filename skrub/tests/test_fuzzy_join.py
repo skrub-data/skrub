@@ -8,7 +8,7 @@ from sklearn.feature_extraction.text import HashingVectorizer
 from skrub import ToDatetime, _join_utils, fuzzy_join
 from skrub import selectors as s
 from skrub._dataframe import _common as ns
-from skrub.conftest import polars_installed_without_pyarrow
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 @pytest.mark.parametrize(
@@ -238,7 +238,7 @@ def test_numerical_column(df_module):
     assert ns.shape(fj_num3) == (2, n_cols)
 
 
-@polars_installed_without_pyarrow
+@skip_polars_installed_without_pyarrow
 def test_datetime_column(df_module):
     """
     Testing that ``fuzzy_join`` works with datetime columns.
@@ -294,7 +294,7 @@ def test_datetime_column(df_module):
     assert ns.shape(fj_time3) == (2, n_cols)
 
 
-@polars_installed_without_pyarrow
+@skip_polars_installed_without_pyarrow
 def test_mixed_joins(df_module):
     """
     Test fuzzy joining on mixed and multiple column types.

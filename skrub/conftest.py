@@ -105,8 +105,8 @@ if _POLARS_INSTALLED:
 else:
     _polars_installed_without_pyarrow = False
 
-polars_installed_without_pyarrow = pytest.mark.skipif(
-    _polars_installed_without_pyarrow=False,
+skip_polars_installed_without_pyarrow = pytest.mark.skipif(
+    _polars_installed_without_pyarrow,
     reason="When polars is installed, requires pyarrow to be installed too",
 )
 
