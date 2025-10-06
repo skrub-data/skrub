@@ -19,7 +19,13 @@ from ._data_ops import (
     check_name,
     deferred,
 )
-from ._estimator import ParamSearch, SkrubLearner, cross_validate, train_test_split
+from ._estimator import (
+    OptunaSearch,
+    ParamSearch,
+    SkrubLearner,
+    cross_validate,
+    train_test_split,
+)
 from ._evaluation import (
     choices,
     clone,
@@ -1286,14 +1292,12 @@ class SkrubNamespace:
         ... )
         >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_defaults())
-        {'k': 9, 'classifier': 'logistic', 'C': 1.0...}
+        {'k': 9, 'C': 1.0..., 'classifier': 'logistic'}
         """
-        from ._evaluation import choice_graph, chosen_or_default_outcomes
+        from ._evaluation import choice_graph, eval_choices
         from ._inspection import describe_params
 
-        return describe_params(
-            chosen_or_default_outcomes(self._data_op), choice_graph(self._data_op)
-        )
+        return describe_params(eval_choices(self._data_op), choice_graph(self._data_op))
 
     def full_report(
         self,
@@ -1788,6 +1792,40 @@ class SkrubNamespace:
 
         search = ParamSearch(
             self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
+        )
+        if not fitted:
+            return search
+        return search.fit(
+            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
+        )
+
+    def make_optuna_search(
+        self,
+        *,
+        study=None,
+        cv=None,
+        random_state=None,
+        n_jobs=None,
+        n_trials=10,
+        timeout=None,
+        callbacks=None,
+        catch=(),
+        refit=True,
+        fitted=False,
+        keep_subsampling=False,
+    ):
+        _check_keep_subsampling(fitted, keep_subsampling)
+        search = OptunaSearch(
+            self.clone(),
+            study=study,
+            cv=cv,
+            random_state=random_state,
+            n_jobs=n_jobs,
+            n_trials=n_trials,
+            timeout=timeout,
+            callbacks=callbacks,
+            catch=catch,
+            refit=refit,
         )
         if not fitted:
             return search

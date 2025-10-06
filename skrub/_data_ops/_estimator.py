@@ -1,22 +1,28 @@
 # Scikit-learn-ish interface to the skrub DataOps
+import sys
 
+import numpy as np
 import pandas as pd
+from joblib import effective_n_jobs
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
+from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
+from .._utils import short_repr
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
-    chosen_or_default_outcomes,
+    eval_choices,
     evaluate,
     find_first_apply,
     find_node_by_name,
     find_X,
     find_y,
+    get_choice_default,
     get_params,
     param_grid,
     set_params,
@@ -87,6 +93,42 @@ class _CloudPickleDataOp(_CloudPickle):
     """
 
     _cloudpickle_attributes = ["data_op"]
+
+
+def _is_optuna_trial(obj):
+    try:
+        trial_type = sys.modules["optuna"].Trial
+    except (KeyError, AttributeError):
+        return False
+    return isinstance(obj, trial_type)
+
+
+def _optuna_trial_suggestions(trial):
+    def policy(choice_id, display_name, choice):
+        name = f"{choice_id}:{display_name}"
+        if isinstance(choice, BaseNumericChoice):
+            if choice.to_int:
+                func = trial.suggest_int
+                default_step = 1
+            else:
+                func = trial.suggest_float
+                default_step = None
+            return func(
+                name,
+                choice.low,
+                choice.high,
+                log=choice.log,
+                step=getattr(choice, "step", default_step),
+            )
+        if choice.outcome_names is None:
+            outcome_names = list(map(short_repr, choice.outcomes))
+        else:
+            outcome_names = choice.outcome_names
+        outcome_names = [f"{i}:{n}" for i, n in enumerate(outcome_names)]
+        result = trial.suggest_categorical(name, outcome_names)
+        return int(result.split(":", 1)[0])
+
+    return policy
 
 
 class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
@@ -178,10 +220,32 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
     def set_params(self, **params):
         if "data_op" in params:
             self.data_op = params.pop("data_op")
-        set_params(
-            self.data_op, {int(k.lstrip("data_op__")): v for k, v in params.items()}
-        )
+
+        def to_id(key):
+            if key.startswith("data_op__"):
+                return int(key.lstrip("data_op__"))
+            return int(key.split(":", 1)[0])
+
+        def to_idx(val):
+            if isinstance(val, str):
+                return int(val.split(":", 1)[0])
+            return val
+
+        set_params(self.data_op, {to_id(k): to_idx(v) for k, v in params.items()})
         return self
+
+    def collect_params(self, policy):
+        if _is_optuna_trial(policy):
+            policy = _optuna_trial_suggestions(policy)
+        elif isinstance(policy, str) and policy == "default":
+            policy = get_choice_default
+        else:
+            raise ValueError(
+                "Policy should be a optuna.Trial instance or the string 'default', got"
+                " object of type {type(obj).__name__!r}: {obj!r}"
+            )
+        choices = eval_choices(self.data_op, policy)
+        return {f"data_op__{k}": v for k, v in choices.items()}
 
     def get_param_grid(self):
         grid = param_grid(self.data_op)
@@ -402,9 +466,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         parameters (outcomes of `choose_*` objects contained in the
         DataOp).
         """
-        return describe_params(
-            chosen_or_default_outcomes(self.data_op), choice_graph(self.data_op)
-        )
+        return describe_params(eval_choices(self.data_op), choice_graph(self.data_op))
 
 
 # Xy_pipeline because it is an actual scikit-learn pippeline rather than
@@ -894,3 +956,88 @@ class _XyParamSearch(_XyPipelineMixin, ParamSearch):
 
     def _call_predictor_method(self, name, X, y=None):
         return getattr(self.best_learner_, name)(self._get_env(X, y))
+
+
+class OptunaSearch(_CloudPickleDataOp, BaseEstimator):
+    def __init__(
+        self,
+        data_op,
+        study=None,
+        cv=None,
+        random_state=None,
+        n_jobs=None,
+        n_trials=10,
+        timeout=None,
+        callbacks=None,
+        catch=(),
+        refit=True,
+    ):
+        self.data_op = data_op
+        self.study = study
+        self.cv = cv
+        self.random_state = random_state
+        self.n_jobs = n_jobs
+        self.n_trials = n_trials
+        self.timeout = timeout
+        self.callbacks = callbacks
+        self.catch = catch
+        self.refit = refit
+
+    def fit(self, environment):
+        import optuna
+        import optuna.samplers
+
+        if self.study is None:
+            random_state = check_random_state(self.random_state)
+            seed = random_state.randint(np.iinfo("int32").max)
+            # The default sampler, we instantiate it to set the seed
+            sampler = optuna.samplers.TPESampler(seed=seed)
+            self.study_ = optuna.create_study(direction="maximize", sampler=sampler)
+        else:
+            self.study_ = self.study
+
+        def objective(trial):
+            learner = self.data_op.skb.make_learner()
+            params = learner.collect_params(trial)
+            learner.set_params(**params)
+            cv_results = learner.data_op.skb.cross_validate(environment, cv=self.cv)
+            return cv_results["test_score"].mean()
+
+        n_jobs = effective_n_jobs(self.n_jobs)
+        self.study_.optimize(
+            objective,
+            n_jobs=n_jobs,
+            n_trials=self.n_trials,
+            timeout=self.timeout,
+            callbacks=self.callbacks,
+            catch=self.catch,
+        )
+        self.best_params_ = self.study_.best_params
+        if not self.refit:
+            return self
+        best_learner = self.data_op.skb.make_learner()
+        best_learner.set_params(**self.study_.best_params)
+        best_learner.fit(environment)
+        self.best_learner_ = best_learner
+        return self
+
+    def __getattr__(self, name):
+        if name not in supported_modes(self.data_op):
+            attribute_error(self, name)
+
+        def f(*args, **kwargs):
+            return self._call_predictor_method(name, *args, **kwargs)
+
+        f.__name__ = name
+        return f
+
+    def _call_predictor_method(self, name, environment):
+        check_is_fitted(self, "study_")
+        if not hasattr(self, "best_learner_"):
+            raise AttributeError(
+                "This parameter search was initialized with `refit=False`. "
+                f"{name} is available only after refitting on the best parameters. "
+                "Please pass another value to `refit` or fit a learner manually "
+                "using the `best_params_` or `study_` attributes."
+            )
+        return getattr(self.best_learner_, name)(environment)
