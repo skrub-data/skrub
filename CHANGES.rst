@@ -15,8 +15,8 @@ New features
 Changes
 -------
 - The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
-  :class:`StandardScaler` for centering and scaling numerical features 
-  when linear models are used. 
+  :class:`StandardScaler` for centering and scaling numerical features
+  when linear models are used.
   :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
 
 Bugfixes
