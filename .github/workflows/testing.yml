@@ -20,7 +20,8 @@ jobs:
             ci-py309-min-optional-deps,
             ci-py311-transformers,
             ci-py313-latest-deps,
-            ci-py313-latest-optional-deps
+            ci-py313-latest-optional-deps,
+            ci-py313-polars-without-pyarrow
         ]
     runs-on: ${{ matrix.os }}
     steps:

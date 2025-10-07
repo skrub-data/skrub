@@ -11,6 +11,8 @@ Ongoing Development
 
 New features
 ------------
+- TableReport now displays the mean statistic for boolean columns.
+  :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
 
 Changes
 -------
@@ -25,8 +27,6 @@ New features
 ------------
 - The :meth:`DataOp.skb.full_report` now displays the time each node took to
   evaluate. :pr:`1596` by :user:`Jérôme Dockès <jeromedockes>`.
-- TableReport now displays the mean statistic for boolean columns.
-  :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
 
 Changes
 -------

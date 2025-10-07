@@ -6,6 +6,7 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub import _join_utils
+from skrub.conftest import polars_installed_without_pyarrow
 
 
 @pytest.mark.parametrize(
@@ -173,6 +174,7 @@ def test_left_join_wrong_right_type(df_module, left):
         )
 
 
+@polars_installed_without_pyarrow
 def test_left_join_types_not_equal(df_module, left):
     try:
         import polars as pl
