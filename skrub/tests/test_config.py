@@ -12,8 +12,8 @@ def _use_table_report(obj):
 
 
 @pytest.fixture
-def simple_df():
-    return pd.DataFrame(
+def simple_df(df_module):
+    return df_module.make_dataframe(
         {
             "A": [1, 2, 3, 4, 5],
             "B": ["a", "b", "a", "b", "c"],
