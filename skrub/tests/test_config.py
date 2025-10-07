@@ -22,8 +22,8 @@ def simple_df(df_module):
 
 
 @pytest.fixture
-def simple_series():
-    return pd.Series([1, 2, 3, 4, 5], name="A")
+def simple_series(df_module):
+    return df_module.make_column(name="A", values=[1, 2, 3, 4, 5])
 
 
 def test_config_context():
