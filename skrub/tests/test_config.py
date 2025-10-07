@@ -146,20 +146,20 @@ def test_subsampling_seed(simple_df):
     data_op = skrub.X(simple_df)
 
     with config_context(subsampling_seed=0):
-        index = evaluate(
+        col_a = evaluate(data_op.skb.subsample(n=3, how="random"), mode="preview")[
+            "A"
+        ].to_list()
+        col_a_identical = evaluate(
             data_op.skb.subsample(n=3, how="random"), mode="preview"
-        ).index.tolist()
-        index_identical = evaluate(
-            data_op.skb.subsample(n=3, how="random"), mode="preview"
-        ).index.tolist()
+        )["A"].to_list()
 
     with config_context(subsampling_seed=1):
-        index_different = evaluate(
+        col_a_different = evaluate(
             data_op.skb.subsample(n=3, how="random"), mode="preview"
-        ).index.tolist()
+        )["A"].to_list()
 
-    assert index == index_identical
-    assert index != index_different
+    assert col_a == col_a_identical
+    assert col_a != col_a_different
 
 
 def test_parsing(monkeypatch):
