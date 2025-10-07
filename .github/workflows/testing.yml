@@ -15,14 +15,13 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        environment: [
-            ci-py309-min-deps,
-            ci-py309-min-optional-deps,
-            ci-py311-transformers,
-            ci-py313-latest-deps,
-            ci-py313-latest-optional-deps,
-            ci-py313-polars-without-pyarrow
-        ]
+        environment:
+          - ci-py309-min-deps
+          - ci-py309-min-optional-deps
+          - ci-py311-transformers
+          - ci-py313-latest-deps
+          - ci-py313-latest-optional-deps
+          - ci-py313-polars-without-pyarrow
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
@@ -33,13 +32,10 @@ jobs:
           # we can freeze the environment and manually bump the dependencies to the
           # latest version time to time.
           frozen: true
-
       - name: Run tests
         run: pixi run -e ${{ matrix.environment }} test -n auto
-
       - name: Run user guide doctests
         run: pixi run -e ${{ matrix.environment }} test-user-guide
-
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5.5.1
         with:
@@ -67,7 +63,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
-            python-version: "3.11"
+          python-version: "3.11"
         name: 'Setup python'
       - shell: bash {0}
         run: |
