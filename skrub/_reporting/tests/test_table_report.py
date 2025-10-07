@@ -6,7 +6,6 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import pytest
 from sklearn.utils import Bunch
 
@@ -17,8 +16,8 @@ from skrub.conftest import polars_installed_without_pyarrow
 
 
 @pytest.fixture
-def simple_df():
-    return pd.DataFrame(
+def simple_df(df_module):
+    return df_module.make_dataframe(
         {
             "A": [1, 2, 3, 4, 5],
             "B": ["a", "b", "a", "b", "c"],
@@ -27,8 +26,8 @@ def simple_df():
 
 
 @pytest.fixture
-def simple_series():
-    return pd.Series([1, 2, 3, 4, 5], name="A")
+def simple_series(df_module):
+    return df_module.make_column(name="A", values=[1, 2, 3, 4, 5])
 
 
 def get_report_id(html):
