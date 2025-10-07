@@ -17,7 +17,9 @@ from types import SimpleNamespace
 
 from sklearn.base import BaseEstimator
 from sklearn.base import clone as skl_clone
+from sklearn.utils import check_random_state
 
+from .._utils import short_repr
 from . import _choosing
 from ._data_ops import (
     Apply,
@@ -950,11 +952,50 @@ def set_params(data_op, params):
             target.chosen_outcome = v
 
 
-def get_choice_default(choice_id, display_name, choice):
+def choice_default(choice_id, display_name, choice):
     if isinstance(choice, _choosing.Choice):
         return choice.chosen_outcome_idx or 0
     else:
         return choice.chosen_outcome_or_default()
+
+
+def random_choice(random_state):
+    random_state = check_random_state()
+
+    def policy(choice_id, display_name, choice):
+        if hasattr(choice, "rvs"):
+            return choice.rvs(random_state)
+        return int(random_state.randint(len(choice.outcomes)))
+
+    return policy
+
+
+def optuna_suggestion(trial):
+    def policy(choice_id, display_name, choice):
+        name = f"{choice_id}:{display_name}"
+        if isinstance(choice, _choosing.BaseNumericChoice):
+            if choice.to_int:
+                func = trial.suggest_int
+                default_step = 1
+            else:
+                func = trial.suggest_float
+                default_step = None
+            return func(
+                name,
+                choice.low,
+                choice.high,
+                log=choice.log,
+                step=getattr(choice, "step", default_step),
+            )
+        if choice.outcome_names is None:
+            outcome_names = list(map(short_repr, choice.outcomes))
+        else:
+            outcome_names = choice.outcome_names
+        outcome_names = [f"{i}:{n}" for i, n in enumerate(outcome_names)]
+        result = trial.suggest_categorical(name, outcome_names)
+        return int(result.split(":", 1)[0])
+
+    return policy
 
 
 class _ChoiceEvaluator(_DataOpTraversal):
@@ -979,7 +1020,7 @@ class _ChoiceEvaluator(_DataOpTraversal):
         display_name = self.display_names[c_id]
         if c_id in self.Xy_choices:
             # Clamp to default if ancestor of X or y
-            param = get_choice_default(c_id, display_name, choice)
+            param = choice_default(c_id, display_name, choice)
         else:
             param = self.policy(c_id, display_name, choice)
         if isinstance(choice, _choosing.Choice):
@@ -995,7 +1036,7 @@ class _ChoiceEvaluator(_DataOpTraversal):
         return (yield choice_match.outcome_mapping[outcome])
 
 
-def eval_choices(data_op, policy=get_choice_default):
+def eval_choices(data_op, policy=choice_default):
     """Get the selected or default outcomes for choices in the DataOp.
 
     Return a mapping from the choice's ID (0, 1, ... -- see `choice_graph`) to

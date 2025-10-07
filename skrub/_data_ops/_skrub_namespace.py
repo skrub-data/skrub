@@ -1,4 +1,6 @@
 import pickle
+import re
+import sys
 import typing
 import warnings
 
@@ -83,6 +85,14 @@ def _check_grid_search_possible(data_op):
                 "Please use `make_randomized_search` or provide a number "
                 f"of steps for this range: {c}"
             )
+
+
+def _is_optuna_trial(obj):
+    try:
+        trial_type = sys.modules["optuna"].Trial
+    except (KeyError, AttributeError):
+        return False
+    return isinstance(obj, trial_type)
 
 
 class SkrubNamespace:
@@ -1409,7 +1419,7 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def make_learner(self, *, fitted=False, keep_subsampling=False):
+    def make_learner(self, *, fitted=False, keep_subsampling=False, choosing="default"):
         """Get a skrub learner for this DataOp.
 
         Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
@@ -1441,6 +1451,26 @@ class SkrubNamespace:
             Therefore it is an error to pass ``keep_subsampling=True`` and
             ``fitted=False`` (because ``keep_subsampling=True`` would have no
             effect).
+
+        choosing : 'default', 'random', 'random([seed])' or optuna.Trial instance
+            How to resolve choices contained in the data_op.
+
+            - default: the corresponding parameters of the SkrubLearner are not
+              set; the default values of the choices are used.
+            - random: a random value is picked according to the distribution of
+              each choice. The form 'random(<seed>)' is also accepted to set
+              the random seed: for example 'random(0)' sets it to 0. 'random()'
+              is the same as 'random'.
+            - if an optuna Trial, it is used to suggest values for the choices.
+
+            Note none of these options picks the best choice value according to
+            an evaluation criterion, as this function creates a single learner.
+            These options can be combined with external logic to evaluate and
+            select the resulting learners, or one of
+            :meth:`DataOp.skb.make_grid_search`,
+            :meth:`DataOp.skb.make_randomized_search`,
+            :meth:`DataOp.skb.make_optuna_search` can be used to automatically
+            select the best hyperparameters.
 
         Returns
         -------
@@ -1485,9 +1515,34 @@ class SkrubNamespace:
         Please see the examples gallery for full information about DataOps
         and the learners they generate.
         """
+        from . import _evaluation
+
         _check_keep_subsampling(fitted, keep_subsampling)
 
         learner = SkrubLearner(self.clone())
+        if isinstance(choosing, str) and choosing == "default":
+            choices = {}
+        elif (
+            isinstance(choosing, str)
+            and (m := re.match(r"random(?:\(\s*\d*\s*\))?", choosing)) is not None
+        ):
+            random_state = int(g) if (g := m.group(1)) else None
+            choices = _evaluation.eval_choices(
+                self._data_op, _evaluation.random_choice(random_state)
+            )
+        elif _is_optuna_trial(choosing):
+            choices = _evaluation.eval_choices(
+                self._data_op, _evaluation.optuna_suggestion(choosing)
+            )
+        else:
+            raise ValueError(
+                "choosing should be 'default', 'random', 'random(<seed>)', or an"
+                " optuna.Trial instance. Got object of type"
+                f" {type(choosing).__name__!r}: {choosing!r}"
+            )
+        params = {f"data_op__{k}": v for k, v in choices.items()}
+        learner.set_params(**params)
+
         _check_can_be_pickled(learner)
         if not fitted:
             return learner

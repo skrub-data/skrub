@@ -1,6 +1,4 @@
 # Scikit-learn-ish interface to the skrub DataOps
-import sys
-
 import numpy as np
 import pandas as pd
 from joblib import effective_n_jobs
@@ -11,7 +9,6 @@ from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _join_utils
-from .._utils import short_repr
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, check_subsampled_X_y_shape
 from ._evaluation import (
@@ -22,7 +19,6 @@ from ._evaluation import (
     find_node_by_name,
     find_X,
     find_y,
-    get_choice_default,
     get_params,
     param_grid,
     set_params,
@@ -93,42 +89,6 @@ class _CloudPickleDataOp(_CloudPickle):
     """
 
     _cloudpickle_attributes = ["data_op"]
-
-
-def _is_optuna_trial(obj):
-    try:
-        trial_type = sys.modules["optuna"].Trial
-    except (KeyError, AttributeError):
-        return False
-    return isinstance(obj, trial_type)
-
-
-def _optuna_trial_suggestions(trial):
-    def policy(choice_id, display_name, choice):
-        name = f"{choice_id}:{display_name}"
-        if isinstance(choice, BaseNumericChoice):
-            if choice.to_int:
-                func = trial.suggest_int
-                default_step = 1
-            else:
-                func = trial.suggest_float
-                default_step = None
-            return func(
-                name,
-                choice.low,
-                choice.high,
-                log=choice.log,
-                step=getattr(choice, "step", default_step),
-            )
-        if choice.outcome_names is None:
-            outcome_names = list(map(short_repr, choice.outcomes))
-        else:
-            outcome_names = choice.outcome_names
-        outcome_names = [f"{i}:{n}" for i, n in enumerate(outcome_names)]
-        result = trial.suggest_categorical(name, outcome_names)
-        return int(result.split(":", 1)[0])
-
-    return policy
 
 
 class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
@@ -233,19 +193,6 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         set_params(self.data_op, {to_id(k): to_idx(v) for k, v in params.items()})
         return self
-
-    def collect_params(self, policy):
-        if _is_optuna_trial(policy):
-            policy = _optuna_trial_suggestions(policy)
-        elif isinstance(policy, str) and policy == "default":
-            policy = get_choice_default
-        else:
-            raise ValueError(
-                "Policy should be a optuna.Trial instance or the string 'default', got"
-                " object of type {type(obj).__name__!r}: {obj!r}"
-            )
-        choices = eval_choices(self.data_op, policy)
-        return {f"data_op__{k}": v for k, v in choices.items()}
 
     def get_param_grid(self):
         grid = param_grid(self.data_op)
@@ -997,9 +944,7 @@ class OptunaSearch(_CloudPickleDataOp, BaseEstimator):
             self.study_ = self.study
 
         def objective(trial):
-            learner = self.data_op.skb.make_learner()
-            params = learner.collect_params(trial)
-            learner.set_params(**params)
+            learner = self.data_op.skb.make_learner(choosing=trial)
             cv_results = learner.data_op.skb.cross_validate(environment, cv=self.cv)
             return cv_results["test_score"].mean()
 
