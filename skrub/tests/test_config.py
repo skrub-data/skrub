@@ -4,6 +4,7 @@ import skrub
 from skrub import TableReport, config_context, get_config, set_config
 from skrub._config import _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
+from skrub.conftest import polars_installed_without_pyarrow
 
 
 def _use_table_report(obj):
@@ -50,6 +51,7 @@ def test_use_table_report_data_ops(simple_df):
             assert not _use_table_report(X)
 
 
+@polars_installed_without_pyarrow
 def test_use_table_report(simple_df):
     assert not _use_table_report(simple_df)
     with config_context(use_table_report=True):
@@ -58,6 +60,7 @@ def test_use_table_report(simple_df):
             assert not _use_table_report(simple_df)
 
 
+@polars_installed_without_pyarrow
 def test_max_plot_columns(simple_df):
     report = TableReport(simple_df)
     assert report.max_association_columns == 30
@@ -106,6 +109,7 @@ def test_enable_subsampling(simple_df):
             assert evaluate(dataop.skb.subsample(n=3), mode="preview").shape[0] == 3
 
 
+@polars_installed_without_pyarrow
 def test_float_precision(simple_series):
     # Default config: float_precision set to 3
     report = TableReport(simple_series)
