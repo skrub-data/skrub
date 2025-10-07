@@ -51,21 +51,21 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - id: get_head_commit_message
-        name: get head commit message
+        name: Get head commit message
         run: echo "COMMIT_MSG=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
 
   test_against_nightly:
     needs: check_run_nightly
     if: ${{ needs.check_run_nightly.outputs.run == 'true' }}
     runs-on: ubuntu-latest
-    name: test against nighlty dependencies
+    name: Test against nightly dependencies
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
         name: 'Setup python'
-      - shell: bash {0}
+      - name: Install skrub and nightly dependencies
         run: |
           dev_anaconda_url=https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
           pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url .
