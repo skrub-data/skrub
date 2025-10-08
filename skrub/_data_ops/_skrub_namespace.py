@@ -333,6 +333,35 @@ class SkrubNamespace:
         3    False
         Name: delayed, dtype: bool
 
+        We can also pass additional keyword arguments to the estimator's
+        methods. For example a StandardScaler can be passed sample weights.
+        We first apply it without weights for comparison:
+
+        >>> import pandas as pd
+        >>> X = skrub.var("X", pd.DataFrame({"count": [10, 1], "value": [2.0, -2.0]}))
+        >>> count, value = X["count"], X[["value"]]
+        >>> value.skb.apply(StandardScaler())
+        <Apply StandardScaler>
+        Result:
+        ―――――――
+           value
+        0    1.0
+        1   -1.0
+
+        Now we weight by ``count``. Note that ``count`` is itself a DataOp -- the
+        kwargs, like X and y, can be computed during the DataOp's evaluation:
+
+        >>> value.skb.apply(StandardScaler(), fit_transform_kwargs={"sample_weight": count})
+        <Apply StandardScaler>
+        Result:
+        ―――――――
+              value
+        0  0.316...
+        1 -3.162...
+
+        Another example would be passing evaluation sets to the ``fit`` method
+        of an ``xgboost`` estimator.
+
         Sometimes we want to pass a value for ``y`` because it is required for
         scoring and cross-validation, but it is not needed for fitting the
         estimator. In this case pass ``unsupervised=True``.
