@@ -22,7 +22,6 @@ from ._data_ops import (
     deferred,
 )
 from ._estimator import (
-    OptunaSearch,
     ParamSearch,
     SkrubLearner,
     cross_validate,
@@ -1913,40 +1912,6 @@ class SkrubNamespace:
 
         search = ParamSearch(
             self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
-        )
-        if not fitted:
-            return search
-        return search.fit(
-            env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
-        )
-
-    def make_optuna_search(
-        self,
-        *,
-        study=None,
-        cv=None,
-        random_state=None,
-        n_jobs=None,
-        n_trials=10,
-        timeout=None,
-        callbacks=None,
-        catch=(),
-        refit=True,
-        fitted=False,
-        keep_subsampling=False,
-    ):
-        _check_keep_subsampling(fitted, keep_subsampling)
-        search = OptunaSearch(
-            self.clone(),
-            study=study,
-            cv=cv,
-            random_state=random_state,
-            n_jobs=n_jobs,
-            n_trials=n_trials,
-            timeout=timeout,
-            callbacks=callbacks,
-            catch=catch,
-            refit=refit,
         )
         if not fitted:
             return search

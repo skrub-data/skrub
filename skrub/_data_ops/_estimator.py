@@ -1,12 +1,9 @@
 # Scikit-learn-ish interface to the skrub DataOps
-import numpy as np
 import pandas as pd
-from joblib import effective_n_jobs
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
 from sklearn.model_selection import KFold, check_cv
-from sklearn.utils import check_random_state
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _dataframe as sbd
@@ -938,86 +935,3 @@ class _XyParamSearch(_XyPipelineMixin, ParamSearch):
 
     def _call_predictor_method(self, name, X, y=None):
         return getattr(self.best_learner_, name)(self._get_env(X, y))
-
-
-class OptunaSearch(_CloudPickleDataOp, BaseEstimator):
-    def __init__(
-        self,
-        data_op,
-        study=None,
-        cv=None,
-        random_state=None,
-        n_jobs=None,
-        n_trials=10,
-        timeout=None,
-        callbacks=None,
-        catch=(),
-        refit=True,
-    ):
-        self.data_op = data_op
-        self.study = study
-        self.cv = cv
-        self.random_state = random_state
-        self.n_jobs = n_jobs
-        self.n_trials = n_trials
-        self.timeout = timeout
-        self.callbacks = callbacks
-        self.catch = catch
-        self.refit = refit
-
-    def fit(self, environment):
-        import optuna
-        import optuna.samplers
-
-        if self.study is None:
-            random_state = check_random_state(self.random_state)
-            seed = random_state.randint(np.iinfo("int32").max)
-            # The default sampler, we instantiate it to set the seed
-            sampler = optuna.samplers.TPESampler(seed=seed)
-            self.study_ = optuna.create_study(direction="maximize", sampler=sampler)
-        else:
-            self.study_ = self.study
-
-        def objective(trial):
-            learner = self.data_op.skb.make_learner(choosing=trial)
-            cv_results = learner.data_op.skb.cross_validate(environment, cv=self.cv)
-            return cv_results["test_score"].mean()
-
-        n_jobs = effective_n_jobs(self.n_jobs)
-        self.study_.optimize(
-            objective,
-            n_jobs=n_jobs,
-            n_trials=self.n_trials,
-            timeout=self.timeout,
-            callbacks=self.callbacks,
-            catch=self.catch,
-        )
-        self.best_params_ = self.study_.best_params
-        if not self.refit:
-            return self
-        best_learner = self.data_op.skb.make_learner()
-        best_learner.set_params(**self.study_.best_params)
-        best_learner.fit(environment)
-        self.best_learner_ = best_learner
-        return self
-
-    def __getattr__(self, name):
-        if name not in supported_modes(self.data_op):
-            attribute_error(self, name)
-
-        def f(*args, **kwargs):
-            return self._call_predictor_method(name, *args, **kwargs)
-
-        f.__name__ = name
-        return f
-
-    def _call_predictor_method(self, name, environment):
-        check_is_fitted(self, "study_")
-        if not hasattr(self, "best_learner_"):
-            raise AttributeError(
-                "This parameter search was initialized with `refit=False`. "
-                f"{name} is available only after refitting on the best parameters. "
-                "Please pass another value to `refit` or fit a learner manually "
-                "using the `best_params_` or `study_` attributes."
-            )
-        return getattr(self.best_learner_, name)(environment)
