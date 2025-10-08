@@ -13,6 +13,10 @@ New features
 ------------
 - TableReport now displays the mean statistic for boolean columns.
   :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
+- :meth:`DataOp.skb.iter_cv_splits` iterates over the training and testing
+  environments produced by a CV splitter -- similar to
+  :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
+  :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
