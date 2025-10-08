@@ -238,6 +238,7 @@ API_REFERENCE = {
                     "DataOp.skb.make_grid_search",
                     "DataOp.skb.make_randomized_search",
                     "DataOp.skb.if_else",
+                    "DataOp.skb.iter_cv_splits",
                     "DataOp.skb.iter_learners_grid",
                     "DataOp.skb.iter_learners_randomized",
                     "DataOp.skb.mark_as_X",
