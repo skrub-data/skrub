@@ -1307,6 +1307,7 @@ class SkrubNamespace:
         open=True,
         output_dir=None,
         overwrite=False,
+        title=None,
     ):
         """Generate a full report of the DataOp's evaluation.
 
@@ -1332,6 +1333,10 @@ class SkrubNamespace:
         overwrite : bool (default=False)
             What to do if the output directory already exists. If
             ``overwrite``, replace it, otherwise raise an exception.
+
+        title: str (default=None)
+            Title to display at the top of the report. If ``None``, no title will be
+            displayed.
 
         Returns
         -------
@@ -1409,6 +1414,7 @@ class SkrubNamespace:
             open=open,
             output_dir=output_dir,
             overwrite=overwrite,
+            title=title,
         )
 
     def make_learner(self, *, fitted=False, keep_subsampling=False):
