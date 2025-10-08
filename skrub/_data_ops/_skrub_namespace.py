@@ -19,7 +19,13 @@ from ._data_ops import (
     check_name,
     deferred,
 )
-from ._estimator import ParamSearch, SkrubLearner, cross_validate, train_test_split
+from ._estimator import (
+    ParamSearch,
+    SkrubLearner,
+    cross_validate,
+    iter_cv_splits,
+    train_test_split,
+)
 from ._evaluation import (
     choices,
     clone,
@@ -33,7 +39,7 @@ from ._inspection import (
     full_report,
 )
 from ._subsampling import SubsamplePreviews, env_with_subsampling
-from ._utils import NULL, attribute_error
+from ._utils import KFOLD_5, NULL, attribute_error
 
 
 def _var_values_provided(data_op, environment):
@@ -1528,9 +1534,9 @@ class SkrubNamespace:
 
             - train: a dictionary containing the training environment
             - test: a dictionary containing the test environment
-            - X_train: the value of the variable marked with ``skb.mark_as_x()`` in
+            - X_train: the value of the variable marked with ``skb.mark_as_X()`` in
               the train environment
-            - X_test: the value of the variable marked with ``skb.mark_as_x()`` in
+            - X_test: the value of the variable marked with ``skb.mark_as_X()`` in
               the test environment
             - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
               the train environment, if there is one (may not be the case for
@@ -1582,6 +1588,71 @@ class SkrubNamespace:
             keep_subsampling=keep_subsampling,
             split_func=split_func,
             **split_func_kwargs,
+        )
+
+    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=KFOLD_5):
+        """Yield splits of an environment into training and testing environments.
+
+        Parameters
+        ----------
+        environment : dict, optional
+            The environment (dict mapping variable names to values) containing the
+            full data. If ``None`` (the default), the data is retrieved from the
+            DataOp.
+
+        keep_subsampling : bool, default=False
+            If True, and if subsampling has been configured (see
+            :meth:`DataOp.skb.subsample`), use a subsample of the data. By
+            default subsampling is not applied and all the data is used.
+
+        cv : int, cross-validation generator or iterable, default=KFold(5)
+            The default is 5-fold without shuffling. Can be a cross-validation
+            splitter, an iterable yielding pairs of (train, test) indices, or an
+            int to specify the number of folds for KFold splitting.
+
+        Yields
+        ------
+        dict
+            For each split, a dict is produced, containing the following keys:
+
+            - train: a dictionary containing the training environment
+            - test: a dictionary containing the test environment
+            - X_train: the value of the variable marked with ``skb.mark_as_X()`` in
+              the train environment
+            - X_test: the value of the variable marked with ``skb.mark_as_X()`` in
+              the test environment
+            - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
+              the train environment, if there is one (may not be the case for
+              unsupervised learning).
+            - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
+              the test environment, if there is one (may not be the case for
+              unsupervised learning).
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+        >>> from sklearn.metrics import accuracy_score
+
+        >>> orders = skrub.var("orders")
+        >>> X = orders.skb.drop("delayed").skb.mark_as_X()
+        >>> y = orders["delayed"].skb.mark_as_y()
+        >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
+        ...     DummyClassifier(), y=y
+        ... )
+        >>> df = skrub.datasets.toy_orders().orders
+        >>> accuracies = []
+        >>> for split in delayed.skb.iter_cv_splits({"orders": df}, cv=3):
+        ...     learner = delayed.skb.make_learner().fit(split["train"])
+        ...     prediction = learner.predict(split["test"])
+        ...     accuracies.append(accuracy_score(split["y_test"], prediction))
+        >>> accuracies
+        [1.0, 0.0, 1.0]
+        """
+        if environment is None:
+            environment = self.get_data()
+        yield from iter_cv_splits(
+            self._data_op, environment, keep_subsampling=keep_subsampling, cv=cv
         )
 
     def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
