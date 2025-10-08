@@ -487,3 +487,13 @@ def test_class_skb():
     from skrub._data_ops._skrub_namespace import SkrubNamespace
 
     assert skrub.DataOp.skb is SkrubNamespace
+
+
+def test_get_vars():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = (a + b).skb.set_name("c")
+    d = c + c
+    assert list(d.skb.get_vars().keys()) == ["a", "b"]
+    assert d.skb.get_vars()["a"] is a
+    assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
