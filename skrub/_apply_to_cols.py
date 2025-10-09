@@ -124,15 +124,16 @@ class SingleColumnTransformer(TransformerMixin, BaseEstimator):
                 setattr(subclass, method, wrapped)
 
     def get_feature_names_out(self, input_features=None):
-        """
-        Get the output feature names.
-        Parameters:
+        """Get the output feature names.
+
+        Parameters
         -----------
         input_features : array-like of str, default=None
             Input feature names. Ignored.
-        Returns:
+
+        Returns
         --------
-        all_outputs_ : array-like of str
+        all_outputs_
             The names of the output features.
         """
         check_is_fitted(self, "all_outputs_")
