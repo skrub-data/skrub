@@ -48,7 +48,7 @@ class RejectColumn(ValueError):
     pass
 
 
-class SingleColumnTransformer(BaseEstimator):
+class SingleColumnTransformer(TransformerMixin, BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
@@ -122,6 +122,21 @@ class SingleColumnTransformer(BaseEstimator):
             if method in subclass.__dict__:
                 wrapped = _wrap_add_check_single_column(getattr(subclass, method))
                 setattr(subclass, method, wrapped)
+
+    def get_feature_names_out(self, input_features=None):
+        """
+        Get the output feature names.
+        Parameters:
+        -----------
+        input_features : array-like of str, default=None
+            Input feature names. Ignored.
+        Returns:
+        --------
+        all_outputs_ : array-like of str
+            The names of the output features.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return self.all_outputs_
 
 
 def _wrap_add_check_single_column(f):

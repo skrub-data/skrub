@@ -188,6 +188,7 @@ class DropCols(TransformerMixin, BaseEstimator):
 
 class Drop(SingleColumnTransformer):
     def fit_transform(self, column, y=None):
+        self.all_outputs_ = []
         return []
 
     def transform(self, column):
