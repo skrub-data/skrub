@@ -1190,6 +1190,92 @@ class SkrubNamespace:
                 data[impl.name] = impl.value
         return data
 
+    def get_vars(self, all_named_ops=False):
+        """
+        Get all the variables used in the DataOp.
+
+        Parameters
+        ----------
+        all_named_ops : bool, default = False
+            If False, return only actual variables (DataOps created with
+            :func:`var()`, :func:`X()` or :func:`y()`). If False, return all
+            nodes that have a name (ie for which a value can be passed in the
+            environment).
+
+        Returns
+        -------
+        dict :
+            Keys are names, and values the corresponding DataOp.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> a = skrub.var("a")
+        >>> b = skrub.var("b")
+        >>> c = (a + b).skb.set_name("c")
+        >>> d = c + c
+        >>> d
+        <BinOp: add>
+
+        Our DataOp, `d`, contains 2 variables: "a" and "b":
+
+        >>> d.skb.get_vars()
+        {'a': <Var 'a'>, 'b': <Var 'b'>}
+
+        Those are the keys for which we need to provide values in the
+        environment when evaluating `d`:
+
+        >>> d.skb.eval({"a": 10, "b": 3}) # (10 + 3) + (10 + 3) = 26
+        26
+
+        In addition, we set a name on the internal node `c`. It is not a
+        variable, and normally it is computed as `(a + b)`. But as it has a
+        name, we can override its output by passing a value for "c" in the
+        environment. When we do, the computation of `c` never happens (nor of
+        `a` or `b`, here, because they are only used to compute `c`) -- it is
+        bypassed and the provided value is used instead.
+
+        >>> d.skb.eval({"c": 7}) # 7 + 7 = 14
+        14
+
+        If we want ``get_vars`` to also list nodes like our example ``c`` which
+        have a name and can be passed in the environment, we pass
+        ``all_named_ops=True``:
+
+        >>> d.skb.get_vars(all_named_ops=True)
+        {'a': <Var 'a'>, 'b': <Var 'b'>, 'c': <c | BinOp: add>}
+
+        Note ``get_vars`` can be particularly useful when we have a learner
+        (e.g. loaded from a pickle file) and we want to check what inputs we
+        should pass to its methods such as ``fit`` and ``transform``:
+
+        >>> learner = d.skb.make_learner()
+        >>> list(learner.data_op.skb.get_vars().keys())
+        ['a', 'b']
+
+        The output above tells us what keys the dict we pass to
+        ``learner.fit()`` should contain:
+
+        >>> learner.fit({'a': 2, 'b': 3})
+        SkrubLearner(data_op=<BinOp: add>)
+        """
+        from ._data_ops import Var
+        from ._evaluation import nodes
+
+        named_nodes = {
+            name: op
+            for op in nodes(self._data_op)
+            if (name := op._skrub_impl.name) is not None
+        }
+        if all_named_ops:
+            return named_nodes
+        return {
+            name: op
+            for name, op in named_nodes.items()
+            if isinstance(op._skrub_impl, Var)
+        }
+
     def draw_graph(self):
         """Get an SVG string representing the computation graph.
 
