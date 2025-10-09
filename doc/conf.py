@@ -373,6 +373,7 @@ intersphinx_mapping = {
     "polars": ("https://docs.pola.rs/py-polars/html", None),
     "seaborn": ("http://seaborn.pydata.org", None),
     "sentence_transformers": ("https://sbert.net/", None),
+    "optuna": ("https://optuna.readthedocs.io/en/stable/", None),
 }
 
 

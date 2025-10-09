@@ -960,11 +960,11 @@ def choice_default(choice_id, display_name, choice):
 
 
 def random_choice(random_state):
-    random_state = check_random_state()
+    random_state = check_random_state(random_state)
 
     def policy(choice_id, display_name, choice):
         if hasattr(choice, "rvs"):
-            return choice.rvs(random_state)
+            return choice.rvs(random_state=random_state)
         return int(random_state.randint(len(choice.outcomes)))
 
     return policy

@@ -4,6 +4,7 @@ import sys
 import typing
 import warnings
 
+import numpy as np
 from sklearn import model_selection
 
 from .. import selectors as s
@@ -1419,7 +1420,7 @@ class SkrubNamespace:
             overwrite=overwrite,
         )
 
-    def make_learner(self, *, fitted=False, keep_subsampling=False, choosing="default"):
+    def make_learner(self, *, fitted=False, keep_subsampling=False, choose="default"):
         """Get a skrub learner for this DataOp.
 
         Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
@@ -1429,11 +1430,13 @@ class SkrubNamespace:
 
         .. warning::
 
-           If the DataOp contains choices (e.g. ``choose_from(...)``), this
-           learner uses the default value of each choice. To actually pick the
-           best value with hyperparameter tuning, use
-           :meth:`DataOp.skb.make_randomized_search` or
-           :meth:`DataOp.skb.make_grid_search` instead.
+           If the DataOp contains choices (e.g. ``choose_from(...)``), by
+           default this learner uses the default value of each choice. See the
+           ``choose`` parameter for other options (random or from an optuna
+           trial). To actually pick the best value with hyperparameter tuning,
+           use :meth:`DataOp.skb.make_randomized_search`
+           :meth:`DataOp.skb.make_grid_search` instead, or an optuna
+           :class:`~optuna.study.Study`.
 
         Parameters
         ----------
@@ -1452,16 +1455,21 @@ class SkrubNamespace:
             ``fitted=False`` (because ``keep_subsampling=True`` would have no
             effect).
 
-        choosing : 'default', 'random', 'random([seed])' or optuna.Trial instance
-            How to resolve choices contained in the data_op.
+        choose : 'default', 'random', 'random([seed])' or \
+                 :class:`optuna.Trial <optuna.trial.Trial>` instance
+            How to resolve choices contained in the data_op. The different
+            options are:
 
-            - default: the corresponding parameters of the SkrubLearner are not
+            - 'default': the corresponding parameters of the SkrubLearner are not
               set; the default values of the choices are used.
-            - random: a random value is picked according to the distribution of
-              each choice. The form 'random(<seed>)' is also accepted to set
+            - 'random': a random value is picked according to the distribution of
+              each choice. The form 'random([seed])' is also accepted to set
               the random seed: for example 'random(0)' sets it to 0. 'random()'
               is the same as 'random'.
-            - if an optuna Trial, it is used to suggest values for the choices.
+            - an instance of ``numpy.random.RandomState``. Same as 'random',
+              but the provided RandomState is used to sample values.
+            - an instance of :class:`optuna.trial <optuna.trial.Trial>`. It is used to suggest values for
+              the choices.
 
             Note none of these options picks the best choice value according to
             an evaluation criterion, as this function creates a single learner.
@@ -1469,8 +1477,8 @@ class SkrubNamespace:
             select the resulting learners, or one of
             :meth:`DataOp.skb.make_grid_search`,
             :meth:`DataOp.skb.make_randomized_search`,
-            :meth:`DataOp.skb.make_optuna_search` can be used to automatically
-            select the best hyperparameters.
+            :meth:`optuna.Study.optimize <optuna.study.Study.optimize>`
+            can be used to automatically select the best hyperparameters.
 
         Returns
         -------
@@ -1512,33 +1520,62 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
 
+        The ``choose`` parameter allows us to control how choices contained in
+        the DataOp should be handled. The default is to use the default value
+        of each choice.
+
+        >>> def mult(x, factor):
+        ...     return x * factor
+        >>> out = skrub.var("x").skb.apply_func(
+        ...     mult, skrub.choose_int(-10, 10, default=2)
+        ... )
+        >>> out.skb.make_learner().fit_transform({'x': 1})
+        2
+
+        The 'random' option samples new choice outcomes for each created learner:
+
+        >>> out.skb.make_learner(choose='random').fit_transform({'x': 1}) # doctest: +SKIP
+        np.int64(3)
+        >>> out.skb.make_learner(choose='random').fit_transform({'x': 1}) # doctest: +SKIP
+        np.int64(-5)
+
+        If an :class:`optuna.Trial <optuna.trial.Trial>` instance is passed
+        instead, the choice outcomes are obtained by calling the trial's
+        ``suggest_int``, ``suggest_float`` or ``suggest_categorical`` methods.
+        This allows easily selecting hyperparameters with optuna.
+
         Please see the examples gallery for full information about DataOps
         and the learners they generate.
-        """
+        """  # noqa: E501
         from . import _evaluation
 
         _check_keep_subsampling(fitted, keep_subsampling)
 
         learner = SkrubLearner(self.clone())
-        if isinstance(choosing, str) and choosing == "default":
+        if isinstance(choose, str) and choose == "default":
             choices = {}
         elif (
-            isinstance(choosing, str)
-            and (m := re.match(r"random(?:\(\s*\d*\s*\))?", choosing)) is not None
+            isinstance(choose, str)
+            and (m := re.match(r"^\s*random\s*(?:\(\s*(\d*)\s*\))?\s*$", choose))
+            is not None
         ):
             random_state = int(g) if (g := m.group(1)) else None
             choices = _evaluation.eval_choices(
                 self._data_op, _evaluation.random_choice(random_state)
             )
-        elif _is_optuna_trial(choosing):
+        elif isinstance(choose, np.random.RandomState):
             choices = _evaluation.eval_choices(
-                self._data_op, _evaluation.optuna_suggestion(choosing)
+                self._data_op, _evaluation.random_choice(choose)
+            )
+        elif _is_optuna_trial(choose):
+            choices = _evaluation.eval_choices(
+                self._data_op, _evaluation.optuna_suggestion(choose)
             )
         else:
             raise ValueError(
-                "choosing should be 'default', 'random', 'random(<seed>)', or an"
+                "`choose` should be 'default', 'random', a numpy RandomState, or an"
                 " optuna.Trial instance. Got object of type"
-                f" {type(choosing).__name__!r}: {choosing!r}"
+                f" {type(choose).__name__!r}: {choose!r}"
             )
         params = {f"data_op__{k}": v for k, v in choices.items()}
         learner.set_params(**params)
