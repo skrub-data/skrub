@@ -76,6 +76,7 @@ dev = [
     "pyarrow",
     "polars",
     "plotly",
+    "optuna",
 ]
 transformers = [
     "sentence-transformers",
@@ -129,6 +130,7 @@ pre-commit = "*"
 pyarrow = "*"
 polars = "*"
 plotly = "*"
+optuna = "*"
 
 [tool.pixi.feature.transformers]
 # pytorch is not anymore released on osx-64 platform
@@ -167,10 +169,12 @@ requests = "==2.25.0"
 pyarrow = "==15.0.2"
 polars = "==0.20.15"
 plotly = "*"
+optuna = "*"
 
 [tool.pixi.feature.polars-without-pyarrow.dependencies]
 polars = "*"
 plotly = "*"
+optuna = "*"
 
 [tool.pixi.feature.py309.dependencies]
 python = "~=3.9.0"
