@@ -19,6 +19,8 @@ Changes
 
 Bugfixes
 --------
+- Added a ``get_feature_names_out`` method to all transformers.
+  :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Release 0.6.2
 =============
