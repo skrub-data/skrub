@@ -120,6 +120,7 @@ sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
 sphinx-sitemap = "*"
 statsmodels = "*"
+optuna = "*"
 
 [tool.pixi.feature.lint.dependencies]
 black = "==23.3.0"
