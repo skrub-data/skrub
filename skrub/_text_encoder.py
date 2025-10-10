@@ -4,7 +4,6 @@ import os
 import warnings
 from pathlib import Path
 
-from sklearn.base import TransformerMixin
 from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
@@ -20,7 +19,7 @@ class ModelNotFound(ValueError):
     pass
 
 
-class TextEncoder(SingleColumnTransformer, TransformerMixin):
+class TextEncoder(SingleColumnTransformer):
     """Encode string features by applying a pretrained language model \
         downloaded from the HuggingFace Hub.
 
