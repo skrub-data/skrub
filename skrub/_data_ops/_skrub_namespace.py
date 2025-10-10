@@ -90,10 +90,10 @@ def _check_grid_search_possible(data_op):
 
 def _is_optuna_trial(obj):
     try:
-        trial_type = sys.modules["optuna"].Trial
+        optuna = sys.modules["optuna"]
+        return isinstance(obj, (optuna.trial.Trial, optuna.trial.FrozenTrial))
     except (KeyError, AttributeError):
         return False
-    return isinstance(obj, trial_type)
 
 
 class SkrubNamespace:

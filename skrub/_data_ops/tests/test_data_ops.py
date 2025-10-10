@@ -396,7 +396,6 @@ def test_optuna_optimize_learner(use_choose_from, outcome_names):
     sampler = optuna.samplers.TPESampler(seed=0)
     study = optuna.create_study(direction="minimize", sampler=sampler)
     study.optimize(objective, n_trials=n_trials)
-    learner = err.skb.make_learner()
     if use_choose_from:
         if outcome_names:
             assert study.best_params == {"0:x": "2:two"}
@@ -405,10 +404,15 @@ def test_optuna_optimize_learner(use_choose_from, outcome_names):
     else:
         assert list(study.best_params.keys()) == ["0:x"]
         assert study.best_params["0:x"] == pytest.approx(2.0, abs=0.01)
-    learner.set_params(**study.best_params)
-    assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.01)
-    truncated = learner.truncated_after("x_")
-    assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.01)
+
+    # test both set_params(**best_params) or make_learner(choose=best_trial)
+    learner_0 = err.skb.make_learner(choose=study.best_trial)
+    learner_1 = err.skb.make_learner()
+    learner_1.set_params(**study.best_params)
+    for learner in [learner_0, learner_1]:
+        assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.01)
+        truncated = learner.truncated_after("x_")
+        assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.01)
 
 
 def test_is_optuna_trial(monkeypatch):
