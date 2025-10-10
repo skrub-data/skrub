@@ -17,6 +17,9 @@ parallel or distributed computation.
 """
 
 # %%
+# Defining the pipeline and creating example data
+# -----------------------------------------------
+#
 # We will fit a binary classifier containing a few choices on a toy dataset. We
 # try several classifiers: logisitic regression, random forest, and a dummy
 # baseline. The logistic regression and random forest have hyperparameters that
@@ -51,22 +54,21 @@ X_a, y_a = make_classification(random_state=0)
 env = {"X": X_a, "y": y_a}
 
 # %%
-# Select the best hyperparameters with Optuna.
+# Selecting the best hyperparameters with Optuna.
+# -----------------------------------------------
 #
-# The :class:`optuna.Study <optuna.study.Study>` created with
-# :func:`create_study <optuna.study.create_study>` runs the hyperparameter
+# The :class:`optuna.Study <optuna.study.Study>` runs the hyperparameter
 # search.
 #
 # Its method :meth:`optimize <optuna.study.Study.optimize>` is given an
 # ``objective`` function. The ``objective`` must accept a
-# :class:`~optuna.trial.Trial` object (which is produced by the study) and
-# return the value to maximize (or minimize).
+# :class:`~optuna.trial.Trial` object (which is produced by the study and picks
+# the parameters for a given evaluation of the objective) and return the value
+# to maximize (or minimize).
 #
-# The :class:`~optuna.trial.Trial` is what picks the parameters for a given
-# evaluation of the objective function. To use it with a :class:`DataOp`, we
-# just need to pass the Trial object to :meth:`DataOp.skb.make_learner`. This
-# creates a :class:`SkrubLearner` initialized with the parameters picked by the
-# optuna Trial.
+# To use Optuna with a :class:`DataOp`, we just need to pass the Trial object
+# to :meth:`DataOp.skb.make_learner`. This creates a :class:`SkrubLearner`
+# initialized with the parameters picked by the optuna Trial.
 #
 # We can then cross-validate the SkrubLearner, or score it however we prefer,
 # and return the score so that the optuna Study can take it into account.
@@ -106,15 +108,20 @@ study.trials_dataframe().sort_values("value", ascending=False).filter(
 # predictions on unseen data.
 
 # %%
-learner = pred.skb.make_learner()
-learner.set_params(**study.best_params)
-learner.fit(env)
-print(learner.describe_params())
+best_learner = pred.skb.make_learner(choose=study.best_trial)
+
+# This would achieve the same result:
+# best_learner = pred.skb.make_learner()
+# best_learner.set_params(**study.best_params)
+
+best_learner.fit(env)
+print(best_learner.describe_params())
 
 # %%
 # Many reporting capabilities are available for example with `optuna-dashboard
 # <https://optuna-dashboard.readthedocs.io/en/latest/getting-started.html>`_.
 # As a small example we plot the score depending on the number of trees in the
 # random forest:
+
 # %%
 optuna.visualization.plot_slice(study, params=["1:n estimators"])

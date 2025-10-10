@@ -1591,11 +1591,13 @@ class SkrubNamespace:
 
            If the DataOp contains choices (e.g. ``choose_from(...)``), by
            default this learner uses the default value of each choice. See the
-           ``choose`` parameter for other options (random or from an optuna
-           trial). To actually pick the best value with hyperparameter tuning,
-           use :meth:`DataOp.skb.make_randomized_search`
-           :meth:`DataOp.skb.make_grid_search` instead, or an optuna
-           :class:`~optuna.study.Study`.
+           `choose` parameter for other options (random or from an
+           `Optuna <https://optuna.readthedocs.io/en/stable/>`_ trial). To actually
+           pick the best value with hyperparameter tuning, use
+           :meth:`DataOp.skb.make_randomized_search`
+           :meth:`DataOp.skb.make_grid_search` instead, or an Optuna
+           :class:`~optuna.study.Study` as shown in this
+           :ref:`example <example_optuna_choices>`.
 
         Parameters
         ----------
@@ -1625,9 +1627,11 @@ class SkrubNamespace:
               each choice. The form 'random([seed])' is also accepted to set
               the random seed: for example 'random(0)' sets it to 0. 'random()'
               is the same as 'random'.
-            - an instance of ``numpy.random.RandomState``. Same as 'random',
+            - an instance of :class:`numpy.random.RandomState`. Same as 'random',
               but the provided RandomState is used to sample values.
-            - an instance of :class:`optuna.trial <optuna.trial.Trial>`. It is used to suggest values for
+            - an instance of :class:`optuna.Trial <optuna.trial.Trial>` or
+              :class:`optuna.FrozenTrial <optuna.trial.FrozenTrial>`. It is
+              used to suggest values for
               the choices.
 
             Note none of these options picks the best choice value according to
@@ -1636,8 +1640,9 @@ class SkrubNamespace:
             select the resulting learners, or one of
             :meth:`DataOp.skb.make_grid_search`,
             :meth:`DataOp.skb.make_randomized_search`,
-            :meth:`optuna.Study.optimize <optuna.study.Study.optimize>`
-            can be used to automatically select the best hyperparameters.
+            :meth:`optuna.Study.optimize <optuna.study.Study.optimize>` (as
+            shown in this :ref:`example <example_optuna_choices>`) can be used
+            to automatically select the best hyperparameters.
 
         Returns
         -------
