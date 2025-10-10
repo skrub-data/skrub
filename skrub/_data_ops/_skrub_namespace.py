@@ -116,7 +116,10 @@ class SkrubNamespace:
         how="auto",
         allow_reject=False,
         unsupervised=False,
+        kwargs=None,
     ):
+        if kwargs is None:
+            kwargs = {}
         data_op = DataOp(
             Apply(
                 estimator=estimator,
@@ -126,6 +129,7 @@ class SkrubNamespace:
                 how=how,
                 allow_reject=allow_reject,
                 unsupervised=unsupervised,
+                kwargs=kwargs,
             )
         )
         return data_op
@@ -141,6 +145,13 @@ class SkrubNamespace:
         how="auto",
         allow_reject=False,
         unsupervised=False,
+        fit_kwargs=None,
+        fit_transform_kwargs=None,
+        transform_kwargs=None,
+        predict_kwargs=None,
+        predict_proba_kwargs=None,
+        decision_function_kwargs=None,
+        score_kwargs=None,
     ):
         """
         Apply a scikit-learn estimator to a dataframe or numpy array.
@@ -198,6 +209,30 @@ class SkrubNamespace:
             transformer, or when we are not interested in scoring with
             ground-truth labels), simply leave the default ``y=None`` and there
             is no need to pass a value for ``unsupervised``.
+
+        fit_kwargs : dict, optional, default=None
+            Extra named arguments to pass to the estimator's ``fit()`` method,
+            for example ``fit_kwargs={'sample_weights': [.1, .5, .4]}``. May be
+            (or contain) a DataOp, which will be evaluated before passing the
+            kwargs to ``fit``.
+        fit_transform_kwargs : dict, optional, default=None
+            Extra named arguments for ``fit_transform``. See the description of
+            the ``fit_kwargs`` parameter.
+        transform_kwargs : dict, optional, default=None
+            Extra named arguments for ``transform``. See the description of the
+            ``fit_kwargs`` parameter.
+        predict_kwargs : dict, optional, default=None
+            Extra named arguments for ``predict``. See the description of the
+            ``fit_kwargs`` parameter.
+        predict_proba_kwargs : dict, optional, default=None
+            Extra named arguments for ``predict_proba``. See the description of
+            the ``fit_kwargs`` parameter.
+        decision_function_kwargs : dict, optional, default=None
+            Extra named arguments for ``decision_function``. See the
+            description of the ``fit_kwargs`` parameter.
+        score_kwargs : dict, optional, default=None
+            Extra named arguments for ``score``. See the description of the
+            ``fit_kwargs`` parameter.
 
         Returns
         -------
@@ -309,6 +344,35 @@ class SkrubNamespace:
         3    False
         Name: delayed, dtype: bool
 
+        We can also pass additional keyword arguments to the estimator's
+        methods. For example a StandardScaler can be passed sample weights.
+        We first apply it without weights for comparison:
+
+        >>> import pandas as pd
+        >>> X = skrub.var("X", pd.DataFrame({"count": [10, 1], "value": [2.0, -2.0]}))
+        >>> count, value = X["count"], X[["value"]]
+        >>> value.skb.apply(StandardScaler())
+        <Apply StandardScaler>
+        Result:
+        ―――――――
+           value
+        0    1.0
+        1   -1.0
+
+        Now we weight by ``count``. Note that ``count`` is itself a DataOp -- the
+        kwargs, like X and y, can be computed during the DataOp's evaluation:
+
+        >>> value.skb.apply(StandardScaler(), fit_transform_kwargs={"sample_weight": count})
+        <Apply StandardScaler>
+        Result:
+        ―――――――
+              value
+        0  0.316...
+        1 -3.162...
+
+        Another example would be passing evaluation sets to the ``fit`` method
+        of an ``xgboost`` estimator.
+
         Sometimes we want to pass a value for ``y`` because it is required for
         scoring and cross-validation, but it is not needed for fitting the
         estimator. In this case pass ``unsupervised=True``.
@@ -346,6 +410,15 @@ class SkrubNamespace:
             how=how,
             allow_reject=allow_reject,
             unsupervised=unsupervised,
+            kwargs={
+                "fit": fit_kwargs,
+                "fit_transform": fit_transform_kwargs,
+                "transform": transform_kwargs,
+                "predict": predict_kwargs,
+                "predict_proba": predict_proba_kwargs,
+                "decision_function": decision_function_kwargs,
+                "score": score_kwargs,
+            },
         )
 
     def apply_func(self, func, *args, **kwargs):
@@ -1127,6 +1200,92 @@ class SkrubNamespace:
             if isinstance(impl, Var) and impl.value is not NULL:
                 data[impl.name] = impl.value
         return data
+
+    def get_vars(self, all_named_ops=False):
+        """
+        Get all the variables used in the DataOp.
+
+        Parameters
+        ----------
+        all_named_ops : bool, default = False
+            If False, return only actual variables (DataOps created with
+            :func:`var()`, :func:`X()` or :func:`y()`). If False, return all
+            nodes that have a name (ie for which a value can be passed in the
+            environment).
+
+        Returns
+        -------
+        dict :
+            Keys are names, and values the corresponding DataOp.
+
+        Examples
+        --------
+        >>> import skrub
+
+        >>> a = skrub.var("a")
+        >>> b = skrub.var("b")
+        >>> c = (a + b).skb.set_name("c")
+        >>> d = c + c
+        >>> d
+        <BinOp: add>
+
+        Our DataOp, `d`, contains 2 variables: "a" and "b":
+
+        >>> d.skb.get_vars()
+        {'a': <Var 'a'>, 'b': <Var 'b'>}
+
+        Those are the keys for which we need to provide values in the
+        environment when evaluating `d`:
+
+        >>> d.skb.eval({"a": 10, "b": 3}) # (10 + 3) + (10 + 3) = 26
+        26
+
+        In addition, we set a name on the internal node `c`. It is not a
+        variable, and normally it is computed as `(a + b)`. But as it has a
+        name, we can override its output by passing a value for "c" in the
+        environment. When we do, the computation of `c` never happens (nor of
+        `a` or `b`, here, because they are only used to compute `c`) -- it is
+        bypassed and the provided value is used instead.
+
+        >>> d.skb.eval({"c": 7}) # 7 + 7 = 14
+        14
+
+        If we want ``get_vars`` to also list nodes like our example ``c`` which
+        have a name and can be passed in the environment, we pass
+        ``all_named_ops=True``:
+
+        >>> d.skb.get_vars(all_named_ops=True)
+        {'a': <Var 'a'>, 'b': <Var 'b'>, 'c': <c | BinOp: add>}
+
+        Note ``get_vars`` can be particularly useful when we have a learner
+        (e.g. loaded from a pickle file) and we want to check what inputs we
+        should pass to its methods such as ``fit`` and ``transform``:
+
+        >>> learner = d.skb.make_learner()
+        >>> list(learner.data_op.skb.get_vars().keys())
+        ['a', 'b']
+
+        The output above tells us what keys the dict we pass to
+        ``learner.fit()`` should contain:
+
+        >>> learner.fit({'a': 2, 'b': 3})
+        SkrubLearner(data_op=<BinOp: add>)
+        """
+        from ._data_ops import Var
+        from ._evaluation import nodes
+
+        named_nodes = {
+            name: op
+            for op in nodes(self._data_op)
+            if (name := op._skrub_impl.name) is not None
+        }
+        if all_named_ops:
+            return named_nodes
+        return {
+            name: op
+            for name, op in named_nodes.items()
+            if isinstance(op._skrub_impl, Var)
+        }
 
     def draw_graph(self):
         """Get an SVG string representing the computation graph.

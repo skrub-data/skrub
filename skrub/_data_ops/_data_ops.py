@@ -1253,7 +1253,16 @@ def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment, 
 class Apply(DataOpImpl):
     """.skb.apply() nodes."""
 
-    _fields = ["X", "estimator", "y", "cols", "how", "allow_reject", "unsupervised"]
+    _fields = [
+        "X",
+        "estimator",
+        "y",
+        "cols",
+        "how",
+        "allow_reject",
+        "unsupervised",
+        "kwargs",
+    ]
 
     # We define `eval()` rather than `compute` because some children may not
     # need to be evaluated depending on the mode. For example in "predict" mode
@@ -1299,8 +1308,10 @@ class Apply(DataOpImpl):
             # `.skb.preview()` or `.skb.eval()`). We replace `.transform()`
             # with `.predict()`
             if method_name == "fit_transform":
-                self.estimator_.fit(X, y)
-            pred = self.estimator_.predict(X)
+                fit_kwargs = yield from self._eval_kwargs("fit")
+                self.estimator_.fit(X, y, **fit_kwargs)
+            predict_kwargs = yield from self._eval_kwargs("predict")
+            pred = self.estimator_.predict(X, **predict_kwargs)
             # In `(fit_)transform` mode only, format the predictions as a
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
@@ -1316,7 +1327,8 @@ class Apply(DataOpImpl):
             y_arg = (y,)
         else:
             y_arg = ()
-        return getattr(self.estimator_, method_name)(X, *y_arg)
+        method_kwargs = yield from self._eval_kwargs(method_name)
+        return getattr(self.estimator_, method_name)(X, *y_arg, **method_kwargs)
 
     def _store_y_format(self, y):
         if sbd.is_dataframe(y):
@@ -1354,6 +1366,26 @@ class Apply(DataOpImpl):
             pred = sbd.make_dataframe_like(X, dict(zip(self._y_col_names, pred.T)))
             return sbd.copy_index(X, pred)
         return pred
+
+    def _eval_kwargs(self, method_name):
+        """
+        Evaluate the kwargs we need to pass to the given method.
+
+        The values in ``self.kwargs`` can be (or contain) DataOps or choices.
+        This looks up the kwargs for ``method_name``, yields it for evaluation,
+        and checks that the result is actually a dictionary before returning it.
+        """
+        kwargs = yield self.kwargs.get(method_name, None)
+        if kwargs is None:
+            # We check if kwargs is None _after_ evaluation
+            kwargs = {}
+        if not isinstance(kwargs, dict):
+            raise TypeError(
+                f"The `{method_name}_kwargs` passed to `.skb.apply()` should be a dict"
+                " of named arguments. Got an object of type"
+                f" {type(kwargs).__name__!r} instead: {kwargs!r}"
+            )
+        return kwargs
 
     def supported_modes(self):
         """
