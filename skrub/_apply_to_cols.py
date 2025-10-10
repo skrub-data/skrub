@@ -73,8 +73,11 @@ class SingleColumnTransformer(TransformerMixin, BaseEstimator):
 
     __single_column_transformer__ = True
 
-    def fit(self, column, y=None):
+    def fit(self, column, y=None, **kwargs):
         """Fit the transformer.
+
+        This default implementation simply calls ``fit_transform()`` and
+        returns ``self``.
 
         Subclasses should implement ``fit_transform`` and ``transform``.
 
@@ -87,12 +90,15 @@ class SingleColumnTransformer(TransformerMixin, BaseEstimator):
         y : column or dataframe
             Prediction targets.
 
+        **kwargs
+            Extra named arguments are passed to ``self.fit_transform()``.
+
         Returns
         -------
         self
             The fitted transformer.
         """
-        self.fit_transform(column, y=y)
+        self.fit_transform(column, y=y, **kwargs)
         return self
 
     def _check_single_column(self, column, function_name):
@@ -148,35 +154,35 @@ def _wrap_add_check_single_column(f):
     if f.__name__ == "fit":
 
         @functools.wraps(f)
-        def fit(self, X, y=None):
+        def fit(self, X, y=None, **kwargs):
             self._check_single_column(X, f.__name__)
-            return f(self, X, y=y)
+            return f(self, X, y=y, **kwargs)
 
         return fit
     elif f.__name__ == "partial_fit":
 
         @functools.wraps(f)
-        def partial_fit(self, X, y=None):
+        def partial_fit(self, X, y=None, **kwargs):
             self._check_single_column(X, f.__name__)
-            return f(self, X, y=y)
+            return f(self, X, y=y, **kwargs)
 
         return partial_fit
 
     elif f.__name__ == "fit_transform":
 
         @functools.wraps(f)
-        def fit_transform(self, X, y=None):
+        def fit_transform(self, X, y=None, **kwargs):
             self._check_single_column(X, f.__name__)
-            return f(self, X, y=y)
+            return f(self, X, y=y, **kwargs)
 
         return fit_transform
     else:
         assert f.__name__ == "transform", f.__name__
 
         @functools.wraps(f)
-        def transform(self, X):
+        def transform(self, X, **kwargs):
             self._check_single_column(X, f.__name__)
-            return f(self, X)
+            return f(self, X, **kwargs)
 
         return transform
 
@@ -454,7 +460,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         self.rename_columns = rename_columns
         self.n_jobs = n_jobs
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **kwargs):
         """Fit the transformer on each column independently.
 
         Parameters
@@ -465,15 +471,19 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         y : Pandas or Polars Series or DataFrame, default=None
             The target data.
 
+        **kwargs
+            Extra named arguments are passed to the ``fit_transform()`` method of
+            the individual column transformers (the clones of ``self.transformer``).
+
         Returns
         -------
         ApplyToCols
             The transformer itself.
         """
-        self.fit_transform(X, y)
+        self.fit_transform(X, y, **kwargs)
         return self
 
-    def fit_transform(self, X, y=None):
+    def fit_transform(self, X, y=None, **kwargs):
         """Fit the transformer on each column independently and transform X.
 
         Parameters
@@ -483,6 +493,10 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
         y : Pandas or Polars Series or DataFrame, default=None
             The target data.
+
+        **kwargs
+            Extra named arguments are passed to the ``fit_transform()`` method of
+            the individual column transformers (the clones of ``self.transformer``).
 
         Returns
         -------
@@ -501,18 +515,24 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
                 self._columns,
                 self.transformer,
                 self.allow_reject,
+                kwargs,
             )
             for col_name in all_columns
         )
         return self._process_fit_transform_results(results, X)
 
-    def transform(self, X):
+    def transform(self, X, **kwargs):
         """Transform a dataframe.
 
         Parameters
         ----------
         X : Pandas or Polars DataFrame
             The column to transform.
+
+        **kwargs
+            Extra named arguments are passed to the ``transform()`` method of
+            the fitted individual column transformers (the values of
+            ``self.transformers_``, which are clones of ``self.transformer``).
 
         Returns
         -------
@@ -523,10 +543,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         parallel = Parallel(n_jobs=self.n_jobs)
         func = delayed(_transform_column)
         outputs = parallel(
-            func(
-                sbd.col(X, col_name),
-                self.transformers_.get(col_name),
-            )
+            func(sbd.col(X, col_name), self.transformers_.get(col_name), kwargs)
             for col_name in sbd.column_names(X)
         )
         transformed_columns = []
@@ -602,7 +619,9 @@ def _prepare_transformer_input(transformer, column):
     return sbd.make_dataframe_like(column, [column])
 
 
-def _fit_transform_column(column, y, columns_to_handle, transformer, allow_reject):
+def _fit_transform_column(
+    column, y, columns_to_handle, transformer, allow_reject, kwargs
+):
     col_name = sbd.name(column)
     if col_name not in columns_to_handle:
         return col_name, [column], None
@@ -611,7 +630,7 @@ def _fit_transform_column(column, y, columns_to_handle, transformer, allow_rejec
     transformer_input = _prepare_transformer_input(transformer, column)
     allowed = (RejectColumn,) if allow_reject else ()
     try:
-        output = transformer.fit_transform(transformer_input, y=y)
+        output = transformer.fit_transform(transformer_input, y=y, **kwargs)
     except allowed:
         return col_name, [column], None
     except Exception as e:
@@ -624,12 +643,12 @@ def _fit_transform_column(column, y, columns_to_handle, transformer, allow_rejec
     return col_name, output_cols, transformer
 
 
-def _transform_column(column, transformer):
+def _transform_column(column, transformer, kwargs):
     if transformer is None:
         return [column]
     transformer_input = _prepare_transformer_input(transformer, column)
     try:
-        output = transformer.transform(transformer_input)
+        output = transformer.transform(transformer_input, **kwargs)
     except Exception as e:
         raise ValueError(
             f"Transformer {transformer.__class__.__name__}.transform "
