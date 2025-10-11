@@ -30,9 +30,10 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         will appear unchanged in the output.
 
     cols : str, sequence of str, or skrub selector, optional
-        The columns to attempt to transform. Columns outside of this selection
-        will be passed through unchanged, without calling ``fit_transform`` on
-        them. The default is to transform all columns.
+        The columns to attempt to transform. Only the selected columns will have
+        the transformer applied. Columns outside of this selection are passed
+        through unchanged (``fit_transform`` is not called on them) and remain
+        unmodified in the output. The default is to transform all columns.
 
     keep_original : bool, default=False
         If ``True``, the original columns are preserved in the output. If the
