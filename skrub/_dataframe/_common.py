@@ -1428,16 +1428,40 @@ def _total_seconds_polars(col):
 
 
 @dispatch
-def is_sorted(col):
-    """Check if a column is sorted."""
+def is_sorted(col, descending=False):
+    """Check if a column is sorted.
+
+    Nulls are ignored.
+
+    WARNING: for some dtypes such as lists and struct the results for polars
+             and pandas may differ.
+
+    Parameters
+    ----------
+    col : a pandas or polars Series
+        The column to check.
+    descending : bool
+        If False, check if the column is sorted in ascending order. Otherwise
+        check if it is sorted in descending order.
+
+    Returns
+    -------
+    bool
+        Indicates if column is sorted in the specified order, ignoring nulls.
+    """
     raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @is_sorted.specialize("pandas", argument_type="Column")
-def _is_sorted_pandas(col):
-    return col.is_monotonic_increasing or col.is_monotonic_decreasing
+def _is_sorted_pandas(col, descending=False):
+    if descending:
+        return col.dropna().is_monotonic_decreasing
+    return col.dropna().is_monotonic_increasing
 
 
 @is_sorted.specialize("polars", argument_type="Column")
-def _is_sorted_polars(col):
-    return col.is_sorted()
+def _is_sorted_polars(col, descending=False):
+    try:
+        return drop_nulls(col).is_sorted(descending=descending)
+    except pl.exceptions.InvalidOperationError:
+        return False
