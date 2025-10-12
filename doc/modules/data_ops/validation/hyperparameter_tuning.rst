@@ -139,14 +139,14 @@ of the search using a parallel coordinates plot.
 
 This could also be done with optuna.
 
->>> import optuna
->>> def objective(trial):
+>>> import optuna  # doctest: +SKIP
+>>> def objective(trial):   # doctest: +SKIP
 ...     learner = pred.skb.make_learner(choose=trial)
 ...     cv_results = skrub.cross_validate(learner, pred.skb.get_data())
 ...     return cv_results['test_score'].mean()
->>> study = optuna.create_study(direction="maximize")
->>> study.optimize(objective, n_trials=10)
->>> best_learner = pred.skb.make_learner(choose=study.best_trial)
+>>> study = optuna.create_study(direction="maximize")   # doctest: +SKIP
+>>> study.optimize(objective, n_trials=10)   # doctest: +SKIP
+>>> best_learner = pred.skb.make_learner(choose=study.best_trial)   # doctest: +SKIP
 >>> best_learner.describe_params()  # doctest: +SKIP
 {'α': 0.0006391165935023005}
 
