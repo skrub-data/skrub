@@ -11,8 +11,9 @@ Ongoing Development
 
 New features
 ------------
-- It is now possible to tune the choices in a :class:`DataOp` with
-  `Optuna <https://optuna.readthedocs.io/en/stable/>`_.
+- It is now possible to tune the choices in a :class:`DataOp` with `Optuna
+  <https://optuna.readthedocs.io/en/stable/>`_. See
+  :ref:`example_optuna_choices` for an example.
   :pr:`1661` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
   estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
