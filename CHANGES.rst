@@ -32,6 +32,9 @@ Changes
 
 Bugfixes
 --------
+- Issues occurring when :meth:`DataOp.skb.apply` was passed a DataOp as the
+  estimator have been fixed in :pr:`1671` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Release 0.6.2
 =============
