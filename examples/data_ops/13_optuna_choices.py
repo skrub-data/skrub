@@ -17,41 +17,39 @@ parallel or distributed computation.
 """
 
 # %%
-# Defining the pipeline and creating example data
-# -----------------------------------------------
+# A simple regressor and example data.
+# ------------------------------------
 #
-# We will fit a binary classifier containing a few choices on a toy dataset. We
-# try several classifiers: logisitic regression, random forest, and a dummy
-# baseline. The logistic regression and random forest have hyperparameters that
-# we want to tune.
+# We will fit a regressor containing a few choices on a toy dataset. We
+# try 2 regressors: gradient boosting and random forest. They both have
+# hyperparameters that we want to tune.
 
 # %%
-from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
 
 import skrub
 
 X, y = skrub.X(), skrub.y()
-logistic = LogisticRegression(C=skrub.choose_float(0.1, 10.0, log=True, name="C"))
-rf = RandomForestClassifier(
-    n_estimators=skrub.choose_int(3, 30, name="n estimators"), random_state=0
+hgb = HistGradientBoostingRegressor(
+    learning_rate=skrub.choose_float(0.01, 0.6, log=True, name="learning_rate")
 )
-classifier = skrub.choose_from(
-    {"logistic": logistic, "random forest": rf, "dummy": DummyClassifier()},
-    name="classifier",
+rf = RandomForestRegressor(
+    n_estimators=skrub.choose_int(20, 100, name="n_estimators"),
 )
-pred = X.skb.apply(classifier, y=y)
+regressor = skrub.choose_from({"hgb": hgb, "random forest": rf}, name="regressor")
+pred = X.skb.apply(regressor, y=y)
 print(pred.skb.describe_param_grid())
 
 # %%
-# Create some toy data for the example
+# Load data for the example
 
 # %%
-from sklearn.datasets import make_classification
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import KFold
 
-X_a, y_a = make_classification(random_state=0)
-env = {"X": X_a, "y": y_a}
+env = {}
+env["X"], env["y"] = fetch_california_housing(return_X_y=True, as_frame=True)
+cv = KFold(n_splits=4, shuffle=True, random_state=0)
 
 # %%
 # Selecting the best hyperparameters with Optuna.
@@ -73,39 +71,26 @@ env = {"X": X_a, "y": y_a}
 # We can then cross-validate the SkrubLearner, or score it however we prefer,
 # and return the score so that the optuna Study can take it into account.
 #
-# Here we return a single score (accuracy), but multi-objective
+# Here we return a single score (R²), but multi-objective
 # optimization is also possible. Please refer to the Optuna documentation for
 # more information.
 
 # %%
 import optuna
 
-study = optuna.create_study(direction="maximize")
-
 
 def objective(trial):
-    # The optuna trial picks an outcome for each choice in the DataOp
     learner = pred.skb.make_learner(choose=trial)
-    # We score the resulting SkrubLearner
-    cv_results = skrub.cross_validate(learner, environment=env)
-    # We return the score to the Study
+    cv_results = skrub.cross_validate(learner, environment=env, cv=cv)
     return cv_results["test_score"].mean()
 
 
-study.optimize(objective, n_trials=30)
-study.trials_dataframe().sort_values("value", ascending=False).filter(
-    regex="(value|params.*)"
-)
+study = optuna.create_study(direction="maximize")
+study.optimize(objective, n_trials=16)
 
 # %%
-# We can see that the random forest performs much better than the logistic
-# regression, which in turns is much better than the dummy classifier, and that
-# ``n_estimators=10`` works well for the random forest.
-#
-# Finally we build a learner with the best hyperparameters identified by Optuna
-# (stored in the ``best_params`` attribute), and fit it on the full dataset. We
-# now have a learner fitted with tuned hyperparameters, ready to make
-# predictions on unseen data.
+# Now we build a learner with the best hyperparameters and fit it on the full
+# dataset:
 
 # %%
 best_learner = pred.skb.make_learner(choose=study.best_trial)
@@ -118,10 +103,32 @@ best_learner.fit(env)
 print(best_learner.describe_params())
 
 # %%
-# Many reporting capabilities are available for example with `optuna-dashboard
+# Exploring the search results
+# ----------------------------
+#
+# Many reporting capabilities are available for example with
+# `optuna.visualization
+# <https://optuna.readthedocs.io/en/stable/reference/visualization/>`_ or
+# `optuna-dashboard
 # <https://optuna-dashboard.readthedocs.io/en/latest/getting-started.html>`_.
-# As a small example we plot the score depending on the number of trees in the
-# random forest:
+# The Study object itself has some useful attributes:
 
 # %%
-optuna.visualization.plot_slice(study, params=["1:n estimators"])
+study.best_params
+
+# %%
+study.trials_dataframe().sort_values("value", ascending=False).filter(
+    regex="(value|params.*)"
+)
+
+# %%
+# We can see that the histogram gradient boosting seems to perform better than
+# the random forest, and that the best learning rate for this dataset seems to
+# be inside the range we explored.
+
+# %%
+# As a small example of the visalization capabilities we plot the score
+# depending on the learning rate of the histogram gradient boosting:
+
+# %%
+optuna.visualization.plot_slice(study, params=["0:learning_rate"])

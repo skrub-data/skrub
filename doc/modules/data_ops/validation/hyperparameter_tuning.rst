@@ -30,21 +30,26 @@ for ``alpha``.
 
 
 >>> pred = X.skb.apply(
-...     Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α")), y=y
+...     Ridge(alpha=skrub.choose_float(1e-6, 10.0, log=True, name="α")), y=y
 ... )
 
 .. warning::
 
-   When we do :meth:`.skb.make_learner() <DataOp.skb.make_learner>`, the pipeline
-   we obtain does not perform any hyperparameter tuning. The pipeline we obtain
-   uses default values for each of the choices. For numeric choices it is the
-   middle of the range, and for :func:`choose_from` it is the first option we
-   give it.
+   When we do :meth:`.skb.make_learner() <DataOp.skb.make_learner>`, the
+   pipeline we obtain does not perform any hyperparameter tuning. The pipeline
+   we obtain by default uses default values for each of the choices. For numeric
+   choices it is the middle of the range (unless an explicit default has been
+   set when creating the choice), and for :func:`choose_from` it is the first
+   option we give it. We can also obtain random choices, or choices suggested by
+   an optuna :class:`trial <optuna.trial.Trial>`, by passing the ``choose``
+   parameter.
 
    To get a pipeline that runs an internal cross-validation to select the best
    hyperparameters, we must use :meth:`.skb.make_grid_search()
    <DataOp.skb.make_grid_search()>` or :meth:`.skb.make_randomized_search()
-   <DataOp.skb.make_randomized_search>`.
+   <DataOp.skb.make_randomized_search>`. We can also use `Optuna
+   <https://optuna.readthedocs.io/>`_ to choose the best hyperparameters as shown
+   in :ref:`this example <example_optuna_choices>`.
 
 
 Here are the different kinds of choices, along with their default outcome when
@@ -105,43 +110,59 @@ The default choices for an DataOp, those that get used when calling
 :meth:`.skb.describe_defaults() <DataOp.skb.describe_defaults>`:
 
 >>> pred.skb.describe_defaults()
-{'α': 0.316...}
+{'α': 0.00316...}
 
 We can then find the best hyperparameters.
 
 >>> search = pred.skb.make_randomized_search(fitted=True)
 >>> search.results_  # doctest: +SKIP
-   mean_test_score         α
-0         0.478338  0.141359
-1         0.476022  0.186623
-2         0.474905  0.205476
-3         0.457807  0.431171
-4         0.456808  0.443038
-5         0.439670  0.643117
-6         0.420917  0.866328
-7         0.380719  1.398196
-8         0.233172  4.734989
-9         0.168444  7.780156
-
-Rather than fitting a randomized or grid search to find the best combination, it is also
-possible to obtain an iterator over different parameter combinations, to inspect
-their outputs or to have manual control over the model selection, using
-:meth:`.skb.iter_learners_grid() <DataOp.skb.iter_learners_grid>` or
-:meth:`.skb.iter_learners_randomized() <DataOp.skb.iter_learners_randomized>`.
-Those yield the candidate pipelines that are explored by the grid and randomized
-search respectively.
+          α  mean_test_score
+0  0.000480         0.482327
+1  0.000287         0.482327
+2  0.000014         0.482317
+3  0.000012         0.482317
+4  0.000006         0.482317
+5  0.134157         0.478651
+6  0.249613         0.472019
+7  0.612327         0.442312
+8  2.664713         0.308492
+9  3.457901         0.275007
 
 A human-readable description of parameters for a pipeline can be obtained with
 :meth:`SkrubLearner.describe_params`:
 
->>> search.best_learner_.describe_params() # doctest: +SKIP
-{'α': 0.054...}
+>>> search.best_learner_.describe_params()  # doctest: +SKIP
+{'α': 0.000479...}
 
 It is also possible to use :meth:`ParamSearch.plot_results` to visualize the results
 of the search using a parallel coordinates plot.
 
+This could also be done with optuna.
+
+>>> import optuna
+>>> def objective(trial):
+...     learner = pred.skb.make_learner(choose=trial)
+...     cv_results = skrub.cross_validate(learner, pred.skb.get_data())
+...     return cv_results['test_score'].mean()
+>>> study = optuna.create_study(direction="maximize")
+>>> study.optimize(objective, n_trials=10)
+>>> best_learner = pred.skb.make_learner(choose=study.best_trial)
+>>> best_learner.describe_params()  # doctest: +SKIP
+{'α': 0.0006391165935023005}
+
+
+Rather than fitting a randomized or grid search to find the best combination, it
+is also possible to obtain an iterator over different parameter combinations, to
+inspect their outputs or to have manual control over the model selection, using
+:meth:`.skb.iter_learners_grid() <DataOp.skb.iter_learners_grid>` or
+:meth:`.skb.iter_learners_randomized() <DataOp.skb.iter_learners_randomized>` (
+which yield the candidate pipelines that are explored by the grid and randomized
+search respectively), or with the ``choose`` parameter of
+:meth:`.skb.make_learner() <DataOp.skb.make_learner>`.
+
 A full example of how to use hyperparameter search is available in
-:ref:`sphx_glr_auto_examples_data_ops_13_choices.py`.
+:ref:`sphx_glr_auto_examples_data_ops_13_choices.py`, and a full example using
+Optuna is in :ref:`example_optuna_choices`.
 
 |
 
