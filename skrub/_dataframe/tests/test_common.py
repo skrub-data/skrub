@@ -1007,15 +1007,13 @@ def test_is_sorted(col, expected, df_module):
         assert ns.is_sorted(col[::-1], descending=True)
 
 
-def test_is_sorted_object_dtypes(pd_module, pl_module):
+@pytest.mark.parametrize(
+    "col", [[[1, 2], [3, 4]], [{"a": 1, "b": 2}, {"a": 1, "b": 3}]]
+)
+def test_is_sorted_object_dtypes(col, df_module):
     # For those more complex dtypes where the result is more ambiguous pandas &
-    # polars can disagree on whether they are sorted, for the time being we
-    # don't have a strong reason to add the code / computation time to handle
-    # those discrepancies. However, is_sorted should not crash and return a
-    # Boolean in all cases.
-    col = [[1, 2], [3, 4]]
-    assert ns.is_sorted(pd_module.make_column("", col))
-    assert not ns.is_sorted(pl_module.make_column("", col))
-    col = {"a": 1, "b": 2}, {"a": 1, "b": 3}
-    assert not ns.is_sorted(pd_module.make_column("", col))
-    assert not ns.is_sorted(pl_module.make_column("", col))
+    # polars or even different versions of the same package can disagree on
+    # whether they are sorted. For the time being we don't have a strong reason
+    # to add the code / computation time to handle those discrepancies.
+    # However, is_sorted should not crash and return a Boolean in all cases.
+    assert isinstance(ns.is_sorted(df_module.make_column("", col)), bool)
