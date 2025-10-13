@@ -1431,7 +1431,8 @@ def _total_seconds_polars(col):
 def is_sorted(col, descending=False):
     """Check if a column is sorted.
 
-    Nulls are ignored.
+    Nulls are ignored. Returns False if col contains a dtype that cannot be
+    ordered (e.g. Object in polars).
 
     WARNING: for some dtypes such as lists and struct the results for polars
              and pandas may differ.
@@ -1461,6 +1462,19 @@ def _is_sorted_pandas(col, descending=False):
 
 @is_sorted.specialize("polars", argument_type="Column")
 def _is_sorted_polars(col, descending=False):
+    if parse_version(pl.__version__) < parse_version("1.22.0"):
+        # in old polars versions for unorderable dtypes this would cause a rust
+        # panic so we resort to a hard-coded list of dtypes we know can be
+        # ordered.
+        dtype = col.dtype
+        if (
+            dtype.is_numeric()
+            or dtype.is_temporal()
+            or dtype.base_type() in (pl.String, pl.Categorical, pl.Enum, pl.Boolean)
+        ):
+            return drop_nulls(col).is_sorted(descending=descending)
+        else:
+            return False
     try:
         return drop_nulls(col).is_sorted(descending=descending)
     except pl.exceptions.InvalidOperationError:
