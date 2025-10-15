@@ -11,6 +11,10 @@ from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
+import numpy as np
+import pandas as pd
+import warnings
+
 
 def _check_max_cols(max_plot_columns, max_association_columns):
     max_plot_columns = (
@@ -185,7 +189,27 @@ class TableReport:
         verbose=1,
         max_plot_columns=None,
         max_association_columns=None,
-    ):
+    ): 
+        if isinstance(dataframe, np.ndarray):
+            if dataframe.ndim == 1:
+                
+                warnings.warn(
+                    "Input is a 1D NumPy array; converting to a pandas Series."
+                )
+                dataframe = pd.Series(dataframe, name="0")
+
+            elif dataframe.ndim == 2:
+                warnings.warn(
+                    "Input is a NumPy array; converting to a pandas DataFrame."
+                )
+                dataframe = pd.DataFrame(dataframe)
+
+            else:
+                raise ValueError(
+                    f"Input NumPy array has {dataframe.ndim} dimensions. "
+                    "TableReport only supports 1D and 2D arrays"
+                )
+    
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
             "order_by": order_by,
