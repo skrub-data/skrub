@@ -7,8 +7,7 @@ import unicodedata
 import numpy as np
 
 from skrub import _dataframe as sbd
-from skrub._dataframe._common import _raise as _sbd_raise
-from skrub._dispatch import dispatch
+from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
 
 def get_dtype_name(column):
@@ -17,7 +16,7 @@ def get_dtype_name(column):
 
 @dispatch
 def to_dict(df):
-    raise _sbd_raise(df, kind="DataFrame")
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
 
 
 @to_dict.specialize("pandas", argument_type="DataFrame")
