@@ -101,7 +101,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
 
     .. versionchanged:: 0.7.0
-        The :class:`~skrub.SquashingScaler` with `max_absolute_value=10` is now used instead of
+        The :class:`~skrub.SquashingScaler` with `max_absolute_value=5` is now used instead of
         :class:`~sklearn.preprocessing.StandardScaler` for centering and scaling
         numerical features when using linear models.
 
@@ -221,7 +221,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('squashingscaler', SquashingScaler(max_absolute_value=10)),
+                    ('squashingscaler', SquashingScaler(max_absolute_value=5)),
                     ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data that is
@@ -253,7 +253,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     - A :obj:`~sklearn.impute.SimpleImputer`, as the
       :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing values.
 
-    - A :obj:`~skrub.SquashingScaler` for centering and standard scaling
+    - A :obj:`~skrub.SquashingScaler` for centering and scaling
       numerical features.
 
     On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
@@ -337,6 +337,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     if not get_tags(estimator).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
     if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
-        steps.append(SquashingScaler(max_absolute_value=10))
+        steps.append(SquashingScaler(max_absolute_value=5))
     steps.append(estimator)
     return make_pipeline(*steps)

@@ -26,7 +26,7 @@ If the estimator is a linear model (e.g., ``Ridge``, ``LogisticRegression``),
 Pipeline(steps=[('tablevectorizer',
                  TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                 ('simpleimputer', SimpleImputer(add_indicator=True)),
-                ('squashingscaler', SquashingScaler(max_absolute_value=10)),
+                ('squashingscaler', SquashingScaler(max_absolute_value=5)),
                 ('linearregression', LinearRegression())])
 
 It is also possible to call the function with the name of the task that must be
