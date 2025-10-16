@@ -201,7 +201,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     Columns that are not selected in the ``cols`` parameter are passed through
     without modification.
-    
+
     Moreover, if ``allow_reject`` is ``True`` and the transformers'
     ``fit_transform`` raises a ``RejectColumn`` exception for a particular
     column, that column is passed through unchanged. If ``allow_reject`` is

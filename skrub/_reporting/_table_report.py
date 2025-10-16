@@ -2,7 +2,11 @@ import codecs
 import functools
 import json
 import numbers
+import warnings
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 from .. import _config
 from .. import _dataframe as sbd
@@ -10,10 +14,6 @@ from ._html import to_html
 from ._serve import open_in_browser
 from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
-
-import numpy as np
-import pandas as pd
-import warnings
 
 
 def _check_max_cols(max_plot_columns, max_association_columns):
@@ -189,10 +189,9 @@ class TableReport:
         verbose=1,
         max_plot_columns=None,
         max_association_columns=None,
-    ): 
+    ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
-                
                 warnings.warn(
                     "Input is a 1D NumPy array; converting to a pandas Series."
                 )
@@ -209,7 +208,7 @@ class TableReport:
                     f"Input NumPy array has {dataframe.ndim} dimensions. "
                     "TableReport only supports 1D and 2D arrays"
                 )
-    
+
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
             "order_by": order_by,
