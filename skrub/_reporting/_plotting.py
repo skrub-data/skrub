@@ -199,25 +199,6 @@ def _robust_hist(values, ax, color):
     n_high_outliers = (high < values).sum()
     n, bins, patches = ax.hist(inliers)
     n_out = n_low_outliers + n_high_outliers
-
-    # Display number on the bar of the histrogram
-    percentages = []
-    for index, value in enumerate(n):
-        string_label = _utils.format_number(value)
-        ax.text(
-            bins[index] + 0.2 * (bins[index + 1] - bins[index]),
-            value + np.max(n) * 0.1,
-            string_label,
-            rotation="vertical",
-            color=_TEXT_COLOR_PLACEHOLDER,
-            fontsize=8,
-        )
-        percentage = value / np.sum(n)
-        percentages.append(_utils.format_percent(percentage))
-
-    # set max of y axis for include the text in the graphic
-    ax.set_ylim(ax.get_ylim()[0], ax.get_ylim()[1] * 2.2)
-
     if not n_out:
         return 0, 0
     width = bins[1] - bins[0]
@@ -268,7 +249,7 @@ def histogram(col, duration_unit=None, color=COLOR_0):
         ax.set_xlabel(f"{duration_unit.capitalize()}s")
     if sbd.is_any_date(col):
         _rotate_ticklabels(ax)
-    _adjust_fig_size(fig, ax, 2.0, 1.2)
+    _adjust_fig_size(fig, ax, 2.0, 1.0)
     return _serialize(fig), n_low_outliers, n_high_outliers
 
 
