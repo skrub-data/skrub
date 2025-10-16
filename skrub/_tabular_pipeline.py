@@ -241,7 +241,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('squashingscaler', SquashingScaler(max_absolute_value=10)),
+                    ('squashingscaler', SquashingScaler(max_absolute_value=5)),
                     ('logisticregression', LogisticRegression())])
 
     For a :obj:`~sklearn.linear_model.LogisticRegression`, we get:
