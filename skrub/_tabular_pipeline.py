@@ -197,7 +197,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     >>> y = [0, 1, 0, 1]
     >>> X
        last_visit   medication insulin_prescriptions  fasting_glucose
-    0  2020-01-02         None                   N/A               35
+    0  2020-01-02          ...                   N/A               35
     1  2021-04-01    metformin                    13              140
     2  2024-12-05  paracetamol                     0               44
     3  2023-08-10   gliclazide                    17              137
