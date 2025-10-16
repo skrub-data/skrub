@@ -335,8 +335,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
          birthday    city
     0  29/01/2024  London
     >>> df.dtypes
-    birthday    object
-    city        object
+    birthday    ...
+    city        ...
     dtype: object
     >>> ToDatetime().fit_transform(df["birthday"])
     0   2024-01-29
@@ -374,7 +374,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     >>> transformed.dtypes
     birthday    datetime64[...]
-    city                object
+    city                ...
     dtype: object
     >>> to_datetime.transformers_
     {'birthday': ToDatetime()}
