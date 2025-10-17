@@ -204,6 +204,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.
+    All columns not listed in ``cols`` remain unmodified in the output.
     Moreover, if ``allow_reject`` is ``True`` and the transformers'
     ``fit_transform`` raises a ``RejectColumn`` exception for a particular
     column, that column is passed through unchanged. If ``allow_reject`` is
@@ -233,9 +234,10 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         the output.
 
     cols : str, sequence of str, or skrub selector, optional
-        The columns to attempt to transform. Columns outside of this selection
-        will be passed through unchanged, without attempting to call
-        ``fit_transform`` on them. The default is to attempt transforming all
+        The columns to attempt to transform. Only the selected columns will have
+        the transformer applied. Columns outside this selection are passed
+        through unchanged (``fit_transform`` is not called on them) and remain
+        unmodified in the output. The default is to attempt transforming all
         columns.
 
     allow_reject : bool, default=False
