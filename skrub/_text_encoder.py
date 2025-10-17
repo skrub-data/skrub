@@ -16,11 +16,11 @@ from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
 
 
-class ModelNotFound(ValueError):
+class ModelNotFound(TransformerMixin, ValueError):
     pass
 
 
-class TextEncoder(SingleColumnTransformer, TransformerMixin):
+class TextEncoder(SingleColumnTransformer):
     """Encode string features by applying a pretrained language model \
         downloaded from the HuggingFace Hub.
 

@@ -96,7 +96,6 @@ __all__ = [
     "TextEncoder",
     "StringEncoder",
     "column_associations",
-    "toy_orders",
     "SquashingScaler",
     "get_config",
     "set_config",

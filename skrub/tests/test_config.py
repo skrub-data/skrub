@@ -53,6 +53,8 @@ def test_use_table_report_data_ops(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_use_table_report(simple_df):
+    config = get_config()
+    set_config(**config)
     assert not _use_table_report(simple_df)
     with config_context(use_table_report=True):
         assert _use_table_report(simple_df)

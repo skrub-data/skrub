@@ -169,6 +169,7 @@ class ToFloat32(SingleColumnTransformer):
 
     def fit_transform(self, column, y=None):
         del y
+        self.all_outputs_ = [sbd.name(column)]
         if sbd.is_any_date(column) or sbd.is_categorical(column):
             raise RejectColumn(
                 f"Refusing to cast column {sbd.name(column)!r} "

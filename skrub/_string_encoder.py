@@ -1,5 +1,6 @@
 import warnings
 
+from sklearn.base import TransformerMixin
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -15,7 +16,7 @@ from ._scaling_factor import scaling_factor
 from ._to_str import ToStr
 
 
-class StringEncoder(SingleColumnTransformer):
+class StringEncoder(TransformerMixin, SingleColumnTransformer):
     """Generate a lightweight string encoding of a given column using tf-idf \
         vectorization and truncated singular value decomposition (SVD).
 

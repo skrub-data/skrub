@@ -160,6 +160,8 @@ class ToCategorical(SingleColumnTransformer):
         transformed : pandas or polars Series
             The input transformed to Categorical.
         """
+        self.all_outputs_ = [sbd.name(column)]
+
         if sbd.is_categorical(column):
             return column
         if not sbd.is_string(column):
