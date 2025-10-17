@@ -9,6 +9,7 @@ from copy import deepcopy
 import numpy as np
 import scipy.sparse as sp
 from scipy import sparse
+from sklearn.base import TransformerMixin
 from sklearn.cluster import KMeans, kmeans_plusplus
 from sklearn.decomposition._nmf import _beta_divergence
 from sklearn.feature_extraction.text import CountVectorizer, HashingVectorizer
@@ -22,7 +23,7 @@ from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._utils import unique_strings
 
 
-class GapEncoder(SingleColumnTransformer):
+class GapEncoder(TransformerMixin, SingleColumnTransformer):
     """Encode string columns by constructing latent topics.
 
     This encoder can be understood as a continuous encoding on a set of latent

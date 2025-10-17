@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 from joblib import Parallel, delayed, effective_n_jobs
+from sklearn.base import TransformerMixin
 from sklearn.utils import gen_even_slices, murmurhash3_32
 from sklearn.utils.validation import check_is_fitted
 
@@ -19,7 +20,7 @@ from ._utils import LRUDict, unique_strings
 NoneType = type(None)
 
 
-class MinHashEncoder(SingleColumnTransformer):
+class MinHashEncoder(TransformerMixin, SingleColumnTransformer):
     """Encode string categorical features by applying the MinHash method to n-gram \
     decompositions of strings.
 

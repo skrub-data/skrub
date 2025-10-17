@@ -48,7 +48,7 @@ class RejectColumn(ValueError):
     pass
 
 
-class SingleColumnTransformer(TransformerMixin, BaseEstimator):
+class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
