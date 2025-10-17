@@ -652,6 +652,9 @@ def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scorin
     else:
         X, y = skrub.X(), skrub.y()
     if needs_data:
+        # In this case the estimator's automated preview cannot be computed
+        # because it needs a value from the environment, the value is not known
+        # until we fit the learner.
 
         def get_vectorizer(X):
             return skrub.TableVectorizer()
@@ -663,6 +666,8 @@ def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scorin
 
         predictor = X.skb.apply_func(get_predictor)
     else:
+        # In this case the estimator can be evaluated in the automated preview
+        # when the data op is created.
         vectorizer = skrub.as_data_op(skrub.TableVectorizer())
         predictor = skrub.as_data_op(Ridge() if regression else LogisticRegression())
     pred = X.skb.apply(vectorizer).skb.apply(predictor, y=y)
@@ -715,6 +720,7 @@ def test_apply_no_sklearn_tags():
     xy_learner = learner.__skrub_to_Xy_pipeline__({})
     assert xy_learner._estimator_type == "transformer"
     if hasattr(xy_learner, "__sklearn_tags__"):
+        # Old scikit-learn versiond don't have __sklearn_tags__
         assert xy_learner.__sklearn_tags__().estimator_type is None
 
 
