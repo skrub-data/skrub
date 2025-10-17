@@ -1,5 +1,4 @@
 # Scikit-learn-ish interface to the skrub DataOps
-
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -13,7 +12,7 @@ from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
-    chosen_or_default_outcomes,
+    eval_choices,
     evaluate,
     find_first_apply,
     find_node_by_name,
@@ -180,9 +179,18 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
     def set_params(self, **params):
         if "data_op" in params:
             self.data_op = params.pop("data_op")
-        set_params(
-            self.data_op, {int(k.lstrip("data_op__")): v for k, v in params.items()}
-        )
+
+        def to_id(key):
+            if key.startswith("data_op__"):
+                return int(key.lstrip("data_op__"))
+            return int(key.split(":", 1)[0])
+
+        def to_idx(val):
+            if isinstance(val, str):
+                return int(val.split(":", 1)[0])
+            return val
+
+        set_params(self.data_op, {to_id(k): to_idx(v) for k, v in params.items()})
         return self
 
     def get_param_grid(self):
@@ -404,9 +412,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         parameters (outcomes of `choose_*` objects contained in the
         DataOp).
         """
-        return describe_params(
-            chosen_or_default_outcomes(self.data_op), choice_graph(self.data_op)
-        )
+        return describe_params(eval_choices(self.data_op), choice_graph(self.data_op))
 
 
 # Xy_pipeline because it is an actual scikit-learn pippeline rather than
