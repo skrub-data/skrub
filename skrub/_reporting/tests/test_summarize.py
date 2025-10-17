@@ -52,7 +52,8 @@ def test_summarize(
     assert round(c["unique_proportion"], 3) == 0.118
     c["unique_proportion"] = 0.118
     if with_plots:
-        assert c["value_counts_plot"].startswith("<?xml")
+        for figure in c["value_counts_plot"]:
+            assert figure.startswith("<?xml")
         assert c["plot_names"] == ["value_counts_plot"]
         c["plot_names"] = []
         c.pop("value_counts_plot")
@@ -113,7 +114,8 @@ def test_no_title(pd_module):
 def test_high_cardinality_column(pd_module):
     df = pd_module.make_dataframe({"s": [f"value {i}" for i in range(30)]})
     summary = summarize_dataframe(df, with_plots=True)
-    assert "10 most frequent" in summary["columns"][0]["value_counts_plot"]
+    assert "10 most frequent" in summary["columns"][0]["value_counts_plot"][0]
+    assert "10 most frequent" in summary["columns"][0]["value_counts_plot"][1]
 
 
 @skip_polars_installed_without_pyarrow

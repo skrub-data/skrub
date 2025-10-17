@@ -260,6 +260,9 @@ Changes
 - The :class:`TableReport` now shows if columns are sorted. :pr:`1512` by :user:`Dea María Léon<DeaMariaLeon>`.
 
 
+- The display of :class:`TableReport` has the new capability to switch between display percentage and the value of
+  the histogram and the value_counts plot. :pr:`1506` by :user:`Lionel Kusch<lionelkusch>`.
+
 Bugfixes
 --------
 - Fixed a bug that caused the :class:`StringEncoder` and :class:`TextEncoder` to raise an exception if the
