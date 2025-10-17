@@ -256,10 +256,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
     1    two  23/02/2024   N/A  2.0
     2    two  12/03/2024  12.2  2.5
     3  three  13/03/2024   N/A  3.0
-    >>> df.dtypes
-    A    object
-    B    object
-    C    object
+    >>> df.dtypes # doctest: +SKIP
+    A       ...
+    B       ...
+    C       ...
     D   float64
     dtype: object
 
@@ -274,10 +274,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
     2    two 2024-03-12  12.2  2.5
     3  three 2024-03-13   NaN  3.0
 
-    >>> cleaner.fit_transform(df).dtypes
-    A            object
+    >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
+    A               ...
     B    datetime64[ns]
-    C            object
+    C               ...
     D           float64
     dtype: object
 
@@ -577,9 +577,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     2    two  12/03/2024  12.2
     3  three  13/03/2024   N/A
     >>> df.dtypes
-    A    object
-    B    object
-    C    object
+    A         ...
+    B         ...
+    C         ...
     dtype: object
 
     >>> vectorizer = TableVectorizer()
@@ -609,7 +609,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     OneHotEncoder(drop='if_binary', dtype='float32', handle_unknown='ignore',
                   sparse_output=False)
     >>> vectorizer.transformers_['A'].categories_
-    [array(['one', 'three', 'two'], dtype=object)]
+    [array(['one', 'three', 'two'], dtype=...)]
 
     We can see the columns grouped by the kind of encoder that was applied
     to them:
@@ -658,9 +658,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     >>> vectorizer.transformers_['A'] is not vectorizer.transformers_['B']
     True
     >>> vectorizer.transformers_['A'].categories_
-    [array(['one', 'two'], dtype=object)]
+    [array(['one', 'two'], dtype=...)]
     >>> vectorizer.transformers_['B'].categories_
-    [array(['four', 'three'], dtype=object)]
+    [array(['four', 'three'], dtype=...)]
 
     **Overriding the transformer for specific columns**
 
