@@ -14,6 +14,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
     A subset of the dataframe is selected and passed to the transformer (as a
     single input). This is different from ``ApplyToCols``, which fits a
     separate clone of the transformer to each selected column independently.
+    All columns not listed in ``cols`` remain unmodified in the output.
 
     .. note::
 
