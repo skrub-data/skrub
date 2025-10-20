@@ -175,7 +175,7 @@ def numeric():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      object
+    str_     ...
     dtype: object
 
     >>> s.select(df, s.numeric())
