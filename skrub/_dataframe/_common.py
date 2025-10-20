@@ -103,6 +103,7 @@ __all__ = [
     "sample",
     "head",
     "slice",
+    "select_rows",
     "replace",
     "with_columns",
     "abs",
@@ -1360,6 +1361,26 @@ def _slice_polars(obj, *start_stop):
 
 
 @dispatch
+def select_rows(obj, idx):
+    return np.asarray(obj)[list(idx)]
+
+
+@select_rows.specialize("pandas")
+def _select_rows_pandas(obj, idx):
+    return obj.iloc[list(idx)]
+
+
+@select_rows.specialize("polars")
+def _select_rows_polars(obj, idx):
+    idx = list(idx)
+    if not idx:
+        # polars changed from interpreting indexing with an empty list as list
+        # of columns to list of row indices at some point.
+        return obj.head(0)
+    return obj[idx]
+
+
+@dispatch
 def replace(col, old, new):
     raise_dispatch_unregistered_type(col, kind="Series")
 
@@ -1411,16 +1432,54 @@ def _total_seconds_polars(col):
 
 
 @dispatch
-def is_sorted(col):
-    """Check if a column is sorted."""
+def is_sorted(col, descending=False):
+    """Check if a column is sorted.
+
+    Nulls are ignored. Returns False if col contains a dtype that cannot be
+    ordered (e.g. Object in polars).
+
+    WARNING: for some dtypes such as lists and struct the results for polars
+             and pandas may differ.
+
+    Parameters
+    ----------
+    col : a pandas or polars Series
+        The column to check.
+    descending : bool
+        If False, check if the column is sorted in ascending order. Otherwise
+        check if it is sorted in descending order.
+
+    Returns
+    -------
+    bool
+        Indicates if column is sorted in the specified order, ignoring nulls.
+    """
     raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @is_sorted.specialize("pandas", argument_type="Column")
-def _is_sorted_pandas(col):
-    return col.is_monotonic_increasing or col.is_monotonic_decreasing
+def _is_sorted_pandas(col, descending=False):
+    if descending:
+        return col.dropna().is_monotonic_decreasing
+    return col.dropna().is_monotonic_increasing
 
 
 @is_sorted.specialize("polars", argument_type="Column")
-def _is_sorted_polars(col):
-    return col.is_sorted()
+def _is_sorted_polars(col, descending=False):
+    if parse_version(pl.__version__) < parse_version("1.22.0"):
+        # in old polars versions for unorderable dtypes this would cause a rust
+        # panic so we resort to a hard-coded list of dtypes we know can be
+        # ordered.
+        dtype = col.dtype
+        if (
+            dtype.is_numeric()
+            or dtype.is_temporal()
+            or dtype.base_type() in (pl.String, pl.Categorical, pl.Enum, pl.Boolean)
+        ):
+            return drop_nulls(col).is_sorted(descending=descending)
+        else:
+            return False
+    try:
+        return drop_nulls(col).is_sorted(descending=descending)
+    except pl.exceptions.InvalidOperationError:
+        return False

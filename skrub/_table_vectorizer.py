@@ -183,8 +183,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         The format to use when parsing dates. If None, the format is inferred.
 
     numeric_dtype : "float32" or None, default=None
-        If set to ``float32``, convert numeric columns to ``np.float32`` dtype. If
-        ``None``, numerical dtypes are not modified.
+        If set to ``float32``, convert columns with numerical information
+        to ``np.float32`` dtype. If ``None``, numerical columns are not modified.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -235,7 +235,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
       categorical, or datetime.
 
     If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
-    numeric columns to ``np.float32`` dtype, ensuring a consistent representation
+    numeric columns to this dtype, including numbers represented
+    as string, ensuring a consistent representation
     of numbers and missing values. This can be useful if the ``Cleaner``
     is used as a preprocessing step in a skrub pipeline.
 
