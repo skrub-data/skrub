@@ -7,16 +7,34 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from sklearn.utils import Bunch
 
-from skrub import TableReport, ToDatetime, datasets
+from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
 from skrub._reporting._sample_table import make_table
+from skrub.conftest import skip_polars_installed_without_pyarrow
+
+
+@pytest.fixture
+def simple_df(df_module):
+    return df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "a", "b", "c"],
+        }
+    )
+
+
+@pytest.fixture
+def simple_series(df_module):
+    return df_module.make_column(name="A", values=[1, 2, 3, 4, 5])
 
 
 def get_report_id(html):
     return re.search(r'<skrub-table-report.*?id="report_([a-z0-9]+)"', html).group(1)
 
 
+@skip_polars_installed_without_pyarrow
 def test_report(air_quality):
     col_filt = {
         "first_2": {
@@ -64,11 +82,13 @@ def test_report(air_quality):
     assert len(all_report_ids) == len(set(all_report_ids))
 
 
+@skip_polars_installed_without_pyarrow
 def test_few_columns(df_module, check_polars_numpy2):
     report = TableReport(df_module.example_dataframe)
     assert "First 10 columns" not in report.html()
 
 
+@skip_polars_installed_without_pyarrow
 def test_few_rows(df_module, check_polars_numpy2):
     df = sbd.slice(df_module.example_dataframe, 2)
     TableReport(df).html()
@@ -84,6 +104,7 @@ def test_open(pd_module, browser_mock):
     assert b"the title" in browser_mock.content
 
 
+@skip_polars_installed_without_pyarrow
 def test_non_hashable_values(df_module):
     # non-regression test for #1066
     df = df_module.make_dataframe(dict(a=[[1, 2, 3], None, [4]]))
@@ -91,6 +112,7 @@ def test_non_hashable_values(df_module):
     assert "[1, 2, 3]" in html
 
 
+@skip_polars_installed_without_pyarrow
 def test_nat(df_module):
     # non-regression for:
     # https://github.com/skrub-data/skrub/issues/1111
@@ -103,12 +125,21 @@ def test_nat(df_module):
     TableReport(df).html()
 
 
+@skip_polars_installed_without_pyarrow
+def test_bool_column_mean(df_module):
+    df = df_module.make_dataframe({"a": [True, False, True, True, False, True]})
+    html = TableReport(df).html()
+    assert "Mean" in html
+    assert "0.667" in html
+
+
 def test_duplicate_columns(pd_module):
     df = pd_module.make_dataframe({"a": [1, 2], "b": [3, 4]})
     df.columns = ["a", "a"]
     TableReport(df).html()
 
 
+@skip_polars_installed_without_pyarrow
 def test_infinite_values(df_module):
     # Non-regression for https://github.com/skrub-data/skrub/issues/1134
     # (histogram plot failing with infinite values)
@@ -122,6 +153,7 @@ def test_infinite_values(df_module):
     TableReport(df).html()
 
 
+@skip_polars_installed_without_pyarrow
 def test_duration(df_module):
     df = df_module.make_dataframe(
         {"a": [datetime.timedelta(days=2), datetime.timedelta(days=3)]}
@@ -180,6 +212,7 @@ def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
     assert "</html>" not in saved_content
 
 
+@skip_polars_installed_without_pyarrow
 def test_verbosity_parameter(df_module, capsys):
     df = df_module.make_dataframe(
         dict(
@@ -202,6 +235,7 @@ def test_verbosity_parameter(df_module, capsys):
     assert capsys.readouterr().err != ""
 
 
+@skip_polars_installed_without_pyarrow
 def test_write_to_stderr(df_module, capsys):
     df = df_module.make_dataframe(
         dict(
@@ -222,6 +256,7 @@ def test_write_to_stderr(df_module, capsys):
     assert re.search(pattern, captured.err)
 
 
+@skip_polars_installed_without_pyarrow
 def test_max_plot_columns_parameter(df_module):
     df = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
@@ -259,6 +294,9 @@ def test_max_plot_columns_parameter(df_module):
     summary = TableReport(df6, max_plot_columns=None)._summary
     assert not summary["plots_skipped"]
 
+    summary = TableReport(df6, max_plot_columns="all")._summary
+    assert not summary["plots_skipped"]
+
 
 def test_minimal_mode(pd_module):
     # Check that flags are set properly and that the panels are not created
@@ -272,12 +310,13 @@ def test_minimal_mode(pd_module):
     assert 'id="column-associations-panel"' not in html
 
 
-def test_error_input_type():
-    df = datasets.fetch_employee_salaries()
+def test_error_input_type(simple_df, simple_series):
+    df = Bunch(X=simple_df, y=simple_series)
     with pytest.raises(TypeError):
         TableReport(df)
 
 
+@skip_polars_installed_without_pyarrow
 def test_single_column_report(df_module):
     # Check that single column report works
     single_col = df_module.example_column

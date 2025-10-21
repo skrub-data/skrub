@@ -71,14 +71,14 @@ employees
 
 from sklearn.model_selection import cross_validate
 
-from skrub import tabular_learner
+from skrub import tabular_pipeline
 
-model = tabular_learner("regressor")
+model = tabular_pipeline("regressor")
 results = cross_validate(model, employees, salaries)
 results["test_score"]
 
 # %%
-# The estimator returned by :obj:`tabular_learner` combines 2 steps:
+# The estimator returned by :obj:`tabular_pipeline` combines 2 steps:
 #
 # - a |TableVectorizer| to preprocess the dataframe and vectorize the features
 # - a supervised learner (by default a |HGBR|)
@@ -178,7 +178,7 @@ vectorizer.output_to_input_["department_BOA"]
 # ~~~~~~~~~~~~~~~~~~~~~~~
 #
 # Note that ``"date_first_hired"`` has been recognized and processed as a datetime
-# ßcolumn.
+# column.
 
 vectorizer.column_to_kind_["date_first_hired"]
 
@@ -194,7 +194,7 @@ employees["date_first_hired"]
 #
 # For example, strings commonly used to represent missing values such as ``"N/A"`` are
 # replaced with actual ``null``. As we saw above, columns containing strings that
-# represent dates (e.g. ``'2024-05-15'``) are detected and converted  to proper
+# represent dates (e.g. ``'2024-05-15'``) are detected and converted to proper
 # datetimes.
 #
 # We can inspect the list of steps that were applied to a given column:
@@ -262,7 +262,7 @@ print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
 # learner is built on top of decision trees, which is the case for the |HGBR|.
 #
 # The resulting pipeline is identical to the one produced by default by
-# :obj:`tabular_learner`.
+# :obj:`tabular_pipeline`.
 
 from skrub import MinHashEncoder, ToCategorical
 

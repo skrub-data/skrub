@@ -4,8 +4,8 @@ import pytest
 from pandas.testing import assert_series_equal
 
 from skrub import _dataframe as sbd
+from skrub._apply_to_cols import RejectColumn
 from skrub._clean_categories import CleanCategories, _with_string_categories
-from skrub._on_each_column import RejectColumn
 
 
 def test_clean_categories_polars():

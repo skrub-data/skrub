@@ -1,12 +1,12 @@
 [
     {
-        "name": "0.6.dev0 (dev)",
-        "version": "0.6.dev0",
+        "name": "0.7.dev0 (dev)",
+        "version": "0.7.dev0",
         "url": "https://skrub-data.org/dev/"
     },
     {
-        "name": "0.5.4 (stable)",
-        "version": "0.5.4",
+        "name": "0.6.2 (stable)",
+        "version": "0.6.2",
         "url": "https://skrub-data.org/stable/",
         "preferred": true
     }

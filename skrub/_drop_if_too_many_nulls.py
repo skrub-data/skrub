@@ -4,7 +4,7 @@ import warnings
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._apply_to_cols import SingleColumnTransformer
 
 __all__ = ["DropIfTooManyNulls"]
 

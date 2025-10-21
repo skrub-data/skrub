@@ -9,11 +9,13 @@ from skrub import _column_associations
 from skrub import _dataframe as sbd
 from skrub._reporting import _sample_table
 from skrub._reporting._summarize import summarize_dataframe
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 @pytest.mark.parametrize("order_by", [None, "date.utc", "value"])
 @pytest.mark.parametrize("with_plots", [False, True])
 @pytest.mark.parametrize("with_associations", [False, True])
+@skip_polars_installed_without_pyarrow
 def test_summarize(
     monkeypatch, df_module, air_quality, order_by, with_plots, with_associations
 ):
@@ -57,6 +59,7 @@ def test_summarize(
     assert c == {
         "idx": 0,
         "dtype": "string",
+        "is_ordered": False,
         "n_unique": 2,
         "name": "city",
         "null_count": 0,
@@ -69,6 +72,7 @@ def test_summarize(
         "most_frequent_values": ["Paris", "London"],
         "value_is_constant": False,
         "is_duration": False,
+        "is_high_cardinality": False,
     }
 
     assert summary["columns"][4]["constant_value"] == "no2"
@@ -112,6 +116,7 @@ def test_high_cardinality_column(pd_module):
     assert "10 most frequent" in summary["columns"][0]["value_counts_plot"]
 
 
+@skip_polars_installed_without_pyarrow
 def test_all_null(df_module):
     df = df_module.make_dataframe(
         {
@@ -140,6 +145,7 @@ def small_df_summary(df_module):
     return make_summary
 
 
+@skip_polars_installed_without_pyarrow
 def test_small_df(small_df_summary):
     summary = small_df_summary(11)
     thead, first_slice, ellipsis, last_slice = summary["sample_table"]["parts"]
@@ -252,3 +258,25 @@ def test_duplicate_columns(pd_module):
     assert cols[0]["mean"] == 1.5
     assert cols[1]["name"] == "a"
     assert cols[1]["mean"] == 3.5
+
+
+@skip_polars_installed_without_pyarrow
+def test_high_cardinality_columns(df_module):
+    df = df_module.make_dataframe(
+        {
+            "low-cardinality": [0] * 100,
+            "high-cardinality": range(100),
+        }
+    )
+    summary = summarize_dataframe(df)
+    cols = summary["columns"]
+    assert not cols[0]["is_high_cardinality"]
+    assert cols[1]["is_high_cardinality"]
+
+
+@skip_polars_installed_without_pyarrow
+def test_bool_column_mean(df_module):
+    df = df_module.make_dataframe({"a": [True, False, True, True, False, True]})
+    summary = summarize_dataframe(df)
+    cols = summary["columns"]
+    assert "mean" in cols[0]

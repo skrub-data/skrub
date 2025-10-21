@@ -11,12 +11,12 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
+from ._apply_to_cols import SingleColumnTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
-from ._on_each_column import SingleColumnTransformer
 from ._select_cols import Drop
 from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
@@ -75,7 +75,7 @@ def _created_by_predicate(col, transformers):
 def _created_by(*transformers):
     """Selector for columns created by one of the provided transformers.
 
-    Each of ``transformers`` must be an instance of ``OnEachColumn``.
+    Each of ``transformers`` must be an instance of ``ApplyToCols``.
     A column is matched if it was created (or modified) by one of them, i.e. if
     it is listed in one of their ``created_outputs_`` fitted attributes.
 
@@ -183,8 +183,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         The format to use when parsing dates. If None, the format is inferred.
 
     numeric_dtype : "float32" or None, default=None
-        If set to ``float32``, convert numeric columns to ``np.float32`` dtype. If
-        ``None``, numerical dtypes are not modified.
+        If set to ``float32``, convert columns with numerical information
+        to ``np.float32`` dtype. If ``None``, numerical columns are not modified.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -202,6 +202,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
     TableVectorizer :
         Process columns of a dataframe and convert them to a numeric (vectorized)
         representation.
+
+    ToFloat32 :
+        Convert numeric columns to ``np.float32``, to have consistent numeric
+        types and representation of missing values. More informative columns (e.g.,
+        categorical or datetime) are not converted.
 
     Notes
     -----
@@ -230,7 +235,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
       categorical, or datetime.
 
     If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
-    numeric columns to ``np.float32`` dtype, ensuring a consistent representation
+    numeric columns to this dtype, including numbers represented
+    as string, ensuring a consistent representation
     of numbers and missing values. This can be useful if the ``Cleaner``
     is used as a preprocessing step in a skrub pipeline.
 
@@ -285,17 +291,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
     [CleanNullStrings(), DropUninformative(), ToStr()]
     >>> cleaner.all_processing_steps_['D']
     [DropUninformative()]
-
-    See Also:
-    --------
-    TableVectorizer :
-        Process columns of a dataframe and convert them to a numeric (vectorized)
-        representation.
-
-    ToFloat32 :
-        Convert numeric columns to ``np.float32``, to have consistent numeric
-        types and representation of missing values. More informative columns (e.g.,
-        categorical or datetime) are not converted.
     """
 
     def __init__(
@@ -522,7 +517,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     See Also
     --------
-    tabular_learner :
+    tabular_pipeline :
         A function that accepts a scikit-learn estimator and creates a pipeline
         combining a ``TableVectorizer``, optional missing value imputation and
         the provided estimator.
@@ -866,25 +861,15 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             return steps[-1]
 
         cols = s.all() - self._specific_columns
-
-        self._preprocessors = [CheckInputDataFrame()]
-
-        transformer_list = [CleanNullStrings()]
-        transformer_list.append(
-            DropUninformative(
-                self.drop_if_constant, self.drop_if_unique, self.drop_null_fraction
-            )
+        self._preprocessors = _get_preprocessors(
+            cols=cols,
+            drop_null_fraction=self.drop_null_fraction,
+            drop_if_constant=self.drop_if_constant,
+            drop_if_unique=self.drop_if_unique,
+            n_jobs=self.n_jobs,
+            add_tofloat32=True,
+            datetime_format=self.datetime_format,
         )
-
-        transformer_list += [
-            ToDatetime(format=self.datetime_format),
-            ToFloat32(),
-            CleanCategories(),
-            ToStr(),
-        ]
-
-        for transformer in transformer_list:
-            add_step(self._preprocessors, transformer, cols, allow_reject=True)
 
         self._encoders = []
         self._named_encoders = {}
