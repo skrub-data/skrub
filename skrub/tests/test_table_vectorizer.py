@@ -27,6 +27,7 @@ from skrub._table_vectorizer import (
     _get_preprocessors,
 )
 from skrub._to_float32 import ToFloat32
+from skrub.conftest import _POLARS_INSTALLED
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
@@ -560,6 +561,10 @@ def test_get_feature_names_out(clean_dataframe):
     )
 
 
+@pytest.mark.skipif(
+    parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
+    reason="This test requires sklearn version 1.4 or higher",
+)
 def test_transform(clean_dataframe, df_module):
     X = clean_dataframe
     table_vec = TableVectorizer().fit(X)
@@ -608,6 +613,10 @@ inputs = [
 ]
 
 
+@pytest.mark.skipif(
+    parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
+    reason="This test requires sklearn version 1.4 or higher",
+)
 def test_handle_unknown_category(df_module, clean_dataframe):
     X = clean_dataframe
     # Treat all columns as having few unique values
