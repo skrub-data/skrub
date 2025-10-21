@@ -79,15 +79,6 @@ def clean_dataframe(df_module):
 
 @pytest.fixture
 def dirty_dataframe(df_module, categorical_dtype="object"):
-    # data = {
-    #     "int": [15, 56, None, 12, 44],
-    #     "float": [5.2, 2.4, 6.2, 10.45, None],
-    #     "str1": ["public", None, "private", "private", "public"],
-    #     "str2": ["officer", "manager", None, "chef", "teacher"],
-    #     "cat1": [None, "yes", "no", "yes", "no"],
-    #     "cat2": ["20K+", "40K+", "60K+", "30K+", None],
-    # }
-    # return df_module.make_dataframe(data)
     data1 = {
         "int": [15, 56, None, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, None],
