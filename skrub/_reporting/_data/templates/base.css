@@ -346,3 +346,13 @@ article.wrapper {
     stroke: var(--color-text-info);
     stroke-width: var(--border-s);
 }
+
+.alert-info-dismissable {
+    position: relative;
+}
+
+.dismiss-container {
+    position: absolute;
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
+}
