@@ -560,6 +560,10 @@ def fit_transform_inputs(df_module):
     ]
 
 
+@pytest.mark.skipif(
+    parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
+    reason="This test requires sklearn version 1.4 or higher",
+)
 def test_fit_transform_equiv(fit_transform_inputs):
     # TODO: this check is probably already performed in test_sklearn
     """
