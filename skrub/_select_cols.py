@@ -21,8 +21,8 @@ class SelectCols(TransformerMixin, BaseEstimator):
 
     See Also
     --------
-    DropCols : Dropping cols by name, dtypes, or general skrub selectors
-    Cleaner: Can be used to drop columns with too many NaNs
+    DropCols : Dropping cols by name, dtypes, or general skrub selectors.
+    Cleaner: Can be used to drop columns with too many NaNs.
 
     Examples
     --------
@@ -116,8 +116,8 @@ class DropCols(TransformerMixin, BaseEstimator):
 
     See Also
     --------
-    SelectCols : Selecting cols by name, dtypes, or general skrub selectors
-    Cleaner: Can be used to drop columns with too many NaNs
+    SelectCols : Selecting cols by name, dtypes, or general skrub selectors.
+    Cleaner: Can be used to drop columns with too many NaNs.
 
     Examples
     --------

@@ -33,8 +33,8 @@ class DropUninformative(SingleColumnTransformer):
     --------
     Cleaner :
         A full-frame transformer (as opposed to single column) that can
-        drop columns with missing values
-    DropCols : Dropping cols by name, dtypes, or general skrub selectors
+        drop columns with missing values.
+    DropCols : Dropping cols by name, dtypes, or general skrub selectors.
 
     Notes
     -----
