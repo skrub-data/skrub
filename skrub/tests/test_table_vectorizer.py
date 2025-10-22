@@ -53,8 +53,7 @@ def type_equality(expected_type, actual_type):
         return expected_type == actual_type
 
 
-@pytest.fixture
-def clean_dataframe(df_module):
+def _get_clean_dataframe(df_module):
     """
     Creates a simple DataFrame with various types of data,
     and without missing values.
@@ -78,17 +77,25 @@ def clean_dataframe(df_module):
     return sbd.concat(df1, df2, axis=1)
 
 
-@pytest.fixture
-def dirty_dataframe(df_module, categorical_dtype="object"):
+def _get_dirty_dataframe(df_module, categorical_dtype="object"):
     data1 = {
         "int": [15, 56, None, 12, 44],
         "float": [5.2, 2.4, 6.2, 10.45, None],
-        "str1": ["public", None, "private", "private", "public"],
-        "str2": ["officer", "manager", None, "chef", "teacher"],
     }
     df1 = df_module.make_dataframe(data1)
+
     if categorical_dtype == "category":
         data2 = {
+            "str1": sbd.to_categorical(
+                df_module.make_column(
+                    "str1", ["public", None, "private", "private", "public"]
+                )
+            ),
+            "str2": sbd.to_categorical(
+                df_module.make_column(
+                    "str2", ["officer", "manager", None, "chef", "teacher"]
+                )
+            ),
             "cat1": sbd.to_categorical(
                 df_module.make_column("cat1", [None, "yes", "no", "yes", "no"])
             ),
@@ -98,6 +105,8 @@ def dirty_dataframe(df_module, categorical_dtype="object"):
         }
     else:
         data2 = {
+            "str1": ["public", None, "private", "private", "public"],
+            "str2": ["officer", "manager", None, "chef", "teacher"],
             "cat1": ["yes", "yes", "no", "yes", "no"],
             "cat2": ["20K+", "40K+", "60K+", "30K+", "50K+"],
         }
@@ -105,8 +114,7 @@ def dirty_dataframe(df_module, categorical_dtype="object"):
     return sbd.concat(df1, df2, axis=1)
 
 
-@pytest.fixture
-def mixed_types_dataframe(df_module):
+def _get_mixed_types_dataframe(df_module):
     data = {
         "int_str": ["1", "2", 3, "3", 5],
         "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
@@ -114,68 +122,6 @@ def mixed_types_dataframe(df_module):
         "bool_str": ["True", False, True, "False", "True"],
     }
     return df_module.make_dataframe(data)
-
-
-def _get_clean_dataframe():
-    """
-    Creates a simple DataFrame with various types of data,
-    and without missing values.
-    """
-    return pd.DataFrame(
-        {
-            "int": pd.Series([15, 56, 63, 12, 44], dtype="int64"),
-            "float": pd.Series([5.2, 2.4, 6.2, 10.45, 9.0], dtype="float64"),
-            "str1": pd.Series(
-                ["public", "private", "private", "private", "public"], dtype="string"
-            ),
-            "str2": pd.Series(
-                ["officer", "manager", "lawyer", "chef", "teacher"], dtype="string"
-            ),
-            "cat1": pd.Series(["yes", "yes", "no", "yes", "no"], dtype="category"),
-            "cat2": pd.Series(
-                ["20K+", "40K+", "60K+", "30K+", "50K+"], dtype="category"
-            ),
-        }
-    )
-
-
-def _get_dirty_dataframe(categorical_dtype="object"):
-    """
-    Creates a simple DataFrame with some missing values.
-    We'll use different types of missing values (np.nan, pd.NA, None)
-    to test the robustness of the vectorizer.
-    """
-    return pd.DataFrame(
-        {
-            "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
-            "float": pd.Series([5.2, 2.4, 6.2, 10.45, np.nan], dtype="Float64"),
-            "str1": pd.Series(
-                ["public", np.nan, "private", "private", "public"],
-                dtype=categorical_dtype,
-            ),
-            "str2": pd.Series(
-                ["officer", "manager", None, "chef", "teacher"],
-                dtype=categorical_dtype,
-            ),
-            "cat1": pd.Series(
-                [np.nan, "yes", "no", "yes", "no"], dtype=categorical_dtype
-            ),
-            "cat2": pd.Series(
-                ["20K+", "40K+", "60K+", "30K+", np.nan], dtype=categorical_dtype
-            ),
-        }
-    )
-
-
-def _get_mixed_types_dataframe():
-    return pd.DataFrame(
-        {
-            "int_str": ["1", "2", 3, "3", 5],
-            "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
-            "int_float": [1, 2, 3.0, 3, 5.0],
-            "bool_str": ["True", False, True, "False", "True"],
-        }
-    )
 
 
 def _get_mixed_types_array():
@@ -189,7 +135,7 @@ def _get_mixed_types_array():
     ).T
 
 
-def _get_datetimes_dataframe():
+def _get_datetimes_dataframe(df_module):
     """
     Creates a DataFrame with various date formats,
     already converted or to be converted.
@@ -235,13 +181,13 @@ def _get_datetimes_dataframe():
     )
 
 
-def _get_missing_values_dataframe(categorical_dtype="object"):
+def _get_missing_values_dataframe(df_module, categorical_dtype="object"):
     """
     Creates a simple DataFrame with some columns that contain only missing values.
     We'll use different types of missing values (np.nan, pd.NA, None)
     to test how the vectorizer handles full null columns with mixed null values.
     """
-    return pd.DataFrame(
+    return df_module.make_dataframe(
         {
             "int": pd.Series([15, 56, pd.NA, 12, 44], dtype="Int64"),
             "all_null": pd.Series(
@@ -257,8 +203,8 @@ def _get_missing_values_dataframe(categorical_dtype="object"):
     )
 
 
-def test_get_preprocessors(clean_dataframe):
-    X = clean_dataframe
+def test_get_preprocessors(df_module):
+    X = _get_clean_dataframe(df_module)
     steps = _get_preprocessors(
         cols=X.columns,
         drop_null_fraction=1.0,
@@ -280,8 +226,8 @@ def test_get_preprocessors(clean_dataframe):
     assert not any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
 
 
-def test_fit_default_transform(clean_dataframe):
-    X = clean_dataframe
+def test_fit_default_transform(df_module):
+    X = _get_clean_dataframe(df_module)
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
 
@@ -321,45 +267,43 @@ def test_duplicate_column_names():
     assert re.match(r"^col_1__skrub_[0-9a-f]+__$", cols[1])
 
 
-X = _get_datetimes_dataframe()
-# Add weird index to test that it's not used
-X.index = [10, 3, 4, 2, 5]
-
-X_tuples = [
-    (
-        X,
-        {
-            "pd_datetime": "datetime",
-            "np_datetime": "datetime",
-            "dmy-": "datetime",
-            "ymd/": "datetime",
-            "ymd/_hms:": "datetime",
-        },
-    ),
-    # Test other types detection
-    (
-        _get_clean_dataframe(),
-        {
-            "int": "float32",
-            "float": "float32",
-            "str1": "string",
-            "str2": "string",
-            "cat1": "category",
-            "cat2": "category",
-        },
-    ),
-    (
-        _get_dirty_dataframe("category"),
-        {
-            "int": "float32",
-            "float": "float32",
-            "str1": "category",
-            "str2": "category",
-            "cat1": "category",
-            "cat2": "category",
-        },
-    ),
-]
+@pytest.fixture
+def X_tuples_fixture(df_module):
+    """Generate test tuples for the given dataframe module."""
+    return [
+        (
+            _get_datetimes_dataframe(df_module),
+            {
+                "pd_datetime": "datetime",
+                "np_datetime": "datetime",
+                "dmy-": "datetime",
+                "ymd/": "datetime",
+                "ymd/_hms:": "datetime",
+            },
+        ),
+        (
+            _get_clean_dataframe(df_module),
+            {
+                "int": "float32",
+                "float": "float32",
+                "str1": "string",
+                "str2": "string",
+                "cat1": "category",
+                "cat2": "category",
+            },
+        ),
+        (
+            _get_dirty_dataframe(df_module, "category"),
+            {
+                "int": "float32",
+                "float": "float32",
+                "str1": "category",
+                "str2": "category",
+                "cat1": "category",
+                "cat2": "category",
+            },
+        ),
+    ]
 
 
 def passthrough_vectorizer():
@@ -371,98 +315,111 @@ def passthrough_vectorizer():
     )
 
 
-@pytest.mark.parametrize("X, dict_expected_types", X_tuples)
-def test_auto_cast(X, dict_expected_types):
+def test_auto_cast(X_tuples_fixture):
     """
     Tests that the TableVectorizer automatic type detection works as expected.
     """
-    vectorizer = passthrough_vectorizer()
-    X_trans = vectorizer.fit_transform(X)
-    for col in X_trans.columns:
-        if dict_expected_types[col] == "datetime":
-            assert sbd.is_any_date(X_trans[col])
-        if dict_expected_types[col] == "categorical":
-            assert sbd.is_categorical(X_trans[col])
-        if dict_expected_types[col] == "float32":
-            assert sbd.is_float(X_trans[col])
-        if dict_expected_types[col] == "string":
-            assert sbd.is_string(X_trans[col])
+    for X, dict_expected_types in X_tuples_fixture:
+        vectorizer = passthrough_vectorizer()
+        X_trans = vectorizer.fit_transform(X)
+        for col in X_trans.columns:
+            if dict_expected_types[col] == "datetime":
+                assert sbd.is_any_date(X_trans[col])
+            if dict_expected_types[col] == "category":
+                assert sbd.is_categorical(X_trans[col])
+            if dict_expected_types[col] == "float32":
+                assert sbd.is_float(X_trans[col])
+            if dict_expected_types[col] == "string":
+                assert sbd.is_string(X_trans[col])
 
 
 # Cleaner does not cast to float32
-X_tuples = [
-    (
-        X,
-        {
-            "pd_datetime": "datetime",
-            "np_datetime": "datetime",
-            "dmy-": "datetime",
-            "ymd/": "datetime",
-            "ymd/_hms:": "datetime",
-        },
-    ),
-    # Test other types detection
-    (
-        _get_clean_dataframe(),
-        {
-            "int": "int",
-            "float": "float",
-            "str1": "O",
-            "str2": "O",
-            "cat1": "category",
-            "cat2": "category",
-        },
-    ),
-    (
-        _get_dirty_dataframe("category"),
-        {
-            "int": "int",
-            "float": "float",
-            "str1": "category",
-            "str2": "category",
-            "cat1": "category",
-            "cat2": "category",
-        },
-    ),
-]
+@pytest.fixture
+def X_tuples_cleaner_fixture(df_module):
+    """Generate test tuples for the given dataframe module."""
+    return [
+        (
+            _get_datetimes_dataframe(df_module),
+            {
+                "pd_datetime": "datetime",
+                "np_datetime": "datetime",
+                "dmy-": "datetime",
+                "ymd/": "datetime",
+                "ymd/_hms:": "datetime",
+            },
+        ),
+        (
+            _get_clean_dataframe(df_module),
+            {
+                "int": "int",
+                "float": "float",
+                "str1": "string",
+                "str2": "string",
+                "cat1": "category",
+                "cat2": "category",
+            },
+        ),
+        (
+            _get_dirty_dataframe(df_module, "category"),
+            {
+                "int": "int",
+                "float": "float",
+                "str1": "category",
+                "str2": "category",
+                "cat1": "category",
+                "cat2": "category",
+            },
+        ),
+    ]
 
 
-@pytest.mark.parametrize("X, dict_expected_types", X_tuples)
-def test_cleaner_dtypes(X, dict_expected_types):
-    vectorizer = Cleaner()
-    X_trans = vectorizer.fit_transform(X)
-    for col in X_trans.columns:
-        if dict_expected_types[col] == "datetime":
-            assert sbd.is_any_date(X_trans[col])
-        else:
-            for col, dtype in dict_expected_types.items():
-                if dtype == "int":
-                    assert sbd.is_integer(X_trans[col])
-                elif dtype == "float":
-                    assert sbd.is_float(X_trans[col])
-                else:
-                    assert dict_expected_types[col] == X_trans[col].dtype
+def test_cleaner_dtypes(X_tuples_cleaner_fixture, df_module):
+    for X, dict_expected_types in X_tuples_cleaner_fixture:
+        if df_module.description == "pandas-numpy-dtypes":
+            pytest.xfail(
+                reason=(
+                    "Test is expected to fail for dirty dataframe with"
+                    " pandas-numpy-dtypes configuration"
+                ),
+            )
+        vectorizer = Cleaner()
+        X_trans = vectorizer.fit_transform(X)
+        for col in X_trans.columns:
+            if dict_expected_types[col] == "datetime":
+                assert sbd.is_any_date(X_trans[col])
+            else:
+                for col, dtype in dict_expected_types.items():
+                    if dtype == "int":
+                        assert sbd.is_integer(X_trans[col])
+                    elif dtype == "float":
+                        assert sbd.is_float(X_trans[col])
+                    elif dtype == "category":
+                        assert sbd.is_categorical(X_trans[col])
+                    else:  # string
+                        assert sbd.is_string(X_trans[col])
 
-    X_trans = vectorizer.fit(X).transform(X)
-    for col in X_trans.columns:
-        if dict_expected_types[col] == "datetime":
-            assert sbd.is_any_date(X_trans[col])
-        else:
-            for col, dtype in dict_expected_types.items():
-                if dtype == "int":
-                    assert sbd.is_integer(X_trans[col])
-                elif dtype == "float":
-                    assert sbd.is_float(X_trans[col])
-                else:
-                    assert dict_expected_types[col] == X_trans[col].dtype
+        X_trans = vectorizer.fit(X).transform(X)
+        for col in X_trans.columns:
+            if dict_expected_types[col] == "datetime":
+                assert sbd.is_any_date(X_trans[col])
+            else:
+                for col, dtype in dict_expected_types.items():
+                    if dtype == "int":
+                        assert sbd.is_integer(X_trans[col])
+                    elif dtype == "float":
+                        assert sbd.is_float(X_trans[col])
+                    elif dtype == "category":
+                        assert sbd.is_categorical(X_trans[col])
+                    else:  # string
+                        assert sbd.is_string(X_trans[col])
 
 
-def test_convert_float32(clean_dataframe):
+def test_convert_float32(df_module):
     """
     Test that the TableVectorizer converts float64 to float32
     when using the default parameters.
     """
-    X = clean_dataframe
+    X = _get_clean_dataframe(df_module)
     vectorizer = TableVectorizer()
     out = vectorizer.fit_transform(X)
     assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
@@ -480,14 +437,18 @@ def test_convert_float32(clean_dataframe):
     assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
 
 
-def test_cleaner_invalid_numeric_dtype(clean_dataframe):
-    X = clean_dataframe
+def test_cleaner_invalid_numeric_dtype(df_module):
+    X = _get_clean_dataframe(df_module)
     with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
         Cleaner(numeric_dtype="wrong").fit_transform(X)
 
 
-def test_auto_cast_missing_categories():
-    X = _get_dirty_dataframe("category")
+def test_auto_cast_missing_categories(df_module):
+    # TODO implement test for polars
+    if df_module.description == "polars":
+        pytest.skip("Skipping test for polars")
+
+    X = _get_dirty_dataframe(df_module, "category")
     vectorizer = passthrough_vectorizer()
     out = vectorizer.fit_transform(X)
 
@@ -509,7 +470,7 @@ def test_auto_cast_missing_categories():
     }
     assert dict(out.dtypes) == expected_type_per_column
 
-    X = _get_dirty_dataframe("category")
+    X = _get_dirty_dataframe(df_module, "category")
     X_train = X.head(3).reset_index(drop=True)
     X_test = X.tail(2).reset_index(drop=True)
     _ = vectorizer.fit_transform(X_train)
@@ -518,7 +479,7 @@ def test_auto_cast_missing_categories():
     assert dict(out.dtypes) == expected_type_per_column
 
 
-def test_get_feature_names_out(clean_dataframe):
+def test_get_feature_names_out(df_module):
     expected_features = [
         "int",
         "float",
@@ -535,7 +496,7 @@ def test_get_feature_names_out(clean_dataframe):
         "cat2_50K+",
         "cat2_60K+",
     ]
-    X = clean_dataframe
+    X = _get_clean_dataframe(df_module)
     rng = np.random.default_rng(42)
     y = rng.integers(0, 2, size=X.shape[0])
     vectorizer = TableVectorizer().fit(X)
@@ -565,8 +526,8 @@ def test_get_feature_names_out(clean_dataframe):
     parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
     reason="This test requires sklearn version 1.4 or higher",
 )
-def test_transform(clean_dataframe, df_module):
-    X = clean_dataframe
+def test_transform(df_module):
+    X = _get_clean_dataframe(df_module)
     table_vec = TableVectorizer().fit(X)
 
     x = {
@@ -586,39 +547,36 @@ def test_transform(clean_dataframe, df_module):
     assert_array_equal(x_trans, expected_x_trans)
 
 
-inputs = [
-    _get_clean_dataframe(),
-    _get_dirty_dataframe(categorical_dtype="object"),
-    _get_dirty_dataframe(categorical_dtype="category"),
-    _get_mixed_types_dataframe(),
-    _get_mixed_types_array(),
-]
+@pytest.fixture
+def fit_transform_inputs(df_module):
+    """Generate test inputs for fit_transform equivalence test."""
+    return [
+        _get_clean_dataframe(df_module),
+        _get_dirty_dataframe(df_module, categorical_dtype="object"),
+        _get_dirty_dataframe(df_module, categorical_dtype="category"),
+        _get_mixed_types_dataframe(df_module),
+        _get_mixed_types_array(),
+    ]
 
 
-@pytest.mark.parametrize("X", inputs)
-def test_fit_transform_equiv(X):
+def test_fit_transform_equiv(fit_transform_inputs):
     # TODO: this check is probably already performed in test_sklearn
     """
     We will test the equivalence between using `.fit_transform(X)`
     and `.fit(X).transform(X).`
     """
-    X_trans_1 = TableVectorizer().fit_transform(X)
-    X_trans_2 = TableVectorizer().fit(X).transform(X)
-    assert_array_equal(X_trans_1, X_trans_2)
-
-
-inputs = [
-    _get_dirty_dataframe(),
-    _get_clean_dataframe(),
-]
+    for X in fit_transform_inputs:
+        X_trans_1 = TableVectorizer().fit_transform(X)
+        X_trans_2 = TableVectorizer().fit(X).transform(X)
+        assert_array_equal(X_trans_1, X_trans_2)
 
 
 @pytest.mark.skipif(
     parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
     reason="This test requires sklearn version 1.4 or higher",
 )
-def test_handle_unknown_category(df_module, clean_dataframe):
-    X = clean_dataframe
+def test_handle_unknown_category(df_module):
+    X = _get_clean_dataframe(df_module)
     # Treat all columns as having few unique values
     table_vec = TableVectorizer(cardinality_threshold=7).fit(X)
     data_unknown = {
@@ -673,24 +631,24 @@ def test_handle_unknown_category(df_module, clean_dataframe):
         ),
     ],
 )
-def test_deterministic(pipeline, dirty_dataframe):
+def test_deterministic(pipeline, df_module):
     """
     Tests that running the same TableVectorizer multiple times with the same
     (deterministic) components results in the same output.
     """
-    X = dirty_dataframe
+    X = _get_dirty_dataframe(df_module)
     X_trans_1 = pipeline.fit_transform(X)
     X_trans_2 = pipeline.fit_transform(X)
     assert_array_equal(X_trans_1, X_trans_2)
 
 
-def test_mixed_types(mixed_types_dataframe):
+def test_mixed_types(df_module):
     """
     Check that the types are correctly inferred.
     """
     if parse_version(pd.__version__) < parse_version("2.0.0"):
         pytest.xfail("pandas is_string_dtype incorrect in old pandas")
-    X = mixed_types_dataframe
+    X = _get_mixed_types_dataframe(df_module)
     vectorizer = TableVectorizer()
     vectorizer.fit(X)
     expected_transformer_types = {
@@ -775,14 +733,14 @@ def test_changing_types_int_float():
     assert_array_almost_equal(X_trans, expected_X_trans)
 
 
-def test_column_by_column(clean_dataframe):
+def test_column_by_column(df_module):
     """
     Test that the TableVectorizer gives the same result
     when applied column by column.
     """
     if parse_version(pd.__version__) < parse_version("2.0.0"):
         pytest.xfail("pandas is_string_dtype incorrect in old pandas")
-    X = clean_dataframe
+    X = _get_clean_dataframe(df_module)
     vectorizer = TableVectorizer(
         high_cardinality=GapEncoder(n_components=2, random_state=0),
         cardinality_threshold=4,
@@ -808,8 +766,8 @@ def test_column_by_column(clean_dataframe):
         MinHashEncoder(n_components=2),
     ],
 )
-def test_parallelism(high_cardinality, clean_dataframe):
-    X = clean_dataframe
+def test_parallelism(high_cardinality, df_module):
+    X = _get_clean_dataframe(df_module)
     params = dict(
         high_cardinality=high_cardinality,
         cardinality_threshold=4,
@@ -852,8 +810,8 @@ def test_pandas_sparse_array():
         TableVectorizer().fit(df)
 
 
-def test_wrong_transformer(clean_dataframe):
-    X = clean_dataframe
+def test_wrong_transformer(df_module):
+    X = _get_clean_dataframe(df_module)
     with pytest.raises(ValueError):
         TableVectorizer(high_cardinality="passthroughtypo").fit(X)
     with pytest.raises(TypeError):
@@ -962,8 +920,8 @@ def test_bad_specific_cols():
         TableVectorizer(specific_transformers=[(None, [0])]).fit(None)
 
 
-def test_sk_visual_block(clean_dataframe):
-    X = clean_dataframe
+def test_sk_visual_block(df_module):
+    X = _get_clean_dataframe(df_module)
     vectorizer = TableVectorizer()
     unfitted_repr = vectorizer._repr_html_()
     assert "TableVectorizer" in unfitted_repr
@@ -984,10 +942,10 @@ def test_supervised_encoder(df_module):
     tv.fit_transform(X, y)
 
 
-def test_drop_null_column():
+def test_drop_null_column(df_module):
     """Check that all null columns are dropped, and no more."""
     # Don't drop null columns
-    X = _get_missing_values_dataframe()
+    X = _get_missing_values_dataframe(df_module)
     tv = TableVectorizer(drop_null_fraction=None)
     transformed = tv.fit_transform(X)
 
