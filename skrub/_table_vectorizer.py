@@ -184,7 +184,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     numeric_dtype : "float32" or None, default=None
         If set to ``float32``, convert columns with numerical information
-        to ``np.float32`` dtype. If ``None``, numerical columns are not modified.
+        to ``np.float32`` dtype thanks to the transformer ``ToFloat32``.
+        If ``None``, numerical columns are not modified.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
