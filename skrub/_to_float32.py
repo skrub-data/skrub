@@ -199,4 +199,16 @@ class ToFloat32(SingleColumnTransformer):
             ) from e
 
     def transform(self, column):
+        """Transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series
+            The input to transform.
+
+        Returns
+        -------
+        transformed : pandas or polars Series
+            The input transformed to Float32.
+        """
         return sbd.to_float32(column, strict=False)
