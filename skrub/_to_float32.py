@@ -168,6 +168,21 @@ class ToFloat32(SingleColumnTransformer):
     """  # noqa: E501
 
     def fit_transform(self, column, y=None):
+        """Fit the encoder and transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series
+            The input to transform.
+
+        y : None
+            Ignored.
+
+        Returns
+        -------
+        transformed : pandas or polars Series
+            The input transformed to Float32.
+        """
         del y
         if sbd.is_any_date(column) or sbd.is_categorical(column):
             raise RejectColumn(
