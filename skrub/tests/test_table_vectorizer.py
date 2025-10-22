@@ -181,6 +181,7 @@ def _get_datetimes_dataframe(df_module):
     )
 
 
+# TODO: update this so it can generate polars dataframes
 def _get_missing_values_dataframe(df_module, categorical_dtype="object"):
     """
     Creates a simple DataFrame with some columns that contain only missing values.
@@ -944,8 +945,11 @@ def test_supervised_encoder(df_module):
 
 def test_drop_null_column(df_module):
     """Check that all null columns are dropped, and no more."""
-    # Don't drop null columns
+    # TODO: avoid skipping by adding proper polars support to
+    # _get_missing_values_dataframe
+    pytest.importorskip("pyarrow")
     X = _get_missing_values_dataframe(df_module)
+    # Don't drop null columns
     tv = TableVectorizer(drop_null_fraction=None)
     transformed = tv.fit_transform(X)
 
