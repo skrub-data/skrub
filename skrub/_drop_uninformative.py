@@ -29,6 +29,13 @@ class DropUninformative(SingleColumnTransformer):
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
 
+    See Also
+    --------
+    Cleaner :
+        A full-frame transformer (as opposed to single column) that can
+        drop columns with missing values
+    DropCols : Dropping cols by name, dtypes, or general skrub selectors
+
     Notes
     -----
     A column is considered to be "uninformative" if one or more of the following

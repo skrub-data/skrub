@@ -19,6 +19,11 @@ class SelectCols(TransformerMixin, BaseEstimator):
         ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
         :ref:`selectors<user_guide_selectors>` user guide for more info on selectors.
 
+    See Also
+    --------
+    DropCols : Dropping cols by name, dtypes, or general skrub selectors
+    Cleaner: Can be used to drop columns with too many NaNs
+
     Examples
     --------
     >>> import pandas as pd
@@ -108,6 +113,11 @@ class DropCols(TransformerMixin, BaseEstimator):
         The columns to drop, or a selector. A single column name can be passed as a
         ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
         :ref:`selectors <user_guide_selectors>` user guide for more info on selectors.
+
+    See Also
+    --------
+    SelectCols : Selecting cols by name, dtypes, or general skrub selectors
+    Cleaner: Can be used to drop columns with too many NaNs
 
     Examples
     --------
