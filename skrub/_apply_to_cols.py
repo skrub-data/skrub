@@ -34,7 +34,7 @@ class RejectColumn(ValueError):
     """Used by single-column transformers to indicate they do not apply to a column.
 
     >>> import pandas as pd
-    >>> from skrub._to_datetime import ToDatetime
+    >>> from skrub import ToDatetime
     >>> df = pd.DataFrame(dict(a=['2020-02-02'], b=[12.5]))
     >>> ToDatetime().fit_transform(df['a'])
     0   2020-02-02
@@ -337,7 +337,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     The transformer can raise ``RejectColumn`` to indicate it cannot handle a
     given column.
 
-    >>> from skrub._to_datetime import ToDatetime
+    >>> from skrub import ToDatetime
     >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
     >>> df
          birthday    city
