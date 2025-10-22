@@ -84,6 +84,9 @@ def _get_dirty_dataframe(df_module, categorical_dtype="object"):
     }
     df1 = df_module.make_dataframe(data1)
 
+    # String and categorical values should be tested with both regular "string" and
+    # "categorical" dtype. A separate dataframe is generated based on the case and
+    # concatenated to the numeric features.
     if categorical_dtype == "category":
         data2 = {
             "str1": sbd.to_categorical(
@@ -115,6 +118,8 @@ def _get_dirty_dataframe(df_module, categorical_dtype="object"):
 
 
 def _get_mixed_types_dataframe(df_module):
+    # TODO: This test should be modified so that it does not rely
+    # on pd.NA
     data = {
         "int_str": ["1", "2", 3, "3", 5],
         "float_str": ["1.0", pd.NA, 3.0, "3.0", 5.0],
@@ -268,6 +273,11 @@ def test_duplicate_column_names():
     assert re.match(r"^col_1__skrub_[0-9a-f]+__$", cols[1])
 
 
+# This fixture is needed because we need to pass df_module to the _get_*_dataframe
+# functions, and this cannot be done if X_tuples is a simple list due to df_module
+# being out of scope
+
+
 @pytest.fixture
 def X_tuples_fixture(df_module):
     """Generate test tuples for the given dataframe module."""
@@ -334,7 +344,8 @@ def test_auto_cast(X_tuples_fixture):
                 assert sbd.is_string(X_trans[col])
 
 
-# Cleaner does not cast to float32
+# Same fixture as above, with but the expected types are different because
+# the Cleaner does not cast to float32 by default
 @pytest.fixture
 def X_tuples_cleaner_fixture(df_module):
     """Generate test tuples for the given dataframe module."""
@@ -376,6 +387,8 @@ def X_tuples_cleaner_fixture(df_module):
 
 def test_cleaner_dtypes(X_tuples_cleaner_fixture, df_module):
     for X, dict_expected_types in X_tuples_cleaner_fixture:
+        # Numpy dtypes fail when an integer column contains a null value, so we
+        # skip this test
         if df_module.description == "pandas-numpy-dtypes":
             pytest.xfail(
                 reason=(
@@ -423,17 +436,21 @@ def test_convert_float32(df_module):
     X = _get_clean_dataframe(df_module)
     vectorizer = TableVectorizer()
     out = vectorizer.fit_transform(X)
+    # this syntax is needed because polars dtypes aren't represented as strings
     assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
     assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
 
     # default behavior: keep numeric type
     vectorizer = Cleaner()
     out = vectorizer.fit_transform(X)
+    # here we don't need to convert because we're just checking that the output
+    # dtypes are the same as the input dtypes
     assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
     assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
     vectorizer = Cleaner(numeric_dtype="float32")
     out = vectorizer.fit_transform(X)
+    # here it's the same as the case with the TableVectorizer above
     assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
     assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
 
@@ -548,6 +565,7 @@ def test_transform(df_module):
     assert_array_equal(x_trans, expected_x_trans)
 
 
+# fixture needed for the same reason as X_tuple above
 @pytest.fixture
 def fit_transform_inputs(df_module):
     """Generate test inputs for fit_transform equivalence test."""
@@ -614,6 +632,8 @@ def test_handle_unknown_category(df_module):
     # +2 for binary columns which get one category dropped
     n_zeroes = sbd.n_unique(X["str2"]) + sbd.n_unique(X["cat2"]) + 2
 
+    # This is a convoluted syntax for checking that all the columns from the
+    # second to the last are empty (because they're unknown categories)
     colnames = sbd.column_names(X_trans_unknown)[2:n_zeroes]
     assert_array_equal(
         sbd.slice(X_trans_unknown[colnames], 0, 1).to_numpy().squeeze(),
