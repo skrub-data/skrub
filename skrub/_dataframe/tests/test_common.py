@@ -1032,11 +1032,11 @@ def test_is_list_basic(df_module):
         dtype=object,
     )
     # a and d: all non-null values are lists
-    assert is_list(df["a"]) 
-    assert is_list(df["d"]) 
+    assert is_list(df["a"])
+    assert is_list(df["d"])
     # b and c: not lists
-    assert not is_list(df["b"]) 
-    assert not is_list(df["c"]) 
+    assert not is_list(df["b"])
+    assert not is_list(df["c"])
 
 
 # must return true only if all non-nulls are lists
@@ -1052,6 +1052,6 @@ def test_is_list_requires_all_non_null_lists(df_module):
     # a: mixed types
     assert not is_list(df["a"])
     # b: all nulls
-    assert not is_list(df["b"]) 
+    assert not is_list(df["b"])
     # c: valid lists + nulls
     assert is_list(df["c"])
