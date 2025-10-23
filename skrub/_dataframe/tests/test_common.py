@@ -18,6 +18,7 @@ from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 import skrub
 from skrub import selectors as s
 from skrub._dataframe import _common as ns
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 def test_not_implemented():
@@ -34,6 +35,7 @@ def test_not_implemented():
         "copy_index",
         "index",
         "with_columns",
+        "select_rows",
     }
     for func_name in sorted(set(ns.__all__) - has_default_impl):
         func = getattr(ns, func_name)
@@ -44,7 +46,7 @@ def test_not_implemented():
         dop = [skrub.var("a")] * n_params
         with pytest.raises(
             TypeError,
-            match=r"Expected a Pandas or Polars DataFrame, but got a skrub DataOp",
+            match=r"Expected a Pandas or Polars .*, but got a skrub DataOp",
         ):
             func(*dop)
 
@@ -103,6 +105,7 @@ def test_to_numpy(df_module, example_data_dict):
     assert_array_equal(array[2:], np.asarray(example_data_dict["str-col"])[2:])
 
 
+@skip_polars_installed_without_pyarrow
 def test_to_pandas(df_module, pd_module):
     with pytest.raises(TypeError):
         ns.to_pandas(np.arange(3))
@@ -725,6 +728,7 @@ def test_mean(df_module):
     )
 
 
+@skip_polars_installed_without_pyarrow
 def test_corr(df_module):
     df = df_module.example_dataframe
 
@@ -781,6 +785,23 @@ def test_slice(df_module, obj, s):
     out = ns.to_numpy(out)
     expected = ns.to_numpy(df_module.example_column)[slice(*s)]
     assert_array_equal(out, expected)
+
+
+@pytest.mark.parametrize("obj", ["column", "dataframe"])
+@pytest.mark.parametrize("idx", [[], [1], [2, 1]])
+def test_select_rows(df_module, obj, idx):
+    out = ns.select_rows(getattr(df_module, f"example_{obj}"), idx)
+    if obj == "dataframe":
+        out = ns.col(out, "float-col")
+    out = ns.to_numpy(out)
+    expected = ns.to_numpy(df_module.example_column)[idx]
+    assert_array_equal(out, expected)
+
+
+def test_select_rows_array():
+    a = np.arange(6).reshape((3, 2))
+    assert_array_equal(ns.select_rows(a, (2, 1)), a[[2, 1], :])
+    assert_array_equal(ns.select_rows(a[0], (1, 0)), a[0, [1, 0]])
 
 
 def test_is_null(df_module):
@@ -965,3 +986,34 @@ def test_abs(df_module):
 def test_total_seconds(df_module):
     s = df_module.make_column("", [timedelta(seconds=20), timedelta(hours=1)])
     assert ns.to_list(ns.total_seconds(s)) == [20, 3600]
+
+
+@pytest.mark.parametrize(
+    "col, expected",
+    [
+        ([1, 2, 3], True),
+        (["a", "b", "c"], True),
+        ([1, 3, 2], False),
+        (["a", "c", "b"], False),
+        ([1, None, 3], True),
+        ([inspect, re, ns.is_sorted], False),  # weird object dtype
+    ],
+)
+def test_is_sorted(col, expected, df_module):
+    col = df_module.make_column("", col)
+    assert ns.is_sorted(col) == expected
+    if expected:
+        assert not ns.is_sorted(col[::-1])
+        assert ns.is_sorted(col[::-1], descending=True)
+
+
+@pytest.mark.parametrize(
+    "col", [[[1, 2], [3, 4]], [{"a": 1, "b": 2}, {"a": 1, "b": 3}]]
+)
+def test_is_sorted_object_dtypes(col, df_module):
+    # For those more complex dtypes where the result is more ambiguous pandas &
+    # polars or even different versions of the same package can disagree on
+    # whether they are sorted. For the time being we don't have a strong reason
+    # to add the code / computation time to handle those discrepancies.
+    # However, is_sorted should not crash and return a Boolean in all cases.
+    assert isinstance(ns.is_sorted(df_module.make_column("", col)), bool)

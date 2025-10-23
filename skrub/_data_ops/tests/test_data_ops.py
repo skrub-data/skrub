@@ -421,6 +421,148 @@ def test_apply_on_cols(use_choice):
     assert (out.values == expected).all()
 
 
+def test_apply_kwargs():
+    class E(BaseEstimator):
+        def fit(self, X, y=None, extra_f=None):
+            assert extra_f == "kwarg for fit"
+            return self
+
+        def predict(self, X, extra_p=None):
+            assert extra_p == "kwarg for predict"
+            return 0
+
+        def score(self, X, y=None, **kwargs):
+            assert not kwargs
+            return 0
+
+    pred = skrub.var("a").skb.apply(
+        E(),
+        fit_kwargs={"extra_f": "kwarg for fit"},
+        predict_kwargs={"extra_p": "kwarg for predict"},
+    )
+    learner = pred.skb.make_learner()
+    learner.fit({"a": 0})
+    learner.predict({"a": 0})
+    learner.score({"a": 0})
+
+
+def test_apply_transformer_kwargs():
+    # check kwargs get passed correctly to the transformer for all 'how' values.
+    class T(BaseEstimator):
+        def fit_transform(self, X, y=None, extra_f=None):
+            assert extra_f == "kwarg for fit_transform"
+            return X
+
+        def transform(self, X, extra_t=None):
+            assert extra_t == "kwarg for transform"
+            return X
+
+    kwargs = {
+        "fit_transform_kwargs": {"extra_f": "kwarg for fit_transform"},
+        "transform_kwargs": {"extra_t": "kwarg for transform"},
+    }
+    learner = (
+        skrub.var("df")
+        .skb.apply(T(), how="no_wrap", **kwargs)
+        .skb.apply(T(), how="cols", **kwargs)
+        .skb.apply(T(), how="frame", **kwargs)
+        .skb.make_learner()
+    )
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
+    learner.fit({"df": df})
+    learner.fit_transform({"df": df})
+    learner.transform({"df": df})
+
+
+def test_apply_kwargs_evaluation():
+    class E(BaseEstimator):
+        def fit(self, X, y=None, extra_f=None):
+            assert extra_f == "kwarg for fit"
+            return self
+
+        def predict(self, X, extra_p=None):
+            assert extra_p == "kwarg for predict"
+            return 0
+
+        def predict_proba(self, X, **kwargs):
+            assert not kwargs
+            return 0
+
+        def score(self, X, y=None, **kwargs):
+            assert not kwargs
+            return 0
+
+    get_extra_f_n_calls = 0
+
+    @skrub.deferred
+    def get_extra_f(a):
+        nonlocal get_extra_f_n_calls
+        get_extra_f_n_calls += 1
+        return "kwarg for fit"
+
+    get_predict_kwargs_n_calls = 0
+
+    @skrub.deferred
+    def get_predict_kwargs(a):
+        nonlocal get_predict_kwargs_n_calls
+        get_predict_kwargs_n_calls += 1
+        return {"extra_p": "kwarg for predict"}
+
+    get_predict_proba_kwargs_n_calls = 0
+
+    @skrub.deferred
+    def get_predict_proba_kwargs(a):
+        nonlocal get_predict_proba_kwargs_n_calls
+        get_predict_proba_kwargs_n_calls += 1
+        # None is a valid value for kwargs, get translated to {}
+        return None
+
+    assert get_extra_f_n_calls == 0
+    a = skrub.var("a")
+    pred = a.skb.apply(
+        E(),
+        fit_kwargs={"extra_f": get_extra_f(a)},
+        predict_kwargs=get_predict_kwargs(a),
+        predict_proba_kwargs=get_predict_proba_kwargs(a),
+    )
+    learner = pred.skb.make_learner()
+    assert get_extra_f_n_calls == 0
+    assert get_predict_kwargs_n_calls == 0
+    assert get_predict_proba_kwargs_n_calls == 0
+
+    learner.fit({"a": 0})
+    assert get_extra_f_n_calls == 1
+    # the kwargs for predict have not been evaluated when calling fit()
+    assert get_predict_kwargs_n_calls == 0
+    assert get_predict_proba_kwargs_n_calls == 0
+
+    learner.predict({"a": 0})
+    assert get_extra_f_n_calls == 1
+    assert get_predict_kwargs_n_calls == 1
+    assert get_predict_proba_kwargs_n_calls == 0
+
+    learner.predict_proba({"a": 0})
+    assert get_extra_f_n_calls == 1
+    assert get_predict_kwargs_n_calls == 1
+    assert get_predict_proba_kwargs_n_calls == 1
+
+    learner.score({"a": 0})
+    assert get_extra_f_n_calls == 1
+    assert get_predict_kwargs_n_calls == 1
+    assert get_predict_proba_kwargs_n_calls == 1
+
+
+def test_apply_bad_kwargs():
+    with pytest.raises(
+        (TypeError, RuntimeError),
+        match=(
+            r".*The `fit_kwargs` passed to `\.skb\.apply\(\)` should be a dict of named"
+            r" arguments"
+        ),
+    ):
+        skrub.X(0).skb.apply(DummyRegressor(), fit_kwargs="BAD", y=skrub.y(0))
+
+
 def test_concat_horizontal_duplicate_cols():
     X_df = pd.DataFrame({"a": [0, 1, 2], "b": [3, 4, 5]})
     X = skrub.X()
@@ -487,3 +629,13 @@ def test_class_skb():
     from skrub._data_ops._skrub_namespace import SkrubNamespace
 
     assert skrub.DataOp.skb is SkrubNamespace
+
+
+def test_get_vars():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = (a + b).skb.set_name("c")
+    d = c + c
+    assert list(d.skb.get_vars().keys()) == ["a", "b"]
+    assert d.skb.get_vars()["a"] is a
+    assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]

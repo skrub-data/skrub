@@ -14,6 +14,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
     A subset of the dataframe is selected and passed to the transformer (as a
     single input). This is different from ``ApplyToCols``, which fits a
     separate clone of the transformer to each selected column independently.
+    All columns not listed in ``cols`` remain unmodified in the output.
 
     .. note::
 
@@ -30,9 +31,10 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         will appear unchanged in the output.
 
     cols : str, sequence of str, or skrub selector, optional
-        The columns to attempt to transform. Columns outside of this selection
-        will be passed through unchanged, without calling ``fit_transform`` on
-        them. The default is to transform all columns.
+        The columns to attempt to transform. Only the selected columns will have
+        the transformer applied. Columns outside of this selection are passed
+        through unchanged (``fit_transform`` is not called on them) and remain
+        unmodified in the output. The default is to transform all columns.
 
     keep_original : bool, default=False
         If ``True``, the original columns are preserved in the output. If the
@@ -137,7 +139,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         self.keep_original = keep_original
         self.rename_columns = rename_columns
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **kwargs):
         """Fit the transformer on all columns jointly.
 
         Parameters
@@ -148,15 +150,19 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         y : Pandas or Polars Series or DataFrame, default=None
             The target data.
 
+        **kwargs
+            Extra named arguments are passed to the ``fit_transform()`` method
+            of ``self.transformer``.
+
         Returns
         -------
         ApplyToFrame
             The transformer itself.
         """
-        self.fit_transform(X, y)
+        self.fit_transform(X, y, **kwargs)
         return self
 
-    def fit_transform(self, X, y=None):
+    def fit_transform(self, X, y=None, **kwargs):
         """Fit the transformer on all columns jointly and transform X.
 
         Parameters
@@ -166,6 +172,10 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
 
         y : Pandas or Polars Series or DataFrame, default=None
             The target data.
+
+        **kwargs
+            Extra named arguments are passed to the ``fit_transform()`` method
+            of ``self.transformer``.
 
         Returns
         -------
@@ -183,7 +193,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         if self._columns:
             self.transformer_ = clone(self.transformer)
             _utils.set_output(self.transformer_, X)
-            transformed = self.transformer_.fit_transform(to_transform, y)
+            transformed = self.transformer_.fit_transform(to_transform, y, **kwargs)
             transformed = _utils.check_output(
                 self.transformer_, to_transform, transformed, allow_column_list=False
             )
@@ -212,13 +222,17 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
         result = sbd.copy_index(X, result)
         return result
 
-    def transform(self, X):
+    def transform(self, X, **kwargs):
         """Transform a dataframe.
 
         Parameters
         ----------
         X : Pandas or Polars DataFrame
             The column to transform.
+
+        **kwargs
+            Extra named arguments are passed to the ``transform()`` method
+            of ``self.transformer_``.
 
         Returns
         -------
@@ -236,7 +250,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
             passthrough = selectors.select(X, selectors.inv(self._columns))
         if not self._columns:
             return passthrough
-        transformed = self.transformer_.transform(to_transform)
+        transformed = self.transformer_.transform(to_transform, **kwargs)
         # we do not call `_utils.check_output` here, assuming that if the output
         # had a correct type (e.g. polars dataframe) in `fit_transform` it will
         # have the same (correct) type in `transform`.

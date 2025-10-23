@@ -15,6 +15,7 @@ Y_NAME = "_skrub_y"
 class Sentinels(enum.Enum):
     NULL = "NULL"
     OPTIONAL_VALUE = "value"
+    KFOLD_5 = "KFold(5)"
 
     def __repr__(self):
         return self.value
@@ -25,6 +26,7 @@ class Sentinels(enum.Enum):
 
 NULL = Sentinels.NULL
 OPTIONAL_VALUE = Sentinels.OPTIONAL_VALUE
+KFOLD_5 = Sentinels.KFOLD_5
 
 
 def simple_repr(data_op):

@@ -1,4 +1,5 @@
 """Get information and plots for a dataframe, that are used to generate reports."""
+
 import sys
 
 from .. import _column_associations, _config
@@ -255,6 +256,8 @@ def _add_numeric_summary(
     else:
         summary["is_duration"] = False
         if not sbd.is_numeric(column):
+            if sbd.is_bool(column):
+                summary["mean"] = sbd.mean(column)
             return
         duration_unit = None
     summary["duration_unit"] = duration_unit
@@ -284,4 +287,6 @@ def _add_numeric_summary(
 
 
 def _add_is_sorted(summary, column):
-    summary["is_ordered"] = sbd.is_sorted(column)
+    summary["is_ordered"] = sbd.is_sorted(column, descending=False) or sbd.is_sorted(
+        column, descending=True
+    )

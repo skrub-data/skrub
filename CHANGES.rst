@@ -11,14 +11,37 @@ Ongoing Development
 
 New features
 ------------
+- :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
+  estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
+  etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
+- TableReport now displays the mean statistic for boolean columns.
+  :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
+- :meth:`DataOp.skb.get_vars` allows inspecting all the variables, or all the
+  named dataops, in a :class:`DataOp`. This lets us easily know what keys should
+  be present in the ``environment`` dictionary we pass to
+  :meth:`DataOp.skb.eval` or to :meth:`SkrubLearner.fit`,
+  :meth:`SkrubLearner.predict`, etc. .
+  :pr:`1646` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.iter_cv_splits` iterates over the training and testing
+  environments produced by a CV splitter -- similar to
+  :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
+  :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
 - The :meth: `DataOp.skb.full_report` method now deletes reports created with
   ``output_dir=None`` after 7 days. :pr:`1657` by :user: `Simon Dierickx <simon.dierickx>`.
+- The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
+  :class:`StandardScaler` for centering and scaling numerical features
+  when linear models are used.
+  :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
 
 Bugfixes
 --------
+- :class:`TableReport` could raise an error while trying to check if Polars
+  columns with some dtypes (lists, structs) are sorted. It would not indicate
+  Polars columns sorted in descending order. Fixed in :pr:`1673` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.6.2
 =============
