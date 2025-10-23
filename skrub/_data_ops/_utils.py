@@ -3,6 +3,7 @@ import os
 import shutil
 import time
 import traceback
+import warnings
 
 from joblib.externals import cloudpickle
 
@@ -75,11 +76,15 @@ def prune_folder(path: str):
     folders = (
         (f, os.path.getmtime(os.path.join(path, f)))
         for f in os.listdir(path)
-        if os.path.isdir(os.path.join(path, f))
+        if os.path.isdir(os.path.join(path, f)) and f.startswith("full_data_op_report_")
     )
-    for dir in folders:
+    for dir_path, dir_time in folders:
         try:
-            if dir[1] < time_threshold and dir[0].startswith("full_data_op_report_"):
-                shutil.rmtree(os.path.join(path, dir[0]))
-        except Exception:
-            pass
+            if dir_time < time_threshold:
+                shutil.rmtree(os.path.join(path, dir_path))
+        except Exception as e:
+            warnings.warn(
+                "Skrub wants to delete an old folder in the skrub data folder: "
+                f"Could not delete {dir_path}:\n"
+                + "".join(format_exception_only(e))
+            )

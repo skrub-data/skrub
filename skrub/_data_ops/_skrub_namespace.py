@@ -1476,9 +1476,10 @@ class SkrubNamespace:
         a timestamped subdirectory of the skrub data folder.
 
         .. note::
+            When this function is invoked reports starting with ``full_data_op_report_``
+            that are stored in the skrub data folder are automatically deleted after 7 days.
+            This is to avoid accumulating too many reports over time.
 
-            reports starting with ``full_data_op_report_`` that are stored
-            in the skrub data folder are automatically deleted after 7 days.
 
         Parameters
         ----------

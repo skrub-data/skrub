@@ -2,6 +2,8 @@ import os
 import tempfile
 import time
 
+import pytest
+
 from skrub._data_ops import _utils
 
 
@@ -36,3 +38,24 @@ def test_prune_folder_with_nonstandard_name_dirs():
         remaining_items = os.listdir(tmpdir)
         assert len(remaining_items) == 1
         assert remaining_items[0] == "other_report"
+
+
+def test_prune_folder_catch_exception(monkeypatch):
+    eight_days_ago = time.time() - 8 * 24 * 3600
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        dirname = os.path.join(tmpdir, "full_data_op_report_test")
+        os.mkdir(dirname)
+        os.utime(dirname, (eight_days_ago, eight_days_ago))
+
+        def mock_rmtree(path, *args, **kwargs):
+            raise OSError("Cannot delete folder")
+
+        monkeypatch.setattr("shutil.rmtree", mock_rmtree)
+
+        assert len(os.listdir(tmpdir)) == 1
+
+        with pytest.warns(UserWarning, match="Could not delete"):
+            _utils.prune_folder(tmpdir)
+
+        monkeypatch.undo()
