@@ -375,18 +375,16 @@ def test_auto_cast(data_getter, expected_types, df_module):
     ],
 )
 def test_cleaner_dtypes(data_getter, expected_types, df_module):
+    X = data_getter(df_module)
     # Numpy dtypes fail when an integer column contains a null value, so we
     # skip this test
-    if df_module.description == "pandas-numpy-dtypes" and "category" in str(
-        data_getter
-    ):
+    if df_module.description == "pandas-numpy-dtypes" and sbd.has_nulls(X["int"]):
         pytest.xfail(
             reason=(
                 "Test is expected to fail for dirty dataframe with"
                 " pandas-numpy-dtypes configuration"
             ),
         )
-    X = data_getter(df_module)
     vectorizer = Cleaner()
     X_trans = vectorizer.fit_transform(X)
     for col in X_trans.columns:
