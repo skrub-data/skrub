@@ -306,3 +306,13 @@ def test_empty_column_name(df_module):
     s = df_module.make_column("", ["one", "two"] * 10)
     out = GapEncoder(n_components=3, random_state=0).fit_transform(s)
     assert sbd.column_names(out) == ["one, two", "two, one", "one, two (2)"]
+
+
+def test_non_supported_analyzer(generate_data):
+    n_samples = 70
+    X = generate_data(n_samples, random_state=0)
+    gap_encoder = GapEncoder(analyzer="unsupported")
+    with pytest.raises(
+        ValueError, match=r"analyzer should be one of \['word', 'char', 'char_wb']\."
+    ):
+        gap_encoder.fit(X)
