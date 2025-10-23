@@ -273,50 +273,6 @@ def test_duplicate_column_names():
     assert re.match(r"^col_1__skrub_[0-9a-f]+__$", cols[1])
 
 
-# This fixture is needed because we need to pass df_module to the _get_*_dataframe
-# functions, and this cannot be done if X_tuples is a simple list due to df_module
-# being out of scope
-
-
-@pytest.fixture
-def X_tuples_fixture(df_module):
-    """Generate test tuples for the given dataframe module."""
-    return [
-        (
-            _get_datetimes_dataframe(df_module),
-            {
-                "pd_datetime": "datetime",
-                "np_datetime": "datetime",
-                "dmy-": "datetime",
-                "ymd/": "datetime",
-                "ymd/_hms:": "datetime",
-            },
-        ),
-        (
-            _get_clean_dataframe(df_module),
-            {
-                "int": "float32",
-                "float": "float32",
-                "str1": "string",
-                "str2": "string",
-                "cat1": "category",
-                "cat2": "category",
-            },
-        ),
-        (
-            _get_dirty_dataframe(df_module, "category"),
-            {
-                "int": "float32",
-                "float": "float32",
-                "str1": "category",
-                "str2": "category",
-                "cat1": "category",
-                "cat2": "category",
-            },
-        ),
-    ]
-
-
 def passthrough_vectorizer():
     return TableVectorizer(
         high_cardinality="passthrough",
@@ -326,32 +282,11 @@ def passthrough_vectorizer():
     )
 
 
-def test_auto_cast(X_tuples_fixture):
-    """
-    Tests that the TableVectorizer automatic type detection works as expected.
-    """
-    for X, dict_expected_types in X_tuples_fixture:
-        vectorizer = passthrough_vectorizer()
-        X_trans = vectorizer.fit_transform(X)
-        for col in X_trans.columns:
-            if dict_expected_types[col] == "datetime":
-                assert sbd.is_any_date(X_trans[col])
-            if dict_expected_types[col] == "category":
-                assert sbd.is_categorical(X_trans[col])
-            if dict_expected_types[col] == "float32":
-                assert sbd.is_float(X_trans[col])
-            if dict_expected_types[col] == "string":
-                assert sbd.is_string(X_trans[col])
-
-
-# Same fixture as above, with but the expected types are different because
-# the Cleaner does not cast to float32 by default
-@pytest.fixture
-def X_tuples_cleaner_fixture(df_module):
-    """Generate test tuples for the given dataframe module."""
-    return [
+@pytest.mark.parametrize(
+    "data_getter, expected_types",
+    [
         (
-            _get_datetimes_dataframe(df_module),
+            _get_datetimes_dataframe,
             {
                 "pd_datetime": "datetime",
                 "np_datetime": "datetime",
@@ -361,7 +296,62 @@ def X_tuples_cleaner_fixture(df_module):
             },
         ),
         (
-            _get_clean_dataframe(df_module),
+            _get_clean_dataframe,
+            {
+                "int": "float32",
+                "float": "float32",
+                "str1": "string",
+                "str2": "string",
+                "cat1": "category",
+                "cat2": "category",
+            },
+        ),
+        (
+            lambda df_module: _get_dirty_dataframe(df_module, "category"),
+            {
+                "int": "float32",
+                "float": "float32",
+                "str1": "category",
+                "str2": "category",
+                "cat1": "category",
+                "cat2": "category",
+            },
+        ),
+    ],
+)
+def test_auto_cast(data_getter, expected_types, df_module):
+    """
+    Tests that the TableVectorizer automatic type detection works as expected.
+    """
+    X = data_getter(df_module)
+    vectorizer = passthrough_vectorizer()
+    X_trans = vectorizer.fit_transform(X)
+    for col in X_trans.columns:
+        if expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        if expected_types[col] == "category":
+            assert sbd.is_categorical(X_trans[col])
+        if expected_types[col] == "float32":
+            assert sbd.is_float(X_trans[col])
+        if expected_types[col] == "string":
+            assert sbd.is_string(X_trans[col])
+
+
+@pytest.mark.parametrize(
+    "data_getter, expected_types",
+    [
+        (
+            _get_datetimes_dataframe,
+            {
+                "pd_datetime": "datetime",
+                "np_datetime": "datetime",
+                "dmy-": "datetime",
+                "ymd/": "datetime",
+                "ymd/_hms:": "datetime",
+            },
+        ),
+        (
+            _get_clean_dataframe,
             {
                 "int": "int",
                 "float": "float",
@@ -372,7 +362,7 @@ def X_tuples_cleaner_fixture(df_module):
             },
         ),
         (
-            _get_dirty_dataframe(df_module, "category"),
+            lambda df_module: _get_dirty_dataframe(df_module, "category"),
             {
                 "int": "int",
                 "float": "float",
@@ -382,50 +372,51 @@ def X_tuples_cleaner_fixture(df_module):
                 "cat2": "category",
             },
         ),
-    ]
+    ],
+)
+def test_cleaner_dtypes(data_getter, expected_types, df_module):
+    # Numpy dtypes fail when an integer column contains a null value, so we
+    # skip this test
+    if df_module.description == "pandas-numpy-dtypes" and "category" in str(
+        data_getter
+    ):
+        pytest.xfail(
+            reason=(
+                "Test is expected to fail for dirty dataframe with"
+                " pandas-numpy-dtypes configuration"
+            ),
+        )
+    X = data_getter(df_module)
+    vectorizer = Cleaner()
+    X_trans = vectorizer.fit_transform(X)
+    for col in X_trans.columns:
+        if expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            for col, dtype in expected_types.items():
+                if dtype == "int":
+                    assert sbd.is_integer(X_trans[col])
+                elif dtype == "float":
+                    assert sbd.is_float(X_trans[col])
+                elif dtype == "category":
+                    assert sbd.is_categorical(X_trans[col])
+                else:  # string
+                    assert sbd.is_string(X_trans[col])
 
-
-def test_cleaner_dtypes(X_tuples_cleaner_fixture, df_module):
-    for X, dict_expected_types in X_tuples_cleaner_fixture:
-        # Numpy dtypes fail when an integer column contains a null value, so we
-        # skip this test
-        if df_module.description == "pandas-numpy-dtypes":
-            pytest.xfail(
-                reason=(
-                    "Test is expected to fail for dirty dataframe with"
-                    " pandas-numpy-dtypes configuration"
-                ),
-            )
-        vectorizer = Cleaner()
-        X_trans = vectorizer.fit_transform(X)
-        for col in X_trans.columns:
-            if dict_expected_types[col] == "datetime":
-                assert sbd.is_any_date(X_trans[col])
-            else:
-                for col, dtype in dict_expected_types.items():
-                    if dtype == "int":
-                        assert sbd.is_integer(X_trans[col])
-                    elif dtype == "float":
-                        assert sbd.is_float(X_trans[col])
-                    elif dtype == "category":
-                        assert sbd.is_categorical(X_trans[col])
-                    else:  # string
-                        assert sbd.is_string(X_trans[col])
-
-        X_trans = vectorizer.fit(X).transform(X)
-        for col in X_trans.columns:
-            if dict_expected_types[col] == "datetime":
-                assert sbd.is_any_date(X_trans[col])
-            else:
-                for col, dtype in dict_expected_types.items():
-                    if dtype == "int":
-                        assert sbd.is_integer(X_trans[col])
-                    elif dtype == "float":
-                        assert sbd.is_float(X_trans[col])
-                    elif dtype == "category":
-                        assert sbd.is_categorical(X_trans[col])
-                    else:  # string
-                        assert sbd.is_string(X_trans[col])
+    X_trans = vectorizer.fit(X).transform(X)
+    for col in X_trans.columns:
+        if expected_types[col] == "datetime":
+            assert sbd.is_any_date(X_trans[col])
+        else:
+            for col, dtype in expected_types.items():
+                if dtype == "int":
+                    assert sbd.is_integer(X_trans[col])
+                elif dtype == "float":
+                    assert sbd.is_float(X_trans[col])
+                elif dtype == "category":
+                    assert sbd.is_categorical(X_trans[col])
+                else:  # string
+                    assert sbd.is_string(X_trans[col])
 
 
 def test_convert_float32(df_module):
@@ -565,33 +556,32 @@ def test_transform(df_module):
     assert_array_equal(x_trans, expected_x_trans)
 
 
-# fixture needed for the same reason as X_tuple above
-@pytest.fixture
-def fit_transform_inputs(df_module):
-    """Generate test inputs for fit_transform equivalence test."""
-    return [
-        _get_clean_dataframe(df_module),
-        _get_dirty_dataframe(df_module, categorical_dtype="object"),
-        _get_dirty_dataframe(df_module, categorical_dtype="category"),
-        _get_mixed_types_dataframe(df_module),
-        _get_mixed_types_array(),
-    ]
-
-
 @pytest.mark.skipif(
     parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
     reason="This test requires sklearn version 1.4 or higher",
 )
-def test_fit_transform_equiv(fit_transform_inputs):
+@pytest.mark.parametrize(
+    "data_getter",
+    [
+        _get_clean_dataframe,
+        # lambda functions are needed to access df_module
+        lambda df_module: _get_dirty_dataframe(df_module, categorical_dtype="object"),
+        lambda df_module: _get_dirty_dataframe(df_module, categorical_dtype="category"),
+        _get_mixed_types_dataframe,
+        lambda df_module: _get_mixed_types_array(),
+    ],
+)
+def test_fit_transform_equiv(data_getter, df_module):
     # TODO: this check is probably already performed in test_sklearn
     """
     We will test the equivalence between using `.fit_transform(X)`
     and `.fit(X).transform(X).`
     """
-    for X in fit_transform_inputs:
-        X_trans_1 = TableVectorizer().fit_transform(X)
-        X_trans_2 = TableVectorizer().fit(X).transform(X)
-        assert_array_equal(X_trans_1, X_trans_2)
+    # data_getter may be an array, otherwise call data_getter and get the result
+    X = data_getter(df_module) if callable(data_getter) else data_getter
+    X_trans_1 = TableVectorizer().fit_transform(X)
+    X_trans_2 = TableVectorizer().fit(X).transform(X)
+    assert_array_equal(X_trans_1, X_trans_2)
 
 
 @pytest.mark.skipif(
