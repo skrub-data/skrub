@@ -316,3 +316,17 @@ def test_non_supported_analyzer(generate_data):
         ValueError, match=r"analyzer should be one of \['word', 'char', 'char_wb']\."
     ):
         gap_encoder.fit(X)
+
+
+def test_non_supported_init(generate_data):
+    n_samples = 70
+    X = generate_data(n_samples, random_state=0)
+    gap_encoder = GapEncoder(init="unsupported")
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Initialization method 'unsupported' does not exist\. It should be one of"
+            r" \['k-means\++', 'random', 'k-means']\."
+        ),
+    ):
+        gap_encoder.fit(X)
