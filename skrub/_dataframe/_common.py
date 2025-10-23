@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import builtins
 import warnings
 from collections.abc import Mapping, Sequence
@@ -8,6 +10,8 @@ import pandas.api.types
 from sklearn.utils.fixes import parse_version
 
 from skrub import _join_utils
+
+from .._dispatch import dispatch, raise_dispatch_unregistered_type
 
 try:
     import polars as pl
@@ -1441,3 +1445,32 @@ def _is_sorted_pandas(col):
 @is_sorted.specialize("polars", argument_type="Column")
 def _is_sorted_polars(col):
     return col.is_sorted()
+
+@dispatch
+def is_list(col):
+    """Return True if all non-null entries in the series are Python lists."""
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@is_list.specialize("pandas", argument_type="Column")
+def _is_list_pandas(col):
+    """
+    Return True if all non-null entries in the pandas Series are Python lists.
+    """
+    s_non_null = col.dropna()
+    if s_non_null.empty:
+        return False
+    return s_non_null.apply(lambda x: isinstance(x, list)).all()
+
+@is_list.specialize("polars", argument_type="Column")
+def _is_list_polars(col):
+    """
+    Return True if all non-null entries in the Polars Series are lists.
+    """
+    if str(col.dtype).startswith("List"):
+        return True
+
+    col_non_null = col.drop_nulls()
+    if col_non_null.len() == 0:
+        return False
+    return col_non_null.map_elements(lambda x: isinstance(x, list)).all()

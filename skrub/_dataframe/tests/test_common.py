@@ -19,6 +19,7 @@ import skrub
 from skrub import selectors as s
 from skrub._dataframe import _common as ns
 from skrub.conftest import skip_polars_installed_without_pyarrow
+from skrub._dataframe._common import is_list
 
 
 def test_not_implemented():
@@ -986,3 +987,27 @@ def test_abs(df_module):
 def test_total_seconds(df_module):
     s = df_module.make_column("", [timedelta(seconds=20), timedelta(hours=1)])
     assert ns.to_list(ns.total_seconds(s)) == [20, 3600]
+
+def test_is_list_basic(df_module):
+    df = df_module.DataFrame({
+        "a": [[1, 2], [3, 4]],
+        "b": ["x", "y"],
+        "c": [1, 2],
+        "d": [None, [5, 6]],
+    }, dtype=object)
+    assert is_list(df["a"]) == True
+    assert is_list(df["b"]) == False
+    assert is_list(df["c"]) == False
+    assert is_list(df["d"]) == True
+
+
+def test_is_list_requires_all_non_null_lists(df_module):
+    df = df_module.DataFrame({
+        "a": [[1, 2], "oops"],
+        "b": [None, None],
+        "c": [[1], None],
+    }, dtype=object)
+    assert is_list(df["a"]) == False
+    assert is_list(df["b"]) == False
+    assert is_list(df["c"]) == True
+

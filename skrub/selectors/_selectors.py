@@ -1,6 +1,6 @@
 import fnmatch
 import re
-
+from skrub._dataframe._common import is_list
 from .. import _dataframe as sbd
 from ._base import Filter, NameFilter
 
@@ -512,3 +512,19 @@ def has_nulls():
     2  20.0  None
     """
     return Filter(sbd.has_nulls, name="has_nulls")
+
+def select_list(df):
+    """
+    Return column names that contain list-like values.
+
+    Parameters
+    ----------
+    df : DataFrame
+        Input dataframe.
+
+    Returns
+    -------
+    list of str
+        Names of columns whose non-null entries are all Python lists.
+    """
+    return [col for col in df.columns if is_list(df[col])]

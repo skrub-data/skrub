@@ -8,6 +8,7 @@ import pytest
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub.selectors._base import _select_col_names
+from skrub.selectors._selectors import select_list
 
 
 def test_repr():
@@ -142,3 +143,14 @@ def test_pickling_selectors_with_args(df_module):
 def test_error_select_col_names():
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
         _select_col_names(np.array([1]), col_names=None)
+
+def test_select_list(df_module):
+    df = df_module.DataFrame({
+        "a": [[1, 2], [3, 4]],
+        "b": ["x", "y"],
+        "c": [None, [5, 6]],
+    }, dtype=object)
+    result = select_list(df)
+    assert "a" in result
+    assert "c" in result
+    assert "b" not in result
