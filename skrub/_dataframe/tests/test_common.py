@@ -19,6 +19,7 @@ import skrub
 from skrub import selectors as s
 from skrub._dataframe import _common as ns
 from skrub.conftest import skip_polars_installed_without_pyarrow
+from skrub._dataframe._common import is_list
 
 
 def test_not_implemented():
@@ -1017,3 +1018,33 @@ def test_is_sorted_object_dtypes(col, df_module):
     # to add the code / computation time to handle those discrepancies.
     # However, is_sorted should not crash and return a Boolean in all cases.
     assert isinstance(ns.is_sorted(df_module.make_column("", col)), bool)
+
+
+# basic detection of list-like columns
+def test_is_list_basic(df_module):
+    df = df_module.DataFrame({
+        "a": [[1, 2], [3, 4]],
+        "b": ["x", "y"],
+        "c": [1, 2],
+        "d": [None, [5, 6]],
+    }, dtype=object)
+    # a and d: all non-null values are lists
+    assert is_list(df["a"]) == True
+    assert is_list(df["d"]) == True
+    # b and c: not lists
+    assert is_list(df["b"]) == False
+    assert is_list(df["c"]) == False
+
+# must return true only if all non-nulls are lists
+def test_is_list_requires_all_non_null_lists(df_module):
+    df = df_module.DataFrame({
+        "a": [[1, 2], "oops"],
+        "b": [None, None],
+        "c": [[1], None],
+    }, dtype=object)
+    # a: mixed types
+    assert is_list(df["a"]) == False
+    # b: all nulls
+    assert is_list(df["b"]) == False
+    # c: valid lists + nulls
+    assert is_list(df["c"]) == True

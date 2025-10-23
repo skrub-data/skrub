@@ -3,6 +3,7 @@ import re
 
 from .. import _dataframe as sbd
 from ._base import Filter, NameFilter
+from skrub._dataframe._common import is_list
 
 __all__ = [
     "glob",
@@ -512,3 +513,26 @@ def has_nulls():
     2  20.0  None
     """
     return Filter(sbd.has_nulls, name="has_nulls")
+
+
+
+def select_list(df):
+    """
+    Return column names that contain list-like values.
+
+    A column is considered list-like if all its non-null entries
+    are Python lists.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from skrub.selectors import select_list
+    >>> df = pd.DataFrame({
+    ...     "a": [[1, 2], [3, 4]],
+    ...     "b": ["x", "y"],
+    ...     "c": [None, [5, 6]],
+    ... })
+    >>> select_list(df)
+    ['a', 'c']
+    """
+    return [col for col in df.columns if is_list(df[col])]
