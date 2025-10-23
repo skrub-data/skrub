@@ -147,11 +147,14 @@ def test_error_select_col_names():
 
 # basic selection of list-like columns
 def test_select_list(df_module):
-    df = df_module.DataFrame({
-        "a": [[1, 2], [3, 4]],
-        "b": ["x", "y"],
-        "c": [None, [5, 6]],
-    }, dtype=object)
+    df = df_module.DataFrame(
+        {
+            "a": [[1, 2], [3, 4]],
+            "b": ["x", "y"],
+            "c": [None, [5, 6]],
+        },
+        dtype=object,
+    )
     result = select_list(df)
     # a and c: list-like columns
     assert "a" in result

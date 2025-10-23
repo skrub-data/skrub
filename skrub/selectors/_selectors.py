@@ -1,9 +1,10 @@
 import fnmatch
 import re
 
+from skrub._dataframe._common import is_list
+
 from .. import _dataframe as sbd
 from ._base import Filter, NameFilter
-from skrub._dataframe._common import is_list
 
 __all__ = [
     "glob",
@@ -513,7 +514,6 @@ def has_nulls():
     2  20.0  None
     """
     return Filter(sbd.has_nulls, name="has_nulls")
-
 
 
 def select_list(df):

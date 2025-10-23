@@ -18,8 +18,8 @@ from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 import skrub
 from skrub import selectors as s
 from skrub._dataframe import _common as ns
-from skrub.conftest import skip_polars_installed_without_pyarrow
 from skrub._dataframe._common import is_list
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 def test_not_implemented():
@@ -1022,29 +1022,36 @@ def test_is_sorted_object_dtypes(col, df_module):
 
 # basic detection of list-like columns
 def test_is_list_basic(df_module):
-    df = df_module.DataFrame({
-        "a": [[1, 2], [3, 4]],
-        "b": ["x", "y"],
-        "c": [1, 2],
-        "d": [None, [5, 6]],
-    }, dtype=object)
+    df = df_module.DataFrame(
+        {
+            "a": [[1, 2], [3, 4]],
+            "b": ["x", "y"],
+            "c": [1, 2],
+            "d": [None, [5, 6]],
+        },
+        dtype=object,
+    )
     # a and d: all non-null values are lists
-    assert is_list(df["a"]) == True
-    assert is_list(df["d"]) == True
+    assert is_list(df["a"]) 
+    assert is_list(df["d"]) 
     # b and c: not lists
-    assert is_list(df["b"]) == False
-    assert is_list(df["c"]) == False
+    assert not is_list(df["b"]) 
+    assert not is_list(df["c"]) 
+
 
 # must return true only if all non-nulls are lists
 def test_is_list_requires_all_non_null_lists(df_module):
-    df = df_module.DataFrame({
-        "a": [[1, 2], "oops"],
-        "b": [None, None],
-        "c": [[1], None],
-    }, dtype=object)
+    df = df_module.DataFrame(
+        {
+            "a": [[1, 2], "oops"],
+            "b": [None, None],
+            "c": [[1], None],
+        },
+        dtype=object,
+    )
     # a: mixed types
-    assert is_list(df["a"]) == False
+    assert not is_list(df["a"])
     # b: all nulls
-    assert is_list(df["b"]) == False
+    assert not is_list(df["b"]) 
     # c: valid lists + nulls
-    assert is_list(df["c"]) == True
+    assert is_list(df["c"])

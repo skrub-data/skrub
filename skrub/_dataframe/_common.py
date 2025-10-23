@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import builtins
 import warnings
 from collections.abc import Mapping, Sequence
@@ -1480,10 +1481,12 @@ def _is_sorted_polars(col, descending=False):
         return drop_nulls(col).is_sorted(descending=descending)
     except pl.exceptions.InvalidOperationError:
         return False
-    
+
+
 @dispatch
 def is_list(col):
     raise_dispatch_unregistered_type(col, kind="Series")
+
 
 @is_list.specialize("pandas", argument_type="Column")
 def _is_list_pandas(col):
@@ -1492,6 +1495,7 @@ def _is_list_pandas(col):
         return False
     return bool(s_non_null.apply(lambda x: isinstance(x, list)).all())
 
+
 @is_list.specialize("polars", argument_type="Column")
 def _is_list_polars(col):
     if str(col.dtype).startswith("List"):
@@ -1499,4 +1503,6 @@ def _is_list_polars(col):
     col_non_null = col.drop_nulls()
     if col_non_null.len() == 0:
         return False
-    return bool(col_non_null.map_elements(lambda x: isinstance(x, list)).all())
+    if hasattr(col_non_null, "map_elements"):
+        return bool(col_non_null.map_elements(lambda x: isinstance(x, list)).all())
+    return bool(col_non_null.apply(lambda x: isinstance(x, list)).all())
