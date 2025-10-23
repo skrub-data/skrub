@@ -247,7 +247,7 @@ ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
 ci-py313-latest-optional-deps = ["py313", "optional", "test"]
 
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
-ci-nightly-deps = { no-default-feature = true, features = [ "py311", "nightly-dependencies", "test" ] }
+ci-nightly-deps = { no-default-feature = true, features = [ "py313", "nightly-dependencies", "test" ] }
 
 [tool.black]
 line-length = 88
