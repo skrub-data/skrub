@@ -65,6 +65,46 @@ def test_fetch_employee_salaries():
         skrub.datasets.fetch_employee_salaries(split=None)
 
 
+@pytest.mark.parametrize(
+    "dataset_name, shape",
+    [
+        ("medical_charge", (163065, 12)),
+        ("midwest_survey", (2494, 29)),
+        ("open_payments", (73558, 6)),
+        ("traffic_violations", (1578154, 43)),
+        ("toxicity", (1000, 2)),
+        ("videogame_sales", (16572, 11)),
+        ("bike_sharing", (17379, 11)),
+    ],
+)
+def test_datasets_without_splitting(dataset_name, shape):
+    "Test datasets that do not have a split argument in their fetching function."
+    data = getattr(_fetching, f"fetch_{dataset_name}")()
+    assert data[dataset_name].shape == shape
+
+
+@pytest.mark.parametrize(
+    "dataset_name, keys",
+    [
+        ("flight_delays", ["flights", "airports", "weather", "stations", "metadata"]),
+        (
+            "country_happiness",
+            [
+                "happiness_report",
+                "happiness_report",
+                "life_expectancy",
+                "legal_rights_index",
+            ],
+        ),
+        ("movielens", ["movies", "ratings", "metadata"]),
+    ],
+)
+def test_fetching_several_tables(dataset_name, keys):
+    "Test fetching functions that return several tables."
+    data = getattr(_fetching, f"fetch_{dataset_name}")()
+    assert all(key in data.keys() for key in keys)
+
+
 def test_fetching_wrong_checksum(monkeypatch):
     dataset_info = _utils.DATASET_INFO["employee_salaries"]
     monkeypatch.setitem(dataset_info, "sha256", "bad_checksum")
