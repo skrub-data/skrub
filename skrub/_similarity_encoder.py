@@ -89,8 +89,8 @@ def ngram_similarity_matrix(
     """
     min_n, max_n = ngram_range
     unq_X = np.unique(X)
-    cats = np.array([" %s " % cat for cat in cats])
-    unq_X_ = np.array([" %s " % x for x in unq_X])
+    cats = np.array([" {} ".format(cat) for cat in cats])
+    unq_X_ = np.array([" {} ".format(x) for x in unq_X])
     if not hashing_dim:
         vectorizer = CountVectorizer(
             analyzer=analyzer, ngram_range=(min_n, max_n), dtype=dtype

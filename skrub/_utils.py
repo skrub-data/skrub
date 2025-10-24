@@ -161,7 +161,7 @@ class Repr(reprlib.Repr):
         for key in itertools.islice(x, self.maxdict):
             keyrepr = repr1(key, newlevel)
             valrepr = repr1(x[key], newlevel)
-            pieces.append("%s: %s" % (keyrepr, valrepr))
+            pieces.append("{}: {}".format(keyrepr, valrepr))
         if n > self.maxdict:
             pieces.append(self.fillvalue)
 
@@ -171,7 +171,7 @@ class Repr(reprlib.Repr):
         # so we can just ', '.join to avoid using a private method
         s = ", ".join(pieces)
 
-        return "{%s}" % (s,)
+        return "{{{}}}".format(s)
 
 
 class _ShortRepr(Repr):
