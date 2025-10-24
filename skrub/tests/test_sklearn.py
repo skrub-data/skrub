@@ -33,9 +33,9 @@ def _enforce_estimator_tags_X_monkey_patch(
         if X_test is not None:
             X_test = X_test - X_test.min()  # pragma: no cover
     if tags.input_tags.categorical:
-        X = np.round((X - X.min()))
+        X = np.round(X - X.min())
         if X_test is not None:
-            X_test = np.round((X_test - X_test.min()))  # pragma: no cover
+            X_test = np.round(X_test - X_test.min())  # pragma: no cover
         if tags.input_tags.string:
             X = X.astype(object)
             for i in range(X.shape[0]):
