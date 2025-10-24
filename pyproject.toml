@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skrub"
-dynamic = ["version", "readme"]
+dynamic = ["version"]
 description = "Machine learning with dataframes"
+readme = "README.rst"
 authors = [
     {name = "Riccardo Cappuzzo"},
     {name = "Jerome Dockes"},
@@ -42,7 +43,6 @@ dependencies = [
 
 [tool.setuptools.dynamic]
 version = { file = "skrub/VERSION.txt" }
-readme = { file = "README.rst" }
 
 [project.optional-dependencies]
 dev = [
