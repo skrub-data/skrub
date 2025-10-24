@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-from packaging.version import parse
 from pandas.testing import assert_series_equal
 
 from skrub import _dataframe as sbd
@@ -50,7 +49,7 @@ def test_clean_categories(df_module):
     for vals in ["x", "y", None], [1.1, 2.2, None]:
         assert sbd.is_categorical(cleaner.transform(df_module.make_column("c", vals)))
 
-    if sbd.is_pandas(s) and parse(pd.__version__).major >= parse("3.0.0").major:
+    if sbd.is_pandas(s):
         # Added to avoid a failing type check since we don't care about dtype here
         assert (
             sbd.to_numpy(s) == sbd.to_numpy(CleanCategories().fit_transform(s))
