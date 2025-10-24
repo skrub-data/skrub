@@ -205,7 +205,7 @@ def test_determinist():
     sim_enc = SimilarityEncoder(
         categories="auto",
     )
-    X = np.array([" {} ".format(chr(i)) for i in range(32, 127)]).reshape((-1, 1))
+    X = np.array([f" {chr(i)} " for i in range(32, 127)]).reshape((-1, 1))
     prototypes = sim_enc.fit(X).categories_[0]
     for i in range(10):
         assert np.array_equal(prototypes, sim_enc.fit(X).categories_[0])
@@ -224,7 +224,7 @@ def test_fit_transform():
 def test_get_features():
     # See https://github.com/skrub-data/skrub/issues/168
     sim_enc = SimilarityEncoder()
-    X = np.array(["{}".format(chr(i)) for i in range(32, 127)]).reshape((-1, 1))
+    X = np.array([f"{chr(i)}" for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)
     assert sim_enc.get_feature_names_out().tolist() == [
         "x0_ ",
@@ -328,7 +328,7 @@ def test_get_features():
 def test_check_fitted_super_vectorizer():
     """Test that calling transform before fit raises an error"""
     sim_enc = SimilarityEncoder()
-    X = np.array(["{}".format(chr(i)) for i in range(32, 127)]).reshape((-1, 1))
+    X = np.array([f"{chr(i)}" for i in range(32, 127)]).reshape((-1, 1))
     with pytest.raises(NotFittedError):
         sim_enc.transform(X)
     sim_enc.fit(X)
