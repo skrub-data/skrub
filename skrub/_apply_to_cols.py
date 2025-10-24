@@ -11,6 +11,9 @@ from ._single_column_transformer import RejectColumn
 
 __all__ = ["ApplyToCols"]
 
+# By default, select all columns
+_SELECT_ALL_COLUMNS = selectors.all()
+
 
 class ApplyToCols(BaseEstimator, TransformerMixin):
     """
@@ -250,7 +253,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         transformer,
-        cols=selectors.all(),
+        cols=_SELECT_ALL_COLUMNS,
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
