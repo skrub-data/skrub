@@ -408,7 +408,7 @@ def test_agg_joiner_default_cols(main_table):
         aux_table=main_table, operations="mode", key=["movieId", "userId"]
     )
     agg_joiner.fit(main_table)
-    agg_joiner._cols == ["rating", "genre"]
+    assert agg_joiner._cols == ["rating", "genre"]
 
 
 def test_agg_joiner_correct_cols(df_module, main_table):
@@ -422,7 +422,7 @@ def test_agg_joiner_correct_cols(df_module, main_table):
         cols=["rating"],
     )
     agg_joiner.fit(main_table)
-    agg_joiner._cols == ["rating"]
+    assert agg_joiner._cols == ["rating"]
 
 
 def test_agg_joiner_wrong_cols(main_table):
@@ -662,7 +662,7 @@ def test_agg_target_multiple_main_key(df_module, main_table, y_df):
         operations="max",
     )
     main_transformed = agg_target.fit_transform(main_table, y_df)
-    sbd.column_names(main_transformed) == [
+    assert sbd.column_names(main_transformed) == [
         "userId",
         "movieId",
         "rating",
