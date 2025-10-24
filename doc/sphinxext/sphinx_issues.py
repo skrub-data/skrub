@@ -72,7 +72,7 @@ def cve_role(name, rawtext, text, lineno, inliner, options=None, content=None):
     return [link], []
 
 
-class IssueRole(object):
+class IssueRole:
     EXTERNAL_REPO_REGEX = re.compile(r"^(\w+)/(.+)([#@])([\w]+)$")
 
     def __init__(
