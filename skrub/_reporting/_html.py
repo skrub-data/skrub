@@ -83,7 +83,7 @@ def _get_column_filters(summary):
             "columns": list(range(10)),
         }
 
-    if "top_associations" in summary.keys():
+    if "top_associations" in summary:
         filters["high_association"] = {
             "columns": _get_high_association_columns(summary),
             "display_name": _FILTER_NAMES["high_association"],

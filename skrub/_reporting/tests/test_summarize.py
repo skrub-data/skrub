@@ -102,7 +102,7 @@ def test_summarize(
         ) == {("city", "country"), ("city", "location"), ("country", "location")}
         assert asso[-1]["cramer_v"] == 0.0
     else:
-        assert "top_associations" not in summary.keys()
+        assert "top_associations" not in summary
 
 
 def test_no_title(pd_module):
