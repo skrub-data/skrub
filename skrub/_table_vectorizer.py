@@ -184,7 +184,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     numeric_dtype : "float32" or None, default=None
         If set to ``float32``, convert columns with numerical information
-        to ``np.float32`` dtype. If ``None``, numerical columns are not modified.
+        to ``np.float32`` dtype thanks to the transformer ``ToFloat32``.
+        If ``None``, numerical columns are not modified.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -394,9 +395,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     This transformer preprocesses the given dataframe by first cleaning the data
-    to ensure consistent numerical dtypes (float32), then encodes each column with
-    an encoder suitable for its dtype. Categorical features are encoded differently
-    depending on their cardinality.
+    to ensure consistent numerical dtypes (float32). The TableVectorizer will
+    automatically convert to float32 any string column that contains only numerical
+    information.
+    Then it encodes each column with an encoder suitable for its dtype. Categorical
+    features are encoded differently depending on their cardinality.
 
     .. note::
 
