@@ -81,7 +81,7 @@ extensions = [
 ]
 
 try:
-    import sphinxext.opengraph  # noqa
+    import sphinxext.opengraph  # noqa: F401
 
     extensions.append("sphinxext.opengraph")
 except ImportError:
@@ -377,7 +377,7 @@ intersphinx_mapping = {
 
 
 # -- sphinx-gallery configuration ---------------------------------------------
-from sphinx_gallery.sorting import FileNameSortKey  # noqa
+from sphinx_gallery.sorting import FileNameSortKey  # noqa: F401
 
 if "dev" in release:
     binder_branch = "main"
@@ -475,7 +475,7 @@ sphinx_gallery_conf = {
         # The module we locally document (so, skrub) uses None
         "skrub": None,
         # We don't specify the other modules as we use the intershpinx ext.
-        # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
+        # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa: E501
     },
     "filename_pattern": ".*",
     "examples_dirs": "../examples",
