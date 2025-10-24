@@ -1,11 +1,12 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "skrub"
-dynamic = ["version", "readme"]
+dynamic = ["version"]
 description = "Machine learning with dataframes"
+readme = "README.rst"
 authors = [
   { name = "Riccardo Cappuzzo" },
   { name = "Jerome Dockes" },
@@ -13,19 +14,20 @@ authors = [
   { name = "Vincent Maladiere" },
   { name = "Gael Varoquaux" },
 ]
+license = "BSD-3-Clause"
+license-files = ["LICENSE.txt"]
 classifiers = [
-  "Development Status :: 5 - Production/Stable",
-  "Environment :: Console",
-  "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: BSD License",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Topic :: Scientific/Engineering",
-  "Topic :: Software Development :: Libraries",
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries",
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -41,7 +43,6 @@ dependencies = [
 
 [tool.setuptools.dynamic]
 version = { file = "skrub/VERSION.txt" }
-readme = { file = "README.rst" }
 
 [project.optional-dependencies]
 dev = [
