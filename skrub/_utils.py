@@ -9,7 +9,6 @@ from typing import Iterable
 import numpy as np
 import sklearn
 from sklearn.base import BaseEstimator, clone
-from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as sbd
@@ -74,33 +73,6 @@ def unique_strings(values, is_null):
     full_idx[is_null] = 0
     full_idx[~is_null] = idx
     return unique, full_idx
-
-
-def check_input(X):
-    """Check input with sklearn standards.
-
-    Also converts X to a numpy array if not already.
-    """
-    # TODO check for weird type of input to pass scikit learn tests
-    #  without messing with the original type too much
-
-    X_ = check_array(
-        X,
-        dtype=None,
-        ensure_2d=True,
-        force_all_finite=False,
-    )
-    # If the array contains both NaNs and strings, convert to object type
-    if X_.dtype.kind in {"U", "S"}:  # contains strings
-        if np.any(X_ == "nan"):  # missing value converted to string
-            return check_array(
-                np.array(X, dtype=object),
-                dtype=None,
-                ensure_2d=True,
-                force_all_finite=False,
-            )
-
-    return X_
 
 
 def import_optional_dependency(name, extra=""):
