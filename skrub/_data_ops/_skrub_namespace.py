@@ -763,7 +763,7 @@ class SkrubNamespace:
         ―――――――
            a1  a2  b1  b2
         0   0   1   2   3
-        """  # noqa: E501
+        """
         return DataOp(Concat(self._data_op, others, axis=axis))
 
     @check_data_op
@@ -1551,7 +1551,7 @@ class SkrubNamespace:
         ZeroDivisionError('division by zero')
         >>> report['report_path']
         PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
-        """  # noqa : E501
+        """
 
         if environment is None:
             mode = "preview"
