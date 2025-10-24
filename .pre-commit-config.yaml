@@ -11,7 +11,7 @@ repos:
     -   id: ruff-check
         args: ["--fix", "--show-fixes", "--output-format=full"]
 -   repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 23.3.0
+    rev: 25.11.0
     hooks:
     -   id: black
 -   repo: https://github.com/codespell-project/codespell
