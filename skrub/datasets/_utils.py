@@ -356,8 +356,7 @@ def _stream_download(
         temp_file_path = Path(temp_file_path)
         with open(temp_file_path, "wb") as tf:
             response = requests.get(target_url, timeout=timeout, stream=True)
-            for chunk in response.iter_content(chunk_size):
-                tf.write(chunk)
+            tf.writelines(response.iter_content(chunk_size))
 
         if _sha256(temp_file_path) != remote_checksum:
             raise OSError(
