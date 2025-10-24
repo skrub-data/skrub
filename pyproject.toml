@@ -283,7 +283,7 @@ exclude = [
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
-select = ["E", "F", "W", "I"]
+select = ["E", "F", "W", "C4", "I"]
 ignore = [
   # space before : (needed for how black formats slicing)
   "E203",
