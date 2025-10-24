@@ -23,7 +23,7 @@ def test_for():
     with pytest.raises(
         TypeError, match=".*it is not possible to eagerly iterate over it"
     ):
-        for item in a:
+        for _item in a:
             pass
 
 
