@@ -78,6 +78,20 @@ def test_single_column_transformer_attribute():
     assert Dummy.__single_column_transformer__ is True
 
 
+def test_single_column_transformer_all_outputs(df_module):
+    class Dummy(SingleColumnTransformer):
+        def fit(self, column, y=None):
+            self.all_outputs_ = [sbd.name(column)]
+            return column
+
+    column = df_module.example_column
+
+    transformer = Dummy()
+    transformer.fit(column)
+
+    assert transformer.get_feature_names_out() == [sbd.name(column)]
+
+
 class Mult(BaseEstimator):
     """Dummy to test the different kinds of output supported by ApplyToCols.
 
