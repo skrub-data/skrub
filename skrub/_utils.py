@@ -163,16 +163,6 @@ def get_duplicates(values):
     return duplicates
 
 
-def check_duplicated_column_names(column_names, table_name=None):
-    duplicates = get_duplicates(column_names)
-    if duplicates:
-        table_name = "" if table_name is None else f"{table_name!r}"
-        raise ValueError(
-            f"Table {table_name} has duplicate column names: {duplicates}."
-            " Please make sure column names are unique."
-        )
-
-
 def renaming_func(renaming):
     if isinstance(renaming, str):
         return renaming.format
