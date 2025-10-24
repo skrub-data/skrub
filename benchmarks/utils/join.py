@@ -183,8 +183,8 @@ def evaluate(pred_joins, gt_joins):
     f1: float
         F1 score
     """
-    pred = {(le, ri) for le, ri in pred_joins}
-    gt = {(le, ri) for le, ri in gt_joins}
+    pred = set(pred_joins)
+    gt = set(gt_joins)
 
     tp = pred.intersection(gt)
     precision = len(tp) / len(pred)
