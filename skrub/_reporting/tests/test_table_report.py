@@ -416,6 +416,5 @@ def test_polars_df_no_pyarrow():
     html_snippet = report.html_snippet()
     assert (
         "Computing pairwise associations is not available for Polars dataframes "
-        "when PyArrow is not installed"
-        in html_snippet
+        "when PyArrow is not installed" in html_snippet
     )

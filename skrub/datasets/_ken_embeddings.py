@@ -1,6 +1,7 @@
 """
 Get the Wikipedia embeddings for feature augmentation.
 """
+
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
 

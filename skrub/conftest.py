@@ -16,14 +16,17 @@ def _example_data_dict():
         "str-col": ["one", None, "three", "four"],
         "bool-col": [False, True, None, True],
         "bool-not-null-col": [False, True, True, True],
-        "datetime-col": [
-            datetime.datetime.fromisoformat(dt)
-            for dt in [
-                "2020-02-03T12:30:05",
-                "2021-03-15T00:37:15",
-                "2022-02-13T17:03:25",
+        "datetime-col": (
+            [
+                datetime.datetime.fromisoformat(dt)
+                for dt in [
+                    "2020-02-03T12:30:05",
+                    "2021-03-15T00:37:15",
+                    "2022-02-13T17:03:25",
+                ]
             ]
-        ] + [None],
+            + [None]
+        ),
         "date-col": [
             datetime.date.fromisoformat(dt)
             for dt in ["2002-02-03", "2001-05-17", "2005-02-13", "2004-10-02"]
@@ -67,17 +70,19 @@ _DATAFAME_MODULES_INFO["pandas-nullable-dtypes"] = SimpleNamespace(
         "DataFrame": pd.DataFrame,
         "Column": pd.Series,
         "make_dataframe": lambda data: pd.DataFrame(data).convert_dtypes(),
-        "make_column": lambda name, values: pd.Series(
-            name=name, data=values
-        ).convert_dtypes(),
+        "make_column": (
+            lambda name, values: pd.Series(name=name, data=values).convert_dtypes()
+        ),
         "assert_frame_equal": pandas.testing.assert_frame_equal,
         "assert_column_equal": pandas.testing.assert_series_equal,
         "empty_dataframe": pd.DataFrame(),
         "empty_column": pd.Series([], dtype="object"),
         "example_dataframe": pd.DataFrame(_example_data_dict()).convert_dtypes(),
-        "example_column": pd.Series(
-            _example_data_dict()["float-col"], name="float-col"
-        ).convert_dtypes(),
+        "example_column": (
+            pd.Series(
+                _example_data_dict()["float-col"], name="float-col"
+            ).convert_dtypes()
+        ),
         "dtypes": {
             "float32": pd.Float32Dtype(),
             "float64": pd.Float64Dtype(),

@@ -3,7 +3,6 @@ Implements the SimilarityEncoder, a generalization of the OneHotEncoder,
 which encodes similarity instead of equality of values.
 """
 
-
 import numpy as np
 import pandas as pd
 import sklearn
