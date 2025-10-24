@@ -139,16 +139,16 @@ def _get_preprocessors(
         ToStr(),
     ]
 
-    for transformer in transformers:
-        steps.append(
-            wrap_transformer(
-                transformer,
-                cols,
-                allow_reject=True,
-                n_jobs=n_jobs,
-                columnwise=True,
-            )
+    steps.extend(
+        wrap_transformer(
+            transformer,
+            cols,
+            allow_reject=True,
+            n_jobs=n_jobs,
+            columnwise=True,
         )
+        for transformer in transformers
+    )
     return steps
 
 
