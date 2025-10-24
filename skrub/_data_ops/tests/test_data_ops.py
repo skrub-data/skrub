@@ -363,7 +363,7 @@ def test_apply_bad_params(why_no_wrap, bad_param):
     else:
         cols = s.all()
     how = "cols" if bad_param == "how" else how
-    allow_reject = True if bad_param == "allow_reject" else False
+    allow_reject = bad_param == "allow_reject"
 
     with pytest.raises(
         (ValueError, RuntimeError),
