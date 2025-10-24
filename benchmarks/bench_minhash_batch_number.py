@@ -28,10 +28,6 @@ from skrub.tests.utils import generate_data
 NoneType = type(None)
 
 
-# Ignore lines too long, as links can't be cut
-# flake8: noqa: E501
-
-
 class MinHashEncoder(BaseEstimator, TransformerMixin):
     """
     Encode string categorical features as a numeric array, minhash method
