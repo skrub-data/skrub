@@ -33,7 +33,7 @@ def encoder():
 
 def test_missing_import_error(encoder):
     try:
-        import sentence_transformers  # noqa
+        import sentence_transformers  # noqa: F401
     except ImportError:
         pass
     else:
