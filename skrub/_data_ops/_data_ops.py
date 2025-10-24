@@ -1397,9 +1397,9 @@ class Apply(DataOpImpl):
             estimator = self.estimator_
         except AttributeError:
             estimator = get_chosen_or_default(self.estimator)
-        for name in FITTED_PREDICTOR_METHODS:
-            if hasattr(estimator, name):
-                modes.append(name)
+        modes.extend(
+            name for name in FITTED_PREDICTOR_METHODS if hasattr(estimator, name)
+        )
         return modes
 
     def __repr__(self):
