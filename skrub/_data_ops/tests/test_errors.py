@@ -41,7 +41,7 @@ def test_contains():
     with pytest.raises(
         TypeError, match=".*it is not possible to eagerly perform membership tests"
     ):
-        2 in a
+        2 in a  # noqa: B015
 
 
 def test_setitem():
