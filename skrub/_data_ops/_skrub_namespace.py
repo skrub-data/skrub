@@ -1478,7 +1478,8 @@ class SkrubNamespace:
         .. note::
             When this function is invoked reports starting with ``full_data_op_report_``
             that are stored in the skrub data folder are automatically deleted after 7 days.
-            This is to avoid accumulating too many reports over time.
+            This is to avoid accumulating too many reports over time. If you want to keep
+            specific reports, please specify an output directory.
 
 
         Parameters
