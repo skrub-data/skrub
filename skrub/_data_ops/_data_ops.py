@@ -1269,14 +1269,20 @@ class Apply(DataOpImpl):
     # we do not evaluate `y`.
 
     def eval(self, *, mode, environment):
-        if mode not in self.supported_modes():
+        # 1. Find method to call and collect the necessary arguments: X and
+        # possibly y and the estimator (depending on the mode).
+
+        if "fit" in mode or mode == "preview":
+            # we need to fit, evaluate the estimator
+            estimator = yield self.estimator
+        else:
+            # for other modes self.estimator_ will be used
+            estimator = None
+        if mode not in self.supported_modes(estimator):
             # We are not the final estimator, e.g. mode is 'predict' and we are
             # a transformer that comes before the predictor.
             mode = "fit_transform" if "fit" in mode else "transform"
         method_name = "fit_transform" if mode == "preview" else mode
-
-        # 1. Collect the necessary arguments: X and possibly y and the estimator
-        # (depending on the mode).
 
         X = yield self.X
         if ("fit" in method_name and not self.unsupervised) or method_name == "score":
@@ -1288,7 +1294,6 @@ class Apply(DataOpImpl):
         X = _check_column_names(X)
 
         if "fit" in method_name:
-            estimator = yield self.estimator
             cols = yield self.cols
             how = yield self.how
             allow_reject = yield self.allow_reject
@@ -1387,18 +1392,23 @@ class Apply(DataOpImpl):
             )
         return kwargs
 
-    def supported_modes(self):
+    def supported_modes(self, estimator=None):
         """
         Used by SkrubLearner and param search to decide if they have the
         methods `predict`, `predict_proba` etc.
         """
         modes = ["preview", "fit", "fit_transform", "transform"]
-        try:
-            estimator = self.estimator_
-        except AttributeError:
-            estimator = get_chosen_or_default(self.estimator)
+        if estimator is None:
+            try:
+                estimator = self.estimator_
+            except AttributeError:
+                estimator = get_chosen_or_default(self.estimator)
         for name in FITTED_PREDICTOR_METHODS:
-            if hasattr(estimator, name):
+            if isinstance(estimator, DataOp) or hasattr(estimator, name):
+                # if estimator is a DataOp we cannot know yet if it has the
+                # attribute, in this case we assume it does (and risk a
+                # slightly worse error message when a SkrubLearner tries to use
+                # it if it does not).
                 modes.append(name)
         return modes
 
