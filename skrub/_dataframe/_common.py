@@ -803,6 +803,7 @@ def is_string(col):
 
 @is_string.specialize("pandas", argument_type="Column")
 def _is_string_pandas(col):
+    # Pandas 3.0 introduces str dtypes, which are not parsed as "object"
     if (
         parse_version(pd.__version__).base_version
         >= parse_version("3.0.0").base_version
@@ -815,11 +816,9 @@ def _is_string_pandas(col):
         return pandas.api.types.is_string_dtype(col[~col.isna()])
     if col.dtype == pd.StringDtype():
         return True
-    # (╯°□°)╯︵ ┻━┻
     # In pandas, a categorical column *is* a string dtype, but *is not* an object dtype
     if not pd.api.types.is_object_dtype(col):
         return False
-    # Pandas 3.0 introduces str dtypes, which are not parsed as "object"
     if parse_version(pd.__version__) < parse_version("2.0.0"):
         # on old pandas versions
         # `pd.api.types.is_string_dtype(pd.Series([1, ""]))` is True

@@ -549,6 +549,29 @@ def test_is_string(df_module):
         assert not ns.is_string(ns.col(df, col))
 
 
+# Added to make coverage happy for configurations with pandas >= 3.0.0
+@pytest.mark.skipif(
+    parse(pd.__version__).major < parse("3.0.0").major,
+    reason="Requires pandas >= 3.0.0",
+)
+def test_is_string_pandas_3(df_module):
+    if df_module.name != "pandas":
+        return
+    df = pd.DataFrame(
+        {
+            "str-col": pd.Series(["a", None, "b"], dtype="string"),
+            "obj-col": pd.Series(["a", None, "b"], dtype="object"),
+            "cat-col": pd.Series(["a", "b", "a"], dtype="category"),
+            "num-col": pd.Series([1, 2, 3], dtype="Int64"),
+        }
+    )
+
+    assert ns.is_string(ns.col(df, "str-col"))
+    assert ns.is_string(ns.col(df, "obj-col"))
+    assert not ns.is_string(ns.col(df, "cat-col"))
+    assert not ns.is_string(ns.col(df, "num-col"))
+
+
 def test_to_string(df_module):
     s = ns.to_string(df_module.make_column("_", list(range(5))))
     assert ns.is_string(s)
