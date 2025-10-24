@@ -186,7 +186,7 @@ def test_write_html(tmp_path, pd_module, filename_type):
         report.write_html(filename)
         assert tmp_file_path.exists()
 
-    with open(tmp_file_path, "r", encoding="utf-8") as file:
+    with open(tmp_file_path, encoding="utf-8") as file:
         saved_content = file.read()
     assert "</html>" in saved_content
 
@@ -207,7 +207,7 @@ def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
         ):
             report.write_html(file)
 
-    with open(tmp_file_path, "r", encoding="latin-1") as file:
+    with open(tmp_file_path, encoding="latin-1") as file:
         saved_content = file.read()
     assert "</html>" not in saved_content
 
