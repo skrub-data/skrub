@@ -348,10 +348,8 @@ def test_correct_parameters(a_datetime_col, params, transformers):
     enc.fit_transform(a_datetime_col)
 
     assert all(
-        [
-            isinstance(t, required_t)
-            for t, required_t in zip(enc._periodic_encoders.values(), transformers)
-        ]
+        isinstance(t, required_t)
+        for t, required_t in zip(enc._periodic_encoders.values(), transformers)
     )
 
     with pytest.raises(ValueError, match="Unsupported value wrongvalue .*"):
