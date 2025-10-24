@@ -7,6 +7,9 @@ from ._join_utils import pick_column_names
 
 __all__ = ["ApplyToFrame"]
 
+# By default, select all columns
+_SELECT_ALL_COLUMNS = selectors.all()
+
 
 class ApplyToFrame(TransformerMixin, BaseEstimator):
     """Apply a transformer to part of a dataframe.
@@ -130,7 +133,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         transformer,
-        cols=selectors.all(),
+        cols=_SELECT_ALL_COLUMNS,
         keep_original=False,
         rename_columns="{}",
     ):
