@@ -234,3 +234,13 @@ def test_error_dispatch(func):
     # Make codecov happy
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         func(np.array([1]))
+
+
+def test_specific_time_encoding(df_module):
+    from zoneinfo import ZoneInfo
+
+    col = [
+        pd.Timestamp(1584226800, unit="s", tz=ZoneInfo("Europe/Paris")),
+        pd.Timestamp(1584226801, unit="s", tz=ZoneInfo("Europe/Paris")),
+    ]
+    assert _get_time_zone(df_module.make_column("dt", col)) == "Europe/Paris"

@@ -338,7 +338,10 @@ class GapEncoder(TransformerMixin, SingleColumnTransformer):
                 W2 = W2 + 0.1
                 W = np.concatenate((W, W2), axis=0)
         else:
-            raise ValueError(f"Initialization method {self.init!r} does not exist. ")
+            raise ValueError(
+                f"Initialization method {self.init!r} does not exist. It should be one"
+                " of ['k-means++', 'random', 'k-means']."
+            )
         W /= W.sum(axis=1, keepdims=True)
         A = np.ones((self.n_components, self.n_vocab)) * 1e-10
         B = A.copy()
