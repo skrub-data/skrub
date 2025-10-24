@@ -64,7 +64,7 @@ dev = [
 
     # lint
     "black==23.3.0",
-    "ruff==0.4.8",
+    "ruff==0.14.2",
     "pre-commit",
 
     # test
@@ -122,7 +122,7 @@ statsmodels = "*"
 
 [tool.pixi.feature.lint.dependencies]
 black = "==23.3.0"
-ruff = "==0.4.8"
+ruff = "==0.14.2"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
@@ -254,6 +254,8 @@ select = ["E", "F", "W", "I"]
 ignore=[
     # space before : (needed for how black formats slicing)
     "E203",
+    # use `is` and `is not` for type comparisons
+    "E721",
     # do not assign a lambda expression, use a def
     "E731",
     # do not use variables named 'l', 'O', or 'I'
