@@ -584,7 +584,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
                 forbidden_names.update(output_names)
                 self.transformers_[input_name] = transformer
                 self.input_to_outputs_[input_name] = output_names
-                self.output_to_input_.update(**{o: input_name for o in output_names})
+                self.output_to_input_.update(**dict.fromkeys(output_names, input_name))
                 if self.keep_original:
                     output_cols = [sbd.col(X, input_name)] + output_cols
             transformed_columns.extend(output_cols)
