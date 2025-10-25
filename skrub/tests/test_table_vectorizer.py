@@ -1016,4 +1016,9 @@ def test_date_format(df_module):
     )
     cleaner = Cleaner(datetime_format="%d %B %Y")
     transformed = cleaner.fit_transform(X)
-    df_module.assert_column_equal(transformed["date"], expected["date"])
+
+    # This is needed because the transformed version of the date column is formatted
+    # by pandas using the format, and has a different resolution than the expected one.
+    transformed_to_list = sbd.to_list(transformed["date"])
+    expected_to_list = sbd.to_list(expected["date"])
+    assert transformed_to_list == expected_to_list

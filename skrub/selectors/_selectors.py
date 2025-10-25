@@ -175,7 +175,7 @@ def numeric():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      object
+    str_     ...
     dtype: object
 
     >>> s.select(df, s.numeric())
@@ -226,7 +226,7 @@ def integer():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      object
+    str_      ...
     dtype: object
 
     >>> s.select(df, s.integer())
@@ -277,7 +277,7 @@ def float():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      object
+    str_      ...
     dtype: object
 
     >>> s.select(df, s.float())
@@ -314,7 +314,7 @@ def any_date():
     >>> df.dtypes
     dt           datetime64[...]
     tzdt    datetime64[..., UTC]
-    str_                 object
+    str_                 ...
     dtype: object
 
     >>> s.select(df, s.any_date())
@@ -346,7 +346,7 @@ def categorical():
     1      B        B
 
     >>> df.dtypes
-    string        object
+    string        ...
     category    category
     dtype: object
 
@@ -384,9 +384,9 @@ def string():
     1  B  10  B  B
 
     >>> df.dtypes
-    os            object
+    os            ...
     o             object
-    s     string...
+    s     ...
     c           category
     dtype: object
 
@@ -509,6 +509,6 @@ def has_nulls():
           b     c
     0   0.0     a
     1   NaN     b
-    2  20.0  None
+    2  20.0  ...
     """
     return Filter(sbd.has_nulls, name="has_nulls")

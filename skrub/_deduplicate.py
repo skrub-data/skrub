@@ -218,7 +218,7 @@ def deduplicate(
     white    white
     white    white
     white    white
-    dtype: object
+    dtype: ...
 
     The translation table above is actually a series, giving the deduplicated values,
     and indexed by the original values.

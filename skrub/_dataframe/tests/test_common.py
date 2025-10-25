@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from packaging.version import parse
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 import skrub
@@ -92,7 +93,18 @@ def test_is_column(df_module):
 
 def test_to_list(df_module):
     col = ns.col(df_module.example_dataframe, "str-col")
-    assert ns.to_list(col) == ["one", None, "three", "four"]
+    if ns.is_pandas(col) and parse(pd.__version__).major >= parse("3.0.0").major:
+        # (╯°□°)╯︵ ┻━┻
+        # In pandas 3.0, nulls in string dtypes have type np.nan, but nullable dtypes
+        # become None
+        # To avoid adding even more conditions I'm checking all elements one by one
+        #
+        to_list = ns.to_list(col)
+        assert to_list[0] == "one"
+        assert pd.isna(to_list[1])
+        assert to_list[2:] == ["three", "four"]
+    else:
+        assert ns.to_list(col) == ["one", None, "three", "four"]
 
 
 def test_to_numpy(df_module, example_data_dict):
@@ -537,6 +549,29 @@ def test_is_string(df_module):
         assert not ns.is_string(ns.col(df, col))
 
 
+# Added to make coverage happy for configurations with pandas >= 3.0.0
+@pytest.mark.skipif(
+    parse(pd.__version__).major < parse("3.0.0").major,
+    reason="Requires pandas >= 3.0.0",
+)
+def test_is_string_pandas_3(df_module):
+    if df_module.name != "pandas":
+        return
+    df = pd.DataFrame(
+        {
+            "str-col": pd.Series(["a", None, "b"], dtype="string"),
+            "obj-col": pd.Series(["a", None, "b"], dtype="object"),
+            "cat-col": pd.Series(["a", "b", "a"], dtype="category"),
+            "num-col": pd.Series([1, 2, 3], dtype="Int64"),
+        }
+    )
+
+    assert ns.is_string(ns.col(df, "str-col"))
+    assert ns.is_string(ns.col(df, "obj-col"))
+    assert not ns.is_string(ns.col(df, "cat-col"))
+    assert not ns.is_string(ns.col(df, "num-col"))
+
+
 def test_to_string(df_module):
     s = ns.to_string(df_module.make_column("_", list(range(5))))
     assert ns.is_string(s)
@@ -759,7 +794,11 @@ def test_value_counts(df_module):
     counts = ns.sort(counts, by="value")
     expected = df_module.make_dataframe({"value": ["a", "b"], "count": [3, 1]})
     expected = ns.sort(expected, by="value")
-    df_module.assert_frame_equal(counts, expected)
+    if ns.is_pandas(col) and parse(pd.__version__).major >= parse("3.0.0").major:
+        # Added to avoid a failing type check since we don't care about dtype here
+        assert (ns.to_numpy(expected) == ns.to_numpy(counts)).all()
+    else:
+        df_module.assert_frame_equal(counts, expected)
 
 
 @pytest.mark.parametrize("q", [0.0, 0.3, 1.0])

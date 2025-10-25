@@ -91,7 +91,7 @@ def _prepare_obj_column(col):
     is_null = col.isna().values
     encoder = OrdinalEncoder()
     encoded_not_null = encoder.fit_transform(
-        col.dropna().astype(str).values[:, None]
+        col.dropna().astype(str).to_frame()
     ).ravel()
     encoded = np.full(col.shape, -1.0)
     encoded[~is_null] = encoded_not_null

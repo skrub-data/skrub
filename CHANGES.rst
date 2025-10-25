@@ -41,6 +41,10 @@ Bugfixes
   Polars columns sorted in descending order. Fixed in :pr:`1673` by
   :user:`Jérôme Dockès <jeromedockes>`.
 
+- Fixed nightly checks and added support for upcoming library versions, including Pandas
+  v3.0. :pr:`1664` by :user:`Auguste Baum <auguste-probabl>` and
+  :user:`Riccardo Cappuzzo <rcap107>`.
+
 Release 0.6.2
 =============
 

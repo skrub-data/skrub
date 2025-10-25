@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from packaging.version import parse
 
 from skrub import _dataframe as sbd
 from skrub._apply_to_cols import RejectColumn
@@ -14,7 +15,10 @@ def test_to_str(df_module):
     out = ToStr().fit_transform(df_module.make_column("", values))
     assert sbd.is_string(out)
     if df_module.name == "pandas":
-        assert out.dtype == "O"
+        if sbd.is_pandas(out) and parse(pd.__version__).major >= parse("3.0.0").major:
+            assert out.dtype == pd.StringDtype(na_value=np.nan)
+        else:
+            assert out.dtype == "O"
         assert pd.NA not in out
     expected = df_module.make_column(
         "", [None if v is None else str(v) for v in values]
@@ -42,13 +46,21 @@ def test_rejected_columns(df_module):
 
 def test_pandas_string():
     s = pd.Series(["a", "b"], dtype="string")
-    assert ToStr().fit_transform(s).dtype == "O"
+
+    if sbd.is_pandas(s) and parse(pd.__version__).major >= parse("3.0.0").major:
+        assert ToStr().fit_transform(s).dtype == pd.StringDtype(na_value=np.nan)
+    else:
+        assert ToStr().fit_transform(s).dtype == "O"
 
 
 def test_pandas_na():
     s = pd.Series(["a", pd.NA], dtype="str")
-    assert s[1] is pd.NA
+    if sbd.is_pandas(s) and parse(pd.__version__).major >= parse("3.0.0").major:
+        assert s[1] is np.nan
+    else:
+        assert s[1] is pd.NA
     out = ToStr().fit_transform(s)
+    # This check is not needed with pandas 3.0
     assert out[1] is not pd.NA
     assert np.isnan(out[1])
 
