@@ -74,6 +74,8 @@ def test_extract_archive_exception_unlink_called():
 
     mock_temp_dir = str(Path("mock_temp_dir"))
     # Patch both tempfile.mkdtemp and shutil.unpack_archive
+    # tempfile.mkdtemp and shutil.unpack_archive are used in _extract_archive
+    # We simulate unpack_archive raising an exception to test that unlink is called
     with (
         patch("tempfile.mkdtemp", return_value=mock_temp_dir),
         patch("shutil.unpack_archive") as mock_unpack,
@@ -95,6 +97,7 @@ def test_extract_archive_unlink_raises():
 
     mock_temp_dir = str(Path("mock_temp_dir"))
     # Patch both tempfile.mkdtemp and shutil.unpack_archive
+    # tempfile.mkdtemp and shutil.unpack_archive are used in _extract_archive
     with (
         patch("tempfile.mkdtemp", return_value=mock_temp_dir),
         patch("shutil.unpack_archive") as mock_unpack,
