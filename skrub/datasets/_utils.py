@@ -329,10 +329,9 @@ def _download_archive(
         time.sleep(delay)
         delay *= 3
 
-    else:
-        raise OSError(
-            f"Can't download the file {dataset_name!r} from urls {metadata['urls']}."
-        )
+    raise OSError(
+        f"Can't download the file {dataset_name!r} from urls {metadata['urls']}."
+    )
 
 
 def _stream_download(
