@@ -151,7 +151,7 @@ class MinHashEncoder(BaseEstimator, TransformerMixin):
         ndarray of shape (n_components, )
             The encoded string.
         """
-        min_hashes = np.ones(self.n_components) * np.infty
+        min_hashes = np.ones(self.n_components) * np.inf
         grams = get_unique_ngrams(string, self.ngram_range)
         if len(grams) == 0:
             grams = get_unique_ngrams(" Na ", self.ngram_range)
