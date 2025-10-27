@@ -191,7 +191,7 @@ class ToFloat(SingleColumnTransformer):
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
-            numeric = sbd.to_float(column, strict=True)
+            numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
             raise RejectColumn(
