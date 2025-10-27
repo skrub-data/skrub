@@ -7,7 +7,7 @@ Generating the report
 ---------------------
 
 Information about the dataframe is collected in a dictionary by
-`_summarize.summarize_dataframe`. This dictionary is then used to render a
+``_summarize.summarize_dataframe``. This dictionary is then used to render a
 `jinja <https://jinja.palletsprojects.com/en/3.0.x/>`_ template, filling it with
 information about this particular dataframe. This is done by ``_html.to_html``.
 
@@ -20,7 +20,7 @@ CSS and javascript files.
 
 .. note::
 
-   the files in `_data/templates/pure-3.0.0/` are a subset of the
+   the files in ``_data/templates/pure-3.0.0/`` are a subset of the
    `pure.css <https://purecss.io/>`_ project. Only the ``base`` and ``tables``
    modules are included. They respectively provide some baseline default styling
    for better cross-browser consistency and some basic styling of tables such as

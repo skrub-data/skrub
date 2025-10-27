@@ -3,7 +3,7 @@
 Development
 ===========
 
-While `skrub` is still being born, we believe in openness and community
+While ``skrub`` is still being born, we believe in openness and community
 development from the start. Join us in building a great package to
 facilitate learning on databases.
 
