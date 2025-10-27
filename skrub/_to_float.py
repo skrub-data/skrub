@@ -211,4 +211,4 @@ class ToFloat(SingleColumnTransformer):
         transformed : pandas or polars Series
             The input transformed to Float32.
         """
-        return sbd.to_float(column, strict=False)
+        return sbd.to_float32(column, strict=False)
