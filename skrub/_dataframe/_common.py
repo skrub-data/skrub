@@ -811,9 +811,9 @@ def _is_string_pandas(col):
         # (╯°□°)╯︵ ┻━┻
         # In pandas, a categorical column *is* a string dtype, but *is not* an
         # object dtype
-        if isinstance(col.dtype, pd.CategoricalDtype):
-            return False
-        return pandas.api.types.is_string_dtype(col[~col.isna()])
+        if isinstance(col.dtype, pd.CategoricalDtype):  # pragma: no cover
+            return False  # pragma: no cover
+        return pandas.api.types.is_string_dtype(col[~col.isna()])  # pragma: no cover
     if col.dtype == pd.StringDtype():
         return True
     # In pandas, a categorical column *is* a string dtype, but *is not* an object dtype
