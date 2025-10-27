@@ -1000,7 +1000,7 @@ def test_date_format(df_module):
     vectorizer = TableVectorizer(datetime_format="%d %B %Y", datetime=datetime_encoder)
     transformed = vectorizer.fit_transform(X)
     for col in transformed.columns:
-        df_module.assert_column_equal(transformed[col], sbd.to_float(expected[col]))
+        df_module.assert_column_equal(transformed[col], sbd.to_float32(expected[col]))
 
     expected = df_module.make_dataframe(
         {
