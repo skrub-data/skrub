@@ -38,6 +38,9 @@ Bugfixes
 --------
 - Added a ``get_feature_names_out`` method to all transformers.
   :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Issues occurring when :meth:`DataOp.skb.apply` was passed a DataOp as the
+  estimator have been fixed in :pr:`1671` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 - :class:`TableReport` could raise an error while trying to check if Polars
   columns with some dtypes (lists, structs) are sorted. It would not indicate
   Polars columns sorted in descending order. Fixed in :pr:`1673` by

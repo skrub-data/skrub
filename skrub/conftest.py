@@ -54,6 +54,7 @@ _DATAFAME_MODULES_INFO["pandas-numpy-dtypes"] = SimpleNamespace(
             "float64": np.float64,
             "int32": np.int32,
             "int64": np.int64,
+            "category": pd.CategoricalDtype(),
         },
     }
 )
@@ -82,6 +83,7 @@ _DATAFAME_MODULES_INFO["pandas-nullable-dtypes"] = SimpleNamespace(
             "float64": pd.Float64Dtype(),
             "int32": pd.Int32Dtype(),
             "int64": pd.Int64Dtype(),
+            "category": pd.CategoricalDtype(),
         },
     }
 )
@@ -145,6 +147,7 @@ if _POLARS_INSTALLED:
                 "float64": pl.Float64,
                 "int32": pl.Int32,
                 "int64": pl.Int64,
+                "category": pl.Categorical,
             },
         }
     )
