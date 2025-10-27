@@ -21,7 +21,7 @@ from ._select_cols import Drop
 from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
-from ._to_float32 import ToFloat32
+from ._to_float import ToFloat
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
@@ -133,7 +133,7 @@ def _get_preprocessors(
         ToDatetime(format=datetime_format),
     ]
     if add_tofloat32:
-        transformers.append(ToFloat32())
+        transformers.append(ToFloat())
     transformers += [
         CleanCategories(),
         ToStr(),
@@ -184,7 +184,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     numeric_dtype : "float32" or None, default=None
         If set to ``float32``, convert columns with numerical information
-        to ``np.float32`` dtype thanks to the transformer ``ToFloat32``.
+        to ``np.float32`` dtype thanks to the transformer ``ToFloat``.
         If ``None``, numerical columns are not modified.
 
     n_jobs : int, default=None
@@ -204,7 +204,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Process columns of a dataframe and convert them to a numeric (vectorized)
         representation.
 
-    ToFloat32 :
+    ToFloat :
         Convert numeric columns to ``np.float32``, to have consistent numeric
         types and representation of missing values. More informative columns (e.g.,
         categorical or datetime) are not converted.
@@ -636,7 +636,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), DropUninformative(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), DropUninformative(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat(), 'B_month': ToFloat(), ...}]
 
     Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
@@ -711,7 +711,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat(), PassThrough(), {'C': ToFloat()}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 
@@ -898,7 +898,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self._postprocessors = []
         add_step(
             self._postprocessors,
-            ToFloat32(),
+            ToFloat(),
             s.all() - _created_by(*self._specific_transformers) - s.categorical(),
             allow_reject=True,
         )

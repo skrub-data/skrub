@@ -1,10 +1,10 @@
 from . import _dataframe as sbd
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 
-__all__ = ["ToFloat32"]
+__all__ = ["ToFloat"]
 
 
-class ToFloat32(SingleColumnTransformer):
+class ToFloat(SingleColumnTransformer):
     """
     Convert a column to 32-bit floating-point numbers.
 
@@ -25,7 +25,7 @@ class ToFloat32(SingleColumnTransformer):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub._to_float32 import ToFloat32
+    >>> from skrub._to_float import ToFloat
 
     A column that does not contain floats is converted if possible:
 
@@ -37,7 +37,7 @@ class ToFloat32(SingleColumnTransformer):
     Name: x, dtype: object
     >>> s[0]
     '1.1'
-    >>> to_float = ToFloat32()
+    >>> to_float = ToFloat()
     >>> float_s = to_float.fit_transform(s)
     >>> float_s
     0    1.1
@@ -137,7 +137,7 @@ class ToFloat32(SingleColumnTransformer):
     Once a column has been accepted, all calls to ``transform`` will result in the
     same output dtype. Values that fail to be converted become null values.
 
-    >>> to_float = ToFloat32().fit(pd.Series([1, 2]))
+    >>> to_float = ToFloat().fit(pd.Series([1, 2]))
     >>> to_float.transform(pd.Series(['3.3', 'hello']))
     0    3.3
     1    NaN
@@ -191,7 +191,7 @@ class ToFloat32(SingleColumnTransformer):
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
-            numeric = sbd.to_float32(column, strict=True)
+            numeric = sbd.to_float(column, strict=True)
             return numeric
         except Exception as e:
             raise RejectColumn(
@@ -211,4 +211,4 @@ class ToFloat32(SingleColumnTransformer):
         transformed : pandas or polars Series
             The input transformed to Float32.
         """
-        return sbd.to_float32(column, strict=False)
+        return sbd.to_float(column, strict=False)

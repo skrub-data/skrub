@@ -26,8 +26,7 @@ from skrub._table_vectorizer import (
     TableVectorizer,
     _get_preprocessors,
 )
-from skrub._to_float32 import ToFloat32
-from skrub.conftest import _POLARS_INSTALLED
+from skrub._to_float import ToFloat
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
@@ -219,7 +218,7 @@ def test_get_preprocessors(df_module):
         n_jobs=1,
         add_tofloat32=True,
     )
-    assert any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
+    assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
     steps = _get_preprocessors(
         cols=X.columns,
@@ -229,7 +228,7 @@ def test_get_preprocessors(df_module):
         n_jobs=1,
         add_tofloat32=False,
     )
-    assert not any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
+    assert not any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
 
 def test_fit_default_transform(df_module):
@@ -1001,7 +1000,7 @@ def test_date_format(df_module):
     vectorizer = TableVectorizer(datetime_format="%d %B %Y", datetime=datetime_encoder)
     transformed = vectorizer.fit_transform(X)
     for col in transformed.columns:
-        df_module.assert_column_equal(transformed[col], sbd.to_float32(expected[col]))
+        df_module.assert_column_equal(transformed[col], sbd.to_float(expected[col]))
 
     expected = df_module.make_dataframe(
         {

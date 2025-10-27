@@ -92,7 +92,7 @@ API_REFERENCE = {
                     "DatetimeEncoder",
                     "ToDatetime",
                     "to_datetime",
-                    "ToFloat32",
+                    "ToFloat",
                 ],
             }
         ],
