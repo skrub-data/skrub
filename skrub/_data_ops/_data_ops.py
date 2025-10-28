@@ -39,6 +39,7 @@ import traceback
 import types
 import warnings
 
+import numpy as np
 from sklearn.base import BaseEstimator
 
 from .. import _dataframe as sbd
@@ -721,8 +722,8 @@ def _check_wrap_params(cols, how, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
-    elif how not in ["auto", "full_frame"]:
-        msg = f"`how` must be 'auto' (the default) or 'full_frame' when {reason}"
+    elif how not in ["auto", "no_wrap"]:
+        msg = f"`how` must be 'auto' (the default) or 'no_wrap' when {reason}"
     elif allow_reject:
         msg = f"`allow_reject` must be False (the default) when {reason}"
     if msg is not None:
@@ -753,11 +754,34 @@ def _check_estimator_type(estimator):
     )
 
 
+def _check_apply_how(how):
+    valid = ["auto", "cols", "frame", "no_wrap"]
+    if how in valid:
+        return how
+
+    # TODO remove when the old names are completely dropped in 0.7.0
+    translate = {"columnwise": "cols", "sub_frame": "frame", "full_frame": "no_wrap"}
+    if how in translate:
+        new = translate[how]
+        warnings.warn(
+            (
+                f"{how!r} has been renamed to {new!r}: use .skb.apply(how={new!r})"
+                " instead."
+            ),
+            FutureWarning,
+        )
+        return new
+
+    raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
+
+
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
     """
     Wrap the estimator passed to .skb.apply in ApplyToCols or ApplyToFrame if
     needed.
     """
+    how = _check_apply_how(how)
+
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
 
@@ -766,16 +790,16 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     def _check(reason):
         _check_wrap_params(cols, how, allow_reject, reason)
 
-    if how == "full_frame":
-        _check("`how` is 'full_frame'")
+    if how == "no_wrap":
+        _check("`how` is 'no_wrap'")
         return estimator
-    if not hasattr(estimator, "transform"):
+    if hasattr(estimator, "predict") or not hasattr(estimator, "transform"):
         _check("`estimator` is a predictor (not a transformer)")
         return estimator
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    columnwise = {"auto": "auto", "columnwise": True, "sub_frame": False}[how]
+    columnwise = {"auto": "auto", "cols": True, "frame": False}[how]
     return wrap_transformer(
         estimator, cols, allow_reject=allow_reject, columnwise=columnwise
     )
@@ -1185,7 +1209,7 @@ class FreezeAfterFit(DataOpImpl):
 
 
 def _check_column_names(X):
-    # NOTE: could allow int column names when how='full_frame', prob. not worth
+    # NOTE: could allow int column names when how='no_wrap', prob. not worth
     # the added complexity.
     #
     # TODO: maybe also forbid duplicates? use a reduced version of
@@ -1229,14 +1253,34 @@ def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment, 
 class Apply(DataOpImpl):
     """.skb.apply() nodes."""
 
-    _fields = ["X", "estimator", "y", "cols", "how", "allow_reject", "unsupervised"]
+    _fields = [
+        "X",
+        "estimator",
+        "y",
+        "cols",
+        "how",
+        "allow_reject",
+        "unsupervised",
+        "kwargs",
+    ]
 
     # We define `eval()` rather than `compute` because some children may not
     # need to be evaluated depending on the mode. For example in "predict" mode
     # we do not evaluate `y`.
 
     def eval(self, *, mode, environment):
-        if mode not in self.supported_modes():
+        # 1. Find method to call and collect the necessary arguments: X and
+        # possibly y and the estimator (depending on the mode).
+
+        if "fit" in mode or mode == "preview":
+            # we need to fit, evaluate the estimator
+            estimator = yield self.estimator
+        else:
+            # for other modes self.estimator_ will be used
+            estimator = None
+        if mode not in self.supported_modes(estimator):
+            # We are not the final estimator, e.g. mode is 'predict' and we are
+            # a transformer that comes before the predictor.
             mode = "fit_transform" if "fit" in mode else "transform"
         method_name = "fit_transform" if mode == "preview" else mode
 
@@ -1247,11 +1291,9 @@ class Apply(DataOpImpl):
             y = None
 
         check_subsampled_X_y_shape(self.X, self.y, X, y, mode, environment)
-
         X = _check_column_names(X)
 
         if "fit" in method_name:
-            estimator = yield self.estimator
             cols = yield self.cols
             how = yield self.how
             allow_reject = yield self.allow_reject
@@ -1262,30 +1304,27 @@ class Apply(DataOpImpl):
                 allow_reject=allow_reject,
                 X=X,
             )
+            self._store_y_format(y)
 
-        if "transform" in method_name and not hasattr(self.estimator_, "transform"):
-            if "fit" in method_name:
-                self.estimator_.fit(X, y)
-                if sbd.is_column(y):
-                    self._all_outputs = [sbd.name(y)]
-                elif sbd.is_dataframe(y):
-                    self._all_outputs = sbd.column_names(y)
-                else:
-                    self._all_outputs = None
-            pred = self.estimator_.predict(X)
-            if not sbd.is_dataframe(X) and self._all_outputs is None:
-                return pred
-            if len(pred.shape) == 1:
-                col_name = "y" if self._all_outputs is None else self._all_outputs[0]
-                result = sbd.make_dataframe_like(X, {col_name: pred})
-            else:
-                col_names = (
-                    [f"y{i}" for i in range(pred.shape[1])]
-                    if self._all_outputs is None
-                    else self._all_outputs
-                )
-                result = sbd.make_dataframe_like(X, dict(zip(col_names, pred.T)))
-            return sbd.copy_index(X, result)
+        # 2. Call the appropriate estimator method
+
+        if "transform" in method_name and not hasattr(self.estimator_, method_name):
+            # We are a predictor and the mode is 'transform' or 'fit_transform' (as in
+            # `.skb.preview()` or `.skb.eval()`). We replace `.transform()`
+            # with `.predict()`
+            if method_name == "fit_transform":
+                fit_kwargs = yield from self._eval_kwargs("fit")
+                self.estimator_.fit(X, y, **fit_kwargs)
+            predict_kwargs = yield from self._eval_kwargs("predict")
+            pred = self.estimator_.predict(X, **predict_kwargs)
+            # In `(fit_)transform` mode only, format the predictions as a
+            # dataframe or column if y was one during `fit()`
+            return self._format_predictions(X, pred)
+
+        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
+            # We are a transformer in 'fit' mode. Rather than `fit()` we call
+            # `fit_transform()` so that subsequent steps can be fitted as well.
+            method_name = "fit_transform"
 
         if "fit" in method_name:
             y_arg = () if self.unsupervised else (y,)
@@ -1293,20 +1332,83 @@ class Apply(DataOpImpl):
             y_arg = (y,)
         else:
             y_arg = ()
-        return getattr(self.estimator_, method_name)(X, *y_arg)
+        method_kwargs = yield from self._eval_kwargs(method_name)
+        return getattr(self.estimator_, method_name)(X, *y_arg, **method_kwargs)
 
-    def supported_modes(self):
+    def _store_y_format(self, y):
+        if sbd.is_dataframe(y):
+            self._y_col_names = list(map(str, sbd.column_names(y)))
+            self._y_type = "dataframe"
+        elif sbd.is_column(y):
+            self._y_col_names = str(sbd.name(y))
+            self._y_type = "column"
+        else:
+            self._y_col_names = None
+            self._y_type = None
+
+    def _format_predictions(self, X, pred):
+        if self._y_type is None or not (sbd.is_dataframe(X) or sbd.is_column(X)):
+            return pred
+        if not isinstance(pred, np.ndarray):
+            return pred
+        if self._y_type == "column" and np.ndim(pred) == 1 and pred.shape[0] == len(X):
+            pred = sbd.make_column_like(X, pred, self._y_col_names)
+            return sbd.copy_index(X, pred)
+        if (
+            self._y_type == "dataframe"
+            and np.ndim(pred) == 1
+            and len(self._y_col_names) == 1
+            and pred.shape[0] == len(X)
+        ):
+            pred = sbd.make_dataframe_like(X, {self._y_col_names[0]: pred})
+            return sbd.copy_index(X, pred)
+        if (
+            self._y_type == "dataframe"
+            and np.ndim(pred) == 2
+            and pred.shape[1] == len(self._y_col_names)
+            and pred.shape[0] == len(X)
+        ):
+            pred = sbd.make_dataframe_like(X, dict(zip(self._y_col_names, pred.T)))
+            return sbd.copy_index(X, pred)
+        return pred
+
+    def _eval_kwargs(self, method_name):
+        """
+        Evaluate the kwargs we need to pass to the given method.
+
+        The values in ``self.kwargs`` can be (or contain) DataOps or choices.
+        This looks up the kwargs for ``method_name``, yields it for evaluation,
+        and checks that the result is actually a dictionary before returning it.
+        """
+        kwargs = yield self.kwargs.get(method_name, None)
+        if kwargs is None:
+            # We check if kwargs is None _after_ evaluation
+            kwargs = {}
+        if not isinstance(kwargs, dict):
+            raise TypeError(
+                f"The `{method_name}_kwargs` passed to `.skb.apply()` should be a dict"
+                " of named arguments. Got an object of type"
+                f" {type(kwargs).__name__!r} instead: {kwargs!r}"
+            )
+        return kwargs
+
+    def supported_modes(self, estimator=None):
         """
         Used by SkrubLearner and param search to decide if they have the
         methods `predict`, `predict_proba` etc.
         """
-        modes = ["preview", "fit_transform", "transform"]
-        try:
-            estimator = self.estimator_
-        except AttributeError:
-            estimator = get_chosen_or_default(self.estimator)
+        modes = ["preview", "fit", "fit_transform", "transform"]
+        if estimator is None:
+            try:
+                estimator = self.estimator_
+            except AttributeError:
+                estimator = get_chosen_or_default(self.estimator)
         for name in FITTED_PREDICTOR_METHODS:
-            if hasattr(estimator, name):
+            if isinstance(estimator, DataOp) or hasattr(estimator, name):
+                # if estimator is a DataOp we cannot know yet if it has the
+                # attribute, in this case we assume it does (and risk a
+                # slightly worse error message when a SkrubLearner tries to use
+                # it if it does not).
                 modes.append(name)
         return modes
 
@@ -1405,10 +1507,10 @@ class Call(DataOpImpl):
             name = getattr(self.func, "__name__", repr(self.func))
         else:
             impl = self.func._skrub_impl
-            if isinstance(impl, GetItem):
-                name = f"{{ ... }}[{short_repr(impl.key)}]"
-            elif isinstance(impl, Var):
+            if impl.name is not None:
                 name = impl.name
+            elif isinstance(impl, GetItem):
+                name = f"{{ ... }}[{short_repr(impl.key)}]"
             else:
                 name = type(impl).__name__
         return name

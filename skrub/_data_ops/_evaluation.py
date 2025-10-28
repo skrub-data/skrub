@@ -437,8 +437,6 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
         The signature is callback(data_op, result) where data_op is the DataOp
         that was just evaluated and result is the resulting value.
     """
-    requested_mode = mode
-    mode = "fit_transform" if requested_mode == "fit" else requested_mode
     _check_environment(environment)
     if clear:
         callbacks = (_cache_pruner(data_op, mode),) + tuple(callbacks)
@@ -446,10 +444,9 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
     else:
         callbacks = ()
     try:
-        result = _Evaluator(
-            mode=mode, environment=environment, callbacks=callbacks
-        ).run(data_op)
-        return data_op if requested_mode == "fit" else result
+        return _Evaluator(mode=mode, environment=environment, callbacks=callbacks).run(
+            data_op
+        )
     finally:
         if clear:
             clear_results(data_op, mode=mode)
@@ -1243,5 +1240,5 @@ def supported_modes(data_op):
     """The evaluation modes that the final estimator supports."""
     first = find_first_apply(data_op)
     if first is None:
-        return ["preview", "fit_transform", "transform"]
+        return ["preview", "fit", "fit_transform", "transform"]
     return first._skrub_impl.supported_modes()

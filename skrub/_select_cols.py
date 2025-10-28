@@ -17,7 +17,12 @@ class SelectCols(TransformerMixin, BaseEstimator):
     cols : list of str, str or :ref:`selector<selectors_ref>`
         The columns to select, or a selector. A single column name can be passed as a
         ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
-        :ref:`selectors<userguide_selectors>` user guide for more info on selectors.
+        :ref:`selectors<user_guide_selectors>` user guide for more info on selectors.
+
+    See Also
+    --------
+    DropCols : Dropping cols by name, dtypes, or general skrub selectors.
+    Cleaner: Can be used to drop columns with too many NaNs.
 
     Examples
     --------
@@ -107,7 +112,12 @@ class DropCols(TransformerMixin, BaseEstimator):
     cols : list of str, str or :ref:`selector <selectors_ref>`
         The columns to drop, or a selector. A single column name can be passed as a
         ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
-        :ref:`selectors <userguide_selectors>` user guide for more info on selectors.
+        :ref:`selectors <user_guide_selectors>` user guide for more info on selectors.
+
+    See Also
+    --------
+    SelectCols : Selecting cols by name, dtypes, or general skrub selectors.
+    Cleaner: Can be used to drop columns with too many nulls (or NaNs).
 
     Examples
     --------

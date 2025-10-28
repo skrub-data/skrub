@@ -422,6 +422,44 @@ def test_train_test_split(with_y):
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
 
 
+def test_iter_cv_splits():
+    X = skrub.X(np.arange(5) * 10)
+    splits = X.skb.iter_cv_splits()
+    s = next(splits)
+    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30, 40]
+    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
+    s = next(splits)
+    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30, 40]
+    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
+
+    X = skrub.X(np.arange(4) * 10)
+    y = skrub.y(np.arange(4) * -10)
+    splits = skrub.as_data_op((X, y)).skb.iter_cv_splits(cv=4)
+    s = next(splits)
+    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30]
+    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
+    assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [-10, -20, -30]
+    assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [0]
+    s = next(splits)
+    assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30]
+    assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
+    assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [0, -20, -30]
+    assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [-10]
+
+
+def test_train_test_split_splitter_renaming():
+    # TODO remove when `splitter` is removed in 0.7.0
+    X = skrub.X(list(range(10)))
+
+    def split(X, shuffle):
+        return train_test_split(X, shuffle=shuffle)
+
+    with pytest.warns(FutureWarning, match="`splitter`.*has been renamed"):
+        assert X.skb.train_test_split(splitter=split, shuffle=False)["X_train"] == list(
+            range(7)
+        )
+
+
 def test_iter_learners():
     e = skrub.choose_from([1, 2, 3], name="c").as_data_op()
     assert [p.describe_params() for p in e.skb.iter_learners_grid()] == [
@@ -700,7 +738,8 @@ def test_estimator_type(estimator_type, expected, bury_apply):
         e.skb.make_randomized_search(n_iter=2),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
-        assert Xy_pipe._estimator_type == expected
+        if hasattr(estimator, "_estimator_type"):
+            assert Xy_pipe._estimator_type == expected
         if hasattr(estimator_type, "__sklearn_tags__"):
             # scikit-learn >= 1.6
             assert Xy_pipe.__sklearn_tags__() == estimator.__sklearn_tags__()

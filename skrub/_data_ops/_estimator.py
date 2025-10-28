@@ -4,11 +4,13 @@ import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
+from sklearn.model_selection import KFold, check_cv
 from sklearn.utils.validation import check_is_fitted
 
+from .. import _dataframe as sbd
 from .. import _join_utils
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply, check_subsampled_X_y_shape
+from ._data_ops import Apply, DataOp, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     chosen_or_default_outcomes,
@@ -25,7 +27,7 @@ from ._evaluation import (
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
-from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
+from ._utils import KFOLD_5, X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -113,10 +115,6 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
     def __sklearn_is_fitted__(self):
         return getattr(self, "_is_fitted", False)
 
-    def fit(self, environment):
-        _ = self.fit_transform(environment)
-        return self
-
     def _eval_in_mode(self, mode, environment):
         if mode not in _FITTING_METHODS:
             check_is_fitted(self)
@@ -166,7 +164,8 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
-            return self._eval_in_mode(name, *args, **kwargs)
+            result = self._eval_in_mode(name, *args, **kwargs)
+            return self if name == "fit" else result
 
         f.__name__ = name
         return f
@@ -252,15 +251,15 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         >>> learner.find_fitted_estimator("classifier")
         DummyClassifier()
 
-        Depending on the parameters passed to ``skb.apply()``, the estimator we provide
-        can be wrapped in a skrub transformer that applies it to several columns in the
-        input, or to a subset of the columns in a dataframe. In other cases it may be
-        applied without any wrapping. We provide examples for those 3 different cases
-        below.
+        Depending on the parameters passed to :meth:`DataOp.skb.apply`, the
+        estimator we provide can be wrapped in a skrub transformer that applies
+        it to several columns in the input, or to a subset of the columns in a
+        dataframe. In other cases it may be applied without any wrapping. We
+        provide examples for those 3 different cases below.
 
         Case 1: the ``StringEncoder`` is a skrub single-column transformer: it
         transforms a single column. In the learner it gets wrapped in a
-        ``skrub.ApplyToCols`` which independently fits a separate instance of the
+        :class:`ApplyToCols` which independently fits a separate instance of the
         ``StringEncoder`` to each of the columns it transforms (in this case there is
         only one column, ``'product'``). The individual transformers can be found in the
         fitted attribute ``transformers_`` which maps column names to the corresponding
@@ -272,13 +271,13 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
         {' pe': 2, 'pen': 12, 'en ': 8, ' pen': 3, 'pen ': 13, ' cu': 0, 'cup': 6, 'up ': 18, ' cup': 1, 'cup ': 7, ' sp': 4, 'spo': 16, 'poo': 14, 'oon': 10, 'on ': 9, ' spo': 5, 'spoo': 17, 'poon': 15, 'oon ': 11}
 
-        This case (wrapping in ``ApplyToCols``) happens when the estimator is a skrub
+        This case (wrapping in :class:`ApplyToCols`) happens when the estimator is a skrub
         single-column transformer (it has a ``__single_column_transformer__``
-        attribute), we pass ``.skb.apply(how='columnwise')`` or we pass
+        attribute), we pass ``.skb.apply(how='cols')`` or we pass
         ``.skb.apply(allow_reject=True)``.
 
         Case 2: the ``PCA`` is a regular scikit-learn transformer. In the learner it
-        gets wrapped in a ``skrub.ApplyToFrame`` which applies it to the subset of columns
+        gets wrapped in a :class:`ApplyToFrame` which applies it to the subset of columns
         in the dataframe selected by the ``cols`` argument passed to ``.skb.apply()``.
         The fitted ``PCA`` can be found in the fitted attribute ``transformer_``.
 
@@ -290,8 +289,9 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         >>> pca.transformer_.mean_
         array([2020.,    4.,    4.], dtype=float32)
 
-        This case (wrapping in ``ApplyToFrame``) happens when the estimator is a
-        scikit-learn transformer but not a single-column transformer.
+        This case (wrapping in :class:`ApplyToFrame`) happens when the estimator is a
+        scikit-learn transformer but not a single-column transformer, or we
+        pass ``.skb.apply(how='frame')``.
 
         The ``DummyRegressor`` is a scikit-learn predictor. In the learner it gets
         applied directly to the input dataframe without any wrapping.
@@ -304,7 +304,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         This case (no wrapping) happens when the estimator is a scikit-learn predictor
         (not a transformer), the input is not a dataframe (e.g. it is a numpy array), or
-        we pass ``.skb.apply(how='full_frame')``.
+        we pass ``.skb.apply(how='no_wrap')``.
         """  # noqa: E501
         node = find_node_by_name(self.data_op, name)
         if node is None:
@@ -409,8 +409,6 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         )
 
 
-# Xy_pipeline because it is an actual scikit-learn pippeline rather than
-# a skrub learner
 def _to_Xy_pipeline(learner, environment):
     return learner.__skrub_to_Xy_pipeline__(environment)
 
@@ -442,8 +440,11 @@ class _XyPipelineMixin:
         first = find_first_apply(self.data_op)
         if first is None:
             return "transformer"
+        estimator = get_default(first._skrub_impl.estimator)
+        if isinstance(estimator, DataOp):
+            return "transformer"
         try:
-            return get_default(first._skrub_impl.estimator)._estimator_type
+            return estimator._estimator_type
         except AttributeError:
             return "transformer"
 
@@ -454,7 +455,13 @@ class _XyPipelineMixin:
             first = find_first_apply(self.data_op)
             if first is None:
                 return _default_sklearn_tags()
-            return get_default(first._skrub_impl.estimator).__sklearn_tags__()
+            estimator = get_default(first._skrub_impl.estimator)
+            if isinstance(estimator, DataOp):
+                return _default_sklearn_tags()
+            try:
+                return estimator.__sklearn_tags__()
+            except AttributeError:
+                return _default_sklearn_tags()
 
     @property
     def classes_(self):
@@ -489,10 +496,6 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         new = SkrubLearner(self.data_op)
         _copy_attr(self, new, ["_is_fitted"])
         return new
-
-    def fit(self, X, y=None):
-        _ = self.fit_transform(X, y=y)
-        return self
 
     def _eval_in_mode(self, mode, X, y=None):
         result = evaluate(self.data_op, mode, self._get_env(X, y), clear=True)
@@ -650,8 +653,8 @@ def train_test_split(
     environment,
     *,
     keep_subsampling=False,
-    splitter=model_selection.train_test_split,
-    **splitter_kwargs,
+    split_func=model_selection.train_test_split,
+    **split_func_kwargs,
 ):
     """Split an environment into a training an testing environments.
 
@@ -662,9 +665,9 @@ def train_test_split(
     environment = env_with_subsampling(data_op, environment, keep_subsampling)
     X, y = _compute_Xy(data_op, environment)
     if y is None:
-        X_train, X_test = splitter(X, **splitter_kwargs)
+        X_train, X_test = split_func(X, **split_func_kwargs)
     else:
-        X_train, X_test, y_train, y_test = splitter(X, y, **splitter_kwargs)
+        X_train, X_test, y_train, y_test = split_func(X, y, **split_func_kwargs)
     train_env = {**environment, X_NAME: X_train}
     test_env = {**environment, X_NAME: X_test}
     result = {
@@ -679,6 +682,39 @@ def train_test_split(
         result["y_train"] = y_train
         result["y_test"] = y_test
     return result
+
+
+def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=KFOLD_5):
+    """Yield splits of an environment into training an testing environments.
+
+    This functionality is exposed to users through the
+    ``DataOp.skb.iter_cv_splits()`` method. See the corresponding docstring for
+    details and examples.
+    """
+    if cv is KFOLD_5:
+        cv = KFold(5)
+    cv = check_cv(cv)
+    environment = env_with_subsampling(data_op, environment, keep_subsampling)
+    X, y = _compute_Xy(data_op, environment)
+    for train_idx, test_idx in cv.split(X, y):
+        X_train, X_test = sbd.select_rows(X, train_idx), sbd.select_rows(X, test_idx)
+        train_env = {**environment, X_NAME: X_train}
+        test_env = {**environment, X_NAME: X_test}
+        split_info = {
+            "train": train_env,
+            "test": test_env,
+            "X_train": X_train,
+            "X_test": X_test,
+        }
+        if y is not None:
+            y_train, y_test = sbd.select_rows(y, train_idx), sbd.select_rows(
+                y, test_idx
+            )
+            train_env[Y_NAME] = y_train
+            test_env[Y_NAME] = y_test
+            split_info["y_train"] = y_train
+            split_info["y_test"] = y_test
+        yield split_info
 
 
 class ParamSearch(_CloudPickleDataOp, BaseEstimator):

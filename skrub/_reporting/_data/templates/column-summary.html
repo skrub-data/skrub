@@ -55,12 +55,15 @@
                 {% set unit = "" %}
                 {% endif %}
 
-                {% if "mean" in column %}
+                {% if "standard_deviation" in column %}
                 <dt>Mean ± Std</dt>
                 <dd>{{ column["mean"] | format_number }} ±
                     {{ column["standard_deviation"] | format_number }}
                     {{ unit }}
                 </dd>
+                {% elif "mean" in column %}
+                <dt>Mean</dt>
+                <dd>{{ column["mean"] | format_number }} {{ unit }}</dd>
                 {% endif %}
                 {% if column.quantiles %}
                 <dt>Median ± IQR</dt>

@@ -3,12 +3,14 @@ import pickle
 import pytest
 
 from skrub import config_context, get_config, set_config
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 base_config = get_config()
 
 
 @pytest.mark.parametrize("repeat_patch", [1, 2])
 @pytest.mark.parametrize("repeat_unpatch", [1, 2])
+@skip_polars_installed_without_pyarrow
 def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
     set_config(use_table_report=False)
     df = df_module.make_dataframe(
