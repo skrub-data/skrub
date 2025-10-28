@@ -32,6 +32,9 @@ New features
 
 Changes
 -------
+- The minimum supported version of Python has been increased to 3.10. Additionally,
+  the minimum supported versions of scikit-learn and requests are 1.4.2 and 2.27.1
+  respectively. :pr:`1572` by :user:`Riccardo Cappuzzo<rcap107>`.
 - The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
   :class:`StandardScaler` for centering and scaling numerical features
   when linear models are used.
