@@ -181,7 +181,8 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         if "data_op" in params:
             self.data_op = params.pop("data_op")
         set_params(
-            self.data_op, {int(k.lstrip("data_op__")): v for k, v in params.items()}
+            self.data_op,
+            {int(k.removeprefix("data_op__")): v for k, v in params.items()},
         )
         return self
 
@@ -804,7 +805,7 @@ class ParamSearch(_CloudPickleDataOp, BaseEstimator):
 
         all_rows = []
         for params in self.cv_results_["params"]:
-            params = {int(k.lstrip("data_op__")): v for k, v in params.items()}
+            params = {int(k.removeprefix("data_op__")): v for k, v in params.items()}
             all_rows.append(describe_params(params, data_op_choices))
 
         table = pd.DataFrame(

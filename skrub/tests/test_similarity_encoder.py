@@ -207,7 +207,7 @@ def test_determinist():
     )
     X = np.array([" %s " % chr(i) for i in range(32, 127)]).reshape((-1, 1))
     prototypes = sim_enc.fit(X).categories_[0]
-    for i in range(10):
+    for _i in range(10):
         assert np.array_equal(prototypes, sim_enc.fit(X).categories_[0])
 
 

@@ -4,7 +4,7 @@ import warnings
 
 from sklearn import model_selection
 
-from .. import selectors as s
+from .. import selectors
 from .._select_cols import DropCols, SelectCols
 from ._data_ops import (
     AppliedEstimator,
@@ -40,6 +40,8 @@ from ._inspection import (
 )
 from ._subsampling import SubsamplePreviews, env_with_subsampling
 from ._utils import KFOLD_5, NULL, attribute_error
+
+_SELECTORS = selectors.all()
 
 
 def _var_values_provided(data_op, environment):
@@ -101,7 +103,7 @@ class SkrubNamespace:
         self,
         estimator,
         y=None,
-        cols=s.all(),
+        cols=_SELECTORS,
         how="auto",
         allow_reject=False,
         unsupervised=False,
@@ -129,7 +131,7 @@ class SkrubNamespace:
         estimator,
         *,
         y=None,
-        cols=s.all(),
+        cols=_SELECTORS,
         exclude_cols=None,
         how="auto",
         allow_reject=False,
@@ -389,7 +391,7 @@ class SkrubNamespace:
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
         # and `rename_cols` params
         if exclude_cols is not None:
-            cols = s.make_selector(cols) - exclude_cols
+            cols = selectors.make_selector(cols) - exclude_cols
         # unsupervised should be an actual bool
         unsupervised = bool(unsupervised)
         return self._apply(
@@ -621,7 +623,7 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-        >>> from skrub import selectors as s
+        >>> from skrub import selectors
         >>> X = skrub.X(skrub.datasets.toy_orders().X)
         >>> X
         <Var 'X'>
@@ -641,7 +643,7 @@ class SkrubNamespace:
         1     cup         3
         2     cup         5
         3   spoon         1
-        >>> X.skb.select(s.string())
+        >>> X.skb.select(selectors.string())
         <Apply SelectCols>
         Result:
         ―――――――
@@ -674,7 +676,7 @@ class SkrubNamespace:
         Examples
         --------
         >>> import skrub
-        >>> from skrub import selectors as s
+        >>> from skrub import selectors
         >>> X = skrub.X(skrub.datasets.toy_orders().X)
         >>> X
         <Var 'X'>
@@ -694,7 +696,7 @@ class SkrubNamespace:
         1     cup         3
         2     cup         5
         3   spoon         1
-        >>> X.skb.drop(s.string())
+        >>> X.skb.drop(selectors.string())
         <Apply DropCols>
         Result:
         ―――――――

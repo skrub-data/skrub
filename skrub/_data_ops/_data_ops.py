@@ -1840,9 +1840,8 @@ class BinOp(DataOpImpl):
         return e.op(e.left, e.right)
 
     def __repr__(self):
-        return (
-            f"<{self.__class__.__name__}: {self.op.__name__.lstrip('__').rstrip('__')}>"
-        )
+        op_name = self.op.__name__.removeprefix("__").removesuffix("__")
+        return f"<{self.__class__.__name__}: {op_name}>"
 
 
 class UnaryOp(DataOpImpl):
@@ -1852,9 +1851,8 @@ class UnaryOp(DataOpImpl):
         return e.op(e.operand)
 
     def __repr__(self):
-        return (
-            f"<{self.__class__.__name__}: {self.op.__name__.lstrip('__').rstrip('__')}>"
-        )
+        op_name = self.op.__name__.removeprefix("__").removesuffix("__")
+        return f"<{self.__class__.__name__}: {op_name}>"
 
 
 class EvalMode(DataOpImpl):
