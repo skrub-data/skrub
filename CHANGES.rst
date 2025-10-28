@@ -26,6 +26,9 @@ New features
   environments produced by a CV splitter -- similar to
   :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
   :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
+  in the html report.
+  :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
 
 Changes
 -------
