@@ -219,26 +219,7 @@ ci-py313-latest-deps = ["py313", "test"]
 ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
 ci-py313-latest-optional-deps = ["py313", "optional", "test"]
 
-[tool.black]
-line-length = 88
-target_version = ['py310', 'py311']
-preview = true
-# Exclude irrelevant directories for formatting
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.mypy_cache
-  | \.vscode
-  | \.pytest_cache
-  | \.idea
-  | build
-  | dist
-)/
-'''
-
 [tool.ruff]
-# max line length for black
 line-length = 88
 target-version = "py38"
 exclude=[
