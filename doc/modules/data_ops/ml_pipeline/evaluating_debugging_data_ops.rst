@@ -8,7 +8,7 @@ All operations on DataOps are recorded in a computational graph, which can be
 inspected with :meth:`.skb.full_report() <DataOp.skb.full_report>`. This method
 generates a html report that shows the full plan, including all nodes, their names,
 descriptions, and the transformations applied to the data. It is possible to give a
-title to the evaluation report this way: `my_data_op.skb.full_report(title=title)`.
+title to the evaluation report this way: ``my_data_op.skb.full_report(title=title)``.
 
 An example of the report can be found
 `here <../../../_static/credit_fraud_report/index.html>`_.
