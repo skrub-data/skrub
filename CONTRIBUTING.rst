@@ -389,8 +389,12 @@ without running the examples by using the following command:
 This command generates the documentation without re-executing the examples, which can
 take a long time. This is useful if you are only modifying the documentation itself, such as fixing
 typos or improving explanations.
+The documentation will be generated in the ``doc/_build/html/`` directory.
+You can view it by opening the local ``doc/_build/html/index.html`` file, or by running:
 
+.. code:: bash
 
+     open _build/html/index.html
 
 **Using pixi**
 
@@ -409,8 +413,9 @@ From the repository root:
     # Clean previously built documentation
     pixi run clean-doc
 
-The documentation will be generated in the ``doc/_build/html/`` directory.
-You can view it by opening the local ``doc/_build/html/index.html`` file.
+    # Open the built documentation in the default web browser
+    pixi run open-doc
+
 
 .. warning::
 

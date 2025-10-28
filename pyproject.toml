@@ -188,6 +188,7 @@ python = "~=3.13.0"
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
+open-doc = { cmd = "open _build/html/index.html", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
@@ -218,6 +219,7 @@ ci-py312-latest-optional-deps = ["py312", "optional", "test"]
 ci-py313-latest-deps = ["py313", "test"]
 ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
 ci-py313-latest-optional-deps = ["py313", "optional", "test"]
+
 
 [tool.black]
 line-length = 88
