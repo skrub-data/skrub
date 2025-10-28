@@ -2,11 +2,11 @@
 Implements deduplication based on clustering string distance matrices.
 """
 
-
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
 from scipy.cluster.hierarchy import fcluster, linkage
+from scipy.sparse import csr_array
 from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
@@ -42,8 +42,10 @@ def compute_ngram_distance(
     computes the pair-wise Euclidean distance between elements based on their
     n-gram TF-IDF representation.
     """
-    encoded = TfidfVectorizer(ngram_range=ngram_range, analyzer=analyzer).fit_transform(
-        unique_words
+    encoded = csr_array(
+        TfidfVectorizer(ngram_range=ngram_range, analyzer=analyzer).fit_transform(
+            unique_words
+        )
     )
 
     distance_mat = pdist(encoded.todense(), metric="euclidean")

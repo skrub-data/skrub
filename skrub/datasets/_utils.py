@@ -274,7 +274,16 @@ def _extract_archive(dataset_dir, archive_path):
         temp_dir = tempfile.mkdtemp(dir=dataset_dir)
         shutil.unpack_archive(archive_path, temp_dir, format="zip")
         path_source = Path(temp_dir) / dataset_name
-        path_source.rename(dataset_dir / dataset_name)
+        path_target = dataset_dir / dataset_name
+        try:
+            path_source.rename(path_target)
+        except OSError:  # pragma: nocover
+            if path_target.is_dir():
+                # another thread was fetching the dataset at the same time and
+                # beat us to it; no problem
+                return
+            else:
+                raise
     except (Exception, KeyboardInterrupt):
         try:
             archive_path.unlink()

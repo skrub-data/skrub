@@ -1,11 +1,12 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "skrub"
-dynamic = ["version", "readme"]
+dynamic = ["version"]
 description = "Machine learning with dataframes"
+readme = "README.rst"
 authors = [
     {name = "Riccardo Cappuzzo"},
     {name = "Jerome Dockes"},
@@ -13,11 +14,12 @@ authors = [
     {name = "Vincent Maladiere"},
     {name = "Gael Varoquaux"},
 ]
+license = "BSD-3-Clause"
+license-files = ["LICENSE.txt"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -40,7 +42,6 @@ dependencies = [
 
 [tool.setuptools.dynamic]
 version = { file = "skrub/VERSION.txt" }
-readme = { file = "README.rst" }
 
 [project.optional-dependencies]
 dev = [
@@ -116,6 +117,7 @@ sphinx-copybutton = "*"
 sphinx-gallery = "*"
 sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
+sphinx-sitemap = "*"
 statsmodels = "*"
 
 [tool.pixi.feature.lint.dependencies]
@@ -168,6 +170,10 @@ pyarrow = "==15.0.2"
 polars = "==0.20.15"
 plotly = "*"
 
+[tool.pixi.feature.polars-without-pyarrow.dependencies]
+polars = "*"
+plotly = "*"
+
 [tool.pixi.feature.py310.dependencies]
 python = "~=3.10.0"
 
@@ -184,6 +190,9 @@ python = "~=3.13.0"
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
+linkcheck = { cmd = "make linkcheck", cwd = "doc" }
+linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
+
 
 [tool.pixi.feature.lint.tasks]
 lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
@@ -194,7 +203,7 @@ check = { cmd = "python build_tools/generate_data_ops_stub.py | diff - skrub/_da
 
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
-test-user-guide = { cmd = "pytest doc/*.rst" }
+test-user-guide = { cmd = "pytest doc/**/*.rst" }
 
 [tool.pixi.environments]
 lint = ["lint"]
@@ -208,6 +217,7 @@ ci-py311-transformers = ["py311", "transformers", "test"]
 ci-py312-latest-deps = ["py312", "test"]
 ci-py312-latest-optional-deps = ["py312", "optional", "test"]
 ci-py313-latest-deps = ["py313", "test"]
+ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
 ci-py313-latest-optional-deps = ["py313", "optional", "test"]
 
 [tool.black]
