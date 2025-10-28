@@ -39,7 +39,7 @@ build a pipeline that uses a
 Pipeline(steps=[('tablevectorizer',
                  TableVectorizer(...),
                 ('histgradientboostingregressor',
-                 HistGradientBoostingRegressor())])
+                 HistGradientBoostingRegressor(...))])
 
 The pipeline prepared by |tabular_pipeline| is a strong first baseline for most
 problems, but may not beat properly tuned ad-hoc pipelines.
