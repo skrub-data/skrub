@@ -57,7 +57,7 @@ Meanwhile, preparing the post-released PR
 - For a major/minor (not a patch) release:
     - VERSION.txt: update to ``0.3.dev0`` (the next minor).
     - CHANGES.rst: create a header for the new entries ("ongoing development").
-    - doc/version.json: update the version numbers of the stable release and dev branch.
+    - doc/version.json: update the version numbers of the stable release and dev branch. Remove the oldest version to keep the 2 previous ones only.
 
 
 The doc update has succeeded
