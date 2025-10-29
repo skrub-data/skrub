@@ -2,7 +2,6 @@ import codecs
 import functools
 import json
 import numbers
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -52,7 +51,7 @@ class TableReport:
 
     This class summarizes a dataframe, providing information such as the type
     and summary statistics (mean, number of missing values, etc.) for each
-    column.
+    column. It converts numpy array to pandas DataFrame or Series.
 
     Parameters
     ----------
@@ -192,15 +191,9 @@ class TableReport:
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
-                warnings.warn(
-                    "Input is a 1D NumPy array; converting to a pandas Series."
-                )
                 dataframe = pd.Series(dataframe, name="0")
 
             elif dataframe.ndim == 2:
-                warnings.warn(
-                    "Input is a NumPy array; converting to a pandas DataFrame."
-                )
                 dataframe = pd.DataFrame(dataframe)
 
             else:
