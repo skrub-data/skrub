@@ -194,7 +194,9 @@ class TableReport:
                 dataframe = pd.Series(dataframe, name="0")
 
             elif dataframe.ndim == 2:
-                dataframe = pd.DataFrame(dataframe)
+                dataframe = pd.DataFrame(
+                    dataframe, columns=[str(i) for i in range(dataframe.shape[1])]
+                )
 
             else:
                 raise ValueError(
