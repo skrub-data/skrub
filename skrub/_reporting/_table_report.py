@@ -25,7 +25,6 @@ def _check_max_cols(max_plot_columns, max_association_columns):
             "'max_plot_columns' must be a positive scalar or 'all', got"
             f" {max_plot_columns!r}."
         )
-
     max_association_columns = (
         max_association_columns
         if max_association_columns is not None
@@ -42,6 +41,11 @@ def _check_max_cols(max_plot_columns, max_association_columns):
 
     return max_plot_columns, max_association_columns
 
+def lazy_dataframe_exception(dataframe):
+    if sbd.is_polars(dataframe) and sbd.is_lazyframe(dataframe):
+        raise ValueError(
+            "Cannot automatically collect a lazyframe, this might lead to issues!"
+        )
 
 class TableReport:
     r"""Summarize the contents of a dataframe.
@@ -203,6 +207,7 @@ class TableReport:
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
+        lazy_dataframe_exception(self.dataframe)
         self.n_columns = sbd.shape(self.dataframe)[1]
 
     def _set_minimal_mode(self):
