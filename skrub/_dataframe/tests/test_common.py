@@ -94,7 +94,6 @@ def test_is_column(df_module):
 def test_to_list(df_module):
     col = ns.col(df_module.example_dataframe, "str-col")
     if ns.is_pandas(col) and parse(pd.__version__).major >= parse("3.0.0").major:
-        # (╯°□°)╯︵ ┻━┻
         # In pandas 3.0, nulls in string dtypes have type np.nan, but nullable dtypes
         # become None
         # To avoid adding even more conditions I'm checking all elements one by one
