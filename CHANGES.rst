@@ -27,16 +27,29 @@ New features
   :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
   :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`TableReport` now supports ``np.array``. :pr:`1676` by :user: `Nisma Amjad <Nismamjad1>`.
+- :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
+  in the html report.
+  :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
 
 Changes
 -------
+- The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
+  :class:`StandardScaler` for centering and scaling numerical features
+  when linear models are used.
+  :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
 
 Bugfixes
 --------
+- Issues occurring when :meth:`DataOp.skb.apply` was passed a DataOp as the
+  estimator have been fixed in :pr:`1671` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 - :class:`TableReport` could raise an error while trying to check if Polars
   columns with some dtypes (lists, structs) are sorted. It would not indicate
   Polars columns sorted in descending order. Fixed in :pr:`1673` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed nightly checks and added support for upcoming library versions, including Pandas
+  v3.0. :pr:`1664` by :user:`Auguste Baum <auguste-probabl>` and
+  :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.6.2
 =============

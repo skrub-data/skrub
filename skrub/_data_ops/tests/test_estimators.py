@@ -738,7 +738,8 @@ def test_estimator_type(estimator_type, expected, bury_apply):
         e.skb.make_randomized_search(n_iter=2),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
-        assert Xy_pipe._estimator_type == expected
+        if hasattr(estimator, "_estimator_type"):
+            assert Xy_pipe._estimator_type == expected
         if hasattr(estimator_type, "__sklearn_tags__"):
             # scikit-learn >= 1.6
             assert Xy_pipe.__sklearn_tags__() == estimator.__sklearn_tags__()
