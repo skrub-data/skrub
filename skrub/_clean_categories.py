@@ -77,14 +77,14 @@ class CleanCategories(SingleColumnTransformer):
     1      two
     2    three
     Name: c, dtype: category
-    Categories (3, object): ['one', 'three', 'two']
+    Categories (3, ...): ['one', 'three', 'two']
     >>> cleaner = CleanCategories()
     >>> cleaner.fit_transform(s)
     0      one
     1      two
     2    three
     Name: c, dtype: category
-    Categories (3, object): ['one', 'three', 'two']
+    Categories (3, ...): ['one', 'three', 'two']
     >>> cleaner.fit_transform(s) is s
     True
 
@@ -121,7 +121,7 @@ class CleanCategories(SingleColumnTransformer):
     0    1
     1    2
     Name: c, dtype: category
-    Categories (2, object): ['1', '2']
+    Categories (2, ...): ['1', '2']
 
     We can see above that the output categories are strings.
 
@@ -167,7 +167,7 @@ class CleanCategories(SingleColumnTransformer):
     1    b
     2    c
     Name: c, dtype: category
-    Categories (3, object): ['a', 'b', 'c']
+    Categories (3, ...): ['a', 'b', 'c']
 
     The categories themselves are not checked and may vary depending on the
     input; handling unseen categories is the responsibility of encoders such as
@@ -178,7 +178,7 @@ class CleanCategories(SingleColumnTransformer):
     1      y
     2    NaN
     Name: c, dtype: category
-    Categories (2, object): ['x', 'y']
+    Categories (2, ...): ['x', 'y']
 
     The category dtype transformations do not apply to polars; in polars all
     Categorical columns have Strings as the type of their categories.
