@@ -39,6 +39,9 @@ Changes
 
 Bugfixes
 --------
+- Fixed various issues with some transformers by adding ``get_feature_names_out``
+  to all single column transformers.
+  :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
 - Issues occurring when :meth:`DataOp.skb.apply` was passed a DataOp as the
   estimator have been fixed in :pr:`1671` by :user:`Jérôme Dockès
   <jeromedockes>`.
