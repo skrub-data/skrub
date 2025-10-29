@@ -245,7 +245,9 @@ html_theme_options = {
         "**": ["page-toc", "sourcelink", "sg_download_links", "sg_launcher_links"]
     },
     "switcher": {
-        "json_url": "https://raw.githubusercontent.com/MarieSacksick/skrub/doc_versions/doc/version.json",
+        "json_url": (
+            "https://raw.githubusercontent.com/skrub-data/skrub/main/doc/version.json"
+        ),
         "version_match": version,
     },
     "show_version_warning_banner": True,
