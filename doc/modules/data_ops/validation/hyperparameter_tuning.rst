@@ -141,7 +141,7 @@ It is also possible to use :meth:`ParamSearch.plot_results` to visualize the res
 of the search using a parallel coordinates plot.
 
 A full example of how to use hyperparameter search is available in
-:ref:`sphx_glr_auto_examples_data_ops_13_choices.py`.
+:ref:`sphx_glr_auto_examples_data_ops_0130_choices.py`.
 
 |
 
