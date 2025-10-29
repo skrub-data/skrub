@@ -11,11 +11,11 @@
         "preferred": true
     },
     {
-        "version": "0.5.4",
-        "url": "https://skrub-data.org/0.5.4/"
+        "version": "0.5",
+        "url": "https://skrub-data.org/0.5/"
     },
     {
-        "version": "0.4.1",
-        "url": "https://skrub-data.org/0.4.1/"
+        "version": "0.4",
+        "url": "https://skrub-data.org/0.4/"
     }
 ]
