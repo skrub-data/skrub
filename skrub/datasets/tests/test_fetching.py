@@ -6,6 +6,7 @@ import requests
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 import skrub.datasets
+from skrub.conftest import xfail_with_download_error
 from skrub.datasets import _fetching, _utils
 
 
@@ -13,6 +14,7 @@ def _get_table_names_from_bunch(bunch):
     return [k for k in bunch if isinstance(bunch[k], pd.DataFrame)]
 
 
+@xfail_with_download_error
 @pytest.mark.parametrize("dataset_name", ["employee_salaries", "drug_directory"])
 def test_fetching(monkeypatch, dataset_name):
     with TemporaryDirectory() as temp_dir:
@@ -39,6 +41,7 @@ def test_fetching(monkeypatch, dataset_name):
     assert bunch["metadata"] == local_bunch["metadata"]
 
 
+@xfail_with_download_error
 def test_fetch_credit_fraud():
     data = skrub.datasets.fetch_credit_fraud()
     assert data.baskets.shape == (61241, 2)
@@ -52,6 +55,7 @@ def test_fetch_credit_fraud():
         skrub.datasets.fetch_credit_fraud(split=None)
 
 
+@xfail_with_download_error
 def test_fetch_employee_salaries():
     data = skrub.datasets.fetch_employee_salaries()
     assert data.employee_salaries.shape == (9228, 9)
@@ -65,6 +69,7 @@ def test_fetch_employee_salaries():
         skrub.datasets.fetch_employee_salaries(split=None)
 
 
+@xfail_with_download_error
 @pytest.mark.parametrize(
     "dataset_name, shape",
     [
@@ -83,6 +88,7 @@ def test_datasets_without_splitting(dataset_name, shape):
     assert data[dataset_name].shape == shape
 
 
+@xfail_with_download_error
 @pytest.mark.parametrize(
     "dataset_name, keys",
     [
