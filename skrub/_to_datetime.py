@@ -91,7 +91,7 @@ class ToDatetime(SingleColumnTransformer):
 
     Parameters
     ----------
-    format : str or None, optional, default=None
+    format : str or None or a given list of str, optional, default=None
         Format to use for parsing dates that are stored as strings, e.g.
         ``"%Y-%m-%dT%H:%M%S"``.
         If not specified, the format is inferred from the data when possible.
@@ -424,7 +424,7 @@ class ToDatetime(SingleColumnTransformer):
         return sbd.cast(column, self.output_dtype_)
 
     def _get_datetime_format(self, column):
-        if self.format is not None:
+        if self.format is not None and isinstance(self.format, str) :
             return self.format
         not_null = sbd.drop_nulls(column)
         sample = sbd.sample(
@@ -432,6 +432,13 @@ class ToDatetime(SingleColumnTransformer):
         )
         if not sbd.is_string(sample):
             return None
+        if isinstance(self.format, list):
+            for format_option in self.format: 
+                try:
+                    sbd.to_datetime(column, format=format_option, strict=False)
+                    return proposed_format 
+                except Exception:
+                    continue
         return _guess_datetime_format(sample)
 
 
