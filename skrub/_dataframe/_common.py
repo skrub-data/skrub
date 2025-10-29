@@ -808,7 +808,6 @@ def _is_string_pandas(col):
         parse_version(pd.__version__).base_version
         >= parse_version("3.0.0").base_version
     ):
-        # (╯°□°)╯︵ ┻━┻
         # In pandas, a categorical column *is* a string dtype, but *is not* an
         # object dtype
         if isinstance(col.dtype, pd.CategoricalDtype):  # pragma: no cover
