@@ -51,7 +51,7 @@ class TableReport:
 
     This class summarizes a dataframe or numpy array, providing information such as
     the type and summary statistics (mean, number of missing values, etc.) for each
-    column. It converts numpy array to pandas DataFrame or Series.
+    column. Numpy arrays are converted to pandas DataFrame or Series.
 
     Parameters
     ----------
