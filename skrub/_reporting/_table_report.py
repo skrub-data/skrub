@@ -49,8 +49,8 @@ def _check_max_cols(max_plot_columns, max_association_columns):
 class TableReport:
     r"""Summarize the contents of a dataframe.
 
-    This class summarizes a dataframe, providing information such as the type
-    and summary statistics (mean, number of missing values, etc.) for each
+    This class summarizes a dataframe or numpy array, providing information such as
+    the type and summary statistics (mean, number of missing values, etc.) for each
     column. It converts numpy array to pandas DataFrame or Series.
 
     Parameters
