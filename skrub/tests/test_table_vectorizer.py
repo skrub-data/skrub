@@ -27,6 +27,7 @@ from skrub._table_vectorizer import (
     _get_preprocessors,
 )
 from skrub._to_float import ToFloat
+from skrub.conftest import _POLARS_INSTALLED
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
