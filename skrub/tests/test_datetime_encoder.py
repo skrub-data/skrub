@@ -13,7 +13,7 @@ from skrub._datetime_encoder import (
     _is_date,
     _SplineEncoder,
 )
-from skrub._to_float32 import ToFloat32
+from skrub._to_float import ToFloat
 
 
 def date(df_module):
@@ -115,7 +115,7 @@ def expected_features(df_module):
     }
 
     res = df_module.make_dataframe(values)
-    return ApplyToCols(ToFloat32()).fit_transform(res)
+    return ApplyToCols(ToFloat()).fit_transform(res)
 
 
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):

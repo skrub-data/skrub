@@ -46,6 +46,7 @@ from ._tabular_pipeline import tabular_learner, tabular_pipeline
 from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
+from ._to_float import ToFloat
 
 with open(_Path(__file__).parent / "VERSION.txt") as _fh:
     __version__ = _fh.read().strip()
@@ -102,4 +103,5 @@ __all__ = [
     "config_context",
     "ApplyToCols",
     "ApplyToFrame",
+    "ToFloat",
 ]

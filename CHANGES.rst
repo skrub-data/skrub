@@ -37,6 +37,8 @@ Changes
   :class:`StandardScaler` for centering and scaling numerical features
   when linear models are used.
   :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
+- The transformer :class:`ToFloat`, previously called `ToFloat32`, is now public.
+  :pr:`1687` by :user:`Marie Sacksick <MarieSacksick>`.
 
 Bugfixes
 --------
