@@ -61,7 +61,7 @@ Result:
 0   A4   4       -1.0      -1.0
 1   A3   3        1.0       1.0
 
-Selectors can be used within the :class:`skrub.SelectCols` class, implementing `fit` and `transform`, as demoed below::
+Selectors can be used within the :class:`skrub.SelectCols` class, implementing ``fit`` and ``transform``, as demoed below::
 
   >>> from skrub import SelectCols
 

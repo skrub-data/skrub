@@ -233,7 +233,7 @@ class Choice(BaseChoice):
         {'logistic': 'linear', 'hgb': 'tree'}
         >>> estimator_kind.match({'logistic': 'linear'}, default='unknown').outcome_mapping
         {'logistic': 'linear', 'hgb': 'unknown'}
-        """  # noqa : E501
+        """  # noqa: E501
         _check_match_keys(
             outcomes=self.outcomes,
             match_keys=outcome_mapping.keys(),

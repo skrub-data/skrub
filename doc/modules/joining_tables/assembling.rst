@@ -30,7 +30,7 @@ In addition, skrub also enable more advanced analysis:
   Alternatively, it can aggregate the main table and then join it back onto itself.
 
 - :class:`AggTarget`: in some settings, one can derive powerful features from
-  the target `y` itself. AggTarget aggregates the target without risking data
+  the target ``y`` itself. AggTarget aggregates the target without risking data
   leakage, then joins the result back on the main table, similar to AggJoiner.
 
 - :class:`MultiAggJoiner`: extension of the :class:`AggJoiner` that joins multiple

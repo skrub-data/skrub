@@ -53,7 +53,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         )
     dataset = load_simple_dataset("employee_salaries", data_home)
 
-    id_split = 8000  # noqa
+    id_split = 8000
     if split == "train":
         dataset["employee_salaries"] = dataset["employee_salaries"][:id_split]
         dataset["X"] = dataset["X"][:id_split]
@@ -253,7 +253,7 @@ def fetch_credit_fraud(data_home=None, split="train"):
         )
     dataset = load_dataset_files("credit_fraud", data_home)
     #  obtained by a quantile: dataset.baskets['ID'].quantile(.66)
-    id_split = 76543  # noqa
+    id_split = 76543  # noqa: F841
     if split == "train":
         dataset["baskets"] = dataset["baskets"].query("ID <= @id_split")
         dataset["products"] = dataset["products"].query("basket_ID <= @id_split")
