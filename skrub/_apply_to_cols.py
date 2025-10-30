@@ -220,6 +220,10 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.
+
+    Columns that are not selected in the ``cols`` parameter are passed through
+    without modification.
+
     All columns not listed in ``cols`` remain unmodified in the output.
     Moreover, if ``allow_reject`` is ``True`` and the transformers'
     ``fit_transform`` raises a ``RejectColumn`` exception for a particular
