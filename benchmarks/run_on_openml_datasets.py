@@ -154,7 +154,7 @@ for type_id, problem, pipeline, metric in [
                 function=metric, tasks=[task_id], output_format="dataframe"
             )
             if len(evals) > 0:
-                percentiles = {p: np.percentile(evals.value, p) for p in {25, 50, 75}}
+                percentiles = {p: np.percentile(evals.value, p) for p in (25, 50, 75)}
                 logger.info(
                     f"OpenML scores on {len(evals)} runs (on the full dataset): "
                     + " ; ".join(
