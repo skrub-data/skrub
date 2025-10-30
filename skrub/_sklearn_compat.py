@@ -202,15 +202,15 @@ if sklearn_version < parse_version("1.5"):
     # extmath
     # fixes
     from sklearn.utils import (
-        _IS_32BIT,  # noqa: F401
-        _approximate_mode,  # noqa: F401
-        _in_unstable_openblas_configuration,  # noqa: F401
-        gen_batches,  # noqa: F401
-        gen_even_slices,  # noqa: F401
-        get_chunk_n_rows,  # noqa: F401
-        safe_sqr,  # noqa: F401
+        _IS_32BIT,
+        _approximate_mode,
+        _in_unstable_openblas_configuration,
+        gen_batches,
+        gen_even_slices,
+        get_chunk_n_rows,
+        safe_sqr,
     )
-    from sklearn.utils import _chunk_generator as chunk_generator  # noqa: F401
+    from sklearn.utils import _chunk_generator as chunk_generator
 
     _IS_WASM = platform.machine() in ["wasm32", "wasm64"]
     # indexing
@@ -220,22 +220,22 @@ if sklearn_version < parse_version("1.5"):
     # user interface
     # validation
     from sklearn.utils import (
-        _determine_key_type,  # noqa: F401
-        _get_column_indices,  # noqa: F401
-        _print_elapsed_time,  # noqa: F401
-        _safe_assign,  # noqa: F401
-        _safe_indexing,  # noqa: F401
-        _to_object_array,  # noqa: F401
-        axis0_safe_slice,  # noqa: F401
-        check_matplotlib_support,  # noqa: F401
-        check_pandas_support,  # noqa: F401
-        indices_to_mask,  # noqa: F401
-        is_scalar_nan,  # noqa: F401
-        resample,  # noqa: F401
-        safe_mask,  # noqa: F401
-        shuffle,  # noqa: F401
+        _determine_key_type,
+        _get_column_indices,
+        _print_elapsed_time,
+        _safe_assign,
+        _safe_indexing,
+        _to_object_array,
+        axis0_safe_slice,
+        check_matplotlib_support,
+        check_pandas_support,
+        indices_to_mask,
+        is_scalar_nan,
+        resample,
+        safe_mask,
+        shuffle,
     )
-    from sklearn.utils import _is_pandas_na as is_pandas_na  # noqa: F401
+    from sklearn.utils import _is_pandas_na as is_pandas_na
 else:
     # chunking
     from sklearn.utils._chunking import (
@@ -271,7 +271,7 @@ else:
     # optional dependencies
     from sklearn.utils._optional_dependencies import (  # noqa: F401
         check_matplotlib_support,
-        check_pandas_support,  # noqa: F401
+        check_pandas_support,
     )
 
     # user interface
@@ -576,6 +576,6 @@ else:
 ########################################################################################
 
 if sklearn_version < parse_version("1.7"):
-    from sklearn.utils._estimator_html_repr import _VisualBlock  # noqa: F401
+    from sklearn.utils._estimator_html_repr import _VisualBlock
 else:
     from sklearn.utils._repr_html.estimator import _VisualBlock  # noqa: F401
