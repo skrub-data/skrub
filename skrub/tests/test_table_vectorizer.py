@@ -1024,9 +1024,10 @@ def test_date_format(df_module):
     expected_to_list = sbd.to_list(expected["date"])
     assert transformed_to_list == expected_to_list
 
+
 def test_cleaner_empty_column_name():
     # non-regression test for issue https://github.com/skrub-data/skrub/issues/1490
-    df = pl.DataFrame({'': [1], 'b': [2], 'c': [""]})
+    df = pl.DataFrame({"": [1], "b": [2], "c": [""]})
     cleaner = Cleaner()
     cleaner.fit_transform(df)
     assert list(cleaner.all_processing_steps_.keys()) == df.columns
