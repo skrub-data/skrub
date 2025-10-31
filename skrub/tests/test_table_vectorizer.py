@@ -1024,12 +1024,10 @@ def test_date_format(df_module):
     assert transformed_to_list == expected_to_list
 
 
-pytest.mark.skipif(
+@pytest.mark.skipif(
     not _POLARS_INSTALLED,
     reason="This test requires polars to be installed",
 )
-
-
 def test_cleaner_empty_column_name():
     import polars as pl
 
