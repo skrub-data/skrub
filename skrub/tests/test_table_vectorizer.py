@@ -5,7 +5,6 @@ from datetime import datetime
 import joblib
 import numpy as np
 import pandas as pd
-import polars as pl
 import pytest
 import sklearn
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_raises
@@ -1025,7 +1024,15 @@ def test_date_format(df_module):
     assert transformed_to_list == expected_to_list
 
 
+pytest.mark.skipif(
+    not _POLARS_INSTALLED,
+    reason="This test requires polars to be installed",
+)
+
+
 def test_cleaner_empty_column_name():
+    import polars as pl
+
     # non-regression test for issue https://github.com/skrub-data/skrub/issues/1490
     df = pl.DataFrame({"": [1], "b": [2], "c": [""]})
     cleaner = Cleaner()
