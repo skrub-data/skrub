@@ -14,6 +14,12 @@ class DropUninformative(SingleColumnTransformer):
     Columns are considered "uninformative" if the fraction of missing values is larger
     than a threshold, if they contain one unique value, or if all values are unique.
 
+    When a column has too many null values (but not entirely null), it is replaced
+    by a missing indicator column instead of being dropped. This preserves information
+    about whether values were present or not while avoiding spending feature dimensions
+    on encoding the actual values. Columns that are entirely null are still dropped
+    (as the missing indicator would be constant).
+
     Parameters
     ----------
     drop_if_constant : bool, default=False
@@ -26,8 +32,14 @@ class DropUninformative(SingleColumnTransformer):
         lead to dropping columns that contain free-flowing text.
 
     drop_null_fraction : float or None, default=1.0
-        Drop columns with a fraction of missing values larger than threshold. If None,
-        keep the column even if all its values are missing.
+        Fraction of missing values above which the column is replaced by a missing
+        indicator (instead of being dropped), or dropped if entirely null. If
+        ``drop_null_fraction`` is set to ``1.0``, only entirely null columns are
+        dropped. If ``drop_null_fraction`` is a number in ``[0.0, 1.0)``, columns
+        with a fraction of nulls strictly larger than this threshold are replaced by
+        a missing indicator (or dropped if entirely null). If ``drop_null_fraction``
+        is ``None``, this check is disabled: no columns are replaced or dropped based
+        on the number of null values they contain.
 
     See Also
     --------
@@ -41,8 +53,10 @@ class DropUninformative(SingleColumnTransformer):
     A column is considered to be "uninformative" if one or more of the following
     issues are found:
 
-    - The fraction of missing values is larger than a certain fraction (by default,
-      all values must be null for the column to be dropped).
+    - The fraction of missing values is larger than a certain fraction. In this case,
+      if the column is entirely null, it is dropped. Otherwise, it is replaced by
+      a missing indicator column (a boolean/float32 column indicating positions
+      where values were missing).
     - The column includes only one unique value (the column is constant). Missing
       values are considered a separate value.
     - The number of unique values in the column is equal to the length of the
@@ -56,19 +70,44 @@ class DropUninformative(SingleColumnTransformer):
     >>> import pandas as pd
     >>> df = pd.DataFrame({"col1": [None, None, None]})
 
-    By default, only null columns are dropped:
+    By default, only entirely null columns are dropped. Columns with some nulls
+    are kept as-is:
 
     >>> du = DropUninformative()
     >>> du.fit_transform(df["col1"])
     []
 
-    It is also possible to drop constant columns, or specify a lower null fraction
-    threshold:
+    >>> df = pd.DataFrame({"col1": [1, None, None, None]})
+    >>> result = du.fit_transform(df["col1"])
+    >>> result
+    0      1.0
+    1      NaN
+    2      NaN
+    3      NaN
+    Name: col1, dtype: float64
+
+    Columns with many nulls (but not entirely null) are replaced by missing indicators
+    when using a lower threshold:
+
+    >>> df = pd.DataFrame({"col1": [1, None, None, None]})
+    >>> du = DropUninformative(drop_null_fraction=0.5)
+    >>> result = du.fit_transform(df["col1"])
+    >>> result
+    0    0.0
+    1    1.0
+    2    1.0
+    3    1.0
+    Name: col1, dtype: float32
+
+    With a lower threshold, more columns are replaced:
 
     >>> df = pd.DataFrame({"col1": [1, 2, None], "col2": ["const", "const", "const"]})
     >>> du = DropUninformative(drop_if_constant=True, drop_null_fraction=0.1)
     >>> du.fit_transform(df["col1"])
-    []
+    0    0.0
+    1    0.0
+    2    1.0
+    Name: col1, dtype: float32
     >>> du.fit_transform(df["col2"])
     []
 
@@ -111,13 +150,32 @@ class DropUninformative(SingleColumnTransformer):
                     " should be a number in the range [0, 1], or None."
                 )
 
+    def _should_replace_with_missing_indicator(self, column):
+        """Check if column should be replaced with missing indicator
+        instead of dropped."""
+        if self.drop_null_fraction is None:
+            return False
+        if self.drop_null_fraction == 1.0:
+            # With default threshold, only drop entirely null columns,
+            # don't replace others
+            return False
+        # For other thresholds, replace if fraction exceeds threshold
+        # but not entirely null
+        if self._null_count == 0:
+            return False
+        null_fraction = self._null_count / len(column)
+        return null_fraction > self.drop_null_fraction and self._null_count < len(
+            column
+        )
+
     def _drop_if_too_many_nulls(self, column):
         if self.drop_null_fraction == 1.0:
             return self._null_count == len(column)
         # No nulls found, or no threshold
         if self._null_count == 0 or self.drop_null_fraction is None:
             return False
-        return self._null_count / len(column) > self.drop_null_fraction
+        # Only drop if entirely null (otherwise we replace with missing indicator)
+        return self._null_count == len(column)
 
     def _drop_if_constant(self, column):
         if self.drop_if_constant:
@@ -147,8 +205,8 @@ class DropUninformative(SingleColumnTransformer):
         Returns
         -------
         column
-            The input column, or an empty list if the column is chosen to be
-            dropped.
+            The input column, a missing indicator column (boolean), or an empty list
+            if the column is chosen to be dropped.
         """
         del y
 
@@ -156,6 +214,10 @@ class DropUninformative(SingleColumnTransformer):
 
         # Count nulls
         self._null_count = sum(sbd.is_null(column))
+
+        self.replace_with_indicator_ = self._should_replace_with_missing_indicator(
+            column
+        )
 
         self.drop_ = any(
             check(column)
@@ -166,7 +228,12 @@ class DropUninformative(SingleColumnTransformer):
             ]
         )
 
-        self.all_outputs_ = [] if self.drop_ else [sbd.name(column)]
+        if self.replace_with_indicator_:
+            # Store original column name for the missing indicator
+            self.original_column_name_ = sbd.name(column)
+            self.all_outputs_ = [sbd.name(column)]
+        else:
+            self.all_outputs_ = [] if self.drop_ else [sbd.name(column)]
 
         return self.transform(column)
 
@@ -181,11 +248,23 @@ class DropUninformative(SingleColumnTransformer):
         Returns
         -------
         column
-            The input column, or an empty list if the column is chosen to be
-            dropped.
+            The input column, a missing indicator column (boolean), or an empty list
+            if the column is chosen to be dropped.
         """
         check_is_fitted(self, "all_outputs_")
 
         if self.drop_:
             return []
+
+        if self.replace_with_indicator_:
+            # Return a boolean column indicating missing values
+            # (1.0 for missing, 0.0 for present)
+            missing_mask = sbd.is_null(column)
+            # Convert boolean to float32 column
+            missing_indicator_values = sbd.to_float32(missing_mask)
+            missing_indicator = sbd.make_column_like(
+                column, missing_indicator_values, sbd.name(column)
+            )
+            return missing_indicator
+
         return column

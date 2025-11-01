@@ -4,6 +4,7 @@ Get the Wikipedia embeddings for feature augmentation.
 # Required for ignoring lines too long in the docstrings
 # flake8: noqa: E501
 
+import typing
 import urllib.request
 import warnings
 from dataclasses import dataclass
@@ -58,7 +59,7 @@ class DatasetAll:
     X: pd.DataFrame
     y: pd.Series
     path: Path
-    read_csv_kwargs: dict[str]
+    read_csv_kwargs: typing.Dict[str, typing.Any]
 
     def __eq__(self, other):
         """
@@ -96,7 +97,7 @@ class DatasetInfoOnly:
     source: str
     target: str
     path: Path
-    read_csv_kwargs: dict[str]
+    read_csv_kwargs: typing.Dict[str, typing.Any]
 
 
 def fetch_figshare(
