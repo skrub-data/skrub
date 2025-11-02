@@ -99,15 +99,16 @@ def _onehot_encode_categoricals(df: DataFrame) -> tuple[DataFrame, dict[int, lis
         one_hot_cols = None
         if sbd.is_duration(col):
             col = sbd.total_seconds(col)
-        if sbd.is_any_date(col):
-            raise Exception("Datetime features not supported for.")
-        if sbd.is_numeric(col):
+        if sbd.is_numeric(col) or sbd.is_any_date(col):
             col = sbd.to_float32(col)
             if sbd.n_unique(col) >= _CATEGORICAL_THRESHOLD:
                 new_cols.append(col.to_numpy().reshape(-1, 1))
             else:
                 # OneHotEncoder requires numeric values to be sorted.
                 col = np.sort(col.to_numpy()).reshape(-1, 1)
+                if col.dtype != np.object_:
+                    finfo = np.finfo(col.dtype)
+                    col = np.clip(col, finfo.min, finfo.max)
                 one_hot_cols = one_hot_encoder.fit_transform(col)
         else:
             col = sbd.to_string(col).to_numpy().reshape(-1, 1)
