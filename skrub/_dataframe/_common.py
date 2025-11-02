@@ -94,6 +94,7 @@ __all__ = [
     "is_null",
     "has_nulls",
     "drop_nulls",
+    "drop_columns_containing",
     "fill_nulls",
     "n_unique",
     "unique",
@@ -1385,6 +1386,23 @@ def _select_rows_polars(obj, idx):
         # of columns to list of row indices at some point.
         return obj.head(0)
     return obj[idx]
+
+
+@dispatch
+def drop_columns_containing(df, substring):
+    raise_dispatch_unregistered_type(df)
+
+
+@drop_columns_containing.specialize("pandas")
+def _drop_columns_containing_pandas(df, substring):
+    cols_to_keep = [col for col in df.columns if substring not in col]
+    return df[cols_to_keep]
+
+
+@drop_columns_containing.specialize("polars")
+def _drop_columns_containing_polars(df, substring):
+    cols_to_keep = [col for col in df.columns if substring not in col]
+    return df.select(cols_to_keep)
 
 
 @dispatch
