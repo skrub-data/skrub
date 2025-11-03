@@ -3,6 +3,7 @@ import re
 import numpy as np
 import pandas as pd
 import pytest
+from packaging.version import parse
 from pandas.testing import assert_index_equal
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import FunctionTransformer
@@ -10,7 +11,7 @@ from sklearn.preprocessing import FunctionTransformer
 from skrub import SelectCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._on_subframe import OnSubFrame
+from skrub._apply_to_frame import ApplyToFrame
 
 
 class Dummy(BaseEstimator):
@@ -34,7 +35,7 @@ class Dummy(BaseEstimator):
 def test_on_subframe(df_module, use_fit_transform):
     X = df_module.make_dataframe({"a": [1.0, 2.2], "b": [3.0, 4.4], "c": [5.0, 6.6]})
     y = [0.0, 1.0]
-    transformer = OnSubFrame(Dummy(), ["a", "c"])
+    transformer = ApplyToFrame(Dummy(), ["a", "c"])
     if use_fit_transform:
         out = transformer.fit_transform(X, y)
     else:
@@ -53,7 +54,7 @@ def test_on_subframe(df_module, use_fit_transform):
 
 def test_empty_selection(df_module, use_fit_transform):
     df = df_module.example_dataframe
-    transformer = OnSubFrame(Dummy(), ())
+    transformer = ApplyToFrame(Dummy(), ())
     if use_fit_transform:
         out = transformer.fit_transform(df)
     else:
@@ -62,13 +63,28 @@ def test_empty_selection(df_module, use_fit_transform):
 
 
 def test_empty_output(df_module, use_fit_transform):
+    if df_module.name == "polars":
+        pytest.xfail("Polars need at least one array to concatenate.")
     df = df_module.example_dataframe
-    transformer = OnSubFrame(SelectCols(()))
+    transformer = ApplyToFrame(SelectCols(()))
     if use_fit_transform:
         out = transformer.fit_transform(df)
     else:
         out = transformer.fit(df).transform(df)
-    df_module.assert_frame_equal(out, s.select(df, ()))
+    # Selecting no columns to have an empty dataframe
+    selected = s.select(df, ())
+
+    # I need to add a special case for pandas 3.0 here because the type of the
+    # empty dataframe with pandas 3.0 is different from that of out, but here
+    # we don't care about that dtype.
+    if sbd.is_pandas(df) and parse(pd.__version__).major >= parse("3.0.0").major:
+        out = sbd.to_numpy(out)
+        selected = sbd.to_numpy(selected)
+        # With pandas 3.0, selected has type "string" rather than "empty"
+        assert out.shape == selected.shape
+        assert (out == selected).all()
+    else:
+        df_module.assert_frame_equal(out, selected)
 
 
 def _to_XXX(names):
@@ -78,7 +94,7 @@ def _to_XXX(names):
 
 def test_keep_original(df_module, use_fit_transform):
     df = df_module.make_dataframe({"A": [1], "B": [2]})
-    transformer = OnSubFrame(FunctionTransformer(), keep_original=True)
+    transformer = ApplyToFrame(FunctionTransformer(), keep_original=True)
 
     if use_fit_transform:
         out = transformer.fit_transform(df)
@@ -96,7 +112,7 @@ class NumpyOutput(BaseEstimator):
 
 def test_wrong_transformer_output_type(pd_module):
     with pytest.raises(TypeError, match=".*fit_transform returned a result of type"):
-        OnSubFrame(NumpyOutput()).fit_transform(pd_module.example_dataframe)
+        ApplyToFrame(NumpyOutput()).fit_transform(pd_module.example_dataframe)
 
 
 class ResetsIndex(BaseEstimator):
@@ -110,7 +126,7 @@ class ResetsIndex(BaseEstimator):
 @pytest.mark.parametrize("cols", [(), ("a",), ("a", "b")])
 def test_output_index(cols):
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
-    transformer = OnSubFrame(ResetsIndex(), cols=cols)
+    transformer = ApplyToFrame(ResetsIndex(), cols=cols)
     assert_index_equal(transformer.fit_transform(df).index, df.index)
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
     assert_index_equal(transformer.transform(df).index, df.index)

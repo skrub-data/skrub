@@ -4,6 +4,9 @@ import json
 import numbers
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 from .. import _config
 from .. import _dataframe as sbd
 from ._html import to_html
@@ -18,9 +21,12 @@ def _check_max_cols(max_plot_columns, max_association_columns):
         if max_plot_columns is not None
         else _config.get_config()["max_plot_columns"]
     )
-    if not (isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0):
+    if (max_plot_columns != "all") and not (
+        isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0
+    ):
         raise ValueError(
-            f"'max_plot_columns' must be a positive scalar, got {max_plot_columns!r}."
+            "'max_plot_columns' must be a positive scalar or 'all', got"
+            f" {max_plot_columns!r}."
         )
 
     max_association_columns = (
@@ -28,12 +34,12 @@ def _check_max_cols(max_plot_columns, max_association_columns):
         if max_association_columns is not None
         else _config.get_config()["max_association_columns"]
     )
-    if not (
+    if (max_association_columns != "all") and not (
         isinstance(max_association_columns, numbers.Real)
         and max_association_columns >= 0
     ):
         raise ValueError(
-            "'max_association_columns' must be a positive scalar, got "
+            "'max_association_columns' must be a positive scalar or 'all', got "
             f"{max_association_columns!r}."
         )
 
@@ -43,9 +49,9 @@ def _check_max_cols(max_plot_columns, max_association_columns):
 class TableReport:
     r"""Summarize the contents of a dataframe.
 
-    This class summarizes a dataframe, providing information such as the type
-    and summary statistics (mean, number of missing values, etc.) for each
-    column.
+    This class summarizes a dataframe or numpy array, providing information such as
+    the type and summary statistics (mean, number of missing values, etc.) for each
+    column. Numpy arrays are converted to pandas DataFrame or Series.
 
     Parameters
     ----------
@@ -76,7 +82,7 @@ class TableReport:
     max_plot_columns : int, default=30
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If None, all columns will be plotted.
+        the plots will not be generated. If "all", all columns will be plotted.
 
         To avoid having to set this parameter at each call of ``TableReport``, you can
         change the default using :func:`set_config`:
@@ -93,7 +99,7 @@ class TableReport:
     max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
         If the number of columns in the dataframe is greater than this value,
-        the associations will not be computed. If None, the associations
+        the associations will not be computed. If "all", the associations
         for all columns will be computed.
 
         To avoid having to set this parameter at each call of ``TableReport``, you can
@@ -183,6 +189,21 @@ class TableReport:
         max_plot_columns=None,
         max_association_columns=None,
     ):
+        if isinstance(dataframe, np.ndarray):
+            if dataframe.ndim == 1:
+                dataframe = pd.Series(dataframe, name="0")
+
+            elif dataframe.ndim == 2:
+                dataframe = pd.DataFrame(
+                    dataframe, columns=[str(i) for i in range(dataframe.shape[1])]
+                )
+
+            else:
+                raise ValueError(
+                    f"Input NumPy array has {dataframe.ndim} dimensions. "
+                    "TableReport only supports 1D and 2D arrays"
+                )
+
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
             "order_by": order_by,
@@ -206,7 +227,7 @@ class TableReport:
         """Put the report in minimal mode.
 
         This is meant to be called by other skrub functions, such as the
-        expressions  ``__repr__``.
+        DataOps  ``__repr__``.
 
         In the minimal mode, the associations and distributions tabs are not
         shown and the plots and associations are not computed.
@@ -232,10 +253,10 @@ class TableReport:
     @functools.cached_property
     def _summary(self):
         with_plots = (
-            self.max_plot_columns is None or self.max_plot_columns >= self.n_columns
+            self.max_plot_columns == "all" or self.max_plot_columns >= self.n_columns
         )
         with_associations = (
-            self.max_association_columns is None
+            self.max_association_columns == "all"
             or self.max_association_columns >= self.n_columns
         )
 

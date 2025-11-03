@@ -1,16 +1,6 @@
 :html_theme.sidebar_secondary.remove:
 
-{% if module == "skrub" -%}
-{%- set module_hook = "skrub" -%}
-{%- elif module.startswith("skrub.") -%}
-{%- set module_hook = module[6:] -%}
-{%- else -%}
-{%- set module_hook = None -%}
-{%- endif -%}
-
-{% if module_hook %}
-.. _{{ module_hook }}_ref:
-{% endif %}
+.. _{{ module }}_ref:
 
 .. title:: {{ module }}
 

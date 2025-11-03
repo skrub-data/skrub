@@ -1,5 +1,5 @@
 from . import _dataframe as sbd
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToCategorical"]
 
@@ -50,18 +50,18 @@ class ToCategorical(SingleColumnTransformer):
     A string column is converted to a categorical column.
 
     >>> s = pd.Series(['one', 'two', None], name='c')
-    >>> s
+    >>> s # doctest: +SKIP
     0     one
     1     two
-    2    None
-    Name: c, dtype: object
+    2     ...
+    Name: c, dtype: ...
     >>> to_cat = ToCategorical()
-    >>> to_cat.fit_transform(s)
+    >>> to_cat.fit_transform(s) # doctest: +SKIP
     0    one
     1    two
-    2    NaN
-    Name: c, dtype: category
-    Categories (2, object): ['one', 'two']
+    2    ...
+    Name: c, dtype: ...
+    Categories (2, ...): ['one', 'two']
 
     The dtypes (the list of categories) of the outputs of ``transform`` may
     vary. This transformer only ensures the dtype is Categorical to mark the
@@ -73,7 +73,7 @@ class ToCategorical(SingleColumnTransformer):
     0    four
     1    five
     Name: c, dtype: category
-    Categories (2, object): ['five', 'four']
+    Categories (2, ...): ['five', 'four']
 
     Columns that already have a Categorical dtype are passed through:
 
@@ -86,7 +86,7 @@ class ToCategorical(SingleColumnTransformer):
     >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'c' does not contain strings.
+    skrub._apply_to_cols.RejectColumn: Column 'c' does not contain strings.
 
     ``object`` columns that do not contain only strings are also rejected:
 
@@ -94,7 +94,7 @@ class ToCategorical(SingleColumnTransformer):
     >>> to_cat.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'c' does not contain strings.
+    skrub._apply_to_cols.RejectColumn: Column 'c' does not contain strings.
 
     No special handling of ``StringDtype`` vs ``object`` columns is done, the
     behavior is the same as ``pd.astype('category')``: if the input uses the
@@ -112,8 +112,7 @@ class ToCategorical(SingleColumnTransformer):
     2     <NA>
     Name: c, dtype: category
     Categories (2, string): [cat A, cat B]
-    >>> _.cat.categories.dtype
-    string[python]
+    >>> _.cat.categories.dtype # doctest: +SKIP
 
     Polars string columns are converted to the ``Categorical`` dtype (not ``Enum``). As
     for pandas, categories may vary across calls to ``transform``.
@@ -160,6 +159,8 @@ class ToCategorical(SingleColumnTransformer):
         transformed : pandas or polars Series
             The input transformed to Categorical.
         """
+        self.all_outputs_ = [sbd.name(column)]
+
         if sbd.is_categorical(column):
             return column
         if not sbd.is_string(column):

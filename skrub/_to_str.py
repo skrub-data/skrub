@@ -1,5 +1,5 @@
 from . import _dataframe as sbd
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToStr"]
 
@@ -89,15 +89,15 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.fit_transform(pd.Series([1.1, 2.2], name='s'))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'float64' to strings.
+    skrub._apply_to_cols.RejectColumn: Refusing to convert 's' with dtype 'float64' to strings.
     >>> to_str.fit_transform(pd.Series(['a', 'b'], name='s', dtype='category'))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'category' to strings.
+    skrub._apply_to_cols.RejectColumn: Refusing to convert 's' with dtype 'category' to strings.
     >>> to_str.fit_transform(pd.to_datetime(pd.Series(['2020-02-02'])))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert None with dtype 'datetime64[...]' to strings.
+    skrub._apply_to_cols.RejectColumn: Refusing to convert None with dtype 'datetime64[...]' to strings.
 
     However, once a column has been accepted, the output of ``transform`` will
     always be strings:
@@ -163,11 +163,11 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.fit_transform(pl.Series('s', ['a', 'b'], dtype=pl.Enum(['a', 'b'])))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'Enum(categories=['a', 'b'])' to strings.
+    skrub._apply_to_cols.RejectColumn: Refusing to convert 's' with dtype 'Enum(categories=['a', 'b'])' to strings.
     >>> to_str.fit_transform(pl.Series('s', ['2020-02-01']).cast(pl.Date))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'Date' to strings.
+    skrub._apply_to_cols.RejectColumn: Refusing to convert 's' with dtype 'Date' to strings.
 
     If ``convert_category=True``, Categorical columns are converted:
     >>> to_str = ToStr(convert_category=True)
@@ -193,6 +193,7 @@ class ToStr(SingleColumnTransformer):
 
     def fit_transform(self, column, y=None):
         del y
+        self.all_outputs_ = [sbd.name(column)]
         if (
             (sbd.is_categorical(column) and not self.convert_category)
             or sbd.is_numeric(column)

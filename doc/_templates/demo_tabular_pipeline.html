@@ -1,0 +1,118 @@
+<div class="container-fluid" style="max-width: 58rem;">
+    <div class="sd-card card-landing">
+      <div class="card-body">
+        <details>
+          <summary>Given, a complex dataframe
+            <code class="docutils literal notranslate"><span
+class="pre">df</span></code>: <i>(expand for full code)</i></summary>
+      <div class="doctest highlight-default notranslate">
+        <div class="highlight">
+<pre style="overflow-x: auto;">
+<span class="kn">from</span> <span class="nn">skrub.datasets</span> <span class="kn">import</span> <span class="n">fetch_employee_salaries</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">fetch_employee_salaries</span><span class="p">()</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">X</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">y</span>
+<span class="n">df</span></pre>
+        </div>
+      </div>
+    </details>
+<div class="output_subarea output_html rendered_html output_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>gender</th>
+      <th>department</th>
+      <th>department_name</th>
+      <th>division</th>
+      <th>assignment_category</th>
+      <th>employee_position_title</th>
+      <th>date_first_hired</th>
+      <th>year_first_hired</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>M</td>
+      <td>FRS</td>
+      <td>Fire and Rescue Services</td>
+      <td>Third Battalion - Administration</td>
+      <td>Fulltime-Regular</td>
+      <td>Fire/Rescue Lieutenant</td>
+      <td>06/07/2004</td>
+      <td>2004</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>M</td>
+      <td>HHS</td>
+      <td>Department of Health and Human Services</td>
+      <td>Environmental Health and Regulatory Services</td>
+      <td>Fulltime-Regular</td>
+      <td>Environmental Health Specialist III</td>
+      <td>02/20/2007</td>
+      <td>2007</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>9226</th>
+      <td>M</td>
+      <td>DGS</td>
+      <td>Department of General Services</td>
+      <td>Facilities Maintenance</td>
+      <td>Fulltime-Regular</td>
+      <td>Master Plumber</td>
+      <td>03/26/2001</td>
+      <td>2001</td>
+    </tr>
+    <tr>
+      <th>9227</th>
+      <td>F</td>
+      <td>HHS</td>
+      <td>Department of Health and Human Services</td>
+      <td>Infants and Toddlers</td>
+      <td>Fulltime-Regular</td>
+      <td>Program Specialist II</td>
+      <td>03/25/2013</td>
+      <td>2013</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+      <div class="doctest highlight-default notranslate">
+        <div class="highlight">
+<pre style="overflow-x: auto;"><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">cross_val_score</span>
+<span class="kn">from</span> <span class="nn">skrub</span> <span class="kn">import</span> <span class="n">tabular_pipeline</span>
+<span class="n">cross_val_score</span><span class="p">(</span><span class="n">tabular_pipeline</span><span class="p">(</span><span class="s1">&#39;regressor&#39;</span><span class="p">),</span> </span><span class="n">df</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></pre>
+        </div>
+      </div>
+<pre><span class="sx">array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])</span></pre>
+    </div>
+  </div>
+</div>
