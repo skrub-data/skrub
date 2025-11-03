@@ -287,4 +287,6 @@ def _add_numeric_summary(
 
 
 def _add_is_sorted(summary, column):
-    summary["is_ordered"] = sbd.is_sorted(column)
+    summary["is_ordered"] = sbd.is_sorted(column, descending=False) or sbd.is_sorted(
+        column, descending=True
+    )

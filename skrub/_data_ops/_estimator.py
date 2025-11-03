@@ -9,7 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 from .. import _dataframe as sbd
 from .. import _join_utils
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply, check_subsampled_X_y_shape
+from ._data_ops import Apply, DataOp, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     eval_choices,
@@ -415,8 +415,6 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         return describe_params(eval_choices(self.data_op), choice_graph(self.data_op))
 
 
-# Xy_pipeline because it is an actual scikit-learn pippeline rather than
-# a skrub learner
 def _to_Xy_pipeline(learner, environment):
     return learner.__skrub_to_Xy_pipeline__(environment)
 
@@ -448,8 +446,11 @@ class _XyPipelineMixin:
         first = find_first_apply(self.data_op)
         if first is None:
             return "transformer"
+        estimator = get_default(first._skrub_impl.estimator)
+        if isinstance(estimator, DataOp):
+            return "transformer"
         try:
-            return get_default(first._skrub_impl.estimator)._estimator_type
+            return estimator._estimator_type
         except AttributeError:
             return "transformer"
 
@@ -460,7 +461,13 @@ class _XyPipelineMixin:
             first = find_first_apply(self.data_op)
             if first is None:
                 return _default_sklearn_tags()
-            return get_default(first._skrub_impl.estimator).__sklearn_tags__()
+            estimator = get_default(first._skrub_impl.estimator)
+            if isinstance(estimator, DataOp):
+                return _default_sklearn_tags()
+            try:
+                return estimator.__sklearn_tags__()
+            except AttributeError:
+                return _default_sklearn_tags()
 
     @property
     def classes_(self):

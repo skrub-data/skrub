@@ -5,11 +5,12 @@ from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils.fixes import parse_version
 
 from ._datetime_encoder import DatetimeEncoder
 from ._sklearn_compat import get_tags
+from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_categorical import ToCategorical
@@ -99,6 +100,11 @@ def tabular_pipeline(estimator, *, n_jobs=None):
         The high cardinality encoder has been changed from
         :class:`~skrub.MinHashEncoder` to :class:`~skrub.StringEncoder`.
 
+    .. versionchanged:: 0.7.0
+        The :class:`~skrub.SquashingScaler` with `max_absolute_value=5` is now used instead of
+        :class:`~sklearn.preprocessing.StandardScaler` for centering and scaling
+        numerical features when using linear models.
+
     Parameters
     ----------
     estimator : {"regressor", "regression", "classifier", "classification"} or sklearn.base.BaseEstimator
@@ -136,7 +142,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     - An optional :obj:`~sklearn.impute.SimpleImputer` imputes missing values by their
       mean and adds binary columns that indicate which values were missing. This step is
       only added if the ``estimator`` cannot handle missing values itself.
-    - An optional :obj:`~sklearn.preprocessing.StandardScaler` centers and rescales the
+    - An optional :obj:`~skrub.SquashingScaler` centers and rescales the
       data. This step is not added (because it is unnecessary) when the ``estimator`` is
       a tree ensemble such as random forest or gradient boosting.
     - The last step is the provided ``estimator``.
@@ -197,7 +203,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     >>> y = [0, 1, 0, 1]
     >>> X
        last_visit   medication insulin_prescriptions  fasting_glucose
-    0  2020-01-02         None                   N/A               35
+    0  2020-01-02          ...                   N/A               35
     1  2021-04-01    metformin                    13              140
     2  2024-12-05  paracetamol                     0               44
     3  2023-08-10   gliclazide                    17              137
@@ -215,7 +221,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('standardscaler', StandardScaler()),
+                    ('squashingscaler', SquashingScaler(max_absolute_value=5)),
                     ('logisticregression', LogisticRegression())])
 
     By applying only the first pipeline step we can see the transformed data that is
@@ -235,7 +241,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     Pipeline(steps=[('tablevectorizer',
                     TableVectorizer(datetime=DatetimeEncoder(periodic_encoding='spline'))),
                     ('simpleimputer', SimpleImputer(add_indicator=True)),
-                    ('standardscaler', StandardScaler()),
+                    ('squashingscaler', SquashingScaler(max_absolute_value=5)),
                     ('logisticregression', LogisticRegression())])
 
     For a :obj:`~sklearn.linear_model.LogisticRegression`, we get:
@@ -247,7 +253,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     - A :obj:`~sklearn.impute.SimpleImputer`, as the
       :obj:`~sklearn.linear_model.LogisticRegression` cannot handle missing values.
 
-    - A :obj:`~sklearn.preprocessing.StandardScaler` for centering and standard scaling
+    - A :obj:`~skrub.SquashingScaler` for centering and scaling
       numerical features.
 
     On the other hand, For the :obj:`~sklearn.ensemble.HistGradientBoostingClassifier`
@@ -331,6 +337,6 @@ def tabular_pipeline(estimator, *, n_jobs=None):
     if not get_tags(estimator).input_tags.allow_nan:
         steps.append(SimpleImputer(add_indicator=True))
     if not isinstance(estimator, _TREE_ENSEMBLE_CLASSES):
-        steps.append(StandardScaler())
+        steps.append(SquashingScaler(max_absolute_value=5))
     steps.append(estimator)
     return make_pipeline(*steps)

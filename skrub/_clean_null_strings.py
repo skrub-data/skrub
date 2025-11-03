@@ -158,12 +158,12 @@ class CleanNullStrings(SingleColumnTransformer):
     In both examples above, the column can be converted to numbers by
     ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``:
 
-    >>> from skrub._to_float32 import ToFloat32
-    >>> ToFloat32().fit_transform(s)
+    >>> from skrub._to_float import ToFloat
+    >>> ToFloat().fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._apply_to_cols.RejectColumn: Could not convert column 's' to numbers.
-    >>> ToFloat32().fit_transform(cleaner.fit_transform(s))
+    >>> ToFloat().fit_transform(cleaner.fit_transform(s))
     0    1.1
     1    2.2
     2    NaN

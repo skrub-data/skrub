@@ -1,23 +1,25 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "skrub"
-dynamic = ["version", "readme"]
+dynamic = ["version"]
 description = "Machine learning with dataframes"
+readme = "README.rst"
 authors = [
-    {name = "Riccardo Cappuzzo"},
-    {name = "Jerome Dockes"},
-    {name = "Guillaume Lemaitre"},
-    {name = "Vincent Maladiere"},
-    {name = "Gael Varoquaux"},
+  { name = "Riccardo Cappuzzo" },
+  { name = "Jerome Dockes" },
+  { name = "Guillaume Lemaitre" },
+  { name = "Vincent Maladiere" },
+  { name = "Gael Varoquaux" },
 ]
+license = "BSD-3-Clause"
+license-files = ["LICENSE.txt"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -29,54 +31,53 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = [
-    "numpy>=1.23.5",
-    "pandas>=1.5.3",
-    "scikit-learn>=1.2.1",
-    "scipy>=1.9.3",
-    "jinja2>=3.1.2",
-    "matplotlib>=3.4.3",
-    "requests>=2.25.0",
-    "pydot",
+  "numpy>=1.23.5",
+  "pandas>=1.5.3",
+  "scikit-learn>=1.2.1",
+  "scipy>=1.9.3",
+  "jinja2>=3.1.2",
+  "matplotlib>=3.4.3",
+  "requests>=2.25.0",
+  "pydot",
 ]
 
 [tool.setuptools.dynamic]
 version = { file = "skrub/VERSION.txt" }
-readme = { file = "README.rst" }
 
 [project.optional-dependencies]
 dev = [
-    "ipykernel",
-    "ipython",
-    "jupyterlab",
+  "ipykernel",
+  "ipython",
+  "jupyterlab",
 
-    # doc
-    "jupyterlite-sphinx",
-    "jupyterlite-pyodide-kernel",
-    "numpydoc",
-    "pydata-sphinx-theme",
-    "seaborn",
-    "sphinx",
-    "sphinx-copybutton",
-    "sphinx-gallery",
-    "sphinxext-opengraph",
-    "sphinx-autosummary-accessors",
-    "statsmodels",
+  # doc
+  "jupyterlite-sphinx",
+  "jupyterlite-pyodide-kernel",
+  "numpydoc",
+  "pydata-sphinx-theme",
+  "seaborn",
+  "sphinx",
+  "sphinx-copybutton",
+  "sphinx-gallery",
+  "sphinxext-opengraph",
+  "sphinx-autosummary-accessors",
+  "statsmodels",
 
-    # lint
-    "black==23.3.0",
-    "ruff==0.4.8",
-    "pre-commit",
+  # lint
+  "black==23.3.0",
+  "ruff==0.4.8",
+  "pre-commit",
 
-    # test
-    "pytest",
-    "pytest-cov",
-    "pytest-xdist",
+  # test
+  "pytest",
+  "pytest-cov",
+  "pytest-xdist",
 
-    # optional
-    "pyarrow",
-    "polars",
-    "plotly",
-    "optuna",
+  # optional
+  "pyarrow",
+  "polars",
+  "plotly",
+  "optuna",
 ]
 transformers = [
     "sentence-transformers",
@@ -90,7 +91,7 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 [tool.setuptools]
 packages = ["skrub"]
 
-[tool.pixi.project]
+[tool.pixi.workspace]
 channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
@@ -172,6 +173,31 @@ polars = "==0.20.15"
 plotly = "*"
 optuna = "*"
 
+[tool.pixi.feature.nightly-dependencies.pypi-options]
+# Get the nightly of as many dependencies as possible
+extra-index-urls = [
+  # scikit-learn, numpy, pandas...
+  "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",
+  # pyarrow
+  "https://pypi.fury.io/arrow-nightlies",
+]
+
+[tool.pixi.feature.nightly-dependencies.pypi-dependencies]
+# Have to repeat dependencies here because otherwise pixi pulls from conda channels
+# rather than PyPI indexes
+skrub = { path = ".", editable = true }
+numpy = "*"
+pandas = "*"
+scikit-learn = "*"
+scipy = "*"
+jinja2 = "*"
+matplotlib = "*"
+pydot = "*"
+requests = "*"
+pyarrow = "*"
+polars = "*"
+plotly = "*"
+
 [tool.pixi.feature.polars-without-pyarrow.dependencies]
 polars = "*"
 plotly = "*"
@@ -215,13 +241,21 @@ doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
 ci-py309-min-deps = ["py309", "min-dependencies", "test"]
-ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
+ci-py309-min-optional-deps = [
+  "py309",
+  "min-dependencies",
+  "min-optional-dependencies",
+  "test",
+]
 ci-py311-transformers = ["py311", "transformers", "test"]
 ci-py312-latest-deps = ["py312", "test"]
 ci-py312-latest-optional-deps = ["py312", "optional", "test"]
 ci-py313-latest-deps = ["py313", "test"]
 ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
 ci-py313-latest-optional-deps = ["py313", "optional", "test"]
+
+# no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
+ci-nightly-deps = { no-default-feature = true, features = [ "py313", "nightly-dependencies", "test" ] }
 
 [tool.black]
 line-length = 88
@@ -245,60 +279,60 @@ exclude = '''
 # max line length for black
 line-length = 88
 target-version = "py38"
-exclude=[
-    ".git",
-    "__pycache__",
-    "dist",
-    "doc/_build",
-    "doc/auto_examples",
-    "build",
+exclude = [
+  ".git",
+  "__pycache__",
+  "dist",
+  "doc/_build",
+  "doc/auto_examples",
+  "build",
 ]
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
 select = ["E", "F", "W", "I"]
-ignore=[
-    # space before : (needed for how black formats slicing)
-    "E203",
-    # do not assign a lambda expression, use a def
-    "E731",
-    # do not use variables named 'l', 'O', or 'I'
-    "E741",
+ignore = [
+  # space before : (needed for how black formats slicing)
+  "E203",
+  # do not assign a lambda expression, use a def
+  "E731",
+  # do not use variables named 'l', 'O', or 'I'
+  "E741",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 # It's fine not to put the import at the top of the file in the examples
 # folder.
-"examples/*"=["E402"]
-"doc/conf.py"=["E402"]
+"examples/*" = ["E402"]
+"doc/conf.py" = ["E402"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    # Turn deprecation warnings into errors
-    "error::FutureWarning",
-    "error::DeprecationWarning",
+  # Turn deprecation warnings into errors
+  "error::FutureWarning",
+  "error::DeprecationWarning",
 
-    # Ignore warning from np.in1d since the future behavior is already the desired
-    # behavior. TODO remove when numpy min version >= 1.25.
-    'ignore:elementwise\ comparison\ failed:FutureWarning',
-    # TODO remove when pandas min version >= 2.2.0
-    'ignore:.*utcfromtimestamp\(\) is deprecated.*:DeprecationWarning',
-    # TODO remove when joblib min version >= 1.4.0
-    'ignore:.*ast\.Num is deprecated.*:DeprecationWarning',
-    # TODO remove when joblib min version >= 1.4.0
-    'ignore:.*ast\.NameConstant is deprecated.*:DeprecationWarning',
-    # TODO remove when joblib min version >= 1.4.0
-    'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
-    # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
-    'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
-    # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
-    # should be addressed in pandas
-    'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
-    'ignore:.*distutils Version classes are deprecated.*',
-    'ignore:.*`resume_download` is deprecated.*',
-    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
-    'ignore:The current process just got forked.*',
-    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+  # Ignore warning from np.in1d since the future behavior is already the desired
+  # behavior. TODO remove when numpy min version >= 1.25.
+  'ignore:elementwise\ comparison\ failed:FutureWarning',
+  # TODO remove when pandas min version >= 2.2.0
+  'ignore:.*utcfromtimestamp\(\) is deprecated.*:DeprecationWarning',
+  # TODO remove when joblib min version >= 1.4.0
+  'ignore:.*ast\.Num is deprecated.*:DeprecationWarning',
+  # TODO remove when joblib min version >= 1.4.0
+  'ignore:.*ast\.NameConstant is deprecated.*:DeprecationWarning',
+  # TODO remove when joblib min version >= 1.4.0
+  'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
+  # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
+  'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
+  # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
+  # should be addressed in pandas
+  'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
+  'ignore:.*distutils Version classes are deprecated.*',
+  'ignore:.*`resume_download` is deprecated.*',
+  'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+  'ignore:The current process just got forked.*',
+  'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"

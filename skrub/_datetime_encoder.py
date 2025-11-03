@@ -216,7 +216,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     0       Monday = 1
     1              NaN
     2    Wednesday = 3
-    Name: login, dtype: object
+    Name: login, dtype: ...
     >>> login.dt.day_of_week
     0    0.0
     1    NaN
@@ -253,7 +253,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> s
     0    2024-04-14
     1    2024-05-15
-    Name: birthday, dtype: object
+    Name: birthday, dtype: ...
     >>> DatetimeEncoder().fit_transform(s)
     Traceback (most recent call last):
         ...

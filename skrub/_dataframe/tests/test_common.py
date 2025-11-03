@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_array_equal
+from packaging.version import parse
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 import skrub
@@ -92,7 +93,17 @@ def test_is_column(df_module):
 
 def test_to_list(df_module):
     col = ns.col(df_module.example_dataframe, "str-col")
-    assert ns.to_list(col) == ["one", None, "three", "four"]
+    if ns.is_pandas(col) and parse(pd.__version__).major >= parse("3.0.0").major:
+        # In pandas 3.0, nulls in string dtypes have type np.nan, but nullable dtypes
+        # become None
+        # To avoid adding even more conditions I'm checking all elements one by one
+        #
+        to_list = ns.to_list(col)
+        assert to_list[0] == "one"
+        assert pd.isna(to_list[1])
+        assert to_list[2:] == ["three", "four"]
+    else:
+        assert ns.to_list(col) == ["one", None, "three", "four"]
 
 
 def test_to_numpy(df_module, example_data_dict):
@@ -537,6 +548,16 @@ def test_is_string(df_module):
         assert not ns.is_string(ns.col(df, col))
 
 
+def test_sentinel_is_string_pandas_3(df_module):
+    if df_module.name != "pandas":
+        return
+    pd_version = parse(pd.__version__)
+    if pd_version.major < parse("3.0.0").major:
+        return
+    if not pd_version.is_prerelease:
+        pytest.fail("This test should fail when pandas 3.x is released.")
+
+
 def test_to_string(df_module):
     s = ns.to_string(df_module.make_column("_", list(range(5))))
     assert ns.is_string(s)
@@ -759,7 +780,11 @@ def test_value_counts(df_module):
     counts = ns.sort(counts, by="value")
     expected = df_module.make_dataframe({"value": ["a", "b"], "count": [3, 1]})
     expected = ns.sort(expected, by="value")
-    df_module.assert_frame_equal(counts, expected)
+    if ns.is_pandas(col) and parse(pd.__version__).major >= parse("3.0.0").major:
+        # Added to avoid a failing type check since we don't care about dtype here
+        assert (ns.to_numpy(expected) == ns.to_numpy(counts)).all()
+    else:
+        df_module.assert_frame_equal(counts, expected)
 
 
 @pytest.mark.parametrize("q", [0.0, 0.3, 1.0])
@@ -986,3 +1011,34 @@ def test_abs(df_module):
 def test_total_seconds(df_module):
     s = df_module.make_column("", [timedelta(seconds=20), timedelta(hours=1)])
     assert ns.to_list(ns.total_seconds(s)) == [20, 3600]
+
+
+@pytest.mark.parametrize(
+    "col, expected",
+    [
+        ([1, 2, 3], True),
+        (["a", "b", "c"], True),
+        ([1, 3, 2], False),
+        (["a", "c", "b"], False),
+        ([1, None, 3], True),
+        ([inspect, re, ns.is_sorted], False),  # weird object dtype
+    ],
+)
+def test_is_sorted(col, expected, df_module):
+    col = df_module.make_column("", col)
+    assert ns.is_sorted(col) == expected
+    if expected:
+        assert not ns.is_sorted(col[::-1])
+        assert ns.is_sorted(col[::-1], descending=True)
+
+
+@pytest.mark.parametrize(
+    "col", [[[1, 2], [3, 4]], [{"a": 1, "b": 2}, {"a": 1, "b": 3}]]
+)
+def test_is_sorted_object_dtypes(col, df_module):
+    # For those more complex dtypes where the result is more ambiguous pandas &
+    # polars or even different versions of the same package can disagree on
+    # whether they are sorted. For the time being we don't have a strong reason
+    # to add the code / computation time to handle those discrepancies.
+    # However, is_sorted should not crash and return a Boolean in all cases.
+    assert isinstance(ns.is_sorted(df_module.make_column("", col)), bool)

@@ -9,7 +9,7 @@ from pandas.testing import assert_frame_equal
 from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.model_selection import train_test_split
 from sklearn.utils import check_random_state
 
@@ -755,12 +755,6 @@ def test_concat_non_str_colname():
         )
 
 
-def test_class_skb():
-    from skrub._data_ops._skrub_namespace import SkrubNamespace
-
-    assert skrub.DataOp.skb is SkrubNamespace
-
-
 def test_get_vars():
     a = skrub.var("a")
     b = skrub.var("b")
@@ -769,3 +763,98 @@ def test_get_vars():
     assert list(d.skb.get_vars().keys()) == ["a", "b"]
     assert d.skb.get_vars()["a"] is a
     assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
+
+
+@pytest.mark.parametrize("needs_data", [False, True])
+@pytest.mark.parametrize("has_preview", [False, True])
+@pytest.mark.parametrize("regression", [False, True])
+@pytest.mark.parametrize("with_scoring", [False, True])
+def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scoring):
+    # Check that the data_op, learner and search estimators behave well when
+    # the estimator passed to apply is a data op
+    if regression:
+        X_a, y_a = make_regression(random_state=0)
+    else:
+        X_a, y_a = make_classification(random_state=0)
+    X_df = pd.DataFrame(X_a).rename(columns=str)
+    if has_preview:
+        X, y = skrub.X(X_df), skrub.y(y_a)
+    else:
+        X, y = skrub.X(), skrub.y()
+    if needs_data:
+        # In this case the estimator's automated preview cannot be computed
+        # because it needs a value from the environment, the value is not known
+        # until we fit the learner.
+
+        def get_vectorizer(X):
+            return skrub.TableVectorizer()
+
+        vectorizer = X.skb.apply_func(get_vectorizer)
+
+        def get_predictor(X):
+            return Ridge() if regression else LogisticRegression()
+
+        predictor = X.skb.apply_func(get_predictor)
+    else:
+        # In this case the estimator can be evaluated in the automated preview
+        # when the data op is created.
+        vectorizer = skrub.as_data_op(skrub.TableVectorizer())
+        predictor = skrub.as_data_op(Ridge() if regression else LogisticRegression())
+    pred = X.skb.apply(vectorizer).skb.apply(predictor, y=y)
+    # no information about the estimator: we expose all methods and default to
+    # 'transformer' estimator type.
+    learner = pred.skb.make_learner()
+    assert learner.__skrub_to_Xy_pipeline__({})._estimator_type == "transformer"
+    assert hasattr(learner, "predict")
+    assert hasattr(pred.skb.make_randomized_search(), "predict")
+    if has_preview:
+        assert pred.skb.preview().shape == y_a.shape
+    env = {"X": X_df, "y": y_a}
+    assert pred.skb.eval(env).shape == y_a.shape
+    search = pred.skb.make_grid_search(cv=2).fit(env)
+    min_score = 0.3 if regression else 0.7
+    assert search.best_score_ > min_score
+    if with_scoring:
+        scoring = "r2" if regression else "accuracy"
+    else:
+        scoring = None
+    res = skrub.cross_validate(
+        pred.skb.make_grid_search(cv=2, scoring=scoring),
+        environment=env,
+        cv=2,
+        scoring=scoring,
+    )
+    assert res["test_score"].mean() > min_score
+
+
+def test_apply_no_sklearn_tags():
+    # applying an estimator that does not define __sklearn_tags__
+    class Twice:
+        def fit(self, X, y=None):
+            return self
+
+        def fit_transform(self, X, y=None):
+            return X * 2
+
+        def transform(self, X):
+            return X * 2
+
+        def get_params(self, deep=True):
+            return {}
+
+        def set_params(self):
+            return self
+
+    learner = skrub.var("a").skb.apply(Twice()).skb.make_learner()
+    assert learner.fit_transform({"a": 1}) == 2
+    xy_learner = learner.__skrub_to_Xy_pipeline__({})
+    assert xy_learner._estimator_type == "transformer"
+    if hasattr(xy_learner, "__sklearn_tags__"):
+        # Old scikit-learn versiond don't have __sklearn_tags__
+        assert xy_learner.__sklearn_tags__().estimator_type is None
+
+
+def test_class_skb():
+    from skrub._data_ops._skrub_namespace import SkrubNamespace
+
+    assert skrub.DataOp.skb is SkrubNamespace

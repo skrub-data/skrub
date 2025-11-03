@@ -9,7 +9,6 @@ from typing import Iterable
 import numpy as np
 import sklearn
 from sklearn.base import BaseEstimator, clone
-from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as sbd
@@ -76,33 +75,6 @@ def unique_strings(values, is_null):
     return unique, full_idx
 
 
-def check_input(X):
-    """Check input with sklearn standards.
-
-    Also converts X to a numpy array if not already.
-    """
-    # TODO check for weird type of input to pass scikit learn tests
-    #  without messing with the original type too much
-
-    X_ = check_array(
-        X,
-        dtype=None,
-        ensure_2d=True,
-        force_all_finite=False,
-    )
-    # If the array contains both NaNs and strings, convert to object type
-    if X_.dtype.kind in {"U", "S"}:  # contains strings
-        if np.any(X_ == "nan"):  # missing value converted to string
-            return check_array(
-                np.array(X, dtype=object),
-                dtype=None,
-                ensure_2d=True,
-                force_all_finite=False,
-            )
-
-    return X_
-
-
 def import_optional_dependency(name, extra=""):
     """Import an optional dependency.
 
@@ -161,16 +133,6 @@ def get_duplicates(values):
     counts = collections.Counter(values)
     duplicates = [k for k, v in counts.items() if v > 1]
     return duplicates
-
-
-def check_duplicated_column_names(column_names, table_name=None):
-    duplicates = get_duplicates(column_names)
-    if duplicates:
-        table_name = "" if table_name is None else f"{table_name!r}"
-        raise ValueError(
-            f"Table {table_name} has duplicate column names: {duplicates}."
-            " Please make sure column names are unique."
-        )
 
 
 def renaming_func(renaming):
