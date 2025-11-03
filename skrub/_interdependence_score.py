@@ -2,7 +2,7 @@
 
 import math
 import sys
-from typing import TypeVar
+from typing import Tuple, TypeVar, Union
 
 import numpy
 import numpy as np
@@ -223,7 +223,7 @@ def _compute_ids_numpy(
     p_val=False,
     num_tests=100,
     bandwidth_term=1 / 2,
-) -> tuple[numpy.ndarray, numpy.ndarray] | tuple[numpy.ndarray, None]:
+) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, None]]:
     """
     Compute the InterDependence score matrix between the columns of X.
 
@@ -339,7 +339,7 @@ def _ids_matrix(
     num_tests=100,
     bandwidth_term=1 / 2,
     squeeze_option="mean",
-) -> tuple[numpy.ndarray, numpy.ndarray] | tuple[numpy.ndarray, None]:
+) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, None]]:
     """
         Compute the interdependence score matrix.
 
