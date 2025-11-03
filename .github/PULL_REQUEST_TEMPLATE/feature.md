@@ -1,5 +1,12 @@
 # New Feature Pull Request
 
+<!--
+Before proceeding, please confirm that:
+1. The changes have been discussed with the maintainers
+2. A plan has been agreed upon
+3. The related issue has been assigned to you
+-->
+
 ## Description
 
 <!-- Please include a summary of the new feature -->
