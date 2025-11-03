@@ -8,7 +8,6 @@ from sklearn.utils.fixes import parse_version
 
 from . import _dataframe as sbd
 from . import _join_utils
-from ._interdependence_score import _ids_matrix
 
 _N_BINS = 10
 _CATEGORICAL_THRESHOLD = 30
@@ -112,36 +111,9 @@ def column_associations(df, ids_pvalue=False):
     )
     pearson_c_table = _compute_pearson(df)
     on = ["left_column_name", "right_column_name"]
-    cramer_pearson_table = _join_utils.left_join(
+    return _join_utils.left_join(
         cramer_v_table, pearson_c_table, right_on=on, left_on=on
     )
-
-    ids_mat, pval_mat = _ids_matrix(df, p_val=ids_pvalue)
-    interdependence_table = _stack_symmetric_associations(
-        ids_mat, df, "interdependence score"
-    )
-    if ids_pvalue:
-        pval_for_ids_table = _stack_symmetric_associations(
-            pval_mat, df, "interdependence pvalue"
-        )
-        ids_pvalue_table = _join_utils.left_join(
-            interdependence_table, pval_for_ids_table, right_on=on, left_on=on
-        )
-        final_table = _join_utils.left_join(
-            cramer_pearson_table,
-            ids_pvalue_table,
-            left_on=["left_column_name", "right_column_name"],
-            right_on=["left_column_name", "right_column_name"],
-        )
-    else:
-        final_table = _join_utils.left_join(
-            cramer_pearson_table,
-            interdependence_table,
-            left_on=["left_column_name", "right_column_name"],
-            right_on=["left_column_name", "right_column_name"],
-        )
-    final_table = sbd.drop_columns_containing(final_table, "skrub")
-    return final_table
 
 
 def _stack_symmetric_associations(associations, df, statistic_name):
