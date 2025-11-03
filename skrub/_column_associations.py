@@ -13,7 +13,7 @@ _N_BINS = 10
 _CATEGORICAL_THRESHOLD = 30
 
 
-def column_associations(df, ids_pvalue=False):
+def column_associations(df):
     """Get measures of statistical associations between all pairs of columns.
 
     Reported metrics include Cramer's V statistic and Pearson's Correlation
