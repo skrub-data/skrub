@@ -74,7 +74,7 @@ dev = [
   "pytest-xdist",
 
   # optional
-  "pyarrow",
+  "pyarrow<21.0.0",
   "polars",
   "plotly",
   "optuna",
@@ -129,7 +129,7 @@ ruff = "==0.4.8"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
-pyarrow = "*"
+pyarrow = "<21.0.0"
 polars = "*"
 plotly = "*"
 optuna = "*"
@@ -194,7 +194,6 @@ jinja2 = "*"
 matplotlib = "*"
 pydot = "*"
 requests = "*"
-pyarrow = "*"
 polars = "*"
 plotly = "*"
 
