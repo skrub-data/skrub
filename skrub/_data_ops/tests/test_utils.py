@@ -31,6 +31,7 @@ def test_prune_folder_with_nonstandard_name_dirs():
     with tempfile.TemporaryDirectory() as tmpdir:
         dirname = os.path.join(tmpdir, "other_report")
         os.mkdir(dirname)
+        # setting access time to 8 days ago
         os.utime(dirname, (eight_days_ago, eight_days_ago))
 
         assert len(os.listdir(tmpdir)) == 1
