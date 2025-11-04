@@ -39,6 +39,8 @@ def test_prune_folder_with_nonstandard_name_dirs():
         _utils.prune_folder(tmpdir)
 
         remaining_items = os.listdir(tmpdir)
+        # the report has a non-default name, 
+        # so it should not be pruned
         assert len(remaining_items) == 1
         assert remaining_items[0] == "other_report"
 
