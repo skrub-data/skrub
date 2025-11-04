@@ -69,7 +69,7 @@ def format_exception_only(e):
     return traceback.format_exception_only(type(e), e)
 
 
-def prune_folder(path: str):
+def prune_directory(path: str):
     path = Path(path)
     if not path.exists():
         return

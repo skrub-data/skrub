@@ -35,7 +35,7 @@ def create_dir(tmp_dir):
     return _create
 
 
-def test_prune_folder_with_standard_name_dirs(tmp_dir, create_dir):
+def test_prune_directory_with_standard_name_dirs(tmp_dir, create_dir):
     # Making an directory older than 7 days that should be pruned
     # and one recent directory that should not be pruned
     create_dir(name=None, days_old=None)
@@ -43,27 +43,27 @@ def test_prune_folder_with_standard_name_dirs(tmp_dir, create_dir):
 
     assert len(list(tmp_dir.iterdir())) == 2
 
-    _utils.prune_folder(tmp_dir)
+    _utils.prune_directory(tmp_dir)
 
     remaining_items = list(tmp_dir.iterdir())
     assert len(remaining_items) == 1
 
 
-def test_prune_folder_with_nonstandard_name_dirs(tmp_dir, create_dir):
+def test_prune_directory_with_nonstandard_name_dirs(tmp_dir, create_dir):
     # Making an directory older than 7 days with a non-matching name
     # so it should not be pruned
     create_dir("other_report", days_old=8)
 
     assert len(list(tmp_dir.iterdir())) == 1
 
-    _utils.prune_folder(tmp_dir)
+    _utils.prune_directory(tmp_dir)
 
     remaining_items = list(tmp_dir.iterdir())
     assert len(remaining_items) == 1
     assert remaining_items[0].name == "other_report"
 
 
-def test_prune_folder_catch_exception(tmp_dir, create_dir, monkeypatch):
+def test_prune_directory_catch_exception(tmp_dir, create_dir, monkeypatch):
     create_dir(name=None, days_old=8)
 
     def mock_rmtree(path, *args, **kwargs):
@@ -74,7 +74,7 @@ def test_prune_folder_catch_exception(tmp_dir, create_dir, monkeypatch):
     assert len(list(tmp_dir.iterdir())) == 1
 
     with pytest.warns(UserWarning, match="Could not delete"):
-        _utils.prune_folder(tmp_dir)
+        _utils.prune_directory(tmp_dir)
 
     assert len(list(tmp_dir.iterdir())) == 1
 
