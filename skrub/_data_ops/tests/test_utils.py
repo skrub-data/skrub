@@ -13,6 +13,8 @@ def test_prune_folder_with_standard_name_dirs():
         for i in range(3):
             dirname = os.path.join(tmpdir, f"full_data_op_report_{i}")
             os.mkdir(dirname)
+            # setting the access time of the first two files 
+            # to 8 days ago, so that they should be pruned
             if i < 2:
                 os.utime(dirname, (eight_days_ago, eight_days_ago))
 
