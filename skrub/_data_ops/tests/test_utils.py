@@ -1,66 +1,81 @@
+import datetime
 import os
+import shutil
 import tempfile
 import time
+from pathlib import Path
 
 import pytest
 
 from skrub._data_ops import _utils
+from skrub._utils import random_string
 
 
-def test_prune_folder_with_standard_name_dirs():
-    eight_days_ago = time.time() - 8 * 24 * 3600
+@pytest.fixture
+def tmp_dir():
     with tempfile.TemporaryDirectory() as tmpdir:
-        for i in range(3):
-            dirname = os.path.join(tmpdir, f"full_data_op_report_{i}")
-            os.mkdir(dirname)
-            # setting the access time of the first two files
-            # to 8 days ago, so that they should be pruned
-            if i < 2:
-                os.utime(dirname, (eight_days_ago, eight_days_ago))
-
-        assert len(os.listdir(tmpdir)) == 3
-
-        _utils.prune_folder(tmpdir)
-
-        remaining_items = os.listdir(tmpdir)
-        assert len(remaining_items) == 1
+        yield Path(tmpdir)
 
 
-def test_prune_folder_with_nonstandard_name_dirs():
-    eight_days_ago = time.time() - 8 * 24 * 3600
-    with tempfile.TemporaryDirectory() as tmpdir:
-        dirname = os.path.join(tmpdir, "other_report")
-        os.mkdir(dirname)
-        # setting access time to 8 days ago
-        os.utime(dirname, (eight_days_ago, eight_days_ago))
+# Fixture to create directories with optional old timestamp
+@pytest.fixture
+def create_dir(tmp_dir):
+    def _create(name=None, days_old=None):
+        if name is None:
+            now = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
+            name = f"full_data_op_report_{now}_{random_string()}"
+        path = tmp_dir / name
+        path.mkdir()
+        if days_old is not None:
+            old_time = time.time() - days_old * 24 * 3600
+            # setting access and modified times to old_time
+            os.utime(path, (old_time, old_time))
+        return path
 
-        assert len(os.listdir(tmpdir)) == 1
-
-        _utils.prune_folder(tmpdir)
-
-        remaining_items = os.listdir(tmpdir)
-        # the report has a non-default name,
-        # so it should not be pruned
-        assert len(remaining_items) == 1
-        assert remaining_items[0] == "other_report"
+    return _create
 
 
-def test_prune_folder_catch_exception(monkeypatch):
-    eight_days_ago = time.time() - 8 * 24 * 3600
+def test_prune_folder_with_standard_name_dirs(tmp_dir, create_dir):
+    # Making an directory older than 7 days that should be pruned
+    # and one recent directory that should not be pruned
+    create_dir(name=None, days_old=None)
+    create_dir(name=None, days_old=8)
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        dirname = os.path.join(tmpdir, "full_data_op_report_test")
-        os.mkdir(dirname)
-        os.utime(dirname, (eight_days_ago, eight_days_ago))
+    assert len(list(tmp_dir.iterdir())) == 2
 
-        def mock_rmtree(path, *args, **kwargs):
-            raise OSError("Cannot delete folder")
+    _utils.prune_folder(tmp_dir)
 
-        monkeypatch.setattr("shutil.rmtree", mock_rmtree)
+    remaining_items = list(tmp_dir.iterdir())
+    assert len(remaining_items) == 1
 
-        assert len(os.listdir(tmpdir)) == 1
 
-        with pytest.warns(UserWarning, match="Could not delete"):
-            _utils.prune_folder(tmpdir)
+def test_prune_folder_with_nonstandard_name_dirs(tmp_dir, create_dir):
+    # Making an directory older than 7 days with a non-matching name
+    # so it should not be pruned
+    create_dir("other_report", days_old=8)
 
-        monkeypatch.undo()
+    assert len(list(tmp_dir.iterdir())) == 1
+
+    _utils.prune_folder(tmp_dir)
+
+    remaining_items = list(tmp_dir.iterdir())
+    assert len(remaining_items) == 1
+    assert remaining_items[0].name == "other_report"
+
+
+def test_prune_folder_catch_exception(tmp_dir, create_dir, monkeypatch):
+    create_dir(name=None, days_old=8)
+
+    def mock_rmtree(path, *args, **kwargs):
+        raise OSError("Cannot delete folder")
+
+    monkeypatch.setattr(shutil, "rmtree", mock_rmtree)
+
+    assert len(list(tmp_dir.iterdir())) == 1
+
+    with pytest.warns(UserWarning, match="Could not delete"):
+        _utils.prune_folder(tmp_dir)
+
+    assert len(list(tmp_dir.iterdir())) == 1
+
+    monkeypatch.undo()

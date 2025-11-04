@@ -1,9 +1,10 @@
 import enum
-import os
+import re
 import shutil
 import time
 import traceback
 import warnings
+from pathlib import Path
 
 from joblib.externals import cloudpickle
 
@@ -69,22 +70,23 @@ def format_exception_only(e):
 
 
 def prune_folder(path: str):
-    if not os.path.exists(path):
+    path = Path(path)
+    if not path.exists():
         return
     time_threshold = time.time() - 7 * 24 * 3600  # 7 days ago
-
-    folders = (
-        (f, os.path.getmtime(os.path.join(path, f)))
-        for f in os.listdir(path)
-        if os.path.isdir(os.path.join(path, f)) and f.startswith("full_data_op_report_")
-    )
-    for dir_path, dir_time in folders:
-        try:
-            if dir_time < time_threshold:
-                shutil.rmtree(os.path.join(path, dir_path))
-        except Exception as e:
-            warnings.warn(
-                "Skrub wants to delete an old folder in the skrub data folder: "
-                f"Could not delete {dir_path}:\n"
-                + "".join(format_exception_only(e))
-            )
+    # pattern to match folder names like full_data_op_report_{datetime}_{randomstring}
+    pattern = re.compile(r"^full_data_op_report_\d{4}-\d{2}-\d{2}T\d{6}_[0-9a-f]{8}$")
+    for dir_path in path.iterdir():
+        if (
+            dir_path.is_dir()
+            and pattern.match(dir_path.name)
+            and dir_path.stat().st_mtime < time_threshold
+        ):
+            try:
+                shutil.rmtree(dir_path)
+            except Exception as e:
+                warnings.warn(
+                    "Skrub wants to delete an old folder in the skrub data folder: "
+                    f"Could not delete {dir_path}:\n"
+                    + "".join(format_exception_only(e))
+                )
