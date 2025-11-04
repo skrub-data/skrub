@@ -1,4 +1,5 @@
 import contextlib
+import pathlib
 import tempfile
 import uuid
 import warnings
@@ -56,6 +57,18 @@ def _process_study_results(study):
     return result
 
 
+def _check_storage(url):
+    from optuna.storages import JournalStorage
+    from optuna.storages.journal import JournalFileBackend
+
+    if url.startswith("journal:"):
+        return JournalStorage(
+            JournalFileBackend(file_path=url.removeprefix("journal:"))
+        )
+    else:
+        return url
+
+
 class OptunaSearch(ParamSearch):
     def __init__(
         self,
@@ -90,8 +103,6 @@ class OptunaSearch(ParamSearch):
     def fit(self, environment):
         import optuna
         import optuna.samplers
-        from optuna.storages import JournalStorage
-        from optuna.storages.journal import JournalFileBackend
 
         self.scorer_ = check_scoring(
             self.data_op.skb.make_learner().__skrub_to_Xy_pipeline__(environment),
@@ -108,9 +119,12 @@ class OptunaSearch(ParamSearch):
                 )
                 tmp_file = tmp_file_obj.name
                 tmp_file_obj.close()
-                storage = JournalStorage(JournalFileBackend(file_path=tmp_file))
+                storage = f"journal:{tmp_file}"
             else:
-                storage = self.storage
+                if not isinstance(self.storage, (str, pathlib.Path)):
+                    raise TypeError(
+                        f"storage should be a database url or None, got: {self.storage}"
+                    )
             if self.study_name is None:
                 study_name = f"skrub_randomized_search_{uuid.uuid4()}"
             else:
@@ -129,16 +143,19 @@ class OptunaSearch(ParamSearch):
                         " random_state to None"
                     )
                 seed = None
-            # The default sampler, we instantiate it to set the seed
-            sampler = optuna.samplers.TPESampler(seed=seed)
-            study_kwargs = dict(
-                direction="maximize",
-                sampler=sampler,
-                storage=storage,
-                study_name=study_name,
-                load_if_exists=True,
-            )
-            study = optuna.create_study(**study_kwargs)
+
+            def make_sampler():
+                # The default sampler, we instantiate it to set the seed
+                return optuna.samplers.TPESampler(seed=seed)
+
+            def create_study():
+                return optuna.create_study(
+                    direction="maximize",
+                    sampler=make_sampler(),
+                    storage=_check_storage(storage),
+                    study_name=study_name,
+                    load_if_exists=True,
+                )
 
             def objective(trial):
                 learner = self.data_op.skb.make_learner(choose=trial)
@@ -153,13 +170,14 @@ class OptunaSearch(ParamSearch):
                 or n_jobs == 1
             ):
                 # If sequential or threading, use optuna's built-in parallelization
+                study = create_study()
                 study.optimize(objective, n_trials=self.n_iter, n_jobs=n_jobs)
             else:
                 # Otherwise use joblib.Parallel
                 # Note this would probably not be safe with the threading
                 # backend.
                 def optimize():
-                    study = optuna.create_study(**study_kwargs)
+                    study = create_study()
                     study.optimize(objective, n_trials=1, n_jobs=1)
 
                 joblib.Parallel(n_jobs=n_jobs)(
@@ -172,12 +190,12 @@ class OptunaSearch(ParamSearch):
                 new_storage = optuna.storages.InMemoryStorage()
                 optuna.study.copy_study(
                     from_study_name=study_name,
-                    from_storage=storage,
+                    from_storage=_check_storage(storage),
                     to_storage=new_storage,
                     to_study_name=study_name,
                 )
                 self.study_ = optuna.study.load_study(
-                    study_name=study_name, storage=new_storage, sampler=sampler
+                    study_name=study_name, storage=new_storage, sampler=make_sampler()
                 )
             else:
                 self.study_ = study
