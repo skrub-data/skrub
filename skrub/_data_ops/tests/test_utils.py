@@ -13,7 +13,7 @@ def test_prune_folder_with_standard_name_dirs():
         for i in range(3):
             dirname = os.path.join(tmpdir, f"full_data_op_report_{i}")
             os.mkdir(dirname)
-            # setting the access time of the first two files 
+            # setting the access time of the first two files
             # to 8 days ago, so that they should be pruned
             if i < 2:
                 os.utime(dirname, (eight_days_ago, eight_days_ago))
@@ -39,7 +39,7 @@ def test_prune_folder_with_nonstandard_name_dirs():
         _utils.prune_folder(tmpdir)
 
         remaining_items = os.listdir(tmpdir)
-        # the report has a non-default name, 
+        # the report has a non-default name,
         # so it should not be pruned
         assert len(remaining_items) == 1
         assert remaining_items[0] == "other_report"
