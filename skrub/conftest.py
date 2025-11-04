@@ -236,3 +236,8 @@ def use_fit_transform(request):
     manually.
     """
     return request.param
+
+
+xfail_with_download_error = pytest.mark.xfail(
+    raises=OSError, match="Can't download the file '.*' from urls.*"
+)

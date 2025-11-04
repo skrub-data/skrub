@@ -117,6 +117,7 @@ def full_report(
     open=True,
     output_dir=None,
     overwrite=False,
+    title=None,
 ):
     if clear:
         clear_results(data_op, mode)
@@ -128,6 +129,7 @@ def full_report(
             open=open,
             output_dir=output_dir,
             overwrite=overwrite,
+            title=title,
         )
     finally:
         if clear:
@@ -141,6 +143,7 @@ def _make_full_report(
     open=True,
     output_dir=None,
     overwrite=False,
+    title=None,
 ):
     _check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
@@ -166,7 +169,7 @@ def _make_full_report(
     svg = draw_data_op_graph(data_op, url=make_url).svg.decode("utf-8")
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
-        {"svg": svg, "node_status": node_status}
+        {"svg": svg, "node_status": node_status, "title": title}
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")

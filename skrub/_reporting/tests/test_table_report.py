@@ -337,3 +337,45 @@ def test_bad_cols_parameter(pd_module, arg):
     df = pd_module.example_dataframe
     with pytest.raises(ValueError):
         TableReport(df, **{arg: -1})
+
+
+def test_array_dim_check():
+    array_3d = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+    assert array_3d.ndim == 3
+    with pytest.raises(ValueError, match=r"Input (NumPy )?array has 3 dimensions"):
+        TableReport(array_3d)
+
+    array_4d = np.array([[[[1]]]])
+    assert array_4d.ndim == 4
+    with pytest.raises(ValueError, match=r"Input (NumPy )?array has 4 dimensions"):
+        TableReport(array_4d)
+
+    array_1d = np.array([1, 2, 3])
+    assert array_1d.ndim == 1
+
+    TableReport(array_1d)
+
+
+numpy_test_cases = [
+    (
+        np.array(
+            [
+                [1, 2, 3],
+                [
+                    4,
+                    5,
+                    6,
+                ],
+            ]
+        ),
+        3,
+    ),
+    (np.array([[10, 20], [30, 40], [50, 60], [60, 70]]), 2),
+]
+
+
+@pytest.mark.parametrize("input_array, expected_columns", numpy_test_cases)
+def test_numpy_array_columns(input_array, expected_columns):
+    report = TableReport(input_array, max_association_columns=0)
+
+    assert report._summary["n_columns"] == expected_columns
