@@ -159,10 +159,6 @@ def to_html(
             f"'default_tab' must be one of {valid_tabs}, got {default_tab!r}."
         )
 
-    # In minimal mode, fall back to 'table' if user selected unavailable tabs
-    if minimal_report_mode and default_tab in ["distributions", "associations"]:
-        default_tab = "table"
-
     default_panel_id = _TAB_MAPPING[default_tab]
 
     jinja_env = _get_jinja_env()

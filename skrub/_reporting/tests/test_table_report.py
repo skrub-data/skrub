@@ -407,11 +407,45 @@ def test_default_tab_parameter(df_module):
     report4 = TableReport(df, default_tab="associations")
     assert report4.default_tab == "associations"
 
-    # Test invalid tab name (should raise error)
-    with pytest.raises(ValueError, match="'default_tab' must be one of"):
-        TableReport(df, default_tab="invalid")
-
     # Test HTML generation includes correct attributes
     html_snippet = report2.html_snippet()
     assert 'data-target-panel-id="summary-statistics-panel"' in html_snippet
     assert "data-is-selected" in html_snippet
+
+
+@skip_polars_installed_without_pyarrow
+def test_default_tab_wrong_names(df_module):
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test invalid tab name (should raise error)
+    with pytest.raises(ValueError, match="'default_tab' must be one of"):
+        TableReport(df, default_tab="invalid")
+
+    with pytest.raises(ValueError, match="'default_tab' must be one of"):
+        TableReport(df, default_tab="invalid").html()
+
+
+@skip_polars_installed_without_pyarrow
+def test_default_tab_minimal_mode(df_module):
+    """Test that default_tab falls back to 'table' in minimal mode when needed"""
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test minimal mode with default_tab set to 'distributions'
+    report1 = TableReport(df, default_tab="distributions")
+    report1._set_minimal_mode()
+    assert report1.default_tab == "table"
+
+    # Test minimal mode with default_tab set to 'associations'
+    report2 = TableReport(df, default_tab="associations")
+    report2._set_minimal_mode()
+    assert report2.default_tab == "table"

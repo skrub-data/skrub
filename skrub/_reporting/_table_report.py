@@ -262,6 +262,9 @@ class TableReport:
         self._to_html_kwargs["minimal_report_mode"] = True
         self.max_association_columns = 0
         self.max_plot_columns = 0
+        # In minimal mode, fall back to 'table' if user selected unavailable tabs
+        if self.default_tab in ["distributions", "associations"]:
+            self.default_tab = "table"
 
     def _display_subsample_hint(self):
         self._summary["is_subsampled"] = True
