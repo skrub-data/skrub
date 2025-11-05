@@ -31,7 +31,7 @@ New features
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
 - :class:`TableReport` now includes the ``default_tab`` parameter, which lets the
-  user select which tab should be shown by default when the ``TableReport`` is 
+  user select which tab should be shown by default when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 
