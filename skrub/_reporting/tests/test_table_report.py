@@ -379,3 +379,38 @@ def test_numpy_array_columns(input_array, expected_columns):
     report = TableReport(input_array, max_association_columns=0)
 
     assert report._summary["n_columns"] == expected_columns
+
+
+def test_default_tab_parameter(df_module):
+    """Test the default_tab parameter functionality"""
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test default behavior (should be 'table')
+    report1 = TableReport(df)
+    assert report1.default_tab == "table"
+
+    # Test explicitly set to 'stats'
+    report2 = TableReport(df, default_tab="stats")
+    assert report2.default_tab == "stats"
+
+    # Test set to 'distributions'
+    report3 = TableReport(df, default_tab="distributions")
+    assert report3.default_tab == "distributions"
+
+    # Test set to 'associations'
+    report4 = TableReport(df, default_tab="associations")
+    assert report4.default_tab == "associations"
+
+    # Test invalid tab name (should raise error)
+    with pytest.raises(ValueError, match="'default_tab' must be one of"):
+        TableReport(df, default_tab="invalid")
+
+    # Test HTML generation includes correct attributes
+    html_snippet = report2.html_snippet()
+    assert 'data-target-panel-id="summary-statistics-panel"' in html_snippet
+    assert "data-is-selected" in html_snippet

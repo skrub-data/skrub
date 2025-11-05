@@ -17,6 +17,13 @@ from . import _utils
 
 _HIGH_ASSOCIATION_THRESHOLD = 0.9
 
+_TAB_MAPPING = {
+    "table": "dataframe-sample-panel",
+    "stats": "summary-statistics-panel",
+    "distributions": "column-summaries-panel",
+    "associations": "column-associations-panel",
+}
+
 _FILTER_NAMES = {
     "first_10": "First 10",
     "high_association": "High similarity",
@@ -108,7 +115,13 @@ def _get_column_filters(summary):
     return filters
 
 
-def to_html(summary, standalone=True, column_filters=None, minimal_report_mode=False):
+def to_html(
+    summary,
+    standalone=True,
+    column_filters=None,
+    minimal_report_mode=False,
+    default_tab="table",
+):
     """Given a dataframe summary, generate the HTML string.
 
     Parameters
@@ -128,6 +141,9 @@ def to_html(summary, standalone=True, column_filters=None, minimal_report_mode=F
     minimal_report_mode : bool
         Whether to turn on the minimal mode, which hides the 'distributions'
         and 'associations' tabs.
+    default_tab : str, default="table"
+        The tab that will be displayed by default when the report is opened.
+        Must be one of "table", "stats", "distributions", or "associations".
 
     Returns
     -------
@@ -135,6 +151,20 @@ def to_html(summary, standalone=True, column_filters=None, minimal_report_mode=F
         The report as a string (containing HTML).
     """
     column_filters = column_filters if column_filters is not None else {}
+
+    # Validate and convert default_tab
+    if default_tab not in _TAB_MAPPING:
+        valid_tabs = list(_TAB_MAPPING.keys())
+        raise ValueError(
+            f"'default_tab' must be one of {valid_tabs}, got {default_tab!r}."
+        )
+
+    # In minimal mode, fall back to 'table' if user selected unavailable tabs
+    if minimal_report_mode and default_tab in ["distributions", "associations"]:
+        default_tab = "table"
+
+    default_panel_id = _TAB_MAPPING[default_tab]
+
     jinja_env = _get_jinja_env()
     if standalone:
         template = jinja_env.get_template("standalone-report.html")
@@ -153,6 +183,8 @@ def to_html(summary, standalone=True, column_filters=None, minimal_report_mode=F
             "base64_column_filters": _b64_encode(column_filters),
             "report_id": f"report_{secrets.token_hex()[:8]}",
             "minimal_report_mode": minimal_report_mode,
+            "default_tab": default_tab,
+            "default_panel_id": default_panel_id,
             "config": _config.get_config(),
         }
     )

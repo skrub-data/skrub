@@ -114,6 +114,15 @@ class TableReport:
 
             export SKB_MAX_ASSOCIATION_COLUMNS=30
 
+    default_tab : str, default="table"
+        The tab that will be displayed by default when the report is opened.
+        Must be one of "table", "stats", "distributions", or "associations".
+
+        * "table": Shows a sample of the dataframe rows
+        * "stats": Shows summary statistics for all columns
+        * "distributions": Shows plots of column distributions
+        * "associations": Shows column associations and similarities
+
     See Also
     --------
     patch_display :
@@ -188,6 +197,7 @@ class TableReport:
         verbose=1,
         max_plot_columns=None,
         max_association_columns=None,
+        default_tab="table",
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -205,6 +215,15 @@ class TableReport:
                 )
 
         n_rows = max(1, n_rows)
+
+        # Validate default_tab parameter
+        valid_tabs = ["table", "stats", "distributions", "associations"]
+        if default_tab not in valid_tabs:
+            raise ValueError(
+                f"'default_tab' must be one of {valid_tabs}, got {default_tab!r}."
+            )
+        self.default_tab = default_tab
+
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
@@ -280,6 +299,7 @@ class TableReport:
             self._summary,
             standalone=True,
             column_filters=self.column_filters,
+            default_tab=self.default_tab,
             **self._to_html_kwargs,
         )
 
@@ -295,6 +315,7 @@ class TableReport:
             self._summary,
             standalone=False,
             column_filters=self.column_filters,
+            default_tab=self.default_tab,
             **self._to_html_kwargs,
         )
 
