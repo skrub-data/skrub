@@ -381,6 +381,7 @@ def test_numpy_array_columns(input_array, expected_columns):
     assert report._summary["n_columns"] == expected_columns
 
 
+@skip_polars_installed_without_pyarrow
 def test_default_tab_parameter(df_module):
     """Test the default_tab parameter functionality"""
     df = df_module.make_dataframe(
