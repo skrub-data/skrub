@@ -350,9 +350,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.all_processing_steps_ = {col: [] for col in input_names}
         for step in all_steps[1:]:
             for col, transformer in step.transformers_.items():
-                if col == "column_0" and col not in input_names:
-                    # for polars empty column name, which get renamed by scikit-learn
-                    col = ""
                 self.all_processing_steps_[col].append(transformer)
         return result
 

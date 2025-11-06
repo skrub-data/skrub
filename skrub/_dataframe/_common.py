@@ -286,7 +286,11 @@ def _make_dataframe_like_pandas(obj, data):
 
 @make_dataframe_like.specialize("polars")
 def _make_dataframe_like_polars(obj, data):
-    return pl.DataFrame(data)
+    if isinstance(data, dict):
+        return pl.DataFrame(data)
+    else:
+        # not pretty workaround for polars issue https://github.com/pola-rs/polars/issues/25204
+        return pl.DataFrame(data, schema={unit.name:None for unit in data})
 
 
 @dispatch
