@@ -51,7 +51,7 @@ See the |deduplicate| documentation for caveats and more detail.
 Deduplicating values in a dataframe
 -----------------------------------
 
-|deduplicate| can be used to replace values in a dataframe that contains typos. 
+|deduplicate| can be used to replace values in a dataframe that contains typos.
 >>> import pandas as pd
 >>> df = pd.DataFrame({'color': duplicated, 'value': range(10)})
 >>> df
