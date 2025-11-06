@@ -152,13 +152,6 @@ def to_html(
     """
     column_filters = column_filters if column_filters is not None else {}
 
-    # Validate and convert default_tab
-    if default_tab not in _TAB_MAPPING:
-        valid_tabs = list(_TAB_MAPPING.keys())
-        raise ValueError(
-            f"'default_tab' must be one of {valid_tabs}, got {default_tab!r}."
-        )
-
     default_panel_id = _TAB_MAPPING[default_tab]
 
     jinja_env = _get_jinja_env()
