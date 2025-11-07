@@ -81,7 +81,7 @@ color  value deduplicated_color
 9  white      9              white
 
 With polars:
->>> import polars as pl
+>>> import polars as pl  # doctest: +SKIP
 >>> df = pl.DataFrame({'color': duplicated, 'value': range(10)})
 >>> df.with_columns(deduplicated_color = pl.col("color").replace(
 ...     deduplicate_correspondence.to_dict())
