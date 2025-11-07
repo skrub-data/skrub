@@ -23,7 +23,8 @@ def _example_data_dict():
                 "2021-03-15T00:37:15",
                 "2022-02-13T17:03:25",
             ]
-        ] + [None],
+        ]
+        + [None],
         "date-col": [
             datetime.date.fromisoformat(dt)
             for dt in ["2002-02-03", "2001-05-17", "2005-02-13", "2004-10-02"]
