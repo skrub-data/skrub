@@ -45,10 +45,12 @@ def type_equality(expected_type, actual_type):
     assuming object and str types are equivalent
     (considered as categorical by the TableVectorizer).
     """
-    return (
-        isinstance(expected_type, (object, str))
-        and isinstance(actual_type, (object, str))
-    ) or expected_type == actual_type
+    if isinstance(expected_type, (object, str)) and isinstance(
+        actual_type, (object, str)
+    ):
+        return True
+    else:
+        return expected_type == actual_type
 
 
 def _get_clean_dataframe(df_module):
