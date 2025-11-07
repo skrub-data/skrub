@@ -6,6 +6,7 @@ from unittest.mock import Mock
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from numpy.testing import assert_allclose
 from sklearn.base import BaseEstimator, clone
 from sklearn.cluster import KMeans
@@ -18,6 +19,7 @@ from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV, cross_validate, train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
@@ -364,6 +366,8 @@ def test_no_refit(data_op, data, randomized_search_backend):
 
 
 def test_multimetric_no_refit(data_op, data, randomized_search_backend):
+    if parse_version(sklearn.__version__) < parse_version("1.5.0"):
+        pytest.skip("multimetric scoring not supported yet in check_scoring")
     search = data_op.skb.make_randomized_search(
         random_state=0,
         cv=2,
