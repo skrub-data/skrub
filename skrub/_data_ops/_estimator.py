@@ -818,14 +818,13 @@ class ParamSearch(_CloudPickleDataOp, BaseEstimator):
         table = pd.DataFrame(
             all_rows, columns=list(data_op_choices["choice_display_names"].values())
         )
-        if isinstance(self.scorer_, dict):
-            metric_names = list(self.scorer_.keys())
-            if isinstance(self.refit_, str):
-                metric_names.insert(
-                    0, metric_names.pop(metric_names.index(self.refit_))
-                )
-        else:
-            metric_names = ["score"]
+        metric_names = [
+            k.removeprefix("mean_test_")
+            for k in self.cv_results_.keys()
+            if k.startswith("mean_test_")
+        ]
+        if isinstance(self.refit_, str):
+            metric_names.insert(0, metric_names.pop(metric_names.index(self.refit_)))
         result_keys = [
             *(f"mean_test_{n}" for n in metric_names),
             *(f"std_test_{n}" for n in metric_names),
