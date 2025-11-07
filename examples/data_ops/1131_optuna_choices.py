@@ -55,6 +55,31 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # Selecting the best hyperparameters with Optuna.
 # -----------------------------------------------
 #
+# The simplest way to use Optuna is to pass ``backend='optuna'`` to
+# :meth:`DataOp.skb.make_randomized_search()`. It is used very similarly as
+# with the default backend
+# (:class:`sklearn.model_selection.RandomizedSearchCV`). A few additional
+# parameters are available to control the Optuna sampler, storage and study
+# name.
+
+# %%
+search = pred.skb.make_randomized_search(backend="optuna", cv=cv)
+search.fit(env)
+search.results_
+
+# %%
+search.plot_results()
+
+# %%
+# Using Optuna directly
+# ---------------------
+#
+# Often we may want more control over the use of Optuna. Indeed,
+# :meth:`DataOp.skb.make_randomized_search` only provides access to some of
+# Optuna's functionality. This is also easy, as we can pass an Optuna Trial to
+# :meth:`DataOp.skb.make_learner` in which case the parameter suggested by the
+# trial are used.
+#
 # The :class:`optuna.Study <optuna.study.Study>` runs the hyperparameter
 # search.
 #
