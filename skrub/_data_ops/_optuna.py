@@ -2,7 +2,6 @@ import contextlib
 import pathlib
 import tempfile
 import uuid
-import warnings
 
 import joblib
 import numpy as np
@@ -23,14 +22,14 @@ from ._estimator import (
     attribute_error,
 )
 
-
-def _get_metrics(cv_results):
-    return [c.removeprefix("test_") for c in cv_results.keys() if c.startswith("test_")]
+_OPTUNA_SEARCH_FITTED_ATTRIBUTES = _SEARCH_FITTED_ATTRIBUTES + ["study_"]
 
 
 def _process_trial_results(trial, cv_results, refit_metric):
     info = {}
-    metrics = _get_metrics(cv_results)
+    metrics = [
+        c.removeprefix("test_") for c in cv_results.keys() if c.startswith("test_")
+    ]
     for task in ("fit", "score"):
         info[f"mean_{task}_time"] = cv_results[f"{task}_time"].mean()
         info[f"std_{task}_time"] = cv_results[f"{task}_time"].std()
@@ -112,7 +111,7 @@ class OptunaSearch(ParamSearch):
         new = _XyOptunaSearch(
             **self.get_params(deep=False), environment=_SharedDict(environment)
         )
-        _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES + ["study_"])
+        _copy_attr(self, new, _OPTUNA_SEARCH_FITTED_ATTRIBUTES)
         return new
 
     def fit(self, environment):
@@ -121,6 +120,7 @@ class OptunaSearch(ParamSearch):
             self.scoring,
         )
         try:
+            # sklearn MultiMetricScorer when scorer is a dict
             self.scorer_ = scorer._scorers
         except AttributeError:
             self.scorer_ = scorer
@@ -150,17 +150,8 @@ class OptunaSearch(ParamSearch):
             # Create study and run trials
             #
             n_jobs = joblib.effective_n_jobs(self.n_jobs)
-            if n_jobs == 1:
-                random_state = check_random_state(self.random_state)
-                seed = random_state.randint(np.iinfo("int32").max)
-            else:
-                if self.random_state is not None:
-                    warnings.warn(
-                        "Optuna search with n_jobs > 1 is not deterministic, setting"
-                        " random_state to None"
-                    )
-                seed = None
-
+            random_state = check_random_state(self.random_state)
+            seed = random_state.randint(np.iinfo("int32").max)
             sampler = (
                 self.sampler
                 if self.sampler is not None
@@ -201,6 +192,10 @@ class OptunaSearch(ParamSearch):
                 # backend.
                 def optimize():
                     study = create_study()
+                    # reseed otherwise all processes will start with the same
+                    # params, optuna also does this for each worker when
+                    # n_jobs > 1
+                    study.sampler.reseed_rng()
                     study.optimize(objective, n_trials=1, n_jobs=1)
 
                 joblib.Parallel(n_jobs=n_jobs, pre_dispatch=self.pre_dispatch)(
@@ -227,6 +222,7 @@ class OptunaSearch(ParamSearch):
             #
             self.cv_results_ = _process_study_results(self.study_)
             self.best_params_ = self.study_.best_params
+            self.best_score_ = self.study_.best_value
             if not self.refit:
                 return self
             best_learner = self.data_op.skb.make_learner(choose=self.study_.best_trial)
@@ -262,7 +258,7 @@ class _XyOptunaSearch(_XyPipelineMixin, OptunaSearch):
 
     def __skrub_to_env_learner__(self):
         new = OptunaSearch(**self.get_params(deep=False))
-        _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES + ["study_"])
+        _copy_attr(self, new, _OPTUNA_SEARCH_FITTED_ATTRIBUTES)
         return new
 
     @property
