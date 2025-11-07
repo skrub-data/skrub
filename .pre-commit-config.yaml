@@ -20,5 +20,3 @@ repos:
     hooks:
     -   id: codespell
         exclude: .*/package-lock.json
-    additional_dependencies:
-    -   tomli
