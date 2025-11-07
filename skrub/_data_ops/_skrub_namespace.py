@@ -1919,7 +1919,7 @@ class SkrubNamespace:
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where the main difference is that
+        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`,where the main difference is that
         ``fit()`` and ``predict()`` accept a dictionary of inputs
         rather than ``X`` and ``y``. The best learner can
         be returned by calling ``.best_learner_``.
@@ -2053,8 +2053,8 @@ class SkrubNamespace:
         This function returns a :class:`ParamSearch`, an object similar to
         scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where
         the main difference is ``fit()`` and ``predict()`` accept a
-        dictionary of inputs rather than ``X`` and ``y``. The best learner can
-        be returned by calling ``.best_learner_``.
+        dictionary of inputs rather than ``X`` and ``y``. The best learner is stored
+        in the attribute ``.best_learner_``.
 
         Parameters
         ----------
@@ -2076,9 +2076,27 @@ class SkrubNamespace:
         backend : 'sklearn' or 'optuna' (default='sklearn')
             Which library to use for hyperparameter search. The default is
             'sklearn', which uses
-            ``sklearn.model_selection.RandomizedSearchCV``. If 'optuna', an
-            optuna study is used instead and it is possible to choose the
-            sampler and storage.
+            the scikit-learn :class:`~sklearn.model_selection.RandomizedSearchCV`.
+            If 'optuna', an Optuna :class:`~optuna.study.Study` is used instead
+            and it is possible to choose the sampler and storage.
+
+        # TODO document the usual scikit-learn parameters cv, scoring, etc.
+
+        storage : None or str (default=None)
+            The URL for the database to use as the Optuna storage. In addition
+            to the usual relational database URLs (e.g.
+            ``'sqlite://<file_path>'`` ), it can be ``'journal://<file_path>'``
+            to use Optuna's :class:`~optuna.storages.JournalStorage`.
+
+        study_name : None or str (default=None)
+            The name to use for the created (or loaded) Optuna study. If the
+            study already exists in the provided ``storage``, the existing one
+            is loaded. If None, a random name is generated.
+
+        sampler : None or Optuna sampler (default=None)
+            The sampler to use when the backend is 'optuna'. If None, a
+            :class:`~optuna.samplers.TPESampler` is used (the same default as
+            :func:`~optuna.study.create_study`).
 
         Returns
         -------

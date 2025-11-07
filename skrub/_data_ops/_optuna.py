@@ -5,10 +5,6 @@ import uuid
 
 import joblib
 import numpy as np
-import optuna
-import optuna.samplers
-from optuna.storages import JournalStorage
-from optuna.storages.journal import JournalFileBackend
 from sklearn.metrics import check_scoring
 from sklearn.utils import check_random_state
 
@@ -65,9 +61,12 @@ def _process_study_results(study):
 
 
 def _check_storage(url):
-    if url.startswith("journal:"):
+    from optuna.storages import JournalStorage
+    from optuna.storages.journal import JournalFileBackend
+
+    if url.startswith("journal://"):
         return JournalStorage(
-            JournalFileBackend(file_path=url.removeprefix("journal:"))
+            JournalFileBackend(file_path=url.removeprefix("journal://"))
         )
     else:
         return url
@@ -115,6 +114,9 @@ class OptunaSearch(ParamSearch):
         return new
 
     def fit(self, environment):
+        import optuna
+        import optuna.samplers
+
         scorer = check_scoring(
             self.data_op.skb.make_learner().__skrub_to_Xy_pipeline__(environment),
             self.scoring,
@@ -136,7 +138,7 @@ class OptunaSearch(ParamSearch):
                 )
                 tmp_file = tmp_file_obj.name
                 tmp_file_obj.close()
-                storage = f"journal:{tmp_file}"
+                storage = f"journal://{tmp_file}"
             else:
                 if not isinstance(self.storage, (str, pathlib.Path)):
                     raise TypeError(
