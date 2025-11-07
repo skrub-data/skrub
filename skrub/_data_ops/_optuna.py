@@ -10,7 +10,7 @@ from sklearn.utils import check_random_state
 
 from ._estimator import (
     _SEARCH_FITTED_ATTRIBUTES,
-    ParamSearch,
+    _BaseParamSearch,
     _copy_attr,
     _get_classes,
     _SharedDict,
@@ -72,7 +72,7 @@ def _check_storage(url):
         return url
 
 
-class OptunaSearch(ParamSearch):
+class OptunaSearch(_BaseParamSearch):
     def __init__(
         self,
         data_op,

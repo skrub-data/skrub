@@ -724,42 +724,16 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=KFOLD_5):
         yield split_info
 
 
-class ParamSearch(_CloudPickleDataOp, BaseEstimator):
-    """Learner that evaluates a skrub DataOp with hyperparameter tuning.
+class _BaseParamSearch(_CloudPickleDataOp, BaseEstimator):
+    """Base class for hyperparameter search objects.
 
-    This class is not meant to be instantiated manually, ``ParamSearch``
-    objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
-    :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
+    It defines some default implementations for getting results, plotting, and
+    using the best learner.
+
+    Subclasses must define __skrub_to_Xy_pipeline__ and fit.
+    After fit, the attributes data_op, cv_results_, best_learner_ (unless refit
+    is False), and refit_ must be available.
     """
-
-    def __init__(self, data_op, search):
-        self.data_op = data_op
-        self.search = search
-
-    def __skrub_to_Xy_pipeline__(self, environment):
-        new = _XyParamSearch(self.data_op, self.search, _SharedDict(environment))
-        _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
-        return new
-
-    def fit(self, environment):
-        self.refit_ = self.search.refit
-        search = clone(self.search)
-        search.estimator = _XyPipeline(self.data_op, _SharedDict(environment))
-        param_grid = search.estimator.get_param_grid()
-        if hasattr(search, "param_grid"):
-            search.param_grid = param_grid
-        else:
-            assert hasattr(search, "param_distributions")
-            search.param_distributions = param_grid
-        X, y = _compute_Xy(self.data_op, environment)
-        search.fit(X, y)
-        _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
-        try:
-            self.best_learner_ = _to_env_learner(search.best_estimator_)
-        except AttributeError:
-            # refit is set to False, there is no best_estimator_
-            pass
-        return self
 
     def __getattr__(self, name):
         if name not in supported_modes(self.data_op):
@@ -913,6 +887,44 @@ def _get_results_metadata(data_op_choices):
         "log_scale_columns": list(log_scale_columns),
         "int_columns": list(int_columns),
     }
+
+
+class ParamSearch(_BaseParamSearch):
+    """Learner that evaluates a skrub DataOp with hyperparameter tuning.
+
+    This class is not meant to be instantiated manually, ``ParamSearch``
+    objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
+    :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
+    """
+
+    def __init__(self, data_op, search):
+        self.data_op = data_op
+        self.search = search
+
+    def __skrub_to_Xy_pipeline__(self, environment):
+        new = _XyParamSearch(self.data_op, self.search, _SharedDict(environment))
+        _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
+        return new
+
+    def fit(self, environment):
+        self.refit_ = self.search.refit
+        search = clone(self.search)
+        search.estimator = _XyPipeline(self.data_op, _SharedDict(environment))
+        param_grid = search.estimator.get_param_grid()
+        if hasattr(search, "param_grid"):
+            search.param_grid = param_grid
+        else:
+            assert hasattr(search, "param_distributions")
+            search.param_distributions = param_grid
+        X, y = _compute_Xy(self.data_op, environment)
+        search.fit(X, y)
+        _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
+        try:
+            self.best_learner_ = _to_env_learner(search.best_estimator_)
+        except AttributeError:
+            # refit is set to False, there is no best_estimator_
+            pass
+        return self
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):
