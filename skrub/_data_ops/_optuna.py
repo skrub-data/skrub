@@ -133,11 +133,13 @@ class OptunaSearch(_BaseParamSearch):
             # Set up storage on disk so we can use multiprocessing
             #
             if self.storage is None:
-                tmp_file_obj = exit_stack.enter_context(
-                    tempfile.NamedTemporaryFile(delete_on_close=False)
+                # We use a temp dir even if we just need one file because the
+                # delete_on_close param of NamedTemporaryFile did not exist in
+                # python < 3.12
+                tmp_dir = exit_stack.enter_context(
+                    tempfile.TemporaryDirectory(suffix="_skrub_optuna_search_storage")
                 )
-                tmp_file = tmp_file_obj.name
-                tmp_file_obj.close()
+                tmp_file = pathlib.Path(tmp_dir) / "optuna_storage"
                 storage = f"journal://{tmp_file}"
             else:
                 if not isinstance(self.storage, (str, pathlib.Path)):
