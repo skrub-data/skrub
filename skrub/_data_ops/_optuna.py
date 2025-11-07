@@ -242,9 +242,14 @@ class _XyOptunaSearch(_XyPipelineMixin, OptunaSearch):
         n_jobs,
         refit,
         cv,
+        verbose,
+        pre_dispatch,
         random_state,
+        error_score,
+        return_train_score,
         storage,
         study_name,
+        sampler,
         environment,
     ):
         self.data_op = data_op
@@ -253,13 +258,20 @@ class _XyOptunaSearch(_XyPipelineMixin, OptunaSearch):
         self.n_jobs = n_jobs
         self.refit = refit
         self.cv = cv
+        self.verbose = verbose
+        self.pre_dispatch = pre_dispatch
         self.random_state = random_state
+        self.error_score = error_score
+        self.return_train_score = return_train_score
         self.storage = storage
         self.study_name = study_name
+        self.sampler = sampler
         self.environment = environment
 
     def __skrub_to_env_learner__(self):
-        new = OptunaSearch(**self.get_params(deep=False))
+        params = self.get_params(deep=False)
+        params.pop("environment")
+        new = OptunaSearch(**params)
         _copy_attr(self, new, _OPTUNA_SEARCH_FITTED_ATTRIBUTES)
         return new
 

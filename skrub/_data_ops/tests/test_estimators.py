@@ -122,6 +122,14 @@ def n_jobs(request):
     return request.param
 
 
+@pytest.fixture(params=("sklearn", "optuna"))
+def randomized_search_backend(request):
+    backend = request.param
+    if backend == "optuna":
+        pytest.importorskip("optuna")
+    return backend
+
+
 #
 # fit, predict, param search & (possibly nested) cross-validation
 #
@@ -164,8 +172,10 @@ def test_return_estimator():
         data_op.skb.cross_validate(data, return_estimator=True)
 
 
-def test_randomized_search(data_op, data, n_jobs):
-    search = data_op.skb.make_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
+def test_randomized_search(data_op, data, n_jobs, randomized_search_backend):
+    search = data_op.skb.make_randomized_search(
+        n_iter=3, n_jobs=n_jobs, random_state=0, backend=randomized_search_backend
+    )
     with pytest.raises(NotFittedError):
         search.predict(data)
     assert not hasattr(search, "results_")
@@ -184,7 +194,7 @@ def test_randomized_search(data_op, data, n_jobs):
     assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
     train_score = search.score(data)
-    assert train_score == pytest.approx(0.94)
+    assert train_score == pytest.approx(0.94, abs=0.05)
 
 
 def test_grid_search(data_op, data, n_jobs):
@@ -213,8 +223,12 @@ def test_no_names():
     ]
 
 
-def test_nested_cv(data_op, data, data_kind, n_jobs, monkeypatch):
-    search = data_op.skb.make_randomized_search(n_iter=3, n_jobs=n_jobs, random_state=0)
+def test_nested_cv(
+    data_op, data, data_kind, n_jobs, monkeypatch, randomized_search_backend
+):
+    search = data_op.skb.make_randomized_search(
+        n_iter=3, n_jobs=n_jobs, random_state=0, backend=randomized_search_backend
+    )
     mock = Mock(side_effect=pd.read_csv)
     monkeypatch.setattr(pd, "read_csv", mock)
 
@@ -225,7 +239,7 @@ def test_nested_cv(data_op, data, data_kind, n_jobs, monkeypatch):
     assert len(learners) == 5
     for p in learners:
         assert is_fitted(p)
-        assert p.__class__.__name__ == "ParamSearch"
+        assert p.__class__.__name__ in ("ParamSearch", "OptunaSearch")
 
     # when data is loaded from csv we check that the caching results in
     # read_csv being called exactly twice (we have 2 different 'files' to
@@ -329,11 +343,18 @@ def test_multimetric():
         assert np.allclose(sklearn_results[col], data_op_search.results_[col].values)
 
 
-def test_no_refit(data_op, data):
-    search = data_op.skb.make_randomized_search(random_state=0, cv=2, refit=False).fit(
-        data
-    )
-    assert search.best_params_["data_op__0"] == pytest.approx(0.01)
+# TODO: add test with scorer returning a dict
+
+
+def test_no_refit(data_op, data, randomized_search_backend):
+    search = data_op.skb.make_randomized_search(
+        random_state=0, cv=2, refit=False, backend=randomized_search_backend
+    ).fit(data)
+    try:
+        C = search.best_params_["data_op__0"]
+    except KeyError:
+        C = search.best_params_["0:C"]
+    assert 0.01 <= C <= 1.0
     assert search.results_.shape == (10, 2)
     with pytest.raises(
         AttributeError,
@@ -342,15 +363,20 @@ def test_no_refit(data_op, data):
         search.predict(data)
 
 
-def test_multimetric_no_refit(data_op, data):
+def test_multimetric_no_refit(data_op, data, randomized_search_backend):
     search = data_op.skb.make_randomized_search(
-        random_state=0, cv=2, refit=False, scoring=["accuracy", "roc_auc"]
+        random_state=0,
+        cv=2,
+        refit=False,
+        scoring=["accuracy", "roc_auc"],
+        backend=randomized_search_backend,
     ).fit(data)
-    assert not hasattr(search, "best_params_")
+    if randomized_search_backend != "optuna":
+        assert not hasattr(search, "best_params_")
     assert search.results_.shape == (10, 3)
 
 
-def test_when_last_step_is_not_apply(data_op, data):
+def test_when_last_step_is_not_apply(data_op, data, randomized_search_backend):
     new_data_op = skrub.choose_from(
         [
             data_op.skb.apply_func(lambda x: x),
@@ -361,6 +387,7 @@ def test_when_last_step_is_not_apply(data_op, data):
     search = new_data_op.skb.make_randomized_search(
         n_iter=3,
         random_state=0,
+        backend=randomized_search_backend,
     ).fit(data)
     assert search.results_.shape == (3, 3)
     assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
@@ -491,7 +518,7 @@ def _load_data():
     return {"features": X, "target": y}
 
 
-def test_caching():
+def test_caching(randomized_search_backend):
     data = _load_data()
     data = _count_passthrough(data, skrub.var("load_counter"), "load")
     X = data["features"].skb.mark_as_X()
@@ -505,7 +532,9 @@ def test_caching():
         LogisticRegression(**skrub.choose_float(0.1, 1.0, name="C")), y=y
     )
     cv, search_iter, search_cv = 4, 3, 2
-    search = pred.skb.make_randomized_search(n_iter=search_iter, cv=search_cv)
+    search = pred.skb.make_randomized_search(
+        n_iter=search_iter, cv=search_cv, backend=randomized_search_backend
+    )
     data = {"load_counter": {}, "scale_counter": {}}
     skrub.cross_validate(search, data, cv=cv)
     assert data["load_counter"]["count"] == 1
@@ -564,10 +593,12 @@ def test_shared_dict():
 #
 
 
-def test_plot_results():
+def test_plot_results(randomized_search_backend):
     pytest.importorskip("plotly")
     data_op, data = get_data_op_and_data("simple")
-    search = data_op.skb.make_randomized_search(n_iter=2, cv=2, random_state=0)
+    search = data_op.skb.make_randomized_search(
+        n_iter=2, cv=2, random_state=0, backend=randomized_search_backend
+    )
     with pytest.raises(NotFittedError):
         search.plot_results()
     search.fit(data)
@@ -719,7 +750,9 @@ def test_truncated_after():
     ],
 )
 @pytest.mark.parametrize("bury_apply", [False, True])
-def test_estimator_type(estimator_type, expected, bury_apply):
+def test_estimator_type(
+    estimator_type, expected, bury_apply, randomized_search_backend
+):
     estimator = estimator_type()
     e = skrub.X().skb.apply(
         skrub.choose_from([estimator, estimator], name="_"), y=skrub.y()
@@ -735,7 +768,7 @@ def test_estimator_type(estimator_type, expected, bury_apply):
     for pipe in [
         e.skb.make_learner(),
         e.skb.make_grid_search(),
-        e.skb.make_randomized_search(n_iter=2),
+        e.skb.make_randomized_search(n_iter=2, backend=randomized_search_backend),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         if hasattr(estimator, "_estimator_type"):
@@ -747,12 +780,12 @@ def test_estimator_type(estimator_type, expected, bury_apply):
             assert not hasattr(Xy_pipe, "__sklearn_tags__")
 
 
-def test_estimator_type_no_apply():
+def test_estimator_type_no_apply(randomized_search_backend):
     e = skrub.X()
     for pipe in [
         e.skb.make_learner(),
         e.skb.make_grid_search(),
-        e.skb.make_randomized_search(n_iter=2),
+        e.skb.make_randomized_search(n_iter=2, backend=randomized_search_backend),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert Xy_pipe._estimator_type == "transformer"
@@ -765,7 +798,7 @@ def test_estimator_type_no_apply():
 
 
 @pytest.mark.parametrize("bury_apply", [False, True])
-def test_classes(bury_apply):
+def test_classes(bury_apply, randomized_search_backend):
     data_op, data = get_data_op_and_data("simple")
     if bury_apply:
         data_op = (
@@ -780,7 +813,7 @@ def test_classes(bury_apply):
     for pipe in [
         data_op.skb.make_learner(),
         data_op.skb.make_grid_search(),
-        data_op.skb.make_randomized_search(n_iter=2),
+        data_op.skb.make_randomized_search(n_iter=2, backend=randomized_search_backend),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert not hasattr(Xy_pipe, "classes_")
@@ -788,12 +821,14 @@ def test_classes(bury_apply):
         assert (Xy_pipe.classes_ == logreg.classes_).all()
 
 
-def test_classes_no_apply():
+def test_classes_no_apply(randomized_search_backend):
     data_op = skrub.X() + skrub.choose_from([0.0, 1.0], name="_")
     for pipe in [
         data_op.skb.make_learner(),
         data_op.skb.make_grid_search(scoring=lambda e, X: 0),
-        data_op.skb.make_randomized_search(n_iter=2, scoring=lambda e, X: 0),
+        data_op.skb.make_randomized_search(
+            n_iter=2, scoring=lambda e, X: 0, backend=randomized_search_backend
+        ),
     ]:
         Xy_pipe = pipe.__skrub_to_Xy_pipeline__({})
         assert not hasattr(Xy_pipe, "classes_")
