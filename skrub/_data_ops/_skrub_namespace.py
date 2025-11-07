@@ -1482,7 +1482,15 @@ class SkrubNamespace:
         This creates a report showing the computation graph, and for each
         intermediate computation, some information (the line of code where it
         was defined, the time it took to run, and more) and a display of the
-        intermediate result (or error).
+        intermediate result (or error). By default, the report is stored in
+        a timestamped subdirectory of the skrub data folder.
+
+        .. note::
+            When this function is invoked reports starting with ``full_data_op_report_``
+            that are stored in the skrub data folder are automatically deleted after 7 days.
+            This is to avoid accumulating too many reports over time. If you want to keep
+            specific reports, please specify an output directory.
+
 
         Parameters
         ----------
@@ -1496,7 +1504,9 @@ class SkrubNamespace:
 
         output_dir : str or Path or None (default=None)
             Directory where to store the report. If ``None``, a timestamped
-            subdirectory will be created in the skrub data directory.
+            subdirectory will be created in the skrub data directory. Note
+            that the reports created with ``output_dir=None`` are automatically
+            deleted after 7 days.
 
         overwrite : bool (default=False)
             What to do if the output directory already exists. If
