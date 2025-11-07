@@ -46,7 +46,8 @@ _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
     "multimetric_",
 ]
 _SEARCH_FITTED_ATTRIBUTES = _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY + [
-    "best_learner_"
+    "best_learner_",
+    "refit_",
 ]
 
 
@@ -741,6 +742,7 @@ class ParamSearch(_CloudPickleDataOp, BaseEstimator):
         return new
 
     def fit(self, environment):
+        self.refit_ = self.search.refit
         search = clone(self.search)
         search.estimator = _XyPipeline(self.data_op, _SharedDict(environment))
         param_grid = search.estimator.get_param_grid()
@@ -818,9 +820,9 @@ class ParamSearch(_CloudPickleDataOp, BaseEstimator):
         )
         if isinstance(self.scorer_, dict):
             metric_names = list(self.scorer_.keys())
-            if isinstance(self.search.refit, str):
+            if isinstance(self.refit_, str):
                 metric_names.insert(
-                    0, metric_names.pop(metric_names.index(self.search.refit))
+                    0, metric_names.pop(metric_names.index(self.refit_))
                 )
         else:
             metric_names = ["score"]

@@ -2026,7 +2026,28 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
-    def make_randomized_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
+    def make_randomized_search(
+        self,
+        *,
+        fitted=False,
+        keep_subsampling=False,
+        backend="sklearn",
+        # params for all backends
+        n_iter=10,
+        scoring=None,
+        n_jobs=None,
+        refit=True,
+        cv=None,
+        verbose=0,
+        pre_dispatch="2*n_jobs",
+        random_state=None,
+        error_score=np.nan,
+        return_train_score=False,
+        # optuna params
+        storage=None,
+        study_name=None,
+        sampler=None,
+    ):
         """Find the best parameters with randomized search.
 
         This function returns a :class:`ParamSearch`, an object similar to
@@ -2052,9 +2073,12 @@ class SkrubNamespace:
             ``fitted=False`` (because ``keep_subsampling=True`` would have no
             effect).
 
-        kwargs : dict
-            All other named arguments are forwarded to
-            :class:`~sklearn.search.RandomizedSearchCV`.
+        backend : 'sklearn' or 'optuna' (default='sklearn')
+            Which library to use for hyperparameter search. The default is
+            'sklearn', which uses
+            ``sklearn.model_selection.RandomizedSearchCV``. If 'optuna', an
+            optuna study is used instead and it is possible to choose the
+            sampler and storage.
 
         Returns
         -------
@@ -2115,11 +2139,48 @@ class SkrubNamespace:
 
         Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
+        if not isinstance(backend, str) or backend not in ("sklearn", "optuna"):
+            raise ValueError(f"backend must be 'sklearn' or 'optuna', got: {backend}")
+
         _check_keep_subsampling(fitted, keep_subsampling)
 
-        search = ParamSearch(
-            self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
-        )
+        if backend == "sklearn":
+            search = ParamSearch(
+                self.clone(),
+                model_selection.RandomizedSearchCV(
+                    None,
+                    None,
+                    n_iter=n_iter,
+                    scoring=scoring,
+                    n_jobs=n_jobs,
+                    refit=refit,
+                    cv=cv,
+                    verbose=verbose,
+                    pre_dispatch=pre_dispatch,
+                    random_state=random_state,
+                    error_score=error_score,
+                    return_train_score=return_train_score,
+                ),
+            )
+        else:
+            from ._optuna import OptunaSearch
+
+            search = OptunaSearch(
+                self.clone(),
+                n_iter=n_iter,
+                scoring=scoring,
+                n_jobs=n_jobs,
+                refit=refit,
+                cv=cv,
+                verbose=verbose,
+                pre_dispatch=pre_dispatch,
+                random_state=random_state,
+                error_score=error_score,
+                return_train_score=return_train_score,
+                storage=storage,
+                study_name=study_name,
+                sampler=sampler,
+            )
         if not fitted:
             return search
         return search.fit(

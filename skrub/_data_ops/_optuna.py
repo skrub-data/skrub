@@ -6,6 +6,10 @@ import warnings
 
 import joblib
 import numpy as np
+import optuna
+import optuna.samplers
+from optuna.storages import JournalStorage
+from optuna.storages.journal import JournalFileBackend
 from sklearn.metrics import check_scoring
 from sklearn.utils import check_random_state
 
@@ -31,11 +35,15 @@ def _process_trial_results(trial, cv_results, refit_metric):
         info[f"mean_{task}_time"] = cv_results[f"{task}_time"].mean()
         info[f"std_{task}_time"] = cv_results[f"{task}_time"].std()
     for m in metrics:
-        scores = cv_results[f"test_{m}"]
-        for split in range(len(scores)):
-            info[f"split{split}_test_{m}"] = scores[split]
-        info[f"mean_test_{m}"] = scores.mean()
-        info[f"std_test_{m}"] = scores.std()
+        for task in ("train", "test"):
+            try:
+                scores = cv_results[f"{task}_{m}"]
+            except KeyError:
+                continue
+            for split in range(len(scores)):
+                info[f"split{split}_{task}_{m}"] = scores[split]
+            info[f"mean_{task}_{m}"] = scores.mean()
+            info[f"std_{task}_{m}"] = scores.std()
     info = {k: float(v) for k, v in info.items()}
     info["params"] = {
         f"data_op__{k.split(':', 1)[0]}": (
@@ -58,9 +66,6 @@ def _process_study_results(study):
 
 
 def _check_storage(url):
-    from optuna.storages import JournalStorage
-    from optuna.storages.journal import JournalFileBackend
-
     if url.startswith("journal:"):
         return JournalStorage(
             JournalFileBackend(file_path=url.removeprefix("journal:"))
@@ -78,10 +83,15 @@ class OptunaSearch(ParamSearch):
         n_jobs=None,
         refit=True,
         cv=None,
+        verbose=0,
+        pre_dispatch="2*n_jobs",
         random_state=None,
+        error_score=np.nan,
+        return_train_score=False,
         # optuna-specific params
         storage=None,
         study_name=None,
+        sampler=None,
     ):
         self.data_op = data_op
         self.n_iter = n_iter
@@ -89,9 +99,14 @@ class OptunaSearch(ParamSearch):
         self.n_jobs = n_jobs
         self.refit = refit
         self.cv = cv
+        self.verbose = verbose
+        self.pre_dispatch = pre_dispatch
         self.random_state = random_state
+        self.error_score = error_score
+        self.return_train_score = return_train_score
         self.storage = storage
         self.study_name = study_name
+        self.sampler = sampler
 
     def __skrub_to_Xy_pipeline__(self, environment):
         new = _XyOptunaSearch(
@@ -101,13 +116,15 @@ class OptunaSearch(ParamSearch):
         return new
 
     def fit(self, environment):
-        import optuna
-        import optuna.samplers
-
-        self.scorer_ = check_scoring(
+        scorer = check_scoring(
             self.data_op.skb.make_learner().__skrub_to_Xy_pipeline__(environment),
             self.scoring,
         )
+        try:
+            self.scorer_ = scorer._scorers
+        except AttributeError:
+            self.scorer_ = scorer
+        self.refit_ = self.refit
 
         with contextlib.ExitStack() as exit_stack:
             #
@@ -144,14 +161,16 @@ class OptunaSearch(ParamSearch):
                     )
                 seed = None
 
-            def make_sampler():
-                # The default sampler, we instantiate it to set the seed
-                return optuna.samplers.TPESampler(seed=seed)
+            sampler = (
+                self.sampler
+                if self.sampler is not None
+                else optuna.samplers.TPESampler(seed=seed)
+            )
 
             def create_study():
                 return optuna.create_study(
                     direction="maximize",
-                    sampler=make_sampler(),
+                    sampler=sampler,
                     storage=_check_storage(storage),
                     study_name=study_name,
                     load_if_exists=True,
@@ -162,6 +181,10 @@ class OptunaSearch(ParamSearch):
                 cv_results = learner.data_op.skb.cross_validate(
                     environment,
                     cv=self.cv,
+                    error_score=self.error_score,
+                    return_train_score=self.return_train_score,
+                    verbose=self.verbose,
+                    scoring=self.scoring,
                 )
                 return _process_trial_results(trial, cv_results, None)
 
@@ -180,7 +203,7 @@ class OptunaSearch(ParamSearch):
                     study = create_study()
                     study.optimize(objective, n_trials=1, n_jobs=1)
 
-                joblib.Parallel(n_jobs=n_jobs)(
+                joblib.Parallel(n_jobs=n_jobs, pre_dispatch=self.pre_dispatch)(
                     joblib.delayed(optimize)() for _ in range(self.n_iter)
                 )
             #
@@ -195,7 +218,7 @@ class OptunaSearch(ParamSearch):
                     to_study_name=study_name,
                 )
                 self.study_ = optuna.study.load_study(
-                    study_name=study_name, storage=new_storage, sampler=make_sampler()
+                    study_name=study_name, storage=new_storage, sampler=sampler
                 )
             else:
                 self.study_ = study
