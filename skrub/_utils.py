@@ -4,7 +4,7 @@ import itertools
 import re
 import reprlib
 import secrets
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import sklearn
