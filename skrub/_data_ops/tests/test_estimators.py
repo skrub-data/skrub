@@ -505,6 +505,75 @@ def test_iter_learners():
     ] == [{"c": 549}, {"c": 715}, {"c": 603}]
 
 
+def test_optuna_storage(tmp_path, data_op, data, n_jobs):
+    # cannot use optuna search without optuna installed
+    pytest.importorskip("optuna")
+
+    # providing explicit storage: sqlite db
+    storage = f"sqlite:///{tmp_path / 'search_data.sqlite'}"
+    search = data_op.skb.make_randomized_search(
+        n_iter=2,
+        cv=2,
+        backend="optuna",
+        storage=storage,
+        study_name="classif_search",
+        n_jobs=n_jobs,
+    )
+    search.fit(data)
+    assert len(search.study_.trials) == 2
+    search.fit(data)
+    assert len(search.study_.trials) == 4
+
+    # providing explicit storage: journal
+    storage = f"journal:///{tmp_path / 'search_data.journal'}"
+    search = data_op.skb.make_randomized_search(
+        n_iter=2,
+        cv=2,
+        backend="optuna",
+        storage=storage,
+        study_name="classif_search",
+        n_jobs=n_jobs,
+    )
+    search.fit(data)
+    assert len(search.study_.trials) == 2
+    search.fit(data)
+    assert len(search.study_.trials) == 4
+
+    # default storage: check study is moved to in-memory storage
+    storage = None
+    search = data_op.skb.make_randomized_search(
+        n_iter=2,
+        cv=2,
+        backend="optuna",
+        storage=storage,
+        study_name="classif_search",
+        n_jobs=n_jobs,
+    )
+    search.fit(data)
+    # If we didn't move the study to in-memory storage, we would get a
+    # FileNotFound error for the temp file created for optimization.
+    assert len(search.study_.trials) == 2
+    assert len(pickle.loads(pickle.dumps(search)).study_.trials) == 2
+
+    # bad storage: actual storage objects or other types are not accepted, only
+    # strings
+    from optuna.storages import JournalStorage
+    from optuna.storages.journal import JournalFileBackend
+
+    with pytest.raises(TypeError, match="storage should be a database url or None"):
+        storage = JournalStorage(
+            JournalFileBackend(file_path=str(tmp_path / "search_data_1.journal"))
+        )
+        search = data_op.skb.make_randomized_search(
+            n_iter=2,
+            cv=2,
+            backend="optuna",
+            storage=storage,
+            study_name="classif_search",
+        )
+        search.fit(data)
+
+
 #
 # caching
 #

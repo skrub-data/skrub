@@ -2095,8 +2095,14 @@ class SkrubNamespace:
         storage : None or str (default=None)
             The URL for the database to use as the Optuna storage. In addition
             to the usual relational database URLs (e.g.
-            ``'sqlite://<file_path>'`` ), it can be ``'journal://<file_path>'``
-            to use Optuna's :class:`~optuna.storages.JournalStorage`.
+            ``'sqlite:///<file_path>'`` ), it can be
+            ``'journal:///<file_path>'`` to use Optuna's
+            :class:`~optuna.storages.JournalStorage`. See the `SQLAlchemy
+            documentation
+            <https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls>`_
+            for information on how to construct database URLs, which take the
+            general form
+            ``dialect+driver://username:password@host:port/database``.
 
         study_name : None or str (default=None)
             The name to use for the created (or loaded) Optuna study. If the

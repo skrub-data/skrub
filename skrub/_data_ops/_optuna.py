@@ -64,9 +64,9 @@ def _check_storage(url):
     from optuna.storages import JournalStorage
     from optuna.storages.journal import JournalFileBackend
 
-    if url.startswith("journal://"):
+    if url.startswith("journal:///"):
         return JournalStorage(
-            JournalFileBackend(file_path=url.removeprefix("journal://"))
+            JournalFileBackend(file_path=url.removeprefix("journal:///"))
         )
     else:
         return url
@@ -140,16 +140,18 @@ class OptunaSearch(_BaseParamSearch):
                     tempfile.TemporaryDirectory(suffix="_skrub_optuna_search_storage")
                 )
                 tmp_file = pathlib.Path(tmp_dir) / "optuna_storage"
-                storage = f"journal://{tmp_file}"
+                storage = f"journal:///{tmp_file}"
             else:
-                if not isinstance(self.storage, (str, pathlib.Path)):
+                if not isinstance(self.storage, str):
                     raise TypeError(
                         f"storage should be a database url or None, got: {self.storage}"
                     )
+                storage = self.storage
             if self.study_name is None:
                 study_name = f"skrub_randomized_search_{uuid.uuid4()}"
             else:
                 study_name = self.study_name
+            print(f"Running optuna search for study {study_name} in storage {storage}")
             #
             # Create study and run trials
             #
@@ -191,9 +193,15 @@ class OptunaSearch(_BaseParamSearch):
                 study = create_study()
                 study.optimize(objective, n_trials=self.n_iter, n_jobs=n_jobs)
             else:
-                # Otherwise use joblib.Parallel
-                # Note this would probably not be safe with the threading
-                # backend.
+                # If multiprocessing, use joblib.Parallel.
+
+                # Make sure we initialize the database before launching the
+                # processes otherwise we can have an error with rdb backends
+                # where multiple processes try to create the same table (the
+                # first one succeeds and the others get an error as the table
+                # exists)
+                create_study()
+
                 def optimize():
                     study = create_study()
                     # reseed otherwise all processes will start with the same
@@ -220,7 +228,7 @@ class OptunaSearch(_BaseParamSearch):
                     study_name=study_name, storage=new_storage, sampler=sampler
                 )
             else:
-                self.study_ = study
+                self.study_ = create_study()
             #
             # Best params & refit
             #
