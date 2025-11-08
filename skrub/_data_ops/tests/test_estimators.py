@@ -574,6 +574,26 @@ def test_optuna_storage(tmp_path, data_op, data, n_jobs):
         search.fit(data)
 
 
+@pytest.mark.parametrize(
+    "sampler_class", ("RandomSampler", "CmaEsSampler", "TPESampler")
+)
+def test_optuna_sampler(sampler_class, data_op, data):
+    pytest.importorskip("optuna")
+    from optuna import samplers
+
+    sampler = getattr(samplers, sampler_class)()
+    search = data_op.skb.make_randomized_search(
+        n_iter=2,
+        cv=2,
+        n_jobs=2,
+        backend="optuna",
+        sampler=sampler,
+    )
+    search.fit(data)
+    assert search.study_.sampler is sampler
+    assert len(search.study_.trials) == 2
+
+
 #
 # caching
 #

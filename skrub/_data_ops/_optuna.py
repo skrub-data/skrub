@@ -117,6 +117,9 @@ class OptunaSearch(_BaseParamSearch):
         import optuna
         import optuna.samplers
 
+        #
+        # Store some fitted attributes
+        #
         scorer = check_scoring(
             self.data_op.skb.make_learner().__skrub_to_Xy_pipeline__(environment),
             self.scoring,
@@ -214,7 +217,7 @@ class OptunaSearch(_BaseParamSearch):
                     joblib.delayed(optimize)() for _ in range(self.n_iter)
                 )
             #
-            # Copy results to an in-memory storage if self.storage was None
+            # Copy results to an in-memory storage if the storage we used is a temp file
             #
             if self.storage is None:
                 new_storage = optuna.storages.InMemoryStorage()
