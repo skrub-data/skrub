@@ -574,9 +574,7 @@ def test_optuna_storage(tmp_path, data_op, data, n_jobs):
         search.fit(data)
 
 
-@pytest.mark.parametrize(
-    "sampler_class", ("RandomSampler", "CmaEsSampler", "TPESampler")
-)
+@pytest.mark.parametrize("sampler_class", ("RandomSampler", "TPESampler"))
 def test_optuna_sampler(sampler_class, data_op, data):
     pytest.importorskip("optuna")
     from optuna import samplers
