@@ -439,7 +439,7 @@ def test_failing_estimator(randomized_search_backend):
     # the search should pick logistic regression
     assert search.best_learner_.get_params()["data_op__1"] == 0
 
-    with pytest.raises(RuntimeError, match="error from BadClassifier"):
+    with pytest.raises(RuntimeError) as e:
         data_op.skb.make_randomized_search(
             n_iter=5,
             cv=2,
@@ -447,6 +447,7 @@ def test_failing_estimator(randomized_search_backend):
             backend=randomized_search_backend,
             error_score="raise",
         ).fit(data)
+    assert "error from BadClassifier" in str(e.getrepr(style="native"))
 
 
 def test_no_refit(data_op, data, randomized_search_backend):
