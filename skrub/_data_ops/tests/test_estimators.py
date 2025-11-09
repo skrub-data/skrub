@@ -1,6 +1,7 @@
 import copy
 import io
 import pickle
+import warnings
 from unittest.mock import Mock
 
 import numpy as np
@@ -13,7 +14,7 @@ from sklearn.cluster import KMeans
 from sklearn.datasets import make_blobs, make_classification
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyClassifier, DummyRegressor
-from sklearn.exceptions import NotFittedError
+from sklearn.exceptions import FitFailedWarning, NotFittedError
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import accuracy_score
@@ -345,7 +346,71 @@ def test_multimetric():
         assert np.allclose(sklearn_results[col], data_op_search.results_[col].values)
 
 
-# TODO: add test with scorer returning a dict
+def test_scorer_returns_dict(randomized_search_backend):
+    def scoring(estimator, X, y):
+        acc = accuracy_score(y, estimator.predict(X))
+        return {"neg_accuracy": -acc, "true_accuracy": acc}
+
+    data_op = skrub.X().skb.apply(
+        skrub.choose_from(
+            (
+                DummyClassifier(),
+                LogisticRegression(C=skrub.choose_float(0.01, 10.0, log=True)),
+            )
+        ),
+        y=skrub.y(),
+    )
+    X, y = make_classification()
+    data = {"X": X, "y": y}
+    search = data_op.skb.make_randomized_search(
+        n_iter=5,
+        scoring=scoring,
+        cv=2,
+        refit="true_accuracy",
+        backend=randomized_search_backend,
+    ).fit(data)
+    assert search.results_["mean_test_true_accuracy"].is_monotonic_decreasing
+    assert search.best_score_ == search.results_["mean_test_true_accuracy"][0]
+
+
+def test_failing_estimator(randomized_search_backend):
+    class BadClassifier(DummyClassifier):
+        def fit(self, X, y):
+            raise RuntimeError("error from BadClassifier")
+
+    data_op = skrub.X().skb.apply(
+        skrub.choose_from(
+            (
+                LogisticRegression(C=skrub.choose_float(0.1, 10.0, log=True)),
+                BadClassifier(),
+            )
+        ),
+        y=skrub.y(),
+    )
+    X, y = make_classification(random_state=0)
+    data = {"X": X, "y": y}
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=FitFailedWarning)
+        warnings.filterwarnings(
+            "ignore", message="One or more of the test scores are non-finite"
+        )
+        search = data_op.skb.make_randomized_search(
+            n_iter=5, cv=2, random_state=0, backend=randomized_search_backend
+        ).fit(data)
+    assert search.best_score_ > 0.6
+    assert search.results_.shape[0] == 5
+    assert search.results_["mean_test_score"].isna().any()
+    # the search should pick logistic regression
+    assert search.best_learner_.get_params()["data_op__1"] == 0
+
+    with pytest.raises(RuntimeError, match="error from BadClassifier"):
+        data_op.skb.make_randomized_search(
+            n_iter=5,
+            cv=2,
+            random_state=0,
+            backend=randomized_search_backend,
+            error_score="raise",
+        ).fit(data)
 
 
 def test_no_refit(data_op, data, randomized_search_backend):
@@ -560,7 +625,7 @@ def test_optuna_storage(tmp_path, data_op, data, n_jobs):
     from optuna.storages import JournalStorage
     from optuna.storages.journal import JournalFileBackend
 
-    with pytest.raises(TypeError, match="storage should be a database url or None"):
+    with pytest.raises(TypeError, match="storage should be a database URL or None"):
         storage = JournalStorage(
             JournalFileBackend(file_path=str(tmp_path / "search_data_1.journal"))
         )
@@ -590,6 +655,11 @@ def test_optuna_sampler(sampler_class, data_op, data):
     search.fit(data)
     assert search.study_.sampler is sampler
     assert len(search.study_.trials) == 2
+
+
+def test_bad_search_backend():
+    with pytest.raises(ValueError, match="backend must be 'sklearn' or 'optuna'"):
+        skrub.X().skb.make_randomized_search(backend="bad")
 
 
 #

@@ -1,4 +1,5 @@
 import contextlib
+import itertools
 import pathlib
 import tempfile
 import uuid
@@ -21,7 +22,29 @@ from ._estimator import (
 _OPTUNA_SEARCH_FITTED_ATTRIBUTES = _SEARCH_FITTED_ATTRIBUTES + ["study_"]
 
 
+def _parse_trial_params(trial):
+    """
+    Convert the keys and values we use for Optuna parameters, which are meant
+    to be informative like {'1:estimator': '0:logistic', '0:C': 0.1} to the
+    sklearn params like {'data_op__1': 0, 'data_op__0': 0.1}
+    """
+    return {
+        f"data_op__{k.split(':', 1)[0]}": (
+            int(v.split(":", 1)[0]) if isinstance(v, str) else v
+        )
+        for k, v in trial.params.items()
+    }
+
+
 def _process_trial_results(trial, cv_results, refit_metric):
+    """
+    Process results of one cross-validation and store them in the corresponding trial.
+
+    refit_metric should be the name of the metric that drives the
+    hyperparameter optimization (the return value of the objective function).
+    If None, the first metric found in the CV results (ie the first one in the
+    'scoring' passed to make_randomized_search) is used.
+    """
     info = {}
     metrics = [
         c.removeprefix("test_") for c in cv_results.keys() if c.startswith("test_")
@@ -40,12 +63,8 @@ def _process_trial_results(trial, cv_results, refit_metric):
             info[f"mean_{task}_{m}"] = scores.mean()
             info[f"std_{task}_{m}"] = scores.std()
     info = {k: float(v) for k, v in info.items()}
-    info["params"] = {
-        f"data_op__{k.split(':', 1)[0]}": (
-            int(v.split(":", 1)[0]) if isinstance(v, str) else v
-        )
-        for k, v in trial.params.items()
-    }
+    info["params"] = _parse_trial_params(trial)
+
     trial.set_user_attr("cv_results", info)
     if refit_metric is None:
         refit_metric = metrics[0]
@@ -53,14 +72,35 @@ def _process_trial_results(trial, cv_results, refit_metric):
 
 
 def _process_study_results(study):
-    result = {}
+    """
+    Build the overall search results from the study once optimization is finished.
+    """
+    # Find all keys in the cv_results of all trials. Some trials may have
+    # missing keys: when all splits raise an error only the 'params' key will
+    # be present.
+    all_keys = list(
+        dict.fromkeys(
+            itertools.chain(
+                *(trial.user_attrs["cv_results"].keys() for trial in study.trials)
+            )
+        )
+    )
+    result = {k: [] for k in all_keys}
+    # Build the overall cv_results_
     for trial in study.trials:
-        for k, v in trial.user_attrs["cv_results"].items():
-            result.setdefault(k, []).append(v)
+        trial_results = trial.user_attrs["cv_results"]
+        for key, values in result.items():
+            values.append(trial_results.get(key, None))
     return result
 
 
 def _check_storage(url):
+    """
+    Convert URL to something we can pass to optuna.create_study
+
+    SqlAlchemy URLs can be passed directly but when we want to use
+    JournalStorage we need to instantiate it ourselves.
+    """
     from optuna.storages import JournalStorage
     from optuna.storages.journal import JournalFileBackend
 
@@ -117,15 +157,15 @@ class OptunaSearch(_BaseParamSearch):
         import optuna
         import optuna.samplers
 
-        #
-        # Store some fitted attributes
-        #
+        # TODO: check_scoring fails in sklearn < 1.5 if scoring is a dict or list of
+        # metrics. We could build the scorer ourselves instead of calling
+        # check_scoring in this case.
         scorer = check_scoring(
             self.data_op.skb.make_learner().__skrub_to_Xy_pipeline__(environment),
             self.scoring,
         )
         try:
-            # sklearn MultiMetricScorer when scorer is a dict
+            # sklearn MultiMetricScorer when self.scoring is a dict or list of metrics.
             self.scorer_ = scorer._scorers
         except AttributeError:
             self.scorer_ = scorer
@@ -147,7 +187,7 @@ class OptunaSearch(_BaseParamSearch):
             else:
                 if not isinstance(self.storage, str):
                     raise TypeError(
-                        f"storage should be a database url or None, got: {self.storage}"
+                        f"storage should be a database URL or None, got: {self.storage}"
                     )
                 storage = self.storage
             if self.study_name is None:
@@ -168,6 +208,11 @@ class OptunaSearch(_BaseParamSearch):
             )
 
             def create_study():
+                # When using multiprocessing, create_study will get called by each
+                # subprocess. Note we do not share a study nor an optuna
+                # storage object with subprocesses, as they can store database
+                # connections, thread pools etc., but create both the study
+                # and the storage in each process.
                 return optuna.create_study(
                     direction="maximize",
                     sampler=sampler,
@@ -178,15 +223,29 @@ class OptunaSearch(_BaseParamSearch):
 
             def objective(trial):
                 learner = self.data_op.skb.make_learner(choose=trial)
-                cv_results = learner.data_op.skb.cross_validate(
-                    environment,
-                    cv=self.cv,
-                    error_score=self.error_score,
-                    return_train_score=self.return_train_score,
-                    verbose=self.verbose,
-                    scoring=self.scoring,
-                )
-                return _process_trial_results(trial, cv_results, None)
+                try:
+                    cv_results = learner.data_op.skb.cross_validate(
+                        environment,
+                        cv=self.cv,
+                        error_score=self.error_score,
+                        return_train_score=self.return_train_score,
+                        verbose=self.verbose,
+                        scoring=self.scoring,
+                    )
+                except Exception:
+                    # Even with error_score != 'raise', cross_validate will
+                    # raise if all splits raise an error.
+                    if (
+                        isinstance(self.error_score, str)
+                        and self.error_score == "raise"
+                    ):
+                        raise
+                    trial.set_user_attr(
+                        "cv_results", {"params": _parse_trial_params(trial)}
+                    )
+                    return self.error_score
+                refit_metric = self.refit_ if isinstance(self.refit_, str) else None
+                return _process_trial_results(trial, cv_results, refit_metric)
 
             if (
                 getattr(joblib.parallel.get_active_backend()[0], "uses_threads", False)

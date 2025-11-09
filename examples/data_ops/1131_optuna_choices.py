@@ -29,7 +29,6 @@ from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegresso
 
 import skrub
 
-X, y = skrub.X(), skrub.y()
 hgb = HistGradientBoostingRegressor(
     learning_rate=skrub.choose_float(0.01, 0.6, log=True, name="learning_rate")
 )
@@ -37,7 +36,7 @@ rf = RandomForestRegressor(
     n_estimators=skrub.choose_int(20, 100, name="n_estimators"),
 )
 regressor = skrub.choose_from({"hgb": hgb, "random forest": rf}, name="regressor")
-pred = X.skb.apply(regressor, y=y)
+pred = skrub.X().skb.apply(regressor, y=skrub.y())
 print(pred.skb.describe_param_grid())
 
 # %%
@@ -47,8 +46,9 @@ print(pred.skb.describe_param_grid())
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import KFold
 
-env = {}
-env["X"], env["y"] = fetch_california_housing(return_X_y=True, as_frame=True)
+X, y = fetch_california_housing(return_X_y=True, as_frame=True)
+# The environment we will use to fit the learners created by our DataOp.
+env = {"X": X, "y": y}
 cv = KFold(n_splits=4, shuffle=True, random_state=0)
 
 # %%
@@ -58,27 +58,59 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # The simplest way to use Optuna is to pass ``backend='optuna'`` to
 # :meth:`DataOp.skb.make_randomized_search()`. It is used very similarly as
 # with the default backend
-# (:class:`sklearn.model_selection.RandomizedSearchCV`). A few additional
+# (:class:`sklearn.model_selection.RandomizedSearchCV`). Additional
 # parameters are available to control the Optuna sampler, storage and study
 # name.
 
 # %%
-search = pred.skb.make_randomized_search(backend="optuna", cv=cv)
+search = pred.skb.make_randomized_search(backend="optuna", cv=cv, n_iter=16)
 search.fit(env)
 search.results_
+
+# %%
+# The usual ``results_``, ``detailed_results_`` and ``plot_results()`` are
+# still available.
 
 # %%
 search.plot_results()
 
 # %%
-# Using Optuna directly
-# ---------------------
+# The Optuna :class:`Study <optuna.study.Study>` that was used to run the
+# hyperparameter search is available in the attribute ``study_``:
+
+# %%
+search.study_
+
+# %%
+search.study_.best_params
+
+# %%
+# This allows us to use Optuna's reporting capabilities provided in
+# `optuna.visualization
+# <https://optuna.readthedocs.io/en/stable/reference/visualization/>`_ or
+# `optuna-dashboard
+# <https://optuna-dashboard.readthedocs.io/en/latest/getting-started.html>`_.
+
+# %%
+import optuna
+
+optuna.visualization.plot_slice(search.study_, params=["0:learning_rate"])
+
+# %%
+# Using Optuna directly for more advanced use cases
+# -------------------------------------------------
 #
-# Often we may want more control over the use of Optuna. Indeed,
-# :meth:`DataOp.skb.make_randomized_search` only provides access to some of
-# Optuna's functionality. This is also easy, as we can pass an Optuna Trial to
-# :meth:`DataOp.skb.make_learner` in which case the parameter suggested by the
-# trial are used.
+# Often we may want more control over the use of Optuna, or to access
+# functionality not available through :meth:`DataOp.skb.make_randomized_search`
+# such as the ask-and-tell interface, timeouts, trial pruning, callbacks,
+# multi-objective optimization, etc. .
+#
+# Directly using Optuna ourselves is also easy, as we will show now. What makes
+# this possible is that we can pass an Optuna Trial to
+# :meth:`DataOp.skb.make_learner` in which case the parameters suggested by the
+# trial are used to create the learner.
+#
+# We revisit the example above, following the typical Optuna workflow.
 #
 # The :class:`optuna.Study <optuna.study.Study>` runs the hyperparameter
 # search.
@@ -100,8 +132,8 @@ search.plot_results()
 # optimization is also possible. Please refer to the Optuna documentation for
 # more information.
 
+
 # %%
-import optuna
 
 
 def objective(trial):
@@ -112,6 +144,7 @@ def objective(trial):
 
 study = optuna.create_study(direction="maximize")
 study.optimize(objective, n_trials=16)
+study.best_params
 
 # %%
 # Now we build a learner with the best hyperparameters and fit it on the full
@@ -128,32 +161,4 @@ best_learner.fit(env)
 print(best_learner.describe_params())
 
 # %%
-# Exploring the search results
-# ----------------------------
-#
-# Many reporting capabilities are available for example with
-# `optuna.visualization
-# <https://optuna.readthedocs.io/en/stable/reference/visualization/>`_ or
-# `optuna-dashboard
-# <https://optuna-dashboard.readthedocs.io/en/latest/getting-started.html>`_.
-# The Study object itself has some useful attributes:
-
-# %%
-study.best_params
-
-# %%
-study.trials_dataframe().sort_values("value", ascending=False).filter(
-    regex="(value|params.*)"
-)
-
-# %%
-# We can see that the histogram gradient boosting seems to perform better than
-# the random forest, and that the best learning rate for this dataset seems to
-# be inside the range we explored.
-
-# %%
-# As a small example of the visalization capabilities we plot the score
-# depending on the learning rate of the histogram gradient boosting:
-
-# %%
-optuna.visualization.plot_slice(study, params=["0:learning_rate"])
+optuna.visualization.plot_optimization_history(study)
