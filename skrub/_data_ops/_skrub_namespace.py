@@ -2057,6 +2057,7 @@ class SkrubNamespace:
         storage=None,
         study_name=None,
         sampler=None,
+        timeout=None,
     ):
         """Find the best parameters with randomized search.
 
@@ -2113,6 +2114,17 @@ class SkrubNamespace:
             The sampler to use when the backend is 'optuna'. If None, a
             :class:`~optuna.samplers.TPESampler` is used (the same default as
             :func:`~optuna.study.create_study`).
+
+        timeout : None or float (default=None)
+            Timeout after which no new trials are created. Trials already
+            started when reaching the timeout are still completed. If None,
+            there is no timeout and all ``n_iters`` trials are completed.
+
+            .. note::
+                If this parameter is used, parallelization when ``n_jobs > 1``
+                is always done with Optuna's built-in parallelization, which
+                relies on multithreading. This means threads are used (rather
+                than processes) regardless of the joblib backend.
 
         Returns
         -------
@@ -2214,6 +2226,7 @@ class SkrubNamespace:
                 storage=storage,
                 study_name=study_name,
                 sampler=sampler,
+                timeout=timeout,
             )
         if not fitted:
             return search

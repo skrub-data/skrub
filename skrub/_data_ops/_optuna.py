@@ -154,6 +154,7 @@ class OptunaSearch(_BaseParamSearch):
         storage=None,
         study_name=None,
         sampler=None,
+        timeout=None,
     ):
         self.data_op = data_op
         self.n_iter = n_iter
@@ -169,6 +170,7 @@ class OptunaSearch(_BaseParamSearch):
         self.storage = storage
         self.study_name = study_name
         self.sampler = sampler
+        self.timeout = timeout
 
     def __skrub_to_Xy_pipeline__(self, environment):
         new = _XyOptunaSearch(
@@ -264,14 +266,20 @@ class OptunaSearch(_BaseParamSearch):
                 return _process_trial_results(trial, cv_results, refit_metric)
 
             if (
-                getattr(joblib.parallel.get_active_backend()[0], "uses_threads", False)
+                self.timeout is not None
+                or getattr(
+                    joblib.parallel.get_active_backend()[0], "uses_threads", False
+                )
                 or n_jobs == 1
             ):
-                # If sequential or threading, use optuna's built-in parallelization
+                # If using timeout or sequential or threading parallelism, use
+                # optuna's built-in parallelization
                 study = create_study()
-                study.optimize(objective, n_trials=self.n_iter, n_jobs=n_jobs)
+                study.optimize(
+                    objective, n_trials=self.n_iter, n_jobs=n_jobs, timeout=self.timeout
+                )
             else:
-                # If multiprocessing, use joblib.Parallel.
+                # Otherwise for multiprocessing parallelism, use joblib.Parallel.
 
                 # Make sure we initialize the database before launching the
                 # processes otherwise we can have an error with rdb backends
@@ -338,6 +346,7 @@ class _XyOptunaSearch(_XyPipelineMixin, OptunaSearch):
         storage,
         study_name,
         sampler,
+        timeout,
         environment,
     ):
         self.data_op = data_op
@@ -354,6 +363,7 @@ class _XyOptunaSearch(_XyPipelineMixin, OptunaSearch):
         self.storage = storage
         self.study_name = study_name
         self.sampler = sampler
+        self.timeout = timeout
         self.environment = environment
 
     def __skrub_to_env_learner__(self):

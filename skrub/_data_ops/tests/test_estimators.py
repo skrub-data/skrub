@@ -675,10 +675,11 @@ def test_optuna_storage(tmp_path, data_op, data, n_jobs):
 
 
 @pytest.mark.parametrize("sampler_class", ("RandomSampler", "TPESampler"))
-def test_optuna_sampler(sampler_class, data_op, data):
+def test_optuna_sampler(sampler_class):
     pytest.importorskip("optuna")
     from optuna import samplers
 
+    data_op, data = get_data_op_and_data("simple")
     sampler = getattr(samplers, sampler_class)()
     search = data_op.skb.make_randomized_search(
         n_iter=2,
@@ -690,6 +691,21 @@ def test_optuna_sampler(sampler_class, data_op, data):
     search.fit(data)
     assert search.study_.sampler is sampler
     assert len(search.study_.trials) == 2
+
+
+def test_optuna_timeout():
+    pytest.importorskip("optuna")
+
+    data_op, data = get_data_op_and_data("simple")
+    search = data_op.skb.make_randomized_search(
+        n_iter=20,
+        cv=5,
+        n_jobs=1,
+        backend="optuna",
+        timeout=1e-5,
+    )
+    search.fit(data)
+    assert len(search.study_.trials) == 1
 
 
 def test_bad_search_backend():

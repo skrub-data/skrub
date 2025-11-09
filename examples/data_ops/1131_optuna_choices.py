@@ -60,7 +60,7 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # with the default backend
 # (:class:`sklearn.model_selection.RandomizedSearchCV`). Additional
 # parameters are available to control the Optuna sampler, storage and study
-# name.
+# name, and timeout.
 
 # %%
 search = pred.skb.make_randomized_search(backend="optuna", cv=cv, n_iter=16)
@@ -102,7 +102,7 @@ optuna.visualization.plot_slice(search.study_, params=["0:learning_rate"])
 #
 # Often we may want more control over the use of Optuna, or to access
 # functionality not available through :meth:`DataOp.skb.make_randomized_search`
-# such as the ask-and-tell interface, timeouts, trial pruning, callbacks,
+# such as the ask-and-tell interface, trial pruning, callbacks,
 # multi-objective optimization, etc. .
 #
 # Directly using Optuna ourselves is also easy, as we will show now. What makes
