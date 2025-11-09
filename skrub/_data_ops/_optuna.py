@@ -6,8 +6,10 @@ import uuid
 
 import joblib
 import numpy as np
+import sklearn
 from sklearn.metrics import check_scoring
 from sklearn.utils import check_random_state
+from sklearn.utils.fixes import parse_version
 
 from ._estimator import (
     _SEARCH_FITTED_ATTRIBUTES,
@@ -112,6 +114,28 @@ def _check_storage(url):
         return url
 
 
+def _get_scorer(estimator, scoring):
+    """Create the scorer_ attribute."""
+    if parse_version(sklearn.__version__) < parse_version("1.5"):
+        if isinstance(scoring, (list, tuple, set)):
+            scorer = {
+                metric_name: check_scoring(estimator, metric_name)
+                for metric_name in scoring
+            }
+        elif isinstance(scoring, dict):
+            scorer = {k: check_scoring(estimator, v) for k, v in scoring.items()}
+        else:
+            scorer = check_scoring(estimator, scoring)
+        return scorer
+    scorer = check_scoring(estimator, scoring)
+    try:
+        # if multimetric, get the {name: scorer} dict
+        scorer = scorer._scorers
+    except AttributeError:
+        pass
+    return scorer
+
+
 class OptunaSearch(_BaseParamSearch):
     def __init__(
         self,
@@ -157,18 +181,10 @@ class OptunaSearch(_BaseParamSearch):
         import optuna
         import optuna.samplers
 
-        # TODO: check_scoring fails in sklearn < 1.5 if scoring is a dict or list of
-        # metrics. We could build the scorer ourselves instead of calling
-        # check_scoring in this case.
-        scorer = check_scoring(
+        self.scorer_ = _get_scorer(
             self.data_op.skb.make_learner().__skrub_to_Xy_pipeline__(environment),
             self.scoring,
         )
-        try:
-            # sklearn MultiMetricScorer when self.scoring is a dict or list of metrics.
-            self.scorer_ = scorer._scorers
-        except AttributeError:
-            self.scorer_ = scorer
         self.refit_ = self.refit
 
         with contextlib.ExitStack() as exit_stack:

@@ -7,7 +7,6 @@ from unittest.mock import Mock
 import numpy as np
 import pandas as pd
 import pytest
-import sklearn
 from numpy.testing import assert_allclose
 from sklearn.base import BaseEstimator, clone
 from sklearn.cluster import KMeans
@@ -17,10 +16,9 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.exceptions import FitFailedWarning, NotFittedError
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import GridSearchCV, cross_validate, train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 import skrub
@@ -346,6 +344,44 @@ def test_multimetric():
         assert np.allclose(sklearn_results[col], data_op_search.results_[col].values)
 
 
+@pytest.mark.parametrize("scoring_format", ["list", "dict", "callable"])
+def test_multimetric_randomized_search(randomized_search_backend, scoring_format):
+    if scoring_format == "list":
+        scoring = ["roc_auc", "accuracy"]
+    elif scoring_format == "dict":
+        scoring = {"roc_auc": "roc_auc", "accuracy": "accuracy"}
+    else:
+        assert scoring_format == "callable"
+
+        def scoring(e, X, y):
+            return {
+                "roc_auc": roc_auc_score(y, e.predict_proba(X)[:, 1]),
+                "accuracy": accuracy_score(y, e.predict(X)),
+            }
+
+    X, y = make_classification(random_state=0)
+    data_op_search = (
+        skrub.X(X)
+        .skb.apply(
+            LogisticRegression(**skrub.choose_float(0.1, 10.0, log=True, name="C")),
+            y=skrub.y(y),
+        )
+        .skb.make_randomized_search(
+            fitted=True,
+            scoring=scoring,
+            refit="roc_auc",
+            backend=randomized_search_backend,
+            cv=2,
+            n_iter=2,
+        )
+    )
+    assert list(data_op_search.results_.columns) == [
+        "C",
+        "mean_test_accuracy",
+        "mean_test_roc_auc",
+    ]
+
+
 def test_scorer_returns_dict(randomized_search_backend):
     def scoring(estimator, X, y):
         acc = accuracy_score(y, estimator.predict(X))
@@ -431,8 +467,6 @@ def test_no_refit(data_op, data, randomized_search_backend):
 
 
 def test_multimetric_no_refit(data_op, data, randomized_search_backend):
-    if parse_version(sklearn.__version__) < parse_version("1.5.0"):
-        pytest.skip("multimetric scoring not supported yet in check_scoring")
     search = data_op.skb.make_randomized_search(
         random_state=0,
         cv=2,
