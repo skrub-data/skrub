@@ -41,7 +41,7 @@ for ``alpha``.
    choices it is the middle of the range (unless an explicit default has been
    set when creating the choice), and for :func:`choose_from` it is the first
    option we give it. We can also obtain random choices, or choices suggested by
-   an optuna :class:`trial <optuna.trial.Trial>`, by passing the ``choose``
+   an Optuna :class:`trial <optuna.trial.Trial>`, by passing the ``choose``
    parameter.
 
    To get a pipeline that runs an internal cross-validation to select the best
