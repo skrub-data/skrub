@@ -105,19 +105,23 @@ do this like this:
 4      Art -1.069045
 
 
-Using :func:`filter` to select columns that contain outliers
-------------------------------------------------------------
+Custom criteria in :func:`filter`, example of selecting columns with outliers
+------------------------------------------------------------------------------
+
 The :func:`filter` selector can be used to select columns based on custom
 criteria. For example, we can define a function that checks if a column contains
 outliers using the Interquartile Range (IQR) method, and then use this function
 with :func:`filter` to select such columns.
 
+Specifically, we define a function that computes the IQR (Inter Quartile Range) of a column
+and checks if any data points extend further than 2 IQRs of the lower and upper quartile.
+
 >>> def has_outliers(column):
 ...    q1 = column.quantile(0.25)
 ...    q3 = column.quantile(0.75)
 ...    IQR = q3 - q1
-...    lower_bound = q1 - 1.5 * IQR
-...    upper_bound = q3 + 1.5 * IQR
+...    lower_bound = q1 - 2 * IQR
+...    upper_bound = q3 + 2 * IQR
 ...    outliers = (column < lower_bound) | (column > upper_bound)
 ...    return any(outliers)
 
