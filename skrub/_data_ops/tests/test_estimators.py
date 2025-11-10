@@ -240,7 +240,7 @@ def test_nested_cv(
     assert len(learners) == 5
     for p in learners:
         assert is_fitted(p)
-        assert p.__class__.__name__ in ("ParamSearch", "OptunaSearch")
+        assert p.__class__.__name__ in ("ParamSearch", "OptunaParamSearch")
 
     # when data is loaded from csv we check that the caching results in
     # read_csv being called exactly twice (we have 2 different 'files' to

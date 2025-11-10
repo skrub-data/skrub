@@ -136,7 +136,18 @@ def _get_scorer(estimator, scoring):
     return scorer
 
 
-class OptunaSearch(_BaseParamSearch):
+class OptunaParamSearch(_BaseParamSearch):
+    """Learner that evaluates a skrub DataOp with hyperparameter tuning.
+
+    This class is not meant to be instantiated manually, ``OptunaParamSearch``
+    objects are created by calling :meth:`DataOp.skb.make_randomized_search()`
+    on a :class:`DataOp`.
+
+    Attributes of interest are ``best_learner_``, ``best_score_``,
+    ``results_``, ``detailed_results_``, and ``study_`` (the Optuna study used
+    to find hyperparameters).
+    """
+
     def __init__(
         self,
         data_op,
@@ -173,7 +184,7 @@ class OptunaSearch(_BaseParamSearch):
         self.timeout = timeout
 
     def __skrub_to_Xy_pipeline__(self, environment):
-        new = _XyOptunaSearch(
+        new = _XyOptunaParamSearch(
             **self.get_params(deep=False), environment=_SharedDict(environment)
         )
         _copy_attr(self, new, _OPTUNA_SEARCH_FITTED_ATTRIBUTES)
@@ -329,7 +340,7 @@ class OptunaSearch(_BaseParamSearch):
         return self
 
 
-class _XyOptunaSearch(_XyPipelineMixin, OptunaSearch):
+class _XyOptunaParamSearch(_XyPipelineMixin, OptunaParamSearch):
     def __init__(
         self,
         data_op,
@@ -369,7 +380,7 @@ class _XyOptunaSearch(_XyPipelineMixin, OptunaSearch):
     def __skrub_to_env_learner__(self):
         params = self.get_params(deep=False)
         params.pop("environment")
-        new = OptunaSearch(**params)
+        new = OptunaParamSearch(**params)
         _copy_attr(self, new, _OPTUNA_SEARCH_FITTED_ATTRIBUTES)
         return new
 

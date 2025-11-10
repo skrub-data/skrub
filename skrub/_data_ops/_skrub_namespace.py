@@ -41,6 +41,7 @@ from ._inspection import (
     draw_data_op_graph,
     full_report,
 )
+from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
 from ._utils import KFOLD_5, NULL, attribute_error
 
@@ -2091,9 +2092,73 @@ class SkrubNamespace:
             If 'optuna', an Optuna :class:`~optuna.study.Study` is used instead
             and it is possible to choose the sampler and storage.
 
-        # TODO document the usual scikit-learn parameters cv, scoring, etc.
+        n_iter : int, default=10
+            Number of parameter combinations to try.
 
-        storage : None or str (default=None)
+        scoring : str, callable, list or dict, default=None
+            Strategy to evaluate the model's predictions.
+            It can be:
+
+            - None: use the predictor's ``score`` method
+            - a metric name such as 'accuracy'
+            - a list of such names
+            - a callable (estimator, X_test, y_test) → score
+            - a dict mapping metric name to callable
+            - a callable returning a dict mapping metric name to value
+
+            See the `scikit-learn documentation
+            <https://scikit-learn.org/stable/modules/model_evaluation.html#the-scoring-parameter-defining-model-evaluation-rules>`_
+            for details.
+
+        n_jobs : int or None, default=None
+            Number of jobs to run in parallel.
+            ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+            ``-1`` means using all processors.
+
+        refit : bool or str, default=True
+            Whether to refit a learner to the whole dataset using the best
+            parameters found.
+
+            For multiple metric evaluation it should be the name of the metric
+            to use to pick the best parameters. If ``backend='optuna'`` it is
+            also the metric that drives the Optuna optimization.
+
+        cv : int, cross-validation iterator or iterable, default=None
+            Cross-validation splitting strategy. It can be:
+
+            - None: 5-fold (stratified) cross-validation
+            - integer: specify the number of folds
+            - sklearn `CV splitter <https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators>`_
+            - iterable yielding (train, test) splits as arrays of indices.
+
+        verbose : int, default=0
+            Verbosity, the higher the more verbose. It is recommended to leave
+            it to 0 if using ``backend='optuna'``.
+
+        pre_dispatch : int, or str, default='2*n_jobs'
+            Number of jobs dispatched during parallel execution, when using the
+            joblib parallelization.
+
+        random_state : int, RandomState instance or None, default=None
+            Pseudo random number generator state used for random sampling
+            Pass an int for reproducible output across multiple function calls.
+
+            .. note::
+
+                the result will never be deterministic if using
+                ``backend='optuna'`` and ``n_jobs > 1`` (as the sampled
+                parameters depend on previous runs).
+
+        error_score : 'raise' or float, default=np.nan
+            Value to assign to the score if an error occurs in estimator fitting.
+            If set to 'raise', the error is raised.
+
+        return_train_score : bool, default=False
+            Also compute scores on the training set, in which case they will be
+            available in the ``cv_results_`` attribute in addition to the
+            scores on the test set.
+
+        storage : None or str, default=None
             The URL for the database to use as the Optuna storage. In addition
             to the usual relational database URLs (e.g.
             ``'sqlite:///<file_path>'`` ), it can be
@@ -2105,17 +2170,17 @@ class SkrubNamespace:
             general form
             ``dialect+driver://username:password@host:port/database``.
 
-        study_name : None or str (default=None)
+        study_name : None or str, default=None
             The name to use for the created (or loaded) Optuna study. If the
             study already exists in the provided ``storage``, the existing one
             is loaded. If None, a random name is generated.
 
-        sampler : None or Optuna sampler (default=None)
+        sampler : None or Optuna sampler, default=None
             The sampler to use when the backend is 'optuna'. If None, a
             :class:`~optuna.samplers.TPESampler` is used (the same default as
             :func:`~optuna.study.create_study`).
 
-        timeout : None or float (default=None)
+        timeout : None or float, default=None
             Timeout after which no new trials are created. Trials already
             started when reaching the timeout are still completed. If None,
             there is no timeout and all ``n_iters`` trials are completed.
@@ -2128,15 +2193,26 @@ class SkrubNamespace:
 
         Returns
         -------
-        ParamSearch
+        ParamSearch or OptunaParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
             ``results_``, ``plot_results()``, and ``best_learner_``.
+            If ``backend='optuna'`` was used, the returned object is an
+            :class:`OptunaParamSearch` which additionally has an attribute
+            ``study_`` which is the Optuna :class:`~optuna.study.Study` that
+            performed the hyperparameter optimization.
 
         See also
         --------
         skrub.DataOp.skb.make_grid_search :
             Find the best parameters with grid search.
+        skrub.DataOp.skb.make_learner :
+            Make a :class:`SkrubLearner` without actually searching for the
+            best hyperparameters. The strategy to resolve choices can be use
+            the default value, random, or taking suggestions from an Optuna
+            :class:`optuna.trial.Trial`. This allows using Optuna directly,
+            rather than through the ``make_randomized_search`` interface, for
+            more advanced use cases.
 
         Examples
         --------
@@ -2209,9 +2285,7 @@ class SkrubNamespace:
                 ),
             )
         else:
-            from ._optuna import OptunaSearch
-
-            search = OptunaSearch(
+            search = OptunaParamSearch(
                 self.clone(),
                 n_iter=n_iter,
                 scoring=scoring,

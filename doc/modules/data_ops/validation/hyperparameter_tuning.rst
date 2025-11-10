@@ -137,7 +137,8 @@ A human-readable description of parameters for a pipeline can be obtained with
 It is also possible to use :meth:`ParamSearch.plot_results` to visualize the results
 of the search using a parallel coordinates plot.
 
-This could also be done with optuna.
+This could also be done with optuna, either by passing ``backend='optuna'`` to
+:meth:`DataOp.skb.make_randomized_search`, or by using Optuna directly:
 
 >>> import optuna  # doctest: +SKIP
 >>> def objective(trial):   # doctest: +SKIP
