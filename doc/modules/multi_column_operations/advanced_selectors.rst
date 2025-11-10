@@ -1,4 +1,4 @@
-.. currentmodule :: skrub.selectors
+.. currentmodule:: skrub.selectors
 
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
@@ -7,8 +7,8 @@
 
 .. _user_guide_advanced_selectors:
 
-Advanced selectors: |filter| and |filter_names|
--------------------------------------------
+|filter| and |filter_names| to select with user-defined criteria
+-----------------------------------------------------------------
 
 :func:`filter` and :func:`filter_names` allow
 selecting columns based on arbitrary user-defined criteria. These are also used to
@@ -49,64 +49,9 @@ lambda or local functions and thus ensure the selector is picklable.
 0      297.0     210.0
 1      420.0     297.0
 
-Combining selectors with other skrub transformers
--------------------------------------------------
-Skrub transformers are designed to be used in conjunction with other transformers
-that operate on columns to improve their versatility.
 
-For example, we can drop columns that have more unique values than a certain amount
-by combining :func:`cardinality_below` with :class:`skrub.DropCols`.
-We first select the columns that have more than 3 unique values, then we invert the
-selector and finally transform the dataframe.
-
->>> df = pd.DataFrame({
-... "not a lot": [1, 1, 1, 2, 2],
-... "too_many":  [1,2,3,4,5]})
-
->>> from skrub import DropCols
->>> DropCols(cols=~s.cardinality_below(3)).fit_transform(df)
-   not a lot
-0          1
-1          1
-2          1
-3          2
-4          2
-
-Selectors can be used in conjunction with |ApplyToCols| to transform columns
-based on specific requirements.
-
-Consider the following example:
-
->>> import pandas as pd
->>> data = {
-...     "subject": ["Math", "English", "History", "Science", "Art"],
-...     "grade": [5, 4, 3, 4, 3]
-... }
->>> df = pd.DataFrame(data)
->>> df
-   subject grade
-0     Math     5
-1  English     4
-2  History     3
-3  Science     4
-4      Art     3
-
-We might want to apply the |StandardScaler| only to the numeric column. We can
-do this like this:
-
->>> from skrub import ApplyToCols
->>> from sklearn.preprocessing import StandardScaler
->>> ApplyToCols(StandardScaler(), cols=s.numeric()).fit_transform(df)
-   subject     grade
-0     Math  1.603567
-1  English  0.267261
-2  History -1.069045
-3  Science  0.267261
-4      Art -1.069045
-
-
-Custom criteria in :func:`filter`, example of selecting columns with outliers
-------------------------------------------------------------------------------
+Example of custom criteria in :func:`filter`: selecting columns with outliers
+.............................................................................
 
 The :func:`filter` selector can be used to select columns based on custom
 criteria. For example, we can define a function that checks if a column contains
