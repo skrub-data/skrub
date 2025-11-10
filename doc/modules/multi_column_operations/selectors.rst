@@ -204,4 +204,3 @@ do this like this:
 2  History -1.069045
 3  Science  0.267261
 4      Art -1.069045
-
