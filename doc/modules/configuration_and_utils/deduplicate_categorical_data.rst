@@ -52,6 +52,8 @@ Deduplicating values in a dataframe
 -----------------------------------
 
 |deduplicate| can be used to replace values in a dataframe that contains typos.
+This can be done with ``deduplicate_correspondence`` and the ``map`` function in
+pandas, or the ``replace`` function in polars.
 >>> import pandas as pd
 >>> df = pd.DataFrame({'color': duplicated, 'value': range(10)})
 >>> df
@@ -82,8 +84,8 @@ color  value deduplicated_color
 
 With polars:
 >>> import polars as pl  # doctest: +SKIP
->>> df = pl.DataFrame({'color': duplicated, 'value': range(10)})
->>> df.with_columns(deduplicated_color = pl.col("color").replace(
+>>> df = pl.DataFrame({'color': duplicated, 'value': range(10)}) # doctest: +SKIP
+>>> df.with_columns(deduplicated_color = pl.col("color").replace( # doctest: +SKIP
 ...     deduplicate_correspondence.to_dict())
 ... )
 shape: (10, 3)
