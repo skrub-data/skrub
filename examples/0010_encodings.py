@@ -139,7 +139,7 @@ HistGradientBoostingRegressor().fit(vectorized_employees, salaries)
 vectorizer
 
 ###############################################################################
-# We can inspect which transformation was chosen for a each column and retrieve the
+# We can inspect which transformation was chosen for each column and retrieve the
 # fitted transformer. ``vectorizer.kind_to_columns_`` provides an overview of how the
 # vectorizer categorized columns in our input:
 
