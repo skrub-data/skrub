@@ -211,11 +211,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     ApplyToCols :
         Apply a given transformer separately to each column in a selection of columns.
-        Useful to complement the default heuristics of the Cleaner.
+        Useful to complement the default heuristics of the ``Cleaner``.
 
     ApplyToFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
-        Useful to complement the default heuristics of the Cleaner.
+        Useful to complement the default heuristics of the ``Cleaner``.
 
     Notes
     -----
@@ -539,11 +539,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     ApplyToCols :
         Apply a given transformer separately to each column in a selection of columns.
-        Useful to complement the default heuristics of the TableVectorizer.
+        Useful to complement the default heuristics of the ``TableVectorizer``.
 
     ApplyToFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
-        Useful to complement the default heuristics of the TableVectorizer.
+        Useful to complement the default heuristics of the ``TableVectorizer``.
 
     Notes
     -----
