@@ -329,7 +329,14 @@ filterwarnings = [
   'ignore:The current process just got forked.*',
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
-addopts = "--doctest-modules"
+log_cli_level = "INFO"
+xfail_strict = true
+addopts = [
+  "--doctest-modules",
+  "-ra",
+  "--strict-config",
+  "--strict-markers",
+]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]

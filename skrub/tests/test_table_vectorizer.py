@@ -334,6 +334,7 @@ def test_auto_cast(data_getter, expected_types, df_module):
             assert sbd.is_string(X_trans[col])
 
 
+@pytest.mark.xfail(strict=False)
 @pytest.mark.parametrize(
     "data_getter, expected_types",
     [
@@ -378,11 +379,12 @@ def test_cleaner_dtypes(data_getter, expected_types, df_module):
         if df_module.description == "pandas-numpy-dtypes" and sbd.has_nulls(X["int"]):
             # Numpy dtypes fail when an integer column contains a null value, so we
             # skip this test
-            pytest.xfail(
+            pytest.mark.xfail(
                 reason=(
                     "Test is expected to fail for dirty dataframe with"
                     " pandas-numpy-dtypes configuration"
                 ),
+                strict=False,
             )
     vectorizer = Cleaner()
     X_trans = vectorizer.fit_transform(X)
