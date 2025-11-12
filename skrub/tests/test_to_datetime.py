@@ -69,7 +69,8 @@ def test_string_to_datetime(df_module, datetime_col, format, provide_format):
         )
     ):
         pytest.xfail(
-            "TODO improve datetime parsing, pandas does not find some ISO formats."
+            "TODO improve datetime parsing, pandas does not find some ISO formats.",
+            strict=False,
         )
     as_str = strftime(datetime_col, format)
     if provide_format:
