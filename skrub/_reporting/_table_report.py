@@ -114,7 +114,7 @@ class TableReport:
 
             export SKB_MAX_ASSOCIATION_COLUMNS=30
 
-    default_tab : str, default="table"
+    open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
         Must be one of "table", "stats", "distributions", or "associations".
 
@@ -216,11 +216,11 @@ class TableReport:
 
         n_rows = max(1, n_rows)
 
-        # Validate default_tab parameter
+        # Validate open_tab parameter
         valid_tabs = ["table", "stats", "distributions", "associations"]
         if open_tab not in valid_tabs:
             raise ValueError(
-                f"'default_tab' must be one of {valid_tabs}, got {open_tab!r}."
+                f"'open_tab' must be one of {valid_tabs}, got {open_tab!r}."
             )
         self.open_tab = open_tab
 
