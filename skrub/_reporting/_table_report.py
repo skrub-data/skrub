@@ -197,7 +197,7 @@ class TableReport:
         verbose=1,
         max_plot_columns=None,
         max_association_columns=None,
-        default_tab="table",
+        open_tab="table",
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -218,11 +218,11 @@ class TableReport:
 
         # Validate default_tab parameter
         valid_tabs = ["table", "stats", "distributions", "associations"]
-        if default_tab not in valid_tabs:
+        if open_tab not in valid_tabs:
             raise ValueError(
-                f"'default_tab' must be one of {valid_tabs}, got {default_tab!r}."
+                f"'default_tab' must be one of {valid_tabs}, got {open_tab!r}."
             )
-        self.default_tab = default_tab
+        self.open_tab = open_tab
 
         self._summary_kwargs = {
             "order_by": order_by,
@@ -263,8 +263,8 @@ class TableReport:
         self.max_association_columns = 0
         self.max_plot_columns = 0
         # In minimal mode, fall back to 'table' if user selected unavailable tabs
-        if self.default_tab in ["distributions", "associations"]:
-            self.default_tab = "table"
+        if self.open_tab in ["distributions", "associations"]:
+            self.open_tab = "table"
 
     def _display_subsample_hint(self):
         self._summary["is_subsampled"] = True
@@ -302,7 +302,7 @@ class TableReport:
             self._summary,
             standalone=True,
             column_filters=self.column_filters,
-            default_tab=self.default_tab,
+            open_tab=self.open_tab,
             **self._to_html_kwargs,
         )
 
@@ -318,7 +318,7 @@ class TableReport:
             self._summary,
             standalone=False,
             column_filters=self.column_filters,
-            default_tab=self.default_tab,
+            open_tab=self.open_tab,
             **self._to_html_kwargs,
         )
 
