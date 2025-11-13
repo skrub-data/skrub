@@ -61,6 +61,12 @@ Bugfixes
 - Fixed nightly checks and added support for upcoming library versions, including Pandas
   v3.0. :pr:`1664` by :user:`Auguste Baum <auguste-probabl>` and
   :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed the use of :class:`TableReport` and :class:`Cleaner` with Polars dataframes
+  containing a column with empty string as name.
+  :pr:`1722` by :user:`Marie Sacksick <MarieSacksick>`.
+- Fixed an issue where :class:`TableReport` would fail when computing associations
+  for Polars dataframes if PyArrow was not installed.
+  :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.6.2
 =============

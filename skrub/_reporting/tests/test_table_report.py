@@ -381,6 +381,46 @@ def test_numpy_array_columns(input_array, expected_columns):
     assert report._summary["n_columns"] == expected_columns
 
 
+def _pyarrow_available():
+    try:
+        import pyarrow  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+@pytest.mark.xfail(
+    condition=_pyarrow_available(),
+    reason="Test expects pyarrow to not be installed, but it is installed",
+)
+def test_polars_df_no_pyarrow():
+    # Test that when using a Polars dataframe without pyarrow installed,
+    # the appropriate flag is set in the summary and the message appears in the HTML.
+    pl = pytest.importorskip("polars")
+
+    df = pl.DataFrame(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+            "C": [10, 20, 30, 40, 50],
+        }
+    )
+
+    report = TableReport(df, verbose=0)
+    summary = report._summary
+
+    assert summary.get("associations_skipped_polars_no_pyarrow", False) is True
+    assert summary.get("dataframe_module", "") == "polars"
+
+    html_snippet = report.html_snippet()
+    assert (
+        "Computing pairwise associations is not available for Polars dataframes "
+        "when PyArrow is not installed"
+        in html_snippet
+    )
+
+
 @skip_polars_installed_without_pyarrow
 def test_default_tab_parameter(df_module):
     """Test the default_tab parameter functionality"""
