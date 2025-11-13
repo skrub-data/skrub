@@ -17,7 +17,7 @@ from . import _utils
 
 _HIGH_ASSOCIATION_THRESHOLD = 0.9
 
-_TAB_MAPPING = {
+_TAB_NAME_TO_ID = {
     "table": "dataframe-sample-panel",
     "stats": "summary-statistics-panel",
     "distributions": "column-summaries-panel",
@@ -120,7 +120,7 @@ def to_html(
     standalone=True,
     column_filters=None,
     minimal_report_mode=False,
-    default_tab="table",
+    open_tab="table",
 ):
     """Given a dataframe summary, generate the HTML string.
 
@@ -141,7 +141,7 @@ def to_html(
     minimal_report_mode : bool
         Whether to turn on the minimal mode, which hides the 'distributions'
         and 'associations' tabs.
-    default_tab : str, default="table"
+    open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
         Must be one of "table", "stats", "distributions", or "associations".
 
@@ -152,7 +152,7 @@ def to_html(
     """
     column_filters = column_filters if column_filters is not None else {}
 
-    default_panel_id = _TAB_MAPPING[default_tab]
+    open_panel_id = _TAB_NAME_TO_ID[open_tab]
 
     jinja_env = _get_jinja_env()
     if standalone:
@@ -172,8 +172,7 @@ def to_html(
             "base64_column_filters": _b64_encode(column_filters),
             "report_id": f"report_{secrets.token_hex()[:8]}",
             "minimal_report_mode": minimal_report_mode,
-            "default_tab": default_tab,
-            "default_panel_id": default_panel_id,
+            "open_panel_id": open_panel_id,
             "config": _config.get_config(),
         }
     )
