@@ -6,7 +6,7 @@ Going beyond estimator hyperparameters: nesting choices and choosing pipelines
 
 Choices are not limited to scikit-learn hyperparameters: we can use choices
 wherever we use DataOps. The choice of the estimator to use, any argument of
-an DataOp's method or :func:`deferred` function call, etc. can be replaced
+a DataOp's method or :func:`deferred` function call, etc. can be replaced
 with choices. We can also choose between several DataOps to compare
 different pipelines.
 
@@ -22,7 +22,7 @@ several ways to perform an aggregation on a pandas DataFrame:
 - rating_aggregation: ['median', 'mean']
 
 We can also choose between several completely different pipelines by turning a
-choice into an DataOp, via its ``as_data_op`` method (or by using
+choice into a DataOp, via its ``as_data_op`` method (or by using
 :func:`as_data_op` on any object).
 
 >>> from sklearn.preprocessing import StandardScaler

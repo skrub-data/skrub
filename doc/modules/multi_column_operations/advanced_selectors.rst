@@ -103,3 +103,39 @@ do this like this:
 2  History -1.069045
 3  Science  0.267261
 4      Art -1.069045
+
+
+Custom criteria in :func:`filter`, example of selecting columns with outliers
+------------------------------------------------------------------------------
+
+The :func:`filter` selector can be used to select columns based on custom
+criteria. For example, we can define a function that checks if a column contains
+outliers using the Interquartile Range (IQR) method, and then use this function
+with :func:`filter` to select such columns.
+
+Specifically, we define a function that computes the IQR (Inter Quartile Range) of a column
+and checks if any data points extend further than 2 IQRs of the lower and upper quartile.
+
+>>> def has_outliers(column):
+...    q1 = column.quantile(0.25)
+...    q3 = column.quantile(0.75)
+...    IQR = q3 - q1
+...    lower_bound = q1 - 2 * IQR
+...    upper_bound = q3 + 2 * IQR
+...    outliers = (column < lower_bound) | (column > upper_bound)
+...    return any(outliers)
+
+>>> from skrub import SelectCols
+>>> select = SelectCols(s.filter(has_outliers))
+>>> data = pd.DataFrame({
+...     "A": [10, 12, 14, 15, 100],  # Outlier in column A
+...     "B": [20, 22, 21, 19, 20],   # No outliers in column B
+...     "C": [30, 29, 31, 32, 300]   # Outlier in column C
+... })
+>>> select.fit_transform(data)
+     A    C
+0   10   30
+1   12   29
+2   14   31
+3   15   32
+4  100  300
