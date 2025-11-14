@@ -490,6 +490,7 @@ if (customElements.get('skrub-table-report') === undefined) {
         constructor(elem, exchange) {
             super(elem, exchange);
             this.tabs = new Map();
+            let preSelectedTab = null;
             this.elem.querySelectorAll("button[data-role='tab']").forEach(
                 tab => {
                     const panel = tab.getRootNode().getElementById(tab.dataset
@@ -499,6 +500,10 @@ if (customElements.get('skrub-table-report') === undefined) {
                         this.firstTab = tab;
                     }
                     this.lastTab = tab;
+                    // Check for pre-selected tab
+                    if (tab.hasAttribute('data-is-selected')) {
+                        preSelectedTab = tab;
+                    }
                     tab.addEventListener("click", () => this.selectTab(tab));
                     // See forwardKeyboardEvent for details about captureKeys
                     tab.dataset.captureKeys = "ArrowRight ArrowLeft";
@@ -508,7 +513,8 @@ if (customElements.get('skrub-table-report') === undefined) {
                         .onKeyDown(
                             unwrapSkrubKeyDown(event)));
                 });
-            this.selectTab(this.firstTab, false);
+            // Select pre-selected tab if exists, otherwise select first tab
+            this.selectTab(preSelectedTab || this.firstTab, false);
         }
 
         selectTab(tabToSelect, focus = true) {
