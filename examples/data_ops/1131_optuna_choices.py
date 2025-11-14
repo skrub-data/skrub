@@ -11,7 +11,7 @@ skrub :class:`DataOp`. As seen in the previous example, skrub DataOps can contai
 "choices", objects created with :func:`choose_from`, :func:`choose_int`,
 :func:`choose_float`, etc. and we can use hyperparameter search techniques to
 pick the best outcome for each choice. Performing this search with Optuna
-allows us to benefit from its many features such as state-of-the-art search
+allows us to benefit from its many features, such as state-of-the-art search
 strategies, monitoring and visualization, stopping and resuming searches, and
 parallel or distributed computation.
 """

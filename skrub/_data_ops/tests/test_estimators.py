@@ -438,7 +438,8 @@ def test_failing_estimator(randomized_search_backend):
     assert search.results_["mean_test_score"].isna().any()
     # the search should pick logistic regression
     assert search.best_learner_.get_params()["data_op__1"] == 0
-
+# setting error_score="raise" to make sure the exception
+# from BadClassifier is raised and caught
     with pytest.raises(RuntimeError) as e:
         data_op.skb.make_randomized_search(
             n_iter=5,
