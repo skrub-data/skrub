@@ -186,7 +186,7 @@ def _summarize_column(
         order_by_column=order_by_column,
     )
     _add_datetime_summary(summary, column, with_plots=with_plots)
-    summary["plot_names"] = [k for k in summary.keys() if k.endswith("_plot")]
+    summary["plot_names"] = [k for k in summary if k.endswith("_plot")]
     _add_is_sorted(summary, column)
 
     return summary
