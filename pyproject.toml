@@ -251,26 +251,7 @@ ci-py313-latest-optional-deps = ["py313", "optional", "test"]
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
 ci-nightly-deps = { no-default-feature = true, features = [ "py313", "nightly-dependencies", "test" ] }
 
-[tool.black]
-line-length = 88
-target_version = ['py310', 'py311']
-preview = true
-# Exclude irrelevant directories for formatting
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.mypy_cache
-  | \.vscode
-  | \.pytest_cache
-  | \.idea
-  | build
-  | dist
-)/
-'''
-
 [tool.ruff]
-# max line length for black
 line-length = 88
 exclude = [
   ".git",

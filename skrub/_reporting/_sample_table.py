@@ -62,6 +62,7 @@ Table Cell
     "dataframe-data" or "padding"
   rowspan, colspan, scope: the values for the html attributes with the same names
 """
+
 import pandas as pd
 
 from .. import _dataframe as sbd
