@@ -96,10 +96,10 @@ def test_summarize(
             d | {"cramer_v": round(d["cramer_v"], 1)}
             for d in summary["top_associations"]
         ]
-        assert set(
+        assert {
             tuple(sorted((a["left_column_name"], a["right_column_name"])))
             for a in asso[:3]
-        ) == {("city", "country"), ("city", "location"), ("country", "location")}
+        } == {("city", "country"), ("city", "location"), ("country", "location")}
         assert asso[-1]["cramer_v"] == 0.0
     else:
         assert "top_associations" not in summary.keys()
