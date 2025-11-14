@@ -356,6 +356,8 @@ def test_make_learner_choose_optuna_trial():
     sampler = optuna.samplers.TPESampler(seed=0)
     study = optuna.create_study(sampler=sampler)
 
+    # The choices are returned by the Trial returned by study.ask(). Those are
+    # deterministic as the sampler is seeded.
     learner = dop.skb.make_learner(choose=study.ask())
     assert learner.fit_transform({}) == ("b", 13)
     assert params(learner) == {"data_op__0": 1, "data_op__1": 13}

@@ -182,11 +182,16 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
             self.data_op = params.pop("data_op")
 
         def to_id(key):
+            # scikit-learn style '__' for nested attributes
             if key.startswith("data_op__"):
-                return int(key.lstrip("data_op__"))
+                return int(key.removeprefix("data_op__"))
+            # formatting of params passed to optuna:
+            # <choice_id>:<choice name or human-readable repr>
             return int(key.split(":", 1)[0])
 
         def to_idx(val):
+            # formatting of values passed to optuna for non-numeric choices:
+            # <outcome_index>:<outcome name or human-readable repr>
             if isinstance(val, str):
                 return int(val.split(":", 1)[0])
             return val
@@ -786,7 +791,7 @@ class _BaseParamSearch(_CloudPickleDataOp, BaseEstimator):
 
         all_rows = []
         for params in self.cv_results_["params"]:
-            params = {int(k.lstrip("data_op__")): v for k, v in params.items()}
+            params = {int(k.removeprefix("data_op__")): v for k, v in params.items()}
             all_rows.append(describe_params(params, data_op_choices))
 
         table = pd.DataFrame(

@@ -140,8 +140,9 @@ class OptunaParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``OptunaParamSearch``
-    objects are created by calling :meth:`DataOp.skb.make_randomized_search()`
-    on a :class:`DataOp`.
+    objects are created by calling
+    :meth:`.skb.make_randomized_search(backend='optuna')
+    <DataOp.skb.make_randomized_search>` on a :class:`DataOp`.
 
     Attributes of interest are ``best_learner_``, ``best_score_``,
     ``results_``, ``detailed_results_``, and ``study_`` (the Optuna study used

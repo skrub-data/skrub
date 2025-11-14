@@ -6,7 +6,7 @@ Tuning DataOps with Optuna
 ==========================
 
 This example shows how to use `Optuna
-<https://optuna.readthedocs.io/en/stable/>`_ to tune the hyperparameters a
+<https://optuna.readthedocs.io/en/stable/>`_ to tune the hyperparameters of a
 skrub :class:`DataOp`. As seen in the previous example, skrub DataOps can contain
 "choices", objects created with :func:`choose_from`, :func:`choose_int`,
 :func:`choose_float`, etc. and we can use hyperparameter search techniques to
