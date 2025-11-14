@@ -294,7 +294,7 @@ def test_is_column_list(df_module):
     assert not ns.is_column_list([np.ones(3)])
     assert not ns.is_column_list(np.ones(3))
     assert not ns.is_column_list(np.ones((3, 3)))
-    assert not ns.is_column_list((df_module.example_column for i in range(2)))
+    assert not ns.is_column_list(df_module.example_column for i in range(2))
     assert not ns.is_column_list({"col": df_module.example_column})
 
 
