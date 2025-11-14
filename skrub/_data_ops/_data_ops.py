@@ -1403,13 +1403,15 @@ class Apply(DataOpImpl):
                 estimator = self.estimator_
             except AttributeError:
                 estimator = get_chosen_or_default(self.estimator)
-        for name in FITTED_PREDICTOR_METHODS:
-            if isinstance(estimator, DataOp) or hasattr(estimator, name):
-                # if estimator is a DataOp we cannot know yet if it has the
-                # attribute, in this case we assume it does (and risk a
-                # slightly worse error message when a SkrubLearner tries to use
-                # it if it does not).
-                modes.append(name)
+        modes.extend(
+            name
+            for name in FITTED_PREDICTOR_METHODS
+            # if estimator is a DataOp we cannot know yet if it has the
+            # attribute, in this case we assume it does (and risk a
+            # slightly worse error message when a SkrubLearner tries to use
+            # it if it does not).
+            if isinstance(estimator, DataOp) or hasattr(estimator, name)
+        )
         return modes
 
     def __repr__(self):

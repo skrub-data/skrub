@@ -209,8 +209,10 @@ def _insert_after_first_paragraph(document, text_to_insert):
             break
     else:
         output_lines.append("\n")
-    for line in text_to_insert.splitlines(True):
-        output_lines.append(line if not line.strip() else " " * indent + line)
+    output_lines.extend(
+        line if not line.strip() else " " * indent + line
+        for line in text_to_insert.splitlines(True)
+    )
     output_lines.append("\n")
     output_lines.extend(doc_lines)
     return "".join(output_lines)
