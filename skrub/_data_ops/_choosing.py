@@ -109,8 +109,8 @@ class _Ellipsis:
 class Choice(BaseChoice):
     """A choice among an enumerated set of outcomes."""
 
-    outcomes: list[typing.Any]
-    outcome_names: typing.Optional[list[str]]
+    outcomes: typing.List[typing.Any]
+    outcome_names: typing.Optional[typing.List[str]]
     name: typing.Optional[str] = None
     chosen_outcome_idx: typing.Optional[int] = None
 
