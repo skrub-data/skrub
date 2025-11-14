@@ -316,6 +316,8 @@ def test_make_learner_choose_options():
             all_ci.add(ci)
         assert all_cf == {"a", "b", "c"}
         assert all_ci == set(range(10, 16))
+    # testing numpy RandomState and random state with seed 1
+    # also testing random spacing in the seed number
     for choose in [check_random_state(1), "random (1 ) "]:
         seeded = dop.skb.make_learner(choose=choose)
         assert seeded.fit_transform({}) == ("b", 15)

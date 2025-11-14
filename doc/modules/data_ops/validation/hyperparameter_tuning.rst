@@ -137,7 +137,7 @@ A human-readable description of parameters for a pipeline can be obtained with
 It is also possible to use :meth:`ParamSearch.plot_results` to visualize the results
 of the search using a parallel coordinates plot.
 
-This could also be done with optuna, either by passing ``backend='optuna'`` to
+This could also be done with Optuna, either by passing ``backend='optuna'`` to
 :meth:`DataOp.skb.make_randomized_search`, or by using Optuna directly:
 
 >>> import optuna  # doctest: +SKIP
@@ -153,9 +153,9 @@ This could also be done with optuna, either by passing ``backend='optuna'`` to
 
 
 Rather than fitting a randomized or grid search to find the best combination, it
-is also possible to obtain an iterator over different parameter combinations, to
-inspect their outputs or to have manual control over the model selection, using
-:meth:`.skb.iter_learners_grid() <DataOp.skb.iter_learners_grid>` or
+is also possible to obtain an iterator over different parameter combinations to
+inspect their outputs or to have manual control over the model selection. This can
+be done with :meth:`.skb.iter_learners_grid() <DataOp.skb.iter_learners_grid>` or
 :meth:`.skb.iter_learners_randomized() <DataOp.skb.iter_learners_randomized>` (
 which yield the candidate pipelines that are explored by the grid and randomized
 search respectively), or with the ``choose`` parameter of
