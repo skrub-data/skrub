@@ -8,11 +8,13 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _utils, selectors
+from . import _utils
+from . import selectors as s
 from ._join_utils import pick_column_names
 
 __all__ = ["ApplyToCols", "SingleColumnTransformer", "RejectColumn"]
 
+_SELECT_ALL_COLUMNS = s.all()
 _SINGLE_COL_LINE = (
     "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
     " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
@@ -453,7 +455,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         transformer,
-        cols=selectors.all(),
+        cols=_SELECT_ALL_COLUMNS,
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
@@ -509,7 +511,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         result : Pandas or Polars DataFrame
             The transformed data.
         """
-        self._columns = selectors.make_selector(self.cols).expand(X)
+        self._columns = s.make_selector(self.cols).expand(X)
         results = []
         all_columns = sbd.column_names(X)
         parallel = Parallel(n_jobs=self.n_jobs)

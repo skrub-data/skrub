@@ -193,7 +193,7 @@ def short_repr(obj):
     return r.repr(obj)
 
 
-def repr_args(args, kwargs, defaults={}):
+def repr_args(args, kwargs, defaults={}):  # noqa: B006
     return ", ".join(
         [short_repr(a) for a in args]
         + [
