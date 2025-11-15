@@ -227,7 +227,7 @@ def _onehot_encode_numbers(values, n_bins, output):
 
 
 def _contingency_table(encoded):
-    """Build the contingency table given a OH-encoded dataframe.
+    """Build the contingency table given an OH-encoded dataframe.
 
     The input is computed by ``_one_hot_encode``:
     it has shape (n columns, n bins, n rows).

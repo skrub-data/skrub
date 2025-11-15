@@ -67,7 +67,7 @@ def fetch_data(
     if len(file_paths) == 0:
         repository = "Yeye-He/Auto-Join"
         dataset_name = dataset_name.replace(" ", "%20")
-        base_url = base_url = (
+        base_url = (
             "https://raw.githubusercontent.com/"
             f"{repository}/master/autojoin-Benchmark/{dataset_name}"
         )

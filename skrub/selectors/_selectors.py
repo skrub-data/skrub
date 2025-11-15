@@ -406,7 +406,7 @@ def string():
 
 def boolean():
     """
-    Select columns that have an Boolean data type.
+    Select columns that have a Boolean data type.
 
     Examples
     --------

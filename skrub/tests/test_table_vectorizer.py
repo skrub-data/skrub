@@ -26,7 +26,7 @@ from skrub._table_vectorizer import (
     TableVectorizer,
     _get_preprocessors,
 )
-from skrub._to_float32 import ToFloat32
+from skrub._to_float import ToFloat
 from skrub.conftest import _POLARS_INSTALLED
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -219,7 +219,7 @@ def test_get_preprocessors(df_module):
         n_jobs=1,
         add_tofloat32=True,
     )
-    assert any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
+    assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
     steps = _get_preprocessors(
         cols=X.columns,
@@ -229,7 +229,7 @@ def test_get_preprocessors(df_module):
         n_jobs=1,
         add_tofloat32=False,
     )
-    assert not any(isinstance(step.transformer, ToFloat32) for step in steps[1:])
+    assert not any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
 
 def test_fit_default_transform(df_module):
@@ -1022,3 +1022,18 @@ def test_date_format(df_module):
     transformed_to_list = sbd.to_list(transformed["date"])
     expected_to_list = sbd.to_list(expected["date"])
     assert transformed_to_list == expected_to_list
+
+
+@pytest.mark.skipif(
+    not _POLARS_INSTALLED,
+    reason="This test requires polars to be installed",
+)
+def test_cleaner_empty_column_name():
+    import polars as pl
+
+    # non-regression test for issue https://github.com/skrub-data/skrub/issues/1490
+    df = pl.DataFrame({"": [1], "b": [2], "c": [""]})
+    cleaner = Cleaner()
+    cleaner.fit_transform(df)
+    assert list(cleaner.all_processing_steps_.keys()) == df.columns
+    assert all(len(step) > 0 for step in cleaner.all_processing_steps_.values())

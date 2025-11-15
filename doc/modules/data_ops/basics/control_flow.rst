@@ -145,9 +145,9 @@ Finally, there are other situations where using :func:`deferred` can be helpful:
 
 .. rubric:: Examples
 
-- See :ref:`sphx_glr_auto_examples_data_ops_11_data_ops_intro.py` for an introductory
+- See :ref:`sphx_glr_auto_examples_data_ops_0110_data_ops_intro.py` for an introductory
   example on how to use skrub DataOps on a single dataframe.
-- See :ref:`sphx_glr_auto_examples_data_ops_12_multiple_tables.py` for an example
+- See :ref:`sphx_glr_auto_examples_data_ops_0120_multiple_tables.py` for an example
   of how skrub DataOps can be used to process multiple tables using dataframe APIs.
-- See :ref:`sphx_glr_auto_examples_data_ops_13_choices.py` for an example of
+- See :ref:`sphx_glr_auto_examples_data_ops_0130_choices.py` for an example of
   hyper-parameter tuning using skrub DataOps.

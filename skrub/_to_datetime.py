@@ -379,6 +379,9 @@ class ToDatetime(SingleColumnTransformer):
             The input transformed to Datetime.
         """
         del y
+
+        self.all_outputs_ = [sbd.name(column)]
+
         if sbd.is_any_date(column):
             self.format_ = None
             self.output_dtype_ = sbd.dtype(column)
