@@ -1699,7 +1699,7 @@ def deferred(func):
            [-0.87, -0.5 ],
            [-0.87,  0.5 ],
            [-0.  ,  1.  ]])
-    """  # noqa : E501
+    """  # noqa: E501
     from ._evaluation import needs_eval
 
     if isinstance(func, DataOp) or getattr(func, "_skrub_is_deferred", False):

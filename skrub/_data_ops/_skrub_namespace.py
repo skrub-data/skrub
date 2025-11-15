@@ -927,7 +927,7 @@ class SkrubNamespace:
 
         Read more about subsampling in the :ref:`User Guide <user_guide_data_ops_subsampling>`.
 
-        """  # noqa : E501
+        """  # noqa: E501
         return DataOp(SubsamplePreviews(self._data_op, n=n, how=how))
 
     def clone(self, drop_values=True):
@@ -1566,7 +1566,7 @@ class SkrubNamespace:
         ZeroDivisionError('division by zero')
         >>> report['report_path']
         PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
-        """  # noqa : E501
+        """  # noqa: E501
 
         if environment is None:
             mode = "preview"

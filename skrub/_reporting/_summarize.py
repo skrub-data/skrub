@@ -7,7 +7,7 @@ from .. import _dataframe as sbd
 from . import _plotting, _sample_table, _utils
 
 try:
-    import pyarrow  # noqa F401
+    import pyarrow  # noqa: F401
 
     _PYARROW_INSTALLED = True
 except ImportError:

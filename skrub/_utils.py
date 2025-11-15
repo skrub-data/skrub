@@ -148,7 +148,7 @@ class Repr(reprlib.Repr):
         # (probably for historical reasons) reprlib sorts dict keys, destroying
         # the actual order of the dictionary which is misleading.
         # We adapt the stdlib implementation:
-        # https://github.com/python/cpython/blob/630dc2bd6422715f848b76d7950919daa8c44b99/Lib/reprlib.py#L156 # noqa
+        # https://github.com/python/cpython/blob/630dc2bd6422715f848b76d7950919daa8c44b99/Lib/reprlib.py#L156 # noqa: E501
         # to remove the sorting
         n = len(x)
         if n == 0:

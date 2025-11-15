@@ -7,7 +7,7 @@ The other cells are used to generate the HTML snippets for the index page.
 """
 # We want manual control over the formatting as those snippets are shown in the home page
 # fmt: off
-# ruff: noqa
+# ruff: noqa: I001, E402, E501
 
 # A print statement to show that the script is running
 print("Generating pipeline snippets for the skrub index page...")
