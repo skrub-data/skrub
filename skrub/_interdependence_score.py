@@ -280,7 +280,7 @@ def _compute_ids_numpy(
 
 
 def merge_one_hot_features(
-    arr: numpy.ndarray, features_match: dict[int, list], how="mean"
+    arr: numpy.ndarray, features_match: dict[int, list], how="max"
 ):
     """
     Merge the one hot features in order to get IDS matrix for the initial features
@@ -313,8 +313,10 @@ def merge_one_hot_features(
         else:
             if how == "max":
                 arr[original_feature_idx, :] = arr[indices_to_merge, :].max(axis=0)
-            else:
+            elif how == "mean":
                 arr[original_feature_idx, :] = arr[indices_to_merge, :].mean(axis=0)
+            else:
+                raise ValueError(f"Unsupported value argument : how={how}")
     arr = arr[:original_number_feats, :]
 
     for original_feature_idx in features_match.keys():
@@ -338,7 +340,7 @@ def _ids_matrix(
     p_val=False,
     num_tests=100,
     bandwidth_term=1 / 2,
-    squeeze_option="mean",
+    squeeze_option="max",
 ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, None]]:
     """
         Compute the interdependence score matrix.
