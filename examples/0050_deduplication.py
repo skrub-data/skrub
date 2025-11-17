@@ -159,9 +159,9 @@ translation_table.head()
 
 from scipy.spatial.distance import squareform
 
-from skrub import compute_ngram_distance
+from skrub import _compute_ngram_distance
 
-ngram_distances = compute_ngram_distance(unique_examples)
+ngram_distances = _compute_ngram_distance(unique_examples)
 square_distances = squareform(ngram_distances)
 
 import seaborn as sns
