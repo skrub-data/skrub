@@ -2,10 +2,13 @@ from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _utils, selectors
+from . import _utils
+from . import selectors as s
 from ._join_utils import pick_column_names
 
 __all__ = ["ApplyToFrame"]
+
+_SELECT_ALL_COLUMNS = s.all()
 
 
 class ApplyToFrame(TransformerMixin, BaseEstimator):
@@ -130,7 +133,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         transformer,
-        cols=selectors.all(),
+        cols=_SELECT_ALL_COLUMNS,
         keep_original=False,
         rename_columns="{}",
     ):
@@ -183,12 +186,12 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
             The transformed data.
         """
         self.all_inputs_ = sbd.column_names(X)
-        self._columns = selectors.make_selector(self.cols).expand(X)
-        to_transform = selectors.select(X, self._columns)
+        self._columns = s.make_selector(self.cols).expand(X)
+        to_transform = s.select(X, self._columns)
         if self.keep_original:
             passthrough = X
         else:
-            passthrough = selectors.select(X, selectors.inv(self._columns))
+            passthrough = s.select(X, s.inv(self._columns))
         passthrough_names = sbd.column_names(passthrough)
         if self._columns:
             self.transformer_ = clone(self.transformer)
@@ -243,11 +246,11 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
 
         # do the selection even if self._columns is empty to raise if X doesn't
         # have the right columns
-        to_transform = selectors.select(X, self._columns)
+        to_transform = s.select(X, self._columns)
         if self.keep_original:
             passthrough = X
         else:
-            passthrough = selectors.select(X, selectors.inv(self._columns))
+            passthrough = s.select(X, s.inv(self._columns))
         if not self._columns:
             return passthrough
         transformed = self.transformer_.transform(to_transform, **kwargs)

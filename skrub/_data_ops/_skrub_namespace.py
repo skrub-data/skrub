@@ -41,6 +41,8 @@ from ._inspection import (
 from ._subsampling import SubsamplePreviews, env_with_subsampling
 from ._utils import KFOLD_5, NULL, attribute_error
 
+_SELECT_ALL_COLUMNS = s.all()
+
 
 def _var_values_provided(data_op, environment):
     all_nodes = nodes(data_op)
@@ -101,7 +103,7 @@ class SkrubNamespace:
         self,
         estimator,
         y=None,
-        cols=s.all(),
+        cols=_SELECT_ALL_COLUMNS,
         how="auto",
         allow_reject=False,
         unsupervised=False,
@@ -129,7 +131,7 @@ class SkrubNamespace:
         estimator,
         *,
         y=None,
-        cols=s.all(),
+        cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         how="auto",
         allow_reject=False,
