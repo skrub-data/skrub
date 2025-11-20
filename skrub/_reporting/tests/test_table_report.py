@@ -14,7 +14,6 @@ from skrub import _dataframe as sbd
 from skrub._reporting._sample_table import make_table
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
-
 @pytest.fixture
 def simple_df(df_module):
     return df_module.make_dataframe(
@@ -24,11 +23,9 @@ def simple_df(df_module):
         }
     )
 
-
 @pytest.fixture
 def simple_series(df_module):
     return df_module.make_column(name="A", values=[1, 2, 3, 4, 5])
-
 
 def get_report_id(html):
     return re.search(r'<skrub-table-report.*?id="report_([a-z0-9]+)"', html).group(1)
@@ -97,6 +94,19 @@ def test_few_rows(df_module, check_polars_numpy2):
 def test_empty_dataframe(df_module):
     html = TableReport(df_module.empty_dataframe).html()
     assert "The dataframe is empty." in html
+
+
+def test_lazyframe_exception():
+    pl = pytest.importorskip("polars")
+    lazy_df = pl.DataFrame({
+        "a": ["1", "2", "3"]
+    }).lazy()
+
+    with pytest.raises(
+        ValueError,
+        match=r"TableReport does not support lazy dataframes"
+    ):
+        TableReport(lazy_df)
 
 
 def test_open(pd_module, browser_mock):
