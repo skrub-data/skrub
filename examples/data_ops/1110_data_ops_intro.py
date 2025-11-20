@@ -109,7 +109,7 @@ predictor
 # Now that we have built our entire plan, we can explore it in more detail
 # with the |.skb.full_report()| method::
 #
-#     predictions.skb.full_report()
+#     predictor.skb.full_report()
 #
 # This produces a folder on disk rather than displaying inline in a notebook so
 # we do not run it here. But you can

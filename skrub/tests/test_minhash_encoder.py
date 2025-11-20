@@ -287,3 +287,14 @@ def test_zero_padding_in_feature_names_out(df_module, n_components, expected_col
     feature_names = encoder.get_feature_names_out()
 
     assert feature_names[: len(expected_columns)] == expected_columns
+
+
+def test_col_not_categorical(df_module):
+    X1 = df_module.make_column("some col", [1, 2, 3, 4, 5, 6, 7, 8])
+    X2 = df_module.make_column("col", ["a", "b", "c", "d", "e", "f", "g", "h"])
+    encoder = MinHashEncoder()
+    with pytest.raises(ValueError, match="does not contain strings"):
+        encoder.fit_transform(X1)
+
+    with pytest.raises(ValueError, match="does not contain strings"):
+        encoder.fit(X2).transform(X1)
