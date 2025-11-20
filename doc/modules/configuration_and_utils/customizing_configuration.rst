@@ -40,7 +40,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report', 'use_table_report_data_ops', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold'])
+dict_keys(['use_table_report', 'use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold'])
 
 These are the parameters currently available in the global configuration:
 
