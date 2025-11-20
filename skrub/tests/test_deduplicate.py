@@ -9,7 +9,7 @@ from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
 from skrub._deduplicate import (
     _create_spelling_correction,
     _guess_clusters,
-    compute_ngram_distance,
+    _compute_ngram_distance,
     deduplicate,
 )
 from skrub.datasets import make_deduplication_data
@@ -60,7 +60,7 @@ def test_deduplicate(
 
 def test_compute_ngram_distance():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
-    distance = compute_ngram_distance(words)
+    distance = _compute_ngram_distance(words)
     distance = squareform(distance)
     assert distance.shape[0] == words.shape[0]
     assert np.allclose(np.diag(distance), 0)
@@ -70,7 +70,7 @@ def test_compute_ngram_distance():
 
 def test__guess_clusters():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
-    distance = compute_ngram_distance(words)
+    distance = _compute_ngram_distance(words)
     Z = linkage(distance, method="average")
     n_clusters = _guess_clusters(Z, distance)
     assert n_clusters == len(np.unique(words))

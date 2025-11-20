@@ -12,7 +12,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
 
 
-def compute_ngram_distance(
+def _compute_ngram_distance(
     unique_words,
     ngram_range=(2, 4),
     analyzer="char_wb",
@@ -260,7 +260,7 @@ def deduplicate(
     9  white      9              white
     """
     unique_words, counts = np.unique(X, return_counts=True)
-    distance_mat = compute_ngram_distance(
+    distance_mat = _compute_ngram_distance(
         unique_words, ngram_range=ngram_range, analyzer=analyzer
     )
 
