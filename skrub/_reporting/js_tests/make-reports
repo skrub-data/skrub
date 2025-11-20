@@ -117,15 +117,15 @@ if __name__ == "__main__":
     #
 
     df = datasets.fetch_employee_salaries().X
-    
+
     # Report opening on stats tab
     html = TableReport(df, open_tab="stats").html()
     (reports_dir / "open_tab_stats.html").write_text(html, encoding="UTF-8")
-    
+
     # Report opening on distributions tab
     html = TableReport(df, open_tab="distributions").html()
     (reports_dir / "open_tab_distributions.html").write_text(html, encoding="UTF-8")
-    
+
     # Report opening on associations tab
     html = TableReport(df, open_tab="associations").html()
     (reports_dir / "open_tab_associations.html").write_text(html, encoding="UTF-8")
