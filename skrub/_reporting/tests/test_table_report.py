@@ -8,7 +8,6 @@ from pathlib import Path
 import numpy as np
 import pytest
 from sklearn.utils import Bunch
-import polars as pl
 
 from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
@@ -98,13 +97,14 @@ def test_empty_dataframe(df_module):
 
 
 def test_lazyframe_exception():
+    pl = pytest.importorskip("polars")
     lazy_df = pl.DataFrame({
         "a": ["1", "2", "3"]
     }).lazy()
 
     with pytest.raises(
         ValueError,
-        match=r"Cannot automaticaly collect a lazyframe, this might lead to issues!"
+        match=r"TableReport does not support lazy dataframes"
     ):
         TableReport(lazy_df)
 
