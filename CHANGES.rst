@@ -63,8 +63,8 @@ Bugfixes
 - Fixed an issue where :class:`TableReport` would fail when computing associations
   for Polars dataframes if PyArrow was not installed.
   :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
-- Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the 
-  :class:`TableVectorizer` and other transformers. :pr:`1762` by 
+- Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the
+  :class:`TableVectorizer` and other transformers. :pr:`1762` by
   :user:`Riccardo Cappuzzo <rcap107>`.
 
 
