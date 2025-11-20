@@ -47,3 +47,61 @@ dtype: object
 'white', 'white', 'white', 'white', 'white']
 
 See the |deduplicate| documentation for caveats and more detail.
+
+Deduplicating values in a dataframe
+-----------------------------------
+
+|deduplicate| can be used to replace values in a dataframe that contains typos.
+This can be done with ``deduplicate_correspondence`` computed above and the
+``map`` function in pandas, or the ``replace`` function in polars.
+>>> import pandas as pd
+>>> df = pd.DataFrame({'color': duplicated, 'value': range(10)})
+>>> df
+color  value
+0  blacs      0
+1  black      1
+2  black      2
+3  black      3
+4  black      4
+5  uhibe      5
+6  white      6
+7  white      7
+8  white      8
+9  white      9
+>>> df['deduplicated_color'] = df['color'].map(deduplicate_correspondence.to_dict())
+>>> df
+color  value deduplicated_color
+0  blacs      0              black
+1  black      1              black
+2  black      2              black
+3  black      3              black
+4  black      4              black
+5  uhibe      5              white
+6  white      6              white
+7  white      7              white
+8  white      8              white
+9  white      9              white
+
+With polars:
+>>> import polars as pl  # doctest: +SKIP
+>>> df = pl.DataFrame({'color': duplicated, 'value': range(10)}) # doctest: +SKIP
+>>> df.with_columns(deduplicated_color = pl.col("color").replace( # doctest: +SKIP
+...     deduplicate_correspondence.to_dict())
+... )
+shape: (10, 3)
+┌───────┬───────┬────────────────────┐
+│ color ┆ value ┆ deduplicated_color │
+│ ---   ┆ ---   ┆ ---                │
+│ str   ┆ i64   ┆ str                │
+╞═══════╪═══════╪════════════════════╡
+│ blacs ┆ 0     ┆ black              │
+│ black ┆ 1     ┆ black              │
+│ black ┆ 2     ┆ black              │
+│ black ┆ 3     ┆ black              │
+│ black ┆ 4     ┆ black              │
+│ uhibe ┆ 5     ┆ white              │
+│ white ┆ 6     ┆ white              │
+│ white ┆ 7     ┆ white              │
+│ white ┆ 8     ┆ white              │
+│ white ┆ 9     ┆ white              │
+└───────┴───────┴────────────────────┘

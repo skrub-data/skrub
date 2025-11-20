@@ -20,16 +20,37 @@
 	    <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
 	</div>
     </div>
-
     {% if summary.plots_skipped %}
     <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between"
         data-manager="AlertDismissable">
         <div class="alert-content shrinkable-text">
             Plotting was skipped as the dataframe exceeded the
             <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>max_plot_columns</code></a>
-            limit set for the TableReport during report creation.
+            limit set for the <code>TableReport</code> during report creation.
+            <p>You can adjust this behavior in several ways:</p>
+            <ul>
+                <li>To fix it for a single report, change the parameter passed when creating <code>TableReport</code> (<em>default: 30</em>):
+                    <pre><code class="language-python">    report = TableReport(max_plot_columns=50)</code></pre>
+                </li>
+                <li>To change the default number of columns to be plotted during the current Python session, use <code>skrub.set_config</code>:
+                    <pre><code class="language-python">    from skrub import set_config
+    set_config(max_plot_columns=50)</code></pre>
+                </li>
+                <li>To make the change permanent, use an environment variable:
+                    <pre><code class="language-shell">    export SKB_MAX_PLOT_COLUMNS=50</code></pre>
+                </li>
+            </ul>
+            <p>
+            Note that <code>TableReport</code> accepts two parameters:
+            </p>
+            <ul>
+                <li>The <code>max_plot_columns</code> limits the number of columns that are plotted.</li>
+                <li>The <code>max_association_columns</code> limits the number of columns for which associations should be computed.</li>
+            </ul>
         </div>
-        {{buttons.dismissbutton()}}
+        <div class="dismiss-container">
+            {{ buttons.dismissbutton() }}
+        </div>
     </div>
     {% else %}
     <div class="horizontal-scroll padding-b-s">
