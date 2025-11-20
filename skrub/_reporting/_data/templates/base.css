@@ -347,9 +347,6 @@ article.wrapper {
     stroke-width: var(--border-s);
 }
 
-.alert-info-dismissable {
-    position: relative;
-}
 
 .dismiss-container {
     position: absolute;

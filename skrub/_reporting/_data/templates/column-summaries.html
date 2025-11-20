@@ -27,7 +27,7 @@
             Plotting was skipped as the dataframe exceeded the
             <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>max_plot_columns</code></a>
             limit set for the <code>TableReport</code> during report creation.
-            <p>If this result was not intended, you can adjust this behavior in several ways:</p>
+            <p>You can adjust this behavior in several ways:</p>
             <ul>
                 <li>To fix it for a single report, change the parameter passed when creating <code>TableReport</code> (<em>default: 30</em>):
                     <pre><code class="language-python">    report = TableReport(max_plot_columns=50)</code></pre>
@@ -41,7 +41,7 @@
                 </li>
             </ul>
             <p>
-            If performance or memory usage is a concern, note that <code>TableReport</code> accepts two parameters:
+            Note that <code>TableReport</code> accepts two parameters:
             </p>
             <ul>
                 <li>The <code>max_plot_columns</code> limits the number of columns that are plotted.</li>
