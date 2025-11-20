@@ -452,6 +452,43 @@ def test_cleaner_invalid_numeric_dtype(df_module):
         Cleaner(numeric_dtype="wrong").fit_transform(X)
 
 
+def test_cleaner_get_feature_names_out(df_module):
+    """Test that Cleaner.get_feature_names_out returns the correct column names."""
+    X = _get_clean_dataframe(df_module)
+    cleaner = Cleaner().fit(X)
+
+    # Get feature names from the cleaner
+    feature_names = cleaner.get_feature_names_out()
+
+    # Get the expected column names from the transformed dataframe
+    X_transformed = cleaner.transform(X)
+    expected_names = sbd.column_names(X_transformed)
+
+    # Check that they match
+    assert_array_equal(feature_names, expected_names)
+
+    # Test that it works with drop_null_fraction parameter
+    X_with_nulls = df_module.make_dataframe(
+        {
+            "col1": [1, 2, 3, 4],
+            "col2": ["a", "b", "c", "d"],
+            "all_nulls": [None, None, None, None],
+        }
+    )
+
+    cleaner_drop = Cleaner(drop_null_fraction=1.0).fit(X_with_nulls)
+    feature_names_drop = cleaner_drop.get_feature_names_out()
+
+    # The all_nulls column should not be in the output
+    assert "all_nulls" not in feature_names_drop
+
+    # Test that input_features parameter is ignored (like in TableVectorizer)
+    feature_names_with_input = cleaner.get_feature_names_out(
+        input_features=["dummy1", "dummy2"]
+    )
+    assert_array_equal(feature_names_with_input, expected_names)
+
+
 def test_auto_cast_missing_categories(df_module):
     # TODO implement test for polars
     if df_module.description == "polars":
