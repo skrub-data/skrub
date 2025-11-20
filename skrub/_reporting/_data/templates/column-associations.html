@@ -17,6 +17,9 @@
         </div>
     </div>
 
+        {% elif summary["n_columns"] == 1 %}
+            No associations computed because there is only one column.
+
     {% elif summary["top_associations"] %}
 
     <div class="horizontal-scroll padding-b-s">
