@@ -46,7 +46,7 @@ Bugfixes
 --------
 - Improved the error message raised when a Polars lazyframe is passed to
   :class:`TableReport`, clarifying that `.collect()` must be called first.
-  :pr:`1732` by :user:`Fatima Ben Kadour <fatiben2002>`
+  :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
 - Fixed various issues with some transformers by adding ``get_feature_names_out``
   to all single column transformers.
   :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
