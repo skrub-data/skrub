@@ -6,14 +6,11 @@ repos:
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.2
+    rev: v0.14.4
     hooks:
     -   id: ruff-check
         args: ["--fix", "--show-fixes", "--output-format=full"]
--   repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
-    -   id: black
+    -   id: ruff-format
 -   repo: https://github.com/codespell-project/codespell
     # Configuration for codespell is in pyproject.toml
     rev: v2.3.0

@@ -106,8 +106,7 @@ class SingleColumnTransformer(BaseEstimator):
         if sbd.is_dataframe(column):
             raise ValueError(
                 f"``{class_name}.{function_name}`` should be passed a single column,"
-                " not a dataframe. "
-                + _SINGLE_COL_LINE.format(class_name=class_name)
+                " not a dataframe. " + _SINGLE_COL_LINE.format(class_name=class_name)
             )
         if not sbd.is_column(column):
             raise ValueError(
