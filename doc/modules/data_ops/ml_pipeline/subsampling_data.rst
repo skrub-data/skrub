@@ -26,4 +26,4 @@ set to ``True`` to force using the subsampling when we call them. Note that
 even if we set ``keep_subsampling=True``, subsampling is not applied when using
 ``predict``.
 
-See more details in a :ref:`full example <sphx_glr_auto_examples_data_ops_14_subsampling.py>`.
+See more details in a :ref:`full example <sphx_glr_auto_examples_data_ops_0140_subsampling.py>`.

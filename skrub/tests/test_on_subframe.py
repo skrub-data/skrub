@@ -3,6 +3,7 @@ import re
 import numpy as np
 import pandas as pd
 import pytest
+from packaging.version import parse
 from pandas.testing import assert_index_equal
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import FunctionTransformer
@@ -70,7 +71,20 @@ def test_empty_output(df_module, use_fit_transform):
         out = transformer.fit_transform(df)
     else:
         out = transformer.fit(df).transform(df)
-    df_module.assert_frame_equal(out, s.select(df, ()))
+    # Selecting no columns to have an empty dataframe
+    selected = s.select(df, ())
+
+    # I need to add a special case for pandas 3.0 here because the type of the
+    # empty dataframe with pandas 3.0 is different from that of out, but here
+    # we don't care about that dtype.
+    if sbd.is_pandas(df) and parse(pd.__version__).major >= parse("3.0.0").major:
+        out = sbd.to_numpy(out)
+        selected = sbd.to_numpy(selected)
+        # With pandas 3.0, selected has type "string" rather than "empty"
+        assert out.shape == selected.shape
+        assert (out == selected).all()
+    else:
+        df_module.assert_frame_equal(out, selected)
 
 
 def _to_XXX(names):

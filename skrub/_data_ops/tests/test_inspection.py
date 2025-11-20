@@ -61,6 +61,17 @@ def test_full_report():
 
 
 @pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+def test_full_report_title():
+    # TODO we should have a private function that returns the JSON data so we
+    #      can check the content before rendering with jinja
+    # however that requires first settling on the content of the report etc.
+    data_op = skrub.var("a", 1)
+    title = "small data ops"
+    report = data_op.skb.full_report(open=False, title=title)
+    assert title in report["report_path"].read_text("utf-8")
+
+
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
 def test_preview_subsample():
     X = datasets.fetch_employee_salaries().X
     preview = skrub.X(X).skb.subsample(n=3)._repr_html_()

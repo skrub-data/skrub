@@ -218,7 +218,7 @@ def deduplicate(
     white    white
     white    white
     white    white
-    dtype: object
+    dtype: ...
 
     The translation table above is actually a series, giving the deduplicated values,
     and indexed by the original values.
@@ -228,6 +228,36 @@ def deduplicate(
     >>> deduplicated
     ['black', 'black', 'black', 'black', 'black', \
 'white', 'white', 'white', 'white', 'white']
+
+    It is possible to use the deduplication function to replace values in a DataFrame
+    column:
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'color': duplicated, 'value': range(10)})
+    >>> df
+    color  value
+    0  blacs      0
+    1  black      1
+    2  black      2
+    3  black      3
+    4  black      4
+    5  uhibe      5
+    6  white      6
+    7  white      7
+    8  white      8
+    9  white      9
+    >>> df['deduplicated_color'] = df['color'].map(deduplicate_correspondence.to_dict())
+    >>> df
+    color  value deduplicated_color
+    0  blacs      0              black
+    1  black      1              black
+    2  black      2              black
+    3  black      3              black
+    4  black      4              black
+    5  uhibe      5              white
+    6  white      6              white
+    7  white      7              white
+    8  white      8              white
+    9  white      9              white
     """
     unique_words, counts = np.unique(X, return_counts=True)
     distance_mat = compute_ngram_distance(
