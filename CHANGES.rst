@@ -63,8 +63,8 @@ Bugfixes
 - Fixed an issue where :class:`TableReport` would fail when computing associations
   for Polars dataframes if PyArrow was not installed.
   :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
-- Fixed an issue in the Data Ops report generation in cases where the DataOp 
-  contained escape characters or were spanning multiple lines. 
+- Fixed an issue in the Data Ops report generation in cases where the DataOp
+  contained escape characters or were spanning multiple lines.
   :pr:`1764` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.6.2
