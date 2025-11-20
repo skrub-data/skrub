@@ -270,6 +270,7 @@ API_REFERENCE = {
                 "autosummary": [
                     "SkrubLearner",
                     "ParamSearch",
+                    "OptunaParamSearch",
                 ],
                 "template": "base.rst",
             },
