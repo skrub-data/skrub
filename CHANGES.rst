@@ -39,6 +39,9 @@ Changes
 
 Bugfixes
 --------
+- Improved the error message raised when a Polars lazyframe is passed to
+  :class:`TableReport`, clarifying that `.collect()` must be called first.
+  :pr:`1732` by :user:`Fatima Ben Kadour <fatiben2002>`
 - Issues occurring when :meth:`DataOp.skb.apply` was passed a DataOp as the
   estimator have been fixed in :pr:`1671` by :user:`Jérôme Dockès
   <jeromedockes>`.
