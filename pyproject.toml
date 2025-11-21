@@ -293,8 +293,14 @@ ignore = [
   "E731",
   # do not use variables named 'l', 'O', or 'I'
   "E741",
-  # unnecessary `dict()` call (rewrite as a literal)
+  # unnecessary list comprehension (rewrite as a set comprehension)
+  "C403",
+  # unnecessary tuple literal (rewrite as a set literal)
+  "C405",
+  # unnecessary `dict()`/`list()`/`tuple()` call (rewrite as a literal)
   "C408",
+  # unnecessary list/tuple literal passed to `tuple()`
+  "C409",
 ]
 
 [tool.ruff.lint.per-file-ignores]
