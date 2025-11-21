@@ -23,7 +23,7 @@ jobs:
 
       - name: Create the reports
         working-directory: skrub/_reporting/js_tests/
-        run: pixi run make-reports
+        run: pixi run python make-reports
 
       - name: Cypress run
         uses: cypress-io/github-action@v6
