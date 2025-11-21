@@ -69,4 +69,4 @@ jobs:
           # latest version time to time.
           frozen: true
       - name: Run tests
-        run: pixi run pytest -vsl --cov=skrub --cov-report=xml skrub -n 3
+        run: pixi run test -n auto
