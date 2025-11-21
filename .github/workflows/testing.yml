@@ -69,4 +69,4 @@ jobs:
           # latest version time to time.
           frozen: true
       - name: Run tests
-        run: pixi run test -n auto
+        run: pixi run -e ci-nightly-deps test -n auto
