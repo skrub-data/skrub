@@ -248,7 +248,7 @@ class Choice(BaseChoice):
         if self.outcome_names is None:
             arg = self.outcomes
         else:
-            arg = {name: out for name, out in zip(self.outcome_names, self.outcomes)}
+            arg = dict(zip(self.outcome_names, self.outcomes))
         args_r = _utils.repr_args((arg,), {"name": self.name}, {"name": None})
         return f"choose_from({args_r})"
 
