@@ -32,6 +32,11 @@ def encoder():
 
 
 def test_missing_import_error(encoder):
+    """This test is actually skipped by the importorskip at the top of the file.
+
+    The actual test for missing dependencies is in test_text_encoder_missing.py
+    which can run without sentence_transformers installed.
+    """
     try:
         import sentence_transformers  # noqa
     except ImportError:
@@ -41,7 +46,13 @@ def test_missing_import_error(encoder):
 
     st = clone(encoder)
     x = pd.Series(["oh no"])
-    with pytest.raises(ImportError, match="Missing optional dependency"):
+
+    err_msg = (
+        "Missing optional dependency 'sentence_transformers'.*"
+        "TextEncoder requires sentence-transformers.*"
+        "install\\.html#deep-learning-dependencies"
+    )
+    with pytest.raises(ImportError, match=err_msg):
         st.fit(x)
 
 
