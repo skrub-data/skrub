@@ -422,12 +422,12 @@ def interdependence_score(
     >>> features = np.column_stack([x, x_log, x_square, z])
     >>> df = pd.DataFrame(features, columns=['x', 'log(x)', 'x²', 'z'])
     >>> df.head()
-           x   log(x)	    x²	   z
-    0	10.06	2.31	101.23	0.06
-    1	5.71	1.74	32.55	0.46
-    2	11.16	2.41	124.59	0.13
-    3	9.07	2.20	82.19	0.15
-    4	1.22	0.20	1.50	0.63
+               x    log(x)          x²         z
+    0  10.061429  2.308709  101.232346  0.062063
+    1   5.705420  1.741417   32.551814  0.458262
+    2  11.161773  2.412495  124.585176  0.129030
+    3   9.065784  2.204507   82.188446  0.152327
+    4   1.224306  0.202374    1.498924  0.632283
     >>> table = interdependence_score(df, p_val=True, num_tests=100)
     >>> table
       left_column_name right_column_name  interdependence_score  pvalue
