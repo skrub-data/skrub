@@ -193,6 +193,7 @@ class ToStr(SingleColumnTransformer):
 
     def fit_transform(self, column, y=None):
         del y
+        self.all_outputs_ = [sbd.name(column)]
         if (
             (sbd.is_categorical(column) and not self.convert_category)
             or sbd.is_numeric(column)
