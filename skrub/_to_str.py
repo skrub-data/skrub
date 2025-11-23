@@ -39,7 +39,7 @@ class ToStr(SingleColumnTransformer):
     0    ('one', 1)
     1    ('two', 2)
     2           NaN
-    dtype: object
+    dtype: ...
     >>> _[0]
     "('one', 1)"
 
@@ -56,7 +56,7 @@ class ToStr(SingleColumnTransformer):
     0    one
     1    two
     2    NaN
-    dtype: object
+    dtype: ...
 
     In ``object`` columns, ``pd.NA`` and other null values are also replaced by
     ``np.nan``:
@@ -67,13 +67,13 @@ class ToStr(SingleColumnTransformer):
     1                 None
     2                  NaT
     3                 <NA>
-    dtype: object
+    dtype: ...
     >>> to_str.fit_transform(s)
     0    {'city': 'Paris'}
     1                  NaN
     2                  NaN
     3                  NaN
-    dtype: object
+    dtype: ...
 
     A column that already contain strings, has the dtype ``object`` and no
     missing values is passed through:
@@ -107,7 +107,7 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.transform(pd.Series([1.1, 2.2]))
     0    1.1
     1    2.2
-    dtype: object
+    dtype: ...
     >>> _[0]
     '1.1'
 
