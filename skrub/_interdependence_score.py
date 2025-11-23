@@ -68,7 +68,7 @@ def _permute_rows(X: numpy.ndarray) -> numpy.ndarray:
         result: numpy array
     """
     n, d = X.shape
-    rng = np.random.default_rng()
+    rng = np.random.default_rng(42)
     result = np.empty_like(X)
     for j in range(d):
         result[:, j] = X[rng.permutation(n), j]
@@ -414,29 +414,28 @@ def interdependence_score(
     >>> import numpy as np
     >>> import pandas as pd
     >>> from skrub import interdependence_score
-    >>> rng = np.random.default_rng(42)
-    >>> x = rng.random(1000)*13
+    >>> x = np.random.default_rng(42).random(1000)
     >>> x_log = np.log(x)
     >>> x_square = np.square(x)
-    >>> z = rng.random(1000)
+    >>> z = np.random.default_rng(43).random(1000)
     >>> features = np.column_stack([x, x_log, x_square, z])
     >>> df = pd.DataFrame(features, columns=['x', 'log(x)', 'x²', 'z'])
     >>> df.head()
-               x    log(x)          x²         z
-    0  10.061429  2.308709  101.232346  0.062063
-    1   5.705420  1.741417   32.551814  0.458262
-    2  11.161773  2.412495  124.585176  0.129030
-    3   9.065784  2.204507   82.188446  0.152327
-    4   1.224306  0.202374    1.498924  0.632283
+              x    log(x)        x²         z
+    0  0.773956 -0.256240  0.599008  0.652299
+    1  0.438878 -0.823533  0.192614  0.043775
+    2  0.858598 -0.152455  0.737190  0.020030
+    3  0.697368 -0.360442  0.486322  0.839213
+    4  0.094177 -2.362576  0.008869  0.587143
     >>> table = interdependence_score(df, p_val=True, num_tests=100)
     >>> table
       left_column_name right_column_name  interdependence_score  pvalue
-    0                x                x²               0.966105    0.00
-    1                x            log(x)               0.889642    0.00
-    2           log(x)                x²               0.776569    0.00
-    3           log(x)                 z               0.042476    0.76
-    4               x²                 z               0.042180    0.67
-    5                x                 z               0.036878    0.65
+    0                x                x²               0.999624     0.0
+    1                x            log(x)               0.995241     0.0
+    2           log(x)                x²               0.917463     0.0
+    3               x²                 z               0.031476     1.0
+    4                x                 z               0.024181     1.0
+    5           log(x)                 z               0.021241     1.0
     """  # noqa: E501
 
     ids_matrix, pval_matrix = _ids_matrix(
