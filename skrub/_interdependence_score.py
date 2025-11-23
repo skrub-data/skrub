@@ -382,14 +382,15 @@ def interdependence_score(
     bandwidth_term : float, default=0.5
         The gaussian bandwidth that represents the term `B` in the feature map formula.
 
-    return_matrix: bool, default=False
+    return_matrix : bool, default=False
         If True, return the squared matrix of interdependence scores (n_features, n_features).
 
     Returns
     -------
-    IDS table : DataFrame
-        The interdependence score table with the pvalues if `p_val` is True.
-    IDS matrix : DataFrame, optional
+    DataFrame or (DataFrame, DataFrame)
+        If ``return_matrix=False`` (default), returns a DataFrame containing each
+        pair of columns, their interdependence score, and optionally the p-value.
+        If ``return_matrix=True``, returns also a square matrix of interdependence scores.
 
     Notes
     -----
