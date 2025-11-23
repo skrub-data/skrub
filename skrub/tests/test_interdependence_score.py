@@ -1,13 +1,16 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal
 
-# from skrub import _dataframe as sbd
-from skrub._interdependence_score import _ids_matrix
+from skrub import _dataframe as sbd
+from skrub._interdependence_score import _ids_matrix, interdependence_score
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def variables():
     np.random.seed(42)
     n = 1000
@@ -50,12 +53,50 @@ REFERENCE_SCORES = np.array(
 )
 
 
-def test_interdependence_score(df_module, variables):
+def test_interdependence_values(df_module, variables):
     df = df_module.make_dataframe(variables)
-    interdependence_scores, pvalues = _ids_matrix(df, p_val=True)
-    n_variables = len(variables)
+    interdependence_scores, _ = _ids_matrix(df, p_val=False)
 
-    assert_almost_equal(np.diag(interdependence_scores), np.ones(n_variables))
+    assert_almost_equal(np.diag(interdependence_scores), np.ones(len(variables)))
     diff_mat = np.abs(REFERENCE_SCORES - interdependence_scores)
     assert np.all(diff_mat < 0.05)
-    assert np.all(pvalues[interdependence_scores > 0.5] < 0.05)
+
+
+def test_interdependence_pvalues(df_module, variables):
+    df = df_module.make_dataframe(variables)
+    interdependence_scores, pvalues = _ids_matrix(df, p_val=True)
+
+    assert np.all(pvalues[interdependence_scores > 0.5] <= 0.05)
+
+
+def test_interdependence_score_output(df_module, variables):
+    df = df_module.make_dataframe(variables)
+    ids_table, ids_mat = interdependence_score(df, p_val=True, return_matrix=True)
+    ids_table_without_pval = interdependence_score(df, p_val=False)
+
+    assert sbd.shape(ids_table) == (36, 4)
+    assert sbd.shape(ids_table_without_pval) == (36, 3)
+    assert ids_mat.shape == (9, 9)
+
+    assert sbd.column_names(ids_table) == [
+        "left_column_name",
+        "right_column_name",
+        "interdependence_score",
+        "pvalue",
+    ]
+
+
+@skip_polars_installed_without_pyarrow
+def test_infinite(df_module):
+    # non-regression test for https://github.com/skrub-data/skrub/issues/1133
+    # (column associations would raise an exception on low-cardinality float
+    # column with infinite values)
+    with warnings.catch_warnings():
+        # pandas convert_dtypes() emits a spurious warning while trying to decide if
+        # floats should be cast to int or not
+        # eg `pd.Series([float('inf')]).convert_dtypes()` raises the warning
+        warnings.filterwarnings("ignore", message="invalid value encountered in cast")
+
+        _ids_matrix(
+            df_module.make_dataframe({"a": [float("inf"), 1.5], "b": [0.0, 1.5]})
+        )

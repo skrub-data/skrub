@@ -29,6 +29,9 @@ New features
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+- Added the :func:`interdependence_score`, an implementation of the IDS from the paper
+  `Efficiently quantifying dependence in massive scientific datasets using InterDependence Scores`.
+  :pr:`1724` by :user:`Jade Affolabi <JadeAffolabi>`.
 
 Changes
 -------

@@ -9,6 +9,8 @@ import numpy as np
 from sklearn.preprocessing import OneHotEncoder
 
 from . import _dataframe as sbd
+from . import _join_utils
+from ._column_associations import _stack_symmetric_associations
 
 DataFrame = TypeVar("DataFrame")
 _N_BINS = 10
@@ -24,7 +26,7 @@ def _gaussian_feature_map(
     For each element of the matrix x, the k terms of the feature map are computed.
     Parameters
     ----------
-        x : numpy.ndarray
+        x : numpy array
             An array of shape (n_samples, n_features).
 
         k_terms : int
@@ -35,7 +37,7 @@ def _gaussian_feature_map(
 
     Returns
     -------
-        result : numpy.ndarray
+        result : numpy array
             The resulting array of shape (n_samples, n_features * k_terms).
     """
     B = bandwidth_term
@@ -58,12 +60,12 @@ def _permute_rows(X: numpy.ndarray) -> numpy.ndarray:
 
     Parameters
     ----------
-        X: numpy.ndarray
+        X: numpy array
             An array of shape (n_samples, n_features).
 
     Returns
     -------
-        result: numpy.ndarray
+        result: numpy array
     """
     n, d = X.shape
     rng = np.random.default_rng()
@@ -85,7 +87,7 @@ def _onehot_encode_categoricals(df: DataFrame) -> tuple[DataFrame, dict[int, lis
 
     Returns
     -------
-        output: numpy.ndarray
+        output: numpy array
             The resulting array with one hot encoded features.
         old_idx_matches: dict[int, list]
     """
@@ -134,7 +136,6 @@ def _compute_p_val(
     X: numpy.ndarray,
     feature_map_function=_gaussian_feature_map,
     k_terms=6,
-    norm="inf",
     n_tests=100,
     bandwidth_term=1 / 2,
 ) -> numpy.ndarray:
@@ -143,11 +144,11 @@ def _compute_p_val(
 
     Parameters
     ----------
-        ids: numpy.ndarray
+        ids: numpy array
             An array of shape (n_features, n_features).
             The interdependence score matrix computed.
 
-        X: numpy.ndarray
+        X: numpy array
             An array of shape (n_samples, n_features).
 
         feature_map_function: function
@@ -155,9 +156,6 @@ def _compute_p_val(
 
         k_terms: int
             The number of terms to compute for the feature map function
-
-        norm: str
-            The order of the vector norm (1, 2, inf)
 
         n_tests: int
             The number of tests to run in order to compute the p-value.
@@ -167,7 +165,7 @@ def _compute_p_val(
 
     Returns
     -------
-        p_vals: numpy.ndarray
+        p_vals: numpy array
             The p-value matrix associated to the interdependence score matrix.
     """
     ids_obs = ids
@@ -178,7 +176,6 @@ def _compute_p_val(
             X_permuted,
             k_terms=k_terms,
             feature_map_function=feature_map_function,
-            norm=norm,
             bandwidth_term=bandwidth_term,
         )
         count += np.where(ids_perm > ids_obs, 1, 0)
@@ -186,40 +183,10 @@ def _compute_p_val(
     return p_vals
 
 
-def _apply_norm(C: numpy.ndarray, norm: str) -> numpy.ndarray:
-    """
-    Compute the norm for IDS score
-
-    Parameters
-    ----------
-        C: numpy.ndarray
-            An array of shape (k_terms, n_features, k_terms, n_features).
-            It is the correlation between the feature map component of each feature.
-
-        norm: str
-            The order of the vector norm (1, 2, inf)
-
-    Returns
-    -------
-        res: numpy.ndarray
-            An array of shape (n_features, n_features).
-            The interdependence score matrix.
-    """
-    if norm == "inf":
-        return np.max(np.abs(C), axis=(0, 2))
-    elif norm == 2:
-        return np.sqrt(np.mean(np.abs(C) ** 2, axis=(0, 1)))
-    elif norm == 1:
-        return np.mean(np.abs(C), axis=(0, 1))
-    else:
-        raise ValueError(f"Unsupported norm type: {norm}")
-
-
 def _compute_ids_numpy(
     X: numpy.ndarray,
     feature_map_function=_gaussian_feature_map,
     k_terms=6,
-    norm="inf",
     p_val=False,
     num_tests=100,
     bandwidth_term=1 / 2,
@@ -229,7 +196,7 @@ def _compute_ids_numpy(
 
     Parameters
     ----------
-        X: numpy.ndarray
+        X: numpy array
             An array of shape (n_samples, n_features).
 
         feature_map_function: function
@@ -237,9 +204,6 @@ def _compute_ids_numpy(
 
         k_terms: int
             The number of terms to compute for the feature map function
-
-        norm: str
-            The order of the vector norm (1, 2, inf)
 
         p_val: bool
             True if the p-values should be computed.
@@ -252,10 +216,11 @@ def _compute_ids_numpy(
 
     Returns
     -------
-        ids: numpy.ndarray
+        ids: numpy array
             An array of shape (n_features, n_features).
             The interdependence score matrix.
-        pvals: numpy.ndarray
+
+        pvals: numpy array
             An array of shape (n_features, n_features).
             The p-value matrix associated to the interdependence score matrix.
     """
@@ -269,54 +234,44 @@ def _compute_ids_numpy(
     C = C.reshape(k_terms, dx, k_terms, dx)
 
     C = np.nan_to_num(C, nan=0, posinf=0, neginf=0)
-    ids = _apply_norm(C, norm)
+    # Apply infinity-norm
+    ids = np.max(np.abs(C), axis=(0, 2))
 
     if p_val:
         p_vals = _compute_p_val(
-            ids, X, feature_map_function, k_terms, norm, num_tests, bandwidth_term
+            ids, X, feature_map_function, k_terms, num_tests, bandwidth_term
         )
-        return ids, p_vals
-    return ids, None
+    else:
+        p_vals = None
+    return ids, p_vals
 
 
-def merge_one_hot_features(
-    arr: numpy.ndarray, features_match: dict[int, list], how="max"
-):
+def merge_one_hot_features(arr: numpy.ndarray, features_match: dict[int, list]):
     """
     Merge the one hot features in order to get IDS matrix for the initial features
 
     Parameters
     ----------
-        arr: numpy.ndarray
+        arr: numpy array
             An array of shape (n_features, n_features).
             The interdependence score matrix.
         features_match: dict
             Dictionary mapping the index of the initial features to the indices
             of their one-hot components or to their new position in the one hot array.
-        how: str
-            The way to aggregate the values of the one hot features
-            to get the estimated ids score of the original feature.
-            One of 'mean', 'max'
 
     Returns
     -------
-        arr: numpy.ndarray
+        arr: numpy array
             An array of shape (n_initial_features, n_initial_features).
     """
 
     original_number_feats = len(features_match.keys())
-
     for original_feature_idx in features_match.keys():
         indices_to_merge = features_match[original_feature_idx]
         if len(indices_to_merge) == 1:
             arr[original_feature_idx, :] = arr[indices_to_merge[0], :]
         else:
-            if how == "max":
-                arr[original_feature_idx, :] = arr[indices_to_merge, :].max(axis=0)
-            elif how == "mean":
-                arr[original_feature_idx, :] = arr[indices_to_merge, :].mean(axis=0)
-            else:
-                raise ValueError(f"Unsupported value argument : how={how}")
+            arr[original_feature_idx, :] = arr[indices_to_merge, :].max(axis=0)
     arr = arr[:original_number_feats, :]
 
     for original_feature_idx in features_match.keys():
@@ -324,10 +279,7 @@ def merge_one_hot_features(
         if len(indices_to_merge) == 1:
             arr[:, original_feature_idx] = arr[:, indices_to_merge[0]]
         else:
-            if how == "max":
-                arr[:, original_feature_idx] = arr[:, indices_to_merge].max(axis=1)
-            else:
-                arr[:, original_feature_idx] = arr[:, indices_to_merge].mean(axis=1)
+            arr[:, original_feature_idx] = arr[:, indices_to_merge].max(axis=1)
     arr = arr[:, :original_number_feats]
     return arr
 
@@ -336,11 +288,9 @@ def _ids_matrix(
     X: DataFrame,
     feature_map_function=_gaussian_feature_map,
     k_terms=6,
-    norm="inf",
     p_val=False,
     num_tests=100,
     bandwidth_term=1 / 2,
-    squeeze_option="max",
 ) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, None]]:
     """
         Compute the interdependence score matrix.
@@ -348,16 +298,13 @@ def _ids_matrix(
     Parameters
     ----------
         X: DataFrame
-            An array of shape (n_samples, n_features).
+            An dataframe of shape (n_samples, n_features).
 
         feature_map_function: function
             The feature map function
 
         k_terms: int
             The number of terms to compute for the feature map function
-
-        norm: str
-            The order of the vector norm (1, 2, inf)
 
         p_val: bool
             True if the p-values should be computed.
@@ -368,32 +315,179 @@ def _ids_matrix(
         bandwidth_term: float
             The gaussian bandwidth
 
-        squeeze_option: str
-            How to aggregate the one-hot encoded features to get the initial features.
-
     Returns
     -------
-        ids_matrix: numpy.ndarray
-            The interdependence score matrix.
-        pval_matrix: numpy.ndarray
-            The p-value matrix.
+        ids_matrix: numpy array,
+            The interdependence score matrix (n_features, n_features).
+
+        pval_matrix: numpy array
+            The p-value matrix (n_features, n_features).
     """
     X_encoded, features_match = _onehot_encode_categoricals(X)
     ids_matrix, pval_matrix = _compute_ids_numpy(
         X_encoded,
         feature_map_function=feature_map_function,
         k_terms=k_terms,
-        norm=norm,
         p_val=p_val,
         num_tests=num_tests,
         bandwidth_term=bandwidth_term,
     )
 
-    ids_matrix = merge_one_hot_features(ids_matrix, features_match, how=squeeze_option)
+    ids_matrix = merge_one_hot_features(ids_matrix, features_match)
     if p_val:
-        pval_matrix = merge_one_hot_features(
-            pval_matrix, features_match, how=squeeze_option
+        pval_matrix = merge_one_hot_features(pval_matrix, features_match)
+    else:
+        pval_matrix = None
+
+    return ids_matrix, pval_matrix
+
+
+def interdependence_score(
+    X: DataFrame,
+    k_terms=6,
+    p_val=False,
+    num_tests=100,
+    bandwidth_term=1 / 2,
+    return_matrix=False,
+) -> Union[DataFrame, Tuple[DataFrame, DataFrame]]:
+    r"""
+    Compute the InterDependence Score (IDS).
+
+    The InterDependence Score is a measure of dependence that captures linear and
+    various nonlinear dependencies between variables. The IDS algorithm is based on
+    a dependence measure defined in infinite-dimensional Hilbert spaces, capable of capturing
+    any type of dependence, and a fast algorithm that neural networks natively implement
+    to compute dependencies between random variables.
+    IDS range from 0 to 1 (high dependence).
+
+    Parameters
+    ----------
+    X : DataFrame
+        An dataframe of shape (n_samples, n_features).
+
+    k_terms : int, default=6
+        The number of terms `k` to compute for the feature map associated to universal Gaussian kernel.
+        A canonical feature map for this kernel is :
+        .. math::
+            \begin{align*}
+                \phi(x) = exp\left(-x^2/(2B^2)\right) \left[1, x/B, \cdots, x^k/\left(\sqrt{k!}\, B^k\right), \cdots\right]
+            \end{align*}
+
+    p_val : bool, default=False
+        If True, the p-value associated to each score is compute and added to the output table.
+
+    num_tests : int, default=100
+        The number of tests to run in order to compute the p-values.
+
+    bandwidth_term : float, default=0.5
+        The gaussian bandwidth that represents the term `B` in the feature map formula.
+
+    return_matrix: bool, default=False
+        If True, return the squared matrix of interdependence scores (n_features, n_features).
+
+    Returns
+    -------
+    IDS table : DataFrame
+        The interdependence score table with the pvalues if `p_val` is True.
+    IDS matrix : DataFrame, optional
+
+    Notes
+    -----
+    The result is a dataframe with columns: ``['left_column_name', 'right_column_name', 'cramer_v', 'pearson_corr']``
+
+    Each pair of columns appears only once, and the scores are sorted in descending order.
+
+    Numeric columns with fewer than 30 values are treated as categorical.
+    The categoricals columns are one-hot encoded.
+
+    The implemented IDS only use the infinity norm.
+
+    References
+    ----------
+    This measure of dependence has been introduced in the paper `Efficiently quantifying dependence
+    in massive scientific datasets using InterDependence Scores
+    (A. Radhakrishnan, Y. Jain, C. Uhler, & E.S. Lander)<https://doi.org/10.1073/pnas.2509860122>`.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from skrub import interdependence_score
+    >>> rng = np.random.default_rng(42)
+    >>> x = rng.random(1000)*13
+    >>> x_log = np.log(x)
+    >>> x_square = np.square(x)
+    >>> z = rng.random(1000)
+    >>> features = np.column_stack([x, x_log, x_square, z])
+    >>> df = pd.DataFrame(features, columns=['x', 'log(x)', 'x²', 'z'])
+    >>> df.head()
+           x   log(x)	    x²	   z
+    0	10.06	2.31	101.23	0.06
+    1	5.71	1.74	32.55	0.46
+    2	11.16	2.41	124.59	0.13
+    3	9.07	2.20	82.19	0.15
+    4	1.22	0.20	1.50	0.63
+    >>> table = interdependence_score(df, p_val=True, num_tests=100)
+    >>> table
+      left_column_name right_column_name  interdependence_score  pvalue
+    0                x                x²               0.966105    0.00
+    1                x            log(x)               0.889642    0.00
+    2           log(x)                x²               0.776569    0.00
+    3           log(x)                 z               0.042476    0.76
+    4               x²                 z               0.042180    0.67
+    5                x                 z               0.036878    0.65
+    """  # noqa: E501
+
+    ids_matrix, pval_matrix = _ids_matrix(
+        X,
+        feature_map_function=_gaussian_feature_map,
+        k_terms=k_terms,
+        p_val=p_val,
+        num_tests=num_tests,
+        bandwidth_term=bandwidth_term,
+    )
+
+    ids_table = _stack_symmetric_associations(
+        ids_matrix, X, statistic_name="interdependence_score"
+    )
+
+    if p_val:
+        pval_table = _stack_symmetric_associations(
+            pval_matrix, X, statistic_name="pvalue"
         )
-    if p_val:
-        return ids_matrix, pval_matrix
-    return ids_matrix, None
+        on = ["left_column_name", "right_column_name"]
+        ids_table = _join_utils.left_join(
+            ids_table, pval_table, right_on=on, left_on=on
+        )
+        ids_table = drop_columns_with_substring(ids_table, "skrub")
+
+    ids_table = drop_columns_with_substring(ids_table, "idx")
+    if return_matrix:
+        ids_matrix_df = sbd.make_dataframe_like(
+            X,
+            {
+                col_name: ids_matrix[:, i]
+                for i, col_name in enumerate(sbd.column_names(X))
+            },
+        )
+        return ids_table, ids_matrix_df
+    else:
+        return ids_table
+
+
+@sbd._common.dispatch
+def drop_columns_with_substring(df, substring):
+    """Drop columns whose name contains the specified substring."""
+    raise NotImplementedError()
+
+
+@drop_columns_with_substring.specialize("pandas")
+def _drop_columns_containing_pandas(df, substring):
+    cols_to_keep = [col for col in df.columns if substring not in col]
+    return df[cols_to_keep]
+
+
+@drop_columns_with_substring.specialize("polars")
+def _drop_columns_containing_polars(df, substring):
+    cols_to_keep = [col for col in df.columns if substring not in col]
+    return df.select(cols_to_keep)
