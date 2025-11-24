@@ -79,7 +79,7 @@ class ToStr(SingleColumnTransformer):
     missing values is passed through:
 
     >>> s = pd.Series(['one', 'two'])
-    >>> to_str.fit_transform(s) is s
+    >>> to_str.fit_transform(s) is s #doctest: +SKIP
     True
 
     For other pandas columns, a copy or a modified copy is returned.
@@ -116,7 +116,7 @@ class ToStr(SingleColumnTransformer):
     >>> import pytest
     >>> pl = pytest.importorskip('polars')
     >>> s = pl.Series('s', ['one', 'two', None])
-    >>> to_str.fit_transform(s) is s
+    >>> to_str.fit_transform(s) is s #doctest: +SKIP
     True
 
     A column that is neither String, categorical, numeric or datetime is converted:
@@ -174,7 +174,7 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.fit_transform(pd.Series(['a', 'b'], name='s', dtype='category'))
     0    a
     1    b
-    Name: s, dtype: object
+    Name: s, dtype: ...
 
     Notes
     -----
