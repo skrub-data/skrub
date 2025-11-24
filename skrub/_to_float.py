@@ -1,7 +1,27 @@
 from . import _dataframe as sbd
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToFloat"]
+
+POSSIBLE_SEPARATORS = [".", ",", "'", " "]
+
+
+@dispatch
+def _str_replace(col, pattern, strict=True):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@_str_replace.specialize("pandas", argument_type="Column")
+def _str_replace_pandas(col, pattern):
+    col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
+    return col.str.replace("".join(pattern), "", regex=True)
+
+
+@_str_replace.specialize("polars", argument_type="Column")
+def _str_replace_polars(col, pattern):
+    col = col.str.replace(r"^\((.*)\)$", r"-\1")
+    return col.str.replace_all("".join(pattern), "")
 
 
 class ToFloat(SingleColumnTransformer):
@@ -167,6 +187,10 @@ class ToFloat(SingleColumnTransformer):
     True
     """  # noqa: E501
 
+    def __init__(self, decimal="."):
+        super().__init__()
+        self.decimal = decimal
+
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
 
@@ -191,6 +215,10 @@ class ToFloat(SingleColumnTransformer):
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
+            if sbd.is_string(column):
+                p = POSSIBLE_SEPARATORS.copy()
+                p.remove(self.decimal)
+                column = _str_replace(column, pattern=p)
             numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
