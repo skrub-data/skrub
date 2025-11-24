@@ -7989,7 +7989,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/rfc3987-syntax-1.1.0-pyhe01879c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/roman-numerals-py-3.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.29.0-py311h902ca64_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/ruff-0.4.8-py311hae69bc3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/ruff-0.14.2-ha3a3aed_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/s2n-1.6.0-h8399546_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/safetensors-0.7.0-py311hc8fb587_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/scikit-learn-1.7.2-py311hc3e1efb_0.conda
@@ -8384,7 +8384,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/rfc3987-syntax-1.1.0-pyhe01879c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/roman-numerals-py-3.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/rpds-py-0.29.0-py311h71babbd_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruff-0.4.8-py311hd374d79_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruff-0.14.2-h492a034_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/safetensors-0.7.0-py311h0f0954d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/scikit-learn-1.7.2-py311h0f965f6_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/scipy-1.16.3-py311h2734c94_1.conda
@@ -8731,7 +8731,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/rfc3987-syntax-1.1.0-pyhe01879c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/roman-numerals-py-3.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.29.0-py311hf51aa87_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/ruff-0.4.8-py311ha637bb9_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/ruff-0.14.2-h3e3edff_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/safetensors-0.7.0-py311h18438d6_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/scikit-learn-1.7.2-py311h8a15ebc_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/scipy-1.16.3-py311hf127856_1.conda
@@ -33826,9 +33826,10 @@ packages:
   - pkg:pypi/rpds-py?source=hash-mapping
   size: 242866
   timestamp: 1763326622973
-- conda: https://conda.anaconda.org/conda-forge/linux-64/ruff-0.4.8-py311hae69bc3_0.conda
-  sha256: a1b59b39866f72d542e2ea11fca30e63d3a9957cde2f48661c1246724537b51c
-  md5: bc378b1e199bfcc587d60a62cc40eb6c
+- conda: https://conda.anaconda.org/conda-forge/linux-64/ruff-0.14.2-ha3a3aed_0.conda
+  noarch: python
+  sha256: d6c3ee6381ce275107a3fb3cfe82499f3cb74da1d95e134a93ed5e4851b4ec01
+  md5: ba27344e81c9c460c9502fcbf7bd1e5c
   depends:
   - python
   - __glibc >=2.17,<3.0.a0
@@ -35424,7 +35425,7 @@ packages:
 - pypi: ./
   name: skrub
   version: 0.7.dev0
-  sha256: 96529beb56aa1fac987c148a8eadb4f5d9efc35aef05189ef398a5be9e2a89ca
+  sha256: da2bdf9292676d6c59c37d9ec9e4410b252a1d215584785aa0cdb7f31a667ae0
   requires_dist:
   - numpy>=1.23.5
   - pandas>=1.5.3
