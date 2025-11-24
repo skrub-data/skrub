@@ -1223,7 +1223,11 @@ def fill_nulls(obj, value):
 
 @fill_nulls.specialize("pandas")
 def _fill_nulls_pandas(obj, value):
-    if parse_version(pd.__version__) < parse_version("2.2.0"):
+    if (
+        parse_version(pd.__version__) < parse_version("2.2.0")
+        # pandas 3.0+ no longer has silent downcasting and raises a futurewarning
+        or parse_version(pd.__version__).major >= 3
+    ):
         return obj.fillna(value)
     with pd.option_context("future.no_silent_downcasting", True):
         return obj.fillna(value)
