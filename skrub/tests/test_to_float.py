@@ -43,3 +43,36 @@ def test_rejected_columns(df_module):
             ToFloat().fit_transform(col)
         to_float = ToFloat().fit(df_module.make_column("c", [1.1]))
         assert is_float32(df_module, to_float.transform(col))
+
+
+@pytest.mark.parametrize(
+    "input_str, expected_float, decimal",
+    [
+        ("1,234.56", 1234.56, "."),
+        ("1.234,56", 1234.56, ","),
+        ("1 234,56", 1234.56, ","),
+        ("1234.56", 1234.56, "."),
+        ("1234,56", 1234.56, ","),
+        ("1,234,567.89", 1234567.89, "."),
+        ("1.234.567,89", 1234567.89, ","),
+        ("1 234 567,89", 1234567.89, ","),
+        ("1'234'567.89", 1234567.89, "."),
+        ("1.23e+4", 12300.0, "."),
+        ("1.23E+4", 12300.0, "."),
+        ("1,23e+4", 12300.0, ","),
+        ("1,23E+4", 12300.0, ","),
+        ("-1,234.56", -1234.56, "."),
+        ("-1.234,56", -1234.56, ","),
+        ("(1,234.56)", -1234.56, "."),
+        ("(1.234,56)", -1234.56, ","),
+        ("1,23,456.78", 123456.78, "."),
+        ("12,3456.78", 123456.78, "."),
+        (".56", 0.56, "."),
+        (",56", 0.56, ","),
+    ],
+)
+def test_number_parsing(input_str, expected_float, decimal, df_module):
+    column = df_module.make_column("col", [input_str])
+    result = ToFloat(decimal=decimal).fit_transform(column)
+
+    assert result == expected_float
