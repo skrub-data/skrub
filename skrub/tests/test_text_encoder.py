@@ -1,4 +1,5 @@
 import pickle
+import sys
 
 import pandas as pd
 import pytest
@@ -30,13 +31,13 @@ def encoder():
     )
 
 
-def test_missing_import_error():
-    try:
-        import sentence_transformers  # noqa
-    except ImportError:
-        pass
-    else:
-        return
+def test_missing_import_error(monkeypatch):
+    """Test that a clear error is raised when sentence_transformers is missing.
+
+    We mock the missing dependency by hiding it from sys.modules, then verify
+    that TextEncoder.fit() raises an ImportError with a helpful message.
+    """
+    monkeypatch.setitem(sys.modules, "sentence_transformers", None)
 
     st = TextEncoder()  # Direct creation to avoid importorskip
     x = pd.Series(["oh no"])
