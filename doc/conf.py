@@ -378,7 +378,7 @@ intersphinx_mapping = {
 
 
 # -- sphinx-gallery configuration ---------------------------------------------
-from sphinx_gallery.sorting import FileNameSortKey  # noqa
+from sphinx_gallery.sorting import FileNameSortKey
 
 if "dev" in release:
     binder_branch = "main"

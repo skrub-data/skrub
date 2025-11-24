@@ -36,7 +36,7 @@ def create_dir(tmp_dir):
 
 
 def test_prune_directory_with_standard_name_dirs(tmp_dir, create_dir):
-    # Making an directory older than 7 days that should be pruned
+    # Making a directory older than 7 days that should be pruned
     # and one recent directory that should not be pruned
     create_dir(name=None, days_old=None)
     create_dir(name=None, days_old=8)
@@ -50,7 +50,7 @@ def test_prune_directory_with_standard_name_dirs(tmp_dir, create_dir):
 
 
 def test_prune_directory_with_nonstandard_name_dirs(tmp_dir, create_dir):
-    # Making an directory older than 7 days with a non-matching name
+    # Making a directory older than 7 days with a non-matching name
     # so it should not be pruned
     create_dir("other_report", days_old=8)
 

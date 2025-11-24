@@ -45,8 +45,8 @@ def type_equality(expected_type, actual_type):
     assuming object and str types are equivalent
     (considered as categorical by the TableVectorizer).
     """
-    if (isinstance(expected_type, object) or isinstance(expected_type, str)) and (
-        isinstance(actual_type, object) or isinstance(actual_type, str)
+    if isinstance(expected_type, (object, str)) and isinstance(
+        actual_type, (object, str)
     ):
         return True
     else:
@@ -1022,3 +1022,18 @@ def test_date_format(df_module):
     transformed_to_list = sbd.to_list(transformed["date"])
     expected_to_list = sbd.to_list(expected["date"])
     assert transformed_to_list == expected_to_list
+
+
+@pytest.mark.skipif(
+    not _POLARS_INSTALLED,
+    reason="This test requires polars to be installed",
+)
+def test_cleaner_empty_column_name():
+    import polars as pl
+
+    # non-regression test for issue https://github.com/skrub-data/skrub/issues/1490
+    df = pl.DataFrame({"": [1], "b": [2], "c": [""]})
+    cleaner = Cleaner()
+    cleaner.fit_transform(df)
+    assert list(cleaner.all_processing_steps_.keys()) == df.columns
+    assert all(len(step) > 0 for step in cleaner.all_processing_steps_.values())

@@ -65,7 +65,7 @@ dev = [
 
   # lint
   "black==23.3.0",
-  "ruff==0.4.8",
+  "ruff==0.14.2",
   "pre-commit",
 
   # test
@@ -125,7 +125,7 @@ optuna = "*"
 
 [tool.pixi.feature.lint.dependencies]
 black = "==23.3.0"
-ruff = "==0.4.8"
+ruff = "==0.14.2"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
@@ -278,7 +278,6 @@ exclude = '''
 [tool.ruff]
 # max line length for black
 line-length = 88
-target-version = "py38"
 exclude = [
   ".git",
   "__pycache__",
@@ -294,6 +293,8 @@ select = ["E", "F", "W", "I"]
 ignore = [
   # space before : (needed for how black formats slicing)
   "E203",
+  # use `is` and `is not` for type comparisons
+  "E721",
   # do not assign a lambda expression, use a def
   "E731",
   # do not use variables named 'l', 'O', or 'I'

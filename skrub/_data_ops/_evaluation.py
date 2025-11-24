@@ -698,7 +698,7 @@ def _choice_display_names(choices):
     add(c_id for (c_id, c) in choices.items() if c.name is not None)
     add(c_id for (c_id, c) in choices.items() if c.name is None)
     # keep the same order as in choices
-    return {c_id: names[c_id] for c_id in choices.keys()}
+    return {c_id: names[c_id] for c_id in choices}
 
 
 class _ChoiceGraph(_DataOpTraversal):

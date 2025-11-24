@@ -105,7 +105,7 @@ we are not using hyperparameter search:
        (steps: ``[1, 5, 22, 100]``)
 
 
-The default choices for an DataOp, those that get used when calling
+The default choices for a DataOp, those that get used when calling
 :meth:`.skb.make_learner() <DataOp.skb.make_learner>`, can be inspected with
 :meth:`.skb.describe_defaults() <DataOp.skb.describe_defaults>`:
 
