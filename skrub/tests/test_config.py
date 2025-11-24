@@ -45,7 +45,6 @@ def simple_series(df_module):
 
 
 def test_config_context():
-    set_config(**BASE_CONFIG)
     assert get_config() == {
         "use_table_report": False,
         "use_table_report_data_ops": True,
@@ -64,7 +63,6 @@ def test_config_context():
 
 
 def test_use_table_report_data_ops(simple_df):
-    set_config(**BASE_CONFIG)
     X = skrub.X(simple_df)
     with config_context(use_table_report_data_ops=True):
         assert _use_table_report(X)
@@ -84,7 +82,6 @@ def test_use_table_report(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_max_plot_columns(simple_df):
-    set_config(**BASE_CONFIG)
     report = TableReport(simple_df)
     assert report.max_association_columns == 30
     assert report.max_plot_columns == 30
@@ -110,7 +107,6 @@ def test_max_plot_columns(simple_df):
 
 
 def test_enable_subsampling(simple_df):
-    set_config(**BASE_CONFIG)
     dataop = skrub.X(simple_df)
 
     # No subsampling by default with fit_transform mode
@@ -135,7 +131,6 @@ def test_enable_subsampling(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_float_precision(simple_series):
-    set_config(**BASE_CONFIG)
     # Default config: float_precision set to 3
     report = TableReport(simple_series)
     mean = f"{report._summary['columns'][0]['mean']:#.3g}"
@@ -172,7 +167,6 @@ def test_error(params):
 
 
 def test_subsampling_seed(simple_df):
-    set_config(**BASE_CONFIG)
     data_op = skrub.X(simple_df)
 
     with config_context(subsampling_seed=0):
@@ -193,7 +187,6 @@ def test_subsampling_seed(simple_df):
 
 
 def test_parsing(monkeypatch):
-    set_config(**BASE_CONFIG)
     assert _parse_env_bool("MY_VAR", default=True)
 
     with monkeypatch.context() as m:

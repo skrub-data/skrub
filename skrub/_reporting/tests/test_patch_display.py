@@ -27,7 +27,6 @@ def _reset_config_to_base():
 @pytest.mark.parametrize("repeat_unpatch", [1, 2])
 @skip_polars_installed_without_pyarrow
 def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
-    set_config(use_table_report=False)
     df = df_module.make_dataframe(
         dict(
             a=[1, 2, 3, 4],
@@ -73,7 +72,6 @@ def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
 
 
 def test_max_plot_max_assoc_columns_parameter(pd_module):
-    set_config(**base_config)  # Reset to base config
     set_config(use_table_report=True)
 
     df = pd_module.make_dataframe(
