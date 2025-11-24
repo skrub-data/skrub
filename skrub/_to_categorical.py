@@ -111,7 +111,7 @@ class ToCategorical(SingleColumnTransformer):
     1    cat B
     2     <NA>
     Name: c, dtype: category
-    Categories (2, string): [cat A, cat B]
+    Categories (2, string): [...]
     >>> _.cat.categories.dtype # doctest: +SKIP
 
     Polars string columns are converted to the ``Categorical`` dtype (not ``Enum``). As

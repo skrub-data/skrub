@@ -45,8 +45,8 @@ def type_equality(expected_type, actual_type):
     assuming object and str types are equivalent
     (considered as categorical by the TableVectorizer).
     """
-    if (isinstance(expected_type, object) or isinstance(expected_type, str)) and (
-        isinstance(actual_type, object) or isinstance(actual_type, str)
+    if isinstance(expected_type, (object, str)) and isinstance(
+        actual_type, (object, str)
     ):
         return True
     else:
