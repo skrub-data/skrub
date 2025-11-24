@@ -25,3 +25,4 @@ coverage:
 
 ignore:
   - "**/setup.py"
+  - "skrub/skrub/_sklearn_compat.py" # already tested in https://github.com/sklearn-compat/sklearn-compat

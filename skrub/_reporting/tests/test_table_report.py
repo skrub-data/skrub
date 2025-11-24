@@ -337,3 +337,85 @@ def test_bad_cols_parameter(pd_module, arg):
     df = pd_module.example_dataframe
     with pytest.raises(ValueError):
         TableReport(df, **{arg: -1})
+
+
+def test_array_dim_check():
+    array_3d = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+    assert array_3d.ndim == 3
+    with pytest.raises(ValueError, match=r"Input (NumPy )?array has 3 dimensions"):
+        TableReport(array_3d)
+
+    array_4d = np.array([[[[1]]]])
+    assert array_4d.ndim == 4
+    with pytest.raises(ValueError, match=r"Input (NumPy )?array has 4 dimensions"):
+        TableReport(array_4d)
+
+    array_1d = np.array([1, 2, 3])
+    assert array_1d.ndim == 1
+
+    TableReport(array_1d)
+
+
+numpy_test_cases = [
+    (
+        np.array(
+            [
+                [1, 2, 3],
+                [
+                    4,
+                    5,
+                    6,
+                ],
+            ]
+        ),
+        3,
+    ),
+    (np.array([[10, 20], [30, 40], [50, 60], [60, 70]]), 2),
+]
+
+
+@pytest.mark.parametrize("input_array, expected_columns", numpy_test_cases)
+def test_numpy_array_columns(input_array, expected_columns):
+    report = TableReport(input_array, max_association_columns=0)
+
+    assert report._summary["n_columns"] == expected_columns
+
+
+def _pyarrow_available():
+    try:
+        import pyarrow  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+@pytest.mark.xfail(
+    condition=_pyarrow_available(),
+    reason="Test expects pyarrow to not be installed, but it is installed",
+)
+def test_polars_df_no_pyarrow():
+    # Test that when using a Polars dataframe without pyarrow installed,
+    # the appropriate flag is set in the summary and the message appears in the HTML.
+    pl = pytest.importorskip("polars")
+
+    df = pl.DataFrame(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+            "C": [10, 20, 30, 40, 50],
+        }
+    )
+
+    report = TableReport(df, verbose=0)
+    summary = report._summary
+
+    assert summary.get("associations_skipped_polars_no_pyarrow", False) is True
+    assert summary.get("dataframe_module", "") == "polars"
+
+    html_snippet = report.html_snippet()
+    assert (
+        "Computing pairwise associations is not available for Polars dataframes "
+        "when PyArrow is not installed"
+        in html_snippet
+    )

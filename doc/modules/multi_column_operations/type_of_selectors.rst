@@ -1,5 +1,8 @@
+.. _selectors_details:
+
 Selecting based on dtype or data properties
 -------------------------------------------
+
 Selectors can filter columns based on different conditions.
 
 :func:`~skrub.selectors.all` is a simple selector, especially useful for default

@@ -140,9 +140,9 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["2024-05-05T13:17:52", None, "2024-05-07T13:17:52"], name="when")
     >>> s
     0    2024-05-05T13:17:52
-    1                   None
+    1                    ...
     2    2024-05-07T13:17:52
-    Name: when, dtype: object
+    Name: when, dtype: ...
 
     >>> from skrub import ToDatetime
 
@@ -379,6 +379,9 @@ class ToDatetime(SingleColumnTransformer):
             The input transformed to Datetime.
         """
         del y
+
+        self.all_outputs_ = [sbd.name(column)]
+
         if sbd.is_any_date(column):
             self.format_ = None
             self.output_dtype_ = sbd.dtype(column)

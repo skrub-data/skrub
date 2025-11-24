@@ -113,9 +113,9 @@ def benchmark(
 
 def plot(df):
     base_values = {"batch_size": 1024, "max_iter_e_step": 1, "max_no_improvement": 5}
-    for variable in base_values.keys():
+    for variable in base_values:
         df_to_plot = df
-        for other_variable in base_values.keys():
+        for other_variable in base_values:
             if other_variable != variable:
                 df_to_plot = df_to_plot[
                     df_to_plot[other_variable] == base_values[other_variable]
