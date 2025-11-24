@@ -138,7 +138,6 @@ transformers = "*"
 datasets = "*"
 sentence-transformers = ">=3.0,<6"
 pyarrow = "<21"
-pyarrow = "<21"
 
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
