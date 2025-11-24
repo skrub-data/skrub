@@ -6,6 +6,24 @@ from skrub._config import _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
+# Needed to avoid issues with concurrent tests changing global config
+BASE_CONFIG = get_config()
+
+
+@pytest.fixture(autouse=True)
+def _reset_config_to_base():
+    """Autouse fixture that resets config to BASE_CONFIG before each test.
+
+    This ensures that tests run in isolation and don't affect each other's
+    configuration state, even when running in parallel or in different orders.
+    This prevents race conditions where one test's config changes could leak
+    into another test's execution.
+    """
+    set_config(**BASE_CONFIG)
+    yield
+    # Also reset after the test to ensure clean state for next test
+    set_config(**BASE_CONFIG)
+
 
 def _use_table_report(obj):
     return "SkrubTableReport" in obj._repr_html_()
@@ -27,6 +45,7 @@ def simple_series(df_module):
 
 
 def test_config_context():
+    set_config(**BASE_CONFIG)
     assert get_config() == {
         "use_table_report": False,
         "use_table_report_data_ops": True,
@@ -45,6 +64,7 @@ def test_config_context():
 
 
 def test_use_table_report_data_ops(simple_df):
+    set_config(**BASE_CONFIG)
     X = skrub.X(simple_df)
     with config_context(use_table_report_data_ops=True):
         assert _use_table_report(X)
@@ -54,9 +74,7 @@ def test_use_table_report_data_ops(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_use_table_report(simple_df):
-    config = get_config()
-    # Needed to reset to default after test
-    set_config(**config)
+    set_config(**BASE_CONFIG)
     assert not _use_table_report(simple_df)
     with config_context(use_table_report=True):
         assert _use_table_report(simple_df)
@@ -66,6 +84,7 @@ def test_use_table_report(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_max_plot_columns(simple_df):
+    set_config(**BASE_CONFIG)
     report = TableReport(simple_df)
     assert report.max_association_columns == 30
     assert report.max_plot_columns == 30
@@ -91,6 +110,7 @@ def test_max_plot_columns(simple_df):
 
 
 def test_enable_subsampling(simple_df):
+    set_config(**BASE_CONFIG)
     dataop = skrub.X(simple_df)
 
     # No subsampling by default with fit_transform mode
@@ -115,6 +135,7 @@ def test_enable_subsampling(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_float_precision(simple_series):
+    set_config(**BASE_CONFIG)
     # Default config: float_precision set to 3
     report = TableReport(simple_series)
     mean = f"{report._summary['columns'][0]['mean']:#.3g}"
@@ -151,6 +172,7 @@ def test_error(params):
 
 
 def test_subsampling_seed(simple_df):
+    set_config(**BASE_CONFIG)
     data_op = skrub.X(simple_df)
 
     with config_context(subsampling_seed=0):
@@ -171,6 +193,7 @@ def test_subsampling_seed(simple_df):
 
 
 def test_parsing(monkeypatch):
+    set_config(**BASE_CONFIG)
     assert _parse_env_bool("MY_VAR", default=True)
 
     with monkeypatch.context() as m:

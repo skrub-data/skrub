@@ -8,6 +8,21 @@ from skrub.conftest import skip_polars_installed_without_pyarrow
 base_config = get_config()
 
 
+@pytest.fixture(autouse=True)
+def _reset_config_to_base():
+    """Autouse fixture that resets config to base_config before each test.
+
+    This ensures that tests run in isolation and don't affect each other's
+    configuration state, even when running in parallel or in different orders.
+    This prevents race conditions where one test's config changes could leak
+    into another test's execution.
+    """
+    set_config(**base_config)
+    yield
+    # Also reset after the test to ensure clean state for next test
+    set_config(**base_config)
+
+
 @pytest.mark.parametrize("repeat_patch", [1, 2])
 @pytest.mark.parametrize("repeat_unpatch", [1, 2])
 @skip_polars_installed_without_pyarrow
