@@ -26,19 +26,27 @@ New features
   environments produced by a CV splitter -- similar to
   :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
   :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`TableReport` now supports ``np.array``. :pr:`1676` by :user: `Nisma Amjad <Nismamjad1>`.
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
 
 Changes
 -------
+- The :meth: `DataOp.skb.full_report` method now deletes reports created with
+  ``output_dir=None`` after 7 days. :pr:`1657` by :user: `Simon Dierickx <simon.dierickx>`.
 - The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
   :class:`StandardScaler` for centering and scaling numerical features
   when linear models are used.
   :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
+- The transformer :class:`ToFloat`, previously called `ToFloat32`, is now public.
+  :pr:`1687` by :user:`Marie Sacksick <MarieSacksick>`.
 
 Bugfixes
 --------
+- Fixed various issues with some transformers by adding ``get_feature_names_out``
+  to all single column transformers.
+  :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
 - Issues occurring when :meth:`DataOp.skb.apply` was passed a DataOp as the
   estimator have been fixed in :pr:`1671` by :user:`Jérôme Dockès
   <jeromedockes>`.
@@ -46,7 +54,15 @@ Bugfixes
   columns with some dtypes (lists, structs) are sorted. It would not indicate
   Polars columns sorted in descending order. Fixed in :pr:`1673` by
   :user:`Jérôme Dockès <jeromedockes>`.
-
+- Fixed nightly checks and added support for upcoming library versions, including Pandas
+  v3.0. :pr:`1664` by :user:`Auguste Baum <auguste-probabl>` and
+  :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed the use of :class:`TableReport` and :class:`Cleaner` with Polars dataframes
+  containing a column with empty string as name.
+  :pr:`1722` by :user:`Marie Sacksick <MarieSacksick>`.
+- Fixed an issue where :class:`TableReport` would fail when computing associations
+  for Polars dataframes if PyArrow was not installed.
+  :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.6.2
 =============
@@ -151,11 +167,11 @@ Highlights
 - :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
   providing utilities for selecting columns to which a transformer should be applied
   in a flexible way. For more details, see the :ref:`User guide <user_guide_selectors>`
-  and the :ref:`example <sphx_glr_auto_examples_09_apply_to_cols.py>`.
+  and the :ref:`example <sphx_glr_auto_examples_0090_apply_to_cols.py>`.
 
 - The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
   clips numeric columns, enabling more robust handling of numeric columns
-  with neural networks. See the :ref:`example <sphx_glr_auto_examples_10_squashing_scaler.py>`
+  with neural networks. See the :ref:`example <sphx_glr_auto_examples_0100_squashing_scaler.py>`
 
 New features
 ------------

@@ -129,6 +129,22 @@ class SingleColumnTransformer(BaseEstimator):
                 wrapped = _wrap_add_check_single_column(getattr(subclass, method))
                 setattr(subclass, method, wrapped)
 
+    def get_feature_names_out(self, input_features=None):
+        """Get the output feature names.
+
+        Parameters
+        -----------
+        input_features : array-like of str, default=None
+            Input feature names. Ignored.
+
+        Returns
+        --------
+        all_outputs_
+            The names of the output features.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return self.all_outputs_
+
 
 def _wrap_add_check_single_column(f):
     # as we have only a few predefined functions to handle, using their exact
@@ -204,6 +220,10 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     """Map a transformer to columns in a dataframe.
 
     A separate clone of the transformer is applied to each column separately.
+
+    Columns that are not selected in the ``cols`` parameter are passed through
+    without modification.
+
     All columns not listed in ``cols`` remain unmodified in the output.
     Moreover, if ``allow_reject`` is ``True`` and the transformers'
     ``fit_transform`` raises a ``RejectColumn`` exception for a particular
@@ -343,8 +363,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
          birthday    city
     0  29/01/2024  London
     >>> df.dtypes
-    birthday    object
-    city        object
+    birthday    ...
+    city        ...
     dtype: object
     >>> ToDatetime().fit_transform(df["birthday"])
     0   2024-01-29
@@ -382,7 +402,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     >>> transformed.dtypes
     birthday    datetime64[...]
-    city                object
+    city                ...
     dtype: object
     >>> to_datetime.transformers_
     {'birthday': ToDatetime()}

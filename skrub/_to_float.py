@@ -1,10 +1,10 @@
 from . import _dataframe as sbd
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 
-__all__ = ["ToFloat32"]
+__all__ = ["ToFloat"]
 
 
-class ToFloat32(SingleColumnTransformer):
+class ToFloat(SingleColumnTransformer):
     """
     Convert a column to 32-bit floating-point numbers.
 
@@ -25,19 +25,19 @@ class ToFloat32(SingleColumnTransformer):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub._to_float32 import ToFloat32
+    >>> from skrub._to_float import ToFloat
 
     A column that does not contain floats is converted if possible:
 
     >>> s = pd.Series(['1.1', None, '3.3'], name='x')
     >>> s
     0     1.1
-    1    None
+    1    ...
     2     3.3
-    Name: x, dtype: object
+    Name: x, dtype: ...
     >>> s[0]
     '1.1'
-    >>> to_float = ToFloat32()
+    >>> to_float = ToFloat()
     >>> float_s = to_float.fit_transform(s)
     >>> float_s
     0    1.1
@@ -137,7 +137,7 @@ class ToFloat32(SingleColumnTransformer):
     Once a column has been accepted, all calls to ``transform`` will result in the
     same output dtype. Values that fail to be converted become null values.
 
-    >>> to_float = ToFloat32().fit(pd.Series([1, 2]))
+    >>> to_float = ToFloat().fit(pd.Series([1, 2]))
     >>> to_float.transform(pd.Series(['3.3', 'hello']))
     0    3.3
     1    NaN
@@ -150,7 +150,7 @@ class ToFloat32(SingleColumnTransformer):
     0    1.1
     1    2.2
     Name: s, dtype: category
-    Categories (2, object): ['1.1', '2.2']
+    Categories (2, ...): ['1.1', '2.2']
     >>> to_float.fit_transform(s)
     Traceback (most recent call last):
         ...
@@ -168,7 +168,23 @@ class ToFloat32(SingleColumnTransformer):
     """  # noqa: E501
 
     def fit_transform(self, column, y=None):
+        """Fit the encoder and transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series
+            The input to transform.
+
+        y : None
+            Ignored.
+
+        Returns
+        -------
+        transformed : pandas or polars Series
+            The input transformed to Float32.
+        """
         del y
+        self.all_outputs_ = [sbd.name(column)]
         if sbd.is_any_date(column) or sbd.is_categorical(column):
             raise RejectColumn(
                 f"Refusing to cast column {sbd.name(column)!r} "
@@ -183,4 +199,16 @@ class ToFloat32(SingleColumnTransformer):
             ) from e
 
     def transform(self, column):
+        """Transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series
+            The input to transform.
+
+        Returns
+        -------
+        transformed : pandas or polars Series
+            The input transformed to Float32.
+        """
         return sbd.to_float32(column, strict=False)

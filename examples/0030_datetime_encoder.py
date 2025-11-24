@@ -129,7 +129,7 @@ pprint(table_vec_weekday.get_feature_names_out())
 ###############################################################################
 # .. note:
 #     For more information on how to customize the |TableVectorizer|, see
-#     :ref:`sphx_glr_auto_examples_01_dirty_categories.py`.
+#     :ref:`sphx_glr_auto_examples_0010_dirty_categories.py`.
 #
 # Inspecting the |TableVectorizer| further, we can check that the
 # |DatetimeEncoder| is used on the correct column(s).
