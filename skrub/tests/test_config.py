@@ -6,6 +6,24 @@ from skrub._config import _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
+# Needed to avoid issues with concurrent tests changing global config
+BASE_CONFIG = get_config()
+
+
+@pytest.fixture(autouse=True)
+def _reset_config_to_base():
+    """Autouse fixture that resets config to BASE_CONFIG before each test.
+
+    This ensures that tests run in isolation and don't affect each other's
+    configuration state, even when running in parallel or in different orders.
+    This prevents race conditions where one test's config changes could leak
+    into another test's execution.
+    """
+    set_config(**BASE_CONFIG)
+    yield
+    # Also reset after the test to ensure clean state for next test
+    set_config(**BASE_CONFIG)
+
 
 def _use_table_report(obj):
     return "SkrubTableReport" in obj._repr_html_()
@@ -30,6 +48,7 @@ def test_config_context():
     assert get_config() == {
         "use_table_report": False,
         "use_table_report_data_ops": True,
+        "table_report_verbosity": 1,
         "max_plot_columns": 30,
         "max_association_columns": 30,
         "subsampling_seed": 0,
@@ -53,9 +72,7 @@ def test_use_table_report_data_ops(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_use_table_report(simple_df):
-    config = get_config()
-    # Needed to reset to default after test
-    set_config(**config)
+    set_config(**BASE_CONFIG)
     assert not _use_table_report(simple_df)
     with config_context(use_table_report=True):
         assert _use_table_report(simple_df)
