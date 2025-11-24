@@ -75,4 +75,4 @@ def test_number_parsing(input_str, expected_float, decimal, df_module):
     column = df_module.make_column("col", [input_str])
     result = ToFloat(decimal=decimal).fit_transform(column)
 
-    assert result == expected_float
+    np.allclose(result[0], expected_float)

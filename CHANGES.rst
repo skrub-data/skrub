@@ -30,6 +30,9 @@ New features
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+- :class:`ToFloat32` has the parameter decimal to let the user specify whether they use ',' or '.'
+  as decimal separator and it also handles negative numbers indicated with parentheses.
+  :pr:`1772` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
