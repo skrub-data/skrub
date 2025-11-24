@@ -10,8 +10,6 @@ from skrub import TableVectorizer, TextEncoder
 from skrub._apply_to_cols import RejectColumn
 from skrub._text_encoder import ModelNotFound
 
-pytest.importorskip("sentence_transformers")
-
 
 @pytest.fixture
 def encoder():
@@ -25,18 +23,14 @@ def encoder():
       detect the MPS backend, but due to limitations, no memory can be allocated.
       See https://github.com/actions/runner-images/issues/9918 for more details.
     """
+    pytest.importorskip("sentence_transformers")
     return TextEncoder(
         model_name="sentence-transformers/paraphrase-albert-small-v2",
         device="cpu",
     )
 
 
-def test_missing_import_error(encoder):
-    """This test is actually skipped by the importorskip at the top of the file.
-
-    The actual test for missing dependencies is in test_text_encoder_missing.py
-    which can run without sentence_transformers installed.
-    """
+def test_missing_import_error():
     try:
         import sentence_transformers  # noqa
     except ImportError:
@@ -44,7 +38,7 @@ def test_missing_import_error(encoder):
     else:
         return
 
-    st = clone(encoder)
+    st = TextEncoder()  # Direct creation to avoid importorskip
     x = pd.Series(["oh no"])
 
     err_msg = (
