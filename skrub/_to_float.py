@@ -32,9 +32,9 @@ class ToFloat(SingleColumnTransformer):
     >>> s = pd.Series(['1.1', None, '3.3'], name='x')
     >>> s
     0     1.1
-    1    None
+    1    ...
     2     3.3
-    Name: x, dtype: object
+    Name: x, dtype: ...
     >>> s[0]
     '1.1'
     >>> to_float = ToFloat()
@@ -150,7 +150,7 @@ class ToFloat(SingleColumnTransformer):
     0    1.1
     1    2.2
     Name: s, dtype: category
-    Categories (2, object): ['1.1', '2.2']
+    Categories (2, ...): ['1.1', '2.2']
     >>> to_float.fit_transform(s)
     Traceback (most recent call last):
         ...

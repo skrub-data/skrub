@@ -99,6 +99,16 @@ def test_empty_dataframe(df_module):
     assert "The dataframe is empty." in html
 
 
+def test_lazyframe_exception():
+    pl = pytest.importorskip("polars")
+    lazy_df = pl.DataFrame({"a": ["1", "2", "3"]}).lazy()
+
+    with pytest.raises(
+        ValueError, match=r"TableReport does not support lazy dataframes"
+    ):
+        TableReport(lazy_df)
+
+
 def test_open(pd_module, browser_mock):
     TableReport(pd_module.example_dataframe, title="the title").open()
     assert b"the title" in browser_mock.content
