@@ -44,6 +44,9 @@ Changes
   :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
 - The transformer :class:`ToFloat`, previously called `ToFloat32`, is now public.
   :pr:`1687` by :user:`Marie Sacksick <MarieSacksick>`.
+- Improved the error message raised when a Polars lazyframe is passed to
+  :class:`TableReport`, clarifying that `.collect()` must be called first.
+  :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
 
 Bugfixes
 --------
@@ -66,6 +69,8 @@ Bugfixes
 - Fixed an issue where :class:`TableReport` would fail when computing associations
   for Polars dataframes if PyArrow was not installed.
   :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Improve error message when :class:`TextEncoder` is used without the optional
+  transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
 
 Release 0.6.2
 =============

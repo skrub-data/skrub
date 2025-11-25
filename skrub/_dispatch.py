@@ -135,14 +135,14 @@ Instead we must rewrite it to be:
 from dataclasses import dataclass
 from functools import singledispatch
 from types import MappingProxyType, ModuleType
-from typing import Any, Dict, Tuple
+from typing import Any
 
 
 @dataclass
 class DataFrameModuleInfo:
     name: str
     module: ModuleType
-    types: Dict[str, Tuple[Any]]
+    types: dict[str, tuple[Any]]
 
 
 def _load_dataframe_module_info(name):

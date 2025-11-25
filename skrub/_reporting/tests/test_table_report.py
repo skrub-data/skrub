@@ -99,6 +99,16 @@ def test_empty_dataframe(df_module):
     assert "The dataframe is empty." in html
 
 
+def test_lazyframe_exception():
+    pl = pytest.importorskip("polars")
+    lazy_df = pl.DataFrame({"a": ["1", "2", "3"]}).lazy()
+
+    with pytest.raises(
+        ValueError, match=r"TableReport does not support lazy dataframes"
+    ):
+        TableReport(lazy_df)
+
+
 def test_open(pd_module, browser_mock):
     TableReport(pd_module.example_dataframe, title="the title").open()
     assert b"the title" in browser_mock.content
@@ -186,7 +196,7 @@ def test_write_html(tmp_path, pd_module, filename_type):
         report.write_html(filename)
         assert tmp_file_path.exists()
 
-    with open(tmp_file_path, "r", encoding="utf-8") as file:
+    with open(tmp_file_path, encoding="utf-8") as file:
         saved_content = file.read()
     assert "</html>" in saved_content
 
@@ -207,7 +217,7 @@ def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
         ):
             report.write_html(file)
 
-    with open(tmp_file_path, "r", encoding="latin-1") as file:
+    with open(tmp_file_path, encoding="latin-1") as file:
         saved_content = file.read()
     assert "</html>" not in saved_content
 
