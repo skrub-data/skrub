@@ -272,6 +272,9 @@ ignore = [
   "E731",
   # do not use variables named 'l', 'O', or 'I'
   "E741",
+  "B004",
+  "B007",
+  "B010",
   "B017",
   "B018",
   "B028",
