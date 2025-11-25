@@ -419,7 +419,7 @@ class MultiAggJoiner(TransformerMixin, BaseEstimator):
             suffixes = [f"_{i}" for i in range(len(self._aux_tables))]
         else:
             if not _is_array_like(suffixes) or not all(
-                [isinstance(suffix, str) for suffix in suffixes]
+                isinstance(suffix, str) for suffix in suffixes
             ):
                 raise ValueError(
                     "Accepted inputs for `suffixes` are None and iterable of str."

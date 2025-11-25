@@ -863,7 +863,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                         f"Column {c!r} used twice in 'specific_transformers', "
                         f"at indices {specific_columns[c]} and {i}."
                     )
-            specific_columns.update({c: i for c in cols})
+            specific_columns.update(dict.fromkeys(cols, i))
         self._specific_columns = list(specific_columns.keys())
 
     def _make_pipeline(self):
