@@ -135,14 +135,14 @@ Instead we must rewrite it to be:
 from dataclasses import dataclass
 from functools import singledispatch
 from types import MappingProxyType, ModuleType
-from typing import Any, Dict, Tuple
+from typing import Any
 
 
 @dataclass
 class DataFrameModuleInfo:
     name: str
     module: ModuleType
-    types: Dict[str, Tuple[Any]]
+    types: dict[str, tuple[Any]]
 
 
 def _load_dataframe_module_info(name):
@@ -247,3 +247,20 @@ def dispatch(function):
 
     # return the generic function
     return dispatched
+
+
+def raise_dispatch_unregistered_type(obj, kind="object"):
+    from ._data_ops import DataOp
+
+    if isinstance(obj, DataOp):
+        raise TypeError(f"""Expected a Pandas or Polars {kind}, but got a skrub DataOp.
+A function that expects an actual value cannot be applied directly to a DataOp;
+you may want to (i) use op.skb.eval() or op.skb.preview() to evaluate the
+dataop and turn it into an actual value or (ii) use op.skb.apply_func() or
+op.skb.apply() to schedule the operation for later execution (when the dataop is
+evaluated) rather than computing it immediately.
+ """)
+    raise TypeError(
+        "Operation not supported on this object. Expecting a Pandas or Polars "
+        f"{kind}, but got an object of type {type(obj)}."
+    )

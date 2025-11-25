@@ -100,7 +100,7 @@ we are not using hyperparameter search:
        (steps: ``[1, 5, 22, 100]``)
 
 
-The default choices for an DataOp, those that get used when calling
+The default choices for a DataOp, those that get used when calling
 :meth:`.skb.make_learner() <DataOp.skb.make_learner>`, can be inspected with
 :meth:`.skb.describe_defaults() <DataOp.skb.describe_defaults>`:
 
@@ -141,7 +141,7 @@ It is also possible to use :meth:`ParamSearch.plot_results` to visualize the res
 of the search using a parallel coordinates plot.
 
 A full example of how to use hyperparameter search is available in
-:ref:`sphx_glr_auto_examples_data_ops_13_choices.py`.
+:ref:`sphx_glr_auto_examples_data_ops_0130_choices.py`.
 
 |
 
@@ -200,6 +200,6 @@ We can see the generated parameter grid with :func:`DataOps.skb.describe_param_g
 "- choose_from({'number': …, 'text': …}): ['number', 'text']\n"
 
 A more advanced application of this technique is used in
-:ref:`this tutorial on forecasting timeseries <https://skrub-data.org/EuroSciPy2025/content/notebooks/single_horizon_prediction.html>_`,
+`this tutorial on forecasting timeseries <https://skrub-data.org/EuroSciPy2025/content/notebooks/single_horizon_prediction.html>`_,
 along with the feature engineering required to prepare the columns, and the
 analysis of the results.

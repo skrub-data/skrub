@@ -8,10 +8,11 @@ from pandas.testing import assert_frame_equal
 from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.model_selection import train_test_split
 
 import skrub
+from skrub import ApplyToCols
 from skrub import selectors as s
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
@@ -329,43 +330,63 @@ def test_data_op_impl():
         a.skb.eval()
 
 
-@pytest.mark.parametrize("why_full_frame", ["numpy", "predictor", "how"])
+@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "how"])
 @pytest.mark.parametrize("bad_param", ["cols", "how", "allow_reject"])
-def test_apply_bad_params(why_full_frame, bad_param):
+def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
-    # dataframe) (or how='full_frame') the estimator can only be applied to the
+    # dataframe) (or how='no_wrap') the estimator can only be applied to the
     # full input without wrapping in ApplyToCols or ApplyToFrame. In this case
     # if the user passed a parameter that would require wrapping, such as
     # passing a value for `cols` that is not `all()`, or passing
-    # how='columnwise' or allow_reject=True, we get an error.
+    # how='cols' or allow_reject=True, we get an error.
 
-    if why_full_frame == bad_param == "how":
+    if why_no_wrap == bad_param == "how":
         return
     X_a, y_a = make_classification(random_state=0)
     X_df = pd.DataFrame(X_a, columns=[f"col_{i}" for i in range(X_a.shape[1])])
 
-    X = skrub.X(X_a) if why_full_frame == "numpy" else skrub.X(X_df)
-    if why_full_frame == "predictor":
+    X = skrub.X(X_a) if why_no_wrap == "numpy" else skrub.X(X_df)
+    if why_no_wrap == "predictor":
         estimator = LogisticRegression()
         y = skrub.y(y_a)
     else:
         estimator = PassThrough()
         y = None
-    how = "full_frame" if why_full_frame == "how" else "auto"
-    # X is a numpy array: how must be full_frame and selecting columns is not
+    how = "no_wrap" if why_no_wrap == "how" else "auto"
+    # X is a numpy array: how must be no_wrap and selecting columns is not
     # allowed.
     if bad_param == "cols":
-        if why_full_frame == "numpy":
+        if why_no_wrap == "numpy":
             cols = [0, 1]
         else:
             cols = ["col_0", "col_1"]
     else:
         cols = s.all()
-    how = "columnwise" if bad_param == "how" else how
+    how = "cols" if bad_param == "how" else how
     allow_reject = True if bad_param == "allow_reject" else False
 
-    with pytest.raises((ValueError, RuntimeError), match=""):
+    with pytest.raises(
+        (ValueError, RuntimeError),
+        match=(
+            r"(`cols` must be `all\(\)`|`how` must be 'auto'|`allow_reject` must be"
+            r" False)"
+        ),
+    ):
         X.skb.apply(estimator, y=y, how=how, allow_reject=allow_reject, cols=cols)
+
+
+def test_apply_invalid_how():
+    df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+    X = skrub.var("X", df)
+    t = PassThrough()
+    for how in ["auto", "cols", "frame", "no_wrap"]:
+        assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
+    with pytest.raises(RuntimeError, match="`how` must be one of"):
+        X.skb.apply(t, how="bad value")
+    # TODO: remove when old names are dropped in 0.7.0
+    with pytest.warns(FutureWarning, match="'columnwise' has been renamed to 'cols'"):
+        wrapper = X.skb.apply(t, how="columnwise").skb.applied_estimator.skb.eval()
+        assert isinstance(wrapper, ApplyToCols)
 
 
 class Mul(BaseEstimator):
@@ -398,6 +419,148 @@ def test_apply_on_cols(use_choice):
     e = skrub.as_data_op(X_df).skb.apply(transformer, exclude_cols=["a"])
     out = e.skb.eval()
     assert (out.values == expected).all()
+
+
+def test_apply_kwargs():
+    class E(BaseEstimator):
+        def fit(self, X, y=None, extra_f=None):
+            assert extra_f == "kwarg for fit"
+            return self
+
+        def predict(self, X, extra_p=None):
+            assert extra_p == "kwarg for predict"
+            return 0
+
+        def score(self, X, y=None, **kwargs):
+            assert not kwargs
+            return 0
+
+    pred = skrub.var("a").skb.apply(
+        E(),
+        fit_kwargs={"extra_f": "kwarg for fit"},
+        predict_kwargs={"extra_p": "kwarg for predict"},
+    )
+    learner = pred.skb.make_learner()
+    learner.fit({"a": 0})
+    learner.predict({"a": 0})
+    learner.score({"a": 0})
+
+
+def test_apply_transformer_kwargs():
+    # check kwargs get passed correctly to the transformer for all 'how' values.
+    class T(BaseEstimator):
+        def fit_transform(self, X, y=None, extra_f=None):
+            assert extra_f == "kwarg for fit_transform"
+            return X
+
+        def transform(self, X, extra_t=None):
+            assert extra_t == "kwarg for transform"
+            return X
+
+    kwargs = {
+        "fit_transform_kwargs": {"extra_f": "kwarg for fit_transform"},
+        "transform_kwargs": {"extra_t": "kwarg for transform"},
+    }
+    learner = (
+        skrub.var("df")
+        .skb.apply(T(), how="no_wrap", **kwargs)
+        .skb.apply(T(), how="cols", **kwargs)
+        .skb.apply(T(), how="frame", **kwargs)
+        .skb.make_learner()
+    )
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
+    learner.fit({"df": df})
+    learner.fit_transform({"df": df})
+    learner.transform({"df": df})
+
+
+def test_apply_kwargs_evaluation():
+    class E(BaseEstimator):
+        def fit(self, X, y=None, extra_f=None):
+            assert extra_f == "kwarg for fit"
+            return self
+
+        def predict(self, X, extra_p=None):
+            assert extra_p == "kwarg for predict"
+            return 0
+
+        def predict_proba(self, X, **kwargs):
+            assert not kwargs
+            return 0
+
+        def score(self, X, y=None, **kwargs):
+            assert not kwargs
+            return 0
+
+    get_extra_f_n_calls = 0
+
+    @skrub.deferred
+    def get_extra_f(a):
+        nonlocal get_extra_f_n_calls
+        get_extra_f_n_calls += 1
+        return "kwarg for fit"
+
+    get_predict_kwargs_n_calls = 0
+
+    @skrub.deferred
+    def get_predict_kwargs(a):
+        nonlocal get_predict_kwargs_n_calls
+        get_predict_kwargs_n_calls += 1
+        return {"extra_p": "kwarg for predict"}
+
+    get_predict_proba_kwargs_n_calls = 0
+
+    @skrub.deferred
+    def get_predict_proba_kwargs(a):
+        nonlocal get_predict_proba_kwargs_n_calls
+        get_predict_proba_kwargs_n_calls += 1
+        # None is a valid value for kwargs, get translated to {}
+        return None
+
+    assert get_extra_f_n_calls == 0
+    a = skrub.var("a")
+    pred = a.skb.apply(
+        E(),
+        fit_kwargs={"extra_f": get_extra_f(a)},
+        predict_kwargs=get_predict_kwargs(a),
+        predict_proba_kwargs=get_predict_proba_kwargs(a),
+    )
+    learner = pred.skb.make_learner()
+    assert get_extra_f_n_calls == 0
+    assert get_predict_kwargs_n_calls == 0
+    assert get_predict_proba_kwargs_n_calls == 0
+
+    learner.fit({"a": 0})
+    assert get_extra_f_n_calls == 1
+    # the kwargs for predict have not been evaluated when calling fit()
+    assert get_predict_kwargs_n_calls == 0
+    assert get_predict_proba_kwargs_n_calls == 0
+
+    learner.predict({"a": 0})
+    assert get_extra_f_n_calls == 1
+    assert get_predict_kwargs_n_calls == 1
+    assert get_predict_proba_kwargs_n_calls == 0
+
+    learner.predict_proba({"a": 0})
+    assert get_extra_f_n_calls == 1
+    assert get_predict_kwargs_n_calls == 1
+    assert get_predict_proba_kwargs_n_calls == 1
+
+    learner.score({"a": 0})
+    assert get_extra_f_n_calls == 1
+    assert get_predict_kwargs_n_calls == 1
+    assert get_predict_proba_kwargs_n_calls == 1
+
+
+def test_apply_bad_kwargs():
+    with pytest.raises(
+        (TypeError, RuntimeError),
+        match=(
+            r".*The `fit_kwargs` passed to `\.skb\.apply\(\)` should be a dict of named"
+            r" arguments"
+        ),
+    ):
+        skrub.X(0).skb.apply(DummyRegressor(), fit_kwargs="BAD", y=skrub.y(0))
 
 
 def test_concat_horizontal_duplicate_cols():
@@ -460,6 +623,105 @@ def test_concat_non_str_colname():
         skrub.as_data_op(int_columns).skb.concat(
             [skrub.as_data_op(int_columns)], axis=0
         )
+
+
+def test_get_vars():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = (a + b).skb.set_name("c")
+    d = c + c
+    assert list(d.skb.get_vars().keys()) == ["a", "b"]
+    assert d.skb.get_vars()["a"] is a
+    assert list(d.skb.get_vars(all_named_ops=True).keys()) == ["a", "b", "c"]
+
+
+@pytest.mark.parametrize("needs_data", [False, True])
+@pytest.mark.parametrize("has_preview", [False, True])
+@pytest.mark.parametrize("regression", [False, True])
+@pytest.mark.parametrize("with_scoring", [False, True])
+def test_estimator_is_a_data_op(needs_data, has_preview, regression, with_scoring):
+    # Check that the data_op, learner and search estimators behave well when
+    # the estimator passed to apply is a data op
+    if regression:
+        X_a, y_a = make_regression(random_state=0)
+    else:
+        X_a, y_a = make_classification(random_state=0)
+    X_df = pd.DataFrame(X_a).rename(columns=str)
+    if has_preview:
+        X, y = skrub.X(X_df), skrub.y(y_a)
+    else:
+        X, y = skrub.X(), skrub.y()
+    if needs_data:
+        # In this case the estimator's automated preview cannot be computed
+        # because it needs a value from the environment, the value is not known
+        # until we fit the learner.
+
+        def get_vectorizer(X):
+            return skrub.TableVectorizer()
+
+        vectorizer = X.skb.apply_func(get_vectorizer)
+
+        def get_predictor(X):
+            return Ridge() if regression else LogisticRegression()
+
+        predictor = X.skb.apply_func(get_predictor)
+    else:
+        # In this case the estimator can be evaluated in the automated preview
+        # when the data op is created.
+        vectorizer = skrub.as_data_op(skrub.TableVectorizer())
+        predictor = skrub.as_data_op(Ridge() if regression else LogisticRegression())
+    pred = X.skb.apply(vectorizer).skb.apply(predictor, y=y)
+    # no information about the estimator: we expose all methods and default to
+    # 'transformer' estimator type.
+    learner = pred.skb.make_learner()
+    assert learner.__skrub_to_Xy_pipeline__({})._estimator_type == "transformer"
+    assert hasattr(learner, "predict")
+    assert hasattr(pred.skb.make_randomized_search(), "predict")
+    if has_preview:
+        assert pred.skb.preview().shape == y_a.shape
+    env = {"X": X_df, "y": y_a}
+    assert pred.skb.eval(env).shape == y_a.shape
+    search = pred.skb.make_grid_search(cv=2).fit(env)
+    min_score = 0.3 if regression else 0.7
+    assert search.best_score_ > min_score
+    if with_scoring:
+        scoring = "r2" if regression else "accuracy"
+    else:
+        scoring = None
+    res = skrub.cross_validate(
+        pred.skb.make_grid_search(cv=2, scoring=scoring),
+        environment=env,
+        cv=2,
+        scoring=scoring,
+    )
+    assert res["test_score"].mean() > min_score
+
+
+def test_apply_no_sklearn_tags():
+    # applying an estimator that does not define __sklearn_tags__
+    class Twice:
+        def fit(self, X, y=None):
+            return self
+
+        def fit_transform(self, X, y=None):
+            return X * 2
+
+        def transform(self, X):
+            return X * 2
+
+        def get_params(self, deep=True):
+            return {}
+
+        def set_params(self):
+            return self
+
+    learner = skrub.var("a").skb.apply(Twice()).skb.make_learner()
+    assert learner.fit_transform({"a": 1}) == 2
+    xy_learner = learner.__skrub_to_Xy_pipeline__({})
+    assert xy_learner._estimator_type == "transformer"
+    if hasattr(xy_learner, "__sklearn_tags__"):
+        # Old scikit-learn versiond don't have __sklearn_tags__
+        assert xy_learner.__sklearn_tags__().estimator_type is None
 
 
 def test_class_skb():

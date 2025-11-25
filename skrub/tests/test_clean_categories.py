@@ -49,6 +49,14 @@ def test_clean_categories(df_module):
     for vals in ["x", "y", None], [1.1, 2.2, None]:
         assert sbd.is_categorical(cleaner.transform(df_module.make_column("c", vals)))
 
+    if sbd.is_pandas(s):
+        # Added to avoid a failing type check since we don't care about dtype here
+        assert (
+            sbd.to_numpy(s) == sbd.to_numpy(CleanCategories().fit_transform(s))
+        ).all()
+    else:
+        df_module.assert_column_equal(s, CleanCategories().fit_transform(s))
+
 
 def test_error_with_string_categories():
     # Make codecov happy

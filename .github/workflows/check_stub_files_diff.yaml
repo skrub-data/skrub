@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.8
+      - uses: actions/checkout@v5
+      - uses: prefix-dev/setup-pixi@v0.9.3
         with:
-          pixi-version: v0.41.3
+          pixi-version: v0.59.0
           frozen: true
 
       - name: Check stub file for `_data_ops.py` is up-to-date

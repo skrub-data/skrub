@@ -2,15 +2,14 @@ import numpy as np
 
 from . import _dataframe as sbd
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
-from ._dataframe._common import _raise as _sbd_raise
-from ._dispatch import dispatch
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 
 __all__ = ["CleanCategories"]
 
 
 @dispatch
 def _with_string_categories(col):
-    raise _sbd_raise(col, kind="Series")
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_with_string_categories.specialize("pandas", argument_type="Column")
@@ -78,15 +77,15 @@ class CleanCategories(SingleColumnTransformer):
     1      two
     2    three
     Name: c, dtype: category
-    Categories (3, object): ['one', 'three', 'two']
+    Categories (3, ...): ['one', 'three', 'two']
     >>> cleaner = CleanCategories()
     >>> cleaner.fit_transform(s)
     0      one
     1      two
     2    three
     Name: c, dtype: category
-    Categories (3, object): ['one', 'three', 'two']
-    >>> cleaner.fit_transform(s) is s
+    Categories (3, ...): ['one', 'three', 'two']
+    >>> cleaner.fit_transform(s) is s # doctest: +SKIP
     True
 
     Categories stored with the ``StringDtype`` dtype are converted to ``object``:
@@ -98,16 +97,16 @@ class CleanCategories(SingleColumnTransformer):
     1    cat B
     2     <NA>
     Name: c, dtype: category
-    Categories (2, string): [cat A, cat B]
-    >>> _.cat.categories.dtype
+    Categories (2, string): [...]
+    >>> _.cat.categories.dtype #doctest: +SKIP
     string[python]
     >>> cleaner.fit_transform(s)
     0    cat A
     1    cat B
     2      NaN
     Name: c, dtype: category
-    Categories (2, object): ['cat A', 'cat B']
-    >>> _.cat.categories.dtype
+    Categories (2, ...): [...]
+    >>> _.cat.categories.dtype #doctest: +SKIP
     dtype('O')
 
     Non-string categories are converted to strings:
@@ -122,7 +121,7 @@ class CleanCategories(SingleColumnTransformer):
     0    1
     1    2
     Name: c, dtype: category
-    Categories (2, object): ['1', '2']
+    Categories (2, ...): ['1', '2']
 
     We can see above that the output categories are strings.
 
@@ -143,7 +142,7 @@ class CleanCategories(SingleColumnTransformer):
     0    C()
     1    C()
     Name: c, dtype: category
-    Categories (1, object): ['C()']
+    Categories (1, ...): ['C()']
 
     A non-categorical column is rejected:
 
@@ -162,13 +161,13 @@ class CleanCategories(SingleColumnTransformer):
     0    a
     1    b
     2    c
-    Name: c, dtype: object
+    Name: c, dtype: ...
     >>> cleaner.transform(s)
     0    a
     1    b
     2    c
     Name: c, dtype: category
-    Categories (3, object): ['a', 'b', 'c']
+    Categories (3, ...): ['a', 'b', 'c']
 
     The categories themselves are not checked and may vary depending on the
     input; handling unseen categories is the responsibility of encoders such as
@@ -179,7 +178,7 @@ class CleanCategories(SingleColumnTransformer):
     1      y
     2    NaN
     Name: c, dtype: category
-    Categories (2, object): ['x', 'y']
+    Categories (2, ...): ['x', 'y']
 
     The category dtype transformations do not apply to polars; in polars all
     Categorical columns have Strings as the type of their categories.

@@ -11,6 +11,69 @@ Ongoing Development
 
 New features
 ------------
+- :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
+  estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
+  etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
+- TableReport now displays the mean statistic for boolean columns.
+  :pr:`1647` by :user:`Abdelhakim Benechehab <abenechehab>`.
+- :meth:`DataOp.skb.get_vars` allows inspecting all the variables, or all the
+  named dataops, in a :class:`DataOp`. This lets us easily know what keys should
+  be present in the ``environment`` dictionary we pass to
+  :meth:`DataOp.skb.eval` or to :meth:`SkrubLearner.fit`,
+  :meth:`SkrubLearner.predict`, etc. .
+  :pr:`1646` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.iter_cv_splits` iterates over the training and testing
+  environments produced by a CV splitter -- similar to
+  :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
+  :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`TableReport` now supports ``np.array``. :pr:`1676` by :user: `Nisma Amjad <Nismamjad1>`.
+- :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
+  in the html report.
+  :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+
+Changes
+-------
+- The :meth: `DataOp.skb.full_report` method now deletes reports created with
+  ``output_dir=None`` after 7 days. :pr:`1657` by :user: `Simon Dierickx <simon.dierickx>`.
+- The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
+  :class:`StandardScaler` for centering and scaling numerical features
+  when linear models are used.
+  :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
+- The transformer :class:`ToFloat`, previously called `ToFloat32`, is now public.
+  :pr:`1687` by :user:`Marie Sacksick <MarieSacksick>`.
+- Improved the error message raised when a Polars lazyframe is passed to
+  :class:`TableReport`, clarifying that `.collect()` must be called first.
+  :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
+
+Bugfixes
+--------
+- Fixed various issues with some transformers by adding ``get_feature_names_out``
+  to all single column transformers.
+  :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Issues occurring when :meth:`DataOp.skb.apply` was passed a DataOp as the
+  estimator have been fixed in :pr:`1671` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- :class:`TableReport` could raise an error while trying to check if Polars
+  columns with some dtypes (lists, structs) are sorted. It would not indicate
+  Polars columns sorted in descending order. Fixed in :pr:`1673` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed nightly checks and added support for upcoming library versions, including Pandas
+  v3.0. :pr:`1664` by :user:`Auguste Baum <auguste-probabl>` and
+  :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed the use of :class:`TableReport` and :class:`Cleaner` with Polars dataframes
+  containing a column with empty string as name.
+  :pr:`1722` by :user:`Marie Sacksick <MarieSacksick>`.
+- Fixed an issue where :class:`TableReport` would fail when computing associations
+  for Polars dataframes if PyArrow was not installed.
+  :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Improve error message when :class:`TextEncoder` is used without the optional
+  transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
+
+Release 0.6.2
+=============
+
+New features
+------------
 - The :meth:`DataOp.skb.full_report` now displays the time each node took to
   evaluate. :pr:`1596` by :user:`Jérôme Dockès <jeromedockes>`.
 
@@ -20,9 +83,17 @@ Changes
   :func:`datasets.get_ken_table_aliases`, and :func:`datasets.get_ken_types` will be
   removed in the next release of skrub.
   :pr:`1546` by :user:`Vincent Maladiere <Vincent-Maladiere>`.
-
 - Improved error messages when a DataOp is being sent to dispatched functions.
   :pr:`1607` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The accepted values for the parameter ``how`` of :meth:`DataOp.skb.apply` have
+  changed. The new values are ``"auto"`` (unchanged), ``"cols"`` to wrap the
+  transformer in :class:`ApplyToCols`, ``"frame"`` to wrap the transformer in
+  :class:`ApplyToFrame`, or ``"no_wrap"`` for no wrapping. The old values are
+  deprecated and will result in an error in a future release.
+  :pr:`1628` by :user:`Jérôme Dockès <jeromedockes>`.
+- The parameter ``splitter`` of :meth:`DataOp.skb.train_test_split` has been
+  renamed ``split_func``. :pr:`1630` by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Bugfixes
 --------
@@ -50,6 +121,9 @@ Bugfixes
   (not into their subclasses). If you need the items evaluated (ie if they
   contain DataOps or Choices), store them in one of the builtin collections.
   :pr:`1612` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`SkrubLearner.report` with ``mode="fit"`` used to display the dataops
+  themselves, rather than their outputs, in the report. This has been fixed in
+  :pr:`1623` by :user:`Jérôme Dockès <jeromedockes>`.
 - Fixed a bug that happened when ``get_feature_names_out`` was called on instances
   of the :class:`DatetimeEncoder`. :pr:`1622` by :user:`Riccardo Cappuzzo<rcap107>`.
 
@@ -89,11 +163,11 @@ Highlights
 - :mod:`selectors`, :class:`ApplyToCols` and :class:`ApplyToFrame` are now available,
   providing utilities for selecting columns to which a transformer should be applied
   in a flexible way. For more details, see the :ref:`User guide <user_guide_selectors>`
-  and the :ref:`example <sphx_glr_auto_examples_09_apply_to_cols.py>`.
+  and the :ref:`example <sphx_glr_auto_examples_0090_apply_to_cols.py>`.
 
 - The :class:`SquashingScaler` has been added: it robustly rescales and smoothly
   clips numeric columns, enabling more robust handling of numeric columns
-  with neural networks. See the :ref:`example <sphx_glr_auto_examples_10_squashing_scaler.py>`
+  with neural networks. See the :ref:`example <sphx_glr_auto_examples_0100_squashing_scaler.py>`
 
 New features
 ------------

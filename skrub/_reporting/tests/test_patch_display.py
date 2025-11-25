@@ -3,10 +3,12 @@ import pickle
 import pytest
 
 from skrub import patch_display, unpatch_display
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 @pytest.mark.parametrize("repeat_patch", [1, 2])
 @pytest.mark.parametrize("repeat_unpatch", [1, 2])
+@skip_polars_installed_without_pyarrow
 def test_patch_display(df_module, repeat_patch, repeat_unpatch, capsys):
     df = df_module.make_dataframe(
         dict(

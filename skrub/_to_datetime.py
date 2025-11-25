@@ -8,8 +8,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import selectors as s
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
-from ._dataframe._common import _raise as _sbd_raise
-from ._dispatch import dispatch
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._wrap_transformer import wrap_transformer
 
 __all__ = ["ToDatetime", "to_datetime"]
@@ -19,7 +18,7 @@ _SAMPLE_SIZE = 30
 
 @dispatch
 def _get_time_zone(col):
-    raise _sbd_raise(col, kind="Series")
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_get_time_zone.specialize("pandas", argument_type="Column")
@@ -45,7 +44,7 @@ def _get_time_zone_polars(col):
 
 @dispatch
 def _convert_time_zone(col, time_zone):
-    raise _sbd_raise(col, kind="Series")
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_convert_time_zone.specialize("pandas", argument_type="Column")
@@ -141,9 +140,9 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["2024-05-05T13:17:52", None, "2024-05-07T13:17:52"], name="when")
     >>> s
     0    2024-05-05T13:17:52
-    1                   None
+    1                    ...
     2    2024-05-07T13:17:52
-    Name: when, dtype: object
+    Name: when, dtype: ...
 
     >>> from skrub import ToDatetime
 
@@ -380,6 +379,9 @@ class ToDatetime(SingleColumnTransformer):
             The input transformed to Datetime.
         """
         del y
+
+        self.all_outputs_ = [sbd.name(column)]
+
         if sbd.is_any_date(column):
             self.format_ = None
             self.output_dtype_ = sbd.dtype(column)

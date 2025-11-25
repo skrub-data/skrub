@@ -4,12 +4,11 @@ import itertools
 import re
 import reprlib
 import secrets
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import sklearn
 from sklearn.base import BaseEstimator, clone
-from sklearn.utils import check_array
 from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as sbd
@@ -76,33 +75,6 @@ def unique_strings(values, is_null):
     return unique, full_idx
 
 
-def check_input(X):
-    """Check input with sklearn standards.
-
-    Also converts X to a numpy array if not already.
-    """
-    # TODO check for weird type of input to pass scikit learn tests
-    #  without messing with the original type too much
-
-    X_ = check_array(
-        X,
-        dtype=None,
-        ensure_2d=True,
-        force_all_finite=False,
-    )
-    # If the array contains both NaNs and strings, convert to object type
-    if X_.dtype.kind in {"U", "S"}:  # contains strings
-        if np.any(X_ == "nan"):  # missing value converted to string
-            return check_array(
-                np.array(X, dtype=object),
-                dtype=None,
-                ensure_2d=True,
-                force_all_finite=False,
-            )
-
-    return X_
-
-
 def import_optional_dependency(name, extra=""):
     """Import an optional dependency.
 
@@ -163,16 +135,6 @@ def get_duplicates(values):
     return duplicates
 
 
-def check_duplicated_column_names(column_names, table_name=None):
-    duplicates = get_duplicates(column_names)
-    if duplicates:
-        table_name = "" if table_name is None else f"{table_name!r}"
-        raise ValueError(
-            f"Table {table_name} has duplicate column names: {duplicates}."
-            " Please make sure column names are unique."
-        )
-
-
 def renaming_func(renaming):
     if isinstance(renaming, str):
         return renaming.format
@@ -199,7 +161,7 @@ class Repr(reprlib.Repr):
         for key in itertools.islice(x, self.maxdict):
             keyrepr = repr1(key, newlevel)
             valrepr = repr1(x[key], newlevel)
-            pieces.append("%s: %s" % (keyrepr, valrepr))
+            pieces.append(f"{keyrepr}: {valrepr}")
         if n > self.maxdict:
             pieces.append(self.fillvalue)
 
@@ -209,7 +171,7 @@ class Repr(reprlib.Repr):
         # so we can just ', '.join to avoid using a private method
         s = ", ".join(pieces)
 
-        return "{%s}" % (s,)
+        return f"{{{s}}}"
 
 
 class _ShortRepr(Repr):

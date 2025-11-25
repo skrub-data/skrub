@@ -1,7 +1,6 @@
 from . import _dataframe as sbd
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
-from ._dataframe._common import _raise as _sbd_raise
-from ._dispatch import dispatch
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 
 __all__ = ["CleanNullStrings"]
 
@@ -32,7 +31,7 @@ STR_NA_VALUES = [
 
 @dispatch
 def _trim_whitespace_only(col):
-    raise _sbd_raise(col, kind="Series")
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_trim_whitespace_only.specialize("pandas", argument_type="Column")
@@ -159,12 +158,12 @@ class CleanNullStrings(SingleColumnTransformer):
     In both examples above, the column can be converted to numbers by
     ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``:
 
-    >>> from skrub._to_float32 import ToFloat32
-    >>> ToFloat32().fit_transform(s)
+    >>> from skrub._to_float import ToFloat
+    >>> ToFloat().fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._apply_to_cols.RejectColumn: Could not convert column 's' to numbers.
-    >>> ToFloat32().fit_transform(cleaner.fit_transform(s))
+    >>> ToFloat().fit_transform(cleaner.fit_transform(s))
     0    1.1
     1    2.2
     2    NaN

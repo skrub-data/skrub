@@ -5,7 +5,8 @@ from skrub import _dataframe as sbd
 from skrub._apply_to_cols import RejectColumn
 from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
-from skrub._to_float32 import ToFloat32
+from skrub._to_float import ToFloat
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 def is_float32(df_module, column):
@@ -24,12 +25,13 @@ def is_float32(df_module, column):
         [True, False, None],
     ],
 )
-def test_to_float_32(values, df_module):
+def test_to_float(values, df_module):
     s = df_module.make_column("c", values)
-    out = ToFloat32().fit_transform(s)
+    out = ToFloat().fit_transform(s)
     assert is_float32(df_module, out)
 
 
+@skip_polars_installed_without_pyarrow
 def test_rejected_columns(df_module):
     columns = [
         df_module.make_column("c", ["1", "2", "hello"]),
@@ -38,6 +40,6 @@ def test_rejected_columns(df_module):
     ]
     for col in columns:
         with pytest.raises(RejectColumn):
-            ToFloat32().fit_transform(col)
-        to_float = ToFloat32().fit(df_module.make_column("c", [1.1]))
+            ToFloat().fit_transform(col)
+        to_float = ToFloat().fit(df_module.make_column("c", [1.1]))
         assert is_float32(df_module, to_float.transform(col))

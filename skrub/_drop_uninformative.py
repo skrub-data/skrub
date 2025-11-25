@@ -29,6 +29,13 @@ class DropUninformative(SingleColumnTransformer):
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
 
+    See Also
+    --------
+    Cleaner :
+        A full-frame transformer (as opposed to single column) that can
+        drop columns with missing values.
+    DropCols : Dropping cols by name, dtypes, or general skrub selectors.
+
     Notes
     -----
     A column is considered to be "uninformative" if one or more of the following
@@ -159,6 +166,8 @@ class DropUninformative(SingleColumnTransformer):
             ]
         )
 
+        self.all_outputs_ = [] if self.drop_ else [sbd.name(column)]
+
         return self.transform(column)
 
     def transform(self, column):
@@ -175,7 +184,7 @@ class DropUninformative(SingleColumnTransformer):
             The input column, or an empty list if the column is chosen to be
             dropped.
         """
-        check_is_fitted(self)
+        check_is_fitted(self, "all_outputs_")
 
         if self.drop_:
             return []

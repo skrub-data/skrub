@@ -24,8 +24,6 @@ the features we present in this example and the following ones.
 """
 
 # %%
-
-# %%
 # Preliminary exploration with the |TableReport|
 # ----------------------------------------------
 from skrub.datasets import fetch_employee_salaries
@@ -45,7 +43,7 @@ TableReport(employees_df)
 # %%
 # You can use the interactive display above to explore the dataset visually.
 #
-# It is also possible to tell skrub to replace the default pandas & polars
+# It is also possible to tell skrub to replace the default pandas and polars
 # displays with |TableReport| by modifying the global config with
 # |set_config|.
 #
@@ -59,13 +57,16 @@ TableReport(employees_df)
 #    .. _example reports: https://skrub-data.org/skrub-reports/examples/
 #    .. _demo: https://skrub-data.org/skrub-reports/
 #
-# From the Report above, we can see that there are datetime columns, so we use the
-# |Cleaner| to parse them.
+# From the report above, we see that there are columns with date and time stored
+# as `object` dtype (cf. "Stats" tab of the report).
+# Datatypes not being parsed correctly is a scenario that occurs commonly after
+# reading a table. We can use the |Cleaner| to address this.
+# In the next section, we show that this transformer does additional cleaning.
 
 # %%
 # Sanitizing data with the |Cleaner|
 # ----------------------------------
-# Here, we use the |Cleaner|, a transformer that cleans the
+# Here, we use the |Cleaner|, a transformer that sanitizing the
 # dataframe by parsing nulls and dates, and by dropping "uninformative" columns
 # (e.g., columns with too many nulls or that are constant).
 #
@@ -74,6 +75,10 @@ from skrub import Cleaner
 
 employees_df = Cleaner().fit_transform(employees_df)
 TableReport(employees_df)
+
+# %%
+# We can see from the "Stats" tab that now the column `date_first_hired` has been
+# parsed correctly as a Datetime.
 
 # %%
 # Easily building a strong baseline for tabular machine learning
@@ -90,6 +95,8 @@ from sklearn.model_selection import cross_validate
 from skrub import tabular_pipeline
 
 model = tabular_pipeline("regressor")
+model
+# %%
 results = cross_validate(model, employees_df, salaries)
 results["test_score"]
 
@@ -97,7 +104,7 @@ results["test_score"]
 # To handle rich tabular data and feed it to a machine learning model, the
 # pipeline returned by |tabular_pipeline| preprocesses and encodes
 # strings, categories and dates using the |TableVectorizer|.
-# See its documentation or :ref:`sphx_glr_auto_examples_01_encodings.py` for
+# See its documentation or :ref:`sphx_glr_auto_examples_0010_encodings.py` for
 # more details. An overview of the chosen defaults is available in
 # :ref:`user_guide_tabular_pipeline`.
 
@@ -116,7 +123,7 @@ results["test_score"]
 #
 # For **numerical features**, the |SquashingScaler| applies a robust
 # scaling technique that is less sensitive to outliers. Check the
-# :ref:`relative example <sphx_glr_auto_examples_10_squashing_scaler.py>`
+# :ref:`relative example <sphx_glr_auto_examples_0100_squashing_scaler.py>`
 # for more information on the feature.
 #
 # For **datetime columns**, skrub provides the |DatetimeEncoder|
@@ -175,7 +182,7 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # which uses pre-trained language models retrieved from the HuggingFace hub to
 # create meaningful text embeddings.
 # See :ref:`user_guide_encoders_index` for more details on all the categorical encoders
-# provided by skrub, and :ref:`sphx_glr_auto_examples_01_encodings.py` for a
+# provided by skrub, and :ref:`sphx_glr_auto_examples_0010_encodings.py` for a
 # comparison between the different methods.
 #
 
@@ -191,10 +198,10 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # a main table will be augmented with values from the best match in the auxiliary table.
 # You can control how distant fuzzy-matches are allowed to be with the
 # ``max_dist`` parameter.
-
+#
 # Skrub also allows you to aggregate multiple tables according to various strategies.
-# You
-# can see other ways to join multiple tables in :ref:`user_guide_joining_dataframes`.
+# You can see other ways to join multiple tables in
+# :ref:`user_guide_joining_dataframes`.
 
 # %%
 # Advanced use cases

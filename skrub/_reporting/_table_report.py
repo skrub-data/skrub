@@ -4,6 +4,9 @@ import json
 import numbers
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
 from .. import _config
 from .. import _dataframe as sbd
 from ._html import to_html
@@ -25,7 +28,6 @@ def _check_max_cols(max_plot_columns, max_association_columns):
             "'max_plot_columns' must be a positive scalar or 'all', got"
             f" {max_plot_columns!r}."
         )
-
     max_association_columns = (
         max_association_columns
         if max_association_columns is not None
@@ -46,9 +48,9 @@ def _check_max_cols(max_plot_columns, max_association_columns):
 class TableReport:
     r"""Summarize the contents of a dataframe.
 
-    This class summarizes a dataframe, providing information such as the type
-    and summary statistics (mean, number of missing values, etc.) for each
-    column.
+    This class summarizes a dataframe or numpy array, providing information such as
+    the type and summary statistics (mean, number of missing values, etc.) for each
+    column. Numpy arrays are converted to pandas DataFrame or Series.
 
     Parameters
     ----------
@@ -186,6 +188,21 @@ class TableReport:
         max_plot_columns=None,
         max_association_columns=None,
     ):
+        if isinstance(dataframe, np.ndarray):
+            if dataframe.ndim == 1:
+                dataframe = pd.Series(dataframe, name="0")
+
+            elif dataframe.ndim == 2:
+                dataframe = pd.DataFrame(
+                    dataframe, columns=[str(i) for i in range(dataframe.shape[1])]
+                )
+
+            else:
+                raise ValueError(
+                    f"Input NumPy array has {dataframe.ndim} dimensions. "
+                    "TableReport only supports 1D and 2D arrays"
+                )
+
         n_rows = max(1, n_rows)
         self._summary_kwargs = {
             "order_by": order_by,
@@ -203,6 +220,11 @@ class TableReport:
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
+        if sbd.is_polars(dataframe) and sbd.is_lazyframe(dataframe):
+            raise ValueError(
+                "The TableReport does not support lazy dataframes. Please call"
+                " `.collect()` to use the TableReport on the current dataframe."
+            )
         self.n_columns = sbd.shape(self.dataframe)[1]
 
     def _set_minimal_mode(self):

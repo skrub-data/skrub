@@ -80,11 +80,9 @@ def node_report(data_op, mode="preview", environment=None, **report_kwargs):
 def _get_output_dir(output_dir, overwrite):
     now = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
     if output_dir is None:
-        output_dir = (
-            datasets.get_data_dir()
-            / "execution_reports"
-            / f"full_data_op_report_{now}_{random_string()}"
-        )
+        output_base_dir = datasets.get_data_dir() / "execution_reports"
+        output_dir = output_base_dir / f"full_data_op_report_{now}_{random_string()}"
+        _utils.prune_directory(output_base_dir)
     else:
         output_dir = Path(output_dir).expanduser().resolve()
         if output_dir.exists():
@@ -119,6 +117,7 @@ def full_report(
     open=True,
     output_dir=None,
     overwrite=False,
+    title=None,
 ):
     if clear:
         clear_results(data_op, mode)
@@ -130,6 +129,7 @@ def full_report(
             open=open,
             output_dir=output_dir,
             overwrite=overwrite,
+            title=title,
         )
     finally:
         if clear:
@@ -143,6 +143,7 @@ def _make_full_report(
     open=True,
     output_dir=None,
     overwrite=False,
+    title=None,
 ):
     _check_graphviz()
     output_dir = _get_output_dir(output_dir, overwrite)
@@ -168,7 +169,7 @@ def _make_full_report(
     svg = draw_data_op_graph(data_op, url=make_url).svg.decode("utf-8")
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
-        {"svg": svg, "node_status": node_status}
+        {"svg": svg, "node_status": node_status, "title": title}
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")

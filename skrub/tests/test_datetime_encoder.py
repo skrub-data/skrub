@@ -13,7 +13,7 @@ from skrub._datetime_encoder import (
     _is_date,
     _SplineEncoder,
 )
-from skrub._to_float32 import ToFloat32
+from skrub._to_float import ToFloat
 
 
 def date(df_module):
@@ -115,7 +115,7 @@ def expected_features(df_module):
     }
 
     res = df_module.make_dataframe(values)
-    return ApplyToCols(ToFloat32()).fit_transform(res)
+    return ApplyToCols(ToFloat()).fit_transform(res)
 
 
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):
@@ -369,3 +369,11 @@ def test_error_checking_periodic_encoder(a_datetime_col):
 def test_error_dispatch(func):
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         func(np.array([1]))
+
+
+def test_n_splines_default_value(df_module):
+    """Check that when `n_splines is None`, it defaults to the `period` value."""
+    period = 15
+    enc = _SplineEncoder(period=period)
+    result = enc.fit_transform(df_module.make_column("when", [20, 20, 20]))
+    assert sbd.column_names(result) == [f"when_spline_{i:02d}" for i in range(period)]
