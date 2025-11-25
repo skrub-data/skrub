@@ -707,8 +707,9 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=KFOLD_5):
             "X_test": X_test,
         }
         if y is not None:
-            y_train, y_test = sbd.select_rows(y, train_idx), sbd.select_rows(
-                y, test_idx
+            y_train, y_test = (
+                sbd.select_rows(y, train_idx),
+                sbd.select_rows(y, test_idx),
             )
             train_env[Y_NAME] = y_train
             test_env[Y_NAME] = y_test
