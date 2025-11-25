@@ -66,6 +66,8 @@ Bugfixes
 - Fixed an issue where :class:`TableReport` would fail when computing associations
   for Polars dataframes if PyArrow was not installed.
   :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Improve error message when :class:`TextEncoder` is used without the optional
+  transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
 
 Release 0.6.2
 =============
