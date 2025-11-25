@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # skrub documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar 13 14:34:47 2018.
 #
