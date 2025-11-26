@@ -4,7 +4,6 @@
 .. |make_randomized_search| replace:: :func:`~skrub.DataOp.skb.make_randomized_search`
 
 
-
 Tuning skrub DataOps plans with Optuna
 =======================================
 
@@ -18,6 +17,16 @@ Optuna as a ``backend`` in the
 |make_randomized_search|
 method, or by creating an Optuna study and providing it with a skrub
 :class:`SkrubLearner`.
+
+.. note::
+
+   To use Optuna with skrub, you need to have Optuna installed in your Python
+   environment. You can install it using pip:
+
+   .. code-block:: bash
+
+       pip install optuna
+
 
 Using Optuna as a backend for randomized search
 -------------------------------------------------
@@ -87,6 +96,8 @@ accepts ``sampler`` and ``timeout`` parameters to customize the Optuna study.
 Optuna studies feature a wide range of additional parameters, which can be accessed
 by using Optuna directly with skrub learners, as shown in the next section.
 
+A more complete example that includes more advanced usage is available in
+:ref:`example_optuna_choices`.
 
 Setting a storage for the Optuna study
 -------------------------------------------------
@@ -137,30 +148,32 @@ Here we return a single score (R²), but multi-objective
 optimization is also possible. Please refer to the Optuna documentation for
 more information.
 
->>> import optuna
+>>> import optuna # doctest: +SKIP
 
->>> def objective(trial):
+>>> def objective(trial): # doctest: +SKIP
 ...    learner = pred.skb.make_learner(choose=trial)
 ...    cv_results = skrub.cross_validate(learner, environment=pred.skb.get_data(), cv=4)
 ...    return cv_results["test_score"].mean()
 
->>> study = optuna.create_study(direction="maximize")
->>> study.optimize(objective, n_trials=16)
->>> best_params = study.best_params
+>>> study = optuna.create_study(direction="maximize") # doctest: +SKIP
+>>> study.optimize(objective, n_trials=16) # doctest: +SKIP
+>>> best_params = study.best_params # doctest: +SKIP
 
 Then, we can create the best learner using the best trial found by Optuna:
 
->>> best_learner = pred.skb.make_learner(choose=study.best_trial)
+>>> best_learner = pred.skb.make_learner(choose=study.best_trial) # doctest: +SKIP
 
 The learner can also be defined as follows:
 
->>> best_learner = pred.skb.make_learner()
->>> best_learner.set_params(**study.best_params)
+>>> best_learner = pred.skb.make_learner() # doctest: +SKIP
+>>> best_learner.set_params(**study.best_params) # doctest: +SKIP
 
 Then, we can inspect the parameters as usual:
 
 >>> best_learner.describe_params() # doctest: +SKIP
 {'k': 4, 'C': 0.3031965763542701, 'classifier': 'logistic'}
+
+You can find a more complete example in :ref:`example_optuna_choices`.
 
 
 Parallelism with Optuna
