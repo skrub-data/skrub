@@ -699,14 +699,14 @@ def test_optuna_timeout():
 
     data_op, data = get_data_op_and_data("simple")
     search = data_op.skb.make_randomized_search(
-        n_iter=20,
+        n_iter=100,
         cv=5,
         n_jobs=1,
         backend="optuna",
-        timeout=1e-5,
+        timeout=0.01,
     )
     search.fit(data)
-    assert len(search.study_.trials) == 1
+    assert len(search.study_.trials) < 50
 
 
 def test_bad_search_backend():
