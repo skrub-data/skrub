@@ -14,6 +14,14 @@ pick the best outcome for each choice. Performing this search with Optuna
 allows us to benefit from its many features, such as state-of-the-art search
 strategies, monitoring and visualization, stopping and resuming searches, and
 parallel or distributed computation.
+
+In order to use Optuna with skrub, the package must be installed first.
+This can be done with pip:
+
+.. code-block:: bash
+
+    pip install optuna
+
 """
 
 # %%
@@ -61,6 +69,9 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # (:class:`sklearn.model_selection.RandomizedSearchCV`). Additional
 # parameters are available to control the Optuna sampler, storage and study
 # name, and timeout.
+# Note that in order to persist the study and resume it later, the ``storage``
+# parameter must be set to a valid database URL (e.g., a SQLite file). Refer to
+# the User Guide for an example.
 
 # %%
 search = pred.skb.make_randomized_search(backend="optuna", cv=cv, n_iter=16)
@@ -94,7 +105,7 @@ search.study_.best_params
 # %%
 import optuna
 
-optuna.visualization.plot_slice(search.study_, params=["0:learning_rate"])
+optuna.visualization.plot_slice(search.study_, params=["2:regressor"])
 
 # %%
 # Using Optuna directly for more advanced use cases
@@ -147,6 +158,10 @@ study.optimize(objective, n_trials=16)
 study.best_params
 
 # %%
+# We can also use Optuna's visualization capabilities to inspect the study:
+optuna.visualization.plot_optimization_history(study)
+
+# %%
 # Now we build a learner with the best hyperparameters and fit it on the full
 # dataset:
 
@@ -161,4 +176,3 @@ best_learner.fit(env)
 print(best_learner.describe_params())
 
 # %%
-optuna.visualization.plot_optimization_history(study)
