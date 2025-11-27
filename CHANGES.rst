@@ -30,6 +30,9 @@ New features
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+- :meth:`summarize_dataframe` now accepts a new parameter ``seed``, used to set the
+  sampling seed when computing the top associations.
+  :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
 
 Changes
 -------
