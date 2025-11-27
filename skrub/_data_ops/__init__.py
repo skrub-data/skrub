@@ -7,6 +7,7 @@ from ._choosing import (
 )
 from ._data_ops import DataOp, X, as_data_op, deferred, eval_mode, var, y
 from ._estimator import ParamSearch, SkrubLearner, cross_validate
+from ._optuna import OptunaParamSearch
 
 __all__ = [
     "DataOp",
@@ -19,6 +20,7 @@ __all__ = [
     "cross_validate",
     "SkrubLearner",
     "ParamSearch",
+    "OptunaParamSearch",
     #
     "choose_bool",
     "choose_float",
