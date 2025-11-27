@@ -24,6 +24,7 @@ def summarize_dataframe(
     order_by=None,
     with_plots=True,
     with_associations=True,
+    seed=None,
     title=None,
     max_top_slice_size=5,
     max_bottom_slice_size=5,
@@ -48,6 +49,9 @@ def summarize_dataframe(
     with_associations : bool, default=True
         Compute the associations or not.
 
+    seed : int or None, default=None
+        The random seed of sampling when computing the associations.
+
     title : str or None, default=None
         A title that gets added to the returned dictionary and can be picked up
         and inserted in the report.
@@ -60,7 +64,7 @@ def summarize_dataframe(
         Maximum number of rows from the end of the dataframe to show in the
         sample table.
 
-    verbose : int, default = 1
+    verbose : int, default=1
         Whether to print progress information while the report is being generated.
 
         * verbose = 1 prints how many columns have been processed so far.
@@ -125,14 +129,14 @@ def summarize_dataframe(
         summary["associations_skipped_polars_no_pyarrow"] = True
     elif with_associations:
         if n_rows and n_columns:
-            _add_associations(df, summary)
+            _add_associations(df, summary, seed=seed)
         else:
             summary["top_associations"] = []
     return summary
 
 
-def _add_associations(df, dataframe_summary):
-    df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
+def _add_associations(df, dataframe_summary, *, seed=None):
+    df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE), seed=seed)
     associations = _column_associations.column_associations(df)
 
     # get only the top _N_TOP_ASSOCIATIONS
