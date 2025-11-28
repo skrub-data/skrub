@@ -428,3 +428,73 @@ def test_polars_df_no_pyarrow():
         "Computing pairwise associations is not available for Polars dataframes "
         "when PyArrow is not installed" in html_snippet
     )
+
+
+@skip_polars_installed_without_pyarrow
+def test_open_tab_parameter(df_module):
+    """Test the open_tab parameter functionality"""
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test open behavior (should be 'table')
+    report1 = TableReport(df)
+    assert report1.open_tab == "table"
+
+    # Test explicitly set to 'stats'
+    report2 = TableReport(df, open_tab="stats")
+    assert report2.open_tab == "stats"
+
+    # Test set to 'distributions'
+    report3 = TableReport(df, open_tab="distributions")
+    assert report3.open_tab == "distributions"
+
+    # Test set to 'associations'
+    report4 = TableReport(df, open_tab="associations")
+    assert report4.open_tab == "associations"
+
+    # Test HTML generation includes correct attributes
+    html_snippet = report2.html_snippet()
+    assert 'data-target-panel-id="summary-statistics-panel"' in html_snippet
+    assert "data-is-selected" in html_snippet
+
+
+@skip_polars_installed_without_pyarrow
+def test_open_tab_wrong_names(df_module):
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test invalid tab name (should raise error)
+    with pytest.raises(ValueError, match="'open_tab' must be one of"):
+        TableReport(df, open_tab="invalid")
+
+    with pytest.raises(ValueError, match="'open_tab' must be one of"):
+        TableReport(df, open_tab="invalid").html()
+
+
+@skip_polars_installed_without_pyarrow
+def test_open_tab_minimal_mode(df_module):
+    """Test that default_tab falls back to 'table' in minimal mode when needed"""
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test minimal mode with open_tab set to 'distributions'
+    report1 = TableReport(df, open_tab="distributions")
+    report1._set_minimal_mode()
+    assert report1.open_tab == "table"
+
+    # Test minimal mode with open_tab set to 'associations'
+    report2 = TableReport(df, open_tab="associations")
+    report2._set_minimal_mode()
+    assert report2.open_tab == "table"
