@@ -5,6 +5,13 @@ repos:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
+-   repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+    -   id: rst-backticks
+        exclude: CHANGES.rst
+    -   id: rst-directive-colons
+    -   id: rst-inline-touching-normal
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.4
     hooks:
