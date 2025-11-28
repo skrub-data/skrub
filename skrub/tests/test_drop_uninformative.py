@@ -61,8 +61,10 @@ def drop_null_table(df_module):
         (dict(drop_null_fraction=0.5), "idx", [1, 2, 3]),
         (dict(drop_null_fraction=0.5), "value_nan", []),
         (dict(drop_null_fraction=0.5), "value_null", []),
-        (dict(drop_null_fraction=0.5), "value_almost_nan", []),
-        (dict(drop_null_fraction=0.5), "value_almost_null", []),
+        # value_almost_nan: 2/3 nulls (66.7% > 0.5), replaced with missing indicator
+        (dict(drop_null_fraction=0.5), "value_almost_nan", [0.0, 1.0, 1.0]),
+        # value_almost_null: 2/3 nulls (66.7% > 0.5), replaced with missing indicator
+        (dict(drop_null_fraction=0.5), "value_almost_null", [0.0, 1.0, 1.0]),
         (dict(drop_null_fraction=0.5), "value_mostly_not_nan", [2.5, 2.5, np.nan]),
         (
             dict(drop_null_fraction=0.5),
@@ -77,7 +79,26 @@ def test_drop_nulls(df_module, drop_null_table, params, column, result):
     if result == []:
         assert res == result
     else:
-        df_module.assert_column_equal(res, df_module.make_column(column, result))
+        # For missing indicators (float32), check values directly
+        if (
+            params.get("drop_null_fraction", 1.0) != 1.0
+            and params.get("drop_null_fraction") is not None
+            and isinstance(result, list)
+            and all(isinstance(x, (int, float)) and 0 <= x <= 1 for x in result)
+        ):
+            # This is a missing indicator - check values match
+            res_values = sbd.to_list(res)
+            assert len(res_values) == len(result)
+            for r_val, expected_val in zip(res_values, result):
+                assert abs(r_val - expected_val) < 1e-6
+            # Check dtype is float32
+            dtype_obj = sbd.dtype(res)
+            dtype_name = getattr(dtype_obj, "name", None)
+            assert (dtype_name is not None and dtype_name.lower() == "float32") or str(
+                dtype_obj
+            ).lower() == "float32"
+        else:
+            df_module.assert_column_equal(res, df_module.make_column(column, result))
 
 
 def test_do_not_drop_nulls(df_module, drop_null_table):

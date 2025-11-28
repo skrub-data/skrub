@@ -162,12 +162,14 @@ class Cleaner(TransformerMixin, BaseEstimator):
     Parameters
     ----------
     drop_null_fraction : float or None, default=1.0
-        Fraction of null above which the column is dropped. If ``drop_null_fraction``
-        is set to ``1.0``, the column is dropped if it contains only
-        nulls or NaNs (this is the default behavior). If ``drop_null_fraction`` is a
-        number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
-        is strictly larger than ``drop_null_fraction``. If ``drop_null_fraction`` is
-        ``None``, this selection is disabled: no columns are dropped based on the
+        Fraction of null above which the column is replaced by a missing indicator
+        (instead of being dropped), or dropped if entirely null. If
+        ``drop_null_fraction`` is set to ``1.0``, only entirely null columns are
+        dropped (this is the default behavior). If ``drop_null_fraction`` is a
+        number in ``[0.0, 1.0)``, columns with a fraction of nulls strictly larger
+        than ``drop_null_fraction`` are replaced by a missing indicator (or
+        dropped if entirely null). If ``drop_null_fraction`` is ``None``, this
+        selection is disabled: no columns are replaced or dropped based on the
         number of null values they contain.
 
     drop_if_constant : bool, default=False
@@ -225,9 +227,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
       with NA markers.
 
     - ``DropUninformative()``: drop the column if it is considered to be
-      "uninformative". A column is considered to be "uninformative" if it contains
-      only missing values (``drop_null_fraction``), only a constant value
-      (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      "uninformative", or replace it with a missing indicator. A column is considered
+      to be "uninformative" if it contains only missing values (``drop_null_fraction``),
+      only a constant value (``drop_if_constant``), or if all values are distinct
+      (``drop_if_unique``). When a column has too many null values (but not entirely
+      null), it is replaced by a missing indicator column instead of being dropped.
       By default, the ``Cleaner`` keeps all columns, unless they contain only
       missing values.
       Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
@@ -458,12 +462,13 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         :class:`~sklearn.compose.ColumnTransformer`.
 
     drop_null_fraction : float or None, default=1.0
-        Fraction of null above which the column is dropped. If `drop_null_fraction` is
-        set to ``1.0``, the column is dropped if it contains only
-        nulls or NaNs (this is the default behavior). If `drop_null_fraction` is a
-        number in ``[0.0, 1.0)``, the column is dropped if the fraction of nulls
-        is strictly larger than `drop_null_fraction`. If `drop_null_fraction` is ``None``,
-        this selection is disabled: no columns are dropped based on the number
+        Fraction of null above which the column is replaced by a missing indicator
+        (instead of being dropped), or dropped if entirely null. If `drop_null_fraction` is
+        set to ``1.0``, only entirely null columns are dropped (this is the default
+        behavior). If `drop_null_fraction` is a number in ``[0.0, 1.0)``, columns
+        with a fraction of nulls strictly larger than `drop_null_fraction` are replaced
+        by a missing indicator (or dropped if entirely null). If `drop_null_fraction` is ``None``,
+        this selection is disabled: no columns are replaced or dropped based on the number
         of null values they contain.
 
     drop_if_constant : bool, default=False
@@ -644,7 +649,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Before applying the main transformer, the ``TableVectorizer`` applies
     several preprocessing steps, for example to detect numbers or dates that are
     represented as strings. By default, columns that contain only null values are
-    dropped. Moreover, a final post-processing step is applied to all
+    dropped. Columns with many nulls (but not entirely null) are replaced by missing
+    indicator columns instead of being dropped, preserving information about whether
+    values were present or not. Moreover, a final post-processing step is applied to all
     non-categorical columns in the encoder's output to cast them to float32.
     If ``datetime_format`` is provided, it will be used to parse all datetime
     columns.

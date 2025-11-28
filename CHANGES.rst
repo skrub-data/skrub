@@ -30,6 +30,11 @@ New features
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+- :class:`DropUninformative` now replaces columns with many null values (but not
+  entirely null) with missing indicator columns instead of dropping them, preserving
+  information about whether values were present while avoiding spending feature
+  dimensions on encoding the actual values. Updated in :pr:`1723` by
+  :user:`Hanh Tran <honghanhh>`.
 
 Changes
 -------

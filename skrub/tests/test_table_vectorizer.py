@@ -975,6 +975,42 @@ def test_drop_null_column(df_module):
     assert sbd.shape(transformed) == (sbd.shape(X)[0], 1)
 
 
+def test_missing_indicator_replacement(df_module):
+    """Check that columns with too many nulls are replaced with missing indicators."""
+    pytest.importorskip("pyarrow")
+
+    # Create a dataframe with a column that has many nulls but not entirely null
+    X = df_module.make_dataframe(
+        {
+            "normal": [1, 2, 3, 4, 5],
+            "mostly_null": [1.0, np.nan, np.nan, np.nan, np.nan],  # 80% null
+            "some_null": [1, 2, None, None, 5],  # 40% null
+        }
+    )
+
+    # With threshold 0.5, mostly_null should be replaced with missing indicator
+    tv = TableVectorizer(drop_null_fraction=0.5)
+    transformed = tv.fit_transform(X)
+
+    # Check that mostly_null was replaced with a missing indicator
+    assert "mostly_null" in sbd.column_names(transformed)
+    mostly_null_col = sbd.col(transformed, "mostly_null")
+    # Should be float32 with values [0.0, 1.0, 1.0, 1.0, 1.0]
+    dtype_obj = sbd.dtype(mostly_null_col)
+    dtype_str = str(dtype_obj)
+    assert (
+        getattr(dtype_obj, "name", None) == "float32" or dtype_str.lower() == "float32"
+    )
+    values = sbd.to_list(mostly_null_col)
+    assert values == [0.0, 1.0, 1.0, 1.0, 1.0]
+
+    # some_null should be kept as-is (40% < 50% threshold)
+    assert "some_null" in sbd.column_names(transformed)
+
+    # normal should be kept as-is
+    assert "normal" in sbd.column_names(transformed)
+
+
 def test_date_format(df_module):
     # Test that the date format is correctly inferred
 
