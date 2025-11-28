@@ -28,7 +28,7 @@ from ._data_ops import (
     y,
 )
 from ._datetime_encoder import DatetimeEncoder
-from ._deduplicate import compute_ngram_distance, deduplicate
+from ._deduplicate import deduplicate
 from ._drop_uninformative import DropUninformative
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
@@ -78,7 +78,6 @@ __all__ = [
     "Cleaner",
     "DropUninformative",
     "deduplicate",
-    "compute_ngram_distance",
     "ToCategorical",
     "to_datetime",
     "AggJoiner",
