@@ -1,7 +1,29 @@
 from . import _dataframe as sbd
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 
 __all__ = ["ToFloat"]
+
+POSSIBLE_SEPARATORS = [".", ",", "'", " "]
+
+
+@dispatch
+def _str_replace(col, pattern, strict=True):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@_str_replace.specialize("pandas", argument_type="Column")
+def _str_replace_pandas(col, pattern, decimal):
+    col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
+    col = col.str.replace("[" + "".join(pattern) + "]", "", regex=True)
+    return col.str.replace(decimal, ".", regex=False)
+
+
+@_str_replace.specialize("polars", argument_type="Column")
+def _str_replace_polars(col, pattern, decimal):
+    col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
+    col = col.str.replace_all("[" + "".join(pattern) + "]", "")
+    return col.str.replace_all(f"[{decimal}]", ".")
 
 
 class ToFloat(SingleColumnTransformer):
@@ -165,7 +187,36 @@ class ToFloat(SingleColumnTransformer):
     >>> s = pd.Series([1.1, None], dtype='float32')
     >>> to_float.fit_transform(s) is s
     True
+
+    Handling parentheses around negative numbers
+    >>> s = pd.Series(["-1,234.56", "1.234,56", "(1,234.56)"], name='parens')
+    >>> to_float.fit_transform(s) #doctest: +SKIP
+    0   -1234.56
+    1    1234.56
+    2   -1234.56
+    dtype: float32
+
+    Scientific notation
+    >>> s = pd.Series(["1.23e+4", "1.23E+4"], name="x")
+    >>> ToFloat(decimal=".").fit_transform(s)
+    0    12300.0
+    1    12300.0
+    Name: x, dtype: float32
+
+
+    Space or apostrophe as thousand separator
+    >>> s = pd.Series(["1 234 567,89", "1'234'567,89"], name="x")
+    >>> ToFloat(decimal=",").fit_transform(s)
+    0    1234567.89
+    1    1234567.89
+    Name: x, dtype: float32
+
+
     """  # noqa: E501
+
+    def __init__(self, decimal="."):
+        super().__init__()
+        self.decimal = decimal
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -191,6 +242,10 @@ class ToFloat(SingleColumnTransformer):
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
+            if sbd.is_string(column):
+                p = POSSIBLE_SEPARATORS.copy()
+                p.remove(self.decimal)
+                column = _str_replace(column, pattern=p, decimal=self.decimal)
             numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
