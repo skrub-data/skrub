@@ -32,6 +32,7 @@ from ._deduplicate import compute_ngram_distance, deduplicate
 from ._drop_uninformative import DropUninformative
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
+from ._interdependence_score import interdependence_score
 from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
@@ -104,4 +105,5 @@ __all__ = [
     "ApplyToCols",
     "ApplyToFrame",
     "ToFloat",
+    "interdependence_score",
 ]

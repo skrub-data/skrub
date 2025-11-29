@@ -107,6 +107,7 @@ def column_associations(df):
     cramer_v_table = _stack_symmetric_associations(
         _cramer_v_matrix(df),
         df,
+        "cramer_v",
     )
     pearson_c_table = _compute_pearson(df)
     on = ["left_column_name", "right_column_name"]
@@ -115,7 +116,7 @@ def column_associations(df):
     )
 
 
-def _stack_symmetric_associations(associations, df):
+def _stack_symmetric_associations(associations, df, statistic_name):
     """Turn a symmetric matrix of V statistics into a list of (col, col, value).
 
     The input is the symmetric matrix where entry i, j contains the V statistic
@@ -144,7 +145,7 @@ def _stack_symmetric_associations(associations, df):
         "left_column_idx": left_indices,
         "right_column_name": right_column_names,
         "right_column_idx": right_indices,
-        "cramer_v": associations,
+        statistic_name: associations,
     }
     return sbd.make_dataframe_like(df, result)
 
