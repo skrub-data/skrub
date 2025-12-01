@@ -8,19 +8,23 @@ POSSIBLE_SEPARATORS = [".", ",", "'", " "]
 
 
 @dispatch
-def _str_replace(col, pattern, strict=True):
+def _str_replace(col, strict=True):
     raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_str_replace.specialize("pandas", argument_type="Column")
-def _str_replace_pandas(col, pattern, decimal):
+def _str_replace_pandas(col, decimal):
+    pattern = POSSIBLE_SEPARATORS.copy()
+    pattern.remove(decimal)
     col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
     col = col.str.replace("[" + "".join(pattern) + "]", "", regex=True)
     return col.str.replace(decimal, ".", regex=False)
 
 
 @_str_replace.specialize("polars", argument_type="Column")
-def _str_replace_polars(col, pattern, decimal):
+def _str_replace_polars(col, decimal):
+    pattern = POSSIBLE_SEPARATORS.copy()
+    pattern.remove(decimal)
     col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
     col = col.str.replace_all("[" + "".join(pattern) + "]", "")
     return col.str.replace_all(f"[{decimal}]", ".")
@@ -247,9 +251,7 @@ class ToFloat(SingleColumnTransformer):
             )
         try:
             if sbd.is_string(column):
-                p = POSSIBLE_SEPARATORS.copy()
-                p.remove(self.decimal)
-                column = _str_replace(column, pattern=p, decimal=self.decimal)
+                column = _str_replace(column, decimal=self.decimal)
             numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
