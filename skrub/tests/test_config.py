@@ -201,3 +201,9 @@ def test_parsing(monkeypatch):
         with monkeypatch.context() as m:
             m.setenv("MY_VAR", "hello")
             _parse_env_bool("MY_VAR", default=False)
+
+
+def test_wrong_verbosity():
+    with pytest.raises(ValueError, match=".*table_report_verbosity.*"):
+        with config_context(table_report_verbosity=-1):
+            pass
