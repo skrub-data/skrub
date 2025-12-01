@@ -149,7 +149,7 @@ def check_other_inputs(operations, suffix):
     The checked inputs.
     """
     operations = np.atleast_1d(operations).tolist()
-    if not all([isinstance(op, str) for op in operations]) or operations == []:
+    if not all(isinstance(op, str) for op in operations) or operations == []:
         raise ValueError(
             "`operations` must be a string or an iterable of strings, got"
             f" {operations}."

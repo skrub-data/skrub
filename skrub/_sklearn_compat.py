@@ -165,7 +165,7 @@ if sklearn_version < parse_version("1.4"):
             Eg.: ``["coef_", "estimator_", ...], "coef_"``
 
             If `None`, `estimator` is considered fitted if there exist an
-            attribute that ends with a underscore and does not start with double
+            attribute that ends with an underscore and does not start with double
             underscore.
 
         all_or_any : callable, {all, any}, default=all

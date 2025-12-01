@@ -268,6 +268,9 @@ class DataOpImpl:
         new.results = self.results.copy()
         new.errors = self.errors.copy()
         new.metadata = self.metadata.copy()
+        new.__dict__.update(
+            {k: v for k, v in self.__dict__.items() if k not in new.__dict__}
+        )
         return new
 
     def compute(self, e, mode, environment):

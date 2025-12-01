@@ -728,3 +728,16 @@ def test_class_skb():
     from skrub._data_ops._skrub_namespace import SkrubNamespace
 
     assert skrub.DataOp.skb is SkrubNamespace
+
+
+def test_copy_attrs():
+    # non-regression for #1781 some attributes could be missing after
+    # .set_name(), .mark_as_X() etc.
+    df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+    out = (
+        skrub.var("X", df)
+        .skb.apply(PassThrough())
+        .skb.mark_as_X()
+        .skb.set_name("transform")
+    )
+    assert isinstance(out.skb.applied_estimator.skb.eval().transformer_, PassThrough)

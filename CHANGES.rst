@@ -30,6 +30,10 @@ New features
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+- :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
+  user select which tab should be opened when the ``TableReport`` is
+  rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 
 Changes
 -------
@@ -41,6 +45,9 @@ Changes
   :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
 - The transformer :class:`ToFloat`, previously called `ToFloat32`, is now public.
   :pr:`1687` by :user:`Marie Sacksick <MarieSacksick>`.
+- Improved the error message raised when a Polars lazyframe is passed to
+  :class:`TableReport`, clarifying that `.collect()` must be called first.
+  :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
 
 Bugfixes
 --------
@@ -66,6 +73,15 @@ Bugfixes
 - Fixed an issue in the Data Ops report generation in cases where the DataOp
   contained escape characters or were spanning multiple lines.
   :pr:`1764` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the
+  :class:`TableVectorizer` and other transformers. :pr:`1762` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+- Improve error message when :class:`TextEncoder` is used without the optional
+  transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
+- Accessing ``.skb.applied_estimator`` on a :class:`DataOp` after calling
+  ``.skb.set_name()``, ``.skb.set_description()``, ``.skb.mark_as_X()`` or
+  ``.skb.mark_as_y()`` used to raise an error, this has been fixed in :pr:`1782`
+  by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.6.2
 =============
