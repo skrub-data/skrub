@@ -101,13 +101,13 @@ Changes
   :pr:`1628` by :user:`Jérôme Dockès <jeromedockes>`.
 - The parameter ``splitter`` of :meth:`DataOp.skb.train_test_split` has been
   renamed ``split_func``. :pr:`1630` by :user:`Jérôme Dockès <jeromedockes>`.
-
+- KEN embeddings and all the relevant functions have been removed from skrub.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
 - The objects ``tabular_learner`` and ``DropIfTooManyNulls`` were removed. Use
   :func:`tabular_pipeline` and :class:`DropUninformative` instead.
   Additionally, ``patch_display`` and ``unpatch_display`` were removed. Use
   :func:`get_config`, :func:`set_config` and :func:`config_context` instead.
   :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
-
 - The skrub global configuration now includes a parameter for setting the default
   verbosity of the :class:`TableReport`.
   :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
