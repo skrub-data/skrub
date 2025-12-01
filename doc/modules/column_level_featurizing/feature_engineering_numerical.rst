@@ -17,10 +17,10 @@ Common issues include:
 - String columns that contain mostly numeric values, but with occasional invalid entries
 
 To provide consistent numeric behavior, skrub includes the |ToFloat| transformer,
-which **standardizes all numeric-like columns to ``float32``** and handles a wide
+which standardizes all numeric-like columns to ``float32`` and handles a wide
 range of real-world formatting issues automatically.
 
-The |ToFloat| transformer is used internally by both the |Cleaner| class and the
+The |ToFloat| transformer is used internally by both the |Cleaner| and the
 |TableVectorizer| to guarantee that downstream estimators receive clean and
 uniform numeric data.
 
@@ -50,6 +50,22 @@ The |ToFloat| transformer provides:
 As with all skrub transformers, |ToFloat| behaves like a standard
 scikit-learn transformer and is fully compatible with pipelines.
 
+How to use |ToFloat|
+--------------------
+The |ToFloat| transformer must be applied to individual columns. It behaves like
+a standard scikit-learn transformer.
+Each column is expected to use a single decimal separator, which is
+specified through the ``decimal`` parameter. If this parameter is not provided,
+the default decimal separator is ``'.'``.
+
+During ``fit``, |ToFloat| attempts to convert all values in the column to
+numeric values after automatically removing other possible thousands separators
+(``,``, ``.``, space, apostrophe). If any value cannot be converted, the column
+is rejected with a ``RejectColumn`` exception.
+
+During ``transform``, invalid or non-convertible values are replaced by ``NaN``
+instead of raising an error.
+
 Examples
 --------
 
@@ -64,20 +80,22 @@ Parsing numeric-formatted strings:
 2    3.3
 Name: x, dtype: float32
 
-Automatic handling of locale-dependent decimal separators:
+Locale-dependent decimal separators can be handled by specifying the
+``decimal`` parameter. Here we use comma as decimal separator, and
+remove spaces and apostrophes as thousands separators:
 
 >>> s = pd.Series(["4 567,89", "4'567,89"], name="x")
->>> ToFloat(decimal=",").fit_transform(s)   # doctest: +SKIP
-0    4567.89
-1    4567.89
+>>> ToFloat(decimal=",").fit_transform(s)
+0    4567.8...
+1    4567.8...
 Name: x, dtype: float32
 
 Parentheses interpreted as negative numbers:
 
 >>> s = pd.Series(["-1,234.56", "(1,234.56)"], name="neg")
->>> ToFloat().fit_transform(s)   # doctest: +SKIP
-0   -1234.56
-1   -1234.56
+>>> ToFloat().fit_transform(s)
+0   -1234.5...
+1   -1234.5...
 Name: neg, dtype: float32
 
 Scientific notation:
@@ -96,17 +114,16 @@ Traceback (most recent call last):
     ...
 skrub._apply_to_cols.RejectColumn: Could not convert column 'x' to numbers.
 
-How |ToFloat| is used in skrub
-------------------------------
 
-The |ToFloat| transformer is used internally in:
+During ``transform``, invalid entries become ``NaN`` instead of raising an error:
+>>> s = pd.Series(['1.1', '2.2'], name='x')
+>>> to_float = ToFloat(decimal=".")
+>>> to_float.fit_transform(s)
+0    1.1
+1    2.2
+Name: x, dtype: float32
 
-- the **Cleaner** (|Cleaner|), to normalize all numeric-like columns before modeling
-- the **|TableVectorizer|**, ensuring a consistent numeric dtype across all numeric features
-
-This makes |ToFloat| a core building block of skrub’s handling of heterogeneous
-tabular data.
-
-``ToFloat`` ensures that downstream machine-learning models receive numeric data
-that is clean, consistent, lightweight, and free of locale-specific quirks or
-string-encoded values.
+>>> to_float.transform(pd.Series(['3.3', 'invalid'], name='x'))
+0    3.3
+1    NaN
+Name: x, dtype: float32
