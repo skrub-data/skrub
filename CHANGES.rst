@@ -70,12 +70,16 @@ Bugfixes
 - Fixed an issue where :class:`TableReport` would fail when computing associations
   for Polars dataframes if PyArrow was not installed.
   :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the
+  :class:`TableVectorizer` and other transformers. :pr:`1762` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
 - Improve error message when :class:`TextEncoder` is used without the optional
   transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
 - Accessing ``.skb.applied_estimator`` on a :class:`DataOp` after calling
   ``.skb.set_name()``, ``.skb.set_description()``, ``.skb.mark_as_X()`` or
   ``.skb.mark_as_y()`` used to raise an error, this has been fixed in :pr:`1782`
   by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Release 0.6.2
 =============
