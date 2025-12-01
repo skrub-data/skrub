@@ -88,24 +88,13 @@ Scientific notation:
 1    12300.0
 dtype: float32
 
-Numeric, boolean, and extension dtypes are also standardized:
-
->>> pd.Series([True, False])
-0    1.0
-1    0.0
-dtype: float32
-
->>> pd.Series([1.1, 2.2], dtype="Float32")
-0    1.1
-1    2.2
-dtype: float32
-
 Columns that cannot be converted are rejected during ``fit``:
 
->>> pd.Series(['1.1', 'hello'])
+>>> s = pd.Series(['1.1', 'hello'], name='x')
+>>> ToFloat(decimal=".").fit_transform(s)
 Traceback (most recent call last):
     ...
-skrub._apply_to_cols.RejectColumn: Could not convert column '...' to numbers.
+skrub._apply_to_cols.RejectColumn: Could not convert column 'x' to numbers.
 
 How |ToFloat| is used in skrub
 ------------------------------
