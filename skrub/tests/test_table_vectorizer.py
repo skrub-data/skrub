@@ -45,8 +45,8 @@ def type_equality(expected_type, actual_type):
     assuming object and str types are equivalent
     (considered as categorical by the TableVectorizer).
     """
-    if (isinstance(expected_type, object) or isinstance(expected_type, str)) and (
-        isinstance(actual_type, object) or isinstance(actual_type, str)
+    if isinstance(expected_type, (object, str)) and isinstance(
+        actual_type, (object, str)
     ):
         return True
     else:
@@ -450,6 +450,43 @@ def test_cleaner_invalid_numeric_dtype(df_module):
     X = _get_clean_dataframe(df_module)
     with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
         Cleaner(numeric_dtype="wrong").fit_transform(X)
+
+
+def test_cleaner_get_feature_names_out(df_module):
+    """Test that Cleaner.get_feature_names_out returns the correct column names."""
+    X = _get_clean_dataframe(df_module)
+    cleaner = Cleaner().fit(X)
+
+    # Get feature names from the cleaner
+    feature_names = cleaner.get_feature_names_out()
+
+    # Get the expected column names from the transformed dataframe
+    X_transformed = cleaner.transform(X)
+    expected_names = sbd.column_names(X_transformed)
+
+    # Check that they match
+    assert_array_equal(feature_names, expected_names)
+
+    # Test that it works with drop_null_fraction parameter
+    X_with_nulls = df_module.make_dataframe(
+        {
+            "col1": [1, 2, 3, 4],
+            "col2": ["a", "b", "c", "d"],
+            "all_nulls": [None, None, None, None],
+        }
+    )
+
+    cleaner_drop = Cleaner(drop_null_fraction=1.0).fit(X_with_nulls)
+    feature_names_drop = cleaner_drop.get_feature_names_out()
+
+    # The all_nulls column should not be in the output
+    assert "all_nulls" not in feature_names_drop
+
+    # Test that input_features parameter is ignored (like in TableVectorizer)
+    feature_names_with_input = cleaner.get_feature_names_out(
+        input_features=["dummy1", "dummy2"]
+    )
+    assert_array_equal(feature_names_with_input, expected_names)
 
 
 def test_auto_cast_missing_categories(df_module):
@@ -1022,3 +1059,18 @@ def test_date_format(df_module):
     transformed_to_list = sbd.to_list(transformed["date"])
     expected_to_list = sbd.to_list(expected["date"])
     assert transformed_to_list == expected_to_list
+
+
+@pytest.mark.skipif(
+    not _POLARS_INSTALLED,
+    reason="This test requires polars to be installed",
+)
+def test_cleaner_empty_column_name():
+    import polars as pl
+
+    # non-regression test for issue https://github.com/skrub-data/skrub/issues/1490
+    df = pl.DataFrame({"": [1], "b": [2], "c": [""]})
+    cleaner = Cleaner()
+    cleaner.fit_transform(df)
+    assert list(cleaner.all_processing_steps_.keys()) == df.columns
+    assert all(len(step) > 0 for step in cleaner.all_processing_steps_.values())

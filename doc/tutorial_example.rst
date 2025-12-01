@@ -46,7 +46,7 @@ Writing the example
 -----------------------
 Your python script should start with a docstring that briefly explains what the example
 is about. This docstring can contain multiple paragraphs and will be rendered
-as a RST file in the documentation, so you can use RST syntax
+as an RST file in the documentation, so you can use RST syntax
 in it.
 
 Importantly, the first line of the docstring should be the title of the example,

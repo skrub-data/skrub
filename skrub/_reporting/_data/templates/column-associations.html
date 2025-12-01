@@ -8,6 +8,15 @@
         </div>
     </div>
 
+    {% elif summary.get("associations_skipped_polars_no_pyarrow", False) %}
+
+    <div id="skipped-associations-polars-pyarrow-alert" class="alert-info-dismissable flex space-between">
+        <div class="alert-content shrinkable-text">
+            Computing pairwise associations is not available for Polars dataframes when PyArrow is not installed.
+            To enable associations, install PyArrow: <code>pip install pyarrow</code>, or use a Pandas dataframe.
+        </div>
+    </div>
+
     {% elif summary["top_associations"] %}
 
     <div class="horizontal-scroll padding-b-s">

@@ -209,7 +209,7 @@ def test_repr():
     >>> X.skb.concat(skrub.as_data_op([X, X]),axis=0)
     <Concat>
 
-    if we end up applying a ApplyToCols, seeing the inner transformer is more
+    if we end up applying an ApplyToCols, seeing the inner transformer is more
     informative.
 
     >>> from skrub._wrap_transformer import wrap_transformer

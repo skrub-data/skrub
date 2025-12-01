@@ -4,6 +4,7 @@ It can be used to check that we can deal with any dataset without failing.
 It can also be used to compare our scores to OpenML scores uploaded by other users,
 using the `--compare_scores` flag (this is slow).
 """
+
 import argparse
 import os
 from collections import Counter
@@ -154,7 +155,7 @@ for type_id, problem, pipeline, metric in [
                 function=metric, tasks=[task_id], output_format="dataframe"
             )
             if len(evals) > 0:
-                percentiles = {p: np.percentile(evals.value, p) for p in {25, 50, 75}}
+                percentiles = {p: np.percentile(evals.value, p) for p in (25, 50, 75)}
                 logger.info(
                     f"OpenML scores on {len(evals)} runs (on the full dataset): "
                     + " ; ".join(

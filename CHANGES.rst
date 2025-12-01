@@ -30,18 +30,27 @@ New features
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+- :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
+  user select which tab should be opened when the ``TableReport`` is
+  rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+
 - :class:`ToFloat32` has the parameter decimal to let the user specify whether they use ',' or '.'
   as decimal separator and it also handles negative numbers indicated with parentheses.
   :pr:`1772` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
+- The :meth: `DataOp.skb.full_report` method now deletes reports created with
+  ``output_dir=None`` after 7 days. :pr:`1657` by :user: `Simon Dierickx <simon.dierickx>`.
 - The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
   :class:`StandardScaler` for centering and scaling numerical features
   when linear models are used.
   :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
 - The transformer :class:`ToFloat`, previously called `ToFloat32`, is now public.
   :pr:`1687` by :user:`Marie Sacksick <MarieSacksick>`.
+- Improved the error message raised when a Polars lazyframe is passed to
+  :class:`TableReport`, clarifying that `.collect()` must be called first.
+  :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
 
 Bugfixes
 --------
@@ -58,6 +67,22 @@ Bugfixes
 - Fixed nightly checks and added support for upcoming library versions, including Pandas
   v3.0. :pr:`1664` by :user:`Auguste Baum <auguste-probabl>` and
   :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed the use of :class:`TableReport` and :class:`Cleaner` with Polars dataframes
+  containing a column with empty string as name.
+  :pr:`1722` by :user:`Marie Sacksick <MarieSacksick>`.
+- Fixed an issue where :class:`TableReport` would fail when computing associations
+  for Polars dataframes if PyArrow was not installed.
+  :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the
+  :class:`TableVectorizer` and other transformers. :pr:`1762` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
+- Improve error message when :class:`TextEncoder` is used without the optional
+  transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
+- Accessing ``.skb.applied_estimator`` on a :class:`DataOp` after calling
+  ``.skb.set_name()``, ``.skb.set_description()``, ``.skb.mark_as_X()`` or
+  ``.skb.mark_as_y()`` used to raise an error, this has been fixed in :pr:`1782`
+  by :user:`Jérôme Dockès <jeromedockes>`.
+
 
 Release 0.6.2
 =============

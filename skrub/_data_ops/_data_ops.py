@@ -268,6 +268,9 @@ class DataOpImpl:
         new.results = self.results.copy()
         new.errors = self.errors.copy()
         new.metadata = self.metadata.copy()
+        new.__dict__.update(
+            {k: v for k, v in self.__dict__.items() if k not in new.__dict__}
+        )
         return new
 
     def compute(self, e, mode, environment):
@@ -296,7 +299,7 @@ def _find_dataframe(data_op, func_name):
     # Eg skrub.X().join(actual_df, ...) instead of skrub.X().join(skrub.var('Z'), ...)
     from ._evaluation import find_arg
 
-    df = find_arg(data_op, lambda o: sbd.is_dataframe(o))
+    df = find_arg(data_op, sbd.is_dataframe)
     if df is not None:
         return {
             "message": (

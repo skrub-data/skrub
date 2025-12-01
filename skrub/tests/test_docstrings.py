@@ -244,4 +244,4 @@ if __name__ == "__main__":
         print(msg)
         sys.exit(1)
     else:
-        print("All docstring checks passed for {}!".format(args.import_path))
+        print(f"All docstring checks passed for {args.import_path}!")

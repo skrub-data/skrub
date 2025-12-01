@@ -53,7 +53,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         )
     dataset = load_simple_dataset("employee_salaries", data_home)
 
-    id_split = 8000  # noqa
+    id_split = 8000
     if split == "train":
         dataset["employee_salaries"] = dataset["employee_salaries"][:id_split]
         dataset["X"] = dataset["X"][:id_split]

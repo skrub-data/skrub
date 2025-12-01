@@ -339,7 +339,15 @@ class TextEncoder(SingleColumnTransformer):
                 "ignore",
                 message=r".*IProgress not found.*",
             )
-            st = import_optional_dependency("sentence_transformers")
+            st = import_optional_dependency(
+                "sentence_transformers",
+                extra=(
+                    "The TextEncoder requires sentence-transformers and its"
+                    " dependencies. Please see"
+                    " https://skrub-data.org/stable/install.html#deep-learning-dependencies"
+                    " for the installation guide."
+                ),
+            )
 
         self._cache_folder = get_data_dir(
             name=self.model_name, data_home=self.cache_folder

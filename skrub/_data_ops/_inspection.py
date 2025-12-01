@@ -80,11 +80,9 @@ def node_report(data_op, mode="preview", environment=None, **report_kwargs):
 def _get_output_dir(output_dir, overwrite):
     now = datetime.datetime.now().strftime("%Y-%m-%dT%H%M%S")
     if output_dir is None:
-        output_dir = (
-            datasets.get_data_dir()
-            / "execution_reports"
-            / f"full_data_op_report_{now}_{random_string()}"
-        )
+        output_base_dir = datasets.get_data_dir() / "execution_reports"
+        output_dir = output_base_dir / f"full_data_op_report_{now}_{random_string()}"
+        _utils.prune_directory(output_base_dir)
     else:
         output_dir = Path(output_dir).expanduser().resolve()
         if output_dir.exists():

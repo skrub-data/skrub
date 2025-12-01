@@ -168,7 +168,9 @@ def test_param_grid_nested_choices():
     c2 = skrub.choose_from([{"C": c0}, {"C": c1}], name="c2")
     c3 = skrub.choose_from([12, 22, 40, 50, 60], name="c3")
     e = skrub.as_data_op([c2, c3])
-    assert e.skb.describe_param_grid() == """\
+    assert (
+        e.skb.describe_param_grid()
+        == """\
 - c3: [12, 22, 40, 50, 60]
   c2: {'C': choose_from([10, 20, 30], name='c0')}
   c0: [10, 20, 30]
@@ -176,6 +178,7 @@ def test_param_grid_nested_choices():
   c2: {'C': choose_from([11, 21, 22, 24], name='c1')}
   c1: [11, 21, 22, 24]
 """
+    )
     assert _evaluation.param_grid(e) == [
         {2: [0], 0: [0, 1, 2], 3: [0, 1, 2, 3, 4]},
         {2: [1], 1: [0, 1, 2, 3], 3: [0, 1, 2, 3, 4]},
@@ -191,11 +194,14 @@ def test_param_grid_choice_before_X():
     assert _evaluation.param_grid(c) == [
         {0: [0, 1], 1: skrub.choose_float(0.0, 1.0, name="c1"), 2: [0, 1]}
     ]
-    assert c.skb.describe_param_grid() == """\
+    assert (
+        c.skb.describe_param_grid()
+        == """\
 - c0: [10, 20]
   c1: choose_float(0.0, 1.0, name='c1')
   c2: [12, 22]
 """
+    )
 
     with pytest.warns(
         UserWarning,
@@ -219,11 +225,14 @@ def test_param_grid_choice_before_X():
                 2: [0, 1],
             }
         ]
-        assert c.skb.describe_param_grid().replace("np.float64(0.5)", "0.5") == """\
+        assert (
+            c.skb.describe_param_grid().replace("np.float64(0.5)", "0.5")
+            == """\
 - c0: 10
   c1: [0.5]
   c2: [12, 22]
 """
+        )
 
 
 def test_unnamed_choices():

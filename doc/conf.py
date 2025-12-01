@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # skrub documentation build configuration file, created by
 # sphinx-quickstart on Tue Mar 13 14:34:47 2018.
 #
@@ -377,7 +375,7 @@ intersphinx_mapping = {
 
 
 # -- sphinx-gallery configuration ---------------------------------------------
-from sphinx_gallery.sorting import FileNameSortKey  # noqa
+from sphinx_gallery.sorting import FileNameSortKey
 
 if "dev" in release:
     binder_branch = "main"

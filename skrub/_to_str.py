@@ -39,7 +39,7 @@ class ToStr(SingleColumnTransformer):
     0    ('one', 1)
     1    ('two', 2)
     2           NaN
-    dtype: object
+    dtype: ...
     >>> _[0]
     "('one', 1)"
 
@@ -56,7 +56,7 @@ class ToStr(SingleColumnTransformer):
     0    one
     1    two
     2    NaN
-    dtype: object
+    dtype: ...
 
     In ``object`` columns, ``pd.NA`` and other null values are also replaced by
     ``np.nan``:
@@ -67,19 +67,19 @@ class ToStr(SingleColumnTransformer):
     1                 None
     2                  NaT
     3                 <NA>
-    dtype: object
+    dtype: ...
     >>> to_str.fit_transform(s)
     0    {'city': 'Paris'}
     1                  NaN
     2                  NaN
     3                  NaN
-    dtype: object
+    dtype: ...
 
     A column that already contain strings, has the dtype ``object`` and no
     missing values is passed through:
 
     >>> s = pd.Series(['one', 'two'])
-    >>> to_str.fit_transform(s) is s
+    >>> to_str.fit_transform(s) is s #doctest: +SKIP
     True
 
     For other pandas columns, a copy or a modified copy is returned.
@@ -107,7 +107,7 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.transform(pd.Series([1.1, 2.2]))
     0    1.1
     1    2.2
-    dtype: object
+    dtype: ...
     >>> _[0]
     '1.1'
 
@@ -116,7 +116,7 @@ class ToStr(SingleColumnTransformer):
     >>> import pytest
     >>> pl = pytest.importorskip('polars')
     >>> s = pl.Series('s', ['one', 'two', None])
-    >>> to_str.fit_transform(s) is s
+    >>> to_str.fit_transform(s) is s #doctest: +SKIP
     True
 
     A column that is neither String, categorical, numeric or datetime is converted:
@@ -174,7 +174,7 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.fit_transform(pd.Series(['a', 'b'], name='s', dtype='category'))
     0    a
     1    b
-    Name: s, dtype: object
+    Name: s, dtype: ...
 
     Notes
     -----

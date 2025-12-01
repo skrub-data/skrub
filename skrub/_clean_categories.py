@@ -85,7 +85,7 @@ class CleanCategories(SingleColumnTransformer):
     2    three
     Name: c, dtype: category
     Categories (3, ...): ['one', 'three', 'two']
-    >>> cleaner.fit_transform(s) is s
+    >>> cleaner.fit_transform(s) is s # doctest: +SKIP
     True
 
     Categories stored with the ``StringDtype`` dtype are converted to ``object``:
@@ -97,16 +97,16 @@ class CleanCategories(SingleColumnTransformer):
     1    cat B
     2     <NA>
     Name: c, dtype: category
-    Categories (2, string): [cat A, cat B]
-    >>> _.cat.categories.dtype
+    Categories (2, string): [...]
+    >>> _.cat.categories.dtype #doctest: +SKIP
     string[python]
     >>> cleaner.fit_transform(s)
     0    cat A
     1    cat B
     2      NaN
     Name: c, dtype: category
-    Categories (2, object): ['cat A', 'cat B']
-    >>> _.cat.categories.dtype
+    Categories (2, ...): [...]
+    >>> _.cat.categories.dtype #doctest: +SKIP
     dtype('O')
 
     Non-string categories are converted to strings:
@@ -142,7 +142,7 @@ class CleanCategories(SingleColumnTransformer):
     0    C()
     1    C()
     Name: c, dtype: category
-    Categories (1, object): ['C()']
+    Categories (1, ...): ['C()']
 
     A non-categorical column is rejected:
 
@@ -161,7 +161,7 @@ class CleanCategories(SingleColumnTransformer):
     0    a
     1    b
     2    c
-    Name: c, dtype: object
+    Name: c, dtype: ...
     >>> cleaner.transform(s)
     0    a
     1    b

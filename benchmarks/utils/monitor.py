@@ -248,10 +248,9 @@ def monitor(
                         for key, value in result_mapping.items():
                             results[key].append(value)
 
-                else:
-                    # Accessing the upper-level variable, kind of hackish,
-                    # but cleanest in terms of code.
-                    progress_bar.update(1)
+                # Accessing the upper-level variable, kind of hackish,
+                # but cleanest in terms of code.
+                progress_bar.update(1)
 
                 # Global cleanup of monitored values
                 if memory:

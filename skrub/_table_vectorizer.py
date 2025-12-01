@@ -1,6 +1,6 @@
 import reprlib
 from collections import UserDict
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -198,6 +198,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Maps the name of each column to a list of all the processing steps that were
         applied to it.
 
+    all_outputs_ : list of str
+        Column names of the output of ``transform``.
+
     See Also
     --------
     TableVectorizer :
@@ -208,6 +211,14 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Convert numeric columns to ``np.float32``, to have consistent numeric
         types and representation of missing values. More informative columns (e.g.,
         categorical or datetime) are not converted.
+
+    ApplyToCols :
+        Apply a given transformer separately to each column in a selection of columns.
+        Useful to complement the default heuristics of the ``Cleaner``.
+
+    ApplyToFrame :
+        Apply a given transformer jointly to all columns in a selection of columns.
+        Useful to complement the default heuristics of the ``Cleaner``.
 
     Notes
     -----
@@ -347,6 +358,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
+        self.all_outputs_ = sbd.column_names(result)
         input_names = all_steps[0].feature_names_out_
         self.all_processing_steps_ = {col: [] for col in input_names}
         for step in all_steps[1:]:
@@ -389,6 +401,22 @@ class Cleaner(TransformerMixin, BaseEstimator):
         """
         self.fit_transform(X, y=y)
         return self
+
+    def get_feature_names_out(self, input_features=None):
+        """Return the column names of the output of ``transform`` as a list of strings.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        list of strings
+            The column names.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return np.asarray(self.all_outputs_)
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
@@ -528,6 +556,14 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Cleaner :
         Preprocesses each column of a dataframe with consistency checks and
         sanitization, e.g., of null values or dates.
+
+    ApplyToCols :
+        Apply a given transformer separately to each column in a selection of columns.
+        Useful to complement the default heuristics of the ``TableVectorizer``.
+
+    ApplyToFrame :
+        Apply a given transformer jointly to all columns in a selection of columns.
+        Useful to complement the default heuristics of the ``TableVectorizer``.
 
     Notes
     -----
@@ -847,7 +883,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                         f"Column {c!r} used twice in 'specific_transformers', "
                         f"at indices {specific_columns[c]} and {i}."
                     )
-            specific_columns.update({c: i for c in cols})
+            specific_columns.update(dict.fromkeys(cols, i))
         self._specific_columns = list(specific_columns.keys())
 
     def _make_pipeline(self):
