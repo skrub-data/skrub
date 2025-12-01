@@ -96,10 +96,10 @@ def test_summarize(
             d | {"cramer_v": round(d["cramer_v"], 1)}
             for d in summary["top_associations"]
         ]
-        assert set(
+        assert {
             tuple(sorted((a["left_column_name"], a["right_column_name"])))
             for a in asso[:3]
-        ) == {("city", "country"), ("city", "location"), ("country", "location")}
+        } == {("city", "country"), ("city", "location"), ("country", "location")}
         assert asso[-1]["cramer_v"] == 0.0
     else:
         assert "top_associations" not in summary
@@ -188,9 +188,8 @@ def get_pivoted_df():
             "C": ["foo", "foo", "foo", "bar", "bar", "bar"] * 4,
             "D": np.random.randn(24),
             "E": np.random.randn(24),
-            "F": [datetime.datetime(2013, i, 1) for i in range(1, 13)] + [
-                datetime.datetime(2013, i, 15) for i in range(1, 13)
-            ],
+            "F": [datetime.datetime(2013, i, 1) for i in range(1, 13)]
+            + [datetime.datetime(2013, i, 15) for i in range(1, 13)],
         }
     )
 

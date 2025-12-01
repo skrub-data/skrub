@@ -251,26 +251,7 @@ ci-py313-latest-optional-deps = ["py313", "optional", "test"]
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
 ci-nightly-deps = { no-default-feature = true, features = [ "py313", "nightly-dependencies", "test" ] }
 
-[tool.black]
-line-length = 88
-target_version = ['py310', 'py311']
-preview = true
-# Exclude irrelevant directories for formatting
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.mypy_cache
-  | \.vscode
-  | \.pytest_cache
-  | \.idea
-  | build
-  | dist
-)/
-'''
-
 [tool.ruff]
-# max line length for black
 line-length = 88
 exclude = [
   ".git",
@@ -284,16 +265,22 @@ exclude = [
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
-select = ["E", "F", "W", "I"]
+select = ["E", "F", "W", "C4", "I", "UP"]
 ignore = [
-  # space before : (needed for how black formats slicing)
-  "E203",
   # use `is` and `is not` for type comparisons
   "E721",
   # do not assign a lambda expression, use a def
   "E731",
   # do not use variables named 'l', 'O', or 'I'
   "E741",
+  # unnecessary list comprehension (rewrite as a set comprehension)
+  "C403",
+  # unnecessary tuple literal (rewrite as a set literal)
+  "C405",
+  # unnecessary `dict()` call (rewrite as a literal)
+  "C408",
+  # unnecessary list literal passed to `tuple()` (rewrite as a tuple literal)
+  "C409",
 ]
 
 [tool.ruff.lint.per-file-ignores]

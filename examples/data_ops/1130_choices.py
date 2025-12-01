@@ -23,6 +23,7 @@ Skrub :ref:`DataOps <user_guide_data_ops_index>` provide a convenient way to spe
 the range of possible values by inserting them directly in place of the actual
 value. For example, we can write:
 """
+
 # %%
 from sklearn.linear_model import RidgeClassifier
 
