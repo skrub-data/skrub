@@ -23,7 +23,6 @@ the features we present in this example and the following ones.
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
 """
 
-
 # %%
 # Preliminary exploration with the |TableReport|
 # ----------------------------------------------
