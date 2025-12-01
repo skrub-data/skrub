@@ -44,6 +44,13 @@ class ToFloat(SingleColumnTransformer):
     During ``transform``, entries for which conversion fails are replaced by
     null values.
 
+    Parameters
+    ----------
+    decimal : str, default='.'
+        Character to recognize as the decimal separator when converting from
+        strings to floats. Other possible decimal separators are removed from
+        the strings before conversion.
+
     Examples
     --------
     >>> import pandas as pd
@@ -203,15 +210,12 @@ class ToFloat(SingleColumnTransformer):
     1    12300.0
     Name: x, dtype: float32
 
-
     Space or apostrophe as thousand separator
     >>> s = pd.Series(["4 567,89", "4'567,89"], name="x")
     >>> ToFloat(decimal=",").fit_transform(s) #doctest: +SKIP
     0    4567.89
     1    4567.89
     Name: x, dtype: float32
-
-
     """  # noqa: E501
 
     def __init__(self, decimal="."):
