@@ -4,7 +4,7 @@ import itertools
 import re
 import reprlib
 import secrets
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import sklearn
@@ -161,7 +161,7 @@ class Repr(reprlib.Repr):
         for key in itertools.islice(x, self.maxdict):
             keyrepr = repr1(key, newlevel)
             valrepr = repr1(x[key], newlevel)
-            pieces.append("%s: %s" % (keyrepr, valrepr))
+            pieces.append(f"{keyrepr}: {valrepr}")
         if n > self.maxdict:
             pieces.append(self.fillvalue)
 
@@ -171,7 +171,7 @@ class Repr(reprlib.Repr):
         # so we can just ', '.join to avoid using a private method
         s = ", ".join(pieces)
 
-        return "{%s}" % (s,)
+        return f"{{{s}}}"
 
 
 class _ShortRepr(Repr):
