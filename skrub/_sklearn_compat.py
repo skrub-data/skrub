@@ -12,7 +12,6 @@ Version: 0.1.0
 from __future__ import annotations
 
 import platform
-import sys
 from dataclasses import dataclass, field
 
 import sklearn
@@ -49,8 +48,6 @@ class ParamsValidationMixin:
 
 # tags infrastructure
 def _dataclass_args():
-    if sys.version_info < (3, 10):
-        return {}
     return {"slots": True}
 
 
