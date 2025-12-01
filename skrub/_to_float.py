@@ -196,11 +196,11 @@ class ToFloat(SingleColumnTransformer):
     True
 
     Handling parentheses around negative numbers
-    >>> s = pd.Series(["-1,234.56", "1.234,56", "(1,234.56)"], name='parens')
-    >>> to_float.fit_transform(s) #doctest: +SKIP
-    0   -1234.56
-    1    1234.56
-    2   -1234.56
+    >>> s = pd.Series(["-1,234.56", "1,234.56", "(1,234.56)"], name='parens')
+    >>> to_float.fit_transform(s)
+    0   -1234.5...
+    1    1234.5...
+    2   -1234.5...
     dtype: float32
 
     Scientific notation
@@ -212,9 +212,9 @@ class ToFloat(SingleColumnTransformer):
 
     Space or apostrophe as thousand separator
     >>> s = pd.Series(["4 567,89", "4'567,89"], name="x")
-    >>> ToFloat(decimal=",").fit_transform(s) #doctest: +SKIP
-    0    4567.89
-    1    4567.89
+    >>> ToFloat(decimal=",").fit_transform(s)
+    0    4567.8...
+    1    4567.8...
     Name: x, dtype: float32
     """  # noqa: E501
 
