@@ -198,6 +198,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Maps the name of each column to a list of all the processing steps that were
         applied to it.
 
+    all_outputs_ : list of str
+        Column names of the output of ``transform``.
+
     See Also
     --------
     TableVectorizer :
@@ -355,6 +358,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
+        self.all_outputs_ = sbd.column_names(result)
         input_names = all_steps[0].feature_names_out_
         self.all_processing_steps_ = {col: [] for col in input_names}
         for step in all_steps[1:]:
@@ -397,6 +401,22 @@ class Cleaner(TransformerMixin, BaseEstimator):
         """
         self.fit_transform(X, y=y)
         return self
+
+    def get_feature_names_out(self, input_features=None):
+        """Return the column names of the output of ``transform`` as a list of strings.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        list of strings
+            The column names.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return np.asarray(self.all_outputs_)
 
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
