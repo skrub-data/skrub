@@ -31980,7 +31980,7 @@ packages:
 - pypi: ./
   name: skrub
   version: 0.7.dev0
-  sha256: 0cd2e1132f999d76700d4e8eb3cc08b6583e044be3e4b449138794b50771552d
+  sha256: 26436304d014af928f231598045ef9a17a6bf96b82b9175b154d6aa2cf12070c
   requires_dist:
   - numpy>=1.23.5
   - pandas>=1.5.3
