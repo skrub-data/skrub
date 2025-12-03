@@ -39,7 +39,8 @@ Changes
 -------
 - The minimum supported version of Python has been increased to 3.10. Additionally,
   the minimum supported versions of scikit-learn and requests are 1.4.2 and 2.27.1
-  respectively. :pr:`1572` by :user:`Riccardo Cappuzzo<rcap107>`.
+  respectively. Support for python 3.14 has been added.
+  :pr:`1572` by :user:`Riccardo Cappuzzo<rcap107>`.
 - The :meth: `DataOp.skb.full_report` method now deletes reports created with
   ``output_dir=None`` after 7 days. :pr:`1657` by :user: `Simon Dierickx <simon.dierickx>`.
 - The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a

@@ -25,6 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries",
 ]
@@ -137,6 +138,7 @@ pytorch = { version = ">=2.4.1,<3" }
 transformers = "*"
 datasets = "*"
 sentence-transformers = ">=3.0,<6"
+tokenizers = ">=0.22.0,<=0.23.0"
 pyarrow = "<21"
 
 [tool.pixi.feature.test.dependencies]
@@ -206,8 +208,8 @@ python = "~=3.11.0"
 [tool.pixi.feature.py312.dependencies]
 python = "~=3.12.0"
 
-[tool.pixi.feature.py313.dependencies]
-python = "~=3.13.0"
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
@@ -242,14 +244,12 @@ ci-py310-min-optional-deps = [
   "test",
 ]
 ci-py311-transformers = ["py311", "transformers", "test"]
-ci-py312-latest-deps = ["py312", "test"]
-ci-py312-latest-optional-deps = ["py312", "optional", "test"]
-ci-py313-latest-deps = ["py313", "test"]
-ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
-ci-py313-latest-optional-deps = ["py313", "optional", "test"]
+ci-py314-latest-deps = ["py314", "test"]
+ci-py314-polars-without-pyarrow = ["py314", "test", "polars-without-pyarrow"]
+ci-py314-latest-optional-deps = ["py314", "optional", "test"]
 
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
-ci-nightly-deps = { no-default-feature = true, features = [ "py313", "nightly-dependencies", "test" ] }
+ci-nightly-deps = { no-default-feature = true, features = [ "py314", "nightly-dependencies", "test" ] }
 
 [tool.ruff]
 line-length = 88
