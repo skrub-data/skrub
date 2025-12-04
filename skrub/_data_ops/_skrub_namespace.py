@@ -1835,7 +1835,7 @@ class SkrubNamespace:
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where the main difference is that
+        scikit-learn's :class:`~sklearn.model_selection.GridSearchCV`, where the main difference is that
         ``fit()`` and ``predict()`` accept a dictionary of inputs
         rather than ``X`` and ``y``. The best learner can
         be returned by calling ``.best_learner_``.
@@ -1871,7 +1871,7 @@ class SkrubNamespace:
         See also
         --------
         skrub.DataOp.skb.make_randomized_search :
-            Find the best parameters with grid search.
+            Find the best parameters with randomized search.
 
         Examples
         --------
