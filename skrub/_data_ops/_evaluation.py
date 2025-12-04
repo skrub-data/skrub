@@ -452,41 +452,17 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
             clear_results(data_op, mode=mode)
 
 
-class _Reachable(_DataOpTraversal):
-    """
-    Find all nodes that are reachable from the root node, stopping at nodes
-    that have already been computed.
-
-    This is used to find which cached results are no longer needed and can be
-    discarded to free the corresponding memory. For example if we have this
-    DataOp: `b = a + a; c = b * b` and we want to evaluate `c`, once `b`
-    has been computed we no longer need `a` to compute `c` and we can clear its
-    cache.
-    """
-
-    def __init__(self, mode):
-        self.mode = mode
-
-    def run(self, data_op):
-        self._reachable = {}
-        super().run(data_op)
-        return self._reachable
-
-    def handle_data_op(self, data_op):
-        self._reachable[id(data_op)] = data_op
-        if self.mode in data_op._skrub_impl.results:
-            return data_op
-        return (yield from super().handle_data_op(data_op))
-
-
 def _cache_pruner(data_op, mode):
-    all_nodes = nodes(data_op)
+    g = graph(data_op)
+    ref_counts = {node_id: len(parents) for node_id, parents in g["parents"].items()}
+    id_map = {id(node): node_id for node_id, node in g["nodes"].items()}
 
-    def prune(*args, **kwargs):
-        reachable_nodes = _Reachable(mode).run(data_op)
-        for node in all_nodes:
-            if id(node) not in reachable_nodes:
-                node._skrub_impl.results.pop(mode, None)
+    def prune(data_op, result):
+        node_id = id_map[id(data_op)]
+        for c in g["children"].get(node_id, ()):
+            ref_counts[c] -= 1
+            if ref_counts[c] == 0:
+                g["nodes"][c]._skrub_impl.results.pop(mode, None)
 
     return prune
 
@@ -1174,8 +1150,9 @@ def find_conflicts(data_op):
     """
     We use a function that returns the conflicts, rather than raises an
     exception, because we want the exception to be raised higher in the call
-    stack (in ``_data_ops._check_data_op``) so that the user sees the line in
-    their code that created a problematic DataOp easily in the traceback.
+    stack (in ``_data_ops._checked_data_op_constructor``) so that the user sees
+    the line in their code that created a problematic DataOp easily in the
+    traceback.
     """
     try:
         _FindConflicts().run(data_op)

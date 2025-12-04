@@ -1,3 +1,4 @@
+import functools
 import pickle
 import typing
 import warnings
@@ -17,6 +18,7 @@ from ._data_ops import (
     Var,
     check_data_op,
     check_name,
+    checked_data_op_constructor,
     deferred,
 )
 from ._estimator import (
@@ -85,6 +87,15 @@ def _check_grid_search_possible(data_op):
             )
 
 
+def _check_before(f):
+    @functools.wraps(f)
+    def _checked(self, *args, **kwargs):
+        check_data_op(self._data_op)
+        return f(self, *args, **kwargs)
+
+    return _checked
+
+
 class SkrubNamespace:
     """The data_ops' ``.skb`` attribute."""
 
@@ -123,7 +134,7 @@ class SkrubNamespace:
         )
         return data_op
 
-    @check_data_op
+    @checked_data_op_constructor
     def apply(
         self,
         estimator,
@@ -474,7 +485,7 @@ class SkrubNamespace:
         """
         return deferred(func)(self._data_op, *args, **kwargs)
 
-    @check_data_op
+    @checked_data_op_constructor
     def if_else(self, value_if_true, value_if_false):
         """Create a conditional DataOp.
 
@@ -537,7 +548,7 @@ class SkrubNamespace:
         """
         return DataOp(IfElse(self._data_op, value_if_true, value_if_false))
 
-    @check_data_op
+    @checked_data_op_constructor
     def match(self, targets, default=NULL):
         """Select based on the value of a DataOp.
 
@@ -600,7 +611,7 @@ class SkrubNamespace:
         """
         return DataOp(Match(self._data_op, targets, default))
 
-    @check_data_op
+    @checked_data_op_constructor
     def select(self, cols):
         """Select a subset of columns.
 
@@ -653,7 +664,7 @@ class SkrubNamespace:
         """
         return self._apply(SelectCols(cols), how="no_wrap")
 
-    @check_data_op
+    @checked_data_op_constructor
     def drop(self, cols):
         """Drop some columns.
 
@@ -706,7 +717,7 @@ class SkrubNamespace:
         """
         return self._apply(DropCols(cols), how="no_wrap")
 
-    @check_data_op
+    @checked_data_op_constructor
     def concat(self, others, axis=0):
         """Concatenate dataframes vertically or horizontally.
 
@@ -766,7 +777,7 @@ class SkrubNamespace:
         """
         return DataOp(Concat(self._data_op, others, axis=axis))
 
-    @check_data_op
+    @checked_data_op_constructor
     def subsample(self, n=1000, *, how="head"):
         """Configure subsampling of a dataframe or numpy array.
 
@@ -930,6 +941,7 @@ class SkrubNamespace:
         """  # noqa : E501
         return DataOp(SubsamplePreviews(self._data_op, n=n, how=how))
 
+    @_check_before
     def clone(self, drop_values=True):
         """Get an independent clone of the DataOp.
 
@@ -987,6 +999,7 @@ class SkrubNamespace:
 
         return clone(self._data_op, drop_preview_data=drop_values)
 
+    @_check_before
     def eval(self, environment=None, *, keep_subsampling=False):
         """Evaluate the DataOp.
 
@@ -1058,6 +1071,7 @@ class SkrubNamespace:
             self._data_op, mode="fit_transform", environment=environment, clear=True
         )
 
+    @_check_before
     def preview(self):
         """Get the value computed for previews (shown when printing the DataOp).
 
@@ -1112,7 +1126,7 @@ class SkrubNamespace:
         """
         return evaluate(self._data_op, mode="preview", environment=None, clear=False)
 
-    @check_data_op
+    @checked_data_op_constructor
     def freeze_after_fit(self):
         """Freeze the result during learner fitting.
 
@@ -1163,6 +1177,7 @@ class SkrubNamespace:
         """
         return DataOp(FreezeAfterFit(self._data_op))
 
+    @_check_before
     def get_data(self):
         """Collect the values of the variables contained in the DataOp.
 
@@ -1190,6 +1205,7 @@ class SkrubNamespace:
                 data[impl.name] = impl.value
         return data
 
+    @_check_before
     def get_vars(self, all_named_ops=False):
         """
         Get all the variables used in the DataOp.
@@ -1276,6 +1292,7 @@ class SkrubNamespace:
             if isinstance(op._skrub_impl, Var)
         }
 
+    @_check_before
     def draw_graph(self):
         """Get an SVG string representing the computation graph.
 
@@ -1293,6 +1310,7 @@ class SkrubNamespace:
 
         return draw_data_op_graph(self._data_op)
 
+    @_check_before
     def describe_steps(self):
         """Get a text representation of the computation graph.
 
@@ -1341,6 +1359,7 @@ class SkrubNamespace:
 
         return describe_steps(self._data_op)
 
+    @_check_before
     def describe_param_grid(self):
         """Describe the hyper-parameters extracted from choices in the DataOp.
 
@@ -1423,6 +1442,7 @@ class SkrubNamespace:
 
         return describe_param_grid(self._data_op)
 
+    @_check_before
     def describe_defaults(self):
         """Describe the hyper-parameters used by the default learner.
 
@@ -1460,6 +1480,7 @@ class SkrubNamespace:
             chosen_or_default_outcomes(self._data_op), choice_graph(self._data_op)
         )
 
+    @_check_before
     def full_report(
         self,
         environment=None,
@@ -1587,6 +1608,7 @@ class SkrubNamespace:
             title=title,
         )
 
+    @_check_before
     def make_learner(self, *, fitted=False, keep_subsampling=False):
         """Get a skrub learner for this DataOp.
 
@@ -1673,6 +1695,7 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
+    @_check_before
     def train_test_split(
         self,
         environment=None,
@@ -1766,6 +1789,7 @@ class SkrubNamespace:
             **split_func_kwargs,
         )
 
+    @_check_before
     def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=KFOLD_5):
         """Yield splits of an environment into training and testing environments.
 
@@ -1831,6 +1855,7 @@ class SkrubNamespace:
             self._data_op, environment, keep_subsampling=keep_subsampling, cv=cv
         )
 
+    @_check_before
     def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
@@ -1942,6 +1967,7 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
+    @_check_before
     def make_randomized_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with randomized search.
 
@@ -2042,6 +2068,7 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
+    @_check_before
     def iter_learners_grid(self):
         """Get learners with different parameter combinations.
 
@@ -2123,6 +2150,7 @@ class SkrubNamespace:
             new.set_params(**params)
             yield new
 
+    @_check_before
     def iter_learners_randomized(self, n_iter, *, random_state=None):
         """Get learners with different parameter combinations.
 
@@ -2194,6 +2222,7 @@ class SkrubNamespace:
             new.set_params(**params)
             yield new
 
+    @_check_before
     def cross_validate(self, environment=None, *, keep_subsampling=False, **kwargs):
         """Cross-validate the DataOp plan.
 
@@ -2258,7 +2287,7 @@ class SkrubNamespace:
             **kwargs,
         )
 
-    @check_data_op
+    @checked_data_op_constructor
     def mark_as_X(self):
         """Mark this DataOp as being the ``X`` table.
 
@@ -2340,7 +2369,7 @@ class SkrubNamespace:
         """Whether this DataOp has been marked with :meth:`.skb.mark_as_X()`."""
         return self._data_op._skrub_impl.is_X
 
-    @check_data_op
+    @checked_data_op_constructor
     def mark_as_y(self):
         """Mark this DataOp as being the ``y`` table.
 
@@ -2416,7 +2445,7 @@ class SkrubNamespace:
         """Whether this DataOp has been marked with :meth:`.skb.mark_as_y()`."""
         return self._data_op._skrub_impl.is_y
 
-    @check_data_op
+    @checked_data_op_constructor
     def set_name(self, name):
         """Give a name to this DataOp.
 
@@ -2542,7 +2571,7 @@ class SkrubNamespace:
         return f"<{self.__class__.__name__}>"
 
     @property
-    @check_data_op
+    @checked_data_op_constructor
     def applied_estimator(self):
         """Retrieve the estimator applied in the previous step, as a DataOp.
 

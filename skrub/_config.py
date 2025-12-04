@@ -31,6 +31,7 @@ _global_config = {
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
+    "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
 }
 _threadlocal = threading.local()
 
@@ -89,6 +90,7 @@ def set_config(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    eager_data_ops=None,
 ):
     """Set global skrub configuration.
 
@@ -165,6 +167,10 @@ def set_config(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps when they are created, and
+        compute previews if preview data is available.
+
     See Also
     --------
     get_config : Retrieve current values for global configuration.
@@ -239,6 +245,8 @@ def set_config(
                 f"integer, got {cardinality_threshold!r}"
             )
 
+    if eager_data_ops is not None:
+        local_config["eager_data_ops"] = eager_data_ops
     _apply_external_patches(local_config)
 
 
@@ -253,6 +261,7 @@ def config_context(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    eager_data_ops=None,
 ):
     """Context manager for global skrub configuration.
 
@@ -354,6 +363,7 @@ def config_context(
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
+        eager_data_ops=eager_data_ops,
     )
 
     try:
