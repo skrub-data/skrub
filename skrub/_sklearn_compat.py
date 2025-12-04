@@ -190,7 +190,7 @@ if sklearn_version < parse_version("1.4"):
         return len(fitted_attrs) > 0
 
 else:
-    from sklearn.utils.validation import _is_fitted  # noqa: F401
+    from sklearn.utils.validation import _is_fitted
 
 ########################################################################################
 # Upgrading for scikit-learn 1.5
@@ -239,59 +239,59 @@ if sklearn_version < parse_version("1.5"):
 else:
     # chunking
     from sklearn.utils._chunking import (
-        chunk_generator,  # noqa: F401
-        gen_batches,  # noqa: F401
-        gen_even_slices,  # noqa: F401
-        get_chunk_n_rows,  # noqa: F401
+        chunk_generator,
+        gen_batches,
+        gen_even_slices,
+        get_chunk_n_rows,
     )
 
     # indexing
     from sklearn.utils._indexing import (
-        _determine_key_type,  # noqa: F401
-        _get_column_indices,  # noqa: F401
-        _safe_assign,  # noqa: F401
-        _safe_indexing,  # noqa: F401
-        resample,  # noqa: F401
-        shuffle,  # noqa: F401
+        _determine_key_type,
+        _get_column_indices,
+        _safe_assign,
+        _safe_indexing,
+        resample,
+        shuffle,
     )
 
     # mask
     from sklearn.utils._mask import (
-        axis0_safe_slice,  # noqa: F401
-        indices_to_mask,  # noqa: F401
-        safe_mask,  # noqa: F401
+        axis0_safe_slice,
+        indices_to_mask,
+        safe_mask,
     )
 
     # missing
     from sklearn.utils._missing import (
-        is_pandas_na,  # noqa: F401
-        is_scalar_nan,  # noqa: F401
+        is_pandas_na,
+        is_scalar_nan,
     )
 
     # optional dependencies
-    from sklearn.utils._optional_dependencies import (  # noqa: F401
+    from sklearn.utils._optional_dependencies import (
         check_matplotlib_support,
         check_pandas_support,
     )
 
     # user interface
-    from sklearn.utils._user_interface import _print_elapsed_time  # noqa: F401
+    from sklearn.utils._user_interface import _print_elapsed_time
 
     # extmath
     from sklearn.utils.extmath import (
-        _approximate_mode,  # noqa: F401
-        safe_sqr,  # noqa: F401
+        _approximate_mode,
+        safe_sqr,
     )
 
     # fixes
     from sklearn.utils.fixes import (
-        _IS_32BIT,  # noqa: F401
-        _IS_WASM,  # noqa: F401
-        _in_unstable_openblas_configuration,  # noqa: F401
+        _IS_32BIT,
+        _IS_WASM,
+        _in_unstable_openblas_configuration,
     )
 
     # validation
-    from sklearn.utils.validation import _to_object_array  # noqa: F401
+    from sklearn.utils.validation import _to_object_array
 
 ########################################################################################
 # Upgrading for scikit-learn 1.6
@@ -560,14 +560,14 @@ else:
         TransformerTags,
     )
     from sklearn.utils._test_common.instance_generator import (
-        _construct_instances,  # noqa: F401
+        _construct_instances,
     )
 
     # validation
     from sklearn.utils.validation import (
-        _check_feature_names,  # noqa: F401
-        _check_n_features,  # noqa: F401
-        validate_data,  # noqa: F401
+        _check_feature_names,
+        _check_n_features,
+        validate_data,
     )
 
 
@@ -578,4 +578,4 @@ else:
 if sklearn_version < parse_version("1.7"):
     from sklearn.utils._estimator_html_repr import _VisualBlock
 else:
-    from sklearn.utils._repr_html.estimator import _VisualBlock  # noqa: F401
+    from sklearn.utils._repr_html.estimator import _VisualBlock
