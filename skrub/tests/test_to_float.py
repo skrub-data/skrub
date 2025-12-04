@@ -5,7 +5,7 @@ from skrub import _dataframe as sbd
 from skrub._apply_to_cols import RejectColumn
 from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
-from skrub._to_float import ToFloat
+from skrub._to_float import ToFloat, _str_replace
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
@@ -43,3 +43,49 @@ def test_rejected_columns(df_module):
             ToFloat().fit_transform(col)
         to_float = ToFloat().fit(df_module.make_column("c", [1.1]))
         assert is_float32(df_module, to_float.transform(col))
+
+
+@pytest.mark.parametrize(
+    "input_str, expected_float, decimal",
+    [
+        ("1,234.56", 1234.56, "."),
+        ("1.234,56", 1234.56, ","),
+        ("1 234,56", 1234.56, ","),
+        ("1234.56", 1234.56, "."),
+        ("1234,56", 1234.56, ","),
+        ("1,234,567.89", 1234567.89, "."),
+        ("1.234.567,89", 1234567.89, ","),
+        ("1 234 567,89", 1234567.89, ","),
+        ("1'234'567.89", 1234567.89, "."),
+        ("1.23e+4", 12300.0, "."),
+        ("1.23E+4", 12300.0, "."),
+        ("1,23e+4", 12300.0, ","),
+        ("1,23E+4", 12300.0, ","),
+        ("-1,234.56", -1234.56, "."),
+        ("-1.234,56", -1234.56, ","),
+        ("(1,234.56)", -1234.56, "."),
+        ("(1.234,56)", -1234.56, ","),
+        ("1,23,456.78", 123456.78, "."),
+        ("12,3456.78", 123456.78, "."),
+        (".56", 0.56, "."),
+        (",56", 0.56, ","),
+    ],
+)
+def test_number_parsing(input_str, expected_float, decimal, df_module):
+    column = df_module.make_column("col", [input_str])
+    result = ToFloat(decimal=decimal).fit_transform(column)
+
+    np.allclose(result[0], expected_float)
+
+
+def test_str_replace(df_module):
+    s = df_module.make_column("x", ["1,234.56", "7.890,12", "3 456,78", "9'012.34"])
+    result_dot = _str_replace(s, decimal=".")
+
+    expected_dot = df_module.make_column(
+        "x", ["1234.56", "7890.12", "3456.78", "9012.34"]
+    )
+    np.all(sbd.to_list(result_dot) == sbd.to_list(expected_dot))
+
+    with pytest.raises(TypeError):
+        _str_replace([1, 2, 3], decimal=".")
