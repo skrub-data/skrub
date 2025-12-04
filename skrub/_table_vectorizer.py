@@ -135,7 +135,7 @@ def _get_preprocessors(
     ]
     if add_tofloat32:
         transformers.append(ToFloat())
-    
+
     if add_tostr:
         transformers.append(ToStr())
 
@@ -193,7 +193,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
         ``-1`` means using all processors.
-    
+
     add_tostr : bool, default=True
         If ``True``, apply the ``ToStr`` transformer to non-numeric,
         non-categorical, and non-datetime columns, converting them to strings.
@@ -325,7 +325,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         datetime_format=None,
         numeric_dtype=None,
         n_jobs=1,
-        add_tostr=True
+        add_tostr=True,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
