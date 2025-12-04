@@ -279,3 +279,22 @@ def test_bool_column_mean(df_module):
     summary = summarize_dataframe(df)
     cols = summary["columns"]
     assert "mean" in cols[0]
+
+
+@skip_polars_installed_without_pyarrow
+def test_with_associations_and_seed(monkeypatch, air_quality):
+    from numpy.testing import assert_equal, assert_raises
+
+    monkeypatch.setattr("skrub._reporting._summarize._SUBSAMPLE_SIZE", 2)
+    monkeypatch.setattr("skrub._reporting._summarize._N_TOP_ASSOCIATIONS", 2)
+
+    associations_1 = summarize_dataframe(air_quality, seed=41)["top_associations"]
+    associations_2 = summarize_dataframe(air_quality, seed=42)["top_associations"]
+    associations_3 = summarize_dataframe(air_quality, seed=42)["top_associations"]
+
+    assert associations_1
+    assert associations_2
+    assert associations_3
+
+    assert_raises(AssertionError, assert_equal, associations_1, associations_2)
+    assert_equal(associations_2, associations_3)
