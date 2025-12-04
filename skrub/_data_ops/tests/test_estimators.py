@@ -190,7 +190,7 @@ def test_randomized_search(data_op, data, n_jobs):
 def test_grid_search(data_op, data, n_jobs):
     search = data_op.skb.make_grid_search(n_jobs=n_jobs)
     search.fit(data)
-    search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
+    assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
     train_score = search.score(data)
     assert train_score == pytest.approx(0.94)
