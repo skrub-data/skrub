@@ -110,9 +110,9 @@ class Choice(BaseChoice):
     """A choice among an enumerated set of outcomes."""
 
     outcomes: list[typing.Any]
-    outcome_names: typing.Optional[list[str]]
-    name: typing.Optional[str] = None
-    chosen_outcome_idx: typing.Optional[int] = None
+    outcome_names: list[str] | None
+    name: str | None = None
+    chosen_outcome_idx: int | None = None
 
     def __post_init__(self):
         _check_name(self.name)
@@ -666,7 +666,7 @@ class NumericChoice(BaseNumericChoice):
     to_int: bool
     name: str
     default_outcome: float
-    chosen_outcome: typing.Optional[typing.Union[int, float]] = None
+    chosen_outcome: int | float | None = None
 
     def __post_init__(self):
         _check_name(self.name)
@@ -719,7 +719,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
     to_int: bool
     name: str
     default_outcome: float
-    chosen_outcome: typing.Optional[typing.Union[int, float]] = None
+    chosen_outcome: int | float | None = None
 
     def __post_init__(self):
         _check_name(self.name)

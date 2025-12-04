@@ -7,9 +7,7 @@ import secrets
 from collections.abc import Iterable
 
 import numpy as np
-import sklearn
 from sklearn.base import BaseEstimator, clone
-from sklearn.utils.fixes import parse_version
 
 from skrub import _dataframe as sbd
 
@@ -207,14 +205,7 @@ def repr_args(args, kwargs, defaults={}):
 def set_output(transformer, X):
     if not hasattr(transformer, "set_output"):
         return
-    module_name = sbd.dataframe_module_name(X)
-    if module_name == "polars" and parse_version(sklearn.__version__) < parse_version(
-        "1.4"
-    ):
-        # TODO: remove when scikit-learn 1.3 support is dropped.
-        target_module = "pandas"
-    else:
-        target_module = module_name
+    target_module = sbd.dataframe_module_name(X)
     try:
         transformer.set_output(transform=target_module)
     except Exception:
@@ -235,32 +226,6 @@ def check_output(
     def has_correct_module(obj):
         return sbd.dataframe_module_name(obj) == target_module
 
-    if (
-        sbd.is_dataframe(transform_output)
-        and target_module == "polars"
-        and sbd.dataframe_module_name(transform_output) == "pandas"
-        and hasattr(transformer, "set_output")
-        and parse_version(sklearn.__version__) < parse_version("1.4")
-    ):
-        # TODO: remove when scikit-learn 1.3 support is dropped.
-        #
-        # For older scikit-learn versions that do not support
-        # `set_output(transform='polars')`, we fall back to using
-        # `set_output(transform='pandas')` and converting the output dataframe
-        # to polars ourselves.
-        # Therefore having pandas output when the input is polars is tolerated,
-        # when:
-        #   - the scikit-learn version is < 1.4
-        #   - and the transformer relies on the set_output API
-        #     (this implies that the output is a dataframe -- not a column or
-        #     list of columns).
-        # In all other cases having the output backed by the wrong dataframe
-        # library (e.g. pandas instead of polars) will result in an error.
-
-        # transform_input is a polars object so we know we can import it
-        import polars as pl
-
-        return pl.from_pandas(transform_output)
     if sbd.is_dataframe(transform_output) and has_correct_module(transform_output):
         return transform_output
     if (

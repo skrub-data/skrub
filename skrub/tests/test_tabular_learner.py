@@ -1,10 +1,8 @@
 import pytest
-import sklearn
 from sklearn import ensemble
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
-from sklearn.utils.fixes import parse_version
 
 from skrub import (
     SquashingScaler,
@@ -24,11 +22,8 @@ def test_default_pipeline(learner_kind):
     tv, learner = (e for _, e in p.steps)
     assert isinstance(tv, TableVectorizer)
     assert isinstance(tv.high_cardinality, StringEncoder)
-    if parse_version(sklearn.__version__) < parse_version("1.4"):
-        assert isinstance(tv.low_cardinality, OrdinalEncoder)
-    else:
-        assert isinstance(tv.low_cardinality, ToCategorical)
-        assert learner.categorical_features == "from_dtype"
+    assert isinstance(tv.low_cardinality, ToCategorical)
+    assert learner.categorical_features == "from_dtype"
     if learner_kind in ("regressor", "regression"):
         assert isinstance(learner, ensemble.HistGradientBoostingRegressor)
     else:
@@ -64,11 +59,7 @@ def test_linear_learner():
 def test_tree_learner():
     original_learner = ensemble.RandomForestClassifier()
     p = tabular_pipeline(original_learner)
-    if parse_version(sklearn.__version__) < parse_version("1.4"):
-        tv, impute, learner = (e for _, e in p.steps)
-        assert isinstance(impute, SimpleImputer)
-    else:
-        tv, learner = (e for _, e in p.steps)
+    tv, learner = (e for _, e in p.steps)
     assert learner is original_learner
     assert isinstance(tv.high_cardinality, StringEncoder)
     assert isinstance(tv.low_cardinality, OrdinalEncoder)
@@ -80,8 +71,6 @@ def test_from_dtype():
         ensemble.HistGradientBoostingRegressor(categorical_features=())
     )
     assert isinstance(p.named_steps["tablevectorizer"].low_cardinality, OrdinalEncoder)
-    if parse_version(sklearn.__version__) < parse_version("1.4"):
-        return
     p = tabular_pipeline(
         ensemble.HistGradientBoostingRegressor(categorical_features="from_dtype")
     )
