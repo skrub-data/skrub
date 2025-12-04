@@ -14,11 +14,6 @@ from ._fetching import (
     fetch_videogame_sales,
 )
 from ._generating import make_deduplication_data, toy_orders
-from ._ken_embeddings import (
-    fetch_ken_embeddings,
-    fetch_ken_table_aliases,
-    fetch_ken_types,
-)
 from ._utils import get_data_dir
 
 __all__ = [
@@ -28,9 +23,6 @@ __all__ = [
     "fetch_drug_directory",
     "fetch_employee_salaries",
     "fetch_flight_delays",
-    "fetch_ken_embeddings",
-    "fetch_ken_table_aliases",
-    "fetch_ken_types",
     "fetch_medical_charge",
     "fetch_midwest_survey",
     "fetch_movielens",
