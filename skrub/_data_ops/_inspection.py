@@ -309,6 +309,9 @@ def _node_kwargs(data_op, url=None):
     tooltip = html.escape(data_op._skrub_impl.creation_stack_last_line())
     if description := data_op._skrub_impl.description:
         tooltip = f"{tooltip}\n\n{html.escape(description)}"
+    # Also escape backslahses inserted in the .dot file
+    # otherwise they are interpreted as escape sequences by graphviz
+    tooltip = tooltip.replace("\\", "\\\\")
     kwargs["tooltip"] = tooltip
     if isinstance(data_op._skrub_impl, (Var, Value)):
         kwargs["peripheries"] = 2
