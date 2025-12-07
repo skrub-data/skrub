@@ -224,7 +224,12 @@ class OptunaParamSearch(_BaseParamSearch):
                 study_name = f"skrub_randomized_search_{uuid.uuid4()}"
             else:
                 study_name = self.study_name
-            print(f"Running optuna search for study {study_name} in storage {storage}")
+            # Display storage as it should be passed to optuna-dashboard:
+            # remove the protocol for journal files (only).
+            print(
+                f"Running optuna search for study {study_name} in storage "
+                f"{storage.removeprefix('journal:///')}"
+            )
             #
             # Create study and run trials
             #
@@ -288,7 +293,10 @@ class OptunaParamSearch(_BaseParamSearch):
                 # optuna's built-in parallelization
                 study = create_study()
                 study.optimize(
-                    objective, n_trials=self.n_iter, n_jobs=n_jobs, timeout=self.timeout
+                    objective,
+                    n_trials=self.n_iter,
+                    n_jobs=n_jobs,
+                    timeout=self.timeout,
                 )
             else:
                 # Otherwise for multiprocessing parallelism, use joblib.Parallel.
