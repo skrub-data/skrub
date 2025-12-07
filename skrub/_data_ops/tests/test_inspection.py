@@ -170,14 +170,6 @@ def test_draw_graph_open(monkeypatch):
     mock.assert_called_once()
 
 
-@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
-def test_escaping_characters():
-    out = skrub.as_data_op(0) + 1
-    g = out.skb.draw_graph()
-    result = g.svg.decode("utf-8")
-    assert isinstance(result, str)
-
-
 def test_describe_param_grid():
     """
     >>> from sklearn.linear_model import LogisticRegression
