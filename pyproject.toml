@@ -195,6 +195,7 @@ jinja2 = "*"
 matplotlib = "*"
 pydot = "*"
 requests = "*"
+pyarrow = "*"
 polars = "*"
 plotly = "*"
 
