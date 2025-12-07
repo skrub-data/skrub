@@ -714,6 +714,16 @@ def test_bad_search_backend():
         skrub.X().skb.make_randomized_search(backend="bad")
 
 
+@pytest.mark.parametrize("param", ["storage", "study_name", "sampler", "timeout"])
+def test_optuna_params_for_sklearn_backend(param):
+    with pytest.raises(
+        TypeError,
+        match="(?s).*were provided with backend='sklearn'"
+        f".*only with backend='optuna'.*{param}",
+    ):
+        skrub.X().skb.make_randomized_search(backend="sklearn", **{param: 0})
+
+
 #
 # caching
 #
