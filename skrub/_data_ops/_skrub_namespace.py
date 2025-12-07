@@ -2277,7 +2277,7 @@ class SkrubNamespace:
             provided_optuna_params = {
                 k: v for k, v in optuna_params.items() if v is not None
             }
-            if optuna_params:
+            if provided_optuna_params:
                 raise TypeError(
                     "The following parameters were provided with backend='sklearn'. "
                     "Those parameters are used only with backend='optuna':\n"
