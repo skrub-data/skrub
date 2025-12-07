@@ -79,9 +79,7 @@ dev = [
   "plotly",
   "optuna",
 ]
-transformers = [
-    "sentence-transformers",
-]
+transformers = ["sentence-transformers"]
 
 [project.urls]
 Homepage = "https://skrub-data.org/"
