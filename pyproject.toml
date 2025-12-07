@@ -56,7 +56,9 @@ dev = [
   "numpydoc",
   "pydata-sphinx-theme",
   "seaborn",
-  "sphinx",
+  # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
+  # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
+  "sphinx<9",
   "sphinx-copybutton",
   "sphinx-gallery",
   "sphinxext-opengraph",
@@ -112,7 +114,9 @@ numpydoc = "*"
 pydata-sphinx-theme = "*"
 plotly = "*"
 seaborn = "*"
-sphinx = "*"
+  # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
+  # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
+sphinx = "<9"
 sphinx-copybutton = "*"
 sphinx-gallery = "*"
 sphinxext-opengraph = "*"
