@@ -154,7 +154,7 @@ Skrub transformers are designed to be used in conjunction with other transformer
 that operate on columns to improve their versatility.
 
 For example, we can drop columns that have more unique values than a certain amount
-by combining :func:`cardinality_below` with :class:`skrub.DropCols`.
+by combining :func:`~skrub.selectors.cardinality_below` with :class:`skrub.DropCols`.
 We first select the columns that have more than 3 unique values, then we invert the
 selector and finally transform the dataframe.
 
