@@ -12,7 +12,6 @@ Version: 0.1.0
 from __future__ import annotations
 
 import platform
-import sys
 from dataclasses import dataclass, field
 
 import sklearn
@@ -49,8 +48,6 @@ class ParamsValidationMixin:
 
 # tags infrastructure
 def _dataclass_args():
-    if sys.version_info < (3, 10):
-        return {}
     return {"slots": True}
 
 
@@ -144,53 +141,6 @@ def _to_new_tags(old_tags, estimator=None):
         _skip_test=old_tags["_skip_test"],
     )
 
-
-########################################################################################
-# Upgrading for scikit-learn 1.4
-########################################################################################
-
-
-if sklearn_version < parse_version("1.4"):
-
-    def _is_fitted(estimator, attributes=None, all_or_any=all):
-        """Determine if an estimator is fitted
-
-        Parameters
-        ----------
-        estimator : estimator instance
-            Estimator instance for which the check is performed.
-
-        attributes : str, list or tuple of str, default=None
-            Attribute name(s) given as string or a list/tuple of strings
-            Eg.: ``["coef_", "estimator_", ...], "coef_"``
-
-            If `None`, `estimator` is considered fitted if there exist an
-            attribute that ends with a underscore and does not start with double
-            underscore.
-
-        all_or_any : callable, {all, any}, default=all
-            Specify whether all or any of the given attributes must exist.
-
-        Returns
-        -------
-        fitted : bool
-            Whether the estimator is fitted.
-        """
-        if attributes is not None:
-            if not isinstance(attributes, (list, tuple)):
-                attributes = [attributes]
-            return all_or_any([hasattr(estimator, attr) for attr in attributes])
-
-        if hasattr(estimator, "__sklearn_is_fitted__"):
-            return estimator.__sklearn_is_fitted__()
-
-        fitted_attrs = [
-            v for v in vars(estimator) if v.endswith("_") and not v.startswith("__")
-        ]
-        return len(fitted_attrs) > 0
-
-else:
-    from sklearn.utils.validation import _is_fitted  # noqa: F401
 
 ########################################################################################
 # Upgrading for scikit-learn 1.5

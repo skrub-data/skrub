@@ -21,23 +21,23 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
   "numpy>=1.23.5",
   "pandas>=1.5.3",
-  "scikit-learn>=1.2.1",
+  "scikit-learn>=1.4.2",
   "scipy>=1.9.3",
   "jinja2>=3.1.2",
   "matplotlib>=3.4.3",
-  "requests>=2.25.0",
+  "requests>=2.27.1",
   "pydot",
 ]
 
@@ -74,7 +74,7 @@ dev = [
   "pytest-xdist",
 
   # optional
-  "pyarrow<21.0.0",
+  "pyarrow",
   "polars",
   "plotly",
   "optuna",
@@ -98,12 +98,12 @@ platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 [tool.pixi.dependencies]
 numpy = ">=1.23.5"
 pandas = ">=1.5.3"
-scikit-learn = ">=1.2.1"
+scikit-learn = ">=1.4.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.4.3"
 pydot = "*"
-requests = ">=2.25.0"
+requests = ">=2.27.1"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
@@ -129,7 +129,7 @@ ruff = "==0.14.2"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
-pyarrow = "<21.0.0"
+pyarrow = "*"
 polars = "*"
 plotly = "*"
 optuna = "*"
@@ -141,7 +141,9 @@ platforms = ["linux-64", "osx-arm64", "win-64"]
 [tool.pixi.feature.transformers.dependencies]
 pytorch = { version = ">=2.4.1,<3" }
 transformers = "*"
+datasets = "*"
 sentence-transformers = ">=3.0,<6"
+tokenizers = ">=0.22.0,<=0.23.0"
 pyarrow = "<21"
 
 [tool.pixi.feature.test.dependencies]
@@ -161,12 +163,12 @@ skrub = { path = ".", editable = true }
 [tool.pixi.feature.min-dependencies.dependencies]
 numpy = "==1.23.5"
 pandas = "==1.5.3"
-scikit-learn = "==1.2.1"
+scikit-learn = "==1.4.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.4.3"
 pydot = "*"
-requests = "==2.25.0"
+requests = "==2.27.1"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
@@ -203,17 +205,14 @@ polars = "*"
 plotly = "*"
 optuna = "*"
 
-[tool.pixi.feature.py309.dependencies]
-python = "~=3.9.0"
+[tool.pixi.feature.py310.dependencies]
+python = "~=3.10.0"
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
 
-[tool.pixi.feature.py312.dependencies]
-python = "~=3.12.0"
-
-[tool.pixi.feature.py313.dependencies]
-python = "~=3.13.0"
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
@@ -240,43 +239,22 @@ check-pyi-diff = ["check-pyi-diff"]
 doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
-ci-py309-min-deps = ["py309", "min-dependencies", "test"]
-ci-py309-min-optional-deps = [
-  "py309",
+ci-py310-min-deps = ["py310", "min-dependencies", "test"]
+ci-py310-min-optional-deps = [
+  "py310",
   "min-dependencies",
   "min-optional-dependencies",
   "test",
 ]
 ci-py311-transformers = ["py311", "transformers", "test"]
-ci-py312-latest-deps = ["py312", "test"]
-ci-py312-latest-optional-deps = ["py312", "optional", "test"]
-ci-py313-latest-deps = ["py313", "test"]
-ci-py313-polars-without-pyarrow = ["py313", "test", "polars-without-pyarrow"]
-ci-py313-latest-optional-deps = ["py313", "optional", "test"]
+ci-py314-latest-deps = ["py314", "test"]
+ci-py314-polars-without-pyarrow = ["py314", "test", "polars-without-pyarrow"]
+ci-py314-latest-optional-deps = ["py314", "optional", "test"]
 
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
-ci-nightly-deps = { no-default-feature = true, features = [ "py313", "nightly-dependencies", "test" ] }
-
-[tool.black]
-line-length = 88
-target_version = ['py310', 'py311']
-preview = true
-# Exclude irrelevant directories for formatting
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.mypy_cache
-  | \.vscode
-  | \.pytest_cache
-  | \.idea
-  | build
-  | dist
-)/
-'''
+ci-nightly-deps = { no-default-feature = true, features = [ "py314", "nightly-dependencies", "test" ] }
 
 [tool.ruff]
-# max line length for black
 line-length = 88
 exclude = [
   ".git",
@@ -289,16 +267,22 @@ exclude = [
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
-select = ["E", "F", "W", "I"]
+select = ["E", "F", "W", "C4", "I", "UP"]
 ignore = [
-  # space before : (needed for how black formats slicing)
-  "E203",
   # use `is` and `is not` for type comparisons
   "E721",
   # do not assign a lambda expression, use a def
   "E731",
   # do not use variables named 'l', 'O', or 'I'
   "E741",
+  # unnecessary list comprehension (rewrite as a set comprehension)
+  "C403",
+  # unnecessary tuple literal (rewrite as a set literal)
+  "C405",
+  # unnecessary `dict()` call (rewrite as a literal)
+  "C408",
+  # unnecessary list literal passed to `tuple()` (rewrite as a tuple literal)
+  "C409",
 ]
 
 [tool.ruff.lint.per-file-ignores]
