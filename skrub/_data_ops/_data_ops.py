@@ -1638,8 +1638,8 @@ def deferred(func):
     INFO x = 3
     3
 
-    Advanced examples
-    -----------------
+    **Advanced examples**
+
     As we saw in the last example above, the arguments passed to the function,
     if they are DataOps, are evaluated before calling it. This is also the
     case for global variables, default arguments and free variables.
