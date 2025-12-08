@@ -37,6 +37,10 @@ New features
 
 Changes
 -------
+- The minimum supported version of Python has been increased to 3.10. Additionally,
+  the minimum supported versions of scikit-learn and requests are 1.4.2 and 2.27.1
+  respectively. Support for python 3.14 has been added.
+  :pr:`1572` by :user:`Riccardo Cappuzzo<rcap107>`.
 - The :meth: `DataOp.skb.full_report` method now deletes reports created with
   ``output_dir=None`` after 7 days. :pr:`1657` by :user: `Simon Dierickx <simon.dierickx>`.
 - The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
@@ -70,6 +74,12 @@ Bugfixes
 - Fixed an issue where :class:`TableReport` would fail when computing associations
   for Polars dataframes if PyArrow was not installed.
   :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed an issue in the Data Ops report generation in cases where the DataOp
+  contained escape characters or were spanning multiple lines.
+  :pr:`1764` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the
+  :class:`TableVectorizer` and other transformers. :pr:`1762` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
 - Improve error message when :class:`TextEncoder` is used without the optional
   transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
 - Accessing ``.skb.applied_estimator`` on a :class:`DataOp` after calling

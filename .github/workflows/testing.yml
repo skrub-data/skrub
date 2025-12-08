@@ -16,12 +16,12 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
         environment:
-          - ci-py309-min-deps
-          - ci-py309-min-optional-deps
+          - ci-py310-min-deps
+          - ci-py310-min-optional-deps
           - ci-py311-transformers
-          - ci-py313-latest-deps
-          - ci-py313-latest-optional-deps
-          - ci-py313-polars-without-pyarrow
+          - ci-py314-latest-deps
+          - ci-py314-latest-optional-deps
+          - ci-py314-polars-without-pyarrow
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6

@@ -6,7 +6,6 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
-import sklearn
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_raises
 from pandas.testing import assert_frame_equal
 from scipy.sparse import csr_matrix
@@ -31,12 +30,9 @@ from skrub.conftest import _POLARS_INSTALLED
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
 
-if parse_version(sklearn.__version__) < parse_version("1.4"):
-    PASSTHROUGH = "passthrough"
-else:
-    PASSTHROUGH = FunctionTransformer(
-        accept_sparse=True, check_inverse=False, feature_names_out="one-to-one"
-    )
+PASSTHROUGH = FunctionTransformer(
+    accept_sparse=True, check_inverse=False, feature_names_out="one-to-one"
+)
 
 
 def type_equality(expected_type, actual_type):
@@ -452,6 +448,43 @@ def test_cleaner_invalid_numeric_dtype(df_module):
         Cleaner(numeric_dtype="wrong").fit_transform(X)
 
 
+def test_cleaner_get_feature_names_out(df_module):
+    """Test that Cleaner.get_feature_names_out returns the correct column names."""
+    X = _get_clean_dataframe(df_module)
+    cleaner = Cleaner().fit(X)
+
+    # Get feature names from the cleaner
+    feature_names = cleaner.get_feature_names_out()
+
+    # Get the expected column names from the transformed dataframe
+    X_transformed = cleaner.transform(X)
+    expected_names = sbd.column_names(X_transformed)
+
+    # Check that they match
+    assert_array_equal(feature_names, expected_names)
+
+    # Test that it works with drop_null_fraction parameter
+    X_with_nulls = df_module.make_dataframe(
+        {
+            "col1": [1, 2, 3, 4],
+            "col2": ["a", "b", "c", "d"],
+            "all_nulls": [None, None, None, None],
+        }
+    )
+
+    cleaner_drop = Cleaner(drop_null_fraction=1.0).fit(X_with_nulls)
+    feature_names_drop = cleaner_drop.get_feature_names_out()
+
+    # The all_nulls column should not be in the output
+    assert "all_nulls" not in feature_names_drop
+
+    # Test that input_features parameter is ignored (like in TableVectorizer)
+    feature_names_with_input = cleaner.get_feature_names_out(
+        input_features=["dummy1", "dummy2"]
+    )
+    assert_array_equal(feature_names_with_input, expected_names)
+
+
 def test_auto_cast_missing_categories(df_module):
     # TODO implement test for polars
     if df_module.description == "polars":
@@ -531,10 +564,6 @@ def test_get_feature_names_out(df_module):
     )
 
 
-@pytest.mark.skipif(
-    parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
-    reason="This test requires sklearn version 1.4 or higher",
-)
 def test_transform(df_module):
     X = _get_clean_dataframe(df_module)
     table_vec = TableVectorizer().fit(X)
@@ -556,10 +585,6 @@ def test_transform(df_module):
     assert_array_equal(x_trans, expected_x_trans)
 
 
-@pytest.mark.skipif(
-    parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
-    reason="This test requires sklearn version 1.4 or higher",
-)
 @pytest.mark.parametrize(
     "data_getter",
     [
@@ -584,10 +609,6 @@ def test_fit_transform_equiv(data_getter, df_module):
     assert_array_equal(X_trans_1, X_trans_2)
 
 
-@pytest.mark.skipif(
-    parse_version(sklearn.__version__) < parse_version("1.4") and _POLARS_INSTALLED,
-    reason="This test requires sklearn version 1.4 or higher",
-)
 def test_handle_unknown_category(df_module):
     X = _get_clean_dataframe(df_module)
     # Treat all columns as having few unique values
@@ -903,10 +924,6 @@ def test_accept_pipeline():
     tv.fit(df)
 
 
-@pytest.mark.skipif(
-    parse_version(sklearn.__version__) < parse_version("1.4"),
-    reason="set_output('polars') was added in scikit-learn 1.4",
-)
 def test_clean_null_downcast_warning():
     # non-regression test for https://github.com/skrub-data/skrub/issues/894
     pl = pytest.importorskip("polars")

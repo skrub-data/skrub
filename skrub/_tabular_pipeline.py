@@ -1,10 +1,8 @@
-import sklearn
 from sklearn import ensemble
 from sklearn.base import BaseEstimator
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder
-from sklearn.utils.fixes import parse_version
 
 from ._datetime_encoder import DatetimeEncoder
 from ._sklearn_compat import get_tags
@@ -225,10 +223,7 @@ def tabular_pipeline(estimator, *, n_jobs=None):
       unnecessary for tree ensembles.
     """  # noqa: E501
     vectorizer = TableVectorizer(n_jobs=n_jobs)
-    if parse_version(sklearn.__version__) < parse_version("1.4"):
-        cat_feat_kwargs = {}
-    else:
-        cat_feat_kwargs = {"categorical_features": "from_dtype"}
+    cat_feat_kwargs = {"categorical_features": "from_dtype"}
 
     if isinstance(estimator, str):
         if estimator in ("classifier", "classification"):
