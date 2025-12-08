@@ -1652,7 +1652,7 @@ class SkrubNamespace:
               used to suggest values for
               the choices.
 
-            Note none of these options picks the best choice value according to
+            Note that none of these options picks the best choice value according to
             an evaluation criterion, as this function creates a single learner.
             These options can be combined with external logic to evaluate and
             select the resulting learners, or one of
