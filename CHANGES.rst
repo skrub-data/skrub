@@ -86,7 +86,7 @@ Bugfixes
   ``.skb.set_name()``, ``.skb.set_description()``, ``.skb.mark_as_X()`` or
   ``.skb.mark_as_y()`` used to raise an error, this has been fixed in :pr:`1782`
   by :user:`Jérôme Dockès <jeromedockes>`.
-- Added ``add_tostr`` parameter to :class:`Cleaner` to prevent unintended
+- Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
   conversion of list/object-like columns to strings unless explicitly enabled.
   :pr:`1789` by :user:`PilliSiddharth`
 

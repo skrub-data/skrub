@@ -26,6 +26,7 @@ from skrub._table_vectorizer import (
     _get_preprocessors,
 )
 from skrub._to_float import ToFloat
+from skrub._to_str import ToStr
 from skrub.conftest import _POLARS_INSTALLED
 
 MSG_PANDAS_DEPRECATED_WARNING = "Skip deprecation warning"
@@ -440,6 +441,40 @@ def test_convert_float32(df_module):
     # here it's the same as the case with the TableVectorizer above
     assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
     assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
+
+
+def test_cast_to_str(df_module):
+    """
+    Test that the Cleaner conditionally applies the ToStr transformer
+    depending on the cast_to_str parameter.
+    """
+    df = df_module.DataFrame({"a": [[1, 2], [3]]})
+
+    # -----------------------
+    # Case 0: default (False)
+    # -----------------------
+    cleaner = Cleaner()
+    out = cleaner.fit_transform(df)
+    # Default should preserve the dtype
+    assert sbd.dtype(out["a"]) == sbd.dtype(df["a"])
+
+    # -----------------------
+    # Case 1: cast_to_str=False
+    # -----------------------
+    cleaner = Cleaner(cast_to_str=False)
+    out = cleaner.fit_transform(df)
+
+    # Should preserve dtype
+    assert sbd.dtype(out["a"]) == sbd.dtype(df["a"])
+
+    # ----------------------
+    # Case 2: cast_to_str=True
+    # ----------------------
+    cleaner = Cleaner(cast_to_str=True)
+    out = cleaner.fit_transform(df)
+
+    expected_col = ToStr().fit_transform(df["a"])
+    assert sbd.dtype(out["a"]) == sbd.dtype(expected_col)
 
 
 def test_cleaner_invalid_numeric_dtype(df_module):
