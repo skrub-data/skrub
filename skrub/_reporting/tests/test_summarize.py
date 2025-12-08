@@ -285,7 +285,7 @@ def test_bool_column_mean(df_module):
 def test_with_associations_and_seed(monkeypatch, air_quality):
     """Check that we can control the subsampling seed when computing the
     associations."""
-    monkeypatch.setattr("skrub._reporting._summarize._SUBSAMPLE_SIZE", 2)
+    monkeypatch.setattr("skrub._reporting._summarize._SUBSAMPLE_SIZE", 10)
 
     with config_context(max_association_columns=2):
         associations_1 = summarize_dataframe(air_quality)["top_associations"]
