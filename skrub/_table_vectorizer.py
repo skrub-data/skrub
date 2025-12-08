@@ -292,9 +292,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.fit_transform(df)
            A          B     C    D
     0    one 2024-02-02   1.5  1.5
-    1    two 2024-02-23   NaN  2.0
+    1    two 2024-02-23   None  2.0
     2    two 2024-03-12  12.2  2.5
-    3  three 2024-03-13   NaN  3.0
+    3  three 2024-03-13   None  3.0
 
     >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     A               ...
@@ -306,18 +306,13 @@ class Cleaner(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> cleaner.all_processing_steps_['A']
-    [CleanNullStrings(), DropUninformative()]
+    [CleanNullStrings(), DropUninformative(), ToStr()]
     >>> cleaner.all_processing_steps_['B']
     [CleanNullStrings(), DropUninformative(), ToDatetime()]
     >>> cleaner.all_processing_steps_['C']
-    [CleanNullStrings(), DropUninformative()]
+    [CleanNullStrings(), DropUninformative(), ToStr()]
     >>> cleaner.all_processing_steps_['D']
     [DropUninformative()]
-
-    ``cast_to_str`` is left to its default (False), string casting is not applied.
-    To enable it, pass ``cast_to_str=True`` when creating the ``Cleaner`` instance.
-
-    >>> cleaner = Cleaner(cast_to_str=True)
     """
 
     def __init__(
