@@ -33,17 +33,19 @@ This can be done with pip:
 # hyperparameters that we want to tune.
 
 # %%
-from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.linear_model import Ridge
 
 import skrub
 
-hgb = HistGradientBoostingRegressor(
-    learning_rate=skrub.choose_float(0.01, 0.6, log=True, name="learning_rate")
+extra_tree = ExtraTreesRegressor(
+    min_samples_leaf=skrub.choose_int(1, 32, log=True, name="min_samples_leaf"),
 )
-rf = RandomForestRegressor(
-    n_estimators=skrub.choose_int(20, 100, name="n_estimators"),
+ridge = Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α"))
+
+regressor = skrub.choose_from(
+    {"extra_tree": extra_tree, "ridge": ridge}, name="regressor"
 )
-regressor = skrub.choose_from({"hgb": hgb, "random forest": rf}, name="regressor")
 pred = skrub.X().skb.apply(regressor, y=skrub.y())
 print(pred.skb.describe_param_grid())
 
@@ -74,7 +76,7 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # the User Guide for an example.
 
 # %%
-search = pred.skb.make_randomized_search(backend="optuna", cv=cv, n_iter=16)
+search = pred.skb.make_randomized_search(backend="optuna", cv=cv, n_iter=10)
 search.fit(env)
 search.results_
 
@@ -105,7 +107,7 @@ search.study_.best_params
 # %%
 import optuna
 
-optuna.visualization.plot_slice(search.study_, params=["2:regressor"])
+optuna.visualization.plot_slice(search.study_, params=["0:min_samples_leaf"])
 
 # %%
 # Using Optuna directly for more advanced use cases
@@ -154,7 +156,7 @@ def objective(trial):
 
 
 study = optuna.create_study(direction="maximize")
-study.optimize(objective, n_trials=16)
+study.optimize(objective, n_trials=10)
 study.best_params
 
 # %%

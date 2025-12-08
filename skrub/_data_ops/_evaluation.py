@@ -960,6 +960,7 @@ def choice_default(choice_id, display_name, choice):
 
 
 def random_choice(random_state):
+    """Create a policy for eval_choices() that picks random choice outcomes."""
     random_state = check_random_state(random_state)
 
     def policy(choice_id, display_name, choice):
@@ -971,6 +972,11 @@ def random_choice(random_state):
 
 
 def optuna_suggestion(trial):
+    """
+    Create a policy for eval_choices() that picks choice outcomes by calling the
+    optuna Trial's 'suggest_*' methods.
+    """
+
     def policy(choice_id, display_name, choice):
         name = f"{choice_id}:{display_name}"
         if isinstance(choice, _choosing.BaseNumericChoice):
