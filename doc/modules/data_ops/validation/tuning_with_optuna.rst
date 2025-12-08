@@ -41,19 +41,19 @@ We start by defining a skrub DataOps plan with hyperparameter choices:
 >>> from sklearn.datasets import make_classification
 >>> from sklearn.linear_model import LogisticRegression
 >>> from sklearn.feature_selection import SelectKBest
->>> from sklearn.ensemble import RandomForestClassifier
+>>> from sklearn.ensemble import HistGradientBoostingClassifier
 >>> from sklearn.dummy import DummyClassifier
 
 >>> X_a, y_a = make_classification(random_state=0)
 >>> X, y = skrub.X(X_a), skrub.y(y_a)
 >>> selector = SelectKBest(k=skrub.choose_int(4, 20, log=True, name='k'))
 >>> logistic = LogisticRegression(C=skrub.choose_float(0.1, 10.0, log=True, name="C"))
->>> rf = RandomForestClassifier(
-...    n_estimators=skrub.choose_int(3, 30, log=True, name="N 🌴"),
+>>> hgb = HistGradientBoostingClassifier(
+...    learning_rate=skrub.choose_float(.01, .5, log=True, name="learning_rate"),
 ...    random_state=0,
 ... )
 >>> classifier = skrub.choose_from(
-... {"logistic": logistic, "rf": rf, "dummy": DummyClassifier()}, name="classifier"
+... {"logistic": logistic, "hgb": hgb, "dummy": DummyClassifier()}, name="classifier"
 ... )
 >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
 >>> print(pred.skb.describe_param_grid())
@@ -61,8 +61,8 @@ We start by defining a skrub DataOps plan with hyperparameter choices:
   classifier: 'logistic'
   C: choose_float(0.1, 10.0, log=True, name='C')
 - k: choose_int(4, 20, log=True, name='k')
-  classifier: 'rf'
-  N 🌴: choose_int(3, 30, log=True, name='N 🌴')
+  classifier: 'hgb'
+  learning_rate: choose_float(0.01, 0.5, log=True, name='learning_rate')
 - k: choose_int(4, 20, log=True, name='k')
   classifier: 'dummy'
 
@@ -70,26 +70,27 @@ We start by defining a skrub DataOps plan with hyperparameter choices:
 Now, we can create a randomized search using Optuna as the backend:
 
 >>> search = pred.skb.make_randomized_search(fitted=True, random_state=0, backend="optuna") # doctest: +SKIP
+Running optuna search for study skrub_randomized_search_c4af73b2-45fb-49ca-9f06-092d74aa8118 in storage .../tmpuor7hqjm_skrub_optuna_search_storage/optuna_storage
 
 It's possible to access the same parameters as the default backend:
 
 >>> search.results_  # doctest: +SKIP
-k         C   N 🌴 classifier  mean_test_score
-0   4       NaN   6.0         rf             0.93
-1   4  0.645966   NaN   logistic             0.92
-2   4       NaN   4.0         rf             0.92
-3   4       NaN   3.0         rf             0.90
-4   8       NaN  11.0         rf             0.88
-5   9       NaN  11.0         rf             0.88
-6  14  0.391899   NaN   logistic             0.81
-7  19       NaN   4.0         rf             0.72
-8  20       NaN   NaN      dummy             0.50
-9   9       NaN   NaN      dummy             0.50
+    k         C  learning_rate classifier  mean_test_score
+0   4       NaN       0.013146        hgb             0.93
+1   4       NaN       0.040454        hgb             0.92
+2  19       NaN       0.019968        hgb             0.92
+3   4  0.645966            NaN   logistic             0.92
+4   4       NaN       0.023337        hgb             0.92
+5   8       NaN       0.097994        hgb             0.90
+6   9       NaN       0.104104        hgb             0.88
+7  14  0.391899            NaN   logistic             0.81
+8  20       NaN            NaN      dummy             0.50
+9   9       NaN            NaN      dummy             0.50
 
 The best learner and best hyperparameters can be accessed as usual:
 
 >>> search.best_learner_.describe_params()  # doctest: +SKIP
-{'k': 4, 'N 🌴': 6, 'classifier': 'rf'}
+{'k': 4, 'learning_rate': 0.01314593370942781, 'classifier': 'hgb'}
 
 |make_randomized_search|
 accepts ``sampler`` and ``timeout`` parameters to customize the Optuna study.
@@ -100,7 +101,7 @@ A more complete example that includes more advanced usage is available in
 :ref:`example_optuna_choices`.
 
 Setting a storage for the Optuna study
--------------------------------------------------
+--------------------------------------
 When using Optuna as a backend for hyperparameter search, it is possible to
 specify a storage option to persist the study and its results. This allows us to
 resume the search later or analyze the results after the search is complete.
@@ -116,10 +117,12 @@ This can be done by providing the ``storage`` parameter to
         storage="sqlite:///optuna_study.db",  # Use a SQLite database file
     )
 
-By default, no storage is used, and the study is kept in memory only.
+If no storage is provided, a temporary storage is used during optimization, then
+the study is moved to an in-memory storage once the search completes so the
+resulting search object is self-contained.
 
 Using Optuna directly with skrub learners
--------------------------------------------------
+------------------------------------------
 It is also possible to use Optuna directly with skrub learners. This allows for more
 flexibility and control over the optimization process, as we can define custom
 objectives and leverage Optuna's advanced features, such as the ask-and-tell interface,
@@ -167,39 +170,33 @@ The learner can also be defined as follows:
 
 >>> best_learner = pred.skb.make_learner() # doctest: +SKIP
 >>> best_learner.set_params(**study.best_params) # doctest: +SKIP
+SkrubLearner(data_op=<Apply HistGradientBoostingClassifier>)
 
 Then, we can inspect the parameters as usual:
 
 >>> best_learner.describe_params() # doctest: +SKIP
-{'k': 4, 'C': 0.3031965763542701, 'classifier': 'logistic'}
+{'k': 12, 'learning_rate': 0.06401143720094754, 'classifier': 'hgb'}
 
 You can find a more complete example in :ref:`example_optuna_choices`.
 
 
-Parallelism with Optuna
--------------------------------------------------
-:meth:`skrub.cross_validate` and :meth:`optuna.study.Study.optimize` both
-accept parameters to control parallelism, however :meth:`skrub.cross_validate`
-uses joblib for parallelism, which implmenents process-based parallelism, while
-Optuna uses multi-threading for parallelism.
+Parallelism
+-----------
 
-:meth:`skrub.cross_validate` parallelizes by evaluating different splits
-in parallel, while :meth:`optuna.study.Study.optimize` parallelizes by
-evaluating different trials in parallel. Depending on the use case, multi-processing
-may be preferred (e.g., when the evaluation of a single split is very expensive),
-or multi-threading (e.g., when the overhead of process-based parallelism is
-too high compared to the evaluation time of a single split).
+Optuna's :meth:`optuna.study.Study.optimize` uses thread-based parallelism. When
+we use :meth:`DataOp.skb.make_randomized_search` with the Optuna backend, both
+threading and multiprocessing can be used. Skrub will choose based on the joblib
+configuration: if joblib is configured to use processes (the default),
+parallelization is done with joblib, and if joblib is configured to use the
+"threading" backend, Optuna's built-in thread-based parallelism is used instead.
 
-In |make_randomized_search|,
-the ``n_jobs`` parameter can be set to 1 to disable joblib parallelism, allowing
-Optuna's multi-threading parallelism to be used without interference. Additionally,
-multi-threading parallelism is enabled by default if the ``timeout`` parameter
-is set.
+When the ``timeout`` parameter is used, Optuna's built-in, thread-based
+parallelization is always used regardless of the joblib configuration.
 
 
 Using the Optuna dashboard
--------------------------------------------------
-Optuna provides a dashboard called Optuna Dashboard that allows us to visualize
+--------------------------
+Optuna provides a dashboard that allows us to visualize
 and monitor the optimization process in real-time. This can be especially useful
 for long-running hyperparameter searches.
 To use the Optuna Dashboard, we need to install it first:
