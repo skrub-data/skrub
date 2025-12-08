@@ -261,6 +261,7 @@ exclude = [
   "doc/_build",
   "doc/auto_examples",
   "build",
+  "pixi.lock"
 ]
 
 [tool.ruff.lint]

@@ -74,6 +74,9 @@ Bugfixes
 - Fixed an issue where :class:`TableReport` would fail when computing associations
   for Polars dataframes if PyArrow was not installed.
   :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed an issue in the Data Ops report generation in cases where the DataOp
+  contained escape characters or were spanning multiple lines.
+  :pr:`1764` by :user:`Riccardo Cappuzzo <rcap107>`.
 - Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the
   :class:`TableVectorizer` and other transformers. :pr:`1762` by
   :user:`Riccardo Cappuzzo <rcap107>`.
@@ -83,7 +86,6 @@ Bugfixes
   ``.skb.set_name()``, ``.skb.set_description()``, ``.skb.mark_as_X()`` or
   ``.skb.mark_as_y()`` used to raise an error, this has been fixed in :pr:`1782`
   by :user:`Jérôme Dockès <jeromedockes>`.
-
 
 Release 0.6.2
 =============
