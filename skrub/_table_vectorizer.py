@@ -306,11 +306,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> cleaner.all_processing_steps_['A']
-    [CleanNullStrings(), DropUninformative(), ToStr()]
+    [CleanNullStrings(), DropUninformative()]
     >>> cleaner.all_processing_steps_['B']
     [CleanNullStrings(), DropUninformative(), ToDatetime()]
     >>> cleaner.all_processing_steps_['C']
-    [CleanNullStrings(), DropUninformative(), ToStr()]
+    [CleanNullStrings(), DropUninformative()]
     >>> cleaner.all_processing_steps_['D']
     [DropUninformative()]
     """
