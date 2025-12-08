@@ -36,7 +36,7 @@ from ._interpolation_joiner import InterpolationJoiner
 from ._joiner import Joiner
 from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
-from ._reporting import TableReport
+from ._reporting import TableReport, patch_display, unpatch_display
 from ._select_cols import Drop, DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._squashing_scaler import SquashingScaler
@@ -95,6 +95,8 @@ __all__ = [
     "StringEncoder",
     "column_associations",
     "SquashingScaler",
+    "patch_display",
+    "unpatch_display",
     "get_config",
     "set_config",
     "config_context",
