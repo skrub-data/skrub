@@ -4,19 +4,19 @@
 .. |make_randomized_search| replace:: :func:`~skrub.DataOp.skb.make_randomized_search`
 
 
-Tuning skrub DataOps plans with Optuna
-=======================================
+Tuning DataOps with Optuna
+==========================
 
 Optuna is a powerful hyperparameter optimization framework that
 can be used to efficiently search for the best hyperparameters for machine
 learning models; Optuna includes both sophisticated search algorithms and
 tools to monitor and visualize the optimization process.
 
-There are two main ways of using Optuna with skrub DataOps plans: either by using
+There are two main ways of using Optuna with skrub DataOps: either by using
 Optuna as a ``backend`` in the
 |make_randomized_search|
-method, or by creating an Optuna study and providing it with a skrub
-:class:`SkrubLearner`.
+method, or by creating an Optuna study directly and using it to pick values for
+skrub choices when calling :meth:`DataOp.skb.make_learner()`.
 
 .. note::
 
@@ -31,11 +31,11 @@ method, or by creating an Optuna study and providing it with a skrub
 Using Optuna as a backend for randomized search
 -------------------------------------------------
 The easiest way to use Optuna with skrub is to use it as a backend for
-randomized hyperparameter search. This allows us to leverage Optuna's advanced
-sampling algorithms and features while keeping the familiar interface of
-|make_randomized_search|.
+|make_randomized_search|. This allows us to leverage Optuna's advanced
+sampling algorithms and features while keeping same the familiar interface as
+for other search methods.
 
-We start by defining a skrub DataOps plan with hyperparameter choices:
+We start by defining a DataOp containing choices:
 
 >>> import skrub
 >>> from sklearn.datasets import make_classification
@@ -72,7 +72,7 @@ Now, we can create a randomized search using Optuna as the backend:
 >>> search = pred.skb.make_randomized_search(fitted=True, random_state=0, backend="optuna") # doctest: +SKIP
 Running optuna search for study skrub_randomized_search_c4af73b2-45fb-49ca-9f06-092d74aa8118 in storage .../tmpuor7hqjm_skrub_optuna_search_storage/optuna_storage
 
-It's possible to access the same parameters as the default backend:
+It is possible to access the same parameters as with the default backend:
 
 >>> search.results_  # doctest: +SKIP
     k         C  learning_rate classifier  mean_test_score
@@ -121,9 +121,9 @@ If no storage is provided, a temporary storage is used during optimization, then
 the study is moved to an in-memory storage once the search completes so the
 resulting search object is self-contained.
 
-Using Optuna directly with skrub learners
-------------------------------------------
-It is also possible to use Optuna directly with skrub learners. This allows for more
+Using Optuna directly
+---------------------
+It is also possible to use Optuna directly with skrub DataOps. This allows for more
 flexibility and control over the optimization process, as we can define custom
 objectives and leverage Optuna's advanced features, such as the ask-and-tell interface,
 trial pruning, and multi-objective optimization.
