@@ -30,9 +30,6 @@ New features
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
-- :meth:`summarize_dataframe` now accepts a new parameter ``seed``, used to set the
-  sampling seed when computing the top associations.
-  :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
@@ -50,6 +47,9 @@ Changes
 - Improved the error message raised when a Polars lazyframe is passed to
   :class:`TableReport`, clarifying that `.collect()` must be called first.
   :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
+- Computing the associations in `TableReport` is now deterministic and can be controlled
+  by the new parameter ``subsampling_seed`` of the global configuration.
+  :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
 
 Bugfixes
 --------

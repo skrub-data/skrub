@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from skrub import _column_associations
+from skrub import _column_associations, config_context
 from skrub import _dataframe as sbd
 from skrub._reporting import _sample_table
 from skrub._reporting._summarize import summarize_dataframe
@@ -283,18 +283,29 @@ def test_bool_column_mean(df_module):
 
 @skip_polars_installed_without_pyarrow
 def test_with_associations_and_seed(monkeypatch, air_quality):
-    from numpy.testing import assert_equal, assert_raises
-
+    """Check that we can control the subsampling seed when computing the
+    associations."""
     monkeypatch.setattr("skrub._reporting._summarize._SUBSAMPLE_SIZE", 2)
-    monkeypatch.setattr("skrub._reporting._summarize._N_TOP_ASSOCIATIONS", 2)
 
-    associations_1 = summarize_dataframe(air_quality, seed=41)["top_associations"]
-    associations_2 = summarize_dataframe(air_quality, seed=42)["top_associations"]
-    associations_3 = summarize_dataframe(air_quality, seed=42)["top_associations"]
+    with config_context(max_association_columns=2):
+        associations_1 = summarize_dataframe(air_quality)["top_associations"]
+        associations_2 = summarize_dataframe(air_quality)["top_associations"]
+        with config_context(subsampling_seed=42):
+            associations_3 = summarize_dataframe(air_quality)["top_associations"]
 
-    assert associations_1
-    assert associations_2
-    assert associations_3
+        res_associations_1_vs_2, res_associations_1_vs_3 = [], []
+        for a1, a2, a3 in zip(associations_1, associations_2, associations_3):
+            res_associations_1_vs_2.append(
+                a1["left_column_name"] == a2["left_column_name"]
+            )
+            res_associations_1_vs_3.append(
+                a1["left_column_name"] != a3["left_column_name"]
+            )
 
-    assert_raises(AssertionError, assert_equal, associations_1, associations_2)
-    assert_equal(associations_2, associations_3)
+        assert all(res_associations_1_vs_2), (
+            "Computing summary with the same seed should produce the same associations."
+        )
+        assert not all(res_associations_1_vs_3), (
+            "Computing summary with different seeds should produce different "
+            "associations."
+        )
