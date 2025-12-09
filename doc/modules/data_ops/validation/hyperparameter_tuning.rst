@@ -162,7 +162,7 @@ search respectively), or with the ``choose`` parameter of
 :meth:`.skb.make_learner() <DataOp.skb.make_learner>`.
 
 A full example of how to use hyperparameter search is available in
-:ref:`sphx_glr_auto_examples_data_ops_0130_choices.py`, and a full example using
+:ref:`sphx_glr_auto_examples_data_ops_1130_choices.py`, and a full example using
 Optuna is in :ref:`example_optuna_choices`.
 
 |
