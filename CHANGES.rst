@@ -34,7 +34,6 @@ New features
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
 
-
 Changes
 -------
 - The minimum supported version of Python has been increased to 3.10. Additionally,
@@ -52,6 +51,9 @@ Changes
 - Improved the error message raised when a Polars lazyframe is passed to
   :class:`TableReport`, clarifying that `.collect()` must be called first.
   :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
+- Computing the associations in `TableReport` is now deterministic and can be controlled
+  by the new parameter ``subsampling_seed`` of the global configuration.
+  :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
 
 Bugfixes
 --------
