@@ -245,7 +245,7 @@ xfail_with_download_error = pytest.mark.xfail(
     raises=OSError, match="Can't download the file '.*' from urls.*"
 )
 
-base_config = get_config()
+BASE_CONFIG = get_config()
 
 
 @pytest.fixture(autouse=True)
@@ -257,7 +257,7 @@ def _reset_config_to_base():
     This prevents race conditions where one test's config changes could leak
     into another test's execution.
     """
-    set_config(**base_config)
+    set_config(**BASE_CONFIG)
     yield
     # Also reset after the test to ensure clean state for next test
-    set_config(**base_config)
+    set_config(**BASE_CONFIG)
