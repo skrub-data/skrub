@@ -120,6 +120,7 @@ def _get_preprocessors(
     drop_if_constant,
     n_jobs,
     add_tofloat32=True,
+    cast_to_str=True,
     datetime_format=None,
 ):
     steps = [CheckInputDataFrame()]
@@ -134,10 +135,11 @@ def _get_preprocessors(
     ]
     if add_tofloat32:
         transformers.append(ToFloat())
-    transformers += [
-        CleanCategories(),
-        ToStr(),
-    ]
+
+    transformers.append(CleanCategories())
+
+    if cast_to_str:
+        transformers.append(ToStr())
 
     for transformer in transformers:
         steps.append(
@@ -186,6 +188,12 @@ class Cleaner(TransformerMixin, BaseEstimator):
         If set to ``float32``, convert columns with numerical information
         to ``np.float32`` dtype thanks to the transformer ``ToFloat``.
         If ``None``, numerical columns are not modified.
+
+    cast_to_str : bool, default=False
+        If ``True``, apply the ``ToStr`` transformer to non-numeric,
+        non-categorical, and non-datetime columns, converting them to strings.
+        If ``False``, this step is skipped and such columns retain their
+        original dtype (e.g., lists, structs).
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -243,8 +251,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
-    - ``ToStr()``: convert columns to strings, unless they are numerical,
-      categorical, or datetime.
+    - ``ToStr()``: convert columns to strings unless they are numerical,
+    categorical, or datetime. This step is controlled by the ``cast_to_str``
+    parameter. When ``cast_to_str=False`` (default), string conversion is skipped.
+    When ``cast_to_str=True``, string conversion is applied.
 
     If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
     numeric columns to this dtype, including numbers represented
@@ -282,9 +292,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.fit_transform(df)
            A          B     C    D
     0    one 2024-02-02   1.5  1.5
-    1    two 2024-02-23   NaN  2.0
+    1    two 2024-02-23   None  2.0
     2    two 2024-03-12  12.2  2.5
-    3  three 2024-03-13   NaN  3.0
+    3  three 2024-03-13   None  3.0
 
     >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     A               ...
@@ -296,11 +306,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> cleaner.all_processing_steps_['A']
-    [CleanNullStrings(), DropUninformative(), ToStr()]
+    [CleanNullStrings(), DropUninformative()]
     >>> cleaner.all_processing_steps_['B']
     [CleanNullStrings(), DropUninformative(), ToDatetime()]
     >>> cleaner.all_processing_steps_['C']
-    [CleanNullStrings(), DropUninformative(), ToStr()]
+    [CleanNullStrings(), DropUninformative()]
     >>> cleaner.all_processing_steps_['D']
     [DropUninformative()]
     """
@@ -312,6 +322,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_unique=False,
         datetime_format=None,
         numeric_dtype=None,
+        cast_to_str=False,
         n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
@@ -319,6 +330,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
         self.numeric_dtype = numeric_dtype
+        self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -354,6 +366,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             add_tofloat32=add_tofloat32,
+            cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
         )
         self._pipeline = make_pipeline(*all_steps)

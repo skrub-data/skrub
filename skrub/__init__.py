@@ -12,6 +12,7 @@ from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
 from ._data_ops import (
     DataOp,
+    OptunaParamSearch,
     ParamSearch,
     SkrubLearner,
     X,
@@ -56,6 +57,7 @@ __all__ = [
     "var",
     "SkrubLearner",
     "ParamSearch",
+    "OptunaParamSearch",
     "X",
     "y",
     "as_data_op",
