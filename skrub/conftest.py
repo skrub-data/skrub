@@ -249,7 +249,7 @@ BASE_CONFIG = get_config()
 
 
 @pytest.fixture(autouse=True)
-def _reset_config_to_base():
+def reset_config_to_base():
     """Autouse fixture that resets config to base_config before each test.
 
     This ensures that tests run in isolation and don't affect each other's
