@@ -189,16 +189,16 @@ class Cleaner(TransformerMixin, BaseEstimator):
         to ``np.float32`` dtype thanks to the transformer ``ToFloat``.
         If ``None``, numerical columns are not modified.
 
-    n_jobs : int, default=None
-        Number of jobs to run in parallel.
-        ``None`` means 1 unless in a joblib ``parallel_backend`` context.
-        ``-1`` means using all processors.
-
     cast_to_str : bool, default=False
         If ``True``, apply the ``ToStr`` transformer to non-numeric,
         non-categorical, and non-datetime columns, converting them to strings.
         If ``False``, this step is skipped and such columns retain their
         original dtype (e.g., lists, structs).
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel.
+        ``None`` means 1 unless in a joblib ``parallel_backend`` context.
+        ``-1`` means using all processors.
 
     Attributes
     ----------
