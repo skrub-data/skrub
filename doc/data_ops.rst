@@ -69,3 +69,4 @@ Tuning and validating Skrub DataOps plans
    modules/data_ops/validation/nested_cross_validation
    modules/data_ops/validation/nesting_choices_choosing_pipelines
    modules/data_ops/validation/exporting_data_ops
+   modules/data_ops/validation/tuning_with_optuna

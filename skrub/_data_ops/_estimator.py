@@ -1,5 +1,4 @@
 # Scikit-learn-ish interface to the skrub DataOps
-
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -13,7 +12,7 @@ from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, DataOp, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
-    chosen_or_default_outcomes,
+    eval_choices,
     evaluate,
     find_first_apply,
     find_node_by_name,
@@ -47,7 +46,8 @@ _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
     "multimetric_",
 ]
 _SEARCH_FITTED_ATTRIBUTES = _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY + [
-    "best_learner_"
+    "best_learner_",
+    "refit_",
 ]
 
 
@@ -180,9 +180,23 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
     def set_params(self, **params):
         if "data_op" in params:
             self.data_op = params.pop("data_op")
-        set_params(
-            self.data_op, {int(k.lstrip("data_op__")): v for k, v in params.items()}
-        )
+
+        def to_id(key):
+            # scikit-learn style '__' for nested attributes
+            if key.startswith("data_op__"):
+                return int(key.removeprefix("data_op__"))
+            # formatting of params passed to optuna:
+            # <choice_id>:<choice name or human-readable repr>
+            return int(key.split(":", 1)[0])
+
+        def to_idx(val):
+            # formatting of values passed to optuna for non-numeric choices:
+            # <outcome_index>:<outcome name or human-readable repr>
+            if isinstance(val, str):
+                return int(val.split(":", 1)[0])
+            return val
+
+        set_params(self.data_op, {to_id(k): to_idx(v) for k, v in params.items()})
         return self
 
     def get_param_grid(self):
@@ -404,9 +418,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         parameters (outcomes of `choose_*` objects contained in the
         DataOp).
         """
-        return describe_params(
-            chosen_or_default_outcomes(self.data_op), choice_graph(self.data_op)
-        )
+        return describe_params(eval_choices(self.data_op), choice_graph(self.data_op))
 
 
 def _to_Xy_pipeline(learner, environment):
@@ -718,41 +730,16 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=KFOLD_5):
         yield split_info
 
 
-class ParamSearch(_CloudPickleDataOp, BaseEstimator):
-    """Learner that evaluates a skrub DataOp with hyperparameter tuning.
+class _BaseParamSearch(_CloudPickleDataOp, BaseEstimator):
+    """Base class for hyperparameter search objects.
 
-    This class is not meant to be instantiated manually, ``ParamSearch``
-    objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
-    :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
+    It defines some default implementations for getting results, plotting, and
+    using the best learner.
+
+    Subclasses must define __skrub_to_Xy_pipeline__ and fit.
+    After fit, the attributes data_op, cv_results_, best_learner_ (unless refit
+    is False), and refit_ must be available.
     """
-
-    def __init__(self, data_op, search):
-        self.data_op = data_op
-        self.search = search
-
-    def __skrub_to_Xy_pipeline__(self, environment):
-        new = _XyParamSearch(self.data_op, self.search, _SharedDict(environment))
-        _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
-        return new
-
-    def fit(self, environment):
-        search = clone(self.search)
-        search.estimator = _XyPipeline(self.data_op, _SharedDict(environment))
-        param_grid = search.estimator.get_param_grid()
-        if hasattr(search, "param_grid"):
-            search.param_grid = param_grid
-        else:
-            assert hasattr(search, "param_distributions")
-            search.param_distributions = param_grid
-        X, y = _compute_Xy(self.data_op, environment)
-        search.fit(X, y)
-        _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
-        try:
-            self.best_learner_ = _to_env_learner(search.best_estimator_)
-        except AttributeError:
-            # refit is set to False, there is no best_estimator_
-            pass
-        return self
 
     def __getattr__(self, name):
         if name not in supported_modes(self.data_op):
@@ -805,20 +792,19 @@ class ParamSearch(_CloudPickleDataOp, BaseEstimator):
 
         all_rows = []
         for params in self.cv_results_["params"]:
-            params = {int(k.lstrip("data_op__")): v for k, v in params.items()}
+            params = {int(k.removeprefix("data_op__")): v for k, v in params.items()}
             all_rows.append(describe_params(params, data_op_choices))
 
         table = pd.DataFrame(
             all_rows, columns=list(data_op_choices["choice_display_names"].values())
         )
-        if isinstance(self.scorer_, dict):
-            metric_names = list(self.scorer_.keys())
-            if isinstance(self.search.refit, str):
-                metric_names.insert(
-                    0, metric_names.pop(metric_names.index(self.search.refit))
-                )
-        else:
-            metric_names = ["score"]
+        metric_names = [
+            k.removeprefix("mean_test_")
+            for k in self.cv_results_.keys()
+            if k.startswith("mean_test_")
+        ]
+        if isinstance(self.refit_, str):
+            metric_names.insert(0, metric_names.pop(metric_names.index(self.refit_)))
         result_keys = [
             *(f"mean_test_{n}" for n in metric_names),
             *(f"std_test_{n}" for n in metric_names),
@@ -907,6 +893,44 @@ def _get_results_metadata(data_op_choices):
         "log_scale_columns": list(log_scale_columns),
         "int_columns": list(int_columns),
     }
+
+
+class ParamSearch(_BaseParamSearch):
+    """Learner that evaluates a skrub DataOp with hyperparameter tuning.
+
+    This class is not meant to be instantiated manually, ``ParamSearch``
+    objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
+    :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
+    """
+
+    def __init__(self, data_op, search):
+        self.data_op = data_op
+        self.search = search
+
+    def __skrub_to_Xy_pipeline__(self, environment):
+        new = _XyParamSearch(self.data_op, self.search, _SharedDict(environment))
+        _copy_attr(self, new, _SEARCH_FITTED_ATTRIBUTES)
+        return new
+
+    def fit(self, environment):
+        self.refit_ = self.search.refit
+        search = clone(self.search)
+        search.estimator = _XyPipeline(self.data_op, _SharedDict(environment))
+        param_grid = search.estimator.get_param_grid()
+        if hasattr(search, "param_grid"):
+            search.param_grid = param_grid
+        else:
+            assert hasattr(search, "param_distributions")
+            search.param_distributions = param_grid
+        X, y = _compute_Xy(self.data_op, environment)
+        search.fit(X, y)
+        _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
+        try:
+            self.best_learner_ = _to_env_learner(search.best_estimator_)
+        except AttributeError:
+            # refit is set to False, there is no best_estimator_
+            pass
+        return self
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):
