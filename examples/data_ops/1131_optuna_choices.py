@@ -46,7 +46,10 @@ ridge = Ridge(alpha=skrub.choose_float(0.01, 10.0, log=True, name="α"))
 regressor = skrub.choose_from(
     {"extra_tree": extra_tree, "ridge": ridge}, name="regressor"
 )
-pred = skrub.X().skb.apply(regressor, y=skrub.y())
+data = skrub.var("data")
+X = data.drop(columns="MedHouseVal", errors="ignore").skb.mark_as_X()
+y = data["MedHouseVal"].skb.mark_as_y()
+pred = X.skb.apply(regressor, y=y)
 print(pred.skb.describe_param_grid())
 
 # %%
@@ -56,9 +59,11 @@ print(pred.skb.describe_param_grid())
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import KFold
 
-X, y = fetch_california_housing(return_X_y=True, as_frame=True)
+# (We subsample the dataset by half to make the example run faster)
+df = fetch_california_housing(as_frame=True).frame.sample(10_000, random_state=0)
+
 # The environment we will use to fit the learners created by our DataOp.
-env = {"X": X, "y": y}
+env = {"data": df}
 cv = KFold(n_splits=4, shuffle=True, random_state=0)
 
 # %%
