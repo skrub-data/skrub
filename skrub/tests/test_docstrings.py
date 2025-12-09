@@ -56,7 +56,7 @@ def get_methods_to_validate():
             if name.startswith("_"):
                 continue
             method_obj = getattr(Estimator, name)
-            if hasattr(method_obj, "__call__") or isinstance(method_obj, property):
+            if callable(method_obj) or isinstance(method_obj, property):
                 methods.append(name)
         methods.append(None)
 
