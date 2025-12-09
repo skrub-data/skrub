@@ -2,25 +2,8 @@ import pickle
 
 import pytest
 
-from skrub import config_context, get_config, patch_display, set_config, unpatch_display
+from skrub import config_context, patch_display, set_config, unpatch_display
 from skrub.conftest import skip_polars_installed_without_pyarrow
-
-base_config = get_config()
-
-
-@pytest.fixture(autouse=True)
-def _reset_config_to_base():
-    """Autouse fixture that resets config to base_config before each test.
-
-    This ensures that tests run in isolation and don't affect each other's
-    configuration state, even when running in parallel or in different orders.
-    This prevents race conditions where one test's config changes could leak
-    into another test's execution.
-    """
-    set_config(**base_config)
-    yield
-    # Also reset after the test to ensure clean state for next test
-    set_config(**base_config)
 
 
 @pytest.mark.parametrize("repeat_patch", [1, 2])
@@ -120,8 +103,7 @@ def test_patch_display_config(df_module, repeat_patch, repeat_unpatch, capsys):
 
 
 def test_max_plot_max_assoc_columns_parameter(pd_module):
-    set_config(use_table_report=True)
-
+    patch_display()
     df = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
     )
@@ -131,32 +113,34 @@ def test_max_plot_max_assoc_columns_parameter(pd_module):
     df2 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(30)}
     )
+    patch_display()
     assert "data-test-plots-skipped" not in df2._repr_html_()
     assert "data-test-associations-skipped" not in df2._repr_html_()
 
     df3 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
+    patch_display()
     assert "data-test-plots-skipped" in df3._repr_html_()
     assert "data-test-associations-skipped" in df3._repr_html_()
 
     df4 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    with config_context(max_plot_columns=10, max_association_columns=10):
-        assert "data-test-plots-skipped" in df4._repr_html_()
-        assert "data-test-associations-skipped" in df4._repr_html_()
+    patch_display(max_plot_columns=10, max_association_columns=10)
+    assert "data-test-plots-skipped" in df4._repr_html_()
+    assert "data-test-associations-skipped" in df4._repr_html_()
 
     df5 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    with config_context(max_plot_columns=15, max_association_columns=15):
-        assert "data-test-plots-skipped" not in df5._repr_html_()
-        assert "data-test-associations-skipped" not in df5._repr_html_()
+    patch_display(max_plot_columns=15, max_association_columns=15)
+    assert "data-test-plots-skipped" not in df5._repr_html_()
+    assert "data-test-associations-skipped" not in df5._repr_html_()
 
     df6 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    with config_context(max_plot_columns=None, max_association_columns=None):
-        assert "data-test-plots-skipped" not in df6._repr_html_()
-        assert "data-test-associations-skipped" not in df6._repr_html_()
+    patch_display(max_plot_columns=None, max_association_columns=None)
+    assert "data-test-plots-skipped" not in df6._repr_html_()
+    assert "data-test-associations-skipped" not in df6._repr_html_()
