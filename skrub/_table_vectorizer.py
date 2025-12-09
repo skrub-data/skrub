@@ -322,16 +322,16 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_unique=False,
         datetime_format=None,
         numeric_dtype=None,
-        n_jobs=1,
         cast_to_str=False,
+        n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
         self.numeric_dtype = numeric_dtype
-        self.n_jobs = n_jobs
         self.cast_to_str = cast_to_str
+        self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
         """Fit transformer and transform dataframe.
