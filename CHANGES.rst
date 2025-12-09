@@ -11,6 +11,10 @@ Ongoing Development
 
 New features
 ------------
+- It is now possible to tune the choices in a :class:`DataOp` with `Optuna
+  <https://optuna.readthedocs.io/en/stable/>`_. See
+  :ref:`example_optuna_choices` for an example.
+  :pr:`1661` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
   estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
   etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -34,7 +38,6 @@ New features
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
 
-
 Changes
 -------
 - The minimum supported version of Python has been increased to 3.10. Additionally,
@@ -52,6 +55,9 @@ Changes
 - Improved the error message raised when a Polars lazyframe is passed to
   :class:`TableReport`, clarifying that `.collect()` must be called first.
   :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
+- Computing the associations in `TableReport` is now deterministic and can be controlled
+  by the new parameter ``subsampling_seed`` of the global configuration.
+  :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
 
 Bugfixes
 --------
