@@ -646,6 +646,14 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     4    0.85
     Name: test_score, dtype: float64
     """
+    from skrub._data_ops._optuna import OptunaParamSearch
+
+    if not isinstance(learner, (SkrubLearner, ParamSearch, OptunaParamSearch)):
+        raise ValueError(
+            f"`cross_validate` function requires either a Learner object \
+                         or a ParamSearch object, got {type(learner)}."
+        )
+
     environment = env_with_subsampling(learner.data_op, environment, keep_subsampling)
     kwargs = _rename_cv_param_learner_to_estimator(kwargs)
     X, y = _compute_Xy(learner.data_op, environment)
