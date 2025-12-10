@@ -57,6 +57,7 @@ def _add_jitter(column):
     min_val, max_val = np.min(vals), np.max(vals)
     argmin, argmax = np.argmin(vals), np.argmax(vals)
     eps = (max_val - min_val) / 200
+    # eps= max((max_val - min_val) / 200, np.finfo(float).eps)
     vals = column["values"] + np.random.uniform(low=-eps, high=eps, size=vals.shape[0])
     # plotly adds extra labels for the min and max of the range. So we make
     # sure we don't exceed the current bounds and that they are still attained
@@ -64,9 +65,9 @@ def _add_jitter(column):
     vals = np.clip(vals, min_val, max_val)
     vals[argmin] = min_val
     vals[argmax] = max_val
-
-    column["values"] = vals
-    return column
+    jitter_column = {**column}
+    jitter_column["values"] = vals
+    return jitter_column
 
 
 def _wrap_label(column):

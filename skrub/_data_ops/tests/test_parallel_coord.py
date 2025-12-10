@@ -1,9 +1,11 @@
+import numpy as np
 import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 
 import skrub
+from skrub._data_ops._parallel_coord import _add_jitter, _prepare_column
 
 
 def _has_plotly():
@@ -85,6 +87,19 @@ def test_parallel_coord():
     assert dim["label"] == "fit time"
     dim = next(data)
     assert dim["label"] == "score"
+
+
+def test_jitter():
+    pytest.importorskip("plotly")
+
+    column = pd.Series(
+        np.array([1000000000.0, 1000000000.0, np.nan], dtype=np.float64), name="test"
+    )
+
+    prepared = _prepare_column(column, is_log_scale=False, is_int=False)
+
+    jittered = _add_jitter(prepared)
+    assert np.all(jittered["values"] == 1.0)
 
 
 def test_multi_scoring():
