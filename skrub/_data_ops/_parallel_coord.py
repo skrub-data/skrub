@@ -57,7 +57,6 @@ def _add_jitter(column):
     min_val, max_val = np.min(vals), np.max(vals)
     argmin, argmax = np.argmin(vals), np.argmax(vals)
     eps = (max_val - min_val) / 200
-    # eps= max((max_val - min_val) / 200, np.finfo(float).eps)
     vals = column["values"] + np.random.uniform(low=-eps, high=eps, size=vals.shape[0])
     # plotly adds extra labels for the min and max of the range. So we make
     # sure we don't exceed the current bounds and that they are still attained
@@ -121,9 +120,21 @@ def _pick_format(vals):
 
 def _prepare_numeric_column(col, *, is_log_scale, is_int):
     vals = col.to_numpy()
+    if np.isnan(vals).all():
+        # all NaN -- special case
+        return {
+            "label": col.name,
+            "values": np.zeros_like(vals),
+            "tickvals": [0.0],
+            "ticktext": ["NaN"],
+        }
     if is_log_scale:
         vals = np.log(vals)
+    # Find min and max values ignoring NaNs to set tick bounds
     min_val, max_val = np.nanmin(vals), np.nanmax(vals)
+    # Create a set of tick values spanning the range
+    # Tick values are different from the actual values and are meant to be
+    # indicative points along the axis
     tickvals = np.unique(np.linspace(min_val, max_val, 10))
     if pd.api.types.is_integer_dtype(col) or is_int:
         if is_log_scale:
@@ -139,9 +150,16 @@ def _prepare_numeric_column(col, *, is_log_scale, is_int):
         tickvals = tickvals.tolist()
         fmt = _pick_format(tickvals_label_space)
         ticktext = [fmt.format(val) for val in tickvals_label_space]
+    # Handle NaN values by assigning them a tick value just below the min
     if np.isnan(vals).any():
-        tickvals = [min_val - (max_val - min_val) / 10] + tickvals
+        offset = (max_val - min_val) / 10
+        # if offset is zero, then all values are identical, just use 1.0
+        if offset == 0.0:
+            offset = 1.0
+        # add extra tick for NaN
+        tickvals = [min_val - offset] + tickvals
         ticktext = ["NaN"] + ticktext
+        # replace NaNs in vals with a placeholder value for NaN
         vals = np.where(~np.isnan(vals), vals, tickvals[0])
     return {
         "label": col.name,
