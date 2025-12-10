@@ -7,6 +7,8 @@ import pandas as pd
 import pandas.testing
 import pytest
 
+from skrub import get_config, set_config
+
 
 def _example_data_dict():
     return {
@@ -242,3 +244,18 @@ def use_fit_transform(request):
 xfail_with_download_error = pytest.mark.xfail(
     raises=OSError, match="Can't download the file '.*' from urls.*"
 )
+
+BASE_CONFIG = get_config()
+
+
+@pytest.fixture(autouse=True)
+def reset_config_to_base():
+    """Autouse fixture that resets config to base_config before each test.
+
+    This ensures that tests run in isolation, don't affect each other's
+    configuration state, and clean up after themselves.
+    """
+    set_config(**BASE_CONFIG)
+    yield
+    # Also reset after the test to ensure clean state for next test
+    set_config(**BASE_CONFIG)
