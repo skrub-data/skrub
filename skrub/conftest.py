@@ -252,10 +252,8 @@ BASE_CONFIG = get_config()
 def _reset_config_to_base():
     """Autouse fixture that resets config to base_config before each test.
 
-    This ensures that tests run in isolation and don't affect each other's
-    configuration state, even when running in parallel or in different orders.
-    This prevents race conditions where one test's config changes could leak
-    into another test's execution.
+    This ensures that tests run in isolation, don't affect each other's
+    configuration state, and clean up after themselves.
     """
     set_config(**BASE_CONFIG)
     yield
