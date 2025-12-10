@@ -646,9 +646,7 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     4    0.85
     Name: test_score, dtype: float64
     """
-    from skrub._data_ops._optuna import OptunaParamSearch
-
-    if not isinstance(learner, (SkrubLearner, ParamSearch, OptunaParamSearch)):
+    if not hasattr(learner, "__skrub_to_Xy_pipeline__"):
         raise ValueError(
             f"`cross_validate` function requires either a Learner object \
                          or a ParamSearch object, got {type(learner)}."
