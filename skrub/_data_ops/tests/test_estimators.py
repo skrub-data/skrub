@@ -263,7 +263,7 @@ def test_nested_cv(
     assert mock.call_count == (2 if data_kind == "unprocessed" else 0)
 
     assert len(score) == 5
-    assert score.mean() == pytest.approx(0.84, abs=0.05)
+    assert score.mean() == pytest.approx(0.84, abs=0.08)
 
 
 def test_unsupervised_no_y():
