@@ -64,6 +64,9 @@ Changes
 
 Bugfixes
 --------
+- The :meth:`skrub.cross_validate` function now raises a specific exception if the wrong variable
+  type is passed.
+  :pr:`1799` by :user: `Eloi Massoulié<emassoulie>`
 - Fixed various issues with some transformers by adding ``get_feature_names_out``
   to all single column transformers.
   :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
