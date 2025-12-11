@@ -11,6 +11,18 @@ Ongoing Development
 
 New features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Release 0.7.0
+=============
+
+New features
+------------
 - It is now possible to tune the choices in a :class:`DataOp` with `Optuna
   <https://optuna.readthedocs.io/en/stable/>`_. See
   :ref:`example_optuna_choices` for an example.
