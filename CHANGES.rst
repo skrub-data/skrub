@@ -58,6 +58,9 @@ Changes
 - Computing the associations in `TableReport` is now deterministic and can be controlled
   by the new parameter ``subsampling_seed`` of the global configuration.
   :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
+- Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
+  conversion of list/object-like columns to strings unless explicitly enabled.
+  :pr:`1789` by :user:`PilliSiddharth`
 
 Bugfixes
 --------
