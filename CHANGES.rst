@@ -58,6 +58,9 @@ Changes
 - Computing the associations in `TableReport` is now deterministic and can be controlled
   by the new parameter ``subsampling_seed`` of the global configuration.
   :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
+- Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
+  conversion of list/object-like columns to strings unless explicitly enabled.
+  :pr:`1789` by :user:`PilliSiddharth`
 
 Bugfixes
 --------
@@ -92,9 +95,9 @@ Bugfixes
   ``.skb.set_name()``, ``.skb.set_description()``, ``.skb.mark_as_X()`` or
   ``.skb.mark_as_y()`` used to raise an error, this has been fixed in :pr:`1782`
   by :user:`Jérôme Dockès <jeromedockes>`.
-- Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
-  conversion of list/object-like columns to strings unless explicitly enabled.
-  :pr:`1789` by :user:`PilliSiddharth`
+- Fixed potential issues that could arise in :meth:`ParamSearch.plot_results`
+  when NaN values were present in the crossvalidation results.
+  :pr:`1800` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.6.2
 =============
