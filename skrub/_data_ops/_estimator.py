@@ -648,8 +648,8 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     """
     if not hasattr(learner, "__skrub_to_Xy_pipeline__"):
         raise ValueError(
-            f"`cross_validate` function requires either a Learner object \
-                         or a ParamSearch object, got {type(learner)}."
+            "`cross_validate` function requires either a Learner object or "
+            f"a ParamSearch object, got {type(learner)}."
         )
 
     environment = env_with_subsampling(learner.data_op, environment, keep_subsampling)
