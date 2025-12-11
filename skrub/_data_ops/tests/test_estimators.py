@@ -174,7 +174,11 @@ def test_cross_validate_type_error():
     learner = data_op.skb.make_learner()
     skrub.cross_validate(learner, data)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="`cross_validate` function requires either a Learner object or "
+        "a ParamSearch object, got *.",
+    ):
         skrub.cross_validate(data_op, data)
 
 
