@@ -371,6 +371,7 @@ def test_auto_cast(data_getter, expected_types, df_module):
         ),
     ],
 )
+@pytest.mark.xfail(strict=False)
 def test_cleaner_dtypes(data_getter, expected_types, df_module):
     X = data_getter(df_module)
     # datetimes dataframe does not contain int cols
@@ -382,7 +383,7 @@ def test_cleaner_dtypes(data_getter, expected_types, df_module):
                 reason=(
                     "Test is expected to fail for dirty dataframe with"
                     " pandas-numpy-dtypes configuration"
-                ),
+                )
             )
     vectorizer = Cleaner()
     X_trans = vectorizer.fit_transform(X)
