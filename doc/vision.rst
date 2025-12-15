@@ -34,11 +34,6 @@ To make things simpler, skrub uses defaults that are chosen empirically to
 give good machine learning, even though these are sometimes heuristic, as
 in the :class:`TableVectorizer`.
 
-Imputation is out of skrub's scope: scikit-learn implements transformers
-that perform imputation. Academic work has also shown that imputation is
-expensive and often does not improve prediction results
-(https://arxiv.org/pdf/2407.19804).
-
 
 Roadmap
 =======
@@ -61,3 +56,9 @@ From shorter term to longer term:
 
 - Automatic feature synthesis in databases, building on the assembling
   features
+
+
+Imputation is out of skrub's scope: scikit-learn implements transformers
+that perform imputation. Academic work has also shown that imputation is
+expensive and often does not improve prediction results
+(https://arxiv.org/pdf/2407.19804).
