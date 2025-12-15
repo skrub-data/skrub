@@ -6,8 +6,6 @@ from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToFloat"]
 
-POSSIBLE_SEPARATORS = [".", ",", "'", " "]
-
 
 def _build_number_regex(decimal, thousand):
     d = re.escape(decimal)
@@ -259,10 +257,10 @@ class ToFloat(SingleColumnTransformer):
     Name: x, dtype: float32
     """  # noqa: E501
 
-    def __init__(self, decimal=".", thousand=","):
+    def __init__(self, decimal=".", thousand=None):
         super().__init__()
         self.decimal = decimal
-        self.thousand = thousand
+        self.thousand = thousand if thousand is not None else ""
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
