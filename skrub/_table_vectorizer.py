@@ -227,7 +227,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     ApplyToFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
         Useful to complement the default heuristics of the ``Cleaner``.
-    
+
     DropUninformative :
         Drop columns that are considered uninformative, e.g., containing only
         null values or a single unique value.
@@ -581,6 +581,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ApplyToFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
         Useful to complement the default heuristics of the ``TableVectorizer``.
+    
+    DropUninformative :
+        Drop columns that are considered uninformative, e.g., containing only
+        null values or a single unique value.
 
     Notes
     -----
