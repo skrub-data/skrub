@@ -1,3 +1,5 @@
+import re
+
 from . import _dataframe as sbd
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
@@ -7,26 +9,61 @@ __all__ = ["ToFloat"]
 POSSIBLE_SEPARATORS = [".", ",", "'", " "]
 
 
+def _build_number_regex(decimal, thousand):
+    d = re.escape(decimal)
+    t = re.escape(thousand)
+
+    integer = rf"(?:\d+|\d{{1,3}}(?:{t}\d{{3}})+)"
+    decimal_part = rf"(?:{d}\d+)?"
+    scientific = r"(?:[eE][+-]?\d+)?"
+
+    return rf"""
+        ^
+        \(?
+        [+-]?
+        {integer}
+        {decimal_part}
+        {scientific}
+        \)?
+        $
+    """
+
+
+@dispatch
+def _str_is_valid_number(col, number_re):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@_str_is_valid_number.specialize("pandas", argument_type="Column")
+def _str_is_valid_number_pandas(col, number_re):
+    if not col.str.match(number_re, na=False).all():
+        raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
+    return True
+
+
+@_str_is_valid_number.specialize("polars", argument_type="Column")
+def _str_is_valid_number_polars(col, number_re):
+    if not col.str.contains(number_re.pattern).all():
+        raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
+    return True
+
+
 @dispatch
 def _str_replace(col, strict=True):
     raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_str_replace.specialize("pandas", argument_type="Column")
-def _str_replace_pandas(col, decimal):
-    pattern = POSSIBLE_SEPARATORS.copy()
-    pattern.remove(decimal)
+def _str_replace_pandas(col, decimal, thousand):
     col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
-    col = col.str.replace("[" + "".join(pattern) + "]", "", regex=True)
+    col = col.str.replace(thousand, "", regex=False)
     return col.str.replace(decimal, ".", regex=False)
 
 
 @_str_replace.specialize("polars", argument_type="Column")
-def _str_replace_polars(col, decimal):
-    pattern = POSSIBLE_SEPARATORS.copy()
-    pattern.remove(decimal)
+def _str_replace_polars(col, decimal, thousand):
     col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
-    col = col.str.replace_all("[" + "".join(pattern) + "]", "")
+    col = col.str.replace_all(thousand, "")
     return col.str.replace_all(f"[{decimal}]", ".")
 
 
@@ -222,9 +259,10 @@ class ToFloat(SingleColumnTransformer):
     Name: x, dtype: float32
     """  # noqa: E501
 
-    def __init__(self, decimal="."):
+    def __init__(self, decimal=".", thousand=","):
         super().__init__()
         self.decimal = decimal
+        self.thousand = thousand
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -244,6 +282,9 @@ class ToFloat(SingleColumnTransformer):
         """
         del y
         self.all_outputs_ = [sbd.name(column)]
+        if self.thousand == self.decimal:
+            raise ValueError("The thousand and decimal separators must differ.")
+
         if sbd.is_any_date(column) or sbd.is_categorical(column):
             raise RejectColumn(
                 f"Refusing to cast column {sbd.name(column)!r} "
@@ -251,7 +292,14 @@ class ToFloat(SingleColumnTransformer):
             )
         try:
             if sbd.is_string(column):
-                column = _str_replace(column, decimal=self.decimal)
+                self._number_re_ = re.compile(
+                    _build_number_regex(self.decimal, self.thousand),
+                    re.VERBOSE,
+                )
+                _str_is_valid_number(column, self._number_re_)
+                column = _str_replace(
+                    column, decimal=self.decimal, thousand=self.thousand
+                )
             numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
