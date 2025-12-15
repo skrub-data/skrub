@@ -14,17 +14,15 @@ def _build_number_regex(decimal, thousand):
     integer = rf"(?:\d+|\d{{1,3}}(?:{t}\d{{3}})+)"
     decimal_part = rf"(?:{d}\d+)?"
     scientific = r"(?:[eE][+-]?\d+)?"
-
-    return rf"""
-        ^
-        \(?
-        [+-]?
-        {integer}
-        {decimal_part}
-        {scientific}
-        \)?
-        $
-    """
+    return rf"^\(?[+-]?(?:{integer}{decimal_part}{scientific})?\)?$"
+    # return rf"""
+    #     ^
+    #     \(?
+    #     [+-]?
+    #     (?:{integer}{decimal_part}{scientific})?
+    #     \)?
+    #     $
+    # """
 
 
 @dispatch
@@ -34,14 +32,15 @@ def _str_is_valid_number(col, number_re):
 
 @_str_is_valid_number.specialize("pandas", argument_type="Column")
 def _str_is_valid_number_pandas(col, number_re):
-    if not col.str.match(number_re, na=False).all():
+    if not col.fillna("").str.match(number_re, na=False).all():
         raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
     return True
 
 
 @_str_is_valid_number.specialize("polars", argument_type="Column")
 def _str_is_valid_number_polars(col, number_re):
-    if not col.str.contains(number_re.pattern).all():
+    # pattern = re.sub(r'\s+', '', number_re.pattern)
+    if not col.fill_null("").str.contains(number_re.pattern, literal=False).all():
         raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
     return True
 
