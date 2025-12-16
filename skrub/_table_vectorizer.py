@@ -228,6 +228,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Apply a given transformer jointly to all columns in a selection of columns.
         Useful to complement the default heuristics of the ``Cleaner``.
 
+    DropUninformative :
+        Drop columns that are considered uninformative, e.g., containing only
+        null values or a single unique value.
+
     Notes
     -----
     The ``Cleaner`` performs the following set of transformations on each column:
@@ -235,7 +239,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``CleanNullStrings()``: replace strings used to represent missing values
       with NA markers.
 
-    - ``DropUninformative()``: drop the column if it is considered to be
+    - :class:`DropUninformative`: drop the column if it is considered to be
       "uninformative". A column is considered to be "uninformative" if it contains
       only missing values (``drop_null_fraction``), only a constant value
       (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
@@ -577,6 +581,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ApplyToFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
         Useful to complement the default heuristics of the ``TableVectorizer``.
+
+    DropUninformative :
+        Drop columns that are considered uninformative, e.g., containing only
+        null values or a single unique value.
 
     Notes
     -----
