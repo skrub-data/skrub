@@ -37,11 +37,9 @@ The |ToFloat| transformer provides:
   - The thousands separator can be one of ``.``, ``,``, space (``" "``), apostrophe (``'``),
   or None (no thousands separator)
   - The transformer supports integers, decimals (including leading-decimal forms such as .56 or ,56), scientific notation
-  and negative numbers (including parentheses)
+  and negative numbers
+  - Numbers in parentheses are interpreted as negative numbers (``(1,234.56)`` → ``-1234.56``). This format is more common in financial datasets.
   - Decimal and thousands separators must be different characters
-
-- **Parentheses interpreted as negative numbers**, a common format in financial datasets:
-  - ``(1,234.56)`` → ``-1234.56``
 
 - **Scientific notation parsing** (e.g. ``1.23e+4``)
 
