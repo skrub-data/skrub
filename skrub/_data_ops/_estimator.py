@@ -175,6 +175,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         ...         'y': orders.y
         ...     }
         ... )
+        # doctest: +ELLIPSIS
         {'result': SkrubLearner(data_op=<classifier | Apply DummyClassifier>),
         'error': None,
         'report_path': PosixPath('/path/to/reports/index.html')}
@@ -192,6 +193,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         ...         'y': orders.y
         ...     }
         ... )
+        # doctest: +ELLIPSIS
         {'result': array([False, False, False, False]),
         'error': None,
         'report_path': PosixPath('/path/to/reports/index.html')}
@@ -205,6 +207,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         ...         'y': orders.y
         ...     }
         ... )
+        # doctest: +ELLIPSIS
         {'result': 0    False
         1    False
         2    False
@@ -222,6 +225,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         ...         'y' : orders.y
         ...     }
         ... )
+        # doctest: +ELLIPSIS
         {'result': array([[0.75, 0.25],
             [0.75, 0.25],
             [0.75, 0.25],
