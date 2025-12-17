@@ -5,6 +5,7 @@ import pytest
 from sklearn.preprocessing import FunctionTransformer
 
 import skrub
+from skrub._data_ops import _inspection
 
 # Those tests have to be outside of the `_data_ops` module (and thus out of
 # _data_ops/tests/, as we place the tests inside the package), because to
@@ -78,3 +79,17 @@ def test_apply_eval_failure(eval_data_op):
         r'^.*d = c\.skb\.apply\(FunctionTransformer\(lambda x: x \+ "string"\)\)',
     ):
         eval_data_op(e, {"a": 1.0, "b": 2.0})
+
+
+@pytest.mark.skipif(not _inspection._has_graphviz(), reason="report requires graphviz")
+def test_escaping_characters():
+    # fmt: off
+    out = skrub.as_data_op("") + "\n" + '"' + "\t" +'\\ ' \
+        '\t'
+    # fmt: on
+    g = out.skb.draw_graph()
+    result = g.svg.decode("utf-8")
+    assert (
+        """out = skrub.as_data_op(&quot;&quot;) + &quot;\\n&quot; """
+        """+ &#39;&quot;&#39; + &quot;\\t&quot; +&#39;\\ &#39; \\""" in result
+    )

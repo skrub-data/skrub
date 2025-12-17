@@ -17,7 +17,9 @@ from types import SimpleNamespace
 
 from sklearn.base import BaseEstimator
 from sklearn.base import clone as skl_clone
+from sklearn.utils import check_random_state
 
+from .._utils import short_repr
 from . import _choosing
 from ._data_ops import (
     Apply,
@@ -950,39 +952,97 @@ def set_params(data_op, params):
             target.chosen_outcome = v
 
 
-class _ChosenOrDefaultOutcomes(_DataOpTraversal):
-    """Helper for `chosen_or_default_outcomes`."""
+def choice_default(choice_id, display_name, choice):
+    if isinstance(choice, _choosing.Choice):
+        return choice.chosen_outcome_idx or 0
+    else:
+        return choice.chosen_outcome_or_default()
 
-    def run(self, data_op):
+
+def random_choice(random_state):
+    """Create a policy for eval_choices() that picks random choice outcomes."""
+    random_state = check_random_state(random_state)
+
+    def policy(choice_id, display_name, choice):
+        if hasattr(choice, "rvs"):
+            return choice.rvs(random_state=random_state)
+        return int(random_state.randint(len(choice.outcomes)))
+
+    return policy
+
+
+def optuna_suggestion(trial):
+    """
+    Create a policy for eval_choices() that picks choice outcomes by calling the
+    optuna Trial's 'suggest_*' methods.
+    """
+
+    def policy(choice_id, display_name, choice):
+        name = f"{choice_id}:{display_name}"
+        if isinstance(choice, _choosing.BaseNumericChoice):
+            if choice.to_int:
+                func = trial.suggest_int
+                default_step = 1
+            else:
+                func = trial.suggest_float
+                default_step = None
+            return func(
+                name,
+                choice.low,
+                choice.high,
+                log=choice.log,
+                step=getattr(choice, "step", default_step),
+            )
+        if choice.outcome_names is None:
+            outcome_names = list(map(short_repr, choice.outcomes))
+        else:
+            outcome_names = choice.outcome_names
+        outcome_names = [f"{i}:{n}" for i, n in enumerate(outcome_names)]
+        result = trial.suggest_categorical(name, outcome_names)
+        return int(result.split(":", 1)[0])
+
+    return policy
+
+
+class _ChoiceEvaluator(_DataOpTraversal):
+    """Helper for `eval_choices`."""
+
+    def run(self, data_op, policy):
+        graph = choice_graph(data_op)
+        data_op_choices = graph["choices"]
+        self.display_names = graph["choice_display_names"]
+        self.choice_ids = {id(c): k for k, c in data_op_choices.items()}
+        self.Xy_choices = graph["Xy_choices"]
+        self.policy = policy
         self.chosen = {}
         self.results = {}
         _ = super().run(data_op)
         return self.chosen
 
     def handle_choice(self, choice):
-        if id(choice) in self.results:
-            return self.results[id(choice)]
-        if not isinstance(choice, _choosing.Choice):
-            # We have a NumericChoice, the outcome is simply a number
-            outcome = choice.chosen_outcome_or_default()
-            self.chosen[id(choice)] = outcome
-            self.results[id(choice)] = outcome
-            return outcome
-        # We have a Choice and need to visit the chosen outcome (it may contain
-        # further choices).
-        idx = choice.chosen_outcome_idx or 0
-        self.chosen[id(choice)] = idx
-        outcome = choice.outcomes[idx]
-        result = yield outcome
-        self.results[id(choice)] = result
-        return result
+        c_id = self.choice_ids[id(choice)]
+        if c_id in self.results:
+            return self.results[c_id]
+        display_name = self.display_names[c_id]
+        if c_id in self.Xy_choices:
+            # Clamp to default if ancestor of X or y
+            param = choice_default(c_id, display_name, choice)
+        else:
+            param = self.policy(c_id, display_name, choice)
+        if isinstance(choice, _choosing.Choice):
+            value = yield choice.outcomes[param]
+        else:
+            value = param
+        self.chosen[c_id] = param
+        self.results[c_id] = value
+        return value
 
     def handle_choice_match(self, choice_match):
         outcome = yield choice_match.choice
         return (yield choice_match.outcome_mapping[outcome])
 
 
-def chosen_or_default_outcomes(data_op):
+def eval_choices(data_op, policy=choice_default):
     """Get the selected or default outcomes for choices in the DataOp.
 
     Return a mapping from the choice's ID (0, 1, ... -- see `choice_graph`) to
@@ -1000,7 +1060,7 @@ def chosen_or_default_outcomes(data_op):
     >>> from sklearn.linear_model import Ridge
     >>> from sklearn.dummy import DummyRegressor
     >>> from skrub import choose_from, choose_float
-    >>> from skrub._data_ops._evaluation import chosen_or_default_outcomes, choices
+    >>> from skrub._data_ops._evaluation import eval_choices, choices
 
     >>> e = choose_from(
     ...     [DummyRegressor(), Ridge(alpha=choose_float(0.1, 1.0, name="alpha"))],
@@ -1016,18 +1076,15 @@ def chosen_or_default_outcomes(data_op):
 
     In the default configuration, the 'regressor' chooses the DummyRegressor. So the
     'alpha' choice is not used. It does not appear in the
-    `chosen_or_default_outcomes` result:
+    `eval_choices` result:
 
-    >>> pprint(chosen_or_default_outcomes(e))
+    >>> pprint(eval_choices(e))
     {1: 0}
 
     Here we only see that choice 'regressor' (ID 1) in chooses its first outcome
     (index 0), and the choice 'alpha' (ID 0) does not appear.
     """  # noqa: E501
-    data_op_choices = choices(data_op)
-    short_ids = {id(c): k for k, c in data_op_choices.items()}
-    outcomes = _ChosenOrDefaultOutcomes().run(data_op)
-    return {short_ids[k]: v for k, v in outcomes.items()}
+    return _ChoiceEvaluator().run(data_op, policy=policy)
 
 
 class _Found(Exception):

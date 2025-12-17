@@ -41,8 +41,7 @@ column names::
 
 Using selectors:
 
-* **select function** The above selector can be passed to the :func:`~skrub.selectors.select`
-function::
+* **select function**: the above selector can be passed to the :func:`~skrub.selectors.select` function::
 
     >>> s.select(df, mm_cols)
     height_mm  width_mm
@@ -52,7 +51,7 @@ function::
 * **transformers**: various transformers in skrub use selectors to select and transform columns
   in a scikit-learn pipeline: :class:`~skrub.ApplyToCols`, :class:`~skrub.ApplyToFrame`,
   :class:`~skrub.DropCols`, :class:`~skrub.SelectCols`, as
-  :ref:`detailed below <selectors_and_transformer>`_.
+  :ref:`detailed below <selectors_and_transformer>`.
 
 * **DataOps** selectors can be passed to
   :ref:`skrub DataOps <user_guide_data_ops_index>` when applying an
@@ -105,7 +104,7 @@ name, data type, contents, or according to arbitrary user-provided rules::
 
     * :ref:`selectors_details` explains more the various selectors
 
-    * :ref:`selectors_ref` gives the exhaustive list of selectors.
+    * :ref:`selectors_ref` gives the exhaustive list of selectors
 
     * :ref:`user_guide_advanced_selectors`
 
@@ -146,7 +145,6 @@ following selector won't compute the cardinality of non-categorical columns::
     >>> s.categorical() & s.cardinality_below(10)
     (categorical() & cardinality_below(10))
 
-
 .. _selectors_and_transformer:
 
 Using selectors with other skrub transformers
@@ -156,7 +154,7 @@ Skrub transformers are designed to be used in conjunction with other transformer
 that operate on columns to improve their versatility.
 
 For example, we can drop columns that have more unique values than a certain amount
-by combining :func:`cardinality_below` with :class:`skrub.DropCols`.
+by combining :func:`~skrub.selectors.cardinality_below` with :class:`skrub.DropCols`.
 We first select the columns that have more than 3 unique values, then we invert the
 selector and finally transform the dataframe.
 
@@ -173,7 +171,7 @@ selector and finally transform the dataframe.
 3          2
 4          2
 
-Selectors can be used in conjunction with |ApplyToCols| to transform columns
+Selectors can be used in conjunction with :class:`~skrub.ApplyToCols` to transform columns
 based on specific requirements.
 
 Consider the following example:
@@ -192,7 +190,7 @@ Consider the following example:
 3  Science     4
 4      Art     3
 
-We might want to apply the |StandardScaler| only to the numeric column. We can
+We might want to apply the :class:`~sklearn.preprocessing.StandardScaler` only to the numeric column. We can
 do this like this:
 
 >>> from skrub import ApplyToCols

@@ -201,7 +201,7 @@ def test_bad_match_mappings(test_class):
     c = skrub.choose_from([skrub.X(), skrub.X() + 10], name="c")
     with pytest.raises(
         TypeError,
-        match=r"To use `match\(\)`, all choice outcomes must be hashable. "
+        match=r"To use `match\(\)`, all choice outcomes must be hashable. .*"
         "unhashable type: 'DataOp'",
     ):
         c.match({1: "one", 11: "eleven"})
