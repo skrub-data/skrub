@@ -80,6 +80,10 @@ class ToFloat(SingleColumnTransformer):
         Character to recognize as the decimal separator when converting from
         strings to floats. Other possible decimal separators are removed from
         the strings before conversion.
+    thousand : str or None, default=None
+    Character used as thousands separator. Supported values are ``"."``,
+    ``,``, space (``" "``), apostrophe (``"'"``), or ``None`` (no thousands
+    separator). The decimal and thousands separators must differ.
 
     Examples
     --------
@@ -240,9 +244,9 @@ class ToFloat(SingleColumnTransformer):
     1    12300.0
     Name: x, dtype: float32
 
-    Space or apostrophe as thousand separator
-    >>> s = pd.Series(["4 567,89", "4'567,89"], name="x")
-    >>> ToFloat(decimal=",").fit_transform(s)
+    Space as thousand separator
+    >>> s = pd.Series(["4 567,89", "1 234 567,89"], name="x")
+    >>> ToFloat(decimal=",", thousand=" ").fit_transform(s)
     0    4567.8...
     1    4567.8...
     Name: x, dtype: float32

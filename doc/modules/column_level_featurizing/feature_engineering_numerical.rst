@@ -32,9 +32,13 @@ The |ToFloat| transformer provides:
 - **Automatic conversion to 32-bit floating-point values (`float32`).**
   This dtype is lightweight and fully supported by scikit-learn estimators.
 
-- **Automatic parsing of decimal separators**, regardless of locale:
-  - ``.`` or ``,`` can be used as decimal point
-  - thousands separators (``.``, ``,``, space, apostrophe) are removed automatically
+- **Automatic parsing of decimal and thousands separators**, regardless of locale:
+  - The decimal separator must be specified explicitly and can be either ``.`` or ``,``
+  - The thousands separator can be one of ``.``, ``,``, space (``" "``), apostrophe (``'``),
+  or None (no thousands separator)
+  - The transformer supports integers, decimals (including leading-decimal forms such as .56 or ,56), scientific notation
+  and negative numbers (including parentheses)
+  - Decimal and thousands separators must be different characters
 
 - **Parentheses interpreted as negative numbers**, a common format in financial datasets:
   - ``(1,234.56)`` → ``-1234.56``
@@ -54,9 +58,9 @@ How to use |ToFloat|
 --------------------
 The |ToFloat| transformer must be applied to individual columns. It behaves like
 a standard scikit-learn transformer.
-Each column is expected to use a single decimal separator, which is
-specified through the ``decimal`` parameter. If this parameter is not provided,
-the default decimal separator is ``'.'``.
+Each column is expected to use a single decimals and thousands separator, which is
+specified through the ``decimal`` and ``thousand`` parameter. If this parameter is not provided,
+the default decimal separators are ``'.'`` and ``None``.
 
 During ``fit``, |ToFloat| attempts to convert all values in the column to
 numeric values after automatically removing other possible thousands separators
@@ -81,11 +85,11 @@ Parsing numeric-formatted strings:
 Name: x, dtype: float32
 
 Locale-dependent decimal separators can be handled by specifying the
-``decimal`` parameter. Here we use comma as decimal separator, and
-remove spaces and apostrophes as thousands separators:
+``decimal`` and ``thousand`` parameter. Here we use comma as decimal separator, and
+a spaces as thousands separators:
 
->>> s = pd.Series(["4 567,89", "4'567,89"], name="x")
->>> ToFloat(decimal=",").fit_transform(s)
+>>> s = pd.Series(["4 567,89", "1 234 567,89"], name="x")
+>>> ToFloat(decimal=",", thousand=" ").fit_transform(s)
 0    4567.8...
 1    4567.8...
 Name: x, dtype: float32
