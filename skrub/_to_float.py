@@ -229,7 +229,8 @@ class ToFloat(SingleColumnTransformer):
     >>> to_float.fit_transform(s) is s
     True
 
-    Handling parentheses around negative numbers
+    Negative numbers represented using parentheses are converted
+    so they use "-" instead.
     >>> s = pd.Series(["-1,234.56", "1,234.56", "(1,234.56)"], name='parens')
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
     0   -1234.5...
