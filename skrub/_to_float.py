@@ -81,9 +81,9 @@ class ToFloat(SingleColumnTransformer):
         strings to floats. Other possible decimal separators are removed from
         the strings before conversion.
     thousand : str or None, default=None
-    Character used as thousands separator. Supported values are ``"."``,
-    ``,``, space (``" "``), apostrophe (``"'"``), or ``None`` (no thousands
-    separator). The decimal and thousands separators must differ.
+        Character used as thousands separator. Supported values are ``"."``,
+        ``,``, space (``" "``), apostrophe (``"'"``), or ``None`` (no thousands
+        separator). The decimal and thousands separators must differ.
 
     Examples
     --------
