@@ -12,17 +12,10 @@ def _build_number_regex(decimal, thousand):
     t = re.escape(thousand)
 
     integer = rf"(?:\d+|\d{{1,3}}(?:{t}\d{{3}})+)"
-    decimal_part = rf"(?:{d}\d+)?"
+    decimal_part = rf"{d}\d+"
     scientific = r"(?:[eE][+-]?\d+)?"
-    return rf"^\(?[+-]?(?:{integer}{decimal_part}{scientific})?\)?$"
-    # return rf"""
-    #     ^
-    #     \(?
-    #     [+-]?
-    #     (?:{integer}{decimal_part}{scientific})?
-    #     \)?
-    #     $
-    # """
+    number = rf"(?:{integer}(?:{decimal_part})?|{decimal_part})"
+    return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
 
 
 @dispatch
@@ -39,7 +32,6 @@ def _str_is_valid_number_pandas(col, number_re):
 
 @_str_is_valid_number.specialize("polars", argument_type="Column")
 def _str_is_valid_number_polars(col, number_re):
-    # pattern = re.sub(r'\s+', '', number_re.pattern)
     if not col.fill_null("").str.contains(number_re.pattern, literal=False).all():
         raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
     return True
@@ -60,7 +52,7 @@ def _str_replace_pandas(col, decimal, thousand):
 @_str_replace.specialize("polars", argument_type="Column")
 def _str_replace_polars(col, decimal, thousand):
     col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
-    col = col.str.replace_all(thousand, "")
+    col = col.str.replace_all(thousand, "", literal=True)
     return col.str.replace_all(f"[{decimal}]", ".")
 
 
@@ -259,7 +251,7 @@ class ToFloat(SingleColumnTransformer):
     def __init__(self, decimal=".", thousand=None):
         super().__init__()
         self.decimal = decimal
-        self.thousand = thousand if thousand is not None else ""
+        self.thousand = thousand
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -279,6 +271,10 @@ class ToFloat(SingleColumnTransformer):
         """
         del y
         self.all_outputs_ = [sbd.name(column)]
+        if self.thousand is None:
+            self.thousand = ""  # No thousand separator
+        if self.decimal is None:
+            raise ValueError("The decimal separator cannot be None.")
         if self.thousand == self.decimal:
             raise ValueError("The thousand and decimal separators must differ.")
 

@@ -5,7 +5,7 @@ from skrub import _dataframe as sbd
 from skrub._single_column_transformer import RejectColumn
 from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
-from skrub._to_float import ToFloat, _str_replace
+from skrub._to_float import ToFloat
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
@@ -46,46 +46,52 @@ def test_rejected_columns(df_module):
 
 
 @pytest.mark.parametrize(
-    "input_str, expected_float, decimal",
+    "input_str, expected_float, decimal, thousand",
     [
-        ("1,234.56", 1234.56, "."),
-        ("1.234,56", 1234.56, ","),
-        ("1 234,56", 1234.56, ","),
-        ("1234.56", 1234.56, "."),
-        ("1234,56", 1234.56, ","),
-        ("1,234,567.89", 1234567.89, "."),
-        ("1.234.567,89", 1234567.89, ","),
-        ("1 234 567,89", 1234567.89, ","),
-        ("1'234'567.89", 1234567.89, "."),
-        ("1.23e+4", 12300.0, "."),
-        ("1.23E+4", 12300.0, "."),
-        ("1,23e+4", 12300.0, ","),
-        ("1,23E+4", 12300.0, ","),
-        ("-1,234.56", -1234.56, "."),
-        ("-1.234,56", -1234.56, ","),
-        ("(1,234.56)", -1234.56, "."),
-        ("(1.234,56)", -1234.56, ","),
-        ("1,23,456.78", 123456.78, "."),
-        ("12,3456.78", 123456.78, "."),
-        (".56", 0.56, "."),
-        (",56", 0.56, ","),
+        # valid numbers
+        ("1,234.56", 1234.56, ".", ","),
+        ("1.234,56", 1234.56, ",", "."),
+        ("1 234,56", 1234.56, ",", " "),
+        ("1234.56", 1234.56, ".", None),
+        ("1234,56", 1234.56, ",", None),
+        ("1,234,567.89", 1234567.89, ".", ","),
+        ("1.234.567,89", 1234567.89, ",", "."),
+        ("1 234 567,89", 1234567.89, ",", " "),
+        ("1'234'567.89", 1234567.89, ".", "'"),
+        ("1.23e+4", 12300.0, ".", None),
+        ("1.23E+4", 12300.0, ".", None),
+        ("-1,234.56", -1234.56, ".", ","),
+        ("(1,234.56)", -1234.56, ".", ","),
+        (".56", 0.56, ".", None),
+        (",56", 0.56, ",", None),
+        ("56", 56.0, ".", None),
     ],
 )
-def test_number_parsing(input_str, expected_float, decimal, df_module):
+def test_number_parsing_valid(input_str, expected_float, decimal, thousand, df_module):
     column = df_module.make_column("col", [input_str])
-    result = ToFloat(decimal=decimal).fit_transform(column)
+    result = ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
+    assert np.allclose(result[0], expected_float)
 
-    np.allclose(result[0], expected_float)
 
-
-def test_str_replace(df_module):
-    s = df_module.make_column("x", ["1,234.56", "7.890,12", "3 456,78", "9'012.34"])
-    result_dot = _str_replace(s, decimal=".")
-
-    expected_dot = df_module.make_column(
-        "x", ["1234.56", "7890.12", "3456.78", "9012.34"]
-    )
-    np.all(sbd.to_list(result_dot) == sbd.to_list(expected_dot))
-
-    with pytest.raises(TypeError):
-        _str_replace([1, 2, 3], decimal=".")
+@pytest.mark.parametrize(
+    "input_str, decimal, thousand",
+    [
+        # invalid grouping
+        ("1,23,456.78", ".", ","),
+        ("1.2.3.4", ".", None),
+        ("1.2.3.4,0", ",", "."),
+        ("12,3456.78", ".", ","),
+        ("1 234,567.34", ".", ","),
+        ("1'234,567.34", ".", ","),
+        ("1'234'234,567.34", ",", "'"),
+        ("123.45.67", ".", None),
+        ("1,,234", ".", ","),
+        ("1.23,45", ".", ","),
+        # decimal == thousand
+        ("123,456,789", ",", ","),
+    ],
+)
+def test_number_parsing_invalid(input_str, decimal, thousand, df_module):
+    column = df_module.make_column("col", [input_str])
+    with pytest.raises((RejectColumn, ValueError)):
+        ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
