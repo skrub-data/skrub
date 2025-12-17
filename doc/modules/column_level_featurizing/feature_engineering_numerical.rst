@@ -88,10 +88,10 @@ Locale-dependent decimal separators can be handled by specifying the
 ``decimal`` and ``thousand`` parameter. Here we use comma as decimal separator, and
 a spaces as thousands separators:
 
->>> s = pd.Series(["4 567,89", "1 234 567,89"], name="x")
+>>> s = pd.Series(["4 567,89", "12 567,89"], name="x")
 >>> ToFloat(decimal=",", thousand=" ").fit_transform(s)
 0    4567.8...
-1    4567.8...
+1    12567.8...
 Name: x, dtype: float32
 
 Parentheses interpreted as negative numbers:
