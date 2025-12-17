@@ -144,7 +144,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         dict
             The result of ``DataOp.skb.full_report``: a dict containing
             ``'result'``, ``'error'`` and ``'report_path'``.
-        
+
         Examples
         --------
         >>> from sklearn.decomposition import PCA
@@ -157,42 +157,77 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         >>> pred = (
         ...     X.skb.apply(skrub.StringEncoder(n_components=2), cols=["product"])
         ...     .skb.set_name("product_encoder")
-        ...     .skb.apply(skrub.ToDatetime(), cols=["date"])
-        ...     .skb.apply(skrub.DatetimeEncoder(add_total_seconds=False), cols=["date"])
+        ...     .skb.apply(skrub.ToDatetime(), cols = ["date"])
+        ...     .skb.apply(
+        ...            skrub.DatetimeEncoder(add_total_seconds = False),
+        ...            cols=["date"]
+        ...     )
         ...     .skb.apply(PCA(n_components=2), cols=s.glob("date_*"))
         ...     .skb.set_name("pca")
         ...     .skb.apply(DummyClassifier(), y=y)
         ...     .skb.set_name("classifier")
         ... )
         >>> learner = pred.skb.make_learner()
-        >>> learner.report(mode='fit',environment={ 'X': orders.X , 'y':orders.y})
+        >>> learner.report(
+        ...     mode='fit',
+        ...     environment = {
+        ...         'X': orders.X,
+        ...         'y': orders.y
+        ...     }
+        ... )
         {'result': SkrubLearner(data_op=<classifier | Apply DummyClassifier>),
         'error': None,
-        'report_path': PosixPath('/root/skrub_data/execution_reports/full_data_op_report_2025-12-17T054248_2c62a657/index.html')}
+        'report_path': PosixPath('/path/to/reports/index.html')}
 
         The value of the result will depend on the mode:
 
         Case 1: The ``fit`` mode returns the fitted learner as seen above.
 
         Case 2: The ``predict`` mode returns the predictions:
-        >>> learner.report(mode='predict',environment={ 'X': orders.X , 'y':orders.y})['result']
-        array([False, False, False, False])
+
+        >>> learner.report(
+        ...     mode = 'predict',
+        ...     environment = {
+        ...         'X': orders.X,
+        ...         'y': orders.y
+        ...     }
+        ... )
+        {'result': array([False, False, False, False]),
+        'error': None,
+        'report_path': PosixPath('/path/to/reports/index.html')}
 
         Case 3: The ``transform`` mode returns the transformed data:
-        >>> learner.report(mode='transform',environment={ 'X': orders.X , 'y':orders.y})['result']
-                delayed
-            0   False
-            1   False
-            2   False
-            3   False
-        
-        Case 4: The ``predict_proba`` mode returns the predicted probabilities:
-        >>> learner.report(mode='predict_proba',environment={ 'X': orders.X , 'y':orders.y})['result']
-        array([[0.75, 0.25],
-        [0.75, 0.25],
-        [0.75, 0.25],
-        [0.75, 0.25]])
 
+        >>> learner.report(
+        ...     mode= 'transform',
+        ...     environment={
+        ...         'X': orders.X,
+        ...         'y': orders.y
+        ...     }
+        ... )
+        {'result': 0    False
+        1    False
+        2    False
+        3    False
+        Name: delayed, dtype: bool,
+        'error': None,
+        'report_path': PosixPath('/path/to/reports/index.html')}
+
+        Case 4: The ``predict_proba`` mode returns the predicted probabilities:
+
+        >>> learner.report(
+        ...     mode = 'predict_proba',
+        ...     environment = {
+        ...         'X' : orders.X,
+        ...         'y' : orders.y
+        ...     }
+        ... )
+        {'result': array([[0.75, 0.25],
+            [0.75, 0.25],
+            [0.75, 0.25],
+            [0.75, 0.25]]),
+        'error': None,
+        'report_path': PosixPath('/path/to/reports/index.html')}
         """
         from ._inspection import full_report
 
