@@ -245,7 +245,7 @@ class ToFloat(SingleColumnTransformer):
     1    12300.0
     Name: x, dtype: float32
 
-    Space as thousand separator
+    It is possible to specify the thousands separator, e.g., to use " "
     >>> s = pd.Series(["4 567,89", "12 567,89"], name="x")
     >>> ToFloat(decimal=",", thousand=" ").fit_transform(s) # doctest: +ELLIPSIS
     0    4567.8...
