@@ -86,7 +86,7 @@ Name: x, dtype: float32
 
 Locale-dependent decimal separators can be handled by specifying the
 ``decimal`` and ``thousand`` parameter. Here we use comma as decimal separator, and
-a spaces as thousands separators:
+a space as thousands separators:
 
 >>> s = pd.Series(["4 567,89", "12 567,89"], name="x")
 >>> ToFloat(decimal=",", thousand=" ").fit_transform(s)
