@@ -238,7 +238,7 @@ class ToFloat(SingleColumnTransformer):
     2   -1234.5...
     dtype: float32
 
-    Scientific notation
+    Numbers that use scientific notation are converted:
     >>> s = pd.Series(["1.23e+4", "1.23E+4"], name="x")
     >>> ToFloat(decimal=".").fit_transform(s)
     0    12300.0
