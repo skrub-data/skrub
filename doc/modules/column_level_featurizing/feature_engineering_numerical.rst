@@ -54,11 +54,13 @@ scikit-learn transformer and is fully compatible with pipelines.
 
 How to use |ToFloat|
 --------------------
-The |ToFloat| transformer must be applied to individual columns. It behaves like
-a standard scikit-learn transformer.
-Each column is expected to use a single decimals and thousands separator, which is
-specified through the ``decimal`` and ``thousand`` parameter. If this parameter is not provided,
-the default decimal separators are ``'.'`` and ``None``.
+The |ToFloat| transformer must be applied to individual columns, and it behaves
+like a standard scikit-learn transformer. 
+|ToFloat| requires a ``decimal`` and a ``thousands`` separator, which are ``'.'`` and 
+``None`` (no thousands separator) by default.
+Each column is expected to use a single separator for decimals, and one for thousands: 
+if any characters other than the provided selectors are encountered in the column, it will not 
+be converted. 
 
 During ``fit``, |ToFloat| attempts to convert all values in the column to
 numeric values after automatically removing other possible thousands separators
