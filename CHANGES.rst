@@ -17,6 +17,10 @@ Changes
 
 Bugfixes
 --------
+- :class:`DropCols` and :class:`SelectCols:` attributes were renamed to end
+  with an underscore, in order to follow a scikit-learn convention which is
+  used to determine if an estimator is fitted. :pr:`1813` by :user:`Auguste
+  Baum <auguste-probabl>`.
 
 Release 0.7.0
 =============
