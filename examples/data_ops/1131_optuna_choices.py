@@ -81,7 +81,9 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # the User Guide for an example.
 
 # %%
-search = pred.skb.make_randomized_search(backend="optuna", cv=cv, n_iter=10)
+search = pred.skb.make_randomized_search(
+    backend="optuna", cv=cv, n_iter=10, random_state=10
+)
 search.fit(env)
 search.results_
 
