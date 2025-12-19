@@ -11,6 +11,9 @@ Ongoing Development
 
 New features
 ------------
+- :class:`ToFloat32` has the parameter decimal to let the user specify whether they use ',' or '.'
+  as decimal separator and it also handles negative numbers indicated with parentheses.
+  :pr:`1772` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
