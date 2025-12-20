@@ -147,91 +147,38 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         Examples
         --------
-        >>> from sklearn.decomposition import PCA
-        >>> from sklearn.dummy import DummyClassifier
+        We start by creating the learner for a simple DataOp:
+
         >>> import skrub
-        >>> from skrub import selectors as s
-
-        >>> orders = skrub.datasets.toy_orders()
-        >>> X, y = skrub.X(), skrub.y()
-        >>> pred = (
-        ...     X.skb.apply(skrub.StringEncoder(n_components=2), cols=["product"])
-        ...     .skb.set_name("product_encoder")
-        ...     .skb.apply(skrub.ToDatetime(), cols = ["date"])
-        ...     .skb.apply(
-        ...            skrub.DatetimeEncoder(add_total_seconds = False),
-        ...            cols=["date"]
-        ...     )
-        ...     .skb.apply(PCA(n_components=2), cols=s.glob("date_*"))
-        ...     .skb.set_name("pca")
-        ...     .skb.apply(DummyClassifier(), y=y)
-        ...     .skb.set_name("classifier")
-        ... )
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.datasets import make_classification
+        >>> pred = skrub.X().skb.apply(LogisticRegression(), y=skrub.y())
+        >>> X, y = make_classification(n_samples=20, random_state=0)
+        >>> split = pred.skb.train_test_split({'X': X, 'y': y}, shuffle=False)
         >>> learner = pred.skb.make_learner()
-        >>> learner.report(
-        ...     mode='fit',
-        ...     environment = {
-        ...         'X': orders.X,
-        ...         'y': orders.y
-        ...     }
-        ... )
-        # doctest: +ELLIPSIS
-        {'result': SkrubLearner(data_op=<classifier | Apply DummyClassifier>),
-        'error': None,
-        'report_path': PosixPath('/path/to/reports/index.html')}
 
-        The value of the result will depend on the mode:
+        We can now obtain reports for the different methods of the learner such
+        as 'fit', 'predict_proba', etc.
 
-        Case 1: The ``fit`` mode returns the fitted learner as seen above.
+        >>> fit_results = learner.report(
+        ...     environment=split["train"], mode="fit", open=False
+        ... )  # doctest: +SKIP
+        >>> fit_results['report_path']  # doctest: +SKIP
+        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
 
-        Case 2: The ``predict`` mode returns the predictions:
+        Note that our learner has been fitted now, we can use it for predictions.
 
-        >>> learner.report(
-        ...     mode = 'predict',
-        ...     environment = {
-        ...         'X': orders.X,
-        ...         'y': orders.y
-        ...     }
-        ... )
-        # doctest: +ELLIPSIS
-        {'result': array([False, False, False, False]),
-        'error': None,
-        'report_path': PosixPath('/path/to/reports/index.html')}
+        >>> predict_results = learner.report(
+        ...     environment=split["train"], mode="predict", open=False
+        ... )  # doctest: +SKIP
+        >>> predict_results['report_path']  # doctest: +SKIP
+        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
 
-        Case 3: The ``transform`` mode returns the transformed data:
+        In addition to the report, we can also retrieve the actual output of
+        the 'predict' method:
 
-        >>> learner.report(
-        ...     mode= 'transform',
-        ...     environment={
-        ...         'X': orders.X,
-        ...         'y': orders.y
-        ...     }
-        ... )
-        # doctest: +ELLIPSIS
-        {'result': 0    False
-        1    False
-        2    False
-        3    False
-        Name: delayed, dtype: bool,
-        'error': None,
-        'report_path': PosixPath('/path/to/reports/index.html')}
-
-        Case 4: The ``predict_proba`` mode returns the predicted probabilities:
-
-        >>> learner.report(
-        ...     mode = 'predict_proba',
-        ...     environment = {
-        ...         'X' : orders.X,
-        ...         'y' : orders.y
-        ...     }
-        ... )
-        # doctest: +ELLIPSIS
-        {'result': array([[0.75, 0.25],
-            [0.75, 0.25],
-            [0.75, 0.25],
-            [0.75, 0.25]]),
-        'error': None,
-        'report_path': PosixPath('/path/to/reports/index.html')}
+        >>> predict_results['result']  # doctest: +SKIP
+        array([0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0])
         """
         from ._inspection import full_report
 
