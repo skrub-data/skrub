@@ -1,8 +1,8 @@
 import numpy as np
 
 from . import _dataframe as sbd
-from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["CleanCategories"]
 
