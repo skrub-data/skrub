@@ -39,7 +39,7 @@ def test_single_column_transformer_wrapped_methods(df_module, define_fit):
     dummy = Dummy().fit(col)
     for method in "fit", "fit_transform", "transform":
         with pytest.raises(
-            ValueError, match=r"``Dummy\..*`` should be passed as single column"
+            ValueError, match=r"``Dummy\..*`` should be passed a single column"
         ):
             getattr(dummy, method)(df_module.example_dataframe)
 
