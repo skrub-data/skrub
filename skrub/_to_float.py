@@ -129,10 +129,10 @@ class ToFloat(SingleColumnTransformer):
     Columns that cannot be cast to numbers are rejected:
 
     >>> s = pd.Series(['1.1', '2.2', 'hello'], name='x')
-    >>> to_float.fit_transform(s)
+    >>> to_float.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Could not convert column 'x' to numbers.
+    skrub._single_column_transformer.RejectColumn: Could not convert column 'x' to numbers.
 
     Once a column has been accepted, all calls to ``transform`` will result in the
     same output dtype. Values that fail to be converted become null values.

@@ -147,10 +147,10 @@ class CleanCategories(SingleColumnTransformer):
     A non-categorical column is rejected:
 
     >>> s = pd.Series(['a', 'b', 'c'], name='c')
-    >>> cleaner.fit_transform(s)
+    >>> cleaner.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Column 'c' is not categorical.
+    skrub._single_column_transformer.RejectColumn: Column 'c' is not categorical.
 
     However once a column has been accepted, the output of ``transform`` will
     always have a categorical dtype:

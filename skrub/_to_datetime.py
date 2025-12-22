@@ -172,10 +172,10 @@ class ToDatetime(SingleColumnTransformer):
     2   2024-05-07 13:17:52
     Name: when, dtype: datetime64[...]
 
-    >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)
+    >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
+    skrub._single_column_transformer.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
 
     Columns that already have ``Datetime`` ``dtype`` are not modified (but
     they are accepted); for those columns the provided format, if any, is ignored.

@@ -159,10 +159,10 @@ class CleanNullStrings(SingleColumnTransformer):
     ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``:
 
     >>> from skrub._to_float import ToFloat
-    >>> ToFloat().fit_transform(s)
+    >>> ToFloat().fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn:
+    skrub._single_column_transformer.RejectColumn:
     Could not convert column 's' to numbers.
     >>> ToFloat().fit_transform(cleaner.fit_transform(s))
     0    1.1

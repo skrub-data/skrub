@@ -166,10 +166,10 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     >>> ToDatetime().fit_transform(df["birthday"])
     0   2024-01-29
     Name: birthday, dtype: datetime64[...]
-    >>> ToDatetime().fit_transform(df["city"])
+    >>> ToDatetime().fit_transform(df["city"])  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
+    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
 
     How these rejections are handled depends on the ``allow_reject`` parameter.
     By default, no special handling is performed and rejections are considered
