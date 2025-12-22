@@ -98,7 +98,7 @@ Name: birthday, dtype: datetime64[...]
 >>> ToDatetime().fit_transform(df["city"])
 Traceback (most recent call last):
     ...
-skrub._apply_to_cols.RejectColumn: Could not find a datetime format for column 'city'.
+skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
 
 It is possible to change how rejected columns are handled through the ``allow_reject``
 parameter.

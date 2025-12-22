@@ -11,13 +11,13 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
-from ._apply_to_cols import SingleColumnTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
 from ._select_cols import Drop
+from ._single_column_transformer import SingleColumnTransformer
 from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime

@@ -1,5 +1,5 @@
 from . import _dataframe as sbd
-from ._apply_to_cols import RejectColumn, SingleColumnTransformer
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToCategorical"]
 
@@ -83,18 +83,18 @@ class ToCategorical(SingleColumnTransformer):
 
     Columns that are not strings nor categorical are rejected:
 
-    >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))
+    >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Column 'c' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 'c' does not contain strings.
 
     ``object`` columns that do not contain only strings are also rejected:
 
     >>> s = pd.Series(['one', 1], name='c')
-    >>> to_cat.fit_transform(s)
+    >>> to_cat.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Column 'c' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 'c' does not contain strings.
 
     No special handling of ``StringDtype`` vs ``object`` columns is done, the
     behavior is the same as ``pd.astype('category')``: if the input uses the
