@@ -151,14 +151,14 @@ class ToFloat(SingleColumnTransformer):
     1    2.2
     Name: s, dtype: category
     Categories (2, ...): ['1.1', '2.2']
-    >>> to_float.fit_transform(s)
+    >>> to_float.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Refusing to cast column 's' with dtype 'category' to numbers.
-    >>> to_float.fit_transform(pd.to_datetime(pd.Series(['2024-05-13'], name='s')))
+    skrub._single_column_transformer.RejectColumn: Refusing to cast column 's' with dtype 'category' to numbers.
+    >>> to_float.fit_transform(pd.to_datetime(pd.Series(['2024-05-13'], name='s')))  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Refusing to cast column 's' with dtype 'datetime64[...]' to numbers.
+    skrub._single_column_transformer.RejectColumn: Refusing to cast column 's' with dtype 'datetime64[...]' to numbers.
 
     float32 columns are passed through:
 

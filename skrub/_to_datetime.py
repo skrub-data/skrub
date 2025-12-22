@@ -202,19 +202,19 @@ class ToDatetime(SingleColumnTransformer):
     datetimes are rejected.
 
     >>> s = pd.Series([2020, 2021, 2022], name="year")
-    >>> to_dt.fit_transform(s)
+    >>> to_dt.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Column 'year' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 'year' does not contain strings.
 
     String columns that do not appear to contain datetimes or for some other reason
     fail to be converted are also rejected.
 
     >>> s = pd.Series(["2024-05-07T13:36:27", "yesterday"], name="when")
-    >>> to_dt.fit_transform(s)
+    >>> to_dt.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Could not find a datetime format for column 'when'.
+    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'when'.
 
     Once ``ToDatetime`` was successfully fitted, ``transform`` will always try to
     parse datetimes with the same format and output the same ``dtype``. Entries that

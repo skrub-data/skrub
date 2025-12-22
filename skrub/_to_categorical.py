@@ -91,10 +91,10 @@ class ToCategorical(SingleColumnTransformer):
     ``object`` columns that do not contain only strings are also rejected:
 
     >>> s = pd.Series(['one', 1], name='c')
-    >>> to_cat.fit_transform(s)
+    >>> to_cat.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub_single_column_transformer.RejectColumn: Column 'c' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 'c' does not contain strings.
 
     No special handling of ``StringDtype`` vs ``object`` columns is done, the
     behavior is the same as ``pd.astype('category')``: if the input uses the
