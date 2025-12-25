@@ -98,7 +98,7 @@ def set_config(
     Parameters
     ----------
     use_table_report : bool, default=None
-        The type of display used for dataframes. If ``None``, fallbacks to the current 
+        The type of display used for dataframes. If ``None``, fallbacks to the current
         configuration, which is ``False`` by default.
 
         - If ``True``, replace the default DataFrame HTML displays with
