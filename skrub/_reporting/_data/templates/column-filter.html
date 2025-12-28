@@ -1,5 +1,5 @@
 <div class="column-filter" data-manager="InvisibleInAssociationsTabPanel">
-    <select data-manager="ColumnFilter"
+    <select data-manager="ColumnFilterSelect"
             data-all-filters-base64="{{ base64_column_filters | safe }}"
             data-test="column-filter-select"
             autocomplete="off">
@@ -11,4 +11,19 @@
         {% endfor %}
         </optgroup>
     </select>
+    <div class="search-wrapper">
+        <input type="text"
+                class="column-filter-search"
+                data-manager="ColumnFilterSearch"
+                data-test="column-filter-search"
+                placeholder="Search columns by name..."
+                autocomplete="off">
+        <button type="button"
+                class="column-filter-regex"
+                data-manager="ColumnFilterRegex"
+                data-regex-enabled="false"
+                data-test="column-filter-regex"
+                title="Use regular expression"
+                aria-label="Toggle regular expression search">.*</button>
+    </div>
 </div>

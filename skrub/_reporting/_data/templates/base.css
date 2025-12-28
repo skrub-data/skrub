@@ -54,7 +54,7 @@ button > * {
     pointer-events: none;
 }
 
-select {
+select, input[type="text"] {
     background: var(--color-background-button-primary);
     color: var(--color-text-primary);
     box-shadow: none;

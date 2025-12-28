@@ -93,9 +93,28 @@ if (customElements.get('skrub-table-report') === undefined) {
                 this.exchange.add(new HideOn(elem, this.exchange));
             });
 
+            // Initialize column filter model with column names
+            if (this[columnFilterModelSymbol]) {
+                this[columnFilterModelSymbol].setColumnNames(this.collectColumnNames());
+            }
+
             const report = this.shadowRoot.getElementById("report");
             report.classList.add(detectTheme(`${this.id}-wrapper`));
             adjustAllSvgViewBoxes(report);
+        }
+
+        collectColumnNames() {
+            const names = new Map();
+            this.shadowRoot
+                .querySelectorAll("[data-column-idx][data-column-name]")
+                .forEach((elem) => {
+                    const idx = Number(elem.dataset.columnIdx);
+                    const name = elem.dataset.columnName;
+                    if (!names.has(idx)) {
+                        names.set(idx, name);
+                    }
+                });
+            return names;
         }
 
     }
@@ -138,37 +157,183 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(InvisibleInAssociationsTabPanel);
 
-    class ColumnFilter extends Manager {
+    // Store one ColumnFilterModel per report component
+    // to share state between multiple controllers
+    const columnFilterModelSymbol = Symbol("columnFilterModel");
+
+    function getColumnFilterModel(elem, exchange) {
+        const host = elem.getRootNode().host;
+        if (!host[columnFilterModelSymbol]) {
+            host[columnFilterModelSymbol] = new ColumnFilterModel(exchange);
+        }
+        return host[columnFilterModelSymbol];
+    }
+
+    class ColumnFilterModel {
+        constructor(exchange) {
+            this.exchange = exchange;
+            this.baseFilterName = "all()";
+            this.baseFilterDisplayName = "All columns";
+            this.baseAcceptedColumns = new Set();
+            this.regexEnabled = false;
+            this.searchText = "";
+            this.columnNames = new Map();
+        }
+
+        applySelectFilter(filterName, filterDefinition) {
+            if (!filterDefinition) return;
+            const normalizedColumns = new Set();
+            (filterDefinition.columns || []).forEach((idx) => {
+                normalizedColumns.add(Number(idx));
+            });
+            this.baseFilterName = filterName;
+            this.baseFilterDisplayName = filterDefinition.display_name || "All columns";
+            this.baseAcceptedColumns = normalizedColumns;
+            this.emitChanges();
+        }
+
+        setRegexEnabled(enabled) {
+            this.regexEnabled = Boolean(enabled);
+            this.emitChanges();
+        }
+
+        setSearchText(text) {
+            this.searchText = (text || "").trim();
+            this.emitChanges();
+        }
+
+        setColumnNames(columnNamesMap) {
+            this.columnNames = columnNamesMap || new Map();
+        }
+
+        emitChanges() {
+            let acceptedColumns = new Set(this.baseAcceptedColumns);
+            let filterName = this.baseFilterName;
+            let textFilterValue = "";
+
+            if (this.searchText !== "") {
+                textFilterValue = this.searchText;
+                acceptedColumns = this.filterColumnsBySearch(textFilterValue);
+                filterName = "text";
+            }
+
+            this.exchange.send({
+                kind: "COLUMN_FILTER_CHANGED",
+                filterName,
+                filterDisplayName: this.baseFilterDisplayName,
+                textFilterValue,
+                acceptedColumns,
+            });
+            const filterKind = acceptedColumns.size === 0 ? "EMPTY" : "NON_EMPTY";
+            this.exchange.send({
+                kind: `${filterKind}_COLUMN_FILTER_SELECTED`,
+            });
+        }
+
+        filterColumnsBySearch(searchText) {
+            const accepted = new Set();
+            if (this.columnNames.size === 0) return accepted;
+
+            let regex = null;
+            let isValidRegex = false;
+            if (this.regexEnabled) {
+                try {
+                    regex = new RegExp(searchText, "i");
+                    isValidRegex = true;
+                } catch {
+                    isValidRegex = false;
+                }
+            }
+            for (const idx of this.baseAcceptedColumns) {
+                const name = this.columnNames.get(idx);
+                if (name === undefined) continue;
+
+                let matches;
+                if (isValidRegex) matches = regex.test(name)
+                else matches = name.toLowerCase().includes(searchText.toLowerCase());
+
+                if (matches) accepted.add(idx);
+            }
+            return accepted;
+        }
+    }
+
+    class ColumnFilterSelect extends Manager {
         constructor(elem, exchange) {
             super(elem, exchange);
+            this.model = getColumnFilterModel(this.elem, this.exchange);
             this.filters = JSON.parse(atob(this.elem.dataset.allFiltersBase64));
             this.elem.addEventListener("change", () => this.onSelectChange());
+            this.syncModelWithCurrentValue();
         }
 
         onSelectChange() {
+            this.syncModelWithCurrentValue();
+        }
+
+        syncModelWithCurrentValue() {
             const filterName = this.elem.value;
-            const filterDisplayName = this.filters[filterName]["display_name"];
-            const acceptedColumns = new Set(this.filters[filterName]["columns"]);
-            const msg = {
-                kind: "COLUMN_FILTER_CHANGED",
-                filterName,
-                filterDisplayName,
-                acceptedColumns,
-            };
-            this.exchange.send(msg);
-            const filterKind = acceptedColumns.size === 0 ? "EMPTY" : "NON_EMPTY";
+            const filterDefinition = this.filters[filterName];
+            if (!filterDefinition) return;
+            this.model.applySelectFilter(filterName, filterDefinition);
+        }
+
+        RESET_COLUMN_FILTER() {
+            if (this.elem.querySelector("option[value='all()']")) {
+                this.elem.value = "all()";
+            } else {
+                this.elem.selectedIndex = 0;
+            }
+            this.syncModelWithCurrentValue();
+        }
+
+    }
+    SkrubTableReport.register(ColumnFilterSelect);
+
+    class ColumnFilterRegex extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.model = getColumnFilterModel(this.elem, this.exchange);
+            this.regexEnabled = false;
+            this.elem.addEventListener("click", () => this.onToggle());
+        }
+
+        onToggle() {
+            this.regexEnabled = !this.regexEnabled;
+            this.elem.dataset.regexEnabled = this.regexEnabled.toString();
+            this.model.setRegexEnabled(this.regexEnabled);
             this.exchange.send({
-                kind: `${filterKind}_COLUMN_FILTER_SELECTED`
+                kind: "REGEX_TOGGLE_CHANGED",
+                regexEnabled: this.regexEnabled,
             });
         }
 
         RESET_COLUMN_FILTER() {
-            this.elem.value = "all()";
-            this.onSelectChange();
+            if (this.regexEnabled) {
+                this.onToggle();
+            }
+        }
+    }
+    SkrubTableReport.register(ColumnFilterRegex);
+
+    class ColumnFilterSearch extends Manager {
+        constructor(elem, exchange) {
+            super(elem, exchange);
+            this.model = getColumnFilterModel(this.elem, this.exchange);
+            this.elem.addEventListener("input", () => this.onInputChange());
+            this.model.setSearchText(this.elem.value || "");
         }
 
+        onInputChange() {
+            this.model.setSearchText(this.elem.value);
+        }
+
+        RESET_COLUMN_FILTER() {
+            this.elem.value = "";
+            this.model.setSearchText("");
+        }
     }
-    SkrubTableReport.register(ColumnFilter);
+    SkrubTableReport.register(ColumnFilterSearch);
 
     class ResetColumnFilter extends Manager {
         constructor(elem, exchange) {
@@ -180,12 +345,19 @@ if (customElements.get('skrub-table-report') === undefined) {
     }
     SkrubTableReport.register(ResetColumnFilter);
 
-    class ColumnFilterName extends Manager {
+    class ColumnFilterSelectValue extends Manager {
         COLUMN_FILTER_CHANGED(msg) {
             this.elem.textContent = msg.filterDisplayName;
         }
     }
-    SkrubTableReport.register(ColumnFilterName);
+    SkrubTableReport.register(ColumnFilterSelectValue);
+
+    class ColumnFilterSearchValue extends Manager {
+        COLUMN_FILTER_CHANGED(msg) {
+            this.elem.textContent = `"${msg.textFilterValue || ""}"`;
+        }
+    }
+    SkrubTableReport.register(ColumnFilterSearchValue);
 
     class ColumnFilterMatchCount extends Manager {
         COLUMN_FILTER_CHANGED(msg) {

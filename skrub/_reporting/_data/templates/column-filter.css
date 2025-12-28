@@ -13,4 +13,22 @@
     text-overflow: ellipsis;
     padding: var(--spacing-xs) var(--spacing-s);
     font-size: var(--font-size-s);
+    height: var(--button-size-m);
+}
+
+.column-filter > .search-wrapper {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.column-filter > .search-wrapper > .column-filter-search {
+    max-width: 24ch;
+    padding: var(--spacing-xs) var(--spacing-s);
+    font-size: var(--font-size-s);
+}
+
+.column-filter > .search-wrapper > .column-filter-regex[data-regex-enabled="true"] {
+    color: var(--color-text-primary);
+    font-weight: bold;
+    background: var(--color-background-button-primary-active);
 }
