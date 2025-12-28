@@ -238,7 +238,7 @@ encoder = skrub.choose_from(
 X.skb.apply(encoder, cols="text")
 
 # %%
-# In a similar vein, we might want to choose between a HGB classifier and a Ridge
+# In a similar vein, we might want to choose between an HGB classifier and a Ridge
 # classifier, each with its own set of hyperparameters.
 # We can then define a choice for the classifier and a choice for the
 # hyperparameters of each classifier.
