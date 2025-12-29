@@ -296,7 +296,7 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     Returns
     -------
     str
-        The plot as a XML string.
+        The plot as an XML string.
     """
     values = [_utils.ellide_string(v) for v, _ in value_counts][::-1]
     counts = [c for _, c in value_counts][::-1]

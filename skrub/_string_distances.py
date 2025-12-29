@@ -17,8 +17,8 @@ def get_ngram_count(string, ngram_range):
     * the number of 3-grams in a string is the number of sliding windows of
       size 3 in the string: len(string) - 3 + 1
     * this can be generalized to n-grams by changing 3 by n.
-    * when given a ngram_range, we can sum this formula over all possible
-      ngrams
+    * when given an ngram_range, we can sum this formula over all possible
+      ngrams.
 
     """
     min_n, max_n = ngram_range
