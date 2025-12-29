@@ -1,6 +1,6 @@
 from . import _dataframe as sbd
-from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["CleanNullStrings"]
 
@@ -159,10 +159,11 @@ class CleanNullStrings(SingleColumnTransformer):
     ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``:
 
     >>> from skrub._to_float import ToFloat
-    >>> ToFloat().fit_transform(s)
+    >>> ToFloat().fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Could not convert column 's' to numbers.
+    skrub._single_column_transformer.RejectColumn:
+    Could not convert column 's' to numbers.
     >>> ToFloat().fit_transform(cleaner.fit_transform(s))
     0    1.1
     1    2.2
@@ -174,19 +175,19 @@ class CleanNullStrings(SingleColumnTransformer):
     are rejected:
 
     >>> s = pd.Series([1.1, None], name='s')
-    >>> cleaner.fit_transform(s)
+    >>> cleaner.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Column 's' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 's' does not contain strings.
 
     In particular, Categorical columns, although they contain strings, do not
     have the ``string`` or ``object`` ``dtype``:
 
     >>> s = pd.Series(['a', ''], dtype='category')
-    >>> cleaner.fit_transform(s)
+    >>> cleaner.fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Column None does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column None does not contain strings.
 
     Note however that ``object`` columns are accepted even if they do not
     contain any strings. They will not be modified but they will still be
@@ -229,7 +230,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Column 's' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 's' does not contain strings.
     """
 
     def fit_transform(self, column, y=None):
