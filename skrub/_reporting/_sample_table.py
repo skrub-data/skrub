@@ -45,7 +45,7 @@ Table Part
     first few rows), "ellipsis" (optional, the row of " ⋮ " indicating that the
     table is truncated), "bottom_slice" (optional, tbody containing the last
     few rows).
-  elem: the name of an html element: "thead" (table head) or "tbody" (table body)
+  elem: the name of an HTML element: "thead" (table head) or "tbody" (table body)
   rows: list of table rows
 
 "rows" is a python list where each item is itself a list, representing a table
