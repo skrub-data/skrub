@@ -144,6 +144,41 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         dict
             The result of ``DataOp.skb.full_report``: a dict containing
             ``'result'``, ``'error'`` and ``'report_path'``.
+
+        Examples
+        --------
+        We start by creating the learner for a simple DataOp:
+
+        >>> import skrub
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.datasets import make_classification
+        >>> pred = skrub.X().skb.apply(LogisticRegression(), y=skrub.y())
+        >>> X, y = make_classification(n_samples=20, random_state=0)
+        >>> split = pred.skb.train_test_split({'X': X, 'y': y}, shuffle=False)
+        >>> learner = pred.skb.make_learner()
+
+        We can now obtain reports for the different methods of the learner such
+        as 'fit', 'predict_proba', etc.
+
+        >>> fit_results = learner.report(
+        ...     environment=split["train"], mode="fit", open=False
+        ... )  # doctest: +SKIP
+        >>> fit_results['report_path']  # doctest: +SKIP
+        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+
+        Note that our learner has been fitted now, we can use it for predictions.
+
+        >>> predict_results = learner.report(
+        ...     environment=split["train"], mode="predict", open=False
+        ... )  # doctest: +SKIP
+        >>> predict_results['report_path']  # doctest: +SKIP
+        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+
+        In addition to the report, we can also retrieve the actual output of
+        the 'predict' method:
+
+        >>> predict_results['result']  # doctest: +SKIP
+        array([0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0])
         """
         from ._inspection import full_report
 
