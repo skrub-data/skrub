@@ -56,7 +56,7 @@ Table Cell
   i, j: the position of the cell in the table
   column_idx: the corresponding column in the dataframe, if any
   value: the content of the cell (the corresponding value in the dataframe)
-  elem: the name of an html element, "th" (table header) or "td" (table data cell)
+  elem: the name of an HTML element, "th" (table header) or "td" (table data cell)
   role:
     a semantic description of this cell's content, such as "index-level-name",
     "dataframe-data" or "padding"
