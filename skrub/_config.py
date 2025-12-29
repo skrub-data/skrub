@@ -98,7 +98,8 @@ def set_config(
     Parameters
     ----------
     use_table_report : bool, default=None
-        The type of display used for dataframes. Default is ``True``.
+        The type of display used for dataframes. If ``None``, falls back to the current
+        configuration, which is ``False`` by default.
 
         - If ``True``, replace the default DataFrame HTML displays with
           :class:`~skrub.TableReport`.
@@ -110,7 +111,8 @@ def set_config(
 
     use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
-        DataOps. Default is ``False``.
+        DataOps. If ``None``, falls back to the current configuration, which is ``True``
+        by default.
 
         - If ``True``, :class:`~skrub.TableReport` will be used.
         - If ``False``, the original Pandas or Polars dataframe display will be
