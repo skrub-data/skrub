@@ -11,6 +11,8 @@ Ongoing Development
 
 New features
 ------------
+- You can now filter columns in the TableReport using a search box. It supports plain text and
+  regular expressions. :pr:`1824` by :user:`Josselin Dulongcourty <josselinonduty>`.
 
 Changes
 -------
