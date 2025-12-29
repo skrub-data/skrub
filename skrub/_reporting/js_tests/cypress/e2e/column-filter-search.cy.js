@@ -262,7 +262,7 @@ describe("Column filter search functionality", () => {
             cy.get("@nColumns").should("have.text", "0");
 
             // Click reset
-            cy.get("@resetButton").first().click();
+            cy.get("@resetButton").first().click({ force: true }); // in case button is hidden because of shadow-DOM
             cy.get("@searchInput").should("have.value", "");
             cy.get("@nColumns").should("have.text", "8");
         });
@@ -280,7 +280,7 @@ describe("Column filter search functionality", () => {
             cy.get("@regexButton").should("have.attr", "data-regex-enabled", "true");
 
             // Click reset
-            cy.get("@resetButton").first().click();
+            cy.get("@resetButton").first().click({ force: true }); // in case button is hidden because of shadow-DOM
             cy.get("@regexButton").should("have.attr", "data-regex-enabled", "false");
         });
 
@@ -300,7 +300,7 @@ describe("Column filter search functionality", () => {
             cy.get("@nColumns").should("have.text", "1");
 
             // Click reset
-            cy.get("@resetButton").first().click();
+            cy.get("@resetButton").first().click({ force: true }); // in case button is hidden because of shadow-DOM
             cy.get("@filterSelect").should("have.value", null); // "All columns"
             cy.get("@nColumns").should("have.text", "8");
         });
@@ -329,7 +329,7 @@ describe("Column filter search functionality", () => {
             cy.get("@nColumns").should("have.text", "2"); // department, department_name
 
             // Reset everything
-            cy.get("@resetButton").first().click();
+            cy.get("@resetButton").first().click({ force: true }); // in case button is hidden because of shadow-DOM
             cy.get("@filterSelect").should("have.value", null); // "All columns"
             cy.get("@searchInput").should("have.value", "");
             cy.get("@regexButton").should("have.attr", "data-regex-enabled", "false");
