@@ -2,7 +2,7 @@
 
 import math
 import sys
-from typing import Tuple, TypeVar, Union
+from typing import TypeVar
 
 import numpy
 import numpy as np
@@ -118,10 +118,9 @@ def _onehot_encode_categoricals(df: DataFrame) -> tuple[DataFrame, dict[int, lis
 
         if one_hot_cols is not None:
             new_cols.append(one_hot_cols)
-            old_idx_matches[col_idx] = [
-                i
-                for i in range(current_col_idx, current_col_idx + one_hot_cols.shape[1])
-            ]
+            old_idx_matches[col_idx] = list(
+                range(current_col_idx, current_col_idx + one_hot_cols.shape[1])
+            )
             current_col_idx += one_hot_cols.shape[1]
         else:
             old_idx_matches[col_idx] = [current_col_idx]
@@ -190,7 +189,7 @@ def _compute_ids_numpy(
     p_val=False,
     num_tests=100,
     bandwidth_term=1 / 2,
-) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, None]]:
+) -> tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, None]:
     """
     Compute the InterDependence score matrix between the columns of X.
 
@@ -291,7 +290,7 @@ def _ids_matrix(
     p_val=False,
     num_tests=100,
     bandwidth_term=1 / 2,
-) -> Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, None]]:
+) -> tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, None]:
     """
         Compute the interdependence score matrix.
 
@@ -349,7 +348,7 @@ def interdependence_score(
     num_tests=100,
     bandwidth_term=1 / 2,
     return_matrix=False,
-) -> Union[DataFrame, Tuple[DataFrame, DataFrame]]:
+) -> DataFrame | tuple[DataFrame, DataFrame]:
     r"""
     Compute the InterDependence Score (IDS).
 
