@@ -268,6 +268,9 @@ class DataOpImpl:
         new.results = self.results.copy()
         new.errors = self.errors.copy()
         new.metadata = self.metadata.copy()
+        new.__dict__.update(
+            {k: v for k, v in self.__dict__.items() if k not in new.__dict__}
+        )
         return new
 
     def compute(self, e, mode, environment):
@@ -1635,8 +1638,8 @@ def deferred(func):
     INFO x = 3
     3
 
-    Advanced examples
-    -----------------
+    **Advanced examples**
+
     As we saw in the last example above, the arguments passed to the function,
     if they are DataOps, are evaluated before calling it. This is also the
     case for global variables, default arguments and free variables.

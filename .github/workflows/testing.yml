@@ -16,15 +16,15 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
         environment:
-          - ci-py309-min-deps
-          - ci-py309-min-optional-deps
+          - ci-py310-min-deps
+          - ci-py310-min-optional-deps
           - ci-py311-transformers
-          - ci-py313-latest-deps
-          - ci-py313-latest-optional-deps
-          - ci-py313-polars-without-pyarrow
+          - ci-py314-latest-deps
+          - ci-py314-latest-optional-deps
+          - ci-py314-polars-without-pyarrow
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: prefix-dev/setup-pixi@v0.9.3
         with:
           pixi-version: v0.59.0
@@ -37,7 +37,7 @@ jobs:
       - name: Run user guide doctests
         run: pixi run -e ${{ matrix.environment }} test-user-guide
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: skrub-data/skrub
@@ -47,7 +47,7 @@ jobs:
     outputs:
       run: ${{ github.event_name == 'schedule' || contains(steps.get_head_commit_message.outputs.COMMIT_MSG, '[deps nightly]') }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - id: get_head_commit_message
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Test against nightly dependencies
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: prefix-dev/setup-pixi@v0.9.3
         with:
           pixi-version: v0.59.0

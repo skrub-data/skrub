@@ -21,6 +21,7 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "skrub._data_ops._data_ops",
     "skrub._data_ops._choosing",
     "skrub._data_ops._estimator",
+    "skrub._data_ops._optuna",
     "skrub._select_cols.Drop",
     "skrub._table_vectorizer.SuperVectorizer",
     # The following are not documented in skrub (and thus are out of scope)

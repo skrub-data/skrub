@@ -11,6 +11,26 @@ Ongoing Development
 
 New features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+- :class:`DropCols` and :class:`SelectCols:` attributes were renamed to end
+  with an underscore, in order to follow a scikit-learn convention which is
+  used to determine if an estimator is fitted. :pr:`1813` by :user:`Auguste
+  Baum <auguste-probabl>`.
+
+Release 0.7.0
+=============
+
+New features
+------------
+- It is now possible to tune the choices in a :class:`DataOp` with `Optuna
+  <https://optuna.readthedocs.io/en/stable/>`_. See
+  :ref:`example_optuna_choices` for an example.
+  :pr:`1661` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
   estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
   etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
@@ -20,36 +40,52 @@ New features
   named dataops, in a :class:`DataOp`. This lets us easily know what keys should
   be present in the ``environment`` dictionary we pass to
   :meth:`DataOp.skb.eval` or to :meth:`SkrubLearner.fit`,
-  :meth:`SkrubLearner.predict`, etc. .
+  :meth:`SkrubLearner.predict`, etc.
   :pr:`1646` by :user:`Jérôme Dockès <jeromedockes>`.
 - :meth:`DataOp.skb.iter_cv_splits` iterates over the training and testing
   environments produced by a CV splitter -- similar to
   :meth:`DataOp.skb.train_test_split` but for multiple cross-validation splits.
   :pr:`1653` by :user:`Jérôme Dockès <jeromedockes>`.
-- :class:`TableReport` now supports ``np.array``. :pr:`1676` by :user: `Nisma Amjad <Nismamjad1>`.
-- :meth:`DataOp.skb.full_report` now accepts a new parameter, title, that is displayed
+- :class:`TableReport` now supports ``np.array``. :pr:`1676` by :user:`Nisma Amjad <Nismamjad1>`.
+- :meth:`DataOp.skb.full_report` now accepts a new parameter, ``title``, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
 - Added the :func:`interdependence_score`, an implementation of the IDS from the paper
   `Efficiently quantifying dependence in massive scientific datasets using InterDependence Scores`.
   :pr:`1724` by :user:`Jade Affolabi <JadeAffolabi>`.
+- :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
+  user select which tab should be opened when the ``TableReport`` is
+  rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Changes
 -------
-- The :meth: `DataOp.skb.full_report` method now deletes reports created with
-  ``output_dir=None`` after 7 days. :pr:`1657` by :user: `Simon Dierickx <simon.dierickx>`.
-- The :func: `tabular_pipeline` uses a :class:`SquashingScaler` instead of a
+- The minimum supported version of Python has been increased to 3.10. Additionally,
+  the minimum supported versions of scikit-learn and requests are 1.4.2 and 2.27.1
+  respectively. Support for python 3.14 has been added.
+  :pr:`1572` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The :meth:`DataOp.skb.full_report` method now deletes reports created with
+  ``output_dir=None`` after 7 days. :pr:`1657` by :user:`Simon Dierickx <simon.dierickx>`.
+- The :func:`tabular_pipeline` uses a :class:`SquashingScaler` instead of a
   :class:`StandardScaler` for centering and scaling numerical features
   when linear models are used.
   :pr:`1644` by :user:`Simon Dierickx <dierickxsimon>`
-- The transformer :class:`ToFloat`, previously called `ToFloat32`, is now public.
+- The transformer :class:`ToFloat`, previously called ``ToFloat32``, is now public.
   :pr:`1687` by :user:`Marie Sacksick <MarieSacksick>`.
 - Improved the error message raised when a Polars lazyframe is passed to
-  :class:`TableReport`, clarifying that `.collect()` must be called first.
-  :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`
+  :class:`TableReport`, clarifying that ``.collect()`` must be called first.
+  :pr:`1767` by :user:`Fatima Ben Kadour <fatiben2002>`.
+- Computing the associations in :class:`TableReport` is now deterministic and can
+  be controlled by the new parameter ``subsampling_seed`` of the global configuration.
+  :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
+- Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
+  conversion of list/object-like columns to strings unless explicitly enabled.
+  :pr:`1789` by :user:`PilliSiddharth`.
 
 Bugfixes
 --------
+- The :meth:`skrub.cross_validate` function now raises a specific exception if the wrong variable
+  type is passed.
+  :pr:`1799` by :user:`Eloi Massoulié<emassoulie>`
 - Fixed various issues with some transformers by adding ``get_feature_names_out``
   to all single column transformers.
   :pr:`1666` by :user:`Riccardo Cappuzzo<rcap107>`.
@@ -69,8 +105,21 @@ Bugfixes
 - Fixed an issue where :class:`TableReport` would fail when computing associations
   for Polars dataframes if PyArrow was not installed.
   :pr:`1742` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed an issue in the Data Ops report generation in cases where the DataOp
+  contained escape characters or were spanning multiple lines.
+  :pr:`1764` by :user:`Riccardo Cappuzzo <rcap107>`.
+- Added :meth:`get_feature_names_out` to :class:`Cleaner` for consistency with the
+  :class:`TableVectorizer` and other transformers. :pr:`1762` by
+  :user:`Riccardo Cappuzzo <rcap107>`.
 - Improve error message when :class:`TextEncoder` is used without the optional
   transformers dependencies. :pr:`1769` by :user:`Fangxuan Zhou <fxzhou22>`.
+- Accessing ``.skb.applied_estimator`` on a :class:`DataOp` after calling
+  ``.skb.set_name()``, ``.skb.set_description()``, ``.skb.mark_as_X()`` or
+  ``.skb.mark_as_y()`` used to raise an error, this has been fixed in :pr:`1782`
+  by :user:`Jérôme Dockès <jeromedockes>`.
+- Fixed potential issues that could arise in :meth:`ParamSearch.plot_results`
+  when NaN values were present in the cross-validation results.
+  :pr:`1800` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.6.2
 =============
@@ -96,7 +145,14 @@ Changes
   :pr:`1628` by :user:`Jérôme Dockès <jeromedockes>`.
 - The parameter ``splitter`` of :meth:`DataOp.skb.train_test_split` has been
   renamed ``split_func``. :pr:`1630` by :user:`Jérôme Dockès <jeromedockes>`.
-
+- KEN embeddings and all the relevant functions have been removed from skrub.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The objects ``tabular_learner`` and ``DropIfTooManyNulls`` were removed. Use
+  :func:`tabular_pipeline` and :class:`DropUninformative` instead.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The skrub global configuration now includes a parameter for setting the default
+  verbosity of the :class:`TableReport`.
+  :pr:`1567` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bugfixes
 --------

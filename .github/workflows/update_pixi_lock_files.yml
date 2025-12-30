@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: prefix-dev/setup-pixi@v0.9.3
         with:
           pixi-version: v0.59.0
@@ -35,7 +35,7 @@ jobs:
 
       - name: Create Pull Request
         id: cpr
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.BOT_GITHUB_TOKEN }}
           push-to-fork: skrub-bot/skrub

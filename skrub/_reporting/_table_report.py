@@ -113,6 +113,15 @@ class TableReport:
 
             export SKB_MAX_ASSOCIATION_COLUMNS=30
 
+    open_tab : str, default="table"
+        The tab that will be displayed by default when the report is opened.
+        Must be one of "table", "stats", "distributions", or "associations".
+
+        * "table": Shows a sample of the dataframe rows
+        * "stats": Shows summary statistics for all columns
+        * "distributions": Shows plots of column distributions
+        * "associations": Shows column associations and similarities
+
     See Also
     --------
     patch_display :
@@ -184,9 +193,10 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
-        verbose=1,
+        verbose=None,
         max_plot_columns=None,
         max_association_columns=None,
+        open_tab="table",
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -204,16 +214,28 @@ class TableReport:
                 )
 
         n_rows = max(1, n_rows)
+        if verbose is None:
+            self.verbose = _config.get_config()["table_report_verbosity"]
+        else:
+            self.verbose = verbose
+
+        # Validate open_tab parameter
+        valid_tabs = ["table", "stats", "distributions", "associations"]
+        if open_tab not in valid_tabs:
+            raise ValueError(
+                f"'open_tab' must be one of {valid_tabs}, got {open_tab!r}."
+            )
+        self.open_tab = open_tab
+
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
-            "verbose": verbose,
+            "verbose": self.verbose,
         }
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.verbose = verbose
         self.max_plot_columns, self.max_association_columns = _check_max_cols(
             max_plot_columns, max_association_columns
         )
@@ -247,6 +269,9 @@ class TableReport:
         self._to_html_kwargs["minimal_report_mode"] = True
         self.max_association_columns = 0
         self.max_plot_columns = 0
+        # In minimal mode, fall back to 'table' if user selected unavailable tabs
+        if self.open_tab in ["distributions", "associations"]:
+            self.open_tab = "table"
 
     def _display_subsample_hint(self):
         self._summary["is_subsampled"] = True
@@ -284,6 +309,7 @@ class TableReport:
             self._summary,
             standalone=True,
             column_filters=self.column_filters,
+            open_tab=self.open_tab,
             **self._to_html_kwargs,
         )
 
@@ -299,6 +325,7 @@ class TableReport:
             self._summary,
             standalone=False,
             column_filters=self.column_filters,
+            open_tab=self.open_tab,
             **self._to_html_kwargs,
         )
 
