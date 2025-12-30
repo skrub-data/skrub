@@ -99,10 +99,10 @@ def _onehot_encode_categoricals(df: DataFrame) -> tuple[DataFrame, dict[int, lis
     for col_idx in range(n_cols):
         col = sbd.col_by_idx(df, col_idx)
         one_hot_cols = None
-        if sbd.is_duration(col):
-            col = sbd.total_seconds(col)
-        if sbd.is_numeric(col) or sbd.is_any_date(col):
-            col = sbd.to_float32(col)
+        if sbd.is_numeric(col):
+            col = (
+                sbd.total_seconds(col) if sbd.is_duration(col) else sbd.to_float32(col)
+            )
             if sbd.n_unique(col) >= _CATEGORICAL_THRESHOLD:
                 new_cols.append(col.to_numpy().reshape(-1, 1))
             else:

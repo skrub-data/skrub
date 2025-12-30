@@ -41,7 +41,7 @@ v8 = pd.qcut(np.random.randn(n), q=3, labels=["cat2_0", "cat2_1", "cat2_2"]).to_
 v_num = np.column_stack([v0, v1, v2, v3, v4, v5, v6])
 v_cat = np.column_stack((v7, v8))
 X_dict = {f"v{i}": v_num[:, i] for i in range(v_num.shape[1])}
-X_dict.update({f"v{i+7}": v_cat[:, i] for i in range(v_cat.shape[1])})
+X_dict.update({f"v{i + 7}": v_cat[:, i] for i in range(v_cat.shape[1])})
 X = pd.DataFrame(X_dict)
 # %%
 # +----------+-------------+---------------+

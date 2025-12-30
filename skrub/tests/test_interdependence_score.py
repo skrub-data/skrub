@@ -33,7 +33,7 @@ def variables():
     X_cat = np.column_stack((f7, f8))
 
     X_dict = {f"Num-{i}": X_num[:, i] for i in range(X_num.shape[1])}
-    X_dict.update({f"Cat-{i+1}": X_cat[:, i] for i in range(X_cat.shape[1])})
+    X_dict.update({f"Cat-{i + 1}": X_cat[:, i] for i in range(X_cat.shape[1])})
 
     return X_dict
 
