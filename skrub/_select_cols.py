@@ -236,8 +236,33 @@ class Drop(SingleColumnTransformer):
     """
 
     def fit_transform(self, column, y=None):
+        """Fit the transformer and transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series.
+            The input to transform.
+
+        y : None
+            Ignored.
+
+        Returns
+        -------
+        transformed : empty list
+        """
         self.all_outputs_ = []
         return []
 
     def transform(self, column):
+        """Transform a column.
+
+        Parameters
+        ----------
+        column : pandas or polars Series.
+            The input to transform.
+
+        Returns
+        -------
+        transformed : empty list
+        """
         return []
