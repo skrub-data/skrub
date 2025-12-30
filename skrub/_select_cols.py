@@ -197,6 +197,44 @@ class DropCols(TransformerMixin, BaseEstimator):
 
 
 class Drop(SingleColumnTransformer):
+    """Drop a single column in a column-wise transformation pipeline.
+
+    ``Drop`` is a single-column transformer that removes the column it is
+    applied to and produces no output features. Unlike :class:`DropCols`,
+    which operates on a full DataFrame, ``Drop`` is designed to be used in
+    column-wise contexts such as :class:`ApplyToCols`, data ops, or internally
+    by :class:`TableVectorizer`.
+
+    Accepts a single column extracted from a :obj:`pandas.DataFrame` or
+    :obj:`polars.DataFrame`.
+
+    See Also
+    --------
+    DropCols : Drop a subset of a DataFrame's columns.
+    SelectCols : Select a subset of a DataFrame's columns.
+    ApplyToCols : Map a transformer to columns in a dataframe.
+    TableVectorizer : Transform a dataframe to a numeric (vectorized) representation.
+
+    Examples
+    --------
+    Using ``Drop`` with :class:`ApplyToCols` to drop selected columns::
+
+        >>> import pandas as pd
+        >>> from skrub import ApplyToCols, Drop, StringEncoder
+        >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
+        >>> df
+            A     B     C
+        0 -10.0 -10.0   0.0
+        1  10.0   0.0  10.0
+        >>> transformer = ApplyToCols(Drop(), cols=["A", "B"])
+        >>> transformer.transformers_
+            {'A': Drop(), 'B': Drop()}
+        >>> transformer.fit_transform(df)
+            C
+        0   0.0
+        1  10.0
+    """
+
     def fit_transform(self, column, y=None):
         self.all_outputs_ = []
         return []
