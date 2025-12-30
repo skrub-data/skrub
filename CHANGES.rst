@@ -50,6 +50,9 @@ New features
 - :meth:`DataOp.skb.full_report` now accepts a new parameter, ``title``, that is displayed
   in the html report.
   :pr:`1654` by :user:`Marie Sacksick <MarieSacksick>`.
+- Added the :func:`interdependence_score`, an implementation of the IDS from the paper
+  `Efficiently quantifying dependence in massive scientific datasets using InterDependence Scores`.
+  :pr:`1724` by :user:`Jade Affolabi <JadeAffolabi>`.
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
