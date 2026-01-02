@@ -227,8 +227,6 @@ class Drop(SingleColumnTransformer):
         0 -10.0 -10.0   0.0
         1  10.0   0.0  10.0
         >>> transformer = ApplyToCols(Drop(), cols=["A", "B"])
-        >>> transformer.transformers_
-            {'A': Drop(), 'B': Drop()}
         >>> transformer.fit_transform(df)
             C
         0   0.0
