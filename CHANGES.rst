@@ -16,6 +16,9 @@ New features
   :func:`fetch_california_housing` function.
   :pr:`1830` by :user:`Guillaume Lemaitre <glemaitre>`.
 
+Changes
+-------
+
 Bugfixes
 --------
 - :class:`DropCols` and :class:`SelectCols:` attributes were renamed to end
