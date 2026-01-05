@@ -56,11 +56,12 @@ print(pred.skb.describe_param_grid())
 # Load data for the example
 
 # %%
-from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import KFold
 
 # (We subsample the dataset by half to make the example run faster)
-df = fetch_california_housing(as_frame=True).frame.sample(10_000, random_state=0)
+df = skrub.datasets.fetch_california_housing().california_housing.sample(
+    10_000, random_state=0
+)
 
 # The environment we will use to fit the learners created by our DataOp.
 env = {"data": df}
