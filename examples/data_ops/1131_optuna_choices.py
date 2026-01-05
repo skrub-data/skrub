@@ -29,8 +29,8 @@ This can be done with pip:
 # ------------------------------------
 #
 # We will fit a regressor containing a few choices on a toy dataset. We
-# try 2 regressors: gradient boosting and random forest. They both have
-# hyperparameters that we want to tune.
+# try 2 regressors: extra trees and ridge. They both have  hyperparameters that
+# we want to tune.
 
 # %%
 from sklearn.ensemble import ExtraTreesRegressor
