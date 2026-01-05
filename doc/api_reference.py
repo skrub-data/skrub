@@ -300,6 +300,7 @@ API_REFERENCE = {
                 "description": "Downloading a dataset.",
                 "autosummary": [
                     "datasets.fetch_bike_sharing",
+                    "datasets.fetch_california_housing",
                     "datasets.fetch_country_happiness",
                     "datasets.fetch_credit_fraud",
                     "datasets.fetch_drug_directory",
