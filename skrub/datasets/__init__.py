@@ -1,5 +1,6 @@
 from ._fetching import (
     fetch_bike_sharing,
+    fetch_california_housing,
     fetch_country_happiness,
     fetch_credit_fraud,
     fetch_drug_directory,
@@ -18,6 +19,7 @@ from ._utils import get_data_dir
 
 __all__ = [
     "fetch_bike_sharing",
+    "fetch_california_housing",
     "fetch_country_happiness",
     "fetch_credit_fraud",
     "fetch_drug_directory",

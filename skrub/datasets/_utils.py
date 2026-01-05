@@ -20,6 +20,13 @@ DATASET_INFO = {
         ],
         "sha256": "33745414801712034cf1d8615d7f086bba411ea8e44bfffefc0c6f23cb8afb83",
     },
+    "california_housing": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/california_housing.zip",
+            "https://osf.io/download/dxew5",
+        ],
+        "sha256": "86545bc4250a0c5d1762c52934f3760bc50b5d618f4aeb3a67bb66416909e919",
+    },
     "country_happiness": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/country_happiness.zip",
