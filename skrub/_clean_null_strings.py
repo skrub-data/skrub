@@ -159,7 +159,7 @@ class CleanNullStrings(SingleColumnTransformer):
     ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``:
 
     >>> from skrub._to_float import ToFloat
-    >>> ToFloat().fit_transform(s)  # doctest: +ELLIPSIS
+    >>> ToFloat().fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Could not convert column 's' to numbers.
@@ -174,7 +174,7 @@ class CleanNullStrings(SingleColumnTransformer):
     are rejected:
 
     >>> s = pd.Series([1.1, None], name='s')
-    >>> cleaner.fit_transform(s)  # doctest: +ELLIPSIS
+    >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Column 's' does not contain strings.
@@ -183,7 +183,7 @@ class CleanNullStrings(SingleColumnTransformer):
     have the ``string`` or ``object`` ``dtype``:
 
     >>> s = pd.Series(['a', ''], dtype='category')
-    >>> cleaner.fit_transform(s)  # doctest: +ELLIPSIS
+    >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Column None does not contain strings.

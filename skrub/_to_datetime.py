@@ -172,7 +172,7 @@ class ToDatetime(SingleColumnTransformer):
     2   2024-05-07 13:17:52
     Name: when, dtype: datetime64[...]
 
-    >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)  # doctest: +ELLIPSIS
+    >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
@@ -202,7 +202,7 @@ class ToDatetime(SingleColumnTransformer):
     datetimes are rejected.
 
     >>> s = pd.Series([2020, 2021, 2022], name="year")
-    >>> to_dt.fit_transform(s)  # doctest: +ELLIPSIS
+    >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Column 'year' does not contain strings.
@@ -211,7 +211,7 @@ class ToDatetime(SingleColumnTransformer):
     fail to be converted are also rejected.
 
     >>> s = pd.Series(["2024-05-07T13:36:27", "yesterday"], name="when")
-    >>> to_dt.fit_transform(s)  # doctest: +ELLIPSIS
+    >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'when'.

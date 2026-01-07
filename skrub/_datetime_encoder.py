@@ -254,7 +254,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     0    2024-04-14
     1    2024-05-15
     Name: birthday, dtype: ...
-    >>> DatetimeEncoder().fit_transform(s)  # doctest: +ELLIPSIS
+    >>> DatetimeEncoder().fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.

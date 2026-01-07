@@ -83,7 +83,7 @@ class ToCategorical(SingleColumnTransformer):
 
     Columns that are not strings nor categorical are rejected:
 
-    >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))  # doctest: +ELLIPSIS
+    >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Column 'c' does not contain strings.
@@ -91,7 +91,7 @@ class ToCategorical(SingleColumnTransformer):
     ``object`` columns that do not contain only strings are also rejected:
 
     >>> s = pd.Series(['one', 1], name='c')
-    >>> to_cat.fit_transform(s)  # doctest: +ELLIPSIS
+    >>> to_cat.fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Column 'c' does not contain strings.

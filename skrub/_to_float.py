@@ -129,7 +129,7 @@ class ToFloat(SingleColumnTransformer):
     Columns that cannot be cast to numbers are rejected:
 
     >>> s = pd.Series(['1.1', '2.2', 'hello'], name='x')
-    >>> to_float.fit_transform(s)  # doctest: +ELLIPSIS
+    >>> to_float.fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Could not convert column 'x' to numbers.
@@ -151,11 +151,11 @@ class ToFloat(SingleColumnTransformer):
     1    2.2
     Name: s, dtype: category
     Categories (2, ...): ['1.1', '2.2']
-    >>> to_float.fit_transform(s)  # doctest: +ELLIPSIS
+    >>> to_float.fit_transform(s)
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Refusing to cast column 's' with dtype 'category' to numbers.
-    >>> to_float.fit_transform(pd.to_datetime(pd.Series(['2024-05-13'], name='s')))  # doctest: +ELLIPSIS
+    >>> to_float.fit_transform(pd.to_datetime(pd.Series(['2024-05-13'], name='s')))
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Refusing to cast column 's' with dtype 'datetime64[...]' to numbers.
