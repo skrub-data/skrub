@@ -162,8 +162,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> ToFloat().fit_transform(s)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn:
-    Could not convert column 's' to numbers.
+    skrub._single_column_transformer.RejectColumn: Could not convert column 's' to numbers.
     >>> ToFloat().fit_transform(cleaner.fit_transform(s))
     0    1.1
     1    2.2

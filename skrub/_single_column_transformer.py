@@ -1,6 +1,4 @@
-"""
-A single place for all the single column transformers.
-"""
+"""Base class for single-column transformers."""
 
 import functools
 import re
@@ -10,6 +8,8 @@ from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+
+__all__ = ["SingleColumnTransformer", "RejectColumn"]
 
 _SINGLE_COL_LINE = (
     "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
@@ -26,8 +26,6 @@ _SINGLE_COL_PARAGRAPH = textwrap.fill(
     _SINGLE_COL_LINE, initial_indent="    ", subsequent_indent="    "
 )
 _SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
-
-__all__ = ["SingleColumnTransformer", "RejectColumn"]
 
 
 class RejectColumn(ValueError):

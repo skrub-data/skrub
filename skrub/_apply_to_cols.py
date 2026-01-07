@@ -166,7 +166,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     >>> ToDatetime().fit_transform(df["birthday"])
     0   2024-01-29
     Name: birthday, dtype: datetime64[...]
-    >>> ToDatetime().fit_transform(df["city"])  # doctest: +ELLIPSIS
+    >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
     skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
