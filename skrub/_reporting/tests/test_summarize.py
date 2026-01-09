@@ -302,9 +302,9 @@ def test_with_associations_and_seed(monkeypatch, air_quality):
                 a1["left_column_name"] != a3["left_column_name"]
             )
 
-        assert all(res_associations_1_vs_2), (
-            "Computing summary with the same seed should produce the same associations."
-        )
+        assert all(
+            res_associations_1_vs_2
+        ), "Computing summary with the same seed should produce the same associations."
         assert not all(res_associations_1_vs_3), (
             "Computing summary with different seeds should produce different "
             "associations."

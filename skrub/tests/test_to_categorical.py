@@ -1,7 +1,7 @@
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub._apply_to_cols import RejectColumn
+from skrub._single_column_transformer import RejectColumn
 from skrub._to_categorical import ToCategorical
 
 

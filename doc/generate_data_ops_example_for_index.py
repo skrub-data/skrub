@@ -5,6 +5,7 @@ The first and second "cells" of this script are the actual demo, for the index p
 
 The other cells are used to generate the HTML snippets for the index page.
 """
+
 # We want manual control over the formatting as those snippets are shown in the home page
 # fmt: off
 # ruff: noqa

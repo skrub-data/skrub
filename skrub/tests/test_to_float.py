@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from skrub import _dataframe as sbd
-from skrub._apply_to_cols import RejectColumn
+from skrub._single_column_transformer import RejectColumn
 from skrub._to_categorical import ToCategorical
 from skrub._to_datetime import ToDatetime
 from skrub._to_float import ToFloat
