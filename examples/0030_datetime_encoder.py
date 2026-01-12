@@ -352,3 +352,78 @@ plt.show()
 # features from a datetime column.
 # Also check out the |TableVectorizer|, which automatically recognizes
 # and transforms datetime columns by default.
+
+"""
+Simple example: understanding what DatetimeEncoder extracts
+------------------------------------------------------------
+
+This example demonstrates what the DatetimeEncoder does on a simple,
+non-forecasting regression task.
+
+We compare a naive baseline using a raw numeric timestamp with a model
+that uses DatetimeEncoder with periodic encoding to extract meaningful
+time-based features for a linear regression model.
+"""
+
+import numpy as np
+import pandas as pd
+
+from skrub import DatetimeEncoder, ApplyToCols
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import r2_score
+
+# ---------------------------------------------------------------------
+# Create a simple synthetic dataset
+# ---------------------------------------------------------------------
+rng = pd.date_range("2023-01-01", periods=300, freq="h")
+
+X = pd.DataFrame({"date": rng})
+
+# Target depends on hour of day and weekday (cyclic pattern)
+y = (
+    10 * X["date"].dt.hour.isin([8, 9, 17, 18]).astype(int)
+    + 5 * (X["date"].dt.weekday < 5).astype(int)
+    + np.random.normal(0, 1, size=len(X))
+)
+
+# ---------------------------------------------------------------------
+# Baseline model: naive numeric timestamp
+# ---------------------------------------------------------------------
+X_baseline = pd.DataFrame(
+    {"timestamp": X["date"].astype("int64") // 10**9}
+)
+
+model_baseline = LinearRegression()
+model_baseline.fit(X_baseline, y)
+
+y_pred_baseline = model_baseline.predict(X_baseline)
+print("R² with naive timestamp:", r2_score(y, y_pred_baseline))
+
+# ---------------------------------------------------------------------
+# Model using DatetimeEncoder with periodic features
+# ---------------------------------------------------------------------
+model_datetime = make_pipeline(
+    ApplyToCols(
+        DatetimeEncoder(
+            add_weekday=True,
+            periodic_encoding="spline",
+        ),
+        cols=["date"],
+    ),
+    LinearRegression(),
+)
+
+model_datetime.fit(X, y)
+y_pred_datetime = model_datetime.predict(X)
+
+print("R² with DatetimeEncoder:", r2_score(y, y_pred_datetime))
+
+# ---------------------------------------------------------------------
+# Inspect generated datetime features
+# ---------------------------------------------------------------------
+apply = model_datetime.named_steps["applytocols"]
+encoder = next(iter(apply.transformers_.values()))
+
+print("Generated features:")
+print(encoder.get_feature_names_out())
