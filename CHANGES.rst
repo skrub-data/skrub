@@ -58,6 +58,9 @@ Changes
 - Computing the associations in `TableReport` is now deterministic and can be controlled
   by the new parameter ``subsampling_seed`` of the global configuration.
   :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
+- The :class: `StringEncoder` now exposes the ``vocabulary`` parameter from the parent
+  :class: `TfidfVectorizer`.
+  :pr: `1819` by :user: `Eloi Massoulié <emassoulie>`
 
 Bugfixes
 --------

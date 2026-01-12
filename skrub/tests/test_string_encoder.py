@@ -310,3 +310,22 @@ def test_zero_padding_in_feature_names_out(df_module, n_components, expected_col
     feature_names = encoder.get_feature_names_out()
 
     assert feature_names[: len(expected_columns)] == expected_columns
+
+
+def test_vocabulary_parameter(df_module):
+    voc = {
+        "this": 5,
+        "is": 1,
+        "simple": 3,
+        "example": 0,
+        "this is": 6,
+        "is simple": 2,
+        "simple example": 4,
+    }
+    encoder_tfidf = StringEncoder(vocabulary_=voc)
+    encoder_hashing = StringEncoder(vocabulary_=voc, vectorizer="hashing")
+    X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
+
+    encoder_tfidf.fit_transform(X)
+    with pytest.raises(ValueError):
+        encoder_hashing.fit_transform(X)
