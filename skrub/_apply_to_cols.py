@@ -20,7 +20,7 @@ _SINGLE_COL_LINE = (
     " this transformer to one or more columns in a dataframe, use it as a parameter in"
     " a ``skrub.ApplyToCols`` or a ``skrub.TableVectorizer``."
     " To apply to all columns::\n\n"
-    "   ApplyToCol({class_name}())\n\n"
+    "   ApplyToCols({class_name}())\n\n"
     "To apply to selected columns::\n\n"
     "   ApplyToCols({class_name}(), cols=['col_name_1', 'col_name_2'])"
 )
