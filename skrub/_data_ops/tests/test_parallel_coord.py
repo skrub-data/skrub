@@ -1,9 +1,11 @@
+import numpy as np
 import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
 
 import skrub
+from skrub._data_ops._parallel_coord import _add_jitter, _prepare_column
 
 
 def _has_plotly():
@@ -85,6 +87,70 @@ def test_parallel_coord():
     assert dim["label"] == "fit time"
     dim = next(data)
     assert dim["label"] == "score"
+
+
+@pytest.mark.parametrize(
+    "is_log_scale, is_int",
+    [
+        (True, True),
+        (True, False),
+        (False, True),
+        (False, False),
+    ],
+)
+def test_column_preparation(is_log_scale, is_int):
+    pytest.importorskip("plotly")
+
+    # Normal case
+    column = pd.Series(np.array([1.0, 2.0, 3.0]), name="test")
+    prepared = _prepare_column(column, is_log_scale=is_log_scale, is_int=is_int)
+
+    if is_log_scale:
+        expected_values = np.log(np.array([1.0, 2.0, 3.0]))
+    else:
+        expected_values = np.array([1.0, 2.0, 3.0])
+
+    assert np.allclose(prepared["values"], expected_values)
+
+    # One non-nan value
+    column = pd.Series(np.array([np.nan, 2.0, np.nan]), name="test")
+    prepared = _prepare_column(column, is_log_scale=is_log_scale, is_int=is_int)
+
+    if is_log_scale:
+        expected_value = np.log(2.0)
+    else:
+        expected_value = 2.0
+
+    # check that the non-nan value is correctly placed
+    assert np.allclose(
+        prepared["values"],
+        [prepared["tickvals"][0], expected_value, prepared["tickvals"][0]],
+    )
+    assert prepared["ticktext"] == ["NaN", "2"]
+
+    # All nans
+    column = pd.Series(np.array([np.nan, np.nan, np.nan]), name="test")
+
+    prepared = _prepare_column(column, is_log_scale=is_log_scale, is_int=is_int)
+    jittered = _add_jitter(prepared)
+
+    assert prepared["ticktext"] == ["NaN"]
+    assert np.all(prepared["values"] == 0.0)
+    assert np.all(jittered["values"] == 0.0)
+
+    # All identical values
+    column = pd.Series(np.array([1.0, 1.0, 1.0]), name="test")
+
+    prepared = _prepare_column(column, is_log_scale=is_log_scale, is_int=is_int)
+    jittered = _add_jitter(prepared)
+
+    assert prepared["ticktext"] == ["1"]
+    if is_log_scale:
+        assert np.all(prepared["values"] == np.log(1.0))
+        assert np.all(jittered["values"] == np.log(1.0))
+    else:
+        assert np.all(prepared["values"] == 1.0)
+        assert np.all(jittered["values"] == 1.0)
 
 
 def test_multi_scoring():

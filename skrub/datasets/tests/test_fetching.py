@@ -73,6 +73,7 @@ def test_fetch_employee_salaries():
 @pytest.mark.parametrize(
     "dataset_name, shape",
     [
+        ("california_housing", (20640, 9)),
         ("medical_charge", (163065, 12)),
         ("midwest_survey", (2494, 29)),
         ("open_payments", (73558, 6)),

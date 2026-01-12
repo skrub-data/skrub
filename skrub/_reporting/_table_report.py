@@ -193,7 +193,7 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
-        verbose=1,
+        verbose=None,
         max_plot_columns=None,
         max_association_columns=None,
         open_tab="table",
@@ -214,6 +214,10 @@ class TableReport:
                 )
 
         n_rows = max(1, n_rows)
+        if verbose is None:
+            self.verbose = _config.get_config()["table_report_verbosity"]
+        else:
+            self.verbose = verbose
 
         # Validate open_tab parameter
         valid_tabs = ["table", "stats", "distributions", "associations"]
@@ -227,12 +231,11 @@ class TableReport:
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
-            "verbose": verbose,
+            "verbose": self.verbose,
         }
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.verbose = verbose
         self.max_plot_columns, self.max_association_columns = _check_max_cols(
             max_plot_columns, max_association_columns
         )
