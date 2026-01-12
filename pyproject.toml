@@ -294,6 +294,8 @@ ignore = [
 # folder.
 "examples/*" = ["E402"]
 "doc/conf.py" = ["E402"]
+# Long exception messages in docstrings
+"skrub/_clean_null_strings.py" = ["E501"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
