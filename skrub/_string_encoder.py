@@ -61,7 +61,7 @@ class StringEncoder(TransformerMixin, SingleColumnTransformer):
         Used during randomized svd. Pass an int for reproducible results across
         multiple function calls.
 
-    vocabulary_ : Mapping or iterable, default=None
+    vocabulary : Mapping or iterable, default=None
         In case of "tfidf" vectorizer, the vocabulary mapping passed to the vectorizer.
         Either a Mapping (e.g., a dict) where keys are terms and values are
         indices in the feature matrix, or an iterable over terms.
@@ -136,7 +136,7 @@ class StringEncoder(TransformerMixin, SingleColumnTransformer):
         analyzer="char_wb",
         stop_words=None,
         random_state=None,
-        vocabulary_=None,
+        vocabulary=None,
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
@@ -144,7 +144,7 @@ class StringEncoder(TransformerMixin, SingleColumnTransformer):
         self.analyzer = analyzer
         self.stop_words = stop_words
         self.random_state = random_state
-        self.vocabulary_ = vocabulary_
+        self.vocabulary = vocabulary
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -172,10 +172,10 @@ class StringEncoder(TransformerMixin, SingleColumnTransformer):
                 ngram_range=self.ngram_range,
                 analyzer=self.analyzer,
                 stop_words=self.stop_words,
-                vocabulary=self.vocabulary_,
+                vocabulary=self.vocabulary,
             )
         elif self.vectorizer == "hashing":
-            if self.vocabulary_ is None:
+            if self.vocabulary is None:
                 self.vectorizer_ = Pipeline(
                     [
                         (

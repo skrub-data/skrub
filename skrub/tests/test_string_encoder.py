@@ -322,10 +322,18 @@ def test_vocabulary_parameter(df_module):
         "is simple": 2,
         "simple example": 4,
     }
-    encoder_tfidf = StringEncoder(vocabulary_=voc)
-    encoder_hashing = StringEncoder(vocabulary_=voc, vectorizer="hashing")
+    encoder = StringEncoder(vocabulary=voc)
     X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
 
-    encoder_tfidf.fit_transform(X)
+    encoder.fit_transform(X)
+    assert encoder.vectorizer_.vocabulary_ == voc
+
+
+def test_vocabulary_on_hashing_vectorizer(df_module):
+    voc = {
+        "this": 5,
+    }
+    encoder = StringEncoder(vocabulary=voc, vectorizer="hashing")
     with pytest.raises(ValueError):
-        encoder_hashing.fit_transform(X)
+        X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
+        encoder.fit_transform(X)
