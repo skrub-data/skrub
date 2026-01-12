@@ -11,13 +11,22 @@ Ongoing Development
 
 New features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Release 0.7.1
+=============
+
+New features
+------------
 - A new dataset, :func:`fetch_california_housing`, has been added to the
   :mod:`skrub.datasets` module. It allows to get a redundancy copy of the scikit-learn
   :func:`fetch_california_housing` function.
   :pr:`1830` by :user:`Guillaume Lemaitre <glemaitre>`.
-
-Changes
--------
 
 Bugfixes
 --------

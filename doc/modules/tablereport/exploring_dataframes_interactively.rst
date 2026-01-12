@@ -72,7 +72,7 @@ Exporting and Sharing the |TableReport|
 
 The |TableReport| is a standalone object that does not require a running notebook
 to be accessed after generation: it can be exported in HTML format and opened
-directly in a browser as a HTML page.
+directly in a browser as an HTML page.
 
 >>> import io # to avoid writing to disk in the example
 >>> from skrub import TableReport
