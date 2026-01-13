@@ -58,7 +58,7 @@ def test_deduplicate(
     assert np.isin(unique_other_analyzer, recovered_categories).all()
 
 
-def test__compute_ngram_distance():
+def test_compute_ngram_distance():
     words = np.array(["aac", "aaa", "aaab", "aaa", "aaab", "aaa", "aaab", "aaa"])
     distance = _compute_ngram_distance(words)
     distance = squareform(distance)

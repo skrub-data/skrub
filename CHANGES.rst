@@ -15,6 +15,9 @@ New features
 Changes
 -------
 
+- :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` as it is a private function.
+  :pr:`1755` by :user:`Siddharth Baleja <siddharthbaleja>`.
+
 Bugfixes
 --------
 
