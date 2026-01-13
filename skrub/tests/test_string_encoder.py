@@ -350,7 +350,7 @@ def test_vocabulary_on_hashing_vectorizer(df_module):
         "this": 5,
     }
     encoder = StringEncoder(vocabulary=voc, vectorizer="hashing")
-    with pytest.raises(ValueError, match="*Custom vocabulary passed to StringEncoder*"):
+    with pytest.raises(ValueError, match="Custom vocabulary passed to StringEncoder*"):
         X = df_module.make_column(
             "col",
             ["this is a sentence", "this simple example is simple", "other words", ""],
