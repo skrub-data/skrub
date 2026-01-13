@@ -14,6 +14,10 @@ New features
 
 Changes
 -------
+- The :class: `StringEncoder` now exposes the ``vocabulary`` parameter from the parent
+  :class: `TfidfVectorizer`.
+  :pr: `1819` by :user: `Eloi Massoulié <emassoulie>`
+
 
 Bugfixes
 --------
@@ -66,9 +70,6 @@ New features
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
-- The :class: `StringEncoder` now exposes the ``vocabulary`` parameter from the parent
-  :class: `TfidfVectorizer`.
-  :pr: `1819` by :user: `Eloi Massoulié <emassoulie>`
 
 Changes
 -------
