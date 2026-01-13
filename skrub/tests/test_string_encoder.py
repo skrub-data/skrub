@@ -322,11 +322,27 @@ def test_vocabulary_parameter(df_module):
         "is simple": 2,
         "simple example": 4,
     }
-    encoder = StringEncoder(vocabulary=voc)
-    X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
+    encoder = StringEncoder(n_components=2, vocabulary=voc)
+    pipeline = Pipeline(
+        [
+            (
+                "tfidf",
+                TfidfVectorizer(ngram_range=(3, 4), analyzer="char_wb", vocabulary=voc),
+            ),
+            ("tsvd", TruncatedSVD()),
+        ]
+    )
+    X = df_module.make_column(
+        "col",
+        ["this is a sentence", "this simple example is simple", "other words", ""],
+    )
 
-    encoder.fit_transform(X)
+    enc_out = encoder.fit_transform(X)
+    pipe_out = pipeline.fit_transform(X)
+    pipe_out /= scaling_factor(pipe_out)
+
     assert encoder.vectorizer_.vocabulary_ == voc
+    assert_almost_equal(enc_out, pipe_out)
 
 
 def test_vocabulary_on_hashing_vectorizer(df_module):
@@ -334,6 +350,9 @@ def test_vocabulary_on_hashing_vectorizer(df_module):
         "this": 5,
     }
     encoder = StringEncoder(vocabulary=voc, vectorizer="hashing")
-    with pytest.raises(ValueError):
-        X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
+    with pytest.raises(ValueError, match="*Custom vocabulary passed to StringEncoder*"):
+        X = df_module.make_column(
+            "col",
+            ["this is a sentence", "this simple example is simple", "other words", ""],
+        )
         encoder.fit_transform(X)

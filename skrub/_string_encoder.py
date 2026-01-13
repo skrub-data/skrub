@@ -175,7 +175,12 @@ class StringEncoder(TransformerMixin, SingleColumnTransformer):
                 vocabulary=self.vocabulary,
             )
         elif self.vectorizer == "hashing":
-            if self.vocabulary is None:
+            if self.vocabulary is not None:
+                raise ValueError(
+                    "Custom vocabulary passed to StringEncoder, unsupported by"
+                    "HashingVectorizer. Rerun without a 'vocabulary' parameter."
+                )
+            else:
                 self.vectorizer_ = Pipeline(
                     [
                         (
@@ -189,11 +194,7 @@ class StringEncoder(TransformerMixin, SingleColumnTransformer):
                         ("tfidf", TfidfTransformer()),
                     ]
                 )
-            else:
-                raise ValueError(
-                    "Custom vocabulary passed to StringEncoder, unsupported by"
-                    "HashingVectorizer. Rerun without a 'vocabulary' parameter."
-                )
+
         else:
             raise ValueError(
                 f"Unknown vectorizer {self.vectorizer}. Options are 'tfidf' or"

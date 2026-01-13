@@ -66,6 +66,9 @@ New features
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The :class: `StringEncoder` now exposes the ``vocabulary`` parameter from the parent
+  :class: `TfidfVectorizer`.
+  :pr: `1819` by :user: `Eloi Massoulié <emassoulie>`
 
 Changes
 -------
@@ -87,9 +90,6 @@ Changes
 - Computing the associations in :class:`TableReport` is now deterministic and can
   be controlled by the new parameter ``subsampling_seed`` of the global configuration.
   :pr:`1775` by :user:`Thomas S. <thomass-dev>`.
-- The :class: `StringEncoder` now exposes the ``vocabulary`` parameter from the parent
-  :class: `TfidfVectorizer`.
-  :pr: `1819` by :user: `Eloi Massoulié <emassoulie>`
 - Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
   conversion of list/object-like columns to strings unless explicitly enabled.
   :pr:`1789` by :user:`PilliSiddharth`.
