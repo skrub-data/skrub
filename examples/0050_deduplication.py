@@ -148,33 +148,6 @@ translation_table.head()
 # If we want to adapt the translation table, we can
 # modify it manually.
 
-###############################################################################
-# Visualizing string pair-wise distance between names
-# ---------------------------------------------------
-#
-# Below, we use a heatmap to visualize the pairwise-distance between medication
-# names. A darker color means that two medication names are closer together
-# (i.e. more similar), a lighter color means a larger distance.
-#
-
-from scipy.spatial.distance import squareform
-
-from skrub._deduplicate import _compute_ngram_distance
-
-ngram_distances = _compute_ngram_distance(unique_examples)
-square_distances = squareform(ngram_distances)
-
-import seaborn as sns
-
-fig, ax = plt.subplots(figsize=(14, 12))
-sns.heatmap(
-    square_distances, yticklabels=unique_examples, xticklabels=unique_examples, ax=ax
-)
-plt.show()
-
-###############################################################################
-# We have three clusters appearing - the original medication
-# names and their misspellings that form a cluster around them.
 
 ###############################################################################
 # Conclusion
