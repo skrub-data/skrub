@@ -14,6 +14,13 @@ New features
 
 Changes
 -------
+- The :class:`StringEncoder` now exposes the ``vocabulary`` parameter from the parent
+  :class:`TfidfVectorizer`.
+  :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
+
+
+- :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
+  :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
 
 Bugfixes
 --------
