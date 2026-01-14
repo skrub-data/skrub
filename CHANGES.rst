@@ -14,9 +14,9 @@ New features
 
 Changes
 -------
-- The :class: `StringEncoder` now exposes the ``vocabulary`` parameter from the parent
-  :class: `TfidfVectorizer`.
-  :pr: `1819` by :user: `Eloi Massoulié <emassoulie>`
+- The :class:`StringEncoder` now exposes the ``vocabulary`` parameter from the parent
+  :class:`TfidfVectorizer`.
+  :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 
 
 Bugfixes
