@@ -60,5 +60,6 @@ git config user.name $USERNAME
 git config push.default matching
 git add -f $dir/
 git commit -m "$MSG" $dir
+git pull --rebase origin main
 git push
 echo $MSG
