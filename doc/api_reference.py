@@ -159,6 +159,7 @@ API_REFERENCE = {
                     " details."
                 ),
                 "autosummary": [
+                    "selectors.Selector",
                     "selectors.all",
                     "selectors.any_date",
                     "selectors.boolean",
