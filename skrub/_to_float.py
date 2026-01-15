@@ -1,7 +1,59 @@
+import re
+
 from . import _dataframe as sbd
 from ._apply_to_cols import RejectColumn, SingleColumnTransformer
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 
 __all__ = ["ToFloat"]
+
+
+def _build_number_regex(decimal, thousand):
+    d = re.escape(decimal)
+    t = re.escape(thousand)
+
+    integer = rf"(?:\d+|\d{{1,3}}(?:{t}\d{{3}})+)"
+    decimal_part = rf"{d}\d+"
+    scientific = r"(?:[eE][+-]?\d+)?"
+    number = rf"(?:{integer}(?:{decimal_part})?|{decimal_part})"
+    return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
+
+
+@dispatch
+def _str_is_valid_number(col, number_re):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@_str_is_valid_number.specialize("pandas", argument_type="Column")
+def _str_is_valid_number_pandas(col, number_re):
+    if not col.fillna("").str.match(number_re, na=False).all():
+        raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
+    return True
+
+
+@_str_is_valid_number.specialize("polars", argument_type="Column")
+def _str_is_valid_number_polars(col, number_re):
+    if not col.fill_null("").str.contains(number_re.pattern, literal=False).all():
+        raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
+    return True
+
+
+@dispatch
+def _str_replace(col, strict=True):
+    raise_dispatch_unregistered_type(col, kind="Series")
+
+
+@_str_replace.specialize("pandas", argument_type="Column")
+def _str_replace_pandas(col, decimal, thousand):
+    col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
+    col = col.str.replace(thousand, "", regex=False)
+    return col.str.replace(decimal, ".", regex=False)
+
+
+@_str_replace.specialize("polars", argument_type="Column")
+def _str_replace_polars(col, decimal, thousand):
+    col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
+    col = col.str.replace_all(thousand, "", literal=True)
+    return col.str.replace_all(f"[{decimal}]", ".")
 
 
 class ToFloat(SingleColumnTransformer):
@@ -21,6 +73,17 @@ class ToFloat(SingleColumnTransformer):
 
     During ``transform``, entries for which conversion fails are replaced by
     null values.
+
+    Parameters
+    ----------
+    decimal : str, default='.'
+        Character to recognize as the decimal separator when converting from
+        strings to floats. Other possible decimal separators are removed from
+        the strings before conversion.
+    thousand : str or None, default=None
+        Character used as thousands separator. Supported values are ``"."``,
+        ``,``, space (``" "``), apostrophe (``"'"``), or ``None`` (no thousands
+        separator). The decimal and thousands separators must differ.
 
     Examples
     --------
@@ -165,7 +228,35 @@ class ToFloat(SingleColumnTransformer):
     >>> s = pd.Series([1.1, None], dtype='float32')
     >>> to_float.fit_transform(s) is s
     True
+
+    Negative numbers represented using parentheses are converted
+    so they use "-" instead.
+    >>> s = pd.Series(["-1,234.56", "1,234.56", "(1,234.56)"], name='parens')
+    >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
+    0   -1234.5...
+    1    1234.5...
+    2   -1234.5...
+    dtype: float32
+
+    Numbers that use scientific notation are converted:
+    >>> s = pd.Series(["1.23e+4", "1.23E+4"], name="x")
+    >>> ToFloat(decimal=".").fit_transform(s)
+    0    12300.0
+    1    12300.0
+    Name: x, dtype: float32
+
+    It is possible to specify the thousands separator, e.g., to use " "
+    >>> s = pd.Series(["4 567,89", "12 567,89"], name="x")
+    >>> ToFloat(decimal=",", thousand=" ").fit_transform(s) # doctest: +ELLIPSIS
+    0    4567.8...
+    1    12567.8...
+    Name: x, dtype: float32
     """  # noqa: E501
+
+    def __init__(self, decimal=".", thousand=None):
+        super().__init__()
+        self.decimal = decimal
+        self.thousand = thousand
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -185,12 +276,28 @@ class ToFloat(SingleColumnTransformer):
         """
         del y
         self.all_outputs_ = [sbd.name(column)]
+        if self.thousand is None:
+            self.thousand = ""  # No thousand separator
+        if self.decimal is None:
+            raise ValueError("The decimal separator cannot be None.")
+        if self.thousand == self.decimal:
+            raise ValueError("The thousand and decimal separators must differ.")
+
         if sbd.is_any_date(column) or sbd.is_categorical(column):
             raise RejectColumn(
                 f"Refusing to cast column {sbd.name(column)!r} "
                 f"with dtype '{sbd.dtype(column)}' to numbers."
             )
         try:
+            if sbd.is_string(column):
+                self._number_re_ = re.compile(
+                    _build_number_regex(self.decimal, self.thousand),
+                    re.VERBOSE,
+                )
+                _str_is_valid_number(column, self._number_re_)
+                column = _str_replace(
+                    column, decimal=self.decimal, thousand=self.thousand
+                )
             numeric = sbd.to_float32(column, strict=True)
             return numeric
         except Exception as e:
