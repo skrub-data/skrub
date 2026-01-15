@@ -13,6 +13,7 @@ from ._join_utils import pick_column_names
 
 __all__ = ["ApplyToCols", "SingleColumnTransformer", "RejectColumn"]
 
+_SELECTORS = selectors.all()
 _SINGLE_COL_LINE = (
     "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
     " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
@@ -452,7 +453,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     def __init__(
         self,
         transformer,
-        cols=selectors.all(),
+        cols=_SELECTORS,
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",

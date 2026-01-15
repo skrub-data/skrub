@@ -271,7 +271,7 @@ exclude = [
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
-select = ["E", "F", "W", "C4", "I", "UP"]
+select = ["E", "F", "W", "B", "C4", "I", "UP"]
 ignore = [
   # use `is` and `is not` for type comparisons
   "E721",
@@ -279,6 +279,14 @@ ignore = [
   "E731",
   # do not use variables named 'l', 'O', or 'I'
   "E741",
+  "B004",
+  "B007",
+  "B010",
+  "B017",
+  "B018",
+  "B028",
+  "B904",
+  "B905",
   # unnecessary list comprehension (rewrite as a set comprehension)
   "C403",
   # unnecessary tuple literal (rewrite as a set literal)
