@@ -9,7 +9,6 @@ from sklearn.utils.fixes import parse_version
 from skrub import ApplyToCols
 from skrub import _dataframe as sbd
 from skrub._dispatch import dispatch
-from skrub._single_column_transformer import RejectColumn
 from skrub._to_datetime import (
     ToDatetime,
     _convert_time_zone,
@@ -17,6 +16,7 @@ from skrub._to_datetime import (
     to_datetime,
 )
 from skrub.conftest import skip_polars_installed_without_pyarrow
+from skrub.core._single_column_transformer import RejectColumn
 
 ISO = "%Y-%m-%dT%H:%M:%S"
 

@@ -105,4 +105,6 @@ __all__ = [
     "ApplyToCols",
     "ApplyToFrame",
     "ToFloat",
+    "SingleColumnTransformer",
+    "RejectColumn",
 ]
