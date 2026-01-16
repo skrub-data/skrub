@@ -3,7 +3,7 @@ import numbers
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._apply_to_cols import SingleColumnTransformer
+from ._single_column_transformer import SingleColumnTransformer
 
 __all__ = ["DropUninformative"]
 

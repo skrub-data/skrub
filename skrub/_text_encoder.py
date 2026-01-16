@@ -8,8 +8,8 @@ from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._apply_to_cols import SingleColumnTransformer
 from ._scaling_factor import scaling_factor
+from ._single_column_transformer import SingleColumnTransformer
 from ._to_str import ToStr
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
