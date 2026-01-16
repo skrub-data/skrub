@@ -5,7 +5,7 @@ from pandas.testing import assert_series_equal
 
 from skrub import _dataframe as sbd
 from skrub._clean_categories import CleanCategories, _with_string_categories
-from skrub._single_column_transformer import RejectColumn
+from skrub.core._single_column_transformer import RejectColumn
 
 
 def test_clean_categories_polars():

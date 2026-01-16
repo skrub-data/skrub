@@ -12,7 +12,7 @@ from sklearn.pipeline import Pipeline
 from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
 from skrub._scaling_factor import scaling_factor
-from skrub._single_column_transformer import RejectColumn
+from skrub.core._single_column_transformer import RejectColumn
 
 
 @pytest.fixture
