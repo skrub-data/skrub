@@ -8,8 +8,8 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import selectors as s
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 from ._wrap_transformer import wrap_transformer
-from .core._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToDatetime", "to_datetime"]
 
