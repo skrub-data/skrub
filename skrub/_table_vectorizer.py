@@ -17,13 +17,13 @@ from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
 from ._select_cols import Drop
+from ._single_column_transformer import SingleColumnTransformer
 from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
 from ._to_float import ToFloat
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
-from .core._single_column_transformer import SingleColumnTransformer
 
 __all__ = ["TableVectorizer"]
 
