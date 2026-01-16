@@ -4,7 +4,7 @@ from .._utils import repr_args
 
 
 def all():
-    """Select all columns.
+    """Select all columns. See also :class:`skrub.selectors.Selector()`.
 
     Examples
     --------
@@ -33,7 +33,7 @@ def all():
 
 
 def cols(*columns):
-    """Select columns by name.
+    """Select columns by name. See also :class:`skrub.selectors.Selector()`.
 
     Examples
     --------
@@ -89,7 +89,7 @@ def cols(*columns):
 
 
 def inv(obj):
-    """Invert a selector.
+    """Invert a selector. See also :class:`skrub.selectors.Selector()`.
 
     This selects all columns except those that are matched by the input; it is
     equivalent to ``all() - obj`` or ``~make_selector(obj)``. The argument
@@ -133,6 +133,7 @@ def inv(obj):
 
 def make_selector(obj):
     """Transform a selector, column name or list of column names into a selector.
+    See also :class:`skrub.selectors.Selector()`.
 
     Examples
     --------
@@ -174,6 +175,7 @@ def _select_col_names_polars(df, col_names):
 
 def select(df, selector):
     """Apply a selector to a dataframe and return the resulting dataframe.
+    See also :class:`skrub.selectors.Selector()`.
 
     ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
     column name or list of column names.
@@ -219,10 +221,31 @@ def select(df, selector):
 
 
 class Selector:
+    """Generic selector type, that returns set columns when applied.
+
+    This class is not meant to be instantiated manually, ``Selector``
+    objects are created by calling one of the selector builders such
+    as :meth:`skrub.selectors.all()` or :meth:`skrub.selectors.make_selector()`.
+    """
+
     def _matches(self, col):
         raise NotImplementedError()
 
     def expand(self, df):
+        """Lists the column names that the selector would retain if applied to
+        the dataframe `df`.
+
+        Parameters
+        ----------
+        df : dataframe
+
+        Returns
+        -------
+        list
+            The list of `df`'s columns that the item would select. In effect,
+            running `df[sel.expand(df)]` should give the exact same result as
+            `sel.transform(df)`.
+        """
         matching_col_names = []
         for col_name in sbd.column_names(df):
             col = sbd.col(df, col_name)
@@ -231,6 +254,21 @@ class Selector:
         return matching_col_names
 
     def expand_index(self, df):
+        """Lists the indices of dataframe `df`'s columns that the selector
+        would retain if applied to `df`.
+
+        Parameters
+        ----------
+        df : dataframe
+
+        Returns
+        -------
+        list
+            The list of indices among `df`'s columns that the item would select.
+            In effect, if `cols` is the list of columns in `df`, running
+            `df[cols[i] for i in sel.expand(df)]` should give the exact same
+            result as `sel.transform(df)`.
+        """
         matching_col_indices = []
         for col_idx, col in enumerate(sbd.to_column_list(df)):
             if self._matches(col):
@@ -395,6 +433,7 @@ class Filter(Selector):
 
 def filter(predicate, *args, **kwargs):
     """Select columns for which ``predicate`` returns True.
+    See also :class:`skrub.selectors.Selector()`.
 
     For each column ``col`` in the dataframe, ``predicate`` is called as
     ``predicate(col, *args, **kwargs)`` and the column is kept if it returns
@@ -456,6 +495,7 @@ class NameFilter(Filter):
 
 def filter_names(predicate, *args, **kwargs):
     """Select columns based on their name.
+    See also :class:`skrub.selectors.Selector()`.
 
     For a column whose name is ``col_name``, ``predicate`` is called as
     ``predicate(col_name, *args, **kwargs)`` and the column is selected if
