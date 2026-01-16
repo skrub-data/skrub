@@ -50,7 +50,8 @@ from skrub._data_ops import _data_ops
 file = io.StringIO()
 p = file.write
 
-p("""\
+p(
+    """\
 # fmt: off
 # ruff: noqa
 
@@ -63,7 +64,8 @@ from skrub._data_ops._skrub_namespace import SkrubNamespace
 
 class DataOp:
     skb: SkrubNamespace
-""")
+"""
+)
 
 for name in sorted(skrub.DataOp.__dict__):
     if name not in [
