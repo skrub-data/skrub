@@ -52,7 +52,7 @@ def _str_is_valid_number_pandas(col, number_re):
     # - Use `str.match` with `na=False` to treat empty/missing values as non-matching.
     # - If any value does not match, raise RejectColumn with a descriptive message.
     if not col.fillna("").str.match(number_re, na=False).all():
-        raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
+        raise RejectColumn(f"Could not convert column {sbd.name(col)!r} to numbers.")
     return True
 
 
@@ -63,7 +63,7 @@ def _str_is_valid_number_polars(col, number_re):
     # - Use `str.match` with `na=False` to treat empty/missing values as non-matching.
     # - If any value does not match, raise RejectColumn with a descriptive message.
     if not col.fill_null("").str.contains(number_re.pattern, literal=False).all():
-        raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
+        raise RejectColumn(f"Could not convert column {sbd.name(col)!r} to numbers.")
     return True
 
 
