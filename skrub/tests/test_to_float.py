@@ -87,11 +87,38 @@ def test_number_parsing_valid(input_str, expected_float, decimal, thousand, df_m
         ("123.45.67", ".", None),
         ("1,,234", ".", ","),
         ("1.23,45", ".", ","),
-        # decimal == thousand
-        ("123,456,789", ",", ","),
     ],
 )
 def test_number_parsing_invalid(input_str, decimal, thousand, df_module):
     column = df_module.make_column("col", [input_str])
     with pytest.raises((RejectColumn, ValueError)):
         ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
+
+
+@pytest.mark.parametrize(
+    "decimal, thousand",
+    [
+        # invalid because decimal and thousand are the same
+        (",", ","),
+        (".", "."),
+        # invalid because decimal is None
+        (None, ","),
+        (None, None),
+    ],
+)
+def test_invalid_parameters(decimal, thousand, df_module):
+    """
+    Test that ToFloat raises an exception if the parameters are invalid:
+    - decimal is None → ValueError
+    - thousand == decimal → ValueError
+    """
+    column = df_module.make_column("col", ["123", "456"])
+
+    if decimal is None:
+        with pytest.raises(ValueError, match="decimal separator cannot be None"):
+            ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
+    else:
+        with pytest.raises(
+            ValueError, match="thousand and decimal separators must differ"
+        ):
+            ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)

@@ -8,13 +8,35 @@ __all__ = ["ToFloat"]
 
 
 def _build_number_regex(decimal, thousand):
-    d = re.escape(decimal)
-    t = re.escape(thousand)
+    # Escape decimal and thousand separators to use in regex
+    d = re.escape(decimal)  # e.g., '.' → '\.', ',' → '\,'
+    t = re.escape(thousand)  # e.g., ',' → '\,', '.' → '\.'
 
+    # Matches integer parts:
+    # Either:
+    #   - one or more digits without thousand separators: \d+
+    #   - or digits grouped by thousand separators: \d{1,3}(?:{t}\d{3})+
+    #     e.g., '1,234' or '12,345,678'
     integer = rf"(?:\d+|\d{{1,3}}(?:{t}\d{{3}})+)"
+
+    # Matches decimal part after the decimal separator
+    # e.g., '.456' or ',456' depending on locale
     decimal_part = rf"{d}\d+"
+
+    # Matches optional scientific notation
+    # e.g., 'e10', 'E-5', 'e+3'
     scientific = r"(?:[eE][+-]?\d+)?"
+
+    # Full number can be:
+    #   - integer with optional decimal part
+    #   - or only decimal part (like '.5')
     number = rf"(?:{integer}(?:{decimal_part})?|{decimal_part})"
+
+    # Final regex:
+    #   - optional parentheses around the number: \( ... \)?
+    #   - optional leading + or - sign: [+-]?
+    #   - optional scientific notation is included in `number`
+    # Anchored to start (^) and end ($) of string
     return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
 
 
@@ -25,6 +47,10 @@ def _str_is_valid_number(col, number_re):
 
 @_str_is_valid_number.specialize("pandas", argument_type="Column")
 def _str_is_valid_number_pandas(col, number_re):
+    # Check if all values in the column match the number regex.
+    # - Fill NaN values with empty string to avoid match errors.
+    # - Use `str.match` with `na=False` to treat empty/missing values as non-matching.
+    # - If any value does not match, raise RejectColumn with a descriptive message.
     if not col.fillna("").str.match(number_re, na=False).all():
         raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
     return True
@@ -32,6 +58,10 @@ def _str_is_valid_number_pandas(col, number_re):
 
 @_str_is_valid_number.specialize("polars", argument_type="Column")
 def _str_is_valid_number_polars(col, number_re):
+    # Check if all values in the column match the number regex.
+    # - Fill NaN values with empty string to avoid match errors.
+    # - Use `str.match` with `na=False` to treat empty/missing values as non-matching.
+    # - If any value does not match, raise RejectColumn with a descriptive message.
     if not col.fill_null("").str.contains(number_re.pattern, literal=False).all():
         raise RejectColumn(f"The pattern could not match the column {sbd.name(col)!r}.")
     return True
@@ -44,15 +74,23 @@ def _str_replace(col, strict=True):
 
 @_str_replace.specialize("pandas", argument_type="Column")
 def _str_replace_pandas(col, decimal, thousand):
+    # Replace parentheses around numbers with a leading minus sign
+    # e.g., "(123.45)" → "-123.45"
     col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
+    # Remove thousand separators
     col = col.str.replace(thousand, "", regex=False)
+    # Replace decimal separator with '.'
     return col.str.replace(decimal, ".", regex=False)
 
 
 @_str_replace.specialize("polars", argument_type="Column")
 def _str_replace_polars(col, decimal, thousand):
+    # Replace parentheses around numbers with a leading minus sign
+    # e.g., "(123.45)" → "-123.45"
     col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
+    # Remove thousand separators
     col = col.str.replace_all(thousand, "", literal=True)
+    # Replace decimal separator with '.'
     return col.str.replace_all(f"[{decimal}]", ".")
 
 
