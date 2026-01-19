@@ -768,7 +768,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat(), PassThrough(), {'C': ToFloat()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat(thousand=''), PassThrough(), {'C': ToFloat(thousand='')}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 
