@@ -197,7 +197,7 @@ def load_simple_dataset(dataset_name, data_home=None):
     """Load a dataframe and its metadata based on its dataset_name.
 
     The data will be downloaded if not found locally.
-    For e.g. the credit_fraud dataset, the filesystem will look like:
+    For example, with the credit_fraud dataset the filesystem will look like:
 
     <data_home>/
         fraud/
