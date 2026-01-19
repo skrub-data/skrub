@@ -294,7 +294,7 @@ class ToFloat(SingleColumnTransformer):
     def __init__(self, decimal=".", thousand=None):
         super().__init__()
         self.decimal = decimal
-        self.thousand = thousand
+        self.thousand = "" if thousand is None else thousand
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -314,8 +314,6 @@ class ToFloat(SingleColumnTransformer):
         """
         del y
         self.all_outputs_ = [sbd.name(column)]
-        if self.thousand is None:
-            self.thousand = ""  # No thousand separator
         if self.decimal is None:
             raise ValueError("The decimal separator cannot be None.")
         if self.thousand == self.decimal:
