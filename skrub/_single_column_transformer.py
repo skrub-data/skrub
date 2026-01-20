@@ -16,15 +16,13 @@ _SINGLE_COL_LINE = (
     " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
     " single column (a pandas or polars Series) rather than a full dataframe. To apply"
     " this transformer to one or more columns in a dataframe, use it as a parameter in"
-    " a ``skrub.ApplyToCols`` or a ``skrub.TableVectorizer``."
-    " To apply to all columns::\n\n"
+    " a ``skrub.ApplyToCols`` or a ``skrub.TableVectorizer``.\n\n"
+    "To apply to all columns::\n\n"
     "   ApplyToCol({class_name}())\n\n"
     "To apply to selected columns::\n\n"
     "   ApplyToCols({class_name}(), cols=['col_name_1', 'col_name_2'])"
 )
-_SINGLE_COL_PARAGRAPH = textwrap.fill(
-    _SINGLE_COL_LINE, initial_indent="    ", subsequent_indent="    "
-)
+_SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 4)
 _SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
 
 
