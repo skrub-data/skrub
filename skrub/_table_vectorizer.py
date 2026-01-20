@@ -296,9 +296,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.fit_transform(df)
            A          B     C    D
     0    one 2024-02-02   1.5  1.5
-    1    two 2024-02-23   None  2.0
+    1    two 2024-02-23  ...  2.0
     2    two 2024-03-12  12.2  2.5
-    3  three 2024-03-13   None  3.0
+    3  three 2024-03-13  ...  3.0
 
     >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     A               ...
