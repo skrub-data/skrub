@@ -12,41 +12,41 @@ jobs:
     steps:
       - checkout
       - run:
-        name: monitor resources
-        command: |
-          # Loop 100 times to monitor memory usage
-          for i in {1..100}; do
-            # Display the current memory usage in bytes
-            echo -n "Memory Usage: "
-            cat /sys/fs/cgroup/memory.current
+          name: monitor resources
+          command: |
+            # Loop 100 times to monitor memory usage
+            for i in {1..100}; do
+              # Display the current memory usage in bytes
+              echo -n "Memory Usage: "
+              cat /sys/fs/cgroup/memory.current
 
-            # Display the memory hard limit in bytes
-            echo -n "Memory Limit (max): "
-            cat /sys/fs/cgroup/memory.max
+              # Display the memory hard limit in bytes
+              echo -n "Memory Limit (max): "
+              cat /sys/fs/cgroup/memory.max
 
-            # Display the memory throttling threshold (new in v2)
-            echo -n "Memory High Threshold: "
-            cat /sys/fs/cgroup/memory.high
+              # Display the memory throttling threshold (new in v2)
+              echo -n "Memory High Threshold: "
+              cat /sys/fs/cgroup/memory.high
 
-            # Display memory events (replaces oom_control)
-            echo "Memory Events:"
-            cat /sys/fs/cgroup/memory.events
+              # Display memory events (replaces oom_control)
+              echo "Memory Events:"
+              cat /sys/fs/cgroup/memory.events
 
-            # Display memory pressure information (new in v2)
-            echo "Memory Pressure (PSI):"
-            cat /sys/fs/cgroup/memory.pressure
+              # Display memory pressure information (new in v2)
+              echo "Memory Pressure (PSI):"
+              cat /sys/fs/cgroup/memory.pressure
 
-            # Display the current date and time
-            echo -n "Current Date: "
-            date
+              # Display the current date and time
+              echo -n "Current Date: "
+              date
 
-            # Sleep for 1 second before the next iteration
-            sleep 1
+              # Sleep for 1 second before the next iteration
+              sleep 1
 
-            # Add a separator for better readability
-            echo "-------------------------"
-          done
-        background: true
+              # Add a separator for better readability
+              echo "-------------------------"
+            done
+          background: true
       - run: ./build_tools/circle/checkout_merge_commit.sh
       - restore_cache:
           key: saved-cache
