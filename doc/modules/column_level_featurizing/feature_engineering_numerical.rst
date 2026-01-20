@@ -55,12 +55,12 @@ scikit-learn transformer and is fully compatible with pipelines.
 How to use |ToFloat|
 --------------------
 The |ToFloat| transformer must be applied to individual columns, and it behaves
-like a standard scikit-learn transformer. 
-|ToFloat| requires a ``decimal`` and a ``thousands`` separator, which are ``'.'`` and 
+like a standard scikit-learn transformer.
+|ToFloat| requires a ``decimal`` and a ``thousands`` separator, which are ``'.'`` and
 ``None`` (no thousands separator) by default.
-Each column is expected to use a single separator for decimals, and one for thousands: 
-if any characters other than the provided selectors are encountered in the column, it will not 
-be converted. 
+Each column is expected to use a single separator for decimals, and one for thousands:
+if any characters other than the provided selectors are encountered in the column, it will not
+be converted.
 
 During ``fit``, |ToFloat| attempts to convert all values in the column to
 numeric values after automatically removing other possible thousands separators
@@ -97,7 +97,7 @@ Name: x, dtype: float32
 Parentheses interpreted as negative numbers:
 
 >>> s = pd.Series(["-1,234.56", "(1,234.56)"], name="neg")
->>> ToFloat().fit_transform(s)
+>>> ToFloat(thousand=",").fit_transform(s)
 0   -1234.5...
 1   -1234.5...
 Name: neg, dtype: float32
@@ -116,7 +116,7 @@ Columns that cannot be converted are rejected during ``fit``:
 >>> ToFloat(decimal=".").fit_transform(s)
 Traceback (most recent call last):
     ...
-skrub._apply_to_cols.RejectColumn: Could not convert column 'x' to numbers.
+skrub._single_column_transformer.RejectColumn: Could not convert column 'x' to numbers.
 
 
 During ``transform``, invalid entries become ``NaN`` instead of raising an error:
