@@ -1,11 +1,44 @@
 import numbers
 import os
 import threading
+import warnings
 from contextlib import contextmanager
+from pathlib import Path
 
 import numpy as np
 
 from ._reporting import _patching
+
+
+def _get_default_data_folder():
+    """Get the default data folder path.
+
+    Returns the path to SKB_DATA_DIRECTORY if set and absolute,
+    otherwise defaults to ~/skrub_data.
+
+    Deprecated env var SKRUB_DATA_DIRECTORY is still supported with a warning.
+    """
+    # Check for the new env var first
+    data_home_envar = os.environ.get("SKB_DATA_DIRECTORY")
+
+    # Check for deprecated env var
+    if not data_home_envar:
+        deprecated_envar = os.environ.get("SKRUB_DATA_DIRECTORY")
+        if deprecated_envar:
+            warnings.warn(
+                "The environment variable 'SKRUB_DATA_DIRECTORY' is deprecated. "
+                "Please use 'SKB_DATA_DIRECTORY' instead.",
+            )
+            data_home_envar = deprecated_envar
+
+    if data_home_envar and (path := Path(data_home_envar)).is_absolute():
+        data_home = path
+    else:
+        data_home = Path.home() / "skrub_data"
+
+    data_home.mkdir(parents=True, exist_ok=True)
+
+    return str(data_home)
 
 
 def _parse_env_bool(env_variable_name, default):
@@ -32,6 +65,7 @@ _global_config = {
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
+    "data_folder": _get_default_data_folder(),
 }
 _threadlocal = threading.local()
 
@@ -92,6 +126,7 @@ def set_config(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    data_folder=None,
 ):
     """Set global skrub configuration.
 
@@ -175,7 +210,17 @@ def set_config(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
-    See Also
+    data_folder : str or pathlib.Path, default=None
+        Set the data directory path for skrub datasets. If ``None``, falls back to
+        the current configuration.
+
+        - If the ``SKB_DATA_DIRECTORY`` environment variable is set to an absolute
+          path, that path will be used.
+        - Otherwise, the default is ``~/skrub_data``.
+
+        This configuration can also be set with the ``SKB_DATA_DIRECTORY``
+        environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
+        supported with a deprecation warning.
     --------
     get_config : Retrieve current values for global configuration.
     config_context : Context manager for global skrub configuration.
@@ -260,6 +305,10 @@ def set_config(
                 f"integer, got {cardinality_threshold!r}"
             )
 
+    if data_folder is not None:
+        data_folder = Path(data_folder).expanduser().resolve()
+        local_config["data_folder"] = str(data_folder)
+
     _apply_external_patches(local_config)
 
 
@@ -275,6 +324,7 @@ def config_context(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    data_folder=None,
 ):
     """Context manager for global skrub configuration.
 
@@ -356,6 +406,18 @@ def config_context(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    data_folder : str or pathlib.Path, default=None
+        Set the data directory path for skrub datasets. If ``None``, falls back to
+        the current configuration.
+
+        - If the ``SKB_DATA_DIRECTORY`` environment variable is set to an absolute
+          path, that path will be used.
+        - Otherwise, the default is ``~/skrub_data``.
+
+        This configuration can also be set with the ``SKB_DATA_DIRECTORY``
+        environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
+        supported with a deprecation warning.
+
     Yields
     ------
     None.
@@ -382,6 +444,7 @@ def config_context(
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
+        data_folder=data_folder,
     )
 
     try:
