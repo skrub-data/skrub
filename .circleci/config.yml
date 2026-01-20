@@ -82,7 +82,7 @@ jobs:
       - run: ls -ltrh doc/_build/html
       - deploy:
           command: |
-            if [[ "${CIRCLE_BRANCH}" =~ ^main$|^[0-9]+\.[0-9]+\.X$ |"fix-pixi" ]]; then
+            if [[ "${CIRCLE_BRANCH}" =~ ^main$|^[0-9]+\.[0-9]+\.X$|^fix-pixi$ ]]; then
               bash build_tools/circle/push_doc.sh doc/_build/html
             fi
 
