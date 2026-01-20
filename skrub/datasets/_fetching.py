@@ -474,6 +474,7 @@ def fetch_california_housing(data_home=None):
 
         It can be downloaded/loaded using the sklearn.datasets.fetch_california_housing
         function.
+        Size on disk: 1.80MB.
 
     Parameters
     ----------
