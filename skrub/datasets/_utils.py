@@ -271,8 +271,12 @@ def load_dataset_files(dataset_name, data_home):
         elif file_path.suffix == ".json":
             bunch[file_path.stem] = json.loads(file_path.read_text(encoding="utf-8"))
     bunch["paths"] = [
-        pth for pth in datafiles_dir.iterdir() if pth.suffix in {".csv", ".json"}
+        str(pth)
+        for pth in datafiles_dir.iterdir()
+        if pth.suffix in {".csv", ".json"} and pth.stem != "metadata"
     ]
+    bunch["metadata_path"] = str(datafiles_dir / "metadata.json")
+
     return bunch
 
 
