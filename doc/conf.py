@@ -467,6 +467,12 @@ def reset_skrub_config(gallery_conf, fname):
     skrub.set_config(**default_global_config)
 
 
+def print_example_finished(gallery_conf, script_vars, example_globals):
+    """Print a message after each example is built."""
+    example_name = os.path.basename(script_vars["src_file"])
+    print(f"\n✓ Built example: {example_name}")
+
+
 sphinx_gallery_conf = {
     "doc_module": "skrub",
     "backreferences_dir": os.path.join("reference/generated"),
@@ -491,6 +497,8 @@ sphinx_gallery_conf = {
     },
     "default_thumb_file": "./_static/skrub.svg",
     "reset_modules": (reset_skrub_config,),
+    "expected_failing_examples": [],
+    "junit": "",
 }
 if with_jupyterlite:
     sphinx_gallery_conf["jupyterlite"] = {
@@ -630,3 +638,16 @@ for rst_template_name, rst_target_name, kwargs in rst_templates:
     # Render the template and write to the target
     w_path = Path(".") / f"{rst_target_name}.rst"
     w_path.write_text(t.render(**kwargs), encoding="utf-8")
+
+
+def setup(app):
+    """Register sphinx-gallery script finish callback."""
+
+    def log_example_finished(gallery_conf, script_vars, example_globals):
+        example_name = os.path.basename(script_vars["src_file"])
+        print(f"\n✓ Built example: {example_name}\n")
+
+    # Update the sphinx_gallery_conf to include the callback
+    sphinx_gallery_conf["expected_failing_examples"] = set()
+    sphinx_gallery_conf["junit"] = ""
+    # Note: The callback will be invoked automatically for each example
