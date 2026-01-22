@@ -242,9 +242,28 @@ class Selector:
         Returns
         -------
         list
-            The list of `df`'s columns that the item would select. In effect,
-            running `df[sel.expand(df)]` should give the exact same result as
-            `sel.transform(df)`.
+            The list of `df`'s columns that the item would select.
+        Examples
+        --------
+        >>> some_selector = ~s.glob("*_mm") | s.filter(lambda col: 297.0 in col.values)
+        >>> import polars as pl
+        >>> polars_df = pl.DataFrame(
+            {
+                "height_mm": [210.0, 297.0],
+                "width_mm": [188.5, 210.0],
+                "kind": ["A5", "A4"],
+                "ID": [5, 4],
+            }
+        )
+        >>> some_selector.expand(df)
+        ['height_mm', 'kind', 'ID']
+
+
+        Notes
+        -----
+        In effect, running `df[sel.expand(df)]` should give the exact same result as
+        `sel.transform(df)`.
+
         """
         matching_col_names = []
         for col_name in sbd.column_names(df):
@@ -265,9 +284,31 @@ class Selector:
         -------
         list
             The list of indices among `df`'s columns that the item would select.
-            In effect, if `cols` is the list of columns in `df`, running
-            `df[cols[i] for i in sel.expand(df)]` should give the exact same
-            result as `sel.transform(df)`.
+
+
+        Examples
+        --------
+        >>> some_selector = ~s.glob("*_mm") | s.filter(lambda col: 297.0 in col.values)
+        >>> import polars as pl
+        >>> polars_df = pl.DataFrame(
+            {
+                "height_mm": [210.0, 297.0],
+                "width_mm": [188.5, 210.0],
+                "kind": ["A5", "A4"],
+                "ID": [5, 4],
+            }
+        )
+        >>> some_selector.expand(df)
+        ['height_mm', 'kind', 'ID']
+
+
+        Notes
+        -----
+
+        In effect, (as with `expand`), if `cols` is the list of columns in `df`,
+        running `df[cols[i] for i in sel.expand(df)]` should give the exact same
+        result as `sel.transform(df)`.
+
         """
         matching_col_indices = []
         for col_idx, col in enumerate(sbd.to_column_list(df)):
