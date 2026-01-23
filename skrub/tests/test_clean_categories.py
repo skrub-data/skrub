@@ -38,11 +38,7 @@ def test_collapsing_categories():
     s = pd.Series([A(), A()], dtype="category")
     assert len(s.cat.categories) == 2
     out = CleanCategories().fit_transform(s)
-    if pd.__version__ >= "3.0":
-        # Pandas 3.0+ preserves categories
-        assert len(out.cat.categories) == 2
-    else:
-        assert len(out.cat.categories) == 1
+    assert len(out.cat.categories) == 1
 
 
 def test_clean_categories(df_module):
