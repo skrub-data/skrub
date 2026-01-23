@@ -45,10 +45,9 @@ class CleanCategories(SingleColumnTransformer):
 
     Pandas allows anything as categories but scikit-learn encoders raise an
     exception when categories mix strings and numbers or use any other type, so
-    we make sure they are strings. Note that in pandas versions < 3.0 this can
-    result in collapsing 2
-    categories in the edge case that they are different but have the same string
-    representation.
+    we make sure they are strings. Note that in pandas this can result in
+    collapsing 2 categories in the edge case that they are different but have
+    the same string representation.
 
     Pandas categorical columns that store their categories with the
     ``StringDtype`` extension dtype represent missing values with ``pd.NA``,
@@ -140,7 +139,7 @@ class CleanCategories(SingleColumnTransformer):
 
     We can see above that the output categories are strings.
 
-    Note: in pandas versions < 3.0 this can result in some categories being
+    Note: in pandas this can result in some categories being
     collapsed in the edge case where different categories have the same string
     representation, as shown below.
 
