@@ -25,8 +25,8 @@ is done with the :class:`sklearn.compose.ColumnTransformer`:
 >>>
 >>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
 >>>
->>> categorical_columns = selector(dtype_include=object)(df)
->>> numerical_columns = selector(dtype_exclude=object)(df)
+>>> categorical_columns = selector(dtype_include=str)(df)
+>>> numerical_columns = selector(dtype_exclude=str)(df)
 >>>
 >>> ct = make_column_transformer(
 ...       (StandardScaler(),
@@ -89,9 +89,9 @@ column:
     birthday    city
 0  29/01/2024  London
 >>> df.dtypes
-birthday    object
-city        object
-dtype: object
+birthday    ...
+city        ...
+dtype: ...
 >>> ToDatetime().fit_transform(df["birthday"])
 0   2024-01-29
 Name: birthday, dtype: datetime64[...]
@@ -129,8 +129,8 @@ datetime column.
 
 >>> transformed.dtypes
 birthday    datetime64[...]
-city                object
-dtype: object
+city                ...
+dtype: ...
 
 
 |ApplyToFrame| is instead used in cases where multiple columns should be transformed
