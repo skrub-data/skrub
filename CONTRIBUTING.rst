@@ -1,7 +1,7 @@
 .. _contributing:
 
-Contributing to skrub
-=====================
+Contributing guide
+==================
 
 First off, thanks for taking the time to contribute!
 
