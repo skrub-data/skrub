@@ -1,7 +1,7 @@
 .. _contributing:
 
 Contributing guide
-=====================
+==================
 
 First off, thanks for taking the time to contribute!
 
@@ -177,6 +177,8 @@ When contributing, keep these project goals in mind:
     - Document all public functions, methods, variables, and class signatures.
     - The public API refers to all components available for import and use by library users. Anything that doesn't begin with an underscore is considered part of the public API.
 
+Checking the quality of your code contribution
+----------------------------------------------
 
 Testing the code
 ~~~~~~~~~~~~~~~~
@@ -276,73 +278,8 @@ can be pushed. Something worth noting is that if the ``pre-commit``
 hooks format some files, the commit will be canceled: you will have to
 stage the changes made by ``pre-commit`` and commit again.
 
-
-Submitting your code
-^^^^^^^^^^^^^^^^^^^^
-
-Once you have pushed your commits to your remote repository, you can submit
-a PR by clicking the "Compare & pull request" button on GitHub,
-targeting the skrub repository.
-
-
-Continuous Integration (CI)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-After creating your PR, CI tools will run proceed to run all the tests on all
-configurations supported by skrub.
-
-- **Github Actions**:
-  Used for testing skrub across various platforms (Linux, macOS, Windows)
-  and dependencies.
-- **CircleCI**:
-  Builds and verifies the project documentation.
-
-If any of the following markers appears in the commit message, the following
-actions are taken.
-
-    ====================== ===================
-    Commit Message Marker  Action Taken by CI
-    ---------------------- -------------------
-    [ci skip]              CI is skipped completely
-    [skip ci]              CI is skipped completely
-    [skip github]          CI is skipped completely
-    [deps nightly]         CI is run with the nightly builds of dependencies
-    [doc skip]             Docs are not built
-    [doc quick]            Docs built, but excludes example gallery plots
-    [doc build]            Docs built including example gallery plots (longer)
-    ====================== ===================
-
-Note that by default the documentation is built, but only the examples that are
-directly modified by the pull request are executed.
-
-CI is testing all possible configurations supported by skrub, so tests may fail
-with configurations different from what you are developing with. If this is the
-case,  it is possible to run the tests in the environment that is failing by
-using `pixi <https://pixi.sh/latest/>`_. For example if the env is ``ci-py309-min-optional-deps``, it is
-possible to replicate it using the following command:
-
-.. code:: sh
-
-   pixi run -e ci-py309-min-optional-deps  pytest skrub/tests/path/to/test
-
-This command downloads the specific environment on the machine, so you can test
-it locally and apply fixes, or have a clearer idea of where the code is failing
-to discuss with the maintainers.
-
-Finally, if the remote repository was changed, you might need to run
-  ``pre-commit run --all-files`` to make sure that the formatting is
-  correct.
-
-Integration
-^^^^^^^^^^^
-
-Community consensus is key in the integration process. Expect a minimum
-of 1 to 3 reviews depending on the size of the change before we consider
-merging the PR.
-..
-  This is actually unclear to me: do we want 1 to 3 reviews, or 1 to 3 reviewers?
-
-Building the documentation
---------------------------
+Ensuring the documentation builds
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ..
   Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
@@ -422,16 +359,76 @@ You can view it by opening the local ``doc/_build/html/index.html`` file.
    If you encounter issues, you can always fall back to using ``make`` as
    described above.
 
-
 Editing the API reference documentation
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**All public functions and classes must be documented in the API
+reference**, hence when adding a public function or class, a new entry must be
+added, as detailed just above.
 
 To add a new entry to the :ref:`API reference documentation<api_ref>` or change its
 content, head to ``doc/api_reference.py``. This data is then used by ``doc/conf.py``
 to render templates located at ``doc/reference/*.rst.template``.
 
-|
 
-Note that **all public functions and classes must be documented in the API
-reference**, hence when adding a public function or class, a new entry must be
-added, as detailed just above.
+Submitting your code
+--------------------
+
+Once you have pushed your commits to your remote repository, you can submit
+a PR by clicking the "Compare & pull request" button on GitHub,
+targeting the skrub repository.
+
+
+Continuous Integration (CI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+After creating your PR, CI tools will run proceed to run all the tests on all
+configurations supported by skrub.
+
+- **Github Actions**:
+  Used for testing skrub across various platforms (Linux, macOS, Windows)
+  and dependencies.
+- **CircleCI**:
+  Builds and verifies the project documentation.
+
+If any of the following markers appears in the commit message, the following
+actions are taken.
+
+    ====================== ===================
+    Commit Message Marker  Action Taken by CI
+    ---------------------- -------------------
+    [ci skip]              CI is skipped completely
+    [skip ci]              CI is skipped completely
+    [skip github]          CI is skipped completely
+    [deps nightly]         CI is run with the nightly builds of dependencies
+    [doc skip]             Docs are not built
+    [doc quick]            Docs built, but excludes example gallery plots
+    [doc build]            Docs built including example gallery plots (longer)
+    ====================== ===================
+
+Note that by default the documentation is built, but only the examples that are
+directly modified by the pull request are executed.
+
+CI is testing all possible configurations supported by skrub, so tests may fail
+with configurations different from what you are developing with. If this is the
+case,  it is possible to run the tests in the environment that is failing by
+using `pixi <https://pixi.sh/latest/>`_. For example if the env is ``ci-py309-min-optional-deps``, it is
+possible to replicate it using the following command:
+
+.. code:: sh
+
+   pixi run -e ci-py309-min-optional-deps  pytest skrub/tests/path/to/test
+
+This command downloads the specific environment on the machine, so you can test
+it locally and apply fixes, or have a clearer idea of where the code is failing
+to discuss with the maintainers.
+
+Finally, if the remote repository was changed, you might need to run
+  ``pre-commit run --all-files`` to make sure that the formatting is
+  correct.
+
+Integration
+^^^^^^^^^^^
+
+Community consensus is key in the integration process. Expect a minimum
+of 1 to 3 reviews depending on the size of the change before we consider
+merging the PR.
