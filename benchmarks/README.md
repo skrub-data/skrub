@@ -56,3 +56,8 @@ folder in a `parquet` format.
 As mentioned earlier, benchmarks implement a ``--plot`` option used to display
 the results visually. Using ``--plot`` without ``--run`` allows you to plot
 the saved results without re-running the benchmark.
+
+## Format
+
+Results are saved with the format ``<name>-<YYYYMMDD>.parquet`` in the subfolder
+`results`.
