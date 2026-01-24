@@ -15,7 +15,7 @@ These benchmarks do not aim at replacing the tests within skrub.
 Implementing a benchmark
 ------------------------
 
-A mini-framework consisting of a few functions is made available under `utils`.
+A mini-framework consisting of a few functions is made available under ``utils``.
 
 Check out other benchmarks to see how they are used.
 
@@ -23,7 +23,7 @@ Launching a benchmark
 ------------------------
 
 .. note::
-  
+
   Launching a benchmark is usually something you don't want to do as a user.
   Benchmarks are long and expensive to run. Their code is provided for reproducibility.
 
@@ -32,7 +32,7 @@ commands ``--run`` and ``--plot``.
 
 Although, before launching, you should make sure the environment is properly setup.
 First, install the required packages -- we recommend installing the latest versions
-for everything (skip `--upgrade` if you don't want to):
+for everything (skip ``--upgrade`` if you don't want to):
 
 .. code:: sh
 
@@ -60,8 +60,8 @@ Finally, you can launch the benchmark with the ``--run`` command:
 Analyzing results
 ~~~~~~~~~~~~~~~~~
 
-The results of the benchmarks ran by maintainers are pushed in the `results/`
-folder in a `parquet` format.
+The results of the benchmarks ran by maintainers are pushed in the ``results/``
+folder in a ``parquet`` format.
 
 As mentioned earlier, benchmarks implement a ``--plot`` option used to display
 the results visually. Using ``--plot`` without ``--run`` allows you to plot
@@ -71,4 +71,4 @@ Format
 ------
 
 Results are saved with the format ``<name>-<YYYYMMDD>.parquet`` in the subfolder
-`results`.
+``results``.
