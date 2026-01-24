@@ -15,4 +15,3 @@
    learning_materials
    CHANGES
    development
-   CONTRIBUTING
