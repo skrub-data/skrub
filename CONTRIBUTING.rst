@@ -42,7 +42,7 @@ please:
 1. **Check if an issue already exists**
    by searching the `GitHub issues <https://github.com/skrub-data/skrub/issues?q=is%3Aissue>`_
 
-   - If **open**, leave a 👍 on the original message to signal that others are affected.
+   - If **open**, leave a 👍 on the original message to signal that you are also affected.
    - If closed, check for one of the following:
       - A **merged pull request** may indicate the bug is fixed. Update your
         skrub version or note if the fix is pending a release.
@@ -73,7 +73,7 @@ You can find a guide on how to write examples in the :ref:`example guide <tutori
 Suggesting enhancements
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have an idea for improving skrub, whether it's a small fix
+If you have an idea for improving skrub, whether it's a fix
 or a new feature, first:
 
 - **Check if it has been proposed or implemented** by reviewing
@@ -338,7 +338,8 @@ Integration
 Community consensus is key in the integration process. Expect a minimum
 of 1 to 3 reviews depending on the size of the change before we consider
 merging the PR.
-
+..
+  This is actually unclear to me: do we want 1 to 3 reviews, or 1 to 3 reviewers?
 
 Building the documentation
 --------------------------
@@ -349,6 +350,9 @@ Building the documentation
 **Before submitting your pull request, ensure that your modifications haven't
 introduced any new Sphinx warnings by building the documentation locally
 and addressing any issues.**
+..
+  Given the number of warnings already present, I think it's very hard check to do and to enforce.
+  Shouldn't it be removed?
 
 First, make sure you have properly installed the development version of skrub.
 You can follow the :ref:`installation_instructions` > "From source" section, if needed.
@@ -389,7 +393,6 @@ without running the examples by using the following command:
 This command generates the documentation without re-executing the examples, which can
 take a long time. This is useful if you are only modifying the documentation itself, such as fixing
 typos or improving explanations.
-
 
 
 **Using pixi**
