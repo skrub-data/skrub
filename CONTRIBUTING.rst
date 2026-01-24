@@ -287,9 +287,6 @@ Ensuring the documentation builds
 **Before submitting your pull request, ensure that your modifications haven't
 introduced any new Sphinx warnings by building the documentation locally
 and addressing any issues.**
-..
-  Given the number of warnings already present, I think it's very hard check to do and to enforce.
-  Shouldn't it be removed?
 
 First, make sure you have properly installed the development version of skrub.
 You can follow the :ref:`installation_instructions` > "From source" section, if needed.
