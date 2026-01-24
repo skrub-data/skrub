@@ -69,6 +69,7 @@ doc/sg_execution_times.rst
 .DS_Store
 doc/_templates/demo_table_report_generated.html
 doc/reference/*.rst
+doc/benchmark_indications.rst
 
 # Pkl files for benchmarks
 benchmarks/*.pkl
