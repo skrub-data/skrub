@@ -19,15 +19,17 @@ is done with the :class:`sklearn.compose.ColumnTransformer`:
 
 
 >>> import pandas as pd
+>>> import warnings
 >>> from sklearn.compose import make_column_selector as selector
 >>> from sklearn.compose import make_column_transformer
 >>> from sklearn.preprocessing import StandardScaler, OneHotEncoder
 >>>
 >>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
 >>>
->>> categorical_columns = selector(dtype_include=str)(df)
->>> numerical_columns = selector(dtype_exclude=str)(df)
->>>
+>>> with warnings.catch_warnings():
+...     warnings.filterwarnings("ignore")
+...     categorical_columns = selector(dtype_include=object)(df)
+...     numerical_columns = selector(dtype_exclude=object)(df)
 >>> ct = make_column_transformer(
 ...       (StandardScaler(),
 ...        numerical_columns),
