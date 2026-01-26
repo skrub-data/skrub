@@ -47,6 +47,9 @@ example above, which can be rewritten with |ApplyToCols| as follows:
 >>> import skrub.selectors as s
 >>> from sklearn.pipeline import make_pipeline
 >>> from skrub import ApplyToCols
+>>> from sklearn.preprocessing import OneHotEncoder, StandardScaler
+>>> import pandas as pd
+>>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
 >>>
 >>> numeric = ApplyToCols(StandardScaler(), cols=s.numeric())
 >>> string = ApplyToCols(OneHotEncoder(sparse_output=False), cols=s.string())
