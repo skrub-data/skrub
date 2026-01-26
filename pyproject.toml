@@ -96,7 +96,7 @@ channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
-numpy = ">=1.23.5"
+numpy = ">=1.23.5,<2.4"
 pandas = ">=1.5.3"
 scikit-learn = ">=1.4.2"
 scipy = ">=1.9.3"
@@ -113,6 +113,7 @@ pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
 plotly = "*"
+memory_profiler = "*"
 seaborn = "*"
   # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
   # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
@@ -223,6 +224,7 @@ python = "~=3.14.0"
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
+build-doc-split = { cmd = "make html-split", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
