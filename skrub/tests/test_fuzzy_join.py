@@ -555,3 +555,4 @@ def test_fuzzy_join_distance_metrics(df_module):
         left_num, right_num, on="int", suffix="r", metric='manhattan', add_match_info=False
     )
     assert ns.shape(result_num_manhattan)[0] == 3
+    
