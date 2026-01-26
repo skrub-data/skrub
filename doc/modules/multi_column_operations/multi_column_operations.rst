@@ -15,31 +15,7 @@ to be scaled at the same time.
 While the heuristics used by the :class:`TableVectorizer` are usually good enough
 to apply the proper transformers to different datatypes, using it may not be an
 option in all cases. In scikit-learn pipelines, the column selection operation can
-is done with the :class:`sklearn.compose.ColumnTransformer`:
-
-
->>> import pandas as pd
->>> import warnings
->>> from sklearn.compose import make_column_selector as selector
->>> from sklearn.compose import make_column_transformer
->>> from sklearn.preprocessing import StandardScaler, OneHotEncoder
->>>
->>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
->>>
->>> with warnings.catch_warnings():
-...     warnings.filterwarnings("ignore")
-...     categorical_columns = selector(dtype_include=object)(df)
-...     numerical_columns = selector(dtype_exclude=object)(df)
->>> ct = make_column_transformer(
-...       (StandardScaler(),
-...        numerical_columns),
-...       (OneHotEncoder(handle_unknown="ignore"),
-...        categorical_columns))
->>> transformed = ct.fit_transform(df)
->>> transformed
-array([[-1.22474487,  0.        ,  0.        ,  1.        ],
-       [ 0.        ,  1.        ,  0.        ,  0.        ],
-       [ 1.22474487,  0.        ,  1.        ,  0.        ]])
+is done with the :class:`sklearn.compose.ColumnTransformer`.
 
 Skrub provides alternative transformers that can achieve the same results:
 
