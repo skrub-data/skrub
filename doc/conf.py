@@ -64,7 +64,7 @@ extensions = [
     # builtin
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.doctest",
+    # "sphinx.ext.doctest",  # Disabled to reduce memory usage; run separately as CI step
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.githubpages",
