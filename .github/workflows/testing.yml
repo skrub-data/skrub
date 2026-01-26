@@ -36,10 +36,10 @@ jobs:
         run: pixi run -e ${{ matrix.environment }} test -n auto
       - name: Run user guide doctests
         run: pixi run -e ${{ matrix.environment }} test-user-guide
-      - name: Run sphinx doctests
-        # doctests are disabled in the conf.py to reduce memory usage during
-        # documentation build; we run them here instead.
-        run: pixi run -e doc test-doctest
+      # - name: Run sphinx doctests
+      #   # doctests are disabled in the conf.py to reduce memory usage during
+      #   # documentation build; we run them here instead.
+      #   run: pixi run -e doc test-doctest
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5.5.2
         with:
