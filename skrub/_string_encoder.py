@@ -12,8 +12,8 @@ from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._scaling_factor import scaling_factor
-from ._single_column_transformer import SingleColumnTransformer
 from ._to_str import ToStr
+from .core._single_column_transformer import SingleColumnTransformer
 
 
 class StringEncoder(TransformerMixin, SingleColumnTransformer):
