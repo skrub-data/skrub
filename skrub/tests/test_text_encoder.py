@@ -9,7 +9,7 @@ from sklearn.base import clone
 import skrub._dataframe as sbd
 from skrub import TableVectorizer, TextEncoder
 from skrub._text_encoder import ModelNotFound
-from skrub.core._single_column_transformer import RejectColumn
+from skrub.core import RejectColumn
 
 
 @pytest.fixture

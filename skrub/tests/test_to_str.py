@@ -7,7 +7,7 @@ from skrub import _dataframe as sbd
 from skrub._to_datetime import ToDatetime
 from skrub._to_str import ToStr
 from skrub.conftest import skip_polars_installed_without_pyarrow
-from skrub.core._single_column_transformer import RejectColumn
+from skrub.core import RejectColumn
 
 
 def test_to_str(df_module):

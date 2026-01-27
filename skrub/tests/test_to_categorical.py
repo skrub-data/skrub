@@ -2,7 +2,7 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub._to_categorical import ToCategorical
-from skrub.core._single_column_transformer import RejectColumn
+from skrub.core import RejectColumn
 
 
 def test_to_categorical(df_module):
