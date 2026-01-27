@@ -78,7 +78,7 @@ fi
 
 if [[ "$CIRCLE_BRANCH" =~ ^main$|^[0-9]+\.[0-9]+\.X$ && -z "$CI_PULL_REQUEST" ]]
 then
-    make_args="build-doc"
+    make_args="build-doc-split"
 elif [[ "$build_type" =~ ^QUICK ]]
 then
     make_args="build-doc-quick"
@@ -87,9 +87,9 @@ then
     # pattern for examples to run is the last line of output
     pattern=$(echo "$build_type" | tail -n 1)
     export EXAMPLES_PATTERN="$pattern"
-    make_args="build-doc"
+    make_args="build-doc-split"
 else
-    make_args="build-doc"
+    make_args="build-doc-split"
 fi
 
 # deactivate circleci virtualenv and setup a miniconda env instead
