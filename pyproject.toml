@@ -96,7 +96,7 @@ channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
-numpy = ">=1.23.5, <2.4"
+numpy = ">=1.23.5"
 pandas = ">=1.5.3"
 scikit-learn = ">=1.4.2"
 scipy = ">=1.9.3"
