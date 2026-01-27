@@ -50,20 +50,8 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToCols``; see the docstring of ``ApplyToCols`` for more
-    information.
-
-    Single-column transformers are not required to inherit from this class in
-    order to work with ``ApplyToCols``, however doing so avoids some
-    boilerplate:
-
-        - The required ``__single_column_transformer__`` attribute is set.
-        - ``fit`` is defined (calls ``fit_transform`` and discards the result).
-        - ``fit``, ``transform`` and ``fit_transform`` are wrapped to check
-          that the input is a single column and raise a ``ValueError`` with a
-          helpful message when it is not.
-        - A note about single-column transformers (vs dataframe transformers)
-          is added after the summary line of the docstring.
+    ``ApplyToCols``; see the docstring of ``ApplyToCols``, and the
+    ``Advanced columnwise operations`` page of the user guide for more information.
 
     Subclasses must define ``fit_transform`` and ``transform`` (or inherit them
     from another superclass).
