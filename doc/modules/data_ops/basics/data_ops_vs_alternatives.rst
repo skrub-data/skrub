@@ -65,3 +65,13 @@ All DataOps-specific operations are available through the ``.skb`` attribute,
 which provides access to the DataOps namespace. Other library-specific methods
 are available directly from the DataOp object, as if it were a regular object
 (like a Pandas or Polars DataFrame or Series).
+
+Working with databases
+======================
+
+Skrub DataOps can work with databases by converting database tables to pandas
+DataFrames. For example, you can use `Ibis <https://ibis-project.org>`__ to
+connect to SQL databases (such as SQLite, PostgreSQL, MySQL, etc.), execute
+queries, and then convert the results to pandas DataFrames for use with skrub
+DataOps. See :ref:`sphx_glr_auto_examples_data_ops_1160_database_example.py` for
+a complete example showing how to integrate SQLite and Ibis with skrub DataOps.

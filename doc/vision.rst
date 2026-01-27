@@ -22,7 +22,8 @@ data assembly).
 
 In the long term, as skrub is built on higher-level APIs, it will make it
 easier for data-scientists to use efficient database patterns and
-backends.
+backends. See :ref:`sphx_glr_auto_examples_data_ops_1160_database_example.py` for
+an example of working with databases using SQLite and Ibis.
 
 Skrub seeks tradeoffs in terms of flexibility: its high-level APIs are by
 construction restrictive compared to directly manipulating dataframes.
