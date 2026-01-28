@@ -4,7 +4,7 @@ from .._utils import repr_args
 
 
 def all():
-    """Select all columns. See also :class:`skrub.selectors.Selector()`.
+    """Select all columns.
 
     Examples
     --------
@@ -27,13 +27,12 @@ def all():
        height_mm  width_mm kind  ID
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
-
     """
     return All()
 
 
 def cols(*columns):
-    """Select columns by name. See also :class:`skrub.selectors.Selector()`.
+    """Select columns by name.
 
     Examples
     --------
@@ -89,7 +88,7 @@ def cols(*columns):
 
 
 def inv(obj):
-    """Invert a selector. See also :class:`skrub.selectors.Selector()`.
+    """Invert a selector.
 
     This selects all columns except those that are matched by the input; it is
     equivalent to ``all() - obj`` or ``~make_selector(obj)``. The argument
@@ -133,7 +132,7 @@ def inv(obj):
 
 def make_selector(obj):
     """Transform a selector, column name or list of column names into a selector.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     Examples
     --------
@@ -175,7 +174,7 @@ def _select_col_names_polars(df, col_names):
 
 def select(df, selector):
     """Apply a selector to a dataframe and return the resulting dataframe.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
     column name or list of column names.
@@ -476,7 +475,7 @@ class Filter(Selector):
 
 def filter(predicate, *args, **kwargs):
     """Select columns for which ``predicate`` returns True.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     For each column ``col`` in the dataframe, ``predicate`` is called as
     ``predicate(col, *args, **kwargs)`` and the column is kept if it returns
@@ -538,7 +537,7 @@ class NameFilter(Filter):
 
 def filter_names(predicate, *args, **kwargs):
     """Select columns based on their name.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     For a column whose name is ``col_name``, ``predicate`` is called as
     ``predicate(col_name, *args, **kwargs)`` and the column is selected if

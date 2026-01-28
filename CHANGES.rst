@@ -37,6 +37,10 @@ New features
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+- :class:`selectors.Selector` now has documentation for its :meth:`selectors.Selector.expand`
+  and :meth:`selectors.Selector.expand_index` methods, with added information and examples
+  in the user guide, as well as mentions in the corresponding constructor functions.
+  :pr:`1841` by :user:`Eloi Massoulié<emassoulie>`.
 
 Changes
 -------

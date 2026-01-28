@@ -143,7 +143,7 @@ def regex(pattern, flags=0):
 def numeric():
     """
     Select columns that have a numeric data type.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     This selects float and integer columns but not Boolean columns.
 
@@ -196,7 +196,7 @@ def numeric():
 def integer():
     """
     Select columns that have an integer data type.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     This selects integer columns but not Boolean columns.
 
@@ -248,7 +248,7 @@ def integer():
 def float():
     """
     Select columns that have a floating-point data type.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     Examples
     --------
@@ -294,7 +294,7 @@ def float():
 def any_date():
     """
     Select columns that have a Date or Datetime data type.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     Examples
     --------
@@ -332,7 +332,7 @@ def any_date():
 def categorical():
     """
     Select columns that have a Categorical (or polars Enum) data type.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     Examples
     --------
@@ -367,7 +367,7 @@ def categorical():
 def string():
     """
     Select columns that have a String data type.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     In pandas, object columns containing (only) strings are also selected.
 
@@ -413,7 +413,7 @@ def string():
 def boolean():
     """
     Select columns that have a Boolean data type.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     Examples
     --------
@@ -462,7 +462,7 @@ def _cardinality_below(column, threshold):
 def cardinality_below(threshold):
     """
     Select columns whose cardinality (number of unique values) is (strictly)
-    below ``threshold``. See also :class:`skrub.selectors.Selector()`.
+    below ``threshold``.
 
     Null values do not count in the cardinality.
 
@@ -506,7 +506,7 @@ def cardinality_below(threshold):
 def has_nulls():
     """
     Select columns that contain at least one null value.
-    See also :class:`skrub.selectors.Selector()`.
+
 
     Examples
     --------

@@ -145,6 +145,7 @@ following selector won't compute the cardinality of non-categorical columns::
     >>> s.categorical() & s.cardinality_below(10)
     (categorical() & cardinality_below(10))
 
+.. _user_guide_selectors_expand:
 Visualizing a selector
 ----------------------
 
