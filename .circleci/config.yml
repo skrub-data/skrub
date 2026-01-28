@@ -4,50 +4,13 @@ jobs:
   python3:
     docker:
       - image: cimg/python:3.10
-    resource_class: "medium+"
+    resource_class: "medium+" # 6gb memory so we don't get OOM killed #1855
     environment:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv
       - PYTHON_VERSION: "3.10"
       - OMP_NUM_THREADS: 2 # Avoid over-commit with HistGradientBoosting
     steps:
-      - run:
-          name: monitor resources
-          command: |
-            # Loop 100 times to monitor memory usage
-            for i in {1..100}; do
-              # Display the current memory usage in bytes
-              echo -n "Memory Usage: "
-              cat /sys/fs/cgroup/memory.current
-
-              # Display the memory hard limit in bytes
-              echo -n "Memory Limit (max): "
-              cat /sys/fs/cgroup/memory.max
-
-              # Display the memory throttling threshold (new in v2)
-              echo -n "Memory High Threshold: "
-              cat /sys/fs/cgroup/memory.high
-
-              # Display memory events (replaces oom_control)
-              echo "Memory Events:"
-              cat /sys/fs/cgroup/memory.events
-
-              # Display memory pressure information (new in v2)
-              echo "Memory Pressure (PSI):"
-              cat /sys/fs/cgroup/memory.pressure
-
-              # Display the current date and time
-              echo -n "Current Date: "
-              date
-
-              # Sleep for 1 second before the next iteration
-              sleep 1
-
-              # Add a separator for better readability
-              echo "-------------------------"
-            done
-          background: true
-
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh
       - restore_cache:
