@@ -17,13 +17,12 @@ Changes
 - The :class:`StringEncoder` now exposes the ``vocabulary`` parameter from the parent
   :class:`TfidfVectorizer`.
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
-
-
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
 
 Bugfixes
 --------
+- Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.7.1
 =============
