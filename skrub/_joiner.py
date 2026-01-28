@@ -7,6 +7,7 @@ from functools import partial
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
+from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
 from sklearn.utils.validation import check_is_fitted
@@ -16,7 +17,6 @@ from . import _join_utils, _matching, _utils
 from . import selectors as s
 from ._check_input import CheckInputDataFrame
 from ._datetime_encoder import DatetimeEncoder
-from ._string_encoder import StringEncoder
 from ._table_vectorizer import TableVectorizer
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
@@ -24,9 +24,8 @@ from ._wrap_transformer import wrap_transformer
 DEFAULT_STRING_ENCODER = make_pipeline(
     FunctionTransformer(partial(sbd.fill_nulls, value="")),
     ToStr(),
-    # HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)),
-    # TfidfTransformer(),
-    StringEncoder(analyzer="char_wb", ngram_range=(2, 4)),
+    HashingVectorizer(analyzer="char_wb", ngram_range=(2, 4)),
+    TfidfTransformer(),
 )
 _DATETIME_ENCODER = DatetimeEncoder(resolution=None, add_total_seconds=True)
 

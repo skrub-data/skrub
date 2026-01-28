@@ -85,20 +85,6 @@ class CleanCategories(SingleColumnTransformer):
     2    three
     Name: c, dtype: category
     Categories (3, ...): ['one', 'three', 'two']
-    >>> cleaner = CleanCategories()
-    >>> cleaner.fit_transform(s)
-    0      one
-    1      two
-    2    three
-    Name: c, dtype: category
-    Categories (3, ...): ['one', 'three', 'two']
-    >>> cleaner = CleanCategories()
-    >>> cleaner.fit_transform(s)
-    0      one
-    1      two
-    2    three
-    Name: c, dtype: category
-    Categories (3, ...): ['one', 'three', 'two']
     >>> cleaner.fit_transform(s) is s # doctest: +SKIP
     True
 
