@@ -458,6 +458,13 @@ def reset_skrub_config(gallery_conf, fname):
     skrub.set_config(**default_global_config)
 
 
+def call_garbage_collector(gallery_conf, fname):
+    """Call the garbage collector to free memory after each example."""
+    import gc
+
+    gc.collect()
+
+
 sphinx_gallery_conf = {
     "doc_module": "skrub",
     "backreferences_dir": os.path.join("reference/generated"),
@@ -481,7 +488,7 @@ sphinx_gallery_conf = {
         "use_jupyter_lab": True,
     },
     "default_thumb_file": "./_static/skrub.svg",
-    "reset_modules": (reset_skrub_config,),
+    "reset_modules": (reset_skrub_config, call_garbage_collector),
     "show_memory": True,
 }
 if with_jupyterlite:
