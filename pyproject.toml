@@ -190,6 +190,7 @@ extra-index-urls = [
   # pyarrow
   "https://pypi.fury.io/arrow-nightlies",
 ]
+prerelease-mode= "allow"
 
 [tool.pixi.feature.nightly-dependencies.pypi-dependencies]
 # Have to repeat dependencies here because otherwise pixi pulls from conda channels
@@ -260,7 +261,7 @@ ci-py314-polars-without-pyarrow = ["py314", "test", "polars-without-pyarrow"]
 ci-py314-latest-optional-deps = ["py314", "optional", "test"]
 
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
-ci-nightly-deps = { no-default-feature = true, features = [ "py314", "nightly-dependencies", "test" ] }
+# ci-nightly-deps = { no-default-feature = true, features = [ "py314", "nightly-dependencies", "test" ]}
 
 [tool.ruff]
 line-length = 88
@@ -335,7 +336,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'
