@@ -245,16 +245,17 @@ class Selector:
             The list of `df`'s columns that the item would select.
         Examples
         --------
+        >>> from skrub import selectors as s
         >>> some_selector = ~s.glob("*_mm") | s.filter(lambda col: 297.0 in col.values)
         >>> import polars as pl
         >>> polars_df = pl.DataFrame(
-            {
-                "height_mm": [210.0, 297.0],
-                "width_mm": [188.5, 210.0],
-                "kind": ["A5", "A4"],
-                "ID": [5, 4],
-            }
-        )
+        ...     {
+        ...         "height_mm": [210.0, 297.0],
+        ...         "width_mm": [188.5, 210.0],
+        ...         "kind": ["A5", "A4"],
+        ...         "ID": [5, 4],
+        ...     }
+        ... )
         >>> some_selector.expand(df)
         ['height_mm', 'kind', 'ID']
 
@@ -288,16 +289,17 @@ class Selector:
 
         Examples
         --------
+        >>> from skrub import selectors as s
         >>> some_selector = ~s.glob("*_mm") | s.filter(lambda col: 297.0 in col.values)
         >>> import polars as pl
         >>> polars_df = pl.DataFrame(
-            {
-                "height_mm": [210.0, 297.0],
-                "width_mm": [188.5, 210.0],
-                "kind": ["A5", "A4"],
-                "ID": [5, 4],
-            }
-        )
+        ...     {
+        ...         "height_mm": [210.0, 297.0],
+        ...         "width_mm": [188.5, 210.0],
+        ...         "kind": ["A5", "A4"],
+        ...         "ID": [5, 4],
+        ...     }
+        ... )
         >>> some_selector.expand(df)
         ['height_mm', 'kind', 'ID']
 

@@ -152,23 +152,23 @@ All selectors have the :meth:`expand` method, which allows dataframe manipulatio
 outside of a Skrub workflow: applying it to any dataframe will return the list
 of column names from the dataframe that the selector would keep. This allows selectors
 to be applied on a variety of standard dataframe libraries, and can be particularly
-useful on complicated combinations of selectors:
+useful on complicated combinations of selectors::
 
-    >>> some_selector = ~s.glob("*_mm") | s.filter(lambda col: 297.0 in col.values)
+    >>> some_selector = ~s.glob('*_mm') | s.filter(lambda col: 297.0 in col.values)
     >>> import polars as pl
     >>> polars_df = pl.DataFrame(
-        {
-            "height_mm": [210.0, 297.0],
-            "width_mm": [188.5, 210.0],
-            "kind": ["A5", "A4"],
-            "ID": [5, 4],
-        }
-    )
-    >>> some_selector.expand(df)
+    ...     {
+    ...         "height_mm": [210.0, 297.0],
+    ...         "width_mm": [188.5, 210.0],
+    ...         "kind": ["A5", "A4"],
+    ...         "ID": [5, 4],
+    ...     }
+    ... )
+    >>> some_selector.expand(polars_df)
     ['height_mm', 'kind', 'ID']
 
 
-The :meth:`expand_index` method also exists: rather than returning a list of column names, it returns the corresponding indices from the input dataframe's column list:
+The :meth:`expand_index` method also exists: rather than returning a list of column names, it returns the corresponding indices from the input dataframe's column list::
 
     >>> s.expand_index(polars_df)
     [0, 2, 3]
@@ -184,7 +184,7 @@ that operate on columns to improve their versatility.
 For example, we can drop columns that have more unique values than a certain amount
 by combining :func:`~skrub.selectors.cardinality_below` with :class:`skrub.DropCols`.
 We first select the columns that have more than 3 unique values, then we invert the
-selector and finally transform the dataframe.
+selector and finally transform the dataframe::
 
 >>> df = pd.DataFrame({
 ... "not a lot": [1, 1, 1, 2, 2],
@@ -202,7 +202,7 @@ selector and finally transform the dataframe.
 Selectors can be used in conjunction with :class:`~skrub.ApplyToCols` to transform columns
 based on specific requirements.
 
-Consider the following example:
+Consider the following example::
 
 >>> import pandas as pd
 >>> data = {
@@ -219,7 +219,7 @@ Consider the following example:
 4      Art     3
 
 We might want to apply the :class:`~sklearn.preprocessing.StandardScaler` only to the numeric column. We can
-do this like this:
+do this like this::
 
 >>> from skrub import ApplyToCols
 >>> from sklearn.preprocessing import StandardScaler
