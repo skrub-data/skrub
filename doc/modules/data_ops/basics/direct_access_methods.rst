@@ -39,7 +39,7 @@ We can access its attributes:
 <GetAttr 'columns'>
 Result:
 ―――――――
-Index(['item', 'price', 'qty'], dtype='object')
+Index(['item', 'price', 'qty'], dtype=...)
 
 Accessing items, indexing, slicing:
 
@@ -50,7 +50,7 @@ Result:
 1     cup
 2     pen
 3    fork
-Name: item, dtype: object
+Name: item, dtype: ...
 
 We can apply operators:
 

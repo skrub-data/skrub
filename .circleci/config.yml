@@ -4,6 +4,7 @@ jobs:
   python3:
     docker:
       - image: cimg/python:3.10
+    resource_class: "medium+" # 6gb memory so we don't get OOM killed #1855
     environment:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv

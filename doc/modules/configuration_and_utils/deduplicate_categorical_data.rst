@@ -39,7 +39,7 @@ white    white
 white    white
 white    white
 white    white
-dtype: object
+dtype: ...
 
 >>> deduplicated = list(deduplicate_correspondence)
 >>> deduplicated # doctest: +SKIP
