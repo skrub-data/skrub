@@ -284,10 +284,6 @@ Ensuring the documentation builds
 ..
   Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
 
-**Before submitting your pull request, ensure that your modifications haven't
-introduced any new Sphinx warnings by building the documentation locally
-and addressing any issues.**
-
 First, make sure you have properly installed the development version of skrub.
 You can follow the :ref:`installation_instructions` > "From source" section, if needed.
 
