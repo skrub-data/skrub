@@ -259,7 +259,7 @@ ci-py314-polars-without-pyarrow = ["py314", "test", "polars-without-pyarrow"]
 ci-py314-latest-optional-deps = ["py314", "optional", "test"]
 
 # no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
-# ci-nightly-deps = { no-default-feature = true, features = [ "py314", "nightly-dependencies", "test" ]}
+ci-nightly-deps = { no-default-feature = true, features = [ "py314", "nightly-dependencies", "test" ]}
 
 [tool.ruff]
 line-length = 88
