@@ -426,6 +426,6 @@ Finally, if the remote repository was changed, you might need to run
 Integration
 ^^^^^^^^^^^
 
-Community consensus is key in the integration process. Expect a minimum
-of 1 to 3 reviews depending on the size of the change before we consider
+Community consensus is key in the integration process. Expect a minimum of
+1 to 3 reviews from maintainers depending on the size of the change before we consider
 merging the PR.
