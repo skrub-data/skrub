@@ -25,4 +25,4 @@ repos:
       - id: codespell
         exclude: .*/package-lock.json
         additional_dependencies:
-          - tomli
+          - tomli # needed to parse pyproject.toml
