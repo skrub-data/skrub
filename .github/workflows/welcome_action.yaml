@@ -11,8 +11,7 @@ jobs:
       - name: Greet the contributor
         uses: actions/first-interaction@v3
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-message: |
+          pr_message: |
             👋 Hi there! Thank you for your first contribution to skrub.
             We appreciate your effort and look forward to collaborating with you.
             Please make sure to review our
