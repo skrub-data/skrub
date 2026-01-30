@@ -510,6 +510,8 @@ def test_missing_values(df_module):
 
     c = fuzzy_join(b, a, left_on="col3", right_on="col1", add_match_info=True)
     assert ns.shape(c)[0] == len(b)
+
+
 def test_fuzzy_join_distance_metrics(df_module):
     """
     Test that different distance metrics work correctly.
@@ -519,39 +521,49 @@ def test_fuzzy_join_distance_metrics(df_module):
 
     # Test with euclidean (default)
     result_euclidean = fuzzy_join(
-        left, right, on="A", suffix="r", metric='euclidean', add_match_info=False
+        left, right, on="A", suffix="r", metric="euclidean", add_match_info=False
     )
     assert ns.shape(result_euclidean)[0] == 2
     assert ns.shape(result_euclidean)[1] == 3  # A, Ar, Br
 
     # Test with cosine
     result_cosine = fuzzy_join(
-        left, right, on="A", suffix="r", metric='cosine', add_match_info=False
+        left, right, on="A", suffix="r", metric="cosine", add_match_info=False
     )
     assert ns.shape(result_cosine)[0] == 2
     assert ns.shape(result_cosine)[1] == 3
 
     # Test with manhattan
     result_manhattan = fuzzy_join(
-        left, right, on="A", suffix="r", metric='manhattan', add_match_info=False
+        left, right, on="A", suffix="r", metric="manhattan", add_match_info=False
     )
     assert ns.shape(result_manhattan)[0] == 2
     assert ns.shape(result_manhattan)[1] == 3
 
     # Test that invalid metric raises error
     with pytest.raises(ValueError):
-        fuzzy_join(left, right, on="A", metric='invalid_metric')
+        fuzzy_join(left, right, on="A", metric="invalid_metric")
 
     # Test with numeric columns and different metrics
     left_num = df_module.make_dataframe({"int": [10, 20, 30]})
     right_num = df_module.make_dataframe({"int": [11, 21, 31], "val": [1, 2, 3]})
 
     result_num_euclidean = fuzzy_join(
-        left_num, right_num, on="int", suffix="r", metric='euclidean', add_match_info=False
+        left_num,
+        right_num,
+        on="int",
+        suffix="r",
+        metric="euclidean",
+        add_match_info=False,
     )
     assert ns.shape(result_num_euclidean)[0] == 3
 
     result_num_manhattan = fuzzy_join(
-        left_num, right_num, on="int", suffix="r", metric='manhattan', add_match_info=False
+        left_num,
+        right_num,
+        on="int",
+        suffix="r",
+        metric="manhattan",
+        add_match_info=False,
     )
     assert ns.shape(result_num_manhattan)[0] == 3

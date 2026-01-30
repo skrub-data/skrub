@@ -22,7 +22,7 @@ def fuzzy_join(
     string_encoder=DEFAULT_STRING_ENCODER,
     add_match_info=False,
     drop_unmatched=False,
-    metric='euclidean',
+    metric="euclidean",
 ):
     """Fuzzy (approximate) join.
 
@@ -36,8 +36,8 @@ def fuzzy_join(
 
     To identify the best match for each row, values from the matching columns
     (``left_key`` and ``right_key``) are vectorized, i.e. represented by vectors of
-    continuous values. Then, the Euclidean distances between these vectors are
-    computed (using the specified metric) to find, for each left table row, its nearest 
+    continuous values. Then, distances between these vectors are computed
+    (using the specified metric) to find, for each left table row, its nearest
     neighbor within the right table.
 
     Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
@@ -123,12 +123,7 @@ def fuzzy_join(
         which the nearest neighbor is further than `max_dist`).
     metric : str, default='euclidean'
         The distance metric to use for nearest neighbor search.
-        Common options include:
-        - 'euclidean': Standard Euclidean distance (default)
-        - 'manhattan': Sum of absolute differences
-        - 'cosine': Cosine similarity (good for text/TF-IDF vectors)
-        - 'hamming': For binary data
-        See sklearn.neighbors.NearestNeighbors for all available metrics.
+        See :class:`~sklearn.neighbors.NearestNeighbors` for all available metrics.
 
     Returns
     -------

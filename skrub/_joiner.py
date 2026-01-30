@@ -87,8 +87,8 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     To identify the best match for each row, values from the matching columns
     (`main_key` and `aux_key`) are vectorized, i.e. represented by vectors of
-    continuous values. Then, the distances between these vectors are computed 
-    (using the specified metric) computed to find, for each main table row, its 
+    continuous values. Then, the distances between these vectors are computed
+    (using the specified metric) computed to find, for each main table row, its
     nearest neighbor within the auxiliary table.
 
     Insert some columns whose names start with skrub_Joiner containing
@@ -103,7 +103,7 @@ class Joiner(TransformerMixin, BaseEstimator):
     - 'manhattan': Sum of absolute differences
     - 'cosine': Cosine similarity (good for text/TF-IDF vectors)
     - 'hamming': For binary data
-    See sklearn.neighbors.NearestNeighbors for all available metrics.
+    See :class:`~sklearn.neighbors.NearestNeighbors` for all available metrics.
 
     Optionally, a maximum distance threshold, `max_dist`, can be set. Matches
     between vectors that are separated by a distance (strictly) greater than
@@ -182,6 +182,9 @@ class Joiner(TransformerMixin, BaseEstimator):
         above the threshold. Those values can be helpful for an estimator that
         uses the joined features, or to inspect the result of the join and set
         a `max_dist` threshold.
+    metric : str, default='euclidean'
+        The distance metric to use for nearest neighbor search.
+        See :class:`~sklearn.neighbors.NearestNeighbors` for all available metrics.
 
     Attributes
     ----------
@@ -250,7 +253,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         ref_dist=DEFAULT_REF_DIST,
         string_encoder=DEFAULT_STRING_ENCODER,
         add_match_info=True,
-        metric='euclidean',
+        metric="euclidean",
     ):
         self.aux_table = aux_table
         self.key = key
@@ -266,7 +269,7 @@ class Joiner(TransformerMixin, BaseEstimator):
         )
         self.add_match_info = add_match_info
         self.metric = metric
-        
+
     def _check_max_dist(self):
         if (
             self.max_dist is None

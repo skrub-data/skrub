@@ -20,10 +20,10 @@ class Matching(BaseEstimator):
     ----------
     metric : str, default='euclidean'
         The distance metric to use for nearest neighbor search.
-        See sklearn.neighbors.NearestNeighbors for available metrics.
+        See :class:`~sklearn.neighbors.NearestNeighbors` for all available metrics.
     """
 
-    def __init__(self, metric='euclidean'):
+    def __init__(self, metric="euclidean"):
         self.metric = metric
 
     def fit(self, aux):
@@ -94,7 +94,13 @@ class RandomPairs(Matching):
         The distance metric to use. See Matching class.
     """
 
-    def __init__(self, percentile=25.0, n_sampled_pairs=500, random_state=0, metric='euclidean'):
+    def __init__(
+        self,
+        percentile=25.0,
+        n_sampled_pairs=500,
+        random_state=0,
+        metric="euclidean",
+    ):
         super().__init__(metric=metric)
         self.percentile = percentile
         self.n_sampled_pairs = n_sampled_pairs
@@ -151,7 +157,7 @@ class SelfJoinNeighbor(Matching):
         The distance metric to use. See Matching class.
     """
 
-    def __init__(self, reference_neighbor=1, metric='euclidean'):
+    def __init__(self, reference_neighbor=1, metric="euclidean"):
         super().__init__(metric=metric)
         self.reference_neighbor = reference_neighbor
 
@@ -187,7 +193,7 @@ class OtherNeighbor(Matching):
         The distance metric to use. See Matching class.
     """
 
-    def __init__(self, reference_neighbor=1, metric='euclidean'):
+    def __init__(self, reference_neighbor=1, metric="euclidean"):
         super().__init__(metric=metric)
         self.reference_neighbor = reference_neighbor
 
