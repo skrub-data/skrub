@@ -2,31 +2,10 @@ Advanced columnwise operations
 ------------------------------
 
 
-Independent columnwise operations
----------------------------------
-
-When ``ApplyToCols``` is called, what is being run under the hood is in fact a series of
-transformers known as ``SingleColumnTransformer``. If the transformer only needs to be run on
-a single column, it can be given the ``__single_column_transformer__`` attribute. However,
-there are cases where it is useful to work directly with the ``SingleColumnTransformer``
-itself, as it avoids some boilerplate:
-
-    - The required ``__single_column_transformer__`` attribute is set.
-    - ``fit`` is defined (calls ``fit_transform`` and discards the result).
-    - ``fit``, ``transform`` and ``fit_transform`` are wrapped to check
-        that the input is a single column and raise a ``ValueError`` with a
-        helpful message when it is not.
-    - A note about single-column transformers (vs dataframe transformers)
-        is added after the summary line of the docstring.
-
-***TO BE COMPLETED***
-
-
-
 Rejected columns
 ----------------
 
-The transformer can raise ``RejectColumn`` to indicate it cannot handle a
+The ``RejectColumn`` exception exists to indicate when a transformer cannot handle a
 given column.
 
 >>> from skrub import ToDatetime
@@ -78,3 +57,30 @@ city                ...
 dtype: object
 >>> to_datetime.transformers_
 {'birthday': ToDatetime()}
+
+
+The single column transformer
+-----------------------------
+
+In cases where the user needs finer control over a custom transformer's behavior on different columns,
+or if a workflow involves a non-skrub transformer which doesn't handle column rejection, it is necessary
+to create a transformer from scratch that is capable of handling this exception.
+
+Hence the ``SingleColumnTransformer`` class. Custom transformers inherited from this class can have complex
+behaviors assigned to their ``transform`` methods, or serve as wrappers for other transformers. For instance,
+if one wanted to implement the ``RejectColumn`` exception into scikit-learn's ``StandardScaler``::
+
+    >>> class NewScaler(SingleColumnTransformer):
+    ...     def __init__(self):
+    ...         self.scaler = StandardScaler
+    ...
+    ...     def fit_transform(self, x, y):
+    ...         if not check(x):
+    ...             raise RejectColumn
+    ...         else:
+    ...             self.scaler.fit_transform(x,y)
+    ...
+    ...     def transform(self, x):
+    ...         self.scaler.fit_transform(x)
+
+Where ``check`` tests column ``x`` against a custom criterion.
