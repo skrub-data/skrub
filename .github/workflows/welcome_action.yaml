@@ -1,0 +1,25 @@
+name: Welcome New Contributors
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Greet the contributor
+        uses: actions/first-interaction@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          pr-message: |
+            👋 Hi there! Thank you for your first contribution to skrub.
+            We appreciate your effort and look forward to collaborating with you.
+            Please make sure to review our
+            [contributing guidelines](https://skrub-data.org/stable/CONTRIBUTING.html).
+
+            All PRs should be discussed with the maintainers before being opened,
+            and the maintainers reserve the right to close PRs that have been opened
+            without prior agreement.
+
+            If you have any questions, feel free to ask!
