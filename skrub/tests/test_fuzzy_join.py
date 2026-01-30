@@ -567,3 +567,39 @@ def test_fuzzy_join_distance_metrics(df_module):
         add_match_info=False,
     )
     assert ns.shape(result_num_manhattan)[0] == 3
+
+
+@pytest.mark.parametrize(
+    ("metric", "expected_id"),
+    [("euclidean", "A"), ("manhattan", "A"), ("cosine", "B")],
+)
+def test_fuzzy_join_distance_metric_changes_match(df_module, metric, expected_id):
+    """
+    Test that the metric parameter affects the chosen match.
+    """
+    left = df_module.make_dataframe({"x": [1.0], "y": [0.0]})
+    right = df_module.make_dataframe(
+        {"x": [1.0, 3.0], "y": [1.0, 0.0], "id": ["A", "B"]}
+    )
+
+    result = fuzzy_join(
+        left,
+        right,
+        on=["x", "y"],
+        suffix="r",
+        metric=metric,
+        ref_dist="no_rescaling",
+        add_match_info=False,
+    )
+    assert ns.to_list(ns.col(result, "idr")) == [expected_id]
+
+
+def test_fuzzy_join_invalid_metric_raises(df_module):
+    """
+    Test that an invalid metric raises an error.
+    """
+    left = df_module.make_dataframe({"A": ["aa"]})
+    right = df_module.make_dataframe({"A": ["aa"], "B": [1]})
+
+    with pytest.raises(ValueError):
+        fuzzy_join(left, right, on="A", metric="invalid_metric")
