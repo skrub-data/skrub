@@ -7,7 +7,7 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils, selectors
 from ._join_utils import pick_column_names
-from .core._single_column_transformer import RejectColumn
+from .core import RejectColumn
 
 __all__ = ["ApplyToCols"]
 

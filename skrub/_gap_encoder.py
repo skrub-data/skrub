@@ -20,7 +20,7 @@ from sklearn.utils.validation import _num_samples, check_is_fitted
 
 from . import _dataframe as sbd
 from ._utils import unique_strings
-from .core._single_column_transformer import RejectColumn, SingleColumnTransformer
+from .core import RejectColumn, SingleColumnTransformer
 
 
 class GapEncoder(TransformerMixin, SingleColumnTransformer):

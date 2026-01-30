@@ -23,7 +23,7 @@ from ._to_datetime import ToDatetime
 from ._to_float import ToFloat
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
-from .core._single_column_transformer import SingleColumnTransformer
+from .core import SingleColumnTransformer
 
 __all__ = ["TableVectorizer"]
 

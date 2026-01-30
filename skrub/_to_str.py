@@ -1,5 +1,5 @@
 from . import _dataframe as sbd
-from .core._single_column_transformer import RejectColumn, SingleColumnTransformer
+from .core import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToStr"]
 

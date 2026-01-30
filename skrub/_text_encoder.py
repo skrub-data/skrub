@@ -11,7 +11,7 @@ from . import _dataframe as sbd
 from ._scaling_factor import scaling_factor
 from ._to_str import ToStr
 from ._utils import import_optional_dependency, unique_strings
-from .core._single_column_transformer import SingleColumnTransformer
+from .core import SingleColumnTransformer
 from .datasets._utils import get_data_dir
 
 

@@ -15,7 +15,7 @@ from . import _dataframe as sbd
 from ._fast_hash import ngram_min_hash
 from ._string_distances import get_unique_ngrams
 from ._utils import LRUDict, unique_strings
-from .core._single_column_transformer import RejectColumn, SingleColumnTransformer
+from .core import RejectColumn, SingleColumnTransformer
 
 NoneType = type(None)
 
