@@ -34,6 +34,12 @@ Changes
 - The :class:`StringEncoder` now exposes the ``vocabulary`` parameter from the parent
   :class:`TfidfVectorizer`.
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
+
+- Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
+  the nearest-neighbor distance used for matching. The metric can be any value
+  supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
+  :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
+
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
 - The repository wheel has been made smaller by removing some material that was

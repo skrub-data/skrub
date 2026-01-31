@@ -512,70 +512,17 @@ def test_missing_values(df_module):
     assert ns.shape(c)[0] == len(b)
 
 
-def test_fuzzy_join_distance_metrics(df_module):
-    """
-    Test that different distance metrics work correctly.
-    """
-    left = df_module.make_dataframe({"A": ["aa", "bb"]})
-    right = df_module.make_dataframe({"A": ["aa", "ba"], "B": [1, 2]})
-
-    # Test with euclidean (default)
-    result_euclidean = fuzzy_join(
-        left, right, on="A", suffix="r", metric="euclidean", add_match_info=False
-    )
-    assert ns.shape(result_euclidean)[0] == 2
-    assert ns.shape(result_euclidean)[1] == 3  # A, Ar, Br
-
-    # Test with cosine
-    result_cosine = fuzzy_join(
-        left, right, on="A", suffix="r", metric="cosine", add_match_info=False
-    )
-    assert ns.shape(result_cosine)[0] == 2
-    assert ns.shape(result_cosine)[1] == 3
-
-    # Test with manhattan
-    result_manhattan = fuzzy_join(
-        left, right, on="A", suffix="r", metric="manhattan", add_match_info=False
-    )
-    assert ns.shape(result_manhattan)[0] == 2
-    assert ns.shape(result_manhattan)[1] == 3
-
-    # Test that invalid metric raises error
-    with pytest.raises(ValueError):
-        fuzzy_join(left, right, on="A", metric="invalid_metric")
-
-    # Test with numeric columns and different metrics
-    left_num = df_module.make_dataframe({"int": [10, 20, 30]})
-    right_num = df_module.make_dataframe({"int": [11, 21, 31], "val": [1, 2, 3]})
-
-    result_num_euclidean = fuzzy_join(
-        left_num,
-        right_num,
-        on="int",
-        suffix="r",
-        metric="euclidean",
-        add_match_info=False,
-    )
-    assert ns.shape(result_num_euclidean)[0] == 3
-
-    result_num_manhattan = fuzzy_join(
-        left_num,
-        right_num,
-        on="int",
-        suffix="r",
-        metric="manhattan",
-        add_match_info=False,
-    )
-    assert ns.shape(result_num_manhattan)[0] == 3
-
-
 @pytest.mark.parametrize(
-    ("metric", "expected_id"),
-    [("euclidean", "A"), ("manhattan", "A"), ("cosine", "B")],
+    ("metric", "expected_match"),
+    [
+        ("euclidean", {"xr": 1.0, "yr": 1.0, "idr": "A"}),
+        ("manhattan", {"xr": 1.0, "yr": 1.0, "idr": "A"}),
+        ("cosine", {"xr": 3.0, "yr": 0.0, "idr": "B"}),
+    ],
 )
-def test_fuzzy_join_distance_metric_changes_match(df_module, metric, expected_id):
+def test_fuzzy_join_distance_metrics(df_module, metric, expected_match):
     """
-    Test that the metric parameter affects the chosen match.
+    Test that each metric produces the expected joined values.
     """
     left = df_module.make_dataframe({"x": [1.0], "y": [0.0]})
     right = df_module.make_dataframe(
@@ -591,7 +538,48 @@ def test_fuzzy_join_distance_metric_changes_match(df_module, metric, expected_id
         ref_dist="no_rescaling",
         add_match_info=False,
     )
-    assert ns.to_list(ns.col(result, "idr")) == [expected_id]
+
+    expected = df_module.make_dataframe(
+        {
+            "x": [1.0],
+            "y": [0.0],
+            "xr": [expected_match["xr"]],
+            "yr": [expected_match["yr"]],
+            "idr": [expected_match["idr"]],
+        }
+    )
+    df_module.assert_frame_equal(result, expected)
+
+
+def test_fuzzy_join_distance_metric_changes_match(df_module):
+    """
+    Test that changing metric can change which row is selected as the match.
+    """
+    left = df_module.make_dataframe({"x": [1.0], "y": [0.0]})
+    right = df_module.make_dataframe(
+        {"x": [1.0, 3.0], "y": [1.0, 0.0], "id": ["A", "B"]}
+    )
+    result_euclidean = fuzzy_join(
+        left,
+        right,
+        on=["x", "y"],
+        suffix="r",
+        metric="euclidean",
+        ref_dist="no_rescaling",
+        add_match_info=False,
+    )
+    result_cosine = fuzzy_join(
+        left,
+        right,
+        on=["x", "y"],
+        suffix="r",
+        metric="cosine",
+        ref_dist="no_rescaling",
+        add_match_info=False,
+    )
+    assert ns.to_list(ns.col(result_euclidean, "idr")) != ns.to_list(
+        ns.col(result_cosine, "idr")
+    )
 
 
 def test_fuzzy_join_invalid_metric_raises(df_module):

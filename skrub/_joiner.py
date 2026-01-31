@@ -88,22 +88,8 @@ class Joiner(TransformerMixin, BaseEstimator):
     To identify the best match for each row, values from the matching columns
     (`main_key` and `aux_key`) are vectorized, i.e. represented by vectors of
     continuous values. Then, the distances between these vectors are computed
-    (using the specified metric) computed to find, for each main table row, its
+    (using the specified metric) to find, for each main table row, its
     nearest neighbor within the auxiliary table.
-
-    Insert some columns whose names start with skrub_Joiner containing
-    the distance, rescaled distance and whether the rescaled distance is
-    above the threshold. Those values can be helpful for an estimator that
-    uses the joined features, or to inspect the result of the join and set
-    a max_dist threshold.
-    metric : str, default='euclidean'
-    The distance metric to use for nearest neighbor search.
-    Common options include:
-    - 'euclidean': Standard Euclidean distance (default)
-    - 'manhattan': Sum of absolute differences
-    - 'cosine': Cosine similarity (good for text/TF-IDF vectors)
-    - 'hamming': For binary data
-    See :class:`~sklearn.neighbors.NearestNeighbors` for all available metrics.
 
     Optionally, a maximum distance threshold, `max_dist`, can be set. Matches
     between vectors that are separated by a distance (strictly) greater than
