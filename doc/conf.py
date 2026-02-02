@@ -64,7 +64,6 @@ extensions = [
     # builtin
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
-    "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.githubpages",
@@ -396,24 +395,15 @@ def notebook_modification_function(notebook_content, notebook_filename):
             "</div>",
         ]
     )
-    # TODO: remove this when we remove KEN embeddings
-    if "06_ken_embeddings_example" in notebook_filename:
-        message_class = "danger"
-        message = (
-            "This example requires PyArrow, which is currently unavailable in Pyodide"
-            " (see https://github.com/pyodide/pyodide/issues/2933). Thus, this example"
-            " cannot be run in JupyterLite."
-        )
-    else:
-        message_class = "warning"
-        message = (
-            "Running the skrub examples in JupyterLite is experimental and you may"
-            "encounter some unexpected behavior.\n\n"
-            "The main difference is that imports will take a lot longer than usual, "
-            "for example the first `import skrub` can take roughly 10-20s.\n\n"
-            "If you notice problems, feel free to open an "
-            "[issue](https://github.com/skrub-data/skrub/issues/new/choose) about it."
-        )
+    message_class = "warning"
+    message = (
+        "Running the skrub examples in JupyterLite is experimental and you may"
+        "encounter some unexpected behavior.\n\n"
+        "The main difference is that imports will take a lot longer than usual, "
+        "for example the first `import skrub` can take roughly 10-20s.\n\n"
+        "If you notice problems, feel free to open an "
+        "[issue](https://github.com/skrub-data/skrub/issues/new/choose) about it."
+    )
 
     markdown = warning_template.format(message_class=message_class, message=message)
 
@@ -467,6 +457,13 @@ def reset_skrub_config(gallery_conf, fname):
     skrub.set_config(**default_global_config)
 
 
+def call_garbage_collector(gallery_conf, fname):
+    """Call the garbage collector to free memory after each example."""
+    import gc
+
+    gc.collect()
+
+
 sphinx_gallery_conf = {
     "doc_module": "skrub",
     "backreferences_dir": os.path.join("reference/generated"),
@@ -490,7 +487,8 @@ sphinx_gallery_conf = {
         "use_jupyter_lab": True,
     },
     "default_thumb_file": "./_static/skrub.svg",
-    "reset_modules": (reset_skrub_config,),
+    "reset_modules": (reset_skrub_config, call_garbage_collector),
+    "show_memory": True,
 }
 if with_jupyterlite:
     sphinx_gallery_conf["jupyterlite"] = {
@@ -555,9 +553,6 @@ numpydoc_xref_aliases = {
     "pandas.melt": "pandas.melt",
     "pandas.merge": "pandas.merge",
     # Skrub
-    "fetch_ken_table_aliases": "skrub.datasets.fetch_ken_table_aliases",
-    "fetch_ken_types": "skrub.datasets.fetch_ken_types",
-    "fetch_ken_embeddings": "skrub.datasets.fetch_ken_embeddings",
     "fuzzy_join": "skrub.fuzzy_join",
     "Joiner": "skrub.Joiner",
     "AggJoiner": "skrub.AggJoiner",

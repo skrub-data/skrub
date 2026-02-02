@@ -85,8 +85,6 @@ class CleanCategories(SingleColumnTransformer):
     2    three
     Name: c, dtype: category
     Categories (3, ...): ['one', 'three', 'two']
-    >>> cleaner.fit_transform(s) is s # doctest: +SKIP
-    True
 
     Categories stored with the ``StringDtype`` dtype are converted to ``object``:
 
