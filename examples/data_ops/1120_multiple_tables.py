@@ -84,13 +84,11 @@ skrub.TableReport(dataset.products)
 # ------------------------------------
 #
 # We start by creating skrub variables, which are the inputs to our plan.
-# Notice that we load only a fraction of the baskets table to speed up
-# execution time and reduce memory usage for this example
 # In our example, we create two skrub |var| objects: ``products`` and ``baskets``:
 
 # %%
 products = skrub.var("products", dataset.products)
-baskets = skrub.var("baskets", dataset.baskets.sample(frac=0.1, random_state=42))
+baskets = skrub.var("baskets", dataset.baskets)
 
 basket_ids = baskets[["ID"]].skb.mark_as_X()
 fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
