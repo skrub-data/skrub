@@ -64,8 +64,8 @@ The |Cleaner| is a scikit-learn compatible transformer:
   2   3 2024-05-07
 >>> df_clean.dtypes
 id               int64
-date    datetime64[ns]
-dtype: object
+date    datetime64[...]
+dtype:  ...
 
 Note that the ``"all_missing"`` column has been dropped, and that the ``"date"``
 column has been correctly parsed as a datetime column.
@@ -89,11 +89,11 @@ the ``numeric_dtype`` parameter:
 ... })
 >>> df.dtypes
 id    int64
-dtype: object
+dtype: ...
 >>> df_cleaned = cleaner.fit_transform(df)
 >>> df_cleaned.dtypes
 id    float32
-dtype: object
+dtype: ...
 
 Setting the dtype to ``float32`` reduces RAM footprint for most use cases and
 ensures that all missing values have the same representation. This also ensures
