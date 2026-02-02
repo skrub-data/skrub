@@ -1,28 +1,28 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
+-   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-  - repo: https://github.com/pre-commit/pygrep-hooks
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+-   repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
     hooks:
-      - id: rst-backticks
+    -   id: rst-backticks
         exclude: CHANGES.rst
-      - id: rst-directive-colons
-      - id: rst-inline-touching-normal
-  - repo: https://github.com/astral-sh/ruff-pre-commit
+    -   id: rst-directive-colons
+    -   id: rst-inline-touching-normal
+-   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.4
     hooks:
-      - id: ruff-check
+    -   id: ruff-check
         args: ["--fix", "--show-fixes", "--output-format=full"]
-      - id: ruff-format
-  - repo: https://github.com/codespell-project/codespell
+    -   id: ruff-format
+-   repo: https://github.com/codespell-project/codespell
     # Configuration for codespell is in pyproject.toml
     rev: v2.3.0
     hooks:
-      - id: codespell
+    -   id: codespell
         exclude: .*/package-lock.json
         additional_dependencies:
           - tomli # needed to parse pyproject.toml
