@@ -1,7 +1,7 @@
 .. _contributing:
 
-Contributing to skrub
-=====================
+Contributing guide
+==================
 
 First off, thanks for taking the time to contribute!
 
@@ -42,7 +42,7 @@ please:
 1. **Check if an issue already exists**
    by searching the `GitHub issues <https://github.com/skrub-data/skrub/issues?q=is%3Aissue>`_
 
-   - If **open**, leave a 👍 on the original message to signal that others are affected.
+   - If **open**, leave a 👍 on the original message to signal that you are also affected.
    - If closed, check for one of the following:
       - A **merged pull request** may indicate the bug is fixed. Update your
         skrub version or note if the fix is pending a release.
@@ -73,7 +73,7 @@ You can find a guide on how to write examples in the :ref:`example guide <tutori
 Suggesting enhancements
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have an idea for improving skrub, whether it's a small fix
+If you have an idea for improving skrub, whether it's a fix
 or a new feature, first:
 
 - **Check if it has been proposed or implemented** by reviewing
@@ -177,6 +177,8 @@ When contributing, keep these project goals in mind:
     - Document all public functions, methods, variables, and class signatures.
     - The public API refers to all components available for import and use by library users. Anything that doesn't begin with an underscore is considered part of the public API.
 
+Checking the quality of your code contribution
+----------------------------------------------
 
 Testing the code
 ~~~~~~~~~~~~~~~~
@@ -276,9 +278,94 @@ can be pushed. Something worth noting is that if the ``pre-commit``
 hooks format some files, the commit will be canceled: you will have to
 stage the changes made by ``pre-commit`` and commit again.
 
+Ensuring the documentation builds
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+..
+  Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
+
+First, make sure you have properly installed the development version of skrub.
+You can follow the :ref:`installation_instructions` > "From source" section, if needed.
+
+To build the documentation, you need to be in the ``doc`` folder:
+
+.. code:: bash
+
+    cd doc
+
+To generate the full documentation, including the example gallery,
+run the following command:
+
+.. code:: bash
+
+    make html
+
+The documentation will be generated in the ``_build/html/`` directory
+and are viewable in a web browser, for instance by opening the local
+``_build/html/index.html`` file.
+
+Running all the examples can take a while, so if you only want to generate
+specific examples, you can use the following command with a regex pattern:
+
+.. code:: bash
+
+    make html EXAMPLES_PATTERN=your_regex_goes_here
+
+This is especially helpful when you're only modifying or checking a few examples.
+
+It is also possible to build the documentation without running the examples
+without running the examples by using the following command:
+
+.. code:: bash
+
+    make html-noplot
+
+This command generates the documentation without re-executing the examples, which can
+take a long time. This is useful if you are only modifying the documentation itself, such as fixing
+typos or improving explanations.
+
+
+**Using pixi**
+
+You can download and install pixi from `here <https://pixi.sh/latest/>`_.
+
+From the repository root:
+
+.. code:: bash
+
+    # Build documentation without running examples (faster)
+    pixi run build-doc-quick
+
+    # Build the full documentation, including examples
+    pixi run build-doc
+
+    # Clean previously built documentation
+    pixi run clean-doc
+
+The documentation will be generated in the ``doc/_build/html/`` directory.
+You can view it by opening the local ``doc/_build/html/index.html`` file.
+
+.. warning::
+
+   On Intel-based macOS systems (``osx-64``), some pixi environments may not
+   resolve correctly due to missing upstream package builds (e.g., for PyTorch).
+   If you encounter issues, you can always fall back to using ``make`` as
+   described above.
+
+Editing the API reference documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**All public functions and classes must be documented in the API
+reference**, hence when adding a public function or class, a new entry must be
+added, as detailed just above.
+
+To add a new entry to the :ref:`API reference documentation<api_ref>` or change its
+content, head to ``doc/api_reference.py``. This data is then used by ``doc/conf.py``
+to render templates located at ``doc/reference/*.rst.template``.
+
 
 Submitting your code
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 Once you have pushed your commits to your remote repository, you can submit
 a PR by clicking the "Compare & pull request" button on GitHub,
@@ -335,100 +422,6 @@ Finally, if the remote repository was changed, you might need to run
 Integration
 ^^^^^^^^^^^
 
-Community consensus is key in the integration process. Expect a minimum
-of 1 to 3 reviews depending on the size of the change before we consider
+Community consensus is key in the integration process. Expect a minimum of
+1 to 3 reviews from maintainers depending on the size of the change before we consider
 merging the PR.
-
-
-Building the documentation
---------------------------
-
-..
-  Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
-
-**Before submitting your pull request, ensure that your modifications haven't
-introduced any new Sphinx warnings by building the documentation locally
-and addressing any issues.**
-
-First, make sure you have properly installed the development version of skrub.
-You can follow the :ref:`installation_instructions` > "From source" section, if needed.
-
-To build the documentation, you need to be in the ``doc`` folder:
-
-.. code:: bash
-
-    cd doc
-
-To generate the full documentation, including the example gallery,
-run the following command:
-
-.. code:: bash
-
-    make html
-
-The documentation will be generated in the ``_build/html/`` directory
-and are viewable in a web browser, for instance by opening the local
-``_build/html/index.html`` file.
-
-Running all the examples can take a while, so if you only want to generate
-specific examples, you can use the following command with a regex pattern:
-
-.. code:: bash
-
-    make html EXAMPLES_PATTERN=your_regex_goes_here
-
-This is especially helpful when you're only modifying or checking a few examples.
-
-It is also possible to build the documentation without running the examples
-without running the examples by using the following command:
-
-.. code:: bash
-
-    make html-noplot
-
-This command generates the documentation without re-executing the examples, which can
-take a long time. This is useful if you are only modifying the documentation itself, such as fixing
-typos or improving explanations.
-
-
-
-**Using pixi**
-
-You can download and install pixi from `here <https://pixi.sh/latest/>`_.
-
-From the repository root:
-
-.. code:: bash
-
-    # Build documentation without running examples (faster)
-    pixi run build-doc-quick
-
-    # Build the full documentation, including examples
-    pixi run build-doc
-
-    # Clean previously built documentation
-    pixi run clean-doc
-
-The documentation will be generated in the ``doc/_build/html/`` directory.
-You can view it by opening the local ``doc/_build/html/index.html`` file.
-
-.. warning::
-
-   On Intel-based macOS systems (``osx-64``), some pixi environments may not
-   resolve correctly due to missing upstream package builds (e.g., for PyTorch).
-   If you encounter issues, you can always fall back to using ``make`` as
-   described above.
-
-
-Editing the API reference documentation
----------------------------------------
-
-To add a new entry to the :ref:`API reference documentation<api_ref>` or change its
-content, head to ``doc/api_reference.py``. This data is then used by ``doc/conf.py``
-to render templates located at ``doc/reference/*.rst.template``.
-
-|
-
-Note that **all public functions and classes must be documented in the API
-reference**, hence when adding a public function or class, a new entry must be
-added, as detailed just above.
