@@ -176,7 +176,7 @@ def numeric():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_     ...
+    str_      object
     dtype: object
 
     >>> s.select(df, s.numeric())
@@ -227,7 +227,7 @@ def integer():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      ...
+    str_      object
     dtype: object
 
     >>> s.select(df, s.integer())
@@ -278,7 +278,7 @@ def float():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      ...
+    str_      object
     dtype: object
 
     >>> s.select(df, s.float())
@@ -315,7 +315,7 @@ def any_date():
     >>> df.dtypes
     dt           datetime64[...]
     tzdt    datetime64[..., UTC]
-    str_                 ...
+    str_                 object
     dtype: object
 
     >>> s.select(df, s.any_date())
@@ -347,7 +347,7 @@ def categorical():
     1      B        B
 
     >>> df.dtypes
-    string        ...
+    string        object
     category    category
     dtype: object
 
@@ -385,9 +385,9 @@ def string():
     1  B  10  B  B
 
     >>> df.dtypes
-    os            ...
+    os            object
     o             object
-    s     ...
+    s     string...
     c           category
     dtype: object
 
@@ -407,7 +407,7 @@ def string():
 
 def boolean():
     """
-    Select columns that have a Boolean data type.
+    Select columns that have an Boolean data type.
 
     Examples
     --------
@@ -509,11 +509,24 @@ def has_nulls(threshold=0):
     >>> s.select(df, s.has_nulls())
           b     c
     0   0.0     a
-    1   NaN     b
+    1   ...     b
     2  20.0  ...
+
+    Use the ``threshold`` parameter to filter columns by null percentage:
+
+    >>> df2 = pd.DataFrame(dict(
+    ...     few_nulls=[1, 2, 3, None],
+    ...     many_nulls=[1, None, None, None],
+    ...     no_nulls=[1, 2, 3, 4])
+    >>> s.select(df2, s.has_nulls(threshold=0.25))
+       few_nulls  many_nulls
+    0        1.0         1.0
+    1        2.0         ...
+    2        3.0         ...
+    3        ...         ...
     """
 
-    def my_func(column, threshold=None):
+    def null_count_check(column, threshold=None):
         return sum(sbd.is_null(column)) / len(column) >= threshold
 
     if threshold == 0:
@@ -524,4 +537,4 @@ def has_nulls(threshold=0):
                 f"Threshold {threshold} is invalid. Threshold"
                 " should be a number in the range [0, 1], or None."
             )
-        return Filter(my_func, args=(threshold,), name="has_nulls")
+        return Filter(null_count_check, args=(threshold,), name="has_nulls")
