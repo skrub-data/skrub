@@ -70,7 +70,7 @@ Working with databases
 ======================
 
 Skrub DataOps can work with databases by converting database tables to pandas
-DataFrames. For example, you can use `Ibis <https://ibis-project.org>`__ to
+DataFrames. For example, you can use `Ibis <https://ibis-project.org>`_ to
 connect to SQL databases (such as SQLite, PostgreSQL, MySQL, etc.), express and execute
 queries, and then materialize the results as pandas DataFrames for use with skrub
 DataOps. See :ref:`sphx_glr_auto_examples_data_ops_1160_database_example.py` for
