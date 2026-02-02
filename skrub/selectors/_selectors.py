@@ -520,8 +520,8 @@ def has_nulls(threshold=0):
         return Filter(sbd.has_nulls, name="has_nulls")
     else:
         if not isinstance(threshold, numbers.Number) or not 0.0 < threshold <= 1.0:
-            return Filter(my_func, args=(threshold,), name="has_nulls")
-        raise ValueError(
-            f"Threshold {threshold} is invalid. Threshold"
-            " should be a number in the range [0, 1], or None."
-        )
+            raise ValueError(
+                f"Threshold {threshold} is invalid. Threshold"
+                " should be a number in the range [0, 1], or None."
+            )
+        return Filter(my_func, args=(threshold,), name="has_nulls")

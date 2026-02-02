@@ -98,6 +98,16 @@ def test_has_nulls(df_module):
     assert s.has_nulls().expand(df) == ["b", "c"]
 
 
+def test_has_nulls_threshold(df_module):
+    df = df_module.make_dataframe(
+        dict(a=[0, 1, 2, None], b=[0, None, 2, None], c=["a", None, None, None])
+    )
+    assert s.has_nulls(threshold=0.25).expand(df) == ["a", "b", "c"]
+    assert s.has_nulls(threshold=0.5).expand(df) == ["b", "c"]
+    assert s.has_nulls(threshold=0.75).expand(df) == ["c"]
+    assert s.has_nulls(threshold=1.0).expand(df) == []
+
+
 @pytest.mark.parametrize("name", s.__all__)
 def test_pickling_selectors_without_args(name, df_module):
     df = df_module.example_dataframe
