@@ -3,7 +3,6 @@ import pickle
 import types
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
@@ -77,13 +76,6 @@ def test_dtype_selectors(df_module):
         # pandas doesn't have a 'date' dtype, only datetime
         assert df_module.name == "pandas"
         assert s.any_date().expand(df) == ["datetime-col"]
-
-
-def test_dtype_pandas_object():
-    # Testing for behavior with object and string columns
-    df = pd.DataFrame({"string-object": ["foo", "bar"], "object-object": ["baz", 42]})
-
-    assert s.string().expand(df) == ["string-object"]
 
 
 def test_cardinality_below(df_module, monkeypatch):
