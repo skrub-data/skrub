@@ -113,6 +113,7 @@ pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
 plotly = "*"
+memory_profiler = "*"
 seaborn = "*"
   # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
   # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
@@ -333,7 +334,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'
