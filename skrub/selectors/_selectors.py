@@ -1,4 +1,5 @@
 import fnmatch
+import numbers
 import re
 
 from .. import _dataframe as sbd
@@ -496,7 +497,7 @@ def cardinality_below(threshold):
     return Filter(_cardinality_below, args=(threshold,), name="cardinality_below")
 
 
-def has_nulls():
+def has_nulls(threshold=0):
     """
     Select columns that contain at least one null value.
 
@@ -511,4 +512,16 @@ def has_nulls():
     1   NaN     b
     2  20.0  None
     """
-    return Filter(sbd.has_nulls, name="has_nulls")
+
+    def my_func(column, threshold=None):
+        return sum(sbd.is_null(column)) / len(column) >= threshold
+
+    if threshold == 0:
+        return Filter(sbd.has_nulls, name="has_nulls")
+    else:
+        if not isinstance(threshold, numbers.Number) or not 0.0 < threshold <= 1.0:
+            return Filter(my_func, args=(threshold,), name="has_nulls")
+        raise ValueError(
+            f"Threshold {threshold} is invalid. Threshold"
+            " should be a number in the range [0, 1], or None."
+        )
