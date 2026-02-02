@@ -45,9 +45,9 @@ class CleanCategories(SingleColumnTransformer):
 
     Pandas allows anything as categories but scikit-learn encoders raise an
     exception when categories mix strings and numbers or use any other type, so
-    we make sure they are strings. Note that in pandas this can result in
-    collapsing 2 categories in the edge case that they are different but have
-    the same string representation.
+    we make sure they are strings. Note that this can result in collapsing 2
+    categories in the edge case that they are different but have the same string
+    representation.
 
     Pandas categorical columns that store their categories with the
     ``StringDtype`` extension dtype represent missing values with ``pd.NA``,
@@ -85,8 +85,6 @@ class CleanCategories(SingleColumnTransformer):
     2    three
     Name: c, dtype: category
     Categories (3, ...): ['one', 'three', 'two']
-    >>> cleaner.fit_transform(s) is s # doctest: +SKIP
-    True
 
     Categories stored with the ``StringDtype`` dtype are converted to ``object``:
 
@@ -98,7 +96,7 @@ class CleanCategories(SingleColumnTransformer):
     2     <NA>
     Name: c, dtype: category
     Categories (2, string): [...]
-    >>> _.cat.categories.dtype # doctest: +SKIP
+    >>> _.cat.categories.dtype #doctest: +SKIP
     string[python]
     >>> cleaner.fit_transform(s)
     0    cat A
@@ -106,7 +104,7 @@ class CleanCategories(SingleColumnTransformer):
     2      NaN
     Name: c, dtype: category
     Categories (2, ...): [...]
-    >>> _.cat.categories.dtype # doctest: +SKIP
+    >>> _.cat.categories.dtype #doctest: +SKIP
     dtype('O')
 
     Non-string categories are converted to strings:
@@ -125,9 +123,8 @@ class CleanCategories(SingleColumnTransformer):
 
     We can see above that the output categories are strings.
 
-    Note: in pandas this can result in some categories being
-    collapsed in the edge case where different categories have the same string
-    representation, as shown below.
+    Note: this can result in some categories being collapsed in the edge case where
+    different categories have the same string representation, as shown below.
 
     >>> class C:
     ...     def __repr__(self):
@@ -139,7 +136,7 @@ class CleanCategories(SingleColumnTransformer):
     1    C()
     Name: c, dtype: category
     Categories (2, object): [C(), C()]
-    >>> cleaner.fit_transform(s) # doctest: +SKIP
+    >>> cleaner.fit_transform(s)
     0    C()
     1    C()
     Name: c, dtype: category
