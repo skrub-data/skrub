@@ -45,7 +45,7 @@ Table Part
     first few rows), "ellipsis" (optional, the row of " ⋮ " indicating that the
     table is truncated), "bottom_slice" (optional, tbody containing the last
     few rows).
-  elem: the name of a html element: "thead" (table head) or "tbody" (table body)
+  elem: the name of an HTML element: "thead" (table head) or "tbody" (table body)
   rows: list of table rows
 
 "rows" is a python list where each item is itself a list, representing a table
@@ -56,17 +56,17 @@ Table Cell
   i, j: the position of the cell in the table
   column_idx: the corresponding column in the dataframe, if any
   value: the content of the cell (the corresponding value in the dataframe)
-  elem: the name of a html element, "th" (table header) or "td" (table data cell)
+  elem: the name of an HTML element, "th" (table header) or "td" (table data cell)
   role:
     a semantic description of this cell's content, such as "index-level-name",
     "dataframe-data" or "padding"
   rowspan, colspan, scope: the values for the html attributes with the same names
 """
+
 import pandas as pd
 
 from .. import _dataframe as sbd
-from .._dataframe._common import _raise as _sbd_raise
-from .._dispatch import dispatch
+from .._dispatch import dispatch, raise_dispatch_unregistered_type
 
 __all__ = ["make_table"]
 
@@ -90,7 +90,7 @@ def make_table(df, max_top_slice_size=5, max_bottom_slice_size=5):
     A dictionary with all the information needed by the html template, see this
     module's docstring for details.
     """
-    raise _sbd_raise(df, kind="DataFrame")
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
 
 
 @make_table.specialize("pandas", argument_type="DataFrame")

@@ -21,10 +21,11 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.8
+      - uses: actions/checkout@v6
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
-          pixi-version: v0.41.3
+          pixi-version: v0.59.0
+          run-install: false
 
       - name: Remove the current lock file
         run: rm -f pixi.lock
@@ -34,7 +35,7 @@ jobs:
 
       - name: Create Pull Request
         id: cpr
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.BOT_GITHUB_TOKEN }}
           push-to-fork: skrub-bot/skrub

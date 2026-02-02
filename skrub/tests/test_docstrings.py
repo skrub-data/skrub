@@ -17,12 +17,14 @@ from numpydoc.validate import validate
 
 DOCSTRING_TEMP_IGNORE_SET = {
     # TODO remove
-    "skrub._expressions",
-    "skrub._expressions._expressions",
-    "skrub._expressions._choosing",
-    "skrub._expressions._estimator",
+    "skrub._data_ops",
+    "skrub._data_ops._data_ops",
+    "skrub._data_ops._choosing",
+    "skrub._data_ops._estimator",
+    "skrub._data_ops._optuna",
     "skrub._select_cols.Drop",
     "skrub._table_vectorizer.SuperVectorizer",
+    "skrub._single_column_transformer.RejectColumn",
     # The following are not documented in skrub (and thus are out of scope)
     # They are usually inherited from other libraries.
     "skrub._table_vectorizer.TableVectorizer.fit",
@@ -244,4 +246,4 @@ if __name__ == "__main__":
         print(msg)
         sys.exit(1)
     else:
-        print("All docstring checks passed for {}!".format(args.import_path))
+        print(f"All docstring checks passed for {args.import_path}!")

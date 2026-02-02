@@ -6,15 +6,17 @@ import pandas as pd
 import pytest
 from sklearn.utils.fixes import parse_version
 
+from skrub import ApplyToCols
 from skrub import _dataframe as sbd
 from skrub._dispatch import dispatch
-from skrub._on_each_column import OnEachColumn, RejectColumn
+from skrub._single_column_transformer import RejectColumn
 from skrub._to_datetime import (
     ToDatetime,
     _convert_time_zone,
     _get_time_zone,
     to_datetime,
 )
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 ISO = "%Y-%m-%dT%H:%M:%S"
 
@@ -43,6 +45,7 @@ def datetime_col(df_module):
     return sbd.col(df_module.example_dataframe, "datetime-col")
 
 
+@skip_polars_installed_without_pyarrow
 @pytest.mark.parametrize(
     "format",
     [
@@ -84,6 +87,7 @@ def test_datetime_to_datetime(datetime_col):
     assert encoder.format_ is None
 
 
+@skip_polars_installed_without_pyarrow
 def test_rejected_columns(df_module):
     with pytest.raises(ValueError, match=".*does not contain strings"):
         ToDatetime().fit_transform(sbd.col(df_module.example_dataframe, "float-col"))
@@ -95,6 +99,7 @@ def test_rejected_columns(df_module):
         )
 
 
+@skip_polars_installed_without_pyarrow
 def test_transform_failures(datetime_col, df_module):
     encoder = ToDatetime().fit(strftime(datetime_col, ISO))
     test_col = df_module.make_column(
@@ -105,6 +110,7 @@ def test_transform_failures(datetime_col, df_module):
     assert sbd.to_list(sbd.fill_nulls(strftime(transformed, ISO), "????")) == expected
 
 
+@skip_polars_installed_without_pyarrow
 def test_mixed_offsets(df_module):
     s = df_module.make_column(
         "when", ["2020-01-02T08:00:01+02:00", "2020-01-02T08:00:01+04:00"]
@@ -214,9 +220,7 @@ def test_to_datetime_func(df_module, datetime_col):
     )
     df_module.assert_frame_equal(
         to_datetime(df_module.example_dataframe),
-        OnEachColumn(ToDatetime(), cols=cols).fit_transform(
-            df_module.example_dataframe
-        ),
+        ApplyToCols(ToDatetime(), cols=cols).fit_transform(df_module.example_dataframe),
     )
     float_col = df_module.example_column
     assert sbd.is_float(float_col)
@@ -230,3 +234,16 @@ def test_error_dispatch(func):
     # Make codecov happy
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         func(np.array([1]))
+
+
+def test_specific_time_encoding():
+    """Test another specific time zone encoding case.
+    Not using df_module fixture because it's not intended to test polars.
+    """
+    from zoneinfo import ZoneInfo
+
+    col = [
+        pd.Timestamp(1584226800, unit="s", tz=ZoneInfo("Europe/Paris")),
+        pd.Timestamp(1584226801, unit="s", tz=ZoneInfo("Europe/Paris")),
+    ]
+    assert _get_time_zone(pd.Series(name="dt", data=col)) == "Europe/Paris"

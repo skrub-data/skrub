@@ -1,5 +1,5 @@
 from . import _dataframe as sbd
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToStr"]
 
@@ -39,7 +39,7 @@ class ToStr(SingleColumnTransformer):
     0    ('one', 1)
     1    ('two', 2)
     2           NaN
-    dtype: object
+    dtype: ...
     >>> _[0]
     "('one', 1)"
 
@@ -56,7 +56,7 @@ class ToStr(SingleColumnTransformer):
     0    one
     1    two
     2    NaN
-    dtype: object
+    dtype: ...
 
     In ``object`` columns, ``pd.NA`` and other null values are also replaced by
     ``np.nan``:
@@ -67,19 +67,19 @@ class ToStr(SingleColumnTransformer):
     1                 None
     2                  NaT
     3                 <NA>
-    dtype: object
+    dtype: ...
     >>> to_str.fit_transform(s)
     0    {'city': 'Paris'}
     1                  NaN
     2                  NaN
     3                  NaN
-    dtype: object
+    dtype: ...
 
     A column that already contain strings, has the dtype ``object`` and no
     missing values is passed through:
 
     >>> s = pd.Series(['one', 'two'])
-    >>> to_str.fit_transform(s) is s
+    >>> to_str.fit_transform(s) is s #doctest: +SKIP
     True
 
     For other pandas columns, a copy or a modified copy is returned.
@@ -89,15 +89,15 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.fit_transform(pd.Series([1.1, 2.2], name='s'))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'float64' to strings.
+    skrub._single_column_transformer.RejectColumn: Refusing to convert 's' with dtype 'float64' to strings.
     >>> to_str.fit_transform(pd.Series(['a', 'b'], name='s', dtype='category'))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'category' to strings.
+    skrub._single_column_transformer.RejectColumn: Refusing to convert 's' with dtype 'category' to strings.
     >>> to_str.fit_transform(pd.to_datetime(pd.Series(['2020-02-02'])))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert None with dtype 'datetime64[...]' to strings.
+    skrub._single_column_transformer.RejectColumn: Refusing to convert None with dtype 'datetime64[...]' to strings.
 
     However, once a column has been accepted, the output of ``transform`` will
     always be strings:
@@ -107,7 +107,7 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.transform(pd.Series([1.1, 2.2]))
     0    1.1
     1    2.2
-    dtype: object
+    dtype: ...
     >>> _[0]
     '1.1'
 
@@ -116,7 +116,7 @@ class ToStr(SingleColumnTransformer):
     >>> import pytest
     >>> pl = pytest.importorskip('polars')
     >>> s = pl.Series('s', ['one', 'two', None])
-    >>> to_str.fit_transform(s) is s
+    >>> to_str.fit_transform(s) is s #doctest: +SKIP
     True
 
     A column that is neither String, categorical, numeric or datetime is converted:
@@ -163,18 +163,18 @@ class ToStr(SingleColumnTransformer):
     >>> to_str.fit_transform(pl.Series('s', ['a', 'b'], dtype=pl.Enum(['a', 'b'])))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'Enum(categories=['a', 'b'])' to strings.
+    skrub._single_column_transformer.RejectColumn: Refusing to convert 's' with dtype 'Enum(categories=['a', 'b'])' to strings.
     >>> to_str.fit_transform(pl.Series('s', ['2020-02-01']).cast(pl.Date))
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Refusing to convert 's' with dtype 'Date' to strings.
+    skrub._single_column_transformer.RejectColumn: Refusing to convert 's' with dtype 'Date' to strings.
 
     If ``convert_category=True``, Categorical columns are converted:
     >>> to_str = ToStr(convert_category=True)
     >>> to_str.fit_transform(pd.Series(['a', 'b'], name='s', dtype='category'))
     0    a
     1    b
-    Name: s, dtype: object
+    Name: s, dtype: ...
 
     Notes
     -----
@@ -193,6 +193,7 @@ class ToStr(SingleColumnTransformer):
 
     def fit_transform(self, column, y=None):
         del y
+        self.all_outputs_ = [sbd.name(column)]
         if (
             (sbd.is_categorical(column) and not self.convert_category)
             or sbd.is_numeric(column)

@@ -1,46 +1,44 @@
+.. |TableReport| replace:: :class:`~skrub.TableReport`
+.. |Cleaner| replace:: :class:`~skrub.Cleaner`
+.. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
+.. |tabular_pipeline| replace:: :func:`~skrub.tabular_pipeline`
+
 .. _user_guide:
 
-User guide
+User Guide
 ==========
+Skrub is a library that eases machine learning with dataframes, from exploring
+dataframes to validating a machine-learning pipeline.
 
-Skrub eases preparing tables for machine learning.
+The |TableReport| is a powerful data exploration tool, which can be followed by
+data sanitization and feature engineering tools in the |Cleaner| and |TableVectorizer|.
+The |tabular_pipeline| combines the two to build a strong baseline for dataframes.
 
-Starting from rich, complex data stored in one or several dataframes, it helps
-performing the data wrangling necessary to produce a numeric array that is fed
-to a machine-learning model. This wrangling comprises joining tables (possibly
-with inexact matches), parsing text into structured data such as dates,
-extracting numeric features, etc.
+The skrub :ref:`column-level encoders<user_guide_encoders_index>` can be tweaked by the user for more
+specific needs.
+Various :ref:`multi-column transformers <user_guide_building_pipeline_index>` and the :ref:`selectors API<user_guide_selectors>`
+provide a high degree of control over which columns should be modified.
 
-For those tasks, skrub does not replace a dataframe library. Instead, it
-leverages polars or pandas to provide more high-level building blocks that are
-typically needed in a machine-learning pipeline.
+More complex, multi-table scenarios can make use of the skrub :ref:`Data Ops <user_guide_data_ops_index>`,
+which enable constructing and validating pipelines that involve
+multiple dataframes and hyperparameter tuning.
 
-Crucially, the transformations implemented by skrub are *stateful*: skrub
-records the transformations that were applied to the training data and replays the
-same operations when the pipeline is applied to make predictions on unseen
-data. Implementing data-wrangling steps as transformers that can be fitted is
-essential to prevent data leakage and ensure generalization.
+Skrub does not replace pandas or polars. Instead, it
+leverages the dataframe libraries to provide more high-level building blocks that
+perform the data preprocessing steps that are typically needed in a machine learning
+pipeline.
 
-.. topic:: Skrub highlights:
 
- - eases separating the train and test operations, allowing to tune
-   preprocessing steps to the data and improving the generalization of tabular
-   machine-learning models.
-
- - enables statistical and imperfect assembly, as machine-learning models
-   can typically retrieve signals even in noisy data.
-
-|
 
 .. include:: includes/big_toc_css.rst
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   end_to_end_pipeline
-   encoding
-   skrub_pipeline
-   skrub_pipeline_validation
-   skrub_selectors
-   assembling
-   cleaning
+   exploring_a_dataframe
+   default_wrangling
+   column_level_featurizing
+   multi_column_operations
+   data_ops
+   configuration_and_utils
+   joining_dataframes

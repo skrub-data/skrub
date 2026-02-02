@@ -1,5 +1,6 @@
 import warnings
 
+from sklearn.base import TransformerMixin
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -7,13 +8,15 @@ from sklearn.feature_extraction.text import (
     TfidfVectorizer,
 )
 from sklearn.pipeline import Pipeline
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._scaling_factor import scaling_factor
+from ._single_column_transformer import SingleColumnTransformer
 from ._to_str import ToStr
 
 
-class StringEncoder(SingleColumnTransformer):
+class StringEncoder(TransformerMixin, SingleColumnTransformer):
     """Generate a lightweight string encoding of a given column using tf-idf \
         vectorization and truncated singular value decomposition (SVD).
 
@@ -57,6 +60,11 @@ class StringEncoder(SingleColumnTransformer):
     random_state : int, RandomState instance or None, default=None
         Used during randomized svd. Pass an int for reproducible results across
         multiple function calls.
+
+    vocabulary : Mapping or iterable, default=None
+        In case of "tfidf" vectorizer, the vocabulary mapping passed to the vectorizer.
+        Either a Mapping (e.g., a dict) where keys are terms and values are
+        indices in the feature matrix, or an iterable over terms.
 
     Attributes
     ----------
@@ -115,10 +123,10 @@ class StringEncoder(SingleColumnTransformer):
 
     >>> enc.fit_transform(X) # doctest: +SKIP
        video comments_0  video comments_1
-    0      8.218069e-01      4.557474e-17
-    1      6.971618e-16      1.000000e+00
-    2      8.218069e-01     -3.046564e-16
-    """  # noqa: E501
+    0          1.322973         -0.163070
+    1          0.379688          1.659319
+    2          1.306400         -0.317120
+    """
 
     def __init__(
         self,
@@ -128,6 +136,7 @@ class StringEncoder(SingleColumnTransformer):
         analyzer="char_wb",
         stop_words=None,
         random_state=None,
+        vocabulary=None,
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
@@ -135,6 +144,7 @@ class StringEncoder(SingleColumnTransformer):
         self.analyzer = analyzer
         self.stop_words = stop_words
         self.random_state = random_state
+        self.vocabulary = vocabulary
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -162,21 +172,29 @@ class StringEncoder(SingleColumnTransformer):
                 ngram_range=self.ngram_range,
                 analyzer=self.analyzer,
                 stop_words=self.stop_words,
+                vocabulary=self.vocabulary,
             )
         elif self.vectorizer == "hashing":
-            self.vectorizer_ = Pipeline(
-                [
-                    (
-                        "hashing",
-                        HashingVectorizer(
-                            ngram_range=self.ngram_range,
-                            analyzer=self.analyzer,
-                            stop_words=self.stop_words,
+            if self.vocabulary is not None:
+                raise ValueError(
+                    "Custom vocabulary passed to StringEncoder, unsupported by"
+                    "HashingVectorizer. Rerun without a 'vocabulary' parameter."
+                )
+            else:
+                self.vectorizer_ = Pipeline(
+                    [
+                        (
+                            "hashing",
+                            HashingVectorizer(
+                                ngram_range=self.ngram_range,
+                                analyzer=self.analyzer,
+                                stop_words=self.stop_words,
+                            ),
                         ),
-                    ),
-                    ("tfidf", TfidfTransformer()),
-                ]
-            )
+                        ("tfidf", TfidfTransformer()),
+                    ]
+                )
+
         else:
             raise ValueError(
                 f"Unknown vectorizer {self.vectorizer}. Options are 'tfidf' or"
@@ -209,7 +227,10 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()  # To avoid a reference to X_out
         del X_out  # optimize memory: we no longer need X_out
 
-        self._is_fitted = True
+        # block normalize
+        self.scaling_factor_ = scaling_factor(result)
+        result /= self.scaling_factor_
+
         self.n_components_ = result.shape[1]
 
         self.input_name_ = sbd.name(X) or "string_enc"
@@ -249,6 +270,9 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()
         del X_out  # optimize memory: we no longer need X_out
 
+        # block normalize
+        result /= self.scaling_factor_
+
         return self._post_process(X, result)
 
     def _post_process(self, X, result):
@@ -256,3 +280,27 @@ class StringEncoder(SingleColumnTransformer):
         result = sbd.copy_index(X, result)
 
         return result
+
+    def get_feature_names_out(self, input_features=None):
+        """Return a list of features generated by the transformer.
+
+        Each feature has format ``{input_name}_{n_component}`` where ``input_name``
+        is the name of the input column, or a default name for the encoder, and
+        ``n_component`` is the idx of the specific feature.
+
+        Parameters
+        ----------
+        input_features : None
+            The input features. Ignored, only here for compatibility.
+
+        Returns
+        -------
+        list of str
+            The list of feature names.
+        """
+        check_is_fitted(self, "n_components_")
+        num_digits = len(str(self.n_components_ - 1))
+        return [
+            f"{self.input_name_}_{str(i).zfill(num_digits)}"
+            for i in range(self.n_components_)
+        ]

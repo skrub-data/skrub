@@ -15,32 +15,29 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        environment: [
-            ci-py309-min-deps,
-            ci-py309-min-optional-deps,
-            ci-py311-transformers,
-            ci-py313-latest-deps,
-            ci-py313-latest-optional-deps
-        ]
+        environment:
+          - ci-py310-min-deps
+          - ci-py310-min-optional-deps
+          - ci-py311-transformers
+          - ci-py314-latest-deps
+          - ci-py314-latest-optional-deps
+          - ci-py314-polars-without-pyarrow
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.8
+      - uses: actions/checkout@v6
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
-          pixi-version: v0.41.3
+          pixi-version: v0.59.0
           environments: ${{ matrix.environment }}
           # we can freeze the environment and manually bump the dependencies to the
           # latest version time to time.
           frozen: true
-
       - name: Run tests
         run: pixi run -e ${{ matrix.environment }} test -n auto
-
       - name: Run user guide doctests
         run: pixi run -e ${{ matrix.environment }} test-user-guide
-
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5.4.3
+        uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: skrub-data/skrub
@@ -50,32 +47,26 @@ jobs:
     outputs:
       run: ${{ github.event_name == 'schedule' || contains(steps.get_head_commit_message.outputs.COMMIT_MSG, '[deps nightly]') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - id: get_head_commit_message
-        name: get head commit message
+        name: Get head commit message
         run: echo "COMMIT_MSG=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
 
   test_against_nightly:
     needs: check_run_nightly
     if: ${{ needs.check_run_nightly.outputs.run == 'true' }}
     runs-on: ubuntu-latest
-    name: test against nighlty dependencies
+    name: Test against nightly dependencies
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
-            python-version: "3.11"
-        name: 'Setup python'
-      - shell: bash {0}
-        run: |
-          dev_anaconda_url=https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
-          pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url .
-          dev_arrow=https://pypi.fury.io/arrow-nightlies/
-          pip install --extra-index-url $dev_arrow --prefer-binary --pre .[optional]
-          pip install .[test]
-        name: 'Install skrub and nightly dependencies'
-      - shell: bash {0}
-        run: pytest -vsl --cov=skrub --cov-report=xml skrub -n 3
-        name: 'Run tests'
+          pixi-version: v0.59.0
+          environments: ci-nightly-deps
+          # we can freeze the environment and manually bump the dependencies to the
+          # latest version time to time.
+          frozen: true
+      - name: Run tests
+        run: pixi run -e ci-nightly-deps test -n auto

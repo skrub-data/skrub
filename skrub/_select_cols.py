@@ -1,7 +1,7 @@
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 
 from . import selectors as s
-from ._on_each_column import SingleColumnTransformer
+from ._single_column_transformer import SingleColumnTransformer
 
 
 class SelectCols(TransformerMixin, BaseEstimator):
@@ -17,7 +17,12 @@ class SelectCols(TransformerMixin, BaseEstimator):
     cols : list of str, str or :ref:`selector<selectors_ref>`
         The columns to select, or a selector. A single column name can be passed as a
         ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
-        :ref:`selectors<selectors>` user guide for more info on selectors.
+        :ref:`selectors<user_guide_selectors>` user guide for more info on selectors.
+
+    See Also
+    --------
+    DropCols : Dropping cols by name, dtypes, or general skrub selectors.
+    Cleaner: Can be used to drop columns with too many NaNs.
 
     Examples
     --------
@@ -58,7 +63,7 @@ class SelectCols(TransformerMixin, BaseEstimator):
         SelectCols
             The transformer itself.
         """
-        self._columns = s.make_selector(self.cols).expand(X)
+        self.columns_ = s.make_selector(self.cols).expand(X)
         return self
 
     def transform(self, X):
@@ -75,7 +80,23 @@ class SelectCols(TransformerMixin, BaseEstimator):
             The input DataFrame ``X`` after selecting only the columns listed
             in ``self.cols`` (in the provided order).
         """
-        return s.select(X, self._columns)
+        return s.select(X, self.columns_)
+
+    def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "columns_")
+        return self.columns_
 
 
 class DropCols(TransformerMixin, BaseEstimator):
@@ -88,10 +109,15 @@ class DropCols(TransformerMixin, BaseEstimator):
 
     Parameters
     ----------
-    cols : list of str, str or :ref:`selector<selectors_ref>`
+    cols : list of str, str or :ref:`selector <selectors_ref>`
         The columns to drop, or a selector. A single column name can be passed as a
         ``str``: ``"col_name"`` is the same as ``["col_name"]``. See the
-        :ref:`selectors<selectors>` user guide for more info on selectors.
+        :ref:`selectors <user_guide_selectors>` user guide for more info on selectors.
+
+    See Also
+    --------
+    SelectCols : Selecting cols by name, dtypes, or general skrub selectors.
+    Cleaner: Can be used to drop columns with too many nulls (or NaNs).
 
     Examples
     --------
@@ -132,7 +158,9 @@ class DropCols(TransformerMixin, BaseEstimator):
         DropCols
             The transformer itself.
         """
-        self._columns = s.make_selector(self.cols).expand(X)
+        selector = s.make_selector(self.cols)
+        self.kept_cols_ = (~selector).expand(X)
+        self.dropped_cols_ = selector.expand(X)
         return self
 
     def transform(self, X):
@@ -149,11 +177,28 @@ class DropCols(TransformerMixin, BaseEstimator):
             The input DataFrame ``X`` after dropping the columns listed in
             ``self.cols``.
         """
-        return s.select(X, ~s.make_selector(self._columns))
+        return s.select(X, s.make_selector(self.kept_cols_))
+
+    def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "kept_cols_")
+        return self.kept_cols_
 
 
 class Drop(SingleColumnTransformer):
     def fit_transform(self, column, y=None):
+        self.all_outputs_ = []
         return []
 
     def transform(self, column):

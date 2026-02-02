@@ -1,8 +1,11 @@
 import pandas
 import pandas.testing
 import pytest
+from sklearn.dummy import DummyClassifier
+from sklearn.pipeline import make_pipeline
 
 from skrub import DropCols, SelectCols
+from skrub import selectors as s
 from skrub._dataframe import _common as ns
 from skrub._select_cols import Drop
 
@@ -61,3 +64,27 @@ def test_drop(df_module):
     col = df_module.example_column
     assert Drop().fit_transform(col) == []
     assert Drop().fit(col).transform(col) == []
+
+
+def test_get_feature_names_out(df):
+    """Check the behaviour of `get_feature_names_out`.
+
+    Non-regression test for:
+    https://github.com/skrub-data/skrub/issues/1256
+    https://github.com/skrub-data/skrub/issues/1540
+
+    """
+    select = SelectCols(cols=s.all()).fit(df)
+    assert select.get_feature_names_out() == ["A", "B", "C"]
+
+    drop = DropCols(cols=[]).fit(df)
+    assert drop.get_feature_names_out() == ["A", "B", "C"]
+
+    # Testing with a pipeline
+    pipeline = make_pipeline(SelectCols(cols=["A", "B"]), DummyClassifier())
+    pipeline.fit(df, df["C"])
+    assert pipeline[:-1].get_feature_names_out() == ["A", "B"]
+
+    pipeline = make_pipeline(DropCols(cols=["A", "B"]), DummyClassifier())
+    pipeline.fit(df, df["C"])
+    assert pipeline[:-1].get_feature_names_out() == ["C"]

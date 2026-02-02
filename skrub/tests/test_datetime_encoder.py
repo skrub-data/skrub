@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from skrub import DatetimeEncoder
+from skrub import ApplyToCols, DatetimeEncoder
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._datetime_encoder import (
@@ -13,8 +13,7 @@ from skrub._datetime_encoder import (
     _is_date,
     _SplineEncoder,
 )
-from skrub._on_each_column import OnEachColumn
-from skrub._to_float32 import ToFloat32
+from skrub._to_float import ToFloat
 
 
 def date(df_module):
@@ -116,10 +115,12 @@ def expected_features(df_module):
     }
 
     res = df_module.make_dataframe(values)
-    return OnEachColumn(ToFloat32()).fit_transform(res)
+    return ApplyToCols(ToFloat()).fit_transform(res)
 
 
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):
+    import inspect
+
     enc = DatetimeEncoder()
     if use_fit_transform:
         res = enc.fit_transform(a_datetime_col)
@@ -129,7 +130,11 @@ def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_tra
         expected_features,
         [f"{f}" for f in enc.all_outputs_],
     )
-    df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
+    sig = inspect.signature(df_module.assert_frame_equal)
+    if "rel_tol" in sig.parameters:
+        df_module.assert_frame_equal(res, expected_features, rel_tol=1e-4)
+    else:
+        df_module.assert_frame_equal(res, expected_features, rtol=1e-4)
 
 
 @pytest.mark.parametrize(
@@ -294,6 +299,7 @@ def test_all_outputs_choice(datetime_cols, params, all_outputs):
     enc = DatetimeEncoder(**params)
     res = enc.fit_transform(datetime_cols.datetime)
     assert enc.all_outputs_ == [f"when_{f}" for f in all_outputs]
+    assert enc.get_feature_names_out() == [f"when_{f}" for f in all_outputs]
     assert sbd.column_names(res) == [f"{f}" for f in enc.all_outputs_]
 
 
@@ -342,10 +348,8 @@ def test_correct_parameters(a_datetime_col, params, transformers):
     enc.fit_transform(a_datetime_col)
 
     assert all(
-        [
-            isinstance(t, required_t)
-            for t, required_t in zip(enc._periodic_encoders.values(), transformers)
-        ]
+        isinstance(t, required_t)
+        for t, required_t in zip(enc._periodic_encoders.values(), transformers)
     )
 
     with pytest.raises(ValueError, match="Unsupported value wrongvalue .*"):
@@ -363,3 +367,11 @@ def test_error_checking_periodic_encoder(a_datetime_col):
 def test_error_dispatch(func):
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         func(np.array([1]))
+
+
+def test_n_splines_default_value(df_module):
+    """Check that when `n_splines is None`, it defaults to the `period` value."""
+    period = 15
+    enc = _SplineEncoder(period=period)
+    result = enc.fit_transform(df_module.make_column("when", [20, 20, 20]))
+    assert sbd.column_names(result) == [f"when_spline_{i:02d}" for i in range(period)]

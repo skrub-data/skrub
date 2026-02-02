@@ -1,85 +1,87 @@
 [build-system]
-requires = ["setuptools>=64", "setuptools_scm[toml]>=8"]
+requires = ["setuptools>=77.0.3", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "skrub"
-dynamic = ["version", "readme"]
+dynamic = ["version"]
 description = "Machine learning with dataframes"
+readme = "README.rst"
 authors = [
-    {name = "Riccardo Cappuzzo"},
-    {name = "Jerome Dockes"},
-    {name = "Guillaume Lemaitre"},
-    {name = "Vincent Maladiere"},
-    {name = "Gael Varoquaux"},
+  { name = "Riccardo Cappuzzo" },
+  { name = "Jerome Dockes" },
+  { name = "Guillaume Lemaitre" },
+  { name = "Vincent Maladiere" },
+  { name = "Gael Varoquaux" },
 ]
+license = "BSD-3-Clause"
+license-files = ["LICENSE.txt"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "numpy>=1.23.5",
-    "pandas>=1.5.3",
-    "scikit-learn>=1.2.1",
-    "scipy>=1.9.3",
-    "jinja2>=3.1.2",
-    "matplotlib>=3.4.3",
-    "requests>=2.25.0",
-    "pydot",
+  "numpy>=1.23.5",
+  "pandas>=1.5.3",
+  "scikit-learn>=1.4.2",
+  "scipy>=1.9.3",
+  "jinja2>=3.1.2",
+  "matplotlib>=3.4.3",
+  "requests>=2.27.1",
+  "pydot",
 ]
 
 [tool.setuptools.dynamic]
 version = { file = "skrub/VERSION.txt" }
-readme = { file = "README.rst" }
 
 [project.optional-dependencies]
 dev = [
-    "ipykernel",
-    "ipython",
-    "jupyterlab",
+  "ipykernel",
+  "ipython",
+  "jupyterlab",
 
-    # doc
-    "jupyterlite-sphinx",
-    "jupyterlite-pyodide-kernel",
-    "numpydoc",
-    "pydata-sphinx-theme",
-    "seaborn",
-    "sphinx",
-    "sphinx-copybutton",
-    "sphinx-gallery",
-    "sphinxext-opengraph",
-    "sphinx-autosummary-accessors",
-    "statsmodels",
+  # doc
+  "jupyterlite-sphinx",
+  "jupyterlite-pyodide-kernel",
+  "numpydoc",
+  "pydata-sphinx-theme",
+  "seaborn",
+  # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
+  # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
+  "sphinx<9",
+  "sphinx-copybutton",
+  "sphinx-gallery",
+  "sphinxext-opengraph",
+  "sphinx-autosummary-accessors",
+  "statsmodels",
 
-    # lint
-    "black==23.3.0",
-    "ruff==0.4.8",
-    "pre-commit",
+  # lint
+  "black==23.3.0",
+  "ruff==0.14.2",
+  "pre-commit",
 
-    # test
-    "pytest",
-    "pytest-cov",
-    "pytest-xdist",
+  # test
+  "pytest",
+  "pytest-cov",
+  "pytest-xdist",
 
-    # optional
-    "pyarrow",
-    "polars",
-    "plotly",
+  # optional
+  "pyarrow",
+  "polars",
+  "plotly",
+  "optuna",
 ]
-transformers = [
-    "sentence-transformers",
-]
+transformers = ["sentence-transformers"]
 
 [project.urls]
 Homepage = "https://skrub-data.org/"
@@ -89,19 +91,19 @@ Issues = "https://github.com/skrub-data/skrub/issues"
 [tool.setuptools]
 packages = ["skrub"]
 
-[tool.pixi.project]
+[tool.pixi.workspace]
 channels = ["conda-forge", "pytorch"]
 platforms = ["linux-64", "osx-arm64", "osx-64", "win-64"]
 
 [tool.pixi.dependencies]
 numpy = ">=1.23.5"
 pandas = ">=1.5.3"
-scikit-learn = ">=1.2.1"
+scikit-learn = ">=1.4.2"
 scipy = ">=1.9.3"
 jinja2 = ">=3.1.2"
 matplotlib = ">=3.4.3"
 pydot = "*"
-requests = ">=2.25.0"
+requests = ">=2.27.1"
 
 [tool.pixi.feature.doc.dependencies]
 jupyterlite-sphinx = "*"
@@ -111,23 +113,29 @@ pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
 plotly = "*"
+memory_profiler = "*"
 seaborn = "*"
-sphinx = "*"
+  # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
+  # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
+sphinx = "<9"
 sphinx-copybutton = "*"
 sphinx-gallery = "*"
 sphinxext-opengraph = "*"
 sphinx-autosummary-accessors = ">=2025.3.1,<2026"
+sphinx-sitemap = "*"
 statsmodels = "*"
+optuna = "*"
 
 [tool.pixi.feature.lint.dependencies]
 black = "==23.3.0"
-ruff = "==0.4.8"
+ruff = "==0.14.2"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
 pyarrow = "*"
 polars = "*"
 plotly = "*"
+optuna = "*"
 
 [tool.pixi.feature.transformers]
 # pytorch is not anymore released on osx-64 platform
@@ -136,7 +144,10 @@ platforms = ["linux-64", "osx-arm64", "win-64"]
 [tool.pixi.feature.transformers.dependencies]
 pytorch = { version = ">=2.4.1,<3" }
 transformers = "*"
-sentence-transformers = ">=3.0,<5"
+datasets = "*"
+sentence-transformers = ">=3.0,<6"
+tokenizers = ">=0.22.0,<=0.23.0"
+pyarrow = "<21"
 
 [tool.pixi.feature.test.dependencies]
 numpydoc = "*"
@@ -155,45 +166,79 @@ skrub = { path = ".", editable = true }
 [tool.pixi.feature.min-dependencies.dependencies]
 numpy = "==1.23.5"
 pandas = "==1.5.3"
-scikit-learn = "==1.2.1"
+scikit-learn = "==1.4.2"
 scipy = "==1.9.3"
 jinja2 = "==3.1.2"
 matplotlib = "==3.4.3"
 pydot = "*"
-requests = "==2.25.0"
+requests = "==2.27.1"
+# pinning pyparsing because it raises deprecation warnings in matplotlib
+# TODO: unpin when it gets fixed
+pyparsing = "<3.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
 polars = "==0.20.15"
 plotly = "*"
+optuna = "*"
 
-[tool.pixi.feature.py309.dependencies]
-python = "~=3.9.0"
+[tool.pixi.feature.nightly-dependencies.pypi-options]
+# Get the nightly of as many dependencies as possible
+extra-index-urls = [
+  # scikit-learn, numpy, pandas...
+  "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",
+  # pyarrow
+  "https://pypi.fury.io/arrow-nightlies",
+]
+
+[tool.pixi.feature.nightly-dependencies.pypi-dependencies]
+# Have to repeat dependencies here because otherwise pixi pulls from conda channels
+# rather than PyPI indexes
+skrub = { path = ".", editable = true }
+numpy = "*"
+pandas = "*"
+scikit-learn = "*"
+scipy = "*"
+jinja2 = "*"
+matplotlib = "*"
+pydot = "*"
+requests = "*"
+pyarrow = "*"
+polars = "*"
+plotly = "*"
+
+[tool.pixi.feature.polars-without-pyarrow.dependencies]
+polars = "*"
+plotly = "*"
+optuna = "*"
+
+[tool.pixi.feature.py310.dependencies]
+python = "~=3.10.0"
 
 [tool.pixi.feature.py311.dependencies]
 python = "~=3.11.0"
 
-[tool.pixi.feature.py312.dependencies]
-python = "~=3.12.0"
-
-[tool.pixi.feature.py313.dependencies]
-python = "~=3.13.0"
+[tool.pixi.feature.py314.dependencies]
+python = "~=3.14.0"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
+linkcheck = { cmd = "make linkcheck", cwd = "doc" }
+linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
+
 
 [tool.pixi.feature.lint.tasks]
 lint = { cmd = "pre-commit install && pre-commit run -v --all-files --show-diff-on-failure" }
 
 [tool.pixi.feature.check-pyi-diff.tasks]
 # Note: this only works on Unix
-check = { cmd = "python build_tools/generate_expressions_stub.py | diff - skrub/_expressions/_expressions.pyi" }
+check = { cmd = "python build_tools/generate_data_ops_stub.py | diff - skrub/_data_ops/_data_ops.pyi" }
 
 [tool.pixi.feature.test.tasks]
 test = { cmd = "pytest -vsl --cov=skrub --cov-report=xml skrub" }
-test-user-guide = { cmd = "pytest doc/*.rst" }
+test-user-guide = { cmd = "pytest doc/**/*.rst" }
 
 [tool.pixi.environments]
 lint = ["lint"]
@@ -201,97 +246,95 @@ check-pyi-diff = ["check-pyi-diff"]
 doc = ["optional", "doc", "transformers"]
 test = ["optional", "test"]
 dev = ["dev", "optional", "doc", "lint", "test", "transformers"]
-ci-py309-min-deps = ["py309", "min-dependencies", "test"]
-ci-py309-min-optional-deps = ["py309", "min-dependencies", "min-optional-dependencies", "test"]
+ci-py310-min-deps = ["py310", "min-dependencies", "test"]
+ci-py310-min-optional-deps = [
+  "py310",
+  "min-dependencies",
+  "min-optional-dependencies",
+  "test",
+]
 ci-py311-transformers = ["py311", "transformers", "test"]
-ci-py312-latest-deps = ["py312", "test"]
-ci-py312-latest-optional-deps = ["py312", "optional", "test"]
-ci-py313-latest-deps = ["py313", "test"]
-ci-py313-latest-optional-deps = ["py313", "optional", "test"]
+ci-py314-latest-deps = ["py314", "test"]
+ci-py314-polars-without-pyarrow = ["py314", "test", "polars-without-pyarrow"]
+ci-py314-latest-optional-deps = ["py314", "optional", "test"]
 
-[tool.black]
-line-length = 88
-target_version = ['py310', 'py311']
-preview = true
-# Exclude irrelevant directories for formatting
-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.mypy_cache
-  | \.vscode
-  | \.pytest_cache
-  | \.idea
-  | build
-  | dist
-)/
-'''
+# no-default-feature is necessary for pixi to download from nightly PyPI indexes rather than conda channels
+ci-nightly-deps = { no-default-feature = true, features = [ "py314", "nightly-dependencies", "test" ] }
 
 [tool.ruff]
-# max line length for black
 line-length = 88
-target-version = "py38"
-exclude=[
-    ".git",
-    "__pycache__",
-    "dist",
-    "doc/_build",
-    "doc/auto_examples",
-    "build",
+exclude = [
+  ".git",
+  "__pycache__",
+  "dist",
+  "doc/_build",
+  "doc/auto_examples",
+  "build",
+  "pixi.lock"
 ]
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
-select = ["E", "F", "W", "I"]
-ignore=[
-    # space before : (needed for how black formats slicing)
-    "E203",
-    # do not assign a lambda expression, use a def
-    "E731",
-    # do not use variables named 'l', 'O', or 'I'
-    "E741",
+select = ["E", "F", "W", "C4", "I", "UP"]
+ignore = [
+  # use `is` and `is not` for type comparisons
+  "E721",
+  # do not assign a lambda expression, use a def
+  "E731",
+  # do not use variables named 'l', 'O', or 'I'
+  "E741",
+  # unnecessary list comprehension (rewrite as a set comprehension)
+  "C403",
+  # unnecessary tuple literal (rewrite as a set literal)
+  "C405",
+  # unnecessary `dict()` call (rewrite as a literal)
+  "C408",
+  # unnecessary list literal passed to `tuple()` (rewrite as a tuple literal)
+  "C409",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 # It's fine not to put the import at the top of the file in the examples
 # folder.
-"examples/*"=["E402"]
-"doc/conf.py"=["E402"]
+"examples/*" = ["E402"]
+"doc/conf.py" = ["E402"]
+# Long exception messages in docstrings
+"skrub/_clean_null_strings.py" = ["E501"]
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    # Turn deprecation warnings into errors
-    "error::FutureWarning",
-    "error::DeprecationWarning",
+  # Turn deprecation warnings into errors
+  "error::FutureWarning",
+  "error::DeprecationWarning",
 
-    # Ignore warning from np.in1d since the future behavior is already the desired
-    # behavior. TODO remove when numpy min version >= 1.25.
-    'ignore:elementwise\ comparison\ failed:FutureWarning',
-    # TODO remove when pandas min version >= 2.2.0
-    'ignore:.*utcfromtimestamp\(\) is deprecated.*:DeprecationWarning',
-    # TODO remove when joblib min version >= 1.4.0
-    'ignore:.*ast\.Num is deprecated.*:DeprecationWarning',
-    # TODO remove when joblib min version >= 1.4.0
-    'ignore:.*ast\.NameConstant is deprecated.*:DeprecationWarning',
-    # TODO remove when joblib min version >= 1.4.0
-    'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
-    # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
-    'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
-    # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
-    # should be addressed in pandas
-    'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
-    'ignore:.*distutils Version classes are deprecated.*',
-    'ignore:.*`resume_download` is deprecated.*',
-    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
-    'ignore:The current process just got forked.*',
-    'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+  # Ignore warning from np.in1d since the future behavior is already the desired
+  # behavior. TODO remove when numpy min version >= 1.25.
+  'ignore:elementwise\ comparison\ failed:FutureWarning',
+  # TODO remove when pandas min version >= 2.2.0
+  'ignore:.*utcfromtimestamp\(\) is deprecated.*:DeprecationWarning',
+  # TODO remove when joblib min version >= 1.4.0
+  'ignore:.*ast\.Num is deprecated.*:DeprecationWarning',
+  # TODO remove when joblib min version >= 1.4.0
+  'ignore:.*ast\.NameConstant is deprecated.*:DeprecationWarning',
+  # TODO remove when joblib min version >= 1.4.0
+  'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
+  # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
+  'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
+  # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
+  # should be addressed in pandas
+  'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
+  'ignore:.*distutils Version classes are deprecated.*',
+  'ignore:.*`resume_download` is deprecated.*',
+  'ignore:.*`clean_up_tokenization_spaces` was not set.*',
+  'ignore:The current process just got forked.*',
+  'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
 addopts = "--doctest-modules"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'

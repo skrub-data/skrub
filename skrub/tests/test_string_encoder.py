@@ -11,7 +11,8 @@ from sklearn.pipeline import Pipeline
 
 from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
-from skrub._on_each_column import RejectColumn
+from skrub._scaling_factor import scaling_factor
+from skrub._single_column_transformer import RejectColumn
 
 
 @pytest.fixture
@@ -41,6 +42,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
     )
     check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
     check = check.astype("float32")  # StringEncoder is float32
+    check /= scaling_factor(check)
 
     names = [f"col1_{idx}" for idx in range(2)]
 
@@ -308,3 +310,49 @@ def test_zero_padding_in_feature_names_out(df_module, n_components, expected_col
     feature_names = encoder.get_feature_names_out()
 
     assert feature_names[: len(expected_columns)] == expected_columns
+
+
+def test_vocabulary_parameter(df_module):
+    voc = {
+        "this": 5,
+        "is": 1,
+        "simple": 3,
+        "example": 0,
+        "this is": 6,
+        "is simple": 2,
+        "simple example": 4,
+    }
+    encoder = StringEncoder(n_components=2, vocabulary=voc)
+    pipeline = Pipeline(
+        [
+            (
+                "tfidf",
+                TfidfVectorizer(ngram_range=(3, 4), analyzer="char_wb", vocabulary=voc),
+            ),
+            ("tsvd", TruncatedSVD()),
+        ]
+    )
+    X = df_module.make_column(
+        "col",
+        ["this is a sentence", "this simple example is simple", "other words", ""],
+    )
+
+    enc_out = encoder.fit_transform(X)
+    pipe_out = pipeline.fit_transform(X)
+    pipe_out /= scaling_factor(pipe_out)
+
+    assert encoder.vectorizer_.vocabulary_ == voc
+    assert_almost_equal(enc_out, pipe_out)
+
+
+def test_vocabulary_on_hashing_vectorizer(df_module):
+    voc = {
+        "this": 5,
+    }
+    encoder = StringEncoder(vocabulary=voc, vectorizer="hashing")
+    with pytest.raises(ValueError, match="Custom vocabulary passed to StringEncoder*"):
+        X = df_module.make_column(
+            "col",
+            ["this is a sentence", "this simple example is simple", "other words", ""],
+        )
+        encoder.fit_transform(X)

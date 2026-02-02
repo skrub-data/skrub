@@ -2,10 +2,16 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from skrub.datasets._utils import DATA_HOME_ENVAR_NAME, get_data_dir, get_data_home
+from skrub.datasets._utils import (
+    DATA_HOME_ENVAR_NAME,
+    _extract_archive,
+    get_data_dir,
+    get_data_home,
+)
 
 
 @pytest.mark.parametrize("data_home_type", ["string", "path"])
@@ -58,3 +64,46 @@ def test_get_data_home_with_envar(monkeypatch, tmp_path):
 
         assert get_data_home() == dirpath
         assert dirpath.exists()
+
+
+def test_extract_archive_exception_unlink_called():
+    dataset_dir = MagicMock()
+    dataset_dir.name = "test_dataset"
+    archive_path = MagicMock(spec=Path)
+    archive_path.exists.return_value = True
+
+    mock_temp_dir = str(Path("mock_temp_dir"))
+    # Patch both tempfile.mkdtemp and shutil.unpack_archive
+    # tempfile.mkdtemp and shutil.unpack_archive are used in _extract_archive
+    # We simulate unpack_archive raising an exception to test that unlink is called
+    with (
+        patch("tempfile.mkdtemp", return_value=mock_temp_dir),
+        patch("shutil.unpack_archive") as mock_unpack,
+    ):
+        # Simulate unpack failing
+        mock_unpack.side_effect = ValueError("Test error")
+        with pytest.raises(ValueError):
+            _extract_archive(dataset_dir, archive_path)
+        archive_path.unlink.assert_called_once()
+
+
+def test_extract_archive_unlink_raises():
+    dataset_dir = MagicMock()
+    dataset_dir.name = "test_dataset"
+    archive_path = MagicMock(spec=Path)
+    archive_path.exists.return_value = True
+    # Setup unlink to fail
+    archive_path.unlink.side_effect = OSError("unlink failed")
+
+    mock_temp_dir = str(Path("mock_temp_dir"))
+    # Patch both tempfile.mkdtemp and shutil.unpack_archive
+    # tempfile.mkdtemp and shutil.unpack_archive are used in _extract_archive
+    with (
+        patch("tempfile.mkdtemp", return_value=mock_temp_dir),
+        patch("shutil.unpack_archive") as mock_unpack,
+    ):
+        mock_unpack.side_effect = ValueError("Test error")
+        # The original error should still be raised
+        with pytest.raises(ValueError):
+            _extract_archive(dataset_dir, archive_path)
+        archive_path.unlink.assert_called_once()

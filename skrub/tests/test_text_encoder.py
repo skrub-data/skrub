@@ -1,4 +1,5 @@
 import pickle
+import sys
 
 import pandas as pd
 import pytest
@@ -7,10 +8,8 @@ from sklearn.base import clone
 
 import skrub._dataframe as sbd
 from skrub import TableVectorizer, TextEncoder
-from skrub._on_each_column import RejectColumn
+from skrub._single_column_transformer import RejectColumn
 from skrub._text_encoder import ModelNotFound
-
-pytest.importorskip("sentence_transformers")
 
 
 @pytest.fixture
@@ -25,23 +24,30 @@ def encoder():
       detect the MPS backend, but due to limitations, no memory can be allocated.
       See https://github.com/actions/runner-images/issues/9918 for more details.
     """
+    pytest.importorskip("sentence_transformers")
     return TextEncoder(
         model_name="sentence-transformers/paraphrase-albert-small-v2",
         device="cpu",
     )
 
 
-def test_missing_import_error(encoder):
-    try:
-        import sentence_transformers  # noqa
-    except ImportError:
-        pass
-    else:
-        return
+def test_missing_import_error(monkeypatch):
+    """Test that a clear error is raised when sentence_transformers is missing.
 
-    st = clone(encoder)
+    We mock the missing dependency by hiding it from sys.modules, then verify
+    that TextEncoder.fit() raises an ImportError with a helpful message.
+    """
+    monkeypatch.setitem(sys.modules, "sentence_transformers", None)
+
+    st = TextEncoder()  # Direct creation to avoid importorskip
     x = pd.Series(["oh no"])
-    with pytest.raises(ImportError, match="Missing optional dependency"):
+
+    err_msg = (
+        "Missing optional dependency 'sentence_transformers'.*"
+        "TextEncoder requires sentence-transformers.*"
+        "install\\.html#deep-learning-dependencies"
+    )
+    with pytest.raises(ImportError, match=err_msg):
         st.fit(x)
 
 

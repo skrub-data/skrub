@@ -16,7 +16,6 @@ endif
 ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS)\
     $(EXAMPLES_PATTERN_OPTS) .
 
-
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
@@ -29,15 +28,24 @@ html:
 	# the embedding of images more robust
 	rm -rf $(BUILDDIR)/html/_images
 	#rm -rf _build/doctrees/
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
 html-noplot:
-	$(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	SKB_TABLE_REPORT_VERBOSITY=0 $(SPHINXBUILD) -D plot_gallery=0 -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
+linkcheck:
+	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
+	@echo
+	@echo "Linkcheck finished. Results are in $(BUILDDIR)/linkcheck."
+
+linkcheck-noplot:
+	$(SPHINXBUILD) -D plot_gallery=0 -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck-noplot
+	@echo
+	@echo "Linkcheck (no plot) finished. Results are in $(BUILDDIR)/linkcheck-noplot."
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
@@ -47,3 +55,4 @@ html-noplot:
 clean:
 	rm -rf _build/ reference/generated/
 	rm -rf _build/ generated_for_index
+	rm -f reference/*.rst

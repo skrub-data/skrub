@@ -20,6 +20,13 @@ DATASET_INFO = {
         ],
         "sha256": "33745414801712034cf1d8615d7f086bba411ea8e44bfffefc0c6f23cb8afb83",
     },
+    "california_housing": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/california_housing.zip",
+            "https://osf.io/download/dxew5",
+        ],
+        "sha256": "86545bc4250a0c5d1762c52934f3760bc50b5d618f4aeb3a67bb66416909e919",
+    },
     "country_happiness": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/country_happiness.zip",
@@ -274,7 +281,16 @@ def _extract_archive(dataset_dir, archive_path):
         temp_dir = tempfile.mkdtemp(dir=dataset_dir)
         shutil.unpack_archive(archive_path, temp_dir, format="zip")
         path_source = Path(temp_dir) / dataset_name
-        path_source.rename(dataset_dir / dataset_name)
+        path_target = dataset_dir / dataset_name
+        try:
+            path_source.rename(path_target)
+        except OSError:  # pragma: nocover
+            if path_target.is_dir():
+                # another thread was fetching the dataset at the same time and
+                # beat us to it; no problem
+                return
+            else:
+                raise
     except (Exception, KeyboardInterrupt):
         try:
             archive_path.unlink()
@@ -320,10 +336,9 @@ def _download_archive(
         time.sleep(delay)
         delay *= 3
 
-    else:
-        raise OSError(
-            f"Can't download the file {dataset_name!r} from urls {metadata['urls']}."
-        )
+    raise OSError(
+        f"Can't download the file {dataset_name!r} from urls {metadata['urls']}."
+    )
 
 
 def _stream_download(
@@ -347,8 +362,7 @@ def _stream_download(
         temp_file_path = Path(temp_file_path)
         with open(temp_file_path, "wb") as tf:
             response = requests.get(target_url, timeout=timeout, stream=True)
-            for chunk in response.iter_content(chunk_size):
-                tf.write(chunk)
+            tf.writelines(response.iter_content(chunk_size))
 
         if _sha256(temp_file_path) != remote_checksum:
             raise OSError(

@@ -12,20 +12,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.8.8
+      - uses: actions/checkout@v6
+      - uses: prefix-dev/setup-pixi@v0.9.4
         with:
-          pixi-version: v0.41.3
-          environments: ci-py312-latest-optional-deps
+          pixi-version: v0.59.0
+          environments: ci-py314-latest-optional-deps
           # we can freeze the environment and manually bump the dependencies to the
           # latest version time to time.
           frozen: true
 
       - name: Create the reports
         working-directory: skrub/_reporting/js_tests/
-        run: pixi run make-reports
+        run: pixi run python make-reports
 
       - name: Cypress run
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7
         with:
           working-directory: skrub/_reporting/js_tests/

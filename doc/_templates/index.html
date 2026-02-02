@@ -40,7 +40,7 @@ still full-width (unlike the article) #}
       We directly connect database tables to machine learning.
     </p>
     <div class="text-center mt-4">
-        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">Get started →</a>
+        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_examples/0000_getting_started') }}" role="button">Get started →</a>
     </div>
   </div>
 
@@ -55,16 +55,16 @@ still full-width (unlike the article) #}
         literal notranslate sk-landing-code"><span class="pre">TableVectorizer</span></code></a>
         and
         <a class="reference internal"
-        href="reference/generated/skrub.tabular_learner.html#skrub.tabular_learner"
-        title="skrub.tabular_learner"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">tabular_learner</span></code></a>.
+        href="reference/generated/skrub.tabular_pipeline.html#skrub.tabular_pipeline"
+        title="skrub.tabular_pipeline"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">tabular_pipeline</span></code></a>.
       </p>
     </div>
 
 
     <div class="col-md-7">
       <!-- Placeholder for coding demo -->
-      {% include "demo_tabular_learner.html" %}
+      {% include "demo_tabular_pipeline.html" %}
 
     </div>
   </div>
@@ -115,7 +115,12 @@ fa-caret-down visible-small-screen"></i></p>
         <a class="reference internal"
         href="reference/generated/skrub.DatetimeEncoder.html#datetimeencoder"
         title="skrub.DatetimeEncoder"><code class="xref py py-class docutils
-        literal notranslate"><span class="pre">DatetimeEncoder</span></code></a>.
+        literal notranslate"><span class="pre">DatetimeEncoder</span></code></a>,
+        or robustly scale and clip numerical features with the
+        <a class="reference internal"
+        href="reference/generated/skrub.SquashingScaler.html#squashingscaler"
+        title="skrub.SquashingScaler"><code class="xref py py-class docutils
+        literal notranslate"><span class="pre">SquashingScaler</span></code></a>.
       </p>
       {% include "demo_gap_encoder.html" %}
     </div>
@@ -141,7 +146,8 @@ fa-caret-down visible-small-screen"></i></p>
 	{% include "../generated_for_index/pipeline.svg" %}
       </div>
       <p class="feature-text-see-also">
-        <a href="skrub_pipeline.html">Discover the skrub expressions →</a>
+        <!-- name of the userguide file on DataOps -->
+        <a href="{{ pathto('auto_examples/data_ops/1110_data_ops_intro') }}">Discover the skrub DataOps →</a>
       </p>
     </div>
     <div class="col-md-7">
@@ -190,7 +196,7 @@ class="pre">baskets_df</span></code>: <i>(expand for full code)</i></summary>
       and be part of an emerging community!
     </p>
     <div class="text-center mt-4">
-        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_examples/00_getting_started') }}" role="button">Get started →</a>
+        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_examples/0000_getting_started') }}" role="button">Get started →</a>
     </div>
   </div>
 </div>
@@ -253,6 +259,6 @@ fetchContributors();
 
 {%- block footer %}
 
-<div class="home-footer">the skrub developers - 2024</div>
+<div class="home-footer">the skrub developers - 2026</div>
 
 {%- endblock footer %}
