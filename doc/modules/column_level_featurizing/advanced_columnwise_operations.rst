@@ -23,7 +23,7 @@ Name: birthday, dtype: datetime64[...]
 >>> ToDatetime().fit_transform(df["city"])
 Traceback (most recent call last):
     ...
-skrub.core._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
+skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
 
 How these rejections are handled depends on the ``allow_reject`` parameter.
 By default, no special handling is performed and rejections are considered
@@ -66,21 +66,51 @@ In cases where the user needs finer control over a custom transformer's behavior
 or if a workflow involves a non-skrub transformer which doesn't handle column rejection, it is necessary
 to create a transformer from scratch that is capable of handling this exception.
 
-Hence the ``SingleColumnTransformer`` class. Custom transformers inherited from this class can have complex
-behaviors assigned to their ``transform`` methods, or serve as wrappers for other transformers. For instance,
-if one wanted to implement the ``RejectColumn`` exception into scikit-learn's ``StandardScaler``::
+Hence the ``SingleColumnTransformer`` class. It is originally a base class from which many transformers are
+inherited, but it can also be used to create new transformers. Custom transformers inherited from this class
+can serve as wrappers for non-Skrub transformers. For instance, if one wanted to implement the ``RejectColumn``
+exception into scikit-learn's ``StandardScaler``, one could create a ``NewScaler`` as follows::
 
-    >>> class NewScaler(SingleColumnTransformer):
-    ...     def __init__(self):
-    ...         self.scaler = StandardScaler
+>>> class Scaler(SingleColumnTransformer):
+...     def __init__(self):
+...         self.scaler = StandardScaler
+...
+...     def fit_transform(self, x, y):
+...         if x.dtype != 'float64':
+...             raise RejectColumn
+...         else:
+...             self.scaler.fit_transform(x, y)
+...
+...     def transform(self, x):
+...         self.scaler.fit_transform(x)
+>>> df = pd.DataFrame(dict(product=["Chair", "Table", "Bed"], price=[30.0, 60.0, 200.0]))
+>>> Scaler().fit_transform(df["price"])
+0   -0.89984254
+1   -0.4949134
+2   1.39475594
+Name: price, dtype: float64[...]
+>>> Scaler().fit_transform(df["product"])
+Traceback (most recent call last):
     ...
-    ...     def fit_transform(self, x, y):
-    ...         if not check(x):
-    ...             raise RejectColumn
-    ...         else:
-    ...             self.scaler.fit_transform(x,y)
-    ...
-    ...     def transform(self, x):
-    ...         self.scaler.fit_transform(x)
+skrub.core.RejectColumn: Could not find a datetime format for column 'product'.
 
-Where ``check`` tests column ``x`` against a custom criterion.
+
+
+
+A custom class inherited from a ``SingleColumnTransformer`` can also enable to run a custom criterion to
+check whether or not to accept a column::
+
+>>> class NewScaler(SingleColumnTransformer):
+...     def __init__(self):
+...         self.scaler = StandardScaler
+...
+...     def fit_transform(self, x, y):
+...         if not check(x):
+...             raise RejectColumn
+...         else:
+...             self.scaler.fit_transform(x, y)
+...
+...     def transform(self, x):
+...         self.scaler.fit_transform(x)
+
+Where ``check`` is a specially-defined function.
