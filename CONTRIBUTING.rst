@@ -284,10 +284,6 @@ Ensuring the documentation builds
 ..
   Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
 
-**Before submitting your pull request, ensure that your modifications haven't
-introduced any new Sphinx warnings by building the documentation locally
-and addressing any issues.**
-
 First, make sure you have properly installed the development version of skrub.
 You can follow the :ref:`installation_instructions` > "From source" section, if needed.
 
@@ -426,6 +422,6 @@ Finally, if the remote repository was changed, you might need to run
 Integration
 ^^^^^^^^^^^
 
-Community consensus is key in the integration process. Expect a minimum
-of 1 to 3 reviews depending on the size of the change before we consider
+Community consensus is key in the integration process. Expect a minimum of
+1 to 3 reviews from maintainers depending on the size of the change before we consider
 merging the PR.
