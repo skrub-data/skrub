@@ -191,8 +191,9 @@ results["Dummy Negative"] = get_results(
 # Low effort estimator
 # --------------------
 #
-# Next, we use the |TableVectorizer| and an |HGBC| to create a very simple baseline model
-# that uses the sparse dataset directly. Note that due to the large number of high
+# Next, we use the |TableVectorizer| and an |HGBC| to create a very simple
+# baseline model that uses the sparse dataset directly.
+# Note that due to the large number of high
 # cardinality columns, we can't use a multi-dimensional encoder like the
 # |MinHashEncoder|, because the number of columns would then explode.
 #
