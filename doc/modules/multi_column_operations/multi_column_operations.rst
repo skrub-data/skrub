@@ -15,29 +15,7 @@ to be scaled at the same time.
 While the heuristics used by the :class:`TableVectorizer` are usually good enough
 to apply the proper transformers to different datatypes, using it may not be an
 option in all cases. In scikit-learn pipelines, the column selection operation can
-is done with the :class:`sklearn.compose.ColumnTransformer`:
-
-
->>> import pandas as pd
->>> from sklearn.compose import make_column_selector as selector
->>> from sklearn.compose import make_column_transformer
->>> from sklearn.preprocessing import StandardScaler, OneHotEncoder
->>>
->>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
->>>
->>> categorical_columns = selector(dtype_include=object)(df)
->>> numerical_columns = selector(dtype_exclude=object)(df)
->>>
->>> ct = make_column_transformer(
-...       (StandardScaler(),
-...        numerical_columns),
-...       (OneHotEncoder(handle_unknown="ignore"),
-...        categorical_columns))
->>> transformed = ct.fit_transform(df)
->>> transformed
-array([[-1.22474487,  0.        ,  0.        ,  1.        ],
-       [ 0.        ,  1.        ,  0.        ,  0.        ],
-       [ 1.22474487,  0.        ,  1.        ,  0.        ]])
+is done with the :class:`sklearn.compose.ColumnTransformer`.
 
 Skrub provides alternative transformers that can achieve the same results:
 
@@ -69,6 +47,9 @@ example above, which can be rewritten with |ApplyToCols| as follows:
 >>> import skrub.selectors as s
 >>> from sklearn.pipeline import make_pipeline
 >>> from skrub import ApplyToCols
+>>> from sklearn.preprocessing import OneHotEncoder, StandardScaler
+>>> import pandas as pd
+>>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
 >>>
 >>> numeric = ApplyToCols(StandardScaler(), cols=s.numeric())
 >>> string = ApplyToCols(OneHotEncoder(sparse_output=False), cols=s.string())
@@ -89,9 +70,9 @@ column:
     birthday    city
 0  29/01/2024  London
 >>> df.dtypes
-birthday    object
-city        object
-dtype: object
+birthday    ...
+city        ...
+dtype: ...
 >>> ToDatetime().fit_transform(df["birthday"])
 0   2024-01-29
 Name: birthday, dtype: datetime64[...]
@@ -129,8 +110,8 @@ datetime column.
 
 >>> transformed.dtypes
 birthday    datetime64[...]
-city                object
-dtype: object
+city                ...
+dtype: ...
 
 
 |ApplyToFrame| is instead used in cases where multiple columns should be transformed

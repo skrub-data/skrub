@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 import skrub
 from skrub._utils import PassThrough
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 #
 # Using eager statements on DataOps
@@ -550,6 +551,7 @@ def test_bad_names():
         skrub.var("_skrub_X")
 
 
+@skip_polars_installed_without_pyarrow
 def test_pass_df_instead_of_data_op():
     df = skrub.datasets.toy_orders().orders
     with pytest.raises(TypeError, match="You passed an actual DataFrame"):
