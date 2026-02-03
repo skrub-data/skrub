@@ -149,7 +149,6 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     >>> scaler.used_inputs_
     ['A', 'B']
 
-
     **Renaming outputs & keeping the original columns**
 
     The ``rename_columns`` parameter allows renaming output columns.
