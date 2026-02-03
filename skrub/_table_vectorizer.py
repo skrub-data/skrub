@@ -296,9 +296,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.fit_transform(df)
            A          B     C    D
     0    one 2024-02-02   1.5  1.5
-    1    two 2024-02-23   None  2.0
+    1    two 2024-02-23  ...  2.0
     2    two 2024-03-12  12.2  2.5
-    3  three 2024-03-13   None  3.0
+    3  three 2024-03-13  ...  3.0
 
     >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     A               ...
@@ -445,12 +445,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     information.
     Then it encodes each column with an encoder suitable for its dtype. Categorical
     features are encoded differently depending on their cardinality.
-
-    .. note::
-
-        The ``specific_transformers`` parameter will be removed in a future
-        version of ``skrub``, when better utilities for building complex
-        pipelines are introduced.
 
     Parameters
     ----------
@@ -728,11 +722,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     provided transformer has full control over the associated columns; no other
     processing is applied to those columns. A column cannot appear twice in the
     ``specific_transformers``.
-
-    .. note::
-
-        This functionality is likely to be removed in a future version of the
-        ``TableVectorizer``.
 
     The overrides are provided as a list of pairs:
     ``(transformer, list_of_column_names)``.
