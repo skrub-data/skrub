@@ -38,7 +38,7 @@ class RejectColumn(ValueError):
     >>> ToDatetime().fit_transform(df['b'])
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Column 'b' does not contain strings.
+    skrub.core.RejectColumn: Column 'b' does not contain strings.
     """
 
     pass

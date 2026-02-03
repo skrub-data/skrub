@@ -257,7 +257,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> DatetimeEncoder().fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
+    skrub.core.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
 
     :class:`ToDatetime`: can be used for converting strings to datetimes.
 
