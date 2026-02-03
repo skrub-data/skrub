@@ -1777,7 +1777,7 @@ class SkrubNamespace:
         split_func=model_selection.train_test_split,
         **split_func_kwargs,
     ):
-        """Split an environment into a training an testing environments.
+        """Split an environment into training and testing environments.
 
         Parameters
         ----------
