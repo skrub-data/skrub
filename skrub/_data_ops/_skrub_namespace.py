@@ -45,7 +45,8 @@ from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
 from ._utils import KFOLD_5, NULL, attribute_error
 
-_SELECTORS = selectors.all()
+# By default, select all columns
+_SELECT_ALL_COLUMNS = selectors.all()
 
 
 def _var_values_provided(data_op, environment):
@@ -115,7 +116,7 @@ class SkrubNamespace:
         self,
         estimator,
         y=None,
-        cols=_SELECTORS,
+        cols=_SELECT_ALL_COLUMNS,
         how="auto",
         allow_reject=False,
         unsupervised=False,
@@ -143,7 +144,7 @@ class SkrubNamespace:
         estimator,
         *,
         y=None,
-        cols=_SELECTORS,
+        cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         how="auto",
         allow_reject=False,
