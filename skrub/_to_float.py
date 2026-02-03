@@ -132,7 +132,7 @@ class ToFloat(SingleColumnTransformer):
     >>> to_float.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub.core.RejectColumn: Could not convert column 'x' to numbers.
+    skrub.core._single_column_transformer.RejectColumn: Could not convert column 'x' to numbers.
 
     Once a column has been accepted, all calls to ``transform`` will result in the
     same output dtype. Values that fail to be converted become null values.
@@ -154,11 +154,11 @@ class ToFloat(SingleColumnTransformer):
     >>> to_float.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub.core.RejectColumn: Refusing to cast column 's' with dtype 'category' to numbers.
+    skrub.core._single_column_transformer.RejectColumn: Refusing to cast column 's' with dtype 'category' to numbers.
     >>> to_float.fit_transform(pd.to_datetime(pd.Series(['2024-05-13'], name='s')))
     Traceback (most recent call last):
         ...
-    skrub.core.RejectColumn: Refusing to cast column 's' with dtype 'datetime64[...]' to numbers.
+    skrub.core._single_column_transformer.RejectColumn: Refusing to cast column 's' with dtype 'datetime64[...]' to numbers.
 
     float32 columns are passed through:
 

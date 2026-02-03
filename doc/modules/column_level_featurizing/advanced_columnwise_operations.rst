@@ -9,6 +9,7 @@ The ``RejectColumn`` exception exists to indicate when a transformer cannot hand
 given column.
 
 >>> from skrub import ToDatetime
+>>> import pandas as pd
 >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
 >>> df
         birthday    city
@@ -23,12 +24,13 @@ Name: birthday, dtype: datetime64[...]
 >>> ToDatetime().fit_transform(df["city"])
 Traceback (most recent call last):
     ...
-skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
+skrub.core._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
 
 How these rejections are handled depends on the ``allow_reject`` parameter.
 By default, no special handling is performed and rejections are considered
 to be errors:
 
+>>> from skrub import ApplyToCols
 >>> to_datetime = ApplyToCols(ToDatetime())
 >>> to_datetime.fit_transform(df)
 Traceback (most recent call last):
@@ -71,28 +73,30 @@ inherited, but it can also be used to create new transformers. Custom transforme
 can serve as wrappers for non-Skrub transformers. For instance, if one wanted to implement the ``RejectColumn``
 exception into scikit-learn's ``StandardScaler``, one could create a ``NewScaler`` as follows::
 
+>>> from skrub.core import RejectColumn, SingleColumnTransformer
+>>> from sklearn.preprocessing import StandardScaler
 >>> class Scaler(SingleColumnTransformer):
 ...     def __init__(self):
-...         self.scaler = StandardScaler
+...         self.scaler = StandardScaler()
 ...
-...     def fit_transform(self, x, y):
+...     def fit_transform(self, x, y=None):
 ...         if x.dtype != 'float64':
-...             raise RejectColumn
+...             raise RejectColumn('This scaler only takes float64 types.')
 ...         else:
-...             self.scaler.fit_transform(x, y)
+...             return(pd.DataFrame(self.scaler.fit_transform(pd.DataFrame(x), y)))
 ...
 ...     def transform(self, x):
-...         self.scaler.fit_transform(x)
+...         return(pd.DataFrame(self.scaler.transform(pd.DataFrame(x))))
 >>> df = pd.DataFrame(dict(product=["Chair", "Table", "Bed"], price=[30.0, 60.0, 200.0]))
 >>> Scaler().fit_transform(df["price"])
-0   -0.89984254
-1   -0.4949134
-2   1.39475594
-Name: price, dtype: float64[...]
+          0
+0 -0.899843
+1 -0.494913
+2  1.394756
 >>> Scaler().fit_transform(df["product"])
 Traceback (most recent call last):
     ...
-skrub.core.RejectColumn: Could not find a datetime format for column 'product'.
+skrub.core._single_column_transformer.RejectColumn: This scaler only takes float64 types.
 
 
 
@@ -102,9 +106,9 @@ check whether or not to accept a column::
 
 >>> class NewScaler(SingleColumnTransformer):
 ...     def __init__(self):
-...         self.scaler = StandardScaler
+...         self.scaler = StandardScaler()
 ...
-...     def fit_transform(self, x, y):
+...     def fit_transform(self, x, y=None):
 ...         if not check(x):
 ...             raise RejectColumn
 ...         else:

@@ -19,6 +19,9 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
+- :class:`SingleColumnTransformer` and associated exception :class:`RejectColumn` have been exposed and
+  moved to the newly-created :package:`skrub.core` package.
+  :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`
 
 Bugfixes
 --------
