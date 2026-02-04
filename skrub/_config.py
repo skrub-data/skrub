@@ -28,6 +28,7 @@ def _get_default_data_folder():
             warnings.warn(
                 "The environment variable 'SKRUB_DATA_DIRECTORY' is deprecated. "
                 "Please use 'SKB_DATA_DIRECTORY' instead.",
+                DeprecationWarning,
             )
             data_home_envar = deprecated_envar
 
