@@ -142,10 +142,12 @@ def test_load_dataset_files_with_non_metadata_json(tmp_path, monkeypatch):
     with open(datafiles_dir / "metadata.json", "w") as fp:
         fp.write(json.dumps({"name": "test"}))
 
-    # Set the data home to the temp directory and load the dataset files
+    # Mock DATASET_INFO to include the test dataset
     monkeypatch.setattr(
-        "skrub.datasets._utils.get_data_home", lambda data_home=None: tmp_path
+        "skrub.datasets._utils.DATASET_INFO",
+        {dataset_name: {"sha256": "dummy_checksum", "urls": []}},
     )
+
     bunch = load_dataset_files(dataset_name, data_home=tmp_path)
 
     # Verify that config.json and dataset CSV are in paths, but metadata.json is not
