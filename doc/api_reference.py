@@ -124,7 +124,7 @@ API_REFERENCE = {
                     "deduplicate",
                     "Cleaner",
                     "DropUninformative",
-                     "to_datetime",
+                    "to_datetime",
                 ],
             },
         ],
