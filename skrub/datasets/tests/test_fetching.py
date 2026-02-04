@@ -1,3 +1,4 @@
+import os
 from tempfile import TemporaryDirectory
 
 import pandas as pd
@@ -55,7 +56,9 @@ def test_fetch_credit_fraud():
         skrub.datasets.fetch_credit_fraud(split=None)
     assert "paths" in data
     assert data["path"].endswith("baskets.csv")
-    assert ["baskets.csv", "products.csv"] == [p.split("/")[-1] for p in data["paths"]]
+    assert ["baskets.csv", "products.csv"] == [
+        os.path.basename(p) for p in data["paths"]
+    ]
 
 
 @xfail_with_download_error
