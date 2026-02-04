@@ -32,7 +32,10 @@ def test_config_context():
     assert get_config() == {
         "use_table_report": False,
         "use_table_report_data_ops": True,
-        "data_folder": str(pathlib.Path("~/skrub_data").expanduser()),
+        # On CI the absolute path is different, check that it ends with skrub_data
+        "data_folder": str(pathlib.Path("~/skrub_data").expanduser()).endswith(
+            "skrub_data"
+        ),
         "table_report_verbosity": 1,
         "max_plot_columns": 30,
         "max_association_columns": 30,
