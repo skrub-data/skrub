@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from skrub import set_config
+from skrub._config import _get_default_data_folder
 from skrub.datasets._utils import (
     DATA_HOME_ENVAR_NAME,
     _extract_archive,
@@ -45,6 +47,11 @@ def test_get_data_home_without_parameter(monkeypatch, tmp_path):
     with monkeypatch.context() as mp:
         mp.setenv("USERPROFILE" if sys.platform == "win32" else "HOME", str(home))
 
+        # Recompute and set the thread-local config so the module-level
+        # default (which was computed at import time) is updated to reflect
+        # the monkeypatched environment.
+        set_config(data_folder=_get_default_data_folder())
+
         assert get_data_home() == dirpath
         assert dirpath.exists()
 
@@ -61,6 +68,11 @@ def test_get_data_home_with_envar(monkeypatch, tmp_path):
 
     with monkeypatch.context() as mp:
         mp.setenv(DATA_HOME_ENVAR_NAME, str(dirpath))
+
+        # Recompute and set the thread-local config so the module-level
+        # default (which was computed at import time) is updated to reflect
+        # the monkeypatched environment variable.
+        set_config(data_folder=_get_default_data_folder())
 
         assert get_data_home() == dirpath
         assert dirpath.exists()
