@@ -19,6 +19,9 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
+- The dataset fetcher functions now include the ``path`` and ``paths`` fields, which contain the paths to the datasets.
+  In future releases, the bunch objects will not contain Pandas dataframes by default anymore.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bugfixes
 --------
