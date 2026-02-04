@@ -265,17 +265,27 @@ def load_dataset_files(dataset_name, data_home):
         _extract_archive(dataset_dir, archive_path)
 
     bunch = Bunch()
+
+    # Loading all paths and data files
+    bunch["paths"] = []
     for file_path in datafiles_dir.iterdir():
         if file_path.suffix == ".csv":
             bunch[file_path.stem] = pd.read_csv(file_path)
+            bunch["paths"].append(str(file_path))
         elif file_path.suffix == ".json":
             bunch[file_path.stem] = json.loads(file_path.read_text(encoding="utf-8"))
-    bunch["paths"] = [
-        str(pth)
-        for pth in datafiles_dir.iterdir()
-        if pth.suffix in {".csv", ".json"} and pth.stem != "metadata"
-    ]
-    bunch["metadata_path"] = str(datafiles_dir / "metadata.json")
+            if file_path.stem != "metadata":
+                bunch["paths"].append(str(file_path))
+            else:
+                bunch["metadata_path"] = str(file_path)
+
+    # If there is a single CSV file with the dataset name, set it as the main path
+    if (datafiles_dir / f"{dataset_name}.csv").exists():
+        bunch["path"] = str(datafiles_dir / f"{dataset_name}.csv")
+    else:
+        # Otherwise, set the first path as the main path
+        # Datasets with multiple files will have to refer to "paths"
+        bunch["path"] = bunch["paths"][0]
 
     return bunch
 
