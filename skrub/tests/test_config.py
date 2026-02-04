@@ -28,23 +28,41 @@ def simple_series(df_module):
     return df_module.make_column(name="A", values=[1, 2, 3, 4, 5])
 
 
-def test_config_context():
-    assert get_config() == {
-        "use_table_report": False,
-        "use_table_report_data_ops": True,
-        # On CI the absolute path is different, check that it ends with skrub_data
-        "data_folder": str(pathlib.Path("~/skrub_data").expanduser()).endswith(
-            "skrub_data"
-        ),
-        "table_report_verbosity": 1,
-        "max_plot_columns": 30,
-        "max_association_columns": 30,
-        "subsampling_seed": 0,
-        "enable_subsampling": "default",
-        "float_precision": 3,
-        "cardinality_threshold": 40,
-    }
+def test_default_config():
+    cfg = get_config()
+    # Rather than asserting that the dictionary is exactly equal to the hard-coded
+    # default values, we check each expected default value individually.
+    assert cfg["use_table_report"] is False
+    assert cfg["use_table_report_data_ops"] is True
+    # On CI the absolute path is different, check that it ends with skrub_data
+    assert pathlib.Path(cfg["data_folder"]).name == "skrub_data"
+    assert cfg["table_report_verbosity"] == 1
+    assert cfg["max_plot_columns"] == 30
+    assert cfg["max_association_columns"] == 30
+    assert cfg["subsampling_seed"] == 0
+    assert cfg["enable_subsampling"] == "default"
+    assert cfg["float_precision"] == 3
+    assert cfg["cardinality_threshold"] == 40
 
+    # Fail the test if new configuration keys are present but not checked here.
+    expected_keys = {
+        "use_table_report",
+        "use_table_report_data_ops",
+        "data_folder",
+        "table_report_verbosity",
+        "max_plot_columns",
+        "max_association_columns",
+        "subsampling_seed",
+        "enable_subsampling",
+        "float_precision",
+        "cardinality_threshold",
+    }
+    assert set(cfg.keys()) == expected_keys
+
+
+def test_config_context():
+    # Default value
+    assert get_config()["use_table_report"] is False
     # Not using as a context manager affects nothing
     config_context(use_table_report=True)
     assert get_config()["use_table_report"] is False
