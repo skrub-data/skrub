@@ -1,3 +1,4 @@
+import json
 import shutil
 import sys
 import tempfile
@@ -13,6 +14,7 @@ from skrub.datasets._utils import (
     _extract_archive,
     get_data_dir,
     get_data_home,
+    load_dataset_files,
 )
 
 
@@ -119,3 +121,35 @@ def test_extract_archive_unlink_raises():
         with pytest.raises(ValueError):
             _extract_archive(dataset_dir, archive_path)
         archive_path.unlink.assert_called_once()
+
+
+def test_load_dataset_files_with_non_metadata_json(tmp_path, monkeypatch):
+    # Test that non-metadata JSON files are included in bunch['paths'].
+    # Needed to make coverage happy
+
+    # Create a temp directory structure
+    dataset_name = "test_dataset"
+    datafiles_dir = tmp_path / dataset_name / dataset_name
+    datafiles_dir.mkdir(parents=True)
+
+    # Create dummy config.json, dataset CSV, and metadata.json files
+    with open(datafiles_dir / "config.json", "w") as fp:
+        fp.write(json.dumps({"setting": "value"}))
+
+    with open(datafiles_dir / f"{dataset_name}.csv", "w") as fp:
+        fp.write("col1,col2\n1,2\n3,4\n")
+
+    with open(datafiles_dir / "metadata.json", "w") as fp:
+        fp.write(json.dumps({"name": "test"}))
+
+    # Set the data home to the temp directory and load the dataset files
+    monkeypatch.setattr(
+        "skrub.datasets._utils.get_data_home", lambda data_home=None: tmp_path
+    )
+    bunch = load_dataset_files(dataset_name, data_home=tmp_path)
+
+    # Verify that config.json and dataset CSV are in paths, but metadata.json is not
+    assert str(datafiles_dir / f"{dataset_name}.csv") in bunch["paths"]
+    assert str(datafiles_dir / "config.json") in bunch["paths"]
+    assert str(datafiles_dir / "metadata.json") not in bunch["paths"]
+    assert bunch["metadata_path"] == str(datafiles_dir / "metadata.json")
