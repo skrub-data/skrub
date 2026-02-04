@@ -221,7 +221,10 @@ def set_config(
         This configuration can also be set with the ``SKB_DATA_DIRECTORY``
         environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
         supported with a deprecation warning.
+
+    See Also
     --------
+
     get_config : Retrieve current values for global configuration.
     config_context : Context manager for global skrub configuration.
 
