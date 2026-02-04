@@ -4,7 +4,7 @@ import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
-from skrub._config import _parse_env_bool
+from skrub._config import _get_default_data_folder, _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -58,6 +58,23 @@ def test_default_config():
         "cardinality_threshold",
     }
     assert set(cfg.keys()) == expected_keys
+
+
+def test_deprecated_env_var_warning(monkeypatch, tmp_path):
+    """Test that using the deprecated SKRUB_DATA_DIRECTORY env var raises a warning."""
+    deprecated_data_dir = str(tmp_path / "deprecated_data")
+
+    with monkeypatch.context() as mp:
+        # Clear any existing SKB_DATA_DIRECTORY
+        mp.delenv("SKB_DATA_DIRECTORY", raising=False)
+        # Set the deprecated env var
+        mp.setenv("SKRUB_DATA_DIRECTORY", deprecated_data_dir)
+
+        # Call _get_default_data_folder and capture the warning
+        with pytest.warns(
+            DeprecationWarning, match="'SKRUB_DATA_DIRECTORY' is deprecated"
+        ):
+            _get_default_data_folder()
 
 
 def test_config_context():

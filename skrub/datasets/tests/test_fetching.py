@@ -40,6 +40,7 @@ def test_fetching(monkeypatch, dataset_name):
         else:
             assert_frame_equal(bunch.y, local_bunch.y)
     assert bunch["metadata"] == local_bunch["metadata"]
+    assert "metadata.json" not in [os.path.basename(p) for p in bunch["paths"]]
 
 
 @xfail_with_download_error
