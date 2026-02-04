@@ -46,6 +46,8 @@ def fetch_employee_salaries(data_home=None, split="all"):
         - ``y`` : pd.DataFrame, target labels. Shape: (9228, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -96,6 +98,8 @@ def fetch_medical_charge(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (163065, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_simple_dataset("medical_charge", data_home)
 
@@ -123,6 +127,8 @@ def fetch_midwest_survey(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (2494, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_simple_dataset("midwest_survey", data_home)
 
@@ -151,6 +157,8 @@ def fetch_open_payments(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (73558, 1)
         - ``metadata`` : a dictionary containing the name, description, source
           and target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_simple_dataset("open_payments", data_home)
 
@@ -181,6 +189,8 @@ def fetch_traffic_violations(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (1578154, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_simple_dataset("traffic_violations", data_home)
 
@@ -209,6 +219,8 @@ def fetch_drug_directory(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (120215, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_simple_dataset("drug_directory", data_home)
 
@@ -246,6 +258,8 @@ def fetch_credit_fraud(data_home=None, split="train"):
           contained in baskets. Shape: (163357, 7)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the first CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -289,6 +303,8 @@ def fetch_toxicity(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (1000, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_simple_dataset("toxicity", data_home)
 
@@ -323,6 +339,8 @@ def fetch_videogame_sales(data_home=None):
           labels. Shape: (16572, 5)
         - ``y`` : pd.DataFrame, target labels. Shape: (16572, 1)
         - ``metadata`` : a dictionary containing the name, source and target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
 
     result = load_simple_dataset("videogame_sales", data_home)
@@ -355,6 +373,8 @@ def fetch_bike_sharing(data_home=None):
           Shape: (17379, 10)
         - ``y`` : pd.DataFrame, target labels. Shape: (17379, 1)
         - ``metadata`` : a dictionary containing the name and target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
 
     return load_simple_dataset("bike_sharing", data_home)
@@ -381,6 +401,8 @@ def fetch_movielens(data_home=None):
         - ``movies`` : pd.DataFrame, movie ID, title and genres. Shape: (9742, 3)
         - ``ratings``: pd.DataFrame, user ID, movie ID, rating. Shape: (100836, 4)
         - ``metadata`` : a dictionary containing the name source and description
+        - ``path`` : str, the path to the first CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
 
     return load_dataset_files("movielens", data_home)
@@ -417,6 +439,8 @@ def fetch_flight_delays(data_home=None):
           can only be matched to the nearest airport based on the latitude and
           longitude. Shape: (124245, 9)
         - ``metadata`` : a dictionary containing the name  of the dataset.
+        - ``path`` : str, the path to the first CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_dataset_files("flight_delays", data_home)
 
@@ -447,6 +471,8 @@ def fetch_country_happiness(data_home=None):
         - ``legal_rights_index``: dataframe from the World Bank. Shape: (238, 2)
         - ``metadata`` : a dictionary containing the name of the dataset, a
           description and the sources.
+        - ``path`` : str, the path to the first CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_dataset_files("country_happiness", data_home)
 
@@ -492,5 +518,7 @@ def fetch_california_housing(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (20640, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the main dataframe CSV file
+        - ``paths`` : list of str, paths to all CSV and JSON files in the dataset
     """
     return load_simple_dataset("california_housing", data_home)
