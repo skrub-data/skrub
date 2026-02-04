@@ -53,6 +53,9 @@ def test_fetch_credit_fraud():
     assert data.baskets.shape == (92790, 2)
     with pytest.raises(ValueError, match=".*got: None"):
         skrub.datasets.fetch_credit_fraud(split=None)
+    assert "paths" in data
+    assert data["path"].endswith("baskets.csv")
+    assert ["baskets.csv", "products.csv"] == [p.split("/")[-1] for p in data["paths"]]
 
 
 @xfail_with_download_error
@@ -67,6 +70,9 @@ def test_fetch_employee_salaries():
     assert data.employee_salaries.shape == (9228, 9)
     with pytest.raises(ValueError, match=".*got: None"):
         skrub.datasets.fetch_employee_salaries(split=None)
+    assert "paths" in data
+    assert data["path"].endswith("employee_salaries.csv")
+    assert data["paths"][0].endswith("employee_salaries.csv")
 
 
 @xfail_with_download_error

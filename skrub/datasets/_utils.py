@@ -268,7 +268,8 @@ def load_dataset_files(dataset_name, data_home):
 
     # Loading all paths and data files
     bunch["paths"] = []
-    for file_path in datafiles_dir.iterdir():
+    # Sorting to have a deterministic order for tests
+    for file_path in sorted(datafiles_dir.iterdir()):
         if file_path.suffix == ".csv":
             bunch[file_path.stem] = pd.read_csv(file_path)
             bunch["paths"].append(str(file_path))
