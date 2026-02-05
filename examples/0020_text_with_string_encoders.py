@@ -50,11 +50,11 @@ import pandas as pd
 
 from skrub.datasets import fetch_toxicity
 
+# %%
+# We load the dataset from the path using pandas.
 bunch = fetch_toxicity()
 
 X = pd.read_csv(bunch.path)
-y = X["is_toxic"]
-X = X.drop(columns="is_toxic")
 
 # %%
 # When it comes to displaying large chunks of text, the |TableReport| is especially
@@ -62,6 +62,12 @@ X = X.drop(columns="is_toxic")
 from skrub import TableReport
 
 TableReport(X)
+
+# %%
+# We prepare the target variable by mapping the binary labels "Toxic" and "Not Toxic"
+# to 1 and 0, respectively. The target is reused throughout the example.
+
+y = X.pop("is_toxic").map({"Toxic": 1, "Not Toxic": 0})
 
 # %%
 # GapEncoder
@@ -168,7 +174,8 @@ def plot_box_results(named_results):
 
 results = []
 
-y = X.pop("is_toxic").map({"Toxic": 1, "Not Toxic": 0})
+# %%
+# Now we can evaluate the performance of the |GapEncoder| in toxicity classification.
 
 gap_pipe = make_pipeline(
     TableVectorizer(high_cardinality=GapEncoder(n_components=30)),
