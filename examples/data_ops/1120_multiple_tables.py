@@ -36,11 +36,21 @@ based on the products it contains.
 # was fraudulent or not (the customer never made the payment).
 
 # %%
+import pandas as pd
+
 import skrub
 import skrub.datasets
 
-dataset = skrub.datasets.fetch_credit_fraud()
-skrub.TableReport(dataset.baskets)
+bunch = skrub.datasets.fetch_credit_fraud()
+
+# %%
+# For multi-table datasets, we need to load the tables from their paths
+bunch["paths"]
+
+# %%
+baskets_df = pd.read_csv(bunch.paths[0])
+products_df = pd.read_csv(bunch.paths[1])
+skrub.TableReport(baskets_df)
 
 # %%
 # The ``products`` table contains information about the products that have been
@@ -49,7 +59,7 @@ skrub.TableReport(dataset.baskets)
 # column.
 
 # %%
-skrub.TableReport(dataset.products)
+skrub.TableReport(products_df)
 
 # %%
 # A data-processing challenge
@@ -87,8 +97,8 @@ skrub.TableReport(dataset.products)
 # In our example, we create two skrub |var| objects: ``products`` and ``baskets``:
 
 # %%
-products = skrub.var("products", dataset.products)
-baskets = skrub.var("baskets", dataset.baskets)
+products = skrub.var("products", products_df)
+baskets = skrub.var("baskets", baskets_df)
 
 basket_ids = baskets[["ID"]].skb.mark_as_X()
 fraud_flags = baskets["fraud_flag"].skb.mark_as_y()

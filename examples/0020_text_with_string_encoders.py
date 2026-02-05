@@ -46,11 +46,15 @@ available in skrub.
 # between the binary labels "Toxic" and "Not Toxic".
 # Our goal is to classify each entry between these two labels, using only the
 # text of the tweets as features.
+import pandas as pd
+
 from skrub.datasets import fetch_toxicity
 
-dataset = fetch_toxicity()
-X, y = dataset.X, dataset.y
-X["is_toxic"] = y
+bunch = fetch_toxicity()
+
+X = pd.read_csv(bunch.path)
+y = X["is_toxic"]
+X = X.drop(columns="is_toxic")
 
 # %%
 # When it comes to displaying large chunks of text, the |TableReport| is especially

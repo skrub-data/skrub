@@ -155,6 +155,7 @@ fig.supylabel("Value")
 import warnings
 
 import numpy as np
+import pandas as pd
 from sklearn.compose import TransformedTargetRegressor
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import cross_validate
@@ -166,7 +167,10 @@ from skrub import DatetimeEncoder, SquashingScaler, TableVectorizer
 from skrub.datasets import fetch_employee_salaries
 
 np.random.seed(0)
-data = fetch_employee_salaries()
+bunch = fetch_employee_salaries()
+data = pd.read_csv(bunch.path)
+X = data.drop(columns="current_annual_salary")
+y = data["current_annual_salary"]
 
 for num_transformer in [
     StandardScaler(),
@@ -185,7 +189,7 @@ for num_transformer in [
     with warnings.catch_warnings():
         # Ignore warnings about the MLPRegressor not converging
         warnings.simplefilter("ignore", category=ConvergenceWarning)
-        scores = cross_validate(pipeline, data.X, data.y, cv=3, scoring="r2")
+        scores = cross_validate(pipeline, X, y, cv=3, scoring="r2")
 
     print(
         f"Cross-validation R2 scores for {num_transformer.__class__.__name__}"

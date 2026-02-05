@@ -44,17 +44,23 @@ We study the case of predicting wages using the
 #
 # Let's first retrieve the dataset, using one of the downloaders from the
 # :mod:`skrub.datasets` module. As all the downloaders,
-# :func:`~skrub.datasets.fetch_employee_salaries` returns a dataset with attributes
-# ``X``, and ``y``. ``X`` is a dataframe which contains the features (aka design matrix,
-# explanatory variables, independent variables). ``y`` is a column (pandas Series) which
-# contains the target (aka dependent, response variable) that we want to learn to
-# predict from ``X``. In this case ``y`` is the annual salary.
+# :func:`~skrub.datasets.fetch_employee_salaries` returns a dataset with a ``path``
+# field pointing to the dataframe file, which contains both the features and the
+# target. We load the dataframe from the path using pandas.
+# ``X`` is a dataframe which contains the
+# features (aka design matrix, explanatory variables, independent variables).
+# ``y`` is a column (pandas Series) which contains the target (aka dependent, response
+# variable) that we want to learn to predict from ``X``. In this case ``y`` is the
+# annual salary, found in column "current_annual_salary".
+
+import pandas as pd
 
 from skrub.datasets import fetch_employee_salaries
 
-dataset = fetch_employee_salaries()
-employees, salaries = dataset.X, dataset.y
-employees
+bunch = fetch_employee_salaries()
+employees = pd.read_csv(bunch.path)
+X = employees.drop(columns="current_annual_salary")
+y = employees["current_annual_salary"]
 
 ###############################################################################
 # Most machine-learning algorithms work with arrays of numbers. The
@@ -74,7 +80,7 @@ from sklearn.model_selection import cross_validate
 from skrub import tabular_pipeline
 
 model = tabular_pipeline("regressor")
-results = cross_validate(model, employees, salaries)
+results = cross_validate(model, X, y)
 results["test_score"]
 
 # %%
@@ -97,8 +103,8 @@ model
 from skrub import TableVectorizer
 
 vectorizer = TableVectorizer()
-vectorized_employees = vectorizer.fit_transform(employees)
-vectorized_employees
+vectorized_X = vectorizer.fit_transform(X)
+vectorized_X
 
 ###############################################################################
 # From our 8 columns, the |TableVectorizer| has extracted 143 numerical
@@ -112,7 +118,7 @@ vectorized_employees
 
 from sklearn.ensemble import HistGradientBoostingRegressor
 
-HistGradientBoostingRegressor().fit(vectorized_employees, salaries)
+HistGradientBoostingRegressor().fit(vectorized_X, y)
 
 ###############################################################################
 # The |TableVectorizer| bridges the gap between tabular data and machine-learning
@@ -164,7 +170,7 @@ vectorizer.input_to_outputs_["date_first_hired"]
 
 ###############################################################################
 
-vectorized_employees[vectorizer.input_to_outputs_["date_first_hired"]]
+vectorized_X[vectorizer.input_to_outputs_["date_first_hired"]]
 
 ###############################################################################
 # Finally, we can go in the opposite direction: given a column in the input, find out
@@ -185,7 +191,7 @@ vectorizer.column_to_kind_["date_first_hired"]
 ###############################################################################
 # But looking closer at our original dataframe, it was encoded as a string.
 
-employees["date_first_hired"]
+X["date_first_hired"]
 
 ###############################################################################
 # Note the ``dtype: object`` in the output above.
@@ -224,7 +230,7 @@ from sklearn.pipeline import make_pipeline
 
 pipeline = make_pipeline(TableVectorizer(), HistGradientBoostingRegressor())
 
-results = cross_validate(pipeline, employees, salaries)
+results = cross_validate(pipeline, X, y)
 scores = results["test_score"]
 print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}")
 print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
@@ -273,7 +279,7 @@ pipeline = make_pipeline(
     vectorizer, HistGradientBoostingRegressor(categorical_features="from_dtype")
 )
 
-results = cross_validate(pipeline, employees, salaries)
+results = cross_validate(pipeline, X, y)
 scores = results["test_score"]
 print(f"R2 score:  mean: {np.mean(scores):.3f}; std: {np.std(scores):.3f}")
 print(f"mean fit time: {np.mean(results['fit_time']):.3f} seconds")
@@ -306,7 +312,7 @@ vectorizer = TableVectorizer()  # now using the default GapEncoder
 regressor = RandomForestRegressor(n_estimators=50, max_depth=20, random_state=0)
 
 pipeline = make_pipeline(vectorizer, regressor)
-pipeline.fit(employees, salaries)
+pipeline.fit(X, y)
 
 ###############################################################################
 # We are retrieving the feature importances:
