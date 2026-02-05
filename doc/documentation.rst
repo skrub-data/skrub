@@ -3,6 +3,9 @@
 User Guide
 ==========
 
+Skrub is a Python library that facilitates machine learning with tabular data
+(pandas and polars dataframes) using a scikit-learn–compatible API.
+
 Use the sections below to navigate the guide. For runnable code, see the
 :doc:`Example gallery <auto_examples/index>`. For class and function details, see
 the :ref:`API Reference <api_ref>`.
