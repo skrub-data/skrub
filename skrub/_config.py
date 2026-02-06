@@ -178,8 +178,22 @@ def set_config(
         environment variable.
 
     eager_data_ops : bool, default=True
-        Eagerly perform checks on the DataOps when they are created, and
-        compute previews if preview data is available.
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
+        environment variable.
 
     See Also
     --------
@@ -363,6 +377,24 @@ def config_context(
         high cardinality columns in their dataset.
 
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
+        environment variable.
+
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
         environment variable.
 
     Yields
