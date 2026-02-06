@@ -320,11 +320,54 @@ def _find_dataframe(data_op, func_name):
 def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=True):
     """Check a DataOp and evaluate the preview.
 
-    We must decorate all the functions that create DataOps rather than do
-    it in ``__init__`` to make tracebacks as short as possible: the second
+    This decorator must be applied to all functions that create a DataOp, so
+    that they are eagerly checked (e.g. for duplicate names) and their previews
+    are eagerly computed (to make them available and trigger possible errors)
+    as soon as they are defined.
+
+    However, eager checks and preview computation may be disabled in some
+    situations (e.g. the config option eager_data_ops has the value False).
+
+    We decorate all the functions that create DataOps rather than perform
+    checks in ``__init__`` to make tracebacks as short as possible: the second
     frame in the stack trace is the one in user code that created the
     problematic DataOp. If the check was done in ``__init__`` it might be
     buried several calls deep, making it harder to understand those errors.
+    For the same reason (shortening stack traces), exceptions are raised
+    directly from inside this function (not from functions it calls) -- the
+    checks are inlined in this function, not factored into other functions.
+
+    The decorator can be used bare, as:
+
+    @checked_data_op_constructor
+    def make_a_data_op(a, b): ...
+
+    Or by passing the parameters described below
+
+    @checked_data_op_constructor(allow_skipping=False)
+    def make_a_data_op(a, b): ...
+
+    Parameters
+    ----------
+    f : function
+        The function to decorate. Passed implicitly when using the @decorator
+        syntax.
+
+    allow_skipping : bool, default = True
+        Whether checks can be skipped if the configuration sets
+        eager_data_ops=False. When allow_skipping is True, we look at the
+        configuration and if eager_data_ops is False, checks are not performed
+        (this can speed up the definition of complex DataOps). When
+        allow_skipping is False, checks are always performed regardless of the
+        configuration. This is used in functions that actually use the data op
+        and therefore must check it, such as eval() -- checks can be held off
+        while we are building it up, but we always ensure some invariants are
+        respected before attempting to evaluate it.
+
+    eval_preview : bool, default = True
+        Whether to attempt computing the preview. When this function is skipped
+        due to the configuration, both the checks and the preview are skipped
+        (regardless of eval_preview).
     """
     if f is None:
 
@@ -341,10 +384,10 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
 
         data_op = f(*args, **kwargs)
 
-        if not data_op._skrub_impl.checked:
-            if allow_skipping and not _config.get_config().get("eager_data_ops", True):
-                return data_op
+        if allow_skipping and not _config.get_config().get("eager_data_ops", True):
+            return data_op
 
+        if not data_op._skrub_impl.checked:
             try:
                 func_name = data_op._skrub_impl.pretty_repr()
             except Exception:
