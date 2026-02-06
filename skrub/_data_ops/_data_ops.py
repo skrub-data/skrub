@@ -252,6 +252,7 @@ class DataOpImpl:
             if "name" not in self.__dict__:
                 self.name = None
             self.description = None
+            self.checked = False
 
         cls.__init__ = __init__
 
@@ -263,6 +264,7 @@ class DataOpImpl:
         new.is_y = self.is_y
         new.name = self.name
         new.description = self.description
+        new.checked = False
         return new
 
     def __copy__(self):
@@ -339,21 +341,22 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
 
         data_op = f(*args, **kwargs)
 
-        if allow_skipping and not _config.get_config().get("eager_data_ops", True):
-            return data_op
+        if not data_op._skrub_impl.checked:
+            if allow_skipping and not _config.get_config().get("eager_data_ops", True):
+                return data_op
 
-        try:
-            func_name = data_op._skrub_impl.pretty_repr()
-        except Exception:
-            func_name = f"{f.__name__}()"
+            try:
+                func_name = data_op._skrub_impl.pretty_repr()
+            except Exception:
+                func_name = f"{f.__name__}()"
 
-        conflicts = find_conflicts(data_op)
-        if conflicts is not None:
-            raise ValueError(conflicts["message"])
-        if (found_df := _find_dataframe(data_op, func_name)) is not None:
-            raise TypeError(found_df["message"])
-        check_choices_before_Xy(data_op)
-
+            conflicts = find_conflicts(data_op)
+            if conflicts is not None:
+                raise ValueError(conflicts["message"])
+            if (found_df := _find_dataframe(data_op, func_name)) is not None:
+                raise TypeError(found_df["message"])
+            check_choices_before_Xy(data_op)
+            data_op._skrub_impl.checked = True
         if eval_preview:
             try:
                 evaluate(data_op, mode="preview", environment=None)
