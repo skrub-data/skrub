@@ -3,7 +3,8 @@ version: 2.1
 jobs:
   python3:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
+    resource_class: "medium+" # 6gb memory so we don't get OOM killed #1855
     environment:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv
@@ -24,7 +25,7 @@ jobs:
           path: ~/log.txt
           destination: log.txt
       # Persists generated documentation so that it can be attached and deployed
-      # in the 'deploy' step.
+      # in the 'run' step.
       - persist_to_workspace:
           root: doc/_build/html
           paths: .
@@ -33,9 +34,9 @@ jobs:
           paths:
             - /home/circleci/skrub_data
 
-  deploy:
+  run:
     docker:
-      - image: cimg/python:3.9
+      - image: cimg/python:3.10
     steps:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh
@@ -44,17 +45,17 @@ jobs:
       - attach_workspace:
           at: doc/_build/html
       - run: ls -ltrh doc/_build/html
-      - deploy:
+      - run:
           command: |
             if [[ "${CIRCLE_BRANCH}" =~ ^main$|^[0-9]+\.[0-9]+\.X$ ]]; then
               bash build_tools/circle/push_doc.sh doc/_build/html
             fi
 
 workflows:
-  version: 2
+  version: 2.1
   build-doc-and-deploy:
     jobs:
       - python3
-      - deploy:
+      - run:
           requires:
             - python3

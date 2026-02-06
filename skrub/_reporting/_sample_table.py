@@ -45,7 +45,7 @@ Table Part
     first few rows), "ellipsis" (optional, the row of " ⋮ " indicating that the
     table is truncated), "bottom_slice" (optional, tbody containing the last
     few rows).
-  elem: the name of a html element: "thead" (table head) or "tbody" (table body)
+  elem: the name of an HTML element: "thead" (table head) or "tbody" (table body)
   rows: list of table rows
 
 "rows" is a python list where each item is itself a list, representing a table
@@ -56,7 +56,7 @@ Table Cell
   i, j: the position of the cell in the table
   column_idx: the corresponding column in the dataframe, if any
   value: the content of the cell (the corresponding value in the dataframe)
-  elem: the name of a html element, "th" (table header) or "td" (table data cell)
+  elem: the name of an HTML element, "th" (table header) or "td" (table data cell)
   role:
     a semantic description of this cell's content, such as "index-level-name",
     "dataframe-data" or "padding"

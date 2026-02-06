@@ -5,13 +5,11 @@ The Joiner provides fuzzy joining as a scikit-learn transformer.
 from functools import partial
 
 import numpy as np
-import sklearn
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.compose import make_column_transformer
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer, StandardScaler
-from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -39,17 +37,6 @@ _MATCHERS = {
     "no_rescaling": _matching.Matching,
 }
 DEFAULT_REF_DIST = "random_pairs"
-
-
-def _compat_df(df):
-    # In scikit-learn versions older than 1.4, the ColumnTransformer fails on
-    # polars dataframes. Here it is only applied as an internal step on the
-    # joining columns, and we get the output as a numpy array or sparse matrix.
-    # Therefore on old scikit-learn versions we convert the joining columns to
-    # pandas before vectorizing them.
-    if parse_version(sklearn.__version__) < parse_version("1.4"):
-        return sbd.to_pandas(df)
-    return df
 
 
 def _make_vectorizer(table, string_encoder, rescale):
@@ -314,7 +301,7 @@ class Joiner(TransformerMixin, BaseEstimator):
             rescale=self.ref_dist != "no_rescaling",
         )
         aux = self.vectorizer_.fit_transform(
-            _compat_df(s.select(self._aux_table, s.cols(*self._aux_key)))
+            s.select(self._aux_table, s.cols(*self._aux_key))
         )
         self._matching.fit(aux)
         result = self._transform(X, y)
@@ -361,7 +348,7 @@ class Joiner(TransformerMixin, BaseEstimator):
 
     def _transform(self, X, y=None):
         main = sbd.set_column_names(s.select(X, s.cols(*self._main_key)), self._aux_key)
-        main = self.vectorizer_.transform(_compat_df(main))
+        main = self.vectorizer_.transform(main)
         match_result = self._matching.match(main, self.max_dist_)
         matching_col = match_result["index"].copy()
         matching_col[~match_result["match_accepted"]] = -1

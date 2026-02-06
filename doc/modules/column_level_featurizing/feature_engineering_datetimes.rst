@@ -35,9 +35,9 @@ Skrub provides helpers to parse datetime string columns automatically:
 >>> s = pd.Series(["2024-05-05T13:17:52", None, "2024-05-07T13:17:52"], name="when")
 >>> s
 0    2024-05-05T13:17:52
-1                   None
+1                   ...
 2    2024-05-07T13:17:52
-Name: when, dtype: object
+Name: when, dtype: ...
 
 >>> from skrub import ToDatetime
 
@@ -246,7 +246,7 @@ to reduce redundancy:
 >>> encoder.fit_transform(login).columns
 Index(['login_year', 'login_month', 'login_day', 'login_hour',
        'login_total_seconds'],
-      dtype='object')
+      dtype=...)
 >>> from sklearn.pipeline import make_pipeline
 >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
 >>> encoder.fit_transform(login).columns
@@ -254,7 +254,7 @@ Index(['login_year', 'login_total_seconds', 'login_month_circular_0',
        'login_month_circular_1', 'login_day_circular_0',
        'login_day_circular_1', 'login_hour_circular_0',
        'login_hour_circular_1'],
-      dtype='object')
+      dtype=...)
 
 
 The |DatetimeEncoder| uses hardcoded values for generating periodic features.

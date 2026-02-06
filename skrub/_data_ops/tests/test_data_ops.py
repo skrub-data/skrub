@@ -1,4 +1,5 @@
 import copy
+import sys
 import warnings
 
 import numpy as np
@@ -10,6 +11,7 @@ from sklearn.datasets import make_classification, make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.model_selection import train_test_split
+from sklearn.utils import check_random_state
 
 import skrub
 from skrub import ApplyToCols
@@ -288,10 +290,142 @@ def test_predictor_output_formatting():
     assert isinstance(out, np.ndarray)
 
 
-def test_get_learner():
-    p = (skrub.var("a", 0) + skrub.var("b", 1)).skb.make_learner()
-    assert p.fit_transform({"a": 10, "b": 2}) == 12
-    assert p.transform({"a": 100, "b": 30}) == 130
+def test_make_learner():
+    learner = (skrub.var("a", 0) + skrub.var("b", 1)).skb.make_learner()
+    assert learner.fit_transform({"a": 10, "b": 2}) == 12
+    assert learner.transform({"a": 100, "b": 30}) == 130
+
+
+def test_make_learner_choose_options():
+    dop = skrub.as_data_op(
+        (skrub.choose_from(("a", "b", "c")), skrub.choose_int(10, 15, default=11))
+    )
+    default = dop.skb.make_learner()
+    assert default.fit_transform({}) == ("a", 11)
+
+    def params(learner):
+        return {k: v for k, v in learner.get_params().items() if k != "data_op"}
+
+    assert params(default) == {"data_op__0": None, "data_op__1": None}
+    for choose in ["random", "random ( ) "]:
+        all_cf, all_ci = set(), set()
+        for _ in range(200):
+            random = dop.skb.make_learner(choose=choose)
+            cf, ci = random.fit_transform({})
+            all_cf.add(cf)
+            all_ci.add(ci)
+        assert all_cf == {"a", "b", "c"}
+        assert all_ci == set(range(10, 16))
+    # testing numpy RandomState and random state with seed 1
+    # also testing random spacing in the seed number
+    for choose in [check_random_state(1), "random (1 ) "]:
+        seeded = dop.skb.make_learner(choose=choose)
+        assert seeded.fit_transform({}) == ("b", 15)
+        assert params(seeded) == {"data_op__0": 1, "data_op__1": 15}
+
+    with pytest.raises(ValueError, match=r"`choose` should be"):
+        dop.skb.make_learner(choose="randomized")
+
+
+def test_make_learner_choices_before_X():
+    # check that choices that are children of X (same for y) are forced to take
+    # their default value
+    msg = "The following choices are used in the construction of X or y.*choice_clamped"
+    with pytest.warns(UserWarning, match=msg):
+        X = (
+            skrub.as_data_op(skrub.choose_from(("a", "b", "c"), name="choice_clamped"))
+            + "x"
+        ).skb.mark_as_X()
+    with pytest.warns(UserWarning, match=msg):
+        out = X + skrub.choose_from(("a", "b", "c"), name="choice_free")
+    all_results = set()
+    with pytest.warns(UserWarning, match=msg):
+        for _ in range(30):
+            all_results.add(out.skb.make_learner(choose="random").fit_transform({}))
+    assert all_results == {"axa", "axb", "axc"}
+
+
+def test_make_learner_choose_optuna_trial():
+    optuna = pytest.importorskip("optuna")
+
+    def params(learner):
+        return {k: v for k, v in learner.get_params().items() if k != "data_op"}
+
+    dop = skrub.as_data_op(
+        (skrub.choose_from(("a", "b", "c")), skrub.choose_int(10, 15, default=11))
+    )
+
+    sampler = optuna.samplers.TPESampler(seed=0)
+    study = optuna.create_study(sampler=sampler)
+
+    # The choices are returned by the Trial returned by study.ask(). Those are
+    # deterministic as the sampler is seeded.
+    learner = dop.skb.make_learner(choose=study.ask())
+    assert learner.fit_transform({}) == ("b", 13)
+    assert params(learner) == {"data_op__0": 1, "data_op__1": 13}
+
+    learner = dop.skb.make_learner(choose=study.ask())
+    assert learner.fit_transform({}) == ("b", 15)
+    assert params(learner) == {"data_op__0": 1, "data_op__1": 15}
+
+    learner = dop.skb.make_learner(choose=study.ask())
+    assert learner.fit_transform({}) == ("a", 13)
+    assert params(learner) == {"data_op__0": 0, "data_op__1": 13}
+
+
+@pytest.mark.parametrize(
+    ("use_choose_from", "outcome_names"), [(False, None), (True, False), (True, True)]
+)
+def test_optuna_optimize_learner(use_choose_from, outcome_names):
+    optuna = pytest.importorskip("optuna")
+
+    if use_choose_from:
+        if outcome_names:
+            choice = skrub.choose_from(
+                {"minus one": -1.0, "zero": 0.0, "two": 2.0, "four": 4.0}, name="x"
+            )
+        else:
+            choice = skrub.choose_from((-1.0, 0.0, 2.0, 4.0), name="x")
+        n_trials = 10
+    else:
+        choice = skrub.choose_float(-1.0, 7.0, name="x")
+        n_trials = 50
+    x = choice.as_data_op().skb.set_name("x_")
+    err = (x - 2) ** 2
+
+    def objective(trial):
+        learner = err.skb.make_learner(choose=trial)
+        return learner.fit_transform({})
+
+    sampler = optuna.samplers.TPESampler(seed=0)
+    study = optuna.create_study(direction="minimize", sampler=sampler)
+    study.optimize(objective, n_trials=n_trials)
+    if use_choose_from:
+        if outcome_names:
+            assert study.best_params == {"0:x": "2:two"}
+        else:
+            assert study.best_params == {"0:x": "2:2.0"}
+    else:
+        assert list(study.best_params.keys()) == ["0:x"]
+        assert study.best_params["0:x"] == pytest.approx(2.0, abs=0.01)
+
+    # test both set_params(**best_params) or make_learner(choose=best_trial)
+    learner_0 = err.skb.make_learner(choose=study.best_trial)
+    learner_1 = err.skb.make_learner()
+    learner_1.set_params(**study.best_params)
+    for learner in [learner_0, learner_1]:
+        assert learner.get_params()["data_op__0"] == pytest.approx(2.0, abs=0.01)
+        truncated = learner.truncated_after("x_")
+        assert truncated.fit_transform({}) == pytest.approx(2.0, abs=0.01)
+
+
+def test_is_optuna_trial(monkeypatch):
+    # verify we check if an object is an optuna trial without importing optuna.
+    monkeypatch.delitem(sys.modules, "optuna", raising=False)
+    from skrub._data_ops._skrub_namespace import _is_optuna_trial
+
+    assert not _is_optuna_trial(0)
+    assert "optuna" not in sys.modules
 
 
 @pytest.mark.parametrize("how", ["deepcopy", "sklearn", "skb"])

@@ -60,7 +60,7 @@ def summarize_dataframe(
         Maximum number of rows from the end of the dataframe to show in the
         sample table.
 
-    verbose : int, default = 1
+    verbose : int, default=1
         Whether to print progress information while the report is being generated.
 
         * verbose = 1 prints how many columns have been processed so far.
@@ -132,7 +132,11 @@ def summarize_dataframe(
 
 
 def _add_associations(df, dataframe_summary):
-    df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
+    df = sbd.sample(
+        df,
+        n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE),
+        seed=_config.get_config()["subsampling_seed"],
+    )
     associations = _column_associations.column_associations(df)
 
     # get only the top _N_TOP_ASSOCIATIONS

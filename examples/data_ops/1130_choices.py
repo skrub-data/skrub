@@ -64,7 +64,7 @@ labels = data["is_toxic"]
 # We mark the ``texts`` column as the input variable and the ``labels`` column as
 # the target variable.
 #
-# See `the previous example <10_data_ops_intro.html>`_
+# See `the previous example <1110_data_ops_intro.html>`_
 # for a more detailed explanation
 # of :func:`skrub.X` and :func:`skrub.y`.
 #
@@ -238,8 +238,8 @@ encoder = skrub.choose_from(
 X.skb.apply(encoder, cols="text")
 
 # %%
-# In a similar vein, we might want to choose between a HGB classifier and a Ridge
-# classifier, each with its own set of hyperparameters.
+# In a similar vein, we might want to choose between a HistGradientBoostingClassifier
+# and a Ridge classifier, each with its own set of hyperparameters.
 # We can then define a choice for the classifier and a choice for the
 # hyperparameters of each classifier.
 

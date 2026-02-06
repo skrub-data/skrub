@@ -62,5 +62,5 @@ or in a different environment:
 >>> loaded_learner.fit({"orders": new_orders_df})
 SkrubLearner(data_op=<Apply TableVectorizer>)
 
-See :ref:`sphx_glr_auto_examples_data_ops_0150_use_case.py` for an example of how
+See :ref:`sphx_glr_auto_examples_data_ops_1150_use_case.py` for an example of how
 to use the learner in a microservice.

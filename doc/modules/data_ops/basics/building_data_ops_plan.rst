@@ -90,5 +90,5 @@ By working only on Data Ops we ensure that all the operations done on the data
 are added correctly to the computational graph, which then allows the resulting
 learner to execute all steps as intended.
 
-See :ref:`sphx_glr_auto_examples_data_ops_0110_data_ops_intro.py` for an introductory
+See :ref:`sphx_glr_auto_examples_data_ops_1110_data_ops_intro.py` for an introductory
 example on how to use skrub DataOps on a single dataframe.

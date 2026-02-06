@@ -30,6 +30,7 @@ def test_config_context():
     assert get_config() == {
         "use_table_report": False,
         "use_table_report_data_ops": True,
+        "table_report_verbosity": 1,
         "max_plot_columns": 30,
         "max_association_columns": 30,
         "subsampling_seed": 0,
@@ -53,9 +54,6 @@ def test_use_table_report_data_ops(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_use_table_report(simple_df):
-    config = get_config()
-    # Needed to reset to default after test
-    set_config(**config)
     assert not _use_table_report(simple_df)
     with config_context(use_table_report=True):
         assert _use_table_report(simple_df)
@@ -184,3 +182,9 @@ def test_parsing(monkeypatch):
         with monkeypatch.context() as m:
             m.setenv("MY_VAR", "hello")
             _parse_env_bool("MY_VAR", default=False)
+
+
+def test_wrong_verbosity():
+    with pytest.raises(ValueError, match=".*table_report_verbosity.*"):
+        with config_context(table_report_verbosity=-1):
+            pass
