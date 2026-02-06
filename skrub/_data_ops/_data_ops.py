@@ -42,10 +42,10 @@ import warnings
 import numpy as np
 from sklearn.base import BaseEstimator
 
+from .. import _config
 from .. import _dataframe as sbd
 from .. import selectors as s
 from .._check_input import cast_column_names_to_strings
-from .._config import get_config
 from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, short_repr
 from .._wrap_transformer import wrap_transformer
@@ -342,7 +342,7 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
         data_op = f(*args, **kwargs)
 
         if not data_op._skrub_impl.checked:
-            if allow_skipping and not get_config().get("eager_data_ops", True):
+            if allow_skipping and not _config.get_config().get("eager_data_ops", True):
                 return data_op
 
             try:
