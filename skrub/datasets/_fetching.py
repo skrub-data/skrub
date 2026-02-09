@@ -290,7 +290,7 @@ def fetch_toxicity(data_home=None):
         - ``metadata`` : a dictionary containing the name, description, source and
           target
     """
-    return load_simple_dataset("toxicity", data_home)
+    return load_simple_dataset("toxicity_shuffled", data_home)
 
 
 def fetch_videogame_sales(data_home=None):
