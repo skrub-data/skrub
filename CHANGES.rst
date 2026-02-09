@@ -19,10 +19,15 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
+- The repository wheel has been made smaller by removing some material that was
+  not necessary for using the library. Benchmarks are now available in a separate
+  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
+  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
+
 
 Bugfixes
 --------
-- Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.7.1
 =============
