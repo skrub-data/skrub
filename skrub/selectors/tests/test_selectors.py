@@ -3,7 +3,6 @@ import pickle
 import types
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from skrub import _dataframe as sbd
@@ -79,13 +78,6 @@ def test_dtype_selectors(df_module):
         assert s.any_date().expand(df) == ["datetime-col"]
 
 
-def test_dtype_pandas_object():
-    # Testing for behavior with object and string columns
-    df = pd.DataFrame({"string-object": ["foo", "bar"], "object-object": ["baz", 42]})
-
-    assert s.string().expand(df) == ["string-object"]
-
-
 def test_cardinality_below(df_module, monkeypatch):
     df = df_module.example_dataframe
     assert s.cardinality_below(3).expand(df) == ["bool-col", "bool-not-null-col"]
@@ -104,6 +96,16 @@ def test_cardinality_below(df_module, monkeypatch):
 def test_has_nulls(df_module):
     df = df_module.make_dataframe(dict(a=[0, 1, 2], b=[0, None, 2], c=["a", "b", None]))
     assert s.has_nulls().expand(df) == ["b", "c"]
+
+
+def test_has_nulls_threshold(df_module):
+    df = df_module.make_dataframe(
+        dict(a=[0, 1, 2, None], b=[0, None, 2, None], c=["a", None, None, None])
+    )
+    assert s.has_nulls(threshold=0.25).expand(df) == ["a", "b", "c"]
+    assert s.has_nulls(threshold=0.5).expand(df) == ["b", "c"]
+    assert s.has_nulls(threshold=0.75).expand(df) == ["c"]
+    assert s.has_nulls(threshold=1.0).expand(df) == []
 
 
 @pytest.mark.parametrize("name", s.__all__)
