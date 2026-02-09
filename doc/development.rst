@@ -16,3 +16,4 @@ facilitate learning on databases.
     CONTRIBUTING
     tutorial_example
     RELEASE_PROCESS
+    benchmark_indications

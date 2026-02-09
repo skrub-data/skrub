@@ -50,6 +50,7 @@ from sphinx_gallery.notebook import add_code_cell, add_markdown_cell
 shutil.copyfile("../RELEASE_PROCESS.rst", "RELEASE_PROCESS.rst")
 shutil.copyfile("../CHANGES.rst", "CHANGES.rst")
 shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
+shutil.copyfile("../benchmarks/benchmark_indications.rst", "benchmark_indications.rst")
 
 # -- General configuration ------------------------------------------------
 
