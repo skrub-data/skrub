@@ -32,8 +32,8 @@ This is by design, as skrub does not aim to replace tools such as `Pandas
 
 To make things simpler, skrub uses defaults that are chosen empirically to
 give good machine learning, even though these are sometimes heuristic, as
-in the :class:`TableVectorizer`.
-
+in the :class:`TableVectorizer`. We keep the benchmarks used to choose the defaults
+in a separate `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
 
 Roadmap
 =======
