@@ -9,9 +9,6 @@ Release history
 Release 0.7.2
 =============
 
-New features
-------------
-
 Changes
 -------
 - The :class:`StringEncoder` now exposes the ``vocabulary`` parameter from the parent
