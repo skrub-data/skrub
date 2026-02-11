@@ -7,6 +7,7 @@
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
+.. |ToCategorical| replace:: :class:`~skrub.ToCategorical`
 
 .. _user_guide_table_vectorizer:
 
@@ -104,3 +105,36 @@ of control over which operations are applied to which columns.
 The |TableVectorizer| is used in :ref:`example_encodings`, while the
 docstring of the class provides more details on the parameters and usage, as well
 as various examples.
+
+Numeric strings and categorical encoding
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, columns that contain only numeric strings (e.g. ``["1", "2", "3"]``)
+are parsed as numeric features by the |TableVectorizer|. The recommended way to
+treat such values as categorical (e.g. IDs or codes) is to convert the column
+to pandas' ``category`` dtype using |ToCategorical| with |ApplyToCols| before
+vectorizing, rather than relying on keeping them as strings.
+
+Default behavior: numeric strings are parsed as a single numeric column (feature
+names are not one-hot encoded):
+
+>>> import pandas as pd
+>>> from skrub import TableVectorizer
+>>> df = pd.DataFrame({"c": ["1", "2", "3"]})
+>>> tv = TableVectorizer().fit(df)
+>>> list(map(str, sorted(tv.get_feature_names_out())))
+['c']
+
+With |ToCategorical| and |ApplyToCols|, the column is treated as categorical
+and produces one-hot encoded feature names:
+
+>>> from skrub import ApplyToCols, ToCategorical
+>>> from sklearn.pipeline import make_pipeline
+>>> pipe = make_pipeline(
+...     ApplyToCols(ToCategorical(), cols=["c"]),
+...     TableVectorizer(),
+... )
+>>> pipe.fit(df)  # doctest: +ELLIPSIS
+Pipeline(steps=[('applytocols', ...), ('tablevectorizer', ...)])
+>>> list(map(str, sorted(pipe.named_steps["tablevectorizer"].get_feature_names_out())))
+['c_1', 'c_2', 'c_3']
