@@ -147,6 +147,59 @@ class OptunaParamSearch(_BaseParamSearch):
     Attributes of interest are ``best_learner_``, ``best_score_``,
     ``results_``, ``detailed_results_``, and ``study_`` (the Optuna study used
     to find hyperparameters).
+
+    Parameters
+    ----------
+    data_op : DataOp
+        The DataOp to evaluate with hyperparameter tuning.
+
+    n_iter : int, default=10
+        Number of parameter settings that are sampled.
+
+    scoring : str, callable, list, tuple or dict, default=None
+        Strategy to evaluate the performance of the cross-validated model on
+        the test set.
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel.
+
+    refit : bool or str, default=True
+        Refit an estimator using the best found parameters on the whole
+        dataset.
+
+    cv : int, cross-validation generator or iterable, default=None
+        Determines the cross-validation splitting strategy.
+
+    verbose : int, default=0
+        Controls the verbosity.
+
+    pre_dispatch : str, default="2*n_jobs"
+        Controls the number of jobs that get dispatched during parallel
+        execution.
+
+    random_state : int, RandomState instance or None, default=None
+        Pseudo random number generator state used for random uniform sampling
+        from lists of possible values instead of scipy.stats distributions.
+
+    error_score : 'raise' or numeric, default=np.nan
+        Value to assign to the score if an error occurs in estimator fitting.
+
+    return_train_score : bool, default=False
+        If ``False``, the ``cv_results_`` attribute will not include training
+        scores.
+
+    storage : str or None, default=None
+        Database URL for Optuna storage. If None, a temporary journal file
+        storage is used.
+
+    study_name : str or None, default=None
+        Name of the Optuna study. If None, a unique name is generated.
+
+    sampler : optuna.samplers.BaseSampler or None, default=None
+        Optuna sampler to use. If None, TPESampler is used.
+
+    timeout : float or None, default=None
+        Stop study after the given number of seconds.
     """
 
     def __init__(
@@ -168,6 +221,7 @@ class OptunaParamSearch(_BaseParamSearch):
         sampler=None,
         timeout=None,
     ):
+
         self.data_op = data_op
         self.n_iter = n_iter
         self.scoring = scoring

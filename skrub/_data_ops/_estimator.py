@@ -97,9 +97,15 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
     This class is not meant to be instantiated manually, ``SkrubLearner``
     objects are created by calling :meth:`DataOp.skb.make_learner()` on a
     DataOp.
+
+    Parameters
+    ----------
+    data_op : DataOp
+        The DataOp to evaluate.
     """
 
     def __init__(self, data_op):
+
         self.data_op = data_op
 
     def __skrub_to_Xy_pipeline__(self, environment):
@@ -942,9 +948,19 @@ class ParamSearch(_BaseParamSearch):
     This class is not meant to be instantiated manually, ``ParamSearch``
     objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
     :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
+
+    Parameters
+    ----------
+    data_op : DataOp
+        The DataOp to evaluate with hyperparameter tuning.
+
+    search : BaseSearchCV
+        The scikit-learn search object (GridSearchCV or RandomizedSearchCV)
+        to use for hyperparameter tuning.
     """
 
     def __init__(self, data_op, search):
+
         self.data_op = data_op
         self.search = search
 

@@ -197,9 +197,52 @@ class DropCols(TransformerMixin, BaseEstimator):
 
 
 class Drop(SingleColumnTransformer):
+    """Drop a column by returning an empty list.
+
+    This transformer is used internally to drop columns during processing.
+    It returns an empty list for both fit_transform and transform operations,
+    effectively removing the column from the output.
+
+    Examples
+    --------
+    >>> from skrub import Drop
+    >>> drop = Drop()
+    >>> drop.fit_transform([1, 2, 3])
+    []
+    >>> drop.transform([1, 2, 3])
+    []
+    """
+
     def fit_transform(self, column, y=None):
+        """Fit to data, then transform it.
+
+        Parameters
+        ----------
+        column : array-like
+            The column to drop.
+
+        y : None
+            Unused.
+
+        Returns
+        -------
+        list
+            An empty list.
+        """
         self.all_outputs_ = []
         return []
 
     def transform(self, column):
+        """Transform the column by dropping it.
+
+        Parameters
+        ----------
+        column : array-like
+            The column to drop.
+
+        Returns
+        -------
+        list
+            An empty list.
+        """
         return []
