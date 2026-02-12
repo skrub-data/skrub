@@ -8,7 +8,8 @@ Skrub is a Python library that facilitates machine learning with tabular data
 
 Use the sections below to navigate the guide. For runnable code, see the
 :doc:`Example gallery <auto_examples/index>`. For class and function details, see
-the :ref:`API Reference <api_ref>`.
+the :ref:`API Reference <api_ref>`. For common use cases and how to address them,
+see the :ref:`How-to guides <how_to`.
 
 
 .. include:: includes/big_toc_css.rst
