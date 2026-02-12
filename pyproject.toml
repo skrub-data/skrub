@@ -179,7 +179,7 @@ pyparsing = "<3.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
-polars = ">=1.4,<1.5"
+polars = "==1.5.0"
 plotly = "*"
 optuna = "*"
 
