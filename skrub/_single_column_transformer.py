@@ -69,6 +69,28 @@ class SingleColumnTransformer(BaseEstimator):
 
     __single_column_transformer__ = True
 
+    def set_output(self, *, transform=None):
+        """
+        Default no-op implementation for set_output.
+
+        Skrub transformers already output dataframes of the correct type by
+        default so there is usually no need for set_output to do anything.
+
+        Subclasses are of course free to redefine set_output (e.g. by
+        inheriting from TransformerMixin before SingleColumnTransformer).
+
+        Parameters
+        ----------
+        transform : str or None, default=None
+            ignored
+
+        Returns
+        -------
+        SingleColumnTransformer
+            Returns self.
+        """
+        return self
+
     def fit(self, column, y=None, **kwargs):
         """Fit the transformer.
 
