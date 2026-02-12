@@ -6,6 +6,7 @@ import pytest
 
 from skrub import _dataframe as sbd
 from skrub import _join_utils
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
 @pytest.mark.parametrize(
@@ -173,6 +174,7 @@ def test_left_join_wrong_right_type(df_module, left):
         )
 
 
+@skip_polars_installed_without_pyarrow
 def test_left_join_types_not_equal(df_module, left):
     try:
         import polars as pl
@@ -187,4 +189,11 @@ def test_left_join_types_not_equal(df_module, left):
     ):
         _join_utils.left_join(
             left, right=right, left_on="left_key", right_on="right_key"
+        )
+
+
+def test_error_do_left_join():
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
+        _join_utils._do_left_join(
+            np.array([1]), right=None, left_on=None, right_on=None
         )

@@ -35,7 +35,18 @@
                 {% if not column.value_is_constant %}
                 {% if column.n_unique %}
                 <dt>Unique values</dt>
-                <dd>{{ column.n_unique | format_number }} ({{ column.unique_proportion | format_percent }})</dd>
+                <dd>
+                    {{ column.n_unique | format_number }} ({{ column.unique_proportion | format_percent }})
+                    {% if column.is_high_cardinality %}
+                    <span class="toggletip-wrapper">
+                        <div class="toggletip" data-manager="Toggletip">
+                        <button type="button"><span>i</span></button>
+                        <div class="toggletip-info box-shadow">
+                            This column has a high cardinality (> {{config["cardinality_threshold"]}}).
+                        </div>
+                    </span>
+                    {% endif %}
+                </dd>
                 {% endif %}
 
                 {% if column["duration_unit"] %}
@@ -44,12 +55,15 @@
                 {% set unit = "" %}
                 {% endif %}
 
-                {% if "mean" in column %}
+                {% if "standard_deviation" in column %}
                 <dt>Mean ± Std</dt>
                 <dd>{{ column["mean"] | format_number }} ±
                     {{ column["standard_deviation"] | format_number }}
                     {{ unit }}
                 </dd>
+                {% elif "mean" in column %}
+                <dt>Mean</dt>
+                <dd>{{ column["mean"] | format_number }} {{ unit }}</dd>
                 {% endif %}
                 {% if column.quantiles %}
                 <dt>Median ± IQR</dt>
@@ -88,7 +102,7 @@
             <div class="copybutton-grid">
                 <div class="box">
                     <pre id="{{ val_id }}"
-                         data-copy-text="{{ column.constant_value.__repr__() }}">{{ column.constant_value }}</pre>
+                        data-copy-text="{{ column.constant_value.__repr__() }}">{{ column.constant_value }}</pre>
                     {{ buttons.copybutton(val_id) }}
                 </div>
             </div>

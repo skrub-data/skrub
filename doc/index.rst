@@ -12,6 +12,6 @@
    documentation
    reference/index
    auto_examples/index
+   learning_materials
    CHANGES
    development
-   CONTRIBUTING

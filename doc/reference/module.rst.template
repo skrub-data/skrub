@@ -1,0 +1,46 @@
+:html_theme.sidebar_secondary.remove:
+
+.. _{{ module }}_ref:
+
+.. title:: {{ module }}
+
+{% if not module.startswith("skrub.") -%}
+{% set module = "skrub" %}
+.. currentmodule:: {{ module }}
+{%- else -%}
+.. automodule:: {{ module }}
+{%- endif -%}
+
+{% if module_info["description"] %}
+{{ module_info["description"] }}
+{% endif %}
+
+{% if module_info["title"] %}
+{{ module_info["title"] }}
+{{ "-" * module_info["title"]|length }}
+{% endif %}
+
+{% for section in module_info["sections"] %}
+{% if section["title"] and module_hook %}
+.. _{{ module_hook }}_ref-{{ section["title"]|lower|replace(" ", "-") }}:
+{% endif %}
+
+{% if section["description"] %}
+{{ section["description"] }}
+{% endif %}
+
+{% if section["template"] %}
+{% set template = section["template"] %}
+{% else %}
+{% set template = "base.rst" %}
+{% endif %}
+
+.. autosummary::
+  :nosignatures:
+  :toctree: generated/
+  :template: {{ template }}
+
+{% for obj in section["autosummary"] %}
+  {{ obj }}
+{%- endfor %}
+{% endfor %}

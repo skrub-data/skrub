@@ -5,14 +5,9 @@ import pandas as pd
 from sklearn.preprocessing import SplineTransformer
 from sklearn.utils.validation import check_is_fitted
 
-try:
-    import polars as pl
-except ImportError:
-    pass
-
 from . import _dataframe as sbd
 from ._dispatch import dispatch
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 from ._sklearn_compat import TransformerTags
 
 __all__ = ["DatetimeEncoder"]
@@ -29,14 +24,12 @@ _TIME_LEVELS = [
 ]
 
 _DEFAULT_ENCODING_PERIODS = {
-    "day_of_year": 366,
     "month": 12,
     "day": 30,
     "hour": 24,
     "weekday": 7,
 }
 _DEFAULT_ENCODING_SPLINES = {
-    "day_of_year": 12,
     "month": 12,
     "day": 4,
     "hour": 12,
@@ -46,7 +39,10 @@ _DEFAULT_ENCODING_SPLINES = {
 
 @dispatch
 def _is_date(col):
-    raise NotImplementedError()
+    # Avoid circular import
+    from ._dispatch import raise_dispatch_unregistered_type
+
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_is_date.specialize("pandas", argument_type="Column")
@@ -62,7 +58,10 @@ def _is_date_polars(col):
 
 @dispatch
 def _get_dt_feature(col, feature):
-    raise NotImplementedError()
+    # Avoid circular import
+    from ._dispatch import raise_dispatch_unregistered_type
+
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_get_dt_feature.specialize("pandas", argument_type="Column")
@@ -84,6 +83,8 @@ def _get_dt_feature_pandas(col, feature):
 
 @_get_dt_feature.specialize("polars", argument_type="Column")
 def _get_dt_feature_polars(col, feature):
+    import polars as pl
+
     if feature == "total_seconds":
         return (col.dt.timestamp(time_unit="ms") / 1000).cast(pl.Float32)
     if feature == "day_of_year":
@@ -96,17 +97,11 @@ class DatetimeEncoder(SingleColumnTransformer):
     """
     Extract temporal features such as month, day of the week, … from a datetime column.
 
-    All extracted features are provided as float32 columns.
-
-    No timezone conversion is performed: if the input column is timezone aware, the
-    extracted features will be in the column's timezone.
-
-    An input column that does not have a Date or Datetime dtype will be
-    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
-    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
-    only sends datetime columns to its ``datetime_encoder``. Therefore it is
-    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
-    ``datetime_encoder`` parameter.
+    The ``DatetimeEncoder`` converts datetime features to numerical features that
+    can be used by learners. It separates each datetime in its parts (year, month,
+    day, etc.), and adds new features based on the datetime (weekday, seconds
+    from epoch, day of year). Circular or spline-based periodic features may also
+    be included.
 
     Parameters
     ----------
@@ -150,6 +145,36 @@ class DatetimeEncoder(SingleColumnTransformer):
     ToDatetime :
         Convert strings to datetimes.
 
+    Notes
+    -----
+    All extracted features are provided as float32 columns.
+
+    No timezone conversion is performed: if the input column is timezone aware, the
+    extracted features will be in the column's timezone.
+
+    An input column that does not have a Date or Datetime dtype will be
+    rejected by raising a ``RejectColumn`` exception. See ``ToDatetime`` for
+    converting strings to proper datetimes. **Note:** the ``TableVectorizer``
+    only sends datetime columns to its ``datetime_encoder``. Therefore it is
+    always safe to use a ``DatetimeEncoder`` as the ``TableVectorizer``'s
+    ``datetime_encoder`` parameter.
+
+    The ``DatetimeEncoder`` uses hardcoded values for generating periodic features.
+    The period of each feature is:
+
+    - ``month``: 12 (month in year)
+    - ``day``: 30 (day in month)
+    - ``hour``: 24 (hour in day)
+    - ``weekday``: 7 (day in week)
+
+    Additionally, we specify the number of splines for each feature to avoid
+    generating too many features:
+
+    - ``month``: 12
+    - ``day``: 4
+    - ``hour``: 12
+    - ``weekday``: 7
+
     Examples
     --------
     >>> import pandas as pd
@@ -191,7 +216,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     0       Monday = 1
     1              NaN
     2    Wednesday = 3
-    Name: login, dtype: object
+    Name: login, dtype: ...
     >>> login.dt.day_of_week
     0    0.0
     1    NaN
@@ -228,11 +253,11 @@ class DatetimeEncoder(SingleColumnTransformer):
     >>> s
     0    2024-04-14
     1    2024-05-15
-    Name: birthday, dtype: object
+    Name: birthday, dtype: ...
     >>> DatetimeEncoder().fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
+    skrub._single_column_transformer.RejectColumn: Column 'birthday' does not have Date or Datetime dtype.
 
     :class:`ToDatetime`: can be used for converting strings to datetimes.
 
@@ -304,8 +329,9 @@ class DatetimeEncoder(SingleColumnTransformer):
     2      2024.0  ...              -0.965926
 
     Added features can be explored using ``DatetimeEncoder.all_outputs_``:
+
     >>> encoder[-1].all_outputs_
-        ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
+    ['login_year', 'login_total_seconds', 'login_month_circular_0', 'login_month_circular_1',
         'login_day_circular_0', 'login_day_circular_1', 'login_hour_circular_0', 'login_hour_circular_1']
     """  # noqa: E501
 
@@ -364,11 +390,9 @@ class DatetimeEncoder(SingleColumnTransformer):
         # Adding transformers for periodic encoding
         self._periodic_encoders = {}
         if self.periodic_encoding is not None:
-            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[1 : idx_level + 1]
+            encoding_levels = list(_DEFAULT_ENCODING_PERIODS.keys())[0:idx_level]
             if self.add_weekday:
                 encoding_levels += ["weekday"]
-            if self.add_day_of_year:
-                encoding_levels = encoding_levels + ["day_of_year"]
             for enc_feature in encoding_levels:
                 if self.periodic_encoding == "circular":
                     self._periodic_encoders[enc_feature] = _CircularEncoder(
@@ -410,7 +434,7 @@ class DatetimeEncoder(SingleColumnTransformer):
         transformed : DataFrame
             The extracted features.
         """
-        check_is_fitted(self, "extracted_features_")
+        check_is_fitted(self, "all_outputs_")
         name = sbd.name(column)
 
         # Checking again which values are null if calling only transform
@@ -434,7 +458,9 @@ class DatetimeEncoder(SingleColumnTransformer):
 
         # Setting the index back to that of the input column (pandas shenanigans)
         X_out = sbd.copy_index(column, sbd.make_dataframe_like(column, all_extracted))
-        X_out = sbd.concat_horizontal(X_out, *new_features)
+        X_out = sbd.concat(X_out, *new_features, axis=1)
+
+        self.all_outputs_ = sbd.column_names(X_out)
 
         # Censoring all the null features
         X_out = sbd.where_row(X_out, not_nulls, null_mask)
@@ -468,8 +494,59 @@ class DatetimeEncoder(SingleColumnTransformer):
         tags.transformer_tags = TransformerTags(preserves_dtype=[])
         return tags
 
+    def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
 
-class _SplineEncoder(SingleColumnTransformer):
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return self.all_outputs_
+
+
+class _BasePeriodicEncoder(SingleColumnTransformer):
+    """Base class for periodic encoders."""
+
+    def __init__(self, period=24):
+        self.period = period
+
+    def _post_process(self, X, new_features):
+        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, new_features)))
+        return sbd.copy_index(X, result)
+
+    def get_feature_names_out(self, input_features=None):
+        """Return a list of features generated by the transformer.
+
+        Each feature has format ``{input_name}_{n_component}`` where ``input_name``
+        is the name of the input column, or a default name for the encoder, and
+        ``n_component`` is the idx of the specific feature.
+
+        Parameters
+        ----------
+        input_features : None
+            The input features. Ignored, only here for compatibility.
+
+        Returns
+        -------
+        list of str
+            The list of feature names.
+        """
+        check_is_fitted(self, "n_components_")
+        num_digits = len(str(self.n_components_ - 1))
+        return [
+            f"{self.input_name_}_{str(i).zfill(num_digits)}"
+            for i in range(self.n_components_)
+        ]
+
+
+class _SplineEncoder(_BasePeriodicEncoder):
     """Generate univariate B-spline bases for features.
 
     This encoder will apply the scikit-learn SplineTransformer to the given
@@ -491,9 +568,20 @@ class _SplineEncoder(SingleColumnTransformer):
     """
 
     def __init__(self, period=24, n_splines=None, degree=3):
-        self.period = period
+        super().__init__(period=period)
         self.n_splines = n_splines
         self.degree = degree
+
+    def _periodic_spline_transformer(self):
+        n_splines = self.period if self.n_splines is None else self.n_splines
+        n_knots = n_splines + 1  # periodic and include_bias is True
+        return SplineTransformer(
+            degree=self.degree,
+            n_knots=n_knots,
+            knots=np.linspace(0, self.period, n_knots).reshape(n_knots, 1),
+            extrapolation="periodic",
+            include_bias=True,
+        )
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -518,15 +606,16 @@ class _SplineEncoder(SingleColumnTransformer):
 
         X_out = self.transformer_.fit_transform(sbd.to_numpy(X).reshape(-1, 1))
 
-        self.is_fitted = True
         self.n_components_ = X_out.shape[1]
 
-        name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_spline_{idx}" for idx in range(self.n_components_)
-        ]
+        # TODO: this will raise an error if X is None, but it should not happen
+        # since this function is always called by the DatetimeEncoder
+        # If we decide to expose this class, we should handle the case where X is None
+        # See https://github.com/skrub-data/skrub/pull/1405
+        self.input_name_ = sbd.name(X) + "_spline"
+        self.all_outputs_ = self.get_feature_names_out()
 
-        return self._post_process(X, X_out)
+        return self._post_process(X, X_out.T)
 
     def transform(self, X):
         """Transform a column.
@@ -544,28 +633,10 @@ class _SplineEncoder(SingleColumnTransformer):
 
         X_out = self.transformer_.transform(sbd.to_numpy(X).reshape(-1, 1))
 
-        return self._post_process(X, X_out)
-
-    def _post_process(self, X, result):
-        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result.T)))
-        result = sbd.copy_index(X, result)
-
-        return result
-
-    def _periodic_spline_transformer(self):
-        if self.n_splines is None:
-            self.n_splines = self.period
-        n_knots = self.n_splines + 1  # periodic and include_bias is True
-        return SplineTransformer(
-            degree=self.degree,
-            n_knots=n_knots,
-            knots=np.linspace(0, self.period, n_knots).reshape(n_knots, 1),
-            extrapolation="periodic",
-            include_bias=True,
-        )
+        return self._post_process(X, X_out.T)
 
 
-class _CircularEncoder(SingleColumnTransformer):
+class _CircularEncoder(_BasePeriodicEncoder):
     """Generate trigonometric features for the given feature.
 
     This encoder will generate two features corresponding to the sine and cosine
@@ -576,9 +647,6 @@ class _CircularEncoder(SingleColumnTransformer):
     period : int, default = 24
         Period to be used as basis of the trigonometric function.
     """
-
-    def __init__(self, period=24):
-        self.period = period
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -606,10 +674,12 @@ class _CircularEncoder(SingleColumnTransformer):
 
         self.n_components_ = 2
 
-        name = sbd.name(X)
-        self.all_outputs_ = [
-            f"{name}_circular_{idx}" for idx in range(self.n_components_)
-        ]
+        # TODO: this will raise an error if X is None, but it should not happen
+        # since this function is always called by the DatetimeEncoder
+        # If we decide to expose this class, we should handle the case where X is None
+        # See https://github.com/skrub-data/skrub/pull/1405
+        self.input_name_ = sbd.name(X) + "_circular"
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, new_features)
 
@@ -633,9 +703,3 @@ class _CircularEncoder(SingleColumnTransformer):
         ]
 
         return self._post_process(X, new_features)
-
-    def _post_process(self, X, result):
-        result = sbd.make_dataframe_like(X, dict(zip(self.all_outputs_, result)))
-        result = sbd.copy_index(X, result)
-
-        return result

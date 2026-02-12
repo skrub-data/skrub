@@ -7,9 +7,9 @@ Vision: where is skrub heading?
 Vision statement
 ================
 
-The goal of skrub is to facilitate building and deploying
-machine-learning models on tables: `pandas <https://pandas.pydata.org>`__
-dataframe, SQL databases...
+The goal of skrub is to facilitate machine learning on tables:
+`pandas <https://pandas.pydata.org>`__
+and `polars <https://pola.rs>`__ dataframes, SQL databases...
 
 |
 
@@ -32,8 +32,8 @@ This is by design, as skrub does not aim to replace tools such as `Pandas
 
 To make things simpler, skrub uses defaults that are chosen empirically to
 give good machine learning, even though these are sometimes heuristic, as
-in the :class:`TableVectorizer`.
-
+in the :class:`TableVectorizer`. We keep the benchmarks used to choose the defaults
+in a separate `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
 
 Roadmap
 =======
@@ -46,26 +46,19 @@ We however decided to communicate on what we would like to do in the next
 
 From shorter term to longer term:
 
-- Make the :class:`TableVectorizer` fast, robust, and easy to tune (in
-  the sense of hyper-parameter tuning)
-
-- Add a Join-aggregator object, to do feature augmentation on one-to-many
-  correspondences
-
-- Support polars
-
-- Support time series (eg in the aggregations)
-
-- Interpolator join to join across multiple columns without exact
-  correspondences in the keys
-
-- Release (yes we are not planning to release very soon)
+- Better support for time series
 
 - Data namespaces, lazy data loading, out of core computing using
-  database engines (eg duckdb)
+  database engines (e.g., duckdb)
 
 - Join discovery to work in data lakes where the tables are not in a
   clean relational database
 
 - Automatic feature synthesis in databases, building on the assembling
   features
+
+
+Imputation is out of skrub's scope: scikit-learn implements transformers
+that perform imputation. Academic work has also shown that imputation is
+expensive and often does not improve prediction results
+(https://arxiv.org/pdf/2407.19804).

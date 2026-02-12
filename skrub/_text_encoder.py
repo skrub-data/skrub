@@ -4,12 +4,13 @@ import os
 import warnings
 from pathlib import Path
 
-from sklearn.base import TransformerMixin
 from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._scaling_factor import scaling_factor
+from ._single_column_transformer import SingleColumnTransformer
+from ._to_str import ToStr
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
 
@@ -18,7 +19,7 @@ class ModelNotFound(ValueError):
     pass
 
 
-class TextEncoder(SingleColumnTransformer, TransformerMixin):
+class TextEncoder(SingleColumnTransformer):
     """Encode string features by applying a pretrained language model \
         downloaded from the HuggingFace Hub.
 
@@ -30,23 +31,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         To use this class, you need to install the optional ``transformers``
         dependencies for skrub. See the "deep learning dependencies" section
         in the :ref:`installation_instructions` guide for more details.
-
-    This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
-    will not train or fine-tune the model. Instead, the model is loaded from disk,
-    and a PCA is fitted to reduce the dimension of the language model's output,
-    if ``n_components`` is not None.
-
-    When PCA is disabled, this class is essentially stateless, with loading the
-    pre-trained model from disk being the only difference between ``fit_transform``
-    and ``transform``.
-
-    Be aware that parallelizing this class (e.g., using
-    :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
-    expensive. This is because a copy of the pre-trained model is loaded into memory
-    for each thread. Therefore, we recommend you to let the default n_jobs=None
-    (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
-
-    If memory usage is a concern, check the characteristics of your selected model.
 
     Parameters
     ----------
@@ -131,7 +115,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     Attributes
     ----------
     input_name_ : str
-        The name of the fitted column.
+        The name of the fitted column, or "text_enc" if the column has no name.
 
     pca_ : sklearn.decomposition.PCA
         A fitted PCA to reduce the embedding dimensionality (either PCA or truncation,
@@ -152,6 +136,25 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     SimilarityEncoder :
         Encode string columns as a numeric array with n-gram string similarity.
 
+    Notes
+    -----
+    This class uses a pre-trained model, so calling ``fit`` or ``fit_transform``
+    will not train or fine-tune the model. Instead, the model is loaded from disk,
+    and a PCA is fitted to reduce the dimension of the language model's output,
+    if ``n_components`` is not None.
+
+    When PCA is disabled, this class is essentially stateless, with loading the
+    pre-trained model from disk being the only difference between ``fit_transform``
+    and ``transform``.
+
+    Be aware that parallelizing this class (e.g., using
+    :class:`~skrub.TableVectorizer` with ``n_jobs`` > 1) may be computationally
+    expensive. This is because a copy of the pre-trained model is loaded into memory
+    for each thread. Therefore, we recommend you to let the default n_jobs=None
+    (or set to 1) of the TableVectorizer and let pytorch handle parallelism.
+
+    If memory usage is a concern, check the characteristics of your selected model.
+
     References
     ----------
     .. [1]  L. Grinsztajn, M. Kim, E. Oyallon, G. Varoquaux
@@ -166,7 +169,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
 
     Let's encode video comments using only 2 embedding dimensions:
 
-    >>> enc = TextEncoder(model_name='intfloat/e5-small-v2', n_components=2)
+    >>> enc = TextEncoder(
+    ...    model_name='intfloat/e5-small-v2', n_components=2
+    ... )
     >>> X = pd.Series([
     ...   "The professor snatched a good interview out of the jaws of these questions.",
     ...   "Bookmarking this to watch later.",
@@ -177,7 +182,7 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
     but ensure various checks and enable dimension reduction.
 
     >>> enc.fit_transform(X) # doctest: +SKIP
-       video comments_1  video comments_2
+       video comments_0  video comments_1
     0          0.411395          0.096504
     1         -0.105210         -0.344567
     2         -0.306184          0.248063
@@ -225,12 +230,13 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             The embedding representation of the input.
         """
         del y
-        if not sbd.is_string(column):
-            raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
+
+        self.to_str = ToStr(convert_category=True)
+        column = self.to_str.fit_transform(column)
 
         self._check_params()
 
-        self.input_name_ = sbd.name(column)
+        self.input_name_ = sbd.name(column) or "text_enc"
 
         X_out = self._vectorize(column)
 
@@ -258,6 +264,10 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 # number of dimensions of X_out.
                 X_out = X_out[:, : self.n_components]
 
+        # block normalize
+        self.scaling_factor_ = scaling_factor(X_out)
+        X_out /= self.scaling_factor_
+
         self.n_components_ = X_out.shape[1]
 
         cols = self.get_feature_names_out()
@@ -284,8 +294,13 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
         """
         check_is_fitted(self, "_estimator")
 
-        if not sbd.is_string(column):
-            raise ValueError(f"Column {sbd.name(column)!r} does not contain strings.")
+        # Error checking at fit time is done by the ToStr transformer,
+        # but after ToStr is fitted it does not check the input type anymore,
+        # while we want to ensure that the input column is a string or categorical
+        # so we need to add the check here.
+        if not (sbd.is_string(column) or sbd.is_categorical(column)):
+            raise ValueError("Input column does not contain strings.")
+        column = self.to_str.transform(column)
 
         X_out = self._vectorize(column)
 
@@ -293,6 +308,9 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             X_out = self.pca_.transform(X_out)
         elif self.n_components is not None:
             X_out = X_out[:, : self.n_components]
+
+        # block scale
+        X_out /= self.scaling_factor_
 
         cols = self.get_feature_names_out()
         X_out = sbd.make_dataframe_like(column, dict(zip(cols, X_out.T)))
@@ -321,7 +339,15 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 "ignore",
                 message=r".*IProgress not found.*",
             )
-            st = import_optional_dependency("sentence_transformers")
+            st = import_optional_dependency(
+                "sentence_transformers",
+                extra=(
+                    "The TextEncoder requires sentence-transformers and its"
+                    " dependencies. Please see"
+                    " https://skrub-data.org/stable/install.html#deep-learning-dependencies"
+                    " for the installation guide."
+                ),
+            )
 
         self._cache_folder = get_data_dir(
             name=self.model_name, data_home=self.cache_folder
@@ -379,21 +405,6 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
             )
         return
 
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : list of str
-            Transformed feature names.
-        """
-        check_is_fitted(self)
-        n_digits = len(str(self.n_components_))
-        return [
-            f"{self.input_name_}_{str(i).zfill(n_digits)}"
-            for i in range(1, self.n_components_ + 1)
-        ]
-
     def __getstate__(self):
         state = self.__dict__.copy()
         # Always dump self._cache_folder because it is overwritten when the model
@@ -409,3 +420,27 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 del state[prop]
 
         return state
+
+    def get_feature_names_out(self, input_features=None):
+        """Return a list of features generated by the transformer.
+
+        Each feature has format ``{input_name}_{n_component}`` where ``input_name``
+        is the name of the input column, or a default name for the encoder, and
+        ``n_component`` is the idx of the specific feature.
+
+        Parameters
+        ----------
+        input_features : None
+            The input features. Ignored, only here for compatibility.
+
+        Returns
+        -------
+        list of str
+            The list of feature names.
+        """
+        check_is_fitted(self, "n_components_")
+        num_digits = len(str(self.n_components_ - 1))
+        return [
+            f"{self.input_name_}_{str(i).zfill(num_digits)}"
+            for i in range(self.n_components_)
+        ]

@@ -6,9 +6,9 @@ from pandas._libs.tslibs.parsing import (
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from . import _selectors as s
-from ._dispatch import dispatch
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from . import selectors as s
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 from ._wrap_transformer import wrap_transformer
 
 __all__ = ["ToDatetime", "to_datetime"]
@@ -18,7 +18,7 @@ _SAMPLE_SIZE = 30
 
 @dispatch
 def _get_time_zone(col):
-    raise NotImplementedError()
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_get_time_zone.specialize("pandas", argument_type="Column")
@@ -44,7 +44,7 @@ def _get_time_zone_polars(col):
 
 @dispatch
 def _convert_time_zone(col, time_zone):
-    raise NotImplementedError()
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_convert_time_zone.specialize("pandas", argument_type="Column")
@@ -85,15 +85,9 @@ class ToDatetime(SingleColumnTransformer):
     """
     Parse datetimes represented as strings and return ``Datetime`` columns.
 
-    An input column is converted to a column with dtype Datetime if possible,
-    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
-    Datetime, String, and pandas object columns are handled, other dtypes are
-    rejected with ``RejectColumn``.
-
-    Once a column is accepted, outputs of ``transform`` always have the same
-    Datetime dtype (including resolution and time zone). Once the transformer
-    is fitted, entries that fail to be converted during subsequent calls to
-    ``transform`` are replaced with nulls.
+    This transformer tries to convert the given column from string to datetime,
+    by either testing common datetime formats or using the ``format`` specified
+    by the user. Columns that are not strings, dates or datetimes raise an exception.
 
     Parameters
     ----------
@@ -127,6 +121,18 @@ class ToDatetime(SingleColumnTransformer):
         is ``None``; otherwise it is the name of the time zone such as ``UTC`` or
         ``Europe/Paris``.
 
+    Notes
+    -----
+    An input column is converted to a column with dtype Datetime if possible,
+    and rejected by raising a ``RejectColumn`` exception otherwise. Only Date,
+    Datetime, String, and pandas object columns are handled, other dtypes are
+    rejected with ``RejectColumn``.
+
+    Once a column is accepted, outputs of ``transform`` always have the same
+    Datetime dtype (including resolution and time zone). Once the transformer
+    is fitted, entries that fail to be converted during subsequent calls to
+    ``transform`` are replaced with nulls.
+
     Examples
     --------
     >>> import pandas as pd
@@ -134,11 +140,11 @@ class ToDatetime(SingleColumnTransformer):
     >>> s = pd.Series(["2024-05-05T13:17:52", None, "2024-05-07T13:17:52"], name="when")
     >>> s
     0    2024-05-05T13:17:52
-    1                   None
+    1                    ...
     2    2024-05-07T13:17:52
-    Name: when, dtype: object
+    Name: when, dtype: ...
 
-    >>> from skrub._to_datetime import ToDatetime
+    >>> from skrub import ToDatetime
 
     >>> to_dt = ToDatetime()
     >>> to_dt.fit_transform(s)
@@ -169,7 +175,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> ToDatetime(format="%d/%m/%Y").fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
+    skrub._single_column_transformer.RejectColumn: Failed to convert column 'when' to datetimes using the format '%d/%m/%Y'.
 
     Columns that already have ``Datetime`` ``dtype`` are not modified (but
     they are accepted); for those columns the provided format, if any, is ignored.
@@ -199,7 +205,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 'year' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 'year' does not contain strings.
 
     String columns that do not appear to contain datetimes or for some other reason
     fail to be converted are also rejected.
@@ -208,7 +214,7 @@ class ToDatetime(SingleColumnTransformer):
     >>> to_dt.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Could not find a datetime format for column 'when'.
+    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'when'.
 
     Once ``ToDatetime`` was successfully fitted, ``transform`` will always try to
     parse datetimes with the same format and output the same ``dtype``. Entries that
@@ -373,6 +379,9 @@ class ToDatetime(SingleColumnTransformer):
             The input transformed to Datetime.
         """
         del y
+
+        self.all_outputs_ = [sbd.name(column)]
+
         if sbd.is_any_date(column):
             self.format_ = None
             self.output_dtype_ = sbd.dtype(column)
@@ -455,19 +464,28 @@ def _guess_datetime_format(column):
     return None
 
 
-@dispatch
 def to_datetime(data, format=None):
     """Convert DataFrame or column to Datetime dtype.
 
     Parameters
     ----------
-    data : dataframe or column
-        The dataframe or column to transform.
+    data : pandas or polars ``{DataFrame, Series}``
+        The dataframe or series to transform.
 
     format : str or None, optional, default=None
         Format string to use to parse datetime strings.
         See the reference documentation for format codes:
         https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes .
+
+    Returns
+    -------
+    output : pandas or polars {DataFrame, Series}.
+        The input transformed to Datetime.
+
+    See Also
+    --------
+    ToDatetime :
+        Parse datetimes represented as strings and return Datetime columns.
 
     Examples
     --------
@@ -483,22 +501,30 @@ def to_datetime(data, format=None):
     0  1 2021-02-01
     1  2 2021-02-21
     """  # noqa: E501
+    # Wrap _to_datetime to avoid duplicate Sphinx entry due to overloading with
+    # functools.singledispatch.
+    # TODO: remove when https://github.com/sphinx-doc/sphinx/issues/10359 is fixed.
+    return _to_datetime(data, format=format)
+
+
+@dispatch
+def _to_datetime(data, format=None):
     raise TypeError(
         "Input to skrub.to_datetime must be a pandas or polars Series or DataFrame."
         f" Got {type(data)}."
     )
 
 
-@to_datetime.specialize("pandas", argument_type="DataFrame")
-@to_datetime.specialize("polars", argument_type="DataFrame")
+@_to_datetime.specialize("pandas", argument_type="DataFrame")
+@_to_datetime.specialize("polars", argument_type="DataFrame")
 def _to_datetime_dataframe(df, format=None):
     return wrap_transformer(
         ToDatetime(format=format), s.all(), allow_reject=True
     ).fit_transform(df)
 
 
-@to_datetime.specialize("pandas", argument_type="Column")
-@to_datetime.specialize("polars", argument_type="Column")
+@_to_datetime.specialize("pandas", argument_type="Column")
+@_to_datetime.specialize("polars", argument_type="Column")
 def _to_datetime_column(column, format=None):
     try:
         result = ToDatetime(format=format).fit_transform(column)

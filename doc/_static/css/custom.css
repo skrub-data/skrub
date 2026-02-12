@@ -134,6 +134,10 @@ div.card-body details[open] summary i {
     margin-top: 0px;
 }
 
+h5.feature-title {
+    font-size: 1.5rem;
+}
+
 .feature-text {
     font-family: var(--pst-font-family-base);
     font-size: 1.05rem; /* Regular font size for text */
@@ -160,6 +164,45 @@ div.card-body details[open] summary i {
 .code-margin {
     margin-top: 0.75em !important;
     margin-bottom: 0.75em !important;
+}
+
+div.feature-flex {
+    display: flex;
+}
+
+div.feature-flex div {
+    flex: 1 1 auto;
+    padding-bottom: 1ex;
+}
+
+div.feature-img {
+    border-radius: 1ex;
+    overflow: clip;
+    margin-top: 8px;
+}
+
+/* For the pipeline svg */
+div.pipeline-img {
+    transform: scale(0.8);
+    transform-origin: left top;
+    height: 283pt
+}
+
+div.pipeline-img svg > g > polygon {
+    fill: transparent;
+}
+
+div.pipeline-img svg g a polygon[fill="none"] {
+    fill: white;
+}
+
+div.pipeline-img svg g.edge path {
+    stroke: var(--sg-text-color);
+}
+
+div.pipeline-img svg g.edge polygon {
+    stroke: var(--sg-text-color);
+    fill: var(--sg-text-color);
 }
 
 .encoding-image {
@@ -320,6 +363,27 @@ a.sk-btn-orange:hover {
     font-size: 1.25rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
+}
+
+/* Switch the arrow on small screens, as it needs to point down */
+@media (max-width: 720px) {
+    .visible-small-screen {
+	display: initial;
+    }
+
+    .visible-large-screen {
+	display: none;
+    }
+}
+
+@media (min-width: 720px) {
+    .visible-small-screen {
+	display: none;
+    }
+
+    .visible-large-screen {
+	display: initial;
+    }
 }
 
 /** Contributors ***************************/

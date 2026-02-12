@@ -1,8 +1,13 @@
 import codecs
 import functools
 import json
+import numbers
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
+
+from .. import _config
 from .. import _dataframe as sbd
 from ._html import to_html
 from ._serve import open_in_browser
@@ -10,17 +15,47 @@ from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
 
+def _check_max_cols(max_plot_columns, max_association_columns):
+    max_plot_columns = (
+        max_plot_columns
+        if max_plot_columns is not None
+        else _config.get_config()["max_plot_columns"]
+    )
+    if (max_plot_columns != "all") and not (
+        isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0
+    ):
+        raise ValueError(
+            "'max_plot_columns' must be a positive scalar or 'all', got"
+            f" {max_plot_columns!r}."
+        )
+    max_association_columns = (
+        max_association_columns
+        if max_association_columns is not None
+        else _config.get_config()["max_association_columns"]
+    )
+    if (max_association_columns != "all") and not (
+        isinstance(max_association_columns, numbers.Real)
+        and max_association_columns >= 0
+    ):
+        raise ValueError(
+            "'max_association_columns' must be a positive scalar or 'all', got "
+            f"{max_association_columns!r}."
+        )
+
+    return max_plot_columns, max_association_columns
+
+
 class TableReport:
     r"""Summarize the contents of a dataframe.
 
-    This class summarizes a dataframe, providing information such as the type
-    and summary statistics (mean, number of missing values, etc.) for each
-    column.
+    This class summarizes a dataframe or numpy array, providing information such as
+    the type and summary statistics (mean, number of missing values, etc.) for each
+    column. Numpy arrays are converted to pandas DataFrame or Series.
 
     Parameters
     ----------
-    dataframe : pandas or polars DataFrame
-        The dataframe to summarize.
+    dataframe : pandas or polars Series or DataFrame
+        The dataframe or series to summarize.
     n_rows : int, default=10
         Maximum number of rows to show in the sample table. Half will be taken
         from the beginning (head) of the dataframe and half from the end
@@ -46,7 +81,46 @@ class TableReport:
     max_plot_columns : int, default=30
         Maximum number of columns for which plots should be generated.
         If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If None, all columns will be plotted.
+        the plots will not be generated. If "all", all columns will be plotted.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> from skrub import set_config
+        >>> set_config(max_plot_columns=30)
+
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_MAX_PLOT_COLUMNS=30
+
+    max_association_columns : int, default=30
+        Maximum number of columns for which associations should be computed.
+        If the number of columns in the dataframe is greater than this value,
+        the associations will not be computed. If "all", the associations
+        for all columns will be computed.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> from skrub import set_config
+        >>> set_config(max_association_columns=30)
+
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_MAX_ASSOCIATION_COLUMNS=30
+
+    open_tab : str, default="table"
+        The tab that will be displayed by default when the report is opened.
+        Must be one of "table", "stats", "distributions", or "associations".
+
+        * "table": Shows a sample of the dataframe rows
+        * "stats": Shows summary statistics for all columns
+        * "distributions": Shows plots of column distributions
+        * "associations": Shows column associations and similarities
 
     See Also
     --------
@@ -119,46 +193,109 @@ class TableReport:
         order_by=None,
         title=None,
         column_filters=None,
-        verbose=1,
-        max_plot_columns=30,
+        verbose=None,
+        max_plot_columns=None,
+        max_association_columns=None,
+        open_tab="table",
     ):
+        if isinstance(dataframe, np.ndarray):
+            if dataframe.ndim == 1:
+                dataframe = pd.Series(dataframe, name="0")
+
+            elif dataframe.ndim == 2:
+                dataframe = pd.DataFrame(
+                    dataframe, columns=[str(i) for i in range(dataframe.shape[1])]
+                )
+
+            else:
+                raise ValueError(
+                    f"Input NumPy array has {dataframe.ndim} dimensions. "
+                    "TableReport only supports 1D and 2D arrays"
+                )
+
         n_rows = max(1, n_rows)
+        if verbose is None:
+            self.verbose = _config.get_config()["table_report_verbosity"]
+        else:
+            self.verbose = verbose
+
+        # Validate open_tab parameter
+        valid_tabs = ["table", "stats", "distributions", "associations"]
+        if open_tab not in valid_tabs:
+            raise ValueError(
+                f"'open_tab' must be one of {valid_tabs}, got {open_tab!r}."
+            )
+        self.open_tab = open_tab
+
         self._summary_kwargs = {
             "order_by": order_by,
             "max_top_slice_size": -(n_rows // -2),
             "max_bottom_slice_size": n_rows // 2,
-            "verbose": verbose,
+            "verbose": self.verbose,
         }
+        self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.dataframe = dataframe
-        self.verbose = verbose
-        self.max_plot_columns = max_plot_columns
+        self.max_plot_columns, self.max_association_columns = _check_max_cols(
+            max_plot_columns, max_association_columns
+        )
+        self.dataframe = (
+            sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
+        )
+        if sbd.is_polars(dataframe) and sbd.is_lazyframe(dataframe):
+            raise ValueError(
+                "The TableReport does not support lazy dataframes. Please call"
+                " `.collect()` to use the TableReport on the current dataframe."
+            )
+        self.n_columns = sbd.shape(self.dataframe)[1]
+
+    def _set_minimal_mode(self):
+        """Put the report in minimal mode.
+
+        This is meant to be called by other skrub functions, such as the
+        DataOps  ``__repr__``.
+
+        In the minimal mode, the associations and distributions tabs are not
+        shown and the plots and associations are not computed.
+
+        Once set this cannot be undone.
+        """
+        try:
+            # delete the cached _summary if it already exists,
+            # as the summarize arguments have changed
+            delattr(self, "_summary")
+        except AttributeError:
+            pass
+        self._to_html_kwargs["minimal_report_mode"] = True
+        self.max_association_columns = 0
+        self.max_plot_columns = 0
+        # In minimal mode, fall back to 'table' if user selected unavailable tabs
+        if self.open_tab in ["distributions", "associations"]:
+            self.open_tab = "table"
+
+    def _display_subsample_hint(self):
+        self._summary["is_subsampled"] = True
 
     def __repr__(self):
         return f"<{self.__class__.__name__}: use .open() to display>"
 
     @functools.cached_property
-    def _summary_with_plots(self):
-        return summarize_dataframe(
-            self.dataframe, with_plots=True, title=self.title, **self._summary_kwargs
+    def _summary(self):
+        with_plots = (
+            self.max_plot_columns == "all" or self.max_plot_columns >= self.n_columns
+        )
+        with_associations = (
+            self.max_association_columns == "all"
+            or self.max_association_columns >= self.n_columns
         )
 
-    @functools.cached_property
-    def _summary_without_plots(self):
         return summarize_dataframe(
-            self.dataframe, with_plots=False, title=self.title, **self._summary_kwargs
+            self.dataframe,
+            with_plots=with_plots,
+            with_associations=with_associations,
+            title=self.title,
+            **self._summary_kwargs,
         )
-
-    def _get_summary(self):
-        if self.max_plot_columns is None:
-            summary = self._summary_with_plots
-        elif self.max_plot_columns >= sbd.shape(self.dataframe)[1]:
-            summary = self._summary_with_plots
-        else:
-            summary = self._summary_without_plots
-
-        return summary
 
     def html(self):
         """Get the report as a full HTML page.
@@ -169,9 +306,11 @@ class TableReport:
             The HTML page.
         """
         return to_html(
-            self._get_summary(),
+            self._summary,
             standalone=True,
             column_filters=self.column_filters,
+            open_tab=self.open_tab,
+            **self._to_html_kwargs,
         )
 
     def html_snippet(self):
@@ -183,9 +322,11 @@ class TableReport:
             The HTML snippet.
         """
         return to_html(
-            self._get_summary(),
+            self._summary,
             standalone=False,
             column_filters=self.column_filters,
+            open_tab=self.open_tab,
+            **self._to_html_kwargs,
         )
 
     def json(self):
@@ -197,9 +338,7 @@ class TableReport:
             The JSON data.
         """
         to_remove = ["dataframe", "sample_table"]
-        data = {
-            k: v for k, v in self._summary_without_plots.items() if k not in to_remove
-        }
+        data = {k: v for k, v in self._summary.items() if k not in to_remove}
         return json.dumps(data, cls=JSONEncoder)
 
     def _repr_mimebundle_(self, include=None, exclude=None):

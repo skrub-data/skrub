@@ -1,6 +1,6 @@
 from . import _dataframe as sbd
-from ._dispatch import dispatch
-from ._on_each_column import RejectColumn, SingleColumnTransformer
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["CleanNullStrings"]
 
@@ -31,7 +31,7 @@ STR_NA_VALUES = [
 
 @dispatch
 def _trim_whitespace_only(col):
-    raise NotImplementedError()
+    raise_dispatch_unregistered_type(col, kind="Series")
 
 
 @_trim_whitespace_only.specialize("pandas", argument_type="Column")
@@ -158,12 +158,12 @@ class CleanNullStrings(SingleColumnTransformer):
     In both examples above, the column can be converted to numbers by
     ``ToFloat`` (only) after being cleaned by ``CleanNullStrings``:
 
-    >>> from skrub._to_float32 import ToFloat32
-    >>> ToFloat32().fit_transform(s)
+    >>> from skrub._to_float import ToFloat
+    >>> ToFloat().fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Could not convert column 's' to numbers.
-    >>> ToFloat32().fit_transform(cleaner.fit_transform(s))
+    skrub._single_column_transformer.RejectColumn: Could not convert column 's' to numbers.
+    >>> ToFloat().fit_transform(cleaner.fit_transform(s))
     0    1.1
     1    2.2
     2    NaN
@@ -177,7 +177,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 's' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 's' does not contain strings.
 
     In particular, Categorical columns, although they contain strings, do not
     have the ``string`` or ``object`` ``dtype``:
@@ -186,7 +186,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column None does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column None does not contain strings.
 
     Note however that ``object`` columns are accepted even if they do not
     contain any strings. They will not be modified but they will still be
@@ -229,7 +229,7 @@ class CleanNullStrings(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._on_each_column.RejectColumn: Column 's' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 's' does not contain strings.
     """
 
     def fit_transform(self, column, y=None):

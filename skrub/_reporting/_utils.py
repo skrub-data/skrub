@@ -7,7 +7,7 @@ import unicodedata
 import numpy as np
 
 from skrub import _dataframe as sbd
-from skrub._dispatch import dispatch
+from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
 
 def get_dtype_name(column):
@@ -16,7 +16,7 @@ def get_dtype_name(column):
 
 @dispatch
 def to_dict(df):
-    raise NotImplementedError()
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
 
 
 @to_dict.specialize("pandas", argument_type="DataFrame")
@@ -87,7 +87,11 @@ def format_number(number):
     if isinstance(number, numbers.Integral):
         return f"{number:,}"
     if isinstance(number, numbers.Real):
-        return f"{number:#.3g}"
+        # Import placed here to avoid circular import related to dispatch
+        from skrub._config import get_config
+
+        var = get_config()["float_precision"]
+        return f"{number:#.{var}g}"
     return str(number)
 
 

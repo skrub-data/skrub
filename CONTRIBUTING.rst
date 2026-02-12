@@ -1,5 +1,7 @@
-Contributing to skrub
-=====================
+.. _contributing:
+
+Contributing guide
+==================
 
 First off, thanks for taking the time to contribute!
 
@@ -40,7 +42,7 @@ please:
 1. **Check if an issue already exists**
    by searching the `GitHub issues <https://github.com/skrub-data/skrub/issues?q=is%3Aissue>`_
 
-   - If **open**, leave a 👍 on the original message to signal that others are affected.
+   - If **open**, leave a 👍 on the original message to signal that you are also affected.
    - If closed, check for one of the following:
       - A **merged pull request** may indicate the bug is fixed. Update your
         skrub version or note if the fix is pending a release.
@@ -59,10 +61,19 @@ To help us resolve the issue quickly, please include:
 - A **code snippet** that reproduces the issue, if applicable.
 - **Version information** for Python, skrub, and relevant dependencies (e.g., scikit-learn, numpy, pandas).
 
+How to write an example?
+^^^^^^^^^^^^^^^^^^^^^^^^^
+We highly encourage contributors to add examples to the documentation
+when they add new features, or if they have a use case that is not yet covered
+in the documentation.
+
+You can find a guide on how to write examples in the :ref:`example guide <tutorial_write_example>`.
+
+
 Suggesting enhancements
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-If you have an idea for improving skrub, whether it's a small fix
+If you have an idea for improving skrub, whether it's a fix
 or a new feature, first:
 
 - **Check if it has been proposed or implemented** by reviewing
@@ -124,43 +135,17 @@ See the relevant sections above on how to do this.
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To contribute, you will first have to run through some steps:
+To setup your development environment, you need to follow the steps in "From Source" tab
+present in :ref:`Installing from source<installing_from_source>` page.
+After that, you can return to this page to continue.
 
-- Set up your environment by forking the repository (`Github doc on
-  forking and
-  cloning <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`__).
-- Create and activate a new virtual environment:
-
-  - With `venv <https://docs.python.org/3/library/venv.html>`__, create
-    the env with ``python -m venv env_skrub`` and then activate it with
-    ``source env_skrub/bin/activate``.
-  - With
-    `conda <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`__,
-    create the env with ``conda new -n env_skrub`` and activate it with
-    ``conda activate env_skrub``.
-  - While at the root of your local copy of skrub and within the new
-    env, install the required development dependencies by running
-    ``pip install --editable ".[dev, lint, test, doc]"``.
-
-- Run ``pre-commit install`` to activate some checks that will run every
-  time you do a ``git commit`` (mostly, formatting checks).
-
-If you want to make sure that everything runs properly, you can run all
-the tests with the command ``pytest -s skrub/tests``; note that this may
-take a long time. Some tests may raise warnings such as:
+Now that the development environment is ready, you may create a new branch and start working on
+the new issue.
 
 .. code:: sh
 
-  UserWarning: Only pandas and polars DataFrames are supported, but input is a Numpy array. Please convert Numpy arrays to DataFrames before passing them to skrub transformers. Converting to pandas DataFrame with columns ['0', '1', …].
-    warnings.warn(
-
-This is expected, and you may proceed with the next steps without worrying about them. However, no tests should fail at this point: if they do fail, then let us know.
-
-Now that the development environment is ready, you may start working on
-the new issue by creating a new branch:
-
-.. code:: sh
-
+   # fetch latest updates and start from the current head
+   git fetch upstream
    git checkout -b my-branch-name-eg-fix-issue-123
    # make some changes
    git add ./the/file-i-changed
@@ -192,6 +177,8 @@ When contributing, keep these project goals in mind:
     - Document all public functions, methods, variables, and class signatures.
     - The public API refers to all components available for import and use by library users. Anything that doesn't begin with an underscore is considered part of the public API.
 
+Checking the quality of your code contribution
+----------------------------------------------
 
 Testing the code
 ~~~~~~~~~~~~~~~~
@@ -221,7 +208,7 @@ Additionally, you might have updated the internal dataframe API in
 ``amazing_function``.
 
 Run each updated test file using ``pytest``
-([pytest docs](https://docs.pytest.org/en/stable/)):
+(`pytest docs <https://docs.pytest.org/en/stable>`_):
 
 .. code:: sh
 
@@ -291,9 +278,94 @@ can be pushed. Something worth noting is that if the ``pre-commit``
 hooks format some files, the commit will be canceled: you will have to
 stage the changes made by ``pre-commit`` and commit again.
 
+Ensuring the documentation builds
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+..
+  Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
+
+First, make sure you have properly installed the development version of skrub.
+You can follow the :ref:`installation_instructions` > "From source" section, if needed.
+
+To build the documentation, you need to be in the ``doc`` folder:
+
+.. code:: bash
+
+    cd doc
+
+To generate the full documentation, including the example gallery,
+run the following command:
+
+.. code:: bash
+
+    make html
+
+The documentation will be generated in the ``_build/html/`` directory
+and are viewable in a web browser, for instance by opening the local
+``_build/html/index.html`` file.
+
+Running all the examples can take a while, so if you only want to generate
+specific examples, you can use the following command with a regex pattern:
+
+.. code:: bash
+
+    make html EXAMPLES_PATTERN=your_regex_goes_here
+
+This is especially helpful when you're only modifying or checking a few examples.
+
+It is also possible to build the documentation without running the examples
+without running the examples by using the following command:
+
+.. code:: bash
+
+    make html-noplot
+
+This command generates the documentation without re-executing the examples, which can
+take a long time. This is useful if you are only modifying the documentation itself, such as fixing
+typos or improving explanations.
+
+
+**Using pixi**
+
+You can download and install pixi from `here <https://pixi.sh/latest/>`_.
+
+From the repository root:
+
+.. code:: bash
+
+    # Build documentation without running examples (faster)
+    pixi run build-doc-quick
+
+    # Build the full documentation, including examples
+    pixi run build-doc
+
+    # Clean previously built documentation
+    pixi run clean-doc
+
+The documentation will be generated in the ``doc/_build/html/`` directory.
+You can view it by opening the local ``doc/_build/html/index.html`` file.
+
+.. warning::
+
+   On Intel-based macOS systems (``osx-64``), some pixi environments may not
+   resolve correctly due to missing upstream package builds (e.g., for PyTorch).
+   If you encounter issues, you can always fall back to using ``make`` as
+   described above.
+
+Editing the API reference documentation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**All public functions and classes must be documented in the API
+reference**, hence when adding a public function or class, a new entry must be
+added, as detailed just above.
+
+To add a new entry to the :ref:`API reference documentation<api_ref>` or change its
+content, head to ``doc/api_reference.py``. This data is then used by ``doc/conf.py``
+to render templates located at ``doc/reference/*.rst.template``.
+
 
 Submitting your code
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 Once you have pushed your commits to your remote repository, you can submit
 a PR by clicking the "Compare & pull request" button on GitHub,
@@ -332,7 +404,7 @@ directly modified by the pull request are executed.
 CI is testing all possible configurations supported by skrub, so tests may fail
 with configurations different from what you are developing with. If this is the
 case,  it is possible to run the tests in the environment that is failing by
-using pixi. For example if the env is ``ci-py309-min-optional-deps``, it is
+using `pixi <https://pixi.sh/latest/>`_. For example if the env is ``ci-py309-min-optional-deps``, it is
 possible to replicate it using the following command:
 
 .. code:: sh
@@ -350,53 +422,6 @@ Finally, if the remote repository was changed, you might need to run
 Integration
 ^^^^^^^^^^^
 
-Community consensus is key in the integration process. Expect a minimum
-of 1 to 3 reviews depending on the size of the change before we consider
+Community consensus is key in the integration process. Expect a minimum of
+1 to 3 reviews from maintainers depending on the size of the change before we consider
 merging the PR.
-
-
-Building the documentation
---------------------------
-
-..
-  Inspired by: https://github.com/scikit-learn/scikit-learn/blob/main/doc/developers/contributing.rst
-
-**Before submitting your pull request, ensure that your modifications haven't
-introduced any new Sphinx warnings by building the documentation locally
-and addressing any issues.**
-
-First, make sure you have properly installed the development version of skrub.
-You can follow the :ref:`installation_instructions` > "From source" section, if needed.
-
-Building the documentation requires installing some additional packages:
-
-.. code:: bash
-
-    cd skrub
-    pip install '.[doc]'
-
-To build the documentation, you need to be in the ``doc`` folder:
-
-.. code:: bash
-
-    cd doc
-
-To generate the full documentation, including the example gallery,
-run the following command:
-
-.. code:: bash
-
-    make html
-
-The documentation will be generated in the ``_build/html/`` directory
-and are viewable in a web browser, for instance by opening the local
-``_build/html/index.html`` file.
-
-Running all the examples can take a while, so if you only want to generate
-specific examples, you can use the following command with a regex pattern:
-
-.. code:: bash
-
-    make html EXAMPLES_PATTERN=your_regex_goes_here make html
-
-This is especially helpful when you're only modifying or checking a few examples.

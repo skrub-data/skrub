@@ -7,6 +7,8 @@ import pandas as pd
 import pandas.testing
 import pytest
 
+from skrub import get_config, set_config
+
 
 def _example_data_dict():
     return {
@@ -23,7 +25,8 @@ def _example_data_dict():
                 "2021-03-15T00:37:15",
                 "2022-02-13T17:03:25",
             ]
-        ] + [None],
+        ]
+        + [None],
         "date-col": [
             datetime.date.fromisoformat(dt)
             for dt in ["2002-02-03", "2001-05-17", "2005-02-13", "2004-10-02"]
@@ -54,6 +57,7 @@ _DATAFAME_MODULES_INFO["pandas-numpy-dtypes"] = SimpleNamespace(
             "float64": np.float64,
             "int32": np.int32,
             "int64": np.int64,
+            "category": pd.CategoricalDtype(),
         },
     }
 )
@@ -82,6 +86,7 @@ _DATAFAME_MODULES_INFO["pandas-nullable-dtypes"] = SimpleNamespace(
             "float64": pd.Float64Dtype(),
             "int32": pd.Int32Dtype(),
             "int64": pd.Int64Dtype(),
+            "category": pd.CategoricalDtype(),
         },
     }
 )
@@ -94,6 +99,21 @@ try:
     _POLARS_INSTALLED = True
 except ImportError:
     _POLARS_INSTALLED = False
+
+if _POLARS_INSTALLED:
+    try:
+        import pyarrow  # noqa: F401
+
+        _polars_installed_without_pyarrow = False
+    except ImportError:
+        _polars_installed_without_pyarrow = True
+else:
+    _polars_installed_without_pyarrow = False
+
+skip_polars_installed_without_pyarrow = pytest.mark.skipif(
+    _polars_installed_without_pyarrow,
+    reason="When polars is installed, requires pyarrow to be installed too",
+)
 
 
 def _pl_from_dict(data):
@@ -130,6 +150,7 @@ if _POLARS_INSTALLED:
                 "float64": pl.Float64,
                 "int32": pl.Int32,
                 "int64": pl.Int64,
+                "category": pl.Categorical,
             },
         }
     )
@@ -218,3 +239,23 @@ def use_fit_transform(request):
     manually.
     """
     return request.param
+
+
+xfail_with_download_error = pytest.mark.xfail(
+    raises=OSError, match="Can't download the file '.*' from urls.*"
+)
+
+BASE_CONFIG = get_config()
+
+
+@pytest.fixture(autouse=True)
+def reset_config_to_base():
+    """Autouse fixture that resets config to base_config before each test.
+
+    This ensures that tests run in isolation, don't affect each other's
+    configuration state, and clean up after themselves.
+    """
+    set_config(**BASE_CONFIG)
+    yield
+    # Also reset after the test to ensure clean state for next test
+    set_config(**BASE_CONFIG)

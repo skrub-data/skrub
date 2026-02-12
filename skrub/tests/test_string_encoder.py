@@ -11,6 +11,8 @@ from sklearn.pipeline import Pipeline
 
 from skrub import StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
+from skrub._scaling_factor import scaling_factor
+from skrub._single_column_transformer import RejectColumn
 
 
 @pytest.fixture
@@ -40,6 +42,7 @@ def test_tfidf_vectorizer(encode_column, df_module):
     )
     check = pipe.fit_transform(sbd.to_numpy(sbd.fill_nulls(encode_column, "")))
     check = check.astype("float32")  # StringEncoder is float32
+    check /= scaling_factor(check)
 
     names = [f"col1_{idx}" for idx in range(2)]
 
@@ -165,7 +168,7 @@ def test_get_feature_names_out(encode_column, df_module):
     encoder = StringEncoder(n_components=4)
 
     encoder.fit(X)
-    expected_columns = ["tsvd_0", "tsvd_1", "tsvd_2", "tsvd_3"]
+    expected_columns = ["string_enc_0", "string_enc_1", "string_enc_2", "string_enc_3"]
     assert encoder.get_feature_names_out() == expected_columns
 
 
@@ -196,6 +199,17 @@ def test_n_components(df_module):
     assert not hasattr(encoder_30, "tsvd_")
     assert sbd.shape(X_out)[1] == 30
     assert encoder_30.n_components_ == 30
+
+
+@pytest.mark.parametrize("name_vectorizer", ["tfidf", "hashing"])
+def test_stop_words(encode_column, name_vectorizer):
+    encoder = StringEncoder(vectorizer=name_vectorizer, stop_words="english").fit(
+        encode_column
+    )
+    vectorizer = encoder.vectorizer_
+    if isinstance(vectorizer, Pipeline):
+        vectorizer = vectorizer[0]
+    assert vectorizer.stop_words == "english"
 
 
 def test_n_components_equal_voc_size(df_module):
@@ -230,3 +244,115 @@ def test_missing_values(df_module, vectorizer):
     for c in sbd.to_column_list(out):
         assert_almost_equal(c[1], 0.0, decimal=6)
         assert_almost_equal(c[2], 0.0, decimal=6)
+
+
+def test_categorical_features(df_module):
+    cat_col = sbd.to_categorical(
+        df_module.make_column("cat", ["A", "B", "A", "C", "B", "D"])
+    )
+    data = {
+        "categorical": cat_col,
+        "numeric": [1, 2, 3, 4, 5, 6],
+    }
+    df = df_module.make_dataframe(data)
+
+    se = StringEncoder(n_components=2)
+    with pytest.raises(RejectColumn):
+        se.fit(df["numeric"])
+
+    out = se.fit_transform(df["categorical"])
+    assert sbd.column_names(out) == ["categorical_0", "categorical_1"]
+
+    out = se.fit(df["categorical"][:4]).transform(df["categorical"][4:])
+    assert sbd.column_names(out) == ["categorical_0", "categorical_1"]
+
+
+def test_transform_error_on_float_data(df_module):
+    """Check that we raise an error when data without any string is passed at
+    transform."""
+    x = df_module.make_column("", [1.0, 2.5, 3.7])
+
+    encoder = StringEncoder(n_components=2)
+    encoder.fit(df_module.make_column("", ["hello", "world"]))
+
+    with pytest.raises(ValueError, match="does not contain strings"):
+        encoder.transform(x)
+
+
+@pytest.mark.parametrize(
+    "n_components, expected_columns",
+    [
+        (3, ["col_0", "col_1", "col_2"]),  # No padding needed for components < 10
+        (
+            12,
+            [
+                "col_00",
+                "col_01",
+                "col_02",
+                "col_03",
+                "col_04",
+                "col_05",
+                "col_06",
+                "col_07",
+                "col_08",
+                "col_09",
+                "col_10",
+                "col_11",
+            ],
+        ),  # 2-digit padding
+    ],
+)
+def test_zero_padding_in_feature_names_out(df_module, n_components, expected_columns):
+    """Check that the feature names are zero-padded."""
+    encoder = StringEncoder(n_components=n_components)
+    X = df_module.make_column("col", [f"v{idx}" for idx in range(12)])
+    encoder.fit(X)
+    feature_names = encoder.get_feature_names_out()
+
+    assert feature_names[: len(expected_columns)] == expected_columns
+
+
+def test_vocabulary_parameter(df_module):
+    voc = {
+        "this": 5,
+        "is": 1,
+        "simple": 3,
+        "example": 0,
+        "this is": 6,
+        "is simple": 2,
+        "simple example": 4,
+    }
+    encoder = StringEncoder(n_components=2, vocabulary=voc)
+    pipeline = Pipeline(
+        [
+            (
+                "tfidf",
+                TfidfVectorizer(ngram_range=(3, 4), analyzer="char_wb", vocabulary=voc),
+            ),
+            ("tsvd", TruncatedSVD()),
+        ]
+    )
+    X = df_module.make_column(
+        "col",
+        ["this is a sentence", "this simple example is simple", "other words", ""],
+    )
+
+    enc_out = encoder.fit_transform(X)
+    pipe_out = pipeline.fit_transform(X)
+    pipe_out /= scaling_factor(pipe_out)
+
+    assert encoder.vectorizer_.vocabulary_ == voc
+    assert_almost_equal(enc_out, pipe_out)
+
+
+def test_vocabulary_on_hashing_vectorizer(df_module):
+    voc = {
+        "this": 5,
+    }
+    encoder = StringEncoder(vocabulary=voc, vectorizer="hashing")
+    with pytest.raises(ValueError, match="Custom vocabulary passed to StringEncoder*"):
+        X = df_module.make_column(
+            "col",
+            ["this is a sentence", "this simple example is simple", "other words", ""],
+        )
+        encoder.fit_transform(X)

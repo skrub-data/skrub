@@ -27,9 +27,7 @@
     box-sizing: border-box;
     position: absolute;
     top: calc(1.3 * var(--height-button));
-    left: calc(0.8 * var(--height-button));
-    width: calc(min(50ch, 100% - var(--height-button)));
-    min-width: min-content;
+    min-width: calc-size(max-content, min(size, 40dvw));
     padding: var(--spacing-l);
     background-color: var(--color-background-primary);
     border: var(--border-m) solid var(--color-background-info);

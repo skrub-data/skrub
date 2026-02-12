@@ -104,8 +104,8 @@ def test_missing_values(df_module, hashing):
             encoder.fit_transform(X)
     else:
         y = encoder.fit_transform(X)
-        assert y["_0"][1] == 0.0
-        assert y["_0"][7] == 0.0
+        assert y["minhash_0"][1] == 0.0
+        assert y["minhash_0"][7] == 0.0
         # non-regression for https://github.com/skrub-data/skrub/issues/921
         assert sbd.is_null(X)[1]
         assert sbd.is_null(X)[7]
@@ -118,10 +118,10 @@ def test_missing_values_none(df_module, hashing):
 
     enc = MinHashEncoder(hashing=hashing)
     d = enc.fit_transform(a)
-    assert d["_00"][0] != 0.0
-    assert d["_00"][1] != 0.0
-    assert_array_equal(d["_00"][2], 0.0)
-    assert_array_equal(d["_00"][3], 0.0)
+    assert d["minhash_00"][0] != 0.0
+    assert d["minhash_00"][1] != 0.0
+    assert_array_equal(d["minhash_00"][2], 0.0)
+    assert_array_equal(d["minhash_00"][3], 0.0)
 
 
 def test_cache_overflow(df_module):
@@ -136,7 +136,7 @@ def test_cache_overflow(df_module):
     raw_data = [get_random_string(10) for _ in range(capacity + 1)]
     raw_data = df_module.make_column("", raw_data)
     y = encoder.fit_transform(raw_data)
-    assert (sbd.to_numpy(y["_0"]) != -1.0).all()
+    assert (sbd.to_numpy(y["minhash_0"]) != -1.0).all()
 
 
 @skip_if_no_parallel
@@ -287,3 +287,14 @@ def test_zero_padding_in_feature_names_out(df_module, n_components, expected_col
     feature_names = encoder.get_feature_names_out()
 
     assert feature_names[: len(expected_columns)] == expected_columns
+
+
+def test_col_not_categorical(df_module):
+    X1 = df_module.make_column("some col", [1, 2, 3, 4, 5, 6, 7, 8])
+    X2 = df_module.make_column("col", ["a", "b", "c", "d", "e", "f", "g", "h"])
+    encoder = MinHashEncoder()
+    with pytest.raises(ValueError, match="does not contain strings"):
+        encoder.fit_transform(X1)
+
+    with pytest.raises(ValueError, match="does not contain strings"):
+        encoder.fit(X2).transform(X1)

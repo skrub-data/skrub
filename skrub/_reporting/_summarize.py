@@ -1,9 +1,18 @@
 """Get information and plots for a dataframe, that are used to generate reports."""
+
 import sys
 
-from .. import _column_associations
+from .. import _column_associations, _config
 from .. import _dataframe as sbd
 from . import _plotting, _sample_table, _utils
+
+try:
+    import pyarrow  # noqa F401
+
+    _PYARROW_INSTALLED = True
+except ImportError:
+    _PYARROW_INSTALLED = False
+
 
 _SUBSAMPLE_SIZE = 3000
 _N_TOP_ASSOCIATIONS = 20
@@ -14,6 +23,7 @@ def summarize_dataframe(
     *,
     order_by=None,
     with_plots=True,
+    with_associations=True,
     title=None,
     max_top_slice_size=5,
     max_bottom_slice_size=5,
@@ -35,6 +45,9 @@ def summarize_dataframe(
     with_plots : bool, default=True
         Generate the images or not.
 
+    with_associations : bool, default=True
+        Compute the associations or not.
+
     title : str or None, default=None
         A title that gets added to the returned dictionary and can be picked up
         and inserted in the report.
@@ -47,7 +60,7 @@ def summarize_dataframe(
         Maximum number of rows from the end of the dataframe to show in the
         sample table.
 
-    verbose : int, default = 1
+    verbose : int, default=1
         Whether to print progress information while the report is being generated.
 
         * verbose = 1 prints how many columns have been processed so far.
@@ -67,6 +80,7 @@ def summarize_dataframe(
         "columns": [],
         "dataframe_is_empty": not n_rows or not n_columns,
         "plots_skipped": not with_plots,
+        "associations_skipped": not with_associations,
         "sample_table": _sample_table.make_table(
             df,
             max_top_slice_size=max_top_slice_size,
@@ -106,15 +120,23 @@ def summarize_dataframe(
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
-    if n_rows and n_columns:
-        _add_associations(df, summary)
-    else:
-        summary["top_associations"] = []
+    if not _PYARROW_INSTALLED and summary["dataframe_module"] == "polars":
+        with_associations = False
+        summary["associations_skipped_polars_no_pyarrow"] = True
+    elif with_associations:
+        if n_rows and n_columns:
+            _add_associations(df, summary)
+        else:
+            summary["top_associations"] = []
     return summary
 
 
 def _add_associations(df, dataframe_summary):
-    df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
+    df = sbd.sample(
+        df,
+        n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE),
+        seed=_config.get_config()["subsampling_seed"],
+    )
     associations = _column_associations.column_associations(df)
 
     # get only the top _N_TOP_ASSOCIATIONS
@@ -139,6 +161,7 @@ def _summarize_column(
         "name": sbd.name(column),
         "dtype": _utils.get_dtype_name(column),
         "value_is_constant": False,
+        "is_ordered": False,
     }
     _add_nulls_summary(summary, column, dataframe_summary=dataframe_summary)
     if summary["null_count"] == dataframe_summary["n_rows"]:
@@ -148,6 +171,9 @@ def _summarize_column(
         summary["n_unique"] = sbd.n_unique(column)
         summary["unique_proportion"] = summary["n_unique"] / max(
             1, dataframe_summary["n_rows"]
+        )
+        summary["is_high_cardinality"] = (
+            summary["n_unique"] > _config.get_config()["cardinality_threshold"]
         )
     except Exception:
         # for some dtypes n_unique can fail eg with a typeerror for
@@ -164,7 +190,9 @@ def _summarize_column(
         order_by_column=order_by_column,
     )
     _add_datetime_summary(summary, column, with_plots=with_plots)
-    summary["plot_names"] = [k for k in summary.keys() if k.endswith("_plot")]
+    summary["plot_names"] = [k for k in summary if k.endswith("_plot")]
+    _add_is_sorted(summary, column)
+
     return summary
 
 
@@ -243,6 +271,8 @@ def _add_numeric_summary(
     else:
         summary["is_duration"] = False
         if not sbd.is_numeric(column):
+            if sbd.is_bool(column):
+                summary["mean"] = sbd.mean(column)
             return
         duration_unit = None
     summary["duration_unit"] = duration_unit
@@ -269,3 +299,9 @@ def _add_numeric_summary(
         )
     else:
         summary["line_plot"] = _plotting.line(order_by_column, column)
+
+
+def _add_is_sorted(summary, column):
+    summary["is_ordered"] = sbd.is_sorted(column, descending=False) or sbd.is_sorted(
+        column, descending=True
+    )

@@ -18,42 +18,15 @@ skrub
 
 
 **skrub** (formerly *dirty_cat*) is a Python
-library that facilitates prepping your tables for machine learning.
+library that facilitates doing machine learning with dataframes.
 
 If you like the package, spread the word and ⭐ this repository!
 You can also join the `discord server <https://discord.gg/ABaPnm7fDC>`_.
 
 Website: https://skrub-data.org/
 
-What can skrub do?
-------------------
-
-The goal of skrub is to bridge the gap between tabular data sources and machine-learning models.
-
-skrub provides high-level tools for joining dataframes (``Joiner``, ``AggJoiner``, ...),
-encoding columns (``MinHashEncoder``, ``ToCategorical``, ...), building a pipeline
-(``TableVectorizer``, ``tabular_learner``, ...), and exploring interactively your data (``TableReport``).
-
->>> from skrub.datasets import fetch_employee_salaries
->>> dataset = fetch_employee_salaries()
->>> df = dataset.X
->>> y = dataset.y
->>> df.iloc[0]
-gender                                                                     F
-department                                                               POL
-department_name                                         Department of Police
-division                   MSB Information Mgmt and Tech Division Records...
-assignment_category                                         Fulltime-Regular
-employee_position_title                          Office Services Coordinator
-date_first_hired                                                  09/22/1986
-year_first_hired                                                        1986
-
->>> from sklearn.model_selection import cross_val_score
->>> from skrub import tabular_learner
->>> cross_val_score(tabular_learner('regressor'), df, y)
-array([0.89370447, 0.89279068, 0.92282557, 0.92319094, 0.92162666])
-
-See our `examples <https://skrub-data.org/stable/auto_examples>`_.
+See our `examples <https://skrub-data.org/stable/auto_examples>`_, or check out
+the `learning materials <https://skrub-data.org/skrub-materials/index.html>`_.
 
 Installation
 ------------

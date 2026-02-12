@@ -15,8 +15,8 @@ from sklearn.utils.validation import check_is_fitted
 
 from skrub import _dataframe as sbd
 from skrub import _join_utils, _utils
-from skrub import _selectors as s
-from skrub._dispatch import dispatch
+from skrub import selectors as s
+from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
 from ._check_input import CheckInputDataFrame
 
@@ -90,7 +90,7 @@ def aggregate(table, key, cols_to_agg, operations, suffix):
 
 @dispatch
 def perform_groupby(table, key, cols_to_agg, operations):
-    raise NotImplementedError()
+    raise_dispatch_unregistered_type(table, kind="DataFrame")
 
 
 @perform_groupby.specialize("pandas", argument_type="DataFrame")
@@ -149,7 +149,7 @@ def check_other_inputs(operations, suffix):
     The checked inputs.
     """
     operations = np.atleast_1d(operations).tolist()
-    if not all([isinstance(op, str) for op in operations]) or operations == []:
+    if not all(isinstance(op, str) for op in operations) or operations == []:
         raise ValueError(
             "`operations` must be a string or an iterable of strings, got"
             f" {operations}."

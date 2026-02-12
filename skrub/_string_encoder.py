@@ -1,5 +1,6 @@
 import warnings
 
+from sklearn.base import TransformerMixin
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -7,12 +8,15 @@ from sklearn.feature_extraction.text import (
     TfidfVectorizer,
 )
 from sklearn.pipeline import Pipeline
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._on_each_column import SingleColumnTransformer
+from ._scaling_factor import scaling_factor
+from ._single_column_transformer import SingleColumnTransformer
+from ._to_str import ToStr
 
 
-class StringEncoder(SingleColumnTransformer):
+class StringEncoder(TransformerMixin, SingleColumnTransformer):
     """Generate a lightweight string encoding of a given column using tf-idf \
         vectorization and truncated singular value decomposition (SVD).
 
@@ -27,6 +31,7 @@ class StringEncoder(SingleColumnTransformer):
     n_components : int, default=30
         Number of components to be used for the singular value decomposition (SVD).
         Must be a positive integer.
+
     vectorizer : str, "tfidf" or "hashing", default="tfidf"
         Vectorizer to apply to the strings, either `tfidf` or `hashing` for
         scikit-learn TfidfVectorizer or HashingVectorizer respectively.
@@ -42,6 +47,38 @@ class StringEncoder(SingleColumnTransformer):
         Option ``char_wb`` creates character n-grams only from text inside word
         boundaries; n-grams at the edges of words are padded with space.
 
+    stop_words : {'english'}, list, default=None
+        If 'english', a built-in stop word list for English is used. There are several
+        known issues with 'english' and you should consider an alternative (see `Using
+        stop words <https://scikit-learn.org/stable/modules/feature_extraction.html#using-stop-words>`_).
+
+        If a list, that list is assumed to contain stop words, all of which will be
+        removed from the resulting tokens. Only applies if ``analyzer == 'word'``.
+
+        If None, no stop words will be used.
+
+    random_state : int, RandomState instance or None, default=None
+        Used during randomized svd. Pass an int for reproducible results across
+        multiple function calls.
+
+    vocabulary : Mapping or iterable, default=None
+        In case of "tfidf" vectorizer, the vocabulary mapping passed to the vectorizer.
+        Either a Mapping (e.g., a dict) where keys are terms and values are
+        indices in the feature matrix, or an iterable over terms.
+
+    Attributes
+    ----------
+    input_name_ : str
+        Name of the fitted column, or "string_enc" if the column has no name.
+
+    n_components_ : int
+        The number of dimensions of the embeddings after dimensionality
+        reduction.
+
+    all_outputs_ : list of str
+        A list that contains the name of all the features generated from the fitted
+        column.
+
     See Also
     --------
     MinHashEncoder :
@@ -50,6 +87,25 @@ class StringEncoder(SingleColumnTransformer):
         Encode string columns by constructing latent topics.
     TextEncoder :
         Encode string columns using pre-trained language models.
+
+    Notes
+    -----
+    Skrub provides ``StringEncoder`` as a simple interface to perform `Latent Semantic
+    Analysis (LSA) <https://scikit-learn.org/stable/modules/decomposition.html#about-truncated-svd-and-latent-semantic-analysis-(lsa)>`_.
+    As such, it doesn't support all hyper-parameters exposed by the underlying
+    {:class:`~sklearn.feature_extraction.text.TfidfVectorizer`,
+    :class:`~sklearn.feature_extraction.text.HashingVectorizer`} and
+    :class:`~sklearn.decomposition.TruncatedSVD`. If you need more flexibility than the
+    proposed hyper-parameters of ``StringEncoder``, you must create your own LSA using
+    scikit-learn :class:`~sklearn.pipeline.Pipeline`, such as:
+
+    >>> from sklearn.pipeline import make_pipeline
+    >>> from sklearn.feature_extraction.text import TfidfVectorizer
+    >>> from sklearn.decomposition import TruncatedSVD
+
+    >>> make_pipeline(TfidfVectorizer(max_df=300), TruncatedSVD())
+    Pipeline(steps=[('tfidfvectorizer', TfidfVectorizer(max_df=300)),
+                ('truncatedsvd', TruncatedSVD())])
 
     Examples
     --------
@@ -67,9 +123,9 @@ class StringEncoder(SingleColumnTransformer):
 
     >>> enc.fit_transform(X) # doctest: +SKIP
        video comments_0  video comments_1
-    0      8.218069e-01      4.557474e-17
-    1      6.971618e-16      1.000000e+00
-    2      8.218069e-01     -3.046564e-16
+    0          1.322973         -0.163070
+    1          0.379688          1.659319
+    2          1.306400         -0.317120
     """
 
     def __init__(
@@ -78,21 +134,17 @@ class StringEncoder(SingleColumnTransformer):
         vectorizer="tfidf",
         ngram_range=(3, 4),
         analyzer="char_wb",
+        stop_words=None,
+        random_state=None,
+        vocabulary=None,
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
         self.ngram_range = ngram_range
         self.analyzer = analyzer
-
-    def get_feature_names_out(self):
-        """Get output feature names for transformation.
-
-        Returns
-        -------
-        feature_names_out : list of str objects
-            Transformed feature names.
-        """
-        return list(self.all_outputs_)
+        self.stop_words = stop_words
+        self.random_state = random_state
+        self.vocabulary = vocabulary
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -111,34 +163,51 @@ class StringEncoder(SingleColumnTransformer):
         """
         del y
 
+        self.to_str = ToStr(convert_category=True)
+        X_filled = self.to_str.fit_transform(X)
+        X_filled = sbd.fill_nulls(X_filled, "")
+
         if self.vectorizer == "tfidf":
             self.vectorizer_ = TfidfVectorizer(
-                ngram_range=self.ngram_range, analyzer=self.analyzer
+                ngram_range=self.ngram_range,
+                analyzer=self.analyzer,
+                stop_words=self.stop_words,
+                vocabulary=self.vocabulary,
             )
         elif self.vectorizer == "hashing":
-            self.vectorizer_ = Pipeline(
-                [
-                    (
-                        "hashing",
-                        HashingVectorizer(
-                            ngram_range=self.ngram_range, analyzer=self.analyzer
+            if self.vocabulary is not None:
+                raise ValueError(
+                    "Custom vocabulary passed to StringEncoder, unsupported by"
+                    "HashingVectorizer. Rerun without a 'vocabulary' parameter."
+                )
+            else:
+                self.vectorizer_ = Pipeline(
+                    [
+                        (
+                            "hashing",
+                            HashingVectorizer(
+                                ngram_range=self.ngram_range,
+                                analyzer=self.analyzer,
+                                stop_words=self.stop_words,
+                            ),
                         ),
-                    ),
-                    ("tfidf", TfidfTransformer()),
-                ]
-            )
+                        ("tfidf", TfidfTransformer()),
+                    ]
+                )
+
         else:
             raise ValueError(
                 f"Unknown vectorizer {self.vectorizer}. Options are 'tfidf' or"
                 f" 'hashing', got {self.vectorizer!r}"
             )
 
-        X_filled = sbd.fill_nulls(X, "")
         X_out = self.vectorizer_.fit_transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
 
         if (min_shape := min(X_out.shape)) > self.n_components:
-            self.tsvd_ = TruncatedSVD(n_components=self.n_components)
+            self.tsvd_ = TruncatedSVD(
+                n_components=self.n_components, random_state=self.random_state
+            )
             result = self.tsvd_.fit_transform(X_out)
         elif X_out.shape[1] == self.n_components:
             result = X_out.toarray()
@@ -158,13 +227,15 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()  # To avoid a reference to X_out
         del X_out  # optimize memory: we no longer need X_out
 
-        self._is_fitted = True
+        # block normalize
+        self.scaling_factor_ = scaling_factor(result)
+        result /= self.scaling_factor_
+
         self.n_components_ = result.shape[1]
 
-        name = sbd.name(X)
-        if not name:
-            name = "tsvd"
-        self.all_outputs_ = [f"{name}_{idx}" for idx in range(self.n_components_)]
+        self.input_name_ = sbd.name(X) or "string_enc"
+
+        self.all_outputs_ = self.get_feature_names_out()
 
         return self._post_process(X, result)
 
@@ -181,8 +252,15 @@ class StringEncoder(SingleColumnTransformer):
         result: Pandas or Polars dataframe with shape (len(X), tsvd_n_components)
             The embedding representation of the input.
         """
+        # Error checking at fit time is done by the ToStr transformer,
+        # but after ToStr is fitted it does not check the input type anymore,
+        # while we want to ensure that the input column is a string or categorical
+        # so we need to add the check here.
+        if not (sbd.is_string(X) or sbd.is_categorical(X)):
+            raise ValueError("Input column does not contain strings.")
 
-        X_filled = sbd.fill_nulls(X, "")
+        X_filled = self.to_str.transform(X)
+        X_filled = sbd.fill_nulls(X_filled, "")
         X_out = self.vectorizer_.transform(X_filled).astype("float32")
         del X_filled  # optimizes memory: we no longer need X
         if hasattr(self, "tsvd_"):
@@ -192,6 +270,9 @@ class StringEncoder(SingleColumnTransformer):
             result = result.copy()
         del X_out  # optimize memory: we no longer need X_out
 
+        # block normalize
+        result /= self.scaling_factor_
+
         return self._post_process(X, result)
 
     def _post_process(self, X, result):
@@ -199,3 +280,27 @@ class StringEncoder(SingleColumnTransformer):
         result = sbd.copy_index(X, result)
 
         return result
+
+    def get_feature_names_out(self, input_features=None):
+        """Return a list of features generated by the transformer.
+
+        Each feature has format ``{input_name}_{n_component}`` where ``input_name``
+        is the name of the input column, or a default name for the encoder, and
+        ``n_component`` is the idx of the specific feature.
+
+        Parameters
+        ----------
+        input_features : None
+            The input features. Ignored, only here for compatibility.
+
+        Returns
+        -------
+        list of str
+            The list of feature names.
+        """
+        check_is_fitted(self, "n_components_")
+        num_digits = len(str(self.n_components_ - 1))
+        return [
+            f"{self.input_name_}_{str(i).zfill(num_digits)}"
+            for i in range(self.n_components_)
+        ]

@@ -296,7 +296,7 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     Returns
     -------
     str
-        The plot as a XML string.
+        The plot as an XML string.
     """
     values = [_utils.ellide_string(v) for v, _ in value_counts][::-1]
     counts = [c for _, c in value_counts][::-1]
@@ -307,25 +307,39 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     fig, ax = plt.subplots()
     _despine(ax)
     rects = ax.barh(list(map(str, range(len(values)))), counts, color=color)
-    percent = [_utils.format_percent(c / n_rows) for c in counts]
-    large_percent = [
-        f"{p: >6}" if c > counts[-1] / 2 else "" for (p, c) in zip(percent, counts)
+    string_value = [_utils.format_number(c) for c in counts]
+    large_string = [
+        f"{s: >6}" if c > counts[-1] / 2 else "" for (s, c) in zip(string_value, counts)
     ]
-    small_percent = [
-        p if c <= counts[-1] / 2 else "" for (p, c) in zip(percent, counts)
+    small_string = [
+        s if c <= counts[-1] / 2 else "" for (s, c) in zip(string_value, counts)
     ]
 
     # those are written on top of the orange bars so we write them in black
-    ax.bar_label(rects, large_percent, padding=-30, color="black", fontsize=8)
+    ax.bar_label(rects, large_string, padding=-30, color="black", fontsize=8)
     # those are written on top of the background so we write them in foreground color
     ax.bar_label(
-        rects, small_percent, padding=5, color=_TEXT_COLOR_PLACEHOLDER, fontsize=8
+        rects, small_string, padding=5, color=_TEXT_COLOR_PLACEHOLDER, fontsize=8
+    )
+
+    percent = [_utils.format_percent(c / n_rows) for c in counts]
+    # add the percentage of each bar on the top of the figure
+    ax_percentage = ax.twinx()
+    ax_percentage.set_ylim(ax.get_ylim())
+    ax_percentage.set_yticks(ticks=range(len(counts)))
+    ax_percentage.tick_params(axis="both", length=0)
+    ax_percentage.set_yticklabels(
+        labels=percent,
+        color=_TEXT_COLOR_PLACEHOLDER,
+        fontsize=8,
     )
 
     ax.set_yticks(ax.get_yticks())
     ax.set_yticklabels(list(map(str, values)))
+    ax.spines[["right", "top"]].set_visible(False)
+    ax_percentage.spines[["right", "top"]].set_visible(False)
     if title is not None:
         ax.set_title(title)
 
-    _adjust_fig_size(fig, ax, 1.0, 0.2 * len(values))
+    _adjust_fig_size(fig, ax, 1.3, 0.2 * len(values))
     return _serialize(fig)

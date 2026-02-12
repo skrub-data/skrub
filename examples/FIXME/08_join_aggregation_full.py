@@ -191,9 +191,10 @@ results["Dummy Negative"] = get_results(
 # Low effort estimator
 # --------------------
 #
-# Next, we use the |TableVectorizer| and a |HGBC| to create a very simple baseline model
-# that uses the sparse dataset directly. Note that due to the large number of high
-# cardinality columns, we can't use an multi-dimensional encoder like the
+# Next, we use the |TableVectorizer| and an |HGBC| to create a very simple
+# baseline model that uses the sparse dataset directly.
+# Note that due to the large number of high
+# cardinality columns, we can't use a multi-dimensional encoder like the
 # |MinHashEncoder|, because the number of columns would then explode.
 #
 # Instead, we encode our categories with a |TargetEncoder|.
@@ -470,7 +471,7 @@ TableReport(products_transformed)
 from sklearn.pipeline import make_pipeline
 
 from skrub import AggJoiner
-from skrub import _selectors as s
+from skrub import selectors as s
 
 minhash_cols = "ID" | s.glob("item_*") | s.glob("model_*") | s.glob("make_*")
 single_cols = ["ID", "goods_code", "Nbr_of_prod_purchas", "cash_price"]
@@ -493,7 +494,7 @@ TableReport(basket_train_transformed)
 
 # %%
 # Now that we get a sense of how the |AggJoiner| can help us, we complete this pipeline
-# with a |HGBC| and evaluate our final model.
+# with an |HGBC| and evaluate our final model.
 
 tic = time()
 agg_join_estimator = make_pipeline(

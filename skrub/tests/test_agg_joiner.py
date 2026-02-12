@@ -7,7 +7,7 @@ import pytest
 from sklearn.exceptions import NotFittedError
 
 from skrub import _dataframe as sbd
-from skrub._agg_joiner import AggJoiner, AggTarget, aggregate
+from skrub._agg_joiner import AggJoiner, AggTarget, aggregate, perform_groupby
 
 
 @pytest.fixture
@@ -781,3 +781,9 @@ def test_agg_target_duplicate_columns(main_table, y_df):
     out_1 = agg_target.fit_transform(X, y_df)
     out_2 = agg_target.transform(X)
     assert sbd.column_names(out_1) == sbd.column_names(out_2)
+
+
+def test_error_perform_groupby():
+    # Make codecov happy
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars DataFrame"):
+        perform_groupby(np.array([1]), key=None, cols_to_agg=None, operations=None)
