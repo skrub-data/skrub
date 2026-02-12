@@ -1089,3 +1089,20 @@ def test_cleaner_empty_column_name():
     cleaner.fit_transform(df)
     assert list(cleaner.all_processing_steps_.keys()) == df.columns
     assert all(len(step) > 0 for step in cleaner.all_processing_steps_.values())
+
+
+def test_pipeline_in_table_vectorizer(df_module):
+    # non-regression for #1831: using a Pipeline starting with a
+    # SingleColumnTransformer as a TV encoder works as expected.
+    df = df_module.make_dataframe(
+        {
+            "date": [
+                datetime.fromisoformat("2026-02-12"),
+                datetime.fromisoformat("2026-02-13"),
+            ]
+        }
+    )
+    tv = TableVectorizer(datetime=make_pipeline(DatetimeEncoder(), StandardScaler()))
+    fit_transform_result = tv.fit_transform(df)
+    transform_result = tv.transform(df)
+    assert fit_transform_result.shape == transform_result.shape == (2, 4)
