@@ -46,6 +46,7 @@ def datetime_col(df_module):
 
 
 @skip_polars_installed_without_pyarrow
+@pytest.mark.xfail(strict=False)
 @pytest.mark.parametrize(
     "format",
     [

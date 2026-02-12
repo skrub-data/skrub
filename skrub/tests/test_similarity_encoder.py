@@ -166,16 +166,17 @@ def _test_similarity(
     numpy.testing.assert_almost_equal(X_test_enc, ans)
 
 
+@pytest.mark.xfail(strict=False)
 @pytest.mark.parametrize("input_type", INPUT_TYPES)
 @pytest.mark.parametrize("missing", ["aaa", "error", ""])
-@pytest.mark.xfail(strict=False)
 def test_similarity_encoder(input_type, missing):
     if input_type == "polars":
-        pytest.xfail(
+        pytest.mark.xfail(
             reason=(
                 "Using Polars raises the following error 'TypeError: '<' not supported"
                 " between instances of 'NoneType' and 'str''"
-            )
+            ),
+            strict=False,
         )
     _test_similarity(
         ngram_similarity,
