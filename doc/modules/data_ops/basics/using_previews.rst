@@ -50,9 +50,9 @@ Disabling previews and eager checks
 -----------------------------------
 
 By default, as soon as a DataOp is defined, some validity checks are performed
-and the preview results are computed eagerly. In some cases we may want to
-disable this, for example if we are defining a very complex DataOp with over 100
-nodes and running checks after each node is added adds noticeable overhead. This
+and the preview results are computed eagerly. In very complex Data Ops plans
+(100+ nodes), running checks after adding each node adds noticeable overhead.
+To avoid this, it is possible to disable eager checks with the ``"eager_data_ops"``
 is easily achieved with the ``"eager_data_ops"`` :ref:`configuration
 <user_guide_configuration_parameters>` option.
 
