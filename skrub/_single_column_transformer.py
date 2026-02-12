@@ -5,6 +5,7 @@ import re
 import textwrap
 
 from sklearn.base import BaseEstimator
+from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -209,3 +210,36 @@ def _insert_after_first_paragraph(document, text_to_insert):
     output_lines.append("\n")
     output_lines.extend(doc_lines)
     return "".join(output_lines)
+
+
+def is_single_column_transformer(transformer):
+    """
+    Check if the provided transformer is a single-column transformer.
+
+    This is done by checking the special attribute
+    __single_column_transformer__ (thus inheriting from the
+    SingleColumnTransformer class is not mandatory). We treat scikit-learn
+    pipelines as a special case and inspect their first step.
+
+    Parameters
+    ----------
+    transformer : BaseEstimator
+        The transformer to check.
+
+    Returns
+    -------
+    bool
+        Whether the transformer is a single-column transformer, meaning that it
+        should be passed columns rather than dataframes.
+    """
+    if hasattr(transformer, "__single_column_transformer__"):
+        return True
+    if isinstance(transformer, Pipeline):
+        try:
+            return is_single_column_transformer(transformer.steps[0][1])
+        except Exception:
+            # If we are given an invalid Pipeline (eg with no steps) we do not
+            # want to raise while attempting to inspect it (it would obfuscate
+            # the better error that will be raised when calling fit)
+            return False
+    return False

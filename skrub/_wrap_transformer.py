@@ -1,5 +1,6 @@
 from ._apply_to_cols import ApplyToCols
 from ._apply_to_frame import ApplyToFrame
+from ._single_column_transformer import is_single_column_transformer
 from .selectors import make_selector
 
 __all__ = ["wrap_transformer"]
@@ -87,7 +88,7 @@ def wrap_transformer(
     selector = make_selector(selector)
 
     if isinstance(columnwise, str) and columnwise == "auto":
-        columnwise = hasattr(transformer, "__single_column_transformer__")
+        columnwise = is_single_column_transformer(transformer)
 
     if columnwise:
         return ApplyToCols(
