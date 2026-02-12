@@ -17,4 +17,6 @@ the :ref:`API Reference <api_ref>`.
 .. toctree::
    :maxdepth: 2
 
-.. toctree::
+   guides/table_report/alter_appearance.rst
+   guides/table_report/exporting.rst
+   guides/table_report/finding_correlated_columns.rst
