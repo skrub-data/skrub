@@ -333,7 +333,6 @@ log_cli_level = "INFO"
 xfail_strict = true
 addopts = [
   "--doctest-modules",
-  "-ra",
   "--strict-config",
   "--strict-markers",
 ]
