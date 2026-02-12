@@ -82,7 +82,7 @@ class SingleColumnTransformer(BaseEstimator):
         Parameters
         ----------
         transform : str or None, default=None
-            ignored
+            Ignored.
 
         Returns
         -------
