@@ -74,47 +74,27 @@ can serve as wrappers for non-Skrub transformers. For instance, if one wanted to
 exception into scikit-learn's ``StandardScaler``, one could create a ``NewScaler`` as follows::
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
->>> from sklearn.preprocessing import StandardScaler
->>> class Scaler(SingleColumnTransformer):
+>>>
+>>> class ZipcodeScaler(SingleColumnTransformer):
 ...     def __init__(self):
-...         self.scaler = StandardScaler()
-...
-...     def fit_transform(self, x, y=None):
-...         if x.dtype != 'float64':
-...             raise RejectColumn('This scaler only takes float64 types.')
+...         return
+...     def fit_transform(self, X, y=None):
+...         if any(X.map(len) != 5):
+...             raise RejectColumn('This transformer only takes zip codes of length 5.')
 ...         else:
-...             return(pd.DataFrame(self.scaler.fit_transform(pd.DataFrame(x), y)))
-...
-...     def transform(self, x):
-...         return(pd.DataFrame(self.scaler.transform(pd.DataFrame(x))))
->>> df = pd.DataFrame(dict(product=["Chair", "Table", "Bed"], price=[30.0, 60.0, 200.0]))
->>> Scaler().fit_transform(df["price"])
-          0
-0 -0.899843
-1 -0.494913
-2  1.394756
->>> Scaler().fit_transform(df["product"])
+...             letters = X.map(lambda s: s[:2])
+...             try:
+...                 numbers = X.map(lambda s: int(s[2:]))
+...             except:
+...                 raise RejectColumn('Input zip codes must consist of two letters followed by three numbers.')
+...             return(pd.DataFrame({'letters': letters, 'numbers': numbers}))
+>>> df = pd.DataFrame({'sent': ["AB123", "BD601", "HS014"], 'received': ["AB1C45", "DU3K93", "WB9M88"]})
+>>> ZipcodeScaler().fit_transform(df["sent"])
+  letters  numbers
+0      AB      123
+1      BD      601
+2      HS       14
+>>> ZipcodeScaler().fit_transform(df["received"])
 Traceback (most recent call last):
     ...
-skrub.core._single_column_transformer.RejectColumn: This scaler only takes float64 types.
-
-
-
-
-A custom class inherited from a ``SingleColumnTransformer`` can also enable to run a custom criterion to
-check whether or not to accept a column::
-
->>> class NewScaler(SingleColumnTransformer):
-...     def __init__(self):
-...         self.scaler = StandardScaler()
-...
-...     def fit_transform(self, x, y=None):
-...         if not check(x):
-...             raise RejectColumn
-...         else:
-...             self.scaler.fit_transform(x, y)
-...
-...     def transform(self, x):
-...         self.scaler.fit_transform(x)
-
-Where ``check`` is a specially-defined function.
+skrub.core._single_column_transformer.RejectColumn: This transformer only takes zip codes of length 5.
