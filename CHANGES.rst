@@ -9,14 +9,14 @@ Release history
 Ongoing Development
 ===================
 
-New features
+New Features
 ------------
 
 Changes
 -------
 
-Bugfixes
---------
+Bug Fixes
+---------
 
 Release 0.7.2
 =============
