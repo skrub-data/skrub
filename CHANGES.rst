@@ -14,6 +14,8 @@ New features
 
 Changes
 -------
+- Increased the minimum version of polars from 0.20 to 1.5.0.
+  :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
