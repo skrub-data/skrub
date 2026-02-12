@@ -100,6 +100,10 @@ class SingleColumnTransformer(BaseEstimator):
     def _check_single_column(self, column, function_name):
         class_name = self.__class__.__name__
         if sbd.is_dataframe(column):
+            if sbd.shape(column)[1] == 1:
+                # Dataframes containing just 1 column are accepted and silently
+                # converted to a column.
+                return sbd.col_by_idx(column, 0)
             raise ValueError(
                 f"``{class_name}.{function_name}`` should be passed a single column,"
                 " not a dataframe. " + _SINGLE_COL_LINE.format(class_name=class_name)
@@ -150,7 +154,7 @@ def _wrap_add_check_single_column(f):
 
         @functools.wraps(f)
         def fit(self, X, y=None, **kwargs):
-            self._check_single_column(X, f.__name__)
+            X = self._check_single_column(X, f.__name__)
             return f(self, X, y=y, **kwargs)
 
         return fit
@@ -158,7 +162,7 @@ def _wrap_add_check_single_column(f):
 
         @functools.wraps(f)
         def partial_fit(self, X, y=None, **kwargs):
-            self._check_single_column(X, f.__name__)
+            X = self._check_single_column(X, f.__name__)
             return f(self, X, y=y, **kwargs)
 
         return partial_fit
@@ -167,7 +171,7 @@ def _wrap_add_check_single_column(f):
 
         @functools.wraps(f)
         def fit_transform(self, X, y=None, **kwargs):
-            self._check_single_column(X, f.__name__)
+            X = self._check_single_column(X, f.__name__)
             return f(self, X, y=y, **kwargs)
 
         return fit_transform
@@ -176,7 +180,7 @@ def _wrap_add_check_single_column(f):
 
         @functools.wraps(f)
         def transform(self, X, **kwargs):
-            self._check_single_column(X, f.__name__)
+            X = self._check_single_column(X, f.__name__)
             return f(self, X, **kwargs)
 
         return transform
