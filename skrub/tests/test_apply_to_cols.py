@@ -47,6 +47,13 @@ def test_single_column_transformer_wrapped_methods(df_module, define_fit):
             ValueError, match=r"``Dummy\..*`` expects the first argument X"
         ):
             getattr(dummy, method)(np.ones((3,)))
+        # Dataframes with a single column are accepted:
+        col = df_module.example_column
+        result = getattr(dummy, method)(df_module.make_dataframe({sbd.name(col): col}))
+        if method == "fit":
+            assert result is dummy
+        else:
+            df_module.assert_column_equal(result, col)
 
 
 @pytest.mark.parametrize(
