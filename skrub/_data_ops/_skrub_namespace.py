@@ -92,6 +92,20 @@ def _check_grid_search_possible(data_op):
 
 
 def _check_before(f):
+    """
+    Decorator to perform validation of a DataOp before calling a function.
+
+    Usually some checks such as no duplicate names are performed whenever a
+    DataOp is created. However to reduce overhead, those checks can be disabled
+    when the DataOp is created. But we always perform validation before
+    actually using the DataOp. So all functions that evaluate the DataOp or
+    transform it into some other type such as .skb.eval(), .skb.make_learner()
+    etc. must be decorated with _check_before.
+
+    Note that once a DataOp has been checked, that is stored in an attribute so
+    redundant checks are avoided.
+    """
+
     @functools.wraps(f)
     def _checked(self, *args, **kwargs):
         check_data_op(self._data_op)

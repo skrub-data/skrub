@@ -325,8 +325,8 @@ def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=
     are eagerly computed (to make them available and trigger possible errors)
     as soon as they are defined.
 
-    However, eager checks and preview computation may be disabled in some
-    situations (e.g. the config option eager_data_ops has the value False).
+    However, eager checks and preview computation may be disabled
+    via the eager_data_ops config option.
 
     We decorate all the functions that create DataOps rather than perform
     checks in ``__init__`` to make tracebacks as short as possible: the second
