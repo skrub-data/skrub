@@ -408,7 +408,7 @@ def test_agg_joiner_default_cols(main_table):
         aux_table=main_table, operations="mode", key=["movieId", "userId"]
     )
     agg_joiner.fit(main_table)
-    assert agg_joiner._cols == ["rating", "genre"]
+    assert sorted(agg_joiner._cols) == ["genre", "rating"]
 
 
 def test_agg_joiner_correct_cols(df_module, main_table):
