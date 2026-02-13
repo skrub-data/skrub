@@ -144,8 +144,10 @@ def uses_subsampling(data_op):
     return (
         _evaluation.find_node(
             data_op,
-            lambda e: isinstance(e, _data_ops.DataOp)
-            and isinstance(e._skrub_impl, (SubsamplePreviews, ShouldSubsample)),
+            lambda e: (
+                isinstance(e, _data_ops.DataOp)
+                and isinstance(e._skrub_impl, (SubsamplePreviews, ShouldSubsample))
+            ),
         )
         is not None
     )
