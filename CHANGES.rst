@@ -9,7 +9,7 @@ Release history
 Ongoing Development
 ===================
 
-New features
+New Features
 ------------
 - The ``eager_data_ops`` :ref:`configuration
   <user_guide_configuration_parameters>` option has been added. When set to
@@ -23,8 +23,8 @@ New features
 Changes
 -------
 
-Bugfixes
---------
+Bug Fixes
+---------
 
 Release 0.7.2
 =============
