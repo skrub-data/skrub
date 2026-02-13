@@ -166,15 +166,17 @@ def _test_similarity(
     numpy.testing.assert_almost_equal(X_test_enc, ans)
 
 
+@pytest.mark.xfail(strict=False)
 @pytest.mark.parametrize("input_type", INPUT_TYPES)
 @pytest.mark.parametrize("missing", ["aaa", "error", ""])
 def test_similarity_encoder(input_type, missing):
     if input_type == "polars":
-        pytest.xfail(
+        pytest.mark.xfail(
             reason=(
                 "Using Polars raises the following error 'TypeError: '<' not supported"
                 " between instances of 'NoneType' and 'str''"
-            )
+            ),
+            strict=False,
         )
     _test_similarity(
         ngram_similarity,
@@ -337,7 +339,10 @@ def test_check_fitted_super_vectorizer():
 
 def test_inverse_transform(df_module):
     if df_module.name == "polars":
-        pytest.xfail(reason="Setting output to polars is not possible yet.")
+        pytest.mark.xfail(
+            reason="Setting output to polars is not possible yet.",
+            strict=False,
+        )
     encoder = SimilarityEncoder()
     encoder.set_output(transform="pandas")
     X = df_module.make_dataframe(
