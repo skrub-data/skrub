@@ -9,8 +9,6 @@ from . import _utils, selectors
 from ._join_utils import pick_column_names
 from ._single_column_transformer import RejectColumn
 
-_SELECTORS = selectors.all()
-
 __all__ = ["ApplyToCols"]
 
 # By default, select all columns
