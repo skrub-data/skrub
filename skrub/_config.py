@@ -67,6 +67,7 @@ _global_config = {
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
     "data_folder": _get_default_data_folder(),
+    "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
 }
 _threadlocal = threading.local()
 
@@ -128,6 +129,7 @@ def set_config(
     float_precision=None,
     cardinality_threshold=None,
     data_folder=None,
+    eager_data_ops=None,
 ):
     """Set global skrub configuration.
 
@@ -223,6 +225,24 @@ def set_config(
         environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
         supported with a deprecation warning.
 
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
+        environment variable.
+
     See Also
     --------
 
@@ -313,6 +333,8 @@ def set_config(
         data_folder = Path(data_folder).expanduser().resolve()
         local_config["data_folder"] = str(data_folder)
 
+    if eager_data_ops is not None:
+        local_config["eager_data_ops"] = eager_data_ops
     _apply_external_patches(local_config)
 
 
@@ -329,6 +351,7 @@ def config_context(
     float_precision=None,
     cardinality_threshold=None,
     data_folder=None,
+    eager_data_ops=None,
 ):
     """Context manager for global skrub configuration.
 
@@ -422,6 +445,24 @@ def config_context(
         environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
         supported with a deprecation warning.
 
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
+        environment variable.
+
     Yields
     ------
     None.
@@ -449,6 +490,7 @@ def config_context(
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
         data_folder=data_folder,
+        eager_data_ops=eager_data_ops,
     )
 
     try:

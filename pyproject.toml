@@ -66,8 +66,7 @@ dev = [
   "statsmodels",
 
   # lint
-  "black==23.3.0",
-  "ruff==0.14.2",
+  "ruff==0.15.0",
   "pre-commit",
 
   # test
@@ -125,10 +124,10 @@ sphinx-autosummary-accessors = ">=2025.3.1,<2026"
 sphinx-sitemap = "*"
 statsmodels = "*"
 optuna = "*"
+skorch = "*"
 
 [tool.pixi.feature.lint.dependencies]
-black = "==23.3.0"
-ruff = "==0.14.2"
+ruff = "==0.15.0"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
@@ -275,7 +274,7 @@ exclude = [
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
-select = ["E", "F", "W", "C4", "I", "UP"]
+select = ["E", "F", "W", "B", "C4", "I", "UP"]
 ignore = [
   # use `is` and `is not` for type comparisons
   "E721",
@@ -283,6 +282,14 @@ ignore = [
   "E731",
   # do not use variables named 'l', 'O', or 'I'
   "E741",
+  "B004",
+  "B007",
+  "B010",
+  "B017",
+  "B018",
+  "B028",
+  "B904",
+  "B905",
   # unnecessary list comprehension (rewrite as a set comprehension)
   "C403",
   # unnecessary tuple literal (rewrite as a set literal)
@@ -329,7 +336,13 @@ filterwarnings = [
   'ignore:The current process just got forked.*',
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
-addopts = "--doctest-modules"
+log_cli_level = "INFO"
+xfail_strict = true
+addopts = [
+  "--doctest-modules",
+  "--strict-config",
+  "--strict-markers",
+]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]

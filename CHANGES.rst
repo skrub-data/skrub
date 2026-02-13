@@ -11,6 +11,23 @@ Ongoing Development
 
 New features
 ------------
+- The ``eager_data_ops`` :ref:`configuration
+  <user_guide_configuration_parameters>` option has been added. When set to
+  False, no previews are computed and validation is deferred until the DataOp is
+  actually used (e.g. with ``.skb.eval()``) rather than as soon as it is
+  defined. This can make the definition of complex DataOps with many nodes
+  faster (the overhead it removes typically becomes noticeable only in DataOps
+  with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
+  become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Changes
+-------
+
+Bugfixes
+--------
+
+Release 0.7.2
+=============
 
 Changes
 -------
@@ -25,10 +42,15 @@ Changes
   the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
   is deprecated and will be removed in a future version of skrub.
   :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The repository wheel has been made smaller by removing some material that was
+  not necessary for using the library. Benchmarks are now available in a separate
+  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
+  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
+
 
 Bugfixes
 --------
-- Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.7.1
 =============

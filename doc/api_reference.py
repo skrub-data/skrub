@@ -91,7 +91,6 @@ API_REFERENCE = {
                     "ToCategorical",
                     "DatetimeEncoder",
                     "ToDatetime",
-                    "to_datetime",
                     "ToFloat",
                 ],
             }
@@ -125,6 +124,7 @@ API_REFERENCE = {
                     "deduplicate",
                     "Cleaner",
                     "DropUninformative",
+                    "to_datetime",
                 ],
             },
         ],
