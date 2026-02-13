@@ -84,8 +84,8 @@ def test_max_plot_columns(simple_df):
     # Check that max_plot_columns can be set after patching the TableReport
     # repr_html.
     with config_context(use_table_report=True):
-        with config_context(max_plot_columns=3):
-            "Plotting was skipped" in simple_df._repr_html_()
+        with config_context(max_plot_columns=1):
+            assert "Plotting was skipped" in simple_df._repr_html_()
 
 
 def test_enable_subsampling(simple_df):
