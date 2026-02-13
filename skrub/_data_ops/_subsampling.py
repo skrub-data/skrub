@@ -32,7 +32,7 @@ class ShouldSubsample(_data_ops.DataOpImpl):
         return _should_subsample(mode, environment)
 
 
-@_data_ops.check_data_op
+@_data_ops.checked_data_op_constructor
 def should_subsample():
     """DataOp indicating if subsampling should be applied.
 
