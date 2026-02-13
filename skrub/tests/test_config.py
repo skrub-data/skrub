@@ -43,6 +43,7 @@ def test_default_config():
     assert cfg["enable_subsampling"] == "default"
     assert cfg["float_precision"] == 3
     assert cfg["cardinality_threshold"] == 40
+    assert cfg["eager_data_ops"] is True
 
     # Fail the test if new configuration keys are present but not checked here.
     expected_keys = {
@@ -56,6 +57,7 @@ def test_default_config():
         "enable_subsampling",
         "float_precision",
         "cardinality_threshold",
+        "eager_data_ops",
     }
     assert set(cfg.keys()) == expected_keys
 
@@ -78,18 +80,7 @@ def test_deprecated_env_var_warning(monkeypatch, tmp_path):
 
 
 def test_config_context():
-    assert get_config() == {
-        "use_table_report": False,
-        "use_table_report_data_ops": True,
-        "table_report_verbosity": 1,
-        "max_plot_columns": 30,
-        "max_association_columns": 30,
-        "subsampling_seed": 0,
-        "enable_subsampling": "default",
-        "float_precision": 3,
-        "cardinality_threshold": 40,
-        "eager_data_ops": True,
-    }
+    assert get_config()["use_table_report"] is False
 
     # Not using as a context manager affects nothing
     config_context(use_table_report=True)

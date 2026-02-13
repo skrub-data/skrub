@@ -151,7 +151,6 @@ def test_load_dataset_files_with_non_metadata_json(tmp_path, monkeypatch):
     bunch = load_dataset_files(dataset_name, data_home=tmp_path)
 
     # Verify that config.json and dataset CSV are in paths, but metadata.json is not
-    assert str(datafiles_dir / f"{dataset_name}.csv") in bunch["paths"]
-    assert str(datafiles_dir / "config.json") in bunch["paths"]
-    assert str(datafiles_dir / "metadata.json") not in bunch["paths"]
+    assert str(datafiles_dir / f"{dataset_name}.csv") == bunch[f"{dataset_name}_path"]
+    assert str(datafiles_dir / "config.json") == bunch["config_path"]
     assert bunch["metadata_path"] == str(datafiles_dir / "metadata.json")
