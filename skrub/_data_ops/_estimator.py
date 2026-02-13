@@ -709,7 +709,7 @@ def train_test_split(
     split_func=model_selection.train_test_split,
     **split_func_kwargs,
 ):
-    """Split an environment into a training an testing environments.
+    """Split an environment into training and testing environments.
 
     This functionality is exposed to users through the
     ``DataOp.skb.train_test_split()`` method. See the corresponding docstring for
@@ -738,7 +738,7 @@ def train_test_split(
 
 
 def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=KFOLD_5):
-    """Yield splits of an environment into training an testing environments.
+    """Yield splits of an environment into training and testing environments.
 
     This functionality is exposed to users through the
     ``DataOp.skb.iter_cv_splits()`` method. See the corresponding docstring for

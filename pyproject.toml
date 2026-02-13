@@ -125,6 +125,7 @@ sphinx-autosummary-accessors = ">=2025.3.1,<2026"
 sphinx-sitemap = "*"
 statsmodels = "*"
 optuna = "*"
+skorch = "*"
 
 [tool.pixi.feature.lint.dependencies]
 black = "==23.3.0"
@@ -337,7 +338,13 @@ filterwarnings = [
   'ignore:The current process just got forked.*',
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
-addopts = "--doctest-modules"
+log_cli_level = "INFO"
+xfail_strict = true
+addopts = [
+  "--doctest-modules",
+  "--strict-config",
+  "--strict-markers",
+]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
