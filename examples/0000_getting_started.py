@@ -35,7 +35,7 @@ import pandas as pd
 from skrub.datasets import fetch_employee_salaries
 
 bunch = fetch_employee_salaries()
-employees_df = pd.read_csv(bunch.path)
+employees_df = pd.read_csv(bunch.employee_salaries_path)
 
 # %%
 # The target variable is the current annual salary. We pop it from the dataframe
