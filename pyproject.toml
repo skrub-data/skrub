@@ -66,8 +66,7 @@ dev = [
   "statsmodels",
 
   # lint
-  "black==23.3.0",
-  "ruff==0.14.2",
+  "ruff==0.15.0",
   "pre-commit",
 
   # test
@@ -128,8 +127,7 @@ optuna = "*"
 skorch = "*"
 
 [tool.pixi.feature.lint.dependencies]
-black = "==23.3.0"
-ruff = "==0.14.2"
+ruff = "==0.15.0"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]

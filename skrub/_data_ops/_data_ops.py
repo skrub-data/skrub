@@ -42,6 +42,7 @@ import warnings
 import numpy as np
 from sklearn.base import BaseEstimator
 
+from .. import _config
 from .. import _dataframe as sbd
 from .. import selectors as s
 from .._check_input import cast_column_names_to_strings
@@ -59,6 +60,7 @@ __all__ = [
     "as_data_op",
     "deferred",
     "check_data_op",
+    "checked_data_op_constructor",
     "eval_mode",
 ]
 
@@ -250,6 +252,7 @@ class DataOpImpl:
             if "name" not in self.__dict__:
                 self.name = None
             self.description = None
+            self.checked = False
 
         cls.__init__ = __init__
 
@@ -261,6 +264,7 @@ class DataOpImpl:
         new.is_y = self.is_y
         new.name = self.name
         new.description = self.description
+        new.checked = False
         return new
 
     def __copy__(self):
@@ -313,15 +317,66 @@ def _find_dataframe(data_op, func_name):
     return None
 
 
-def check_data_op(f):
+def checked_data_op_constructor(f=None, /, *, allow_skipping=True, eval_preview=True):
     """Check a DataOp and evaluate the preview.
 
-    We must decorate all the functions that create DataOps rather than do
-    it in ``__init__`` to make tracebacks as short as possible: the second
+    This decorator must be applied to all functions that create a DataOp, so
+    that they are eagerly checked (e.g. for duplicate names) and their previews
+    are eagerly computed (to make them available and trigger possible errors)
+    as soon as they are defined.
+
+    However, eager checks and preview computation may be disabled
+    via the eager_data_ops config option.
+
+    We decorate all the functions that create DataOps rather than perform
+    checks in ``__init__`` to make tracebacks as short as possible: the second
     frame in the stack trace is the one in user code that created the
     problematic DataOp. If the check was done in ``__init__`` it might be
     buried several calls deep, making it harder to understand those errors.
+    For the same reason (shortening stack traces), exceptions are raised
+    directly from inside this function (not from functions it calls) -- the
+    checks are inlined in this function, not factored into other functions.
+
+    The decorator can be used bare, as:
+
+    @checked_data_op_constructor
+    def make_a_data_op(a, b): ...
+
+    Or by passing the parameters described below
+
+    @checked_data_op_constructor(allow_skipping=False)
+    def make_a_data_op(a, b): ...
+
+    Parameters
+    ----------
+    f : function
+        The function to decorate. Passed implicitly when using the @decorator
+        syntax.
+
+    allow_skipping : bool, default = True
+        Whether checks can be skipped if the configuration sets
+        eager_data_ops=False. When allow_skipping is True, we look at the
+        configuration and if eager_data_ops is False, checks are not performed
+        (this can speed up the definition of complex DataOps). When
+        allow_skipping is False, checks are always performed regardless of the
+        configuration. This is used in functions that actually use the data op
+        and therefore must check it, such as eval() -- checks can be held off
+        while we are building it up, but we always ensure some invariants are
+        respected before attempting to evaluate it.
+
+    eval_preview : bool, default = True
+        Whether to attempt computing the preview. When this function is skipped
+        due to the configuration, both the checks and the preview are skipped
+        (regardless of eval_preview).
     """
+    if f is None:
+
+        def decorator(f):
+            return checked_data_op_constructor(
+                f, allow_skipping=allow_skipping, eval_preview=eval_preview
+            )
+
+        return decorator
 
     @functools.wraps(f)
     def checked_call(*args, **kwargs):
@@ -329,31 +384,47 @@ def check_data_op(f):
 
         data_op = f(*args, **kwargs)
 
-        try:
-            func_name = data_op._skrub_impl.pretty_repr()
-        except Exception:
-            func_name = f"{f.__name__}()"
+        if allow_skipping and not _config.get_config().get("eager_data_ops", True):
+            return data_op
 
-        conflicts = find_conflicts(data_op)
-        if conflicts is not None:
-            raise ValueError(conflicts["message"])
-        if (found_df := _find_dataframe(data_op, func_name)) is not None:
-            raise TypeError(found_df["message"])
-        check_choices_before_Xy(data_op)
-        try:
-            evaluate(data_op, mode="preview", environment=None)
-        except UninitializedVariable:
-            pass
-        except Exception as e:
-            msg = "\n".join(_utils.format_exception_only(e)).rstrip("\n")
-            raise RuntimeError(
-                f"Evaluation of {func_name!r} failed.\n"
-                f"You can see the full traceback above. The error message was:\n{msg}"
-            ) from e
+        if not data_op._skrub_impl.checked:
+            try:
+                func_name = data_op._skrub_impl.pretty_repr()
+            except Exception:
+                func_name = f"{f.__name__}()"
+
+            conflicts = find_conflicts(data_op)
+            if conflicts is not None:
+                raise ValueError(conflicts["message"])
+            if (found_df := _find_dataframe(data_op, func_name)) is not None:
+                raise TypeError(found_df["message"])
+            check_choices_before_Xy(data_op)
+            data_op._skrub_impl.checked = True
+        if eval_preview:
+            try:
+                evaluate(data_op, mode="preview", environment=None)
+            except UninitializedVariable:
+                pass
+            except Exception as e:
+                msg = "\n".join(_utils.format_exception_only(e)).rstrip("\n")
+                raise RuntimeError(
+                    f"Evaluation of {func_name!r} failed.\nYou can see the "
+                    f"full traceback above. The error message was:\n{msg}"
+                ) from e
 
         return data_op
 
     return checked_call
+
+
+@checked_data_op_constructor(allow_skipping=False, eval_preview=False)
+def check_data_op(data_op):
+    # We want to perform the checks directly in the decorator rather than
+    # calling check_data_op from checked_data_op_constructor to keep tracebacks
+    # as short as possible. To avoid code duplication between the 2, we simply
+    # decorate the identity function to create a checker that can be called
+    # directly on a data op.
+    return data_op
 
 
 def _get_preview(obj):
@@ -364,7 +435,7 @@ def _get_preview(obj):
     return obj
 
 
-def _check_return_value(f):
+def _checked_deferred_call_constructor(f):
     """Warn about function calls returning None
 
     We use this check because it is quite likely that the function was called
@@ -501,7 +572,7 @@ class DataOp:
     def __sklearn_clone__(self):
         return self.__deepcopy__({})
 
-    @check_data_op
+    @checked_data_op_constructor
     def __getattr__(self, name):
         if name in [
             "_skrub_impl",
@@ -522,12 +593,12 @@ class DataOp:
             attribute_error(self, name)
         return DataOp(GetAttr(self, name))
 
-    @check_data_op
+    @checked_data_op_constructor
     def __getitem__(self, key):
         return DataOp(GetItem(self, key))
 
-    @_check_return_value
-    @check_data_op
+    @_checked_deferred_call_constructor
+    @checked_data_op_constructor
     def __call__(self, *args, **kwargs):
         impl = self._skrub_impl
         if isinstance(impl, GetAttr):
@@ -536,7 +607,7 @@ class DataOp:
             Call(self, args, kwargs, globals={}, closure=(), defaults=(), kwdefaults={})
         )
 
-    @check_data_op
+    @checked_data_op_constructor
     def __len__(self):
         return DataOp(GetAttr(self, "__len__"))()
 
@@ -689,7 +760,7 @@ def _make_bin_op(op_name):
         return DataOp(BinOp(self, right, getattr(operator, op_name)))
 
     op.__name__ = op_name
-    return check_data_op(op)
+    return checked_data_op_constructor(op)
 
 
 for op_name in _BIN_OPS:
@@ -701,7 +772,7 @@ def _make_r_bin_op(op_name):
         return DataOp(BinOp(left, self, getattr(operator, op_name)))
 
     op.__name__ = f"__r{op_name.strip('_')}__"
-    return check_data_op(op)
+    return checked_data_op_constructor(op)
 
 
 for op_name in _BIN_OPS:
@@ -714,7 +785,7 @@ def _make_unary_op(op_name):
         return DataOp(UnaryOp(self, getattr(operator, op_name)))
 
     op.__name__ = op_name
-    return check_data_op(op)
+    return checked_data_op_constructor(op)
 
 
 for op_name in _UNARY_OPS:
@@ -1108,7 +1179,7 @@ class Value(DataOpImpl):
         return f"<{self.__class__.__name__} {self.value.__class__.__name__}>"
 
 
-@check_data_op
+@checked_data_op_constructor
 def as_data_op(value):
     """Create a DataOp :class:`DataOp` that evaluates to the given value.
 
@@ -1708,8 +1779,8 @@ def deferred(func):
     if isinstance(func, DataOp) or getattr(func, "_skrub_is_deferred", False):
         return func
 
-    @_check_return_value
-    @check_data_op
+    @_checked_deferred_call_constructor
+    @checked_data_op_constructor
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
         return DataOp(
@@ -1755,8 +1826,8 @@ def deferred(func):
     ):
         return deferred_func
 
-    @_check_return_value
-    @check_data_op
+    @_checked_deferred_call_constructor
+    @checked_data_op_constructor
     @functools.wraps(func)
     def deferred_func(*args, **kwargs):
         return DataOp(
@@ -1865,7 +1936,7 @@ class EvalMode(DataOpImpl):
         return mode
 
 
-@check_data_op
+@checked_data_op_constructor
 def eval_mode():
     """Return the mode in which the DataOp is currently being evaluated.
 
