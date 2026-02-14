@@ -150,4 +150,4 @@ to obtain the final result:
 
 More info on advanced column selection and manipulation be found in
 :ref:`user_guide_selectors` and example
-:ref:`sphx_glr_auto_examples_09_apply_to_cols.py`.
+:ref:`sphx_glr_auto_examples_0090_apply_to_cols.py`.

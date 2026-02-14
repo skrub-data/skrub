@@ -1,7 +1,11 @@
+import functools
 import pickle
+import re
+import sys
 import typing
 import warnings
 
+import numpy as np
 from sklearn import model_selection
 
 from .. import selectors as s
@@ -17,6 +21,7 @@ from ._data_ops import (
     Var,
     check_data_op,
     check_name,
+    checked_data_op_constructor,
     deferred,
 )
 from ._estimator import (
@@ -38,8 +43,12 @@ from ._inspection import (
     draw_data_op_graph,
     full_report,
 )
+from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
 from ._utils import KFOLD_5, NULL, attribute_error
+
+# By default, select all columns
+_SELECT_ALL_COLUMNS = s.all()
 
 
 def _var_values_provided(data_op, environment):
@@ -85,6 +94,37 @@ def _check_grid_search_possible(data_op):
             )
 
 
+def _check_before(f):
+    """
+    Decorator to perform validation of a DataOp before calling a function.
+
+    Usually some checks such as no duplicate names are performed whenever a
+    DataOp is created. However to reduce overhead, those checks can be disabled
+    when the DataOp is created. But we always perform validation before
+    actually using the DataOp. So all functions that evaluate the DataOp or
+    transform it into some other type such as .skb.eval(), .skb.make_learner()
+    etc. must be decorated with _check_before.
+
+    Note that once a DataOp has been checked, that is stored in an attribute so
+    redundant checks are avoided.
+    """
+
+    @functools.wraps(f)
+    def _checked(self, *args, **kwargs):
+        check_data_op(self._data_op)
+        return f(self, *args, **kwargs)
+
+    return _checked
+
+
+def _is_optuna_trial(obj):
+    try:
+        optuna = sys.modules["optuna"]
+        return isinstance(obj, (optuna.trial.Trial, optuna.trial.FrozenTrial))
+    except (KeyError, AttributeError):
+        return False
+
+
 class SkrubNamespace:
     """The data_ops' ``.skb`` attribute."""
 
@@ -101,7 +141,7 @@ class SkrubNamespace:
         self,
         estimator,
         y=None,
-        cols=s.all(),
+        cols=_SELECT_ALL_COLUMNS,
         how="auto",
         allow_reject=False,
         unsupervised=False,
@@ -123,13 +163,13 @@ class SkrubNamespace:
         )
         return data_op
 
-    @check_data_op
+    @checked_data_op_constructor
     def apply(
         self,
         estimator,
         *,
         y=None,
-        cols=s.all(),
+        cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         how="auto",
         allow_reject=False,
@@ -474,7 +514,7 @@ class SkrubNamespace:
         """
         return deferred(func)(self._data_op, *args, **kwargs)
 
-    @check_data_op
+    @checked_data_op_constructor
     def if_else(self, value_if_true, value_if_false):
         """Create a conditional DataOp.
 
@@ -537,7 +577,7 @@ class SkrubNamespace:
         """
         return DataOp(IfElse(self._data_op, value_if_true, value_if_false))
 
-    @check_data_op
+    @checked_data_op_constructor
     def match(self, targets, default=NULL):
         """Select based on the value of a DataOp.
 
@@ -600,7 +640,7 @@ class SkrubNamespace:
         """
         return DataOp(Match(self._data_op, targets, default))
 
-    @check_data_op
+    @checked_data_op_constructor
     def select(self, cols):
         """Select a subset of columns.
 
@@ -653,7 +693,7 @@ class SkrubNamespace:
         """
         return self._apply(SelectCols(cols), how="no_wrap")
 
-    @check_data_op
+    @checked_data_op_constructor
     def drop(self, cols):
         """Drop some columns.
 
@@ -706,7 +746,7 @@ class SkrubNamespace:
         """
         return self._apply(DropCols(cols), how="no_wrap")
 
-    @check_data_op
+    @checked_data_op_constructor
     def concat(self, others, axis=0):
         """Concatenate dataframes vertically or horizontally.
 
@@ -763,10 +803,10 @@ class SkrubNamespace:
         ―――――――
            a1  a2  b1  b2
         0   0   1   2   3
-        """  # noqa: E501
+        """
         return DataOp(Concat(self._data_op, others, axis=axis))
 
-    @check_data_op
+    @checked_data_op_constructor
     def subsample(self, n=1000, *, how="head"):
         """Configure subsampling of a dataframe or numpy array.
 
@@ -930,6 +970,7 @@ class SkrubNamespace:
         """  # noqa : E501
         return DataOp(SubsamplePreviews(self._data_op, n=n, how=how))
 
+    @_check_before
     def clone(self, drop_values=True):
         """Get an independent clone of the DataOp.
 
@@ -987,6 +1028,7 @@ class SkrubNamespace:
 
         return clone(self._data_op, drop_preview_data=drop_values)
 
+    @_check_before
     def eval(self, environment=None, *, keep_subsampling=False):
         """Evaluate the DataOp.
 
@@ -1058,6 +1100,7 @@ class SkrubNamespace:
             self._data_op, mode="fit_transform", environment=environment, clear=True
         )
 
+    @_check_before
     def preview(self):
         """Get the value computed for previews (shown when printing the DataOp).
 
@@ -1112,7 +1155,7 @@ class SkrubNamespace:
         """
         return evaluate(self._data_op, mode="preview", environment=None, clear=False)
 
-    @check_data_op
+    @checked_data_op_constructor
     def freeze_after_fit(self):
         """Freeze the result during learner fitting.
 
@@ -1163,6 +1206,7 @@ class SkrubNamespace:
         """
         return DataOp(FreezeAfterFit(self._data_op))
 
+    @_check_before
     def get_data(self):
         """Collect the values of the variables contained in the DataOp.
 
@@ -1190,6 +1234,7 @@ class SkrubNamespace:
                 data[impl.name] = impl.value
         return data
 
+    @_check_before
     def get_vars(self, all_named_ops=False):
         """
         Get all the variables used in the DataOp.
@@ -1276,6 +1321,7 @@ class SkrubNamespace:
             if isinstance(op._skrub_impl, Var)
         }
 
+    @_check_before
     def draw_graph(self):
         """Get an SVG string representing the computation graph.
 
@@ -1293,6 +1339,7 @@ class SkrubNamespace:
 
         return draw_data_op_graph(self._data_op)
 
+    @_check_before
     def describe_steps(self):
         """Get a text representation of the computation graph.
 
@@ -1341,6 +1388,7 @@ class SkrubNamespace:
 
         return describe_steps(self._data_op)
 
+    @_check_before
     def describe_param_grid(self):
         """Describe the hyper-parameters extracted from choices in the DataOp.
 
@@ -1423,6 +1471,7 @@ class SkrubNamespace:
 
         return describe_param_grid(self._data_op)
 
+    @_check_before
     def describe_defaults(self):
         """Describe the hyper-parameters used by the default learner.
 
@@ -1451,15 +1500,14 @@ class SkrubNamespace:
         ... )
         >>> pred = X.skb.apply(selector, y=y).skb.apply(classifier, y=y)
         >>> print(pred.skb.describe_defaults())
-        {'k': 9, 'classifier': 'logistic', 'C': 1.0...}
+        {'k': 9, 'C': 1.0..., 'classifier': 'logistic'}
         """
-        from ._evaluation import choice_graph, chosen_or_default_outcomes
+        from ._evaluation import choice_graph, eval_choices
         from ._inspection import describe_params
 
-        return describe_params(
-            chosen_or_default_outcomes(self._data_op), choice_graph(self._data_op)
-        )
+        return describe_params(eval_choices(self._data_op), choice_graph(self._data_op))
 
+    @_check_before
     def full_report(
         self,
         environment=None,
@@ -1473,7 +1521,16 @@ class SkrubNamespace:
         This creates a report showing the computation graph, and for each
         intermediate computation, some information (the line of code where it
         was defined, the time it took to run, and more) and a display of the
-        intermediate result (or error).
+        intermediate result (or error). By default, the report is stored in
+        a timestamped subdirectory of the skrub data folder.
+
+        .. note::
+            When this function is invoked reports starting with ``full_data_op_report_``
+            that are stored in the skrub data folder are automatically deleted after
+            7 days.
+            This is to avoid accumulating too many reports over time. If you want
+            to keep specific reports, please specify an output directory.
+
 
         Parameters
         ----------
@@ -1487,7 +1544,9 @@ class SkrubNamespace:
 
         output_dir : str or Path or None (default=None)
             Directory where to store the report. If ``None``, a timestamped
-            subdirectory will be created in the skrub data directory.
+            subdirectory will be created in the skrub data directory. Note
+            that the reports created with ``output_dir=None`` are automatically
+            deleted after 7 days.
 
         overwrite : bool (default=False)
             What to do if the output directory already exists. If
@@ -1556,7 +1615,7 @@ class SkrubNamespace:
         ZeroDivisionError('division by zero')
         >>> report['report_path']
         PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
-        """  # noqa : E501
+        """
 
         if environment is None:
             mode = "preview"
@@ -1576,7 +1635,8 @@ class SkrubNamespace:
             title=title,
         )
 
-    def make_learner(self, *, fitted=False, keep_subsampling=False):
+    @_check_before
+    def make_learner(self, *, fitted=False, keep_subsampling=False, choose="default"):
         """Get a skrub learner for this DataOp.
 
         Returns a :class:`SkrubLearner` with a ``fit()`` method so it can be fit
@@ -1586,11 +1646,15 @@ class SkrubNamespace:
 
         .. warning::
 
-           If the DataOp contains choices (e.g. ``choose_from(...)``), this
-           learner uses the default value of each choice. To actually pick the
-           best value with hyperparameter tuning, use
-           :meth:`DataOp.skb.make_randomized_search` or
-           :meth:`DataOp.skb.make_grid_search` instead.
+           If the DataOp contains choices (e.g. ``choose_from(...)``), by
+           default this learner uses the default value of each choice. See the
+           `choose` parameter for other options (random or from an
+           `Optuna <https://optuna.readthedocs.io/en/stable/>`_ trial). To actually
+           pick the best value with hyperparameter tuning, use
+           :meth:`DataOp.skb.make_randomized_search`
+           :meth:`DataOp.skb.make_grid_search` instead, or an Optuna
+           :class:`~optuna.study.Study` as shown in this
+           :ref:`example <example_optuna_choices>`.
 
         Parameters
         ----------
@@ -1608,6 +1672,34 @@ class SkrubNamespace:
             Therefore it is an error to pass ``keep_subsampling=True`` and
             ``fitted=False`` (because ``keep_subsampling=True`` would have no
             effect).
+
+        choose : 'default', 'random', 'random([seed])' or \
+                 :class:`optuna.Trial <optuna.trial.Trial>` instance
+            How to resolve choices contained in the data_op. The different
+            options are:
+
+            - 'default': the corresponding parameters of the SkrubLearner are not
+              set; the default values of the choices are used.
+            - 'random': a random value is picked according to the distribution of
+              each choice. The form 'random([seed])' is also accepted to set
+              the random seed: for example 'random(0)' sets it to 0. 'random()'
+              is the same as 'random'.
+            - an instance of :class:`numpy.random.RandomState`. Same as 'random',
+              but the provided RandomState is used to sample values.
+            - an instance of :class:`optuna.Trial <optuna.trial.Trial>` or
+              :class:`optuna.FrozenTrial <optuna.trial.FrozenTrial>`. It is
+              used to suggest values for
+              the choices.
+
+            Note that none of these options picks the best choice value according to
+            an evaluation criterion, as this function creates a single learner.
+            These options can be combined with external logic to evaluate and
+            select the resulting learners, or one of
+            :meth:`DataOp.skb.make_grid_search`,
+            :meth:`DataOp.skb.make_randomized_search`,
+            :meth:`optuna.Study.optimize <optuna.study.Study.optimize>` (as
+            shown in this :ref:`example <example_optuna_choices>`) can be used
+            to automatically select the best hyperparameters.
 
         Returns
         -------
@@ -1649,12 +1741,66 @@ class SkrubNamespace:
         corresponds to the name ``'orders'`` in ``skrub.var('orders',
         orders_df)`` above.
 
+        The ``choose`` parameter allows us to control how choices contained in
+        the DataOp should be handled. The default is to use the default value
+        of each choice.
+
+        >>> def mult(x, factor):
+        ...     return x * factor
+        >>> out = skrub.var("x").skb.apply_func(
+        ...     mult, skrub.choose_int(-10, 10, default=2)
+        ... )
+        >>> out.skb.make_learner().fit_transform({'x': 1})
+        2
+
+        The 'random' option samples new choice outcomes for each created learner:
+
+        >>> out.skb.make_learner(choose='random').fit_transform({'x': 1}) # doctest: +SKIP
+        np.int64(3)
+        >>> out.skb.make_learner(choose='random').fit_transform({'x': 1}) # doctest: +SKIP
+        np.int64(-5)
+
+        If an :class:`optuna.Trial <optuna.trial.Trial>` instance is passed
+        instead, the choice outcomes are obtained by calling the trial's
+        ``suggest_int``, ``suggest_float`` or ``suggest_categorical`` methods.
+        This allows easily selecting hyperparameters with optuna.
+
         Please see the examples gallery for full information about DataOps
         and the learners they generate.
-        """
+        """  # noqa: E501
+        from . import _evaluation
+
         _check_keep_subsampling(fitted, keep_subsampling)
 
         learner = SkrubLearner(self.clone())
+        if isinstance(choose, str) and choose == "default":
+            choices = {}
+        elif (
+            isinstance(choose, str)
+            and (m := re.match(r"^\s*random\s*(?:\(\s*(\d*)\s*\))?\s*$", choose))
+            is not None
+        ):
+            random_state = int(g) if (g := m.group(1)) else None
+            choices = _evaluation.eval_choices(
+                self._data_op, _evaluation.random_choice(random_state)
+            )
+        elif isinstance(choose, np.random.RandomState):
+            choices = _evaluation.eval_choices(
+                self._data_op, _evaluation.random_choice(choose)
+            )
+        elif _is_optuna_trial(choose):
+            choices = _evaluation.eval_choices(
+                self._data_op, _evaluation.optuna_suggestion(choose)
+            )
+        else:
+            raise ValueError(
+                "`choose` should be 'default', 'random', a numpy RandomState, or an"
+                " optuna.Trial instance. Got object of type"
+                f" {type(choose).__name__!r}: {choose!r}"
+            )
+        params = {f"data_op__{k}": v for k, v in choices.items()}
+        learner.set_params(**params)
+
         _check_can_be_pickled(learner)
         if not fitted:
             return learner
@@ -1662,6 +1808,7 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
+    @_check_before
     def train_test_split(
         self,
         environment=None,
@@ -1670,7 +1817,7 @@ class SkrubNamespace:
         split_func=model_selection.train_test_split,
         **split_func_kwargs,
     ):
-        """Split an environment into a training an testing environments.
+        """Split an environment into training and testing environments.
 
         Parameters
         ----------
@@ -1755,6 +1902,7 @@ class SkrubNamespace:
             **split_func_kwargs,
         )
 
+    @_check_before
     def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=KFOLD_5):
         """Yield splits of an environment into training and testing environments.
 
@@ -1820,13 +1968,14 @@ class SkrubNamespace:
             self._data_op, environment, keep_subsampling=keep_subsampling, cv=cv
         )
 
+    @_check_before
     def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
         This function returns a :class:`ParamSearch`, an object similar to
-        scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where the main difference is that
-        ``fit()`` and ``predict()`` accept a dictionary of inputs
-        rather than ``X`` and ``y``. The best learner can
+        scikit-learn's :class:`~sklearn.model_selection.GridSearchCV`, where
+        the main difference is that ``fit()`` and ``predict()`` accept a
+        dictionary of inputs rather than ``X`` and ``y``. The best learner can
         be returned by calling ``.best_learner_``.
 
         Parameters
@@ -1860,7 +2009,7 @@ class SkrubNamespace:
         See also
         --------
         skrub.DataOp.skb.make_randomized_search :
-            Find the best parameters with grid search.
+            Find the best parameters with randomized search.
 
         Examples
         --------
@@ -1931,14 +2080,37 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
-    def make_randomized_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
+    @_check_before
+    def make_randomized_search(
+        self,
+        *,
+        fitted=False,
+        keep_subsampling=False,
+        backend="sklearn",
+        # params for all backends
+        n_iter=10,
+        scoring=None,
+        n_jobs=None,
+        refit=True,
+        cv=None,
+        verbose=0,
+        pre_dispatch="2*n_jobs",
+        random_state=None,
+        error_score=np.nan,
+        return_train_score=False,
+        # optuna params
+        storage=None,
+        study_name=None,
+        sampler=None,
+        timeout=None,
+    ):
         """Find the best parameters with randomized search.
 
         This function returns a :class:`ParamSearch`, an object similar to
         scikit-learn's :class:`~sklearn.model_selection.RandomizedSearchCV`, where
         the main difference is ``fit()`` and ``predict()`` accept a
-        dictionary of inputs rather than ``X`` and ``y``. The best learner can
-        be returned by calling ``.best_learner_``.
+        dictionary of inputs rather than ``X`` and ``y``. The best learner is stored
+        in the attribute ``.best_learner_``.
 
         Parameters
         ----------
@@ -1957,21 +2129,134 @@ class SkrubNamespace:
             ``fitted=False`` (because ``keep_subsampling=True`` would have no
             effect).
 
-        kwargs : dict
-            All other named arguments are forwarded to
-            :class:`~sklearn.search.RandomizedSearchCV`.
+        backend : 'sklearn' or 'optuna' (default='sklearn')
+            Which library to use for hyperparameter search. The default is
+            'sklearn', which uses
+            the scikit-learn :class:`~sklearn.model_selection.RandomizedSearchCV`.
+            If 'optuna', an Optuna :class:`~optuna.study.Study` is used instead
+            and it is possible to choose the sampler and storage.
+
+        n_iter : int, default=10
+            Number of parameter combinations to try.
+
+        scoring : str, callable, list or dict, default=None
+            Strategy to evaluate the model's predictions.
+            It can be:
+
+            - None: use the predictor's ``score`` method
+            - a metric name such as 'accuracy'
+            - a list of such names
+            - a callable (estimator, X_test, y_test) → score
+            - a dict mapping metric name to callable
+            - a callable returning a dict mapping metric name to value
+
+            See the `scikit-learn documentation
+            <https://scikit-learn.org/stable/modules/model_evaluation.html#the-scoring-parameter-defining-model-evaluation-rules>`_
+            for details.
+
+        n_jobs : int or None, default=None
+            Number of jobs to run in parallel.
+            ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
+            ``-1`` means using all processors.
+
+        refit : bool or str, default=True
+            Whether to refit a learner to the whole dataset using the best
+            parameters found.
+
+            For multiple metric evaluation it should be the name of the metric
+            to use to pick the best parameters. If ``backend='optuna'`` it is
+            also the metric that drives the Optuna optimization.
+
+        cv : int, cross-validation iterator or iterable, default=None
+            Cross-validation splitting strategy. It can be:
+
+            - None: 5-fold (stratified) cross-validation
+            - integer: specify the number of folds
+            - sklearn `CV splitter <https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators>`_
+            - iterable yielding (train, test) splits as arrays of indices.
+
+        verbose : int, default=0
+            Verbosity, the higher the more verbose. It is recommended to leave
+            it to 0 if using ``backend='optuna'``.
+
+        pre_dispatch : int, or str, default='2*n_jobs'
+            Number of jobs dispatched during parallel execution, when using the
+            joblib parallelization.
+
+        random_state : int, RandomState instance or None, default=None
+            Pseudo random number generator state used for random sampling
+            Pass an int for reproducible output across multiple function calls.
+
+            .. note::
+
+                the result will never be deterministic if using
+                ``backend='optuna'`` and ``n_jobs > 1`` (as the sampled
+                parameters depend on previous runs).
+
+        error_score : 'raise' or float, default=np.nan
+            Value to assign to the score if an error occurs in estimator fitting.
+            If set to 'raise', the error is raised.
+
+        return_train_score : bool, default=False
+            Also compute scores on the training set, in which case they will be
+            available in the ``cv_results_`` attribute in addition to the
+            scores on the test set.
+
+        storage : None or str, default=None
+            The URL for the database to use as the Optuna storage. In addition
+            to the usual relational database URLs (e.g.
+            ``'sqlite:///<file_path>'`` ), it can be
+            ``'journal:///<file_path>'`` to use Optuna's
+            :class:`~optuna.storages.JournalStorage`. See the `SQLAlchemy
+            documentation
+            <https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls>`_
+            for information on how to construct database URLs, which take the
+            general form
+            ``dialect+driver://username:password@host:port/database``.
+
+        study_name : None or str, default=None
+            The name to use for the created (or loaded) Optuna study. If the
+            study already exists in the provided ``storage``, the existing one
+            is loaded. If None, a random name is generated.
+
+        sampler : None or Optuna sampler, default=None
+            The sampler to use when the backend is 'optuna'. If None, a
+            :class:`~optuna.samplers.TPESampler` is used (the same default as
+            :func:`~optuna.study.create_study`).
+
+        timeout : None or float, default=None
+            Timeout after which no new trials are created. Trials already
+            started when reaching the timeout are still completed. If None,
+            there is no timeout and all ``n_iters`` trials are completed.
+
+            .. note::
+                If this parameter is used, parallelization when ``n_jobs > 1``
+                is always done with Optuna's built-in parallelization, which
+                relies on multithreading. This means threads are used (rather
+                than processes) regardless of the joblib backend.
 
         Returns
         -------
-        ParamSearch
+        ParamSearch or OptunaParamSearch
             An object implementing the hyperparameter search. Besides the usual
             ``fit``, ``predict``, attributes of interest are
             ``results_``, ``plot_results()``, and ``best_learner_``.
+            If ``backend='optuna'`` was used, the returned object is an
+            :class:`OptunaParamSearch` which additionally has an attribute
+            ``study_`` which is the Optuna :class:`~optuna.study.Study` that
+            performed the hyperparameter optimization.
 
         See also
         --------
         skrub.DataOp.skb.make_grid_search :
             Find the best parameters with grid search.
+        skrub.DataOp.skb.make_learner :
+            Make a :class:`SkrubLearner` without actually searching for the
+            best hyperparameters. The strategy to resolve choices can be use
+            the default value, random, or taking suggestions from an Optuna
+            :class:`optuna.trial.Trial`. This allows using Optuna directly,
+            rather than through the ``make_randomized_search`` interface, for
+            more advanced use cases.
 
         Examples
         --------
@@ -2020,17 +2305,69 @@ class SkrubNamespace:
 
         Please refer to the examples gallery for an in-depth explanation.
         """  # noqa: E501
+        if not isinstance(backend, str) or backend not in ("sklearn", "optuna"):
+            raise ValueError(f"backend must be 'sklearn' or 'optuna', got: {backend}")
+
         _check_keep_subsampling(fitted, keep_subsampling)
 
-        search = ParamSearch(
-            self.clone(), model_selection.RandomizedSearchCV(None, None, **kwargs)
-        )
+        if backend == "sklearn":
+            optuna_params = dict(
+                storage=storage,
+                study_name=study_name,
+                sampler=sampler,
+                timeout=timeout,
+            )
+            provided_optuna_params = {
+                k: v for k, v in optuna_params.items() if v is not None
+            }
+            if provided_optuna_params:
+                raise TypeError(
+                    "The following parameters were provided with backend='sklearn'. "
+                    "Those parameters are used only with backend='optuna':\n"
+                    f"{provided_optuna_params}"
+                )
+            search = ParamSearch(
+                self.clone(),
+                model_selection.RandomizedSearchCV(
+                    None,
+                    None,
+                    n_iter=n_iter,
+                    scoring=scoring,
+                    n_jobs=n_jobs,
+                    refit=refit,
+                    cv=cv,
+                    verbose=verbose,
+                    pre_dispatch=pre_dispatch,
+                    random_state=random_state,
+                    error_score=error_score,
+                    return_train_score=return_train_score,
+                ),
+            )
+        else:
+            search = OptunaParamSearch(
+                self.clone(),
+                n_iter=n_iter,
+                scoring=scoring,
+                n_jobs=n_jobs,
+                refit=refit,
+                cv=cv,
+                verbose=verbose,
+                pre_dispatch=pre_dispatch,
+                random_state=random_state,
+                error_score=error_score,
+                return_train_score=return_train_score,
+                storage=storage,
+                study_name=study_name,
+                sampler=sampler,
+                timeout=timeout,
+            )
         if not fitted:
             return search
         return search.fit(
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
+    @_check_before
     def iter_learners_grid(self):
         """Get learners with different parameter combinations.
 
@@ -2112,6 +2449,7 @@ class SkrubNamespace:
             new.set_params(**params)
             yield new
 
+    @_check_before
     def iter_learners_randomized(self, n_iter, *, random_state=None):
         """Get learners with different parameter combinations.
 
@@ -2183,6 +2521,7 @@ class SkrubNamespace:
             new.set_params(**params)
             yield new
 
+    @_check_before
     def cross_validate(self, environment=None, *, keep_subsampling=False, **kwargs):
         """Cross-validate the DataOp plan.
 
@@ -2247,7 +2586,7 @@ class SkrubNamespace:
             **kwargs,
         )
 
-    @check_data_op
+    @checked_data_op_constructor
     def mark_as_X(self):
         """Mark this DataOp as being the ``X`` table.
 
@@ -2329,7 +2668,7 @@ class SkrubNamespace:
         """Whether this DataOp has been marked with :meth:`.skb.mark_as_X()`."""
         return self._data_op._skrub_impl.is_X
 
-    @check_data_op
+    @checked_data_op_constructor
     def mark_as_y(self):
         """Mark this DataOp as being the ``y`` table.
 
@@ -2405,7 +2744,7 @@ class SkrubNamespace:
         """Whether this DataOp has been marked with :meth:`.skb.mark_as_y()`."""
         return self._data_op._skrub_impl.is_y
 
-    @check_data_op
+    @checked_data_op_constructor
     def set_name(self, name):
         """Give a name to this DataOp.
 
@@ -2531,7 +2870,7 @@ class SkrubNamespace:
         return f"<{self.__class__.__name__}>"
 
     @property
-    @check_data_op
+    @checked_data_op_constructor
     def applied_estimator(self):
         """Retrieve the estimator applied in the previous step, as a DataOp.
 

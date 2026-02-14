@@ -19,7 +19,7 @@ conda-forge project page.
      the last stable version. These releases are numbered X.Y.Z.
 
 To release a new minor version of skrub (e.g., from 0.1.0 to 0.2.0), here are the main
-steps and appropriate resources: the main steps and appropriate resources:
+steps and appropriate resources:
 
 Preparing the release branch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -58,6 +58,7 @@ Meanwhile, preparing the post-released PR
     - VERSION.txt: update to ``0.3.dev0`` (the next minor).
     - CHANGES.rst: create a header for the new entries ("ongoing development").
     - doc/version.json: update the version numbers of the stable release and dev branch.
+      Don't forget to add an entry for the previously stable version.
 
 
 The doc update has succeeded

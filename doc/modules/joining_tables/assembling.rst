@@ -30,7 +30,7 @@ In addition, skrub also enable more advanced analysis:
   Alternatively, it can aggregate the main table and then join it back onto itself.
 
 - :class:`AggTarget`: in some settings, one can derive powerful features from
-  the target `y` itself. AggTarget aggregates the target without risking data
+  the target ``y`` itself. AggTarget aggregates the target without risking data
   leakage, then joins the result back on the main table, similar to AggJoiner.
 
 - :class:`MultiAggJoiner`: extension of the :class:`AggJoiner` that joins multiple
@@ -58,4 +58,4 @@ in the right table (the table to be added). This is done by estimating the value
 that the missing rows would have by training a machine learning model on the data
 we have access to.
 
-This transformer is explored in more detail in :ref:`this example <sphx_glr_auto_examples_08_interpolation_join.py>`.
+This transformer is explored in more detail in :ref:`this example <sphx_glr_auto_examples_0080_interpolation_join.py>`.

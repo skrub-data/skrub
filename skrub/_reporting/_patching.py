@@ -1,5 +1,4 @@
 import importlib
-import warnings
 
 from ._table_report import TableReport
 
@@ -79,10 +78,6 @@ def patch_display(
 ):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
 
-    .. deprecated:: 0.6.0
-        The functionality provided by this function is now implemented in
-        :func:`~skrub.set_config`.
-
     This function replaces the HTML displays (what is shown when an object is
     the output of a jupyter notebook cell) of pandas and polars DataFrames
     with a TableReport.
@@ -128,13 +123,6 @@ def patch_display(
         compute_associations=compute_associations,
         columns_threshold=columns_threshold,
     )
-    warnings.warn(
-        (
-            "patch_display will be deprecated in the next release. "
-            "Equivalent functionality is available in skrub.set_config."
-        ),
-        category=FutureWarning,
-    )
 
 
 def _patch_display(
@@ -158,10 +146,6 @@ def _patch_display(
 def unpatch_display(pandas=True, polars=True):
     """Undo the effect of ``skrub.patch_display()``.
 
-    .. deprecated:: 0.6.0
-        The functionality provided by this function is now implemented in
-        :func:`~skrub.set_config`.
-
     This function restores the default HTML displays of pandas and polars
     DataFrames.
 
@@ -181,13 +165,6 @@ def unpatch_display(pandas=True, polars=True):
         Directly create a report from a dataframe.
     """
     _change_display(_unpatch, _get_to_patch(pandas=pandas, polars=polars))
-    warnings.warn(
-        (
-            "unpatch_display will be deprecated in the next release. "
-            "Equivalent functionality is available in skrub.set_config."
-        ),
-        category=FutureWarning,
-    )
 
 
 def _unpatch_display(pandas=True, polars=True):

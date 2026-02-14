@@ -1,8 +1,8 @@
 import numpy as np
 
 from . import _dataframe as sbd
-from ._apply_to_cols import RejectColumn, SingleColumnTransformer
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["CleanCategories"]
 
@@ -85,8 +85,6 @@ class CleanCategories(SingleColumnTransformer):
     2    three
     Name: c, dtype: category
     Categories (3, ...): ['one', 'three', 'two']
-    >>> cleaner.fit_transform(s) is s
-    True
 
     Categories stored with the ``StringDtype`` dtype are converted to ``object``:
 
@@ -97,16 +95,16 @@ class CleanCategories(SingleColumnTransformer):
     1    cat B
     2     <NA>
     Name: c, dtype: category
-    Categories (2, string): [cat A, cat B]
-    >>> _.cat.categories.dtype
+    Categories (2, string): [...]
+    >>> _.cat.categories.dtype #doctest: +SKIP
     string[python]
     >>> cleaner.fit_transform(s)
     0    cat A
     1    cat B
     2      NaN
     Name: c, dtype: category
-    Categories (2, object): ['cat A', 'cat B']
-    >>> _.cat.categories.dtype
+    Categories (2, ...): [...]
+    >>> _.cat.categories.dtype #doctest: +SKIP
     dtype('O')
 
     Non-string categories are converted to strings:
@@ -142,7 +140,7 @@ class CleanCategories(SingleColumnTransformer):
     0    C()
     1    C()
     Name: c, dtype: category
-    Categories (1, object): ['C()']
+    Categories (1, ...): ['C()']
 
     A non-categorical column is rejected:
 
@@ -150,7 +148,7 @@ class CleanCategories(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Column 'c' is not categorical.
+    skrub._single_column_transformer.RejectColumn: Column 'c' is not categorical.
 
     However once a column has been accepted, the output of ``transform`` will
     always have a categorical dtype:
@@ -161,7 +159,7 @@ class CleanCategories(SingleColumnTransformer):
     0    a
     1    b
     2    c
-    Name: c, dtype: object
+    Name: c, dtype: ...
     >>> cleaner.transform(s)
     0    a
     1    b

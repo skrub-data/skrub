@@ -1,5 +1,5 @@
 from . import _dataframe as sbd
-from ._apply_to_cols import RejectColumn, SingleColumnTransformer
+from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToCategorical"]
 
@@ -86,7 +86,7 @@ class ToCategorical(SingleColumnTransformer):
     >>> to_cat.fit_transform(pd.Series([1.1, 2.2], name='c'))
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Column 'c' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 'c' does not contain strings.
 
     ``object`` columns that do not contain only strings are also rejected:
 
@@ -94,7 +94,7 @@ class ToCategorical(SingleColumnTransformer):
     >>> to_cat.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._apply_to_cols.RejectColumn: Column 'c' does not contain strings.
+    skrub._single_column_transformer.RejectColumn: Column 'c' does not contain strings.
 
     No special handling of ``StringDtype`` vs ``object`` columns is done, the
     behavior is the same as ``pd.astype('category')``: if the input uses the
@@ -111,7 +111,7 @@ class ToCategorical(SingleColumnTransformer):
     1    cat B
     2     <NA>
     Name: c, dtype: category
-    Categories (2, string): [cat A, cat B]
+    Categories (2, string): [...]
     >>> _.cat.categories.dtype # doctest: +SKIP
 
     Polars string columns are converted to the ``Categorical`` dtype (not ``Enum``). As
@@ -159,6 +159,8 @@ class ToCategorical(SingleColumnTransformer):
         transformed : pandas or polars Series
             The input transformed to Categorical.
         """
+        self.all_outputs_ = [sbd.name(column)]
+
         if sbd.is_categorical(column):
             return column
         if not sbd.is_string(column):

@@ -4,13 +4,12 @@ import os
 import warnings
 from pathlib import Path
 
-from sklearn.base import TransformerMixin
 from sklearn.decomposition import PCA
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._apply_to_cols import SingleColumnTransformer
 from ._scaling_factor import scaling_factor
+from ._single_column_transformer import SingleColumnTransformer
 from ._to_str import ToStr
 from ._utils import import_optional_dependency, unique_strings
 from .datasets._utils import get_data_dir
@@ -20,7 +19,7 @@ class ModelNotFound(ValueError):
     pass
 
 
-class TextEncoder(SingleColumnTransformer, TransformerMixin):
+class TextEncoder(SingleColumnTransformer):
     """Encode string features by applying a pretrained language model \
         downloaded from the HuggingFace Hub.
 
@@ -340,7 +339,15 @@ class TextEncoder(SingleColumnTransformer, TransformerMixin):
                 "ignore",
                 message=r".*IProgress not found.*",
             )
-            st = import_optional_dependency("sentence_transformers")
+            st = import_optional_dependency(
+                "sentence_transformers",
+                extra=(
+                    "The TextEncoder requires sentence-transformers and its"
+                    " dependencies. Please see"
+                    " https://skrub-data.org/stable/install.html#deep-learning-dependencies"
+                    " for the installation guide."
+                ),
+            )
 
         self._cache_folder = get_data_dir(
             name=self.model_name, data_home=self.cache_folder

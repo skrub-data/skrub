@@ -13,7 +13,7 @@ from skrub._datetime_encoder import (
     _is_date,
     _SplineEncoder,
 )
-from skrub._to_float32 import ToFloat32
+from skrub._to_float import ToFloat
 
 
 def date(df_module):
@@ -115,7 +115,7 @@ def expected_features(df_module):
     }
 
     res = df_module.make_dataframe(values)
-    return ApplyToCols(ToFloat32()).fit_transform(res)
+    return ApplyToCols(ToFloat()).fit_transform(res)
 
 
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):
@@ -348,10 +348,8 @@ def test_correct_parameters(a_datetime_col, params, transformers):
     enc.fit_transform(a_datetime_col)
 
     assert all(
-        [
-            isinstance(t, required_t)
-            for t, required_t in zip(enc._periodic_encoders.values(), transformers)
-        ]
+        isinstance(t, required_t)
+        for t, required_t in zip(enc._periodic_encoders.values(), transformers)
     )
 
     with pytest.raises(ValueError, match="Unsupported value wrongvalue .*"):

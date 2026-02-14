@@ -6,6 +6,14 @@ from .. import _column_associations, _config
 from .. import _dataframe as sbd
 from . import _plotting, _sample_table, _utils
 
+try:
+    import pyarrow  # noqa F401
+
+    _PYARROW_INSTALLED = True
+except ImportError:
+    _PYARROW_INSTALLED = False
+
+
 _SUBSAMPLE_SIZE = 3000
 _N_TOP_ASSOCIATIONS = 20
 
@@ -52,7 +60,7 @@ def summarize_dataframe(
         Maximum number of rows from the end of the dataframe to show in the
         sample table.
 
-    verbose : int, default = 1
+    verbose : int, default=1
         Whether to print progress information while the report is being generated.
 
         * verbose = 1 prints how many columns have been processed so far.
@@ -112,7 +120,10 @@ def summarize_dataframe(
     summary["n_constant_columns"] = sum(
         c["value_is_constant"] for c in summary["columns"]
     )
-    if with_associations:
+    if not _PYARROW_INSTALLED and summary["dataframe_module"] == "polars":
+        with_associations = False
+        summary["associations_skipped_polars_no_pyarrow"] = True
+    elif with_associations:
         if n_rows and n_columns:
             _add_associations(df, summary)
         else:
@@ -121,7 +132,11 @@ def summarize_dataframe(
 
 
 def _add_associations(df, dataframe_summary):
-    df = sbd.sample(df, n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE))
+    df = sbd.sample(
+        df,
+        n=min(sbd.shape(df)[0], _SUBSAMPLE_SIZE),
+        seed=_config.get_config()["subsampling_seed"],
+    )
     associations = _column_associations.column_associations(df)
 
     # get only the top _N_TOP_ASSOCIATIONS
@@ -175,7 +190,7 @@ def _summarize_column(
         order_by_column=order_by_column,
     )
     _add_datetime_summary(summary, column, with_plots=with_plots)
-    summary["plot_names"] = [k for k in summary.keys() if k.endswith("_plot")]
+    summary["plot_names"] = [k for k in summary if k.endswith("_plot")]
     _add_is_sorted(summary, column)
 
     return summary

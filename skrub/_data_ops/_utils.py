@@ -1,5 +1,10 @@
 import enum
+import re
+import shutil
+import time
 import traceback
+import warnings
+from pathlib import Path
 
 from joblib.externals import cloudpickle
 
@@ -62,3 +67,26 @@ def format_exception(e):
 def format_exception_only(e):
     """compatibility for python < 3.10"""
     return traceback.format_exception_only(type(e), e)
+
+
+def prune_directory(path: str):
+    path = Path(path)
+    if not path.exists():
+        return
+    time_threshold = time.time() - 7 * 24 * 3600  # 7 days ago
+    # pattern to match folder names like full_data_op_report_{datetime}_{randomstring}
+    pattern = re.compile(r"^full_data_op_report_\d{4}-\d{2}-\d{2}T\d{6}_[0-9a-f]{8}$")
+    for dir_path in path.iterdir():
+        if (
+            dir_path.is_dir()
+            and pattern.match(dir_path.name)
+            and dir_path.stat().st_mtime < time_threshold
+        ):
+            try:
+                shutil.rmtree(dir_path)
+            except Exception as e:
+                warnings.warn(
+                    "Skrub wants to delete an old folder in the skrub data folder: "
+                    f"Could not delete {dir_path}:\n"
+                    + "".join(format_exception_only(e))
+                )

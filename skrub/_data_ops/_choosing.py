@@ -65,7 +65,7 @@ class BaseChoice:
 
     def __init_subclass__(cls):
         if (cls_getitem := cls.__dict__.get("__getitem__", None)) is not None:
-            setattr(cls, "__getitem__", _wrap_getitem(cls_getitem))
+            cls.__getitem__ = _wrap_getitem(cls_getitem)
 
     @_wrap_getitem
     def __getitem__(self, key):
@@ -110,9 +110,9 @@ class Choice(BaseChoice):
     """A choice among an enumerated set of outcomes."""
 
     outcomes: list[typing.Any]
-    outcome_names: typing.Optional[list[str]]
-    name: typing.Optional[str] = None
-    chosen_outcome_idx: typing.Optional[int] = None
+    outcome_names: list[str] | None
+    name: str | None = None
+    chosen_outcome_idx: int | None = None
 
     def __post_init__(self):
         _check_name(self.name)
@@ -248,7 +248,7 @@ class Choice(BaseChoice):
         if self.outcome_names is None:
             arg = self.outcomes
         else:
-            arg = {name: out for name, out in zip(self.outcome_names, self.outcomes)}
+            arg = dict(zip(self.outcome_names, self.outcomes))
         args_r = _utils.repr_args((arg,), {"name": self.name}, {"name": None})
         return f"choose_from({args_r})"
 
@@ -666,7 +666,7 @@ class NumericChoice(BaseNumericChoice):
     to_int: bool
     name: str
     default_outcome: float
-    chosen_outcome: typing.Optional[typing.Union[int, float]] = None
+    chosen_outcome: int | float | None = None
 
     def __post_init__(self):
         _check_name(self.name)
@@ -719,7 +719,7 @@ class DiscretizedNumericChoice(BaseNumericChoice, Sequence):
     to_int: bool
     name: str
     default_outcome: float
-    chosen_outcome: typing.Optional[typing.Union[int, float]] = None
+    chosen_outcome: int | float | None = None
 
     def __post_init__(self):
         _check_name(self.name)

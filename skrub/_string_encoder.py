@@ -1,5 +1,6 @@
 import warnings
 
+from sklearn.base import TransformerMixin
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import (
     HashingVectorizer,
@@ -10,12 +11,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._apply_to_cols import SingleColumnTransformer
 from ._scaling_factor import scaling_factor
+from ._single_column_transformer import SingleColumnTransformer
 from ._to_str import ToStr
 
 
-class StringEncoder(SingleColumnTransformer):
+class StringEncoder(TransformerMixin, SingleColumnTransformer):
     """Generate a lightweight string encoding of a given column using tf-idf \
         vectorization and truncated singular value decomposition (SVD).
 
@@ -59,6 +60,11 @@ class StringEncoder(SingleColumnTransformer):
     random_state : int, RandomState instance or None, default=None
         Used during randomized svd. Pass an int for reproducible results across
         multiple function calls.
+
+    vocabulary : Mapping or iterable, default=None
+        In case of "tfidf" vectorizer, the vocabulary mapping passed to the vectorizer.
+        Either a Mapping (e.g., a dict) where keys are terms and values are
+        indices in the feature matrix, or an iterable over terms.
 
     Attributes
     ----------
@@ -130,6 +136,7 @@ class StringEncoder(SingleColumnTransformer):
         analyzer="char_wb",
         stop_words=None,
         random_state=None,
+        vocabulary=None,
     ):
         self.n_components = n_components
         self.vectorizer = vectorizer
@@ -137,6 +144,7 @@ class StringEncoder(SingleColumnTransformer):
         self.analyzer = analyzer
         self.stop_words = stop_words
         self.random_state = random_state
+        self.vocabulary = vocabulary
 
     def fit_transform(self, X, y=None):
         """Fit the encoder and transform a column.
@@ -164,21 +172,29 @@ class StringEncoder(SingleColumnTransformer):
                 ngram_range=self.ngram_range,
                 analyzer=self.analyzer,
                 stop_words=self.stop_words,
+                vocabulary=self.vocabulary,
             )
         elif self.vectorizer == "hashing":
-            self.vectorizer_ = Pipeline(
-                [
-                    (
-                        "hashing",
-                        HashingVectorizer(
-                            ngram_range=self.ngram_range,
-                            analyzer=self.analyzer,
-                            stop_words=self.stop_words,
+            if self.vocabulary is not None:
+                raise ValueError(
+                    "Custom vocabulary passed to StringEncoder, unsupported by"
+                    "HashingVectorizer. Rerun without a 'vocabulary' parameter."
+                )
+            else:
+                self.vectorizer_ = Pipeline(
+                    [
+                        (
+                            "hashing",
+                            HashingVectorizer(
+                                ngram_range=self.ngram_range,
+                                analyzer=self.analyzer,
+                                stop_words=self.stop_words,
+                            ),
                         ),
-                    ),
-                    ("tfidf", TfidfTransformer()),
-                ]
-            )
+                        ("tfidf", TfidfTransformer()),
+                    ]
+                )
+
         else:
             raise ValueError(
                 f"Unknown vectorizer {self.vectorizer}. Options are 'tfidf' or"

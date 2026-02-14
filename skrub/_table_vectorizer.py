@@ -1,6 +1,6 @@
 import reprlib
 from collections import UserDict
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin, clone
@@ -11,17 +11,17 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
-from ._apply_to_cols import SingleColumnTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
 from ._select_cols import Drop
+from ._single_column_transformer import SingleColumnTransformer
 from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
-from ._to_float32 import ToFloat32
+from ._to_float import ToFloat
 from ._to_str import ToStr
 from ._wrap_transformer import wrap_transformer
 
@@ -120,6 +120,7 @@ def _get_preprocessors(
     drop_if_constant,
     n_jobs,
     add_tofloat32=True,
+    cast_to_str=True,
     datetime_format=None,
 ):
     steps = [CheckInputDataFrame()]
@@ -133,11 +134,12 @@ def _get_preprocessors(
         ToDatetime(format=datetime_format),
     ]
     if add_tofloat32:
-        transformers.append(ToFloat32())
-    transformers += [
-        CleanCategories(),
-        ToStr(),
-    ]
+        transformers.append(ToFloat())
+
+    transformers.append(CleanCategories())
+
+    if cast_to_str:
+        transformers.append(ToStr())
 
     for transformer in transformers:
         steps.append(
@@ -184,7 +186,14 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     numeric_dtype : "float32" or None, default=None
         If set to ``float32``, convert columns with numerical information
-        to ``np.float32`` dtype. If ``None``, numerical columns are not modified.
+        to ``np.float32`` dtype thanks to the transformer ``ToFloat``.
+        If ``None``, numerical columns are not modified.
+
+    cast_to_str : bool, default=False
+        If ``True``, apply the ``ToStr`` transformer to non-numeric,
+        non-categorical, and non-datetime columns, converting them to strings.
+        If ``False``, this step is skipped and such columns retain their
+        original dtype (e.g., lists, structs).
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -197,16 +206,31 @@ class Cleaner(TransformerMixin, BaseEstimator):
         Maps the name of each column to a list of all the processing steps that were
         applied to it.
 
+    all_outputs_ : list of str
+        Column names of the output of ``transform``.
+
     See Also
     --------
     TableVectorizer :
         Process columns of a dataframe and convert them to a numeric (vectorized)
         representation.
 
-    ToFloat32 :
+    ToFloat :
         Convert numeric columns to ``np.float32``, to have consistent numeric
         types and representation of missing values. More informative columns (e.g.,
         categorical or datetime) are not converted.
+
+    ApplyToCols :
+        Apply a given transformer separately to each column in a selection of columns.
+        Useful to complement the default heuristics of the ``Cleaner``.
+
+    ApplyToFrame :
+        Apply a given transformer jointly to all columns in a selection of columns.
+        Useful to complement the default heuristics of the ``Cleaner``.
+
+    DropUninformative :
+        Drop columns that are considered uninformative, e.g., containing only
+        null values or a single unique value.
 
     Notes
     -----
@@ -215,7 +239,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``CleanNullStrings()``: replace strings used to represent missing values
       with NA markers.
 
-    - ``DropUninformative()``: drop the column if it is considered to be
+    - :class:`DropUninformative`: drop the column if it is considered to be
       "uninformative". A column is considered to be "uninformative" if it contains
       only missing values (``drop_null_fraction``), only a constant value
       (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
@@ -231,8 +255,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
 
-    - ``ToStr()``: convert columns to strings, unless they are numerical,
-      categorical, or datetime.
+    - ``ToStr()``: convert columns to strings unless they are numerical,
+    categorical, or datetime. This step is controlled by the ``cast_to_str``
+    parameter. When ``cast_to_str=False`` (default), string conversion is skipped.
+    When ``cast_to_str=True``, string conversion is applied.
 
     If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
     numeric columns to this dtype, including numbers represented
@@ -270,9 +296,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.fit_transform(df)
            A          B     C    D
     0    one 2024-02-02   1.5  1.5
-    1    two 2024-02-23   NaN  2.0
+    1    two 2024-02-23  ...  2.0
     2    two 2024-03-12  12.2  2.5
-    3  three 2024-03-13   NaN  3.0
+    3  three 2024-03-13  ...  3.0
 
     >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     A               ...
@@ -284,11 +310,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> cleaner.all_processing_steps_['A']
-    [CleanNullStrings(), DropUninformative(), ToStr()]
+    [CleanNullStrings(), DropUninformative()]
     >>> cleaner.all_processing_steps_['B']
     [CleanNullStrings(), DropUninformative(), ToDatetime()]
     >>> cleaner.all_processing_steps_['C']
-    [CleanNullStrings(), DropUninformative(), ToStr()]
+    [CleanNullStrings(), DropUninformative()]
     >>> cleaner.all_processing_steps_['D']
     [DropUninformative()]
     """
@@ -300,6 +326,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_unique=False,
         datetime_format=None,
         numeric_dtype=None,
+        cast_to_str=False,
         n_jobs=1,
     ):
         self.drop_null_fraction = drop_null_fraction
@@ -307,6 +334,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
         self.numeric_dtype = numeric_dtype
+        self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
 
     def fit_transform(self, X, y=None):
@@ -342,10 +370,12 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             add_tofloat32=add_tofloat32,
+            cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
+        self.all_outputs_ = sbd.column_names(result)
         input_names = all_steps[0].feature_names_out_
         self.all_processing_steps_ = {col: [] for col in input_names}
         for step in all_steps[1:]:
@@ -389,20 +419,32 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.fit_transform(X, y=y)
         return self
 
+    def get_feature_names_out(self, input_features=None):
+        """Return the column names of the output of ``transform`` as a list of strings.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        list of strings
+            The column names.
+        """
+        check_is_fitted(self, "all_outputs_")
+        return np.asarray(self.all_outputs_)
+
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 
     This transformer preprocesses the given dataframe by first cleaning the data
-    to ensure consistent numerical dtypes (float32), then encodes each column with
-    an encoder suitable for its dtype. Categorical features are encoded differently
-    depending on their cardinality.
-
-    .. note::
-
-        The ``specific_transformers`` parameter will be removed in a future
-        version of ``skrub``, when better utilities for building complex
-        pipelines are introduced.
+    to ensure consistent numerical dtypes (float32). The TableVectorizer will
+    automatically convert to float32 any string column that contains only numerical
+    information.
+    Then it encodes each column with an encoder suitable for its dtype. Categorical
+    features are encoded differently depending on their cardinality.
 
     Parameters
     ----------
@@ -526,6 +568,18 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Preprocesses each column of a dataframe with consistency checks and
         sanitization, e.g., of null values or dates.
 
+    ApplyToCols :
+        Apply a given transformer separately to each column in a selection of columns.
+        Useful to complement the default heuristics of the ``TableVectorizer``.
+
+    ApplyToFrame :
+        Apply a given transformer jointly to all columns in a selection of columns.
+        Useful to complement the default heuristics of the ``TableVectorizer``.
+
+    DropUninformative :
+        Drop columns that are considered uninformative, e.g., containing only
+        null values or a single unique value.
+
     Notes
     -----
     The TableVectorizer applies a different transformation to each of several kinds of columns:
@@ -633,7 +687,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     We can inspect all the processing steps that were applied to a given column:
 
     >>> vectorizer.all_processing_steps_['B']
-    [CleanNullStrings(), DropUninformative(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat32(), 'B_month': ToFloat32(), ...}]
+    [CleanNullStrings(), DropUninformative(), ToDatetime(), DatetimeEncoder(), {'B_day': ToFloat(), 'B_month': ToFloat(), ...}]
 
     Note that as the encoder (``DatetimeEncoder()`` above) produces multiple
     columns, the last processing step is not described by a single transformer
@@ -669,11 +723,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     processing is applied to those columns. A column cannot appear twice in the
     ``specific_transformers``.
 
-    .. note::
-
-        This functionality is likely to be removed in a future version of the
-        ``TableVectorizer``.
-
     The overrides are provided as a list of pairs:
     ``(transformer, list_of_column_names)``.
 
@@ -708,7 +757,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     ``ToDatetime()``:
 
     >>> vectorizer.all_processing_steps_
-    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat32(), PassThrough(), {'C': ToFloat32()}]}
+    {'A': [Drop()], 'B': [OrdinalEncoder()], 'C': [CleanNullStrings(), DropUninformative(), ToFloat(), PassThrough(), {'C': ToFloat()}]}
 
     Specifying several ``specific_transformers`` for the same column is not allowed.
 
@@ -844,7 +893,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
                         f"Column {c!r} used twice in 'specific_transformers', "
                         f"at indices {specific_columns[c]} and {i}."
                     )
-            specific_columns.update({c: i for c in cols})
+            specific_columns.update(dict.fromkeys(cols, i))
         self._specific_columns = list(specific_columns.keys())
 
     def _make_pipeline(self):
@@ -895,7 +944,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self._postprocessors = []
         add_step(
             self._postprocessors,
-            ToFloat32(),
+            ToFloat(),
             s.all() - _created_by(*self._specific_transformers) - s.categorical(),
             allow_reject=True,
         )

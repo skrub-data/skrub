@@ -30,12 +30,14 @@ def test_config_context():
     assert get_config() == {
         "use_table_report": False,
         "use_table_report_data_ops": True,
+        "table_report_verbosity": 1,
         "max_plot_columns": 30,
         "max_association_columns": 30,
         "subsampling_seed": 0,
         "enable_subsampling": "default",
         "float_precision": 3,
         "cardinality_threshold": 40,
+        "eager_data_ops": True,
     }
 
     # Not using as a context manager affects nothing
@@ -82,8 +84,8 @@ def test_max_plot_columns(simple_df):
     # Check that max_plot_columns can be set after patching the TableReport
     # repr_html.
     with config_context(use_table_report=True):
-        with config_context(max_plot_columns=3):
-            "Plotting was skipped" in simple_df._repr_html_()
+        with config_context(max_plot_columns=1):
+            assert "Plotting was skipped" in simple_df._repr_html_()
 
 
 def test_enable_subsampling(simple_df):
@@ -181,3 +183,9 @@ def test_parsing(monkeypatch):
         with monkeypatch.context() as m:
             m.setenv("MY_VAR", "hello")
             _parse_env_bool("MY_VAR", default=False)
+
+
+def test_wrong_verbosity():
+    with pytest.raises(ValueError, match=".*table_report_verbosity.*"):
+        with config_context(table_report_verbosity=-1):
+            pass

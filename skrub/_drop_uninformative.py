@@ -3,7 +3,7 @@ import numbers
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._apply_to_cols import SingleColumnTransformer
+from ._single_column_transformer import SingleColumnTransformer
 
 __all__ = ["DropUninformative"]
 
@@ -166,6 +166,8 @@ class DropUninformative(SingleColumnTransformer):
             ]
         )
 
+        self.all_outputs_ = [] if self.drop_ else [sbd.name(column)]
+
         return self.transform(column)
 
     def transform(self, column):
@@ -182,7 +184,7 @@ class DropUninformative(SingleColumnTransformer):
             The input column, or an empty list if the column is chosen to be
             dropped.
         """
-        check_is_fitted(self)
+        check_is_fitted(self, "all_outputs_")
 
         if self.drop_:
             return []

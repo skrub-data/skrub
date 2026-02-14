@@ -8,8 +8,8 @@ from sklearn.utils.fixes import parse_version
 
 from skrub import ApplyToCols
 from skrub import _dataframe as sbd
-from skrub._apply_to_cols import RejectColumn
 from skrub._dispatch import dispatch
+from skrub._single_column_transformer import RejectColumn
 from skrub._to_datetime import (
     ToDatetime,
     _convert_time_zone,
@@ -46,6 +46,7 @@ def datetime_col(df_module):
 
 
 @skip_polars_installed_without_pyarrow
+@pytest.mark.xfail(strict=False)
 @pytest.mark.parametrize(
     "format",
     [
@@ -69,7 +70,8 @@ def test_string_to_datetime(df_module, datetime_col, format, provide_format):
         )
     ):
         pytest.xfail(
-            "TODO improve datetime parsing, pandas does not find some ISO formats."
+            "TODO improve datetime parsing, pandas does not find some ISO formats.",
+            strict=False,
         )
     as_str = strftime(datetime_col, format)
     if provide_format:
@@ -234,3 +236,16 @@ def test_error_dispatch(func):
     # Make codecov happy
     with pytest.raises(TypeError, match="Expecting a Pandas or Polars Series"):
         func(np.array([1]))
+
+
+def test_specific_time_encoding():
+    """Test another specific time zone encoding case.
+    Not using df_module fixture because it's not intended to test polars.
+    """
+    from zoneinfo import ZoneInfo
+
+    col = [
+        pd.Timestamp(1584226800, unit="s", tz=ZoneInfo("Europe/Paris")),
+        pd.Timestamp(1584226801, unit="s", tz=ZoneInfo("Europe/Paris")),
+    ]
+    assert _get_time_zone(pd.Series(name="dt", data=col)) == "Europe/Paris"

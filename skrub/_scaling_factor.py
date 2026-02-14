@@ -3,6 +3,7 @@ Skrub encoders output vectors that don't have the same scale. Scaling using the
 standard deviation of the matrix help computational stability and downstream prediction
 performance.
 """
+
 import numpy as np
 
 

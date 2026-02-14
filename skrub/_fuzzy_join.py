@@ -1,6 +1,7 @@
 """
 Implements fuzzy_join, a function to perform fuzzy joining between two tables.
 """
+
 import numpy as np
 
 from . import _dataframe as sbd

@@ -294,7 +294,7 @@ def test_is_column_list(df_module):
     assert not ns.is_column_list([np.ones(3)])
     assert not ns.is_column_list(np.ones(3))
     assert not ns.is_column_list(np.ones((3, 3)))
-    assert not ns.is_column_list((df_module.example_column for i in range(2)))
+    assert not ns.is_column_list(df_module.example_column for i in range(2))
     assert not ns.is_column_list({"col": df_module.example_column})
 
 
@@ -546,16 +546,6 @@ def test_is_string(df_module):
     assert ns.is_string(ns.col(df, "str-col"))
     for col in ["int-col", "float-col", "datetime-col", "date-col", "bool-col"]:
         assert not ns.is_string(ns.col(df, col))
-
-
-def test_sentinel_is_string_pandas_3(df_module):
-    if df_module.name != "pandas":
-        return
-    pd_version = parse(pd.__version__)
-    if pd_version.major < parse("3.0.0").major:
-        return
-    if not pd_version.is_prerelease:
-        pytest.fail("This test should fail when pandas 3.x is released.")
 
 
 def test_to_string(df_module):

@@ -99,6 +99,16 @@ def test_empty_dataframe(df_module):
     assert "The dataframe is empty." in html
 
 
+def test_lazyframe_exception():
+    pl = pytest.importorskip("polars")
+    lazy_df = pl.DataFrame({"a": ["1", "2", "3"]}).lazy()
+
+    with pytest.raises(
+        ValueError, match=r"TableReport does not support lazy dataframes"
+    ):
+        TableReport(lazy_df)
+
+
 def test_open(pd_module, browser_mock):
     TableReport(pd_module.example_dataframe, title="the title").open()
     assert b"the title" in browser_mock.content
@@ -186,7 +196,7 @@ def test_write_html(tmp_path, pd_module, filename_type):
         report.write_html(filename)
         assert tmp_file_path.exists()
 
-    with open(tmp_file_path, "r", encoding="utf-8") as file:
+    with open(tmp_file_path, encoding="utf-8") as file:
         saved_content = file.read()
     assert "</html>" in saved_content
 
@@ -207,7 +217,7 @@ def test_write_html_with_not_utf8_encoding(tmp_path, pd_module):
         ):
             report.write_html(file)
 
-    with open(tmp_file_path, "r", encoding="latin-1") as file:
+    with open(tmp_file_path, encoding="latin-1") as file:
         saved_content = file.read()
     assert "</html>" not in saved_content
 
@@ -405,3 +415,154 @@ def test_bad_cols_parameter(pd_module, arg):
     df = pd_module.example_dataframe
     with pytest.raises(ValueError):
         TableReport(df, **{arg: -1})
+
+
+def test_array_dim_check():
+    array_3d = np.array([[[1, 2], [3, 4]], [[5, 6], [7, 8]]])
+    assert array_3d.ndim == 3
+    with pytest.raises(ValueError, match=r"Input (NumPy )?array has 3 dimensions"):
+        TableReport(array_3d)
+
+    array_4d = np.array([[[[1]]]])
+    assert array_4d.ndim == 4
+    with pytest.raises(ValueError, match=r"Input (NumPy )?array has 4 dimensions"):
+        TableReport(array_4d)
+
+    array_1d = np.array([1, 2, 3])
+    assert array_1d.ndim == 1
+
+    TableReport(array_1d)
+
+
+numpy_test_cases = [
+    (
+        np.array(
+            [
+                [1, 2, 3],
+                [
+                    4,
+                    5,
+                    6,
+                ],
+            ]
+        ),
+        3,
+    ),
+    (np.array([[10, 20], [30, 40], [50, 60], [60, 70]]), 2),
+]
+
+
+@pytest.mark.parametrize("input_array, expected_columns", numpy_test_cases)
+def test_numpy_array_columns(input_array, expected_columns):
+    report = TableReport(input_array, max_association_columns=0)
+
+    assert report._summary["n_columns"] == expected_columns
+
+
+def _pyarrow_available():
+    try:
+        import pyarrow  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
+@pytest.mark.xfail(
+    condition=_pyarrow_available(),
+    reason="Test expects pyarrow to not be installed, but it is installed",
+)
+def test_polars_df_no_pyarrow():
+    # Test that when using a Polars dataframe without pyarrow installed,
+    # the appropriate flag is set in the summary and the message appears in the HTML.
+    pl = pytest.importorskip("polars")
+
+    df = pl.DataFrame(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+            "C": [10, 20, 30, 40, 50],
+        }
+    )
+
+    report = TableReport(df, verbose=0)
+    summary = report._summary
+
+    assert summary.get("associations_skipped_polars_no_pyarrow", False) is True
+    assert summary.get("dataframe_module", "") == "polars"
+
+    html_snippet = report.html_snippet()
+    assert (
+        "Computing pairwise associations is not available for Polars dataframes "
+        "when PyArrow is not installed" in html_snippet
+    )
+
+
+@skip_polars_installed_without_pyarrow
+def test_open_tab_parameter(df_module):
+    """Test the open_tab parameter functionality"""
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test open behavior (should be 'table')
+    report1 = TableReport(df)
+    assert report1.open_tab == "table"
+
+    # Test explicitly set to 'stats'
+    report2 = TableReport(df, open_tab="stats")
+    assert report2.open_tab == "stats"
+
+    # Test set to 'distributions'
+    report3 = TableReport(df, open_tab="distributions")
+    assert report3.open_tab == "distributions"
+
+    # Test set to 'associations'
+    report4 = TableReport(df, open_tab="associations")
+    assert report4.open_tab == "associations"
+
+    # Test HTML generation includes correct attributes
+    html_snippet = report2.html_snippet()
+    assert 'data-target-panel-id="summary-statistics-panel"' in html_snippet
+    assert "data-is-selected" in html_snippet
+
+
+@skip_polars_installed_without_pyarrow
+def test_open_tab_wrong_names(df_module):
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test invalid tab name (should raise error)
+    with pytest.raises(ValueError, match="'open_tab' must be one of"):
+        TableReport(df, open_tab="invalid")
+
+    with pytest.raises(ValueError, match="'open_tab' must be one of"):
+        TableReport(df, open_tab="invalid").html()
+
+
+@skip_polars_installed_without_pyarrow
+def test_open_tab_minimal_mode(df_module):
+    """Test that default_tab falls back to 'table' in minimal mode when needed"""
+    df = df_module.make_dataframe(
+        {
+            "A": [1, 2, 3, 4, 5],
+            "B": ["a", "b", "c", "d", "e"],
+        }
+    )
+
+    # Test minimal mode with open_tab set to 'distributions'
+    report1 = TableReport(df, open_tab="distributions")
+    report1._set_minimal_mode()
+    assert report1.open_tab == "table"
+
+    # Test minimal mode with open_tab set to 'associations'
+    report2 = TableReport(df, open_tab="associations")
+    report2._set_minimal_mode()
+    assert report2.open_tab == "table"

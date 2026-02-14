@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from skrub import _column_associations
+from skrub import _column_associations, config_context
 from skrub import _dataframe as sbd
 from skrub._reporting import _sample_table
 from skrub._reporting._summarize import summarize_dataframe
@@ -96,13 +96,13 @@ def test_summarize(
             d | {"cramer_v": round(d["cramer_v"], 1)}
             for d in summary["top_associations"]
         ]
-        assert set(
+        assert {
             tuple(sorted((a["left_column_name"], a["right_column_name"])))
             for a in asso[:3]
-        ) == {("city", "country"), ("city", "location"), ("country", "location")}
+        } == {("city", "country"), ("city", "location"), ("country", "location")}
         assert asso[-1]["cramer_v"] == 0.0
     else:
-        assert "top_associations" not in summary.keys()
+        assert "top_associations" not in summary
 
 
 def test_no_title(pd_module):
@@ -188,9 +188,8 @@ def get_pivoted_df():
             "C": ["foo", "foo", "foo", "bar", "bar", "bar"] * 4,
             "D": np.random.randn(24),
             "E": np.random.randn(24),
-            "F": [datetime.datetime(2013, i, 1) for i in range(1, 13)] + [
-                datetime.datetime(2013, i, 15) for i in range(1, 13)
-            ],
+            "F": [datetime.datetime(2013, i, 1) for i in range(1, 13)]
+            + [datetime.datetime(2013, i, 15) for i in range(1, 13)],
         }
     )
 
@@ -280,3 +279,33 @@ def test_bool_column_mean(df_module):
     summary = summarize_dataframe(df)
     cols = summary["columns"]
     assert "mean" in cols[0]
+
+
+@skip_polars_installed_without_pyarrow
+def test_with_associations_and_seed(monkeypatch, air_quality):
+    """Check that we can control the subsampling seed when computing the
+    associations."""
+    monkeypatch.setattr("skrub._reporting._summarize._SUBSAMPLE_SIZE", 10)
+
+    with config_context(max_association_columns=2):
+        associations_1 = summarize_dataframe(air_quality)["top_associations"]
+        associations_2 = summarize_dataframe(air_quality)["top_associations"]
+        with config_context(subsampling_seed=42):
+            associations_3 = summarize_dataframe(air_quality)["top_associations"]
+
+        res_associations_1_vs_2, res_associations_1_vs_3 = [], []
+        for a1, a2, a3 in zip(associations_1, associations_2, associations_3):
+            res_associations_1_vs_2.append(
+                a1["left_column_name"] == a2["left_column_name"]
+            )
+            res_associations_1_vs_3.append(
+                a1["left_column_name"] != a3["left_column_name"]
+            )
+
+        assert all(res_associations_1_vs_2), (
+            "Computing summary with the same seed should produce the same associations."
+        )
+        assert not all(res_associations_1_vs_3), (
+            "Computing summary with different seeds should produce different "
+            "associations."
+        )

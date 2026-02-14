@@ -20,11 +20,11 @@
 	    <button type="button" data-test="deselect-all-columns" data-manager="DeselectAllColumns">Deselect all</button>
 	</div>
     </div>
-
     {% if summary.plots_skipped %}
     <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between"
         data-manager="AlertDismissable">
         <div class="alert-content shrinkable-text">
+
             <p>Plotting skipped. This is due to either:</p>
             <ul>
                 <li>The dataframe exceeding the
@@ -32,9 +32,32 @@
                     limit.
                 </li>
                 <li>The <code>plot_distributions</code> option being set to <code>False</code>.</li>
+
+            <p>You can adjust this behavior in several ways:</p>
+            <ul>
+                <li>To fix it for a single report, change the parameter passed when creating <code>TableReport</code> (<em>default: 30</em>):
+                    <pre><code class="language-python">    report = TableReport(columns_threshold=50)</code></pre>
+                </li>
+                <li>To change the default number of columns to be plotted during the current Python session, use <code>skrub.set_config</code>:
+                    <pre><code class="language-python">    from skrub import set_config
+    set_config(columns_threshold=50)</code></pre>
+                </li>
+                <li>To make the change permanent, use an environment variable:
+                    <pre><code class="language-shell">    export SKB_COLUMNS_THRESHOLD=50</code></pre>
+                </li>
+            </ul>
+            <p>
+            Note that <code>TableReport</code> accepts three parameters:
+            </p>
+            <ul>
+                <li>The <code>plot_distributions</code> boolean indicating if the columns should be plotted.</li>
+                <li>The <code>compute_associations</code> boolean indicating if the columns for which associations should be computed.</li>
+                <li>The <code>columns_threshold</code> limits the number of columns for which columns should be plotted and associations should be computed.</li>
             </ul>
         </div>
-        {{buttons.dismissbutton()}}
+        <div class="dismiss-container">
+            {{ buttons.dismissbutton() }}
+        </div>
     </div>
     {% else %}
     <div class="horizontal-scroll padding-b-s">

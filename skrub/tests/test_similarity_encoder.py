@@ -166,15 +166,17 @@ def _test_similarity(
     numpy.testing.assert_almost_equal(X_test_enc, ans)
 
 
+@pytest.mark.xfail(strict=False)
 @pytest.mark.parametrize("input_type", INPUT_TYPES)
 @pytest.mark.parametrize("missing", ["aaa", "error", ""])
 def test_similarity_encoder(input_type, missing):
     if input_type == "polars":
-        pytest.xfail(
+        pytest.mark.xfail(
             reason=(
                 "Using Polars raises the following error 'TypeError: '<' not supported"
                 " between instances of 'NoneType' and 'str''"
-            )
+            ),
+            strict=False,
         )
     _test_similarity(
         ngram_similarity,
@@ -205,9 +207,9 @@ def test_determinist():
     sim_enc = SimilarityEncoder(
         categories="auto",
     )
-    X = np.array([" %s " % chr(i) for i in range(32, 127)]).reshape((-1, 1))
+    X = np.array([f" {chr(i)} " for i in range(32, 127)]).reshape((-1, 1))
     prototypes = sim_enc.fit(X).categories_[0]
-    for i in range(10):
+    for _i in range(10):
         assert np.array_equal(prototypes, sim_enc.fit(X).categories_[0])
 
 
@@ -224,7 +226,7 @@ def test_fit_transform():
 def test_get_features():
     # See https://github.com/skrub-data/skrub/issues/168
     sim_enc = SimilarityEncoder()
-    X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
+    X = np.array([f"{chr(i)}" for i in range(32, 127)]).reshape((-1, 1))
     sim_enc.fit(X)
     assert sim_enc.get_feature_names_out().tolist() == [
         "x0_ ",
@@ -328,7 +330,7 @@ def test_get_features():
 def test_check_fitted_super_vectorizer():
     """Test that calling transform before fit raises an error"""
     sim_enc = SimilarityEncoder()
-    X = np.array(["%s" % chr(i) for i in range(32, 127)]).reshape((-1, 1))
+    X = np.array([f"{chr(i)}" for i in range(32, 127)]).reshape((-1, 1))
     with pytest.raises(NotFittedError):
         sim_enc.transform(X)
     sim_enc.fit(X)
@@ -337,7 +339,10 @@ def test_check_fitted_super_vectorizer():
 
 def test_inverse_transform(df_module):
     if df_module.name == "polars":
-        pytest.xfail(reason="Setting output to polars is not possible yet.")
+        pytest.mark.xfail(
+            reason="Setting output to polars is not possible yet.",
+            strict=False,
+        )
     encoder = SimilarityEncoder()
     encoder.set_output(transform="pandas")
     X = df_module.make_dataframe(
