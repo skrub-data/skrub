@@ -20,15 +20,12 @@ DOCSTRING_TEMP_IGNORE_SET = {
     "skrub._data_ops",
     "skrub._data_ops._data_ops",
     "skrub._data_ops._choosing",
-    "skrub._data_ops._estimator",
     "skrub._data_ops._optuna",
     "skrub._select_cols.Drop",
     "skrub._table_vectorizer.SuperVectorizer",
     "skrub._single_column_transformer.RejectColumn",
     # The following are not documented in skrub (and thus are out of scope)
     # They are usually inherited from other libraries.
-    "skrub._table_vectorizer.TableVectorizer.fit",
-    "skrub._table_vectorizer.TableVectorizer.set_params",
     "skrub._table_vectorizer.TableVectorizer.named_transformers_",
     "skrub._table_vectorizer.SuperVectorizer.fit",
     "skrub._table_vectorizer.SuperVectorizer.set_params",
@@ -164,7 +161,6 @@ def filter_errors(errors, method, estimator_cls=None):
         yield code, message
 
 
-@pytest.mark.xfail(strict=False)
 @pytest.mark.parametrize(
     ["estimator_cls", "method"],
     get_methods_to_validate(),
