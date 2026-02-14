@@ -3,8 +3,14 @@
 
     <div id="skipped-associations-alert" class="alert-info-dismissable flex space-between">
         <div class="alert-content shrinkable-text">
-            Computing pairwise associations was skipped because the dataframe has many columns.
-            See TableReport's <code>max_association_columns</code> parameter.
+            <p>Computing pairwise associations was skipped. This is due to either:</p>
+            <ul>
+                <li>The dataframe exceeding the
+                    <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>columns_threshold</code></a>
+                    limit.
+                </li>
+                <li>The <code>compute_associations</code> option being set to <code>False</code>.</li>
+            </ul>
         </div>
     </div>
 

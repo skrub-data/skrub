@@ -25,9 +25,14 @@
     <div id="skipped-plot-alert" class="alert-info-dismissable flex space-between"
         data-manager="AlertDismissable">
         <div class="alert-content shrinkable-text">
-            Plotting was skipped as the dataframe exceeded the
-            <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>max_plot_columns</code></a>
-            limit set for the TableReport during report creation.
+            <p>Plotting skipped. This is due to either:</p>
+            <ul>
+                <li>The dataframe exceeding the
+                    <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>columns_threshold</code></a>
+                    limit.
+                </li>
+                <li>The <code>plot_distributions</code> option being set to <code>False</code>.</li>
+            </ul>
         </div>
         {{buttons.dismissbutton()}}
     </div>
