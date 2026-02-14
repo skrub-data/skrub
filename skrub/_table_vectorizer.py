@@ -810,7 +810,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         X : dataframe of shape (n_samples, n_features)
             Input data to transform.
 
-        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or None, default=None
+        y : array-like of shape (n_samples,) or (n_samples, n_outputs) or \
+                None, default=None
             Target values for supervised learning (None for unsupervised
             transformations).
 
