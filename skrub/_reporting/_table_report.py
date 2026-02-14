@@ -1,6 +1,7 @@
 import codecs
 import functools
 import json
+import numbers
 from pathlib import Path
 
 import numpy as np
@@ -43,7 +44,7 @@ def _validate_plot_and_association(
         else _config.get_config()["columns_threshold"]
     )
 
-    if not isinstance(columns_threshold, int) or columns_threshold < 0:
+    if not isinstance(columns_threshold, numbers.Real) or columns_threshold < 0:
         raise ValueError(
             "'columns_threshold' must be a positive integer, got"
             f" {columns_threshold!r}."

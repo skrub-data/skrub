@@ -153,7 +153,7 @@ def set_config(
         Set the level of verbosity of the :class:`~skrub.TableReport`.
         Default is 1 (print the progress bar). Refer to the ``TableReport``
         documentation for more details.
-  
+
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub DataOps
         :func:`skrub.DataOp.skb.subsample`, when ``how="random"`` is passed.
@@ -255,7 +255,7 @@ def set_config(
                 f" {columns_threshold!r}"
             )
         local_config["columns_threshold"] = columns_threshold
- 
+
     if table_report_verbosity is not None:
         if (
             not isinstance(table_report_verbosity, numbers.Integral)
@@ -266,7 +266,7 @@ def set_config(
                 f" {table_report_verbosity!r}"
             )
         local_config["table_report_verbosity"] = table_report_verbosity
-        
+
     if subsampling_seed is not None:
         np.random.RandomState(subsampling_seed)  # check seed
         local_config["subsampling_seed"] = subsampling_seed
@@ -353,13 +353,13 @@ def config_context(
         Control whether to compute associations in :class:`~skrub.TableReport`.
         Default is ``True``.
 
+        This configuration can also be set with the ``SKB_COMPUTE_ASSOCIATIONS``
+        environment variable.
+
     table_report_verbosity : int, default=None
         Set the level of verbosity of the :class:`~skrub.TableReport`.
         Default is 0 (no verbosity). Refer to the ``TableReport`` documentation for
         more details.
-
-        This configuration can also be set with the ``SKB_COMPUTE_ASSOCIATIONS``
-        environment variable.
 
     columns_threshold : int, default=None
         If a dataframe has more columns than the value set here, the
