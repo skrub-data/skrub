@@ -25,8 +25,9 @@ def _parse_env_bool(env_variable_name, default):
 _global_config = {
     "use_table_report": _parse_env_bool("SKB_USE_TABLE_REPORT", False),
     "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
-    "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
-    "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
+    "plot_distributions": _parse_env_bool("SKB_PLOT_DISTRIBUTIONS", True),
+    "compute_associations": _parse_env_bool("SKB_COMPUTE_ASSOCIATIONS", True),
+    "columns_threshold": int(os.environ.get("SKB_COLUMNS_THRESHOLD", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
@@ -72,8 +73,9 @@ def get_config():
 def _apply_external_patches(config):
     if config["use_table_report"]:
         _patching._patch_display(
-            max_plot_columns=config["max_plot_columns"],
-            max_association_columns=config["max_plot_columns"],
+            plot_distributions=config["plot_distributions"],
+            compute_associations=config["compute_associations"],
+            columns_threshold=config["columns_threshold"],
         )
     else:
         # No-op if dispatch haven't been previously enabled
@@ -83,8 +85,9 @@ def _apply_external_patches(config):
 def set_config(
     use_table_report=None,
     use_table_report_data_ops=None,
-    max_plot_columns=None,
-    max_association_columns=None,
+    plot_distributions=None,
+    compute_associations=None,
+    columns_threshold=None,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
@@ -116,18 +119,27 @@ def set_config(
         This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
 
-    max_plot_columns : int, default=None
-        Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30. If "all", all columns will be plotted.
+    plot_distributions : bool, default=None
+        Control whether to plot distributions in :class:`~skrub.TableReport`.
+        Default is ``True``.
 
-        This configuration can also be set with the ``SKB_MAX_PLOT_COLUMNS``
+        This configuration can also be set with the ``SKB_PLOT_DISTRIBUTIONS``
         environment variable.
 
-    max_association_columns : int, default=None
-        Set the ``max_association_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30. If "all", all columns will be plotted.
+    compute_associations : bool, default=None
+        Control whether to compute associations in :class:`~skrub.TableReport`.
+        Default is ``True``.
 
-        This configuration can also be set with the ``SKB_MAX_ASSOCIATION_COLUMNS``
+        This configuration can also be set with the ``SKB_COMPUTE_ASSOCIATIONS``
+        environment variable.
+
+    columns_threshold : int, default=None
+        If a dataframe has more columns than the value set here, the
+        :class:`~skrub.TableReport` will skip generating the plots and computing
+        the associations.
+        Default is 30.
+
+        This configuration can also be set with the ``SKB_COLUMNS_THRESHOLD``
         environment variable.
 
     subsampling_seed : int, default=None
@@ -191,24 +203,28 @@ def set_config(
             )
         local_config["use_table_report_data_ops"] = use_table_report_data_ops
 
-    if max_plot_columns is not None:
-        if not isinstance(max_plot_columns, numbers.Real) and max_plot_columns != "all":
+    if plot_distributions is not None:
+        if not isinstance(plot_distributions, bool):
             raise ValueError(
-                "'max_plot_columns' must be a number or 'all', got "
-                f"{type(max_plot_columns)!r}"
+                f"'plot_distributions' must be a boolean, got {plot_distributions!r}."
             )
-        local_config["max_plot_columns"] = max_plot_columns
+        local_config["plot_distributions"] = plot_distributions
 
-    if max_association_columns is not None:
-        if (
-            not isinstance(max_association_columns, numbers.Real)
-            and max_plot_columns != "all"
-        ):
+    if compute_associations is not None:
+        if not isinstance(compute_associations, bool):
             raise ValueError(
-                "'max_association_columns' must be a number or 'all', got "
-                f"{type(max_association_columns)!r}"
+                "'compute_associations' must be a boolean, got"
+                f" {compute_associations!r}."
             )
-        local_config["max_association_columns"] = max_association_columns
+        local_config["compute_associations"] = compute_associations
+
+    if columns_threshold is not None:
+        if not isinstance(columns_threshold, numbers.Integral) or columns_threshold < 0:
+            raise ValueError(
+                "'columns_threshold' must be a non-negative integer, got"
+                f" {columns_threshold!r}"
+            )
+        local_config["columns_threshold"] = columns_threshold
 
     if subsampling_seed is not None:
         np.random.RandomState(subsampling_seed)  # check seed
@@ -247,8 +263,9 @@ def config_context(
     *,
     use_table_report=None,
     use_table_report_data_ops=None,
-    max_plot_columns=None,
-    max_association_columns=None,
+    plot_distributions=None,
+    compute_associations=None,
+    columns_threshold=None,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
@@ -280,18 +297,27 @@ def config_context(
         This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
 
-    max_plot_columns : int, default=None
-        Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30. If "all", all columns will be plotted.
+    plot_distributions : bool, default=None
+        Control whether to plot distributions in :class:`~skrub.TableReport`.
+        Default is ``True``.
 
-        This configuration can also be set with the ``SKB_MAX_PLOT_COLUMNS``
+        This configuration can also be set with the ``SKB_PLOT_DISTRIBUTIONS``
         environment variable.
 
-    max_association_columns : int, default=None
-        Set the ``max_association_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30. If "all", all columns will be plotted.
+    compute_associations : bool, default=None
+        Control whether to compute associations in :class:`~skrub.TableReport`.
+        Default is ``True``.
 
-        This configuration can also be set with the ``SKB_MAX_ASSOCIATION_COLUMNS``
+        This configuration can also be set with the ``SKB_COMPUTE_ASSOCIATIONS``
+        environment variable.
+
+    columns_threshold : int, default=None
+        If a dataframe has more columns than the value set here, the
+        :class:`~skrub.TableReport` will skip generating the plots and computing
+        the associations.
+        Default is 30.
+
+        This configuration can also be set with the ``SKB_COLUMNS_THRESHOLD``
         environment variable.
 
     subsampling_seed : int, default=None
@@ -341,15 +367,16 @@ def config_context(
     Examples
     --------
     >>> import skrub
-    >>> with skrub.config_context(max_plot_columns=1):
+    >>> with skrub.config_context(columns_threshold=1):
     ...     ...  # doctest: +SKIP
     """
     original_config = get_config()
     set_config(
         use_table_report=use_table_report,
         use_table_report_data_ops=use_table_report_data_ops,
-        max_plot_columns=max_plot_columns,
-        max_association_columns=max_association_columns,
+        plot_distributions=plot_distributions,
+        compute_associations=compute_associations,
+        columns_threshold=columns_threshold,
         subsampling_seed=subsampling_seed,
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
