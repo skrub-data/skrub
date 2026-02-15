@@ -124,17 +124,28 @@ names are not one-hot encoded):
 >>> tv = TableVectorizer().fit(df)
 >>> list(map(str, sorted(tv.get_feature_names_out())))
 ['c']
+>>> tv = TableVectorizer()
+>>> tv.fit_transform(df)
+c
+0  1.0
+1  2.0
+2  3.0
 
 With |ToCategorical| and |ApplyToCols|, the column is treated as categorical
 and produces one-hot encoded feature names:
 
->>> from skrub import ApplyToCols, ToCategorical
+>>> from skrub import ApplyToCols, TableVectorizer, ToCategorical
 >>> from sklearn.pipeline import make_pipeline
 >>> pipe = make_pipeline(
 ...     ApplyToCols(ToCategorical(), cols=["c"]),
 ...     TableVectorizer(),
 ... )
->>> pipe.fit(df)  # doctest: +ELLIPSIS
+>>> pipe.fit(df)
 Pipeline(steps=[('applytocols', ...), ('tablevectorizer', ...)])
 >>> list(map(str, sorted(pipe.named_steps["tablevectorizer"].get_feature_names_out())))
 ['c_1', 'c_2', 'c_3']
+>>> pipe.fit_transform(df)
+   c_1  c_2  c_3
+0  1.0  0.0  0.0
+1  0.0  1.0  0.0
+2  0.0  0.0  1.0
