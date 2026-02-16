@@ -9,21 +9,45 @@ Release history
 Ongoing Development
 ===================
 
-New features
+New Features
 ------------
+- The ``eager_data_ops`` :ref:`configuration
+  <user_guide_configuration_parameters>` option has been added. When set to
+  False, no previews are computed and validation is deferred until the DataOp is
+  actually used (e.g. with ``.skb.eval()``) rather than as soon as it is
+  defined. This can make the definition of complex DataOps with many nodes
+  faster (the overhead it removes typically becomes noticeable only in DataOps
+  with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
+  become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Changes
+-------
+
+Bug Fixes
+--------
+- The :class:`TableVectorizer` now correctly handles the case where one of the
+  provided encoders is a scikit-learn Pipeline that starts with a skrub
+  single-column transformer. :pr:`1899` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Release 0.7.2
+=============
 
 Changes
 -------
 - The :class:`StringEncoder` now exposes the ``vocabulary`` parameter from the parent
   :class:`TfidfVectorizer`.
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
-
-
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
+- The repository wheel has been made smaller by removing some material that was
+  not necessary for using the library. Benchmarks are now available in a separate
+  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
+  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
+
 
 Bugfixes
 --------
+- Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.7.1
 =============

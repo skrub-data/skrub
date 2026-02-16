@@ -446,12 +446,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Then it encodes each column with an encoder suitable for its dtype. Categorical
     features are encoded differently depending on their cardinality.
 
-    .. note::
-
-        The ``specific_transformers`` parameter will be removed in a future
-        version of ``skrub``, when better utilities for building complex
-        pipelines are introduced.
-
     Parameters
     ----------
     cardinality_threshold : int, default=40
@@ -728,11 +722,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     provided transformer has full control over the associated columns; no other
     processing is applied to those columns. A column cannot appear twice in the
     ``specific_transformers``.
-
-    .. note::
-
-        This functionality is likely to be removed in a future version of the
-        ``TableVectorizer``.
 
     The overrides are provided as a list of pairs:
     ``(transformer, list_of_column_names)``.

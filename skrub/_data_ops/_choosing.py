@@ -65,7 +65,7 @@ class BaseChoice:
 
     def __init_subclass__(cls):
         if (cls_getitem := cls.__dict__.get("__getitem__", None)) is not None:
-            setattr(cls, "__getitem__", _wrap_getitem(cls_getitem))
+            cls.__getitem__ = _wrap_getitem(cls_getitem)
 
     @_wrap_getitem
     def __getitem__(self, key):

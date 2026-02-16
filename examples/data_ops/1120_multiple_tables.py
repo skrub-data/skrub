@@ -103,7 +103,6 @@ fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 # For instance, we filter products to keep only those that match one of the
 # baskets in the ``baskets`` table, and then add a column containing the total
 # amount for each kind of product in a basket:
-
 # %%
 kept_products = products[products["basket_ID"].isin(basket_ids["ID"])]
 products_with_total = kept_products.assign(
