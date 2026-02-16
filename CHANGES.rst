@@ -24,7 +24,10 @@ Changes
 -------
 
 Bug Fixes
----------
+--------
+- The :class:`TableVectorizer` now correctly handles the case where one of the
+  provided encoders is a scikit-learn Pipeline that starts with a skrub
+  single-column transformer. :pr:`1899` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.7.2
 =============
