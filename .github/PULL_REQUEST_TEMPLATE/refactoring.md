@@ -32,3 +32,10 @@ Fixes #<!-- issue number -->
 ## Additional Notes
 
 <!-- Add any other context about the PR here -->
+
+## AI Disclosure
+
+- [ ] This PR contains AI-generated code
+    - [ ] I have tested the code generated in my PR
+    - [ ] I take responsibility for the AI-generated code in my PR
+    - [ ] I can explain what the AI-generated code does

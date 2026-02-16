@@ -25,14 +25,9 @@ Fixes #<!-- issue number -->
 
 <!-- Please describe the tests that you ran to verify your changes -->
 
-## Steps to Reproduce (original bug)
+## AI Disclosure
 
-<!-- Please provide steps to reproduce the bug you fixed -->
-
-1.
-2.
-3.
-
-## Additional Notes
-
-<!-- Add any other context about the PR here -->
+- [ ] This PR contains AI-generated code
+    - [ ] I have tested the code generated in my PR
+    - [ ] I take responsibility for the AI-generated code in my PR
+    - [ ] I can explain what the AI-generated code does

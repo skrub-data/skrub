@@ -18,8 +18,15 @@ jobs:
             Please make sure to review our
             [contributing guidelines](https://skrub-data.org/stable/CONTRIBUTING.html).
 
-            All PRs should be discussed with the maintainers before being opened,
-            and the maintainers reserve the right to close PRs that have been opened
+            All PRs should be discussed in an
+            [issue](https://github.com/skrub-data/skrub/issues) with the maintainers
+            before being opened: this is to ensure that everyone is on the same
+            page, and to avoid having multiple PRs working on the same issue.
+
+            If you used coding agents for this PR, please fill the AI disclosure
+            checklist.
+
+            The maintainers reserve the right to close PRs that have been opened
             without prior agreement.
 
             If you have any questions, feel free to ask!
