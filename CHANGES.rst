@@ -22,6 +22,10 @@ Changes
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
 
+- The :class:`Cleaner` ``numeric_dtype`` parameter now accepts
+  ``"passthrough"``, ``"parse"``, and ``"float32"`` to explicitly control
+  numeric-string parsing and float32 conversion behavior.
+
 Bugfixes
 --------
 

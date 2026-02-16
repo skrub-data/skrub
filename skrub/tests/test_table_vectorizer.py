@@ -443,6 +443,41 @@ def test_convert_float32(df_module):
     assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
 
 
+@pytest.mark.parametrize(
+    "numeric_dtype, parse_numeric_strings, convert_numeric_columns",
+    [
+        ("passthrough", False, False),
+        ("parse", True, False),
+        ("float32", True, True),
+    ],
+)
+def test_cleaner_numeric_dtype_modes(
+    df_module, numeric_dtype, parse_numeric_strings, convert_numeric_columns
+):
+    X = df_module.make_dataframe(
+        {
+            "num_str": ["1", "2", "3"],
+            "int_col": [1, 2, 3],
+            "float_col": [1.5, 2.5, 3.5],
+        }
+    )
+    out = Cleaner(numeric_dtype=numeric_dtype).fit_transform(X)
+
+    if parse_numeric_strings:
+        expected = ToFloat().fit_transform(X["num_str"])
+        df_module.assert_column_equal(out["num_str"], expected)
+    else:
+        assert sbd.is_string(out["num_str"])
+        assert sbd.dtype(out["num_str"]) == sbd.dtype(X["num_str"])
+
+    if convert_numeric_columns:
+        assert sbd.dtype(out["int_col"]) == sbd.dtype(sbd.to_float32(X["int_col"]))
+        assert sbd.dtype(out["float_col"]) == sbd.dtype(sbd.to_float32(X["float_col"]))
+    else:
+        assert sbd.dtype(out["int_col"]) == sbd.dtype(X["int_col"])
+        assert sbd.dtype(out["float_col"]) == sbd.dtype(X["float_col"])
+
+
 def test_cast_to_str(df_module):
     """
     Test that the Cleaner conditionally applies the ToStr transformer
@@ -481,6 +516,8 @@ def test_cleaner_invalid_numeric_dtype(df_module):
     X = _get_clean_dataframe(df_module)
     with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
         Cleaner(numeric_dtype="wrong").fit_transform(X)
+    with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
+        Cleaner(numeric_dtype=None).fit_transform(X)
 
 
 def test_cleaner_get_feature_names_out(df_module):
