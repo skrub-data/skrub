@@ -3,7 +3,7 @@
 Contributing guide
 ==================
 
-First off, thanks for taking the time to contribute!
+First off, thank you for taking the time to contribute!
 
 Below are some guidelines to help you get started.
 
@@ -20,7 +20,7 @@ What to know before you begin
 -----------------------------
 
 To understand the purpose and goals behind skrub, please read our
-`vision statement. <https://skrub-data.org/stable/vision.html>`_
+`vision statement <https://skrub-data.org/stable/vision.html>`_.
 
 If you're interested in the research behind skrub,
 we encourage you to explore these papers:
