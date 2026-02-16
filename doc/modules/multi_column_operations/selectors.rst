@@ -155,7 +155,7 @@ of column names from the dataframe that the selector would keep. This allows sel
 to be applied on a variety of standard dataframe libraries, and can be particularly
 useful on complicated combinations of selectors::
 
-    >>> some_selector = ~s.glob('*_mm') | s.filter(lambda col: 297.0 in col.values)
+    >>> some_selector = ~s.glob('*_mm') | s.filter(lambda col: 297.0 in col)
     >>> import polars as pl
     >>> polars_df = pl.DataFrame(
     ...     {
@@ -171,7 +171,7 @@ useful on complicated combinations of selectors::
 
 The :meth:`expand_index` method also exists: rather than returning a list of column names, it returns the corresponding indices from the input dataframe's column list::
 
-    >>> s.expand_index(polars_df)
+    >>> some_selector.expand_index(polars_df)
     [0, 2, 3]
 
 .. _selectors_and_transformer:
