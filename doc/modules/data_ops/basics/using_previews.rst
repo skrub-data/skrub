@@ -45,3 +45,23 @@ one example dataset.
 
 It is not necessary to provide a value for every variable: it is however advisable
 to do so when possible, as it allows to catch errors early on.
+
+Disabling previews and eager checks
+-----------------------------------
+
+By default, as soon as a DataOp is defined, some validity checks are performed
+and the preview results are computed eagerly. In very complex DataOps plans
+(100+ nodes), running checks after adding each node can cause a noticeable overhead.
+To avoid this, it is possible to disable eager checks with the ``"eager_data_ops"``
+is easily achieved with the ``"eager_data_ops"`` :ref:`configuration
+<user_guide_configuration_parameters>` option.
+
+
+>>> with skrub.config_context(eager_data_ops=False):
+...     # no checks are performed when b is defined so no error in the line below:
+...     b = skrub.var('a', 1) + skrub.var('a', 2)
+...     # checks are still performed (once) before the DataOp is actually used so
+...     # evaluating the DataOp, using .skb.make_learner() etc _would_ still raise:
+...     # b.skb.eval() ## raises ValueError: Choice and node names must be unique.
+>>> b # Note there is no preview, even though we provided values for the variables
+<BinOp: add>

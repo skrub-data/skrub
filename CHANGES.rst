@@ -9,13 +9,21 @@ Release history
 Ongoing Development
 ===================
 
-New features
+New Features
 ------------
+- The ``eager_data_ops`` :ref:`configuration
+  <user_guide_configuration_parameters>` option has been added. When set to
+  False, no previews are computed and validation is deferred until the DataOp is
+  actually used (e.g. with ``.skb.eval()``) rather than as soon as it is
+  defined. This can make the definition of complex DataOps with many nodes
+  faster (the overhead it removes typically becomes noticeable only in DataOps
+  with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
+  become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
 
-Bugfixes
+Bug Fixes
 --------
 - The :class:`TableVectorizer` now correctly handles the case where one of the
   provided encoders is a scikit-learn Pipeline that starts with a skrub
