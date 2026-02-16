@@ -32,6 +32,7 @@ _global_config = {
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
+    "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
 }
 _threadlocal = threading.local()
 
@@ -92,6 +93,7 @@ def set_config(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    eager_data_ops=None,
 ):
     """Set global skrub configuration.
 
@@ -173,6 +175,24 @@ def set_config(
         high cardinality columns in there dataset.
 
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
+        environment variable.
+
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
         environment variable.
 
     See Also
@@ -260,6 +280,8 @@ def set_config(
                 f"integer, got {cardinality_threshold!r}"
             )
 
+    if eager_data_ops is not None:
+        local_config["eager_data_ops"] = eager_data_ops
     _apply_external_patches(local_config)
 
 
@@ -275,6 +297,7 @@ def config_context(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    eager_data_ops=None,
 ):
     """Context manager for global skrub configuration.
 
@@ -356,6 +379,24 @@ def config_context(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
+        environment variable.
+
     Yields
     ------
     None.
@@ -382,6 +423,7 @@ def config_context(
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
+        eager_data_ops=eager_data_ops,
     )
 
     try:

@@ -19,7 +19,7 @@ conda-forge project page.
      the last stable version. These releases are numbered X.Y.Z.
 
 To release a new minor version of skrub (e.g., from 0.1.0 to 0.2.0), here are the main
-steps and appropriate resources: the main steps and appropriate resources:
+steps and appropriate resources:
 
 Preparing the release branch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
