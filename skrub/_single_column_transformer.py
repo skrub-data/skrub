@@ -261,7 +261,11 @@ def is_single_column_transformer(transformer):
     if hasattr(transformer, "__single_column_transformer__"):
         return True
     if isinstance(transformer, Pipeline):
+        # When the transformer is a Pipeline, the first step is what determines
+        # if it accepts single columns or dataframes so we inspect the first
+        # step (recursively, to handle pipelines that contain pipelines).
         try:
+            # Pipeline steps are ('step name', StepEstimator) pairs.
             return is_single_column_transformer(transformer.steps[0][1])
         except Exception:
             # If we are given an invalid Pipeline (eg with no steps) we do not
