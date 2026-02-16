@@ -66,7 +66,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         train_path = Path(dataset["employee_salaries_path"]).with_name(
             "employee_salaries_train.csv"
         )
-        dataset["employee_salaries_train_path"] = str(train_path)
+        dataset["employee_salaries_path"] = str(train_path)
         dataset["employee_salaries"][:id_split].to_csv(str(train_path), index=False)
         dataset["X"] = dataset["X"][:id_split]
         dataset["y"] = dataset["y"][:id_split]
@@ -75,7 +75,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         test_path = Path(dataset["employee_salaries_path"]).with_name(
             "employee_salaries_test.csv"
         )
-        dataset["employee_salaries_test_path"] = str(test_path)
+        dataset["employee_salaries_path"] = str(test_path)
         dataset["employee_salaries"][id_split:].to_csv(str(test_path), index=False)
         dataset["X"] = dataset["X"][id_split:]
         dataset["y"] = dataset["y"][id_split:]
@@ -291,22 +291,22 @@ def fetch_credit_fraud(data_home=None, split="train"):
         dataset["products"] = dataset["products"].query("basket_ID <= @id_split")
 
         train_path = Path(dataset["baskets_path"]).with_name("baskets_train.csv")
-        dataset["baskets_train_path"] = str(train_path)
+        dataset["baskets_path"] = str(train_path)
         dataset["baskets"].to_csv(str(train_path), index=False)
 
         train_path = Path(dataset["products_path"]).with_name("products_train.csv")
-        dataset["products_train_path"] = str(train_path)
+        dataset["products_path"] = str(train_path)
         dataset["products"].to_csv(str(train_path), index=False)
     elif split == "test":
         dataset["baskets"] = dataset["baskets"].query("ID > @id_split")
         dataset["products"] = dataset["products"].query("basket_ID > @id_split")
 
         test_path = Path(dataset["baskets_path"]).with_name("baskets_test.csv")
-        dataset["baskets_test_path"] = str(test_path)
+        dataset["baskets_path"] = str(test_path)
         dataset["baskets"].to_csv(str(test_path), index=False)
 
         test_path = Path(dataset["products_path"]).with_name("products_test.csv")
-        dataset["products_test_path"] = str(test_path)
+        dataset["products_path"] = str(test_path)
         dataset["products"].to_csv(str(test_path), index=False)
     return dataset
 
