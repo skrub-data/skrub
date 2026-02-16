@@ -69,13 +69,12 @@ or if a workflow involves a non-skrub transformer which doesn't handle column re
 to create a transformer from scratch that is capable of handling this exception.
 
 Hence the ``SingleColumnTransformer`` class. It is originally a base class from which many transformers are
-inherited, but it can also be used to create new transformers. Custom transformers inherited from this class
-can serve as wrappers for non-Skrub transformers. For instance, if one wanted to implement the ``RejectColumn``
-exception into scikit-learn's ``StandardScaler``, one could create a ``NewScaler`` as follows::
+inherited, but it can also be used to create new transformers. For instance, if one wanted to create a custom
+transformer specialized in parsing zip codes of a certain format::
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>>
->>> class ZipcodeScaler(SingleColumnTransformer):
+>>> class ZipcodeParser(SingleColumnTransformer):
 ...     def __init__(self):
 ...         return
 ...     def fit_transform(self, X, y=None):
@@ -89,12 +88,12 @@ exception into scikit-learn's ``StandardScaler``, one could create a ``NewScaler
 ...                 raise RejectColumn('Input zip codes must consist of two letters followed by three numbers.')
 ...             return(pd.DataFrame({'letters': letters, 'numbers': numbers}))
 >>> df = pd.DataFrame({'sent': ["AB123", "BD601", "HS014"], 'received': ["AB1C45", "DU3K93", "WB9M88"]})
->>> ZipcodeScaler().fit_transform(df["sent"])
+>>> ZipcodeParser().fit_transform(df["sent"])
   letters  numbers
 0      AB      123
 1      BD      601
 2      HS       14
->>> ZipcodeScaler().fit_transform(df["received"])
+>>> ZipcodeParser().fit_transform(df["received"])
 Traceback (most recent call last):
     ...
 skrub.core._single_column_transformer.RejectColumn: This transformer only takes zip codes of length 5.
