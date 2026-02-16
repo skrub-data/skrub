@@ -18,87 +18,6 @@ from skrub._single_column_transformer import (
 )
 
 
-@pytest.mark.parametrize("define_fit", [False, True])
-def test_single_column_transformer_wrapped_methods(df_module, define_fit):
-    class Dummy(SingleColumnTransformer):
-        def fit_transform(self, column, y=None):
-            return column
-
-        def transform(self, column):
-            return column
-
-        if define_fit:
-
-            def fit(self, column, y=None):
-                return self
-
-    col = df_module.example_column
-    assert Dummy().fit_transform(col) is col
-    assert Dummy().fit(col).transform(col) is col
-
-    dummy = Dummy().fit(col)
-    for method in "fit", "fit_transform", "transform":
-        with pytest.raises(
-            ValueError, match=r"``Dummy\..*`` should be passed a single column"
-        ):
-            getattr(dummy, method)(df_module.example_dataframe)
-
-        with pytest.raises(
-            ValueError, match=r"``Dummy\..*`` expects the first argument X"
-        ):
-            getattr(dummy, method)(np.ones((3,)))
-        # Dataframes with a single column are accepted:
-        col = df_module.example_column
-        result = getattr(dummy, method)(df_module.make_dataframe({sbd.name(col): col}))
-        if method == "fit":
-            assert result is dummy
-        else:
-            df_module.assert_column_equal(result, col)
-
-
-@pytest.mark.parametrize(
-    "docstring",
-    [
-        "dummy transformer\n\n    details\n",
-        "\n    dummy transformer\n    summary\n\n    details",
-        "summary",
-        "\n    dummy transformer\n\ndetails\n   \n    more",
-        "",
-    ],
-)
-def test_single_column_transformer_docstring(docstring):
-    class Dummy(SingleColumnTransformer):
-        __doc__ = docstring
-
-    assert "``Dummy`` is a type of single-column" in Dummy.__doc__
-
-    class Dummy(SingleColumnTransformer):
-        pass
-
-    assert Dummy.__doc__ is None
-
-
-def test_single_column_transformer_attribute():
-    class Dummy(SingleColumnTransformer):
-        pass
-
-    assert Dummy.__single_column_transformer__ is True
-
-
-def test_single_column_transformer_all_outputs(df_module):
-    class Dummy(SingleColumnTransformer):
-        def fit(self, column, y=None):
-            self.all_outputs_ = [sbd.name(column)]
-            return column
-
-    column = df_module.example_column
-
-    transformer = Dummy()
-    transformer.fit(column)
-
-    assert transformer.get_feature_names_out() == [sbd.name(column)]
-
-
 class Mult(BaseEstimator):
     """Dummy to test the different kinds of output supported by ApplyToCols.
 
@@ -148,9 +67,7 @@ class SingleColMult(Mult):
 
 @pytest.mark.parametrize("output_kind", ["single_column", "dataframe", "column_list"])
 @pytest.mark.parametrize("transformer_class", [Mult, SingleColMult])
-def test_single_column_transformer(
-    df_module, output_kind, transformer_class, use_fit_transform
-):
+def test_apply_to_cols(df_module, output_kind, transformer_class, use_fit_transform):
     mapper = ApplyToCols(transformer_class(output_kind), s.glob("a*"))
     X = df_module.make_dataframe(
         {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}
