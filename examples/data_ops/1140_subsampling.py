@@ -19,8 +19,8 @@ import pandas as pd
 import skrub
 import skrub.datasets
 
-bunch = skrub.datasets.fetch_employee_salaries()
-dataset = pd.read_csv(bunch.path)
+file_path = skrub.datasets.fetch_employee_salaries().path
+dataset = pd.read_csv(file_path)
 
 full_data = skrub.var("data", dataset)
 full_data

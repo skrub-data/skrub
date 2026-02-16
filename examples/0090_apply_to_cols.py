@@ -18,8 +18,8 @@ import skrub
 from skrub.datasets import fetch_employee_salaries
 
 skrub.set_config(use_table_report=True)
-bunch = fetch_employee_salaries()
-data = pd.read_csv(bunch.path)
+file_path = fetch_employee_salaries().path
+data = pd.read_csv(file_path)
 X = data.drop(columns="current_annual_salary")
 y = data["current_annual_salary"]
 X

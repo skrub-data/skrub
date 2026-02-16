@@ -167,8 +167,8 @@ from skrub import DatetimeEncoder, SquashingScaler, TableVectorizer
 from skrub.datasets import fetch_employee_salaries
 
 np.random.seed(0)
-bunch = fetch_employee_salaries()
-data = pd.read_csv(bunch.path)
+file_path = fetch_employee_salaries().path
+data = pd.read_csv(file_path)
 X = data.drop(columns="current_annual_salary")
 y = data["current_annual_salary"]
 

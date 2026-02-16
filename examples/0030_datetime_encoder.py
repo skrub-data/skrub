@@ -59,8 +59,8 @@ import pandas as pd
 
 from skrub import datasets
 
-bunch = datasets.fetch_bike_sharing()
-data = pd.read_csv(bunch.path)
+file_path = datasets.fetch_bike_sharing().path
+data = pd.read_csv(file_path)
 
 # Extract our input data (X) and the target column (y)
 y = data["cnt"]

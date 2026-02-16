@@ -57,8 +57,8 @@ import pandas as pd
 
 from skrub.datasets import fetch_employee_salaries
 
-bunch = fetch_employee_salaries()
-employees = pd.read_csv(bunch.employee_salaries_path)
+file_path = fetch_employee_salaries().path
+employees = pd.read_csv(file_path)
 X = employees.drop(columns="current_annual_salary")
 y = employees["current_annual_salary"]
 

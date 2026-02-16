@@ -52,9 +52,9 @@ from skrub.datasets import fetch_toxicity
 
 # %%
 # We load the dataset from the path using pandas.
-bunch = fetch_toxicity()
+file_path = fetch_toxicity().path
 
-X = pd.read_csv(bunch.path)
+X = pd.read_csv(file_path)
 
 # %%
 # When it comes to displaying large chunks of text, the |TableReport| is especially

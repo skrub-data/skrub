@@ -41,15 +41,11 @@ import pandas as pd
 import skrub
 import skrub.datasets
 
-bunch = skrub.datasets.fetch_credit_fraud()
+dataset = skrub.datasets.fetch_credit_fraud()
 
 # %%
-# For multi-table datasets, we need to load the tables from their paths
-bunch["paths"]
-
-# %%
-baskets_df = pd.read_csv(bunch.paths[0])
-products_df = pd.read_csv(bunch.paths[1])
+baskets_df = pd.read_csv(dataset.baskets_path)
+products_df = pd.read_csv(dataset.products_path)
 skrub.TableReport(baskets_df)
 
 # %%

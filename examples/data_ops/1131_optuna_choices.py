@@ -60,8 +60,8 @@ import pandas as pd
 from sklearn.model_selection import KFold
 
 # (We subsample the dataset by half to make the example run faster)
-bunch = skrub.datasets.fetch_california_housing()
-df = pd.read_csv(bunch.path).sample(10_000, random_state=0)
+file_path = skrub.datasets.fetch_california_housing().path
+df = pd.read_csv(file_path).sample(10_000, random_state=0)
 
 # The environment we will use to fit the learners created by our DataOp.
 env = {"data": df}

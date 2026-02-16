@@ -53,8 +53,8 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 import skrub
 import skrub.datasets
 
-bunch = skrub.datasets.fetch_toxicity()
-data = pd.read_csv(bunch.path)
+file_path = skrub.datasets.fetch_toxicity().path
+data = pd.read_csv(file_path)
 
 # This dataset is sorted -- all toxic tweets appear first, so we shuffle it
 data = data.sample(frac=1.0, random_state=1)

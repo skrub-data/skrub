@@ -266,6 +266,11 @@ def load_dataset_files(dataset_name, data_home):
 
     bunch = Bunch()
 
+    # If there is a file named <dataset_name>.csv, we load the path as the main
+    # dataset
+    path = (datafiles_dir / dataset_name).with_suffix(".csv")
+    if path.exists():
+        bunch["path"] = str(path)
     # Loading all paths and data files
     # Sorting to have a deterministic order for tests
     for file_path in sorted(datafiles_dir.iterdir()):
