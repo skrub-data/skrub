@@ -345,6 +345,38 @@ def test_make_learner_choices_before_X():
     assert all_results == {"axa", "axb", "axc"}
 
 
+def test_disabling_eager_checks():
+    msg = "Choice and node names must be unique"
+    with skrub.config_context(eager_data_ops=True):
+        # With eager checks (the default) the error is raised as soon as the
+        # data op is defined.
+        with pytest.raises(ValueError, match=msg):
+            dop = skrub.as_data_op(1).skb.set_name("a") + skrub.as_data_op(
+                2
+            ).skb.set_name("a")
+            assert dop._skrub_impl.results["preview"] == 3
+    with skrub.config_context(eager_data_ops=False):
+        # Even when eager checks are disabled, checks are performed before
+        # actually using the data op; we verify this for a few example methods.
+        dop = skrub.as_data_op(1).skb.set_name("a") + skrub.as_data_op(2).skb.set_name(
+            "a"
+        )
+        assert "preview" not in dop._skrub_impl.results
+        for meth in [
+            "clone",
+            "eval",
+            "preview",
+            "make_learner",
+            "train_test_split",
+            "make_grid_search",
+            "make_randomized_search",
+            "cross_validate",
+        ]:
+            with pytest.raises(ValueError, match=msg):
+                getattr(dop.skb, meth)()
+        assert "preview" not in dop._skrub_impl.results
+
+
 def test_make_learner_choose_optuna_trial():
     optuna = pytest.importorskip("optuna")
 
