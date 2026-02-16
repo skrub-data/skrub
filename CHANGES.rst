@@ -57,6 +57,10 @@ Changes
   :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 
+- The :class:`Cleaner` ``numeric_dtype`` parameter now accepts
+  ``"passthrough"``, ``"parse"``, and ``"float32"`` to explicitly control
+  numeric-string parsing and float32 conversion behavior.
+
 Bugfixes
 --------
 - Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by :user:`Riccardo Cappuzzo <rcap107>`.
