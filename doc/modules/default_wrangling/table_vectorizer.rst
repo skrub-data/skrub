@@ -127,12 +127,10 @@ names are not one-hot encoded):
 >>> tv = TableVectorizer()
 >>> tv.fit_transform(df)
 c
->>> tv = TableVectorizer()
->>> tv.fit_transform(df)
-c
 0  1.0
 1  2.0
 2  3.0
+
 With |ToCategorical| and |ApplyToCols|, the column is treated as categorical
 and produces one-hot encoded feature names:
 
