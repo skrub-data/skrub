@@ -100,6 +100,32 @@ ApplyToCols(cols='id_to_drop', transformer=Cleaner(drop_if_unique=True))
 1          bar
 2          baz
 
+In addition to heuristic-based column removal with |DropUninformative|, you can
+explicitly drop selected columns using the |Drop| transformer together with
+|ApplyToCols|. This is useful when you already know which columns should be
+removed (for example, identifiers or leakage-prone features) and want to express
+this operation declaratively in a pipeline.
+
+Using |ApplyToCols| with |Drop| applies a separate ``Drop`` transformer to each
+specified column, removing them from the output table:
+
+>>> import pandas as pd
+>>> from skrub import ApplyToCols, Drop
+>>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
+>>> df
+    A     B     C
+0 -10.0 -10.0   0.0
+1  10.0   0.0  10.0
+>>> transformer = ApplyToCols(Drop(), cols=["A", "B"])
+>>> transformer.fit_transform(df)
+    C
+0   0.0
+1  10.0
+
+This approach integrates cleanly with other |ApplyToCols| use cases and allows
+you to mix explicit column dropping with more automated cleaning steps in a
+single preprocessing pipeline.
+
 For more advanced filtering operations, refer to the User Guide on
 :ref:`user_guide_selectors` and the |ApplyToCols| documentation for details
 on applying transformers to specific columns.
