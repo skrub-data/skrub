@@ -1,7 +1,7 @@
 .. currentmodule:: skrub
 
 .. |ApplyToCols| replace:: :class:`ApplyToCols`
-.. |ApplyToFrame| replace:: :class:`ApplyToFrame`
+.. |ApplySubFrame| replace:: :class:`ApplySubFrame`
 .. |SelectCols| replace:: :class:`SelectCols`
 .. |DropCols| replace:: :class:`DropCols`
 .. _user_guide_multiple_columns:
@@ -22,7 +22,7 @@ Skrub provides alternative transformers that can achieve the same results:
 - |ApplyToCols| maps a transformer to columns in a dataframe, so that all
   columns that satisfy a certain condition are transformed, while the others are
   left untouched.
-- |ApplyToFrame| applies a transformer to a collection of columns *at once*.
+- |ApplySubFrame| applies a transformer to a collection of columns *at once*.
   This is different from |ApplyToCols|, which instead transforms each column
   one at a time.
 - |SelectCols| allows specifying which columns should be kept.
@@ -38,7 +38,7 @@ parameters to have more control over the columns that are being transformed.
 Skrub selectors are discussed at length in :ref:`user_guide_selectors`.
 
 
-Applying transformations to the columns with |ApplyToCols| and |ApplyToFrame|
+Applying transformations to the columns with |ApplyToCols| and |ApplySubFrame|
 -----------------------------------------------------------------------------
 |ApplyToCols| can be used to transform a subset of columns in a dataframe, while
 leaving the remaining columns unchanged. It simplifies operations such as the
@@ -114,7 +114,7 @@ city                ...
 dtype: ...
 
 
-|ApplyToFrame| is instead used in cases where multiple columns should be transformed
+|ApplySubFrame| is instead used in cases where multiple columns should be transformed
 at once. This is the case when the transformer is expecting multiple columns at
 once, e.g., to perform dimensionality reduction:
 
@@ -129,12 +129,12 @@ once, e.g., to perform dimensionality reduction:
 3  0.0   0.0    0.0  1000.0
 
 >>> from sklearn.decomposition import PCA
->>> from skrub import ApplyToFrame
+>>> from skrub import ApplySubFrame
 
 Like with the other transformers described here, it is possible to limit the
 transformations to a subset of columns:
 
->>> pca = ApplyToFrame(PCA(n_components=2), cols=["a", "b"])
+>>> pca = ApplySubFrame(PCA(n_components=2), cols=["a", "b"])
 >>> pca.fit_transform(df).round(2)
        c       d  pca0  pca1
 0    0.0     0.0 -2.52  0.67
@@ -142,7 +142,7 @@ transformations to a subset of columns:
 2  100.0     0.0 -2.49 -0.33
 3    0.0  1000.0 -2.49 -0.33
 
-By default, |ApplyToCols| and |ApplyToFrame| rename the transformed columns, and
+By default, |ApplyToCols| and |ApplySubFrame| rename the transformed columns, and
 remove the original features from the data. It is possible to rename the columns
 by providing a formatting string to the ``rename_columns`` parameter:
 

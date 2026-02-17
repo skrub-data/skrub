@@ -501,7 +501,7 @@ def test_data_op_impl():
 def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
     # dataframe) (or how='no_wrap') the estimator can only be applied to the
-    # full input without wrapping in ApplyToCols or ApplyToFrame. In this case
+    # full input without wrapping in ApplyToCols or ApplySubFrame. In this case
     # if the user passed a parameter that would require wrapping, such as
     # passing a value for `cols` that is not `all()`, or passing
     # how='cols' or allow_reject=True, we get an error.

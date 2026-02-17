@@ -1,5 +1,5 @@
 from ._apply_to_cols import ApplyToCols
-from ._apply_to_frame import ApplyToFrame
+from ._apply_to_frame import ApplySubFrame
 from ._single_column_transformer import is_single_column_transformer
 from .selectors import make_selector
 
@@ -15,19 +15,19 @@ def wrap_transformer(
     n_jobs=None,
     columnwise="auto",
 ):
-    """Create a ``ApplyToCols`` or a ``ApplyToFrame`` transformer.
+    """Create a ``ApplyToCols`` or a ``ApplySubFrame`` transformer.
 
     The ``transformer`` is wrapped in a transformer that will apply it to part
     of the input dataframe.
 
     By default, if ``transformer`` is a single-column transformer
     (has a ``__single_column_transformer__`` attribute), it is wrapped in a
-    ``ApplyToCols`` instance. Otherwise it is wrapped in a ``ApplyToFrame``
+    ``ApplyToCols`` instance. Otherwise it is wrapped in a ``ApplySubFrame``
     instance.
 
     This default choice can be overridden by passing ``columnwise=True`` to
     force the use of ``ApplyToCols`` or ``columnwise=False`` to force the use
-    of ``ApplyToFrame``.
+    of ``ApplySubFrame``.
 
     Parameters
     ----------
@@ -43,22 +43,22 @@ def wrap_transformer(
 
     keep_original : bool, default=False
         Whether to retain the original columns in transformed output. See the
-        documentation of ``ApplyToCols`` or ``ApplyToFrame`` for details.
+        documentation of ``ApplyToCols`` or ``ApplySubFrame`` for details.
 
     rename_columns : str, default='{}'
         Format string applied to output column names. See the documentation of
-        ``ApplyToCols`` or ``ApplyToFrame`` for details.
+        ``ApplyToCols`` or ``ApplySubFrame`` for details.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel. Only used when the result is an
         instance of ``ApplyToCols``, see this class' docstring for details.
 
     columnwise : 'auto' or bool, default='auto'
-        Whether to create a ``ApplyToCols`` or ``ApplyToFrame`` instance. By
+        Whether to create a ``ApplyToCols`` or ``ApplySubFrame`` instance. By
         default, ``ApplyToCols`` is used if ``transformer`` has a
-        ``__single_column_transformer__`` attribute and ``ApplyToFrame``
+        ``__single_column_transformer__`` attribute and ``ApplySubFrame``
         otherwise. Pass ``columnwise=True`` to force using ``ApplyToCols`` and
-        ``columnwise=False`` to force using ``ApplyToFrame``. Note that forcing
+        ``columnwise=False`` to force using ``ApplySubFrame``. Note that forcing
         ``columnwise=False`` for a single-column transformer will most likely
         cause an error during ``fit``, and forcing ``columnwise=True`` for a
         regular transformer is only appropriate if the transformer can be
@@ -68,7 +68,7 @@ def wrap_transformer(
     Returns
     -------
     Wrapped transformer
-        A ``ApplyToCols`` or ``ApplyToFrame`` instance initialized with the
+        A ``ApplyToCols`` or ``ApplySubFrame`` instance initialized with the
         input ``transformer``.
 
     Examples
@@ -81,7 +81,7 @@ def wrap_transformer(
     >>> wrap_transformer(ToDatetime(), s.all())
     ApplyToCols(transformer=ToDatetime())
     >>> wrap_transformer(OrdinalEncoder(), s.string())
-    ApplyToFrame(cols=string(), transformer=OrdinalEncoder())
+    ApplySubFrame(cols=string(), transformer=OrdinalEncoder())
     >>> wrap_transformer(OrdinalEncoder(), s.string(), columnwise=True, n_jobs=4)
     ApplyToCols(cols=string(), n_jobs=4, transformer=OrdinalEncoder())
     """
@@ -99,7 +99,7 @@ def wrap_transformer(
             rename_columns=rename_columns,
             n_jobs=n_jobs,
         )
-    return ApplyToFrame(
+    return ApplySubFrame(
         transformer,
         cols=selector,
         keep_original=keep_original,

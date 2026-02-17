@@ -45,7 +45,7 @@ Xt
 
 # %%
 # In addition to the :class:`~skrub.ApplyToCols` class, the
-# :class:`~skrub.ApplyToFrame` class is useful for transformers that work on multiple
+# :class:`~skrub.ApplySubFrame` class is useful for transformers that work on multiple
 # columns at once, such as the :class:`~sklearn.decomposition.PCA` which reduces the
 # number of components.
 #
@@ -54,14 +54,14 @@ Xt
 # and composable logic.
 #
 # The regex selector below will match all columns prefixed with ``"lsa"``, and pass them
-# to :class:`~skrub.ApplyToFrame` which will assemble these columns into a dataframe and
-# finally pass it to the PCA.
+# to :class:`~skrub.ApplySubFrame` which will assemble these columns into a dataframe
+# and finally pass it to the PCA.
 from sklearn.decomposition import PCA
 
-from skrub import ApplyToFrame
+from skrub import ApplySubFrame
 from skrub import selectors as s
 
-apply_pca = ApplyToFrame(PCA(n_components=8), cols=s.regex("lsa"))
+apply_pca = ApplySubFrame(PCA(n_components=8), cols=s.regex("lsa"))
 Xt = apply_pca.fit_transform(Xt)
 Xt
 

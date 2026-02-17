@@ -208,7 +208,7 @@ class SkrubNamespace:
               transformer, which fits a separate clone of `estimator` each
               column in `cols`. `estimator` must be a transformer (have a
               ``fit_transform`` method).
-            - "frame" means `estimator` is wrapped in a :class:`ApplyToFrame`
+            - "frame" means `estimator` is wrapped in a :class:`ApplySubFrame`
               transformer, which fits a single clone of `estimator` to the
               selected part of the input dataframe. `estimator` must be a
               transformer.
@@ -277,7 +277,7 @@ class SkrubNamespace:
         skrub.ApplyToCols :
             Transformer that applies a given transformer separately to each
             selected column.
-        skrub.ApplyToFrame:
+        skrub.ApplySubFrame:
             Transformer that applies a given transformer to part of a
             dataframe.
 
@@ -2889,13 +2889,13 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToFrame(transformer=TableVectorizer())
+        ApplySubFrame(transformer=TableVectorizer())
 
         Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``ApplyToFrame`` or
+        they will be wrapped in a meta-estimator ``ApplySubFrame`` or
         ``ApplyToCols`` depending if the transformer is applied to each column
         separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``ApplyToFrame`` or ``transformers_``
+        ``transformer_`` attribute of ``ApplySubFrame`` or ``transformers_``
         attribute of ``ApplyToCols`` (a dictionary mapping column names to the
         corresponding transformer).
 

@@ -49,7 +49,7 @@ Using selectors:
     1      420.0     297.0
 
 * **transformers**: various transformers in skrub use selectors to select and transform columns
-  in a scikit-learn pipeline: :class:`~skrub.ApplyToCols`, :class:`~skrub.ApplyToFrame`,
+  in a scikit-learn pipeline: :class:`~skrub.ApplyToCols`, :class:`~skrub.ApplySubFrame`,
   :class:`~skrub.DropCols`, :class:`~skrub.SelectCols`, as
   :ref:`detailed below <selectors_and_transformer>`.
 
