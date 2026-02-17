@@ -32,8 +32,8 @@ based on the products it contains.
 # The credit fraud dataset
 # ------------------------
 #
-# The ``baskets`` table contains a basket ID and a flag indicating if the order
-# was fraudulent or not (the customer never made the payment).
+# We fetch the credit fraud dataset using ``fetch_credit_fraud``. This dataset
+# contains two tables: ``baskets`` and ``products``.
 
 # %%
 import pandas as pd
@@ -43,11 +43,39 @@ import skrub.datasets
 
 dataset = skrub.datasets.fetch_credit_fraud()
 
-# %%
-baskets_df = pd.read_csv(dataset.baskets_path)
-products_df = pd.read_csv(dataset.products_path)
-skrub.TableReport(baskets_df)
 
+# %%
+# We define two separate deferred loading functions, and use them to load them
+# as pandas dataframes. For this example, the loaders are simple wrappers around
+# ``pd.read_csv``, but in a real-world scenario, they could be more complex and
+# involve additional logic for handling data types, or other
+# particularities of the data source.
+
+
+@skrub.deferred
+def load_baskets(file_path):
+    return pd.read_csv(file_path)
+
+
+@skrub.deferred
+def load_products(file_path):
+    return pd.read_csv(file_path)
+
+
+# %%
+# We define the paths to the data files as skrub variables, and then load the
+# dataframes using the deferred loading functions.
+baskets_path = skrub.var("baskets_path", dataset.baskets_path)
+products_path = skrub.var("products_path", dataset.products_path)
+
+baskets_df = load_baskets(baskets_path)
+products_df = load_products(products_path)
+
+# %%
+# Now we can use the |TableReport| provided by the Data Ops to inspec the two tables.
+# The ``baskets`` table contains the list of basket IDs, and a fraud flag indicating
+# whether the basket is fraudulent or not.
+baskets_df
 # %%
 # The ``products`` table contains information about the products that have been
 # purchased, and the basket they belong to. A basket contains at least one product.
@@ -55,8 +83,7 @@ skrub.TableReport(baskets_df)
 # column.
 
 # %%
-skrub.TableReport(products_df)
-
+products_df
 # %%
 # A data-processing challenge
 # ----------------------------
@@ -202,7 +229,6 @@ search.plot_results()
 # We can get the best performing :class:`~skrub.SkrubLearner` via
 # ``best_learner_``, and use it for inference on new data with:
 
-import pandas as pd
 
 new_baskets = pd.DataFrame([dict(ID="abc")])
 new_products = pd.DataFrame(
