@@ -33,7 +33,9 @@ based on the products it contains.
 # ------------------------
 #
 # We fetch the credit fraud dataset using ``fetch_credit_fraud``. This dataset
-# contains two tables: ``baskets`` and ``products``.
+# contains two tables: ``baskets`` and ``products``. We load the training split
+# of the dataset to train the model. At the end of the example, we will load
+# the test split to evaluate the model on unseen data.
 
 # %%
 import pandas as pd
@@ -41,7 +43,7 @@ import pandas as pd
 import skrub
 import skrub.datasets
 
-dataset = skrub.datasets.fetch_credit_fraud()
+dataset = skrub.datasets.fetch_credit_fraud(split="train")
 
 
 # %%
@@ -68,14 +70,20 @@ def load_products(file_path):
 baskets_path = skrub.var("baskets_path", dataset.baskets_path)
 products_path = skrub.var("products_path", dataset.products_path)
 
-baskets_df = load_baskets(baskets_path)
-products_df = load_products(products_path)
+baskets = load_baskets(baskets_path)
+products = load_products(products_path)
 
 # %%
-# Now we can use the |TableReport| provided by the Data Ops to inspec the two tables.
+# Now we can use the |TableReport| provided by the Data Ops to inspect the two tables.
 # The ``baskets`` table contains the list of basket IDs, and a fraud flag indicating
 # whether the basket is fraudulent or not.
-baskets_df
+baskets
+# %%
+# We mark the "ID" column of the ``baskets`` table as ``X``, and the
+# ``"fraud_flag"`` column as ``y``. This allows the Data Ops to track the indices
+# of the variables when splitting for cross-validation.
+basket_ids = baskets[["ID"]].skb.mark_as_X()
+fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 # %%
 # The ``products`` table contains information about the products that have been
 # purchased, and the basket they belong to. A basket contains at least one product.
@@ -83,7 +91,7 @@ baskets_df
 # column.
 
 # %%
-products_df
+products
 # %%
 # A data-processing challenge
 # ----------------------------
@@ -119,12 +127,6 @@ products_df
 # We start by creating skrub variables, which are the inputs to our plan.
 # In our example, we create two skrub |var| objects: ``products`` and ``baskets``:
 
-# %%
-products = skrub.var("products", products_df)
-baskets = skrub.var("baskets", baskets_df)
-
-basket_ids = baskets[["ID"]].skb.mark_as_X()
-fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 
 # %%
 # We mark the ``basket_ids`` variable as ``X`` and the ``fraud_flags`` variable as ``y``
@@ -227,24 +229,37 @@ search.plot_results()
 # but at the expense of training and scoring time.
 #
 # We can get the best performing :class:`~skrub.SkrubLearner` via
-# ``best_learner_``, and use it for inference on new data with:
+# ``best_learner_``, and use it for inference on new data.
+# We load the test split of the credit fraud dataset, and apply the best learner to
+# it to obtain predictions.
 
+new_data = skrub.datasets.fetch_credit_fraud(split="test")
 
-new_baskets = pd.DataFrame([dict(ID="abc")])
-new_products = pd.DataFrame(
-    [
-        dict(
-            basket_ID="abc",
-            item="COMPUTER",
-            cash_price=200,
-            make="APPLE",
-            model="XXX-X",
-            goods_code="239246782",
-            Nbr_of_prod_purchas=1,
-        )
-    ]
+new_baskets = load_baskets(new_data.baskets_path)
+new_products = load_products(new_data.products_path)
+
+probabilities = search.best_learner_.predict_proba(
+    {"baskets_path": new_data.baskets_path, "products_path": new_data.products_path}
 )
-search.best_learner_.predict_proba({"baskets": new_baskets, "products": new_products})
+# %%
+# We can evaluate the performance of our model by plotting the ROC curve and
+# calculating the AUC score.
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import auc, roc_curve
+
+# Calculate ROC curve
+fpr, tpr, _ = roc_curve(new_baskets["fraud_flag"].skb.eval(), probabilities[:, 1])
+roc_auc = auc(fpr, tpr)
+
+# Plot
+fig, ax = plt.subplots()
+ax.plot(fpr, tpr, color="darkorange", label=f"ROC curve (AUC = {roc_auc:.2f})")
+ax.plot([0, 1], [0, 1], color="navy", linestyle="--", label="Random Classifier")
+ax.set_xlabel("False Positive Rate")
+ax.set_ylabel("True Positive Rate")
+ax.set_title("ROC Curve")
+ax.legend(loc="lower right")
 # %%
 # Conclusion
 # ----------
