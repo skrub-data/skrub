@@ -15,7 +15,7 @@ class ApplySubFrame(TransformerMixin, BaseEstimator):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
-    single input). This is different from ``ApplyToCols``, which fits a
+    single input). This is different from ``ApplyOnEachCol``, which fits a
     separate clone of the transformer to each selected column independently.
     All columns not listed in ``cols`` remain unmodified in the output.
 

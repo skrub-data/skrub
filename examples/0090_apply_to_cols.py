@@ -24,18 +24,18 @@ X
 # Our goal is now to apply a :class:`~skrub.StringEncoder` to two columns of our
 # choosing: ``division`` and ``employee_position_title``.
 #
-# We can achieve this using :class:`~skrub.ApplyToCols`, whose job is to apply a
+# We can achieve this using :class:`~skrub.ApplyOnEachCol`, whose job is to apply a
 # transformer to multiple columns independently, and let unmatched columns through
 # without changes.
 # This can be seen as a handy drop-in replacement of the
 # :class:`~sklearn.compose.ColumnTransformer`.
 #
 # Since we selected two columns and set the number of components to ``30`` each,
-# :class:`~skrub.ApplyToCols` will create ``2*30`` embedding columns in the dataframe
+# :class:`~skrub.ApplyOnEachCol` will create ``2*30`` embedding columns in the dataframe
 # ``Xt``, which we prefix with ``lsa_``.
-from skrub import ApplyToCols, StringEncoder
+from skrub import ApplyOnEachCol, StringEncoder
 
-apply_string_encoder = ApplyToCols(
+apply_string_encoder = ApplyOnEachCol(
     StringEncoder(n_components=30),
     cols=["division", "employee_position_title"],
     rename_columns="lsa_{}",
@@ -44,7 +44,7 @@ Xt = apply_string_encoder.fit_transform(X)
 Xt
 
 # %%
-# In addition to the :class:`~skrub.ApplyToCols` class, the
+# In addition to the :class:`~skrub.ApplyOnEachCol` class, the
 # :class:`~skrub.ApplySubFrame` class is useful for transformers that work on multiple
 # columns at once, such as the :class:`~sklearn.decomposition.PCA` which reduces the
 # number of components.
@@ -100,7 +100,7 @@ pipeline.fit_transform(Xt)
 from sklearn.preprocessing import OrdinalEncoder
 
 low_cardinality = s.filter(lambda col: col.nunique() < 40)
-ApplyToCols(OrdinalEncoder(), cols=s.string() & low_cardinality).fit_transform(X)
+ApplyOnEachCol(OrdinalEncoder(), cols=s.string() & low_cardinality).fit_transform(X)
 
 # %%
 # Notice how we composed the selector with :func:`~skrub.selectors.string()`
@@ -114,11 +114,11 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 
 high_cardinality = ~low_cardinality
 pipeline = make_pipeline(
-    ApplyToCols(
+    ApplyOnEachCol(
         OrdinalEncoder(),
         cols=s.string() & low_cardinality,
     ),
-    ApplyToCols(
+    ApplyOnEachCol(
         StringEncoder(),
         cols=s.string() & high_cardinality,
     ),

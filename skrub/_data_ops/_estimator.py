@@ -260,7 +260,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         -------
         scikit-learn estimator
             The fitted estimator. Depending on the nature of the estimator it
-            may be wrapped in a ``skrub.ApplyToCols`` or ``skrub.ApplySubFrame``,
+            may be wrapped in a ``skrub.ApplyOnEachCol`` or ``skrub.ApplySubFrame``,
             see examples below.
 
         See also
@@ -308,7 +308,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         Case 1: the ``StringEncoder`` is a skrub single-column transformer: it
         transforms a single column. In the learner it gets wrapped in a
-        :class:`ApplyToCols` which independently fits a separate instance of the
+        :class:`ApplyOnEachCol` which independently fits a separate instance of the
         ``StringEncoder`` to each of the columns it transforms (in this case there is
         only one column, ``'product'``). The individual transformers can be found in the
         fitted attribute ``transformers_`` which maps column names to the corresponding
@@ -320,7 +320,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
         {' pe': 2, 'pen': 12, 'en ': 8, ' pen': 3, 'pen ': 13, ' cu': 0, 'cup': 6, 'up ': 18, ' cup': 1, 'cup ': 7, ' sp': 4, 'spo': 16, 'poo': 14, 'oon': 10, 'on ': 9, ' spo': 5, 'spoo': 17, 'poon': 15, 'oon ': 11}
 
-        This case (wrapping in :class:`ApplyToCols`) happens when the estimator is a skrub
+        This case (wrapping in :class:`ApplyOnEachCol`) happens when the estimator is a skrub
         single-column transformer (it has a ``__single_column_transformer__``
         attribute), we pass ``.skb.apply(how='cols')`` or we pass
         ``.skb.apply(allow_reject=True)``.

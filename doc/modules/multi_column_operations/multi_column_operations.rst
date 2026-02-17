@@ -1,6 +1,6 @@
 .. currentmodule:: skrub
 
-.. |ApplyToCols| replace:: :class:`ApplyToCols`
+.. |ApplyOnEachCol| replace:: :class:`ApplyOnEachCol`
 .. |ApplySubFrame| replace:: :class:`ApplySubFrame`
 .. |SelectCols| replace:: :class:`SelectCols`
 .. |DropCols| replace:: :class:`DropCols`
@@ -19,11 +19,11 @@ is done with the :class:`sklearn.compose.ColumnTransformer`.
 
 Skrub provides alternative transformers that can achieve the same results:
 
-- |ApplyToCols| maps a transformer to columns in a dataframe, so that all
+- |ApplyOnEachCol| maps a transformer to columns in a dataframe, so that all
   columns that satisfy a certain condition are transformed, while the others are
   left untouched.
 - |ApplySubFrame| applies a transformer to a collection of columns *at once*.
-  This is different from |ApplyToCols|, which instead transforms each column
+  This is different from |ApplyOnEachCol|, which instead transforms each column
   one at a time.
 - |SelectCols| allows specifying which columns should be kept.
 - |DropCols| allows specifying the columns we want to discard.
@@ -38,21 +38,21 @@ parameters to have more control over the columns that are being transformed.
 Skrub selectors are discussed at length in :ref:`user_guide_selectors`.
 
 
-Applying transformations to the columns with |ApplyToCols| and |ApplySubFrame|
+Applying transformations to the columns with |ApplyOnEachCol| and |ApplySubFrame|
 -----------------------------------------------------------------------------
-|ApplyToCols| can be used to transform a subset of columns in a dataframe, while
+|ApplyOnEachCol| can be used to transform a subset of columns in a dataframe, while
 leaving the remaining columns unchanged. It simplifies operations such as the
-example above, which can be rewritten with |ApplyToCols| as follows:
+example above, which can be rewritten with |ApplyOnEachCol| as follows:
 
 >>> import skrub.selectors as s
 >>> from sklearn.pipeline import make_pipeline
->>> from skrub import ApplyToCols
+>>> from skrub import ApplyOnEachCol
 >>> from sklearn.preprocessing import OneHotEncoder, StandardScaler
 >>> import pandas as pd
 >>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
 >>>
->>> numeric = ApplyToCols(StandardScaler(), cols=s.numeric())
->>> string = ApplyToCols(OneHotEncoder(sparse_output=False), cols=s.string())
+>>> numeric = ApplyOnEachCol(StandardScaler(), cols=s.numeric())
+>>> string = ApplyOnEachCol(OneHotEncoder(sparse_output=False), cols=s.string())
 >>>
 >>> transformed = make_pipeline(numeric, string).fit_transform(df)
 >>> transformed
@@ -61,7 +61,7 @@ example above, which can be rewritten with |ApplyToCols| as follows:
 1       1.0       0.0       0.0  0.000000
 2       0.0       1.0       0.0  1.224745
 
-|ApplyToCols| can raise a ``RejectColumn`` exception if it cannot handle a specific
+|ApplyOnEachCol| can raise a ``RejectColumn`` exception if it cannot handle a specific
 column:
 
 >>> from skrub._to_datetime import ToDatetime
@@ -86,7 +86,7 @@ parameter.
 By default, no special handling is performed and rejections are considered
 to be errors:
 
->>> to_datetime = ApplyToCols(ToDatetime())
+>>> to_datetime = ApplyOnEachCol(ToDatetime())
 >>> to_datetime.fit_transform(df)
 Traceback (most recent call last):
     ...
@@ -98,7 +98,7 @@ string column contains dates is only known once we try to parse them.
 Therefore it might be sensible to try to parse all string columns but allow
 the transformer to reject those that, upon inspection, do not contain dates.
 
->>> to_datetime = ApplyToCols(ToDatetime(), allow_reject=True)
+>>> to_datetime = ApplyOnEachCol(ToDatetime(), allow_reject=True)
 >>> transformed = to_datetime.fit_transform(df)
 >>> transformed
     birthday    city
@@ -142,13 +142,13 @@ transformations to a subset of columns:
 2  100.0     0.0 -2.49 -0.33
 3    0.0  1000.0 -2.49 -0.33
 
-By default, |ApplyToCols| and |ApplySubFrame| rename the transformed columns, and
+By default, |ApplyOnEachCol| and |ApplySubFrame| rename the transformed columns, and
 remove the original features from the data. It is possible to rename the columns
 by providing a formatting string to the ``rename_columns`` parameter:
 
 >>> from sklearn.preprocessing import StandardScaler
 >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[0., 100.]))
->>> scaler = ApplyToCols(StandardScaler(), rename_columns='{}_scaled')
+>>> scaler = ApplyOnEachCol(StandardScaler(), rename_columns='{}_scaled')
 >>> scaler.fit_transform(df)
     A_scaled  B_scaled
 0      -1.0      -1.0
@@ -158,7 +158,7 @@ By setting ``keep_original=True``, the starting columns are not dropped from the
 transformed dataframe. The ``rename_columns`` parameter can be used to avoid
 name collisions:
 
->>> scaler = ApplyToCols(
+>>> scaler = ApplyOnEachCol(
 ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
 ... )
 >>> scaler.fit_transform(df)

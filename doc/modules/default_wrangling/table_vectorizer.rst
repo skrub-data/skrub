@@ -6,7 +6,7 @@
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
-.. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
+.. |ApplyOnEachCol| replace:: :class:`~skrub.ApplyOnEachCol`
 .. |ToCategorical| replace:: :class:`~skrub.ToCategorical`
 
 .. _user_guide_table_vectorizer:
@@ -98,7 +98,7 @@ able to handle the content of the column on its own.
 
 If you need to define complex transformers to pass to a single instance of
 |TableVectorizer|, consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>`,
-|ApplyToCols|, or the :ref:`skrub selectors <user_guide_selectors>` instead, as
+|ApplyOnEachCol|, or the :ref:`skrub selectors <user_guide_selectors>` instead, as
 they are more versatile and allow a higher degree
 of control over which operations are applied to which columns.
 
@@ -112,7 +112,7 @@ Numeric strings and categorical encoding
 By default, columns that contain only numeric strings (e.g. ``["1", "2", "3"]``)
 are parsed as numeric features by the |TableVectorizer|. The recommended way to
 treat such values as categorical (e.g. IDs or codes) is to convert the column
-to pandas' ``category`` dtype using |ToCategorical| with |ApplyToCols| before
+to pandas' ``category`` dtype using |ToCategorical| with |ApplyOnEachCol| before
 vectorizing, rather than relying on keeping them as strings.
 
 Default behavior: numeric strings are parsed as a single numeric column (feature
@@ -131,17 +131,17 @@ c
 1  2.0
 2  3.0
 
-With |ToCategorical| and |ApplyToCols|, the column is treated as categorical
+With |ToCategorical| and |ApplyOnEachCol|, the column is treated as categorical
 and produces one-hot encoded feature names:
 
->>> from skrub import ApplyToCols, TableVectorizer, ToCategorical
+>>> from skrub import ApplyOnEachCol, TableVectorizer, ToCategorical
 >>> from sklearn.pipeline import make_pipeline
 >>> pipe = make_pipeline(
-...     ApplyToCols(ToCategorical(), cols=["c"]),
+...     ApplyOnEachCol(ToCategorical(), cols=["c"]),
 ...     TableVectorizer(),
 ... )
 >>> pipe.fit(df)
-Pipeline(steps=[('applytocols', ...), ('tablevectorizer', ...)])
+Pipeline(steps=[('ApplyOnEachCol', ...), ('tablevectorizer', ...)])
 >>> list(map(str, sorted(pipe.named_steps["tablevectorizer"].get_feature_names_out())))
 ['c_1', 'c_2', 'c_3']
 >>> pipe.fit_transform(df)

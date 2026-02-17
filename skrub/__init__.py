@@ -6,7 +6,7 @@ from pathlib import Path as _Path
 
 from . import selectors
 from ._agg_joiner import AggJoiner, AggTarget
-from ._apply_to_cols import ApplyToCols
+from ._apply_to_cols import ApplyOnEachCol
 from ._apply_to_frame import ApplySubFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
@@ -102,7 +102,7 @@ __all__ = [
     "get_config",
     "set_config",
     "config_context",
-    "ApplyToCols",
+    "ApplyOnEachCol",
     "ApplySubFrame",
     "ToFloat",
 ]

@@ -6,6 +6,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -545,6 +547,8 @@ environments:
     - https://pypi.org/simple
     - https://pypi.anaconda.org/scientific-python-nightly-wheels/simple
     - https://pypi.fury.io/arrow-nightlies
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -886,6 +890,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -1508,6 +1514,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -2374,6 +2382,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-7_kmp_llvm.conda
@@ -3154,6 +3164,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -3800,6 +3812,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -4729,6 +4743,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -5451,6 +5467,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -5988,6 +6006,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-7_kmp_llvm.conda
@@ -7154,6 +7174,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-7_kmp_llvm.conda
@@ -8200,6 +8222,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -8797,6 +8821,8 @@ environments:
     - url: https://conda.anaconda.org/pytorch/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda
@@ -32022,7 +32048,7 @@ packages:
 - pypi: ./
   name: skrub
   version: 0.8.dev0
-  sha256: 50a4146be5fa4bad875bb654cd51b6d581b55e0af3ca781833d78e50d3a37703
+  sha256: 0e2fa6ef626679f463833cf5b117fb181b4830299c5c5454049942913eb54ae5
   requires_dist:
   - numpy>=1.23.5
   - pandas>=1.5.3
@@ -32032,32 +32058,7 @@ packages:
   - matplotlib>=3.4.3
   - requests>=2.27.1
   - pydot
-  - ipykernel ; extra == 'dev'
-  - ipython ; extra == 'dev'
-  - jupyterlab ; extra == 'dev'
-  - jupyterlite-sphinx ; extra == 'dev'
-  - jupyterlite-pyodide-kernel ; extra == 'dev'
-  - numpydoc ; extra == 'dev'
-  - pydata-sphinx-theme ; extra == 'dev'
-  - seaborn ; extra == 'dev'
-  - sphinx<9 ; extra == 'dev'
-  - sphinx-copybutton ; extra == 'dev'
-  - sphinx-gallery ; extra == 'dev'
-  - sphinxext-opengraph ; extra == 'dev'
-  - sphinx-autosummary-accessors ; extra == 'dev'
-  - statsmodels ; extra == 'dev'
-  - ruff==0.15.0 ; extra == 'dev'
-  - pre-commit ; extra == 'dev'
-  - pytest ; extra == 'dev'
-  - pytest-cov ; extra == 'dev'
-  - pytest-xdist ; extra == 'dev'
-  - pyarrow ; extra == 'dev'
-  - polars ; extra == 'dev'
-  - plotly ; extra == 'dev'
-  - optuna ; extra == 'dev'
-  - sentence-transformers ; extra == 'transformers'
   requires_python: '>=3.10'
-  editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/sleef-3.9.0-ha0421bc_0.conda
   sha256: 57afc2ab5bdb24cf979964018dddbc5dfaee130b415e6863765e45aed2175ee4
   md5: e8a0b4f5e82ecacffaa5e805020473cb
