@@ -9,13 +9,13 @@ from . import _utils, selectors
 from ._join_utils import pick_column_names
 from ._single_column_transformer import RejectColumn, is_single_column_transformer
 
-__all__ = ["ApplyToCols"]
+__all__ = ["ApplyToSeparateCols"]
 
 # By default, select all columns
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToCols(BaseEstimator, TransformerMixin):
+class ApplyToSeparateCols(BaseEstimator, TransformerMixin):
     """
     Map a transformer to columns in a dataframe.
 
@@ -63,7 +63,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     allow_reject : bool, default=False
         Whether the transformer is allowed to reject a column by raising a
         ``RejectColumn`` exception. If ``True``, rejected columns will be
-        passed through unchanged by ``ApplyToCols`` and will not appear in
+        passed through unchanged by ``ApplyToSeparateCols`` and will not appear in
         attributes such as ``transformers_``, ``used_inputs_``, etc. If
         ``False``, column rejections are considered as errors and
         ``RejectColumn`` exceptions are propagated.
@@ -118,7 +118,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub import ApplyToCols
+    >>> from skrub import ApplyToSeparateCols
     >>> from sklearn.preprocessing import StandardScaler
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
     >>> df
@@ -128,7 +128,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
 
     Fit a StandardScaler to each column in df:
 
-    >>> scaler = ApplyToCols(StandardScaler())
+    >>> scaler = ApplyToSeparateCols(StandardScaler())
     >>> scaler.fit_transform(df)
          A    B    C
     0 -1.0 -1.0 -1.0
@@ -138,7 +138,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
 
     We can restrict the columns on which the transformation is applied:
 
-    >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"])
+    >>> scaler = ApplyToSeparateCols(StandardScaler(), cols=["A", "B"])
     >>> scaler.fit_transform(df)
          A    B     C
     0 -1.0 -1.0   0.0
@@ -178,7 +178,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     By default, no special handling is performed and rejections are considered
     to be errors:
 
-    >>> to_datetime = ApplyToCols(ToDatetime())
+    >>> to_datetime = ApplyToSeparateCols(ToDatetime())
     >>> to_datetime.fit_transform(df)
     Traceback (most recent call last):
         ...
@@ -190,7 +190,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     Therefore it might be sensible to try to parse all string columns but allow
     the transformer to reject those that, upon inspection, do not contain dates.
 
-    >>> to_datetime = ApplyToCols(ToDatetime(), allow_reject=True)
+    >>> to_datetime = ApplyToSeparateCols(ToDatetime(), allow_reject=True)
     >>> transformed = to_datetime.fit_transform(df)
     >>> transformed
         birthday    city
@@ -212,7 +212,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     The ``rename_columns`` parameter allows renaming output columns.
 
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[0., 100.]))
-    >>> scaler = ApplyToCols(StandardScaler(), rename_columns='{}_scaled')
+    >>> scaler = ApplyToSeparateCols(StandardScaler(), rename_columns='{}_scaled')
     >>> scaler.fit_transform(df)
        A_scaled  B_scaled
     0      -1.0      -1.0
@@ -221,19 +221,19 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     The renaming is only applied to columns selected by ``cols`` (and not
     rejected by the transformer when ``allow_reject`` is ``True``).
 
-    >>> scaler = ApplyToCols(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
+    >>> scaler = ApplyToSeparateCols(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
     >>> scaler.fit_transform(df)
        A_scaled      B
     0      -1.0    0.0
     1       1.0  100.0
 
     ``rename_columns`` can be particularly useful when ``keep_original`` is
-    ``True``. When a column is transformed, we can tell ``ApplyToCols`` to
+    ``True``. When a column is transformed, we can tell ``ApplyToSeparateCols`` to
     retain the original, untransformed column in the output. If the transformer
     produces a column with the same name, the transformation result is renamed
     to avoid a name clash.
 
-    >>> scaler = ApplyToCols(StandardScaler(), keep_original=True)
+    >>> scaler = ApplyToSeparateCols(StandardScaler(), keep_original=True)
     >>> scaler.fit_transform(df)                                    # doctest: +SKIP
           A  A__skrub_89725c56__      B  B__skrub_81cc7d00__
     0 -10.0                 -1.0    0.0                 -1.0
@@ -241,7 +241,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
 
     In this case we may want to set a more sensible name for the transformer's output:
 
-    >>> scaler = ApplyToCols(
+    >>> scaler = ApplyToSeparateCols(
     ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
     ... )
     >>> scaler.fit_transform(df)
@@ -283,7 +283,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        ApplyToCols
+        ApplyToSeparateCols
             The transformer itself.
         """
         self.fit_transform(X, y, **kwargs)
