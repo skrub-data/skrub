@@ -31,7 +31,7 @@ jobs:
           environments: ${{ matrix.environment }}
           # we can freeze the environment and manually bump the dependencies to the
           # latest version time to time.
-          frozen: true
+          locked: true
       - name: Run tests
         run: pixi run -e ${{ matrix.environment }} test -n auto
       - name: Run user guide doctests
