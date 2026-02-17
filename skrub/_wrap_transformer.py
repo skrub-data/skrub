@@ -1,9 +1,15 @@
-from ._apply_to_cols import ApplyToCols
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.validation import check_is_fitted
+
+from . import selectors
 from ._apply_to_frame import ApplyToFrame
+from ._apply_to_separate_cols import ApplyToSeparateCols
 from ._single_column_transformer import is_single_column_transformer
-from .selectors import make_selector
 
 __all__ = ["wrap_transformer"]
+
+# By default, select all columns
+_SELECT_ALL_COLUMNS = selectors.all()
 
 
 def wrap_transformer(
@@ -85,13 +91,13 @@ def wrap_transformer(
     >>> wrap_transformer(OrdinalEncoder(), s.string(), columnwise=True, n_jobs=4)
     ApplyToCols(cols=string(), n_jobs=4, transformer=OrdinalEncoder())
     """
-    selector = make_selector(selector)
+    selector = selector.make_selector(selector)
 
     if isinstance(columnwise, str) and columnwise == "auto":
         columnwise = is_single_column_transformer(transformer)
 
     if columnwise:
-        return ApplyToCols(
+        return ApplyToSeparateCols(
             transformer,
             cols=selector,
             allow_reject=allow_reject,
@@ -105,3 +111,43 @@ def wrap_transformer(
         keep_original=keep_original,
         rename_columns=rename_columns,
     )
+
+
+class ApplyToCols(BaseEstimator, TransformerMixin):
+    def __init__(
+        self,
+        transformer,
+        cols=_SELECT_ALL_COLUMNS,
+        allow_reject=False,
+        keep_original=False,
+        rename_columns="{}",
+        columnwise="auto",
+        n_jobs=None,
+    ):
+        self.transformer = transformer
+        self.cols = cols
+        self.allow_reject = allow_reject
+        self.keep_original = keep_original
+        self.rename_columns = rename_columns
+        self.columnwise = columnwise
+        self.n_jobs = n_jobs
+
+    def fit(self, X, y=None, **kwargs):
+        self.fit_transform(X, y, **kwargs)
+        return self
+
+    def fit_transform(self, X, y=None, **fit_params):
+        self.transformer_ = wrap_transformer(
+            self.transformer,
+            self.cols,
+            allow_reject=self.allow_reject,
+            keep_original=self.keep_original,
+            rename_columns=self.rename_columns,
+            n_jobs=self.n_jobs,
+            columnwise=self.columnwise,
+        )
+        return self.transformer_.fit_transform(X, y, **fit_params)
+
+    def transform(self, X, **kwargs):
+        check_is_fitted(self, "transformer_")
+        return self.transformer_.transform(X, **kwargs)
