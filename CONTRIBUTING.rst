@@ -128,9 +128,18 @@ Writing your first Pull Request
 Preparing the ground
 ^^^^^^^^^^^^^^^^^^^^
 
-Before writing any code, ensure you have created an issue
-discussing the proposed changes with the maintainers.
-See the relevant sections above on how to do this.
+
+Before writing any code, make sure you have discussed your plans with the maintainers.
+You can do this by opening a new issue to discuss a specific improvement (as
+described above), or by commenting on an existing issue to express your interest in working on it.
+
+Be sure to get approval from the maintainers before you start coding, and especially
+before opening any new pull requests (PRs). This helps prevent issues such as multiple
+people working on the same problem independently, or working on an issue that is
+not clearly defined. Without prior discussion, your PR may be closed for being out
+of scope or unrelated to the problem at hand.
+
+Every PR should link to the issue it addresses.
 
 Setting up the environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
