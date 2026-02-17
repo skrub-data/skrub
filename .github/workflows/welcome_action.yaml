@@ -2,7 +2,15 @@ name: Welcome New Contributors
 
 on:
   pull_request:
-    types: [opened]
+    types:
+      - opened
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+  pull-requests: write
 
 jobs:
   welcome:
@@ -12,6 +20,8 @@ jobs:
         uses: actions/first-interaction@v3
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_message: |
+            Thanks for opening this issue! We will take a look.
           pr_message: |
             👋 Hi there! Thank you for your first contribution to skrub.
             We appreciate your effort and look forward to collaborating with you.
