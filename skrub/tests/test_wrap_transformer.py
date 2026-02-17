@@ -3,7 +3,7 @@ from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
 from skrub import ApplyOnEachCol
 from skrub import selectors as s
-from skrub._apply_to_frame import ApplySubFrame
+from skrub._apply_sub_frame import ApplySubFrame
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._to_datetime import ToDatetime
 from skrub._wrap_transformer import wrap_transformer

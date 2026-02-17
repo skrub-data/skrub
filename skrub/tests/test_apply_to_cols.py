@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._apply_to_cols import ApplyOnEachCol
+from skrub._apply_on_each_col import ApplyOnEachCol
 from skrub._select_cols import Drop
 from skrub._single_column_transformer import (
     RejectColumn,
@@ -67,7 +67,9 @@ class SingleColMult(Mult):
 
 @pytest.mark.parametrize("output_kind", ["single_column", "dataframe", "column_list"])
 @pytest.mark.parametrize("transformer_class", [Mult, SingleColMult])
-def test_apply_to_cols(df_module, output_kind, transformer_class, use_fit_transform):
+def test_apply_on_each_col(
+    df_module, output_kind, transformer_class, use_fit_transform
+):
     mapper = ApplyOnEachCol(transformer_class(output_kind), s.glob("a*"))
     X = df_module.make_dataframe(
         {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}

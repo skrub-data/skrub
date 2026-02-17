@@ -11,7 +11,7 @@ from sklearn.preprocessing import FunctionTransformer
 from skrub import SelectCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._apply_to_frame import ApplySubFrame
+from skrub._apply_sub_frame import ApplySubFrame
 
 
 class Dummy(BaseEstimator):
