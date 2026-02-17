@@ -249,12 +249,19 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import auc, roc_curve
 
 # Calculate ROC curve
-fpr, tpr, _ = roc_curve(new_baskets["fraud_flag"].skb.eval(), probabilities[:, 1])
-roc_auc = auc(fpr, tpr)
+false_positive, true_positive, _ = roc_curve(
+    new_baskets["fraud_flag"].skb.eval(), probabilities[:, 1]
+)
+roc_auc = auc(false_positive, true_positive)
 
 # Plot
 fig, ax = plt.subplots()
-ax.plot(fpr, tpr, color="darkorange", label=f"ROC curve (AUC = {roc_auc:.2f})")
+ax.plot(
+    false_positive,
+    true_positive,
+    color="darkorange",
+    label=f"ROC curve (AUC = {roc_auc:.2f})",
+)
 ax.plot([0, 1], [0, 1], color="navy", linestyle="--", label="Random Classifier")
 ax.set_xlabel("False Positive Rate")
 ax.set_ylabel("True Positive Rate")
