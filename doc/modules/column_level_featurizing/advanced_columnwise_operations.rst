@@ -6,7 +6,7 @@ Rejected columns
 ----------------
 
 The ``RejectColumn`` exception exists to indicate when a transformer cannot handle a
-given column.
+given column. It can be called with a custom user message, to explain the rejection.
 
 >>> from skrub import ToDatetime
 >>> import pandas as pd
@@ -70,7 +70,8 @@ to create a transformer from scratch that is capable of handling this exception.
 
 Hence the ``SingleColumnTransformer`` class. It is originally a base class from which many transformers are
 inherited, but it can also be used to create new transformers. For instance, if one wanted to create a custom
-transformer specialized in parsing zip codes of a certain format::
+transformer specialized in parsing zip codes of a certain format, that returns ``RejectColumn`` with a custom
+warning on zip code sizes::
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>>
@@ -88,6 +89,11 @@ transformer specialized in parsing zip codes of a certain format::
 ...                 raise RejectColumn('Input zip codes must consist of two letters followed by three numbers.')
 ...             return(pd.DataFrame({'letters': letters, 'numbers': numbers}))
 >>> df = pd.DataFrame({'sent': ["AB123", "BD601", "HS014"], 'received': ["AB1C45", "DU3K93", "WB9M88"]})
+>>> df
+    sent received
+0  AB123   AB1C45
+1  BD601   DU3K93
+2  HS014   WB9M88
 >>> ZipcodeParser().fit_transform(df["sent"])
   letters  numbers
 0      AB      123

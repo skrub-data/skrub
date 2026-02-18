@@ -149,6 +149,14 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     >>> scaler.used_inputs_
     ['A', 'B']
 
+    **Rejected columns**
+
+    A transformer can raise the :class:`RejectColumn` exception if its criteria
+    are not met. How to deal with such an exception can be decided with
+    ``allow_reject``.
+    See :doc:`/modules/column_level_featurizing/advanced_columnwise_operations` for
+    more information.
+
     **Renaming outputs & keeping the original columns**
 
     The ``rename_columns`` parameter allows renaming output columns.

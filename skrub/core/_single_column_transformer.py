@@ -49,8 +49,9 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToCols``; see the docstring of ``ApplyToCols``, and the
-    ``Advanced columnwise operations`` page of the user guide for more information.
+    :class:`ApplyToCols`; see the docstring of ``ApplyToCols``, and the
+    :doc:`/modules/column_level_featurizing/advanced_columnwise_operations` page of the
+    user guide for more information.
 
     Subclasses must define ``fit_transform`` and ``transform`` (or inherit them
     from another superclass).
