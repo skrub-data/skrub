@@ -214,7 +214,7 @@ def test_get_preprocessors(df_module):
         drop_if_constant=True,
         drop_if_unique=False,
         n_jobs=1,
-        add_tofloat32=True,
+        numeric_dtype="float32",
     )
     assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
@@ -224,7 +224,17 @@ def test_get_preprocessors(df_module):
         drop_if_constant=True,
         drop_if_unique=False,
         n_jobs=1,
-        add_tofloat32=False,
+        numeric_dtype="parse",
+    )
+    assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
+
+    steps = _get_preprocessors(
+        cols=X.columns,
+        drop_null_fraction=1.0,
+        drop_if_constant=True,
+        drop_if_unique=False,
+        n_jobs=1,
+        numeric_dtype="passthrough",
     )
     assert not any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
@@ -447,16 +457,28 @@ def test_convert_float32(df_module):
 
 
 @pytest.mark.parametrize(
-    "numeric_dtype, parse_numeric_strings, convert_numeric_columns",
+    "numeric_dtype, expected_df",
     [
-        ("passthrough", False, False),
-        ("parse", True, False),
-        ("float32", True, True),
+        ("passthrough", lambda X: X),
+        (
+            "parse",
+            lambda X: sbd.with_columns(
+                X,
+                num_str=ToFloat().fit_transform(X["num_str"]),
+            ),
+        ),
+        (
+            "float32",
+            lambda X: sbd.with_columns(
+                X,
+                num_str=ToFloat().fit_transform(X["num_str"]),
+                int_col=ToFloat().fit_transform(X["int_col"]),
+                float_col=ToFloat().fit_transform(X["float_col"]),
+            ),
+        ),
     ],
 )
-def test_cleaner_numeric_dtype_modes(
-    df_module, numeric_dtype, parse_numeric_strings, convert_numeric_columns
-):
+def test_cleaner_numeric_dtype_modes(df_module, numeric_dtype, expected_df):
     X = df_module.make_dataframe(
         {
             "num_str": ["1", "2", "3"],
@@ -464,21 +486,9 @@ def test_cleaner_numeric_dtype_modes(
             "float_col": [1.5, 2.5, 3.5],
         }
     )
+    expected = expected_df(X)
     out = Cleaner(numeric_dtype=numeric_dtype).fit_transform(X)
-
-    if parse_numeric_strings:
-        expected = ToFloat().fit_transform(X["num_str"])
-        df_module.assert_column_equal(out["num_str"], expected)
-    else:
-        assert sbd.is_string(out["num_str"])
-        assert sbd.dtype(out["num_str"]) == sbd.dtype(X["num_str"])
-
-    if convert_numeric_columns:
-        assert sbd.dtype(out["int_col"]) == sbd.dtype(sbd.to_float32(X["int_col"]))
-        assert sbd.dtype(out["float_col"]) == sbd.dtype(sbd.to_float32(X["float_col"]))
-    else:
-        assert sbd.dtype(out["int_col"]) == sbd.dtype(X["int_col"])
-        assert sbd.dtype(out["float_col"]) == sbd.dtype(X["float_col"])
+    df_module.assert_frame_equal(out, expected)
 
 
 def test_cast_to_str(df_module):

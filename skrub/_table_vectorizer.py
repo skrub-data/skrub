@@ -119,11 +119,11 @@ def _get_preprocessors(
     drop_if_unique,
     drop_if_constant,
     n_jobs,
-    add_tofloat32=True,
-    tofloat_cols=None,
+    numeric_dtype="float32",
     cast_to_str=True,
     datetime_format=None,
 ):
+    cols = s.make_selector(cols)
     steps = [CheckInputDataFrame()]
     transformers = [
         (CleanNullStrings(), cols),
@@ -137,9 +137,15 @@ def _get_preprocessors(
         ),
         (ToDatetime(format=datetime_format), cols),
     ]
-    if add_tofloat32:
-        tofloat_selector = cols if tofloat_cols is None else cols & tofloat_cols
-        transformers.append((ToFloat(), tofloat_selector))
+    if numeric_dtype == "float32":
+        transformers.append((ToFloat(), cols))
+    elif numeric_dtype == "parse":
+        transformers.append((ToFloat(), cols & s.string()))
+    elif numeric_dtype != "passthrough":
+        raise ValueError(
+            "`numeric_dtype` must be one of "
+            f"[`'passthrough'`, `'parse'`, `'float32'`]. Found {numeric_dtype}."
+        )
 
     transformers.append((CleanCategories(), cols))
 
@@ -283,6 +289,23 @@ class Cleaner(TransformerMixin, BaseEstimator):
     ``numeric_dtype="float32"``, both string-number columns and numeric columns
     are converted to ``np.float32``.
 
+    Example:
+
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2]})
+    >>> Cleaner(numeric_dtype="passthrough").fit_transform(df).dtypes  # doctest: +SKIP
+    num_str    ...
+    num        ...
+    dtype: object
+    >>> Cleaner(numeric_dtype="parse").fit_transform(df).dtypes  # doctest: +SKIP
+    num_str    float32
+    num        ...
+    dtype: object
+    >>> Cleaner(numeric_dtype="float32").fit_transform(df).dtypes  # doctest: +SKIP
+    num_str    float32
+    num        float32
+    dtype: object
+
     Examples
     --------
     >>> from skrub import Cleaner
@@ -381,17 +404,13 @@ class Cleaner(TransformerMixin, BaseEstimator):
                 f"Found {self.numeric_dtype}."
             )
 
-        add_tofloat32 = self.numeric_dtype in ("parse", "float32")
-        tofloat_cols = s.string() if self.numeric_dtype == "parse" else None
-
         all_steps = _get_preprocessors(
             cols=s.all(),
             drop_null_fraction=self.drop_null_fraction,
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=add_tofloat32,
-            tofloat_cols=tofloat_cols,
+            numeric_dtype=self.numeric_dtype,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
         )
@@ -938,7 +957,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=True,
+            numeric_dtype="float32",
             datetime_format=self.datetime_format,
         )
 
