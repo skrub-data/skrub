@@ -12,7 +12,7 @@ from ._wrap_transformer import wrap_transformer
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToCols(BaseEstimator, TransformerMixin):
+class ApplyToCols(TransformerMixin, BaseEstimator):
     """
     Map a transformer to columns in a dataframe.
 
