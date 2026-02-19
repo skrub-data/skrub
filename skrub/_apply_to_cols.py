@@ -14,10 +14,13 @@ _SELECT_ALL_COLUMNS = selectors.all()
 
 class ApplyToCols(BaseEstimator, TransformerMixin):
     """
-    Wrapper that applies a transformer to columns selected by a selector. The
-    wrapper automatically selects the correct class between ``ApplyToEachCol`` and
-    ``ApplyToSubFrame`` based on the type of the input transformer, but this can
-    be overridden with the ``columnwise`` parameter.
+    Map a transformer to columns in a dataframe.
+
+    A separate clone of the transformer is applied to each column separately.
+
+    Columns that are not selected in the ``cols`` parameter are passed through
+    without modification.
+
 
     Parameters
     ----------
@@ -37,20 +40,36 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         Whether to allow rejecting all columns. See the documentation of
         ``ApplyToEachCol`` for details.
 
-    columnwise : 'auto' or bool, default='auto'
-        Whether to apply the transformer to each selected column independently
-        (equivalent to using ``ApplyToEachCol``) or to the whole sub-dataframe of
-        selected columns at once (equivalent to using ``ApplyToSubFrame``). By
-        default, ``ApplyToEachCol`` is used if the transformer has a
-        ``__single_column_transformer__`` attribute and ``ApplyToSubFrame``
-        otherwise. Pass ``columnwise=True`` to force using ``ApplyToEachCol`` and
-        ``columnwise=False`` to force using ``ApplyToSubFrame``.
-        Note that forcing
-        ``columnwise=False`` for a single-column transformer will most likely
-        cause an error during ``fit``, and forcing ``columnwise=True`` for a
-        regular transformer is only appropriate if the transformer can be
-        fitted on a dataframe with only one column (this is the case for most
-        preprocessors such as ``OrdinalEncoder`` or ``StandardScaler``).
+    how : "auto", "cols" or "frame", optional
+        How the transformer is applied. In most cases the default "auto"
+        is appropriate.
+        - "cols" means `transformer` is wrapped in a :class:`ApplyToEachCol`
+            transformer, which fits a separate clone of `transformer` each
+            column in `cols`. `transformer` must be a transformer (have a
+            ``fit_transform`` method).
+        - "frame" means `transformer` is wrapped in a :class:`ApplyToSubFrame`
+            transformer, which fits a single clone of `transformer` to the
+            selected part of the input dataframe. `transformer` must be a
+            transformer.
+        - "auto" chooses the wrapping depending on the input and transformer.
+            If the input is not a dataframe or the transformer is not a
+            transformer, the "no_wrap" strategy is chosen. Otherwise if the
+            transformer has a ``__single_column_transformer__`` attribute,
+            "cols" is chosen. Otherwise "frame" is chosen.
+
+    Notes
+    -----
+    All columns not listed in ``cols`` remain unmodified in the output.
+    Moreover, if ``allow_reject`` is ``True`` and the transformers'
+    ``fit_transform`` raises a ``RejectColumn`` exception for a particular
+    column, that column is passed through unchanged. If ``allow_reject`` is
+    ``False``, ``RejectColumn`` exceptions are propagated, like other errors
+    raised by the transformer.
+    Wrapper that applies a transformer to columns selected by a selector. The
+    wrapper automatically selects the correct class between ``ApplyToEachCol`` and
+    ``ApplyToSubFrame`` based on the type of the input transformer, but this can
+    be overridden with the ``how`` parameter.
+
     """
 
     def __init__(
@@ -60,7 +79,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
-        columnwise="auto",
+        how="auto",
         n_jobs=None,
     ):
         self.transformer = transformer
@@ -69,13 +88,32 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         self.keep_original = keep_original
         self.rename_columns = rename_columns
         self.n_jobs = n_jobs
-        self.columnwise = columnwise
+        self.how = how
 
     def fit(self, X, y=None):
         self.fit_transform(X, y)
         return self
 
     def fit_transform(self, X, y=None):
+        if self.how not in ("auto", "cols", "frame"):
+            raise ValueError(
+                f"Invalid value for 'how': {self.how}. "
+                "Expected one of 'auto', 'cols', or 'frame'."
+            )
+
+        if self.allow_reject not in (True, False):
+            raise ValueError(
+                f"Invalid value for 'allow_reject': {self.allow_reject}. "
+                "Expected a boolean."
+            )
+        if self.keep_original not in (True, False):
+            raise ValueError(
+                f"Invalid value for 'keep_original': {self.keep_original}. "
+                "Expected a boolean."
+            )
+
+        columnwise = {"auto": "auto", "cols": True, "frame": False}[self.how]
+
         self._wrapped_transformer = wrap_transformer(
             self.transformer,
             self.cols,
@@ -83,7 +121,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
             keep_original=self.keep_original,
             rename_columns=self.rename_columns,
             n_jobs=self.n_jobs,
-            columnwise=self.columnwise,
+            columnwise=columnwise,
         )
         X_transformed = self._wrapped_transformer.fit_transform(X, y)
 

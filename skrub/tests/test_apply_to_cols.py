@@ -4,10 +4,9 @@ import numpy as np
 import pytest
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
-from skrub import ApplyToCols, ApplyToEachCol
+from skrub import ApplyToCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._apply_sub_frame import ApplyToSubFrame
 from skrub._to_datetime import ToDatetime
 
 
@@ -16,7 +15,7 @@ def test_single_column_transformer_becomes_apply_to_each_col(df_module):
     at = ApplyToCols(ToDatetime(), cols=s.all())
     X = df_module.make_dataframe({"date_col": ["2020-01-01", "2020-01-02"]})
     at.fit(X)
-    assert isinstance(at._wrapped_transformer, ApplyToEachCol)
+    assert hasattr(at._wrapped_transformer, "transformers_")
 
 
 def test_non_single_column_transformer_becomes_apply_to_subframe(df_module):
@@ -24,18 +23,18 @@ def test_non_single_column_transformer_becomes_apply_to_subframe(df_module):
     at = ApplyToCols(OrdinalEncoder(), cols=s.all())
     X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
     at.fit(X)
-    assert isinstance(at._wrapped_transformer, ApplyToSubFrame)
+    assert hasattr(at._wrapped_transformer, "transformer_")
 
 
 def test_columnwise_override_forces_apply_to_each_col(df_module):
     """
-    columnwise=True should force ApplyToEachCol even
+    how="cols" should force ApplyToEachCol even
     for non-SingleColumnTransformer.
     """
-    at = ApplyToCols(OrdinalEncoder(), cols=s.all(), columnwise=True)
+    at = ApplyToCols(OrdinalEncoder(), cols=s.all(), how="cols")
     X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
     at.fit(X)
-    assert isinstance(at._wrapped_transformer, ApplyToEachCol)
+    assert hasattr(at._wrapped_transformer, "transformers_")
 
 
 def test_invalid_parameters():
@@ -43,14 +42,14 @@ def test_invalid_parameters():
 
     X = None  # Placeholder for the dataframe, not used in this test
 
-    with pytest.raises((TypeError, ValueError)):
+    with pytest.raises((TypeError, ValueError), match=r"allow_reject.*bool"):
         at = ApplyToCols(ToDatetime(), allow_reject="yes")
         at.fit_transform(X)
-    with pytest.raises((TypeError, ValueError)):
+    with pytest.raises((TypeError, ValueError), match=r"keep_original.*bool"):
         at = ApplyToCols(ToDatetime(), keep_original="no")
         at.fit_transform(X)
-    with pytest.raises((TypeError, ValueError)):
-        at = ApplyToCols(ToDatetime(), columnwise="maybe")
+    with pytest.raises((TypeError, ValueError), match=r"how.*(auto|cols|frame)"):
+        at = ApplyToCols(ToDatetime(), how="maybe")
         at.fit_transform(X)
 
 
