@@ -52,9 +52,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
             selected part of the input dataframe. `transformer` must be a
             transformer.
         - "auto" chooses the wrapping depending on the input and transformer.
-            If the input is not a dataframe or the transformer is not a
-            transformer, the "no_wrap" strategy is chosen. Otherwise if the
-            transformer has a ``__single_column_transformer__`` attribute,
+            If the transformer has a ``__single_column_transformer__`` attribute,
             "cols" is chosen. Otherwise "frame" is chosen.
 
     Notes
