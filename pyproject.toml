@@ -125,6 +125,7 @@ sphinx-sitemap = "*"
 statsmodels = "*"
 optuna = "*"
 skorch = "*"
+ibis-bigquery = "*"
 
 [tool.pixi.feature.lint.dependencies]
 ruff = "==0.15.0"
