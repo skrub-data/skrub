@@ -302,19 +302,14 @@ class _Evaluator(_DataOpTraversal):
             env_key = X_NAME
         elif impl.is_y and Y_NAME in self.environment:
             env_key = Y_NAME
-        elif (
-            # if Var, let the usual mechanism fetch the value from the
-            # environment and store in results dict. Otherwise override with
-            # the provided value.
-            not isinstance(impl, Var)
-            and impl.name is not None
-            and impl.name in self.environment
-        ):
+        elif impl.name is not None and impl.name in self.environment:
             env_key = impl.name
         else:
             env_key = None
 
-        if env_key is None:
+        if env_key is None or isinstance(impl, Var):
+            # if Var, let the usual evaluation mechanism fetch the value from
+            # the environment.
             result = yield from self._eval_data_op(data_op)
         else:
             result = self.environment[env_key]
