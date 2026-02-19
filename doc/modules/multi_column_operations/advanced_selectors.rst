@@ -1,6 +1,6 @@
 .. currentmodule:: skrub.selectors
 
-.. |ApplyOnEachCol| replace:: :class:`~skrub.ApplyOnEachCol`
+.. |ApplyToEachCol| replace:: :class:`~skrub.ApplyToEachCol`
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
 .. |filter| replace:: :func:`filter`
 .. |filter_names| replace:: :func:`filter_names`

@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from skrub import ApplyOnEachCol, DatetimeEncoder
+from skrub import ApplyToEachCol, DatetimeEncoder
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._datetime_encoder import (
@@ -115,7 +115,7 @@ def expected_features(df_module):
     }
 
     res = df_module.make_dataframe(values)
-    return ApplyOnEachCol(ToFloat()).fit_transform(res)
+    return ApplyToEachCol(ToFloat()).fit_transform(res)
 
 
 def test_fit_transform(a_datetime_col, expected_features, df_module, use_fit_transform):

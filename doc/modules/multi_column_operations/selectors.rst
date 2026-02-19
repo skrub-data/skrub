@@ -49,7 +49,7 @@ Using selectors:
     1      420.0     297.0
 
 * **transformers**: various transformers in skrub use selectors to select and transform columns
-  in a scikit-learn pipeline: :class:`~skrub.ApplyOnEachCol`, :class:`~skrub.ApplySubFrame`,
+  in a scikit-learn pipeline: :class:`~skrub.ApplyToEachCol`, :class:`~skrub.ApplyToSubFrame`,
   :class:`~skrub.DropCols`, :class:`~skrub.SelectCols`, as
   :ref:`detailed below <selectors_and_transformer>`.
 
@@ -171,7 +171,7 @@ selector and finally transform the dataframe.
 3          2
 4          2
 
-Selectors can be used in conjunction with :class:`~skrub.ApplyOnEachCol` to transform columns
+Selectors can be used in conjunction with :class:`~skrub.ApplyToEachCol` to transform columns
 based on specific requirements.
 
 Consider the following example:
@@ -193,9 +193,9 @@ Consider the following example:
 We might want to apply the :class:`~sklearn.preprocessing.StandardScaler` only to the numeric column. We can
 do this like this:
 
->>> from skrub import ApplyOnEachCol
+>>> from skrub import ApplyToEachCol
 >>> from sklearn.preprocessing import StandardScaler
->>> ApplyOnEachCol(StandardScaler(), cols=s.numeric()).fit_transform(df)
+>>> ApplyToEachCol(StandardScaler(), cols=s.numeric()).fit_transform(df)
    subject     grade
 0     Math  1.603567
 1  English  0.267261

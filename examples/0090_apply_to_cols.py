@@ -24,18 +24,18 @@ X
 # Our goal is now to apply a :class:`~skrub.StringEncoder` to two columns of our
 # choosing: ``division`` and ``employee_position_title``.
 #
-# We can achieve this using :class:`~skrub.ApplyOnEachCol`, whose job is to apply a
+# We can achieve this using :class:`~skrub.ApplyToEachCol`, whose job is to apply a
 # transformer to multiple columns independently, and let unmatched columns through
 # without changes.
 # This can be seen as a handy drop-in replacement of the
 # :class:`~sklearn.compose.ColumnTransformer`.
 #
 # Since we selected two columns and set the number of components to ``30`` each,
-# :class:`~skrub.ApplyOnEachCol` will create ``2*30`` embedding columns in the dataframe
+# :class:`~skrub.ApplyToEachCol` will create ``2*30`` embedding columns in the dataframe
 # ``Xt``, which we prefix with ``lsa_``.
-from skrub import ApplyOnEachCol, StringEncoder
+from skrub import ApplyToEachCol, StringEncoder
 
-apply_string_encoder = ApplyOnEachCol(
+apply_string_encoder = ApplyToEachCol(
     StringEncoder(n_components=30),
     cols=["division", "employee_position_title"],
     rename_columns="lsa_{}",
@@ -44,8 +44,8 @@ Xt = apply_string_encoder.fit_transform(X)
 Xt
 
 # %%
-# In addition to the :class:`~skrub.ApplyOnEachCol` class, the
-# :class:`~skrub.ApplySubFrame` class is useful for transformers that work on multiple
+# In addition to the :class:`~skrub.ApplyToEachCol` class, the
+# :class:`~skrub.ApplyToSubFrame` class is useful for transformers that work on multiple
 # columns at once, such as the :class:`~sklearn.decomposition.PCA` which reduces the
 # number of components.
 #
@@ -54,14 +54,14 @@ Xt
 # and composable logic.
 #
 # The regex selector below will match all columns prefixed with ``"lsa"``, and pass them
-# to :class:`~skrub.ApplySubFrame` which will assemble these columns into a dataframe
+# to :class:`~skrub.ApplyToSubFrame` which will assemble these columns into a dataframe
 # and finally pass it to the PCA.
 from sklearn.decomposition import PCA
 
-from skrub import ApplySubFrame
+from skrub import ApplyToSubFrame
 from skrub import selectors as s
 
-apply_pca = ApplySubFrame(PCA(n_components=8), cols=s.regex("lsa"))
+apply_pca = ApplyToSubFrame(PCA(n_components=8), cols=s.regex("lsa"))
 Xt = apply_pca.fit_transform(Xt)
 Xt
 
@@ -100,7 +100,7 @@ pipeline.fit_transform(Xt)
 from sklearn.preprocessing import OrdinalEncoder
 
 low_cardinality = s.filter(lambda col: col.nunique() < 40)
-ApplyOnEachCol(OrdinalEncoder(), cols=s.string() & low_cardinality).fit_transform(X)
+ApplyToEachCol(OrdinalEncoder(), cols=s.string() & low_cardinality).fit_transform(X)
 
 # %%
 # Notice how we composed the selector with :func:`~skrub.selectors.string()`
@@ -114,11 +114,11 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 
 high_cardinality = ~low_cardinality
 pipeline = make_pipeline(
-    ApplyOnEachCol(
+    ApplyToEachCol(
         OrdinalEncoder(),
         cols=s.string() & low_cardinality,
     ),
-    ApplyOnEachCol(
+    ApplyToEachCol(
         StringEncoder(),
         cols=s.string() & high_cardinality,
     ),

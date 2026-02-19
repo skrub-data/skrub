@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import check_random_state
 
 import skrub
-from skrub import ApplyOnEachCol
+from skrub import ApplyToEachCol
 from skrub import selectors as s
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
@@ -501,7 +501,7 @@ def test_data_op_impl():
 def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
     # dataframe) (or how='no_wrap') the estimator can only be applied to the
-    # full input without wrapping in ApplyOnEachCol or ApplySubFrame. In this case
+    # full input without wrapping in ApplyToEachCol or ApplyToSubFrame. In this case
     # if the user passed a parameter that would require wrapping, such as
     # passing a value for `cols` that is not `all()`, or passing
     # how='cols' or allow_reject=True, we get an error.
@@ -552,7 +552,7 @@ def test_apply_invalid_how():
     # TODO: remove when old names are dropped in 0.7.0
     with pytest.warns(FutureWarning, match="'columnwise' has been renamed to 'cols'"):
         wrapper = X.skb.apply(t, how="columnwise").skb.applied_estimator.skb.eval()
-        assert isinstance(wrapper, ApplyOnEachCol)
+        assert isinstance(wrapper, ApplyToEachCol)
 
 
 class Mul(BaseEstimator):
