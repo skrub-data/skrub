@@ -15,7 +15,7 @@ def test_single_column_transformer_becomes_apply_to_each_col(df_module):
     at = ApplyToCols(ToDatetime(), cols=s.all())
     X = df_module.make_dataframe({"date_col": ["2020-01-01", "2020-01-02"]})
     at.fit(X)
-    assert hasattr(at._wrapped_transformer, "transformers_")
+    assert hasattr(at, "transformers_")
 
 
 def test_non_single_column_transformer_becomes_apply_to_subframe(df_module):
@@ -23,7 +23,7 @@ def test_non_single_column_transformer_becomes_apply_to_subframe(df_module):
     at = ApplyToCols(OrdinalEncoder(), cols=s.all())
     X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
     at.fit(X)
-    assert hasattr(at._wrapped_transformer, "transformer_")
+    assert hasattr(at, "transformer_")
 
 
 def test_columnwise_override_forces_apply_to_each_col(df_module):
@@ -34,7 +34,7 @@ def test_columnwise_override_forces_apply_to_each_col(df_module):
     at = ApplyToCols(OrdinalEncoder(), cols=s.all(), how="cols")
     X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
     at.fit(X)
-    assert hasattr(at._wrapped_transformer, "transformers_")
+    assert hasattr(at, "transformers_")
 
 
 def test_invalid_parameters():

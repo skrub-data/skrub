@@ -3,6 +3,7 @@ ApplyToCols selects the correct transformer between ApplyToEachCol and ApplyToSu
 based on the type of the transformer passed to it.
 """
 
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from . import selectors
@@ -14,9 +15,7 @@ _SELECT_ALL_COLUMNS = selectors.all()
 
 class ApplyToCols(TransformerMixin, BaseEstimator):
     """
-    Map a transformer to columns in a dataframe.
-
-    A separate clone of the transformer is applied to each column separately.
+    Apply a transformer to columns in a dataframe.
 
     Columns that are not selected in the ``cols`` parameter are passed through
     without modification.
@@ -33,24 +32,22 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         through unchanged (``fit_transform`` is not called on them) and remain
         unmodified in the output. The default is to attempt transforming all
         columns.
-        See the documentation of
-        :class:`ApplyToEachCol` or :class:`ApplyToSubFrame` for details.
 
     allow_reject : bool, default=False
-        Whether to allow rejecting all columns. See the documentation of
-        ``ApplyToEachCol`` for details.
+        Whether to allow refusing to transform columns for which the provided
+        transformer is not suited, for example rejecting non-datetime columns if
+        transformer is a DatetimeEncoder. See the documentation of
+        :class:`ApplyToEachCol` for details.
 
     how : "auto", "cols" or "frame", optional
         How the transformer is applied. In most cases the default "auto"
         is appropriate.
         - "cols" means `transformer` is wrapped in a :class:`ApplyToEachCol`
             transformer, which fits a separate clone of `transformer` each
-            column in `cols`. `transformer` must be a transformer (have a
-            ``fit_transform`` method).
+            column in `cols`.
         - "frame" means `transformer` is wrapped in a :class:`ApplyToSubFrame`
             transformer, which fits a single clone of `transformer` to the
-            selected part of the input dataframe. `transformer` must be a
-            transformer.
+            selected part of the input dataframe.
         - "auto" chooses the wrapping depending on the input and transformer.
             If the transformer has a ``__single_column_transformer__`` attribute,
             "cols" is chosen. Otherwise "frame" is chosen.
@@ -63,11 +60,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     column, that column is passed through unchanged. If ``allow_reject`` is
     ``False``, ``RejectColumn`` exceptions are propagated, like other errors
     raised by the transformer.
-    Wrapper that applies a transformer to columns selected by a selector. The
-    wrapper automatically selects the correct class between ``ApplyToEachCol`` and
-    ``ApplyToSubFrame`` based on the type of the input transformer, but this can
-    be overridden with the ``how`` parameter.
-
     """
 
     def __init__(
@@ -99,13 +91,13 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
                 "Expected one of 'auto', 'cols', or 'frame'."
             )
 
-        if self.allow_reject not in (True, False):
-            raise ValueError(
+        if not isinstance(self.allow_reject, (bool, np.bool_)):
+            raise TypeError(
                 f"Invalid value for 'allow_reject': {self.allow_reject}. "
                 "Expected a boolean."
             )
-        if self.keep_original not in (True, False):
-            raise ValueError(
+        if not isinstance(self.keep_original, (bool, np.bool_)):
+            raise TypeError(
                 f"Invalid value for 'keep_original': {self.keep_original}. "
                 "Expected a boolean."
             )
