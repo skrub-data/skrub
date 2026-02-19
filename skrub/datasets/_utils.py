@@ -165,7 +165,7 @@ def get_data_home(data_home=None):
         data_home = data_home.resolve()
     else:
         # Use the data folder from skrub configuration
-        config_data_folder = get_config().get("data_folder")
+        config_data_folder = get_config().get("data_dir")
         data_home = Path(config_data_folder)
 
     data_home.mkdir(parents=True, exist_ok=True)

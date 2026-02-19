@@ -10,8 +10,8 @@ import numpy as np
 from ._reporting import _patching
 
 
-def _get_default_data_folder():
-    """Get the default data folder path.
+def _get_default_data_dir():
+    """Get the default data directory path.
 
     Returns the path to SKB_DATA_DIRECTORY if set and absolute,
     otherwise defaults to ~/skrub_data.
@@ -66,7 +66,7 @@ _global_config = {
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
-    "data_folder": _get_default_data_folder(),
+    "data_dir": _get_default_data_dir(),
     "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
 }
 _threadlocal = threading.local()
@@ -433,7 +433,7 @@ def config_context(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
-    data_folder : str or pathlib.Path, default=None
+    data_dir : str or pathlib.Path, default=None
         Set the data directory path for skrub datasets. If ``None``, falls back to
         the current configuration.
 
