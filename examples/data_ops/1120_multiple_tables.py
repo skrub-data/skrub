@@ -244,29 +244,16 @@ probabilities = search.best_learner_.predict_proba(
 # %%
 # We can evaluate the performance of our model by plotting the ROC curve and
 # calculating the AUC score.
+# We use the true labels from the ``new_baskets`` table, and the predicted probabilities
+# for the positive class (fraudulent basket) to plot the ROC curve.
 
 import matplotlib.pyplot as plt
-from sklearn.metrics import auc, roc_curve
+from sklearn.metrics import RocCurveDisplay
 
-# Calculate ROC curve
-false_positive, true_positive, _ = roc_curve(
+RocCurveDisplay.from_predictions(
     new_baskets["fraud_flag"].skb.eval(), probabilities[:, 1]
 )
-roc_auc = auc(false_positive, true_positive)
-
-# Plot
-fig, ax = plt.subplots()
-ax.plot(
-    false_positive,
-    true_positive,
-    color="darkorange",
-    label=f"ROC curve (AUC = {roc_auc:.2f})",
-)
-ax.plot([0, 1], [0, 1], color="navy", linestyle="--", label="Random Classifier")
-ax.set_xlabel("False Positive Rate")
-ax.set_ylabel("True Positive Rate")
-ax.set_title("ROC Curve")
-ax.legend(loc="lower right")
+plt.show()
 # %%
 # Conclusion
 # ----------
