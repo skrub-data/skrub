@@ -22,7 +22,7 @@ New Features
 
 Changes
 -------
-- ``ApplyToCols`` and ``ApplyToFrame`` have been renamed :class:`ApplyToEachColumn`
+- ``ApplyToCols`` and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol`
   and :class:`ApplyToSubFrame` respectively.
   :pr:`1913` by :user:`Riccardo Cappuzzo <rcap107>`.
 
