@@ -3,7 +3,6 @@ ApplyToCols selects the correct transformer between ApplyToEachCol and ApplyToSu
 based on the type of the transformer passed to it.
 """
 
-import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from . import selectors
@@ -91,12 +90,12 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
                 "Expected one of 'auto', 'cols', or 'frame'."
             )
 
-        if not isinstance(self.allow_reject, (bool, np.bool_)):
+        if not isinstance(self.allow_reject, bool):
             raise TypeError(
                 f"Invalid value for 'allow_reject': {self.allow_reject}. "
                 "Expected a boolean."
             )
-        if not isinstance(self.keep_original, (bool, np.bool_)):
+        if not isinstance(self.keep_original, bool):
             raise TypeError(
                 f"Invalid value for 'keep_original': {self.keep_original}. "
                 "Expected a boolean."
