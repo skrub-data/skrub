@@ -299,20 +299,26 @@ class _Evaluator(_DataOpTraversal):
             pass
 
         if impl.is_X and X_NAME in self.environment:
-            env_key = X_NAME
+            env_key, fetch = X_NAME, True
         elif impl.is_y and Y_NAME in self.environment:
-            env_key = Y_NAME
+            env_key, fetch = Y_NAME, True
         elif impl.name is not None and impl.name in self.environment:
             env_key = impl.name
-        else:
-            env_key = None
 
-        if env_key is None or isinstance(impl, Var):
-            # if Var, let the usual evaluation mechanism fetch the value from
-            # the environment.
-            result = yield from self._eval_data_op(data_op)
+            # If data_op is a Var, let the usual eval mechanism fetch the value
+            # from the environment (it provides an error message if it is
+            # missing). For other types of nodes fetch the provided value
+            # directly. (if is_X or is_y then the value is always fetched
+            # directly from the environment, as X and y have priority over
+            # variable's names)
+            fetch = not isinstance(impl, Var)
         else:
+            env_key, fetch = None, False
+
+        if fetch:
             result = self.environment[env_key]
+        else:
+            result = yield from self._eval_data_op(data_op)
 
         duration = yield _CurrentNodeDuration()
         self._store(data_op, result, duration=duration, env_key=env_key)
