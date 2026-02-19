@@ -67,7 +67,7 @@ Xt
 # can be applied to multiple columns at once, such as the |PCA|.
 # Here, we want to use PCA to reduce the number of dimensions of the new ``lsa_``
 # columns.
-
+#
 # To select columns without hardcoding their names, we introduce
 # :ref:`selectors<user_guide_selectors>`, which allow for flexible matching pattern
 # and composable logic.
