@@ -284,17 +284,25 @@ class _Evaluator(_DataOpTraversal):
         self._data_op = data_op
         return super().run(data_op)
 
-    def _fetch(self, data_op):
-        """Fetch the result from the cache or environment if possible.
+    def _store(self, data_op, result, duration, env_key):
+        """Store a result in the cache."""
+        data_op._skrub_impl.results[self.mode] = result
+        metadata = data_op._skrub_impl.metadata.setdefault(self.mode, {})
+        metadata["eval_duration"] = duration
+        metadata["env_key"] = env_key
 
-        Raises a KeyError otherwise
-        """
+    def handle_data_op(self, data_op):
         impl = data_op._skrub_impl
+        try:
+            return impl.results[self.mode]
+        except KeyError:
+            pass
+
         if impl.is_X and X_NAME in self.environment:
-            return self.environment[X_NAME]
-        if impl.is_y and Y_NAME in self.environment:
-            return self.environment[Y_NAME]
-        if (
+            env_key = X_NAME
+        elif impl.is_y and Y_NAME in self.environment:
+            env_key = Y_NAME
+        elif (
             # if Var, let the usual mechanism fetch the value from the
             # environment and store in results dict. Otherwise override with
             # the provided value.
@@ -302,25 +310,19 @@ class _Evaluator(_DataOpTraversal):
             and impl.name is not None
             and impl.name in self.environment
         ):
-            return self.environment[impl.name]
-        return impl.results[self.mode]
+            env_key = impl.name
+        else:
+            env_key = None
 
-    def _store(self, data_op, result, duration):
-        """Store a result in the cache."""
-        data_op._skrub_impl.results[self.mode] = result
-        metadata = data_op._skrub_impl.metadata.setdefault(self.mode, {})
-        metadata["eval_duration"] = duration
+        if env_key is None:
+            result = yield from self._eval_data_op(data_op)
+        else:
+            result = self.environment[env_key]
 
-    def handle_data_op(self, data_op):
-        try:
-            return self._fetch(data_op)
-        except KeyError:
-            pass
-        result = yield from self._eval_data_op(data_op)
         duration = yield _CurrentNodeDuration()
-        self._store(data_op, result, duration)
+        self._store(data_op, result, duration=duration, env_key=env_key)
         for cb in self.callbacks:
-            cb(data_op, result)
+            cb(data_op, result, duration=duration, env_key=env_key)
         return result
 
     def _eval_data_op(self, data_op):
@@ -459,7 +461,7 @@ def _cache_pruner(data_op, mode):
     ref_counts = {node_id: len(parents) for node_id, parents in g["parents"].items()}
     id_map = {id(node): node_id for node_id, node in g["nodes"].items()}
 
-    def prune(data_op, result):
+    def prune(data_op, result, **kwargs):
         node_id = id_map[id(data_op)]
         for c in g["children"].get(node_id, ()):
             ref_counts[c] -= 1
