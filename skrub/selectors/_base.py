@@ -245,9 +245,9 @@ class Selector:
         Examples
         --------
         >>> from skrub import selectors as s
-        >>> some_selector = ~s.glob("*_mm") | s.filter(lambda col: 297.0 in col.values)
-        >>> import polars as pl
-        >>> polars_df = pl.DataFrame(
+        >>> some_selector = ~s.glob("*_mm")
+        >>> import pandas as pd
+        >>> pandas_df = pd.DataFrame(
         ...     {
         ...         "height_mm": [210.0, 297.0],
         ...         "width_mm": [188.5, 210.0],
@@ -256,7 +256,7 @@ class Selector:
         ...     }
         ... )
         >>> some_selector.expand(df)
-        ['height_mm', 'kind', 'ID']
+        ['height_mm', 'width_mm']
 
 
         Notes
@@ -289,9 +289,9 @@ class Selector:
         Examples
         --------
         >>> from skrub import selectors as s
-        >>> some_selector = ~s.glob("*_mm") | s.filter(lambda col: 297.0 in col.values)
-        >>> import polars as pl
-        >>> polars_df = pl.DataFrame(
+        >>> some_selector = ~s.glob("*_mm")
+        >>> import pandas as pd
+        >>> pandas_df = pd.DataFrame(
         ...     {
         ...         "height_mm": [210.0, 297.0],
         ...         "width_mm": [188.5, 210.0],
@@ -299,8 +299,8 @@ class Selector:
         ...         "ID": [5, 4],
         ...     }
         ... )
-        >>> some_selector.expand(df)
-        ['height_mm', 'kind', 'ID']
+        >>> some_selector.expand_index(df)
+        [0, 1]
 
 
         Notes
