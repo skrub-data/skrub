@@ -30,7 +30,7 @@ Bug Fixes
   single-column transformer. :pr:`1899` by :user:`Jérôme Dockès <jeromedockes>`
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
 - Errors raised when a polars LazyFrame is passed where an eager DataFrame is
-  expected are now clearer. :pr:`1915` by :user:`Jérôme Dockès <jeromedockes>`.
+  expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.7.2
 =============
