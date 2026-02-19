@@ -36,6 +36,21 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     allow_reject : bool, default=False
         Whether to allow rejecting all columns. See the documentation of
         ``ApplyToEachCol`` for details.
+
+    columnwise : 'auto' or bool, default='auto'
+        Whether to apply the transformer to each selected column independently
+        (equivalent to using ``ApplyToEachCol``) or to the whole sub-dataframe of
+        selected columns at once (equivalent to using ``ApplyToSubFrame``). By
+        default, ``ApplyToEachCol`` is used if the transformer has a
+        ``__single_column_transformer__`` attribute and ``ApplyToSubFrame``
+        otherwise. Pass ``columnwise=True`` to force using ``ApplyToEachCol`` and
+        ``columnwise=False`` to force using ``ApplyToSubFrame``.
+        Note that forcing
+        ``columnwise=False`` for a single-column transformer will most likely
+        cause an error during ``fit``, and forcing ``columnwise=True`` for a
+        regular transformer is only appropriate if the transformer can be
+        fitted on a dataframe with only one column (this is the case for most
+        preprocessors such as ``OrdinalEncoder`` or ``StandardScaler``).
     """
 
     def __init__(
