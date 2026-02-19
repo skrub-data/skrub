@@ -851,7 +851,7 @@ def _check_apply_how(how):
 
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
     """
-    Wrap the estimator passed to .skb.apply in ApplyToCols or ApplyToFrame if
+    Wrap the estimator passed to .skb.apply in ApplyToEachCol or ApplyToSubFrame if
     needed.
     """
     how = _check_apply_how(how)
@@ -1488,7 +1488,7 @@ class Apply(DataOpImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["ApplyToCols", "ApplyToFrame"]:
+        if estimator.__class__.__name__ in ["ApplyToEachCol", "ApplyToSubFrame"]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):

@@ -66,8 +66,8 @@ API_REFERENCE = {
                     "TableVectorizer",
                     "SelectCols",
                     "DropCols",
-                    "ApplyToCols",
-                    "ApplyToFrame",
+                    "ApplyToEachCol",
+                    "ApplyToSubFrame",
                 ],
             }
         ],

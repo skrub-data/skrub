@@ -11,7 +11,7 @@ from sklearn.preprocessing import FunctionTransformer
 from skrub import SelectCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._apply_to_frame import ApplyToFrame
+from skrub._apply_sub_frame import ApplyToSubFrame
 
 
 class Dummy(BaseEstimator):
@@ -35,7 +35,7 @@ class Dummy(BaseEstimator):
 def test_on_subframe(df_module, use_fit_transform):
     X = df_module.make_dataframe({"a": [1.0, 2.2], "b": [3.0, 4.4], "c": [5.0, 6.6]})
     y = [0.0, 1.0]
-    transformer = ApplyToFrame(Dummy(), ["a", "c"])
+    transformer = ApplyToSubFrame(Dummy(), ["a", "c"])
     if use_fit_transform:
         out = transformer.fit_transform(X, y)
     else:
@@ -54,7 +54,7 @@ def test_on_subframe(df_module, use_fit_transform):
 
 def test_empty_selection(df_module, use_fit_transform):
     df = df_module.example_dataframe
-    transformer = ApplyToFrame(Dummy(), ())
+    transformer = ApplyToSubFrame(Dummy(), ())
     if use_fit_transform:
         out = transformer.fit_transform(df)
     else:
@@ -66,7 +66,7 @@ def test_empty_output(df_module, use_fit_transform):
     if df_module.name == "polars":
         pytest.xfail("Polars need at least one array to concatenate.")
     df = df_module.example_dataframe
-    transformer = ApplyToFrame(SelectCols(()))
+    transformer = ApplyToSubFrame(SelectCols(()))
     if use_fit_transform:
         out = transformer.fit_transform(df)
     else:
@@ -94,7 +94,7 @@ def _to_XXX(names):
 
 def test_keep_original(df_module, use_fit_transform):
     df = df_module.make_dataframe({"A": [1], "B": [2]})
-    transformer = ApplyToFrame(FunctionTransformer(), keep_original=True)
+    transformer = ApplyToSubFrame(FunctionTransformer(), keep_original=True)
 
     if use_fit_transform:
         out = transformer.fit_transform(df)
@@ -112,7 +112,7 @@ class NumpyOutput(BaseEstimator):
 
 def test_wrong_transformer_output_type(pd_module):
     with pytest.raises(TypeError, match=".*fit_transform returned a result of type"):
-        ApplyToFrame(NumpyOutput()).fit_transform(pd_module.example_dataframe)
+        ApplyToSubFrame(NumpyOutput()).fit_transform(pd_module.example_dataframe)
 
 
 class ResetsIndex(BaseEstimator):
@@ -126,7 +126,7 @@ class ResetsIndex(BaseEstimator):
 @pytest.mark.parametrize("cols", [(), ("a",), ("a", "b")])
 def test_output_index(cols):
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
-    transformer = ApplyToFrame(ResetsIndex(), cols=cols)
+    transformer = ApplyToSubFrame(ResetsIndex(), cols=cols)
     assert_index_equal(transformer.fit_transform(df).index, df.index)
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
     assert_index_equal(transformer.transform(df).index, df.index)

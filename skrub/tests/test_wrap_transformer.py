@@ -1,9 +1,9 @@
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
-from skrub import ApplyToCols
+from skrub import ApplyToEachCol
 from skrub import selectors as s
-from skrub._apply_to_frame import ApplyToFrame
+from skrub._apply_sub_frame import ApplyToSubFrame
 from skrub._datetime_encoder import DatetimeEncoder
 from skrub._to_datetime import ToDatetime
 from skrub._wrap_transformer import wrap_transformer
@@ -11,12 +11,12 @@ from skrub._wrap_transformer import wrap_transformer
 
 def test_wrap_transformer():
     t = wrap_transformer(ToDatetime(), s.all())
-    assert isinstance(t, ApplyToCols)
+    assert isinstance(t, ApplyToEachCol)
     t = wrap_transformer(OrdinalEncoder(), s.all())
-    assert isinstance(t, ApplyToFrame)
+    assert isinstance(t, ApplyToSubFrame)
     t = wrap_transformer(OrdinalEncoder(), s.all(), columnwise=True)
-    assert isinstance(t, ApplyToCols)
+    assert isinstance(t, ApplyToEachCol)
     t = wrap_transformer(make_pipeline(DatetimeEncoder(), StandardScaler()), s.all())
-    assert isinstance(t, ApplyToCols)
+    assert isinstance(t, ApplyToEachCol)
     t = wrap_transformer(make_pipeline(StandardScaler()), s.all())
-    assert isinstance(t, ApplyToFrame)
+    assert isinstance(t, ApplyToSubFrame)
