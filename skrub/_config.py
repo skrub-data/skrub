@@ -128,7 +128,7 @@ def set_config(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
-    data_folder=None,
+    data_dir=None,
     eager_data_ops=None,
 ):
     """Set global skrub configuration.
@@ -213,7 +213,7 @@ def set_config(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
-    data_folder : str or pathlib.Path, default=None
+    data_dir : str or pathlib.Path, default=None
         Set the data directory path for skrub datasets. If ``None``, falls back to
         the current configuration.
 
@@ -329,9 +329,9 @@ def set_config(
                 f"integer, got {cardinality_threshold!r}"
             )
 
-    if data_folder is not None:
-        data_folder = Path(data_folder).expanduser().resolve()
-        local_config["data_folder"] = str(data_folder)
+    if data_dir is not None:
+        data_dir = Path(data_dir).expanduser().resolve()
+        local_config["data_dir"] = str(data_dir)
 
     if eager_data_ops is not None:
         local_config["eager_data_ops"] = eager_data_ops
@@ -350,7 +350,7 @@ def config_context(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
-    data_folder=None,
+    data_dir=None,
     eager_data_ops=None,
 ):
     """Context manager for global skrub configuration.
@@ -489,7 +489,7 @@ def config_context(
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
-        data_folder=data_folder,
+        data_dir=data_dir,
         eager_data_ops=eager_data_ops,
     )
 
