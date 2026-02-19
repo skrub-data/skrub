@@ -141,7 +141,9 @@ and produces one-hot encoded feature names:
 ...     TableVectorizer(),
 ... )
 >>> pipe.fit(df)
-Pipeline(steps=[('ApplyOnEachCol', ...), ('tablevectorizer', ...)])
+Pipeline(steps=[('applyoneachcol',
+    ApplyOnEachCol(cols=['c'], transformer=ToCategorical())),
+    ('tablevectorizer', TableVectorizer())])
 >>> list(map(str, sorted(pipe.named_steps["tablevectorizer"].get_feature_names_out())))
 ['c_1', 'c_2', 'c_3']
 >>> pipe.fit_transform(df)
