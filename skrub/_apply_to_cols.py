@@ -5,8 +5,11 @@ based on the type of the transformer passed to it.
 
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from . import selectors
 from ._apply_on_each_col import ApplyToEachCol
 from ._wrap_transformer import wrap_transformer
+
+_SELECT_ALL_COLUMNS = selectors.all()
 
 
 class ApplyToCols(BaseEstimator, TransformerMixin):
@@ -21,9 +24,14 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     transformer : transformer instance
         The transformer to apply to the selected columns.
 
-    selector : selector specifier, default=s.all()
-        The columns to which the transformer will be applied. See the documentation of
-        ``ApplyToEachCol`` or ``ApplyToSubFrame`` for details.
+    cols : str, sequence of str, or skrub selector, optional
+        The columns to attempt to transform. Only the selected columns will have
+        the transformer applied. Columns outside this selection are passed
+        through unchanged (``fit_transform`` is not called on them) and remain
+        unmodified in the output. The default is to attempt transforming all
+        columns.
+        See the documentation of
+        :class:`ApplyToEachCol` or :class:`ApplyToSubFrame` for details.
 
     allow_reject : bool, default=False
         Whether to allow rejecting all columns. See the documentation of
@@ -33,7 +41,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     def __init__(
         self,
         transformer,
-        selector="all",
+        cols=_SELECT_ALL_COLUMNS,
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
@@ -41,7 +49,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         n_jobs=None,
     ):
         self.transformer = transformer
-        self.selector = selector
+        self.cols = cols
         self.allow_reject = allow_reject
         self.keep_original = keep_original
         self.rename_columns = rename_columns
@@ -55,7 +63,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     def fit_transform(self, X, y=None):
         self._wrapped_transformer = wrap_transformer(
             self.transformer,
-            self.selector,
+            self.cols,
             allow_reject=self.allow_reject,
             keep_original=self.keep_original,
             rename_columns=self.rename_columns,
