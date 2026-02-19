@@ -1,0 +1,12 @@
+<div class="highlight"><pre><span></span><span class="c1"># A dataset with multiple tables</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">skrub</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">skrub.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_credit_fraud</span>
+<span class="c1"># use the test set to have smaller data</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">fetch_credit_fraud</span><span class="p">(</span><span class="n">split</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+
+<span class="c1"># Extract simplified tables</span>
+<span class="c1"># Drop the columns that are not central to the analysis</span>
+<span class="n">products_df</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">products</span><span class="p">[[</span><span class="s2">&quot;basket_ID&quot;</span><span class="p">,</span> <span class="s2">&quot;cash_price&quot;</span><span class="p">,</span> <span class="s2">&quot;Nbr_of_prod_purchas&quot;</span><span class="p">]]</span>
+<span class="c1"># Rename the ID column to &quot;basket_ID&quot;</span>
+<span class="n">baskets_df</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">baskets</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;ID&quot;</span><span class="p">:</span> <span class="s2">&quot;basket_ID&quot;</span><span class="p">})</span>
+</pre></div>
