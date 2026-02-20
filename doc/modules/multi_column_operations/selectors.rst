@@ -145,6 +145,36 @@ following selector won't compute the cardinality of non-categorical columns::
     >>> s.categorical() & s.cardinality_below(10)
     (categorical() & cardinality_below(10))
 
+.. _user_guide_selectors_expand:
+Visualizing a selector
+----------------------
+
+All selectors have the :meth:`expand` method, which allows dataframe manipulation
+outside of a Skrub workflow: applying it to any dataframe will return the list
+of column names from the dataframe that the selector would keep. This allows selectors
+to be applied on a variety of standard dataframe libraries, and can be particularly
+useful on complicated combinations of selectors. For instance, the following filter
+only keeps columns that do not end in '_mm' OR contain the value 297.0:
+
+>>> some_selector = ~s.glob('*_mm') | s.filter(lambda col: 297.0 in col)
+>>> import pandas as pd
+>>> pandas_df = pd.DataFrame(
+...     {
+...         "height_mm": [210.0, 297.0],
+...         "width_mm": [188.5, 210.0],
+...         "kind": ["A5", "A4"],
+...         "ID": [5, 4],
+...     }
+... )
+>>> some_selector.expand(pandas_df)
+['height_mm', 'kind', 'ID']
+
+
+The :meth:`expand_index` method also exists: rather than returning a list of column names, it returns the corresponding indices from the input dataframe's column list::
+
+    >>> some_selector.expand_index(polars_df)
+    [0, 2, 3]
+
 .. _selectors_and_transformer:
 
 Using selectors with other skrub transformers
@@ -153,10 +183,11 @@ Using selectors with other skrub transformers
 Skrub transformers are designed to be used in conjunction with other transformers
 that operate on columns to improve their versatility.
 
-For example, we can drop columns that have more unique values than a certain amount
-by combining :func:`~skrub.selectors.cardinality_below` with :class:`skrub.DropCols`.
-We first select the columns that have more than 3 unique values, then we invert the
-selector and finally transform the dataframe.
+For example, it is possible to drop columns that have more unique values than a
+certain amount by combining :func:`~skrub.selectors.cardinality_below` with
+:class:`skrub.DropCols`.
+To do so, a selector targeting columns that have more than 3 unique values
+is defined, and its inverse is used as a parameter for :class:`skrub.DropCols`:
 
 >>> df = pd.DataFrame({
 ... "not a lot": [1, 1, 1, 2, 2],
