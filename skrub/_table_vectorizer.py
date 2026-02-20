@@ -119,7 +119,8 @@ def _get_preprocessors(
     drop_if_unique,
     drop_if_constant,
     n_jobs,
-    numeric_dtype="float32",
+    add_tofloat32=False,
+    parse_strings=False,
     cast_to_str=True,
     datetime_format=None,
 ):
@@ -137,15 +138,14 @@ def _get_preprocessors(
         ),
         (ToDatetime(format=datetime_format), cols),
     ]
-    if numeric_dtype == "float32":
-        transformers.append((ToFloat(), cols))
-    elif numeric_dtype == "parse":
-        transformers.append((ToFloat(), cols & s.string()))
-    elif numeric_dtype != "passthrough":
+    if parse_strings and add_tofloat32:
         raise ValueError(
-            "`numeric_dtype` must be one of "
-            f"[`'passthrough'`, `'parse'`, `'float32'`]. Found {numeric_dtype}."
+            "Cannot set both `parse_strings=True` and `add_tofloat32=True`."
         )
+    if parse_strings:
+        transformers.append((ToFloat(), cols & s.string()))
+    elif add_tofloat32:
+        transformers.append((ToFloat(), cols))
 
     transformers.append((CleanCategories(), cols))
 
@@ -195,16 +195,12 @@ class Cleaner(TransformerMixin, BaseEstimator):
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
-    numeric_dtype : {"passthrough", "parse", "float32"}, \
-            default="passthrough"
-        Controls how numeric values are handled.
+    parse_strings : bool, default=False
+        Whether to parse numeric-looking strings.
 
-        - ``"passthrough"``: numeric columns keep their dtype and strings are not
-          parsed as numbers.
-        - ``"parse"``: parse string columns that contain only numerical values and
-          convert them to ``np.float32``; numeric columns keep their dtype.
-        - ``"float32"``: same as ``"parse"``, and also convert numeric columns
-          to ``np.float32``.
+        - ``False``: no numeric parsing is attempted.
+        - ``True``: apply :class:`ToFloat` to string columns only. String columns
+          that contain only numerical values are converted to ``np.float32``.
 
     cast_to_str : bool, default=False
         If ``True``, apply the ``ToStr`` transformer to non-numeric,
@@ -269,12 +265,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
       actual datetimes with the correct dtype. If ``datetime_format`` is provided,
       it is forwarded to ``ToDatetime()``. Otherwise, the format is inferred.
 
-    - ``ToFloat()``: apply numeric parsing and conversion according to
-      ``numeric_dtype``:
-
-      - ``"passthrough"``: skipped.
-      - ``"parse"``: applied to string columns only.
-      - ``"float32"``: applied to all columns.
+    - ``ToFloat()``: if ``parse_strings=True``, apply ``ToFloat()`` on string
+      columns only, converting numeric-looking strings to ``np.float32``.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
@@ -284,26 +276,17 @@ class Cleaner(TransformerMixin, BaseEstimator):
     parameter. When ``cast_to_str=False`` (default), string conversion is skipped.
     When ``cast_to_str=True``, string conversion is applied.
 
-    With ``numeric_dtype="parse"``, string columns that contain only numbers are
-    converted to ``np.float32`` while numeric columns are not modified. With
-    ``numeric_dtype="float32"``, both string-number columns and numeric columns
-    are converted to ``np.float32``.
-
     Example:
 
     >>> import pandas as pd
     >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2]})
-    >>> Cleaner(numeric_dtype="passthrough").fit_transform(df).dtypes  # doctest: +SKIP
+    >>> Cleaner(parse_strings=False).fit_transform(df).dtypes  # doctest: +SKIP
     num_str    ...
     num        ...
     dtype: object
-    >>> Cleaner(numeric_dtype="parse").fit_transform(df).dtypes  # doctest: +SKIP
+    >>> Cleaner(parse_strings=True).fit_transform(df).dtypes  # doctest: +SKIP
     num_str    float32
     num        ...
-    dtype: object
-    >>> Cleaner(numeric_dtype="float32").fit_transform(df).dtypes  # doctest: +SKIP
-    num_str    float32
-    num        float32
     dtype: object
 
     Examples
@@ -365,7 +348,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_constant=False,
         drop_if_unique=False,
         datetime_format=None,
-        numeric_dtype="passthrough",
+        parse_strings=False,
         cast_to_str=False,
         n_jobs=1,
     ):
@@ -373,7 +356,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
-        self.numeric_dtype = numeric_dtype
+        self.parse_strings = parse_strings
         self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
 
@@ -396,12 +379,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
             The transformed input.
         """
 
-        valid_numeric_dtypes = ("passthrough", "parse", "float32")
-        if self.numeric_dtype not in valid_numeric_dtypes:
+        if not isinstance(self.parse_strings, bool):
             raise ValueError(
-                "`numeric_dtype` must be one of "
-                "[`'passthrough'`, `'parse'`, `'float32'`]. "
-                f"Found {self.numeric_dtype}."
+                f"`parse_strings` must be a boolean. Found {self.parse_strings!r}."
             )
 
         all_steps = _get_preprocessors(
@@ -410,7 +390,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            numeric_dtype=self.numeric_dtype,
+            parse_strings=self.parse_strings,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
         )
@@ -957,7 +937,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            numeric_dtype="float32",
+            add_tofloat32=True,
             datetime_format=self.datetime_format,
         )
 

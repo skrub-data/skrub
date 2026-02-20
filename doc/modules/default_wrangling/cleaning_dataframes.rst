@@ -42,10 +42,8 @@ each column:
 - Convert to strings: Convert columns to strings unless they have a more informative
   dtype, such as numeric, categorical, or datetime.
 
-If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
-numeric columns to ``np.float32`` dtype, ensuring a consistent representation
-of numbers and missing values. This can be useful if the ``Cleaner``
-is used as a preprocessing step at the beginning of an ML pipeline.
+If ``parse_strings`` is set to ``True``, the ``Cleaner`` will try to parse
+string columns that contain only numbers and convert them to ``np.float32``.
 
 The |Cleaner| is a scikit-learn compatible transformer:
 
@@ -70,31 +68,29 @@ dtype:  ...
 Note that the ``"all_missing"`` column has been dropped, and that the ``"date"``
 column has been correctly parsed as a datetime column.
 
-Converting numeric dtypes to ``float32`` with the |Cleaner|
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parsing numeric-looking strings with the |Cleaner|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, when the |Cleaner| encounters numeric dtypes (e.g., ``int8``,
-``float64``), it leaves them as-is. In some cases, it may be beneficial to have
-the same numeric dtype for all numeric columns to guarantee compatibility between
-values.
+By default, when the |Cleaner| encounters numeric-looking strings, it leaves
+them unchanged.
 
-The |Cleaner| allows conversion of numeric features to ``float32`` by setting
-the ``numeric_dtype`` parameter:
+The |Cleaner| can parse those values by setting ``parse_strings=True``:
 
 >>> from skrub import Cleaner
->>> cleaner = Cleaner(numeric_dtype="float32")
+>>> cleaner = Cleaner(parse_strings=True)
 >>> import pandas as pd
 >>> df = pd.DataFrame({
+...     "id_as_str": ["1", "2", "3"],
 ...     "id": [1, 2, 3],
 ... })
 >>> df.dtypes
-id    int64
+id_as_str    ...
+id           int64
 dtype: ...
 >>> df_cleaned = cleaner.fit_transform(df)
 >>> df_cleaned.dtypes
-id    float32
+id_as_str    float32
+id           int64
 dtype: ...
 
-Setting the dtype to ``float32`` reduces RAM footprint for most use cases and
-ensures that all missing values have the same representation. This also ensures
-compatibility with scikit-learn transformers.
+When ``parse_strings=False`` (default), both columns keep their original dtypes.

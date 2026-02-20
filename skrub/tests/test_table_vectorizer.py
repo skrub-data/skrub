@@ -214,7 +214,7 @@ def test_get_preprocessors(df_module):
         drop_if_constant=True,
         drop_if_unique=False,
         n_jobs=1,
-        numeric_dtype="float32",
+        add_tofloat32=True,
     )
     assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
@@ -224,7 +224,7 @@ def test_get_preprocessors(df_module):
         drop_if_constant=True,
         drop_if_unique=False,
         n_jobs=1,
-        numeric_dtype="parse",
+        parse_strings=True,
     )
     assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
@@ -234,7 +234,7 @@ def test_get_preprocessors(df_module):
         drop_if_constant=True,
         drop_if_unique=False,
         n_jobs=1,
-        numeric_dtype="passthrough",
+        parse_strings=False,
     )
     assert not any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
@@ -449,36 +449,28 @@ def test_convert_float32(df_module):
     assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
     assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
-    vectorizer = Cleaner(numeric_dtype="float32")
+    vectorizer = Cleaner(parse_strings=True)
     out = vectorizer.fit_transform(X)
-    # here it's the same as the case with the TableVectorizer above
-    assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
-    assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
+    # parse_strings applies ToFloat only to string columns, so numeric columns
+    # keep their original dtype
+    assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
+    assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
 
 @pytest.mark.parametrize(
-    "numeric_dtype, expected_df",
+    "parse_strings, expected_df",
     [
-        ("passthrough", lambda X: X),
+        (False, lambda X: X),
         (
-            "parse",
+            True,
             lambda X: sbd.with_columns(
                 X,
                 num_str=ToFloat().fit_transform(X["num_str"]),
-            ),
-        ),
-        (
-            "float32",
-            lambda X: sbd.with_columns(
-                X,
-                num_str=ToFloat().fit_transform(X["num_str"]),
-                int_col=ToFloat().fit_transform(X["int_col"]),
-                float_col=ToFloat().fit_transform(X["float_col"]),
             ),
         ),
     ],
 )
-def test_cleaner_numeric_dtype_modes(df_module, numeric_dtype, expected_df):
+def test_cleaner_parse_strings(df_module, parse_strings, expected_df):
     X = df_module.make_dataframe(
         {
             "num_str": ["1", "2", "3"],
@@ -487,7 +479,7 @@ def test_cleaner_numeric_dtype_modes(df_module, numeric_dtype, expected_df):
         }
     )
     expected = expected_df(X)
-    out = Cleaner(numeric_dtype=numeric_dtype).fit_transform(X)
+    out = Cleaner(parse_strings=parse_strings).fit_transform(X)
     df_module.assert_frame_equal(out, expected)
 
 
@@ -525,12 +517,12 @@ def test_cast_to_str(df_module):
     assert sbd.dtype(out["a"]) == sbd.dtype(expected_col)
 
 
-def test_cleaner_invalid_numeric_dtype(df_module):
+def test_cleaner_invalid_parse_strings(df_module):
     X = _get_clean_dataframe(df_module)
-    with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
-        Cleaner(numeric_dtype="wrong").fit_transform(X)
-    with pytest.raises(ValueError, match="numeric_dtype.*must be one of"):
-        Cleaner(numeric_dtype=None).fit_transform(X)
+    with pytest.raises(ValueError, match="parse_strings.*must be a boolean"):
+        Cleaner(parse_strings="wrong").fit_transform(X)
+    with pytest.raises(ValueError, match="parse_strings.*must be a boolean"):
+        Cleaner(parse_strings=None).fit_transform(X)
 
 
 def test_cleaner_get_feature_names_out(df_module):
