@@ -40,7 +40,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report', 'use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_folder', 'eager_data_ops'])
+dict_keys(['use_table_report', 'use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops'])
 
 These are the parameters currently available in the global configuration:
 
@@ -60,6 +60,10 @@ These are the parameters currently available in the global configuration:
      - ``True``
      - ``SKB_USE_TABLE_REPORT_DATA_OPS``
      - Set the HTML representation used for the Data Ops previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
+   * - ``table_report_verbosity``
+     - ``1``
+     - ``SKB_TABLE_REPORT_VERBOSITY``
+     - Set the verbosity of the :clas:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
    * - ``max_plot_columns``
      - 30
      - ``SKB_MAX_PLOT_COLUMNS``
@@ -84,3 +88,11 @@ These are the parameters currently available in the global configuration:
      - 40
      - ``SKB_CARDINALITY_THRESHOLD``
      - Set the ``cardinality_threshold`` argument of :class:`~skrub.TableVectorizer`. Additionally, set the threshold for warning the user about high cardinality features in the :class:`~skrub.TableReport`.
+   * - ``data_dir``
+     - ``~/skrub_data``
+     - ``SKB_DATA_DIRECTORY``
+     - Set the default location used by skrub to store datasets and other data, such as the Data Ops reports.
+   * - ``eager_data_ops``
+     - ``True``
+     - ``SKB_EAGER_DATA_OPS``
+     - Eagerly perform checks on the DataOps as soon they are created, and compute previews if preview data is available. If disabled, those checks are delayed until the DataOp is actually used

@@ -46,6 +46,8 @@ def test_default_config():
     assert cfg["eager_data_ops"] is True
 
     # Fail the test if new configuration keys are present but not checked here.
+    # doc/modules/configurations_and_utils/customizing_configurations.rst
+    # should also be updated if new configuration keys are added.
     expected_keys = {
         "use_table_report",
         "use_table_report_data_ops",
