@@ -49,6 +49,9 @@ Changes
   :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings are parsed to ``np.float32``.
+
 Bugfixes
 --------
 - Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by :user:`Riccardo Cappuzzo <rcap107>`.
