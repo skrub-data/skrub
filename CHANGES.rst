@@ -19,6 +19,9 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- The reports produced by :meth:`DataOp.skb.full_report` and
+  :meth:`SkrubLearner.report` now also display the values provided in the
+  environment. :pr:`1920` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
