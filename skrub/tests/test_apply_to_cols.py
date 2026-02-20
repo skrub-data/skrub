@@ -177,6 +177,43 @@ def test_check_is_fitted_transform(df_module, transformer, data):
     # Should raise NotFittedError when calling transform before fit
     with pytest.raises(NotFittedError):
         at.transform(X)
+
+
+def test_check_is_fitted_get_feature_names_out():
+    """Test that get_feature_names_out raises NotFittedError before fitting."""
+    at = ApplyToCols(ToDatetime(), cols=s.all())
+
     # Should raise NotFittedError when calling get_feature_names_out before fit
+    with pytest.raises(NotFittedError):
+        at.get_feature_names_out()
+
+
+# This test is needed to make coverage happy
+@pytest.mark.parametrize(
+    "transformer,expected_attr",
+    [
+        (ToDatetime(), "transformers_"),
+        (OrdinalEncoder(), "transformer_"),
+    ],
+)
+def test_check_is_fitted_missing_fitted_attribute_transform(
+    df_module, transformer, expected_attr
+):
+    """Test check_is_fitted in transform when fitted attributes are missing."""
+    at = ApplyToCols(transformer, cols=s.all())
+    X = df_module.make_dataframe({"col": ["2020-01-01", "2020-01-02"]})
+
+    # Fit the estimator
+    at.fit(X)
+
+    # Artificially remove the fitted attribute to test check_is_fitted
+    if hasattr(at, expected_attr):
+        delattr(at, expected_attr)
+
+    # Should raise NotFittedError when fitted attribute is missing
+    with pytest.raises(NotFittedError):
+        at.transform(X)
+
+    # Should raise NotFittedError when fitted attribute is missing
     with pytest.raises(NotFittedError):
         at.get_feature_names_out()
