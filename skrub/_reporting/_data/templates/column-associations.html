@@ -3,8 +3,36 @@
 
     <div id="skipped-associations-alert" class="alert-info-dismissable flex space-between">
         <div class="alert-content shrinkable-text">
-            Computing pairwise associations was skipped because the dataframe has many columns.
-            See TableReport's <code>max_association_columns</code> parameter.
+            <p>Computing pairwise associations was skipped. This is due to either:</p>
+            <ul>
+                <li>The dataframe exceeding the
+                    <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>columns_threshold</code></a>
+                    limit (default: 30).
+                </li>
+                <li>The <code>compute_associations</code> option being set to <code>False</code> (default: True).</li>
+            </ul>
+
+            <p>You can adjust this behavior in several ways:</p>
+            <ul>
+                <li>To fix it for a single report, change the parameters passed when creating <code>TableReport</code>:
+                    <pre><code class="language-python">    report = TableReport(columns_threshold=50, compute_associations=True)</code></pre>
+                </li>
+                <li>To change the default columns threshold or compute associations during the current Python session, use <code>skrub.set_config</code>:
+                    <pre><code class="language-python">    from skrub import set_config
+    set_config(columns_threshold=50, compute_associations=True)</code></pre>
+                </li>
+                <li>To make the change permanent, use an environment variable:
+                    <pre><code class="language-shell">    export SKB_COLUMNS_THRESHOLD=50
+    export SKB_COMPUTE_ASSOCIATIONS=True</code></pre>
+                </li>
+            </ul>
+            <p>
+            Note that <code>TableReport</code> accepts these parameters:
+            </p>
+            <ul>
+                <li>The <code>compute_associations</code> boolean indicating if the columns for which associations should be computed.</li>
+                <li>The <code>columns_threshold</code> limits the number of columns for which columns should be plotted and associations should be computed.</li>
+            </ul>
         </div>
     </div>
 
