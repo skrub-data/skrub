@@ -103,9 +103,7 @@ def test_lazyframe_exception():
     pl = pytest.importorskip("polars")
     lazy_df = pl.DataFrame({"a": ["1", "2", "3"]}).lazy()
 
-    with pytest.raises(
-        ValueError, match=r"TableReport does not support lazy dataframes"
-    ):
+    with pytest.raises(TypeError, match=r".*LazyFrames are not yet supported"):
         TableReport(lazy_df)
 
 
