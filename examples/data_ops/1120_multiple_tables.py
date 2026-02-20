@@ -24,6 +24,7 @@ based on the products it contains.
 .. |HistGradientBoostingClassifier| replace::
    :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
 .. |make_randomized_search| replace:: :func:`~skrub.DataOp.skb.make_randomized_search`
+.. |RocCurveDisplay| replace:: :class:`~sklearn.metrics.RocCurveDisplay`
 
 
 """
@@ -82,6 +83,7 @@ baskets
 # We mark the "ID" column of the ``baskets`` table as ``X``, and the
 # ``"fraud_flag"`` column as ``y``. This allows the Data Ops to track the indices
 # of the variables when splitting for cross-validation.
+# so that DataOps can use their indices for train-test splitting and cross-validation.
 basket_ids = baskets[["ID"]].skb.mark_as_X()
 fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 # %%
@@ -105,34 +107,27 @@ products
 # the products table, we need to extract these features, aggregate them
 # at the basket level, and merge the result with the basket data.
 #
-# We can use the |TableVectorizer| to vectorize the products, but we
-# then need to aggregate the resulting vectors to obtain a single row per basket.
-# Using a scikit-learn Pipeline is tricky because the |TableVectorizer| would be
-# fitted on a table with a different number of rows than the target y (the baskets
-# table), which scikit-learn does not allow.
+# .. admonition:: Why building a pipeline for this is hard
+#    :collapsible: closed
 #
-# While we could fit the |TableVectorizer| manually, this would forfeit
-# scikit-learn’s tooling for managing transformations, storing fitted estimators,
-# splitting data, cross-validation, and hyper-parameter tuning.
-# We would also have to handle the aggregation and join ourselves, likely with
-# error-prone Pandas code.
+#    We can use the |TableVectorizer| to vectorize the products, but we
+#    then need to aggregate the resulting vectors to obtain a single row per basket.
+#    Using a scikit-learn Pipeline is tricky because the |TableVectorizer| would be
+#    fitted on a table with a different number of rows than the target y (the baskets
+#    table), which scikit-learn does not allow.
 #
-# Fortunately, skrub DataOps provide a powerful alternative for building flexible
-# plans that address these problems.
+#    While we could fit the |TableVectorizer| manually, this would forfeit
+#    scikit-learn’s tooling for managing transformations, storing fitted estimators,
+#    splitting data, cross-validation, and hyper-parameter tuning.
+#    We would also have to handle the aggregation and join ourselves, likely with
+#    error-prone Pandas code.
+#
+#    Fortunately, skrub DataOps provide a powerful alternative for building flexible
+#    plans that address these problems.
 
 # %%
 # Building a multi-table DataOps plan
 # ------------------------------------
-#
-# We start by creating skrub variables, which are the inputs to our plan.
-# In our example, we create two skrub |var| objects: ``products`` and ``baskets``:
-
-
-# %%
-# We mark the ``basket_ids`` variable as ``X`` and the ``fraud_flags`` variable as ``y``
-# so that DataOps can use their indices for train-test splitting and cross-validation.
-# We then build the plan by applying transformations to those inputs.
-#
 # Since our DataOps expect dataframes for products, baskets and fraud
 # flags, we manipulate those objects as we would manipulate pandas dataframes.
 # For instance, we filter products to keep only those that match one of the
@@ -146,7 +141,7 @@ products_with_total = kept_products.assign(
 products_with_total
 
 # %%
-# We then build a skrub ``TableVectorizer`` with different choices of
+# We then build a skrub |TableVectorizer| with different choices of
 # the type of encoder for high-cardinality categorical or string columns, and
 # the number of components it uses.
 #
@@ -244,8 +239,7 @@ probabilities = search.best_learner_.predict_proba(
 # %%
 # We can evaluate the performance of our model by plotting the ROC curve and
 # calculating the AUC score.
-# We use the true labels from the ``new_baskets`` table, and the predicted probabilities
-# for the positive class (fraudulent basket) to plot the ROC curve.
+# We can use the |RocCurveDisplay| from scikit-learn to plot the ROC curve.
 
 import matplotlib.pyplot as plt
 from sklearn.metrics import RocCurveDisplay
