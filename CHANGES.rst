@@ -43,6 +43,12 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
+- The dataset fetcher functions now include the ``path`` and ``paths`` fields, which contain the paths to the datasets.
+  In future releases, the bunch objects will not contain Pandas dataframes by default anymore.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
 - The repository wheel has been made smaller by removing some material that was
   not necessary for using the library. Benchmarks are now available in a separate
   `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
