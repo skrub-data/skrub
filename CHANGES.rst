@@ -45,9 +45,8 @@ Changes
   :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 
-- The :class:`Cleaner` ``numeric_dtype`` parameter now accepts
-  ``"passthrough"``, ``"parse"``, and ``"float32"`` to explicitly control
-  numeric-string parsing and float32 conversion behavior.
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings are parsed to ``np.float32``.
 
 Bugfixes
 --------
