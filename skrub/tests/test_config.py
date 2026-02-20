@@ -4,7 +4,7 @@ import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
-from skrub._config import _get_default_data_folder, _parse_env_bool
+from skrub._config import _get_default_data_dir, _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -35,7 +35,7 @@ def test_default_config():
     assert cfg["use_table_report"] is False
     assert cfg["use_table_report_data_ops"] is True
     # On CI the absolute path is different, check that it ends with skrub_data
-    assert pathlib.Path(cfg["data_folder"]).name == "skrub_data"
+    assert pathlib.Path(cfg["data_dir"]).name == "skrub_data"
     assert cfg["table_report_verbosity"] == 1
     assert cfg["max_plot_columns"] == 30
     assert cfg["max_association_columns"] == 30
@@ -49,7 +49,7 @@ def test_default_config():
     expected_keys = {
         "use_table_report",
         "use_table_report_data_ops",
-        "data_folder",
+        "data_dir",
         "table_report_verbosity",
         "max_plot_columns",
         "max_association_columns",
@@ -76,7 +76,7 @@ def test_deprecated_env_var_warning(monkeypatch, tmp_path):
         with pytest.warns(
             DeprecationWarning, match="'SKRUB_DATA_DIRECTORY' is deprecated"
         ):
-            _get_default_data_folder()
+            _get_default_data_dir()
 
 
 def test_config_context():
