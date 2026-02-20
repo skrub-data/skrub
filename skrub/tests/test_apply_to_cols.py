@@ -2,6 +2,7 @@ import datetime
 
 import numpy as np
 import pytest
+from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
 from skrub import ApplyToCols
@@ -159,3 +160,23 @@ def test_reject_column(df_module):
             {"date": ["2020-01-01", "2020-01-02"], "value": [1, 2]}
         )
         at.fit(X)
+
+
+@pytest.mark.parametrize(
+    "transformer,data",
+    [
+        (ToDatetime(), {"date_col": ["2020-01-01", "2020-01-02"]}),
+        (OrdinalEncoder(), {"col1": ["a", "b"], "col2": ["x", "y"]}),
+    ],
+)
+def test_check_is_fitted_transform(df_module, transformer, data):
+    """Test that transform raises NotFittedError before fitting."""
+    at = ApplyToCols(transformer, cols=s.all())
+    X = df_module.make_dataframe(data)
+
+    # Should raise NotFittedError when calling transform before fit
+    with pytest.raises(NotFittedError):
+        at.transform(X)
+    # Should raise NotFittedError when calling get_feature_names_out before fit
+    with pytest.raises(NotFittedError):
+        at.get_feature_names_out()

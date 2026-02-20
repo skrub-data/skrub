@@ -4,6 +4,7 @@ based on the type of the transformer passed to it.
 """
 
 from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
+from sklearn.exceptions import NotFittedError
 
 from . import selectors
 from ._apply_on_each_col import ApplyToEachCol
@@ -149,6 +150,9 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
         columnwise = {"auto": "auto", "cols": True, "frame": False}[self.how]
 
+        # To make sure transform() raises if fit_transform() hasn't been called
+        self._wrapped_transformer = None
+
         self._wrapped_transformer = wrap_transformer(
             self.transformer,
             self.cols,
@@ -183,6 +187,14 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         result : Pandas or Polars DataFrame
             The transformed data.
         """
+        if (
+            not hasattr(self, "_wrapped_transformer")
+            or self._wrapped_transformer is None
+        ):
+            raise NotFittedError(
+                "This ApplyToCols instance is not fitted yet. Call 'fit' with "
+                "appropriate arguments before using this estimator."
+            )
         if isinstance(self._wrapped_transformer, ApplyToEachCol):
             check_is_fitted(self, "transformers_")
         else:
@@ -203,4 +215,16 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         feature_names_out : ndarray of str objects
             Transformed feature names.
         """
+        if (
+            not hasattr(self, "_wrapped_transformer")
+            or self._wrapped_transformer is None
+        ):
+            raise NotFittedError(
+                "This ApplyToCols instance is not fitted yet. Call 'fit' with "
+                "appropriate arguments before using this estimator."
+            )
+        if isinstance(self._wrapped_transformer, ApplyToEachCol):
+            check_is_fitted(self, "transformers_")
+        else:
+            check_is_fitted(self, "transformer_")
         return self._wrapped_transformer.get_feature_names_out(input_features)
