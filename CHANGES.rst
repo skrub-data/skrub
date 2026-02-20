@@ -28,7 +28,7 @@ Changes
   and ``ApplyToFrame``. As a result, ``ApplyToCols`` and ``ApplyToFrame`` have
   been renamed :class:`ApplyToEachCol` and :class:`ApplyToSubFrame` respectively.
   The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
-  ``columnwise`` to ``True``.
+  ``how`` to ``cols``.
   :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bug Fixes
