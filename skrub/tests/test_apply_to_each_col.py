@@ -10,7 +10,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._apply_to_cols import ApplyToCols
+from skrub._apply_on_each_col import ApplyToEachCol
 from skrub._select_cols import Drop
 from skrub._single_column_transformer import (
     RejectColumn,
@@ -18,86 +18,12 @@ from skrub._single_column_transformer import (
 )
 
 
-@pytest.mark.parametrize("define_fit", [False, True])
-def test_single_column_transformer_wrapped_methods(df_module, define_fit):
-    class Dummy(SingleColumnTransformer):
-        def fit_transform(self, column, y=None):
-            return column
-
-        def transform(self, column):
-            return column
-
-        if define_fit:
-
-            def fit(self, column, y=None):
-                return self
-
-    col = df_module.example_column
-    assert Dummy().fit_transform(col) is col
-    assert Dummy().fit(col).transform(col) is col
-
-    dummy = Dummy().fit(col)
-    for method in "fit", "fit_transform", "transform":
-        with pytest.raises(
-            ValueError, match=r"``Dummy\..*`` should be passed a single column"
-        ):
-            getattr(dummy, method)(df_module.example_dataframe)
-
-        with pytest.raises(
-            ValueError, match=r"``Dummy\..*`` expects the first argument X"
-        ):
-            getattr(dummy, method)(np.ones((3,)))
-
-
-@pytest.mark.parametrize(
-    "docstring",
-    [
-        "dummy transformer\n\n    details\n",
-        "\n    dummy transformer\n    summary\n\n    details",
-        "summary",
-        "\n    dummy transformer\n\ndetails\n   \n    more",
-        "",
-    ],
-)
-def test_single_column_transformer_docstring(docstring):
-    class Dummy(SingleColumnTransformer):
-        __doc__ = docstring
-
-    assert "``Dummy`` is a type of single-column" in Dummy.__doc__
-
-    class Dummy(SingleColumnTransformer):
-        pass
-
-    assert Dummy.__doc__ is None
-
-
-def test_single_column_transformer_attribute():
-    class Dummy(SingleColumnTransformer):
-        pass
-
-    assert Dummy.__single_column_transformer__ is True
-
-
-def test_single_column_transformer_all_outputs(df_module):
-    class Dummy(SingleColumnTransformer):
-        def fit(self, column, y=None):
-            self.all_outputs_ = [sbd.name(column)]
-            return column
-
-    column = df_module.example_column
-
-    transformer = Dummy()
-    transformer.fit(column)
-
-    assert transformer.get_feature_names_out() == [sbd.name(column)]
-
-
 class Mult(BaseEstimator):
-    """Dummy to test the different kinds of output supported by ApplyToCols.
+    """Dummy to test the different kinds of output supported by ApplyToEachCol.
 
     Supported kinds of output are a single column, a list of columns, or a
     dataframe. This also checks that when the transformer is not a
-    single-column transformer, X is passed by ApplyToCols as a dataframe
+    single-column transformer, X is passed by ApplyToEachCol as a dataframe
     containing a single column (not as a column).
     """
 
@@ -141,10 +67,10 @@ class SingleColMult(Mult):
 
 @pytest.mark.parametrize("output_kind", ["single_column", "dataframe", "column_list"])
 @pytest.mark.parametrize("transformer_class", [Mult, SingleColMult])
-def test_single_column_transformer(
+def test_apply_on_each_col(
     df_module, output_kind, transformer_class, use_fit_transform
 ):
-    mapper = ApplyToCols(transformer_class(output_kind), s.glob("a*"))
+    mapper = ApplyToEachCol(transformer_class(output_kind), s.glob("a*"))
     X = df_module.make_dataframe(
         {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}
     )
@@ -169,14 +95,14 @@ def test_single_column_transformer(
 
 
 def test_empty_selection(df_module):
-    mapper = ApplyToCols(Drop(), ())
+    mapper = ApplyToEachCol(Drop(), ())
     out = mapper.fit_transform(df_module.example_dataframe)
     df_module.assert_frame_equal(out, df_module.example_dataframe)
     assert mapper.transformers_ == {}
 
 
 def test_empty_output(df_module):
-    mapper = ApplyToCols(Drop())
+    mapper = ApplyToEachCol(Drop())
     out = mapper.fit_transform(df_module.example_dataframe)
     if df_module.name == "pandas":
         expected = df_module.empty_dataframe.set_axis(
@@ -191,7 +117,7 @@ def test_empty_output(df_module):
 
 
 class Rejector(SingleColumnTransformer):
-    """Dummy class to test ApplyToCols behavior when columns are rejected."""
+    """Dummy class to test ApplyToEachCol behavior when columns are rejected."""
 
     def fit_transform(self, column, y=None):
         if sbd.name(column) != "float-col":
@@ -204,7 +130,7 @@ class Rejector(SingleColumnTransformer):
 
 def test_allowed_column_rejections(df_module, use_fit_transform):
     df = df_module.example_dataframe
-    mapper = ApplyToCols(Rejector(), allow_reject=True)
+    mapper = ApplyToEachCol(Rejector(), allow_reject=True)
     if use_fit_transform:
         out = mapper.fit_transform(df)
     else:
@@ -220,7 +146,7 @@ def test_allowed_column_rejections(df_module, use_fit_transform):
 
 def test_forbidden_column_rejections(df_module):
     df = df_module.example_dataframe
-    mapper = ApplyToCols(Rejector())
+    mapper = ApplyToEachCol(Rejector())
     with pytest.raises(ValueError, match=".*failed on.*int-col"):
         mapper.fit(df)
 
@@ -235,7 +161,7 @@ class RejectInTransform(SingleColumnTransformer):
 
 def test_rejection_forbidden_in_transform(df_module):
     df = df_module.example_dataframe
-    mapper = ApplyToCols(RejectInTransform(), allow_reject=True)
+    mapper = ApplyToEachCol(RejectInTransform(), allow_reject=True)
     mapper.fit(df)
     with pytest.raises(ValueError, match=".*failed on.*int-col"):
         mapper.transform(df)
@@ -269,15 +195,15 @@ def test_column_renaming(df_module, use_fit_transform):
 
     df = df_module.make_dataframe({"A": [1], "B": [2]})
 
-    mapper = ApplyToCols(RenameB())
+    mapper = ApplyToEachCol(RenameB())
     fit_transform()
     assert out_names == ["B__skrub_XXX__", "B"]
 
-    mapper = ApplyToCols(RenameB(), cols=("A",), rename_columns="{}_out")
+    mapper = ApplyToEachCol(RenameB(), cols=("A",), rename_columns="{}_out")
     fit_transform()
     assert out_names == ["B_out", "B"]
 
-    mapper = ApplyToCols(
+    mapper = ApplyToEachCol(
         RenameB(), cols=("A",), rename_columns="{}_out", keep_original=True
     )
     fit_transform()
@@ -291,7 +217,7 @@ class NumpyOutput(BaseEstimator):
 
 def test_wrong_transformer_output_type(pd_module):
     with pytest.raises(TypeError, match=".*fit_transform returned a result of type"):
-        ApplyToCols(NumpyOutput()).fit_transform(pd_module.example_dataframe)
+        ApplyToEachCol(NumpyOutput()).fit_transform(pd_module.example_dataframe)
 
 
 def test_set_output_failure(df_module):
@@ -302,7 +228,7 @@ def test_set_output_failure(df_module):
         {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}
     )
     y = [0.0, 1.0]
-    mapper = ApplyToCols(make_pipeline(Mult()))
+    mapper = ApplyToEachCol(make_pipeline(Mult()))
     mapper.fit_transform(X, y)
 
 
@@ -317,7 +243,7 @@ class ResetsIndex(BaseEstimator):
 @pytest.mark.parametrize("cols", [(), ("a",), ("a", "b")])
 def test_output_index(cols):
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
-    transformer = ApplyToCols(ResetsIndex(), cols=cols)
+    transformer = ApplyToEachCol(ResetsIndex(), cols=cols)
     assert_index_equal(transformer.fit_transform(df).index, df.index)
     df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
     assert_index_equal(transformer.transform(df).index, df.index)
@@ -328,4 +254,4 @@ def test_set_output_polars(pl_module):
     # would cause a failure in old scikit-learn versions.
     # see #1122 for details
     df = pl_module.make_dataframe({"x": ["a", "b", "c"]})
-    ApplyToCols(OneHotEncoder(sparse_output=False)).fit_transform(df)
+    ApplyToEachCol(OneHotEncoder(sparse_output=False)).fit_transform(df)
