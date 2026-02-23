@@ -214,11 +214,11 @@ div.pipeline-img svg g.edge polygon {
 }
 
 html[data-theme="light"] .encoding-image {
-    background-image: url('../encoding_light.png');
+    background-image: url('../periodic_features_light_transparent.png');
 }
 
 html[data-theme="dark"] .encoding-image {
-    background-image: url('../encoding_dark.png');
+    background-image: url('../periodic_features_dark_transparent.png');
 }
 
 
