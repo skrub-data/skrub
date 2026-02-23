@@ -11,13 +11,13 @@ from sklearn.utils.validation import check_is_fitted
 from . import _dataframe as sbd
 from . import _utils
 from . import selectors as s
-from ._apply_to_cols import SingleColumnTransformer
 from ._check_input import CheckInputDataFrame
 from ._clean_categories import CleanCategories
 from ._clean_null_strings import CleanNullStrings
 from ._datetime_encoder import DatetimeEncoder
 from ._drop_uninformative import DropUninformative
 from ._select_cols import Drop
+from ._single_column_transformer import SingleColumnTransformer
 from ._sklearn_compat import _VisualBlock
 from ._string_encoder import StringEncoder
 from ._to_datetime import ToDatetime
@@ -75,7 +75,7 @@ def _created_by_predicate(col, transformers):
 def _created_by(*transformers):
     """Selector for columns created by one of the provided transformers.
 
-    Each of ``transformers`` must be an instance of ``ApplyToCols``.
+    Each of ``transformers`` must be an instance of ``ApplyToEachCol``.
     A column is matched if it was created (or modified) by one of them, i.e. if
     it is listed in one of their ``created_outputs_`` fitted attributes.
 
@@ -220,13 +220,17 @@ class Cleaner(TransformerMixin, BaseEstimator):
         types and representation of missing values. More informative columns (e.g.,
         categorical or datetime) are not converted.
 
-    ApplyToCols :
+    ApplyToEachCol :
         Apply a given transformer separately to each column in a selection of columns.
         Useful to complement the default heuristics of the ``Cleaner``.
 
-    ApplyToFrame :
+    ApplyToSubFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
         Useful to complement the default heuristics of the ``Cleaner``.
+
+    DropUninformative :
+        Drop columns that are considered uninformative, e.g., containing only
+        null values or a single unique value.
 
     Notes
     -----
@@ -235,7 +239,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     - ``CleanNullStrings()``: replace strings used to represent missing values
       with NA markers.
 
-    - ``DropUninformative()``: drop the column if it is considered to be
+    - :class:`DropUninformative`: drop the column if it is considered to be
       "uninformative". A column is considered to be "uninformative" if it contains
       only missing values (``drop_null_fraction``), only a constant value
       (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
@@ -292,9 +296,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.fit_transform(df)
            A          B     C    D
     0    one 2024-02-02   1.5  1.5
-    1    two 2024-02-23   None  2.0
+    1    two 2024-02-23  ...  2.0
     2    two 2024-03-12  12.2  2.5
-    3  three 2024-03-13   None  3.0
+    3  three 2024-03-13  ...  3.0
 
     >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     A               ...
@@ -442,12 +446,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     Then it encodes each column with an encoder suitable for its dtype. Categorical
     features are encoded differently depending on their cardinality.
 
-    .. note::
-
-        The ``specific_transformers`` parameter will be removed in a future
-        version of ``skrub``, when better utilities for building complex
-        pipelines are introduced.
-
     Parameters
     ----------
     cardinality_threshold : int, default=40
@@ -570,13 +568,17 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Preprocesses each column of a dataframe with consistency checks and
         sanitization, e.g., of null values or dates.
 
-    ApplyToCols :
+    ApplyToEachCol :
         Apply a given transformer separately to each column in a selection of columns.
         Useful to complement the default heuristics of the ``TableVectorizer``.
 
-    ApplyToFrame :
+    ApplyToSubFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
         Useful to complement the default heuristics of the ``TableVectorizer``.
+
+    DropUninformative :
+        Drop columns that are considered uninformative, e.g., containing only
+        null values or a single unique value.
 
     Notes
     -----
@@ -720,11 +722,6 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     provided transformer has full control over the associated columns; no other
     processing is applied to those columns. A column cannot appear twice in the
     ``specific_transformers``.
-
-    .. note::
-
-        This functionality is likely to be removed in a future version of the
-        ``TableVectorizer``.
 
     The overrides are provided as a list of pairs:
     ``(transformer, list_of_column_names)``.

@@ -6,8 +6,8 @@ from pathlib import Path as _Path
 
 from . import selectors
 from ._agg_joiner import AggJoiner, AggTarget
-from ._apply_to_cols import ApplyToCols
-from ._apply_to_frame import ApplyToFrame
+from ._apply_on_each_col import ApplyToEachCol
+from ._apply_sub_frame import ApplyToSubFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
 from ._data_ops import (
@@ -29,7 +29,7 @@ from ._data_ops import (
     y,
 )
 from ._datetime_encoder import DatetimeEncoder
-from ._deduplicate import compute_ngram_distance, deduplicate
+from ._deduplicate import deduplicate
 from ._drop_uninformative import DropUninformative
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
@@ -43,7 +43,7 @@ from ._similarity_encoder import SimilarityEncoder
 from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
 from ._table_vectorizer import Cleaner, TableVectorizer
-from ._tabular_pipeline import tabular_learner, tabular_pipeline
+from ._tabular_pipeline import tabular_pipeline
 from ._text_encoder import TextEncoder
 from ._to_categorical import ToCategorical
 from ._to_datetime import ToDatetime, to_datetime
@@ -64,10 +64,7 @@ __all__ = [
     "deferred",
     "eval_mode",
     "TableReport",
-    "patch_display",
-    "unpatch_display",
     "tabular_pipeline",
-    "tabular_learner",
     "DatetimeEncoder",
     "ToDatetime",
     "Joiner",
@@ -80,7 +77,7 @@ __all__ = [
     "Cleaner",
     "DropUninformative",
     "deduplicate",
-    "compute_ngram_distance",
+    "deduplicate",
     "ToCategorical",
     "to_datetime",
     "AggJoiner",
@@ -100,10 +97,12 @@ __all__ = [
     "StringEncoder",
     "column_associations",
     "SquashingScaler",
+    "patch_display",
+    "unpatch_display",
     "get_config",
     "set_config",
     "config_context",
-    "ApplyToCols",
-    "ApplyToFrame",
+    "ApplyToEachCol",
+    "ApplyToSubFrame",
     "ToFloat",
 ]

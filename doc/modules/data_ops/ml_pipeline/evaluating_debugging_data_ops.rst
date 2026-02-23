@@ -6,7 +6,7 @@ Evaluating and debugging the DataOps plan with :meth:`.skb.full_report() <DataOp
 
 All operations on DataOps are recorded in a computational graph, which can be
 inspected with :meth:`.skb.full_report() <DataOp.skb.full_report>`. This method
-generates a html report that shows the full plan, including all nodes, their names,
+generates an HTML report that shows the full plan, including all nodes, their names,
 descriptions, and the transformations applied to the data. It is possible to give a
 title to the evaluation report this way:
 ``my_data_op.skb.full_report(title="my title")``.
@@ -26,7 +26,7 @@ Additionally, if computations fail in the plan, the report shows the offending
 node and the error message, which can help in debugging the plan.
 
 By default, reports are saved in the ``skrub_data/execution_reports`` directory, but
-they can be saved to a different location with the ``ouptut_dir`` parameter.
+they can be saved to a different location with the ``output_dir`` parameter.
 Note that the default path can be altered with the
 ``SKRUB_DATA_DIR`` environment variable. See :ref:`user_guide_configuration_parameters`
 for more details.

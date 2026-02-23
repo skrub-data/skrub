@@ -25,12 +25,14 @@ def _parse_env_bool(env_variable_name, default):
 _global_config = {
     "use_table_report": _parse_env_bool("SKB_USE_TABLE_REPORT", False),
     "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
+    "table_report_verbosity": int(os.environ.get("SKB_TABLE_REPORT_VERBOSITY", 1)),
     "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
     "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
+    "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
 }
 _threadlocal = threading.local()
 
@@ -74,6 +76,7 @@ def _apply_external_patches(config):
         _patching._patch_display(
             max_plot_columns=config["max_plot_columns"],
             max_association_columns=config["max_plot_columns"],
+            verbose=config["table_report_verbosity"],
         )
     else:
         # No-op if dispatch haven't been previously enabled
@@ -83,19 +86,22 @@ def _apply_external_patches(config):
 def set_config(
     use_table_report=None,
     use_table_report_data_ops=None,
+    table_report_verbosity=None,
     max_plot_columns=None,
     max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    eager_data_ops=None,
 ):
     """Set global skrub configuration.
 
     Parameters
     ----------
     use_table_report : bool, default=None
-        The type of display used for dataframes. Default is ``True``.
+        The type of display used for dataframes. If ``None``, falls back to the current
+        configuration, which is ``False`` by default.
 
         - If ``True``, replace the default DataFrame HTML displays with
           :class:`~skrub.TableReport`.
@@ -107,7 +113,8 @@ def set_config(
 
     use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
-        DataOps. Default is ``False``.
+        DataOps. If ``None``, falls back to the current configuration, which is ``True``
+        by default.
 
         - If ``True``, :class:`~skrub.TableReport` will be used.
         - If ``False``, the original Pandas or Polars dataframe display will be
@@ -115,6 +122,11 @@ def set_config(
 
         This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
+
+    table_report_verbosity : int, default=None
+        Set the level of verbosity of the :class:`~skrub.TableReport`.
+        Default is 1 (print the progress bar). Refer to the ``TableReport``
+        documentation for more details.
 
     max_plot_columns : int, default=None
         Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
@@ -165,6 +177,24 @@ def set_config(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
+        environment variable.
+
     See Also
     --------
     get_config : Retrieve current values for global configuration.
@@ -190,6 +220,17 @@ def set_config(
                 f"{use_table_report_data_ops!r}."
             )
         local_config["use_table_report_data_ops"] = use_table_report_data_ops
+
+    if table_report_verbosity is not None:
+        if (
+            not isinstance(table_report_verbosity, numbers.Integral)
+            or table_report_verbosity < 0
+        ):
+            raise ValueError(
+                "'table_report_verbosity' must be a non-negative integer, got"
+                f" {table_report_verbosity!r}"
+            )
+        local_config["table_report_verbosity"] = table_report_verbosity
 
     if max_plot_columns is not None:
         if not isinstance(max_plot_columns, numbers.Real) and max_plot_columns != "all":
@@ -239,6 +280,8 @@ def set_config(
                 f"integer, got {cardinality_threshold!r}"
             )
 
+    if eager_data_ops is not None:
+        local_config["eager_data_ops"] = eager_data_ops
     _apply_external_patches(local_config)
 
 
@@ -247,12 +290,14 @@ def config_context(
     *,
     use_table_report=None,
     use_table_report_data_ops=None,
+    table_report_verbosity=None,
     max_plot_columns=None,
     max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    eager_data_ops=None,
 ):
     """Context manager for global skrub configuration.
 
@@ -279,6 +324,11 @@ def config_context(
 
         This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
+
+    table_report_verbosity : int, default=None
+        Set the level of verbosity of the :class:`~skrub.TableReport`.
+        Default is 0 (no verbosity). Refer to the ``TableReport`` documentation for
+        more details.
 
     max_plot_columns : int, default=None
         Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
@@ -329,6 +379,24 @@ def config_context(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
+        environment variable.
+
     Yields
     ------
     None.
@@ -348,12 +416,14 @@ def config_context(
     set_config(
         use_table_report=use_table_report,
         use_table_report_data_ops=use_table_report_data_ops,
+        table_report_verbosity=table_report_verbosity,
         max_plot_columns=max_plot_columns,
         max_association_columns=max_association_columns,
         subsampling_seed=subsampling_seed,
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
+        eager_data_ops=eager_data_ops,
     )
 
     try:

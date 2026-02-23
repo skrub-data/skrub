@@ -144,6 +144,41 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         dict
             The result of ``DataOp.skb.full_report``: a dict containing
             ``'result'``, ``'error'`` and ``'report_path'``.
+
+        Examples
+        --------
+        We start by creating the learner for a simple DataOp:
+
+        >>> import skrub
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> from sklearn.datasets import make_classification
+        >>> pred = skrub.X().skb.apply(LogisticRegression(), y=skrub.y())
+        >>> X, y = make_classification(n_samples=20, random_state=0)
+        >>> split = pred.skb.train_test_split({'X': X, 'y': y}, shuffle=False)
+        >>> learner = pred.skb.make_learner()
+
+        We can now obtain reports for the different methods of the learner such
+        as 'fit', 'predict_proba', etc.
+
+        >>> fit_results = learner.report(
+        ...     environment=split["train"], mode="fit", open=False
+        ... )  # doctest: +SKIP
+        >>> fit_results['report_path']  # doctest: +SKIP
+        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+
+        Note that our learner has been fitted now, we can use it for predictions.
+
+        >>> predict_results = learner.report(
+        ...     environment=split["train"], mode="predict", open=False
+        ... )  # doctest: +SKIP
+        >>> predict_results['report_path']  # doctest: +SKIP
+        PosixPath('.../skrub_data/execution_reports/full_data_op_report_.../index.html')
+
+        In addition to the report, we can also retrieve the actual output of
+        the 'predict' method:
+
+        >>> predict_results['result']  # doctest: +SKIP
+        array([0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0])
         """
         from ._inspection import full_report
 
@@ -225,7 +260,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         -------
         scikit-learn estimator
             The fitted estimator. Depending on the nature of the estimator it
-            may be wrapped in a ``skrub.ApplyToCols`` or ``skrub.ApplyToFrame``,
+            may be wrapped in a ``skrub.ApplyToEachCol`` or ``skrub.ApplyToSubFrame``,
             see examples below.
 
         See also
@@ -273,7 +308,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         Case 1: the ``StringEncoder`` is a skrub single-column transformer: it
         transforms a single column. In the learner it gets wrapped in a
-        :class:`ApplyToCols` which independently fits a separate instance of the
+        :class:`ApplyToEachCol` which independently fits a separate instance of the
         ``StringEncoder`` to each of the columns it transforms (in this case there is
         only one column, ``'product'``). The individual transformers can be found in the
         fitted attribute ``transformers_`` which maps column names to the corresponding
@@ -285,25 +320,25 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
         {' pe': 2, 'pen': 12, 'en ': 8, ' pen': 3, 'pen ': 13, ' cu': 0, 'cup': 6, 'up ': 18, ' cup': 1, 'cup ': 7, ' sp': 4, 'spo': 16, 'poo': 14, 'oon': 10, 'on ': 9, ' spo': 5, 'spoo': 17, 'poon': 15, 'oon ': 11}
 
-        This case (wrapping in :class:`ApplyToCols`) happens when the estimator is a skrub
+        This case (wrapping in :class:`ApplyToEachCol`) happens when the estimator is a skrub
         single-column transformer (it has a ``__single_column_transformer__``
         attribute), we pass ``.skb.apply(how='cols')`` or we pass
         ``.skb.apply(allow_reject=True)``.
 
         Case 2: the ``PCA`` is a regular scikit-learn transformer. In the learner it
-        gets wrapped in a :class:`ApplyToFrame` which applies it to the subset of columns
+        gets wrapped in a :class:`ApplyToSubFrame` which applies it to the subset of columns
         in the dataframe selected by the ``cols`` argument passed to ``.skb.apply()``.
         The fitted ``PCA`` can be found in the fitted attribute ``transformer_``.
 
         >>> pca = learner.find_fitted_estimator('pca')
         >>> pca
-        ApplyToFrame(cols=glob('date_*'), transformer=PCA(n_components=2))
+        ApplyToSubFrame(cols=glob('date_*'), transformer=PCA(n_components=2))
         >>> pca.transformer_
         PCA(n_components=2)
         >>> pca.transformer_.mean_
         array([2020.,    4.,    4.], dtype=float32)
 
-        This case (wrapping in :class:`ApplyToFrame`) happens when the estimator is a
+        This case (wrapping in :class:`ApplyToSubFrame`) happens when the estimator is a
         scikit-learn transformer but not a single-column transformer, or we
         pass ``.skb.apply(how='frame')``.
 
@@ -402,7 +437,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         step:
 
         >>> learner.find_fitted_estimator("vectorizer")
-        ApplyToFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
+        ApplyToSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
         node = find_node_by_name(self.data_op, name)
         if node is None:
@@ -646,6 +681,12 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
     4    0.85
     Name: test_score, dtype: float64
     """
+    if not hasattr(learner, "__skrub_to_Xy_pipeline__"):
+        raise ValueError(
+            "`cross_validate` function requires either a Learner object or "
+            f"a ParamSearch object, got {type(learner)}."
+        )
+
     environment = env_with_subsampling(learner.data_op, environment, keep_subsampling)
     kwargs = _rename_cv_param_learner_to_estimator(kwargs)
     X, y = _compute_Xy(learner.data_op, environment)
@@ -668,7 +709,7 @@ def train_test_split(
     split_func=model_selection.train_test_split,
     **split_func_kwargs,
 ):
-    """Split an environment into a training an testing environments.
+    """Split an environment into training and testing environments.
 
     This functionality is exposed to users through the
     ``DataOp.skb.train_test_split()`` method. See the corresponding docstring for
@@ -697,7 +738,7 @@ def train_test_split(
 
 
 def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=KFOLD_5):
-    """Yield splits of an environment into training an testing environments.
+    """Yield splits of an environment into training and testing environments.
 
     This functionality is exposed to users through the
     ``DataOp.skb.iter_cv_splits()`` method. See the corresponding docstring for

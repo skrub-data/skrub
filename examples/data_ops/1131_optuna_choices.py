@@ -29,8 +29,8 @@ This can be done with pip:
 # ------------------------------------
 #
 # We will fit a regressor containing a few choices on a toy dataset. We
-# try 2 regressors: gradient boosting and random forest. They both have
-# hyperparameters that we want to tune.
+# try 2 regressors: extra trees and ridge. They both have  hyperparameters that
+# we want to tune.
 
 # %%
 from sklearn.ensemble import ExtraTreesRegressor
@@ -56,11 +56,12 @@ print(pred.skb.describe_param_grid())
 # Load data for the example
 
 # %%
-from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import KFold
 
 # (We subsample the dataset by half to make the example run faster)
-df = fetch_california_housing(as_frame=True).frame.sample(10_000, random_state=0)
+df = skrub.datasets.fetch_california_housing().california_housing.sample(
+    10_000, random_state=0
+)
 
 # The environment we will use to fit the learners created by our DataOp.
 env = {"data": df}
@@ -81,7 +82,9 @@ cv = KFold(n_splits=4, shuffle=True, random_state=0)
 # the User Guide for an example.
 
 # %%
-search = pred.skb.make_randomized_search(backend="optuna", cv=cv, n_iter=10)
+search = pred.skb.make_randomized_search(
+    backend="optuna", cv=cv, n_iter=10, random_state=10
+)
 search.fit(env)
 search.results_
 

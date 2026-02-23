@@ -42,7 +42,7 @@ see a result for that value:
 <GetAttr 'columns'>
 Result:
 ―――――――
-Index(['item', 'price', 'qty'], dtype='object')
+Index(['item', 'price', 'qty'], dtype=...)
 
 The "result" we see is an *example* result that the computation produces for the
 data we provided. But we want to fit our pipeline and apply it to different
@@ -102,6 +102,29 @@ Result:
 1   cup    NaN    1
 2   pen    1.5    2
 3  fork    2.2    4
+
+Unpacking multiple outputs from deferred functions
+--------------------------------------------------
+
+When a deferred function returns more than one value, you cannot unpack the
+result directly because unpacking iterates over the result. Iteration is not
+supported on DataOps until evaluation.
+
+In general, it is recommended that deferred functions return a single
+value whenever possible. Returning multiple outputs should be avoided unless
+strictly necessary, as it makes downstream usage more complex.
+
+Instead, keep the result as a single DataOp and index into it:
+
+>>> test = skrub.var("test", [1, 2])
+>>> @skrub.deferred
+... def process_test_data(test):
+...     left = test[0]
+...     right = test[1]
+...     return left, right
+>>> res = test.skb.apply_func(process_test_data)
+>>> left = res[0]
+>>> right = res[1]
 
 :func:`deferred` is useful not only for our own functions, but also when we
 need to call module-level functions from a library. For example, to delay the

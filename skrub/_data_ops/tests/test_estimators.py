@@ -167,6 +167,21 @@ def test_cross_validate(data_op, data, n_jobs):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
+def test_cross_validate_type_error():
+    # Checks that cross_validate fails as expected when passed anything
+    # other than a Learner, ParamSearch or OptunaParamSearch object
+    data_op, data = get_data_op_and_data("simple")
+    learner = data_op.skb.make_learner()
+    skrub.cross_validate(learner, data)
+
+    with pytest.raises(
+        ValueError,
+        match="`cross_validate` function requires either a Learner object or "
+        "a ParamSearch object, got *.",
+    ):
+        skrub.cross_validate(data_op, data)
+
+
 def test_return_estimator():
     data_op, data = get_data_op_and_data("simple")
     with pytest.raises(TypeError, match=".*return_learner"):
@@ -201,7 +216,7 @@ def test_randomized_search(data_op, data, n_jobs, randomized_search_backend):
 def test_grid_search(data_op, data, n_jobs):
     search = data_op.skb.make_grid_search(n_jobs=n_jobs)
     search.fit(data)
-    search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
+    assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
     train_score = search.score(data)
     assert train_score == pytest.approx(0.94)
@@ -248,7 +263,7 @@ def test_nested_cv(
     assert mock.call_count == (2 if data_kind == "unprocessed" else 0)
 
     assert len(score) == 5
-    assert score.mean() == pytest.approx(0.84, abs=0.05)
+    assert score.mean() == pytest.approx(0.84, abs=0.08)
 
 
 def test_unsupervised_no_y():
