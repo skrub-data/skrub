@@ -112,38 +112,38 @@ Combining selectors
 -------------------
 
 The available operators are ``|``, ``&``, ``-``, ``^`` with the meaning of usual
-python sets, and ``~`` to invert a selection::
+python sets, and ``~`` to invert a selection:
 
-    >>> SelectCols(s.glob('*_mm')).fit_transform(df)
-    height_mm  width_mm
-    0      297.0     210.0
-    1      420.0     297.0
+>>> SelectCols(s.glob('*_mm')).fit_transform(df)
+height_mm  width_mm
+0      297.0     210.0
+1      420.0     297.0
 
-    >>> SelectCols(~s.glob('*_mm')).fit_transform(df)
-    kind  ID
-    0   A4   4
-    1   A3   3
+>>> SelectCols(~s.glob('*_mm')).fit_transform(df)
+kind  ID
+0   A4   4
+1   A3   3
 
-    >>> SelectCols(s.glob('*_mm') | s.cols('ID')).fit_transform(df)
-    height_mm  width_mm  ID
-    0      297.0     210.0   4
-    1      420.0     297.0   3
+>>> SelectCols(s.glob('*_mm') | s.cols('ID')).fit_transform(df)
+height_mm  width_mm  ID
+0      297.0     210.0   4
+1      420.0     297.0   3
 
-    >>> SelectCols(s.glob('*_mm') & s.glob('height_*')).fit_transform(df)
-    height_mm
-    0      297.0
-    1      420.0
+>>> SelectCols(s.glob('*_mm') & s.glob('height_*')).fit_transform(df)
+height_mm
+0      297.0
+1      420.0
 
-    >>> SelectCols(s.glob('*_mm') ^ s.string()).fit_transform(df)
-    height_mm  width_mm kind
-    0      297.0     210.0   A4
-    1      420.0     297.0   A3
+>>> SelectCols(s.glob('*_mm') ^ s.string()).fit_transform(df)
+height_mm  width_mm kind
+0      297.0     210.0   A4
+1      420.0     297.0   A3
 
 The operators respect the usual short-circuit rules. For example, the
-following selector won't compute the cardinality of non-categorical columns::
+following selector won't compute the cardinality of non-categorical columns:
 
-    >>> s.categorical() & s.cardinality_below(10)
-    (categorical() & cardinality_below(10))
+>>> s.categorical() & s.cardinality_below(10)
+(categorical() & cardinality_below(10))
 
 .. _user_guide_selectors_expand:
 Visualizing a selector
@@ -156,7 +156,7 @@ to be applied on a variety of standard dataframe libraries, and can be particula
 useful on complicated combinations of selectors. For instance, the following filter
 only keeps columns that do not end in '_mm' OR contain the value 297.0:
 
->>> some_selector = ~s.glob('*_mm') | s.filter(lambda col: 297.0 in col)
+>>> some_selector = ~s.glob('*_mm')
 >>> import pandas as pd
 >>> pandas_df = pd.DataFrame(
 ...     {
@@ -167,13 +167,13 @@ only keeps columns that do not end in '_mm' OR contain the value 297.0:
 ...     }
 ... )
 >>> some_selector.expand(pandas_df)
-['height_mm', 'kind', 'ID']
+['kind', 'ID']
 
 
-The :meth:`expand_index` method also exists: rather than returning a list of column names, it returns the corresponding indices from the input dataframe's column list::
+The :meth:`expand_index` method also exists: rather than returning a list of column names, it returns the corresponding indices from the input dataframe's column list:
 
-    >>> some_selector.expand_index(polars_df)
-    [0, 2, 3]
+>>> some_selector.expand_index(pandas_df)
+[2, 3]
 
 .. _selectors_and_transformer:
 
