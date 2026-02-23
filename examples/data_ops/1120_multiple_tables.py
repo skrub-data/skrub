@@ -47,8 +47,11 @@ import skrub.datasets
 dataset = skrub.datasets.fetch_credit_fraud(split="train")
 
 # %%
-# We define two skrub variables that hold the dataframes for the two tables,
-# then read the data from the corresponding paths.
+# We define two skrub variables that store the content of the two csv
+# files. These variables will be used as inputs to the DataOps plan we will build.
+# Later, when we want to apply the resulting model to new data, we will need to
+# provide dataframes to the same variables, but with the content of the test split
+# of the dataset instead.
 baskets = skrub.var("baskets", pd.read_csv(dataset.baskets_path))
 products = skrub.var("products", pd.read_csv(dataset.products_path))
 
