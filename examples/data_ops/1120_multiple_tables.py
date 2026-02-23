@@ -46,33 +46,11 @@ import skrub.datasets
 
 dataset = skrub.datasets.fetch_credit_fraud(split="train")
 
-
 # %%
-# We define two separate deferred loading functions, and use them to load them
-# as pandas dataframes. For this example, the loaders are simple wrappers around
-# ``pd.read_csv``, but in a real-world scenario, they could be more complex and
-# involve additional logic for handling data types, or other
-# particularities of the data source.
-
-
-@skrub.deferred
-def load_baskets(file_path):
-    return pd.read_csv(file_path)
-
-
-@skrub.deferred
-def load_products(file_path):
-    return pd.read_csv(file_path)
-
-
-# %%
-# We define the paths to the data files as skrub variables, and then load the
-# dataframes using the deferred loading functions.
-baskets_path = skrub.var("baskets_path", dataset.baskets_path)
-products_path = skrub.var("products_path", dataset.products_path)
-
-baskets = load_baskets(baskets_path)
-products = load_products(products_path)
+# We define two skrub variables that hold the dataframes for the two tables,
+# then read the data from the corresponding paths.
+baskets = skrub.var("baskets", pd.read_csv(dataset.baskets_path))
+products = skrub.var("products", pd.read_csv(dataset.products_path))
 
 # %%
 # Now we can use the |TableReport| provided by the Data Ops to inspect the two tables.
@@ -230,11 +208,11 @@ search.plot_results()
 
 new_data = skrub.datasets.fetch_credit_fraud(split="test")
 
-new_baskets = load_baskets(new_data.baskets_path)
-new_products = load_products(new_data.products_path)
+new_baskets = pd.read_csv(new_data.baskets_path)
+new_products = pd.read_csv(new_data.products_path)
 
 probabilities = search.best_learner_.predict_proba(
-    {"baskets_path": new_data.baskets_path, "products_path": new_data.products_path}
+    {"baskets": new_baskets, "products": new_products}
 )
 # %%
 # We can evaluate the performance of our model by plotting the ROC curve and
@@ -244,9 +222,7 @@ probabilities = search.best_learner_.predict_proba(
 import matplotlib.pyplot as plt
 from sklearn.metrics import RocCurveDisplay
 
-RocCurveDisplay.from_predictions(
-    new_baskets["fraud_flag"].skb.eval(), probabilities[:, 1]
-)
+RocCurveDisplay.from_predictions(new_baskets["fraud_flag"], probabilities[:, 1])
 plt.show()
 # %%
 # Conclusion
