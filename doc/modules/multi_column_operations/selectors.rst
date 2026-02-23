@@ -154,11 +154,11 @@ outside of a Skrub workflow: applying it to any dataframe will return the list
 of column names from the dataframe that the selector would keep. This allows selectors
 to be applied on a variety of standard dataframe libraries, and can be particularly
 useful on complicated combinations of selectors. For instance, the following filter
-only keeps columns that do not end in '_mm' OR contain the value 297.0:
+only keeps columns that do not end in ``_mm``:
 
->>> some_selector = ~s.glob('*_mm')
+>>> some_selector = ~s.glob("*_mm")
 >>> import pandas as pd
->>> pandas_df = pd.DataFrame(
+>>> df = pd.DataFrame(
 ...     {
 ...         "height_mm": [210.0, 297.0],
 ...         "width_mm": [188.5, 210.0],
@@ -166,13 +166,13 @@ only keeps columns that do not end in '_mm' OR contain the value 297.0:
 ...         "ID": [5, 4],
 ...     }
 ... )
->>> some_selector.expand(pandas_df)
+>>> some_selector.expand(df)
 ['kind', 'ID']
 
 
 The :meth:`expand_index` method also exists: rather than returning a list of column names, it returns the corresponding indices from the input dataframe's column list:
 
->>> some_selector.expand_index(pandas_df)
+>>> some_selector.expand_index(df)
 [2, 3]
 
 .. _selectors_and_transformer:

@@ -244,10 +244,10 @@ class Selector:
             The list of `df`'s columns that the item would select.
         Examples
         --------
+        >>> import pandas as pd
         >>> from skrub import selectors as s
         >>> some_selector = ~s.glob("*_mm")
-        >>> import pandas as pd
-        >>> pandas_df = pd.DataFrame(
+        >>> df = pd.DataFrame(
         ...     {
         ...         "height_mm": [210.0, 297.0],
         ...         "width_mm": [188.5, 210.0],
@@ -288,10 +288,10 @@ class Selector:
 
         Examples
         --------
+        >>> import pandas as pd
         >>> from skrub import selectors as s
         >>> some_selector = ~s.glob("*_mm")
-        >>> import pandas as pd
-        >>> pandas_df = pd.DataFrame(
+        >>> df = pd.DataFrame(
         ...     {
         ...         "height_mm": [210.0, 297.0],
         ...         "width_mm": [188.5, 210.0],
