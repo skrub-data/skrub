@@ -232,7 +232,7 @@ class Selector:
 
     def expand(self, df):
         """Lists the column names that the selector would retain if applied to
-        the dataframe `df`.
+        the dataframe ``df``.
 
         Parameters
         ----------
@@ -241,7 +241,8 @@ class Selector:
         Returns
         -------
         list
-            The list of `df`'s columns that the item would select.
+            The list of ``df``'s columns that the item would select.
+
         Examples
         --------
         >>> import pandas as pd
@@ -261,8 +262,8 @@ class Selector:
 
         Notes
         -----
-        In effect, running `df[sel.expand(df)]` should give the exact same result as
-        `sel.transform(df)`.
+        In effect, running ``df[sel.expand(df)]`` should give the exact same result as
+        ``sel.transform(df)``.
 
         """
         matching_col_names = []
@@ -283,7 +284,7 @@ class Selector:
         Returns
         -------
         list
-            The list of indices among `df`'s columns that the item would select.
+            The list of indices among ``df``'s columns that the item would select.
 
 
         Examples
@@ -306,9 +307,9 @@ class Selector:
         Notes
         -----
 
-        In effect, (as with `expand`), if `cols` is the list of columns in `df`,
-        running `df[cols[i] for i in sel.expand(df)]` should give the exact same
-        result as `sel.transform(df)`.
+        In effect, (as with ``expand``), if ``cols`` is the list of columns in ``df``,
+        running ``df[cols[i] for i in sel.expand(df)]`` should give the exact same
+        result as ``sel.transform(df)``.
 
         """
         matching_col_indices = []
