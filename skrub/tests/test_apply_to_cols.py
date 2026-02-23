@@ -3,7 +3,7 @@ import datetime
 import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OrdinalEncoder
 
 from skrub import ApplyToCols
 from skrub import _dataframe as sbd
@@ -17,6 +17,7 @@ def test_single_column_transformer_becomes_apply_to_each_col(df_module):
     X = df_module.make_dataframe({"date_col": ["2020-01-01", "2020-01-02"]})
     at.fit(X)
     assert hasattr(at, "transformers_")
+    assert isinstance(at.transformers_, dict)
 
 
 def test_non_single_column_transformer_becomes_apply_to_subframe(df_module):
@@ -114,29 +115,6 @@ def test_fit_and_transform_separate(df_module):
     assert sbd.shape(X_test_transformed) == (2, 2)
 
 
-def test_correct_transformer_attributes(df_module):
-    """Test that transformer attributes are correctly set after fit."""
-    at = ApplyToCols(StandardScaler(), cols=s.numeric())
-    X = df_module.make_dataframe(
-        {
-            "col1": [1.0, 2.0, 3.0],
-            "col2": [10.0, 20.0, 30.0],
-            "date_col": ["2020-01-01", "2020-01-02", "2020-01-03"],
-        }
-    )
-    at.fit(X)
-
-    # For non-SingleColumnTransformer, transformer_ should be set
-    assert hasattr(at, "transformer_")
-    assert isinstance(at.transformer_, StandardScaler)
-
-    # For SingleColumnTransformer, transformers_ should be set
-    at_single = ApplyToCols(ToDatetime(), cols="date_col")
-    at_single.fit(X)
-    assert hasattr(at_single, "transformers_")
-    assert isinstance(at_single.transformers_, dict)
-
-
 def test_reject_column(df_module):
     at = ApplyToCols(ToDatetime(), cols=s.all(), allow_reject=True)
     X = df_module.make_dataframe(
@@ -186,6 +164,16 @@ def test_check_is_fitted_get_feature_names_out():
     # Should raise NotFittedError when calling get_feature_names_out before fit
     with pytest.raises(NotFittedError):
         at.get_feature_names_out()
+
+
+def test_get_feature_names_out_after_fit(df_module):
+    """Test that get_feature_names_out works after fitting."""
+    at = ApplyToCols(ToDatetime(), cols=s.all())
+    X = df_module.make_dataframe({"date_col": ["2020-01-01", "2020-01-02"]})
+    at.fit(X)
+
+    feature_names = at.get_feature_names_out()
+    assert feature_names == ["date_col"]
 
 
 # This test is needed to make coverage happy

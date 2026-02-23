@@ -102,16 +102,16 @@ model = make_pipeline(
 # .. admonition:: Under the hood of |ApplyToCols|
 #   :collapsible: closed
 #
-#    |ApplyToCols| is implemented using the |ApplyToEachCol| and |ApplyToSubFrame|
-#    classes.
-#    The former applies a transformer to each column independently, while the latter
-#    applies a transformer to a sub-dataframe.
-#    Normally, users don't need to worry about these two classes, but they can be useful
-#    when more control is needed.
+#   |ApplyToCols| is implemented using the |ApplyToEachCol| and |ApplyToSubFrame|
+#   classes.
+#   The former applies a transformer to each column independently, while the latter
+#   applies a transformer to a sub-dataframe.
+#   Normally, users don't need to worry about these two classes, but they can be useful
+#   when more control is needed.
 
 # %%
 # Note that selectors also come in handy in a pipeline to select or drop columns, using
-# |SelectCols| and |DropCols|!
+# |SelectCols| and |DropCols|.
 from sklearn.preprocessing import StandardScaler
 
 from skrub import SelectCols

@@ -4,7 +4,6 @@ based on the type of the transformer passed to it.
 """
 
 from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
-from sklearn.exceptions import NotFittedError
 
 from . import selectors
 from ._apply_on_each_col import ApplyToEachCol
@@ -33,24 +32,47 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         unmodified in the output. The default is to attempt transforming all
         columns.
 
+    how : "auto", "cols" or "frame", optional
+        How the transformer is applied. In most cases the default "auto"
+        is appropriate.
+
+        - "cols" means `transformer` is wrapped in a :class:`ApplyToEachCol`
+          transformer, which fits a separate clone of `transformer` to each
+          column in `cols`.
+        - "frame" means `transformer` is wrapped in a :class:`ApplyToSubFrame`
+          transformer, which fits a single clone of `transformer` to the
+          selected part of the input dataframe.
+        - "auto" chooses the wrapping depending on the input and transformer.
+          If the transformer has a ``__single_column_transformer__`` attribute,
+          "cols" is chosen. Otherwise "frame" is chosen.
+
     allow_reject : bool, default=False
         Whether to allow refusing to transform columns for which the provided
         transformer is not suited, for example rejecting non-datetime columns if
         transformer is a DatetimeEncoder. See the documentation of
         :class:`ApplyToEachCol` for details.
 
-    how : "auto", "cols" or "frame", optional
-        How the transformer is applied. In most cases the default "auto"
-        is appropriate.
-        - "cols" means `transformer` is wrapped in a :class:`ApplyToEachCol`
-            transformer, which fits a separate clone of `transformer` to each
-            column in `cols`.
-        - "frame" means `transformer` is wrapped in a :class:`ApplyToSubFrame`
-            transformer, which fits a single clone of `transformer` to the
-            selected part of the input dataframe.
-        - "auto" chooses the wrapping depending on the input and transformer.
-            If the transformer has a ``__single_column_transformer__`` attribute,
-            "cols" is chosen. Otherwise "frame" is chosen.
+    keep_original : bool, default=False
+        If ``True``, the original columns are preserved in the output. If the
+        transformer produces a column with the same name, the transformation
+        result is renamed so that both columns can appear in the output. If
+        ``False``, when the transformer accepts a column, only the
+        transformer's output is included in the result, not the original
+        column. In all cases rejected columns (or columns not selected by
+        ``cols``) are passed through.
+
+    rename_columns : str, default='{}'
+        Format string applied to all transformation output column names. For
+        example pass ``'transformed_{}'`` to prepend ``'transformed_'`` to all
+        output column names. The default value does not modify the names.
+        Renaming is not applied to columns not selected by ``cols``.
+
+    n_jobs : int, default=None
+        Number of jobs to run in parallel.
+        ``None`` means 1 unless in a joblib ``parallel_backend`` context.
+        ``-1`` means using all processors.
+        Note that this parameter is only used when the transformer is wrapped in an
+        ``ApplyToEachCol``.
 
     Notes
     -----
@@ -66,19 +88,20 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         self,
         transformer,
         cols=_SELECT_ALL_COLUMNS,
+        *,
+        how="auto",
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
-        how="auto",
         n_jobs=None,
     ):
         self.transformer = transformer
         self.cols = cols
+        self.how = how
+        self.n_jobs = n_jobs
         self.allow_reject = allow_reject
         self.keep_original = keep_original
         self.rename_columns = rename_columns
-        self.n_jobs = n_jobs
-        self.how = how
 
     def fit(self, X, y=None, **kwargs):
         """Fit the transformer to the data.
@@ -150,9 +173,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
         columnwise = {"auto": "auto", "cols": True, "frame": False}[self.how]
 
-        # To make sure transform() raises if fit_transform() hasn't been called
-        self._wrapped_transformer = None
-
         self._wrapped_transformer = wrap_transformer(
             self.transformer,
             self.cols,
@@ -187,18 +207,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         result : Pandas or Polars DataFrame
             The transformed data.
         """
-        if (
-            not hasattr(self, "_wrapped_transformer")
-            or self._wrapped_transformer is None
-        ):
-            raise NotFittedError(
-                "This ApplyToCols instance is not fitted yet. Call 'fit' with "
-                "appropriate arguments before using this estimator."
-            )
-        if isinstance(self._wrapped_transformer, ApplyToEachCol):
-            check_is_fitted(self, "transformers_")
-        else:
-            check_is_fitted(self, "transformer_")
+
+        check_is_fitted(self)
 
         return self._wrapped_transformer.transform(X)
 
@@ -215,16 +225,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         feature_names_out : ndarray of str objects
             Transformed feature names.
         """
-        if (
-            not hasattr(self, "_wrapped_transformer")
-            or self._wrapped_transformer is None
-        ):
-            raise NotFittedError(
-                "This ApplyToCols instance is not fitted yet. Call 'fit' with "
-                "appropriate arguments before using this estimator."
-            )
-        if isinstance(self._wrapped_transformer, ApplyToEachCol):
-            check_is_fitted(self, "transformers_")
-        else:
-            check_is_fitted(self, "transformer_")
+        check_is_fitted(self)
+
         return self._wrapped_transformer.get_feature_names_out(input_features)
