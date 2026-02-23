@@ -191,7 +191,7 @@ is defined, and its inverse is used as a parameter for :class:`skrub.DropCols`:
 
 >>> df = pd.DataFrame({
 ... "not a lot": [1, 1, 1, 2, 2],
-... "too_many":  [1,2,3,4,5]})
+... "too_many":  [1, 2, 3, 4, 5]})
 
 >>> from skrub import DropCols
 >>> DropCols(cols=~s.cardinality_below(3)).fit_transform(df)

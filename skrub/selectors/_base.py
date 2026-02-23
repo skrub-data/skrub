@@ -256,7 +256,7 @@ class Selector:
         ...     }
         ... )
         >>> some_selector.expand(df)
-        ['height_mm', 'width_mm']
+        ['kind', 'ID']
 
 
         Notes
@@ -300,7 +300,7 @@ class Selector:
         ...     }
         ... )
         >>> some_selector.expand_index(df)
-        [0, 1]
+        [2, 3]
 
 
         Notes
