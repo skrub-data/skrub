@@ -123,7 +123,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     Fit a StandardScaler to each column in df:
 
-    >>> scaler = ApplyToCols(StandardScaler())
+    >>> scaler = ApplyToCols(StandardScaler(), how="cols")
     >>> scaler.fit_transform(df)
          A    B    C
     0 -1.0 -1.0 -1.0
@@ -133,7 +133,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     We can restrict the columns on which the transformation is applied:
 
-    >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"])
+    >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"], how="cols")
     >>> scaler.fit_transform(df)
          A    B     C
     0 -1.0 -1.0   0.0
@@ -144,7 +144,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     >>> scaler.transformers_
     {'A': StandardScaler(), 'B': StandardScaler()}
-    >>> scaler.used_inputs_
+    >>> scaler._wrapped_transformer.used_inputs_
     ['A', 'B']
 
     **Rejected columns**
@@ -167,7 +167,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
+    skrub.core._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
 
     How these rejections are handled depends on the ``allow_reject`` parameter.
     By default, no special handling is performed and rejections are considered
@@ -207,7 +207,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     The ``rename_columns`` parameter allows renaming output columns.
 
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[0., 100.]))
-    >>> scaler = ApplyToCols(StandardScaler(), rename_columns='{}_scaled')
+    >>> scaler = ApplyToCols(StandardScaler(), rename_columns='{}_scaled', how='cols')
     >>> scaler.fit_transform(df)
        A_scaled  B_scaled
     0      -1.0      -1.0
@@ -216,7 +216,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     The renaming is only applied to columns selected by ``cols`` (and not
     rejected by the transformer when ``allow_reject`` is ``True``).
 
-    >>> scaler = ApplyToCols(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
+    >>> scaler = ApplyToCols(StandardScaler(), cols=['A'], rename_columns='{}_scaled', how='cols')
     >>> scaler.fit_transform(df)
        A_scaled      B
     0      -1.0    0.0
@@ -228,7 +228,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     produces a column with the same name, the transformation result is renamed
     to avoid a name clash.
 
-    >>> scaler = ApplyToCols(StandardScaler(), keep_original=True)
+    >>> scaler = ApplyToCols(StandardScaler(), keep_original=True, how='cols')
     >>> scaler.fit_transform(df)                                    # doctest: +SKIP
           A  A__skrub_89725c56__      B  B__skrub_81cc7d00__
     0 -10.0                 -1.0    0.0                 -1.0
@@ -237,7 +237,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     In this case we may want to set a more sensible name for the transformer's output:
 
     >>> scaler = ApplyToCols(
-    ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
+    ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled", how='cols'
     ... )
     >>> scaler.fit_transform(df)
           A  A_scaled      B  B_scaled
