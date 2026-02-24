@@ -587,7 +587,7 @@ def _compute_Xy(data_op, environment):
             environment,
             msg=msg,
         )
-    return Xy_values["X"], Xy_values.get("y", None)
+    return Xy_values["X"], Xy_values.get("y")
 
 
 def _rename_cv_param_learner_to_estimator(kwargs):
