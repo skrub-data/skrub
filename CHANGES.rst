@@ -23,6 +23,11 @@ New Features
 Changes
 -------
 
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings are parsed to ``np.float32``, and a
+  ``numeric_dtype`` parameter to downcast floating-point columns to
+  ``np.float32`` (without converting integer columns).
+
 Bug Fixes
 --------
 - The :class:`TableVectorizer` now correctly handles the case where one of the
@@ -44,9 +49,6 @@ Changes
   `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
   :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
 
-
-- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
-  control whether numeric-looking strings are parsed to ``np.float32``.
 
 Bugfixes
 --------
