@@ -22,9 +22,15 @@ New Features
 
 Changes
 -------
-- ``ApplyToCols`` and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol`
-  and :class:`ApplyToSubFrame` respectively.
-  :pr:`1913` by :user:`Riccardo Cappuzzo <rcap107>`.
+- :class:`ApplyToCols` has been modified so that now it can detect automatically
+  whether the provided transformer should be applied independently on each column,
+  or on all selected columns as a single dataframe. In most cases, this replaces
+  the original ``ApplyToCols`` and ``ApplyToFrame``. As a result, ``ApplyToCols``
+  and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol` and
+  :class:`ApplyToSubFrame` respectively.
+  The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
+  ``how`` to ``cols``.
+  :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bug Fixes
 --------
@@ -32,6 +38,8 @@ Bug Fixes
   provided encoders is a scikit-learn Pipeline that starts with a skrub
   single-column transformer. :pr:`1899` by :user:`Jérôme Dockès <jeromedockes>`
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
+- Errors raised when a polars LazyFrame is passed where an eager DataFrame is
+  expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.7.2
 =============
