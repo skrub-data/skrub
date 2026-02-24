@@ -42,8 +42,11 @@ each column:
 - Convert to strings: Convert columns to strings unless they have a more informative
   dtype, such as numeric, categorical, or datetime.
 
-If ``parse_strings`` is set to ``True``, the ``Cleaner`` will try to parse
+If ``parse_strings`` is set to ``True``, the ``Cleaner`` will parse
 string columns that contain only numbers and convert them to ``np.float32``.
+If ``numeric_dtype="float32"``, the ``Cleaner`` will also downcast columns
+that are already floating-point (e.g. ``float64``) to ``np.float32`` while
+leaving integer columns unchanged.
 
 The |Cleaner| is a scikit-learn compatible transformer:
 
@@ -94,3 +97,26 @@ id           int64
 dtype: ...
 
 When ``parse_strings=False`` (default), both columns keep their original dtypes.
+
+Downcasting float dtypes to ``float32`` with the |Cleaner|
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, floating-point columns (e.g. ``float64``) keep their original dtype.
+To downcast only floating-point columns to ``float32``, set
+``numeric_dtype="float32"``:
+
+>>> from skrub import Cleaner
+>>> cleaner = Cleaner(numeric_dtype="float32")
+>>> import pandas as pd
+>>> df = pd.DataFrame({
+...     "f64": [1.0, 2.0, 3.0],
+...     "i64": [1, 2, 3],
+... })
+>>> df.dtypes
+f64    float64
+i64      int64
+dtype: ...
+>>> cleaner.fit_transform(df).dtypes
+f64    float32
+i64      int64
+dtype: ...

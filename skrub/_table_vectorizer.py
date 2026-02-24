@@ -121,6 +121,7 @@ def _get_preprocessors(
     n_jobs,
     add_tofloat32=False,
     parse_strings=False,
+    numeric_dtype=None,
     cast_to_str=True,
     datetime_format=None,
 ):
@@ -138,14 +139,25 @@ def _get_preprocessors(
         ),
         (ToDatetime(format=datetime_format), cols),
     ]
-    if parse_strings and add_tofloat32:
-        raise ValueError(
-            "Cannot set both `parse_strings=True` and `add_tofloat32=True`."
-        )
-    if parse_strings:
-        transformers.append((ToFloat(), cols & s.string()))
-    elif add_tofloat32:
+
+    if add_tofloat32:
         transformers.append((ToFloat(), cols))
+    else:
+        tofloat_cols = None
+        if parse_strings:
+            tofloat_cols = cols & s.string()
+        if numeric_dtype == "float32":
+            float_cols = cols & s.float()
+            tofloat_cols = (
+                float_cols if tofloat_cols is None else tofloat_cols | float_cols
+            )
+        elif numeric_dtype is not None:
+            raise ValueError(
+                "`numeric_dtype` must be one of "
+                f"[`None`, `'float32'`]. Found {numeric_dtype}."
+            )
+        if tofloat_cols is not None:
+            transformers.append((ToFloat(), tofloat_cols))
 
     transformers.append((CleanCategories(), cols))
 
@@ -201,6 +213,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
         - ``False``: no numeric parsing is attempted.
         - ``True``: apply :class:`ToFloat` to string columns only. String columns
           that contain only numerical values are converted to ``np.float32``.
+
+    numeric_dtype : "float32" or None, default=None
+        Whether to downcast floating-point columns to ``np.float32``.
+        If set to ``"float32"``, only columns that are already floating-point
+        are converted to ``np.float32``. Integer columns keep their original dtype.
 
     cast_to_str : bool, default=False
         If ``True``, apply the ``ToStr`` transformer to non-numeric,
@@ -265,8 +282,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
       actual datetimes with the correct dtype. If ``datetime_format`` is provided,
       it is forwarded to ``ToDatetime()``. Otherwise, the format is inferred.
 
-    - ``ToFloat()``: if ``parse_strings=True``, apply ``ToFloat()`` on string
-      columns only, converting numeric-looking strings to ``np.float32``.
+    - ``ToFloat()``:
+      - if ``parse_strings=True``, apply ``ToFloat()`` on string columns only,
+        converting numeric-looking strings to ``np.float32``;
+      - if ``numeric_dtype="float32"``, apply ``ToFloat()`` on floating-point
+        columns only to downcast ``float64`` to ``float32``.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
@@ -279,14 +299,17 @@ class Cleaner(TransformerMixin, BaseEstimator):
     Example:
 
     >>> import pandas as pd
-    >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2]})
+    >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2], "f": [1.0, 2.0]})
     >>> Cleaner(parse_strings=False).fit_transform(df).dtypes  # doctest: +SKIP
     num_str    ...
     num        ...
+    f          float64
     dtype: object
-    >>> Cleaner(parse_strings=True).fit_transform(df).dtypes  # doctest: +SKIP
+    >>> cleaner = Cleaner(parse_strings=True, numeric_dtype="float32")
+    >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     num_str    float32
     num        ...
+    f          float32
     dtype: object
 
     Examples
@@ -349,6 +372,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_unique=False,
         datetime_format=None,
         parse_strings=False,
+        numeric_dtype=None,
         cast_to_str=False,
         n_jobs=1,
     ):
@@ -357,6 +381,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
         self.parse_strings = parse_strings
+        self.numeric_dtype = numeric_dtype
         self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
 
@@ -383,6 +408,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
             raise ValueError(
                 f"`parse_strings` must be a boolean. Found {self.parse_strings!r}."
             )
+        if self.numeric_dtype not in (None, "float32"):
+            raise ValueError(
+                "`numeric_dtype` must be one of "
+                f"[`None`, `'float32'`]. Found {self.numeric_dtype}."
+            )
 
         all_steps = _get_preprocessors(
             cols=s.all(),
@@ -391,6 +421,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             parse_strings=self.parse_strings,
+            numeric_dtype=self.numeric_dtype,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
         )
