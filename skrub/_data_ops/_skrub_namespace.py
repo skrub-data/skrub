@@ -47,6 +47,9 @@ from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
 from ._utils import KFOLD_5, NULL, attribute_error
 
+# By default, select all columns
+_SELECT_ALL_COLUMNS = s.all()
+
 
 def _var_values_provided(data_op, environment):
     all_nodes = nodes(data_op)
@@ -138,7 +141,7 @@ class SkrubNamespace:
         self,
         estimator,
         y=None,
-        cols=s.all(),
+        cols=_SELECT_ALL_COLUMNS,
         how="auto",
         allow_reject=False,
         unsupervised=False,
@@ -166,7 +169,7 @@ class SkrubNamespace:
         estimator,
         *,
         y=None,
-        cols=s.all(),
+        cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         how="auto",
         allow_reject=False,
@@ -201,11 +204,11 @@ class SkrubNamespace:
         how : "auto", "cols", "frame" or "no_wrap", optional
             How the estimator is applied. In most cases the default "auto"
             is appropriate.
-            - "cols" means `estimator` is wrapped in a :class:`ApplyToCols`
+            - "cols" means `estimator` is wrapped in a :class:`ApplyToEachCol`
               transformer, which fits a separate clone of `estimator` each
               column in `cols`. `estimator` must be a transformer (have a
               ``fit_transform`` method).
-            - "frame" means `estimator` is wrapped in a :class:`ApplyToFrame`
+            - "frame" means `estimator` is wrapped in a :class:`ApplyToSubFrame`
               transformer, which fits a single clone of `estimator` to the
               selected part of the input dataframe. `estimator` must be a
               transformer.
@@ -271,10 +274,10 @@ class SkrubNamespace:
         --------
         skrub.DataOp.skb.make_learner :
             Get a skrub learner for this DataOp.
-        skrub.ApplyToCols :
+        skrub.ApplyToEachCol :
             Transformer that applies a given transformer separately to each
             selected column.
-        skrub.ApplyToFrame:
+        skrub.ApplyToSubFrame:
             Transformer that applies a given transformer to part of a
             dataframe.
 
@@ -2886,14 +2889,14 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToFrame(transformer=TableVectorizer())
+        ApplyToSubFrame(transformer=TableVectorizer())
 
         Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``ApplyToFrame`` or
-        ``ApplyToCols`` depending if the transformer is applied to each column
+        they will be wrapped in a meta-estimator ``ApplyToSubFrame`` or
+        ``ApplyToEachCol`` depending if the transformer is applied to each column
         separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``ApplyToFrame`` or ``transformers_``
-        attribute of ``ApplyToCols`` (a dictionary mapping column names to the
+        ``transformer_`` attribute of ``ApplyToSubFrame`` or ``transformers_``
+        attribute of ``ApplyToEachCol`` (a dictionary mapping column names to the
         corresponding transformer).
 
         >>> fitted_vectorizer.transformer_
@@ -2920,7 +2923,7 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToCols(cols=(string() - cols('date')),
+        ApplyToEachCol(cols=(string() - cols('date')),
                      transformer=StringEncoder(n_components=2))
         >>> fitted_vectorizer.transformers_
         <GetAttr 'transformers_'>

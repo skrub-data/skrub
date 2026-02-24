@@ -6,7 +6,8 @@
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 .. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
-.. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
+.. |ApplyToEachCol| replace:: :class:`~skrub.ApplyToEachCol`
+.. |ToCategorical| replace:: :class:`~skrub.ToCategorical`
 
 .. _user_guide_table_vectorizer:
 
@@ -97,10 +98,55 @@ able to handle the content of the column on its own.
 
 If you need to define complex transformers to pass to a single instance of
 |TableVectorizer|, consider using the :ref:`skrub Data Ops <user_guide_data_ops_index>`,
-|ApplyToCols|, or the :ref:`skrub selectors <user_guide_selectors>` instead, as
+|ApplyToEachCol|, or the :ref:`skrub selectors <user_guide_selectors>` instead, as
 they are more versatile and allow a higher degree
 of control over which operations are applied to which columns.
 
 The |TableVectorizer| is used in :ref:`example_encodings`, while the
 docstring of the class provides more details on the parameters and usage, as well
 as various examples.
+
+Numeric strings and categorical encoding
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, columns that contain only numeric strings (e.g. ``["1", "2", "3"]``)
+are parsed as numeric features by the |TableVectorizer|. The recommended way to
+treat such values as categorical (e.g. IDs or codes) is to convert the column
+to pandas' ``category`` dtype using |ToCategorical| with |ApplyToEachCol| before
+vectorizing, rather than relying on keeping them as strings.
+
+Default behavior: numeric strings are parsed as a single numeric column (feature
+names are not one-hot encoded):
+
+>>> import pandas as pd
+>>> from skrub import TableVectorizer
+>>> df = pd.DataFrame({"c": ["1", "2", "3"]})
+>>> tv = TableVectorizer().fit(df)
+>>> list(map(str, sorted(tv.get_feature_names_out())))
+['c']
+>>> tv = TableVectorizer()
+>>> tv.fit_transform(df)
+c
+0  1.0
+1  2.0
+2  3.0
+
+With |ToCategorical| and |ApplyToEachCol|, the column is treated as categorical
+and produces one-hot encoded feature names:
+
+>>> from skrub import ApplyToEachCol, TableVectorizer, ToCategorical
+>>> from sklearn.pipeline import make_pipeline
+>>> pipe = make_pipeline(
+...     ApplyToEachCol(ToCategorical(), cols=["c"]),
+...     TableVectorizer(),
+... )
+>>> pipe.fit(df)
+Pipeline(steps=[('applytoeachcol', ...),
+    ('tablevectorizer', ...)])
+>>> list(map(str, sorted(pipe.named_steps["tablevectorizer"].get_feature_names_out())))
+['c_1', 'c_2', 'c_3']
+>>> pipe.fit_transform(df)
+   c_1  c_2  c_3
+0  1.0  0.0  0.0
+1  0.0  1.0  0.0
+2  0.0  0.0  1.0

@@ -67,7 +67,8 @@ API_REFERENCE = {
                     "SelectCols",
                     "DropCols",
                     "ApplyToCols",
-                    "ApplyToFrame",
+                    "ApplyToEachCol",
+                    "ApplyToSubFrame",
                 ],
             }
         ],
