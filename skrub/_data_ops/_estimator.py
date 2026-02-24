@@ -571,31 +571,23 @@ def _find_Xy(data_op):
 
 def _compute_Xy(data_op, environment):
     """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
-
     Xy = _find_Xy(data_op.skb.clone())
-    X = evaluate(
-        Xy["X"],
-        mode="fit_transform",
-        environment=environment,
-        clear=False,
-    )
+    Xy_values = evaluate(Xy, mode="fit_transform", environment=environment, clear=True)
     if "y" in Xy:
-        y = evaluate(
-            Xy["y"],
-            mode="fit_transform",
-            environment=environment,
-            clear=False,
-        )
         msg = (
             "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"
             " for both X and y?"
         )
         check_subsampled_X_y_shape(
-            Xy["X"], Xy["y"], X, y, "fit_transform", environment, msg=msg
+            Xy["X"],
+            Xy["y"],
+            Xy_values["X"],
+            Xy_values["y"],
+            "fit_transform",
+            environment,
+            msg=msg,
         )
-    else:
-        y = None
-    return X, y
+    return Xy_values["X"], Xy_values.get("y")
 
 
 def _rename_cv_param_learner_to_estimator(kwargs):
