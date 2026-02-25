@@ -2,17 +2,15 @@
 The SessionEncoder is a transformer that takes as input:
 - a "by" column, which identifies a user
 - a "timestamp" column, which identifies the time of an event
-- a "session_duration" value, which identifies the duration of a session
+- a "session_gap" value, which identifies the maximum allowed gap between events
+in a session
 
-It returns a dataframe with the same number of rows as the input, but with the following
-columns:
-- "session_id": a unique identifier for each session, which is a combination of the "by"
-column and a session number
-- "session_start": the timestamp of the first event in the session
-- "session_end": the timestamp of the last event in the session
-- "session_duration": the duration of the session, which is the difference between the
-last and first timestamps in the session
+It returns a dataframe with the same number of rows as the input, but with the
+column "session_id": a unique identifier for each session, which is a combination
+of the "by" column and a session number
 """
+
+import numbers
 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -114,11 +112,6 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         The name of the column that identifies the time of an event. This column
         is used to determine the start and end of a session.
 
-    session_duration : str, optional
-        The name of the column that identifies the duration of a session. If not
-        provided, the duration is calculated as the difference between the last
-        and first timestamps in the session.
-
     session_gap : int, default=30
         The maximum gap (in minutes) between events in a session. If the gap
         between two events exceeds this value, they are considered to be in
@@ -130,10 +123,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         All column names in the input dataframe.
     """
 
-    def __init__(self, by, timestamp, session_duration=None, session_gap=30):
+    def __init__(self, by, timestamp, session_gap=30):
         self.by = by
         self.timestamp = timestamp
-        self.session_duration = session_duration
         self.session_gap = session_gap
 
     def fit(self, X, y=None):
@@ -178,14 +170,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         if self.timestamp not in self.all_inputs_:
             raise ValueError(f"Column '{self.timestamp}' not found in input dataframe")
 
-        # check the correctness of the values of session_gap and session_duration
-        if not isinstance(self.session_gap, (int, float)) or self.session_gap <= 0:
+        # check the correctness of the values of session_gap
+        if not isinstance(self.session_gap, numbers.Number) or self.session_gap <= 0:
             raise ValueError("session_gap must be a positive number")
-
-        if self.session_duration is not None and not isinstance(
-            self.session_duration, (int, float)
-        ):
-            raise ValueError("session_duration must be a number if provided")
 
         # sort the input dataframe by the "by" and "timestamp" columns
         X_sorted = sbd.sort(X, by=[self.by, self.timestamp])  # noqa

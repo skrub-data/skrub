@@ -67,11 +67,10 @@ def test_session_encoder_basic(
     unique_sessions = set(session_ids)
     assert len(unique_sessions) == expected_sessions
 
-    # Get the appropriate column data based on what we're grouping by
-    if by_column == "user_id":
-        group_values = sbd.to_list(sbd.col(result, "user_id"))
-    else:  # by_column == "username"
-        group_values = sbd.to_list(sbd.col(result, "username"))
+    # content of the "session_id" column after sessionization
+    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    # content of the "by" column (user_id or username)
+    group_values = sbd.to_list(sbd.col(result, by_column))
 
     counted_sessions = {}
     for group_key, session_id in zip(group_values, session_ids):
@@ -83,39 +82,37 @@ def test_session_encoder_basic(
 
 
 @pytest.mark.parametrize(
-    "by_column",
-    ["user_id", "username"],
+    "by_column,group_keys",
+    [
+        ("user_id", [101, 102, 103]),
+        ("username", ["alice", "bob", "charlie"]),
+    ],
 )
 def test_session_encoder_different_users_different_sessions(
-    example_session_data, by_column
+    example_session_data, by_column, group_keys
 ):
     """Test that different users/groups have different session IDs."""
     # Apply SessionEncoder
     se = SessionEncoder(by=by_column, timestamp="timestamp", session_gap=30)
     result = se.fit_transform(example_session_data)
 
+    # content of the "session_id" column after sessionization
     session_ids = sbd.to_list(sbd.col(result, "session_id"))
-    result_user_ids = sbd.to_list(sbd.col(result, "user_id"))
-    result_usernames = sbd.to_list(sbd.col(result, "username"))
-
-    # Get the appropriate column data based on what we're grouping by
-    if by_column == "user_id":
-        group_values = result_user_ids
-        group_keys = [101, 102, 103]
-    else:  # by_column == "username"
-        group_values = result_usernames
-        group_keys = ["alice", "bob", "charlie"]
+    # content of the "by" column (user_id or username)
+    group_values = sbd.to_list(sbd.col(result, by_column))
 
     # Verify different groups don't share session IDs
     for i, key1 in enumerate(group_keys):
         for key2 in group_keys[i + 1 :]:
+            # find the indices of events for each group key (user id or username)
             indices1 = [idx for idx, v in enumerate(group_values) if v == key1]
             indices2 = [idx for idx, v in enumerate(group_values) if v == key2]
-            sessions1 = set([session_ids[idx] for idx in indices1])
-            sessions2 = set([session_ids[idx] for idx in indices2])
-            assert len(sessions1.intersection(sessions2)) == 0, (
-                f"Groups {key1} and {key2} should not share session IDs"
-            )
+            # find the unique session IDs for each group key (each user)
+            sessions1 = {session_ids[idx] for idx in indices1}
+            sessions2 = {session_ids[idx] for idx in indices2}
+
+            # check that there are no shared session IDs between different users/groups
+            assert len(sessions1.intersection(sessions2)) == 0
 
 
 def test_session_encoder_multiple_users(df_module):
@@ -142,7 +139,7 @@ def test_session_encoder_multiple_users(df_module):
 
     # After sorting by user_id and timestamp, each user should have 1 session
     # since all their events are within 30 minutes
-    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    session_ids = sbd.col(result, "session_id")
 
     # The encoder sorts by user_id then timestamp, so events are grouped by user
     # Check that there are exactly 2 sessions (one per user)
@@ -194,7 +191,7 @@ def test_session_encoder_single_event(df_module):
     session_ids = sbd.to_list(sbd.col(result, "session_id"))
     assert len(session_ids) == 1
     # Single event should create one session
-    assert session_ids[0] in [0, 1]  # Could be 0 or 1 depending on implementation
+    assert session_ids[0] == 0
 
 
 def test_session_encoder_empty_dataframe(df_module):
@@ -256,6 +253,13 @@ def test_session_encoder_invalid_parameters(df_module):
     se_zero = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=0)
     with pytest.raises(ValueError, match="session_gap must be a positive number"):
         se_zero.fit_transform(df)
+
+    # Test non-numeric session_gap
+    se_non_numeric = SessionEncoder(
+        by="user_id", timestamp="timestamp", session_gap="thirty"
+    )
+    with pytest.raises(ValueError, match="session_gap must be a positive number"):
+        se_non_numeric.fit_transform(df)
 
 
 def test_session_encoder_preserves_columns(df_module):
