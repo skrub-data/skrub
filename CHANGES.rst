@@ -19,6 +19,10 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`SessionEncoder` is now available. This encoder takes a dataframe with
+  a timestamp column and a grouping column (e.g., user ID) and computes sessions
+  for each value in the grouping column. Additional statistics can also be added.
+  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
 
 Changes
 -------
