@@ -6,92 +6,116 @@ from skrub import SessionEncoder
 from skrub import _dataframe as sbd
 
 
-def test_session_encoder_basic(df_module):
-    """Test basic sessionization with numeric user IDs."""
-    # Create sample data with clear sessions
+@pytest.fixture
+def example_session_data(df_module):
+    """Create example session data with multiple users and sessions."""
     timestamps = []
     user_ids = []
-    values = []
+    usernames = []
 
     base_time = datetime.datetime(2024, 1, 1)
 
-    # Create 3 sessions with events close together (2 min apart),
-    # separated by large gaps (10 days)
+    # User 101, alice: 3 sessions with 5 events each, 10 days apart
     for session in range(3):
         session_start = base_time + datetime.timedelta(days=session * 10)
         for event in range(5):
             timestamps.append(session_start + datetime.timedelta(minutes=event * 2))
             user_ids.append(101)
-            values.append(float(session * 5 + event))
+            usernames.append("alice")
 
-    df = df_module.make_dataframe(
-        {"timestamp": timestamps, "user_id": user_ids, "value": values}
-    )
-
-    # Apply SessionEncoder with 20-minute gap threshold
-    se = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=20)
-    result = se.fit_transform(df)
-
-    # Check that we have 3 sessions
-    session_ids = sbd.to_list(sbd.col(result, "session_id"))
-    unique_sessions = set(session_ids)
-    assert len(unique_sessions) == 3, f"Expected 3 sessions, got {len(unique_sessions)}"
-
-    # Check that events within a session have the same session_id
-    # Each session has 5 events, so we should have patterns like:
-    # [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2]
-    assert session_ids[0] == session_ids[4]
-    assert session_ids[5] == session_ids[9]
-    assert session_ids[10] == session_ids[14]
-
-    # Check that different sessions have different IDs
-    assert session_ids[0] != session_ids[5]
-    assert session_ids[5] != session_ids[10]
-
-
-def test_session_encoder_alphanumeric_users(df_module):
-    """Test sessionization with alphanumeric user IDs."""
-    timestamps = []
-    user_ids = []
-
-    base_time = datetime.datetime(2024, 1, 1)
-
-    # User A: 2 sessions
+    # User 102, bob: 2 sessions with 3 events each, 2 hours apart
     for session in range(2):
-        session_start = base_time + datetime.timedelta(hours=session * 2)
+        session_start = base_time + datetime.timedelta(days=35, hours=session * 2)
         for event in range(3):
             timestamps.append(session_start + datetime.timedelta(minutes=event * 5))
-            user_ids.append("USER_A")
+            user_ids.append(102)
+            usernames.append("bob")
 
-    # User B: 1 session
-    session_start = base_time + datetime.timedelta(days=1)
-    for event in range(3):
-        timestamps.append(session_start + datetime.timedelta(minutes=event * 5))
-        user_ids.append("USER_B")
+    # User 103, charlie: 1 session with 4 events
+    session_start = base_time + datetime.timedelta(days=40)
+    for event in range(4):
+        timestamps.append(session_start + datetime.timedelta(minutes=event * 3))
+        user_ids.append(103)
+        usernames.append("charlie")
 
-    df = df_module.make_dataframe(
+    return df_module.make_dataframe(
         {
             "timestamp": timestamps,
             "user_id": user_ids,
+            "username": usernames,
         }
     )
 
-    se = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=30)
-    result = se.fit_transform(df)
+
+@pytest.mark.parametrize(
+    "by_column,expected_sessions,group_key_to_sessions",
+    [
+        ("user_id", 6, {101: 3, 102: 2, 103: 1}),
+        ("username", 6, {"alice": 3, "bob": 2, "charlie": 1}),
+    ],
+)
+def test_session_encoder_basic(
+    example_session_data, by_column, expected_sessions, group_key_to_sessions
+):
+    """Test basic sessionization grouping by user_id or username."""
+    # Apply SessionEncoder grouping by the specified column
+    se = SessionEncoder(by=by_column, timestamp="timestamp", session_gap=30)
+    result = se.fit_transform(example_session_data)
+
+    # Check that we have the expected total number of sessions
+    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    unique_sessions = set(session_ids)
+    assert len(unique_sessions) == expected_sessions
+
+    # Get the appropriate column data based on what we're grouping by
+    if by_column == "user_id":
+        group_values = sbd.to_list(sbd.col(result, "user_id"))
+    else:  # by_column == "username"
+        group_values = sbd.to_list(sbd.col(result, "username"))
+
+    counted_sessions = {}
+    for group_key, session_id in zip(group_values, session_ids):
+        if group_key not in counted_sessions:
+            counted_sessions[group_key] = set()
+        counted_sessions[group_key].add(session_id)
+    for group_key, sessions in counted_sessions.items():
+        assert len(sessions) == group_key_to_sessions[group_key]
+
+
+@pytest.mark.parametrize(
+    "by_column",
+    ["user_id", "username"],
+)
+def test_session_encoder_different_users_different_sessions(
+    example_session_data, by_column
+):
+    """Test that different users/groups have different session IDs."""
+    # Apply SessionEncoder
+    se = SessionEncoder(by=by_column, timestamp="timestamp", session_gap=30)
+    result = se.fit_transform(example_session_data)
 
     session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    result_user_ids = sbd.to_list(sbd.col(result, "user_id"))
+    result_usernames = sbd.to_list(sbd.col(result, "username"))
 
-    # Check User A has 2 sessions
-    # Sessions should change when user changes or time gap exceeds threshold
-    # First 3 events: USER_A session 1
-    # Next 3 events: USER_A session 2 (2 hours gap > 30 min)
-    # Last 3 events: USER_B session 3 (user change)
-    assert len(set(session_ids)) == 3
+    # Get the appropriate column data based on what we're grouping by
+    if by_column == "user_id":
+        group_values = result_user_ids
+        group_keys = [101, 102, 103]
+    else:  # by_column == "username"
+        group_values = result_usernames
+        group_keys = ["alice", "bob", "charlie"]
 
-    # Check that user change triggers new session
-    user_a_sessions = set([session_ids[i] for i in range(6)])
-    user_b_sessions = set([session_ids[i] for i in range(6, 9)])
-    assert len(user_a_sessions.intersection(user_b_sessions)) == 0
+    # Verify different groups don't share session IDs
+    for i, key1 in enumerate(group_keys):
+        for key2 in group_keys[i + 1 :]:
+            indices1 = [idx for idx, v in enumerate(group_values) if v == key1]
+            indices2 = [idx for idx, v in enumerate(group_values) if v == key2]
+            sessions1 = set([session_ids[idx] for idx in indices1])
+            sessions2 = set([session_ids[idx] for idx in indices2])
+            assert len(sessions1.intersection(sessions2)) == 0, (
+                f"Groups {key1} and {key2} should not share session IDs"
+            )
 
 
 def test_session_encoder_multiple_users(df_module):

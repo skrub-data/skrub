@@ -34,7 +34,9 @@ def _check_is_new_session_pandas(X, by, timestamp, session_gap):
     # check if the "by" column changes
     char_diff = X[by].diff().fillna(0) > 0
     # check if the time difference between events exceeds the session gap
-    time_diff = X[timestamp].astype(int).diff().fillna(0) // 10**6 > session_gap * 60
+    time_diff = (
+        X[timestamp].astype(int).diff().fillna(0) // 10**3 > session_gap * 60 * 1000
+    )
     # a new session starts if either the "by" column changes or the time gap is
     # exceeded
     is_new_session = char_diff | time_diff
@@ -46,7 +48,9 @@ def _check_is_new_session_polars(X, by, timestamp, session_gap):
     # check if the "by" column changes
     char_diff = X[by].diff().fill_null(0) > 0
     # check if the time difference between events exceeds the session gap
-    time_diff = X[timestamp].diff().fill_null(0) > session_gap * 60 * 1000
+    time_diff = (
+        X[timestamp].dt.epoch("ms").diff().fill_null(0) > session_gap * 60 * 1000
+    )
     # a new session starts if either the "by" column changes or the time gap is
     # exceeded
     is_new_session = char_diff | time_diff
@@ -188,18 +192,25 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
         # convert by column to string if it's not already, to ensure
         # that the diff operation works correctly
-        X_factorized = sbd.with_columns(
-            X_sorted, **{self.by: _factorize_column(X_sorted, self.by)}
-        )
+        if not sbd.is_numeric(X_sorted[self.by]):
+            factorized_by = f"{self.by}_factorized"
+            X_factorized = sbd.with_columns(
+                X_sorted, **{factorized_by: _factorize_column(X_sorted, self.by)}
+            )
+        else:
+            factorized_by = self.by
+            X_factorized = X_sorted
         # mark the start of a new session by checking the difference
         is_new_session = _check_is_new_session(
-            X_factorized, self.by, self.timestamp, self.session_gap
+            X_factorized, factorized_by, self.timestamp, self.session_gap
         )
         # add the session id
         X_with_session_id = _add_session_id(X_factorized, is_new_session)
 
-        # compute statistics
-
-        # wrap everything up in a dataframe and return it
+        # drop the factorized "by" column if the original "by" column was not numeric
+        if factorized_by != self.by:
+            X_with_session_id = sbd.drop_columns(
+                X_with_session_id, columns=[factorized_by]
+            )
 
         return X_with_session_id
