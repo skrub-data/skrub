@@ -15,34 +15,42 @@ from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
 
-def _check_max_cols(max_plot_columns, max_association_columns):
-    max_plot_columns = (
-        max_plot_columns
-        if max_plot_columns is not None
-        else _config.get_config()["max_plot_columns"]
+def _validate_plot_and_association(
+    plot_distributions, compute_associations, columns_threshold
+):
+    plot_distributions = (
+        plot_distributions
+        if plot_distributions is not None
+        else _config.get_config()["plot_distributions"]
     )
-    if (max_plot_columns != "all") and not (
-        isinstance(max_plot_columns, numbers.Real) and max_plot_columns >= 0
-    ):
+    if not isinstance(plot_distributions, bool):
         raise ValueError(
-            "'max_plot_columns' must be a positive scalar or 'all', got"
-            f" {max_plot_columns!r}."
-        )
-    max_association_columns = (
-        max_association_columns
-        if max_association_columns is not None
-        else _config.get_config()["max_association_columns"]
-    )
-    if (max_association_columns != "all") and not (
-        isinstance(max_association_columns, numbers.Real)
-        and max_association_columns >= 0
-    ):
-        raise ValueError(
-            "'max_association_columns' must be a positive scalar or 'all', got "
-            f"{max_association_columns!r}."
+            f"'plot_distributions' must be a boolean, got {plot_distributions!r}."
         )
 
-    return max_plot_columns, max_association_columns
+    compute_associations = (
+        compute_associations
+        if compute_associations is not None
+        else _config.get_config()["compute_associations"]
+    )
+    if not isinstance(compute_associations, bool):
+        raise ValueError(
+            f"'compute_associations' must be a boolean, got {compute_associations!r}."
+        )
+
+    columns_threshold = (
+        columns_threshold
+        if columns_threshold is not None
+        else _config.get_config()["columns_threshold"]
+    )
+
+    if not isinstance(columns_threshold, numbers.Real) or columns_threshold < 0:
+        raise ValueError(
+            "'columns_threshold' must be a positive integer, got"
+            f" {columns_threshold!r}."
+        )
+
+    return plot_distributions, compute_associations, columns_threshold
 
 
 class TableReport:
@@ -78,40 +86,58 @@ class TableReport:
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
-    max_plot_columns : int, default=30
-        Maximum number of columns for which plots should be generated.
-        If the number of columns in the dataframe is greater than this value,
-        the plots will not be generated. If "all", all columns will be plotted.
+    plot_distributions : bool, default=True
+        Whether to plot the distributions of the columns.
+        If False, the plots will not be generated.
+        If True, all columns will be plotted if the number of columns don't exceed
+        the columns_threshold.
 
         To avoid having to set this parameter at each call of ``TableReport``, you can
         change the default using :func:`set_config`:
 
         >>> from skrub import set_config
-        >>> set_config(max_plot_columns=30)
+        >>> set_config(plot_distributions=True)
 
         You can also enable this default more permanently via an environment variable:
 
         .. code:: shell
 
-            export SKB_MAX_PLOT_COLUMNS=30
+            export SKB_PLOT_DISTRIBUTIONS=True
 
-    max_association_columns : int, default=30
-        Maximum number of columns for which associations should be computed.
-        If the number of columns in the dataframe is greater than this value,
-        the associations will not be computed. If "all", the associations
-        for all columns will be computed.
+    compute_associations : bool, default=True
+        Whether to compute associations between columns.
+        If False, the associations will not be computed.
+        If True, all columns will be considered if the number of columns don't exceed
+        the columns_threshold.
 
         To avoid having to set this parameter at each call of ``TableReport``, you can
         change the default using :func:`set_config`:
 
         >>> from skrub import set_config
-        >>> set_config(max_association_columns=30)
+        >>> set_config(compute_associations=True)
 
         You can also enable this default more permanently via an environment variable:
 
         .. code:: shell
 
-            export SKB_MAX_ASSOCIATION_COLUMNS=30
+            export SKB_COMPUTE_ASSOCIATIONS=True
+
+    columns_threshold : int, default=30
+        Number of columns above which the plots and associations tabs are not
+        shown in the report, and the plots and associations are not computed.
+        This is to avoid long computation times and heavy reports when dealing
+        with wide dataframes.
+
+        To avoid having to set this parameter at each call of ``TableReport``, you can
+        change the default using :func:`set_config`:
+
+        >>> from skrub import set_config
+        >>> set_config(columns_threshold=30)
+        You can also enable this default more permanently via an environment variable:
+
+        .. code:: shell
+
+            export SKB_COLUMNS_THRESHOLD=30
 
     open_tab : str, default="table"
         The tab that will be displayed by default when the report is opened.
@@ -194,8 +220,9 @@ class TableReport:
         title=None,
         column_filters=None,
         verbose=None,
-        max_plot_columns=None,
-        max_association_columns=None,
+        plot_distributions=None,
+        compute_associations=None,
+        columns_threshold=None,
         open_tab="table",
     ):
         if isinstance(dataframe, np.ndarray):
@@ -236,9 +263,13 @@ class TableReport:
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = column_filters
-        self.max_plot_columns, self.max_association_columns = _check_max_cols(
-            max_plot_columns, max_association_columns
+        self.verbose = verbose
+        self.plot_distributions, self.compute_associations, self.columns_threshold = (
+            _validate_plot_and_association(
+                plot_distributions, compute_associations, columns_threshold
+            )
         )
+
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
@@ -262,8 +293,8 @@ class TableReport:
         except AttributeError:
             pass
         self._to_html_kwargs["minimal_report_mode"] = True
-        self.max_association_columns = 0
-        self.max_plot_columns = 0
+        self.compute_associations = False
+        self.plot_distributions = False
         # In minimal mode, fall back to 'table' if user selected unavailable tabs
         if self.open_tab in ["distributions", "associations"]:
             self.open_tab = "table"
@@ -277,11 +308,10 @@ class TableReport:
     @functools.cached_property
     def _summary(self):
         with_plots = (
-            self.max_plot_columns == "all" or self.max_plot_columns >= self.n_columns
+            self.plot_distributions and self.columns_threshold >= self.n_columns
         )
         with_associations = (
-            self.max_association_columns == "all"
-            or self.max_association_columns >= self.n_columns
+            self.compute_associations and self.columns_threshold >= self.n_columns
         )
 
         return summarize_dataframe(

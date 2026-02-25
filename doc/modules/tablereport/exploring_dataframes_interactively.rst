@@ -55,8 +55,7 @@ the HTML representation of the |TableReport|.
 
 For performance reasons, the |TableReport| disables the computation of
 distributions and associations for tables with more than 30 columns. This behavior
-can be changed by modifying the ``max_plot_columns`` and ``max_association_columns``
-parameter.
+can be changed by modifying the ``columns_threshold`` parameter.
 
 It is also possible to specify the floating point precision by setting the appropriate
 ``float_precision`` parameter.
