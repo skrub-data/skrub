@@ -14,6 +14,7 @@ import numbers
 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
 from ._dispatch import dispatch
@@ -102,6 +103,11 @@ def _add_session_id_polars(X, is_new_session):
 class SessionEncoder(TransformerMixin, BaseEstimator):
     """Encode sessions from a dataframe.
 
+    A session is defined as a sequence of events from the same user (specified by
+    the `by` column) where consecutive events are separated by at most `session_gap`
+    minutes. When the time gap between consecutive events exceeds `session_gap`, or
+    when the user changes, a new session begins.
+
     Parameters
     ----------
     by : str
@@ -121,6 +127,50 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ----------
     all_inputs_ : list of str
         All column names in the input dataframe.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from datetime import datetime, timedelta
+    >>> encoder = SessionEncoder(by='user_id', timestamp='timestamp', session_gap=30)
+
+    >>> # Create a sample dataframe with events from different users
+    >>> data = {
+    ...     'user_id': ['alice', 'alice', 'alice', 'bob', 'bob'],
+    ...     'timestamp': [
+    ...         pd.Timestamp('2024-01-01 10:00:00'),
+    ...         pd.Timestamp('2024-01-01 10:05:00'),  # 5 min later, same session
+    ...         pd.Timestamp('2024-01-01 11:00:00'),  # 55 min later, new session
+    ...         pd.Timestamp('2024-01-01 10:00:00'),  # Different user
+    ...         pd.Timestamp('2024-01-01 10:20:00'),  # 20 min later, same session
+    ...     ],
+    ...     'action': ['login', 'view', 'logout', 'login', 'purchase']
+    ... }
+    >>> df = pd.DataFrame(data)
+    >>> df
+        user_id           timestamp   action
+    0    alice 2024-01-01 10:00:00    login
+    1    alice 2024-01-01 10:05:00     view
+    2    alice 2024-01-01 11:00:00   logout
+    3      bob 2024-01-01 10:00:00    login
+    4      bob 2024-01-01 10:20:00 purchase
+
+    >>> result = encoder.fit_transform(df)
+    >>> result
+       user_id           timestamp   action  session_id
+    0    alice 2024-01-01 10:00:00    login           0
+    1    alice 2024-01-01 10:05:00     view           0
+    2    alice 2024-01-01 11:00:00   logout           1
+    3      bob 2024-01-01 10:00:00    login           2
+    4      bob 2024-01-01 10:20:00 purchase           2
+
+    In this example:
+    - Alice's first two events (10:00 and 10:05) are 5 minutes apart, so they form
+      session 1.
+    - Alice's third event (11:00) is 55 minutes after the previous one, exceeding
+      the 30-minute gap, so it forms a new session (session 2).
+    - Bob's events form session 3 (different user), with both events within the
+      30-minute window.
     """
 
     def __init__(self, by, timestamp, session_gap=30):
@@ -201,3 +251,19 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             )
 
         return X_with_session_id
+
+    def transform(self, X):
+        """Transform the data by encoding sessions.
+
+        Parameters
+        ----------
+        X : pandas.DataFrame or polars.DataFrame
+            The input dataframe.
+
+        Returns
+        -------
+        pandas.DataFrame or polars.DataFrame
+            The transformed dataframe with session information.
+        """
+        check_is_fitted()
+        return self.fit_transform(X)
