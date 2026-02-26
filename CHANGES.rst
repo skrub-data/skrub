@@ -19,6 +19,10 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
+  some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
+  ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Changes
 -------
