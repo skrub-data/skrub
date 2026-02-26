@@ -271,6 +271,41 @@ def test_session_encoder_time_gap_threshold(df_module):
     assert len(set(session_ids_40)) == 1
 
 
+def test_session_encoder_no_user_column(df_module):
+    """Test sessionization without a user identifier column.
+
+    When ``by`` is None, all events are treated as from the same "user", and
+    sessions are separated only by time gaps.
+    """
+    timestamps = [
+        datetime.datetime(2024, 1, 1, 10, 0),
+        datetime.datetime(2024, 1, 1, 10, 10),  # 10 min gap
+        datetime.datetime(2024, 1, 1, 10, 15),  # 5 min gap (within 30 min)
+        datetime.datetime(2024, 1, 1, 11, 0),  # 45 min gap (exceeds 30 min)
+        datetime.datetime(2024, 1, 1, 11, 10),  # 10 min gap (within 30 min)
+    ]
+
+    df = df_module.make_dataframe(
+        {
+            "timestamp": timestamps,
+        }
+    )
+
+    # Without 'by', sessions are separated only by time gaps
+    se = SessionEncoder(by=None, timestamp="timestamp", session_gap=30)
+    result = se.fit_transform(df)
+
+    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    # Expected: 2 sessions (events 0-2 in session 0, event 3 starts new session)
+    # Then event 4 continues session 1
+    assert len(set(session_ids)) == 2
+    assert (
+        session_ids[0] == session_ids[1] == session_ids[2]
+    )  # First 3 events in session 0
+    assert session_ids[3] == session_ids[4]  # Last 2 events in session 1
+    assert session_ids[0] != session_ids[3]  # Sessions are different
+
+
 def test_session_encoder_single_event(df_module):
     """Test sessionization with single event per user."""
     df = df_module.make_dataframe(

@@ -36,12 +36,14 @@ def _check_is_new_session(X, by, timestamp, session_gap):
 
 @_check_is_new_session.specialize("pandas")
 def _check_is_new_session_pandas(X, by, timestamp, session_gap):
-    # check if the "by" column changes
-    char_diff = (X[by].diff().fillna(0) > 0).any(axis=1)
     # check if the time difference between events exceeds the session gap
     time_diff = (
         X[timestamp].astype(int).diff().fillna(0) // 10**3 > session_gap * 60 * 1000
     )
+    if not by:
+        return time_diff
+    # check if the "by" column changes
+    char_diff = (X[by].diff().fillna(0) > 0).any(axis=1)
     # a new session starts if either the "by" column changes or the time gap is
     # exceeded
     is_new_session = char_diff | time_diff
@@ -50,14 +52,16 @@ def _check_is_new_session_pandas(X, by, timestamp, session_gap):
 
 @_check_is_new_session.specialize("polars")
 def _check_is_new_session_polars(X, by, timestamp, session_gap):
-    # check if the "by" column changes
-    char_diff = X.select(
-        pl.any_horizontal(pl.col(by).diff().fill_null(0) > 0)
-    ).to_series()
     # check if the time difference between events exceeds the session gap
     time_diff = (
         X[timestamp].dt.epoch("ms").diff().fill_null(0) > session_gap * 60 * 1000
     )
+    if not by:
+        return time_diff
+    # check if the "by" column changes
+    char_diff = X.select(
+        pl.any_horizontal(pl.col(by).diff().fill_null(0) > 0)
+    ).to_series()
     # a new session starts if either the "by" column changes or the time gap is
     # exceeded
     is_new_session = char_diff | time_diff
@@ -286,7 +290,12 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             raise ValueError("session_gap must be a positive number")
 
         # sort the input dataframe by the "by" and "timestamp" columns
-        X_sorted = sbd.sort(X, by=self.by_columns + [self.timestamp])
+        sort_by = (
+            self.by_columns + [self.timestamp]
+            if self.by is not None
+            else [self.timestamp]
+        )
+        X_sorted = sbd.sort(X, by=sort_by)
 
         X_factorized, factorized_by = self._factorize_columns(X_sorted)
         # mark the start of a new session by checking the difference
@@ -320,7 +329,8 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     def _factorize_columns(self, X):
         # convert by column to string if it's not already, to ensure
         # that the diff operation works correctly
-
+        if not self.by:
+            return X, []
         factorized_columns = {
             f"{col}_factorized_skrub_{random_string()}": _factorize_column(X, col)
             if not sbd.is_numeric(X[col])
