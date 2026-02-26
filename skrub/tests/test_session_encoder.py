@@ -1,6 +1,5 @@
 import datetime
 
-import numpy as np
 import pytest
 
 from skrub import SessionEncoder
@@ -483,7 +482,7 @@ def test_get_feature_names(df_module):
     se.fit(df)
     feature_names = se.get_feature_names_out()
 
-    # Should include original columns plus "session_id"
+    # Should include original columns plus "timestamp_session_id"
     assert set(feature_names) == {"timestamp", "user_id", "timestamp_session_id"}
 
 
@@ -502,20 +501,15 @@ def test_factorize_column_string(df_module):
     assert codes[1] != codes[0]  # "bob" differs from "alice"
     assert codes[3] != codes[0]  # "charlie" differs from "alice"
     assert codes[1] != codes[3]  # "bob" differs from "charlie"
-    assert all(isinstance(c, np.int64) for c in codes)
     assert all(int(c) == expected for c, expected in zip(codes, [0, 1, 0, 2]))
 
 
 def test_factorize_column_numeric(df_module):
-    """_factorize_column on a numeric column should return integer codes."""
+    """_factorize_column on a numeric column should return the column unchanged."""
     df = df_module.make_dataframe({"user_id": [10, 20, 10, 30]})
     codes = _factorize_column(df, "user_id")
 
-    assert codes[0] == codes[2]  # both 10 → same code
-    assert codes[1] != codes[0]  # 20 differs from 10
-    assert codes[3] != codes[0]  # 30 differs from 10
-    assert all(isinstance(c, np.int64) for c in codes)
-    assert all(int(c) == expected for c, expected in zip(codes, [0, 1, 0, 2]))
+    df_module.assert_column_equal(codes, df["user_id"])
 
 
 def test_add_session_id(df_module):

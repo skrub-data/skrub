@@ -87,6 +87,8 @@ def _factorize_column(X, column_name):
 
 @_factorize_column.specialize("pandas")
 def _factorize_column_pandas(X, column_name):
+    if sbd.is_numeric(X[column_name]):
+        return X[column_name]
     codes, _ = pd.factorize(X[column_name])
     return codes
 
@@ -95,7 +97,8 @@ def _factorize_column_pandas(X, column_name):
 def _factorize_column_polars(X, column_name):
     import polars as pl
 
-    # TODO: update this according to the proper polars API
+    if sbd.is_numeric(X[column_name]):
+        return X[column_name]
     return X[column_name].cast(pl.Categorical).to_physical()
 
 
