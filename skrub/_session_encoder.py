@@ -100,7 +100,7 @@ def _factorize_column_polars(X, column_name):
 
 
 @dispatch
-def _add_session_id(X, is_new_session):
+def _add_session_id(X, is_new_session, column_name):
     # Avoid circular import
     from ._dispatch import raise_dispatch_unregistered_type
 
@@ -108,16 +108,16 @@ def _add_session_id(X, is_new_session):
 
 
 @_add_session_id.specialize("pandas")
-def _add_session_id_pandas(X, is_new_session):
+def _add_session_id_pandas(X, is_new_session, column_name):
     # Compute cumulative sum of is_new_session to create session IDs
-    X["session_id"] = is_new_session.cumsum()
+    X[column_name] = is_new_session.cumsum()
     return X
 
 
 @_add_session_id.specialize("polars")
-def _add_session_id_polars(X, is_new_session):
+def _add_session_id_polars(X, is_new_session, column_name):
     # Add session_id by computing cumulative sum of is_new_session
-    return X.with_columns(is_new_session.cum_sum().alias("session_id"))
+    return X.with_columns(is_new_session.cum_sum().alias(column_name))
 
 
 class SessionEncoder(TransformerMixin, BaseEstimator):
@@ -150,6 +150,10 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ----------
     all_inputs_ : list of str
         All column names in the input dataframe.
+
+    all_outputs_: list of str
+        All column names in the input dataframe plus the new column that identifies
+        the session, with name "{timestamp}_session_id".
 
     Examples
     --------
@@ -355,11 +359,16 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             X_factorized, factorized_by, self.timestamp, self.session_gap
         )
         # add the session id
-        X_with_session_id = _add_session_id(X_factorized, is_new_session)
+        session_col_name = f"{self.timestamp}_session_id"
+        X_with_session_id = _add_session_id(
+            X_factorized, is_new_session, session_col_name
+        )
 
         # drop the factorized "by" column if the original "by" column was not numeric
         to_drop = [col for col in factorized_by if col not in self.by_columns]
         X_with_session_id = sbd.drop_columns(X_with_session_id, to_drop)
+
+        self.all_outputs_ = sbd.column_names(X_with_session_id)
         return X_with_session_id
 
     def transform(self, X):
@@ -407,5 +416,5 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         list of strings
             The column names.
         """
-        check_is_fitted()
-        return ["session_id"]
+        check_is_fitted(self)
+        return self.all_outputs_

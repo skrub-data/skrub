@@ -116,12 +116,12 @@ def test_session_encoder_basic(
     result = se.fit_transform(example_session_data)
 
     # Check that we have the expected total number of sessions
-    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
     unique_sessions = set(session_ids)
     assert len(unique_sessions) == expected_sessions
 
     # content of the "session_id" column after sessionization
-    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
     # content of the "by" column (user_id or username)
     group_values = sbd.to_list(sbd.col(result, by_column))
 
@@ -150,7 +150,7 @@ def test_session_encoder_different_users_different_sessions(
     result = se.fit_transform(example_session_data)
 
     # content of the "session_id" column after sessionization
-    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
     # content of the "by" column (user_id or username)
     group_values = sbd.to_list(sbd.col(result, by_column))
 
@@ -187,7 +187,7 @@ def test_session_encoder_multi_by_columns(example_session_data_multi_by):
     )
     result = se.fit_transform(example_session_data_multi_by)
 
-    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
     user_ids = sbd.to_list(sbd.col(result, "user_id"))
     device_ids = sbd.to_list(sbd.col(result, "device_id"))
 
@@ -240,7 +240,7 @@ def test_session_encoder_multiple_users(df_module):
 
     # After sorting by user_id and timestamp, each user should have 1 session
     # since all their events are within 30 minutes
-    session_ids = sbd.col(result, "session_id")
+    session_ids = sbd.col(result, "timestamp_session_id")
 
     # The encoder sorts by user_id then timestamp, so events are grouped by user
     # Check that there are exactly 2 sessions (one per user)
@@ -267,13 +267,13 @@ def test_session_encoder_time_gap_threshold(df_module):
     # With 20-minute gap: should create 2 sessions (split at 35-min gap)
     se_20 = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=20)
     result_20 = se_20.fit_transform(df)
-    session_ids_20 = sbd.to_list(sbd.col(result_20, "session_id"))
+    session_ids_20 = sbd.to_list(sbd.col(result_20, "timestamp_session_id"))
     assert len(set(session_ids_20)) == 2
 
     # With 40-minute gap: should create 1 session (all gaps < 40 min)
     se_40 = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=40)
     result_40 = se_40.fit_transform(df)
-    session_ids_40 = sbd.to_list(sbd.col(result_40, "session_id"))
+    session_ids_40 = sbd.to_list(sbd.col(result_40, "timestamp_session_id"))
     assert len(set(session_ids_40)) == 1
 
 
@@ -301,7 +301,7 @@ def test_session_encoder_no_user_column(df_module):
     se = SessionEncoder(by=None, timestamp="timestamp", session_gap=30)
     result = se.fit_transform(df)
 
-    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
     # Expected: 2 sessions (events 0-2 in session 0, event 3 starts new session)
     # Then event 4 continues session 1
     assert len(set(session_ids)) == 2
@@ -324,7 +324,7 @@ def test_session_encoder_single_event(df_module):
     se = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=30)
     result = se.fit_transform(df)
 
-    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    session_ids = sbd.to_list(sbd.col(result, "timestamp_session_id"))
     assert len(session_ids) == 1
     # Single event should create one session
     assert session_ids[0] == 0
@@ -343,7 +343,7 @@ def test_session_encoder_empty_dataframe(df_module):
     result = se.fit_transform(df)
 
     assert sbd.shape(result)[0] == 0
-    assert "session_id" in sbd.column_names(result)
+    assert "timestamp_session_id" in sbd.column_names(result)
 
 
 @pytest.mark.parametrize(
@@ -442,7 +442,7 @@ def test_session_encoder_preserves_columns(df_module):
     assert "timestamp" in result_cols
     assert "user_id" in result_cols
     assert "extra_col" in result_cols
-    assert "session_id" in result_cols
+    assert "timestamp_session_id" in result_cols
 
 
 def test_session_encoder_fit_and_transform(df_module):
@@ -465,6 +465,26 @@ def test_session_encoder_fit_and_transform(df_module):
 
     # Test that all_inputs_ is set after fit
     assert hasattr(se, "all_inputs_")
+
+
+def test_get_feature_names(df_module):
+    """Test that get_feature_names returns the correct list of columns."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),
+            ],
+            "user_id": [101, 101],
+        }
+    )
+
+    se = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=30)
+    se.fit(df)
+    feature_names = se.get_feature_names_out()
+
+    # Should include original columns plus "session_id"
+    assert set(feature_names) == {"timestamp", "user_id", "timestamp_session_id"}
 
 
 # ---------------------------------------------------------------------------
@@ -520,10 +540,10 @@ def test_add_session_id(df_module):
         }
     )
     is_new_session = _check_is_new_session(df, [], "timestamp", 30)
-    result = _add_session_id(df, is_new_session)
+    result = _add_session_id(df, is_new_session, "timestamp")
 
-    assert "session_id" in sbd.column_names(result)
-    assert sbd.to_list(sbd.col(result, "session_id")) == [0, 0, 1, 1, 2]
+    assert "timestamp" in sbd.column_names(result)
+    assert sbd.to_list(sbd.col(result, "timestamp")) == [0, 0, 1, 1, 2]
 
 
 def test_check_is_new_session_no_by(df_module):
