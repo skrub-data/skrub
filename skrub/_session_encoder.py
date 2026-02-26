@@ -190,20 +190,20 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
     >>> result = encoder.fit_transform(df)
     >>> result
-       user_id           timestamp   action  session_id
-    0    alice 2024-01-01 10:00:00    login           0
-    1    alice 2024-01-01 10:05:00     view           0
-    2    alice 2024-01-01 11:00:00   logout           1
-    3      bob 2024-01-01 10:00:00    login           2
-    4      bob 2024-01-01 10:20:00 purchase           2
+       user_id           timestamp   action  timestamp_session_id
+    0    alice 2024-01-01 10:00:00    login                     0
+    1    alice 2024-01-01 10:05:00     view                     0
+    2    alice 2024-01-01 11:00:00   logout                     1
+    3      bob 2024-01-01 10:00:00    login                     2
+    4      bob 2024-01-01 10:20:00 purchase                     2
 
     In this example:
 
     - Alice's first two events (10:00 and 10:05) are 5 minutes apart, so they form
-      session 1.
+      session 0.
     - Alice's third event (11:00) is 55 minutes after the previous one, exceeding
-      the 30-minute gap, so it forms a new session (session 2).
-    - Bob's events form session 3 (different user), with both events within the
+      the 30-minute gap, so it forms a new session (session 1).
+    - Bob's events form session 2 (different user), with both events within the
       30-minute window.
 
     You can also identify users by multiple columns. For instance, the same user
@@ -232,14 +232,14 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ... }
     >>> df_multi = pd.DataFrame(data_multi)
     >>> result_multi = encoder_multi.fit_transform(df_multi)
-    >>> result_multi[['user_id', 'device_id', 'timestamp', 'action', 'session_id']]
-       user_id  device_id           timestamp     action  session_id
-    0        1    desktop 2024-01-01 10:05:00       view           0
-    1        1    desktop 2024-01-01 10:20:00   checkout           0
-    2        1     mobile 2024-01-01 10:00:00       view           1
-    3        1     mobile 2024-01-01 10:10:00   purchase           1
-    4        2     mobile 2024-01-01 10:00:00      login           2
-    5        2     mobile 2024-01-01 10:15:00       view           2
+    >>> result_multi
+       user_id  device_id           timestamp     action  timestamp_session_id
+    0        1    desktop 2024-01-01 10:05:00       view                     0
+    1        1    desktop 2024-01-01 10:20:00   checkout                     0
+    2        1     mobile 2024-01-01 10:00:00       view                     1
+    3        1     mobile 2024-01-01 10:10:00   purchase                     1
+    4        2     mobile 2024-01-01 10:00:00      login                     2
+    5        2     mobile 2024-01-01 10:15:00       view                     2
 
     In this example:
 
@@ -270,13 +270,13 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ... }
     >>> df_no_by = pd.DataFrame(data_no_by)
     >>> result_no_by = encoder_no_by.fit_transform(df_no_by)
-    >>> result_no_by[['timestamp', 'event_type', 'session_id']]
-                 timestamp event_type  session_id
-    0 2024-01-01 10:00:00      start           0
-    1 2024-01-01 10:10:00     action           0
-    2 2024-01-01 10:15:00     action           0
-    3 2024-01-01 11:00:00    restart           1
-    4 2024-01-01 11:10:00     action           1
+    >>> result_no_by
+                 timestamp event_type  timestamp_session_id
+    0 2024-01-01 10:00:00      start                     0
+    1 2024-01-01 10:10:00     action                     0
+    2 2024-01-01 10:15:00     action                     0
+    3 2024-01-01 11:00:00    restart                     1
+    4 2024-01-01 11:10:00     action                     1
 
     In this example:
 
