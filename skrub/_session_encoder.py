@@ -127,7 +127,8 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     by at most ``session_gap`` minutes. Additionally, it is possible to provide a column
     or list of columns that identifies the user (specified by the ``by`` column).
     When the time gap between consecutive events exceeds ``session_gap``, or
-    when the user changes, a new session begins.
+    when the user changes, a new session begins. All unrelated columns are passed
+    through unchanged.
 
     Parameters
     ----------
@@ -327,11 +328,11 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
             elif isinstance(self.by, list):
                 self.by_columns = self.by
             else:
-                raise TypeError("by must be a string or a list of strings")
-        if self.by is not None and any(
-            col not in self.all_inputs_ for col in self.by_columns
-        ):
-            raise ValueError(f"Column '{self.by}' not found in input dataframe")
+                raise TypeError("by must be a string, a list of strings, or None")
+        if self.by is not None:
+            for col in self.by_columns:
+                if col not in self.all_inputs_:
+                    raise ValueError(f"Column '{col}' not found in input dataframe")
 
         if self.timestamp not in self.all_inputs_:
             raise ValueError(f"Column '{self.timestamp}' not found in input dataframe")
@@ -392,3 +393,19 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         X_factorized = sbd.with_columns(X, **factorized_columns)
 
         return X_factorized, list(factorized_columns.keys())
+
+    def get_feature_names_out(self, input_features=None):
+        """Return the column names of the output of ``transform`` as a list of strings.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        list of strings
+            The column names.
+        """
+        check_is_fitted()
+        return ["session_id"]

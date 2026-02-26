@@ -1,9 +1,15 @@
 import datetime
 
+import numpy as np
 import pytest
 
 from skrub import SessionEncoder
 from skrub import _dataframe as sbd
+from skrub._session_encoder import (
+    _add_session_id,
+    _check_is_new_session,
+    _factorize_column,
+)
 
 
 @pytest.fixture
@@ -340,29 +346,53 @@ def test_session_encoder_empty_dataframe(df_module):
     assert "session_id" in sbd.column_names(result)
 
 
-def test_session_encoder_missing_column_error(df_module):
-    """Test that missing columns raise appropriate errors."""
+@pytest.mark.parametrize(
+    "by_param,timestamp_param,expected_error_type,expected_error_match",
+    [
+        (
+            "wrong_column",
+            "timestamp",
+            ValueError,
+            "Column 'wrong_column' not found",
+        ),
+        (
+            "user_id",
+            "wrong_column",
+            ValueError,
+            "Column 'wrong_column' not found",
+        ),
+        (
+            ["wrong_column", "user_device"],
+            "timestamp",
+            ValueError,
+            "Column 'wrong_column' not found",
+        ),
+        (
+            23,  # invalid type for 'by'
+            "timestamp",
+            TypeError,
+            "by must be a string, a list of strings, or None",
+        ),
+    ],
+)
+def test_session_encoder_missing_column_error(
+    df_module, by_param, timestamp_param, expected_error_type, expected_error_match
+):
+    """Test that missing columns and invalid parameters raise appropriate errors."""
     df = df_module.make_dataframe(
         {
             "timestamp": [datetime.datetime(2024, 1, 1)],
-            "wrong_column": [101],
-        }
-    )
-
-    se = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=30)
-    with pytest.raises(ValueError, match="Column 'user_id' not found"):
-        se.fit_transform(df)
-
-    df2 = df_module.make_dataframe(
-        {
-            "wrong_timestamp": [datetime.datetime(2024, 1, 1)],
             "user_id": [101],
+            "user_device": ["mobile"],
         }
     )
 
-    se2 = SessionEncoder(by="user_id", timestamp="timestamp", session_gap=30)
-    with pytest.raises(ValueError, match="Column 'timestamp' not found"):
-        se2.fit_transform(df2)
+    se = SessionEncoder(
+        by=by_param,
+        timestamp=timestamp_param,
+    )
+    with pytest.raises(expected_error_type, match=expected_error_match):
+        se.fit_transform(df)
 
 
 def test_session_encoder_invalid_parameters(df_module):
@@ -435,3 +465,105 @@ def test_session_encoder_fit_and_transform(df_module):
 
     # Test that all_inputs_ is set after fit
     assert hasattr(se, "all_inputs_")
+
+
+# ---------------------------------------------------------------------------
+# Tests for the internal dispatched helper functions
+# ---------------------------------------------------------------------------
+
+
+def test_factorize_column_string(df_module):
+    """_factorize_column should map string values to consecutive integer codes."""
+    df = df_module.make_dataframe({"user": ["alice", "bob", "alice", "charlie"]})
+    codes = _factorize_column(df, "user")
+
+    # alice appears first, so it should get code 0
+    assert codes[0] == codes[2]  # both "alice" → same code
+    assert codes[1] != codes[0]  # "bob" differs from "alice"
+    assert codes[3] != codes[0]  # "charlie" differs from "alice"
+    assert codes[1] != codes[3]  # "bob" differs from "charlie"
+    assert all(isinstance(c, np.int64) for c in codes)
+    assert all(int(c) == expected for c, expected in zip(codes, [0, 1, 0, 2]))
+
+
+def test_factorize_column_numeric(df_module):
+    """_factorize_column on a numeric column should return integer codes."""
+    df = df_module.make_dataframe({"user_id": [10, 20, 10, 30]})
+    codes = _factorize_column(df, "user_id")
+
+    assert codes[0] == codes[2]  # both 10 → same code
+    assert codes[1] != codes[0]  # 20 differs from 10
+    assert codes[3] != codes[0]  # 30 differs from 10
+    assert all(isinstance(c, np.int64) for c in codes)
+    assert all(int(c) == expected for c, expected in zip(codes, [0, 1, 0, 2]))
+
+
+def test_add_session_id(df_module):
+    """_add_session_id should add a 'session_id' column computed as a cumulative
+    sum of the boolean ``is_new_session`` series.
+
+    We obtain ``is_new_session`` from ``_check_is_new_session`` (no by-group) so
+    that the boolean series has the correct type for each dataframe backend.
+    """
+    # Gaps: -, 5 min, 55 min, 10 min, 50 min
+    # is_new_session: [False, False, True, False, True]
+    # cumsum:         [  0,     0,    1,     1,    2 ]
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),  # 5 min  – same session
+                datetime.datetime(2024, 1, 1, 11, 0),  # 55 min – new session
+                datetime.datetime(2024, 1, 1, 11, 10),  # 10 min – same session
+                datetime.datetime(2024, 1, 1, 12, 0),  # 50 min – new session
+            ]
+        }
+    )
+    is_new_session = _check_is_new_session(df, [], "timestamp", 30)
+    result = _add_session_id(df, is_new_session)
+
+    assert "session_id" in sbd.column_names(result)
+    assert sbd.to_list(sbd.col(result, "session_id")) == [0, 0, 1, 1, 2]
+
+
+def test_check_is_new_session_no_by(df_module):
+    """_check_is_new_session with an empty by-list uses only the time gap."""
+    df = df_module.make_dataframe(
+        {
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 10),  # 10 min — within gap
+                datetime.datetime(2024, 1, 1, 11, 0),  # 50 min — exceeds gap
+                datetime.datetime(2024, 1, 1, 11, 5),  # 5 min  — within gap
+            ]
+        }
+    )
+    is_new = sbd.to_list(_check_is_new_session(df, [], "timestamp", 30))
+
+    # First row is never a new session (no previous row), all others depend on gap
+    assert not is_new[0]  #  (first row)
+    assert not is_new[1]  # 10 min < 30 min
+    assert is_new[2]  # 50 min > 30 min
+    assert not is_new[3]  # 5 min < 30 min
+
+
+def test_check_is_new_session_with_by(df_module):
+    """_check_is_new_session detects a new session when the group key changes,
+    even if the time gap is small."""
+    df = df_module.make_dataframe(
+        {
+            "user_id": [1, 1, 2, 2],
+            "timestamp": [
+                datetime.datetime(2024, 1, 1, 10, 0),
+                datetime.datetime(2024, 1, 1, 10, 5),  # same user, 5 min gap
+                datetime.datetime(2024, 1, 1, 10, 6),  # different user, 1 min gap
+                datetime.datetime(2024, 1, 1, 10, 10),  # same user, 4 min gap
+            ],
+        }
+    )
+    is_new = sbd.to_list(_check_is_new_session(df, ["user_id"], "timestamp", 30))
+
+    assert not is_new[0]  #  first row
+    assert not is_new[1]  # same user, small gap
+    assert is_new[2]  # user changed → new session
+    assert not is_new[3]  # same user, small gap
