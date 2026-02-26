@@ -13,6 +13,7 @@ of the "by" column(s) and a session number
 import numbers
 
 import pandas as pd
+from packaging.version import parse
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -36,10 +37,18 @@ def _check_is_new_session(X, by, timestamp, session_gap):
 
 @_check_is_new_session.specialize("pandas")
 def _check_is_new_session_pandas(X, by, timestamp, session_gap):
-    # check if the time difference between events exceeds the session gap
-    time_diff = (
-        X[timestamp].astype(int).diff().fillna(0) // 10**3 > session_gap * 60 * 1000
-    )
+    # pandas 3.0 changed the resolution of astype(int) for datetime columns from
+    # nanoseconds to milliseconds, so we need to adjust the time difference calculation
+    # accordingly
+    if parse(pd.__version__).major <= 2:
+        # check if the time difference between events exceeds the session gap
+        time_diff = (
+            X[timestamp].astype(int).diff().fillna(0) // 10**6 > session_gap * 60 * 1000
+        )
+    else:
+        time_diff = (
+            X[timestamp].astype(int).diff().fillna(0) // 10**3 > session_gap * 60 * 1000
+        )
     if not by:
         return time_diff
     # check if the "by" column changes
