@@ -115,9 +115,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     """Encode sessions from a dataframe.
 
     A session is defined as a sequence of events  where consecutive events are separated
-    by at most `session_gap` minutes. Additionally, it is possible to provide a column
-    or list of columns that identifies the user (specified by the `by` column).
-    When the time gap between consecutive events exceeds `session_gap`, or
+    by at most ``session_gap`` minutes. Additionally, it is possible to provide a column
+    or list of columns that identifies the user (specified by the ``by`` column).
+    When the time gap between consecutive events exceeds ``session_gap``, or
     when the user changes, a new session begins.
 
     Parameters
@@ -143,6 +143,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
     Examples
     --------
+    Consider this example where we have a dataframe with user events, and we want
+    to identify sessions based on a 30-minute gap between events for each user:
+
     >>> import pandas as pd
     >>> from datetime import datetime, timedelta
     >>> encoder = SessionEncoder(by='user_id', timestamp='timestamp', session_gap=30)
@@ -178,6 +181,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     4      bob 2024-01-01 10:20:00 purchase           2
 
     In this example:
+
     - Alice's first two events (10:00 and 10:05) are 5 minutes apart, so they form
       session 1.
     - Alice's third event (11:00) is 55 minutes after the previous one, exceeding
@@ -221,9 +225,47 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     5        2     mobile 2024-01-01 10:15:00       view           2
 
     In this example:
+
     - User 1 on "desktop" has session 0.
     - User 1 on "mobile" has session 1 (different device, so separate session).
     - User 2 on "mobile" has session 2 (different user).
+
+    You can also use SessionEncoder without a user identifier column. In this case,
+    sessions are separated only by time gaps. This is useful for analyzing a single
+    timeseries or events that don't have a user dimension:
+
+    >>> encoder_no_by = SessionEncoder(
+    ...     by=None,
+    ...     timestamp='timestamp',
+    ...     session_gap=30
+    ... )
+
+    >>> # Create a sample dataframe with only timestamps
+    >>> data_no_by = {
+    ...     'timestamp': [
+    ...         pd.Timestamp('2024-01-01 10:00:00'),
+    ...         pd.Timestamp('2024-01-01 10:10:00'),  # 10 min gap
+    ...         pd.Timestamp('2024-01-01 10:15:00'),  # 5 min gap, still in session
+    ...         pd.Timestamp('2024-01-01 11:00:00'),  # 45 min gap, new session
+    ...         pd.Timestamp('2024-01-01 11:10:00'),  # 10 min gap, continue session
+    ...     ],
+    ...     'event_type': ['start', 'action', 'action', 'restart', 'action']
+    ... }
+    >>> df_no_by = pd.DataFrame(data_no_by)
+    >>> result_no_by = encoder_no_by.fit_transform(df_no_by)
+    >>> result_no_by[['timestamp', 'event_type', 'session_id']]
+                 timestamp event_type  session_id
+    0 2024-01-01 10:00:00      start           0
+    1 2024-01-01 10:10:00     action           0
+    2 2024-01-01 10:15:00     action           0
+    3 2024-01-01 11:00:00    restart           1
+    4 2024-01-01 11:10:00     action           1
+
+    In this example:
+
+    - Events at 10:00, 10:10, and 10:15 form session 0 (all gaps < 30 min).
+    - The event at 11:00 starts a new session 1 (45 min gap > 30 min).
+    - The event at 11:10 continues session 1 (10 min gap < 30 min).
 
 
     """
