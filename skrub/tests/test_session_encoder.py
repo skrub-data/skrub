@@ -47,6 +47,53 @@ def example_session_data(df_module):
     )
 
 
+@pytest.fixture
+def example_session_data_multi_by(df_module):
+    """Create example session data where a user is identified by two columns.
+
+    A user is uniquely identified by the combination of ``user_id`` and
+    ``device_id``.  The same ``user_id`` on two different devices produces
+    independent sessions, which lets us verify that ``by`` accepts a list of
+    column names.
+    """
+    timestamps = []
+    user_ids = []
+    device_ids = []
+
+    base_time = datetime.datetime(2024, 1, 1)
+
+    # user 1, device "mobile": 2 sessions, 10 days apart, 4 events each
+    for session in range(2):
+        session_start = base_time + datetime.timedelta(days=session * 10)
+        for event in range(4):
+            timestamps.append(session_start + datetime.timedelta(minutes=event * 3))
+            user_ids.append(1)
+            device_ids.append("mobile")
+
+    # user 1, device "desktop": 1 session, 3 events
+    # (same user_id as above but different device → separate sessions)
+    session_start = base_time + datetime.timedelta(days=5)
+    for event in range(3):
+        timestamps.append(session_start + datetime.timedelta(minutes=event * 4))
+        user_ids.append(1)
+        device_ids.append("desktop")
+
+    # user 2, device "mobile": 1 session, 5 events
+    session_start = base_time + datetime.timedelta(days=20)
+    for event in range(5):
+        timestamps.append(session_start + datetime.timedelta(minutes=event * 2))
+        user_ids.append(2)
+        device_ids.append("mobile")
+
+    return df_module.make_dataframe(
+        {
+            "timestamp": timestamps,
+            "user_id": user_ids,
+            "device_id": device_ids,
+        }
+    )
+
+
 @pytest.mark.parametrize(
     "by_column,expected_sessions,group_key_to_sessions",
     [
@@ -113,6 +160,54 @@ def test_session_encoder_different_users_different_sessions(
 
             # check that there are no shared session IDs between different users/groups
             assert len(sessions1.intersection(sessions2)) == 0
+
+
+def test_session_encoder_multi_by_columns(example_session_data_multi_by):
+    """Test sessionization when a user is identified by a combination of columns.
+
+    The fixture has user_id=1 on two devices ("mobile" and "desktop").  When
+    ``by=["user_id", "device_id"]``, those two device contexts must be treated
+    as independent groups, producing separate session IDs even though they share
+    the same ``user_id``.
+
+    Expected sessions:
+    - (user_id=1, device_id="mobile")  → 2 sessions
+    - (user_id=1, device_id="desktop") → 1 session
+    - (user_id=2, device_id="mobile")  → 1 session
+    Total: 4 sessions
+    """
+    se = SessionEncoder(
+        by=["user_id", "device_id"], timestamp="timestamp", session_gap=30
+    )
+    result = se.fit_transform(example_session_data_multi_by)
+
+    session_ids = sbd.to_list(sbd.col(result, "session_id"))
+    user_ids = sbd.to_list(sbd.col(result, "user_id"))
+    device_ids = sbd.to_list(sbd.col(result, "device_id"))
+
+    # 4 distinct sessions overall
+    assert len(set(session_ids)) == 4
+
+    # create a dict that groups sessions by (user_id, device_id) pair
+    group_sessions: dict = {}
+    for uid, did, sid in zip(user_ids, device_ids, session_ids):
+        key = (uid, did)
+        # Each (user_id, device_id) pair should have its own set of session IDs
+        # We use a set to track unique session IDs for each group key
+        group_sessions.setdefault(key, set()).add(sid)
+
+    # assert that each (user_id, device_id) pair has the expected number of sessions
+    assert len(group_sessions[(1, "mobile")]) == 2
+    assert len(group_sessions[(1, "desktop")]) == 1
+    assert len(group_sessions[(2, "mobile")]) == 1
+
+    # sessions belonging to different (user_id, device_id) pairs must be disjoint
+    keys = list(group_sessions)
+    # go through each pair of group keys (user_id, device_id)
+    for i, k1 in enumerate(keys):
+        for k2 in keys[i + 1 :]:
+            # check that the sets in group_sessions for different keys are disjoint
+            assert group_sessions[k1].isdisjoint(group_sessions[k2])
 
 
 def test_session_encoder_multiple_users(df_module):
