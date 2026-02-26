@@ -1,5 +1,7 @@
 import datetime
+from functools import partial
 
+import numpy as np
 import pytest
 
 from skrub import SessionEncoder
@@ -581,3 +583,16 @@ def test_check_is_new_session_with_by(df_module):
     assert not is_new[1]  # same user, small gap
     assert is_new[2]  # user changed → new session
     assert not is_new[3]  # same user, small gap
+
+
+@pytest.mark.parametrize(
+    "func",
+    (
+        partial(_check_is_new_session, by=None, timestamp="timestamp", session_gap=30),
+        partial(_factorize_column, column_name="user_id"),
+        partial(_add_session_id, is_new_session=None, column_name="timestamp"),
+    ),
+)
+def test_error_dispatch(func):
+    with pytest.raises(TypeError, match="Expecting a Pandas or Polars Dataframe"):
+        func(np.array([1]))
