@@ -307,8 +307,10 @@ def fetch_toxicity(data_home=None):
 
     This is a balanced binary classification use-case, where the single table
     consists in only two columns:
+
     - `text`: the text of the comment
     - `is_toxic`: whether or not the comment is toxic
+
     Size on disk: 220KB.
 
     Parameters
