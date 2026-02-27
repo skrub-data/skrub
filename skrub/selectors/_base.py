@@ -27,7 +27,6 @@ def all():
        height_mm  width_mm kind  ID
     0      297.0     210.0   A4   4
     1      420.0     297.0   A3   3
-
     """
     return All()
 
@@ -134,6 +133,7 @@ def inv(obj):
 def make_selector(obj):
     """Transform a selector, column name or list of column names into a selector.
 
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -174,6 +174,7 @@ def _select_col_names_polars(df, col_names):
 
 def select(df, selector):
     """Apply a selector to a dataframe and return the resulting dataframe.
+
 
     ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
     column name or list of column names.
@@ -219,10 +220,52 @@ def select(df, selector):
 
 
 class Selector:
+    """Generic selector type, that returns set columns when applied.
+
+    This class is not meant to be instantiated manually, ``Selector``
+    objects are created by calling one of the selector builders such
+    as :meth:`skrub.selectors.all()` or :meth:`skrub.selectors.make_selector()`.
+    """
+
     def _matches(self, col):
         raise NotImplementedError()
 
     def expand(self, df):
+        """Lists the column names that the selector would retain if applied to
+        the dataframe ``df``.
+
+        Parameters
+        ----------
+        df : dataframe
+
+        Returns
+        -------
+        list
+            The list of ``df``'s columns that the item would select.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from skrub import selectors as s
+        >>> some_selector = ~s.glob("*_mm")
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "height_mm": [210.0, 297.0],
+        ...         "width_mm": [188.5, 210.0],
+        ...         "kind": ["A5", "A4"],
+        ...         "ID": [5, 4],
+        ...     }
+        ... )
+        >>> some_selector.expand(df)
+        ['kind', 'ID']
+
+
+        Notes
+        -----
+        In effect, running ``df[sel.expand(df)]`` should give the exact same result as
+        ``sel.transform(df)``.
+
+        """
         matching_col_names = []
         for col_name in sbd.column_names(df):
             col = sbd.col(df, col_name)
@@ -231,6 +274,44 @@ class Selector:
         return matching_col_names
 
     def expand_index(self, df):
+        """Lists the indices of dataframe `df`'s columns that the selector
+        would retain if applied to `df`.
+
+        Parameters
+        ----------
+        df : dataframe
+
+        Returns
+        -------
+        list
+            The list of indices among ``df``'s columns that the item would select.
+
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from skrub import selectors as s
+        >>> some_selector = ~s.glob("*_mm")
+        >>> df = pd.DataFrame(
+        ...     {
+        ...         "height_mm": [210.0, 297.0],
+        ...         "width_mm": [188.5, 210.0],
+        ...         "kind": ["A5", "A4"],
+        ...         "ID": [5, 4],
+        ...     }
+        ... )
+        >>> some_selector.expand_index(df)
+        [2, 3]
+
+
+        Notes
+        -----
+
+        In effect, (as with ``expand``), if ``cols`` is the list of columns in ``df``,
+        running ``df[cols[i] for i in sel.expand(df)]`` should give the exact same
+        result as ``sel.transform(df)``.
+
+        """
         matching_col_indices = []
         for col_idx, col in enumerate(sbd.to_column_list(df)):
             if self._matches(col):
@@ -396,6 +477,7 @@ class Filter(Selector):
 def filter(predicate, *args, **kwargs):
     """Select columns for which ``predicate`` returns True.
 
+
     For each column ``col`` in the dataframe, ``predicate`` is called as
     ``predicate(col, *args, **kwargs)`` and the column is kept if it returns
     True. To filter columns based only on their name, see also
@@ -456,6 +538,7 @@ class NameFilter(Filter):
 
 def filter_names(predicate, *args, **kwargs):
     """Select columns based on their name.
+
 
     For a column whose name is ``col_name``, ``predicate`` is called as
     ``predicate(col_name, *args, **kwargs)`` and the column is selected if

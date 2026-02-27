@@ -22,12 +22,30 @@ New Features
 - The reports produced by :meth:`DataOp.skb.full_report` and
   :meth:`SkrubLearner.report` now also display the values provided in the
   environment. :pr:`1920` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
+  some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
+  ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Changes
 -------
-- ``ApplyToCols`` and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol`
-  and :class:`ApplyToSubFrame` respectively.
-  :pr:`1913` by :user:`Riccardo Cappuzzo <rcap107>`.
+- :class:`ApplyToCols` has been modified so that now it can detect automatically
+  whether the provided transformer should be applied independently on each column,
+  or on all selected columns as a single dataframe. In most cases, this replaces
+  the original ``ApplyToCols`` and ``ApplyToFrame``. As a result, ``ApplyToCols``
+  and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol` and
+  :class:`ApplyToSubFrame` respectively.
+  The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
+  ``how`` to ``cols``.
+  :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The dataset fetcher functions now include a "path" field for each table in the dataset.
+  For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
+  Additionally, datasets that include a single table have the field ``path``. These
+  fields contain the paths to the datasets stored in the ``skrub_data`` folder.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bug Fixes
 --------
@@ -35,6 +53,8 @@ Bug Fixes
   provided encoders is a scikit-learn Pipeline that starts with a skrub
   single-column transformer. :pr:`1899` by :user:`Jérôme Dockès <jeromedockes>`
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
+- Errors raised when a polars LazyFrame is passed where an eager DataFrame is
+  expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.7.2
 =============
@@ -104,6 +124,10 @@ New features
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+- :class:`selectors.Selector` now has documentation for its :meth:`selectors.Selector.expand`
+  and :meth:`selectors.Selector.expand_index` methods, with added information and examples
+  in the user guide, as well as mentions in the corresponding constructor functions.
+  :pr:`1841` by :user:`Eloi Massoulié<emassoulie>`.
 
 Changes
 -------
