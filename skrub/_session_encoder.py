@@ -74,11 +74,11 @@ def _add_session_id_polars(X, group_by, timestamp_col, session_gap):
         group_diff = X.select(
             pl.any_horizontal(pl.col(group_by).diff().fill_null(0) != 0)
         ).to_series()
+        # a new session starts if either the "group_by" column changes or the time
+        # gap is exceeded
         is_new_session = group_diff | time_diff
     else:
         is_new_session = time_diff
-    # a new session starts if either the "group_by" column changes or the time gap is
-    # exceeded
     # Add session_id by computing cumulative sum of is_new_session
     column_name = f"{timestamp_col}_session_id"
     return X.with_columns(is_new_session.cum_sum().alias(column_name))

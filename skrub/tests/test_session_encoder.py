@@ -537,13 +537,11 @@ def test_check_is_new_session_no_by(df_module):
             ]
         }
     )
-    is_new = sbd.to_list(_add_session_id(df, [], "timestamp", 30))
-
-    # First row is never a new session (no previous row), all others depend on gap
-    assert not is_new[0]  #  (first row)
-    assert not is_new[1]  # 10 min < 30 min
-    assert is_new[2]  # 50 min > 30 min
-    assert not is_new[3]  # 5 min < 30 min
+    session_id = sbd.to_list(
+        sbd.col(_add_session_id(df, [], "timestamp", 30), "timestamp_session_id")
+    )
+    # Expected: first two events in session 0, last two events in session 1
+    assert session_id == [0, 0, 1, 1]
 
 
 def test_check_is_new_session_with_by(df_module):
