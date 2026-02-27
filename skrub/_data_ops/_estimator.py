@@ -260,7 +260,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         -------
         scikit-learn estimator
             The fitted estimator. Depending on the nature of the estimator it
-            may be wrapped in a ``skrub.ApplyToCols`` or ``skrub.ApplyToFrame``,
+            may be wrapped in a ``skrub.ApplyToEachCol`` or ``skrub.ApplyToSubFrame``,
             see examples below.
 
         See also
@@ -308,7 +308,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
 
         Case 1: the ``StringEncoder`` is a skrub single-column transformer: it
         transforms a single column. In the learner it gets wrapped in a
-        :class:`ApplyToCols` which independently fits a separate instance of the
+        :class:`ApplyToEachCol` which independently fits a separate instance of the
         ``StringEncoder`` to each of the columns it transforms (in this case there is
         only one column, ``'product'``). The individual transformers can be found in the
         fitted attribute ``transformers_`` which maps column names to the corresponding
@@ -320,25 +320,25 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
         {' pe': 2, 'pen': 12, 'en ': 8, ' pen': 3, 'pen ': 13, ' cu': 0, 'cup': 6, 'up ': 18, ' cup': 1, 'cup ': 7, ' sp': 4, 'spo': 16, 'poo': 14, 'oon': 10, 'on ': 9, ' spo': 5, 'spoo': 17, 'poon': 15, 'oon ': 11}
 
-        This case (wrapping in :class:`ApplyToCols`) happens when the estimator is a skrub
+        This case (wrapping in :class:`ApplyToEachCol`) happens when the estimator is a skrub
         single-column transformer (it has a ``__single_column_transformer__``
         attribute), we pass ``.skb.apply(how='cols')`` or we pass
         ``.skb.apply(allow_reject=True)``.
 
         Case 2: the ``PCA`` is a regular scikit-learn transformer. In the learner it
-        gets wrapped in a :class:`ApplyToFrame` which applies it to the subset of columns
+        gets wrapped in a :class:`ApplyToSubFrame` which applies it to the subset of columns
         in the dataframe selected by the ``cols`` argument passed to ``.skb.apply()``.
         The fitted ``PCA`` can be found in the fitted attribute ``transformer_``.
 
         >>> pca = learner.find_fitted_estimator('pca')
         >>> pca
-        ApplyToFrame(cols=glob('date_*'), transformer=PCA(n_components=2))
+        ApplyToSubFrame(cols=glob('date_*'), transformer=PCA(n_components=2))
         >>> pca.transformer_
         PCA(n_components=2)
         >>> pca.transformer_.mean_
         array([2020.,    4.,    4.], dtype=float32)
 
-        This case (wrapping in :class:`ApplyToFrame`) happens when the estimator is a
+        This case (wrapping in :class:`ApplyToSubFrame`) happens when the estimator is a
         scikit-learn transformer but not a single-column transformer, or we
         pass ``.skb.apply(how='frame')``.
 
@@ -437,7 +437,7 @@ class SkrubLearner(_CloudPickleDataOp, BaseEstimator):
         step:
 
         >>> learner.find_fitted_estimator("vectorizer")
-        ApplyToFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
+        ApplyToSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
         node = find_node_by_name(self.data_op, name)
         if node is None:
@@ -571,31 +571,23 @@ def _find_Xy(data_op):
 
 def _compute_Xy(data_op, environment):
     """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
-
     Xy = _find_Xy(data_op.skb.clone())
-    X = evaluate(
-        Xy["X"],
-        mode="fit_transform",
-        environment=environment,
-        clear=False,
-    )
+    Xy_values = evaluate(Xy, mode="fit_transform", environment=environment, clear=True)
     if "y" in Xy:
-        y = evaluate(
-            Xy["y"],
-            mode="fit_transform",
-            environment=environment,
-            clear=False,
-        )
         msg = (
             "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"
             " for both X and y?"
         )
         check_subsampled_X_y_shape(
-            Xy["X"], Xy["y"], X, y, "fit_transform", environment, msg=msg
+            Xy["X"],
+            Xy["y"],
+            Xy_values["X"],
+            Xy_values["y"],
+            "fit_transform",
+            environment,
+            msg=msg,
         )
-    else:
-        y = None
-    return X, y
+    return Xy_values["X"], Xy_values.get("y")
 
 
 def _rename_cv_param_learner_to_estimator(kwargs):

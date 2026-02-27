@@ -22,9 +22,24 @@ New Features
 
 Changes
 -------
+- :class:`ApplyToCols` has been modified so that now it can detect automatically
+  whether the provided transformer should be applied independently on each column,
+  or on all selected columns as a single dataframe. In most cases, this replaces
+  the original ``ApplyToCols`` and ``ApplyToFrame``. As a result, ``ApplyToCols``
+  and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol` and
+  :class:`ApplyToSubFrame` respectively.
+  The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
+  ``how`` to ``cols``.
+  :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Bug Fixes
----------
+--------
+- The :class:`TableVectorizer` now correctly handles the case where one of the
+  provided encoders is a scikit-learn Pipeline that starts with a skrub
+  single-column transformer. :pr:`1899` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
+- Errors raised when a polars LazyFrame is passed where an eager DataFrame is
+  expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Release 0.7.2
 =============
@@ -100,6 +115,10 @@ New features
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+- :class:`selectors.Selector` now has documentation for its :meth:`selectors.Selector.expand`
+  and :meth:`selectors.Selector.expand_index` methods, with added information and examples
+  in the user guide, as well as mentions in the corresponding constructor functions.
+  :pr:`1841` by :user:`Eloi Massoulié<emassoulie>`.
 
 Changes
 -------

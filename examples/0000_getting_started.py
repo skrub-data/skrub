@@ -18,7 +18,7 @@ the features we present in this example and the following ones.
 .. |Joiner| replace:: :class:`~skrub.Joiner`
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
-.. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
+.. |ApplyToEachCol| replace:: :class:`~skrub.ApplyToEachCol`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
 """
@@ -158,13 +158,13 @@ data = Cleaner().fit_transform(data)
 TableReport(data)
 # %%
 # Skrub transformers are applied column-by-column, but it's possible to use
-# the |ApplyToCols| meta-transformer to apply a transformer to
+# the |ApplyToEachCol| meta-transformer to apply a transformer to
 # multiple columns at once. Complex column selection is possible using
 # :ref:`skrub's column selectors <user_guide_selectors>`.
 
-from skrub import ApplyToCols, DatetimeEncoder
+from skrub import ApplyToEachCol, DatetimeEncoder
 
-ApplyToCols(
+ApplyToEachCol(
     DatetimeEncoder(add_total_seconds=False), cols=["date_1", "date_2"]
 ).fit_transform(data)
 

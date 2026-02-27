@@ -569,6 +569,21 @@ def test_train_test_split(with_y):
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
 
 
+def test_train_test_split_X_y_aligned():
+    """
+    Assert that X & y are evaluated jointly in train-test-split, CV etc.
+    """
+    df = skrub.var(
+        "df", pd.DataFrame({"a": list(range(1_000)), "b": list(range(1_000))})
+    )
+    shuffled = df.sample(frac=1)
+    X = shuffled[["a"]].skb.mark_as_X()
+    y = shuffled["b"].skb.mark_as_y()
+    data_op = X.skb.apply(Ridge(), y=y)
+    split = data_op.skb.train_test_split()
+    assert (split["X_train"]["a"].to_numpy() == split["y_train"].to_numpy()).all()
+
+
 def test_iter_cv_splits():
     X = skrub.X(np.arange(5) * 10)
     splits = X.skb.iter_cv_splits()
