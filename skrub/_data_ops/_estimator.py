@@ -51,6 +51,20 @@ _SEARCH_FITTED_ATTRIBUTES = _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY + [
 ]
 
 
+def _get_default_sklearn_tags():
+    class _DummyTransformer(TransformerMixin, BaseEstimator):
+        pass
+
+    try:
+        return _DummyTransformer().__sklearn_tags__()
+    except AttributeError:
+        # sklearn < 1.6
+        return None
+
+
+_DEFAULT_SKLEARN_TAGS = _get_default_sklearn_tags()
+
+
 class _SharedDict(dict):
     """A dict that does not get copied during deepcopy/sklearn clone.
 
@@ -106,21 +120,16 @@ class _DataOpWrapperMixin(_CloudPickle):
         # scikit-learn >= 1.6
 
         def __sklearn_tags__(self):
-            class _DummyTransformer(TransformerMixin, BaseEstimator):
-                pass
-
-            default_tags = _DummyTransformer().__sklearn_tags__()
-
             first = find_first_apply(self.data_op)
             if first is None:
-                return default_tags
+                return _DEFAULT_SKLEARN_TAGS
             estimator = get_default(first._skrub_impl.estimator)
             if isinstance(estimator, DataOp):
-                return default_tags
+                return _DEFAULT_SKLEARN_TAGS
             try:
                 return estimator.__sklearn_tags__()
             except AttributeError:
-                return default_tags
+                return _DEFAULT_SKLEARN_TAGS
 
     @property
     def classes_(self):
