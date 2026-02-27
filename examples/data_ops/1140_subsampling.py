@@ -14,10 +14,13 @@ version of the original data.
 
 # %%
 
+import pandas as pd
+
 import skrub
 import skrub.datasets
 
-dataset = skrub.datasets.fetch_employee_salaries().employee_salaries
+file_path = skrub.datasets.fetch_employee_salaries().path
+dataset = pd.read_csv(file_path)
 
 full_data = skrub.var("data", dataset)
 full_data

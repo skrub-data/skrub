@@ -19,6 +19,10 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
+  some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
+  ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 - The :class:`SessionEncoder` is now available. This encoder takes a dataframe with
   a timestamp column and computes sessions based on the given session duration.
   Additionally, it is possible to provide a ``by`` column or list of columns
@@ -37,6 +41,14 @@ Changes
   The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
   ``how`` to ``cols``.
   :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The dataset fetcher functions now include a "path" field for each table in the dataset.
+  For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
+  Additionally, datasets that include a single table have the field ``path``. These
+  fields contain the paths to the datasets stored in the ``skrub_data`` folder.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bug Fixes
 --------

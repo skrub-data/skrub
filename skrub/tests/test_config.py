@@ -1,8 +1,10 @@
+import pathlib
+
 import pytest
 
 import skrub
 from skrub import TableReport, config_context, get_config, set_config
-from skrub._config import _parse_env_bool
+from skrub._config import _get_default_data_dir, _parse_env_bool
 from skrub._data_ops._evaluation import evaluate
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -26,19 +28,61 @@ def simple_series(df_module):
     return df_module.make_column(name="A", values=[1, 2, 3, 4, 5])
 
 
-def test_config_context():
-    assert get_config() == {
-        "use_table_report": False,
-        "use_table_report_data_ops": True,
-        "table_report_verbosity": 1,
-        "max_plot_columns": 30,
-        "max_association_columns": 30,
-        "subsampling_seed": 0,
-        "enable_subsampling": "default",
-        "float_precision": 3,
-        "cardinality_threshold": 40,
-        "eager_data_ops": True,
+def test_default_config():
+    cfg = get_config()
+    # Rather than asserting that the dictionary is exactly equal to the hard-coded
+    # default values, we check each expected default value individually.
+    assert cfg["use_table_report"] is False
+    assert cfg["use_table_report_data_ops"] is True
+    # On CI the absolute path is different, check that it ends with skrub_data
+    assert pathlib.Path(cfg["data_dir"]).name == "skrub_data"
+    assert cfg["table_report_verbosity"] == 1
+    assert cfg["max_plot_columns"] == 30
+    assert cfg["max_association_columns"] == 30
+    assert cfg["subsampling_seed"] == 0
+    assert cfg["enable_subsampling"] == "default"
+    assert cfg["float_precision"] == 3
+    assert cfg["cardinality_threshold"] == 40
+    assert cfg["eager_data_ops"] is True
+
+    # Fail the test if new configuration keys are present but not checked here.
+    # doc/modules/configurations_and_utils/customizing_configurations.rst
+    # should also be updated if new configuration keys are added.
+    expected_keys = {
+        "use_table_report",
+        "use_table_report_data_ops",
+        "data_dir",
+        "table_report_verbosity",
+        "max_plot_columns",
+        "max_association_columns",
+        "subsampling_seed",
+        "enable_subsampling",
+        "float_precision",
+        "cardinality_threshold",
+        "eager_data_ops",
     }
+    assert set(cfg.keys()) == expected_keys
+
+
+def test_deprecated_env_var_warning(monkeypatch, tmp_path):
+    """Test that using the deprecated SKRUB_DATA_DIRECTORY env var raises a warning."""
+    deprecated_data_dir = str(tmp_path / "deprecated_data")
+
+    with monkeypatch.context() as mp:
+        # Clear any existing SKB_DATA_DIRECTORY
+        mp.delenv("SKB_DATA_DIRECTORY", raising=False)
+        # Set the deprecated env var
+        mp.setenv("SKRUB_DATA_DIRECTORY", deprecated_data_dir)
+
+        # Call _get_default_data_folder and capture the warning
+        with pytest.warns(
+            DeprecationWarning, match="'SKRUB_DATA_DIRECTORY' is deprecated"
+        ):
+            _get_default_data_dir()
+
+
+def test_config_context():
+    assert get_config()["use_table_report"] is False
 
     # Not using as a context manager affects nothing
     config_context(use_table_report=True)
