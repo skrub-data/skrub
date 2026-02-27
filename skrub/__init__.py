@@ -43,6 +43,7 @@ from ._select_cols import Drop, DropCols, SelectCols
 from ._similarity_encoder import SimilarityEncoder
 from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
+from ._string_parser import StringParser
 from ._table_vectorizer import Cleaner, TableVectorizer
 from ._tabular_pipeline import tabular_pipeline
 from ._text_encoder import TextEncoder
@@ -107,4 +108,5 @@ __all__ = [
     "ApplyToSubFrame",
     "ApplyToCols",
     "ToFloat",
+    "StringParser",
 ]
