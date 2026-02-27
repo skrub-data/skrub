@@ -24,6 +24,7 @@ based on the products it contains.
 .. |HistGradientBoostingClassifier| replace::
    :class:`~sklearn.ensemble.HistGradientBoostingClassifier`
 .. |make_randomized_search| replace:: :func:`~skrub.DataOp.skb.make_randomized_search`
+.. |RocCurveDisplay| replace:: :class:`~sklearn.metrics.RocCurveDisplay`
 
 
 """
@@ -32,16 +33,40 @@ based on the products it contains.
 # The credit fraud dataset
 # ------------------------
 #
-# The ``baskets`` table contains a basket ID and a flag indicating if the order
-# was fraudulent or not (the customer never made the payment).
+# We fetch the credit fraud dataset using ``fetch_credit_fraud``. This dataset
+# contains two tables: ``baskets`` and ``products``. We load the training split
+# of the dataset to train the model. At the end of the example, we will load
+# the test split to evaluate the model on unseen data.
 
 # %%
+import pandas as pd
+
 import skrub
 import skrub.datasets
 
-dataset = skrub.datasets.fetch_credit_fraud()
-skrub.TableReport(dataset.baskets)
+dataset = skrub.datasets.fetch_credit_fraud(split="train")
 
+# %%
+# We define two skrub variables that store the content of the two csv
+# files. These variables will be used as inputs to the DataOps plan we will build.
+# Later, when we want to apply the resulting model to new data, we will need to
+# provide dataframes to the same variables, but with the content of the test split
+# of the dataset instead.
+baskets = skrub.var("baskets", pd.read_csv(dataset.baskets_path))
+products = skrub.var("products", pd.read_csv(dataset.products_path))
+
+# %%
+# Now we can use the |TableReport| provided by the Data Ops to inspect the two tables.
+# The ``baskets`` table contains the list of basket IDs, and a fraud flag indicating
+# whether the basket is fraudulent or not.
+baskets
+# %%
+# We mark the "ID" column of the ``baskets`` table as ``X``, and the
+# ``"fraud_flag"`` column as ``y``. This allows the Data Ops to track the indices
+# of the variables when splitting for cross-validation.
+# so that DataOps can use their indices for train-test splitting and cross-validation.
+basket_ids = baskets[["ID"]].skb.mark_as_X()
+fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
 # %%
 # The ``products`` table contains information about the products that have been
 # purchased, and the basket they belong to. A basket contains at least one product.
@@ -49,8 +74,7 @@ skrub.TableReport(dataset.baskets)
 # column.
 
 # %%
-skrub.TableReport(dataset.products)
-
+products
 # %%
 # A data-processing challenge
 # ----------------------------
@@ -64,40 +88,27 @@ skrub.TableReport(dataset.products)
 # the products table, we need to extract these features, aggregate them
 # at the basket level, and merge the result with the basket data.
 #
-# We can use the |TableVectorizer| to vectorize the products, but we
-# then need to aggregate the resulting vectors to obtain a single row per basket.
-# Using a scikit-learn Pipeline is tricky because the |TableVectorizer| would be
-# fitted on a table with a different number of rows than the target y (the baskets
-# table), which scikit-learn does not allow.
+# .. admonition:: Why building a pipeline for this is hard
+#    :collapsible: closed
 #
-# While we could fit the |TableVectorizer| manually, this would forfeit
-# scikit-learn’s tooling for managing transformations, storing fitted estimators,
-# splitting data, cross-validation, and hyper-parameter tuning.
-# We would also have to handle the aggregation and join ourselves, likely with
-# error-prone Pandas code.
+#    We can use the |TableVectorizer| to vectorize the products, but we
+#    then need to aggregate the resulting vectors to obtain a single row per basket.
+#    Using a scikit-learn Pipeline is tricky because the |TableVectorizer| would be
+#    fitted on a table with a different number of rows than the target y (the baskets
+#    table), which scikit-learn does not allow.
 #
-# Fortunately, skrub DataOps provide a powerful alternative for building flexible
-# plans that address these problems.
+#    While we could fit the |TableVectorizer| manually, this would forfeit
+#    scikit-learn’s tooling for managing transformations, storing fitted estimators,
+#    splitting data, cross-validation, and hyper-parameter tuning.
+#    We would also have to handle the aggregation and join ourselves, likely with
+#    error-prone Pandas code.
+#
+#    Fortunately, skrub DataOps provide a powerful alternative for building flexible
+#    plans that address these problems.
 
 # %%
 # Building a multi-table DataOps plan
 # ------------------------------------
-#
-# We start by creating skrub variables, which are the inputs to our plan.
-# In our example, we create two skrub |var| objects: ``products`` and ``baskets``:
-
-# %%
-products = skrub.var("products", dataset.products)
-baskets = skrub.var("baskets", dataset.baskets)
-
-basket_ids = baskets[["ID"]].skb.mark_as_X()
-fraud_flags = baskets["fraud_flag"].skb.mark_as_y()
-
-# %%
-# We mark the ``basket_ids`` variable as ``X`` and the ``fraud_flags`` variable as ``y``
-# so that DataOps can use their indices for train-test splitting and cross-validation.
-# We then build the plan by applying transformations to those inputs.
-#
 # Since our DataOps expect dataframes for products, baskets and fraud
 # flags, we manipulate those objects as we would manipulate pandas dataframes.
 # For instance, we filter products to keep only those that match one of the
@@ -111,7 +122,7 @@ products_with_total = kept_products.assign(
 products_with_total
 
 # %%
-# We then build a skrub ``TableVectorizer`` with different choices of
+# We then build a skrub |TableVectorizer| with different choices of
 # the type of encoder for high-cardinality categorical or string columns, and
 # the number of components it uses.
 #
@@ -194,25 +205,28 @@ search.plot_results()
 # but at the expense of training and scoring time.
 #
 # We can get the best performing :class:`~skrub.SkrubLearner` via
-# ``best_learner_``, and use it for inference on new data with:
+# ``best_learner_``, and use it for inference on new data.
+# We load the test split of the credit fraud dataset, and apply the best learner to
+# it to obtain predictions.
 
-import pandas as pd
+new_data = skrub.datasets.fetch_credit_fraud(split="test")
 
-new_baskets = pd.DataFrame([dict(ID="abc")])
-new_products = pd.DataFrame(
-    [
-        dict(
-            basket_ID="abc",
-            item="COMPUTER",
-            cash_price=200,
-            make="APPLE",
-            model="XXX-X",
-            goods_code="239246782",
-            Nbr_of_prod_purchas=1,
-        )
-    ]
+new_baskets = pd.read_csv(new_data.baskets_path)
+new_products = pd.read_csv(new_data.products_path)
+
+probabilities = search.best_learner_.predict_proba(
+    {"baskets": new_baskets, "products": new_products}
 )
-search.best_learner_.predict_proba({"baskets": new_baskets, "products": new_products})
+# %%
+# We can evaluate the performance of our model by plotting the ROC curve and
+# calculating the AUC score.
+# We can use the |RocCurveDisplay| from scikit-learn to plot the ROC curve.
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import RocCurveDisplay
+
+RocCurveDisplay.from_predictions(new_baskets["fraud_flag"], probabilities[:, 1])
+plt.show()
 # %%
 # Conclusion
 # ----------

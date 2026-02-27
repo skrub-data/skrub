@@ -31,6 +31,14 @@ Changes
   The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
   ``how`` to ``cols``.
   :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The dataset fetcher functions now include a "path" field for each table in the dataset.
+  For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
+  Additionally, datasets that include a single table have the field ``path``. These
+  fields contain the paths to the datasets stored in the ``skrub_data`` folder.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bug Fixes
 --------
