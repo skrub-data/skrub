@@ -31,6 +31,14 @@ Changes
   The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
   ``how`` to ``cols``.
   :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The dataset fetcher functions now include a "path" field for each table in the dataset.
+  For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
+  Additionally, datasets that include a single table have the field ``path``. These
+  fields contain the paths to the datasets stored in the ``skrub_data`` folder.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bug Fixes
 --------
@@ -51,12 +59,6 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- The dataset fetcher functions now include the ``path`` and ``paths`` fields, which contain the paths to the datasets.
-  In future releases, the bunch objects will not contain Pandas dataframes by default anymore.
-  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
-  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
-  is deprecated and will be removed in a future version of skrub.
-  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
 - The repository wheel has been made smaller by removing some material that was
   not necessary for using the library. Benchmarks are now available in a separate
   `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
