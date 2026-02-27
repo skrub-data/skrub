@@ -340,7 +340,8 @@ You can download and install pixi from `here <https://pixi.sh/latest/>`_.
 
 From the repository root:
 
-y
+.. code:: bash
+
     # Build documentation without running examples (faster)
     pixi run build-doc-quick
 
