@@ -29,67 +29,58 @@ except ImportError:
 
 
 @dispatch
-def _check_is_new_session(X, group_by, timestamp, session_gap):
+def _add_session_id(X, group_by, timestamp_col, session_gap):
     raise_dispatch_unregistered_type(X, kind="Dataframe")
 
 
-@_check_is_new_session.specialize("pandas")
-def _check_is_new_session_pandas(X, group_by, timestamp, session_gap):
+@_add_session_id.specialize("pandas")
+def _add_session_id_pandas(X, group_by, timestamp_col, session_gap):
     # pandas 3.0 changed the resolution of astype(int) for datetime columns from
     # nanoseconds to milliseconds, so we need to adjust the time difference calculation
     # accordingly
     if parse(pd.__version__).major <= 2:
         # check if the time difference between events exceeds the session gap
         time_diff = (
-            X[timestamp].astype(int).diff().fillna(0) // 10**6 > session_gap * 60 * 1000
+            X[timestamp_col].astype(int).diff().fillna(0) // 10**6
+            > session_gap * 60 * 1000
         )
     else:
         time_diff = (
-            X[timestamp].astype(int).diff().fillna(0) // 10**3 > session_gap * 60 * 1000
+            X[timestamp_col].astype(int).diff().fillna(0) // 10**3
+            > session_gap * 60 * 1000
         )
-    if not group_by:
-        return time_diff
-    # check if the "group_by" column changes
-    char_diff = (X[group_by].diff().fillna(0) > 0).any(axis=1)
-    # a new session starts if either the "group_by" column changes or the time gap is
-    # exceeded
-    is_new_session = char_diff | time_diff
-    return is_new_session
-
-
-@_check_is_new_session.specialize("polars")
-def _check_is_new_session_polars(X, group_by, timestamp, session_gap):
-    # check if the time difference between events exceeds the session gap
-    time_diff = (
-        X[timestamp].dt.epoch("ms").diff().fill_null(0) > session_gap * 60 * 1000
-    )
-    if not group_by:
-        return time_diff
-    # check if the "group_by" column changes
-    char_diff = X.select(
-        pl.any_horizontal(pl.col(group_by).diff().fill_null(0) > 0)
-    ).to_series()
-    # a new session starts if either the "group_by" column changes or the time gap is
-    # exceeded
-    is_new_session = char_diff | time_diff
-    return is_new_session
-
-
-@dispatch
-def _add_session_id(X, is_new_session, column_name):
-    raise_dispatch_unregistered_type(X, kind="Dataframe")
-
-
-@_add_session_id.specialize("pandas")
-def _add_session_id_pandas(X, is_new_session, column_name):
+    if group_by:
+        # check if the "group_by" column changes
+        group_diff = (X[group_by].diff().fillna(0) != 0).any(axis=1)
+        # a new session starts if either the "group_by" column changes or the time
+        # gap is exceeded
+        is_new_session = group_diff | time_diff
+    else:
+        is_new_session = time_diff
     # Compute cumulative sum of is_new_session to create session IDs
+    column_name = f"{timestamp_col}_session_id"
     X[column_name] = is_new_session.cumsum()
     return X
 
 
 @_add_session_id.specialize("polars")
-def _add_session_id_polars(X, is_new_session, column_name):
+def _add_session_id_polars(X, group_by, timestamp_col, session_gap):
+    # check if the time difference between events exceeds the session gap
+    time_diff = (
+        X[timestamp_col].dt.epoch("ms").diff().fill_null(0) > session_gap * 60 * 1000
+    )
+    if group_by:
+        # check if the "group_by" column changes
+        group_diff = X.select(
+            pl.any_horizontal(pl.col(group_by).diff().fill_null(0) != 0)
+        ).to_series()
+        is_new_session = group_diff | time_diff
+    else:
+        is_new_session = time_diff
+    # a new session starts if either the "group_by" column changes or the time gap is
+    # exceeded
     # Add session_id by computing cumulative sum of is_new_session
+    column_name = f"{timestamp_col}_session_id"
     return X.with_columns(is_new_session.cum_sum().alias(column_name))
 
 
@@ -172,14 +163,14 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ...         pd.Timestamp('2024-01-01 10:00:00'),  # Different user
     ...         pd.Timestamp('2024-01-01 10:20:00'),  # 20 min later, same session
     ...     ],
-    ...     'action': ['login', 'view', 'logout', 'login', 'purchase']
+    ...     'action': ['login', 'view', 'purchase', 'login', 'purchase']
     ... }
     >>> df = pd.DataFrame(data)
     >>> df
         user_id           timestamp   action
     0    alice 2024-01-01 10:00:00    login
     1    alice 2024-01-01 10:05:00     view
-    2    alice 2024-01-01 11:00:00   logout
+    2    alice 2024-01-01 11:00:00 purchase
     3      bob 2024-01-01 10:00:00    login
     4      bob 2024-01-01 10:20:00 purchase
 
@@ -356,16 +347,10 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         X_sorted = sbd.sort(X, by=sort_by)
 
         X_factorized, factorized_by = self._factorize_columns(X_sorted)
-        # mark the start of a new session by checking the difference
-        is_new_session = _check_is_new_session(
+        # add the session id
+        X_with_session_id = _add_session_id(
             X_factorized, factorized_by, self.timestamp_col, self.session_gap
         )
-        # add the session id
-        session_col_name = f"{self.timestamp_col}_session_id"
-        X_with_session_id = _add_session_id(
-            X_factorized, is_new_session, session_col_name
-        )
-
         # drop the factorized "group_by" column if the original "group_by"
         # column was not numeric
         to_drop = [col for col in factorized_by if col not in self.group_by_columns]
