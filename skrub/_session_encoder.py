@@ -11,6 +11,7 @@ of the "by" column(s) and a session number
 """
 
 import numbers
+from collections.abc import Iterable
 
 import pandas as pd
 from packaging.version import parse
@@ -18,7 +19,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
-from ._dispatch import dispatch
+from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._utils import random_string
 
 try:
@@ -28,15 +29,12 @@ except ImportError:
 
 
 @dispatch
-def _check_is_new_session(X, by, timestamp, session_gap):
-    # Avoid circular import
-    from ._dispatch import raise_dispatch_unregistered_type
-
+def _check_is_new_session(X, group_by, timestamp, session_gap):
     raise_dispatch_unregistered_type(X, kind="Dataframe")
 
 
 @_check_is_new_session.specialize("pandas")
-def _check_is_new_session_pandas(X, by, timestamp, session_gap):
+def _check_is_new_session_pandas(X, group_by, timestamp, session_gap):
     # pandas 3.0 changed the resolution of astype(int) for datetime columns from
     # nanoseconds to milliseconds, so we need to adjust the time difference calculation
     # accordingly
@@ -49,39 +47,54 @@ def _check_is_new_session_pandas(X, by, timestamp, session_gap):
         time_diff = (
             X[timestamp].astype(int).diff().fillna(0) // 10**3 > session_gap * 60 * 1000
         )
-    if not by:
+    if not group_by:
         return time_diff
-    # check if the "by" column changes
-    char_diff = (X[by].diff().fillna(0) > 0).any(axis=1)
-    # a new session starts if either the "by" column changes or the time gap is
+    # check if the "group_by" column changes
+    char_diff = (X[group_by].diff().fillna(0) > 0).any(axis=1)
+    # a new session starts if either the "group_by" column changes or the time gap is
     # exceeded
     is_new_session = char_diff | time_diff
     return is_new_session
 
 
 @_check_is_new_session.specialize("polars")
-def _check_is_new_session_polars(X, by, timestamp, session_gap):
+def _check_is_new_session_polars(X, group_by, timestamp, session_gap):
     # check if the time difference between events exceeds the session gap
     time_diff = (
         X[timestamp].dt.epoch("ms").diff().fill_null(0) > session_gap * 60 * 1000
     )
-    if not by:
+    if not group_by:
         return time_diff
-    # check if the "by" column changes
+    # check if the "group_by" column changes
     char_diff = X.select(
-        pl.any_horizontal(pl.col(by).diff().fill_null(0) > 0)
+        pl.any_horizontal(pl.col(group_by).diff().fill_null(0) > 0)
     ).to_series()
-    # a new session starts if either the "by" column changes or the time gap is
+    # a new session starts if either the "group_by" column changes or the time gap is
     # exceeded
     is_new_session = char_diff | time_diff
     return is_new_session
 
 
 @dispatch
-def _factorize_column(X, column_name):
-    # Avoid circular import
-    from ._dispatch import raise_dispatch_unregistered_type
+def _add_session_id(X, is_new_session, column_name):
+    raise_dispatch_unregistered_type(X, kind="Dataframe")
 
+
+@_add_session_id.specialize("pandas")
+def _add_session_id_pandas(X, is_new_session, column_name):
+    # Compute cumulative sum of is_new_session to create session IDs
+    X[column_name] = is_new_session.cumsum()
+    return X
+
+
+@_add_session_id.specialize("polars")
+def _add_session_id_polars(X, is_new_session, column_name):
+    # Add session_id by computing cumulative sum of is_new_session
+    return X.with_columns(is_new_session.cum_sum().alias(column_name))
+
+
+@dispatch
+def _factorize_column(X, column_name):
     raise_dispatch_unregistered_type(X, kind="Dataframe")
 
 
@@ -102,47 +115,27 @@ def _factorize_column_polars(X, column_name):
     return X[column_name].cast(pl.Categorical).to_physical()
 
 
-@dispatch
-def _add_session_id(X, is_new_session, column_name):
-    # Avoid circular import
-    from ._dispatch import raise_dispatch_unregistered_type
-
-    raise_dispatch_unregistered_type(X, kind="Dataframe")
-
-
-@_add_session_id.specialize("pandas")
-def _add_session_id_pandas(X, is_new_session, column_name):
-    # Compute cumulative sum of is_new_session to create session IDs
-    X[column_name] = is_new_session.cumsum()
-    return X
-
-
-@_add_session_id.specialize("polars")
-def _add_session_id_polars(X, is_new_session, column_name):
-    # Add session_id by computing cumulative sum of is_new_session
-    return X.with_columns(is_new_session.cum_sum().alias(column_name))
-
-
 class SessionEncoder(TransformerMixin, BaseEstimator):
     """Encode sessions from a dataframe.
 
     A session is defined as a sequence of events  where consecutive events are separated
     by at most ``session_gap`` minutes. Additionally, it is possible to provide a column
-    or list of columns that identifies the user (specified by the ``by`` column).
+    or list of columns that identifies the user (specified by the ``group_by`` column).
     When the time gap between consecutive events exceeds ``session_gap``, or
     when the user changes, a new session begins. All unrelated columns are passed
     through unchanged.
 
     Parameters
     ----------
-    timestamp : str
+    timestamp_col : str
         The name of the column that identifies the time of an event. This column
         is used to determine the start and end of a session.
 
-    by : optional[str, list[str]], default=None
-        The name of the column, or list of columns, that identifies a user. This
-        parameter is used to group events into sessions. If not provided, all
-        events are considered to belong to the same user.
+    group_by : optional[str, list[str]], default=None
+        The name of the column, or list of columns, to group by. This parameter
+        is used to group events into sessions by, for example, user. If not
+        provided, sessions are detected based on the time gap between events, and all
+        events are considered to belong to the same user (or group).
 
     session_gap : int, default=30
         The maximum gap (in minutes) between events in a session. If the gap
@@ -165,7 +158,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
     >>> import pandas as pd
     >>> from datetime import datetime, timedelta
-    >>> encoder = SessionEncoder(by='user_id', timestamp='timestamp', session_gap=30)
+    >>> encoder = SessionEncoder(
+    ...     group_by='user_id', timestamp_col='timestamp', session_gap=30
+    ... )
 
     >>> # Create a sample dataframe with events from different users
     >>> data = {
@@ -193,7 +188,7 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
        user_id           timestamp   action  timestamp_session_id
     0    alice 2024-01-01 10:00:00    login                     0
     1    alice 2024-01-01 10:05:00     view                     0
-    2    alice 2024-01-01 11:00:00   logout                     1
+    2    alice 2024-01-01 11:00:00 purchase                     1
     3      bob 2024-01-01 10:00:00    login                     2
     4      bob 2024-01-01 10:20:00 purchase                     2
 
@@ -210,8 +205,8 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     on different devices should have separate sessions:
 
     >>> encoder_multi = SessionEncoder(
-    ...     by=['user_id', 'device_id'],
-    ...     timestamp='timestamp',
+    ...     group_by=['user_id', 'device_id'],
+    ...     timestamp_col='timestamp',
     ...     session_gap=30
     ... )
 
@@ -251,14 +246,14 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     sessions are separated only by time gaps. This is useful for analyzing a single
     timeseries or events that don't have a user dimension:
 
-    >>> encoder_no_by = SessionEncoder(
-    ...     by=None,
-    ...     timestamp='timestamp',
+    >>> encoder_no_group = SessionEncoder(
+    ...     group_by=None,
+    ...     timestamp_col='timestamp',
     ...     session_gap=30
     ... )
 
     >>> # Create a sample dataframe with only timestamps
-    >>> data_no_by = {
+    >>> data_no_group = {
     ...     'timestamp': [
     ...         pd.Timestamp('2024-01-01 10:00:00'),
     ...         pd.Timestamp('2024-01-01 10:10:00'),  # 10 min gap
@@ -268,9 +263,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
     ...     ],
     ...     'event_type': ['start', 'action', 'action', 'restart', 'action']
     ... }
-    >>> df_no_by = pd.DataFrame(data_no_by)
-    >>> result_no_by = encoder_no_by.fit_transform(df_no_by)
-    >>> result_no_by
+    >>> df_no_group = pd.DataFrame(data_no_group)
+    >>> result_no_group = encoder_no_group.fit_transform(df_no_group)
+    >>> result_no_group
                  timestamp event_type  timestamp_session_id
     0 2024-01-01 10:00:00      start                     0
     1 2024-01-01 10:10:00     action                     0
@@ -287,9 +282,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
 
     """
 
-    def __init__(self, timestamp, by=None, session_gap=30):
-        self.timestamp = timestamp
-        self.by = by
+    def __init__(self, timestamp_col, group_by=None, session_gap=30):
+        self.timestamp_col = timestamp_col
+        self.group_by = group_by
         self.session_gap = session_gap
 
     def fit(self, X, y=None):
@@ -329,46 +324,51 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         """
         self.all_inputs_ = sbd.column_names(X)
         # check that the required columns are present in the input dataframe
-        if self.by is not None:
-            if isinstance(self.by, str):
-                self.by_columns = [self.by]
-            elif isinstance(self.by, list):
-                self.by_columns = self.by
+        if self.group_by is not None:
+            if isinstance(self.group_by, str):
+                self.group_by_columns = [self.group_by]
+            elif isinstance(self.group_by, Iterable) and not isinstance(
+                self.group_by, str
+            ):
+                self.group_by_columns = list(self.group_by)
             else:
-                raise TypeError("by must be a string, a list of strings, or None")
-        if self.by is not None:
-            for col in self.by_columns:
+                raise TypeError("group_by must be a string, a list of strings, or None")
+        if self.group_by is not None:
+            for col in self.group_by_columns:
                 if col not in self.all_inputs_:
                     raise ValueError(f"Column '{col}' not found in input dataframe")
 
-        if self.timestamp not in self.all_inputs_:
-            raise ValueError(f"Column '{self.timestamp}' not found in input dataframe")
+        if self.timestamp_col not in self.all_inputs_:
+            raise ValueError(
+                f"Column '{self.timestamp_col}' not found in input dataframe"
+            )
 
         # check the correctness of the values of session_gap
         if not isinstance(self.session_gap, numbers.Number) or self.session_gap <= 0:
             raise ValueError("session_gap must be a positive number")
 
-        # sort the input dataframe by the "by" and "timestamp" columns
+        # sort the input dataframe by the "group_by" and "timestamp" columns
         sort_by = (
-            self.by_columns + [self.timestamp]
-            if self.by is not None
-            else [self.timestamp]
+            self.group_by_columns + [self.timestamp_col]
+            if self.group_by is not None
+            else [self.timestamp_col]
         )
         X_sorted = sbd.sort(X, by=sort_by)
 
         X_factorized, factorized_by = self._factorize_columns(X_sorted)
         # mark the start of a new session by checking the difference
         is_new_session = _check_is_new_session(
-            X_factorized, factorized_by, self.timestamp, self.session_gap
+            X_factorized, factorized_by, self.timestamp_col, self.session_gap
         )
         # add the session id
-        session_col_name = f"{self.timestamp}_session_id"
+        session_col_name = f"{self.timestamp_col}_session_id"
         X_with_session_id = _add_session_id(
             X_factorized, is_new_session, session_col_name
         )
 
-        # drop the factorized "by" column if the original "by" column was not numeric
-        to_drop = [col for col in factorized_by if col not in self.by_columns]
+        # drop the factorized "group_by" column if the original "group_by"
+        # column was not numeric
+        to_drop = [col for col in factorized_by if col not in self.group_by_columns]
         X_with_session_id = sbd.drop_columns(X_with_session_id, to_drop)
 
         self.all_outputs_ = sbd.column_names(X_with_session_id)
@@ -387,19 +387,19 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         pandas.DataFrame or polars.DataFrame
             The transformed dataframe with session information.
         """
-        check_is_fitted()
+        check_is_fitted(self)
         return self.fit_transform(X)
 
     def _factorize_columns(self, X):
-        # convert by column to string if it's not already, to ensure
+        # convert group_by column to string if it's not already, to ensure
         # that the diff operation works correctly
-        if not self.by:
+        if not self.group_by:
             return X, []
         factorized_columns = {
             f"{col}_factorized_skrub_{random_string()}": _factorize_column(X, col)
             if not sbd.is_numeric(X[col])
             else X[col]
-            for col in self.by_columns
+            for col in self.group_by_columns
         }
 
         X_factorized = sbd.with_columns(X, **factorized_columns)
