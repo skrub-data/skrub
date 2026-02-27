@@ -502,7 +502,7 @@ def _shape_pandas(obj):
     return obj.shape
 
 
-@shape.specialize("polars")
+@shape.specialize("polars", argument_type=("DataFrame", "Column"))
 def _shape_polars(obj):
     return obj.shape
 

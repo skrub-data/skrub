@@ -5,6 +5,7 @@ import re
 import textwrap
 
 from sklearn.base import BaseEstimator
+from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -16,11 +17,11 @@ _SINGLE_COL_LINE = (
     " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
     " single column (a pandas or polars Series) rather than a full dataframe. To apply"
     " this transformer to one or more columns in a dataframe, use it as a parameter in"
-    " a ``skrub.ApplyToCols`` or a ``skrub.TableVectorizer``.\n\n"
+    " a ``skrub.ApplyToEachCol`` or a ``skrub.TableVectorizer``.\n\n"
     "To apply to all columns::\n\n"
     "   ApplyToCol({class_name}())\n\n"
     "To apply to selected columns::\n\n"
-    "   ApplyToCols({class_name}(), cols=['col_name_1', 'col_name_2'])"
+    "   ApplyToEachCol({class_name}(), cols=['col_name_1', 'col_name_2'])"
 )
 _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 4)
 _SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
@@ -48,11 +49,11 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToCols``; see the docstring of ``ApplyToCols`` for more
+    ``ApplyToEachCol``; see the docstring of ``ApplyToEachCol`` for more
     information.
 
     Single-column transformers are not required to inherit from this class in
-    order to work with ``ApplyToCols``, however doing so avoids some
+    order to work with ``ApplyToEachCol``, however doing so avoids some
     boilerplate:
 
         - The required ``__single_column_transformer__`` attribute is set.
@@ -235,3 +236,40 @@ def _insert_after_first_paragraph(document, text_to_insert):
     output_lines.append("\n")
     output_lines.extend(doc_lines)
     return "".join(output_lines)
+
+
+def is_single_column_transformer(transformer):
+    """
+    Check if the provided transformer is a single-column transformer.
+
+    This is done by checking the special attribute
+    __single_column_transformer__ (thus inheriting from the
+    SingleColumnTransformer class is not mandatory). We treat scikit-learn
+    pipelines as a special case and inspect their first step.
+
+    Parameters
+    ----------
+    transformer : BaseEstimator
+        The transformer to check.
+
+    Returns
+    -------
+    bool
+        Whether the transformer is a single-column transformer, meaning that it
+        should be passed columns rather than dataframes.
+    """
+    if hasattr(transformer, "__single_column_transformer__"):
+        return True
+    if isinstance(transformer, Pipeline):
+        # When the transformer is a Pipeline, the first step is what determines
+        # if it accepts single columns or dataframes so we inspect the first
+        # step (recursively, to handle pipelines that contain pipelines).
+        try:
+            # Pipeline steps are ('step name', StepEstimator) pairs.
+            return is_single_column_transformer(transformer.steps[0][1])
+        except Exception:
+            # If we are given an invalid Pipeline (eg with no steps) we do not
+            # want to raise while attempting to inspect it (it would obfuscate
+            # the better error that will be raised when calling fit)
+            return False
+    return False

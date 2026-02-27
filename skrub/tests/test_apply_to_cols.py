@@ -1,338 +1,207 @@
-import re
+import datetime
 
 import numpy as np
-import pandas as pd
 import pytest
-from pandas.testing import assert_index_equal
-from sklearn.base import BaseEstimator
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.exceptions import NotFittedError
+from sklearn.preprocessing import OrdinalEncoder
 
+from skrub import ApplyToCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
-from skrub._apply_to_cols import ApplyToCols
-from skrub._select_cols import Drop
-from skrub._single_column_transformer import (
-    RejectColumn,
-    SingleColumnTransformer,
-)
+from skrub._to_datetime import ToDatetime
 
 
-@pytest.mark.parametrize("define_fit", [False, True])
-def test_single_column_transformer_wrapped_methods(df_module, define_fit):
-    class Dummy(SingleColumnTransformer):
-        def fit_transform(self, column, y=None):
-            return column
+def test_single_column_transformer_becomes_apply_to_each_col(df_module):
+    """SingleColumnTransformer should be wrapped as ApplyToEachCol."""
+    at = ApplyToCols(ToDatetime(), cols=s.all())
+    X = df_module.make_dataframe({"date_col": ["2020-01-01", "2020-01-02"]})
+    at.fit(X)
+    assert hasattr(at, "transformers_")
+    assert isinstance(at.transformers_, dict)
 
-        def transform(self, column):
-            return column
 
-        if define_fit:
+def test_non_single_column_transformer_becomes_apply_to_subframe(df_module):
+    """Non-SingleColumnTransformer should be wrapped as ApplyToSubFrame."""
+    at = ApplyToCols(OrdinalEncoder(), cols=s.all())
+    X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
+    at.fit(X)
+    assert hasattr(at, "transformer_")
 
-            def fit(self, column, y=None):
-                return self
 
-    col = df_module.example_column
-    assert Dummy().fit_transform(col) is col
-    assert Dummy().fit(col).transform(col) is col
+def test_columnwise_override_forces_apply_to_each_col(df_module):
+    """
+    how="cols" should force ApplyToEachCol even
+    for non-SingleColumnTransformer.
+    """
+    at = ApplyToCols(OrdinalEncoder(), cols=s.all(), how="cols")
+    X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
+    at.fit(X)
+    assert hasattr(at, "transformers_")
 
-    dummy = Dummy().fit(col)
-    for method in "fit", "fit_transform", "transform":
-        with pytest.raises(
-            ValueError, match=r"``Dummy\..*`` should be passed a single column"
-        ):
-            getattr(dummy, method)(df_module.example_dataframe)
 
-        with pytest.raises(
-            ValueError, match=r"``Dummy\..*`` expects the first argument X"
-        ):
-            getattr(dummy, method)(np.ones((3,)))
-        # Dataframes with a single column are accepted:
-        col = df_module.example_column
-        result = getattr(dummy, method)(df_module.make_dataframe({sbd.name(col): col}))
-        if method == "fit":
-            assert result is dummy
-        else:
-            df_module.assert_column_equal(result, col)
+def test_invalid_parameters():
+    """all these parameters should be boolean."""
+
+    X = None  # Placeholder for the dataframe, not used in this test
+
+    with pytest.raises((TypeError, ValueError), match=r"allow_reject.*bool"):
+        at = ApplyToCols(ToDatetime(), allow_reject="yes")
+        at.fit_transform(X)
+    with pytest.raises((TypeError, ValueError), match=r"keep_original.*bool"):
+        at = ApplyToCols(ToDatetime(), keep_original="no")
+        at.fit_transform(X)
+    with pytest.raises((TypeError, ValueError), match=r"how.*(auto|cols|frame)"):
+        at = ApplyToCols(ToDatetime(), how="maybe")
+        at.fit_transform(X)
+
+
+def test_to_datetime_transformation(df_module):
+    """Test transformation with ToDatetime (SingleColumnTransformer)."""
+    at = ApplyToCols(ToDatetime(), cols=s.all(), allow_reject=True)
+    X = df_module.make_dataframe(
+        {"date": ["2020-01-01", "2020-01-02"], "value": [1, 2]}
+    )
+    X_transformed = at.fit_transform(X)
+
+    # Check that date column was transformed to datetime
+    assert sbd.is_any_date(sbd.col(X_transformed, "date"))
+    # Check that value column was unchanged
+    assert sbd.to_list(sbd.col(X_transformed, "value")) == [1, 2]
+
+
+def test_ordinal_encoder_transformation(df_module):
+    """Test transformation with OrdinalEncoder (non-SingleColumnTransformer)."""
+    at = ApplyToCols(OrdinalEncoder(), cols=s.all())
+    X = df_module.make_dataframe({"col1": ["a", "b", "c"], "col2": ["x", "y", "z"]})
+    X_transformed = at.fit_transform(X)
+
+    # Check that data was encoded properly
+    assert np.array_equal(sbd.col(X_transformed, "col1"), [0, 1, 2])
+    assert np.array_equal(sbd.col(X_transformed, "col2"), [0, 1, 2])
+
+
+def test_column_selection_with_selector(df_module):
+    """Test that only selected columns are transformed."""
+    at = ApplyToCols(OrdinalEncoder(), cols=s.string())
+    X = df_module.make_dataframe(
+        {
+            "numeric1": [1.0, 2.0, 3.0],
+            "numeric2": [10.0, 20.0, 30.0],
+            "string_col": ["a", "b", "c"],
+        }
+    )
+    X_transformed = at.fit_transform(X)
+
+    # Check that only string_col was transformed
+    assert np.array_equal(sbd.col(X_transformed, "string_col"), [0, 1, 2])
+    # Check that numeric columns were unchanged
+    assert np.array_equal(sbd.col(X_transformed, "numeric1"), [1.0, 2.0, 3.0])
+    assert np.array_equal(sbd.col(X_transformed, "numeric2"), [10.0, 20.0, 30.0])
+
+
+def test_fit_and_transform_separate(df_module):
+    """Test that fit and transform can be called separately."""
+    at = ApplyToCols(OrdinalEncoder(), cols=s.string())
+    X_train = df_module.make_dataframe(
+        {"col1": ["a", "b", "c"], "col2": ["x", "y", "z"]}
+    )
+    X_test = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
+
+    at.fit(X_train)
+    X_train_transformed = at.transform(X_train)
+    X_test_transformed = at.transform(X_test)
+
+    assert sbd.shape(X_train_transformed) == (3, 2)
+    assert sbd.shape(X_test_transformed) == (2, 2)
+
+
+def test_reject_column(df_module):
+    at = ApplyToCols(ToDatetime(), cols=s.all(), allow_reject=True)
+    X = df_module.make_dataframe(
+        {"date": ["2020-01-01", "2020-01-02"], "value": [1, 2]}
+    )
+    X_transformed = at.fit_transform(X)
+
+    X_expected = df_module.make_dataframe(
+        {
+            "date": [datetime.datetime(2020, 1, 1), datetime.datetime(2020, 1, 2)],
+            "value": [1, 2],
+        }
+    )
+
+    df_module.assert_frame_equal(X_transformed, X_expected)
+
+    # A RejectColumn exception should be raised
+    with pytest.raises(ValueError):
+        at = ApplyToCols(ToDatetime(), cols=s.all(), allow_reject=False)
+        X = df_module.make_dataframe(
+            {"date": ["2020-01-01", "2020-01-02"], "value": [1, 2]}
+        )
+        at.fit(X)
 
 
 @pytest.mark.parametrize(
-    "docstring",
+    "transformer,data",
     [
-        "dummy transformer\n\n    details\n",
-        "\n    dummy transformer\n    summary\n\n    details",
-        "summary",
-        "\n    dummy transformer\n\ndetails\n   \n    more",
-        "",
+        (ToDatetime(), {"date_col": ["2020-01-01", "2020-01-02"]}),
+        (OrdinalEncoder(), {"col1": ["a", "b"], "col2": ["x", "y"]}),
     ],
 )
-def test_single_column_transformer_docstring(docstring):
-    class Dummy(SingleColumnTransformer):
-        __doc__ = docstring
+def test_check_is_fitted_transform(df_module, transformer, data):
+    """Test that transform raises NotFittedError before fitting."""
+    at = ApplyToCols(transformer, cols=s.all())
+    X = df_module.make_dataframe(data)
 
-    assert "``Dummy`` is a type of single-column" in Dummy.__doc__
-
-    class Dummy(SingleColumnTransformer):
-        pass
-
-    assert Dummy.__doc__ is None
+    # Should raise NotFittedError when calling transform before fit
+    with pytest.raises(NotFittedError):
+        at.transform(X)
 
 
-def test_single_column_transformer_attribute():
-    class Dummy(SingleColumnTransformer):
-        pass
+def test_check_is_fitted_get_feature_names_out():
+    """Test that get_feature_names_out raises NotFittedError before fitting."""
+    at = ApplyToCols(ToDatetime(), cols=s.all())
 
-    assert Dummy.__single_column_transformer__ is True
-
-
-def test_single_column_transformer_all_outputs(df_module):
-    class Dummy(SingleColumnTransformer):
-        def fit(self, column, y=None):
-            self.all_outputs_ = [sbd.name(column)]
-            return column
-
-    column = df_module.example_column
-
-    transformer = Dummy()
-    transformer.fit(column)
-
-    assert transformer.get_feature_names_out() == [sbd.name(column)]
+    # Should raise NotFittedError when calling get_feature_names_out before fit
+    with pytest.raises(NotFittedError):
+        at.get_feature_names_out()
 
 
-class Mult(BaseEstimator):
-    """Dummy to test the different kinds of output supported by ApplyToCols.
+def test_get_feature_names_out_after_fit(df_module):
+    """Test that get_feature_names_out works after fitting."""
+    at = ApplyToCols(ToDatetime(), cols=s.all())
+    X = df_module.make_dataframe({"date_col": ["2020-01-01", "2020-01-02"]})
+    at.fit(X)
 
-    Supported kinds of output are a single column, a list of columns, or a
-    dataframe. This also checks that when the transformer is not a
-    single-column transformer, X is passed by ApplyToCols as a dataframe
-    containing a single column (not as a column).
-    """
-
-    def __init__(self, output_kind="single_column"):
-        self.output_kind = output_kind
-
-    def fit_transform(self, X, y):
-        self.y_ = np.asarray(y)
-        return self.transform(X)
-
-    def fit(self, X, y):
-        self.fit_transform(X, y)
-        return self
-
-    def transform(self, X):
-        assert sbd.is_dataframe(X)
-        assert sbd.shape(X)[1] == 1
-        col_name = sbd.column_names(X)[0]
-        col = sbd.col(X, col_name)
-        outputs = sbd.make_dataframe_like(
-            X, {f"{col_name} * y": col * self.y_, f"{col_name} * 2.0": col * 2.0}
-        )
-        if self.output_kind == "dataframe":
-            return outputs
-        if self.output_kind == "column_list":
-            return sbd.to_column_list(outputs)
-        assert self.output_kind == "single_column", self.output_kind
-        return sbd.col(outputs, sbd.column_names(outputs)[0])
+    feature_names = at.get_feature_names_out()
+    assert feature_names == ["date_col"]
 
 
-class SingleColMult(Mult):
-    """Single-column transformer equivalent of Mult."""
-
-    __single_column_transformer__ = True
-
-    def transform(self, X):
-        assert sbd.is_column(X)
-        X = sbd.make_dataframe_like(X, [X])
-        return super().transform(X)
-
-
-@pytest.mark.parametrize("output_kind", ["single_column", "dataframe", "column_list"])
-@pytest.mark.parametrize("transformer_class", [Mult, SingleColMult])
-def test_single_column_transformer(
-    df_module, output_kind, transformer_class, use_fit_transform
+# This test is needed to make coverage happy
+@pytest.mark.parametrize(
+    "transformer,expected_attr",
+    [
+        (ToDatetime(), "transformers_"),
+        (OrdinalEncoder(), "transformer_"),
+    ],
+)
+def test_check_is_fitted_missing_fitted_attribute_transform(
+    df_module, transformer, expected_attr
 ):
-    mapper = ApplyToCols(transformer_class(output_kind), s.glob("a*"))
-    X = df_module.make_dataframe(
-        {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}
-    )
-    y = [0.0, 1.0]
-    if use_fit_transform:
-        out = mapper.fit_transform(X, y)
-    else:
-        out = mapper.fit(X, y).transform(X)
-    expected_data = {
-        "a 0 * y": [0.0, 2.2],
-        "a 0 * 2.0": [2.0, 4.4],
-        "a 1 * y": [0.0, 4.4],
-        "a 1 * 2.0": [6.0, 8.8],
-        "b": [5.0, 6.6],
-    }
-    if output_kind == "single_column":
-        expected_data.pop("a 0 * 2.0")
-        expected_data.pop("a 1 * 2.0")
-    expected = df_module.make_dataframe(expected_data)
-    df_module.assert_frame_equal(out, expected)
-    assert mapper.get_feature_names_out() == list(expected_data.keys())
+    """Test check_is_fitted in transform when fitted attributes are missing."""
+    at = ApplyToCols(transformer, cols=s.all())
+    X = df_module.make_dataframe({"col": ["2020-01-01", "2020-01-02"]})
 
+    # Fit the estimator
+    at.fit(X)
 
-def test_empty_selection(df_module):
-    mapper = ApplyToCols(Drop(), ())
-    out = mapper.fit_transform(df_module.example_dataframe)
-    df_module.assert_frame_equal(out, df_module.example_dataframe)
-    assert mapper.transformers_ == {}
+    # Artificially remove the fitted attribute to test check_is_fitted
+    if hasattr(at, expected_attr):
+        delattr(at, expected_attr)
 
+    # Should raise NotFittedError when fitted attribute is missing
+    with pytest.raises(NotFittedError):
+        at.transform(X)
 
-def test_empty_output(df_module):
-    mapper = ApplyToCols(Drop())
-    out = mapper.fit_transform(df_module.example_dataframe)
-    if df_module.name == "pandas":
-        expected = df_module.empty_dataframe.set_axis(
-            df_module.example_dataframe.index, axis="index"
-        )
-    else:
-        expected = df_module.empty_dataframe
-    df_module.assert_frame_equal(out, expected)
-    assert list(mapper.transformers_.keys()) == sbd.column_names(
-        df_module.example_dataframe
-    )
-
-
-class Rejector(SingleColumnTransformer):
-    """Dummy class to test ApplyToCols behavior when columns are rejected."""
-
-    def fit_transform(self, column, y=None):
-        if sbd.name(column) != "float-col":
-            raise RejectColumn("only float-col is accepted")
-        return self.transform(column)
-
-    def transform(self, column):
-        return column * 2.2
-
-
-def test_allowed_column_rejections(df_module, use_fit_transform):
-    df = df_module.example_dataframe
-    mapper = ApplyToCols(Rejector(), allow_reject=True)
-    if use_fit_transform:
-        out = mapper.fit_transform(df)
-    else:
-        out = mapper.fit(df).transform(df)
-    assert sbd.column_names(out) == sbd.column_names(df)
-    df_module.assert_column_equal(
-        sbd.col(out, "float-col"), sbd.col(df, "float-col") * 2.2
-    )
-    for col_name in sbd.column_names(df):
-        if col_name != "float-col":
-            df_module.assert_column_equal(sbd.col(out, col_name), sbd.col(df, col_name))
-
-
-def test_forbidden_column_rejections(df_module):
-    df = df_module.example_dataframe
-    mapper = ApplyToCols(Rejector())
-    with pytest.raises(ValueError, match=".*failed on.*int-col"):
-        mapper.fit(df)
-
-
-class RejectInTransform(SingleColumnTransformer):
-    def fit_transform(self, column, y=None):
-        return column
-
-    def transform(self, column):
-        raise RejectColumn()
-
-
-def test_rejection_forbidden_in_transform(df_module):
-    df = df_module.example_dataframe
-    mapper = ApplyToCols(RejectInTransform(), allow_reject=True)
-    mapper.fit(df)
-    with pytest.raises(ValueError, match=".*failed on.*int-col"):
-        mapper.transform(df)
-
-
-class RenameB(SingleColumnTransformer):
-    """Dummy transformer to check column name deduplication."""
-
-    def fit_transform(self, column, y=None):
-        return self.transform(column)
-
-    def transform(self, column):
-        return sbd.rename(column, "B")
-
-
-def _to_XXX(names):
-    """Mask out the random part of column names."""
-    return [re.sub(r"__skrub_[0-9a-f]+__", "__skrub_XXX__", n) for n in names]
-
-
-def test_column_renaming(df_module, use_fit_transform):
-    df = mapper = out = out_names = None
-
-    def fit_transform():
-        nonlocal out, out_names
-        if use_fit_transform:
-            out = mapper.fit_transform(df)
-        else:
-            out = mapper.fit(df).transform(df)
-        out_names = _to_XXX(sbd.column_names(out))
-
-    df = df_module.make_dataframe({"A": [1], "B": [2]})
-
-    mapper = ApplyToCols(RenameB())
-    fit_transform()
-    assert out_names == ["B__skrub_XXX__", "B"]
-
-    mapper = ApplyToCols(RenameB(), cols=("A",), rename_columns="{}_out")
-    fit_transform()
-    assert out_names == ["B_out", "B"]
-
-    mapper = ApplyToCols(
-        RenameB(), cols=("A",), rename_columns="{}_out", keep_original=True
-    )
-    fit_transform()
-    assert out_names == ["A", "B_out", "B"]
-
-
-class NumpyOutput(BaseEstimator):
-    def fit_transform(self, X, y=None):
-        return np.ones(sbd.shape(X))
-
-
-def test_wrong_transformer_output_type(pd_module):
-    with pytest.raises(TypeError, match=".*fit_transform returned a result of type"):
-        ApplyToCols(NumpyOutput()).fit_transform(pd_module.example_dataframe)
-
-
-def test_set_output_failure(df_module):
-    # check that set_output on the transformer is allowed to fail even if the
-    # set_output method exists, as long as the transformer produces output of
-    # the right type.
-    X = df_module.make_dataframe(
-        {"a 0": [1.0, 2.2], "a 1": [3.0, 4.4], "b": [5.0, 6.6]}
-    )
-    y = [0.0, 1.0]
-    mapper = ApplyToCols(make_pipeline(Mult()))
-    mapper.fit_transform(X, y)
-
-
-class ResetsIndex(BaseEstimator):
-    def fit_transform(self, X, y=None):
-        return X.reset_index()
-
-    def transform(self, X):
-        return X.reset_index()
-
-
-@pytest.mark.parametrize("cols", [(), ("a",), ("a", "b")])
-def test_output_index(cols):
-    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
-    transformer = ApplyToCols(ResetsIndex(), cols=cols)
-    assert_index_equal(transformer.fit_transform(df).index, df.index)
-    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
-    assert_index_equal(transformer.transform(df).index, df.index)
-
-
-def test_set_output_polars(pl_module):
-    # non-regression for an issue introduced in #973; set_output('polars')
-    # would cause a failure in old scikit-learn versions.
-    # see #1122 for details
-    df = pl_module.make_dataframe({"x": ["a", "b", "c"]})
-    ApplyToCols(OneHotEncoder(sparse_output=False)).fit_transform(df)
+    # Should raise NotFittedError when fitted attribute is missing
+    with pytest.raises(NotFittedError):
+        at.get_feature_names_out()

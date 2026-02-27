@@ -2,6 +2,8 @@
 Fetching functions to retrieve example datasets from GitHub and OSF.
 """
 
+from pathlib import Path
+
 from ._utils import load_dataset_files, load_simple_dataset
 
 
@@ -46,6 +48,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         - ``y`` : pd.DataFrame, target labels. Shape: (9228, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the employee salaries CSV file
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -56,10 +59,22 @@ def fetch_employee_salaries(data_home=None, split="all"):
     id_split = 8000
     if split == "train":
         dataset["employee_salaries"] = dataset["employee_salaries"][:id_split]
+        train_path = Path(dataset["employee_salaries_path"]).with_name(
+            "employee_salaries_train.csv"
+        )
+        dataset["employee_salaries_path"] = str(train_path)
+        dataset["path"] = str(train_path)
+        dataset["employee_salaries"][:id_split].to_csv(str(train_path), index=False)
         dataset["X"] = dataset["X"][:id_split]
         dataset["y"] = dataset["y"][:id_split]
     elif split == "test":
         dataset["employee_salaries"] = dataset["employee_salaries"][id_split:]
+        test_path = Path(dataset["employee_salaries_path"]).with_name(
+            "employee_salaries_test.csv"
+        )
+        dataset["employee_salaries_path"] = str(test_path)
+        dataset["path"] = str(test_path)
+        dataset["employee_salaries"][id_split:].to_csv(str(test_path), index=False)
         dataset["X"] = dataset["X"][id_split:]
         dataset["y"] = dataset["y"][id_split:]
     return dataset
@@ -96,6 +111,7 @@ def fetch_medical_charge(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (163065, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the medical charge CSV file
     """
     return load_simple_dataset("medical_charge", data_home)
 
@@ -123,6 +139,7 @@ def fetch_midwest_survey(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (2494, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the midwest survey CSV file
     """
     return load_simple_dataset("midwest_survey", data_home)
 
@@ -151,6 +168,7 @@ def fetch_open_payments(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (73558, 1)
         - ``metadata`` : a dictionary containing the name, description, source
           and target
+        - ``path`` : str, the path to the open payments CSV file
     """
     return load_simple_dataset("open_payments", data_home)
 
@@ -181,6 +199,7 @@ def fetch_traffic_violations(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (1578154, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the traffic violations CSV file
     """
     return load_simple_dataset("traffic_violations", data_home)
 
@@ -209,6 +228,7 @@ def fetch_drug_directory(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (120215, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the drug directory CSV file
     """
     return load_simple_dataset("drug_directory", data_home)
 
@@ -242,10 +262,12 @@ def fetch_credit_fraud(data_home=None, split="train"):
 
         - ``baskets`` : pd.DataFrame, table containing baskets ID and target.
         Shape: (92790, 2)
-        - ``product`` : pd.DataFrame, table containing features about products
+        - ``products`` : pd.DataFrame, table containing features about products
           contained in baskets. Shape: (163357, 7)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``baskets_path`` : str, the path to the baskets CSV file
+        - ``products_path`` : str, the path to the products CSV file
     """
     if split not in ["train", "test", "all"]:
         raise ValueError(
@@ -257,9 +279,25 @@ def fetch_credit_fraud(data_home=None, split="train"):
     if split == "train":
         dataset["baskets"] = dataset["baskets"].query("ID <= @id_split")
         dataset["products"] = dataset["products"].query("basket_ID <= @id_split")
+
+        train_path = Path(dataset["baskets_path"]).with_name("baskets_train.csv")
+        dataset["baskets_path"] = str(train_path)
+        dataset["baskets"].to_csv(str(train_path), index=False)
+
+        train_path = Path(dataset["products_path"]).with_name("products_train.csv")
+        dataset["products_path"] = str(train_path)
+        dataset["products"].to_csv(str(train_path), index=False)
     elif split == "test":
         dataset["baskets"] = dataset["baskets"].query("ID > @id_split")
         dataset["products"] = dataset["products"].query("basket_ID > @id_split")
+
+        test_path = Path(dataset["baskets_path"]).with_name("baskets_test.csv")
+        dataset["baskets_path"] = str(test_path)
+        dataset["baskets"].to_csv(str(test_path), index=False)
+
+        test_path = Path(dataset["products_path"]).with_name("products_test.csv")
+        dataset["products_path"] = str(test_path)
+        dataset["products"].to_csv(str(test_path), index=False)
     return dataset
 
 
@@ -289,6 +327,7 @@ def fetch_toxicity(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (1000, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the toxicity CSV file
     """
     return load_simple_dataset("toxicity", data_home)
 
@@ -323,6 +362,7 @@ def fetch_videogame_sales(data_home=None):
           labels. Shape: (16572, 5)
         - ``y`` : pd.DataFrame, target labels. Shape: (16572, 1)
         - ``metadata`` : a dictionary containing the name, source and target
+        - ``path`` : str, the path to the videogame sales CSV file
     """
 
     result = load_simple_dataset("videogame_sales", data_home)
@@ -355,6 +395,7 @@ def fetch_bike_sharing(data_home=None):
           Shape: (17379, 10)
         - ``y`` : pd.DataFrame, target labels. Shape: (17379, 1)
         - ``metadata`` : a dictionary containing the name and target
+        - ``path`` : str, the path to the bike sharing CSV file
     """
 
     return load_simple_dataset("bike_sharing", data_home)
@@ -381,6 +422,8 @@ def fetch_movielens(data_home=None):
         - ``movies`` : pd.DataFrame, movie ID, title and genres. Shape: (9742, 3)
         - ``ratings``: pd.DataFrame, user ID, movie ID, rating. Shape: (100836, 4)
         - ``metadata`` : a dictionary containing the name source and description
+        - ``movies_path`` : str, the path to the movies CSV file
+        - ``ratings_path`` : str, the path to the ratings CSV file
     """
 
     return load_dataset_files("movielens", data_home)
@@ -417,6 +460,10 @@ def fetch_flight_delays(data_home=None):
           can only be matched to the nearest airport based on the latitude and
           longitude. Shape: (124245, 9)
         - ``metadata`` : a dictionary containing the name  of the dataset.
+        - ``flights_path`` : str, the path to the flights CSV file
+        - ``airports_path`` : str, the path to the airports CSV file
+        - ``weather_path`` : str, the path to the weather CSV file
+        - ``stations_path`` : str, the path to the stations CSV file
     """
     return load_dataset_files("flight_delays", data_home)
 
@@ -447,6 +494,10 @@ def fetch_country_happiness(data_home=None):
         - ``legal_rights_index``: dataframe from the World Bank. Shape: (238, 2)
         - ``metadata`` : a dictionary containing the name of the dataset, a
           description and the sources.
+        - ``happiness_report_path`` : str, the path to the happiness report CSV file
+        - ``GDP_per_capita_path`` : str, the path to the GDP per capita CSV file
+        - ``life_expectancy_path`` : str, the path to the life expectancy CSV file
+        - ``legal_rights_index_path`` : str, the path to the legal rights index CSV file
     """
     return load_dataset_files("country_happiness", data_home)
 
@@ -492,5 +543,6 @@ def fetch_california_housing(data_home=None):
         - ``y`` : pd.DataFrame, target labels. Shape: (20640, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
+        - ``path`` : str, the path to the california housing CSV file
     """
     return load_simple_dataset("california_housing", data_home)

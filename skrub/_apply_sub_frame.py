@@ -5,17 +5,17 @@ from . import _dataframe as sbd
 from . import _utils, selectors
 from ._join_utils import pick_column_names
 
-__all__ = ["ApplyToFrame"]
+__all__ = ["ApplyToSubFrame"]
 
 # By default, select all columns
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToFrame(TransformerMixin, BaseEstimator):
+class ApplyToSubFrame(TransformerMixin, BaseEstimator):
     """Apply a transformer to part of a dataframe.
 
     A subset of the dataframe is selected and passed to the transformer (as a
-    single input). This is different from ``ApplyToCols``, which fits a
+    single input). This is different from ``ApplyToEachCol``, which fits a
     separate clone of the transformer to each selected column independently.
     All columns not listed in ``cols`` remain unmodified in the output.
 
@@ -83,8 +83,8 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
     2  0.0   0.0  100.0     0.0
     3  0.0   0.0    0.0  1000.0
     >>> from sklearn.decomposition import PCA
-    >>> from skrub import ApplyToFrame
-    >>> ApplyToFrame(PCA(n_components=2)).fit_transform(df).round(2)
+    >>> from skrub import ApplyToSubFrame
+    >>> ApplyToSubFrame(PCA(n_components=2)).fit_transform(df).round(2)
          pca0   pca1
     0 -249.01 -33.18
     1 -249.04 -33.68
@@ -93,7 +93,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
 
     We can restrict the transformer to a subset of columns:
 
-    >>> pca = ApplyToFrame(PCA(n_components=2), cols=["a", "b"])
+    >>> pca = ApplyToSubFrame(PCA(n_components=2), cols=["a", "b"])
     >>> pca.fit_transform(df).round(2)
            c       d  pca0  pca1
     0    0.0     0.0 -2.52  0.67
@@ -109,7 +109,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
 
     It is possible to rename the output columns:
 
-    >>> pca = ApplyToFrame(
+    >>> pca = ApplyToSubFrame(
     ...     PCA(n_components=2), cols=["a", "b"], rename_columns='my_tag-{}'
     ... )
     >>> pca.fit_transform(df).round(2)
@@ -121,7 +121,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
 
     We can also force preserving the original columns in the output:
 
-    >>> pca = ApplyToFrame(PCA(n_components=2), cols=["a", "b"], keep_original=True)
+    >>> pca = ApplyToSubFrame(PCA(n_components=2), cols=["a", "b"], keep_original=True)
     >>> pca.fit_transform(df).round(2)
          a     b      c       d  pca0  pca1
     0  1.0   0.0    0.0     0.0 -2.52  0.67
@@ -159,7 +159,7 @@ class ApplyToFrame(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        ApplyToFrame
+        ApplyToSubFrame
             The transformer itself.
         """
         self.fit_transform(X, y, **kwargs)

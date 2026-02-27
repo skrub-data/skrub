@@ -18,7 +18,7 @@ the features we present in this example and the following ones.
 .. |Joiner| replace:: :class:`~skrub.Joiner`
 .. |SquashingScaler| replace:: :class:`~skrub.SquashingScaler`
 .. |DatetimeEncoder| replace:: :class:`~skrub.DatetimeEncoder`
-.. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
+.. |ApplyToEachCol| replace:: :class:`~skrub.ApplyToEachCol`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |TextEncoder| replace:: :class:`~skrub.TextEncoder`
 """
@@ -26,10 +26,21 @@ the features we present in this example and the following ones.
 # %%
 # Preliminary exploration with the |TableReport|
 # ----------------------------------------------
+# We start by loading the "employee salaries". Skrub dataset fetching functions
+# return a Bunch object, which contains the paths to the data files.
+# We can load the data into a dataframe using pandas.
+
+import pandas as pd
+
 from skrub.datasets import fetch_employee_salaries
 
-dataset = fetch_employee_salaries()
-employees_df, salaries = dataset.X, dataset.y
+file_path = fetch_employee_salaries().path
+employees_df = pd.read_csv(file_path)
+
+# %%
+# The target variable is the current annual salary. We pop it from the dataframe
+# to keep only the features in ``employees_df``.
+salaries = employees_df.pop("current_annual_salary")
 
 # %%
 # Typically, the first step with new data is exploration and parsing.
@@ -147,13 +158,13 @@ data = Cleaner().fit_transform(data)
 TableReport(data)
 # %%
 # Skrub transformers are applied column-by-column, but it's possible to use
-# the |ApplyToCols| meta-transformer to apply a transformer to
+# the |ApplyToEachCol| meta-transformer to apply a transformer to
 # multiple columns at once. Complex column selection is possible using
 # :ref:`skrub's column selectors <user_guide_selectors>`.
 
-from skrub import ApplyToCols, DatetimeEncoder
+from skrub import ApplyToEachCol, DatetimeEncoder
 
-ApplyToCols(
+ApplyToEachCol(
     DatetimeEncoder(add_total_seconds=False), cols=["date_1", "date_2"]
 ).fit_transform(data)
 
