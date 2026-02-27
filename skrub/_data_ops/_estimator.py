@@ -51,20 +51,6 @@ _SEARCH_FITTED_ATTRIBUTES = _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY + [
 ]
 
 
-def _get_default_sklearn_tags():
-    class _DummyTransformer(TransformerMixin, BaseEstimator):
-        pass
-
-    try:
-        return _DummyTransformer().__sklearn_tags__()
-    except AttributeError:
-        # sklearn < 1.6
-        return None
-
-
-_DEFAULT_SKLEARN_TAGS = _get_default_sklearn_tags()
-
-
 class _SharedDict(dict):
     """A dict that does not get copied during deepcopy/sklearn clone.
 
@@ -87,6 +73,20 @@ def _copy_attr(source, target, attributes):
             setattr(target, a, getattr(source, a))
         except AttributeError:
             pass
+
+
+def _get_default_sklearn_tags():
+    class _DummyTransformer(TransformerMixin, BaseEstimator):
+        pass
+
+    try:
+        return _DummyTransformer().__sklearn_tags__()
+    except AttributeError:
+        # sklearn < 1.6
+        return None
+
+
+_DEFAULT_SKLEARN_TAGS = _get_default_sklearn_tags()
 
 
 class _DataOpWrapperMixin(_CloudPickle):
