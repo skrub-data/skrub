@@ -167,12 +167,6 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
                 "Input should be a DataFrame. Found an array with incompatible shape:"
                 f" {X.shape}."
             )
-        warnings.warn(
-            "Only pandas and polars DataFrames are supported, but input is a Numpy"
-            " array. Please convert Numpy arrays to DataFrames before passing them to"
-            " skrub transformers. Converting to pandas DataFrame with columns"
-            " ['0', '1', …]."
-        )
         import pandas as pd
 
         columns = list(map(str, range(X.shape[1])))
