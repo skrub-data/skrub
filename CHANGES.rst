@@ -53,6 +53,12 @@ Bug Fixes
 - Errors raised when a polars LazyFrame is passed where an eager DataFrame is
   expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
 
+Documentation
+-------------
+- Updated gallery examples to load datasets from their file paths using
+  ``pd.read_csv()``, following the pattern established in :pr:`1852`.
+  :pr:`1940` by :user:`MuditAtrey <MuditAtrey>`.
+
 Release 0.7.2
 =============
 
