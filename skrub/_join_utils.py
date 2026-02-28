@@ -2,7 +2,7 @@
 
 import inspect
 import re
-
+import warnings
 from skrub import _dataframe as sbd
 from skrub import _utils
 from skrub import selectors as s
@@ -284,6 +284,21 @@ def _do_left_join_polars(left, right, left_on, right_on):
         kw = {"coalesce": True}
     else:
         kw = {}
+        join_params = inspect.signature(left.join).parameters
+        kw = {}
+        if "coalesce" in join_params:
+            kw["coalesce"] = True
+        if "maintain_order" in join_params:
+            kw["maintain_order"] = "left"
+        else:
+            warnings.warn(
+                "Polars join does not preserve row order unless "
+                "maintain_order='left'. This Polars version does not support "
+                "maintain_order, so the output row order may differ from the left "
+                "table.",
+                UserWarning,
+                stacklevel=2,
+            )
     return left.join(
         right, left_on=left_on, right_on=right_on, how="left", suffix="", **kw
     )
