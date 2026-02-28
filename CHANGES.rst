@@ -43,6 +43,11 @@ Changes
   the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
   is deprecated and will be removed in a future version of skrub.
   :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``np.float32``, and a ``numeric_dtype`` parameter to downcast floating-point
+  columns to ``np.float32`` (without converting integer columns).
+  :pr:`1910` by :user:`<Varshith-yadaV>`.
 
 Bug Fixes
 --------
