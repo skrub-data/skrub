@@ -22,6 +22,7 @@ def fuzzy_join(
     string_encoder=DEFAULT_STRING_ENCODER,
     add_match_info=False,
     drop_unmatched=False,
+    metric="euclidean",
 ):
     """Fuzzy (approximate) join.
 
@@ -35,9 +36,9 @@ def fuzzy_join(
 
     To identify the best match for each row, values from the matching columns
     (``left_key`` and ``right_key``) are vectorized, i.e. represented by vectors of
-    continuous values. Then, the Euclidean distances between these vectors are
-    computed to find, for each left table row, its nearest neighbor within the
-    right table.
+    continuous values. Then, distances between these vectors are computed
+    (using the specified metric) to find, for each left table row, its nearest
+    neighbor within the right table.
 
     Optionally, a maximum distance threshold, ``max_dist``, can be set. Matches
     between vectors that are separated by a distance (strictly) greater than
@@ -120,6 +121,9 @@ def fuzzy_join(
     drop_unmatched : bool, default=False
         Remove rows for which a match was not found in the right table (i.e. for
         which the nearest neighbor is further than `max_dist`).
+    metric : str, default='euclidean'
+        The distance metric to use for nearest neighbor search.
+        See :class:`~sklearn.neighbors.NearestNeighbors` for all available metrics.
 
     Returns
     -------
@@ -208,6 +212,7 @@ def fuzzy_join(
         ref_dist=ref_dist,
         string_encoder=string_encoder,
         add_match_info=True,
+        metric=metric,
     ).fit_transform(left)
     if drop_unmatched:
         join = sbd.filter(join, sbd.col(join, "skrub_Joiner_match_accepted"))

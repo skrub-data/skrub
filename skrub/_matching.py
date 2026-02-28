@@ -15,11 +15,20 @@ class Matching(BaseEstimator):
     nearest match are rescaled. This base class does not apply any rescaling:
     the reference distance is 1.0. Subclasses can override
     ``_get_reference_distances`` to modify the rescaling behavior.
+
+    Parameters
+    ----------
+    metric : str, default='euclidean'
+        The distance metric to use for nearest neighbor search.
+        See :class:`~sklearn.neighbors.NearestNeighbors` for all available metrics.
     """
+
+    def __init__(self, metric="euclidean"):
+        self.metric = metric
 
     def fit(self, aux):
         self.aux_ = aux
-        self.neighbors_ = NearestNeighbors(n_neighbors=1).fit(aux)
+        self.neighbors_ = NearestNeighbors(n_neighbors=1, metric=self.metric).fit(aux)
         return self
 
     def match(self, main, max_dist):
@@ -72,9 +81,27 @@ class RandomPairs(Matching):
     Pairs of (different) rows are sampled randomly from the auxiliary table,
     and the distance that separates each pair is computed. The reference
     distance is a percentile (by default 25%) of the resulting distances.
+
+    Parameters
+    ----------
+    percentile : float, default=25.0
+        Percentile to use for reference distance.
+    n_sampled_pairs : int, default=500
+        Number of random pairs to sample.
+    random_state : int or RandomState, default=0
+        Random state for sampling.
+    metric : str, default='euclidean'
+        The distance metric to use. See Matching class.
     """
 
-    def __init__(self, percentile=25.0, n_sampled_pairs=500, random_state=0):
+    def __init__(
+        self,
+        percentile=25.0,
+        n_sampled_pairs=500,
+        random_state=0,
+        metric="euclidean",
+    ):
+        super().__init__(metric=metric)
         self.percentile = percentile
         self.n_sampled_pairs = n_sampled_pairs
         self.random_state = random_state
@@ -121,9 +148,17 @@ class SelfJoinNeighbor(Matching):
 
     Instead of the nearest neighbor, another (more distant neighbor) can be
     chosen by setting ``reference_neighbor``.
+
+    Parameters
+    ----------
+    reference_neighbor : int, default=1
+        Which neighbor to use as reference (1 = nearest, 2 = second nearest, etc.)
+    metric : str, default='euclidean'
+        The distance metric to use. See Matching class.
     """
 
-    def __init__(self, reference_neighbor=1):
+    def __init__(self, reference_neighbor=1, metric="euclidean"):
+        super().__init__(metric=metric)
         self.reference_neighbor = reference_neighbor
 
     def _get_reference_distances(self, main, indices):
@@ -149,9 +184,17 @@ class OtherNeighbor(Matching):
 
     Instead of the nearest neighbor, another (more distant neighbor) can be
     chosen by setting ``reference_neighbor``.
+
+    Parameters
+    ----------
+    reference_neighbor : int, default=1
+        Which neighbor to use as reference (1 = nearest, 2 = second nearest, etc.)
+    metric : str, default='euclidean'
+        The distance metric to use. See Matching class.
     """
 
-    def __init__(self, reference_neighbor=1):
+    def __init__(self, reference_neighbor=1, metric="euclidean"):
+        super().__init__(metric=metric)
         self.reference_neighbor = reference_neighbor
 
     def _get_reference_distances(self, main, indices):
