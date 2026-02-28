@@ -16,3 +16,4 @@ directly by machine learning models.
    modules/column_level_featurizing/feature_engineering_categorical
    modules/column_level_featurizing/feature_engineering_datetimes
    modules/column_level_featurizing/robust_scaling
+   modules/column_level_featurizing/advanced_columnwise_operations
