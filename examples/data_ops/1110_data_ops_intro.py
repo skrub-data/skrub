@@ -1,16 +1,22 @@
 """
-Introduction to machine-learning pipelines with skrub DataOps
-==============================================================
+Introduction to wrangling pipelines for machine-learning skrub DataOps
+=======================================================================
 
-In this example, we show how we can use Skrub's
-:ref:`DataOps <user_guide_data_ops_index>`
-to build a machine learning pipeline that records all the operations involved in
-pre-processing data and training a model. We will also show how to save the model,
-load it back, and then use it to make predictions on new, unseen data.
+This example shows data wrangling for machine learning using Skrub's
+:ref:`DataOps <user_guide_data_ops_index>`.
+
+The challenge of data-wrangling for machine learning is the need to
+apply the wrangling operations to new data, for prediction.
+
+Skrub's DataOps build pipelines blending data wrangling and machine
+learning by recording all the operations involved in pre-processing data
+and training models. They result an a full *learner* that starts from the
+raw data. We will also how it can be saved, loaded it back, and then make
+predictions on new, unseen data.
 
 This example is meant to be an introduction to Skrub DataOps, and as such it
 will not cover all the features. Further examples in the gallery
-:ref:`data_ops_examples_ref` will go into more detail on how to use Skrub DataOps
+:ref:`data_ops_examples_ref` go into more detail on Skrub DataOps
 for more complex tasks.
 
 .. currentmodule:: skrub
