@@ -64,11 +64,6 @@ def _check_not_pandas_sparse_pandas(df):
 
 
 def _check_is_dataframe(df):
-    if sbd.is_lazyframe(df):
-        warnings.warn(
-            "At the moment, skrub only works on eager DataFrames, calling collect()."
-        )
-        df = sbd.collect(df)
     if not sbd.is_dataframe(df):
         raise TypeError(
             "Only pandas and polars DataFrames are supported. Cannot handle X of"
@@ -95,8 +90,6 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         - Only applies to pandas; polars column names are always unique strings.
     - The input is not sparse.
         - A TypeError is raised otherwise.
-    - The input is not a ``LazyFrame``.
-        - A ``LazyFrame`` is ``collect``ed with a warning.
     - The column names are the same during ``fit`` and ``transform``.
         - A ValueError is raised otherwise.
 
