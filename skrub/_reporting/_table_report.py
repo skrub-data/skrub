@@ -242,11 +242,6 @@ class TableReport:
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
-        if sbd.is_polars(dataframe) and sbd.is_lazyframe(dataframe):
-            raise ValueError(
-                "The TableReport does not support lazy dataframes. Please call"
-                " `.collect()` to use the TableReport on the current dataframe."
-            )
         self.n_columns = sbd.shape(self.dataframe)[1]
 
     def _set_minimal_mode(self):

@@ -64,20 +64,17 @@ def _check_not_pandas_sparse_pandas(df):
 
 
 def _check_is_dataframe(df):
+    if sbd.is_lazyframe(df):
+        warnings.warn(
+            "At the moment, skrub only works on eager DataFrames, calling collect()."
+        )
+        df = sbd.collect(df)
     if not sbd.is_dataframe(df):
         raise TypeError(
             "Only pandas and polars DataFrames are supported. Cannot handle X of"
             f" type: {type(df)}."
         )
-
-
-def _collect_lazyframe(df):
-    if not sbd.is_lazyframe(df):
-        return df
-    warnings.warn(
-        "At the moment, skrub only works on eager DataFrames, calling collect()."
-    )
-    return sbd.collect(df)
+    return df
 
 
 class CheckInputDataFrame(TransformerMixin, BaseEstimator):
@@ -122,7 +119,7 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
     def fit_transform(self, X, y=None):
         del y
         X = self._handle_array(X)
-        _check_is_dataframe(X)
+        X = _check_is_dataframe(X)
         self.module_name_ = sbd.dataframe_module_name(X)
         # TODO check schema (including dtypes) not just names.
         # Need to decide how strict we should be about types
@@ -133,13 +130,12 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         if sbd.column_names(X) != self.feature_names_out_:
             X = sbd.set_column_names(X, self.feature_names_out_)
         _check_not_pandas_sparse(X)
-        X = _collect_lazyframe(X)
         return X
 
     def transform(self, X):
         check_is_fitted(self, "module_name_")
         X = self._handle_array(X)
-        _check_is_dataframe(X)
+        X = _check_is_dataframe(X)
         module_name = sbd.dataframe_module_name(X)
         if module_name != self.module_name_:
             raise TypeError(
@@ -161,7 +157,6 @@ class CheckInputDataFrame(TransformerMixin, BaseEstimator):
         if sbd.column_names(X) != self.feature_names_out_:
             X = sbd.set_column_names(X, self.feature_names_out_)
         _check_not_pandas_sparse(X)
-        X = _collect_lazyframe(X)
         return X
 
     def _handle_array(self, X):

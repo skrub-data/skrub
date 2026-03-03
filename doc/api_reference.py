@@ -66,6 +66,7 @@ API_REFERENCE = {
                     "TableVectorizer",
                     "SelectCols",
                     "DropCols",
+                    "ApplyToCols",
                     "ApplyToEachCol",
                     "ApplyToSubFrame",
                 ],
@@ -159,6 +160,7 @@ API_REFERENCE = {
                     " details."
                 ),
                 "autosummary": [
+                    "selectors.Selector",
                     "selectors.all",
                     "selectors.any_date",
                     "selectors.boolean",
