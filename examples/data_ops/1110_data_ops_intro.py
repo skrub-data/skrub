@@ -8,10 +8,10 @@ This example shows data wrangling for machine learning using Skrub's
 The challenge of data-wrangling for machine learning is the need to
 apply the wrangling operations to new data, for prediction.
 
-Skrub's DataOps build pipelines blending data wrangling and machine
+Skrub's DataOps build pipelines that blend data wrangling and machine
 learning by recording all the operations involved in pre-processing data
-and training models. They result an a full *learner* that starts from the
-raw data. We will also how it can be saved, loaded it back, and then make
+and training models. They result in an a full *learner* that starts from the
+raw data. We will also how show it can be saved, loaded back, and then used to make
 predictions on new, unseen data.
 
 This example is meant to be an introduction to Skrub DataOps, and as such it
