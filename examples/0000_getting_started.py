@@ -26,10 +26,21 @@ the features we present in this example and the following ones.
 # %%
 # Preliminary exploration with the |TableReport|
 # ----------------------------------------------
+# We start by loading the "employee salaries". Skrub dataset fetching functions
+# return a Bunch object, which contains the paths to the data files.
+# We can load the data into a dataframe using pandas.
+
+import pandas as pd
+
 from skrub.datasets import fetch_employee_salaries
 
-dataset = fetch_employee_salaries()
-employees_df, salaries = dataset.X, dataset.y
+file_path = fetch_employee_salaries().path
+employees_df = pd.read_csv(file_path)
+
+# %%
+# The target variable is the current annual salary. We pop it from the dataframe
+# to keep only the features in ``employees_df``.
+salaries = employees_df.pop("current_annual_salary")
 
 # %%
 # Typically, the first step with new data is exploration and parsing.

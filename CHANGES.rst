@@ -19,6 +19,10 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
+  some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
+  ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Changes
 -------
@@ -31,6 +35,19 @@ Changes
   The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
   ``how`` to ``cols``.
   :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The dataset fetcher functions now include a "path" field for each table in the dataset.
+  For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
+  Additionally, datasets that include a single table have the field ``path``. These
+  fields contain the paths to the datasets stored in the ``skrub_data`` folder.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``np.float32``, and a ``numeric_dtype`` parameter to downcast floating-point
+  columns to ``np.float32`` (without converting integer columns).
+  :pr:`1910` by :user:`<Varshith-yadaV>`.
 
 - The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
   control whether numeric-looking strings are parsed to ``np.float32``, and a
@@ -45,6 +62,12 @@ Bug Fixes
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
 - Errors raised when a polars LazyFrame is passed where an eager DataFrame is
   expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Documentation
+-------------
+- Updated gallery examples to load datasets from their file paths using
+  ``pd.read_csv()``, following the pattern established in :pr:`1852`.
+  :pr:`1940` by :user:`MuditAtrey <MuditAtrey>`.
 
 Release 0.7.2
 =============
