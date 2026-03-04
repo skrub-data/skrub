@@ -74,8 +74,9 @@ column has been correctly parsed as a datetime column.
 Parsing numeric-looking strings with the |Cleaner|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default, when the |Cleaner| encounters numeric-looking strings, it leaves
-them unchanged.
+By default, when the |Cleaner| encounters a string series that contains only
+numeric-looking values (for example ``["1", "2", "3"]``), it leaves it
+unchanged.
 
 The |Cleaner| can parse those values by setting ``parse_strings=True``:
 
@@ -95,6 +96,10 @@ dtype: ...
 id_as_str    float32
 id           int64
 dtype: ...
+
+Parsed string values are converted to ``float32`` (not to ``int64`` or
+``float64``), to keep a consistent numeric representation that is compatible
+with downstream scikit-learn transformers.
 
 When ``parse_strings=False`` (default), both columns keep their original dtypes.
 
@@ -120,3 +125,5 @@ dtype: ...
 f64    float32
 i64      int64
 dtype: ...
+
+Integer columns are left untouched by ``numeric_dtype="float32"``.

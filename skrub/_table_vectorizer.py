@@ -151,11 +151,6 @@ def _get_preprocessors(
             tofloat_cols = (
                 float_cols if tofloat_cols is None else tofloat_cols | float_cols
             )
-        elif numeric_dtype is not None:
-            raise ValueError(
-                "`numeric_dtype` must be one of "
-                f"[`None`, `'float32'`]. Found {numeric_dtype}."
-            )
         if tofloat_cols is not None:
             transformers.append((ToFloat(), tofloat_cols))
 
@@ -208,14 +203,15 @@ class Cleaner(TransformerMixin, BaseEstimator):
         The format to use when parsing dates. If None, the format is inferred.
 
     parse_strings : bool, default=False
-        Whether to parse numeric-looking strings.
+        Whether to parse strings that represent numeric values.
 
         - ``False``: no numeric parsing is attempted.
         - ``True``: apply :class:`ToFloat` to string columns only. String columns
-          that contain only numerical values are converted to ``np.float32``.
+          whose non-missing values can all be parsed as numbers are converted to
+          ``np.float32``.
 
     numeric_dtype : "float32" or None, default=None
-        Whether to downcast floating-point columns to ``np.float32``.
+        Whether to cast floating-point columns to ``np.float32``.
         If set to ``"float32"``, only columns that are already floating-point
         are converted to ``np.float32``. Integer columns keep their original dtype.
 
@@ -284,9 +280,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     - ``ToFloat()``:
       - if ``parse_strings=True``, apply ``ToFloat()`` on string columns only,
-        converting numeric-looking strings to ``np.float32``;
+        converting strings whose non-missing values can all be parsed as numbers
+        to ``np.float32``;
       - if ``numeric_dtype="float32"``, apply ``ToFloat()`` on floating-point
-        columns only to downcast ``float64`` to ``float32``.
+        columns only to cast them to ``float32``.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
