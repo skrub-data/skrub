@@ -79,14 +79,7 @@
                 </div>
                 {% endif %}
 
-                {% if env_key is not none %}
-                <div>
-                    <h3>Provided in environment</h3>
-                    The value for this step was provided directly in the environment (as the value for <strong><code>{{ {'_skrub_X': 'X', '_skrub_y': 'y'}.get(env_key, env_key.__repr__()) }}</code></strong>).
-                </div>
-                {% endif %}
-
-                {% if estimator_html_repr %}
+                {% if estimator_html_repr and env_key is none %}
                 <div>
                     <h3>Estimator fitted in this step:</h3>
                     {{ estimator_html_repr | safe }}
@@ -96,7 +89,20 @@
                 {% if  report is not none %}
                 <div>
                     <h2>Output of this step</h2>
-                    {{ report | safe }}
+
+                    {% if env_key is not none %}
+                    <div class="is-skipped-message">
+                        <h3>This value was provided, not computed</h3>
+                        This step was not executed because its value was supplied directly in the input data
+                        (as the value for
+                        <strong><code>{{ {'_skrub_X': 'X', '_skrub_y': 'y'}.get(env_key, env_key.__repr__()) }}</code></strong>
+                        in the <code>environment</code> dictionary),
+                        thus short-circuiting its computation. The value is shown below.
+                    </div>
+                    {% endif %}
+                    <div>
+                        {{ report | safe }}
+                    </div>
                 </div>
                 {% elif error is not none %}
                 <div>
@@ -109,7 +115,7 @@
                 </div>
                 {% else %}
                 <div>
-                    <h2> This step did not run. </h2>
+                    <h2>This step did not run.</h2>
                     <p>
                         This step was not executed because its result was not needed or a previous step that it requires has failed.
                     </p>
