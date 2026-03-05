@@ -529,7 +529,7 @@ def has_nulls(threshold=0):
     >>> df2 = pd.DataFrame(dict(
     ...     few_nulls=[1, 2, 3, None],
     ...     many_nulls=[1, None, None, None],
-    ...     no_nulls=[1, 2, 3, 4])
+    ...     no_nulls=[1, 2, 3, 4]))
     >>> s.select(df2, s.has_nulls(threshold=0.25))
        few_nulls  many_nulls
     0        1.0         1.0
