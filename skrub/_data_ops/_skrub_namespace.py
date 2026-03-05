@@ -2631,7 +2631,7 @@ class SkrubNamespace:
 
         See also
         --------
-        :meth:`skrub.DataOp.skb.mark_as_y()`
+        :meth:`DataOp.skb.mark_as_y`
             The equivalent of this function for the targets: mark a node as
             being the ``y`` table.
         :func:`skrub.X`
