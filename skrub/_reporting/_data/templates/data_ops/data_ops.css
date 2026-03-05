@@ -94,6 +94,13 @@ pre, code {
     height: 24px;
 }
 
+.fixed-report-title {
+    position: absolute;
+    left: 40px;
+    top: 5px;
+    padding: 2px;
+}
+
 .error-node polygon {
     stroke: red;
     stroke-width: 3;
