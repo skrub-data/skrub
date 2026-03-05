@@ -1977,7 +1977,7 @@ def eval_mode():
 
 
 class SplitX(DataOpImpl):
-    _fields = ["X", "splitter", "split_kwargs"]
+    _fields = ["X", "cv", "split_kwargs"]
 
     def eval(self, *, mode, environment):
         return (yield self.X)

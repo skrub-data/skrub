@@ -564,14 +564,14 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         return result
 
 
-def _find_X_y_and_splitter(data_op):
+def _find_X_y_and_cv(data_op):
     """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
     x_node = find_X(data_op)
     if x_node is None:
         raise ValueError('DataOp should have a node marked with "mark_as_X()"')
     result = {"X": x_node}
     if isinstance(x_node._skrub_impl, SplitX):
-        result["splitter"] = x_node._skrub_impl.splitter
+        result["cv"] = x_node._skrub_impl.cv
         result["split_kwargs"] = x_node._skrub_impl.split_kwargs
     if (y_node := find_y(data_op)) is not None:
         result["y"] = y_node
@@ -586,9 +586,9 @@ def _find_X_y_and_splitter(data_op):
     return result
 
 
-def _compute_X_y_and_splitter(data_op, environment):
+def _compute_X_y_and_cv(data_op, environment):
     """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
-    nodes = _find_X_y_and_splitter(data_op.skb.clone())
+    nodes = _find_X_y_and_cv(data_op.skb.clone())
     values = evaluate(nodes, mode="fit_transform", environment=environment, clear=True)
     if "y" in nodes:
         msg = (
@@ -637,27 +637,27 @@ class _Splitter:
 
 
 def _compute_cv_data(data_op, environment, cv):
-    data = _compute_X_y_and_splitter(data_op, environment)
+    data = _compute_X_y_and_cv(data_op, environment)
     if cv is not None:
         return data["X"], data["y"], cv
-    if "splitter" in data:
+    if "cv" in data:
         return (
             data["X"],
             data["y"],
-            _Splitter(check_cv(data["splitter"]), data["split_kwargs"]),
+            _Splitter(check_cv(data["cv"]), data["split_kwargs"]),
         )
     return data["X"], data["y"], None
 
 
 def _compute_train_test_split_data(data_op, environment, split_func, split_func_kwargs):
-    data = _compute_X_y_and_splitter(data_op, environment)
+    data = _compute_X_y_and_cv(data_op, environment)
     if split_func is not None:
         return data["X"], data["y"], split_func, split_func_kwargs
-    if "splitter" in data:
+    if "cv" in data:
         return (
             data["X"],
             data["y"],
-            _Splitter(check_cv(data["splitter"]), data["split_kwargs"]),
+            _Splitter(check_cv(data["cv"]), data["split_kwargs"]),
             {},
         )
     # kwargs fall through to the default split_func when no splitter is set and
@@ -1019,10 +1019,9 @@ class ParamSearch(_BaseParamSearch):
     :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
     """
 
-    def __init__(self, data_op, search, cv):
+    def __init__(self, data_op, search):
         self.data_op = data_op
         self.search = search
-        self.cv = cv
 
     def __skrub_to_Xy_pipeline__(self, environment):
         new = _XyParamSearch(self.data_op, self.search, _SharedDict(environment))
@@ -1039,7 +1038,7 @@ class ParamSearch(_BaseParamSearch):
         else:
             assert hasattr(search, "param_distributions")
             search.param_distributions = param_grid
-        X, y, splitter = _compute_cv_data(self.data_op, environment, self.cv)
+        X, y, splitter = _compute_cv_data(self.data_op, environment, search.cv)
         search.cv = splitter
         search.fit(X, y)
         _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
