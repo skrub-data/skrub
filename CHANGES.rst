@@ -9,8 +9,61 @@ Release history
 Ongoing Development
 ===================
 
-New features
+New Features
 ------------
+- The ``eager_data_ops`` :ref:`configuration
+  <user_guide_configuration_parameters>` option has been added. When set to
+  False, no previews are computed and validation is deferred until the DataOp is
+  actually used (e.g. with ``.skb.eval()``) rather than as soon as it is
+  defined. This can make the definition of complex DataOps with many nodes
+  faster (the overhead it removes typically becomes noticeable only in DataOps
+  with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
+  become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
+  some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
+  ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
+  <jeromedockes>`.
+- :func:`selectors.has_nulls` now takes a ``threshold`` parameter, which allows
+  selecting columns that have a fraction of null values above the given threshold.
+  :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
+
+Changes
+-------
+- :class:`ApplyToCols` has been modified so that now it can detect automatically
+  whether the provided transformer should be applied independently on each column,
+  or on all selected columns as a single dataframe. In most cases, this replaces
+  the original ``ApplyToCols`` and ``ApplyToFrame``. As a result, ``ApplyToCols``
+  and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol` and
+  :class:`ApplyToSubFrame` respectively.
+  The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
+  ``how`` to ``cols``.
+  :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The dataset fetcher functions now include a "path" field for each table in the dataset.
+  For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
+  Additionally, datasets that include a single table have the field ``path``. These
+  fields contain the paths to the datasets stored in the ``skrub_data`` folder.
+  The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
+  the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
+  is deprecated and will be removed in a future version of skrub.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+
+Bug Fixes
+--------
+- The :class:`TableVectorizer` now correctly handles the case where one of the
+  provided encoders is a scikit-learn Pipeline that starts with a skrub
+  single-column transformer. :pr:`1899` by :user:`Jérôme Dockès <jeromedockes>`
+  and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
+- Errors raised when a polars LazyFrame is passed where an eager DataFrame is
+  expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
+
+Documentation
+-------------
+- Updated gallery examples to load datasets from their file paths using
+  ``pd.read_csv()``, following the pattern established in :pr:`1852`.
+  :pr:`1940` by :user:`MuditAtrey <MuditAtrey>`.
+
+Release 0.7.2
+=============
 
 Changes
 -------
@@ -19,14 +72,15 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- :func:`selectors.has_nulls` now takes a ``threshold`` parameter, which allows
-  selecting columns that have a fraction of null values above the given threshold.
+- The repository wheel has been made smaller by removing some material that was
+  not necessary for using the library. Benchmarks are now available in a separate
+  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
+  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
 
-  :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Bugfixes
 --------
-- Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by user:`Riccardo Cappuzzo <rcap107>`.
+- Fixed some issues related to the release of Pandas 3.0. :pr:`1855` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.7.1
 =============
@@ -76,6 +130,10 @@ New features
 - :class:`TableReport` now includes the ``open_tab`` parameter, which lets the
   user select which tab should be opened when the ``TableReport`` is
   rendered. :pr:`1737` by :user:`Riccardo Cappuzzo<rcap107>`.
+- :class:`selectors.Selector` now has documentation for its :meth:`selectors.Selector.expand`
+  and :meth:`selectors.Selector.expand_index` methods, with added information and examples
+  in the user guide, as well as mentions in the corresponding constructor functions.
+  :pr:`1841` by :user:`Eloi Massoulié<emassoulie>`.
 
 Changes
 -------

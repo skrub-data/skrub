@@ -1,0 +1,132 @@
+import re
+
+import numpy as np
+import pandas as pd
+import pytest
+from packaging.version import parse
+from pandas.testing import assert_index_equal
+from sklearn.base import BaseEstimator
+from sklearn.preprocessing import FunctionTransformer
+
+from skrub import SelectCols
+from skrub import _dataframe as sbd
+from skrub import selectors as s
+from skrub._apply_sub_frame import ApplyToSubFrame
+
+
+class Dummy(BaseEstimator):
+    def fit_transform(self, X, y):
+        self.y_ = np.asarray(y)
+        return self.transform(X)
+
+    def transform(self, X):
+        result = {}
+        for name in sbd.column_names(X):
+            col = sbd.col(X, name)
+            result[f"{name} * y"] = col * self.y_
+            result[f"{name} * 2.0"] = col * 2.0
+        return sbd.make_dataframe_like(X, result)
+
+    def fit(self, df, y):
+        self.fit_transform(df, y)
+        return self
+
+
+def test_on_subframe(df_module, use_fit_transform):
+    X = df_module.make_dataframe({"a": [1.0, 2.2], "b": [3.0, 4.4], "c": [5.0, 6.6]})
+    y = [0.0, 1.0]
+    transformer = ApplyToSubFrame(Dummy(), ["a", "c"])
+    if use_fit_transform:
+        out = transformer.fit_transform(X, y)
+    else:
+        out = transformer.fit(X, y).transform(X)
+    expected_data = {
+        "b": [3.0, 4.4],
+        "a * y": [0.0, 2.2],
+        "a * 2.0": [2.0, 4.4],
+        "c * y": [0.0, 6.6],
+        "c * 2.0": [10.0, 13.2],
+    }
+    expected = df_module.make_dataframe(expected_data)
+    df_module.assert_frame_equal(out, expected)
+    assert transformer.get_feature_names_out() == list(expected_data.keys())
+
+
+def test_empty_selection(df_module, use_fit_transform):
+    df = df_module.example_dataframe
+    transformer = ApplyToSubFrame(Dummy(), ())
+    if use_fit_transform:
+        out = transformer.fit_transform(df)
+    else:
+        out = transformer.fit(df).transform(df)
+    df_module.assert_frame_equal(out, df)
+
+
+def test_empty_output(df_module, use_fit_transform):
+    if df_module.name == "polars":
+        pytest.xfail("Polars need at least one array to concatenate.")
+    df = df_module.example_dataframe
+    transformer = ApplyToSubFrame(SelectCols(()))
+    if use_fit_transform:
+        out = transformer.fit_transform(df)
+    else:
+        out = transformer.fit(df).transform(df)
+    # Selecting no columns to have an empty dataframe
+    selected = s.select(df, ())
+
+    # I need to add a special case for pandas 3.0 here because the type of the
+    # empty dataframe with pandas 3.0 is different from that of out, but here
+    # we don't care about that dtype.
+    if sbd.is_pandas(df) and parse(pd.__version__).major >= parse("3.0.0").major:
+        out = sbd.to_numpy(out)
+        selected = sbd.to_numpy(selected)
+        # With pandas 3.0, selected has type "string" rather than "empty"
+        assert out.shape == selected.shape
+        assert (out == selected).all()
+    else:
+        df_module.assert_frame_equal(out, selected)
+
+
+def _to_XXX(names):
+    """Mask out the random part of column names."""
+    return [re.sub(r"__skrub_[0-9a-f]+__", "__skrub_XXX__", n) for n in names]
+
+
+def test_keep_original(df_module, use_fit_transform):
+    df = df_module.make_dataframe({"A": [1], "B": [2]})
+    transformer = ApplyToSubFrame(FunctionTransformer(), keep_original=True)
+
+    if use_fit_transform:
+        out = transformer.fit_transform(df)
+    else:
+        out = transformer.fit(df).transform(df)
+
+    out_names = _to_XXX(sbd.column_names(out))
+    assert out_names == ["A", "B", "A__skrub_XXX__", "B__skrub_XXX__"]
+
+
+class NumpyOutput(BaseEstimator):
+    def fit_transform(self, X, y=None):
+        return np.ones(sbd.shape(X))
+
+
+def test_wrong_transformer_output_type(pd_module):
+    with pytest.raises(TypeError, match=".*fit_transform returned a result of type"):
+        ApplyToSubFrame(NumpyOutput()).fit_transform(pd_module.example_dataframe)
+
+
+class ResetsIndex(BaseEstimator):
+    def fit_transform(self, X, y=None):
+        return X.reset_index()
+
+    def transform(self, X):
+        return X.reset_index()
+
+
+@pytest.mark.parametrize("cols", [(), ("a",), ("a", "b")])
+def test_output_index(cols):
+    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-1, -2])
+    transformer = ApplyToSubFrame(ResetsIndex(), cols=cols)
+    assert_index_equal(transformer.fit_transform(df).index, df.index)
+    df = pd.DataFrame({"a": [10, 20], "b": [1.1, 2.2]}, index=[-10, 20])
+    assert_index_equal(transformer.transform(df).index, df.index)

@@ -1,0 +1,42 @@
+name: Welcome New Contributors
+
+on:
+  pull_request:
+    types:
+      - opened
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Greet the contributor
+        uses: actions/first-interaction@v3
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_message: |
+            Thanks for opening this issue! We will take a look.
+          pr_message: |
+            👋 Hi there! Thank you for your first contribution to skrub.
+            We appreciate your effort and look forward to collaborating with you.
+            Please make sure to review our
+            [contributing guidelines](https://skrub-data.org/stable/CONTRIBUTING.html).
+
+            All PRs should be discussed in an
+            [issue](https://github.com/skrub-data/skrub/issues) with the maintainers
+            before being opened: this is to ensure that everyone is on the same
+            page, and to avoid having multiple PRs working on the same issue.
+
+            If you used coding agents for this PR, please fill the AI disclosure
+            checklist.
+
+            The maintainers reserve the right to close PRs that have been opened
+            without prior agreement.
+
+            If you have any questions, feel free to ask!

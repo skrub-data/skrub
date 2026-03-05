@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import check_random_state
 
 import skrub
-from skrub import ApplyToCols
+from skrub import ApplyToEachCol
 from skrub import selectors as s
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
@@ -345,6 +345,38 @@ def test_make_learner_choices_before_X():
     assert all_results == {"axa", "axb", "axc"}
 
 
+def test_disabling_eager_checks():
+    msg = "Choice and node names must be unique"
+    with skrub.config_context(eager_data_ops=True):
+        # With eager checks (the default) the error is raised as soon as the
+        # data op is defined.
+        with pytest.raises(ValueError, match=msg):
+            dop = skrub.as_data_op(1).skb.set_name("a") + skrub.as_data_op(
+                2
+            ).skb.set_name("a")
+            assert dop._skrub_impl.results["preview"] == 3
+    with skrub.config_context(eager_data_ops=False):
+        # Even when eager checks are disabled, checks are performed before
+        # actually using the data op; we verify this for a few example methods.
+        dop = skrub.as_data_op(1).skb.set_name("a") + skrub.as_data_op(2).skb.set_name(
+            "a"
+        )
+        assert "preview" not in dop._skrub_impl.results
+        for meth in [
+            "clone",
+            "eval",
+            "preview",
+            "make_learner",
+            "train_test_split",
+            "make_grid_search",
+            "make_randomized_search",
+            "cross_validate",
+        ]:
+            with pytest.raises(ValueError, match=msg):
+                getattr(dop.skb, meth)()
+        assert "preview" not in dop._skrub_impl.results
+
+
 def test_make_learner_choose_optuna_trial():
     optuna = pytest.importorskip("optuna")
 
@@ -469,7 +501,7 @@ def test_data_op_impl():
 def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
     # dataframe) (or how='no_wrap') the estimator can only be applied to the
-    # full input without wrapping in ApplyToCols or ApplyToFrame. In this case
+    # full input without wrapping in ApplyToEachCol or ApplyToSubFrame. In this case
     # if the user passed a parameter that would require wrapping, such as
     # passing a value for `cols` that is not `all()`, or passing
     # how='cols' or allow_reject=True, we get an error.
@@ -520,7 +552,7 @@ def test_apply_invalid_how():
     # TODO: remove when old names are dropped in 0.7.0
     with pytest.warns(FutureWarning, match="'columnwise' has been renamed to 'cols'"):
         wrapper = X.skb.apply(t, how="columnwise").skb.applied_estimator.skb.eval()
-        assert isinstance(wrapper, ApplyToCols)
+        assert isinstance(wrapper, ApplyToEachCol)
 
 
 class Mul(BaseEstimator):

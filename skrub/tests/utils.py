@@ -13,7 +13,7 @@ def generate_data(
         random.seed(random_state)
     MAX_LIMIT = 255  # extended ASCII Character set
     str_list = []
-    for i in range(n_samples):
+    for _i in range(n_samples):
         random_string = "category "
         for _ in range(sample_length):
             random_integer = random.randint(1, MAX_LIMIT)

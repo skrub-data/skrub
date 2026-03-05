@@ -216,7 +216,7 @@ def test_randomized_search(data_op, data, n_jobs, randomized_search_backend):
 def test_grid_search(data_op, data, n_jobs):
     search = data_op.skb.make_grid_search(n_jobs=n_jobs)
     search.fit(data)
-    search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
+    assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
     train_score = search.score(data)
     assert train_score == pytest.approx(0.94)
@@ -567,6 +567,21 @@ def test_train_test_split(with_y):
         assert e.skb.eval(split["train"]) == [2, 1, 0]
         assert e.skb.eval(split["test"]) == [3]
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
+
+
+def test_train_test_split_X_y_aligned():
+    """
+    Assert that X & y are evaluated jointly in train-test-split, CV etc.
+    """
+    df = skrub.var(
+        "df", pd.DataFrame({"a": list(range(1_000)), "b": list(range(1_000))})
+    )
+    shuffled = df.sample(frac=1)
+    X = shuffled[["a"]].skb.mark_as_X()
+    y = shuffled["b"].skb.mark_as_y()
+    data_op = X.skb.apply(Ridge(), y=y)
+    split = data_op.skb.train_test_split()
+    assert (split["X_train"]["a"].to_numpy() == split["y_train"].to_numpy()).all()
 
 
 def test_iter_cv_splits():

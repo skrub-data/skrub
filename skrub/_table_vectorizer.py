@@ -75,7 +75,7 @@ def _created_by_predicate(col, transformers):
 def _created_by(*transformers):
     """Selector for columns created by one of the provided transformers.
 
-    Each of ``transformers`` must be an instance of ``ApplyToCols``.
+    Each of ``transformers`` must be an instance of ``ApplyToEachCol``.
     A column is matched if it was created (or modified) by one of them, i.e. if
     it is listed in one of their ``created_outputs_`` fitted attributes.
 
@@ -220,11 +220,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
         types and representation of missing values. More informative columns (e.g.,
         categorical or datetime) are not converted.
 
-    ApplyToCols :
+    ApplyToEachCol :
         Apply a given transformer separately to each column in a selection of columns.
         Useful to complement the default heuristics of the ``Cleaner``.
 
-    ApplyToFrame :
+    ApplyToSubFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
         Useful to complement the default heuristics of the ``Cleaner``.
 
@@ -568,11 +568,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         Preprocesses each column of a dataframe with consistency checks and
         sanitization, e.g., of null values or dates.
 
-    ApplyToCols :
+    ApplyToEachCol :
         Apply a given transformer separately to each column in a selection of columns.
         Useful to complement the default heuristics of the ``TableVectorizer``.
 
-    ApplyToFrame :
+    ApplyToSubFrame :
         Apply a given transformer jointly to all columns in a selection of columns.
         Useful to complement the default heuristics of the ``TableVectorizer``.
 

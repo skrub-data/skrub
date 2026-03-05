@@ -67,7 +67,8 @@ API_REFERENCE = {
                     "SelectCols",
                     "DropCols",
                     "ApplyToCols",
-                    "ApplyToFrame",
+                    "ApplyToEachCol",
+                    "ApplyToSubFrame",
                 ],
             }
         ],
@@ -91,7 +92,6 @@ API_REFERENCE = {
                     "ToCategorical",
                     "DatetimeEncoder",
                     "ToDatetime",
-                    "to_datetime",
                     "ToFloat",
                 ],
             }
@@ -125,6 +125,7 @@ API_REFERENCE = {
                     "deduplicate",
                     "Cleaner",
                     "DropUninformative",
+                    "to_datetime",
                 ],
             },
         ],
@@ -159,6 +160,7 @@ API_REFERENCE = {
                     " details."
                 ),
                 "autosummary": [
+                    "selectors.Selector",
                     "selectors.all",
                     "selectors.any_date",
                     "selectors.boolean",

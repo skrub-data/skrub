@@ -1,11 +1,45 @@
 import numbers
 import os
 import threading
+import warnings
 from contextlib import contextmanager
+from pathlib import Path
 
 import numpy as np
 
 from ._reporting import _patching
+
+
+def _get_default_data_dir():
+    """Get the default data directory path.
+
+    Returns the path to SKB_DATA_DIRECTORY if set and absolute,
+    otherwise defaults to ~/skrub_data.
+
+    Deprecated env var SKRUB_DATA_DIRECTORY is still supported with a warning.
+    """
+    # Check for the new env var first
+    data_home_envar = os.environ.get("SKB_DATA_DIRECTORY")
+
+    # Check for deprecated env var
+    if not data_home_envar:
+        deprecated_envar = os.environ.get("SKRUB_DATA_DIRECTORY")
+        if deprecated_envar:
+            warnings.warn(
+                "The environment variable 'SKRUB_DATA_DIRECTORY' is deprecated. "
+                "Please use 'SKB_DATA_DIRECTORY' instead.",
+                DeprecationWarning,
+            )
+            data_home_envar = deprecated_envar
+
+    if data_home_envar and (path := Path(data_home_envar)).is_absolute():
+        data_home = path
+    else:
+        data_home = Path.home() / "skrub_data"
+
+    data_home.mkdir(parents=True, exist_ok=True)
+
+    return str(data_home)
 
 
 def _parse_env_bool(env_variable_name, default):
@@ -32,6 +66,8 @@ _global_config = {
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
+    "data_dir": _get_default_data_dir(),
+    "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
 }
 _threadlocal = threading.local()
 
@@ -92,6 +128,8 @@ def set_config(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    data_dir=None,
+    eager_data_ops=None,
 ):
     """Set global skrub configuration.
 
@@ -175,8 +213,39 @@ def set_config(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    data_dir : str or pathlib.Path, default=None
+        Set the data directory path for skrub datasets. If ``None``, falls back to
+        the current configuration.
+
+        - If the ``SKB_DATA_DIRECTORY`` environment variable is set to an absolute
+          path, that path will be used.
+        - Otherwise, the default is ``~/skrub_data``.
+
+        This configuration can also be set with the ``SKB_DATA_DIRECTORY``
+        environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
+        supported with a deprecation warning.
+
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
+        environment variable.
+
     See Also
     --------
+
     get_config : Retrieve current values for global configuration.
     config_context : Context manager for global skrub configuration.
 
@@ -260,6 +329,12 @@ def set_config(
                 f"integer, got {cardinality_threshold!r}"
             )
 
+    if data_dir is not None:
+        data_dir = Path(data_dir).expanduser().resolve()
+        local_config["data_dir"] = str(data_dir)
+
+    if eager_data_ops is not None:
+        local_config["eager_data_ops"] = eager_data_ops
     _apply_external_patches(local_config)
 
 
@@ -275,6 +350,8 @@ def config_context(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    data_dir=None,
+    eager_data_ops=None,
 ):
     """Context manager for global skrub configuration.
 
@@ -356,6 +433,36 @@ def config_context(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    data_dir : str or pathlib.Path, default=None
+        Set the data directory path for skrub datasets. If ``None``, falls back to
+        the current configuration.
+
+        - If the ``SKB_DATA_DIRECTORY`` environment variable is set to an absolute
+          path, that path will be used.
+        - Otherwise, the default is ``~/skrub_data``.
+
+        This configuration can also be set with the ``SKB_DATA_DIRECTORY``
+        environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
+        supported with a deprecation warning.
+
+    eager_data_ops : bool, default=True
+        Eagerly perform checks on the DataOps as soon they are created, and
+        compute previews if preview data is available. If disabled, those
+        checks are delayed until the DataOp is actually used (e.g. by calling
+        ``.skb.eval()`` or ``make_learner()``), and previews are not computed.
+
+        This option is used to speed-up the creation of large DataOps
+        containing many nodes. It can also be useful in rare cases where a
+        DataOp needs no inputs (for example it relies on a hard-coded filename
+        to load data) but we want to prevent it from computing preview results
+        as soon as it is constructed and delay computation until we explicitly
+        request it. For most DataOps that do need inputs (contain
+        ``skrub.var()`` nodes), previews can also be disabled simply by not
+        providing preview data to ``skrub.var()``.
+
+        This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
+        environment variable.
+
     Yields
     ------
     None.
@@ -382,6 +489,8 @@ def config_context(
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
+        data_dir=data_dir,
+        eager_data_ops=eager_data_ops,
     )
 
     try:

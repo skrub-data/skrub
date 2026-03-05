@@ -145,6 +145,7 @@ def numeric():
     """
     Select columns that have a numeric data type.
 
+
     This selects float and integer columns but not Boolean columns.
 
     Examples
@@ -197,6 +198,7 @@ def integer():
     """
     Select columns that have an integer data type.
 
+
     This selects integer columns but not Boolean columns.
 
     Examples
@@ -248,6 +250,7 @@ def float():
     """
     Select columns that have a floating-point data type.
 
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -293,6 +296,7 @@ def any_date():
     """
     Select columns that have a Date or Datetime data type.
 
+
     Examples
     --------
     >>> import datetime
@@ -330,6 +334,7 @@ def categorical():
     """
     Select columns that have a Categorical (or polars Enum) data type.
 
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -363,6 +368,7 @@ def categorical():
 def string():
     """
     Select columns that have a String data type.
+
 
     In pandas, object columns containing (only) strings are also selected.
 
@@ -408,6 +414,7 @@ def string():
 def boolean():
     """
     Select columns that have a Boolean data type.
+
 
     Examples
     --------
@@ -504,6 +511,7 @@ def null_count_check(column, threshold=None):
 def has_nulls(threshold=0):
     """
     Select columns that contain at least one null value.
+
 
     Examples
     --------

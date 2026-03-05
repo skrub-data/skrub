@@ -64,7 +64,7 @@ def test_short_repr():
     d = {i: i for i in range(100)}
     assert _utils.short_repr(d) == "{0: 0, 1: 1, 2: 2, 3: 3, ...}"
     d = {}
-    for i in range(10):
+    for _i in range(10):
         d = {0: d}
     assert _utils.short_repr(d) == "{0: {0: {0: {0: {0: {0: {...}}}}}}}"
     df = toy_orders().X
