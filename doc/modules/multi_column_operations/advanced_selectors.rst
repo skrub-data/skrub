@@ -139,6 +139,7 @@ to create binary indicator columns for missing values. This is useful when the f
 a value is missing might be informative for your model.
 
 >>> from sklearn.impute import MissingIndicator
+>>> from skrub import ApplyToCols
 
 Using the medical dataset, create missing indicators only for columns with at least 25% nulls:
 
@@ -161,17 +162,18 @@ The original values are:
 7  65.0           150.0       NaN
 
 After applying the missing indicator transformer, we get:
->>> indicators
-   age  blood_pressure  diagnosis
-0    0               0          0
-1    0               1          0
-2    1               1          1
-3    0               1          1
-4    0               0          1
-5    1               1          1
-6    0               1          1
-7    0               0          1
 
-The indicator columns show where values were missing (1) or present (0). Notice that
+>>> indicators
+   patient_id treatment  missingindicator_age  missingindicator_blood_pressure  missingindicator_diagnosis
+0           1     med_A                 False                            False                       False
+1           2     med_B                 False                             True                       False
+2           3     med_C                  True                             True                        True
+3           4     med_D                 False                             True                        True
+4           5     med_E                 False                            False                        True
+5           6     med_F                  True                             True                        True
+6           7     med_G                 False                             True                        True
+7           8     med_H                 False                            False                        True
+
+The indicator columns show where values were missing (True) or present (False). Notice that
 only columns with ≥25% nulls were processed: 'age', 'blood_pressure', and 'diagnosis'.
 The 'patient_id' and 'treatment' columns were not included because they have no nulls.
