@@ -88,12 +88,10 @@ and checks if any data points extend further than 2 IQRs of the lower and upper 
 
 Select columns with null values
 --------------------------------
-Selectors :func:`has_nulls` and :func:`DropUninformative` can be used to get information
+Selectors :func:`has_nulls` and :ref:`user_guide_drop_uninformative` can be used to get information
 about columns with null values. The selector :func:`has_nulls` selects columns that contain
 null values and it accepts an optional ``threshold`` parameter that allows **selecting** columns
-based on the proportion of null values they contain. Similarly, :func:`DropUninformative`
-accepts the optional parameter ``drop_null_fraction`` that allows **dropping** columns with a
-proportion of null values above the given threshold.
+based on the proportion of null values they contain.
 
 Example: Selecting columns by null percentage with :func:`has_nulls`
 .....................................................................
@@ -130,26 +128,8 @@ Select columns with at least 25% missing values:
 
 Example: Dropping columns with :func:`DropUninformative`
 ..........................................................
+:ref:`user_guide_drop_uninformative`
 
-While :func:`has_nulls` **selects** columns with nulls, :func:`DropUninformative` does the
-opposite, it **drops** Columns. This is useful in data cleaning pipelines.
-
->>> from skrub import DropUninformative, ApplyToCols
-
-Using the same medical dataset, we can drop columns with more than 50% missing values:
-
->>> cleaner = ApplyToCols(DropUninformative(drop_null_fraction=0.5))
->>> cleaned_df = cleaner.fit_transform(df)
->>> cleaned_df
-   patient_id   age treatment
-0           1  25.0     med_A
-1           2  30.0     med_B
-2           3   ...     med_C
-3           4  45.0     med_D
-4           5  50.0     med_E
-5           6   ...     med_F
-6           7  60.0     med_G
-7           8  65.0     med_H
 
 Example: Creating missing indicators with :func:`has_nulls` and :class:`MissingIndicator`
 ...........................................................................................
