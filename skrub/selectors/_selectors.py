@@ -176,7 +176,7 @@ def numeric():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      object
+    str_      ...
     dtype: object
 
     >>> s.select(df, s.numeric())
@@ -227,7 +227,7 @@ def integer():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      object
+    str_      ...
     dtype: object
 
     >>> s.select(df, s.integer())
@@ -278,7 +278,7 @@ def float():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_      object
+    str_      ...
     dtype: object
 
     >>> s.select(df, s.float())
@@ -315,7 +315,7 @@ def any_date():
     >>> df.dtypes
     dt           datetime64[...]
     tzdt    datetime64[..., UTC]
-    str_                 object
+    str_                 ...
     dtype: object
 
     >>> s.select(df, s.any_date())
@@ -347,7 +347,7 @@ def categorical():
     1      B        B
 
     >>> df.dtypes
-    string        object
+    string        ...
     category    category
     dtype: object
 
@@ -385,9 +385,9 @@ def string():
     1  B  10  B  B
 
     >>> df.dtypes
-    os            object
+    os            ...
     o             object
-    s     string...
+    s             ...
     c           category
     dtype: object
 
@@ -407,7 +407,7 @@ def string():
 
 def boolean():
     """
-    Select columns that have an Boolean data type.
+    Select columns that have a Boolean data type.
 
     Examples
     --------
@@ -497,6 +497,10 @@ def cardinality_below(threshold):
     return Filter(_cardinality_below, args=(threshold,), name="cardinality_below")
 
 
+def null_count_check(column, threshold=None):
+    return sum(sbd.is_null(column)) / len(column) >= threshold
+
+
 def has_nulls(threshold=0):
     """
     Select columns that contain at least one null value.
@@ -526,15 +530,12 @@ def has_nulls(threshold=0):
     3        ...         ...
     """
 
-    def null_count_check(column, threshold=None):
-        return sum(sbd.is_null(column)) / len(column) >= threshold
-
     if threshold == 0:
         return Filter(sbd.has_nulls, name="has_nulls")
     else:
         if not isinstance(threshold, numbers.Number) or not 0.0 < threshold <= 1.0:
             raise ValueError(
                 f"Threshold {threshold} is invalid. Threshold"
-                " should be a number in the range [0, 1], or None."
+                " should be a number in the range (0, 1], or None."
             )
         return Filter(null_count_check, args=(threshold,), name="has_nulls")

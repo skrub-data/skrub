@@ -19,8 +19,9 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- :func:`selectors.has_nulls` threshold parameter was added to drop columns with a
-  percentage of null values above the given threshold.
+- :func:`selectors.has_nulls` now takes a ``threshold`` parameter, which allows
+  selecting columns that have a fraction of null values above the given threshold.
+
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Bugfixes
