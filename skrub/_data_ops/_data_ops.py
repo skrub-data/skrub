@@ -1974,3 +1974,13 @@ def eval_mode():
     2
     """
     return DataOp(EvalMode())
+
+
+class SplitX(DataOpImpl):
+    _fields = ["X", "splitter", "split_kwargs"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.X)
+
+    def __repr__(self):
+        return "<X>"

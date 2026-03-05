@@ -20,7 +20,7 @@ from .._reporting._serve import open_in_browser
 from .._utils import Repr, format_duration, random_string, short_repr
 from . import _utils
 from ._choosing import BaseNumericChoice, Choice
-from ._data_ops import Apply, Value, Var
+from ._data_ops import Apply, SplitX, Value, Var
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._subsampling import uses_subsampling
 
@@ -283,6 +283,7 @@ class GraphDrawing:
 
 
 def _node_kwargs(data_op, url=None):
+    impl = data_op._skrub_impl
     label = html.escape(_utils.simple_repr(data_op))
     kwargs = {
         "shape": "box",
@@ -293,11 +294,11 @@ def _node_kwargs(data_op, url=None):
         "fontname": "sans-serif",
         "color": "black",
     }
-    if data_op._skrub_impl.is_X:
-        label = f"X: {label}"
+    if impl.is_X:
+        label = "X" if isinstance(impl, SplitX) else f"X: {label}"
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#c6d5f0"
-    elif data_op._skrub_impl.is_y:
+    elif impl.is_y:
         label = f"y: {label}"
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#fad9c6"
@@ -306,14 +307,14 @@ def _node_kwargs(data_op, url=None):
         label = label.replace("\n", "<br />")
         label = f'<<FONT COLOR="#1a0dab"><B>{label}</B></FONT>>'
     kwargs["label"] = label
-    tooltip = html.escape(data_op._skrub_impl.creation_stack_last_line())
-    if description := data_op._skrub_impl.description:
+    tooltip = html.escape(impl.creation_stack_last_line())
+    if description := impl.description:
         tooltip = f"{tooltip}\n\n{html.escape(description)}"
     # Also escape backslahses inserted in the .dot file
     # otherwise they are interpreted as escape sequences by graphviz
     tooltip = tooltip.replace("\\", "\\\\")
     kwargs["tooltip"] = tooltip
-    if isinstance(data_op._skrub_impl, (Var, Value)):
+    if isinstance(impl, (Var, Value)):
         kwargs["peripheries"] = 2
     return kwargs
 

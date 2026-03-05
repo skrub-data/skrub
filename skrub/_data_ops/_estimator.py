@@ -3,13 +3,14 @@ import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
-from sklearn.model_selection import KFold, check_cv
+from sklearn.model_selection import check_cv
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _dataframe as sbd
 from .. import _join_utils
+from .._sklearn_compat import _safe_indexing
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply, DataOp, check_subsampled_X_y_shape
+from ._data_ops import Apply, DataOp, SplitX, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     eval_choices,
@@ -26,7 +27,7 @@ from ._evaluation import (
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
-from ._utils import KFOLD_5, X_NAME, Y_NAME, _CloudPickle, attribute_error
+from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -563,12 +564,15 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         return result
 
 
-def _find_Xy(data_op):
+def _find_X_y_and_splitter(data_op):
     """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
     x_node = find_X(data_op)
     if x_node is None:
         raise ValueError('DataOp should have a node marked with "mark_as_X()"')
     result = {"X": x_node}
+    if isinstance(x_node._skrub_impl, SplitX):
+        result["splitter"] = x_node._skrub_impl.splitter
+        result["split_kwargs"] = x_node._skrub_impl.split_kwargs
     if (y_node := find_y(data_op)) is not None:
         result["y"] = y_node
     else:
@@ -582,25 +586,85 @@ def _find_Xy(data_op):
     return result
 
 
-def _compute_Xy(data_op, environment):
+def _compute_X_y_and_splitter(data_op, environment):
     """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
-    Xy = _find_Xy(data_op.skb.clone())
-    Xy_values = evaluate(Xy, mode="fit_transform", environment=environment, clear=True)
-    if "y" in Xy:
+    nodes = _find_X_y_and_splitter(data_op.skb.clone())
+    values = evaluate(nodes, mode="fit_transform", environment=environment, clear=True)
+    if "y" in nodes:
         msg = (
             "\nAre `.skb.subsample()` and `.skb.mark_as_*()` applied in the same order"
             " for both X and y?"
         )
         check_subsampled_X_y_shape(
-            Xy["X"],
-            Xy["y"],
-            Xy_values["X"],
-            Xy_values["y"],
+            nodes["X"],
+            nodes["y"],
+            values["X"],
+            values["y"],
             "fit_transform",
             environment,
             msg=msg,
         )
-    return Xy_values["X"], Xy_values.get("y")
+    values.setdefault("y")
+    return values
+
+
+class _Splitter:
+    def __init__(self, splitter, split_kwargs):
+        self.splitter = splitter
+        self.split_kwargs = split_kwargs
+
+    def split(self, X, y=None, groups=None):
+        # If user passed groups they will be in split_kwargs, the groups param
+        # here is just for scikit-learn compatibility
+        del groups
+        return self.splitter.split(X, y, **self.split_kwargs)
+
+    def get_n_splits(self, X, y=None, groups=None):
+        # If user passed groups they will be in split_kwargs, the groups param
+        # here is just for scikit-learn compatibility
+        del groups
+        return self.splitter.get_n_splits(X, y, **self.split_kwargs)
+
+    def __call__(self, X, y=None):
+        # Can be used as a callable to get a single train/test split (the first
+        # CV split)
+        train, test = next(iter(self.split(X, y)))
+        X_train, X_test = _safe_indexing(X, train), _safe_indexing(X, test)
+        if y is None:
+            return X_train, X_test
+        y_train, y_test = _safe_indexing(y, train), _safe_indexing(y, test)
+        return X_train, X_test, y_train, y_test
+
+
+def _compute_cv_data(data_op, environment, cv):
+    data = _compute_X_y_and_splitter(data_op, environment)
+    if cv is not None:
+        return data["X"], data["y"], cv
+    if "splitter" in data:
+        return (
+            data["X"],
+            data["y"],
+            _Splitter(check_cv(data["splitter"]), data["split_kwargs"]),
+        )
+    return data["X"], data["y"], None
+
+
+def _compute_train_test_split_data(data_op, environment, split_func, split_func_kwargs):
+    data = _compute_X_y_and_splitter(data_op, environment)
+    if split_func is not None:
+        return data["X"], data["y"], split_func, split_func_kwargs
+    if "splitter" in data:
+        return (
+            data["X"],
+            data["y"],
+            _Splitter(check_cv(data["splitter"]), data["split_kwargs"]),
+            {},
+        )
+    # kwargs fall through to the default split_func when no splitter is set and
+    # no split_func is passed. This allows something like
+    # data_op.skb.train_test_split(shuffle=False), without having to import &
+    # pass sklearn.model_selection.train_test_split explicitly.
+    return data["X"], data["y"], model_selection.train_test_split, split_func_kwargs
 
 
 def _rename_cv_param_learner_to_estimator(kwargs):
@@ -618,7 +682,7 @@ def _rename_cv_param_learner_to_estimator(kwargs):
     return renamed
 
 
-def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
+def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **kwargs):
     """Cross-validate a learner built from a DataOp.
 
     This runs cross-validation from a learner that was built from a skrub
@@ -640,6 +704,11 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
         If True, and if subsampling has been configured (see
         :meth:`DataOp.skb.subsample`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
+
+    cv : int, cross-validation generator or iterable, default=None
+        The default is 5-fold without shuffling. Can be a cross-validation
+        splitter, an iterable yielding pairs of (train, test) indices, or an
+        int to specify the number of folds for KFold splitting.
 
     kwargs : dict
         All other named arguments are forwarded to
@@ -694,11 +763,12 @@ def cross_validate(learner, environment, *, keep_subsampling=False, **kwargs):
 
     environment = env_with_subsampling(learner.data_op, environment, keep_subsampling)
     kwargs = _rename_cv_param_learner_to_estimator(kwargs)
-    X, y = _compute_Xy(learner.data_op, environment)
+    X, y, splitter = _compute_cv_data(learner.data_op, environment, cv)
     result = model_selection.cross_validate(
         _to_Xy_pipeline(learner, environment),
         X,
         y,
+        cv=splitter,
         **kwargs,
     )
     if (fitted_learners := result.pop("estimator", None)) is not None:
@@ -711,7 +781,7 @@ def train_test_split(
     environment,
     *,
     keep_subsampling=False,
-    split_func=model_selection.train_test_split,
+    split_func=None,
     **split_func_kwargs,
 ):
     """Split an environment into training and testing environments.
@@ -721,7 +791,9 @@ def train_test_split(
     details and examples.
     """
     environment = env_with_subsampling(data_op, environment, keep_subsampling)
-    X, y = _compute_Xy(data_op, environment)
+    X, y, split_func, split_func_kwargs = _compute_train_test_split_data(
+        data_op, environment, split_func, split_func_kwargs
+    )
     if y is None:
         X_train, X_test = split_func(X, **split_func_kwargs)
     else:
@@ -742,18 +814,16 @@ def train_test_split(
     return result
 
 
-def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=KFOLD_5):
+def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
     """Yield splits of an environment into training and testing environments.
 
     This functionality is exposed to users through the
     ``DataOp.skb.iter_cv_splits()`` method. See the corresponding docstring for
     details and examples.
     """
-    if cv is KFOLD_5:
-        cv = KFold(5)
-    cv = check_cv(cv)
     environment = env_with_subsampling(data_op, environment, keep_subsampling)
-    X, y = _compute_Xy(data_op, environment)
+    X, y, splitter = _compute_cv_data(data_op, environment, cv)
+    cv = check_cv(splitter)
     for train_idx, test_idx in cv.split(X, y):
         X_train, X_test = sbd.select_rows(X, train_idx), sbd.select_rows(X, test_idx)
         train_env = {**environment, X_NAME: X_train}
@@ -949,9 +1019,10 @@ class ParamSearch(_BaseParamSearch):
     :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
     """
 
-    def __init__(self, data_op, search):
+    def __init__(self, data_op, search, cv):
         self.data_op = data_op
         self.search = search
+        self.cv = cv
 
     def __skrub_to_Xy_pipeline__(self, environment):
         new = _XyParamSearch(self.data_op, self.search, _SharedDict(environment))
@@ -968,7 +1039,8 @@ class ParamSearch(_BaseParamSearch):
         else:
             assert hasattr(search, "param_distributions")
             search.param_distributions = param_grid
-        X, y = _compute_Xy(self.data_op, environment)
+        X, y, splitter = _compute_cv_data(self.data_op, environment, self.cv)
+        search.cv = splitter
         search.fit(X, y)
         _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
         try:
