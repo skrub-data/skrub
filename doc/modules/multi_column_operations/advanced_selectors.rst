@@ -163,16 +163,16 @@ The original values are:
 
 After applying the missing indicator transformer, we get:
 
->>> indicators
-   patient_id treatment  missingindicator_age  missingindicator_blood_pressure  missingindicator_diagnosis
-0           1     med_A                 False                            False                       False
-1           2     med_B                 False                             True                       False
-2           3     med_C                  True                             True                        True
-3           4     med_D                 False                             True                        True
-4           5     med_E                 False                            False                        True
-5           6     med_F                  True                             True                        True
-6           7     med_G                 False                             True                        True
-7           8     med_H                 False                            False                        True
+>>> indicators.filter(like="missingindicator")
+   missingindicator_age  missingindicator_blood_pressure  missingindicator_diagnosis
+0                 False                            False                       False
+1                 False                             True                       False
+2                  True                             True                        True
+3                 False                             True                        True
+4                 False                            False                        True
+5                  True                             True                        True
+6                 False                             True                        True
+7                 False                            False                        True
 
 The indicator columns show where values were missing (True) or present (False). Notice that
 only columns with ≥25% nulls were processed: 'age', 'blood_pressure', and 'diagnosis'.
