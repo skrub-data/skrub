@@ -197,6 +197,7 @@ class TableReport:
         max_plot_columns=None,
         max_association_columns=None,
         open_tab="table",
+        n_jobs=None,
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -243,6 +244,7 @@ class TableReport:
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
         self.n_columns = sbd.shape(self.dataframe)[1]
+        self.n_jobs = n_jobs
 
     def _set_minimal_mode(self):
         """Put the report in minimal mode.
@@ -289,6 +291,7 @@ class TableReport:
             with_plots=with_plots,
             with_associations=with_associations,
             title=self.title,
+            n_jobs=self.n_jobs,
             **self._summary_kwargs,
         )
 

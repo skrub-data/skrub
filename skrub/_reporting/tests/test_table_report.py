@@ -5,9 +5,11 @@ import re
 import warnings
 from pathlib import Path
 
+import joblib
 import numpy as np
 import pytest
 from sklearn.utils import Bunch
+from sklearn.utils._testing import skip_if_no_parallel
 
 from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
@@ -387,6 +389,33 @@ def test_numpy_array_columns(input_array, expected_columns):
     report = TableReport(input_array, max_association_columns=0)
 
     assert report._summary["n_columns"] == expected_columns
+
+
+@skip_if_no_parallel
+def test_parallelism(df_module):
+    df = df_module.make_dataframe(
+        dict(
+            a=[1, 2, 3, 4],
+            b=["one", "two", "three", "four"],
+            c=[11.1, 11.2, 11.3, 11.4],
+        )
+    )
+
+    report = TableReport(df, verbose=0)
+    columns = report._summary["columns"]
+
+    with joblib.parallel_backend("loky"):
+        for n_jobs in [None, 2, -1]:
+            parallel_report = TableReport(df, n_jobs=n_jobs, verbose=0)
+            parallel_columns = parallel_report._summary["columns"]
+
+            assert len(columns) == len(parallel_columns)
+            for i in range(len(columns)):
+                assert columns[i].keys() == parallel_columns[i].keys()
+                assert columns[i]["name"] == parallel_columns[i]["name"]
+                assert columns[i]["dtype"] == parallel_columns[i]["dtype"]
+
+            assert parallel_report.n_jobs == n_jobs
 
 
 def _pyarrow_available():
