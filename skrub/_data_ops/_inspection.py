@@ -236,6 +236,7 @@ def _make_full_report(
                 node_description=node._skrub_impl.description,
                 node_name=node._skrub_impl.name,
                 node_type=node._skrub_impl.__class__.__name__,
+                is_var=isinstance(node._skrub_impl, Var),
                 svg=svg,
                 node_status=node_status,
                 estimator_html_repr=estimator_html_repr,
