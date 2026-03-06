@@ -90,7 +90,7 @@
                 <div>
                     <h2>Output of this step</h2>
 
-                    {% if env_key is not none %}
+                    {% if env_key is not none and not is_var %}
                     <div class="is-skipped-message">
                         <h3>This value was provided, not computed</h3>
                         This step was not executed because its value was supplied directly in the input data
