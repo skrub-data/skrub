@@ -185,10 +185,12 @@ def _make_full_report(
             if hasattr(e, "__notes__"):
                 error_msg = error_msg.removesuffix("\n".join(e.__notes__) + "\n")
         try:
-            eval_duration = node._skrub_impl.metadata[mode]["eval_duration"]
+            metadata = node._skrub_impl.metadata[mode]
         except KeyError:
             # the node was not evaluated
-            eval_duration = None
+            eval_duration, env_key = None, None
+        else:
+            eval_duration, env_key = metadata["eval_duration"], metadata["env_key"]
         if isinstance(report, TableReport):
             print(f"Generating report for node {i}")
             report = report.html_snippet()
@@ -229,6 +231,7 @@ def _make_full_report(
                 error=error,
                 error_msg=error_msg,
                 eval_duration=eval_duration,
+                env_key=env_key,
                 node_creation_stack_description=node._skrub_impl.creation_stack_description(),
                 node_description=node._skrub_impl.description,
                 node_name=node._skrub_impl.name,
