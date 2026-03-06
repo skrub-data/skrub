@@ -29,6 +29,8 @@ New Features
 
 Changes
 -------
+- Increased the minimum version of polars from 0.20 to 1.5.0.
+  :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
 - :class:`ApplyToCols` has been modified so that now it can detect automatically
   whether the provided transformer should be applied independently on each column,
   or on all selected columns as a single dataframe. In most cases, this replaces
