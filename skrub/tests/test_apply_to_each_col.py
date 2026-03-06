@@ -12,7 +12,7 @@ from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._apply_on_each_col import ApplyToEachCol
 from skrub._select_cols import Drop
-from skrub._single_column_transformer import (
+from skrub.core import (
     RejectColumn,
     SingleColumnTransformer,
 )

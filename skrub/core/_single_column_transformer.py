@@ -8,7 +8,7 @@ from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
-from . import _dataframe as sbd
+from .. import _dataframe as sbd
 
 __all__ = ["SingleColumnTransformer", "RejectColumn"]
 
@@ -39,7 +39,8 @@ class RejectColumn(ValueError):
     >>> ToDatetime().fit_transform(df['b'])
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Column 'b' does not contain strings.
+    skrub.core._single_column_transformer.RejectColumn: Column 'b' does not contain \
+        strings.
     """
 
     pass
@@ -49,11 +50,12 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToEachCol``; see the docstring of ``ApplyToEachCol`` for more
-    information.
+    :class:`ApplyToEachCol`; see the docstring of ``ApplyToEachCol``, and the
+    :doc:`/modules/column_level_featurizing/advanced_columnwise_operations` page of the
+    user guide for more information.
 
     Single-column transformers are not required to inherit from this class in
-    order to work with ``ApplyToEachCol``, however doing so avoids some
+    order to work with ``ApplyToCols``, however doing so avoids some
     boilerplate:
 
         - The required ``__single_column_transformer__`` attribute is set.

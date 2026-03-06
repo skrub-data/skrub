@@ -4,7 +4,7 @@ skrub: Prepping tables for machine learning.
 
 from pathlib import Path as _Path
 
-from . import selectors
+from . import core, selectors
 from ._agg_joiner import AggJoiner, AggTarget
 from ._apply_on_each_col import ApplyToEachCol
 from ._apply_sub_frame import ApplyToSubFrame
@@ -94,6 +94,7 @@ __all__ = [
     "choose_int",
     "choose_bool",
     "selectors",
+    "core",
     "TextEncoder",
     "StringEncoder",
     "column_associations",

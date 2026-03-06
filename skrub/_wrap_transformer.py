@@ -1,6 +1,6 @@
 from ._apply_on_each_col import ApplyToEachCol
 from ._apply_sub_frame import ApplyToSubFrame
-from ._single_column_transformer import is_single_column_transformer
+from .core._single_column_transformer import is_single_column_transformer
 from .selectors import make_selector
 
 __all__ = ["wrap_transformer"]

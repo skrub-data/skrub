@@ -4,7 +4,7 @@ from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from skrub import _dataframe as sbd
-from skrub._single_column_transformer import (
+from skrub.core._single_column_transformer import (
     SingleColumnTransformer,
     is_single_column_transformer,
 )

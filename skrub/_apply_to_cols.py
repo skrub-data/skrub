@@ -74,6 +74,33 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         Note that this parameter is only used when the transformer is wrapped in an
         ``ApplyToEachCol``.
 
+    Attributes
+    ----------
+    all_inputs_ : list of str
+        All column names in the input dataframe.
+
+    used_inputs_ : list of str
+        The names of columns that were transformed.
+
+    all_outputs_ : list of str
+        All column names in the output dataframe.
+
+    created_outputs_ : list of str
+        The names of columns in the output dataframe that were created by one
+        of the fitted transformers.
+
+    input_to_outputs_ : dict
+        Maps the name of each column that was transformed to the list of the
+        resulting columns' names in the output.
+
+    output_to_input_ : dict
+        Maps the name of each column in the transformed output to the name of
+        the input column from which it was derived.
+
+    transformers_ : dict
+        Maps the name of each column that was transformed to the corresponding
+        fitted transformer.
+
     Notes
     -----
     All columns not listed in ``cols`` remain unmodified in the output.
@@ -82,7 +109,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     column, that column is passed through unchanged. If ``allow_reject`` is
     ``False``, ``RejectColumn`` exceptions are propagated, like other errors
     raised by the transformer.
-    """
+
+    """  # noqa: E501
 
     def __init__(
         self,
