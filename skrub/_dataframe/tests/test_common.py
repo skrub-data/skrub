@@ -447,6 +447,15 @@ def test_index(df_module):
         assert ns.index(col) is None
 
 
+def test_drop_columns(df_module):
+    df = df_module.example_dataframe
+    col_names = ns.column_names(df)
+    col_to_drop = col_names[0]
+    df_dropped = ns.drop_columns(df, [col_to_drop])
+    assert col_to_drop not in ns.column_names(df_dropped)
+    assert len(ns.column_names(df_dropped)) == len(col_names) - 1
+
+
 #
 # Inspecting dtypes and casting
 # =============================
