@@ -23,6 +23,9 @@ New Features
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- :class:`TableReport` now has a `n_jobs` parameter enabling parallel
+  computing to be used in the processing of individual columns. :pr:`1949` by
+  :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
