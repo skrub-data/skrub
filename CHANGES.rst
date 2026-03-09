@@ -26,7 +26,7 @@ New Features
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
   <jeromedockes>`.
-- :func:`selectors.has_nulls` now takes a ``threshold`` parameter, which allows
+- :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
