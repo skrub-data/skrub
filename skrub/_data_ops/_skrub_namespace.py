@@ -2637,13 +2637,22 @@ class SkrubNamespace:
         :func:`skrub.X`
             ``skrub.X(value)`` can be used as a shorthand for
             ``skrub.var('X', value).skb.mark_as_X()``.
+        :meth:`DataOp.skb.train_test_split`
+            Prepare training and testing sets for a DataOp.
+        :meth:`DataOp.skb.cross_validate`
+            Perform cross-validation on a DataOp.
+        :meth:`DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
 
         Notes
         -----
         During cross-validation, all the previous steps are first executed,
-        until X and y have been materialized. Then, those are split into
-        training and testing sets. The following steps in the DataOp are
-        fitted on the train data, and applied to test data, within each split.
+        until X and y (and the splitter and its additional arguments, if any)
+        have been materialized. Then, X and y are split into training and
+        testing sets. The following steps in the DataOp are fitted on the train
+        data, and applied to test data, within each split.
 
         This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
