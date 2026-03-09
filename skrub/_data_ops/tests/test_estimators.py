@@ -670,6 +670,8 @@ def test_mark_as_X_splitter():
     assert _train_idx(cv_results) == train
     assert _test_idx(cv_results) == test
 
+    assert pred_no_groups.skb.make_grid_search(fitted=True).n_splits_ == 5
+
     split = pred_no_groups.skb.train_test_split()
     assert split["X_train"].shape[0] == 75
     assert split["X_test"].shape[0] == 25
@@ -682,6 +684,8 @@ def test_mark_as_X_splitter():
     assert _train_idx(cv_results) == train
     assert _test_idx(cv_results) == test
 
+    assert pred_with_groups.skb.make_grid_search(fitted=True).n_splits_ == 2
+
     split = pred_with_groups.skb.train_test_split()
     assert list(split["X_train"]["x"]) == train[0]
     assert list(split["X_test"]["x"]) == test[0]
@@ -691,6 +695,8 @@ def test_mark_as_X_splitter():
     train, test = _unzip_splits(KFold(7).split(data_value))
     assert _train_idx(cv_results) == train
     assert _test_idx(cv_results) == test
+
+    assert pred_with_groups.skb.make_grid_search(fitted=True, cv=7).n_splits_ == 7
 
     split = pred_with_groups.skb.train_test_split(
         split_func=train_test_split, test_size=30
