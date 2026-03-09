@@ -25,7 +25,7 @@ def test_repr():
     >>> s.float() & s.integer()
     (float() & integer())
     >>> s.has_nulls()
-    has_nulls()
+    has_nulls(0.0)
     """
 
 
