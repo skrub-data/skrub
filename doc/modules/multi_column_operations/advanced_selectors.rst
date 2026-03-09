@@ -90,7 +90,7 @@ Select columns with null values
 --------------------------------
 Selectors :func:`has_nulls` and :ref:`user_guide_drop_uninformative` can be used to get information
 about columns with null values. The selector :func:`has_nulls` selects columns that contain
-null values and it accepts an optional ``threshold`` parameter that allows **selecting** columns
+null values and it accepts an optional ``proportion`` parameter that allows **selecting** columns
 based on the proportion of null values they contain.
 
 Example: Selecting columns by null percentage with :func:`has_nulls`
@@ -115,7 +115,7 @@ Create a dataset with varying amounts of missing data:
 
 Select columns with at least 25% missing values:
 
->>> s.select(df, s.has_nulls(threshold=0.25))
+>>> s.select(df, s.has_nulls(proportion=0.25))
     age  blood_pressure diagnosis
 0  25.0           120.0       flu
 1  30.0             NaN      cold
@@ -145,12 +145,12 @@ Using the medical dataset, create missing indicators only for columns with at le
 
 >>> missing_indicator = ApplyToCols(
 ...     MissingIndicator(),
-...     cols=s.has_nulls(threshold=0.25)
+...     cols=s.has_nulls(proportion=0.25)
 ... )
 >>> indicators = missing_indicator.fit_transform(df)
 
 The original values are:
->>> s.select(df, s.has_nulls(threshold=0.25))
+>>> s.select(df, s.has_nulls(proportion=0.25))
     age  blood_pressure diagnosis
 0  25.0           120.0       flu
 1  30.0             NaN      cold

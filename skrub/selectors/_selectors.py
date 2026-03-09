@@ -504,11 +504,15 @@ def cardinality_below(threshold):
     return Filter(_cardinality_below, args=(threshold,), name="cardinality_below")
 
 
-def null_count_check(column, threshold=None):
-    return sum(sbd.is_null(column)) / len(column) >= threshold
+def _null_count_check(column, proportion):
+    if proportion == 0.0:
+        return sbd.has_nulls(column)
+    if proportion == 1.0:
+        return sbd.is_all_null(column)
+    return sum(sbd.is_null(column)) / len(column) > proportion
 
 
-def has_nulls(threshold=0):
+def has_nulls(proportion=0.0):
     """
     Select columns that contain at least one null value.
 
@@ -524,26 +528,30 @@ def has_nulls(threshold=0):
     1   ...     b
     2  20.0  ...
 
-    Use the ``threshold`` parameter to filter columns by null percentage:
+    Use the ``proportion`` parameter to filter columns by null percentage:
 
     >>> df2 = pd.DataFrame(dict(
     ...     few_nulls=[1, 2, 3, None],
     ...     many_nulls=[1, None, None, None],
     ...     no_nulls=[1, 2, 3, 4]))
-    >>> s.select(df2, s.has_nulls(threshold=0.25))
+    >>> s.select(df2, s.has_nulls(proportion=0.25))
        few_nulls  many_nulls
     0        1.0         1.0
     1        2.0         ...
     2        3.0         ...
     3        ...         ...
+
+    >>> s.select(df2, s.has_nulls(proportion=0.5))
+    many_nulls
+    0        1.0
+    1        ...
+    2        ...
+    3        ...
     """
 
-    if threshold == 0:
-        return Filter(sbd.has_nulls, name="has_nulls")
-    else:
-        if not isinstance(threshold, numbers.Number) or not 0.0 < threshold <= 1.0:
-            raise ValueError(
-                f"Threshold {threshold} is invalid. Threshold"
-                " should be a number in the range (0, 1], or None."
-            )
-        return Filter(null_count_check, args=(threshold,), name="has_nulls")
+    if not isinstance(proportion, numbers.Number) or not 0.0 <= proportion <= 1.0:
+        raise ValueError(
+            f"Proportion {proportion} is invalid. Proportion"
+            " should be a number in the range [0.0, 1.0]"
+        )
+    return Filter(_null_count_check, args=(proportion,), name="has_nulls")
