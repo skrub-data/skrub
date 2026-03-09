@@ -622,6 +622,20 @@ def test_train_test_split_splitter_renaming():
         )
 
 
+# def _make_grouped_data():
+#     return pd.DataFrame(
+#         {"x": np.arange(100), "g": np.arange(100) % 2, "y": np.arange(100)}
+#     )
+
+
+# def test_mark_as_X_splitter():
+#     df = _make_grouped_data()
+#     data = skrub.var("df")
+#     groups = data["g"]
+#     features = data[["x"]].skb.mark_as_X()
+#     targets = data["y"].skb.mark_as_y()
+
+
 def test_iter_learners():
     e = skrub.choose_from([1, 2, 3], name="c").as_data_op()
     assert [p.describe_params() for p in e.skb.iter_learners_grid()] == [
