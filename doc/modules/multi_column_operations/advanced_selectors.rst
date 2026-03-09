@@ -119,12 +119,12 @@ Select columns with at least 25% missing values:
    blood_pressure diagnosis
 0           120.0       flu
 1             NaN      cold
-2             NaN       NaN
-3             NaN       NaN
-4           140.0       NaN
-5             NaN       NaN
-6             NaN       NaN
-7           150.0       NaN
+2             NaN       ...
+3             NaN       ...
+4           140.0       ...
+5             NaN       ...
+6             NaN       ...
+7           150.0       ...
 
 Example: Dropping columns with :func:`DropUninformative`
 ..........................................................
@@ -154,25 +154,25 @@ The original values are:
    blood_pressure diagnosis
 0           120.0       flu
 1             NaN      cold
-2             NaN       NaN
-3             NaN       NaN
-4           140.0       NaN
-5             NaN       NaN
-6             NaN       NaN
-7           150.0       NaN
+2             NaN       ...
+3             NaN       ...
+4           140.0       ...
+5             NaN       ...
+6             NaN       ...
+7           150.0       ...
 
 After applying the missing indicator transformer, we get:
 
 >>> indicators.filter(like="missingindicator")
-   missingindicator_blood_pressure  missingindicator_diagnosis
-0                            False                       False
-1                             True                       False
-2                             True                        True
-3                             True                        True
-4                            False                        True
-5                             True                        True
-6                             True                        True
-7                            False                        True
+   missingindicator_blood_pressure
+0                            False
+1                             True
+2                             True
+3                             True
+4                            False
+5                             True
+6                             True
+7                            False
 
 The indicator columns show where values were missing (True) or present (False). Notice that
 only columns with ≥25% nulls were processed: 'age', 'blood_pressure', and 'diagnosis'.
