@@ -161,18 +161,31 @@ The original values are:
 6             NaN       ...
 7           150.0       ...
 
-After applying the missing indicator transformer, we get:
+Considering that indicators is a data frame:
+>>> indicators
+patient_id   age treatment  missingindicator_blood_pressure  missingindicator_diagnosis
+0           1  25.0     med_A                            False                       False
+1           2  30.0     med_B                             True                       False
+2           3   NaN     med_C                             True                        True
+3           4  45.0     med_D                             True                        True
+4           5  50.0     med_E                            False                        True
+5           6   NaN     med_F                             True                        True
+6           7  60.0     med_G                             True                        True
+7           8  65.0     med_H                            False                        True
 
->>> indicators.filter(like="missingindicator")
-   missingindicator_blood_pressure
-0                            False
-1                             True
-2                             True
-3                             True
-4                            False
-5                             True
-6                             True
-7                            False
+And after applying the missing indicator transformer, we select only the indicator columns
+transformed:
+>>> indicator_columns=s.glob("missingindicator*").expand(indicators)
+>>> indicators[indicator_columns]
+   missingindicator_blood_pressure  missingindicator_diagnosis
+0                            False                       False
+1                             True                       False
+2                             True                        True
+3                             True                        True
+4                            False                        True
+5                             True                        True
+6                             True                        True
+7                            False                        True
 
 The indicator columns show where values were missing (True) or present (False). Notice that
 only columns with ≥25% nulls were processed: 'age', 'blood_pressure', and 'diagnosis'.

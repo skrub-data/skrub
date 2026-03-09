@@ -117,12 +117,15 @@ def test_has_nulls_proportion(df_module):
     assert s.has_nulls(proportion=1.0).expand(df) == []
 
 
-def test_has_nulls_proportion_none(df_module):
+def test_has_nulls_proportion_wrong(df_module):
     df = df_module.make_dataframe(
         dict(a=[0, 1, 2, None], b=[0, None, 2, None], c=["a", None, None, None])
     )
     with pytest.raises(ValueError, match="should be a number in the range"):
         s.has_nulls(proportion=None).expand(df)
+
+    with pytest.raises(ValueError, match="should be a number in the range"):
+        s.has_nulls(proportion="0.0").expand(df)
 
 
 @pytest.mark.parametrize("name", s.__all__)
