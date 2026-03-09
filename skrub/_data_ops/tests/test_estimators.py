@@ -704,6 +704,14 @@ def test_mark_as_X_splitter():
     assert split["X_train"].shape[0] == 70
     assert split["X_test"].shape[0] == 30
 
+    # Check for unsupervised estimator (train/test split without y)
+
+    split = features_with_groups.skb.train_test_split()
+    assert split["X_train"].shape[0] == 50
+
+    split = features_no_groups.skb.train_test_split()
+    assert split["X_train"].shape[0] == 75
+
 
 def test_iter_learners():
     e = skrub.choose_from([1, 2, 3], name="c").as_data_op()
