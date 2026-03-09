@@ -670,6 +670,10 @@ def test_mark_as_X_splitter():
     assert _train_idx(cv_results) == train
     assert _test_idx(cv_results) == test
 
+    split = pred_no_groups.skb.train_test_split()
+    assert split["X_train"].shape[0] == 75
+    assert split["X_test"].shape[0] == 25
+
     # Use the splitter passed to mark_as_X
     cv_results = pred_with_groups.skb.cross_validate(return_indices=True)
     train, test = _unzip_splits(
@@ -678,11 +682,21 @@ def test_mark_as_X_splitter():
     assert _train_idx(cv_results) == train
     assert _test_idx(cv_results) == test
 
+    split = pred_with_groups.skb.train_test_split()
+    assert list(split["X_train"]["x"]) == train[0]
+    assert list(split["X_test"]["x"]) == test[0]
+
     # Override with another splitter
     cv_results = pred_with_groups.skb.cross_validate(return_indices=True, cv=7)
     train, test = _unzip_splits(KFold(7).split(data_value))
     assert _train_idx(cv_results) == train
     assert _test_idx(cv_results) == test
+
+    split = pred_with_groups.skb.train_test_split(
+        split_func=train_test_split, test_size=30
+    )
+    assert split["X_train"].shape[0] == 70
+    assert split["X_test"].shape[0] == 30
 
 
 def test_iter_learners():
