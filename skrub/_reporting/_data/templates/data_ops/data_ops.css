@@ -110,6 +110,10 @@ pre, code {
 
 .fixed-report-title {
     position: absolute;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
     left: 40px;
     top: 5px;
     padding: 2px;
