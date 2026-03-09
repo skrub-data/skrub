@@ -4,6 +4,13 @@
 {%- block extrahead %}
     {{ super() }}
     {# Add here landing-page specific stuff that goes in the header (eg css) #}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Skrub">
+    <meta property="og:site_name" content="skrub">
+    <meta property="og:description" content="Machine learning with dataframes">
+    <meta property="og:image" content="https://skrub-data.github.io/stable/_static/skrub.svg">
+    <meta property="og:image:alt" content="skrub">
+    <meta name="description" content="skrub is a Python library to ease preprocessing and feature engineering for tabular machine learning.">
 {%- endblock extrahead %}
 
 {% block docs_navbar %}

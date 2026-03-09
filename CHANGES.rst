@@ -19,6 +19,9 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- The reports produced by :meth:`DataOp.skb.full_report` and
+  :meth:`SkrubLearner.report` now also display the values provided in the
+  environment. :pr:`1920` by :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
@@ -26,6 +29,8 @@ New Features
 
 Changes
 -------
+- Increased the minimum version of polars from 0.20 to 1.5.0.
+  :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
 - :class:`ApplyToCols` has been modified so that now it can detect automatically
   whether the provided transformer should be applied independently on each column,
   or on all selected columns as a single dataframe. In most cases, this replaces

@@ -55,6 +55,16 @@ pre, code {
     background: #eee;
 }
 
+.is-skipped-message{
+    background: #eee;
+    padding: 0 1em 1em 1em;
+    border: 1px solid black;
+}
+
+.is-skipped-message + * {
+    margin-top: 1em;
+}
+
 .node-creation-stack {
     font-size: 1rem;
 }

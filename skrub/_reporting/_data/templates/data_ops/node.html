@@ -49,7 +49,7 @@
                     </p>
                     {% endif %}
 
-                    <h3>This step used:</h3>
+                    <h3>This step uses:</h3>
                     <ul>
                         {% for child in node_children %}
                         <li><a href="{{ child['url'] }}">{{ child['id'] }}:
@@ -59,7 +59,7 @@
                 </div>
 
                 <div>
-                    <h3>This step was used by:</h3>
+                    <h3>This step is used by:</h3>
                     <ul>
                         {% for parent in node_parents %}
                         <li><a href="{{ parent['url'] }}">{{ parent['id'] }}:
@@ -72,13 +72,14 @@
                     <h3>Where was this step created?</h3>
                     <pre><code class="node-creation-stack">{{ node_creation_stack_description }}</code></pre>
                 </div>
-                {% if eval_duration is not none %}
+                {% if eval_duration is not none and env_key is none %}
                 <div>
                     <h3>Computation time</h3>
                     <code>{{ eval_duration | format_duration }}</code>
                 </div>
                 {% endif %}
-                {% if estimator_html_repr %}
+
+                {% if estimator_html_repr and env_key is none %}
                 <div>
                     <h3>Estimator fitted in this step:</h3>
                     {{ estimator_html_repr | safe }}
@@ -88,7 +89,20 @@
                 {% if  report is not none %}
                 <div>
                     <h2>Output of this step</h2>
-                    {{ report | safe }}
+
+                    {% if env_key is not none and not is_var %}
+                    <div class="is-skipped-message">
+                        <h3>This value was provided, not computed</h3>
+                        This step was not executed because its value was supplied directly in the input data
+                        (as the value for
+                        <strong><code>{{ {'_skrub_X': 'X', '_skrub_y': 'y'}.get(env_key, env_key.__repr__()) }}</code></strong>
+                        in the <code>environment</code> dictionary),
+                        thus short-circuiting its computation. The value is shown below.
+                    </div>
+                    {% endif %}
+                    <div>
+                        {{ report | safe }}
+                    </div>
                 </div>
                 {% elif error is not none %}
                 <div>
@@ -101,9 +115,9 @@
                 </div>
                 {% else %}
                 <div>
-                    <h2> This step did not run. </h2>
+                    <h2>This step did not run.</h2>
                     <p>
-                        This step was not executed because its result was not needed, was supplied directly in the input data (thus short-circuiting its computation) or a previous step that it requires has failed.
+                        This step was not executed because its result was not needed or a previous step that it requires has failed.
                     </p>
                 </div>
                 {% endif %}
