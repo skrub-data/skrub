@@ -111,9 +111,9 @@ def test_has_nulls_proportion(df_module):
         dict(a=[0, 1, 2, None], b=[0, None, 2, None], c=["a", None, None, None])
     )
     assert s.has_nulls(proportion=0).expand(df) == ["a", "b", "c"]
-    assert s.has_nulls(proportion=0.25).expand(df) == ["a", "b", "c"]
-    assert s.has_nulls(proportion=0.5).expand(df) == ["b", "c"]
-    assert s.has_nulls(proportion=0.75).expand(df) == ["c"]
+    assert s.has_nulls(proportion=0.20).expand(df) == ["a", "b", "c"]
+    assert s.has_nulls(proportion=0.45).expand(df) == ["b", "c"]
+    assert s.has_nulls(proportion=0.70).expand(df) == ["c"]
     assert s.has_nulls(proportion=1.0).expand(df) == []
 
 

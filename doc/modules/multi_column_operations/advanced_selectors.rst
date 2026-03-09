@@ -116,15 +116,15 @@ Create a dataset with varying amounts of missing data:
 Select columns with at least 25% missing values:
 
 >>> s.select(df, s.has_nulls(proportion=0.25))
-    age  blood_pressure diagnosis
-0  25.0           120.0       flu
-1  30.0             NaN      cold
-2   NaN             NaN       NaN
-3  45.0             NaN       NaN
-4  50.0           140.0       NaN
-5   NaN             NaN       NaN
-6  60.0             NaN       NaN
-7  65.0           150.0       NaN
+   blood_pressure diagnosis
+0           120.0       flu
+1             NaN      cold
+2             NaN       NaN
+3             NaN       NaN
+4           140.0       NaN
+5             NaN       NaN
+6             NaN       NaN
+7           150.0       NaN
 
 Example: Dropping columns with :func:`DropUninformative`
 ..........................................................
@@ -151,28 +151,28 @@ Using the medical dataset, create missing indicators only for columns with at le
 
 The original values are:
 >>> s.select(df, s.has_nulls(proportion=0.25))
-    age  blood_pressure diagnosis
-0  25.0           120.0       flu
-1  30.0             NaN      cold
-2   NaN             NaN       NaN
-3  45.0             NaN       NaN
-4  50.0           140.0       NaN
-5   NaN             NaN       NaN
-6  60.0             NaN       NaN
-7  65.0           150.0       NaN
+   blood_pressure diagnosis
+0           120.0       flu
+1             NaN      cold
+2             NaN       NaN
+3             NaN       NaN
+4           140.0       NaN
+5             NaN       NaN
+6             NaN       NaN
+7           150.0       NaN
 
 After applying the missing indicator transformer, we get:
 
 >>> indicators.filter(like="missingindicator")
-   missingindicator_age  missingindicator_blood_pressure  missingindicator_diagnosis
-0                 False                            False                       False
-1                 False                             True                       False
-2                  True                             True                        True
-3                 False                             True                        True
-4                 False                            False                        True
-5                  True                             True                        True
-6                 False                             True                        True
-7                 False                            False                        True
+   missingindicator_blood_pressure  missingindicator_diagnosis
+0                            False                       False
+1                             True                       False
+2                             True                        True
+3                             True                        True
+4                            False                        True
+5                             True                        True
+6                             True                        True
+7                            False                        True
 
 The indicator columns show where values were missing (True) or present (False). Notice that
 only columns with ≥25% nulls were processed: 'age', 'blood_pressure', and 'diagnosis'.
