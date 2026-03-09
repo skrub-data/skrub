@@ -167,6 +167,16 @@ def test_cross_validate(data_op, data, n_jobs):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
+def test_cross_validate_return_indices():
+    """
+    Non-regression for #1487.
+    """
+    data_op, data = get_data_op_and_data("simple")
+    results = data_op.skb.cross_validate(data, return_indices=True)
+    for col in ["train_indices", "test_indices"]:
+        assert col in results.columns
+
+
 def test_cross_validate_type_error():
     # Checks that cross_validate fails as expected when passed anything
     # other than a Learner, ParamSearch or OptunaParamSearch object
