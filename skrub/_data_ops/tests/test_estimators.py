@@ -17,7 +17,13 @@ from sklearn.exceptions import FitFailedWarning, NotFittedError
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import GridSearchCV, cross_validate, train_test_split
+from sklearn.model_selection import (
+    GridSearchCV,
+    KFold,
+    LeaveOneGroupOut,
+    cross_validate,
+    train_test_split,
+)
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
@@ -622,18 +628,61 @@ def test_train_test_split_splitter_renaming():
         )
 
 
-# def _make_grouped_data():
-#     return pd.DataFrame(
-#         {"x": np.arange(100), "g": np.arange(100) % 2, "y": np.arange(100)}
-#     )
+def _make_grouped_data():
+    return pd.DataFrame(
+        {"x": np.arange(100), "g": np.arange(100) % 2, "y": np.arange(100)}
+    )
 
 
-# def test_mark_as_X_splitter():
-#     df = _make_grouped_data()
-#     data = skrub.var("df")
-#     groups = data["g"]
-#     features = data[["x"]].skb.mark_as_X()
-#     targets = data["y"].skb.mark_as_y()
+def _to_list(s):
+    return list(map(list, s))
+
+
+def _train_idx(cv_results):
+    return _to_list(cv_results["train_indices"])
+
+
+def _test_idx(cv_results):
+    return _to_list(cv_results["test_indices"])
+
+
+def _unzip_splits(splits):
+    train, test = zip(*splits)
+    return _to_list(train), _to_list(test)
+
+
+def test_mark_as_X_splitter():
+    data_value = _make_grouped_data()
+
+    data = skrub.var("df", data_value)
+    groups = data["g"]
+    targets = data["y"].skb.mark_as_y()
+    features_with_groups = data[["x"]].skb.mark_as_X(
+        cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+    )
+    features_no_groups = data[["x"]].skb.mark_as_X()
+    pred_with_groups = features_with_groups.skb.apply(DummyRegressor(), y=targets)
+    pred_no_groups = features_no_groups.skb.apply(DummyRegressor(), y=targets)
+
+    # Use the default splitter when nothing is specified
+    cv_results = pred_no_groups.skb.cross_validate(return_indices=True)
+    train, test = _unzip_splits(KFold().split(data_value))
+    assert _train_idx(cv_results) == train
+    assert _test_idx(cv_results) == test
+
+    # Use the splitter passed to mark_as_X
+    cv_results = pred_with_groups.skb.cross_validate(return_indices=True)
+    train, test = _unzip_splits(
+        LeaveOneGroupOut().split(data_value, groups=data_value["g"])
+    )
+    assert _train_idx(cv_results) == train
+    assert _test_idx(cv_results) == test
+
+    # Override with another splitter
+    cv_results = pred_with_groups.skb.cross_validate(return_indices=True, cv=7)
+    train, test = _unzip_splits(KFold(7).split(data_value))
+    assert _train_idx(cv_results) == train
+    assert _test_idx(cv_results) == test
 
 
 def test_iter_learners():

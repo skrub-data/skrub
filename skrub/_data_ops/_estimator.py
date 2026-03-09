@@ -773,6 +773,9 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     )
     if (fitted_learners := result.pop("estimator", None)) is not None:
         result["learner"] = [_to_env_learner(p) for p in fitted_learners]
+    if (indices := result.pop("indices", None)) is not None:
+        result["train_indices"] = indices["train"]
+        result["test_indices"] = indices["test"]
     return pd.DataFrame(result)
 
 
