@@ -84,3 +84,48 @@ and checks if any data points extend further than 2 IQRs of the lower and upper 
 2   14   31
 3   15   32
 4  100  300
+
+
+Select columns with null values
+--------------------------------
+Selectors :func:`has_nulls` and :ref:`user_guide_drop_uninformative` can be used to get information
+about columns with null values. The selector :func:`has_nulls` selects columns that contain
+null values and it accepts an optional ``proportion`` parameter that allows **selecting** columns
+based on the proportion of null values they contain.
+
+Example: Selecting columns by null percentage with :func:`has_nulls`
+.....................................................................
+
+The :func:`has_nulls` selector can filter columns based on their proportion of missing values.
+This is useful for identifying columns that may need imputation or further investigation.
+
+>>> import pandas as pd
+>>> import skrub.selectors as s
+>>> from skrub import SelectCols
+
+Create a dataset with varying amounts of missing data:
+
+>>> df = pd.DataFrame({
+...     'patient_id': [1, 2, 3, 4, 5, 6, 7, 8],
+...     'age': [25.0, 30.0, None, 45.0, 50.0, None, 60.0, 65.0],           # 25% nulls
+...     'blood_pressure': [120, None, None, None, 140, None, None, 150],  # 62.5% nulls
+...     'diagnosis': ['flu', 'cold', None, None, None, None, None, None], # 75% nulls
+...     'treatment': ['med_A', 'med_B', 'med_C', 'med_D', 'med_E', 'med_F', 'med_G', 'med_H']  # no nulls
+... })
+
+Select columns with at least 25% missing values:
+
+>>> s.select(df, s.has_nulls(proportion=0.25))
+   blood_pressure diagnosis
+0           120.0       flu
+1             NaN      cold
+2             NaN       ...
+3             NaN       ...
+4           140.0       ...
+5             NaN       ...
+6             NaN       ...
+7           150.0       ...
+
+Example: Dropping columns with :func:`DropUninformative`
+..........................................................
+:ref:`user_guide_drop_uninformative`

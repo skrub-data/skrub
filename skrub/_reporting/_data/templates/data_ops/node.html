@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>evaluation report</title>
+    <title>{{ report_title if report_title else "DataOp report" }}</title>
     <style>
      {% include "data_ops.css" %}
     </style>
@@ -13,6 +13,9 @@
 <body>
     <button type="button" class="icon-button"
         id="toggle-nav">{% include "icons/list.svg" %}</button>
+    {% if report_title %}
+    <h2 class="fixed-report-title">{{ report_title }}</h2>
+    {% endif %}
     <div class="data_op-node-wrapper">
         <div class="data_op-node">
             <nav class="main-nav" data-is-open>
@@ -21,9 +24,6 @@
             <div class="node-details" {{ "data-has-error" if error is not none }}
                 {{ "data-is-skipped" if (error is none) and (report is none) }}>
                 <h1>{{ node_nb }}: {{ node_repr }}</h1>
-                {% if node_name %}
-                <h2><samp>Name: {{ node_name }}</samp></h2>
-                {% endif %}
                 <nav class="mini-nav">
                     <ul>
                         <li>
@@ -41,6 +41,9 @@
                         </li>
                     </ul>
                 </nav>
+                {% if node_name %}
+                <h2><samp>Name: {{ node_name }}</samp></h2>
+                {% endif %}
                 <div>
                     {% if node_description %}
                     <h3>Description:</h3>

@@ -33,6 +33,9 @@ New Features
   DataOp evaluation and used for splitting. This is achieved by passing the
   splitter and its arguments to :meth:`DataOp.skb.mark_as_X`. :pr:`1943` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
+  selecting columns that have a fraction of null values above the given threshold.
+  :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
@@ -55,6 +58,9 @@ Changes
   the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
   is deprecated and will be removed in a future version of skrub.
   :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+  :class:`SingleColumnTransformer` and associated exception :class:`RejectColumn` (used
+  internally by many skrub estimators) have been added to the public API, in the newly-created
+  :package:`skrub.core` module. :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
 
 Bug Fixes
 --------
@@ -64,6 +70,9 @@ Bug Fixes
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
 - Errors raised when a polars LazyFrame is passed where an eager DataFrame is
   expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`CheckInputDataFrame` no longer collects Polars LazyFrames automatically;
+  a ``TypeError`` is now raised instead, consistent with the rest of the library.
+  :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
 
 Documentation
 -------------
