@@ -3,7 +3,7 @@ Advanced columnwise operations
 
 
 Rejection handling with ``ApplyToCols``
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :class:`ApplyToCols` allows flexible manipulation of dataframes by automatically
 applying any of Skrub's columnwise transformers to multiple columns in any given dataframe.
