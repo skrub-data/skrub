@@ -48,6 +48,9 @@ Changes
   the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
   is deprecated and will be removed in a future version of skrub.
   :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+  :class:`SingleColumnTransformer` and associated exception :class:`RejectColumn` (used
+  internally by many skrub estimators) have been added to the public API, in the newly-created
+  :package:`skrub.core` module. :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
 
 Bug Fixes
 --------
