@@ -115,6 +115,7 @@ def _check_transformer(transformer):
 def _get_preprocessors(
     *,
     cols,
+    null_strings,
     drop_null_fraction,
     drop_if_unique,
     drop_if_constant,
@@ -125,7 +126,9 @@ def _get_preprocessors(
 ):
     steps = [CheckInputDataFrame()]
     transformers = [
-        CleanNullStrings(),
+        CleanNullStrings(null_strings=null_strings,
+
+        ),
         DropUninformative(
             drop_null_fraction=drop_null_fraction,
             drop_if_constant=drop_if_constant,
@@ -321,6 +324,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     def __init__(
         self,
+        null_strings=None,
         drop_null_fraction=1.0,
         drop_if_constant=False,
         drop_if_unique=False,
@@ -329,6 +333,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         cast_to_str=False,
         n_jobs=1,
     ):
+        self.null_strings = null_strings
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
@@ -365,6 +370,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
         all_steps = _get_preprocessors(
             cols=s.all(),
+            null_strings=self.null_strings,
             drop_null_fraction=self.drop_null_fraction,
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,

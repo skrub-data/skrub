@@ -231,9 +231,19 @@ class CleanNullStrings(SingleColumnTransformer):
         ...
     skrub._single_column_transformer.RejectColumn: Column 's' does not contain strings.
     """
+    def __init__(
+        self,
+        null_strings=None,
+    ):
+        self.null_strings = null_strings
 
     def fit_transform(self, column, y=None):
         del y
+        self.null_list_ = STR_NA_VALUES
+        if self.null_strings is not None:
+            if not (isinstance(self.null_strings, str) or (isinstance(self.null_strings, list) and all(isinstance(i, str) for i in self.null_strings))):
+                raise TypeError("Expected either a string or a list of strictly strings.")
+            self.null_list_ += self.null_strings
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
         return self.transform(column)
@@ -242,5 +252,5 @@ class CleanNullStrings(SingleColumnTransformer):
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             return column
         column = _trim_whitespace_only(column)
-        column = sbd.replace(column, STR_NA_VALUES, sbd.null_value_for(column))
+        column = sbd.replace(column, self.null_list_, sbd.null_value_for(column))
         return column
