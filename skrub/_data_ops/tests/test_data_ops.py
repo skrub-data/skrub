@@ -907,3 +907,8 @@ def test_copy_attrs():
         .skb.set_name("transform")
     )
     assert isinstance(out.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+
+
+def test_mark_as_X_missing_cv():
+    with pytest.raises(TypeError, match=".*you must also provide a splitter"):
+        skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})
