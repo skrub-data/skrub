@@ -126,8 +126,8 @@ def _get_preprocessors(
 ):
     steps = [CheckInputDataFrame()]
     transformers = [
-        CleanNullStrings(null_strings=null_strings,
-
+        CleanNullStrings(
+            null_strings=null_strings,
         ),
         DropUninformative(
             drop_null_fraction=drop_null_fraction,
