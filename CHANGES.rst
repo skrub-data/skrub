@@ -169,6 +169,9 @@ Changes
 - Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
   conversion of list/object-like columns to strings unless explicitly enabled.
   :pr:`1789` by :user:`PilliSiddharth`.
+- Added the strings ``"None"`` and ``"none"`` to the list of null string values in
+ :class:`Cleaner`.
+  :pr:`1952` by :user:`Lisa McBride <lisaleemcb>`.
 
 Bugfixes
 --------

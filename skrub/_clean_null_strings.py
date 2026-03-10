@@ -26,6 +26,8 @@ STR_NA_VALUES = [
     "NaN",
     "?",
     "...",
+    "none",
+    "None",
 ]
 
 
@@ -170,7 +172,7 @@ class CleanNullStrings(SingleColumnTransformer):
     3    4.4
     Name: s, dtype: float32
 
-    Columns that are do not have ``object`` or ``string`` as their ``dtype``
+    Columns that do not have ``object`` or ``string`` as their ``dtype``
     are rejected:
 
     >>> s = pd.Series([1.1, None], name='s')
