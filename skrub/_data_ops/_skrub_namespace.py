@@ -2622,7 +2622,7 @@ class SkrubNamespace:
         split_kwargs : dict or None, default=None
             Named arguments for the ``split()`` function (such as groups for a
             :class:`~sklearn.model_selection.GroupKFold`). Note that
-            ``split_kwargs`` (and ``cv``) can themselves be DatOps.
+            ``split_kwargs`` (and ``cv``) can themselves be DataOps.
 
         Returns
         -------
