@@ -65,7 +65,7 @@ dtype: object
 
 
 The single column transformer
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In cases where the user wants to apply a custom transformation to a series and needs the ApplyToCols
 structure to handle multiple columns, or if this transformation needs to be able to reject certain
