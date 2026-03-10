@@ -2,6 +2,8 @@
 
 import sys
 
+from joblib import Parallel, delayed
+
 from .. import _column_associations, _config
 from .. import _dataframe as sbd
 from . import _plotting, _sample_table, _utils
@@ -28,6 +30,7 @@ def summarize_dataframe(
     max_top_slice_size=5,
     max_bottom_slice_size=5,
     verbose=1,
+    n_jobs=None,
 ):
     """Collect information about a dataframe, used to produce reports.
 
@@ -87,6 +90,7 @@ def summarize_dataframe(
             max_bottom_slice_size=max_bottom_slice_size,
         ),
     }
+    columns = []
     if title is not None:
         summary["title"] = title
     if order_by is not None:
@@ -97,23 +101,20 @@ def summarize_dataframe(
     else:
         order_by_idx = sbd.column_names(df).index(order_by)
         order_by_column = sbd.col_by_idx(df, order_by_idx)
-    for position in range(sbd.shape(df)[1]):
-        if verbose > 0:
-            print(
-                f"Processing column {position + 1: >3} / {n_columns}",
-                file=sys.stderr,
-                end="\r",
-                flush=True,
-            )
-        summary["columns"].append(
-            _summarize_column(
-                sbd.col_by_idx(df, position),
-                position,
-                dataframe_summary=summary,
-                with_plots=with_plots,
-                order_by_column=order_by_column,
-            )
+
+    columns = Parallel(n_jobs=n_jobs, verbose=verbose, backend="loky")(
+        delayed(_summarize_column)(
+            sbd.col_by_idx(df, position),
+            position,
+            dataframe_summary={"n_rows": summary["n_rows"]},
+            with_plots=with_plots,
+            order_by_column=order_by_column,
         )
+        for position in range(sbd.shape(df)[1])
+    )
+
+    summary["columns"] = columns
+
     if verbose > 0:
         print(flush=True, file=sys.stderr)
 
