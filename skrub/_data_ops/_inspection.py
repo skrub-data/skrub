@@ -300,7 +300,9 @@ def _node_kwargs(data_op, url=None):
         "color": "black",
     }
     if impl.is_X:
-        label = "X" if isinstance(impl, SplitX) else f"X: {label}"
+        if not isinstance(impl, SplitX):
+            label = f"X: {label}"
+            # for SplitX 'X' is already in the repr so prepending it would be redundant
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#c6d5f0"
     elif impl.is_y:
