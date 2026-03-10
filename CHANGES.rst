@@ -26,6 +26,8 @@ New Features
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- :class:`TextEncoder` has cache support, by allowing to store the values it computes
+  in a custom parquet file. :pr:`1955` by :user:`Eloi Massoulié <emassoulie>`.
 
 Changes
 -------
