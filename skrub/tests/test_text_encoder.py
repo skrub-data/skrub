@@ -1,7 +1,9 @@
+import os
 import pickle
 import sys
 
 import pandas as pd
+import polars as pl
 import pytest
 from numpy.testing import assert_array_equal
 from sklearn.base import clone
