@@ -6,10 +6,23 @@ from skrub._single_column_transformer import RejectColumn
 
 
 def test_clean_null_strings(df_module):
-    s = df_module.make_column("c", ["a", "b", "   ", "N/A", None])
+    s = df_module.make_column("c", ["a", "b", "   ", "N/A", "None", "none", None])
     out = CleanNullStrings().fit_transform(s)
-    expected = df_module.make_column("c", ["a", "b", None, None, None])
+    expected = df_module.make_column("c", ["a", "b", None, None, None, None, None])
     df_module.assert_column_equal(out, expected)
+
+
+def test_custom_null_strings(df_module):
+    s = df_module.make_column("c", ["a", "b", "   ", "N/A", "foo", None])
+    out = CleanNullStrings(null_strings=["foo"]).fit_transform(s)
+    expected = df_module.make_column("c", ["a", "b", None, None, None, None])
+    df_module.assert_column_equal(out, expected)
+
+
+def test_custom_null_strings_type(df_module):
+    s = df_module.make_column("c", ["a", "b", "   ", "N/A", "foo", None])
+    with pytest.raises(ValueError, match=".*a sequence of strictly strings."):
+        CleanNullStrings(null_strings=0).fit_transform(s)
 
 
 def test_reject_non_string_cols(df_module):

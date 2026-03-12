@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from . import _dataframe as sbd
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
@@ -242,15 +244,11 @@ class CleanNullStrings(SingleColumnTransformer):
         del y
         self.null_list_ = STR_NA_VALUES
         if self.null_strings is not None:
-            if not (
-                isinstance(self.null_strings, str)
-                or (
-                    isinstance(self.null_strings, list)
-                    and all(isinstance(i, str) for i in self.null_strings)
-                )
+            if not isinstance(self.null_strings, Sequence) or not all(
+                isinstance(item, str) for item in self.null_strings
             ):
                 raise TypeError(
-                    "Expected either a string or a list of strictly strings."
+                    "Expected either a string or a sequence of strictly strings."
                 )
             self.null_list_ += self.null_strings
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
