@@ -14,8 +14,17 @@ def test_clean_null_strings(df_module):
 
 def test_custom_null_strings(df_module):
     s = df_module.make_column("c", ["a", "b", "   ", "N/A", "foo", None])
+
+    out = CleanNullStrings(null_strings="foo").fit_transform(s)
+    expected = df_module.make_column("c", ["a", "b", None, None, None, None])
+    df_module.assert_column_equal(out, expected)
+
     out = CleanNullStrings(null_strings=["foo"]).fit_transform(s)
     expected = df_module.make_column("c", ["a", "b", None, None, None, None])
+    df_module.assert_column_equal(out, expected)
+
+    out = CleanNullStrings(null_strings=None).fit_transform(s)
+    expected = df_module.make_column("c", ["a", "b", None, None, "foo", None])
     df_module.assert_column_equal(out, expected)
 
 
