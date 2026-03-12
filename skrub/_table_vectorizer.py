@@ -115,7 +115,7 @@ def _check_transformer(transformer):
 def _get_preprocessors(
     *,
     cols,
-    null_strings,
+    null_strings=None,
     drop_null_fraction,
     drop_if_unique,
     drop_if_constant,
