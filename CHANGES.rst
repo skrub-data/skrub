@@ -26,6 +26,9 @@ New Features
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
+  selecting columns that have a fraction of null values above the given threshold.
+  :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
@@ -48,6 +51,9 @@ Changes
   the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
   is deprecated and will be removed in a future version of skrub.
   :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+  :class:`SingleColumnTransformer` and associated exception :class:`RejectColumn` (used
+  internally by many skrub estimators) have been added to the public API, in the newly-created
+  :package:`skrub.core` module. :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
 
 Bug Fixes
 --------
@@ -57,6 +63,9 @@ Bug Fixes
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
 - Errors raised when a polars LazyFrame is passed where an eager DataFrame is
   expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`CheckInputDataFrame` no longer collects Polars LazyFrames automatically;
+  a ``TypeError`` is now raised instead, consistent with the rest of the library.
+  :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
 
 Documentation
 -------------
@@ -160,6 +169,9 @@ Changes
 - Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
   conversion of list/object-like columns to strings unless explicitly enabled.
   :pr:`1789` by :user:`PilliSiddharth`.
+- Added the strings ``"None"`` and ``"none"`` to the list of null string values in
+ :class:`Cleaner`.
+  :pr:`1952` by :user:`Lisa McBride <lisaleemcb>`.
 
 Bugfixes
 --------

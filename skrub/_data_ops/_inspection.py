@@ -169,7 +169,7 @@ def _make_full_report(
     svg = draw_data_op_graph(data_op, url=make_url).svg.decode("utf-8")
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
-        {"svg": svg, "node_status": node_status, "title": title}
+        {"svg": svg, "node_status": node_status, "report_title": title}
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")
@@ -222,6 +222,7 @@ def _make_full_report(
             estimator_html_repr = None
         node_page = jinja_env.get_template("node.html").render(
             dict(
+                report_title=title,
                 total_n_nodes=len(g["nodes"]),
                 node_nb=i,
                 node_children=node_children,
