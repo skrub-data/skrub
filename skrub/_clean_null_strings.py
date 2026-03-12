@@ -256,7 +256,7 @@ class CleanNullStrings(SingleColumnTransformer):
                 raise TypeError(
                     "Expected either a string or a sequence of strictly strings."
                 )
-        elif self.null_strings is None:
+        else:
             self.null_strings_ = STR_NA_VALUES
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
