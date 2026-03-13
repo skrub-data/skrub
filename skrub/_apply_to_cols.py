@@ -17,8 +17,13 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     Apply a transformer to columns in a dataframe.
 
     Columns that are not selected in the ``cols`` parameter are passed through
-    without modification.
-
+    without modification. This transformer automatically detects whether the
+    provided transformer is a single-column transformer (i.e. has the
+    ``__single_column_transformer__`` attribute) and applies it to each column
+    independently; otherwise, it applies the transformer to the selected columns
+    as a group.
+    Refer to the documentation of :class:`SingleColumnTransformer` for more details
+    on single-column transformers and how to create them.
 
     Parameters
     ----------
@@ -82,6 +87,232 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     column, that column is passed through unchanged. If ``allow_reject`` is
     ``False``, ``RejectColumn`` exceptions are propagated, like other errors
     raised by the transformer.
+
+    See also
+    --------
+    :class:`SingleColumnTransformer` : Base class for single-column transformers,
+    which allows to define custom logic to be applied to each column independently,
+    and to indicate that a column cannot be transformed by raising
+    :class:`RejectColumn` exceptions.
+
+    Examples
+    --------
+    ** Applying a transformer to each column independently **
+
+    >>> import pandas as pd
+    >>> login = pd.to_datetime(
+    ...     pd.Series(
+    ...         ["2024-05-13T12:05:36", None, "2024-05-15T13:46:02"], name="login")
+    ... )
+    >>> login
+    0   2024-05-13 12:05:36
+    1                   NaT
+    2   2024-05-15 13:46:02
+    Name: login, dtype: datetime64[...]
+    >>> from skrub import DatetimeEncoder
+    >>> DatetimeEncoder().fit_transform(login)
+       login_year  login_month  login_day  login_hour  login_total_seconds
+    0      2024.0          5.0       13.0        12.0         1.715602e+09
+    1         NaN          NaN        NaN         NaN                  NaN
+    2      2024.0          5.0       15.0        13.0         1.715781e+09
+
+    Apply a StandardScaler to each column in a dataframe:
+
+    >>> import pandas as pd
+    >>> from skrub import ApplyToEachCol
+    >>> from sklearn.preprocessing import StandardScaler
+    >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
+    >>> df
+          A     B     C
+    0 -10.0 -10.0   0.0
+    1  10.0   0.0  10.0
+
+    Fit a StandardScaler to each column in df:
+
+    >>> scaler = ApplyToEachCol(StandardScaler())
+    >>> scaler.fit_transform(df)
+         A    B    C
+    0 -1.0 -1.0 -1.0
+    1  1.0  1.0  1.0
+    >>> scaler.transformers_
+    {'A': StandardScaler(), 'B': StandardScaler(), 'C': StandardScaler()}
+
+    We can restrict the columns on which the transformation is applied:
+
+    >>> scaler = ApplyToEachCol(StandardScaler(), cols=["A", "B"])
+    >>> scaler.fit_transform(df)
+         A    B     C
+    0 -1.0 -1.0   0.0
+    1  1.0  1.0  10.0
+
+    We see that the scaling has not been applied to "C", which also does not
+    appear in the transformers_:
+
+    >>> scaler.transformers_
+    {'A': StandardScaler(), 'B': StandardScaler()}
+    >>> scaler.used_inputs_
+    ['A', 'B']
+
+    **Rejected columns**
+
+    The transformer can raise :class:`RejectColumn` to indicate it cannot handle a
+    given column.
+
+    >>> from skrub import ToDatetime
+    >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
+    >>> df
+         birthday    city
+    0  29/01/2024  London
+    >>> df.dtypes
+    birthday    ...
+    city        ...
+    dtype: object
+    >>> ToDatetime().fit_transform(df["birthday"])
+    0   2024-01-29
+    Name: birthday, dtype: datetime64[...]
+    >>> ToDatetime().fit_transform(df["city"])
+    Traceback (most recent call last):
+        ...
+    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
+
+    How these rejections are handled depends on the ``allow_reject`` parameter.
+    By default, no special handling is performed and rejections are considered
+    to be errors:
+
+    >>> to_datetime = ApplyToEachCol(ToDatetime())
+    >>> to_datetime.fit_transform(df)
+    Traceback (most recent call last):
+        ...
+    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
+
+    However, setting ``allow_reject=True`` gives the transformer itself some
+    control over which columns it should be applied to. For example, whether a
+    string column contains dates is only known once we try to parse them.
+    Therefore it might be sensible to try to parse all string columns but allow
+    the transformer to reject those that, upon inspection, do not contain dates.
+
+    >>> to_datetime = ApplyToEachCol(ToDatetime(), allow_reject=True)
+    >>> transformed = to_datetime.fit_transform(df)
+    >>> transformed
+        birthday    city
+    0 2024-01-29  London
+
+    Now the column 'city' was rejected but this was not treated as an error;
+    'city' was passed through unchanged and only 'birthday' was converted to a
+    datetime column.
+
+    >>> transformed.dtypes
+    birthday    datetime64[...]
+    city                ...
+    dtype: object
+    >>> to_datetime.transformers_
+    {'birthday': ToDatetime()}
+
+    **Renaming outputs & keeping the original columns**
+
+    The ``rename_columns`` parameter allows renaming output columns.
+
+    >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[0., 100.]))
+    >>> scaler = ApplyToEachCol(StandardScaler(), rename_columns='{}_scaled')
+    >>> scaler.fit_transform(df)
+       A_scaled  B_scaled
+    0      -1.0      -1.0
+    1       1.0       1.0
+
+    The renaming is only applied to columns selected by ``cols`` (and not
+    rejected by the transformer when ``allow_reject`` is ``True``).
+
+    >>> scaler = ApplyToEachCol(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
+    >>> scaler.fit_transform(df)
+       A_scaled      B
+    0      -1.0    0.0
+    1       1.0  100.0
+
+    ``rename_columns`` can be particularly useful when ``keep_original`` is
+    ``True``. When a column is transformed, we can tell ``ApplyToEachCol`` to
+    retain the original, untransformed column in the output. If the transformer
+    produces a column with the same name, the transformation result is renamed
+    to avoid a name clash.
+
+    >>> scaler = ApplyToEachCol(StandardScaler(), keep_original=True)
+    >>> scaler.fit_transform(df)                                    # doctest: +SKIP
+          A  A__skrub_89725c56__      B  B__skrub_81cc7d00__
+    0 -10.0                 -1.0    0.0                 -1.0
+    1  10.0                  1.0  100.0                  1.0
+
+    In this case we may want to set a more sensible name for the transformer's output:
+
+    >>> scaler = ApplyToEachCol(
+    ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
+    ... )
+    >>> scaler.fit_transform(df)
+          A  A_scaled      B  B_scaled
+    0 -10.0      -1.0    0.0      -1.0
+    1  10.0       1.0  100.0       1.0
+
+    **Applying a transformer to columns as a group**
+
+    Transformers that do not have the ``__single_column_transformer__``
+    attribute are applied to the selected columns as a group, meaning that
+    the transformer is fitted once on the selected columns together and can
+    learn relationships between them.
+
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(np.eye(4) * np.logspace(0, 3, 4), columns=list("abcd"))
+    >>> df
+         a     b      c       d
+    0  1.0   0.0    0.0     0.0
+    1  0.0  10.0    0.0     0.0
+    2  0.0   0.0  100.0     0.0
+    3  0.0   0.0    0.0  1000.0
+    >>> from sklearn.decomposition import PCA
+    >>> from skrub import ApplyToSubFrame
+    >>> ApplyToSubFrame(PCA(n_components=2)).fit_transform(df).round(2)
+         pca0   pca1
+    0 -249.01 -33.18
+    1 -249.04 -33.68
+    2 -252.37  66.64
+    3  750.42   0.22
+
+    We can restrict the transformer to a subset of columns:
+
+    >>> pca = ApplyToSubFrame(PCA(n_components=2), cols=["a", "b"])
+    >>> pca.fit_transform(df).round(2)
+           c       d  pca0  pca1
+    0    0.0     0.0 -2.52  0.67
+    1    0.0     0.0  7.50  0.00
+    2  100.0     0.0 -2.49 -0.33
+    3    0.0  1000.0 -2.49 -0.33
+    >>> pca.used_inputs_
+    ['a', 'b']
+    >>> pca.created_outputs_
+    ['pca0', 'pca1']
+    >>> pca.transformer_
+    PCA(n_components=2)
+
+    It is possible to rename the output columns:
+
+    >>> pca = ApplyToSubFrame(
+    ...     PCA(n_components=2), cols=["a", "b"], rename_columns='my_tag-{}'
+    ... )
+    >>> pca.fit_transform(df).round(2)
+           c       d  my_tag-pca0  my_tag-pca1
+    0    0.0     0.0        -2.52         0.67
+    1    0.0     0.0         7.50         0.00
+    2  100.0     0.0        -2.49        -0.33
+    3    0.0  1000.0        -2.49        -0.33
+
+    We can also force preserving the original columns in the output:
+
+    >>> pca = ApplyToSubFrame(PCA(n_components=2), cols=["a", "b"], keep_original=True)
+    >>> pca.fit_transform(df).round(2)
+         a     b      c       d  pca0  pca1
+    0  1.0   0.0    0.0     0.0 -2.52  0.67
+    1  0.0  10.0    0.0     0.0  7.50  0.00
+    2  0.0   0.0  100.0     0.0 -2.49 -0.33
+    3  0.0   0.0    0.0  1000.0 -2.49 -0.33
+
     """
 
     def __init__(
