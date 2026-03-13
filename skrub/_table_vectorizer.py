@@ -115,13 +115,13 @@ def _check_transformer(transformer):
 def _get_preprocessors(
     *,
     cols,
-    null_strings=None,
     drop_null_fraction,
     drop_if_unique,
     drop_if_constant,
     n_jobs,
     add_tofloat32=True,
     cast_to_str=True,
+    null_strings=None,
     datetime_format=None,
 ):
     steps = [CheckInputDataFrame()]
@@ -197,6 +197,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
         non-categorical, and non-datetime columns, converting them to strings.
         If ``False``, this step is skipped and such columns retain their
         original dtype (e.g., lists, structs).
+
+    null_strings : str or sequence of str, default=None
+        Additional strings to consider as null values, beyond the default list
+        in ``STR_NA_VALUES``.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.

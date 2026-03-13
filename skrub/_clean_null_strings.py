@@ -61,6 +61,11 @@ class CleanNullStrings(SingleColumnTransformer):
     See ``STR_NA_VALUES`` in this module for the full list of values considered
     as null.
 
+    Parameters
+    ----------
+    null_strings : str or sequence of str, default=None
+        Additional strings to consider as null values, beyond the default list
+        in ``STR_NA_VALUES``.
     Examples
     --------
 
