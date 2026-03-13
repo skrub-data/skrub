@@ -309,6 +309,12 @@ run the following command:
 
     make html
 
+On Windows, use:
+
+.. code:: bat
+
+    make.bat html
+
 The documentation will be generated in the ``_build/html/`` directory
 and are viewable in a web browser, for instance by opening the local
 ``_build/html/index.html`` file.
@@ -320,6 +326,12 @@ specific examples, you can use the following command with a regex pattern:
 
     make html EXAMPLES_PATTERN=your_regex_goes_here
 
+On Windows, use:
+
+.. code:: bat
+
+    make.bat html EXAMPLES_PATTERN=your_regex_goes_here
+
 This is especially helpful when you're only modifying or checking a few examples.
 
 It is also possible to build the documentation without running the examples
@@ -328,6 +340,12 @@ without running the examples by using the following command:
 .. code:: bash
 
     make html-noplot
+
+On Windows, use:
+
+.. code:: bat
+
+    make.bat html-noplot
 
 This command generates the documentation without re-executing the examples, which can
 take a long time. This is useful if you are only modifying the documentation itself, such as fixing
