@@ -72,6 +72,9 @@ Documentation
 - Updated gallery examples to load datasets from their file paths using
   ``pd.read_csv()``, following the pattern established in :pr:`1852`.
   :pr:`1940` by :user:`MuditAtrey <MuditAtrey>`.
+- Updated remaining gallery examples to load datasets from their file paths using
+  ``pd.read_csv()``, following the pattern established in :pr:`1852` and :pr:`1940`.
+  :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
 
 Release 0.7.2
 =============
