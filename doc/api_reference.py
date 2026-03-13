@@ -278,6 +278,20 @@ API_REFERENCE = {
             },
         ],
     },
+    "advanced": {
+        "title": "Advanced topics",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "core.SingleColumnTransformer",
+                    "core.RejectColumn",
+                ],
+            }
+        ],
+    },
     "config": {
         "title": "Configuration",
         "short_summary": None,
