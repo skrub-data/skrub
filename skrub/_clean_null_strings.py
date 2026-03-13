@@ -256,13 +256,13 @@ class CleanNullStrings(SingleColumnTransformer):
             elif isinstance(self.null_strings, Sequence) and all(
                 isinstance(item, str) for item in self.null_strings
             ):
-                self.null_strings_ = STR_NA_VALUES + self.null_strings
+                self.null_strings_ = STR_NA_VALUES + list(self.null_strings)
             else:
                 raise TypeError(
                     "Expected either a string or a sequence of strictly strings."
                 )
         else:
-            self.null_strings_ = STR_NA_VALUES
+            self.null_strings_ = STR_NA_VALUES.copy()
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
         return self.transform(column)
