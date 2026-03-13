@@ -70,7 +70,7 @@ perspective and also inefficient in terms of memory usage.
 # We begin with loading the table from figshare. It has around 100k rows.
 from skrub.datasets import fetch_figshare
 
-X = fetch_figshare("48931237").X
+X = pd.read_parquet(fetch_figshare("48931237").path)
 
 # %%
 # The total price is the sum of the price per unit of each product in the basket,
