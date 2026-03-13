@@ -140,19 +140,19 @@ def _get_preprocessors(
         (ToDatetime(format=datetime_format), cols),
     ]
 
-    if add_tofloat32:
-        transformers.append((ToFloat(), cols))
-    else:
-        tofloat_cols = None
-        if parse_strings:
+    match add_tofloat32, parse_strings, numeric_dtype == "float32":
+        case True, _, _:
+            tofloat_cols = cols
+        case False, False, False:
+            tofloat_cols = None
+        case False, False, True:
+            tofloat_cols = cols & s.float()
+        case False, True, False:
             tofloat_cols = cols & s.string()
-        if numeric_dtype == "float32":
-            float_cols = cols & s.float()
-            tofloat_cols = (
-                float_cols if tofloat_cols is None else tofloat_cols | float_cols
-            )
-        if tofloat_cols is not None:
-            transformers.append((ToFloat(), tofloat_cols))
+        case False, True, True:
+            tofloat_cols = cols & (s.string() | s.float())
+    if tofloat_cols is not None:
+        transformers.append((ToFloat(), tofloat_cols))
 
     transformers.append((CleanCategories(), cols))
 
