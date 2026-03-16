@@ -114,6 +114,11 @@ def test_repr():
     Result:
     ―――――――
     10
+    >>> from sklearn.model_selection import KFold
+    >>> skrub.var('df').skb.mark_as_X(cv=KFold(10), split_kwargs={})
+    <X>
+    >>> skrub.var('df').skb.mark_as_X(cv=KFold(10), split_kwargs={}).skb.set_name('design matrix')
+    <design matrix | X>
     >>> from sklearn.preprocessing import StandardScaler, RobustScaler
     >>> skrub.X().skb.apply(StandardScaler())
     <Apply StandardScaler>

@@ -136,3 +136,60 @@ And we can obtain predictions on the test part:
 
 It is possible to define a custom split function to use instead of
 :func:`sklearn.model_selection.train_test_split`.
+
+Passing additional arguments to the splitter
+============================================
+
+Sometimes we want to pass additional data to the cross-validation splitter.
+
+For example, if there is a group structure in our data (such as sites,
+hospitals, etc.) and we want the model to generalize to unseen groups, we must
+ensure while evaluating it that each group goes entirely in the train set or the
+test set, but is not divided among the 2. This can be done with
+:class:`sklearn.model_selection.GroupKFold`,
+:class:`sklearn.model_selection.LeavePGroupsOut`, etc. . The ``split`` function
+of those objects accepts a ``groups`` parameter. We can compute the groups
+inside of the DataOp and pass them to :meth:`DataOp.skb.mark_as_X` and they will
+be passed to the splitter.
+
+>>> df = skrub.datasets.toy_products()
+>>> df
+    description  price            seller     category
+0        mouse     10   supermarket.com  electronics
+1       hammer     15  bestproducts.com        tools
+2     keyboard     20   supermarket.com  electronics
+3      usb key      9  bestproducts.com  electronics
+4      charger     13  bestproducts.com  electronics
+5  screwdriver     12   supermarket.com        tools
+
+Suppose we want to assess generalization to new sellers. While splitting for
+cross-validation we must group products by seller. We do it with
+:class:`sklearn.model_selection.LeaveOneGroupOut`.
+
+>>> from sklearn.dummy import DummyClassifier
+>>> from sklearn.model_selection import LeaveOneGroupOut
+
+>>> data = skrub.var("df", df)
+>>> groups = data["seller"]
+>>> X = data[["description", "price"]].skb.mark_as_X(
+...     cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+... )
+>>> y = data["category"].skb.mark_as_y()
+>>> pred = X.skb.apply(DummyClassifier(), y=y)
+>>> split = pred.skb.train_test_split()
+
+The train set only contains data from the "supermarket.com" seller.
+
+>>> split["X_train"]
+    description  price
+0        mouse     10
+2     keyboard     20
+5  screwdriver     12
+
+The test set only contains data from the "bestproducts.com" seller.
+
+>>> split["X_test"]
+  description  price
+1      hammer     15
+3     usb key      9
+4     charger     13

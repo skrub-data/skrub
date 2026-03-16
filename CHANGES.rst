@@ -26,6 +26,13 @@ New Features
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- It is now possible to pass additional (dynamically computed) arguments to the
+  cross-validation splitter used by :class:`DataOp` objects for validation,
+  hyperparameter search etc. For example, the groups for a
+  :class:`sklearn.model_selection.GroupKFold` can be computed as part of the
+  DataOp evaluation and used for splitting. This is achieved by passing the
+  splitter and its arguments to :meth:`DataOp.skb.mark_as_X`. :pr:`1943` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 - :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
