@@ -519,6 +519,10 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
+    null_strings : str or sequence of str, default=None
+        Additional strings to consider as null values, beyond the default list
+        in ``STR_NA_VALUES``.
+
     n_jobs : int, default=None
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
@@ -794,6 +798,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         drop_if_constant=False,
         drop_if_unique=False,
         datetime_format=None,
+        null_strings=None,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -811,6 +816,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
+        self.null_strings = null_strings
 
     def fit(self, X, y=None):
         """Fit transformer.
