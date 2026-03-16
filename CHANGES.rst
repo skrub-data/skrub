@@ -39,10 +39,10 @@ Changes
   or on all selected columns as a single dataframe. In most cases, this replaces
   the original ``ApplyToCols`` and ``ApplyToFrame``. As a result, ``ApplyToCols``
   and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol` and
-  :class:`ApplyToSubFrame` respectively.
+  :class:`ApplyToSubFrame` respectively, and have been made private.
   The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
   ``how`` to ``cols``.
-  :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+  :pr:`1913`, :pr:`1919` and :pr:`1962` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The dataset fetcher functions now include a "path" field for each table in the dataset.
   For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
   Additionally, datasets that include a single table have the field ``path``. These
