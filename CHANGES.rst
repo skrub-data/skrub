@@ -61,6 +61,10 @@ Changes
   :class:`SingleColumnTransformer` and associated exception :class:`RejectColumn` (used
   internally by many skrub estimators) have been added to the public API, in the newly-created
   :package:`skrub.core` module. :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
+  - Added the strings ``"None"`` and ``"none"`` to the list of null string values in
+  :class:`Cleaner`. Also, exposed the list of null string values that will be set
+  to null by the :class:`Cleaner` as the parameter ``null_strings``.
+  :pr:`1952` and :pr:`1954` by :user:`Lisa McBride <lisaleemcb>`.
 
 Bug Fixes
 --------
@@ -180,9 +184,6 @@ Changes
 - Added ``cast_to_str`` parameter to :class:`Cleaner` to prevent unintended
   conversion of list/object-like columns to strings unless explicitly enabled.
   :pr:`1789` by :user:`PilliSiddharth`.
-- Added the strings ``"None"`` and ``"none"`` to the list of null string values in
- :class:`Cleaner`.
-  :pr:`1952` by :user:`Lisa McBride <lisaleemcb>`.
 
 Bugfixes
 --------
