@@ -77,6 +77,40 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         Note that this parameter is only used when the transformer
         is a SingleColumnTransformer or when how="cols".
 
+    Attributes
+    ----------
+    all_inputs_ : list of str
+        All column names in the input dataframe.
+
+    used_inputs_ : list of str
+        The names of columns that were transformed.
+
+    all_outputs_ : list of str
+        All column names in the output dataframe.
+
+    created_outputs_ : list of str
+        The names of columns in the output dataframe that were created by one
+        of the fitted transformers.
+
+    transformers_ : dict
+        Maps the name of each column that was transformed to the corresponding
+        fitted transformer. Only available when the transformer is a
+        SingleColumnTransformer or when ``how="cols"``.
+
+    input_to_outputs_ : dict
+        Maps the name of each column that was transformed to the list of the
+        resulting columns' names in the output. Only available when the
+        transformer is a SingleColumnTransformer or when ``how="cols"``.
+
+    output_to_input_ : dict
+        Maps the name of each column in the transformed output to the name of
+        the input column from which it was derived. Only available when the
+        transformer is a SingleColumnTransformer or when ``how="cols"``.
+
+    transformer_ : Transformer
+        The fitted transformer. Only available when ``how="frame"`` and the
+        transformer is not a SingleColumnTransformer.
+
     Notes
     -----
     All columns not listed in ``cols`` remain unmodified in the output.
@@ -323,8 +357,17 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         )
         X_transformed = self._wrapped_transformer.fit_transform(X, y, **kwargs)
 
+        self.all_inputs_ = self._wrapped_transformer.all_inputs_
+        self.used_inputs_ = self._wrapped_transformer.used_inputs_
+        self.all_outputs_ = self._wrapped_transformer.all_outputs_
+        self.created_outputs_ = self._wrapped_transformer.created_outputs_
+        self.feature_names_in_ = self._wrapped_transformer.feature_names_in_
+        self.n_features_in_ = self._wrapped_transformer.n_features_in_
+
         if isinstance(self._wrapped_transformer, ApplyToEachCol):
             self.transformers_ = self._wrapped_transformer.transformers_
+            self.input_to_outputs_ = self._wrapped_transformer.input_to_outputs_
+            self.output_to_input_ = self._wrapped_transformer.output_to_input_
         else:
             self.transformer_ = self._wrapped_transformer.transformer_
 
