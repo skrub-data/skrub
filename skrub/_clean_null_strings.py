@@ -250,20 +250,20 @@ class CleanNullStrings(SingleColumnTransformer):
     def fit_transform(self, column, y=None):
         del y
 
-        if self.null_strings is not None:
-            if isinstance(self.null_strings, str):
-                self.null_strings_ = STR_NA_VALUES + [self.null_strings]
-            elif isinstance(self.null_strings, Sequence) and all(
-                isinstance(item, str) for item in self.null_strings
-            ):
-                self.null_strings_ = STR_NA_VALUES + list(self.null_strings)
-            else:
-                raise TypeError(
-                    "Expected null_strings to be either a string or a sequence of strictly strings, "
-                    f"\n         got: {self.null_strings}."
-                )
-        else:
+        if self.null_strings is None:
             self.null_strings_ = STR_NA_VALUES.copy()
+        elif isinstance(self.null_strings, str):
+            self.null_strings_ = STR_NA_VALUES + [self.null_strings]
+        elif isinstance(self.null_strings, Sequence) and all(
+            isinstance(item, str) for item in self.null_strings
+        ):
+            self.null_strings_ = STR_NA_VALUES + list(self.null_strings)
+        else:
+            raise TypeError(
+                "Expected null_strings to be either a string or a sequence of strictly strings, "
+                f"\n         got: {self.null_strings}."
+            )
+
         if not (sbd.is_pandas_object(column) or sbd.is_string(column)):
             raise RejectColumn(f"Column {sbd.name(column)!r} does not contain strings.")
         return self.transform(column)
