@@ -30,7 +30,7 @@ def test_custom_null_strings(df_module):
 
 def test_custom_null_strings_type(df_module):
     s = df_module.make_column("c", ["a", "b", "   ", "N/A", "foo", None])
-    with pytest.raises(TypeError, match=".*a sequence of strictly strings."):
+    with pytest.raises(TypeError, match=".*string or a sequence of strictly strings*."):
         CleanNullStrings(null_strings=0).fit_transform(s)
 
 

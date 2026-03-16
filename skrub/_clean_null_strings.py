@@ -259,7 +259,8 @@ class CleanNullStrings(SingleColumnTransformer):
                 self.null_strings_ = STR_NA_VALUES + list(self.null_strings)
             else:
                 raise TypeError(
-                    "Expected either a string or a sequence of strictly strings."
+                    "Expected either a string or a sequence of strictly strings, "
+                    f"\n         got: {self.null_strings}."
                 )
         else:
             self.null_strings_ = STR_NA_VALUES.copy()
