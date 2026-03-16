@@ -6,8 +6,11 @@
 .. |DropCols| replace:: :class:`DropCols`
 .. |s.string| replace:: :meth:`skrub.selectors.string`
 .. |s.numeric| replace:: :meth:`skrub.selectors.numeric`
-.. |RejectColumn| replace:: :class:`RejectColumn`
-.. |SingleColumnTranformer| replace:: :class:`SingleColumnTranformer`
+.. |RejectColumn| replace:: :class:`core.RejectColumn`
+.. |ToDatetime| replace:: :class:`ToDatetime`
+.. |SingleColumnTranformer| replace:: :class:`core.SingleColumnTranformer`
+.. |StandardScaler| replace:: :class:`sklearn.preprocessing.StandardScaler`
+.. |OneHotEncoder| replace:: :class:`sklearn.preprocessing.OneHotEncoder`
 
 .. _user_guide_multiple_columns:
 
@@ -54,7 +57,9 @@ a |StandardScaler| to the numeric column, and a |OneHotEncoder| to the text colu
 >>> import pandas as pd
 >>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
 
-We use the |s.numeric| and |s.string() selectors to choose the respective columns:
+
+We use the |s.numeric| and |s.string| selectors to choose the respective columns:
+
 >>> numeric = ApplyToCols(StandardScaler(), cols=s.numeric())
 >>> string = ApplyToCols(OneHotEncoder(sparse_output=False), cols=s.string())
 
@@ -90,6 +95,7 @@ We want to apply a PCA with 2 components to it:
 3  750.42   0.22
 
 We can also apply the transformation only to a subset of the columns:
+
 >>> pca = ApplyToCols(PCA(n_components=2), cols=["a", "b"])
 >>> pca.fit_transform(df).round(2)
        c       d  pca0  pca1

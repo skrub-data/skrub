@@ -1,3 +1,10 @@
+.. currentmodule:: skrub
+
+.. |ApplyToCols| replace:: :class:`ApplyToCols`
+.. |RejectColumn| replace:: :class:`core.RejectColumn`
+.. |SingleColumnTranformer| replace:: :class:`core.SingleColumnTranformer`
+
+
 Advanced columnwise operations
 ------------------------------
 
@@ -5,12 +12,12 @@ Advanced columnwise operations
 Rejection handling with ``ApplyToCols``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:class:`ApplyToCols` allows flexible manipulation of dataframes by automatically
+|ApplyToCols| allows flexible manipulation of dataframes by automatically
 applying any of Skrub's columnwise transformers to multiple columns in any given dataframe.
 More information can be found on this class's basic usage on :ref:`apply_to_each_col`.
 
 If the input columns are unable to be transformed, a specific exception exists to indicate
-this: :class:`RejectColumn`. It can be called with a custom user message, to explain the rejection.
+this: |RejectColumn|. It can be called with a custom user message, to explain the rejection.
 
 >>> from skrub import ToDatetime
 >>> import pandas as pd
@@ -30,7 +37,7 @@ Traceback (most recent call last):
     ...
 skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
 
-The ``allow_reject`` parameter in ``ApplyToCols`` specifies how to react if such an exception is raised.
+The ``allow_reject`` parameter in |ApplyToCols| specifies how to react if such an exception is raised.
 By default, no special handling is performed and rejections are considered to be errors:
 
 >>> from skrub import ApplyToCols
@@ -67,9 +74,9 @@ dtype: object
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In cases where the user wants to apply a custom transformation to a series and needs the ApplyToCols
+In cases where the user wants to apply a custom transformation to a series and needs the |ApplyToCols|
 structure to handle multiple columns, or if this transformation needs to be able to reject certain
-columns and communicate this to ``ApplyToCols``, it is necessary to create a transformer from scratch
+columns and communicate this to |ApplyToCols|, it is necessary to create a transformer from scratch
 that is capable of handling this exception.
 
 Hence the ``SingleColumnTransformer`` class. It is originally a base class from which many transformers are
@@ -77,7 +84,7 @@ inherited, but it can also be used to create new transformers. As long as the us
 corresponding ``fit`` and ``transform`` methods to their custom transformer, it can be passed on like any other.
 
 For instance, if one wanted to create a custom transformer specialized in parsing zip codes of a certain
-format, that returns ``RejectColumn`` with a custom warning on zip code sizes:
+format, that returns |RejectColumn| with a custom warning on zip code sizes:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>>

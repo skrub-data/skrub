@@ -19,11 +19,11 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     This transformer applies the given transformer to all the selected columns in
     the input dataframe; non-selected columns are passed through without modification.
     By default, all selected columns are passed to the same transformer; if the
-    transformer is a :class:`SingleColumnTransformer` or if ``how="cols"``, a separate
-    clone of the transformer is created for each selected column and fitted to that
-    column independently.
+    transformer is a :class:`core.SingleColumnTransformer` or if ``how="cols"``, a
+    separate clone of the transformer is created for each selected column and
+    fitted to that column independently.
 
-    Refer to the documentation of :class:`SingleColumnTransformer` for more details
+    Refer to the documentation of :class:`core.SingleColumnTransformer` for more details
     on single-column transformers and how to create them.
 
     Parameters
@@ -115,17 +115,18 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     -----
     All columns not listed in ``cols`` remain unmodified in the output.
     Moreover, if ``allow_reject`` is ``True`` and the transformers'
-    ``fit_transform`` raises a ``RejectColumn`` exception for a particular
+    ``fit_transform`` raises a :class:`core.RejectColumn` exception for a particular
     column, that column is passed through unchanged. If ``allow_reject`` is
-    ``False``, ``RejectColumn`` exceptions are propagated, like other errors
+    ``False``, :class:`core.RejectColumn` exceptions are propagated, like other errors
     raised by the transformer.
 
     See also
     --------
-    :class:`SingleColumnTransformer` : Base class for single-column transformers,
-    which allows to define custom logic to be applied to each column independently,
-    and to indicate that a column cannot be transformed by raising
-    :class:`RejectColumn` exceptions.
+    :class:`core.SingleColumnTransformer` :
+        Base class for single-column transformers,
+        which allows to define custom logic to be applied to each column independently,
+        and to indicate that a column cannot be transformed by raising
+        :class:`core.RejectColumn` exceptions.
 
     Examples
     --------
@@ -148,6 +149,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     By default, the same transformer is applied to all selected columns. It is
     possible to specify which columns to select with the ``cols`` parameter. For
     example, to apply a StandardScaler to the numeric columns:
+
     >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"])
     >>> scaler.fit_transform(df)
         C                   D    A    B
@@ -180,6 +182,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     It is possible to set ``allow_reject=True`` to allow the transformer to reject
     columns it cannot handle.  In this case, the rejected columns are passed through
     unchanged:
+
     >>> from skrub import DatetimeEncoder
     >>> datetime = ApplyToCols(DatetimeEncoder(), allow_reject=True)
     >>> datetime.fit_transform(df)
@@ -189,6 +192,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     If ``allow_reject=False`` (the default), the same transformation would raise
     an error since the transformer cannot handle the columns "A", "B", and "C":
+
     >>> datetime = ApplyToCols(DatetimeEncoder(), allow_reject=False)
     >>> datetime.fit_transform(df)
     Traceback (most recent call last):
@@ -211,6 +215,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     StandardScaler()
 
     Columns that were not selected or were rejected do not have a transformer:
+
     >>> string_encoder.transformers_
     {'C': StringEncoder(n_components=2)}
 
