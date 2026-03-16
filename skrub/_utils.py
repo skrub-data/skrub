@@ -277,3 +277,27 @@ def format_duration(seconds):
     hours, rest = divmod(seconds, 3600)
     minutes, rest = divmod(rest, 60)
     return f"{hours:.0f}h {minutes:.0f}m {rest:.2g}s"
+
+
+def set_module(module):
+    """
+    Set the __module__ attribute on a class.
+
+    The goal is to have a more readable repr for types that are defined in
+    private sub-modules and re-exposed in the main skrub namespace.
+
+    Examples
+    --------
+    >>> from skrub._utils import set_module
+    >>> class A: pass
+    >>> A
+    <class '__main__.A'>
+    >>> set_module('skrub')(A)
+    <class 'skrub.A'>
+    """
+
+    def decorator(cls):
+        cls.__module__ = module
+        return cls
+
+    return decorator

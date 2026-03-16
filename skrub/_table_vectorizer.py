@@ -436,6 +436,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         return np.asarray(self.all_outputs_)
 
 
+@_utils.set_module("skrub")
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
 

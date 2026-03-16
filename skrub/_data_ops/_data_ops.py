@@ -47,7 +47,7 @@ from .. import _dataframe as sbd
 from .. import selectors as s
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
-from .._utils import PassThrough, short_repr
+from .._utils import PassThrough, set_module, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import get_chosen_or_default
@@ -546,6 +546,7 @@ class _DataOpDoc:
         return f"""Skrub DataOp.\nDocstring of the preview:\n{doc}"""
 
 
+@set_module("skrub")
 class DataOp:
     """A skrub DataOp."""
 
