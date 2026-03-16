@@ -372,12 +372,12 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         if name == "transformers_":
             raise AttributeError(
                 "transformers_ is only available for single-column transformers, "
-                "or if how='cols'."
+                "or if how='cols'. You may be looking for transformer_ instead."
             )  # noqa
         if name == "transformer_":
             raise AttributeError(
                 "transformer_ is only available for non-single-column transformers "
-                "when how is not 'cols'."
+                "when how is not 'cols'. You may be looking for transformers_ instead."
             )  # noqa
         raise AttributeError(
             f"{self.__class__.__name__} object has no attribute {name!r}"
