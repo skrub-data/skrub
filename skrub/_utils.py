@@ -291,7 +291,7 @@ def set_module(module):
     >>> from skrub._utils import set_module
     >>> class A: pass
     >>> A
-    <class '__main__.A'>
+    <class 'skrub._utils.A'>
     >>> set_module('skrub')(A)
     <class 'skrub.A'>
     """
