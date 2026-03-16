@@ -50,7 +50,8 @@ class RejectColumn(ValueError):
     >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
+    skrub._single_column_transformer.RejectColumn: Could not find a datetime format
+    ... for column 'city'.
 
     ``RejectColumn`` exceptions can be used to indicate that a column cannot be
     handled by the current transformer: this may mean that the data is invalid,
@@ -70,7 +71,8 @@ class RejectColumn(ValueError):
     >>> to_datetime.fit_transform(df)
     Traceback (most recent call last):
         ...
-    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
+    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'.
+    ... See above for the full traceback.
 
     However, setting ``allow_reject=True`` gives the transformer itself some
     control over which columns it should be applied to. For example, whether a
