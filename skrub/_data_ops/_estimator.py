@@ -705,10 +705,13 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
         :meth:`DataOp.skb.subsample`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
-    cv : int, cross-validation generator or iterable, default=None
-        The default is 5-fold without shuffling. Can be a cross-validation
-        splitter, an iterable yielding pairs of (train, test) indices, or an
-        int to specify the number of folds for KFold splitting.
+    cv : int, cross-validation iterator or iterable, default=None
+        Cross-validation splitting strategy. It can be:
+
+        - None: 5-fold (stratified) cross-validation
+        - integer: specify the number of folds
+        - sklearn `CV splitter <https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators>`_
+        - iterable yielding (train, test) splits as arrays of indices.
 
     kwargs : dict
         All other named arguments are forwarded to
