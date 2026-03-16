@@ -63,6 +63,10 @@ Bug Fixes
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
 - Errors raised when a polars LazyFrame is passed where an eager DataFrame is
   expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.cross_validate` would raise an error when passed
+  ``return_indices=True``. Now it returns the train and test indices of each
+  fold in the ``train_indices`` and ``test_indices`` columns of the result
+  dataframe. :pr:`1953` by :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`CheckInputDataFrame` no longer collects Polars LazyFrames automatically;
   a ``TypeError`` is now raised instead, consistent with the rest of the library.
   :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
