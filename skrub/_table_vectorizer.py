@@ -199,8 +199,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         original dtype (e.g., lists, structs).
 
     null_strings : str or sequence of str, default=None
-        Additional strings to consider as null values, beyond the default list
-        in ``STR_NA_VALUES``.
+        Additional strings to consider as null values, beyond the default list.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -328,11 +327,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     def __init__(
         self,
-        null_strings=None,
         drop_null_fraction=1.0,
         drop_if_constant=False,
         drop_if_unique=False,
         datetime_format=None,
+        null_strings=None,
         numeric_dtype=None,
         cast_to_str=False,
         n_jobs=1,
@@ -374,7 +373,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
         all_steps = _get_preprocessors(
             cols=s.all(),
-            null_strings=self.null_strings,
             drop_null_fraction=self.drop_null_fraction,
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
@@ -382,6 +380,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             add_tofloat32=add_tofloat32,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
+            null_strings=self.null_strings,
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
@@ -520,8 +519,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         The format to use when parsing dates. If None, the format is inferred.
 
     null_strings : str or sequence of str, default=None
-        Additional strings to consider as null values, beyond the default list
-        in ``STR_NA_VALUES``.
+        Additional strings to consider as null values, beyond the default list.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -934,6 +932,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             n_jobs=self.n_jobs,
             add_tofloat32=True,
             datetime_format=self.datetime_format,
+            null_strings=self.null_strings,
         )
 
         self._encoders = []
