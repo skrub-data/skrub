@@ -205,3 +205,42 @@ def test_check_is_fitted_missing_fitted_attribute_transform(
     # Should raise NotFittedError when fitted attribute is missing
     with pytest.raises(NotFittedError):
         at.get_feature_names_out()
+
+
+def test_getattr_raises_for_wrong_attribute(df_module):
+    """Test __getattr__ raises proper AttributeError for wrong attributes."""
+    # Test that accessing transformers_ on non-single-column transformer raises error
+    at = ApplyToCols(OrdinalEncoder())
+    X = df_module.make_dataframe({"col1": ["a", "b"], "col2": ["x", "y"]})
+    at.fit(X)
+
+    with pytest.raises(
+        AttributeError,
+        match="transformers_ is only available for single-column transformers",
+    ):
+        _ = at.transformers_
+
+    # Test that transformer_ is not available when how="cols"
+    at = ApplyToCols(OrdinalEncoder(), how="cols")
+    at.fit(X)
+
+    with pytest.raises(
+        AttributeError,
+        match="transformer_ is only available for non-single-column transformers",
+    ):
+        _ = at.transformer_
+
+    # Test that accessing transformer_ on single-column transformer raises error
+    at = ApplyToCols(ToDatetime())
+    X = df_module.make_dataframe({"date_col": ["2020-01-01", "2020-01-02"]})
+    at.fit(X)
+
+    with pytest.raises(
+        AttributeError,
+        match="transformer_ is only available for non-single-column transformers",
+    ):
+        _ = at.transformer_
+
+    # Test that accessing any non-existent attribute raises error
+    with pytest.raises(AttributeError, match="ApplyToCols.*has no attribute.*foo"):
+        _ = at.foo

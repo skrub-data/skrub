@@ -367,3 +367,18 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         check_is_fitted(self)
 
         return self._wrapped_transformer.get_feature_names_out(input_features)
+
+    def __getattr__(self, name):
+        if name == "transformers_":
+            raise AttributeError(
+                "transformers_ is only available for single-column transformers, "
+                "or if how='cols'."
+            )  # noqa
+        if name == "transformer_":
+            raise AttributeError(
+                "transformer_ is only available for non-single-column transformers "
+                "when how is not 'cols'."
+            )  # noqa
+        raise AttributeError(
+            f"{self.__class__.__name__} object has no attribute {name!r}"
+        )
