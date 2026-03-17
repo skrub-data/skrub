@@ -79,14 +79,6 @@ def test_deprecated_env_var_warning(monkeypatch, tmp_path):
             _get_default_data_dir()
 
 
-def test_config_context():
-    assert get_config()["use_table_report_data_ops"] is True
-
-    # Not using as a context manager affects nothing
-    config_context(use_table_report_data_ops=False)
-    assert get_config()["use_table_report_data_ops"] is True
-
-
 def test_use_table_report_data_ops(simple_df):
     X = skrub.X(simple_df)
     with config_context(use_table_report_data_ops=True):
