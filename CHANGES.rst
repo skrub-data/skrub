@@ -34,7 +34,6 @@ Changes
 -------
 - Increased the minimum version of polars from 0.20 to 1.5.0.
   :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
-
 - ``ApplyToCols`` and ``ApplyToFrame`` have been merged into a single class,
   :class:`ApplyToCols`,that covers the functionality of both the old classes by
   detecting automatically whether the provided transformer should be applied
