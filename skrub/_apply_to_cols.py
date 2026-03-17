@@ -6,7 +6,7 @@ based on the type of the transformer passed to it.
 from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 
 from . import selectors
-from ._apply_on_each_col import ApplyToEachCol
+from ._apply_to_each_col import ApplyToEachCol
 from ._wrap_transformer import wrap_transformer
 
 _SELECT_ALL_COLUMNS = selectors.all()

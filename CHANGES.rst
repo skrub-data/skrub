@@ -19,13 +19,28 @@ New Features
   faster (the overhead it removes typically becomes noticeable only in DataOps
   with 50-100 nodes or more). Moreover, the evaluation of large DataOps has also
   become faster. :pr:`1890` by :user:`Jérôme Dockès <jeromedockes>`.
+- The reports produced by :meth:`DataOp.skb.full_report` and
+  :meth:`SkrubLearner.report` now also display the values provided in the
+  environment. :pr:`1920` by :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- It is now possible to pass additional (dynamically computed) arguments to the
+  cross-validation splitter used by :class:`DataOp` objects for validation,
+  hyperparameter search etc. For example, the groups for a
+  :class:`sklearn.model_selection.GroupKFold` can be computed as part of the
+  DataOp evaluation and used for splitting. This is achieved by passing the
+  splitter and its arguments to :meth:`DataOp.skb.mark_as_X`. :pr:`1943` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
+  selecting columns that have a fraction of null values above the given threshold.
+  :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
+- Increased the minimum version of polars from 0.20 to 1.5.0.
+  :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
 - :class:`ApplyToCols` has been modified so that now it can detect automatically
   whether the provided transformer should be applied independently on each column,
   or on all selected columns as a single dataframe. In most cases, this replaces
@@ -43,6 +58,13 @@ Changes
   the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
   is deprecated and will be removed in a future version of skrub.
   :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
+  :class:`SingleColumnTransformer` and associated exception :class:`RejectColumn` (used
+  internally by many skrub estimators) have been added to the public API, in the newly-created
+  :package:`skrub.core` module. :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
+  - Added the strings ``"None"`` and ``"none"`` to the list of null string values in
+  :class:`Cleaner`. Also, exposed the list of null string values that will be set
+  to null by the :class:`Cleaner` as the parameter ``null_strings``.
+  :pr:`1952` and :pr:`1954` by :user:`Lisa McBride <lisaleemcb>`.
 - The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
   control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
   to ``np.float32``, and a ``numeric_dtype`` parameter to downcast floating-point
@@ -62,6 +84,13 @@ Bug Fixes
   and :pr:`1900` by :user:`Jérôme Dockès <jeromedockes>`.
 - Errors raised when a polars LazyFrame is passed where an eager DataFrame is
   expected are now clearer. :pr:`1916` by :user:`Jérôme Dockès <jeromedockes>`.
+- :meth:`DataOp.skb.cross_validate` would raise an error when passed
+  ``return_indices=True``. Now it returns the train and test indices of each
+  fold in the ``train_indices`` and ``test_indices`` columns of the result
+  dataframe. :pr:`1953` by :user:`Jérôme Dockès <jeromedockes>`.
+- :class:`CheckInputDataFrame` no longer collects Polars LazyFrames automatically;
+  a ``TypeError`` is now raised instead, consistent with the rest of the library.
+  :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
 
 Documentation
 -------------

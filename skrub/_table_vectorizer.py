@@ -123,12 +123,18 @@ def _get_preprocessors(
     parse_strings=False,
     numeric_dtype=None,
     cast_to_str=True,
+    null_strings=None,
     datetime_format=None,
 ):
     cols = s.make_selector(cols)
     steps = [CheckInputDataFrame()]
     transformers = [
-        (CleanNullStrings(), cols),
+        (
+            CleanNullStrings(
+                null_strings=null_strings,
+            ),
+            cols,
+        ),
         (
             DropUninformative(
                 drop_null_fraction=drop_null_fraction,
@@ -220,6 +226,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
         non-categorical, and non-datetime columns, converting them to strings.
         If ``False``, this step is skipped and such columns retain their
         original dtype (e.g., lists, structs).
+
+    null_strings : str or sequence of str, default=None
+        Additional strings to consider as null values, beyond the default list.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -368,11 +377,13 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_constant=False,
         drop_if_unique=False,
         datetime_format=None,
+        null_strings=None,
         parse_strings=False,
         numeric_dtype=None,
         cast_to_str=False,
         n_jobs=1,
     ):
+        self.null_strings = null_strings
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
@@ -421,6 +432,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             numeric_dtype=self.numeric_dtype,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
+            null_strings=self.null_strings,
         )
         self._pipeline = make_pipeline(*all_steps)
         result = self._pipeline.fit_transform(X)
@@ -557,6 +569,9 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
 
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
+
+    null_strings : str or sequence of str, default=None
+        Additional strings to consider as null values, beyond the default list.
 
     n_jobs : int, default=None
         Number of jobs to run in parallel.
@@ -833,6 +848,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         drop_if_constant=False,
         drop_if_unique=False,
         datetime_format=None,
+        null_strings=None,
         n_jobs=None,
     ):
         self.cardinality_threshold = cardinality_threshold
@@ -850,6 +866,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
+        self.null_strings = null_strings
 
     def fit(self, X, y=None):
         """Fit transformer.
@@ -967,6 +984,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             n_jobs=self.n_jobs,
             add_tofloat32=True,
             datetime_format=self.datetime_format,
+            null_strings=self.null_strings,
         )
 
         self._encoders = []

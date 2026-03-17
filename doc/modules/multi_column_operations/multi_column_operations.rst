@@ -38,6 +38,8 @@ parameters to have more control over the columns that are being transformed.
 Skrub selectors are discussed at length in :ref:`user_guide_selectors`.
 
 
+.. _apply_to_each_col:
+
 Applying transformations to the columns with |ApplyToEachCol| and |ApplyToSubFrame|
 -----------------------------------------------------------------------------
 |ApplyToEachCol| can be used to transform a subset of columns in a dataframe, while
