@@ -17,7 +17,7 @@ applying any of Skrub's columnwise transformers to multiple columns in any given
 More information can be found on this class's basic usage on :ref:`apply_to_each_col`.
 
 If the input columns are unable to be transformed, a specific exception exists to indicate
-this: |RejectColumn|. It can be called with a custom user message, to explain the rejection.
+this: |RejectColumn|.
 
 >>> from skrub import ToDatetime
 >>> import pandas as pd
@@ -74,17 +74,18 @@ dtype: object
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In cases where the user wants to apply a custom transformation to a series and needs the |ApplyToCols|
+In cases where we want to apply a custom transformation to a series we need the |ApplyToCols|
 structure to handle multiple columns, or if this transformation needs to be able to reject certain
-columns and communicate this to |ApplyToCols|, it is necessary to create a transformer from scratch
+columns and communicate this to |ApplyToCols|, we must to create a transformer from scratch
 that is capable of handling this exception.
 
 Hence the ``SingleColumnTransformer`` class. It is originally a base class from which many transformers are
-inherited, but it can also be used to create new transformers. As long as the user specifies
-corresponding ``fit`` and ``transform`` methods to their custom transformer, it can be passed on like any other.
+inherited, but it can also be used to create new transformers. As long we specify
+corresponding ``fit`` and ``transform`` methods to our custom transformer, it can be passed on like any other.
 
-For instance, if one wanted to create a custom transformer specialized in parsing zip codes of a certain
-format, that returns |RejectColumn| with a custom warning on zip code sizes:
+For instance, we might want to create a custom transformer specialized in parsing zip codes of a certain
+format, that returns |RejectColumn| with a custom warning when the length of the provided
+zip code is incorrect:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
 >>>

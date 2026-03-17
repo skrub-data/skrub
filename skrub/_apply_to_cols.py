@@ -46,8 +46,9 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
           If the transformer has a ``__single_column_transformer__`` attribute,
           "cols" is chosen. Otherwise "frame" is chosen.
         - "cols" means `transformer` is cloned and fitted separately to each
-          column in `cols`.
-        - "frame" means `transformer` is fitted on all columns in `cols` together.
+          column in `cols` (possibly in parallel).
+        - "frame" means `transformer` is fitted on all columns in `cols` together,
+        provided as a single dataframe.
 
     allow_reject : bool, default=False
         Whether to allow refusing to transform columns for which the provided
@@ -92,24 +93,26 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         The names of columns in the output dataframe that were created by one
         of the fitted transformers.
 
+    Other Attributes
+    ----------------
     transformers_ : dict
         Maps the name of each column that was transformed to the corresponding
         fitted transformer. Only available when the transformer is a
-        SingleColumnTransformer or when ``how="cols"``.
+        ``SingleColumnTransformer`` or when ``how="cols"``.
 
     input_to_outputs_ : dict
         Maps the name of each column that was transformed to the list of the
         resulting columns' names in the output. Only available when the
-        transformer is a SingleColumnTransformer or when ``how="cols"``.
+        transformer is a ``SingleColumnTransformer`` or when ``how="cols"``.
 
     output_to_input_ : dict
         Maps the name of each column in the transformed output to the name of
         the input column from which it was derived. Only available when the
-        transformer is a SingleColumnTransformer or when ``how="cols"``.
+        transformer is a ``SingleColumnTransformer`` or when ``how="cols"``.
 
     transformer_ : Transformer
         The fitted transformer. Only available when ``how="frame"`` and the
-        transformer is not a SingleColumnTransformer.
+        transformer is not a ``SingleColumnTransformer``.
 
     Notes
     -----
@@ -421,7 +424,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
             raise AttributeError(
                 "transformers_ is only available for single-column transformers, "
                 "or if how='cols'. You may be looking for transformer_ instead."
-            )  # noqa
+            )
         if name == "transformer_":
             raise AttributeError(
                 "transformer_ is only available for non-single-column transformers "

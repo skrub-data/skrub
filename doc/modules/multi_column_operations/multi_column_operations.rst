@@ -142,8 +142,12 @@ dtype: ...
 Dealing with columns that cannot be handled by a transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-|ApplyToCols| can raise a |RejectColumn| exception if it cannot handle a specific
-column:
+|ApplyToCols| lets the underlying encoder decide which columns it can be applied to.
+For example, if we do not know in advance which columns can be transformed to datetime,
+we can use |ApplyToCols| to map |ToDatetime| to all columns in a dataframe and pass
+``allow_reject=True``. In that case, non-datetime columns.  By default, all columns in
+``cols`` must be transformed, and if one of them cannot be transformed an exception
+will be raised and the transformation will fail.
 
 >>> from skrub._to_datetime import ToDatetime
 >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
