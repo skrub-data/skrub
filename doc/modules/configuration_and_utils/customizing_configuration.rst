@@ -15,7 +15,7 @@ Skrub includes a configuration manager that allows setting various parameters
 It is possible to change configuration options using the |set_config| function:
 
 >>> from skrub import set_config
->>> set_config(use_table_report=True)
+>>> set_config(table_report_verbosity=0)
 
 This alters the behavior of skrub in the current script. Each configuration parameter
 has an environment variable that can be used to set it permanently.
