@@ -67,7 +67,7 @@ Changes
   :pr:`1952` and :pr:`1954` by :user:`Lisa McBride <lisaleemcb>`.
 - The configuration parameter "use_table_report" has been removed from the skrub
   configuration. Use :meth:`patch_display` instead.
-  :pr:`1965` by :user:`Riccardo Cappuzzo<rcap107>`.
+  :pr:`1973` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bug Fixes
 --------
