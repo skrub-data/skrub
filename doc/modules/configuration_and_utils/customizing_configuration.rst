@@ -15,7 +15,7 @@ Skrub includes a configuration manager that allows setting various parameters
 It is possible to change configuration options using the |set_config| function:
 
 >>> from skrub import set_config
->>> set_config(use_table_report=True)
+>>> set_config(table_report_verbosity=0)
 
 This alters the behavior of skrub in the current script. Each configuration parameter
 has an environment variable that can be used to set it permanently.
@@ -40,7 +40,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report', 'use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops'])
+dict_keys(['use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops'])
 
 These are the parameters currently available in the global configuration:
 
@@ -52,10 +52,6 @@ These are the parameters currently available in the global configuration:
      - Default Value
      - Env Variable
      - Description
-   * - ``use_table_report``
-     - ``False``
-     - ``SKB_USE_TABLE_REPORT``
-     - If set to ``True``, the HTML representation of Pandas and Polars dataframes is replaced with the :class:`~skrub.TableReport`.
    * - ``use_table_report_data_ops``
      - ``True``
      - ``SKB_USE_TABLE_REPORT_DATA_OPS``

@@ -58,13 +58,16 @@ Changes
   the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
   is deprecated and will be removed in a future version of skrub.
   :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
-  :class:`SingleColumnTransformer` and associated exception :class:`RejectColumn` (used
+- :class:`core.SingleColumnTransformer` and associated exception :class:`core.RejectColumn` (used
   internally by many skrub estimators) have been added to the public API, in the newly-created
   :package:`skrub.core` module. :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
-  - Added the strings ``"None"`` and ``"none"`` to the list of null string values in
+- Added the strings ``"None"`` and ``"none"`` to the list of null string values in
   :class:`Cleaner`. Also, exposed the list of null string values that will be set
   to null by the :class:`Cleaner` as the parameter ``null_strings``.
   :pr:`1952` and :pr:`1954` by :user:`Lisa McBride <lisaleemcb>`.
+- The configuration parameter "use_table_report" has been removed from the skrub
+  configuration. Use :meth:`patch_display` instead.
+  :pr:`1973` by :user:`Riccardo Cappuzzo<rcap107>`.
 
 Bug Fixes
 --------
