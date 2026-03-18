@@ -7,6 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 
 from . import selectors
 from ._apply_to_each_col import ApplyToEachCol
+from ._apply_to_sub_frame import ApplyToSubFrame
 from ._wrap_transformer import wrap_transformer
 
 _SELECT_ALL_COLUMNS = selectors.all()
@@ -272,7 +273,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         transformer,
         cols=_SELECT_ALL_COLUMNS,
         *,
-        how="auto",
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
@@ -280,7 +280,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     ):
         self.transformer = transformer
         self.cols = cols
-        self.how = how
         self.n_jobs = n_jobs
         self.allow_reject = allow_reject
         self.keep_original = keep_original
@@ -337,11 +336,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         result : Pandas or Polars DataFrame
             The transformed data.
         """
-        if self.how not in ("auto", "cols", "frame"):
-            raise ValueError(
-                f"Invalid value for 'how': {self.how}. "
-                "Expected one of 'auto', 'cols', or 'frame'."
-            )
 
         if not isinstance(self.allow_reject, bool):
             raise TypeError(
@@ -354,8 +348,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
                 "Expected a boolean."
             )
 
-        columnwise = {"auto": "auto", "cols": True, "frame": False}[self.how]
-
         self._wrapped_transformer = wrap_transformer(
             self.transformer,
             self.cols,
@@ -363,7 +355,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
             keep_original=self.keep_original,
             rename_columns=self.rename_columns,
             n_jobs=self.n_jobs,
-            columnwise=columnwise,
+            columnwise="auto",
         )
         X_transformed = self._wrapped_transformer.fit_transform(X, y, **kwargs)
 
@@ -400,7 +392,9 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
             The transformed data.
         """
 
-        check_is_fitted(self)
+        check_is_fitted(
+            self, "transformer_" if hasattr(self, "transformer_") else "transformers_"
+        )
 
         return self._wrapped_transformer.transform(X)
 
@@ -417,17 +411,23 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         feature_names_out : ndarray of str objects
             Transformed feature names.
         """
-        check_is_fitted(self)
+        check_is_fitted(
+            self, "transformer_" if hasattr(self, "transformer_") else "transformers_"
+        )
 
         return self._wrapped_transformer.get_feature_names_out(input_features)
 
     def __getattr__(self, name):
-        if name == "transformers_":
+        if name == "transformers_" and isinstance(
+            getattr(self, "_wrapped_transformer", None), ApplyToSubFrame
+        ):
             raise AttributeError(
                 "transformers_ is only available for single-column transformers, "
                 "or if how='cols'. You may be looking for transformer_ instead."
             )
-        if name == "transformer_":
+        if name == "transformer_" and isinstance(
+            getattr(self, "_wrapped_transformer", None), ApplyToEachCol
+        ):
             raise AttributeError(
                 "transformer_ is only available for non-single-column transformers "
                 "when how is not 'cols'. You may be looking for transformers_ instead."
