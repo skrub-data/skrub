@@ -14,8 +14,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import check_random_state
 
 import skrub
-from skrub import ApplyToEachCol
 from skrub import selectors as s
+from skrub._apply_to_each_col import ApplyToEachCol
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 
