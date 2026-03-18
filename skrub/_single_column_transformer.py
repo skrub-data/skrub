@@ -36,6 +36,7 @@ class RejectColumn(ValueError):
     to indicate it cannot handle a given column.
 
     >>> from skrub import ToDatetime
+    >>> import pandas as pd
     >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
     >>> df
          birthday    city
@@ -50,8 +51,7 @@ class RejectColumn(ValueError):
     >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Could not find a datetime format
-    ... for column 'city'.
+    skrub._single_column_transformer.RejectColumn: Could not find a datetime format...
 
     ``RejectColumn`` exceptions can be used to indicate that a column cannot be
     handled by the current transformer: this may mean that the data is invalid,
@@ -67,12 +67,12 @@ class RejectColumn(ValueError):
     By default, no special handling is performed and rejections are considered
     to be errors:
 
-    >>> to_datetime = ApplyToEachCol(ToDatetime())
+    >>> from skrub import ApplyToCols
+    >>> to_datetime = ApplyToCols(ToDatetime())
     >>> to_datetime.fit_transform(df)
     Traceback (most recent call last):
         ...
-    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'.
-    ... See above for the full traceback.
+    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'...
 
     However, setting ``allow_reject=True`` gives the transformer itself some
     control over which columns it should be applied to. For example, whether a
@@ -80,7 +80,7 @@ class RejectColumn(ValueError):
     Therefore it might be sensible to try to parse all string columns but allow
     the transformer to reject those that, upon inspection, do not contain dates.
 
-    >>> to_datetime = ApplyToEachCol(ToDatetime(), allow_reject=True)
+    >>> to_datetime = ApplyToCols(ToDatetime(), allow_reject=True)
     >>> transformed = to_datetime.fit_transform(df)
     >>> transformed
         birthday    city
@@ -97,7 +97,6 @@ class RejectColumn(ValueError):
     >>> to_datetime.transformers_
     {'birthday': ToDatetime()}
 
-    >>> import pandas as pd
     >>> from skrub import ToDatetime
     >>> df = pd.DataFrame(dict(a=['2020-02-02'], b=[12.5]))
     >>> ToDatetime().fit_transform(df['a'])
@@ -116,11 +115,11 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToEachCol``; see the docstring of ``ApplyToEachCol`` for more
+    ``ApplyToCols``; see the docstring of ``ApplyToCols`` for more
     information.
 
     Single-column transformers are not required to inherit from this class in
-    order to work with ``ApplyToEachCol``, however doing so avoids some
+    order to work with ``ApplyToCols``, however doing so avoids some
     boilerplate:
 
     - The required ``__single_column_transformer__`` attribute is set.

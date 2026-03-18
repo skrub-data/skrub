@@ -191,8 +191,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     >>> datetime.fit_transform(df)
     Traceback (most recent call last):
         ...
-    ValueError: Transformer DatetimeEncoder.fit_transform failed on column 'A'.
-    ... See above for the full traceback.
+    ValueError: Transformer DatetimeEncoder.fit_transform failed on column 'A'...
 
     ** Accessing fitted transformers **
     Depending on the transformer, the fitted transformers
@@ -251,7 +250,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     produces a column with the same name, the transformation result is renamed
     to avoid a name clash.
 
-    >>> scaler = ApplyToCols(StandardScaler(), keep_original=True, how="cols")
+    >>> scaler = ApplyToCols(StandardScaler(), keep_original=True)
     >>> scaler.fit_transform(df)                                    # doctest: +SKIP
           A  A__skrub_89725c56__      B  B__skrub_81cc7d00__
     0 -10.0                 -1.0    0.0                 -1.0
@@ -260,12 +259,12 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     In this case we may want to set a more sensible name for the transformer's output:
 
     >>> scaler = ApplyToCols(
-    ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled", how="cols"
+    ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
     ... )
     >>> scaler.fit_transform(df)
-        A  A_scaled      B  B_scaled
-    0 -10.0      -1.0    0.0      -1.0
-    1  10.0       1.0  100.0       1.0
+          A      B  A_scaled  B_scaled
+    0 -10.0    0.0      -1.0      -1.0
+    1  10.0  100.0       1.0       1.0
     """
 
     def __init__(
