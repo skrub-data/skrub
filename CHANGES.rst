@@ -68,6 +68,8 @@ Changes
 - The configuration parameter "use_table_report" has been removed from the skrub
   configuration. Use :meth:`patch_display` instead.
   :pr:`1973` by :user:`Riccardo Cappuzzo<rcap107>`.
+- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 
 Bug Fixes
 --------
@@ -101,8 +103,6 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
-  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
