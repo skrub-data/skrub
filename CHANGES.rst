@@ -65,6 +65,16 @@ Changes
   :class:`Cleaner`. Also, exposed the list of null string values that will be set
   to null by the :class:`Cleaner` as the parameter ``null_strings``.
   :pr:`1952` and :pr:`1954` by :user:`Lisa McBride <lisaleemcb>`.
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``np.float32``, and a ``numeric_dtype`` parameter to downcast floating-point
+  columns to ``np.float32`` (without converting integer columns).
+  :pr:`1910` by :user:`<Varshith-yadaV>`.
+
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings are parsed to ``np.float32``, and a
+  ``numeric_dtype`` parameter to downcast floating-point columns to
+  ``np.float32`` (without converting integer columns).
 
 Bug Fixes
 --------
