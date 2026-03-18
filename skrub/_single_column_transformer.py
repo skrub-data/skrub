@@ -5,6 +5,7 @@ import re
 import textwrap
 
 from sklearn.base import BaseEstimator
+from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -16,11 +17,11 @@ _SINGLE_COL_LINE = (
     " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
     " single column (a pandas or polars Series) rather than a full dataframe. To apply"
     " this transformer to one or more columns in a dataframe, use it as a parameter in"
-    " a ``skrub.ApplyToCols`` or a ``skrub.TableVectorizer``.\n\n"
+    " a ``skrub.ApplyToEachCol`` or a ``skrub.TableVectorizer``.\n\n"
     "To apply to all columns::\n\n"
     "   ApplyToCol({class_name}())\n\n"
     "To apply to selected columns::\n\n"
-    "   ApplyToCols({class_name}(), cols=['col_name_1', 'col_name_2'])"
+    "   ApplyToEachCol({class_name}(), cols=['col_name_1', 'col_name_2'])"
 )
 _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 4)
 _SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
@@ -48,11 +49,11 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToCols``; see the docstring of ``ApplyToCols`` for more
+    ``ApplyToEachCol``; see the docstring of ``ApplyToEachCol`` for more
     information.
 
     Single-column transformers are not required to inherit from this class in
-    order to work with ``ApplyToCols``, however doing so avoids some
+    order to work with ``ApplyToEachCol``, however doing so avoids some
     boilerplate:
 
         - The required ``__single_column_transformer__`` attribute is set.
@@ -68,6 +69,28 @@ class SingleColumnTransformer(BaseEstimator):
     """
 
     __single_column_transformer__ = True
+
+    def set_output(self, *, transform=None):
+        """
+        Default no-op implementation for set_output.
+
+        Skrub transformers already output dataframes of the correct type by
+        default so there is usually no need for set_output to do anything.
+
+        Subclasses are of course free to redefine set_output (e.g. by
+        inheriting from TransformerMixin before SingleColumnTransformer).
+
+        Parameters
+        ----------
+        transform : str or None, default=None
+            Ignored.
+
+        Returns
+        -------
+        SingleColumnTransformer
+            Returns self.
+        """
+        return self
 
     def fit(self, column, y=None, **kwargs):
         """Fit the transformer.
@@ -100,6 +123,10 @@ class SingleColumnTransformer(BaseEstimator):
     def _check_single_column(self, column, function_name):
         class_name = self.__class__.__name__
         if sbd.is_dataframe(column):
+            if sbd.shape(column)[1] == 1:
+                # Dataframes containing just 1 column are accepted and silently
+                # converted to a column.
+                return sbd.col_by_idx(column, 0)
             raise ValueError(
                 f"``{class_name}.{function_name}`` should be passed a single column,"
                 " not a dataframe. " + _SINGLE_COL_LINE.format(class_name=class_name)
@@ -150,7 +177,7 @@ def _wrap_add_check_single_column(f):
 
         @functools.wraps(f)
         def fit(self, X, y=None, **kwargs):
-            self._check_single_column(X, f.__name__)
+            X = self._check_single_column(X, f.__name__)
             return f(self, X, y=y, **kwargs)
 
         return fit
@@ -158,7 +185,7 @@ def _wrap_add_check_single_column(f):
 
         @functools.wraps(f)
         def partial_fit(self, X, y=None, **kwargs):
-            self._check_single_column(X, f.__name__)
+            X = self._check_single_column(X, f.__name__)
             return f(self, X, y=y, **kwargs)
 
         return partial_fit
@@ -167,7 +194,7 @@ def _wrap_add_check_single_column(f):
 
         @functools.wraps(f)
         def fit_transform(self, X, y=None, **kwargs):
-            self._check_single_column(X, f.__name__)
+            X = self._check_single_column(X, f.__name__)
             return f(self, X, y=y, **kwargs)
 
         return fit_transform
@@ -176,7 +203,7 @@ def _wrap_add_check_single_column(f):
 
         @functools.wraps(f)
         def transform(self, X, **kwargs):
-            self._check_single_column(X, f.__name__)
+            X = self._check_single_column(X, f.__name__)
             return f(self, X, **kwargs)
 
         return transform
@@ -209,3 +236,40 @@ def _insert_after_first_paragraph(document, text_to_insert):
     output_lines.append("\n")
     output_lines.extend(doc_lines)
     return "".join(output_lines)
+
+
+def is_single_column_transformer(transformer):
+    """
+    Check if the provided transformer is a single-column transformer.
+
+    This is done by checking the special attribute
+    __single_column_transformer__ (thus inheriting from the
+    SingleColumnTransformer class is not mandatory). We treat scikit-learn
+    pipelines as a special case and inspect their first step.
+
+    Parameters
+    ----------
+    transformer : BaseEstimator
+        The transformer to check.
+
+    Returns
+    -------
+    bool
+        Whether the transformer is a single-column transformer, meaning that it
+        should be passed columns rather than dataframes.
+    """
+    if hasattr(transformer, "__single_column_transformer__"):
+        return True
+    if isinstance(transformer, Pipeline):
+        # When the transformer is a Pipeline, the first step is what determines
+        # if it accepts single columns or dataframes so we inspect the first
+        # step (recursively, to handle pipelines that contain pipelines).
+        try:
+            # Pipeline steps are ('step name', StepEstimator) pairs.
+            return is_single_column_transformer(transformer.steps[0][1])
+        except Exception:
+            # If we are given an invalid Pipeline (eg with no steps) we do not
+            # want to raise while attempting to inspect it (it would obfuscate
+            # the better error that will be raised when calling fit)
+            return False
+    return False

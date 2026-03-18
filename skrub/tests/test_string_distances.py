@@ -28,7 +28,7 @@ def _random_string_pairs(n_pairs=50, seed=1):
     rng = np.random.RandomState(seed)
     characters = list(map(chr, range(10000)))
     pairs = []
-    for n in range(n_pairs):
+    for _n in range(n_pairs):
         s1_len = rng.randint(50)
         s2_len = rng.randint(50)
         s1 = "".join(rng.choice(characters, s1_len))

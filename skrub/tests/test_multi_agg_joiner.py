@@ -348,7 +348,10 @@ def test_default_cols(main_table, df_module):
         keys=[["userId", "movieId"], ["userId"]],
     )
     multi_agg_joiner.fit(main_table)
-    multi_agg_joiner._cols == [["rating", "genre"], ["movieId", "rating", "genre"]]
+    expected_cols = [["genre", "rating"], ["genre", "movieId", "rating"]]
+
+    for col_group, expected_group in zip(multi_agg_joiner._cols, expected_cols):
+        assert sorted(col_group) == expected_group
 
 
 def test_correct_cols(main_table, df_module):

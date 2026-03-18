@@ -50,7 +50,6 @@ from sphinx_gallery.notebook import add_code_cell, add_markdown_cell
 shutil.copyfile("../RELEASE_PROCESS.rst", "RELEASE_PROCESS.rst")
 shutil.copyfile("../CHANGES.rst", "CHANGES.rst")
 shutil.copyfile("../CONTRIBUTING.rst", "CONTRIBUTING.rst")
-shutil.copyfile("../benchmarks/benchmark_indications.rst", "benchmark_indications.rst")
 
 # -- General configuration ------------------------------------------------
 
@@ -234,7 +233,7 @@ html_theme_options = {
     # "primary_sidebar_end": ["custom-template.html", "sidebar-ethical-ads.html"],
     # "article_footer_items": ["prev-next.html", "test.html", "test.html"],
     # "content_footer_items": ["prev-next.html", "test.html", "test.html"],
-    # "footer_start": ["test.html", "test.html"],
+    "footer_start": ["funding_footer.html"],
     # When specified as a dictionary, the keys should follow glob-style patterns, as in
     # https://www.sphinx-doc.org/en/master/usage/configuration.html#confval-exclude_patterns
     # In particular, "**" specifies the default for all pages

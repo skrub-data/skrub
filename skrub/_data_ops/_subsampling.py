@@ -32,7 +32,7 @@ class ShouldSubsample(_data_ops.DataOpImpl):
         return _should_subsample(mode, environment)
 
 
-@_data_ops.check_data_op
+@_data_ops.checked_data_op_constructor
 def should_subsample():
     """DataOp indicating if subsampling should be applied.
 
@@ -144,8 +144,10 @@ def uses_subsampling(data_op):
     return (
         _evaluation.find_node(
             data_op,
-            lambda e: isinstance(e, _data_ops.DataOp)
-            and isinstance(e._skrub_impl, (SubsamplePreviews, ShouldSubsample)),
+            lambda e: (
+                isinstance(e, _data_ops.DataOp)
+                and isinstance(e._skrub_impl, (SubsamplePreviews, ShouldSubsample))
+            ),
         )
         is not None
     )

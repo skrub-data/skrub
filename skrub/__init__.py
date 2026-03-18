@@ -4,10 +4,11 @@ skrub: Prepping tables for machine learning.
 
 from pathlib import Path as _Path
 
-from . import selectors
+from . import core, selectors
 from ._agg_joiner import AggJoiner, AggTarget
 from ._apply_to_cols import ApplyToCols
-from ._apply_to_frame import ApplyToFrame
+from ._apply_to_each_col import ApplyToEachCol
+from ._apply_to_sub_frame import ApplyToSubFrame
 from ._column_associations import column_associations
 from ._config import config_context, get_config, set_config
 from ._data_ops import (
@@ -102,7 +103,9 @@ __all__ = [
     "get_config",
     "set_config",
     "config_context",
+    "ApplyToEachCol",
+    "ApplyToSubFrame",
     "ApplyToCols",
-    "ApplyToFrame",
     "ToFloat",
+    "core",
 ]

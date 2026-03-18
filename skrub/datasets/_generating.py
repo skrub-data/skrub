@@ -99,3 +99,42 @@ def toy_orders(split="train"):
     else:
         assert split == "all", split
     return Bunch(X=X, y=y, orders=X.assign(delayed=y), orders_=X, delayed=y)
+
+
+def toy_products():
+    return pd.DataFrame(
+        {
+            "description": [
+                "mouse",
+                "hammer",
+                "keyboard",
+                "usb key",
+                "charger",
+                "screwdriver",
+            ],
+            "price": [
+                10,
+                15,
+                20,
+                9,
+                13,
+                12,
+            ],
+            "seller": [
+                "supermarket.com",
+                "bestproducts.com",
+                "supermarket.com",
+                "bestproducts.com",
+                "bestproducts.com",
+                "supermarket.com",
+            ],
+            "category": [
+                "electronics",
+                "tools",
+                "electronics",
+                "electronics",
+                "electronics",
+                "tools",
+            ],
+        }
+    )
