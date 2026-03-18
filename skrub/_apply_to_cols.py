@@ -38,18 +38,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         unmodified in the output. The default is to attempt transforming all
         columns.
 
-    how : "auto", "cols" or "frame", optional, default="auto"
-        How the transformer is applied. In most cases the default "auto"
-        is appropriate.
-
-        - "auto" chooses the wrapping depending on the input and transformer.
-          If the transformer has a ``__single_column_transformer__`` attribute,
-          "cols" is chosen. Otherwise "frame" is chosen.
-        - "cols" means `transformer` is cloned and fitted separately to each
-          column in `cols` (possibly in parallel).
-        - "frame" means `transformer` is fitted on all columns in `cols` together,
-        provided as a single dataframe.
-
     allow_reject : bool, default=False
         Whether to allow refusing to transform columns for which the provided
         transformer is not suited, for example rejecting non-datetime columns if
@@ -148,10 +136,22 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     0 -10.0 -10.0  Paris 2024-05-13 12:05:36
     1  10.0   0.0   Rome 2024-05-15 13:46:02
 
+    We can apply a :class:`StringEncoder` to the string column "C" by selecting
+    it with the ``cols`` parameter:
+    >>> from skrub import StringEncoder
+    >>> string_encoder = ApplyToCols(StringEncoder(n_components=2), cols=["C"])
+    >>> df_enc = string_encoder.fit_transform(df)
+    >>> df_enc # doctest: +SKIP
+        A     B       C_0       C_1                   D
+    0 -10.0 -10.0  1.414214  1.414214 2024-05-13 12:05:36
+    1  10.0   0.0  0.000000  0.000000 2024-05-15 13:46:02
 
-    By default, the same transformer is applied to all selected columns. It is
-    possible to specify which columns to select with the ``cols`` parameter. For
-    example, to apply a StandardScaler to the numeric columns:
+    Since we selected only column "C", the transformer was applied only to that column,
+    while the other columns were left unchanged.
+
+    Scikit-learn transformers that can be applied to multiple columns at once can also
+    be used with ``ApplyToCols``. For example, to apply a StandardScaler to the
+    numeric columns:
 
     >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"])
     >>> scaler.fit_transform(df)
@@ -161,30 +161,20 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     Note that the columns "C" and "D" were not modified since they were not selected.
 
-    String columns can be encoded with the :class:`StringEncoder`. ``ApplyToCols``
-    automatically detects that :class:`StringEncoder` is a single-column transformer
-    and applies it to each selected column independently:
-
-    >>> from skrub import StringEncoder
-    >>> string_encoder = ApplyToCols(StringEncoder(n_components=2), cols=["C"])
-    >>> df_enc = string_encoder.fit_transform(df)
-    >>> df_enc # doctest: +SKIP
-        A     B       C_0       C_1                   D
-    0 -10.0 -10.0  1.414214  1.414214 2024-05-13 12:05:36
-    1  10.0   0.0  0.000000  0.000000 2024-05-15 13:46:02
-
-    It is possible to force column-wise application of a transformer by setting
-    ``how="cols"``, even if the transformer is not a single-column transformer:
-
-    >>> scaler_per_col = ApplyToCols(StandardScaler(), how="cols", cols=["A", "B"])
-    >>> scaler_per_col.fit_transform(df)
-        A    B      C                   D
-    0 -1.0 -1.0  Paris 2024-05-13 12:05:36
-    1  1.0  1.0   Rome 2024-05-15 13:46:02
+    We can also rely on the skrub selectors to select the columns. For example,
+    to select all numeric columns we can do:
+    >>> from skrub import selectors as s
+    >>> scaler = ApplyToCols(StandardScaler(), cols=s.numeric())
+    >>> scaler.fit_transform(df)
+        C                   D    A    B
+    0  Paris 2024-05-13 12:05:36 -1.0 -1.0
+    1   Rome 2024-05-15 13:46:02  1.0  1.0
 
     It is possible to set ``allow_reject=True`` to allow the transformer to reject
-    columns it cannot handle.  In this case, the rejected columns are passed through
-    unchanged:
+    columns it cannot handle. For example, the :class:`DatetimeEncoder` cannot handle
+    columns that do not have datetime as their dtype. We can still apply it to
+    all the columns by setting ``allow_reject=True``; in this case, the rejected
+    columns are passed through unchanged:
 
     >>> from skrub import DatetimeEncoder
     >>> datetime = ApplyToCols(DatetimeEncoder(), allow_reject=True)
@@ -204,23 +194,35 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     ... See above for the full traceback.
 
     ** Accessing fitted transformers **
-    Depending on the transformer and the value of ``how``, the fitted transformers
-    are stored in different attributes. If the transformer is a single-column
-    transformer or if how="cols", the fitted transformers are stored in the
+    Depending on the transformer, the fitted transformers
+    are stored in different attributes. For single-column transformers, the fitted
+    transformers are stored in the
     ``transformers_`` attribute as a dictionary mapping column names to fitted
-    transformers.
-    Otherwise, the fitted transformer is stored in the ``transformer_`` attribute.
-
-    >>> scaler_per_col.transformers_
-    {'A': StandardScaler(), 'B': StandardScaler()}
-
-    >>> scaler.transformer_
-    StandardScaler()
-
-    Columns that were not selected or were rejected do not have a transformer:
+    transformers. Columns that were not selected or were rejected do not have a
+    transformer:
 
     >>> string_encoder.transformers_
     {'C': StringEncoder(n_components=2)}
+
+    In all other cases, the fitted transformer is stored in the ``transformer_``
+    attribute:
+    >>> scaler.transformer_
+    StandardScaler()
+
+    If a single-column transformer can be applied to multiple columns, for example
+    if there are multiple string columns, the transformer provided to ``ApplyToCols``
+    is cloned and fitted separately to each column.
+
+    >>> df_str = pd.DataFrame(dict(C1=["a", "b"], C2=["c", "d"]))
+    >>> se = ApplyToCols(StringEncoder(n_components=2))
+    >>> se.fit_transform(df_str)
+        C1_0      C1_1      C2_0      C2_1
+    0  1.414214  0.000000  1.414214  0.000000
+    1  0.000000  1.414214  0.000000  1.414214
+
+    Then, each fitted transformer is stored in the ``transformers_`` attribute:
+    >>> se.transformers_
+    {'C1': StringEncoder(n_components=2), 'C2': StringEncoder(n_components=2)}
 
     **Renaming outputs & keeping the original columns**
 
