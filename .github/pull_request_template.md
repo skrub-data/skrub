@@ -1,4 +1,4 @@
-# Documentation Pull Request
+# Bug Fix Pull Request
 
 <!--
 Before proceeding, please confirm that:
@@ -9,25 +9,21 @@ Before proceeding, please confirm that:
 
 ## Description
 
-<!-- Please include a summary of the documentation changes -->
+<!-- Please include a summary of the bug fix -->
 
-Fixes #<!-- issue number -->
+Addresses #<!-- issue number -->
 
 ## Checklist
 
 - [ ] I have read the contributing guidelines
-- [ ] Documentation renders correctly (if applicable)
-- [ ] Links are working (if applicable)
-- [ ] Code examples are correct and working (if applicable)
-- [ ] Spelling and grammar have been checked
-- [ ] My changes follow the documentation style of this project
+- [ ] I have added tests that verify the bug fix
+- [ ] I have added an entry to CHANGES.rst describing the fix
+- [ ] My code follows the code style of this project
+- [ ] I have checked my code and corrected any misspellings
 
-## Type of Documentation Change
+## How Has This Been Tested?
 
-- [ ] New documentation
-- [ ] Documentation update
-- [ ] Typo fix
-- [ ] Other (please describe):
+<!-- Please describe the tests that you ran to verify your changes -->
 
 ## AI Disclosure
 

@@ -20,7 +20,7 @@ from .._reporting._serve import open_in_browser
 from .._utils import Repr, format_duration, random_string, short_repr
 from . import _utils
 from ._choosing import BaseNumericChoice, Choice
-from ._data_ops import Apply, Value, Var
+from ._data_ops import Apply, SplitX, Value, Var
 from ._evaluation import choice_graph, clear_results, evaluate, graph, param_grid
 from ._subsampling import uses_subsampling
 
@@ -169,7 +169,7 @@ def _make_full_report(
     svg = draw_data_op_graph(data_op, url=make_url).svg.decode("utf-8")
     jinja_env = _get_jinja_env()
     index = jinja_env.get_template("index.html").render(
-        {"svg": svg, "node_status": node_status, "title": title}
+        {"svg": svg, "node_status": node_status, "report_title": title}
     )
     index_file = output_dir / "index.html"
     index_file.write_text(index, "utf-8")
@@ -185,10 +185,12 @@ def _make_full_report(
             if hasattr(e, "__notes__"):
                 error_msg = error_msg.removesuffix("\n".join(e.__notes__) + "\n")
         try:
-            eval_duration = node._skrub_impl.metadata[mode]["eval_duration"]
+            metadata = node._skrub_impl.metadata[mode]
         except KeyError:
             # the node was not evaluated
-            eval_duration = None
+            eval_duration, env_key = None, None
+        else:
+            eval_duration, env_key = metadata["eval_duration"], metadata["env_key"]
         if isinstance(report, TableReport):
             print(f"Generating report for node {i}")
             report = report.html_snippet()
@@ -220,6 +222,7 @@ def _make_full_report(
             estimator_html_repr = None
         node_page = jinja_env.get_template("node.html").render(
             dict(
+                report_title=title,
                 total_n_nodes=len(g["nodes"]),
                 node_nb=i,
                 node_children=node_children,
@@ -229,10 +232,12 @@ def _make_full_report(
                 error=error,
                 error_msg=error_msg,
                 eval_duration=eval_duration,
+                env_key=env_key,
                 node_creation_stack_description=node._skrub_impl.creation_stack_description(),
                 node_description=node._skrub_impl.description,
                 node_name=node._skrub_impl.name,
                 node_type=node._skrub_impl.__class__.__name__,
+                is_var=isinstance(node._skrub_impl, Var),
                 svg=svg,
                 node_status=node_status,
                 estimator_html_repr=estimator_html_repr,
@@ -283,6 +288,7 @@ class GraphDrawing:
 
 
 def _node_kwargs(data_op, url=None):
+    impl = data_op._skrub_impl
     label = html.escape(_utils.simple_repr(data_op))
     kwargs = {
         "shape": "box",
@@ -293,11 +299,13 @@ def _node_kwargs(data_op, url=None):
         "fontname": "sans-serif",
         "color": "black",
     }
-    if data_op._skrub_impl.is_X:
-        label = f"X: {label}"
+    if impl.is_X:
+        if not isinstance(impl, SplitX):
+            label = f"X: {label}"
+            # for SplitX 'X' is already in the repr so prepending it would be redundant
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#c6d5f0"
-    elif data_op._skrub_impl.is_y:
+    elif impl.is_y:
         label = f"y: {label}"
         kwargs["style"] = "filled"
         kwargs["fillcolor"] = "#fad9c6"
@@ -306,14 +314,14 @@ def _node_kwargs(data_op, url=None):
         label = label.replace("\n", "<br />")
         label = f'<<FONT COLOR="#1a0dab"><B>{label}</B></FONT>>'
     kwargs["label"] = label
-    tooltip = html.escape(data_op._skrub_impl.creation_stack_last_line())
-    if description := data_op._skrub_impl.description:
+    tooltip = html.escape(impl.creation_stack_last_line())
+    if description := impl.description:
         tooltip = f"{tooltip}\n\n{html.escape(description)}"
     # Also escape backslahses inserted in the .dot file
     # otherwise they are interpreted as escape sequences by graphviz
     tooltip = tooltip.replace("\\", "\\\\")
     kwargs["tooltip"] = tooltip
-    if isinstance(data_op._skrub_impl, (Var, Value)):
+    if isinstance(impl, (Var, Value)):
         kwargs["peripheries"] = 2
     return kwargs
 
