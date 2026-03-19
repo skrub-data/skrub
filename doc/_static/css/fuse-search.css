@@ -1,0 +1,170 @@
+/* =========================================================================
+   Fuse.js search page styles
+   ========================================================================= */
+
+/* Search input row -------------------------------------------------------- */
+
+.fuse-search-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+#fuse-search-input {
+  flex: 1 1 auto;
+  max-width: 42rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 1rem;
+  border: 1px solid var(--pst-color-border, #ccc);
+  border-radius: 4px;
+  background: var(--pst-color-surface, #fff);
+  color: var(--pst-color-text-base, #111);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#fuse-search-input:focus {
+  border-color: var(--pst-color-primary, #0969da);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pst-color-primary, #0969da) 20%, transparent);
+}
+
+#fuse-search-count {
+  font-size: 0.85rem;
+  color: var(--pst-color-text-muted, #666);
+  white-space: nowrap;
+}
+
+/* Type filter tabs -------------------------------------------------------- */
+
+.fuse-search-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.fuse-filter-label {
+  font-size: 0.85rem;
+  color: var(--pst-color-text-muted, #666);
+  margin-right: 0.25rem;
+}
+
+.fuse-filter-btn {
+  cursor: pointer;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--pst-color-border, #ccc);
+  background: var(--pst-color-surface, #fff);
+  color: var(--pst-color-text-base, #111);
+  font-size: 0.85rem;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.fuse-filter-btn.active,
+.fuse-filter-btn:hover {
+  background: var(--pst-color-primary, #0969da);
+  border-color: var(--pst-color-primary, #0969da);
+  color: #fff;
+}
+
+/* Results list ------------------------------------------------------------ */
+
+.fuse-results-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fuse-result-item {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--pst-color-border-muted, #e8e8e8);
+}
+
+.fuse-result-item:last-child {
+  border-bottom: none;
+}
+
+.fuse-result-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--pst-color-primary, #0969da);
+}
+
+.fuse-result-link:hover .fuse-result-title {
+  text-decoration: underline;
+}
+
+.fuse-result-breadcrumb {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--pst-color-text-muted, #666);
+  margin-top: 0.15rem;
+}
+
+.fuse-result-item > p {
+  margin: 0.3rem 0 0 0;
+  font-size: 0.9rem;
+  color: var(--pst-color-text-muted, #444);
+  line-height: 1.5;
+}
+
+/* Type badges */
+
+.fuse-badge {
+  display: inline-block;
+  padding: 0.1em 0.55em;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.fuse-badge--api {
+  background: color-mix(in srgb, var(--pst-color-secondary, #9b59b6) 15%, transparent);
+  color: var(--pst-color-secondary, #7d3c98);
+  border: 1px solid color-mix(in srgb, var(--pst-color-secondary, #9b59b6) 30%, transparent);
+}
+
+.fuse-badge--guide {
+  background: color-mix(in srgb, var(--pst-color-success, #2ecc71) 12%, transparent);
+  color: color-mix(in srgb, var(--pst-color-success, #27ae60) 120%, #000);
+  border: 1px solid color-mix(in srgb, var(--pst-color-success, #2ecc71) 30%, transparent);
+}
+
+.fuse-badge--section {
+  background: color-mix(in srgb, var(--pst-color-info, #3498db) 12%, transparent);
+  color: color-mix(in srgb, var(--pst-color-info, #2980b9) 130%, #000);
+  border: 1px solid color-mix(in srgb, var(--pst-color-info, #3498db) 30%, transparent);
+}
+
+.fuse-badge--example {
+  background: color-mix(in srgb, var(--pst-color-warning, #f0ad4e) 18%, transparent);
+  color: color-mix(in srgb, var(--pst-color-warning, #e67e22) 140%, #000);
+  border: 1px solid color-mix(in srgb, var(--pst-color-warning, #f0ad4e) 35%, transparent);
+}
+
+/* Highlight matches */
+
+mark {
+  background: color-mix(in srgb, var(--pst-color-warning, #f0ad4e) 35%, transparent);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
+
+/* Misc */
+
+.fuse-no-results,
+.fuse-loading {
+  color: var(--pst-color-text-muted, #666);
+  margin-top: 1rem;
+}
