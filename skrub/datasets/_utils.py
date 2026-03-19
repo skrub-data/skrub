@@ -111,7 +111,7 @@ DATASET_INFO = {
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/toxicity_shuffled.zip",
             "https://osf.io/download/zebm7",
         ],
-        "sha256": "7a57e9371b272378ae4ccf9f0a29b22bdedbf6f8f3cd1b7d5f9547e77be6c7d0",
+        "sha256": "01382d19987c04faab8c7b10dfa87719ae4af273dba08a48a95b0c9a69aeb009",
     },
     "traffic_violations": {
         "urls": [
