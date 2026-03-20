@@ -391,9 +391,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
             The transformed data.
         """
 
-        check_is_fitted(
-            self, "transformer_" if hasattr(self, "transformer_") else "transformers_"
-        )
+        check_is_fitted(self)
 
         return self._wrapped_transformer.transform(X)
 
@@ -410,9 +408,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         feature_names_out : ndarray of str objects
             Transformed feature names.
         """
-        check_is_fitted(
-            self, "transformer_" if hasattr(self, "transformer_") else "transformers_"
-        )
+        check_is_fitted(self)
 
         return self._wrapped_transformer.get_feature_names_out(input_features)
 
