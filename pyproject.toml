@@ -223,9 +223,16 @@ python = "~=3.14.0"
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
-clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
+clean-doc = { cmd = "make clean", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
+
+[tool.pixi.feature.doc.target.win-64.tasks]
+build-doc = { cmd = ".\\make.bat html", cwd = "doc" }
+build-doc-quick = { cmd = ".\\make.bat html-noplot", cwd = "doc" }
+clean-doc = { cmd = ".\\make.bat clean", cwd = "doc" }
+linkcheck = { cmd = ".\\make.bat linkcheck", cwd = "doc" }
+linkcheck-quick = { cmd = ".\\make.bat linkcheck-noplot", cwd = "doc" }
 
 
 [tool.pixi.feature.lint.tasks]
