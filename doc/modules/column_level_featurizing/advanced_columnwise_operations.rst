@@ -25,6 +25,7 @@ format, that returns |RejectColumn| with a custom warning when the length of the
 zip code is incorrect:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
+>>> import pandas as pd
 >>>
 >>> class ZipcodeParser(SingleColumnTransformer):
 ...     def __init__(self):
@@ -69,7 +70,6 @@ If the input columns are unable to be transformed, a specific exception exists t
 this: |RejectColumn|.
 
 >>> from skrub import ToDatetime
->>> import pandas as pd
 >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
 >>> df
         birthday    city
