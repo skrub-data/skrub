@@ -15,13 +15,13 @@
 Operating over multiple columns at once with |ApplyToCols|
 ===========================================================
 
-Very often and for various reasons, transformers must be applied to multiple
-columns at the same time. For example, all numeric columns in a dataframe may need
-to be scaled at the same time.
+Very often and for various reasons, transformers must be applied only to some of the
+columns in a dataframe. For example, all numeric columns in a dataframe may need
+to be scaled at the same time, while string columns should be left alone.
 While the heuristics used by the :class:`TableVectorizer` are usually good enough
 to apply the proper transformers to different datatypes, using it may not be an
 option in all cases. In scikit-learn pipelines, the column selection operation can
-is done with the :class:`~sklearn.compose.ColumnTransformer`.
+be done with the :class:`~sklearn.compose.ColumnTransformer`.
 
 Skrub provides the |ApplyToCols| transformer to achieve the same results with
 a larger degree of control over which columns are being transformed.
@@ -31,36 +31,29 @@ left untouched.
 
 .. tip::
 
-    All multi-column transformers provided by skrub can take skrub selectors as
-    parameters to have more control over the columns that are being transformed.
-    Skrub selectors are discussed at length in the
+    If a skrub transformer has a ``cols`` parameter to specify a column list,
+    that can be a selector as well. Selectors give more control over which columns
+    are being transformed: they are discussed at length in the
     :ref:`selectors user guide<user_guide_selectors>`.
 
 
 |ApplyToCols| can be used to transform a subset of columns in a dataframe, while
 leaving the non-selected columns unchanged. In this example, we want to apply
-a |StandardScaler| to the numeric column, and a |OneHotEncoder| to the text column.
+an |OrdinalEncoder| only on the text column:
 
 >>> import skrub.selectors as s
 >>> from sklearn.pipeline import make_pipeline
 >>> from skrub import ApplyToCols
->>> from sklearn.preprocessing import OneHotEncoder, StandardScaler
+>>> from sklearn.preprocessing import OrdinalEncoder
 >>> import pandas as pd
 >>> df = pd.DataFrame({"text": ["foo", "bar", "baz"], "number": [1, 2, 3]})
 
+We use the |s.string| selector to choose only the text column:
 
-We use the |s.numeric| and |s.string| selectors to choose the respective columns:
 
-.. admonition:: Why ``sparse_output=False``?
-    :collapsible: closed
+>>> string = ApplyToCols(OrdinalEncoder(), cols=s.string())
 
-    Skrub objects treat their input as dataframes, which are inherently dense.
-    For this reason, sparse outputs must be made dense to work with |ApplyToCols|.
-
->>> numeric = ApplyToCols(StandardScaler(), cols=s.numeric())
->>> string = ApplyToCols(OneHotEncoder(sparse_output=False), cols=s.string())
-
->>> transformed = make_pipeline(numeric, string).fit_transform(df)
+>>> transformed = make_pipeline(string).fit_transform(df)
 >>> transformed
      number  text_bar  text_baz  text_foo
 0 -1.224745       0.0       0.0       1.0
@@ -156,7 +149,7 @@ Note that the column "id" was not encoded and was instead left as-is.
 Dealing with columns that cannot be handled by a transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-|ApplyToCols| lets the underlying encoder decide which columns it can be applied to.
+|ApplyToCols| can allow the underlying encoder to decide which columns it can be applied to.
 For example, if we do not know in advance which columns can be transformed to datetime,
 we can use |ApplyToCols| to map |ToDatetime| to all columns in a dataframe and pass
 ``allow_reject=True``. In that case, non-datetime columns.  By default, all columns in
@@ -211,30 +204,3 @@ datetime column.
 birthday    datetime64[...]
 city                ...
 dtype: ...
-
-Renaming the transformed columns
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-By default, |ApplyToCols| renames the transformed columns, and
-removes the original features from the data. It is possible to rename the columns
-by providing a formatting string to the ``rename_columns`` parameter:
-
->>> from sklearn.preprocessing import StandardScaler
->>> df = pd.DataFrame(dict(A=[-10., 10.], B=[0., 100.]))
->>> scaler = ApplyToCols(StandardScaler(), rename_columns='{}_scaled')
->>> scaler.fit_transform(df)
-    A_scaled  B_scaled
-0      -1.0      -1.0
-1       1.0       1.0
-
-By setting ``keep_original=True``, the starting columns are not dropped from the
-transformed dataframe. The ``rename_columns`` parameter can be used to avoid
-name collisions:
-
->>> scaler = ApplyToCols(
-...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
-... )
->>> scaler.fit_transform(df)
-      A      B  A_scaled  B_scaled
-0 -10.0    0.0      -1.0      -1.0
-1  10.0  100.0       1.0       1.0

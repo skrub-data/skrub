@@ -203,7 +203,7 @@ def test_getattr_raises_for_wrong_attribute(df_module):
 
     with pytest.raises(
         AttributeError,
-        match="transformers_ is only available for single-column transformers",
+        match="'transformers_' is only available for single-column transformers",
     ):
         _ = at.transformers_
 
@@ -222,7 +222,7 @@ def test_getattr_raises_for_wrong_attribute(df_module):
 
     with pytest.raises(
         AttributeError,
-        match="transformer_ is only available for non-single-column transformers",
+        match="'transformer_' is only available for non-single-column transformers",
     ):
         _ = at.transformer_
 

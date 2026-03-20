@@ -43,7 +43,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         Whether to allow refusing to transform columns for which the provided
         transformer is not suited, for example rejecting non-datetime columns if
         transformer is a DatetimeEncoder. Only relevant if the transformer is a
-        :class:`~core.SingleColumnTransformer` or if how="cols".
+        :class:`~core.SingleColumnTransformer`. Rejected columns are passed through
+        unchanged.
 
     keep_original : bool, default=False
         If ``True``, the original columns are preserved in the output. If the
@@ -82,8 +83,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         The names of columns in the output dataframe that were created by one
         of the fitted transformers.
 
-    Other Attributes
-    ----------------
     transformers_ : dict
         Maps the name of each column that was transformed to the corresponding
         fitted transformer. Only available when the transformer is a
@@ -126,52 +125,55 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     >>> import pandas as pd
     >>> from skrub import ApplyToCols
-    >>> from sklearn.preprocessing import StandardScaler
 
     >>> df = pd.DataFrame(dict(
-    ...     A=[-10., 10.], B=[-10., 0.], C=["Paris", "Rome"],
+    ...     A=[-10., 10.], B=[-10., 0.], C=[19, 20], city=["Paris", "Rome"],
     ...     D=pd.to_datetime(["2024-05-13T12:05:36", "2024-05-15T13:46:02"]))
     ... )
     >>> df
-        A     B      C                   D
-    0 -10.0 -10.0  Paris 2024-05-13 12:05:36
-    1  10.0   0.0   Rome 2024-05-15 13:46:02
+        A     B   C   city                   D
+    0 -10.0 -10.0  19  Paris 2024-05-13 12:05:36
+    1  10.0   0.0  20   Rome 2024-05-15 13:46:02
 
-    We can apply a :class:`StringEncoder` to the string column "C" by selecting
+    We can apply a :class:`StringEncoder` to the string column "city" by selecting
     it with the ``cols`` parameter:
 
     >>> from skrub import StringEncoder
-    >>> string_encoder = ApplyToCols(StringEncoder(n_components=2), cols=["C"])
+    >>> string_encoder = ApplyToCols(StringEncoder(n_components=2), cols=["city"])
     >>> df_enc = string_encoder.fit_transform(df)
     >>> df_enc # doctest: +SKIP
-        A     B       C_0       C_1                   D
-    0 -10.0 -10.0  1.414214  1.414214 2024-05-13 12:05:36
-    1  10.0   0.0  0.000000  0.000000 2024-05-15 13:46:02
+        A     B   C    city_0    city_1                   D
+    0 -10.0 -10.0  19  1.414214  1.414214 2024-05-13 12:05:36
+    1  10.0   0.0  20  0.000000  0.000000 2024-05-15 13:46:02
 
-    Since we selected only column "C", the transformer was applied only to that column,
-    while the other columns were left unchanged.
+    Since we selected only column "city", the transformer was applied only to that
+    column, while the other columns were left unchanged.
 
     Scikit-learn transformers that can be applied to multiple columns at once can also
     be used with ``ApplyToCols``. For example, to apply a
-    :class:`~sklearn.preprocessing.StandardScaler` to the numeric columns:
+    :class:`sklearn.decomposition.PCA` to the numeric columns "A" and "B", we can do:
 
-    >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"])
-    >>> scaler.fit_transform(df)
-        C                   D    A    B
-    0  Paris 2024-05-13 12:05:36 -1.0 -1.0
-    1   Rome 2024-05-15 13:46:02  1.0  1.0
+    >>> from sklearn.decomposition import PCA
+    >>> pca = ApplyToCols(PCA(n_components=2), cols=["A", "B", "C"])
+    >>> pca.fit_transform(df) # doctest: +SKIP
+        city                   D       pca0          pca1
+    0  Paris 2024-05-13 12:05:36 -11.191515  1.976705e-16
+    1   Rome 2024-05-15 13:46:02  11.191515  1.976705e-16
 
-    Note that the columns "C" and "D" were not modified since they were not selected.
+    Note that the columns "city" and "D" were not modified since they were not
+    selected.
 
     We can also rely on the skrub selectors to select the columns. For example,
     we can use :meth:`~skrub.selectors.numeric` to select all numeric columns:
 
     >>> from skrub import selectors as s
+    >>> from sklearn.preprocessing import StandardScaler
     >>> scaler = ApplyToCols(StandardScaler(), cols=s.numeric())
     >>> scaler.fit_transform(df)
-        C                   D    A    B
-    0  Paris 2024-05-13 12:05:36 -1.0 -1.0
-    1   Rome 2024-05-15 13:46:02  1.0  1.0
+        city                   D    A    B    C
+    0  Paris 2024-05-13 12:05:36 -1.0 -1.0 -1.0
+    1   Rome 2024-05-15 13:46:02  1.0  1.0  1.0
+
 
     It is possible to set ``allow_reject=True`` to allow the transformer to reject
     columns it cannot handle. For example, the :class:`DatetimeEncoder` cannot handle
@@ -182,9 +184,10 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     >>> from skrub import DatetimeEncoder
     >>> datetime = ApplyToCols(DatetimeEncoder(), allow_reject=True)
     >>> datetime.fit_transform(df)
-        A     B      C  D_year  D_month  D_day  D_hour  D_total_seconds
-    0 -10.0 -10.0  Paris  2024.0      5.0   13.0    12.0     1.715602e+09
-    1  10.0   0.0   Rome  2024.0      5.0   15.0    13.0     1.715781e+09
+        A     B   C   city  D_year  D_month  D_day  D_hour  D_total_seconds
+    0 -10.0 -10.0  19  Paris  2024.0      5.0   13.0    12.0     1.715602e+09
+    1  10.0   0.0  20   Rome  2024.0      5.0   15.0    13.0     1.715781e+09
+
 
     If ``allow_reject=False`` (the default), the same transformation would raise
     an error since the transformer cannot handle the columns "A", "B", and "C":
@@ -205,7 +208,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     transformer:
 
     >>> string_encoder.transformers_
-    {'C': StringEncoder(n_components=2)}
+    {'city': StringEncoder(n_components=2)}
 
     In all other cases, the fitted transformer is stored in the ``transformer_``
     attribute:
@@ -418,15 +421,15 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
             getattr(self, "_wrapped_transformer", None), ApplyToSubFrame
         ):
             raise AttributeError(
-                "transformers_ is only available for single-column transformers. "
-                "You may be looking for transformer_ instead."
+                "'transformers_' is only available for single-column transformers. "
+                "Did you mean 'transformer_'?"
             )
         if name == "transformer_" and isinstance(
             getattr(self, "_wrapped_transformer", None), ApplyToEachCol
         ):
             raise AttributeError(
-                "transformer_ is only available for non-single-column transformers. "
-                "You may be looking for transformers_ instead."
+                "'transformer_' is only available for non-single-column transformers. "
+                "Did you mean 'transformers_'?"
             )
         raise AttributeError(
             f"{self.__class__.__name__} object has no attribute {name!r}"
