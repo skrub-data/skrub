@@ -145,15 +145,17 @@ specific columns and avoid others, like ID columns:
 
 >>> from skrub import TableVectorizer
 >>> df = pd.DataFrame({
-...     'id': [1, 2, 3],
+...     'id': ["c1", "c2", "c3"],
 ...     'city': ['Paris', 'Rome', 'Madrid'],
 ...     'date': ['2023-01-15', '2023-02-20', '2023-03-10']
 ... })
 >>> ApplyToCols(TableVectorizer(), cols=s.all() - "id").fit_transform(df) # doctest: +SKIP
 id  city_Madrid  city_Paris  city_Rome  date_year  date_month  date_day  date_total_seconds
-0   1          0.0         1.0        0.0     2023.0         1.0      15.0        1.673741e+09
-1   2          0.0         0.0        1.0     2023.0         2.0      20.0        1.676851e+09
-2   3          1.0         0.0        0.0     2023.0         3.0      10.0        1.678406e+09
+0  c1          0.0         1.0        0.0     2023.0         1.0      15.0        1.673741e+09
+1  c2          0.0         0.0        1.0     2023.0         2.0      20.0        1.676851e+09
+2  c3          1.0         0.0        0.0     2023.0         3.0      10.0        1.678406e+09
+
+Note that the column "id" was not encoded and was instead left as-is.
 
 Dealing with columns that cannot be handled by a transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
