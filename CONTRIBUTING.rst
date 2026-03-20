@@ -315,6 +315,15 @@ On Windows, use:
 
     make.bat html
 
+.. note::
+
+   If you are working on Windows, building the example ``1131_optuna_choices``
+   may fail with a permission error when running ``make.bat html``. This is
+   because optuna uses symlinks for file locking, which requires admin
+   privileges on Windows by default. The rest of the documentation build
+   should run without problem, so it is safe to ignore this error if your
+   contribution does not touch that particular example.
+
 The documentation will be generated in the ``_build/html/`` directory
 and are viewable in a web browser, for instance by opening the local
 ``_build/html/index.html`` file.
