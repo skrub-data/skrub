@@ -64,9 +64,9 @@ API_REFERENCE = {
                 "autosummary": [
                     "tabular_pipeline",
                     "TableVectorizer",
+                    "ApplyToCols",
                     "SelectCols",
                     "DropCols",
-                    "ApplyToCols",
                 ],
             }
         ],

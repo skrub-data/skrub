@@ -1,21 +1,19 @@
 .. currentmodule:: skrub
 
 .. |ApplyToCols| replace:: :class:`ApplyToCols`
-.. |ApplyToSubFrame| replace:: :class:`ApplyToSubFrame`
-.. |SelectCols| replace:: :class:`SelectCols`
-.. |DropCols| replace:: :class:`DropCols`
+.. |TableVectorizer| replace:: :class:`TableVectorizer`
 .. |s.string| replace:: :meth:`~skrub.selectors.string`
 .. |s.numeric| replace:: :meth:`~skrub.selectors.numeric`
 .. |RejectColumn| replace:: :class:`core.RejectColumn`
 .. |ToDatetime| replace:: :class:`ToDatetime`
-.. |SingleColumnTranformer| replace:: :class:`~core.SingleColumnTranformer`
+.. |SingleColumnTransformer| replace:: :class:`~skrub.core.SingleColumnTransformer`
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 
 .. _user_guide_multiple_columns:
 
 Operating over multiple columns at once with |ApplyToCols|
-=======================================
+===========================================================
 
 Very often and for various reasons, transformers must be applied to multiple
 columns at the same time. For example, all numeric columns in a dataframe may need
@@ -23,7 +21,7 @@ to be scaled at the same time.
 While the heuristics used by the :class:`TableVectorizer` are usually good enough
 to apply the proper transformers to different datatypes, using it may not be an
 option in all cases. In scikit-learn pipelines, the column selection operation can
-is done with the :class:`sklearn.compose.ColumnTransformer`.
+is done with the :class:`~sklearn.compose.ColumnTransformer`.
 
 Skrub provides the |ApplyToCols| transformer to achieve the same results with
 a larger degree of control over which columns are being transformed.
@@ -31,16 +29,14 @@ a larger degree of control over which columns are being transformed.
 columns that satisfy a certain condition are transformed, while the others are
 left untouched.
 
-..tip::
+.. tip::
 
     All multi-column transformers provided by skrub can take skrub selectors as
     parameters to have more control over the columns that are being transformed.
-    Skrub selectors are discussed at length in :ref:`user_guide_selectors`.
+    Skrub selectors are discussed at length in the
+    :ref:`selectors user guide<user_guide_selectors>`.
 
-.. _apply_to_each_col:
 
-Applying transformations to the columns with |ApplyToCols|
-----------------------------------------------------------
 |ApplyToCols| can be used to transform a subset of columns in a dataframe, while
 leaving the non-selected columns unchanged. In this example, we want to apply
 a |StandardScaler| to the numeric column, and a |OneHotEncoder| to the text column.
@@ -55,7 +51,7 @@ a |StandardScaler| to the numeric column, and a |OneHotEncoder| to the text colu
 
 We use the |s.numeric| and |s.string| selectors to choose the respective columns:
 
-..note:: Why ``sparse_output=False"?
+.. admonition:: Why ``sparse_output=False``?
     :collapsible: closed
 
     Skrub objects treat their input as dataframes, which are inherently dense.

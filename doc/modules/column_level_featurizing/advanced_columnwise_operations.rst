@@ -64,7 +64,7 @@ Rejection handling with ``ApplyToCols``
 
 |ApplyToCols| allows flexible manipulation of dataframes by automatically
 applying any of Skrub's columnwise transformers to multiple columns in any given dataframe.
-More information can be found on this class's basic usage on :ref:`apply_to_each_col`.
+More information can be found on this class's basic usage on :ref:`user_guide_multiple_columns`.
 
 If the input columns are unable to be transformed, a specific exception exists to indicate
 this: |RejectColumn|.

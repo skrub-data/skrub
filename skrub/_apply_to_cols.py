@@ -20,12 +20,12 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     This transformer applies the given transformer to all the selected columns in
     the input dataframe; non-selected columns are passed through without modification.
     By default, all selected columns are passed to the same transformer; if the
-    transformer is a :class:`core.SingleColumnTransformer` or if ``how="cols"``, a
+    transformer is a :class:`~core.SingleColumnTransformer`, a
     separate clone of the transformer is created for each selected column and
     fitted to that column independently.
 
-    Refer to the documentation of :class:`core.SingleColumnTransformer` for more details
-    on single-column transformers and how to create them.
+    Refer to the documentation of :class:`~core.SingleColumnTransformer` for more
+    details on single-column transformers and how to create them.
 
     Parameters
     ----------
@@ -43,7 +43,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         Whether to allow refusing to transform columns for which the provided
         transformer is not suited, for example rejecting non-datetime columns if
         transformer is a DatetimeEncoder. Only relevant if the transformer is a
-        SingleColumnTransformer or if how="cols".
+        :class:`~core.SingleColumnTransformer` or if how="cols".
 
     keep_original : bool, default=False
         If ``True``, the original columns are preserved in the output. If the
@@ -65,7 +65,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
         ``-1`` means using all processors.
         Note that this parameter is only used when the transformer
-        is a SingleColumnTransformer or when how="cols".
+        is a :class:`~core.SingleColumnTransformer`.
 
     Attributes
     ----------
@@ -87,38 +87,38 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     transformers_ : dict
         Maps the name of each column that was transformed to the corresponding
         fitted transformer. Only available when the transformer is a
-        ``SingleColumnTransformer`` or when ``how="cols"``.
+        :class:`~core.SingleColumnTransformer`.
 
     input_to_outputs_ : dict
         Maps the name of each column that was transformed to the list of the
         resulting columns' names in the output. Only available when the
-        transformer is a ``SingleColumnTransformer`` or when ``how="cols"``.
+        transformer is a :class:`~core.SingleColumnTransformer`.
 
     output_to_input_ : dict
         Maps the name of each column in the transformed output to the name of
         the input column from which it was derived. Only available when the
-        transformer is a ``SingleColumnTransformer`` or when ``how="cols"``.
+        transformer is a :class:`~core.SingleColumnTransformer`.
 
     transformer_ : Transformer
         The fitted transformer. Only available when ``how="frame"`` and the
-        transformer is not a ``SingleColumnTransformer``.
+        transformer is not a :class:`~core.SingleColumnTransformer`.
 
     Notes
     -----
     All columns not listed in ``cols`` remain unmodified in the output.
     Moreover, if ``allow_reject`` is ``True`` and the transformers'
-    ``fit_transform`` raises a :class:`core.RejectColumn` exception for a particular
+    ``fit_transform`` raises a :class:`~core.RejectColumn` exception for a particular
     column, that column is passed through unchanged. If ``allow_reject`` is
-    ``False``, :class:`core.RejectColumn` exceptions are propagated, like other errors
+    ``False``, :class:`~core.RejectColumn` exceptions are propagated, like other errors
     raised by the transformer.
 
     See also
     --------
-    :class:`core.SingleColumnTransformer` :
+    :class:`~core.SingleColumnTransformer` :
         Base class for single-column transformers,
         which allows to define custom logic to be applied to each column independently,
         and to indicate that a column cannot be transformed by raising
-        :class:`core.RejectColumn` exceptions.
+        :class:`~core.RejectColumn` exceptions.
 
     Examples
     --------
@@ -139,6 +139,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     We can apply a :class:`StringEncoder` to the string column "C" by selecting
     it with the ``cols`` parameter:
+
     >>> from skrub import StringEncoder
     >>> string_encoder = ApplyToCols(StringEncoder(n_components=2), cols=["C"])
     >>> df_enc = string_encoder.fit_transform(df)
@@ -151,8 +152,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     while the other columns were left unchanged.
 
     Scikit-learn transformers that can be applied to multiple columns at once can also
-    be used with ``ApplyToCols``. For example, to apply a StandardScaler to the
-    numeric columns:
+    be used with ``ApplyToCols``. For example, to apply a
+    :class:`~sklearn.preprocessing.StandardScaler` to the numeric columns:
 
     >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"])
     >>> scaler.fit_transform(df)
@@ -163,7 +164,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     Note that the columns "C" and "D" were not modified since they were not selected.
 
     We can also rely on the skrub selectors to select the columns. For example,
-    to select all numeric columns we can do:
+    we can use :meth:`~skrub.selectors.numeric` to select all numeric columns:
+
     >>> from skrub import selectors as s
     >>> scaler = ApplyToCols(StandardScaler(), cols=s.numeric())
     >>> scaler.fit_transform(df)
@@ -194,6 +196,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     ValueError: Transformer DatetimeEncoder.fit_transform failed on column 'A'...
 
     ** Accessing fitted transformers **
+
     Depending on the transformer, the fitted transformers
     are stored in different attributes. For single-column transformers, the fitted
     transformers are stored in the
@@ -206,6 +209,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     In all other cases, the fitted transformer is stored in the ``transformer_``
     attribute:
+
     >>> scaler.transformer_
     StandardScaler()
 
@@ -221,6 +225,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     1  0.000000  1.414214  0.000000  1.414214
 
     Then, each fitted transformer is stored in the ``transformers_`` attribute:
+
     >>> se.transformers_
     {'C1': StringEncoder(n_components=2), 'C2': StringEncoder(n_components=2)}
 
@@ -287,10 +292,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     def fit(self, X, y=None, **kwargs):
         """Fit the transformer to the data.
 
-        If the transformer is a SingleColumnTransformer or if how="cols",
-        the transformer is wrapped in an ApplyToEachCol. Otherwise, it is wrapped
-        in an ApplyToSubFrame.
-
         Parameters
         ----------
         X : Pandas or Polars DataFrame
@@ -313,10 +314,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     def fit_transform(self, X, y=None, **kwargs):
         """Fit the transformer on all columns and transform X.
-
-        If the transformer is a SingleColumnTransformer or if how="cols",
-        the transformer is wrapped in an ApplyToEachCol. Otherwise, it is wrapped
-        in an ApplyToSubFrame.
 
         Parameters
         ----------
@@ -421,16 +418,16 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
             getattr(self, "_wrapped_transformer", None), ApplyToSubFrame
         ):
             raise AttributeError(
-                "transformers_ is only available for single-column transformers, "
-                "or if how='cols'. You may be looking for transformer_ instead."
+                "transformers_ is only available for single-column transformers. "
+                "You may be looking for transformer_ instead."
             )
         if name == "transformer_" and isinstance(
             getattr(self, "_wrapped_transformer", None), ApplyToEachCol
         ):
             raise AttributeError(
-                "transformer_ is only available for non-single-column transformers "
-                "when how is not 'cols'. You may be looking for transformers_ instead."
-            )  # noqa
+                "transformer_ is only available for non-single-column transformers. "
+                "You may be looking for transformers_ instead."
+            )
         raise AttributeError(
             f"{self.__class__.__name__} object has no attribute {name!r}"
         )
