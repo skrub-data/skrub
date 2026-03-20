@@ -4,17 +4,17 @@
 .. |ApplyToSubFrame| replace:: :class:`ApplyToSubFrame`
 .. |SelectCols| replace:: :class:`SelectCols`
 .. |DropCols| replace:: :class:`DropCols`
-.. |s.string| replace:: :meth:`skrub.selectors.string`
-.. |s.numeric| replace:: :meth:`skrub.selectors.numeric`
+.. |s.string| replace:: :meth:`~skrub.selectors.string`
+.. |s.numeric| replace:: :meth:`~skrub.selectors.numeric`
 .. |RejectColumn| replace:: :class:`core.RejectColumn`
 .. |ToDatetime| replace:: :class:`ToDatetime`
-.. |SingleColumnTranformer| replace:: :class:`core.SingleColumnTranformer`
-.. |StandardScaler| replace:: :class:`sklearn.preprocessing.StandardScaler`
-.. |OneHotEncoder| replace:: :class:`sklearn.preprocessing.OneHotEncoder`
+.. |SingleColumnTranformer| replace:: :class:`~core.SingleColumnTranformer`
+.. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
+.. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
 
 .. _user_guide_multiple_columns:
 
-Operating over multiple columns at once
+Operating over multiple columns at once with |ApplyToCols|
 =======================================
 
 Very often and for various reasons, transformers must be applied to multiple
@@ -25,22 +25,17 @@ to apply the proper transformers to different datatypes, using it may not be an
 option in all cases. In scikit-learn pipelines, the column selection operation can
 is done with the :class:`sklearn.compose.ColumnTransformer`.
 
-Skrub provides alternative transformers that can achieve the same results:
+Skrub provides the |ApplyToCols| transformer to achieve the same results with
+a larger degree of control over which columns are being transformed.
+|ApplyToCols| maps a transformer to columns in a dataframe, so that all
+columns that satisfy a certain condition are transformed, while the others are
+left untouched.
 
-- |ApplyToCols| maps a transformer to columns in a dataframe, so that all
-  columns that satisfy a certain condition are transformed, while the others are
-  left untouched.
-- |SelectCols| allows specifying which columns should be kept.
-- |DropCols| allows specifying the columns we want to discard.
+..tip::
 
-|SelectCols| and |DropCols| can becombined with the skrub DataOps
-to perform complex tasks
-such as feature selection: refer to :ref:`user_guide_data_ops_feature_selection`
-for more details.
-
-All multi-column transformers provided by skrub can take skrub selectors as
-parameters to have more control over the columns that are being transformed.
-Skrub selectors are discussed at length in :ref:`user_guide_selectors`.
+    All multi-column transformers provided by skrub can take skrub selectors as
+    parameters to have more control over the columns that are being transformed.
+    Skrub selectors are discussed at length in :ref:`user_guide_selectors`.
 
 .. _apply_to_each_col:
 
@@ -60,6 +55,12 @@ a |StandardScaler| to the numeric column, and a |OneHotEncoder| to the text colu
 
 We use the |s.numeric| and |s.string| selectors to choose the respective columns:
 
+..note:: Why ``sparse_output=False"?
+    :collapsible: closed
+
+    Skrub objects treat their input as dataframes, which are inherently dense.
+    For this reason, sparse outputs must be made dense to work with |ApplyToCols|.
+
 >>> numeric = ApplyToCols(StandardScaler(), cols=s.numeric())
 >>> string = ApplyToCols(OneHotEncoder(sparse_output=False), cols=s.string())
 
@@ -70,8 +71,9 @@ We use the |s.numeric| and |s.string| selectors to choose the respective columns
 1  0.000000       1.0       0.0       0.0
 2  1.224745       0.0       1.0       0.0
 
-By default, |ApplyToCols| forwards all the selected columns together to the provided
-transformer. For example, consider this dataframe:
+When it is used with standard scikit-learn transformers, |ApplyToCols| forwards
+all the selected columns together to the provided transformer. For example, consider
+this dataframe:
 
 >>> import numpy as np
 >>> import pandas as pd
@@ -138,6 +140,19 @@ date_1    datetime64[...]
 date_2    datetime64[...]
 dtype: ...
 
+We can also combine |ApplyToCols| with |TableVectorizer| to only vectorize columns
+specific columns and avoid others, like ID columns:
+
+>>> df = pd.DataFrame({
+...     'id': [1, 2, 3],
+...     'city': ['Paris', 'Rome', 'Madrid'],
+...     'date': ['2023-01-15', '2023-02-20', '2023-03-10']
+... })
+>>> ApplyToCols(TableVectorizer(), cols=s.all() - "id").fit_transform(df)
+id  city_Madrid  city_Paris  city_Rome  date_year  date_month  date_day  date_total_seconds
+0   1          0.0         1.0        0.0     2023.0         1.0      15.0        1.673741e+09
+1   2          0.0         0.0        1.0     2023.0         2.0      20.0        1.676851e+09
+2   3          1.0         0.0        0.0     2023.0         3.0      10.0        1.678406e+09
 
 Dealing with columns that cannot be handled by a transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
