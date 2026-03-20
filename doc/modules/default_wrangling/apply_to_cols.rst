@@ -55,10 +55,11 @@ We use the |s.string| selector to choose only the text column:
 
 >>> transformed = make_pipeline(string).fit_transform(df)
 >>> transformed
-     number  text_bar  text_baz  text_foo
-0 -1.224745       0.0       0.0       1.0
-1  0.000000       1.0       0.0       0.0
-2  1.224745       0.0       1.0       0.0
+   number  text
+0       1   2.0
+1       2   0.0
+2       3   1.0
+
 
 When it is used with standard scikit-learn transformers, |ApplyToCols| forwards
 all the selected columns together to the provided transformer. For example, consider
@@ -102,22 +103,14 @@ attribute, then the transformer will be cloned and applied separately to each
 column. Most skrub transformers belong to this category.
 
 Here we want to apply |ToDatetime| to each of the datetime columns to convert
-them to datetime dtype:
+them to datetime dtype. |ApplyToCols| automatically detects that |ToDatetime|
+should be applied to each column separately:
 
+>>> from skrub._to_datetime import ToDatetime
 >>> df = pd.DataFrame({
 ...     'date_1': ['2024-01-15', '2024-02-20', '2024-03-10'],
 ...     'date_2': ['2023-12-01', '2024-01-05', '2024-02-28']
 ... })
->>> df
-       date_1      date_2
-0  2024-01-15  2023-12-01
-1  2024-02-20  2024-01-05
-2  2024-03-10  2024-02-28
-
-|ApplyToCols| automatically detects that |ToDatetime| should be applied to each
-column separately:
-
->>> from skrub._to_datetime import ToDatetime
 >>> df_enc = ApplyToCols(ToDatetime()).fit_transform(df)
 >>> df_enc
       date_1     date_2
