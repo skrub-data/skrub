@@ -4,6 +4,7 @@
 .. |RejectColumn| replace:: :class:`core.RejectColumn`
 .. |SingleColumnTranformer| replace:: :class:`core.SingleColumnTranformer`
 
+.. _user_guide_single_column_transformer:
 
 Advanced columnwise operations
 ------------------------------

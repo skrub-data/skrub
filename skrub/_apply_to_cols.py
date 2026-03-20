@@ -151,7 +151,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     Scikit-learn transformers that can be applied to multiple columns at once can also
     be used with ``ApplyToCols``. For example, to apply a
-    :class:`sklearn.decomposition.PCA` to the numeric columns "A" and "B", we can do:
+    :class:`sklearn.decomposition.PCA` to the numeric columns "A", "B", and "C",
+    we can do:
 
     >>> from sklearn.decomposition import PCA
     >>> pca = ApplyToCols(PCA(n_components=2), cols=["A", "B", "C"])
