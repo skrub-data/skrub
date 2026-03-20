@@ -143,6 +143,7 @@ dtype: ...
 We can also combine |ApplyToCols| with |TableVectorizer| to only vectorize columns
 specific columns and avoid others, like ID columns:
 
+>>> from skrub import TableVectorizer
 >>> df = pd.DataFrame({
 ...     'id': [1, 2, 3],
 ...     'city': ['Paris', 'Rome', 'Madrid'],
