@@ -39,8 +39,6 @@ Changes
   detecting automatically whether the provided transformer should be applied
   independently on each column, or on all selected columns as a single dataframe.
   As a result, ``ApplyToCols`` and ``ApplyToFrame`` have been removed.
-  The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
-  ``how`` to ``cols``.
   :pr:`1913`, :pr:`1919` and :pr:`1962` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The dataset fetcher functions now include a "path" field for each table in the dataset.
   For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
