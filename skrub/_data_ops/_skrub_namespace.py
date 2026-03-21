@@ -2532,7 +2532,7 @@ class SkrubNamespace:
         ----------
         environment : dict or None
             Bindings for variables contained in the DataOp plan. If not
-            provided, the ``value``s passed when initializing ``var()`` are
+            provided, the values passed when initializing ``var()`` are
             used.
 
         keep_subsampling : bool, default=False
