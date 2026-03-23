@@ -68,6 +68,9 @@ Changes
 - The configuration parameter "use_table_report" has been removed from the skrub
   configuration. Use :meth:`patch_display` instead.
   :pr:`1973` by :user:`Riccardo Cappuzzo<rcap107>`.
+- The overplotting of the counts atop the vertical histogram bars in the
+  :class:'TableReport' has been removed due to formatting issues.
+  :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
 --------
