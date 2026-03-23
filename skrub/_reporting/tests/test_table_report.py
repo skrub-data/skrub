@@ -38,10 +38,7 @@ def get_report_id(html):
 @skip_polars_installed_without_pyarrow
 def test_report(air_quality):
     col_filt = {
-        "first_2": {
-            "display_name": "First 2",
-            "columns": sbd.column_names(air_quality)[:2],
-        }
+        "First 2": sbd.column_names(air_quality)[:2],
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
     assert report.max_association_columns == 30
