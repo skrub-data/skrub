@@ -46,9 +46,13 @@ for more complex tasks.
 # By default, the |fetch_employee_salaries| function returns the training set.
 # We will load the test set later, to evaluate our model on unseen data.
 
+import pandas as pd
+
 from skrub.datasets import fetch_employee_salaries
 
-training_data = fetch_employee_salaries(split="train").employee_salaries
+training_data = pd.read_csv(
+    fetch_employee_salaries(split="train").employee_salaries_path
+)
 
 # %%
 # We can take a look at the dataset using the |TableReport|.
@@ -160,7 +164,7 @@ loaded_model = pickle.loads(saved_model)
 # case, "data").
 #
 # We can now get the test set of the employee salaries dataset:
-unseen_data = fetch_employee_salaries(split="test").employee_salaries
+unseen_data = pd.read_csv(fetch_employee_salaries(split="test").employee_salaries_path)
 
 # %%
 # Then, we can use the loaded model to make predictions on the unseen data by
