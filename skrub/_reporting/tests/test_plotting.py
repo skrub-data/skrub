@@ -42,8 +42,6 @@ def test_plots_do_not_show_in_interactive_mode():
         before = plt.get_fignums()
         _plotting.histogram(data)
         after = plt.get_fignums()
-        assert before == after, (
-            "histogram() left open figure(s) in interactive mode"
-        )
+        assert before == after, "histogram() left open figure(s) in interactive mode"
     finally:
         plt.ioff()
