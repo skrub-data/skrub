@@ -2,10 +2,13 @@ import codecs
 import functools
 import json
 import numbers
+from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from skrub import selectors as s
 
 from .. import _config
 from .. import _dataframe as sbd
@@ -45,6 +48,58 @@ def _check_max_cols(max_plot_columns, max_association_columns):
     return max_plot_columns, max_association_columns
 
 
+def _format_custom_filters(column_filters, df):
+    custom_filters = {}
+    if column_filters is None:
+        return column_filters
+    for i, (display_name, filter) in enumerate(column_filters.items()):
+        if isinstance(filter, s.Selector):
+            filter_index = filter.expand_index(df)
+            custom_filters[f"custom_{i}"] = {
+                "display_name": display_name,
+                "columns": filter_index,
+            }
+            continue
+        if not isinstance(filter, Sequence):
+            raise TypeError(
+                "Custom filters should be either a Selector or a list of column names"
+                f"\n     or indices. Got a filter of type: {type(filter).__name__}."
+            )
+        isint = all(isinstance(f, int) for f in filter)
+        isstring = all(isinstance(f, str) for f in filter)
+        if isint:
+            if not all((0 <= f < df.shape[1]) for f in filter):
+                raise ValueError(
+                    "Indices in the filter can not exceed the number of columns in"
+                    "\n     the dataframe or be negative."
+                )
+            custom_filters[f"custom_{i}"] = {
+                "display_name": display_name,
+                "columns": filter,
+            }
+        elif isstring:
+            mask = [f not in df.columns for f in filter]
+            if any(mask):
+                raise ValueError(
+                    f"Column names {np.asarray(filter)[mask]} in filter "
+                    f"\n     '{display_name}' are not valid column names"
+                    " in the dataframe."
+                )
+            filter_index = s.make_selector(filter).expand_index(df)
+            custom_filters[f"custom_{i}"] = {
+                "display_name": display_name,
+                "columns": filter_index,
+            }
+        else:
+            types = [type(f).__name__ for f in filter]
+            raise ValueError(
+                "All list elements must be either valid indices (int) or"
+                f"\n     column names (str), got {types}"
+            )
+
+    return custom_filters
+
+
 class TableReport:
     r"""Summarize the contents of a dataframe.
 
@@ -69,9 +124,10 @@ class TableReport:
         Title for the report.
     column_filters : dict
         A dict for adding custom entries to the column filter dropdown menu.
-        Each key is an id for the filter (e.g. ``"first_10"``) and the value is a
-        mapping with the keys ``display_name`` (the name shown in the menu,
-        e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
+        Each key is the filter named to be displayed in the dropdown menu
+        (e.g. ``"first_10"``), and the value is the desired filter. Allowed
+        formats for the filter values are a list of column names,
+        a list of column indices, or a Selector object.
         See the end of the "Examples" section below for details.
     verbose : int, default = 1
         Whether to print progress information while the report is being generated.
@@ -173,10 +229,7 @@ class TableReport:
     in the report's dropdown menu.
 
     >>> filters = {
-    ...     "at_least_2": {
-    ...         "display_name": "Columns with at least 2 unique values",
-    ...         "columns": ["a", "b"],
-    ...     }
+    ...         "display_name": ["a", "b"],
     ... }
     >>> report = TableReport(df, column_filters=filters)
 
@@ -235,7 +288,7 @@ class TableReport:
         }
         self._to_html_kwargs = {}
         self.title = title
-        self.column_filters = column_filters
+        self.column_filters = _format_custom_filters(column_filters, dataframe)
         self.max_plot_columns, self.max_association_columns = _check_max_cols(
             max_plot_columns, max_association_columns
         )

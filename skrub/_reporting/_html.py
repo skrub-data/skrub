@@ -81,11 +81,6 @@ def _get_column_filters(summary, column_filters):
     df = summary["dataframe"]
     filters = {}
 
-    for i, (display_name, selector) in enumerate(column_filters.items()):
-        filters[f"custom_{i}"] = {
-            "display_name": display_name,
-            "columns": selector.expand_index(df),
-        }
     filters["all()"] = {
         "display_name": _FILTER_NAMES["all()"],
         "columns": list(range(sbd.shape(df)[1])),
@@ -165,11 +160,11 @@ def to_html(
         template = jinja_env.get_template("standalone-report.html")
     else:
         template = jinja_env.get_template("inline-report.html")
-    column_filters = _get_column_filters(summary, column_filters)
+    default_filters = _get_column_filters(summary, column_filters)
     # prioritize user-provided filters and keep them at the beginning
-    # column_filters = column_filters | {
-    #     k: v for (k, v) in default_filters.items() if k not in column_filters
-    # }
+    column_filters = column_filters | {
+        k: v for (k, v) in default_filters.items() if k not in column_filters
+    }
     return template.render(
         {
             "summary": summary,

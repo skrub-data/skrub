@@ -11,6 +11,7 @@ from sklearn.utils import Bunch
 
 from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
+from skrub import selectors as s
 from skrub._reporting._sample_table import make_table
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -496,3 +497,65 @@ def test_open_tab_minimal_mode(df_module):
     report2 = TableReport(df, open_tab="associations")
     report2._set_minimal_mode()
     assert report2.open_tab == "table"
+
+
+@pytest.mark.parametrize(
+    "filter",
+    [
+        {"indices": [0]},
+        {"column_names": ["data1", "names"]},
+        {"selector": s.string()},
+    ],
+    ids=[
+        "pass_index",
+        "pass_name",
+        "pass_input",
+    ],
+)
+def test_column_filters_pass(pd_module, filter):
+    df = pd_module.make_dataframe(
+        {
+            "names": ["name_1", "name_2", "name_3"],
+            "data1": np.random.normal(size=3),
+            "data2": np.random.uniform(size=3),
+        }
+    )
+
+    report = TableReport(df, column_filters=filter)
+    (column_title,) = filter.keys()
+    html = report.html()
+    assert column_title in html
+
+
+@pytest.mark.parametrize(
+    "filter, expected, match",
+    [
+        (
+            {"indices": [0, 1, 100]},
+            ValueError,
+            "Indices in the filter can not exceed the number of columns in.*",
+        ),
+        (
+            {"names": ["data1", " data2", "data3"]},
+            ValueError,
+            ".*not valid column names.*",
+        ),
+        (
+            {"mixed_input": ["data1", 0]},
+            ValueError,
+            "All list elements must be either.*",
+        ),
+        ({"selector": np.arange(3)}, TypeError, "Custom filters should be either.*"),
+    ],
+    ids=["fail_index", "fail_name", "fail_mixed_input", "fail_input"],
+)
+def test_column_filters_fail(pd_module, filter, expected, match):
+    df = pd_module.make_dataframe(
+        {
+            "names": ["name_1", "name_2", "name_3"],
+            "data1": np.random.normal(size=3),
+            "data2": np.random.uniform(size=3),
+        }
+    )
+    with pytest.raises(expected, match=match):
+        TableReport(df, column_filters=filter)
