@@ -7,6 +7,7 @@ import unicodedata
 import numpy as np
 
 from skrub import _dataframe as sbd
+from skrub._config import get_config
 from skrub._dispatch import dispatch, raise_dispatch_unregistered_type
 
 
@@ -87,9 +88,6 @@ def format_number(number):
     if isinstance(number, numbers.Integral):
         return f"{number:,}"
     if isinstance(number, numbers.Real):
-        #    Import placed here to avoid circular import related to dispatch
-        from skrub._config import get_config
-
         var = get_config()["float_precision"]
         return f"{number:#.{var}g}"
     return str(number)
