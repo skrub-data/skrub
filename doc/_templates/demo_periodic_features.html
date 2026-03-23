@@ -1,0 +1,9 @@
+<div class="doctest highlight-default notranslate">
+
+    <div class="highlight hl-ipython3 code-margin">
+<pre><span></span><span class="kn">from</span> <span class="nn">skrub</span> <span class="kn">import</span> <span class="n">DatetimeEncoder</span>
+<span class="n">de</span> <span class="o">=</span> <span class="n">DatetimeEncoder</span><span class="p">(</span><span class="n">periodic_encoding</span><span class="o">=</span><span class="s2">"spline"</span><span class="p">)</span>
+<span class="n">periodic_features</span> <span class="o">=</span> <span class="n">de</span><span class="p">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"hiring_date"</span><span class="p">])</span>
+<span class="n">plt</span><span class="p">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">periodic_features</span><span class="p">)</span></pre>
+    </div>
+  </div>
