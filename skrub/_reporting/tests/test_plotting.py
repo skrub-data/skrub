@@ -28,4 +28,3 @@ def test_histogram():
     data = pd.Series([0.0])
     _, n_low, n_high = _plotting.histogram(data)
     assert (n_low, n_high) == (0, 0)
-
