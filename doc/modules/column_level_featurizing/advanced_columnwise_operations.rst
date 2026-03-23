@@ -13,9 +13,9 @@ The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In cases where we want to apply a custom transformation to a series we need the |ApplyToCols|
-structure to handle multiple columns, or if this transformation needs to be able to reject certain
+structure to handle multiple columns, and if this transformation needs to be able to reject certain
 columns and communicate this to |ApplyToCols|, we must to create a transformer from scratch
-that is capable of handling this exception.
+that raises this exception when appropriate.
 
 Hence the ``SingleColumnTransformer`` class. It is originally a base class from which many transformers are
 inherited, but it can also be used to create new transformers. As long we specify
