@@ -357,7 +357,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml,doc/_static/scripts/fuse.min.js'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'
