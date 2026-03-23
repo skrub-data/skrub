@@ -136,6 +136,7 @@
 
   let fuseInstance = null;
   let currentType = "all"; // "all" | "page" | "api" | "example" | "section"
+  let currentQuery = "";
 
   function runSearch() {
     const q = currentQuery.trim();
