@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+
 from skrub._reporting import _plotting
 
 
