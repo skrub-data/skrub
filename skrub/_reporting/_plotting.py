@@ -312,7 +312,7 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
     ax_percentage = ax.twinx()
     ax_percentage.set_ylim(ax.get_ylim())
     ax_percentage.set_yticks(ticks=range(len(counts)))
-    ax_percentage.tick_params(axis="both", length=0, pad=0)
+    ax_percentage.tick_params(axis="both", length=0)
     ax_percentage.set_yticklabels(
         labels=percent,
         color=_TEXT_COLOR_PLACEHOLDER,
