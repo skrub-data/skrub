@@ -43,7 +43,9 @@
    */
   function highlight(text, term) {
     if (!term) return escHtml(text);
+    // Escape special regex characters in the term.
     const safe = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Replace matches with <mark>…</mark>, keeping the original case.
     return escHtml(text).replace(
       new RegExp(safe, "gi"),
       (m) => `<mark>${m}</mark>`
@@ -58,11 +60,15 @@
     maxLen = maxLen || 200;
     if (!content) return "";
     const lower = content.toLowerCase();
+    // Find the first occurrence of the term (case-insensitive).
+    // If not found, just return the start of the content.
     const idx = term ? lower.indexOf(term.toLowerCase()) : -1;
     let start = 0;
+    // If the term is found, try to center the snippet around it.
     if (idx > 50) {
       start = idx - 50;
     }
+    // Extract the snippet, adding ellipses if we had to cut off the start or end.
     let chunk = content.slice(start, start + maxLen);
     if (start > 0) chunk = "…" + chunk;
     if (start + maxLen < content.length) chunk += "…";
@@ -85,8 +91,12 @@
 
     const parts = ['<ul class="fuse-results-list">'];
     results.forEach(function (r) {
+      // item is the matched document from the search index, with all its fields
       const item = r.item;
       const url = docUrl(item.url);
+      // typeBadge is a visual indicator of the item's type (API, section, example, guide)
+      // item.type is expected to be one of "api", "section", "example", or "guide"
+      // The type is defined in sphinxext/fuse_search_index.py when building the index
       const typeBadge =
         item.type === "api"
           ? '<span class="fuse-badge fuse-badge--api">API</span>'
@@ -96,6 +106,7 @@
           ? '<span class="fuse-badge fuse-badge--example">Example</span>'
           : '<span class="fuse-badge fuse-badge--guide">Guide</span>';
 
+      // Highlight the query terms in the title and content snippet.
       const titleHtml = highlight(item.title, query);
       const breadcrumb = item.page
         ? '<span class="fuse-result-breadcrumb">' + escHtml(item.page) + '</span>'
@@ -103,6 +114,7 @@
       const snip = snippet(item.content, query, 220);
       const snipHtml = snip ? "<p>" + highlight(snip, query) + "</p>" : "";
 
+      // Build the HTML for the search result item
       parts.push(
         '<li class="fuse-result-item">' +
           '<a class="fuse-result-link" href="' + escHtml(url) + '">' +
@@ -118,12 +130,14 @@
     container.innerHTML = parts.join("");
   }
 
+  // Update the display of how many results were found. If count=0, hide it.
   function updateCount(count, total) {
     const el = document.getElementById("fuse-search-count");
     if (!el) return;
     if (count === 0) {
       el.textContent = "";
     } else {
+      // Show "1 result" or "5 results (of 12)" if we had to cap the displayed results.
       el.textContent =
         count + " result" + (count !== 1 ? "s" : "") +
         (total !== count ? " (of " + total + ")" : "");
@@ -142,17 +156,20 @@
     const q = currentQuery.trim();
     const container = document.getElementById("fuse-search-results");
 
+    // If the query is empty, don't show any results (not even "no results found").
     if (!q) {
       container.innerHTML = "";
       updateCount(0, 0);
       return;
     }
 
+    // If the Fuse instance isn't ready yet, show a loading message.
     if (!fuseInstance) {
       container.innerHTML = '<p class="fuse-loading">Loading index…</p>';
       return;
     }
 
+    // Run the search query through Fuse.js to get matching results.
     let results = fuseInstance.search(q);
 
     // Filter by type tab
@@ -214,6 +231,10 @@
       ignoreLocation: true,  // search anywhere in the string
     });
 
+    // Show the type filters and run the initial search if we had a query from the URL.
+    // If we're using search.html, the filters are always present
+    // XXX we might want to remove this check and just assume the filters are always
+    // there, since search.html is the only place that includes this script
     if (typeFilters) typeFilters.hidden = false;
     if (currentQuery) runSearch();
 
@@ -247,6 +268,7 @@
     const form = document.getElementById("fuse-search-form");
     if (form) {
       form.addEventListener("submit", function (e) {
+        // Do nothing on submit, we already handle live search on input.
         e.preventDefault();
       });
     }
