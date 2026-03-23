@@ -29,35 +29,41 @@
   }
 
   /** Escape HTML special characters. */
+  const ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
   function escHtml(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+    return String(str).replace(/[&<>"']/g, (c) => ESC_MAP[c]);
   }
 
   /**
    * Highlight every occurrence of ``term`` (exact string, case-insensitive)
    * inside ``text`` using <mark>.
+   *
+   * We split on matches in the *original* text and HTML-escape each piece
+   * independently, so terms containing &, <, >, " or ' are matched and
+   * highlighted correctly.
    */
   function highlight(text, term) {
     if (!term) return escHtml(text);
     // Escape special regex characters in the term.
     const safe = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    // Replace matches with <mark>…</mark>, keeping the original case.
-    return escHtml(text).replace(
-      new RegExp(safe, "gi"),
-      (m) => `<mark>${m}</mark>`
-    );
+    const re = new RegExp(safe, "gi");
+    const parts = [];
+    let lastIdx = 0;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > lastIdx) parts.push(escHtml(text.slice(lastIdx, m.index)));
+      parts.push("<mark>" + escHtml(m[0]) + "</mark>");
+      lastIdx = m.index + m[0].length;
+    }
+    parts.push(escHtml(text.slice(lastIdx)));
+    return parts.join("");
   }
 
   /**
    * Return a ≤200-character snippet of ``content`` around the first
    * occurrence of ``term``.
    */
-  function snippet(content, term, maxLen) {
-    maxLen = maxLen || 200;
+  function snippet(content, term, maxLen = 200) {
     if (!content) return "";
     const lower = content.toLowerCase();
     // Find the first occurrence of the term (case-insensitive).
@@ -67,6 +73,9 @@
     // If the term is found, try to center the snippet around it.
     if (idx > 50) {
       start = idx - 50;
+      // Advance to the next word boundary so we don't cut off mid-word.
+      const nextSpace = content.indexOf(" ", start);
+      if (nextSpace !== -1 && nextSpace < idx) start = nextSpace + 1;
     }
     // Extract the snippet, adding ellipses if we had to cut off the start or end.
     let chunk = content.slice(start, start + maxLen);
