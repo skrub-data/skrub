@@ -509,8 +509,8 @@ def test_open_tab_minimal_mode(df_module):
         "pass_input",
     ],
 )
-def test_column_filters_pass(pd_module, filter):
-    df = pd_module.make_dataframe(
+def test_column_filters_pass(df_module, filter):
+    df = df_module.make_dataframe(
         {
             "names": ["name_1", "name_2", "name_3"],
             "data1": np.random.normal(size=3),
@@ -528,26 +528,31 @@ def test_column_filters_pass(pd_module, filter):
     "filter, expected, match",
     [
         (
+            0,
+            TypeError,
+            "column_filters should be a dict.*",
+        ),
+        (
             {"indices": [0, 1, 100]},
             ValueError,
-            "Indices in the filter can not exceed the number of columns in.*",
+            "are out of range:.*",
         ),
         (
             {"names": ["data1", " data2", "data3"]},
             ValueError,
-            ".*not valid column names.*",
+            ".*are not in the dataframe:.*",
         ),
         (
             {"mixed_input": ["data1", 0]},
-            ValueError,
-            "All list elements must be either.*",
+            TypeError,
+            "Custom column filters should.*",
         ),
-        ({"selector": np.arange(3)}, TypeError, "Custom filters should be either.*"),
+        ({"selector": np.arange(3)}, TypeError, "Custom column filters should be.*"),
     ],
-    ids=["fail_index", "fail_name", "fail_mixed_input", "fail_input"],
+    ids=["fail_mapping", "fail_index", "fail_name", "fail_mixed_input", "fail_input"],
 )
-def test_column_filters_fail(pd_module, filter, expected, match):
-    df = pd_module.make_dataframe(
+def test_column_filters_fail(df_module, filter, expected, match):
+    df = df_module.make_dataframe(
         {
             "names": ["name_1", "name_2", "name_3"],
             "data1": np.random.normal(size=3),

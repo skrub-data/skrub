@@ -77,7 +77,7 @@ def _get_high_association_columns(summary):
     return list(columns)
 
 
-def _get_column_filters(summary, column_filters):
+def _get_column_filters(summary):
     df = summary["dataframe"]
     filters = {}
 
@@ -160,7 +160,7 @@ def to_html(
         template = jinja_env.get_template("standalone-report.html")
     else:
         template = jinja_env.get_template("inline-report.html")
-    default_filters = _get_column_filters(summary, column_filters)
+    default_filters = _get_column_filters(summary)
     # prioritize user-provided filters and keep them at the beginning
     column_filters = column_filters | {
         k: v for (k, v) in default_filters.items() if k not in column_filters
