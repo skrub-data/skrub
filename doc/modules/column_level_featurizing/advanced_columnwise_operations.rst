@@ -22,7 +22,7 @@ inherited, but it can also be used to create new transformers. As long we specif
 corresponding ``fit`` and ``transform`` methods to our custom transformer, it can be passed on like any other.
 
 For instance, we might want to create a custom transformer specialized in parsing zip codes of a certain
-format, that returns |RejectColumn| with a custom warning when the length of the provided
+format, that raises |RejectColumn| when the length of the provided
 zip code is incorrect:
 
 >>> from skrub.core import RejectColumn, SingleColumnTransformer
