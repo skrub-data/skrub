@@ -162,9 +162,9 @@ TableReport(data)
 # multiple columns at once. Complex column selection is possible using
 # :ref:`skrub's column selectors <user_guide_selectors>`.
 
-from skrub import ApplyToEachCol, DatetimeEncoder
+from skrub import ApplyToCols, DatetimeEncoder
 
-ApplyToEachCol(
+ApplyToCols(
     DatetimeEncoder(add_total_seconds=False), cols=["date_1", "date_2"]
 ).fit_transform(data)
 
