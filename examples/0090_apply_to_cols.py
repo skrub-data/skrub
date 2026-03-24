@@ -24,13 +24,13 @@ and transforming dataframe columns using arbitrary logic.
 
 # %%
 # We begin with loading a dataset with heterogeneous datatypes, and replacing Pandas's
-# display with the TableReport display via :func:`skrub.set_config`.
+# display with the TableReport display via :func:`skrub.patch_display`.
 import pandas as pd
 
 import skrub
 from skrub.datasets import fetch_employee_salaries
 
-skrub.set_config(use_table_report=True)
+skrub.patch_display()
 file_path = fetch_employee_salaries().path
 data = pd.read_csv(file_path)
 X = data.drop(columns="current_annual_salary")

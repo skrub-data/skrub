@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+from . import _utils
 
 __all__ = ["SingleColumnTransformer", "RejectColumn"]
 
@@ -27,6 +28,7 @@ _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 4)
 _SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
 
 
+@_utils.set_module("skrub.core")
 class RejectColumn(ValueError):
     """Used by single-column transformers to indicate they do not apply to a column.
 
@@ -105,7 +107,7 @@ class RejectColumn(ValueError):
     >>> ToDatetime().fit_transform(df['b'])
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Column 'b' does not contain strings.
+    skrub.core.RejectColumn: Column 'b' does not contain strings.
     """
 
     pass

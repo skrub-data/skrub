@@ -18,6 +18,7 @@ from ._data_ops import (
     FreezeAfterFit,
     IfElse,
     Match,
+    SplitX,
     Var,
     check_data_op,
     check_name,
@@ -45,7 +46,7 @@ from ._inspection import (
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
-from ._utils import KFOLD_5, NULL, attribute_error
+from ._utils import NULL, attribute_error
 
 # By default, select all columns
 _SELECT_ALL_COLUMNS = s.all()
@@ -1814,7 +1815,7 @@ class SkrubNamespace:
         environment=None,
         *,
         keep_subsampling=False,
-        split_func=model_selection.train_test_split,
+        split_func=None,
         **split_func_kwargs,
     ):
         """Split an environment into training and testing environments.
@@ -1831,7 +1832,7 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        split_func : function, optional
+        split_func : function, optional, default=None
             The function used to split X and y once they have been computed. By
             default, :func:`~sklearn.model_selection.train_test_split` is used.
 
@@ -1903,7 +1904,7 @@ class SkrubNamespace:
         )
 
     @_check_before
-    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=KFOLD_5):
+    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=None):
         """Yield splits of an environment into training and testing environments.
 
         Parameters
@@ -1918,7 +1919,7 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        cv : int, cross-validation generator or iterable, default=KFold(5)
+        cv : int, cross-validation generator or iterable, default=None
             The default is 5-fold without shuffling. Can be a cross-validation
             splitter, an iterable yielding pairs of (train, test) indices, or an
             int to specify the number of folds for KFold splitting.
@@ -2532,7 +2533,7 @@ class SkrubNamespace:
         ----------
         environment : dict or None
             Bindings for variables contained in the DataOp plan. If not
-            provided, the ``value``s passed when initializing ``var()`` are
+            provided, the values passed when initializing ``var()`` are
             used.
 
         keep_subsampling : bool, default=False
@@ -2587,30 +2588,71 @@ class SkrubNamespace:
         )
 
     @checked_data_op_constructor
-    def mark_as_X(self):
-        """Mark this DataOp as being the ``X`` table.
+    def mark_as_X(self, *, cv=None, split_kwargs=None):
+        """
+        Mark this DataOp as being the ``X`` table.
 
-        This is used for cross-validation and hyperparameter selection: operations
-        done before :meth:`.skb.mark_as_X()` and :meth:`.skb.mark_as_y()` are executed
-        on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original DataOp is left unchanged.
+
+        This is used for train/test splits and cross-validation.
+        To create a split,
+
+        - The nodes that are marked as ``X`` and ``y`` are materialized: all
+          the operations that come before are executed, to compute the value of
+          ``X`` and ``y``.
+        - Then the resulting tables are divided into train and test parts
+          according to the splitting strategy.
+        - For each split, the rest of the DataOp is fitted on the train set and
+          tested on the test set.
+
+        In addition, ``mark_as_X`` can be passed a splitter (``cv``) and named
+        arguments for the splitter. Those will be evaluated at the same time as
+        ``X`` and ``y`` and used to create the train/test splits.
+
+        Parameters
+        ----------
+        cv : int, cross-validation iterator or iterable, default=None
+            Cross-validation splitting strategy. It can be:
+
+            - None: 5-fold (stratified) cross-validation
+            - integer: specify the number of folds
+            - sklearn `CV splitter <https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators>`_
+            - iterable yielding (train, test) splits as arrays of indices.
+
+        split_kwargs : dict or None, default=None
+            Named arguments for the ``split()`` function (such as groups for a
+            :class:`~sklearn.model_selection.GroupKFold`). Note that
+            ``split_kwargs`` (and ``cv``) can themselves be DataOps.
 
         Returns
         -------
-        The input DataOp, which has been marked as being ``X``
+        A new DataOp, which has been marked as being the ``X`` table (which
+        must be split for cross-validation).
 
         See also
         --------
+        :meth:`DataOp.skb.mark_as_y`
+            The equivalent of this function for the targets: mark a node as
+            being the ``y`` table.
         :func:`skrub.X`
             ``skrub.X(value)`` can be used as a shorthand for
             ``skrub.var('X', value).skb.mark_as_X()``.
+        :meth:`DataOp.skb.train_test_split`
+            Prepare training and testing sets for a DataOp.
+        :meth:`DataOp.skb.cross_validate`
+            Perform cross-validation on a DataOp.
+        :meth:`DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
 
         Notes
         -----
         During cross-validation, all the previous steps are first executed,
-        until X and y have been materialized. Then, those are split into
-        training and testing sets. The following steps in the DataOp are
-        fitted on the train data, and applied to test data, within each split.
+        until X and y (and the splitter and its additional arguments, if any)
+        have been materialized. Then, X and y are split into training and
+        testing sets. The following steps in the DataOp are fitted on the train
+        data, and applied to test data, within each split.
 
         This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
@@ -2620,8 +2662,6 @@ class SkrubNamespace:
 
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
-
-        Note: this marks the DataOp in-place and also returns it.
 
         Examples
         --------
@@ -2657,9 +2697,60 @@ class SkrubNamespace:
         rest of the learner (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
 
-        Please see the examples gallery for more information.
+        We can pass additional data to the cross-validation splitter by using
+        the ``cv`` and ``split_kwargs`` parameters:
+
+        >>> df = skrub.datasets.toy_products()
+        >>> df
+           description  price            seller     category
+        0        mouse     10   supermarket.com  electronics
+        1       hammer     15  bestproducts.com        tools
+        2     keyboard     20   supermarket.com  electronics
+        3      usb key      9  bestproducts.com  electronics
+        4      charger     13  bestproducts.com  electronics
+        5  screwdriver     12   supermarket.com        tools
+
+        Suppose we want to assess generalization to new sellers. While splitting for
+        cross-validation we must group products by seller. We do it with
+        :class:`sklearn.model_selection.LeaveOneGroupOut`.
+
+        >>> from sklearn.dummy import DummyClassifier
+        >>> from sklearn.model_selection import LeaveOneGroupOut
+
+        >>> data = skrub.var("df", df)
+        >>> groups = data["seller"]
+        >>> X = data[["description", "price"]].skb.mark_as_X(
+        ...     cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+        ... )
+        >>> y = data["category"].skb.mark_as_y()
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> split = pred.skb.train_test_split()
+
+        The train set only contains data from the "supermarket.com" seller.
+
+        >>> split["X_train"]
+           description  price
+        0        mouse     10
+        2     keyboard     20
+        5  screwdriver     12
+
+        The test set only contains data from the "bestproducts.com" seller.
+
+        >>> split["X_test"]
+          description  price
+        1      hammer     15
+        3     usb key      9
+        4     charger     13
         """
-        new = self._data_op._skrub_impl.__copy__()
+        if cv is None:
+            if split_kwargs is not None:
+                raise TypeError(
+                    "To pass split_kwargs you must also provide a splitter. "
+                    f"Got cv=None and split_kwargs={split_kwargs}."
+                )
+            new = self._data_op._skrub_impl.__copy__()
+        else:
+            new = SplitX(self._data_op, cv, split_kwargs)
         new.is_X = True
         return DataOp(new)
 

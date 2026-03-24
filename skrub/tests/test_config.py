@@ -32,7 +32,6 @@ def test_default_config():
     cfg = get_config()
     # Rather than asserting that the dictionary is exactly equal to the hard-coded
     # default values, we check each expected default value individually.
-    assert cfg["use_table_report"] is False
     assert cfg["use_table_report_data_ops"] is True
     # On CI the absolute path is different, check that it ends with skrub_data
     assert pathlib.Path(cfg["data_dir"]).name == "skrub_data"
@@ -49,7 +48,6 @@ def test_default_config():
     # doc/modules/configurations_and_utils/customizing_configurations.rst
     # should also be updated if new configuration keys are added.
     expected_keys = {
-        "use_table_report",
         "use_table_report_data_ops",
         "data_dir",
         "table_report_verbosity",
@@ -81,29 +79,12 @@ def test_deprecated_env_var_warning(monkeypatch, tmp_path):
             _get_default_data_dir()
 
 
-def test_config_context():
-    assert get_config()["use_table_report"] is False
-
-    # Not using as a context manager affects nothing
-    config_context(use_table_report=True)
-    assert get_config()["use_table_report"] is False
-
-
 def test_use_table_report_data_ops(simple_df):
     X = skrub.X(simple_df)
     with config_context(use_table_report_data_ops=True):
         assert _use_table_report(X)
         with config_context(use_table_report_data_ops=False):
             assert not _use_table_report(X)
-
-
-@skip_polars_installed_without_pyarrow
-def test_use_table_report(simple_df):
-    assert not _use_table_report(simple_df)
-    with config_context(use_table_report=True):
-        assert _use_table_report(simple_df)
-        with config_context(use_table_report=False):
-            assert not _use_table_report(simple_df)
 
 
 @skip_polars_installed_without_pyarrow
@@ -124,12 +105,6 @@ def test_max_plot_columns(simple_df):
         )
         assert report.max_association_columns == "all"
         assert report.max_plot_columns == "all"
-
-    # Check that max_plot_columns can be set after patching the TableReport
-    # repr_html.
-    with config_context(use_table_report=True):
-        with config_context(max_plot_columns=1):
-            assert "Plotting was skipped" in simple_df._repr_html_()
 
 
 def test_enable_subsampling(simple_df):
@@ -177,7 +152,6 @@ def test_float_precision(simple_series):
 @pytest.mark.parametrize(
     "params",
     [
-        {"use_table_report": "hello"},
         {"use_table_report_data_ops": 1},
         {"max_plot_columns": "hello"},
         {"max_association_columns": "hello"},

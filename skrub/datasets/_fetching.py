@@ -64,7 +64,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         )
         dataset["employee_salaries_path"] = str(train_path)
         dataset["path"] = str(train_path)
-        dataset["employee_salaries"][:id_split].to_csv(str(train_path), index=False)
+        dataset["employee_salaries"].to_csv(str(train_path), index=False)
         dataset["X"] = dataset["X"][:id_split]
         dataset["y"] = dataset["y"][:id_split]
     elif split == "test":
@@ -74,7 +74,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         )
         dataset["employee_salaries_path"] = str(test_path)
         dataset["path"] = str(test_path)
-        dataset["employee_salaries"][id_split:].to_csv(str(test_path), index=False)
+        dataset["employee_salaries"].to_csv(str(test_path), index=False)
         dataset["X"] = dataset["X"][id_split:]
         dataset["y"] = dataset["y"][id_split:]
     return dataset
