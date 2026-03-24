@@ -102,7 +102,7 @@ def _plot(plotting_fun):
             for k, v in params.items():
                 plt.rcParams[k] = v
 
-            with warnings.catch_warnings():
+            with warnings.catch_warnings(), plt.ioff():
                 # We do not care about missing glyphs because the text is
                 # rendered & the viewbox is recomputed in the browser.
                 warnings.filterwarnings("ignore", "Glyph.*missing from font")
