@@ -118,7 +118,7 @@ class ApplyToEachCol(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub import ApplyToEachCol
+    >>> from skrub._apply_to_each_col import ApplyToEachCol
     >>> from sklearn.preprocessing import StandardScaler
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
     >>> df

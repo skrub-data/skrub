@@ -41,15 +41,12 @@ Changes
 -------
 - Increased the minimum version of polars from 0.20 to 1.5.0.
   :pr:`1897` by :user:`Riccardo Cappuzzo <rcap107>`.
-- :class:`ApplyToCols` has been modified so that now it can detect automatically
-  whether the provided transformer should be applied independently on each column,
-  or on all selected columns as a single dataframe. In most cases, this replaces
-  the original ``ApplyToCols`` and ``ApplyToFrame``. As a result, ``ApplyToCols``
-  and ``ApplyToFrame`` have been renamed :class:`ApplyToEachCol` and
-  :class:`ApplyToSubFrame` respectively.
-  The behavior of the old ``ApplyToCols`` can be replicated by setting the parameter
-  ``how`` to ``cols``.
-  :pr:`1913` and :pr:`1919` by :user:`Riccardo Cappuzzo <rcap107>`.
+- ``ApplyToCols`` and ``ApplyToFrame`` have been merged into a single class,
+  :class:`ApplyToCols`,that covers the functionality of both the old classes by
+  detecting automatically whether the provided transformer should be applied
+  independently on each column, or on all selected columns as a single dataframe.
+  As a result, ``ApplyToCols`` and ``ApplyToFrame`` have been removed.
+  :pr:`1913`, :pr:`1919` and :pr:`1962` by :user:`Riccardo Cappuzzo <rcap107>`.
 - The dataset fetcher functions now include a "path" field for each table in the dataset.
   For example, the dataset "employee_salaries" now has the field ``employee_salaries_path``.
   Additionally, datasets that include a single table have the field ``path``. These
