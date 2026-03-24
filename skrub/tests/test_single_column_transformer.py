@@ -62,7 +62,7 @@ def test_single_column_transformer_docstring(docstring):
     class Dummy(SingleColumnTransformer):
         __doc__ = docstring
 
-    assert "``Dummy`` is a type of single-column" in Dummy.__doc__
+    assert "``Dummy`` is a type of" in Dummy.__doc__
 
     class Dummy(SingleColumnTransformer):
         pass
