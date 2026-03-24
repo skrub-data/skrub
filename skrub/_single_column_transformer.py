@@ -62,7 +62,7 @@ class RejectColumn(ValueError):
     passed a column that does not contain strings, or that contains strings but none
     of them look like dates.
 
-    :class:`ApplyToCols` relies on these exceptions to whether a column should be
+    :class:`ApplyToCols` relies on these exceptions to decide whether a column should be
     transformed or passed through unchanged.
 
     How these rejections are handled depends on the ``allow_reject`` parameter.
