@@ -99,7 +99,8 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         transformer is a :class:`~core.SingleColumnTransformer`.
 
     transformer_ : Transformer
-        The fitted transformer. Only available when the transformer is **not** a :class:`~core.SingleColumnTransformer`.
+        The fitted transformer. Only available when the transformer is **not** a
+        :class:`~core.SingleColumnTransformer`.
 
     Notes
     -----

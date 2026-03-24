@@ -13,7 +13,7 @@
 
 .. _user_guide_multiple_columns:
 
-Operating over multiple columns at once with |ApplyToCols|
+Transforming selected columns with |ApplyToCols|
 ===========================================================
 
 Very often and for various reasons, transformers must be applied only to some of the
