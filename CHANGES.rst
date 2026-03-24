@@ -65,6 +65,12 @@ Changes
 - The configuration parameter "use_table_report" has been removed from the skrub
   configuration. Use :meth:`patch_display` instead.
   :pr:`1973` by :user:`Riccardo Cappuzzo<rcap107>`.
+- Updated how the ``column_filters`` parameter of :class:`TableReport` works.
+  It now accepts a dictionary where the key is the display name for the
+  dropdown menu, and the value is a filter of the columns that will be displayed.
+  Accepts either a list of column indices, a list of column names
+  or an instance of the :class:`Selector`.
+  :pr:`1976` by :user:`Lisa McBride <lisaleemcb>`.
 - The overplotting of the counts atop the vertical histogram bars in the
   :class:'TableReport' has been removed due to formatting issues.
   :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
