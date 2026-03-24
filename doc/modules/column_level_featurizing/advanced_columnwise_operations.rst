@@ -55,7 +55,7 @@ zip code is incorrect:
 >>> ZipcodeParser().fit_transform(df["received"])
 Traceback (most recent call last):
     ...
-skrub._single_column_transformer.RejectColumn: This transformer only takes zip codes of length 5.
+skrub.core.RejectColumn: This transformer only takes zip codes of length 5.
 
 
 
