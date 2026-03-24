@@ -64,6 +64,8 @@ dtype: object
 {'birthday': ToDatetime()}
 
 
+.. _single_column_transformer:
+
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -14,7 +14,8 @@ from . import _utils
 __all__ = ["SingleColumnTransformer", "RejectColumn"]
 
 _SINGLE_COL_LINE = (
-    "``{class_name}`` is a type of :class:`SingleColumnTransformer`. Unlike most "
+    "``{class_name}`` is a type of "
+    ":ref:`single column transformation <single_column_transformer>` . Unlike most "
     "scikit-learn estimators, its ``fit``, ``transform`` and ``fit_transform`` methods"
     " expect a single column (a pandas or polars Series) rather than a full dataframe."
     " To apply this transformer to one or more columns in a dataframe, use it as a"
