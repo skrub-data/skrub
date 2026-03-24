@@ -234,8 +234,9 @@ def fetch_drug_directory(data_home=None):
 
 
 def fetch_credit_fraud(data_home=None, split="train"):
-    """Fetch the credit fraud dataset (classification) available at \
-        https://github.com/skrub-data/skrub-data-files
+    """Fetch the credit fraud dataset (classification).
+
+    Available at https://github.com/skrub-data/skrub-data-files
 
     This is an imbalanced binary classification use-case. This dataset consists of
     two tables:
