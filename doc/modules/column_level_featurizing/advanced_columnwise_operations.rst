@@ -28,7 +28,7 @@ Name: birthday, dtype: datetime64[...]
 >>> ToDatetime().fit_transform(df["city"])
 Traceback (most recent call last):
     ...
-skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
+skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
 
 The ``allow_reject`` parameter in ``ApplyToCols`` specifies how to react if such an exception is raised.
 By default, no special handling is performed and rejections are considered to be errors:
@@ -108,4 +108,4 @@ format, that returns ``RejectColumn`` with a custom warning on zip code sizes:
 >>> ZipcodeParser().fit_transform(df["received"])
 Traceback (most recent call last):
     ...
-skrub._single_column_transformer.RejectColumn: This transformer only takes zip codes of length 5.
+skrub.core.RejectColumn: This transformer only takes zip codes of length 5.

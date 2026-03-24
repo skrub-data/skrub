@@ -74,6 +74,9 @@ Changes
   Accepts either a list of column indices, a list of column names
   or an instance of the :class:`Selector`.
   :pr:`1976` by :user:`Lisa McBride <lisaleemcb>`.
+- The overplotting of the counts atop the vertical histogram bars in the
+  :class:'TableReport' has been removed due to formatting issues.
+  :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
 --------
@@ -90,12 +93,15 @@ Bug Fixes
 - :class:`CheckInputDataFrame` no longer collects Polars LazyFrames automatically;
   a ``TypeError`` is now raised instead, consistent with the rest of the library.
   :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
+- :func:`fetch_employee_salaries` now correctly writes the train and test
+  split CSV files to their respective paths when ``split`` is specified.
+  :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
 
 Documentation
 -------------
 - Updated gallery examples to load datasets from their file paths using
   ``pd.read_csv()``, following the pattern established in :pr:`1852`.
-  :pr:`1940` by :user:`MuditAtrey <MuditAtrey>`.
+  :pr:`1940` and :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
 
 Release 0.7.2
 =============

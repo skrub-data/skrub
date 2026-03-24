@@ -9,6 +9,7 @@ from sklearn.utils.validation import check_is_fitted
 from .. import _dataframe as sbd
 from .. import _join_utils
 from .._sklearn_compat import _safe_indexing
+from .._utils import set_module
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, DataOp, SplitX, check_subsampled_X_y_shape
 from ._evaluation import (
@@ -140,6 +141,7 @@ class _DataOpWrapperMixin(_CloudPickle):
             attribute_error(self, "classes_")
 
 
+@set_module("skrub")
 class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
     """Learner that evaluates a skrub DataOp.
 
@@ -1017,6 +1019,7 @@ def _get_results_metadata(data_op_choices):
     }
 
 
+@set_module("skrub")
 class ParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 
