@@ -18,11 +18,11 @@ _SINGLE_COL_LINE = (
     " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
     " single column (a pandas or polars Series) rather than a full dataframe. To apply"
     " this transformer to one or more columns in a dataframe, use it as a parameter in"
-    " a ``skrub.ApplyToEachCol`` or a ``skrub.TableVectorizer``.\n\n"
+    " a ``skrub.ApplyToCols`` or a ``skrub.TableVectorizer``.\n\n"
     "To apply to all columns::\n\n"
-    "   ApplyToCol({class_name}())\n\n"
+    "   ApplyToCols({class_name}())\n\n"
     "To apply to selected columns::\n\n"
-    "   ApplyToEachCol({class_name}(), cols=['col_name_1', 'col_name_2'])"
+    "   ApplyToCols({class_name}(), cols=['col_name_1', 'col_name_2'])"
 )
 _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 4)
 _SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
@@ -229,7 +229,7 @@ class SingleColumnTransformer(BaseEstimator):
 
         Returns
         --------
-        all_outputs_
+        list of str
             The names of the output features.
         """
         check_is_fitted(self, "all_outputs_")

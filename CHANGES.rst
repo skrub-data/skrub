@@ -22,7 +22,7 @@ New Features
 - The reports produced by :meth:`DataOp.skb.full_report` and
   :meth:`SkrubLearner.report` now also display the values provided in the
   environment. :pr:`1920` by :user:`Jérôme Dockès <jeromedockes>`.
-- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaSearch` expose
+- :class:`SkrubLearner`, :class:`ParamSearch` and :class:`OptunaParamSearch` expose
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
   <jeromedockes>`.
@@ -54,10 +54,12 @@ Changes
   The default ``skrub_data`` folder can now be set in the skrub configuration and by setting
   the ``SKB_DATA_DIRECTORY`` environment variable. The environment variable ``SKRUB_DATA_DIRECTORY``
   is deprecated and will be removed in a future version of skrub.
-  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`.
-- :class:`core.SingleColumnTransformer` and associated exception :class:`core.RejectColumn` (used
-  internally by many skrub estimators) have been added to the public API, in the newly-created
-  :package:`skrub.core` module. :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
+  :pr:`1852` by :user:`Riccardo Cappuzzo<rcap107>`. Examples in the gallery have
+  been updated accordingly in :pr:`1940` and :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
+- :class:`~skrub.core.SingleColumnTransformer` and associated exception
+  :class:`~skrub.core.RejectColumn` (used internally by many skrub estimators) have
+  been added to the public API, in the newly-created ``skrub.core`` module.
+  :pr:`1851` by :user:`Eloi Massoulié <emassoulie>`.
 - Added the strings ``"None"`` and ``"none"`` to the list of null string values in
   :class:`Cleaner`. Also, exposed the list of null string values that will be set
   to null by the :class:`Cleaner` as the parameter ``null_strings``.
@@ -72,7 +74,7 @@ Changes
   or an instance of the :class:`Selector`.
   :pr:`1976` by :user:`Lisa McBride <lisaleemcb>`.
 - The overplotting of the counts atop the vertical histogram bars in the
-  :class:'TableReport' has been removed due to formatting issues.
+  :class:`TableReport` has been removed due to formatting issues.
   :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
@@ -87,18 +89,10 @@ Bug Fixes
   ``return_indices=True``. Now it returns the train and test indices of each
   fold in the ``train_indices`` and ``test_indices`` columns of the result
   dataframe. :pr:`1953` by :user:`Jérôme Dockès <jeromedockes>`.
-- :class:`CheckInputDataFrame` no longer collects Polars LazyFrames automatically;
-  a ``TypeError`` is now raised instead, consistent with the rest of the library.
+- Polars LazyFrames are no longer collected automatically anywhere in the library;
+  a ``TypeError`` is now raised instead.
   :pr:`1941` by :user:`Mudit Atrey <MuditAtrey>`.
-- :func:`fetch_employee_salaries` now correctly writes the train and test
-  split CSV files to their respective paths when ``split`` is specified.
-  :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
 
-Documentation
--------------
-- Updated gallery examples to load datasets from their file paths using
-  ``pd.read_csv()``, following the pattern established in :pr:`1852`.
-  :pr:`1940` and :pr:`1964` by :user:`MuditAtrey <MuditAtrey>`.
 
 Release 0.7.2
 =============

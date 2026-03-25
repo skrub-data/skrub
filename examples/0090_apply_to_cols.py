@@ -9,8 +9,6 @@ In this new example, we show how to create more flexible pipelines by selecting
 and transforming dataframe columns using arbitrary logic.
 
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
-.. |ApplyToEachCol| replace:: :class:`~skrub.ApplyToEachCol`
-.. |ApplyToSubFrame| replace:: :class:`~skrub.ApplyToSubFrame`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |SelectCols| replace:: :class:`~skrub.SelectCols`
 .. |DropCols| replace:: :class:`~skrub.DropCols`
@@ -106,7 +104,7 @@ model = make_pipeline(
 # .. admonition:: Under the hood of |ApplyToCols|
 #   :collapsible: closed
 #
-#   |ApplyToCols| is implemented using the |ApplyToEachCol| and |ApplyToSubFrame|
+#   |ApplyToCols| is implemented using the ``ApplyToEachCol`` and ``ApplyToSubFrame``
 #   classes.
 #   The former applies a transformer to each column independently, while the latter
 #   applies a transformer to a sub-dataframe.
