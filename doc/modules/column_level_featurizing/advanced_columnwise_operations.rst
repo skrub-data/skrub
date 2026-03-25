@@ -9,6 +9,8 @@
 Advanced columnwise operations
 ------------------------------
 
+.. _single_column_transformer:
+
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -128,51 +130,3 @@ We can see that the only column that has a transformer is "birthday":
 
 >>> to_datetime.transformers_
 {'birthday': ToDatetime()}
-
-.. _single_column_transformer:
-
-The single column transformer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-In cases where the user wants to apply a custom transformation to a series and needs the ApplyToCols
-structure to handle multiple columns, or if this transformation needs to be able to reject certain
-columns and communicate this to ``ApplyToCols``, it is necessary to create a transformer from scratch
-that is capable of handling this exception.
-
-Hence the ``SingleColumnTransformer`` class. It is originally a base class from which many transformers are
-inherited, but it can also be used to create new transformers. As long as the user specifies
-corresponding ``fit`` and ``transform`` methods to their custom transformer, it can be passed on like any other.
-
-For instance, if one wanted to create a custom transformer specialized in parsing zip codes of a certain
-format, that returns ``RejectColumn`` with a custom warning on zip code sizes:
-
->>> from skrub.core import RejectColumn, SingleColumnTransformer
->>>
->>> class ZipcodeParser(SingleColumnTransformer):
-...     def __init__(self):
-...         return
-...     def fit_transform(self, X, y=None):
-...         if any(X.map(len) != 5):
-...             raise RejectColumn('This transformer only takes zip codes of length 5.')
-...         else:
-...             letters = X.map(lambda s: s[:2])
-...             try:
-...                 numbers = X.map(lambda s: int(s[2:]))
-...             except:
-...                 raise RejectColumn('Input zip codes must consist of two letters followed by three numbers.')
-...             return(pd.DataFrame({'letters': letters, 'numbers': numbers}))
->>> df = pd.DataFrame({'sent': ["AB123", "BD601", "HS014"], 'received': ["AB1C45", "DU3K93", "WB9M88"]})
->>> df
-    sent received
-0  AB123   AB1C45
-1  BD601   DU3K93
-2  HS014   WB9M88
->>> ZipcodeParser().fit_transform(df["sent"])
-  letters  numbers
-0      AB      123
-1      BD      601
-2      HS       14
->>> ZipcodeParser().fit_transform(df["received"])
-Traceback (most recent call last):
-    ...
-skrub.core.RejectColumn: This transformer only takes zip codes of length 5.
