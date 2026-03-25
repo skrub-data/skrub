@@ -11,6 +11,19 @@ Ongoing Development
 
 New Features
 ------------
+
+Changes
+-------
+
+Bugfixes
+--------
+
+
+Release 0.8.0
+=============
+
+New Features
+------------
 - The ``eager_data_ops`` :ref:`configuration
   <user_guide_configuration_parameters>` option has been added. When set to
   False, no previews are computed and validation is deferred until the DataOp is
