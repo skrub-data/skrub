@@ -14,18 +14,22 @@ from . import _utils
 __all__ = ["SingleColumnTransformer", "RejectColumn"]
 
 _SINGLE_COL_LINE = (
-    "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
-    " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
-    " single column (a pandas or polars Series) rather than a full dataframe. To apply"
-    " this transformer to one or more columns in a dataframe, use it as a parameter in"
-    " a ``skrub.ApplyToEachCol`` or a ``skrub.TableVectorizer``.\n\n"
+    "``{class_name}`` is a type of "
+    ":ref:`single column transformation <single_column_transformer>` . Unlike most "
+    "scikit-learn estimators, its ``fit``, ``transform`` and ``fit_transform`` methods"
+    " expect a single column (a pandas or polars Series) rather than a full dataframe."
+    " To apply this transformer to one or more columns in a dataframe, use it as a"
+    " parameter in a ``skrub.ApplyToEachCol`` or a ``skrub.TableVectorizer``.\n\n"
     "To apply to all columns::\n\n"
-    "   ApplyToCol({class_name}())\n\n"
+    "   ApplyToCols({class_name}())\n\n"
     "To apply to selected columns::\n\n"
-    "   ApplyToEachCol({class_name}(), cols=['col_name_1', 'col_name_2'])"
+    "   ApplyToCols({class_name}(), cols=['col_name_1', 'col_name_2'])"
 )
 _SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 4)
-_SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
+_SINGLE_COL_NOTE = (
+    f".. admonition:: A note on using single column transformations \n"
+    f"   :collapsible: closed\n\n{_SINGLE_COL_PARAGRAPH}\n"
+)
 
 
 @_utils.set_module("skrub.core")
