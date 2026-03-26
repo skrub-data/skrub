@@ -10,9 +10,10 @@ namespace:
     from skrub.datasets import fetch_employee_salaries
     data = fetch_employee_salaries()
 
-Datasets are stored as :class:`~sklearn.utils.Bunch` objects, which include the
-full data, an ``X`` feature matrix, and a ``y`` target column with type ``pd.DataFrame``.
-Some datasets may have a different format depending on the use case.
+Datasets are stored as :class:`~sklearn.utils.Bunch` objects, which include a path
+to each table in the dataset, and each table loaded as ``pd.DataFrame``. Some
+datasets include an ``X`` feature matrix, and a ``y`` target column with type
+``pd.DataFrame``.
 
 Modifying the download location of ``skrub`` datasets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
