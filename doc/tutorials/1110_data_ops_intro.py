@@ -30,7 +30,7 @@ learning by recording all the operations involved in pre-processing data
 and training models, as well as the state of the transformers and models used to
 make predictions.
 
-.. :admonition:: What is a state?
+.. admonition:: What is a state?
    :collapsible: closed
 
    The state of a transformer or model refers to the internal parameters and
