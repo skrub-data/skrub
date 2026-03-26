@@ -40,6 +40,7 @@ Data Ops basic concepts
 
    modules/data_ops/basics/what_are_data_ops
    modules/data_ops/basics/building_data_ops_plan
+   auto_tutorials/1110_data_ops_intro
    modules/data_ops/basics/using_previews
    modules/data_ops/basics/direct_access_methods
    modules/data_ops/basics/control_flow

@@ -1,23 +1,6 @@
 """
-Introduction to wrangling pipelines for machine-learning skrub DataOps
+Tutorial: Using Data Ops to build a machine-learning pipeline
 =======================================================================
-
-This example shows data wrangling for machine learning using Skrub's
-:ref:`DataOps <user_guide_data_ops_index>`.
-
-The challenge of data-wrangling for machine learning is the need to
-apply the wrangling operations to new data, for prediction.
-
-Skrub's DataOps build pipelines that blend data wrangling and machine
-learning by recording all the operations involved in pre-processing data
-and training models. They result in an a full *learner* that starts from the
-raw data. We will also how show it can be saved, loaded back, and then used to make
-predictions on new, unseen data.
-
-This example is meant to be an introduction to Skrub DataOps, and as such it
-will not cover all the features. Further examples in the gallery
-:ref:`data_ops_examples_ref` go into more detail on Skrub DataOps
-for more complex tasks.
 
 .. currentmodule:: skrub
 
@@ -27,6 +10,7 @@ for more complex tasks.
 .. |skb.mark_as_X| replace:: :meth:`DataOp.skb.mark_as_X`
 .. |skb.mark_as_y| replace:: :meth:`DataOp.skb.mark_as_y`
 .. |TableVectorizer| replace:: :class:`TableVectorizer`
+.. |ToDatetime| replace:: :class:`ToDatetime`
 .. |skb.apply| replace:: :meth:`.skb.apply() <DataOp.skb.apply>`
 .. |HistGradientBoostingRegressor| replace::
    :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
@@ -34,6 +18,41 @@ for more complex tasks.
 .. |choose_float| replace:: :func:`choose_float`
 .. |make_randomized_search| replace::
    :meth:`.skb.make_randomized_search <DataOp.skb.make_randomized_search>`
+
+This example shows data how we can use skrub's
+:ref:`DataOps <user_guide_data_ops_index>` for building a machine learning pipeline.
+
+The challenge of preparing data for machine learning is the need to
+apply the same data preparation and wrangling operations to new data, for prediction.
+
+Skrub's DataOps build pipelines that blend data wrangling and machine
+learning by recording all the operations involved in pre-processing data
+and training models, as well as the state of the transformers and models used to
+make predictions.
+
+.. admonition:: What is a state?
+   :collapsible: closed
+
+   The state of a transformer or model refers to the internal parameters and
+   attributes that are learned or set during the fitting process. For example,
+   in a :class:`~sklearn.preprocessing.StandardScaler`, the state would include
+   the mean and standard deviation calculated from the training data.
+   In a pre-processing transformer like |ToDatetime|, the state would include the
+   inferred datetime format based on the data it was fitted on.
+   In a machine learning model like |HistGradientBoostingRegressor|, the state
+   would include the fitted parameters of the model after training on the data.
+
+The result of building a DataOps plan is a *learner*, an object with an interface
+similar to that of a scikit-learn estimator, but which contains all the steps in the
+data preparation and model training process, along with the state of all the
+transformers and models: this allows to save the learner, load it back later,
+and use it to make predictions on new data.
+
+This example is meant to be an introduction to Skrub DataOps, and as such it
+will not cover all the features. Further examples in the gallery
+:ref:`data_ops_examples_ref` go into more detail on Skrub DataOps
+for more complex tasks.
+
 
 """
 
