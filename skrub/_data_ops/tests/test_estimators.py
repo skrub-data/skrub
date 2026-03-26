@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from numpy.testing import assert_allclose
 from sklearn.base import BaseEstimator, clone
 from sklearn.cluster import KMeans
@@ -16,7 +17,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.exceptions import FitFailedWarning, NotFittedError
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.metrics import accuracy_score, make_scorer, roc_auc_score
 from sklearn.model_selection import (
     GridSearchCV,
     KFold,
@@ -171,6 +172,62 @@ def test_cross_validate(data_op, data, n_jobs):
     assert len(score) == 5
 
     assert score.mean() == pytest.approx(0.84, abs=0.05)
+
+
+def test_cross_validate_with_scoring(data_op, data):
+    X_a, y_a = make_classification(random_state=0)
+    X = skrub.X(X_a)
+
+    def get_sw(X):
+        return np.abs(X[:, 0])
+
+    sw_a = get_sw(X_a)
+    sw = X.skb.apply_func(get_sw)
+
+    data_op = X.skb.apply(DummyClassifier(), y=skrub.y(y_a))
+    skrub_scores = data_op.skb.with_scoring("accuracy").skb.cross_validate()
+    sklearn_scores = cross_validate(DummyClassifier(), X_a, y_a, scoring="accuracy")
+    assert np.allclose(skrub_scores["test_accuracy"], sklearn_scores["test_score"])
+
+    acc_scorer = make_scorer(accuracy_score)
+    roc_scorer = make_scorer(roc_auc_score)
+    skrub_scores = (
+        data_op.skb.with_scoring("accuracy")
+        .skb.with_scoring("roc_auc", name="ROC")
+        .skb.with_scoring({"accuracy": acc_scorer, "roc": roc_scorer}, name="in_dict")
+        .skb.cross_validate()
+    )
+    sklearn_scores = cross_validate(
+        DummyClassifier(),
+        X_a,
+        y_a,
+        scoring={
+            "accuracy": acc_scorer,
+            "ROC": roc_scorer,
+            "in_dict_accuracy": acc_scorer,
+            "in_dict_roc": roc_scorer,
+        },
+    )
+    for name in ["accuracy", "ROC", "in_dict_accuracy", "in_dict_roc"]:
+        assert np.allclose(skrub_scores[f"test_{name}"], sklearn_scores[f"test_{name}"])
+
+    data_op = X.skb.apply(
+        DummyClassifier(), y=skrub.y(y_a), fit_kwargs={"sample_weight": sw}
+    )
+    skrub_scores = data_op.skb.with_scoring(
+        "accuracy", kwargs={"sample_weight": sw}
+    ).skb.cross_validate()
+    scorer = make_scorer(accuracy_score)
+    with sklearn.config_context(enable_metadata_routing=True):
+        scorer.set_score_request(sample_weight=True)
+        sklearn_scores = cross_validate(
+            DummyClassifier().set_fit_request(sample_weight=True),
+            X_a,
+            y_a,
+            scoring=scorer,
+            params=dict(sample_weight=sw_a),
+        )
+    assert np.allclose(skrub_scores["test_accuracy"], sklearn_scores["test_score"])
 
 
 def test_cross_validate_return_indices():

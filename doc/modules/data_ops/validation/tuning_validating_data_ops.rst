@@ -154,8 +154,8 @@ be passed to the splitter.
 
 >>> df = skrub.datasets.toy_products()
 >>> df
-    description  price            seller     category
-0        mouse     10   supermarket.com  electronics
+   description  price            seller     category
+0       screen    100   supermarket.com  electronics
 1       hammer     15  bestproducts.com        tools
 2     keyboard     20   supermarket.com  electronics
 3      usb key      9  bestproducts.com  electronics
@@ -181,8 +181,8 @@ cross-validation we must group products by seller. We do it with
 The train set only contains data from the "supermarket.com" seller.
 
 >>> split["X_train"]
-    description  price
-0        mouse     10
+   description  price
+0       screen    100
 2     keyboard     20
 5  screwdriver     12
 
