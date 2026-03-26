@@ -88,3 +88,19 @@ def prune_directory(path: str):
                     f"Could not delete {dir_path}:\n"
                     + "".join(format_exception_only(e))
                 )
+
+
+def unique_renaming():
+    used = set()
+
+    def rename(name):
+        if name not in used:
+            used.add(name)
+            return name
+        i = 1
+        while (numbered := f"{name}_{i}") in used:
+            i += 1
+        used.add(numbered)
+        return numbered
+
+    return rename

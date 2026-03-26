@@ -1,8 +1,12 @@
 # Scikit-learn-ish interface to the skrub DataOps
+import copy
+from functools import partial
+
 import pandas as pd
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
+from sklearn.metrics import check_scoring
 from sklearn.model_selection import check_cv
 from sklearn.utils.validation import check_is_fitted
 
@@ -11,12 +15,13 @@ from .. import _join_utils
 from .._sklearn_compat import _safe_indexing
 from .._utils import set_module
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply, DataOp, SplitX, check_subsampled_X_y_shape
+from ._data_ops import Apply, DataOp, Scoring, SplitX, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     eval_choices,
     evaluate,
     find_first_apply,
+    find_node,
     find_node_by_name,
     find_X,
     find_y,
@@ -28,7 +33,7 @@ from ._evaluation import (
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
-from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
+from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error, unique_renaming
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -141,6 +146,13 @@ class _DataOpWrapperMixin(_CloudPickle):
             attribute_error(self, "classes_")
 
 
+def _find_scoring_node(data_op):
+    return find_node(
+        data_op,
+        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
+    )
+
+
 @set_module("skrub")
 class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
     """Learner that evaluates a skrub DataOp.
@@ -245,11 +257,22 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         self._set_is_fitted(mode)
         return result
 
+    def _score(self, environment):
+        score_node = _find_scoring_node(self.data_op)
+        if score_node is None:
+            return self._eval_in_mode("score", environment)
+        estimator = self.__skrub_to_Xy_pipeline__(environment)
+        cv_data = _compute_X_y_and_cv(self.data_op, environment)
+        X, y = cv_data["X"], cv_data.get("y")
+        return estimator.score(X, y)
+
     def __getattr__(self, name):
         if name not in supported_modes(self.data_op):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
+            if name == "score":
+                return self._score(*args, **kwargs)
             result = self._eval_in_mode(name, *args, **kwargs)
             return self if name == "fit" else result
 
@@ -565,6 +588,54 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         self._set_is_fitted(mode)
         return result
 
+    def _prepare_scorer(self, scorer_info):
+        scorer = check_scoring(self, scorer_info["scoring"])
+        kwargs = scorer_info["kwargs"] or {}
+        if not hasattr(scorer, "get_metadata_routing"):
+            return partial(scorer, **kwargs)
+        scorer = copy.deepcopy(scorer)
+        if hasattr(scorer, "_kwargs"):
+            scorer._kwargs = {**scorer._kwargs, **kwargs}
+        elif hasattr(scorer, "_scorers"):
+            for sub_scorer in scorer._scorers.values():
+                sub_scorer._kwargs = {**sub_scorer._kwargs, **kwargs}
+        return scorer
+
+    @staticmethod
+    def _process_scores(scorer_info, scorer_output):
+        name = scorer_info["name"]
+        scoring = scorer_info["scoring"]
+        if isinstance(scoring, str):
+            return [(name or scoring, scorer_output)]
+        if isinstance(scorer_output, dict):
+            prefix = f"{name}_" if name else ""
+            return [(f"{prefix}{k}", v) for (k, v) in scorer_output.items()]
+        if not name:
+            try:
+                name = scoring._score_func.__name__
+            except AttributeError:
+                try:
+                    name = scoring.__name__
+                except AttributeError:
+                    name = "score"
+        return [(name, scorer_output)]
+
+    def _score(self, X, y=None):
+        score_node = _find_scoring_node(self.data_op)
+        if score_node is None:
+            return self._eval_in_mode("score", X, y)
+        env = self._get_env(X, y)
+        scorers = evaluate(
+            score_node._skrub_impl.scorers, mode="fit_transform", environment=env
+        )
+        all_scores = []
+        for scorer_info in scorers:
+            scorer = self._prepare_scorer(scorer_info)
+            scorer_output = scorer(self, X, y)
+            all_scores.extend(self._process_scores(scorer_info, scorer_output))
+        rename = unique_renaming()
+        return {rename(name): score for name, score in all_scores}
+
 
 def _find_X_y_and_cv(data_op):
     """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
@@ -613,7 +684,7 @@ def _compute_X_y_and_cv(data_op, environment):
 class _Splitter:
     def __init__(self, splitter, split_kwargs):
         self.splitter = splitter
-        self.split_kwargs = split_kwargs
+        self.split_kwargs = split_kwargs or {}
 
     def split(self, X, y=None, groups=None):
         # If user passed groups they will be in split_kwargs, the groups param
