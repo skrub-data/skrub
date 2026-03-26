@@ -23,5 +23,4 @@ see the :ref:`How-to guides <how_to`.
    column_level_featurizing
    multi_column_operations
    data_ops
-   configuration_and_utils
    joining_dataframes
