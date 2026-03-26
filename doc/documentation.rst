@@ -17,6 +17,7 @@ For class and function details, see the :ref:`API Reference <api_ref>`.
 .. toctree::
    :maxdepth: 3
 
+   auto_tutorials/0000_getting_started
    exploring_a_dataframe
    default_wrangling
    column_level_featurizing
