@@ -102,7 +102,7 @@ def _plot(plotting_fun):
             for k, v in params.items():
                 plt.rcParams[k] = v
 
-            with warnings.catch_warnings():
+            with warnings.catch_warnings(), plt.ioff():
                 # We do not care about missing glyphs because the text is
                 # rendered & the viewbox is recomputed in the browser.
                 warnings.filterwarnings("ignore", "Glyph.*missing from font")
@@ -306,22 +306,7 @@ def value_counts(value_counts, n_unique, n_rows, color=COLOR_0):
         title = None
     fig, ax = plt.subplots()
     _despine(ax)
-    rects = ax.barh(list(map(str, range(len(values)))), counts, color=color)
-    string_value = [_utils.format_number(c) for c in counts]
-    large_string = [
-        f"{s: >6}" if c > counts[-1] / 2 else "" for (s, c) in zip(string_value, counts)
-    ]
-    small_string = [
-        s if c <= counts[-1] / 2 else "" for (s, c) in zip(string_value, counts)
-    ]
-
-    # those are written on top of the orange bars so we write them in black
-    ax.bar_label(rects, large_string, padding=-30, color="black", fontsize=8)
-    # those are written on top of the background so we write them in foreground color
-    ax.bar_label(
-        rects, small_string, padding=5, color=_TEXT_COLOR_PLACEHOLDER, fontsize=8
-    )
-
+    ax.barh(list(map(str, range(len(values)))), counts, color=color)
     percent = [_utils.format_percent(c / n_rows) for c in counts]
     # add the percentage of each bar on the top of the figure
     ax_percentage = ax.twinx()
