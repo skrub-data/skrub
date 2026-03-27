@@ -1,4 +1,4 @@
-<article class="margin-t-s flex-reverse wrapper gap-l">
+<article class="margin-t-s flex-reverse flex-end wrapper gap-l">
     {% if summary["associations_skipped"] %}
 
     <div id="skipped-associations-alert" class="alert-info-dismissable flex space-between">
@@ -19,14 +19,14 @@
 
     {% elif summary["top_associations"] %}
 
-    <div class="horizontal-scroll vertical-scroll padding-b-s">
-    <table class="pure-table pure-table-bordered">
+    <div class="horizontal-scroll vertical-scroll-table-wrapper">
+    <table class="pure-table pure-table-bordered sticky-header-table">
         <thead>
             <tr>
-                <th scope="col" class="sticky-header">Column 1</th>
-                <th scope="col" class="sticky-header">Column 2</th>
-                <th scope="col" class="sticky-header"><a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a></th>
-                <th scope="col" class="sticky-header"><a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson's Correlation</a></th>
+                <th scope="col">Column 1</th>
+                <th scope="col">Column 2</th>
+                <th scope="col"><a href="https://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V">Cramér's V</a></th>
+                <th scope="col"><a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson's Correlation</a></th>
             </tr>
         </thead>
         <tbody>
