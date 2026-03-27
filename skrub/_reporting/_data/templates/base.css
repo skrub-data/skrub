@@ -174,19 +174,32 @@ dd {
     overflow-x: auto;
 }
 
-.vertical-scroll {
+/* Wrap a table by making it scrollable and placing a fixed border at the bottom. */
+.vertical-scroll-table-wrapper {
     overflow-y: auto;
     max-height: 50em;
-    overflow: auto;
-    margin-bottom: 20px;
+    border-bottom: 1px solid var(--color-border-secondary);
 }
 
-.sticky-header {
+.vertical-scroll-table-wrapper > table {
+    /* Already added by the wrapper */
+    border-bottom: 0px;
+}
+
+/* Make the header of a table sticky; #report is here to make it more specific
+   than the default table styling. */
+#report .sticky-header-table {
+    border-collapse: separate;
+    border-left: none;
+    border-top: none;
+}
+
+#report .sticky-header-table > thead > tr > th {
   position: sticky;
-  top: -1px;
+  top: 0px;
+  border-top: 1px solid var(--color-border-secondary);
+  border-bottom: 1px solid var(--color-border-secondary);
   background-color: var(--color-background-quaternary);
-  background-clip: padding-box;
-  z-index: 10;
 }
 
 .select-all {
@@ -243,6 +256,10 @@ article.wrapper {
 .flex-reverse {
     display: flex;
     flex-wrap: wrap-reverse;
+}
+
+.flex-end {
+    align-items: flex-end;
 }
 
 .space-between {
