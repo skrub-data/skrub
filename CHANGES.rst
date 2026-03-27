@@ -11,6 +11,13 @@ Ongoing Development
 
 New Features
 ------------
+- The :class:`SessionEncoder` is now available. This encoder takes a dataframe with
+  a timestamp column and computes sessions based on the given session duration.
+  Additionally, it is possible to provide a ``by`` column or list of columns
+  (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
+  value. A new dataset has also been added and can be accessed by using the fetcher
+  :class:`~skrub.datasets.fetch_wowah`.
+  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
 
 Changes
 -------
@@ -39,12 +46,6 @@ New Features
   some more attributes for inspection by scikit-learn: ``__sklearn_tags__``,
   ``classes_``, ``_estimator_type``. :pr:`1931` by :user:`Jérôme Dockès
   <jeromedockes>`.
-- The :class:`SessionEncoder` is now available. This encoder takes a dataframe with
-  a timestamp column and computes sessions based on the given session duration.
-  Additionally, it is possible to provide a ``by`` column or list of columns
-  (e.g., user ID or (user ID, user device)) to compute sessions for each grouping
-  value.
-  :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
 - It is now possible to pass additional (dynamically computed) arguments to the
   cross-validation splitter used by :class:`DataOp` objects for validation,
   hyperparameter search etc. For example, the groups for a
