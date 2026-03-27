@@ -89,6 +89,7 @@ API_REFERENCE = {
                     "SimilarityEncoder",
                     "ToCategorical",
                     "DatetimeEncoder",
+                    "SessionEncoder",
                     "ToDatetime",
                     "ToFloat",
                 ],
