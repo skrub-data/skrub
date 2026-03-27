@@ -83,7 +83,7 @@ class ApplyToSubFrame(TransformerMixin, BaseEstimator):
     2  0.0   0.0  100.0     0.0
     3  0.0   0.0    0.0  1000.0
     >>> from sklearn.decomposition import PCA
-    >>> from skrub import ApplyToSubFrame
+    >>> from skrub._apply_to_sub_frame import ApplyToSubFrame
     >>> ApplyToSubFrame(PCA(n_components=2)).fit_transform(df).round(2)
          pca0   pca1
     0 -249.01 -33.18

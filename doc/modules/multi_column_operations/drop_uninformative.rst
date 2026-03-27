@@ -1,5 +1,5 @@
 .. |DropUninformative| replace:: :class:`~skrub.DropUninformative`
-.. |ApplyToEachCol| replace:: :class:`~skrub.ApplyToEachCol`
+.. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
 .. |Cleaner| replace:: :class:`~skrub.Cleaner`
 .. |TableVectorizer| replace:: :class:`~skrub.TableVectorizer`
 
@@ -64,14 +64,50 @@ To drop constant columns and those with only single values:
 2  2  6
 
 |
+Dropping columns with many missing values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Columns with too many missing values may not provide useful information for
+downstream models. The ``drop_null_fraction`` parameter allows dropping such
+columns when the proportion of missing values exceeds a specified threshold.
+
+Consider the following dataset:
+
+>>> import pandas as pd
+>>> from skrub import DropUninformative, ApplyToCols
+
+>>> df = pd.DataFrame({
+...     'patient_id': [1, 2, 3, 4, 5, 6, 7, 8],
+...     'age': [25.0, 30.0, None, 45.0, 50.0, None, 60.0, 65.0],
+...     'blood_pressure': [120, None, None, None, 140, None, None, 150],
+...     'diagnosis': ['flu', 'cold', None, None, None, None, None, None],
+...     'treatment': ['med_A', 'med_B', 'med_C', 'med_D', 'med_E', 'med_F', 'med_G', 'med_H']
+... })
+
+We can drop columns with more than 50% missing values:
+
+>>> cleaner = ApplyToCols(DropUninformative(drop_null_fraction=0.5))
+>>> cleaned_df = cleaner.fit_transform(df)
+>>> cleaned_df
+   patient_id   age treatment
+0           1  25.0     med_A
+1           2  30.0     med_B
+2           3   ...     med_C
+3           4  45.0     med_D
+4           5  50.0     med_E
+5           6   ...     med_F
+6           7  60.0     med_G
+7           8  65.0     med_H
+
+
 
 Applying |DropUninformative| only to a subset of columns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can apply the |DropUninformative| transformer to specific columns using
-|ApplyToEachCol|.
+|ApplyToCols|.
 
->>> from skrub import ApplyToEachCol
+>>> from skrub import ApplyToCols
 >>> df = pd.DataFrame({
 ... "id_to_drop": ["A1", "A2", "A3"],
 ... "text_to_keep": ["foo", "bar", "baz"]
@@ -90,16 +126,16 @@ Empty DataFrame
 Columns: []
 Index: [0, 1, 2]
 
-To apply the transformer only to the ``id_to_drop`` column, use |ApplyToEachCol|:
+To apply the transformer only to the ``id_to_drop`` column, use |ApplyToCols|:
 
->>> ApplyToEachCol(cleaner, cols="id_to_drop")
-ApplyToEachCol(cols='id_to_drop', transformer=Cleaner(drop_if_unique=True))
->>> ApplyToEachCol(cleaner, cols="id_to_drop").fit_transform(df)
+>>> ApplyToCols(cleaner, cols="id_to_drop")
+ApplyToCols(cols='id_to_drop', transformer=Cleaner(drop_if_unique=True))
+>>> ApplyToCols(cleaner, cols="id_to_drop").fit_transform(df)
   text_to_keep
 0          foo
 1          bar
 2          baz
 
 For more advanced filtering operations, refer to the User Guide on
-:ref:`user_guide_selectors` and the |ApplyToEachCol| documentation for details
+:ref:`user_guide_selectors` and the |ApplyToCols| documentation for details
 on applying transformers to specific columns.

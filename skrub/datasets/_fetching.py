@@ -64,7 +64,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         )
         dataset["employee_salaries_path"] = str(train_path)
         dataset["path"] = str(train_path)
-        dataset["employee_salaries"][:id_split].to_csv(str(train_path), index=False)
+        dataset["employee_salaries"].to_csv(str(train_path), index=False)
         dataset["X"] = dataset["X"][:id_split]
         dataset["y"] = dataset["y"][:id_split]
     elif split == "test":
@@ -74,7 +74,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
         )
         dataset["employee_salaries_path"] = str(test_path)
         dataset["path"] = str(test_path)
-        dataset["employee_salaries"][id_split:].to_csv(str(test_path), index=False)
+        dataset["employee_salaries"].to_csv(str(test_path), index=False)
         dataset["X"] = dataset["X"][id_split:]
         dataset["y"] = dataset["y"][id_split:]
     return dataset
@@ -234,8 +234,9 @@ def fetch_drug_directory(data_home=None):
 
 
 def fetch_credit_fraud(data_home=None, split="train"):
-    """Fetch the credit fraud dataset (classification) available at \
-        https://github.com/skrub-data/skrub-data-files
+    """Fetch the credit fraud dataset (classification).
+
+    Available at https://github.com/skrub-data/skrub-data-files
 
     This is an imbalanced binary classification use-case. This dataset consists of
     two tables:
@@ -307,8 +308,10 @@ def fetch_toxicity(data_home=None):
 
     This is a balanced binary classification use-case, where the single table
     consists in only two columns:
-    - `text`: the text of the comment
-    - `is_toxic`: whether or not the comment is toxic
+
+   - ``text``: the text of the comment
+   - ``is_toxic``: whether or not the comment is toxic
+
     Size on disk: 220KB.
 
     Parameters

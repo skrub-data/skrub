@@ -309,6 +309,21 @@ run the following command:
 
     make html
 
+On Windows, use:
+
+.. code:: bat
+
+    make.bat html
+
+.. note::
+
+   If you are working on Windows, building the example ``1131_optuna_choices``
+   may fail with a permission error when running ``make.bat html``. This is
+   because optuna uses symlinks for file locking, which requires admin
+   privileges on Windows by default. The rest of the documentation build
+   should run without problem, so it is safe to ignore this error if your
+   contribution does not touch that particular example.
+
 The documentation will be generated in the ``_build/html/`` directory
 and are viewable in a web browser, for instance by opening the local
 ``_build/html/index.html`` file.
@@ -320,6 +335,12 @@ specific examples, you can use the following command with a regex pattern:
 
     make html EXAMPLES_PATTERN=your_regex_goes_here
 
+On Windows, use:
+
+.. code:: bat
+
+    make.bat html EXAMPLES_PATTERN=your_regex_goes_here
+
 This is especially helpful when you're only modifying or checking a few examples.
 
 It is also possible to build the documentation without running the examples
@@ -328,6 +349,12 @@ without running the examples by using the following command:
 .. code:: bash
 
     make html-noplot
+
+On Windows, use:
+
+.. code:: bat
+
+    make.bat html-noplot
 
 This command generates the documentation without re-executing the examples, which can
 take a long time. This is useful if you are only modifying the documentation itself, such as fixing
@@ -380,6 +407,41 @@ Once you have pushed your commits to your remote repository, you can submit
 a PR by clicking the "Compare & pull request" button on GitHub,
 targeting the skrub repository.
 
+Updating the changelog
+~~~~~~~~~~~~~~~~~~~~~~
+Any user-facing change to the codebase needs to be reported in the changelog,
+found in the ``CHANGES.rst`` file in the root of the repository. A user-facing
+change is any change to a functionality of skrub that users are expected to interact
+with: for example, adding or removing a parameter, adding a new transformer,
+deprecating a function, etc.
+
+Changes made in the test suite, or changes made in the
+private parts of the library, should not be reported, unless they bring some benefit
+to the user (such as performance improvements). Normally, changes made to the
+documentation, such as typo or formatting fixes, are not reported either, while
+new examples usually can be added.
+Depending on the nature of the PR, a maintainer may add the "no
+changelog needed" label to skip the corresponding check if a changelog entry isn't
+relevant.
+
+Changelog entries need to follow a specific format: the change should be described
+in sufficient detail for users to understand how they may be affected, and the
+entry must list both the PR number and the GitHub username of the author(s) of the
+PR.
+
+Here is an example:
+
+.. code:: bash
+
+   - :meth:`DataOp.skb.apply` now allows passing extra named arguments to the
+  estimator's methods through the parameters ``fit_kwargs``, ``predict_kwargs``
+  etc. :pr:`1642` by :user:`Jérôme Dockès <jeromedockes>`.
+
+The PR number is reported with the directive ``:pr:`NUMBER```, and the author
+of the PR uses the directive ``:user:`AUTHOR NAME <GITHUB HANDLE>```.
+
+Missing changelog entries, or changelog entries that do not follow the format,
+will fail the changelog check in the CI.
 
 Continuous Integration (CI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
