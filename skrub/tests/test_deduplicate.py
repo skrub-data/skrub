@@ -1,8 +1,9 @@
+import warnings
+
 import joblib
 import numpy as np
 import pandas as pd
 import pytest
-import warnings
 from scipy.cluster.hierarchy import linkage
 from scipy.spatial.distance import squareform
 from sklearn.utils._testing import assert_array_equal, skip_if_no_parallel
