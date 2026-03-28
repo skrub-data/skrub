@@ -308,6 +308,7 @@ def test_thresholds_parameter(df_module):
 
 @skip_polars_installed_without_pyarrow
 def test_plot_distributions_parameter(df_module):
+    # True: always plot regardless of threshold
     df7 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
@@ -318,23 +319,32 @@ def test_plot_distributions_parameter(df_module):
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
     summary = TableReport(df8, plot_distributions=True)._summary
-    assert summary["plots_skipped"]
+    assert not summary["plots_skipped"]  # True ignores threshold
 
+    # False: never plot
     df9 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
     summary = TableReport(df9, plot_distributions=False)._summary
     assert summary["plots_skipped"]
 
+    # None and "auto": use threshold
     df10 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
     summary = TableReport(df10, plot_distributions=None)._summary
     assert not summary["plots_skipped"]
 
+    df10b = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df10b, plot_distributions="auto")._summary
+    assert summary["plots_skipped"]  # "auto" respects threshold
+
 
 @skip_polars_installed_without_pyarrow
 def test_compute_associations_parameter(df_module):
+    # True: always compute regardless of threshold
     df11 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
@@ -345,19 +355,27 @@ def test_compute_associations_parameter(df_module):
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
     summary = TableReport(df12, compute_associations=True)._summary
-    assert summary["associations_skipped"]
+    assert not summary["associations_skipped"]  # True ignores threshold
 
+    # False: never compute
     df13 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
     summary = TableReport(df13, compute_associations=False)._summary
     assert summary["associations_skipped"]
 
+    # None and "auto": use threshold
     df14 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
     summary = TableReport(df14, compute_associations=None)._summary
     assert not summary["associations_skipped"]
+
+    df14b = df_module.make_dataframe(
+        {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
+    )
+    summary = TableReport(df14b, compute_associations="auto")._summary
+    assert summary["associations_skipped"]  # "auto" respects threshold
 
 
 @skip_polars_installed_without_pyarrow
@@ -463,7 +481,7 @@ numpy_test_cases = [
 
 @pytest.mark.parametrize("input_array, expected_columns", numpy_test_cases)
 def test_numpy_array_columns(input_array, expected_columns):
-    report = TableReport(input_array, max_association_columns=0)
+    report = TableReport(input_array, associations_threshold=0)
 
     assert report._summary["n_columns"] == expected_columns
 

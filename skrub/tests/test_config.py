@@ -31,8 +31,8 @@ def test_config_context():
         "use_table_report": False,
         "use_table_report_data_ops": True,
         "table_report_verbosity": 1,
-        "max_plot_columns": 30,
-        "max_association_columns": 30,
+        "plots_threshold": 30,
+        "associations_threshold": 30,
         "subsampling_seed": 0,
         "enable_subsampling": "default",
         "float_precision": 3,
@@ -63,28 +63,26 @@ def test_use_table_report(simple_df):
 
 
 @skip_polars_installed_without_pyarrow
-def test_max_plot_columns(simple_df):
+def test_plots_threshold(simple_df):
     report = TableReport(simple_df)
-    assert report.max_association_columns == 30
-    assert report.max_plot_columns == 30
+    assert report.associations_threshold == 30
+    assert report.plots_threshold == 30
 
     # Set default to 1
-    with config_context(max_plot_columns=1):
+    with config_context(plots_threshold=1):
         report = TableReport(simple_df)
-        assert report.max_association_columns == 30
-        assert report.max_plot_columns == 1
+        assert report.associations_threshold == 30
+        assert report.plots_threshold == 1
 
         # Argument takes precedence over default configuration
-        report = TableReport(
-            simple_df, max_association_columns="all", max_plot_columns="all"
-        )
-        assert report.max_association_columns == "all"
-        assert report.max_plot_columns == "all"
+        report = TableReport(simple_df, associations_threshold=50, plots_threshold=50)
+        assert report.associations_threshold == 50
+        assert report.plots_threshold == 50
 
-    # Check that max_plot_columns can be set after patching the TableReport
+    # Check that plots_threshold can be set after patching the TableReport
     # repr_html.
     with config_context(use_table_report=True):
-        with config_context(max_plot_columns=1):
+        with config_context(plots_threshold=1):
             assert "Plotting was skipped" in simple_df._repr_html_()
 
 
@@ -135,8 +133,8 @@ def test_float_precision(simple_series):
     [
         {"use_table_report": "hello"},
         {"use_table_report_data_ops": 1},
-        {"max_plot_columns": "hello"},
-        {"max_association_columns": "hello"},
+        {"plots_threshold": "hello"},
+        {"associations_threshold": "hello"},
         {"subsampling_seed": -1},
         {"enable_subsampling": "no"},
         {"float_precision": -1},

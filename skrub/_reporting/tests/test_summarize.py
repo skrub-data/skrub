@@ -287,7 +287,7 @@ def test_with_associations_and_seed(monkeypatch, air_quality):
     associations."""
     monkeypatch.setattr("skrub._reporting._summarize._SUBSAMPLE_SIZE", 10)
 
-    with config_context(max_association_columns=2):
+    with config_context(associations_threshold=2):
         associations_1 = summarize_dataframe(air_quality)["top_associations"]
         associations_2 = summarize_dataframe(air_quality)["top_associations"]
         with config_context(subsampling_seed=42):
