@@ -27,7 +27,8 @@ _global_config = {
     "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
     "plot_distributions": _parse_env_bool("SKB_PLOT_DISTRIBUTIONS", True),
     "compute_associations": _parse_env_bool("SKB_COMPUTE_ASSOCIATIONS", True),
-    "columns_threshold": int(os.environ.get("SKB_COLUMNS_THRESHOLD", 30)),
+    "plots_threshold": int(os.environ.get("SKB_PLOTS_THRESHOLD", 30)),
+    "associations_threshold": int(os.environ.get("SKB_ASSOCIATIONS_THRESHOLD", 30)),
     "table_report_verbosity": int(os.environ.get("SKB_TABLE_REPORT_VERBOSITY", 1)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
@@ -77,7 +78,8 @@ def _apply_external_patches(config):
         _patching._patch_display(
             plot_distributions=config["plot_distributions"],
             compute_associations=config["compute_associations"],
-            columns_threshold=config["columns_threshold"],
+            plots_threshold=config["plots_threshold"],
+            associations_threshold=config["associations_threshold"],
             verbose=config["table_report_verbosity"],
         )
     else:
@@ -90,7 +92,8 @@ def set_config(
     use_table_report_data_ops=None,
     plot_distributions=None,
     compute_associations=None,
-    columns_threshold=None,
+    plots_threshold=None,
+    associations_threshold=None,
     table_report_verbosity=None,
     subsampling_seed=None,
     enable_subsampling=None,
@@ -140,13 +143,20 @@ def set_config(
         This configuration can also be set with the ``SKB_COMPUTE_ASSOCIATIONS``
         environment variable.
 
-    columns_threshold : int, default=None
+    plots_threshold : int, default=None
         If a dataframe has more columns than the value set here, the
-        :class:`~skrub.TableReport` will skip generating the plots and computing
-        the associations.
+        :class:`~skrub.TableReport` will skip generating the distribution plots.
         Default is 30.
 
-        This configuration can also be set with the ``SKB_COLUMNS_THRESHOLD``
+        This configuration can also be set with the ``SKB_PLOTS_THRESHOLD``
+        environment variable.
+
+    associations_threshold : int, default=None
+        If a dataframe has more columns than the value set here, the
+        :class:`~skrub.TableReport` will skip computing the associations.
+        Default is 30.
+
+        This configuration can also be set with the ``SKB_ASSOCIATIONS_THRESHOLD``
         environment variable.
 
     table_report_verbosity : int, default=None
@@ -248,13 +258,24 @@ def set_config(
             )
         local_config["compute_associations"] = compute_associations
 
-    if columns_threshold is not None:
-        if not isinstance(columns_threshold, numbers.Integral) or columns_threshold < 0:
+    if plots_threshold is not None:
+        if not isinstance(plots_threshold, numbers.Integral) or plots_threshold < 0:
             raise ValueError(
-                "'columns_threshold' must be a non-negative integer, got"
-                f" {columns_threshold!r}"
+                "'plots_threshold' must be a non-negative integer, got"
+                f" {plots_threshold!r}"
             )
-        local_config["columns_threshold"] = columns_threshold
+        local_config["plots_threshold"] = plots_threshold
+
+    if associations_threshold is not None:
+        if (
+            not isinstance(associations_threshold, numbers.Integral)
+            or associations_threshold < 0
+        ):
+            raise ValueError(
+                "'associations_threshold' must be a non-negative integer, got"
+                f" {associations_threshold!r}"
+            )
+        local_config["associations_threshold"] = associations_threshold
 
     if table_report_verbosity is not None:
         if (
@@ -308,7 +329,8 @@ def config_context(
     use_table_report_data_ops=None,
     plot_distributions=None,
     compute_associations=None,
-    columns_threshold=None,
+    plots_threshold=None,
+    associations_threshold=None,
     table_report_verbosity=None,
     subsampling_seed=None,
     enable_subsampling=None,
@@ -361,13 +383,20 @@ def config_context(
         Default is 0 (no verbosity). Refer to the ``TableReport`` documentation for
         more details.
 
-    columns_threshold : int, default=None
+    plots_threshold : int, default=None
         If a dataframe has more columns than the value set here, the
-        :class:`~skrub.TableReport` will skip generating the plots and computing
-        the associations.
+        :class:`~skrub.TableReport` will skip generating the distribution plots.
         Default is 30.
 
-        This configuration can also be set with the ``SKB_COLUMNS_THRESHOLD``
+        This configuration can also be set with the ``SKB_PLOTS_THRESHOLD``
+        environment variable.
+
+    associations_threshold : int, default=None
+        If a dataframe has more columns than the value set here, the
+        :class:`~skrub.TableReport` will skip computing the associations.
+        Default is 30.
+
+        This configuration can also be set with the ``SKB_ASSOCIATIONS_THRESHOLD``
         environment variable.
 
     subsampling_seed : int, default=None
@@ -435,7 +464,7 @@ def config_context(
     Examples
     --------
     >>> import skrub
-    >>> with skrub.config_context(columns_threshold=1):
+    >>> with skrub.config_context(plots_threshold=1):
     ...     ...  # doctest: +SKIP
     """
     original_config = get_config()
@@ -444,7 +473,8 @@ def config_context(
         use_table_report_data_ops=use_table_report_data_ops,
         plot_distributions=plot_distributions,
         compute_associations=compute_associations,
-        columns_threshold=columns_threshold,
+        plots_threshold=plots_threshold,
+        associations_threshold=associations_threshold,
         table_report_verbosity=table_report_verbosity,
         subsampling_seed=subsampling_seed,
         enable_subsampling=enable_subsampling,

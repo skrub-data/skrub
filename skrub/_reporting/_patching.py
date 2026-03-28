@@ -17,7 +17,8 @@ def _patch(
     verbose,
     plot_distributions,
     compute_associations,
-    columns_threshold,
+    plots_threshold,
+    associations_threshold,
 ):
     if (original_method := getattr(cls, method_name, None)) is None:
         return
@@ -33,7 +34,8 @@ def _patch(
                 verbose=verbose,
                 plot_distributions=plot_distributions,
                 compute_associations=compute_associations,
-                columns_threshold=columns_threshold,
+                plots_threshold=plots_threshold,
+                associations_threshold=associations_threshold,
             ),
             method_name,
         )(),
@@ -74,7 +76,8 @@ def patch_display(
     verbose=1,
     plot_distributions=True,
     compute_associations=True,
-    columns_threshold=30,
+    plots_threshold=30,
+    associations_threshold=30,
 ):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
 
@@ -101,10 +104,13 @@ def patch_display(
     compute_associations : bool, default=True
         Control whether to compute associations in :class:`~skrub.TableReport`.
         Default is ``True``.
-    columns_threshold : int, default=30
+    plots_threshold : int, default=30
         If a dataframe has more columns than the value set here, the
-        :class:`~skrub.TableReport` will skip generating the plots and computing
-        the associations.
+        :class:`~skrub.TableReport` will skip generating the distribution plots.
+        Default is 30.
+    associations_threshold : int, default=30
+        If a dataframe has more columns than the value set here, the
+        :class:`~skrub.TableReport` will skip computing the associations.
         Default is 30.
 
     See Also
@@ -121,7 +127,8 @@ def patch_display(
         verbose=verbose,
         plot_distributions=plot_distributions,
         compute_associations=compute_associations,
-        columns_threshold=columns_threshold,
+        plots_threshold=plots_threshold,
+        associations_threshold=associations_threshold,
     )
 
 
@@ -131,7 +138,8 @@ def _patch_display(
     verbose=1,
     plot_distributions=True,
     compute_associations=True,
-    columns_threshold=30,
+    plots_threshold=30,
+    associations_threshold=30,
 ):
     _change_display(
         _patch,
@@ -139,7 +147,8 @@ def _patch_display(
         verbose=verbose,
         plot_distributions=plot_distributions,
         compute_associations=compute_associations,
-        columns_threshold=columns_threshold,
+        plots_threshold=plots_threshold,
+        associations_threshold=associations_threshold,
     )
 
 

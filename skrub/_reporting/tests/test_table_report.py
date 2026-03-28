@@ -43,7 +43,8 @@ def test_report(air_quality):
         }
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
-    assert report.columns_threshold == 30
+    assert report.plots_threshold == 30
+    assert report.associations_threshold == 30
     html = report.html()
     assert "the title" in html
     assert "With nulls" in html
@@ -267,7 +268,7 @@ def test_write_to_stderr(df_module, capsys):
 
 
 @skip_polars_installed_without_pyarrow
-def test_columns_threshold_parameter(df_module):
+def test_thresholds_parameter(df_module):
     df = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(10)}
     )
@@ -289,19 +290,19 @@ def test_columns_threshold_parameter(df_module):
     df4 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df4, columns_threshold=10)._summary
+    summary = TableReport(df4, plots_threshold=10)._summary
     assert summary["plots_skipped"]
 
     df5 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df5, columns_threshold=15)._summary
+    summary = TableReport(df5, plots_threshold=15)._summary
     assert not summary["plots_skipped"]
 
     df6 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df6, columns_threshold=None)._summary
+    summary = TableReport(df6, plots_threshold=None)._summary
     assert not summary["plots_skipped"]
 
 
@@ -364,13 +365,15 @@ def test_combined_parameters(df_module):
     df15 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df15, compute_associations=True, columns_threshold=3)._summary
+    summary = TableReport(df15, plots_threshold=3, associations_threshold=3)._summary
     assert summary["associations_skipped"] and summary["plots_skipped"]
 
     df16 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df16, plot_distributions=False, columns_threshold=7)._summary
+    summary = TableReport(
+        df16, plot_distributions=False, associations_threshold=7
+    )._summary
     assert not summary["associations_skipped"] and summary["plots_skipped"]
 
 
@@ -409,7 +412,13 @@ def test_error_make_table():
 
 
 @pytest.mark.parametrize(
-    "arg", ["plot_distributions", "compute_associations", "columns_threshold"]
+    "arg",
+    [
+        "plot_distributions",
+        "compute_associations",
+        "plots_threshold",
+        "associations_threshold",
+    ],
 )
 def test_bad_cols_parameter(pd_module, arg):
     df = pd_module.example_dataframe
