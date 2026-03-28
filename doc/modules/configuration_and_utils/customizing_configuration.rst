@@ -40,7 +40,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report', 'use_table_report_data_ops', 'table_report_verbosity', 'plot_distributions', 'compute_associations', 'plots_threshold', 'associations_threshold', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'eager_data_ops'])
+dict_keys(['use_table_report', 'use_table_report_data_ops', 'table_report_verbosity', 'plots_threshold', 'associations_threshold', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'eager_data_ops'])
 
 These are the parameters currently available in the global configuration:
 
@@ -71,11 +71,11 @@ These are the parameters currently available in the global configuration:
     * - ``plots_threshold``
       - 30
       - ``SKB_PLOTS_THRESHOLD``
-      - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip generating the distribution plots.
+      - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip generating the distribution plots (when ``plot_distributions="auto"``, the default).
     * - ``associations_threshold``
       - 30
       - ``SKB_ASSOCIATIONS_THRESHOLD``
-      - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip computing the associations.
+      - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip computing the associations (when ``compute_associations="auto"``, the default).
    * - ``subsampling_seed``
      - 0
      - ``SKB_SUBSAMPLING_SEED``

@@ -74,8 +74,8 @@ def patch_display(
     pandas=True,
     polars=True,
     verbose=1,
-    plot_distributions=True,
-    compute_associations=True,
+    plot_distributions="auto",
+    compute_associations="auto",
     plots_threshold=30,
     associations_threshold=30,
 ):
@@ -98,20 +98,24 @@ def patch_display(
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
-    plot_distributions : bool, default=True
-        Control whether to plot distributions in :class:`~skrub.TableReport`.
-        Default is ``True``.
-    compute_associations : bool, default=True
-        Control whether to compute associations in :class:`~skrub.TableReport`.
-        Default is ``True``.
+    plot_distributions : bool or "auto", default="auto"
+        Whether to plot distributions in :class:`~skrub.TableReport`.
+        - ``True``: always generate plots, regardless of column count.
+        - ``False``: never generate plots.
+        - ``"auto"`` (default): generate plots only when the number of columns
+          does not exceed ``plots_threshold``.
+    compute_associations : bool or "auto", default="auto"
+        Whether to compute associations in :class:`~skrub.TableReport`.
+        - ``True``: always compute associations, regardless of column count.
+        - ``False``: never compute associations.
+        - ``"auto"`` (default): compute associations only when the number of
+          columns does not exceed ``associations_threshold``.
     plots_threshold : int, default=30
-        If a dataframe has more columns than the value set here, the
-        :class:`~skrub.TableReport` will skip generating the distribution plots.
-        Default is 30.
+        Maximum number of columns for which distribution plots are generated
+        when ``plot_distributions="auto"``.
     associations_threshold : int, default=30
-        If a dataframe has more columns than the value set here, the
-        :class:`~skrub.TableReport` will skip computing the associations.
-        Default is 30.
+        Maximum number of columns for which associations are computed
+        when ``compute_associations="auto"``.
 
     See Also
     --------
@@ -136,8 +140,8 @@ def _patch_display(
     pandas=True,
     polars=True,
     verbose=1,
-    plot_distributions=True,
-    compute_associations=True,
+    plot_distributions="auto",
+    compute_associations="auto",
     plots_threshold=30,
     associations_threshold=30,
 ):

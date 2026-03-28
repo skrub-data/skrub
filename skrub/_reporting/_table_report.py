@@ -18,24 +18,21 @@ from ._utils import JSONEncoder
 def _validate_plot_and_association(
     plot_distributions, compute_associations, plots_threshold, associations_threshold
 ):
-    plot_distributions = (
-        plot_distributions
-        if plot_distributions is not None
-        else _config.get_config()["plot_distributions"]
-    )
-    if not isinstance(plot_distributions, bool):
+    if plot_distributions is None:
+        plot_distributions = "auto"
+    if compute_associations is None:
+        compute_associations = "auto"
+
+    if plot_distributions not in (True, False, "auto"):
         raise ValueError(
-            f"'plot_distributions' must be a boolean, got {plot_distributions!r}."
+            "'plot_distributions' must be True, False, or 'auto', got"
+            f" {plot_distributions!r}."
         )
 
-    compute_associations = (
-        compute_associations
-        if compute_associations is not None
-        else _config.get_config()["compute_associations"]
-    )
-    if not isinstance(compute_associations, bool):
+    if compute_associations not in (True, False, "auto"):
         raise ValueError(
-            f"'compute_associations' must be a boolean, got {compute_associations!r}."
+            "'compute_associations' must be True, False, or 'auto', got"
+            f" {compute_associations!r}."
         )
 
     plots_threshold = (
@@ -46,7 +43,8 @@ def _validate_plot_and_association(
 
     if not isinstance(plots_threshold, numbers.Real) or plots_threshold < 0:
         raise ValueError(
-            f"'plots_threshold' must be a positive integer, got {plots_threshold!r}."
+            "'plots_threshold' must be a non-negative integer, got"
+            f" {plots_threshold!r}."
         )
 
     associations_threshold = (
@@ -60,7 +58,7 @@ def _validate_plot_and_association(
         or associations_threshold < 0
     ):
         raise ValueError(
-            "'associations_threshold' must be a positive integer, got"
+            "'associations_threshold' must be a non-negative integer, got"
             f" {associations_threshold!r}."
         )
 
@@ -105,72 +103,49 @@ class TableReport:
 
         * verbose = 1 prints how many columns have been processed so far.
         * verbose = 0 silences the output.
-    plot_distributions : bool, default=True
+    plot_distributions : bool or "auto", default="auto"
         Whether to plot the distributions of the columns.
-        If False, the plots will not be generated.
-        If True, all columns will be plotted if the number of columns don't exceed
-        the plots_threshold.
 
-        To avoid having to set this parameter at each call of ``TableReport``, you can
-        change the default using :func:`set_config`:
+        - ``True``: always generate plots, regardless of column count.
+        - ``False``: never generate plots.
+        - ``"auto"`` (default): generate plots only when the number of columns
+          does not exceed ``plots_threshold``.
 
-        >>> from skrub import set_config
-        >>> set_config(plot_distributions=True)
-
-        You can also enable this default more permanently via an environment variable:
-
-        .. code:: shell
-
-            export SKB_PLOT_DISTRIBUTIONS=True
-
-    compute_associations : bool, default=True
+    compute_associations : bool or "auto", default="auto"
         Whether to compute associations between columns.
-        If False, the associations will not be computed.
-        If True, all columns will be considered if the number of columns don't exceed
-        the associations_threshold.
 
-        To avoid having to set this parameter at each call of ``TableReport``, you can
-        change the default using :func:`set_config`:
-
-        >>> from skrub import set_config
-        >>> set_config(compute_associations=True)
-
-        You can also enable this default more permanently via an environment variable:
-
-        .. code:: shell
-
-            export SKB_COMPUTE_ASSOCIATIONS=True
+        - ``True``: always compute associations, regardless of column count.
+        - ``False``: never compute associations.
+        - ``"auto"`` (default): compute associations only when the number of
+          columns does not exceed ``associations_threshold``.
 
     plots_threshold : int, default=30
-        Number of columns above which the distributions tab is not shown in
-        the report and distribution plots are not computed. This is to avoid
-        long computation times and heavy reports when dealing with wide
-        dataframes.
+        Maximum number of columns for which distribution plots are generated
+        when ``plot_distributions="auto"`` (the default). Dataframes with more
+        columns will skip plots.
 
-        To avoid having to set this parameter at each call of ``TableReport``, you can
-        change the default using :func:`set_config`:
+        To change the default using :func:`set_config`:
 
         >>> from skrub import set_config
         >>> set_config(plots_threshold=30)
 
-        You can also enable this default more permanently via an environment variable:
+        You can also set this permanently via an environment variable:
 
         .. code:: shell
 
             export SKB_PLOTS_THRESHOLD=30
 
     associations_threshold : int, default=30
-        Number of columns above which the associations tab is not shown in the
-        report and associations are not computed. This is to avoid long
-        computation times and heavy reports when dealing with wide dataframes.
+        Maximum number of columns for which associations are computed when
+        ``compute_associations="auto"`` (the default). Dataframes with more
+        columns will skip associations.
 
-        To avoid having to set this parameter at each call of ``TableReport``, you can
-        change the default using :func:`set_config`:
+        To change the default using :func:`set_config`:
 
         >>> from skrub import set_config
         >>> set_config(associations_threshold=30)
 
-        You can also enable this default more permanently via an environment variable:
+        You can also set this permanently via an environment variable:
 
         .. code:: shell
 
@@ -257,8 +232,8 @@ class TableReport:
         title=None,
         column_filters=None,
         verbose=None,
-        plot_distributions=None,
-        compute_associations=None,
+        plot_distributions="auto",
+        compute_associations="auto",
         plots_threshold=None,
         associations_threshold=None,
         open_tab="table",
@@ -356,10 +331,19 @@ class TableReport:
 
     @functools.cached_property
     def _summary(self):
-        with_plots = self.plot_distributions and self.plots_threshold >= self.n_columns
-        with_associations = (
-            self.compute_associations and self.associations_threshold >= self.n_columns
-        )
+        if self.plot_distributions is True:
+            with_plots = True
+        elif self.plot_distributions is False:
+            with_plots = False
+        else:
+            with_plots = self.plots_threshold >= self.n_columns
+
+        if self.compute_associations is True:
+            with_associations = True
+        elif self.compute_associations is False:
+            with_associations = False
+        else:
+            with_associations = self.associations_threshold >= self.n_columns
 
         return summarize_dataframe(
             self.dataframe,
