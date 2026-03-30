@@ -53,9 +53,10 @@ def _build_multigroup_number_regex(decimal, thousand):
     d = re.escape(decimal)
     t = re.escape(thousand)
 
-    # first group: \d{1,3}
-    # next groups: (?:,\d{2})*
-    integer = rf"(?:\d{{1,3}}(?:{t}\d{{2}})+|\d+)"
+    # Supports Indian-style grouping: 1,23,456 or 12,34,567
+    # i.e. one-to-three leading digits, one or more 2-digit groups,
+    # and a final 3-digit group.
+    integer = rf"(?:\d{{1,3}}(?:{t}\d{{2}})+{t}\d{{3}}|\d+)"
 
     decimal_part = rf"{d}\d+"
     scientific = r"(?:[eE][+-]?\d+)?"
@@ -88,7 +89,10 @@ def _str_is_valid_number_pandas(col, number_re):
     # - Fill NaN values with empty string to avoid match errors.
     # - Use `str.match` with `na=False` to treat empty/missing values as non-matching.
     # - If any value does not match, raise RejectColumn with a descriptive message.
-    if not col.fillna("").str.match(number_re, na=False).all():
+    # pandas StringArray raises when compiled regex flags differ from
+    # the implicit flags used by str.match; passing the raw pattern avoids
+    # that mismatch while preserving equivalent matching semantics.
+    if not col.fillna("").str.match(number_re.pattern, na=False).all():
         raise RejectColumn(f"Could not convert column {sbd.name(col)!r} to numbers.")
     return True
 
@@ -138,9 +142,7 @@ def _validate_number_column(column, decimal, thousand):
     Reject if all fail.
     """
     # 3-digit
-    threegroup_re = re.compile(
-        _build_number_regex(decimal, thousand, group_size=3), re.VERBOSE
-    )
+    threegroup_re = re.compile(_build_number_regex(decimal, thousand), re.VERBOSE)
     try:
         _str_is_valid_number(column, threegroup_re)
         return threegroup_re
