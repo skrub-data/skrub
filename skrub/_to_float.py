@@ -40,6 +40,43 @@ def _build_number_regex(decimal, thousand):
     return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
 
 
+def _build_multigroup_number_regex(decimal, thousand):
+    """
+    Matches numbers that use either Western or non-Western grouping styles,
+    including multi-group systems such as the Indian numbering system.
+
+    - Optional leading sign or parentheses
+    - Supports multiple grouping patterns (e.g., groups of 3 + groups of 2)
+    - Optional decimal part
+    - Optional scientific notation
+    """
+    d = re.escape(decimal)
+    t = re.escape(thousand)
+
+    # first group: \d{1,3}
+    # next groups: (?:,\d{2})*
+    integer = rf"(?:\d{{1,3}}(?:{t}\d{{2}})+|\d+)"
+
+    decimal_part = rf"{d}\d+"
+    scientific = r"(?:[eE][+-]?\d+)?"
+    number = rf"(?:{integer}(?:{decimal_part})?|{decimal_part})"
+
+    return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
+
+
+def _build_number_regex_4(decimal, thousand):
+    """Style: all groups of 4 digits."""
+    d = re.escape(decimal)
+    t = re.escape(thousand)
+
+    integer = rf"(?:\d{{1,4}}(?:{t}\d{{4}})+|\d+)"
+    decimal_part = rf"{d}\d+"
+    scientific = r"(?:[eE][+-]?\d+)?"
+    number = rf"(?:{integer}(?:{decimal_part})?|{decimal_part})"
+
+    return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
+
+
 @dispatch
 def _str_is_valid_number(col, number_re):
     raise_dispatch_unregistered_type(col, kind="Series")
@@ -92,6 +129,36 @@ def _str_replace_polars(col, decimal, thousand):
     col = col.str.replace_all(thousand, "", literal=True)
     # Replace decimal separator with '.'
     return col.str.replace_all(f"[{decimal}]", ".")
+
+
+def _validate_number_column(column, decimal, thousand):
+    """
+    Try 1) 3-digit grouping (Western), 2) 2+3 digit (e.g., Indian),
+    3) 4-digit e.g., Chinese).
+    Reject if all fail.
+    """
+    # 3-digit
+    threegroup_re = re.compile(
+        _build_number_regex(decimal, thousand, group_size=3), re.VERBOSE
+    )
+    try:
+        _str_is_valid_number(column, threegroup_re)
+        return threegroup_re
+    except RejectColumn:
+        # Indian multi-group
+        multigroup_re = re.compile(
+            _build_multigroup_number_regex(decimal, thousand), re.VERBOSE
+        )
+        try:
+            _str_is_valid_number(column, multigroup_re)
+            return multigroup_re
+        except RejectColumn:
+            # Chinese 4-digit
+            fourgroup_re = re.compile(
+                _build_number_regex_4(decimal, thousand), re.VERBOSE
+            )
+            _str_is_valid_number(column, fourgroup_re)
+            return fourgroup_re
 
 
 class ToFloat(SingleColumnTransformer):
@@ -289,6 +356,33 @@ class ToFloat(SingleColumnTransformer):
     0    4567.8...
     1    12567.8...
     Name: x, dtype: float32
+
+
+    Number grouping patterns supported:
+
+    >>> import pandas as pd
+    >>> from skrub._to_float import ToFloat
+
+    # 1) Groups of 3 digits (Western style)
+    >>> s = pd.Series(["1,234.56", "12,345.78"], name="x")
+    >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
+    0     1234.56
+    1    12345.78
+    dtype: float32
+
+    # 2) Multi-group (1–3 + 2-digit, e.g., Indian style: 1,23,456)
+    >>> s = pd.Series(["1,23,456.78", "12,34,567.89"], name="x")
+    >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
+    0    123456.78
+    1    1234567.89
+    dtype: float32
+
+    # 3) Groups of 4 digits (e.g., Chinese style: 1234,5678)
+    >>> s = pd.Series(["1,2345.67", "12,3456.78"], name="x")
+    >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
+    0     12345.67
+    1    123456.78
+    dtype: float32
     """  # noqa: E501
 
     def __init__(self, decimal=".", thousand=None):
@@ -326,11 +420,13 @@ class ToFloat(SingleColumnTransformer):
             )
         try:
             if sbd.is_string(column):
-                self._number_re_ = re.compile(
-                    _build_number_regex(self.decimal, self.thousand),
-                    re.VERBOSE,
+                if self.decimal == "." and self.thousand == "":
+                    numeric = sbd.to_float32(column, strict=True)
+                    return numeric
+
+                self._number_re_ = _validate_number_column(
+                    column, self.decimal, self.thousand
                 )
-                _str_is_valid_number(column, self._number_re_)
                 column = _str_replace(
                     column, decimal=self.decimal, thousand=self.thousand
                 )
