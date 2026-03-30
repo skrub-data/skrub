@@ -368,23 +368,23 @@ class ToFloat(SingleColumnTransformer):
     # 1) Groups of 3 digits (Western style)
     >>> s = pd.Series(["1,234.56", "12,345.78"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
-    0     1234.56
-    1    12345.78
-    dtype: float32
+    0     1234.56...
+    1    12345.78...
+    Name: x, dtype: float32
 
     # 2) Multi-group (1–3 + 2-digit, e.g., Indian style: 1,23,456)
     >>> s = pd.Series(["1,23,456.78", "12,34,567.89"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
-    0    123456.78
-    1    1234567.89
-    dtype: float32
+    0    1.234568e+05
+    1    1.234568e+06
+    Name: x, dtype: float32
 
     # 3) Groups of 4 digits (e.g., Chinese style: 1234,5678)
     >>> s = pd.Series(["1,2345.67", "12,3456.78"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
-    0     12345.67
-    1    123456.78
-    dtype: float32
+    0     12345.6...
+    1    123456.7...
+    Name: x, dtype: float32
     """  # noqa: E501
 
     def __init__(self, decimal=".", thousand=None):
