@@ -177,7 +177,7 @@ dd {
 /* Wrap a table by making it scrollable and placing a fixed border at the bottom. */
 .vertical-scroll-table-wrapper {
     overflow-y: auto;
-    max-height: 50em;
+    max-height: 35em;
     border-bottom: 1px solid var(--color-border-secondary);
 }
 
