@@ -59,7 +59,7 @@ These are the parameters currently available in the global configuration:
    * - ``table_report_verbosity``
      - ``1``
      - ``SKB_TABLE_REPORT_VERBOSITY``
-     - Set the verbosity of the :clas:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
+     - Set the verbosity of the :class:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
    * - ``max_plot_columns``
      - 30
      - ``SKB_MAX_PLOT_COLUMNS``

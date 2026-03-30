@@ -235,7 +235,7 @@ class SingleColumnTransformer(BaseEstimator):
 
         Returns
         --------
-        all_outputs_
+        list of str
             The names of the output features.
         """
         check_is_fitted(self, "all_outputs_")

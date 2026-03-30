@@ -9,6 +9,7 @@
 .. |SingleColumnTransformer| replace:: :class:`~skrub.core.SingleColumnTransformer`
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
 .. |OneHotEncoder| replace:: :class:`~sklearn.preprocessing.OneHotEncoder`
+.. |OrdinalEncoder| replace:: :class:`~sklearn.preprocessing.OrdinalEncoder`
 .. |make_pipeline| replace:: :class:`~sklearn.pipeline.make_pipeline`
 
 .. _user_guide_multiple_columns:
