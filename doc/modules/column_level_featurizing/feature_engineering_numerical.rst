@@ -116,7 +116,7 @@ Columns that cannot be converted are rejected during ``fit``:
 >>> ToFloat(decimal=".").fit_transform(s)
 Traceback (most recent call last):
     ...
-skrub._single_column_transformer.RejectColumn: Could not convert column 'x' to numbers.
+skrub.core.RejectColumn: Could not convert column 'x' to numbers.
 
 
 During ``transform``, invalid entries become ``NaN`` instead of raising an error:
