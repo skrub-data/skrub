@@ -19,7 +19,7 @@ _SINGLE_COL_LINE = (
     "scikit-learn estimators, its ``fit``, ``transform`` and ``fit_transform`` methods"
     " expect a single column (e.g. Series) not a full dataframe."
     " To apply this transformer to one or more columns in a dataframe, use it as a"
-    " parameter in a ``skrub.ApplyToEachCol`` or a ``skrub.TableVectorizer``.\n\n"
+    " parameter in a ``skrub.ApplyToEachCols`` or a ``skrub.TableVectorizer``.\n\n"
     "To apply to all columns::\n\n"
     "   ApplyToCols({class_name}())\n\n"
     "To apply to selected columns::\n\n"
