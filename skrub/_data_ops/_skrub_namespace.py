@@ -1,3 +1,4 @@
+import functools
 import pickle
 import re
 import sys
@@ -17,9 +18,11 @@ from ._data_ops import (
     FreezeAfterFit,
     IfElse,
     Match,
+    SplitX,
     Var,
     check_data_op,
     check_name,
+    checked_data_op_constructor,
     deferred,
 )
 from ._estimator import (
@@ -43,7 +46,10 @@ from ._inspection import (
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
-from ._utils import KFOLD_5, NULL, attribute_error
+from ._utils import NULL, attribute_error
+
+# By default, select all columns
+_SELECT_ALL_COLUMNS = s.all()
 
 
 def _var_values_provided(data_op, environment):
@@ -89,6 +95,29 @@ def _check_grid_search_possible(data_op):
             )
 
 
+def _check_before(f):
+    """
+    Decorator to perform validation of a DataOp before calling a function.
+
+    Usually some checks such as no duplicate names are performed whenever a
+    DataOp is created. However to reduce overhead, those checks can be disabled
+    when the DataOp is created. But we always perform validation before
+    actually using the DataOp. So all functions that evaluate the DataOp or
+    transform it into some other type such as .skb.eval(), .skb.make_learner()
+    etc. must be decorated with _check_before.
+
+    Note that once a DataOp has been checked, that is stored in an attribute so
+    redundant checks are avoided.
+    """
+
+    @functools.wraps(f)
+    def _checked(self, *args, **kwargs):
+        check_data_op(self._data_op)
+        return f(self, *args, **kwargs)
+
+    return _checked
+
+
 def _is_optuna_trial(obj):
     try:
         optuna = sys.modules["optuna"]
@@ -113,7 +142,7 @@ class SkrubNamespace:
         self,
         estimator,
         y=None,
-        cols=s.all(),
+        cols=_SELECT_ALL_COLUMNS,
         how="auto",
         allow_reject=False,
         unsupervised=False,
@@ -135,13 +164,13 @@ class SkrubNamespace:
         )
         return data_op
 
-    @check_data_op
+    @checked_data_op_constructor
     def apply(
         self,
         estimator,
         *,
         y=None,
-        cols=s.all(),
+        cols=_SELECT_ALL_COLUMNS,
         exclude_cols=None,
         how="auto",
         allow_reject=False,
@@ -176,11 +205,12 @@ class SkrubNamespace:
         how : "auto", "cols", "frame" or "no_wrap", optional
             How the estimator is applied. In most cases the default "auto"
             is appropriate.
-            - "cols" means `estimator` is wrapped in a :class:`ApplyToCols`
+
+            - "cols" means `estimator` is wrapped in a :class:`ApplyToEachCol`
               transformer, which fits a separate clone of `estimator` each
               column in `cols`. `estimator` must be a transformer (have a
               ``fit_transform`` method).
-            - "frame" means `estimator` is wrapped in a :class:`ApplyToFrame`
+            - "frame" means `estimator` is wrapped in a :class:`ApplyToSubFrame`
               transformer, which fits a single clone of `estimator` to the
               selected part of the input dataframe. `estimator` must be a
               transformer.
@@ -247,10 +277,7 @@ class SkrubNamespace:
         skrub.DataOp.skb.make_learner :
             Get a skrub learner for this DataOp.
         skrub.ApplyToCols :
-            Transformer that applies a given transformer separately to each
-            selected column.
-        skrub.ApplyToFrame:
-            Transformer that applies a given transformer to part of a
+            Transformer that applies a given estimator to selected columns of a
             dataframe.
 
         Examples
@@ -486,7 +513,7 @@ class SkrubNamespace:
         """
         return deferred(func)(self._data_op, *args, **kwargs)
 
-    @check_data_op
+    @checked_data_op_constructor
     def if_else(self, value_if_true, value_if_false):
         """Create a conditional DataOp.
 
@@ -549,7 +576,7 @@ class SkrubNamespace:
         """
         return DataOp(IfElse(self._data_op, value_if_true, value_if_false))
 
-    @check_data_op
+    @checked_data_op_constructor
     def match(self, targets, default=NULL):
         """Select based on the value of a DataOp.
 
@@ -612,7 +639,7 @@ class SkrubNamespace:
         """
         return DataOp(Match(self._data_op, targets, default))
 
-    @check_data_op
+    @checked_data_op_constructor
     def select(self, cols):
         """Select a subset of columns.
 
@@ -665,7 +692,7 @@ class SkrubNamespace:
         """
         return self._apply(SelectCols(cols), how="no_wrap")
 
-    @check_data_op
+    @checked_data_op_constructor
     def drop(self, cols):
         """Drop some columns.
 
@@ -718,7 +745,7 @@ class SkrubNamespace:
         """
         return self._apply(DropCols(cols), how="no_wrap")
 
-    @check_data_op
+    @checked_data_op_constructor
     def concat(self, others, axis=0):
         """Concatenate dataframes vertically or horizontally.
 
@@ -778,7 +805,7 @@ class SkrubNamespace:
         """
         return DataOp(Concat(self._data_op, others, axis=axis))
 
-    @check_data_op
+    @checked_data_op_constructor
     def subsample(self, n=1000, *, how="head"):
         """Configure subsampling of a dataframe or numpy array.
 
@@ -942,6 +969,7 @@ class SkrubNamespace:
         """  # noqa : E501
         return DataOp(SubsamplePreviews(self._data_op, n=n, how=how))
 
+    @_check_before
     def clone(self, drop_values=True):
         """Get an independent clone of the DataOp.
 
@@ -999,6 +1027,7 @@ class SkrubNamespace:
 
         return clone(self._data_op, drop_preview_data=drop_values)
 
+    @_check_before
     def eval(self, environment=None, *, keep_subsampling=False):
         """Evaluate the DataOp.
 
@@ -1070,6 +1099,7 @@ class SkrubNamespace:
             self._data_op, mode="fit_transform", environment=environment, clear=True
         )
 
+    @_check_before
     def preview(self):
         """Get the value computed for previews (shown when printing the DataOp).
 
@@ -1124,7 +1154,7 @@ class SkrubNamespace:
         """
         return evaluate(self._data_op, mode="preview", environment=None, clear=False)
 
-    @check_data_op
+    @checked_data_op_constructor
     def freeze_after_fit(self):
         """Freeze the result during learner fitting.
 
@@ -1175,6 +1205,7 @@ class SkrubNamespace:
         """
         return DataOp(FreezeAfterFit(self._data_op))
 
+    @_check_before
     def get_data(self):
         """Collect the values of the variables contained in the DataOp.
 
@@ -1202,6 +1233,7 @@ class SkrubNamespace:
                 data[impl.name] = impl.value
         return data
 
+    @_check_before
     def get_vars(self, all_named_ops=False):
         """
         Get all the variables used in the DataOp.
@@ -1288,6 +1320,7 @@ class SkrubNamespace:
             if isinstance(op._skrub_impl, Var)
         }
 
+    @_check_before
     def draw_graph(self):
         """Get an SVG string representing the computation graph.
 
@@ -1305,6 +1338,7 @@ class SkrubNamespace:
 
         return draw_data_op_graph(self._data_op)
 
+    @_check_before
     def describe_steps(self):
         """Get a text representation of the computation graph.
 
@@ -1353,6 +1387,7 @@ class SkrubNamespace:
 
         return describe_steps(self._data_op)
 
+    @_check_before
     def describe_param_grid(self):
         """Describe the hyper-parameters extracted from choices in the DataOp.
 
@@ -1435,6 +1470,7 @@ class SkrubNamespace:
 
         return describe_param_grid(self._data_op)
 
+    @_check_before
     def describe_defaults(self):
         """Describe the hyper-parameters used by the default learner.
 
@@ -1470,6 +1506,7 @@ class SkrubNamespace:
 
         return describe_params(eval_choices(self._data_op), choice_graph(self._data_op))
 
+    @_check_before
     def full_report(
         self,
         environment=None,
@@ -1597,6 +1634,7 @@ class SkrubNamespace:
             title=title,
         )
 
+    @_check_before
     def make_learner(self, *, fitted=False, keep_subsampling=False, choose="default"):
         """Get a skrub learner for this DataOp.
 
@@ -1769,15 +1807,16 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
+    @_check_before
     def train_test_split(
         self,
         environment=None,
         *,
         keep_subsampling=False,
-        split_func=model_selection.train_test_split,
+        split_func=None,
         **split_func_kwargs,
     ):
-        """Split an environment into a training an testing environments.
+        """Split an environment into training and testing environments.
 
         Parameters
         ----------
@@ -1791,7 +1830,7 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        split_func : function, optional
+        split_func : function, optional, default=None
             The function used to split X and y once they have been computed. By
             default, :func:`~sklearn.model_selection.train_test_split` is used.
 
@@ -1862,7 +1901,8 @@ class SkrubNamespace:
             **split_func_kwargs,
         )
 
-    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=KFOLD_5):
+    @_check_before
+    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=None):
         """Yield splits of an environment into training and testing environments.
 
         Parameters
@@ -1877,7 +1917,7 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        cv : int, cross-validation generator or iterable, default=KFold(5)
+        cv : int, cross-validation generator or iterable, default=None
             The default is 5-fold without shuffling. Can be a cross-validation
             splitter, an iterable yielding pairs of (train, test) indices, or an
             int to specify the number of folds for KFold splitting.
@@ -1927,6 +1967,7 @@ class SkrubNamespace:
             self._data_op, environment, keep_subsampling=keep_subsampling, cv=cv
         )
 
+    @_check_before
     def make_grid_search(self, *, fitted=False, keep_subsampling=False, **kwargs):
         """Find the best parameters with grid search.
 
@@ -2038,6 +2079,7 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
+    @_check_before
     def make_randomized_search(
         self,
         *,
@@ -2324,6 +2366,7 @@ class SkrubNamespace:
             env_with_subsampling(self._data_op, self.get_data(), keep_subsampling)
         )
 
+    @_check_before
     def iter_learners_grid(self):
         """Get learners with different parameter combinations.
 
@@ -2405,6 +2448,7 @@ class SkrubNamespace:
             new.set_params(**params)
             yield new
 
+    @_check_before
     def iter_learners_randomized(self, n_iter, *, random_state=None):
         """Get learners with different parameter combinations.
 
@@ -2476,6 +2520,7 @@ class SkrubNamespace:
             new.set_params(**params)
             yield new
 
+    @_check_before
     def cross_validate(self, environment=None, *, keep_subsampling=False, **kwargs):
         """Cross-validate the DataOp plan.
 
@@ -2486,7 +2531,7 @@ class SkrubNamespace:
         ----------
         environment : dict or None
             Bindings for variables contained in the DataOp plan. If not
-            provided, the ``value``s passed when initializing ``var()`` are
+            provided, the values passed when initializing ``var()`` are
             used.
 
         keep_subsampling : bool, default=False
@@ -2540,31 +2585,72 @@ class SkrubNamespace:
             **kwargs,
         )
 
-    @check_data_op
-    def mark_as_X(self):
-        """Mark this DataOp as being the ``X`` table.
+    @checked_data_op_constructor
+    def mark_as_X(self, *, cv=None, split_kwargs=None):
+        """
+        Mark this DataOp as being the ``X`` table.
 
-        This is used for cross-validation and hyperparameter selection: operations
-        done before :meth:`.skb.mark_as_X()` and :meth:`.skb.mark_as_y()` are executed
-        on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original DataOp is left unchanged.
+
+        This is used for train/test splits and cross-validation.
+        To create a split,
+
+        - The nodes that are marked as ``X`` and ``y`` are materialized: all
+          the operations that come before are executed, to compute the value of
+          ``X`` and ``y``.
+        - Then the resulting tables are divided into train and test parts
+          according to the splitting strategy.
+        - For each split, the rest of the DataOp is fitted on the train set and
+          tested on the test set.
+
+        In addition, ``mark_as_X`` can be passed a splitter (``cv``) and named
+        arguments for the splitter. Those will be evaluated at the same time as
+        ``X`` and ``y`` and used to create the train/test splits.
+
+        Parameters
+        ----------
+        cv : int, cross-validation iterator or iterable, default=None
+            Cross-validation splitting strategy. It can be:
+
+            - None: 5-fold (stratified) cross-validation
+            - integer: specify the number of folds
+            - sklearn `CV splitter <https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators>`_
+            - iterable yielding (train, test) splits as arrays of indices.
+
+        split_kwargs : dict or None, default=None
+            Named arguments for the ``split()`` function (such as groups for a
+            :class:`~sklearn.model_selection.GroupKFold`). Note that
+            ``split_kwargs`` (and ``cv``) can themselves be DataOps.
 
         Returns
         -------
-        The input DataOp, which has been marked as being ``X``
+        A new DataOp, which has been marked as being the ``X`` table (which
+        must be split for cross-validation).
 
         See also
         --------
+        :meth:`DataOp.skb.mark_as_y`
+            The equivalent of this function for the targets: mark a node as
+            being the ``y`` table.
         :func:`skrub.X`
             ``skrub.X(value)`` can be used as a shorthand for
             ``skrub.var('X', value).skb.mark_as_X()``.
+        :meth:`DataOp.skb.train_test_split`
+            Prepare training and testing sets for a DataOp.
+        :meth:`DataOp.skb.cross_validate`
+            Perform cross-validation on a DataOp.
+        :meth:`DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
 
         Notes
         -----
         During cross-validation, all the previous steps are first executed,
-        until X and y have been materialized. Then, those are split into
-        training and testing sets. The following steps in the DataOp are
-        fitted on the train data, and applied to test data, within each split.
+        until X and y (and the splitter and its additional arguments, if any)
+        have been materialized. Then, X and y are split into training and
+        testing sets. The following steps in the DataOp are fitted on the train
+        data, and applied to test data, within each split.
 
         This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
@@ -2574,8 +2660,6 @@ class SkrubNamespace:
 
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
-
-        Note: this marks the DataOp in-place and also returns it.
 
         Examples
         --------
@@ -2611,9 +2695,60 @@ class SkrubNamespace:
         rest of the learner (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
 
-        Please see the examples gallery for more information.
+        We can pass additional data to the cross-validation splitter by using
+        the ``cv`` and ``split_kwargs`` parameters:
+
+        >>> df = skrub.datasets.toy_products()
+        >>> df
+           description  price            seller     category
+        0        mouse     10   supermarket.com  electronics
+        1       hammer     15  bestproducts.com        tools
+        2     keyboard     20   supermarket.com  electronics
+        3      usb key      9  bestproducts.com  electronics
+        4      charger     13  bestproducts.com  electronics
+        5  screwdriver     12   supermarket.com        tools
+
+        Suppose we want to assess generalization to new sellers. While splitting for
+        cross-validation we must group products by seller. We do it with
+        :class:`sklearn.model_selection.LeaveOneGroupOut`.
+
+        >>> from sklearn.dummy import DummyClassifier
+        >>> from sklearn.model_selection import LeaveOneGroupOut
+
+        >>> data = skrub.var("df", df)
+        >>> groups = data["seller"]
+        >>> X = data[["description", "price"]].skb.mark_as_X(
+        ...     cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+        ... )
+        >>> y = data["category"].skb.mark_as_y()
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> split = pred.skb.train_test_split()
+
+        The train set only contains data from the "supermarket.com" seller.
+
+        >>> split["X_train"]
+           description  price
+        0        mouse     10
+        2     keyboard     20
+        5  screwdriver     12
+
+        The test set only contains data from the "bestproducts.com" seller.
+
+        >>> split["X_test"]
+          description  price
+        1      hammer     15
+        3     usb key      9
+        4     charger     13
         """
-        new = self._data_op._skrub_impl.__copy__()
+        if cv is None:
+            if split_kwargs is not None:
+                raise TypeError(
+                    "To pass split_kwargs you must also provide a splitter. "
+                    f"Got cv=None and split_kwargs={split_kwargs}."
+                )
+            new = self._data_op._skrub_impl.__copy__()
+        else:
+            new = SplitX(self._data_op, cv, split_kwargs)
         new.is_X = True
         return DataOp(new)
 
@@ -2622,7 +2757,7 @@ class SkrubNamespace:
         """Whether this DataOp has been marked with :meth:`.skb.mark_as_X()`."""
         return self._data_op._skrub_impl.is_X
 
-    @check_data_op
+    @checked_data_op_constructor
     def mark_as_y(self):
         """Mark this DataOp as being the ``y`` table.
 
@@ -2698,7 +2833,7 @@ class SkrubNamespace:
         """Whether this DataOp has been marked with :meth:`.skb.mark_as_y()`."""
         return self._data_op._skrub_impl.is_y
 
-    @check_data_op
+    @checked_data_op_constructor
     def set_name(self, name):
         """Give a name to this DataOp.
 
@@ -2824,7 +2959,7 @@ class SkrubNamespace:
         return f"<{self.__class__.__name__}>"
 
     @property
-    @check_data_op
+    @checked_data_op_constructor
     def applied_estimator(self):
         """Retrieve the estimator applied in the previous step, as a DataOp.
 
@@ -2843,14 +2978,14 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToFrame(transformer=TableVectorizer())
+        ApplyToSubFrame(transformer=TableVectorizer())
 
         Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``ApplyToFrame`` or
-        ``ApplyToCols`` depending if the transformer is applied to each column
+        they will be wrapped in a meta-estimator ``ApplyToSubFrame`` or
+        ``ApplyToEachCol`` depending if the transformer is applied to each column
         separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``ApplyToFrame`` or ``transformers_``
-        attribute of ``ApplyToCols`` (a dictionary mapping column names to the
+        ``transformer_`` attribute of ``ApplyToSubFrame`` or ``transformers_``
+        attribute of ``ApplyToEachCol`` (a dictionary mapping column names to the
         corresponding transformer).
 
         >>> fitted_vectorizer.transformer_
@@ -2877,7 +3012,7 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToCols(cols=(string() - cols('date')),
+        ApplyToEachCol(cols=(string() - cols('date')),
                      transformer=StringEncoder(n_components=2))
         >>> fitted_vectorizer.transformers_
         <GetAttr 'transformers_'>

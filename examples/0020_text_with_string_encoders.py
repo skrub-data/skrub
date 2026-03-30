@@ -46,11 +46,15 @@ available in skrub.
 # between the binary labels "Toxic" and "Not Toxic".
 # Our goal is to classify each entry between these two labels, using only the
 # text of the tweets as features.
+import pandas as pd
+
 from skrub.datasets import fetch_toxicity
 
-dataset = fetch_toxicity()
-X, y = dataset.X, dataset.y
-X["is_toxic"] = y
+# %%
+# We load the dataset from the path using pandas.
+file_path = fetch_toxicity().path
+
+X = pd.read_csv(file_path)
 
 # %%
 # When it comes to displaying large chunks of text, the |TableReport| is especially
@@ -58,6 +62,12 @@ X["is_toxic"] = y
 from skrub import TableReport
 
 TableReport(X)
+
+# %%
+# We prepare the target variable by mapping the binary labels "Toxic" and "Not Toxic"
+# to 1 and 0, respectively. The target is reused throughout the example.
+
+y = X.pop("is_toxic").map({"Toxic": 1, "Not Toxic": 0})
 
 # %%
 # GapEncoder
@@ -164,7 +174,8 @@ def plot_box_results(named_results):
 
 results = []
 
-y = X.pop("is_toxic").map({"Toxic": 1, "Not Toxic": 0})
+# %%
+# Now we can evaluate the performance of the |GapEncoder| in toxicity classification.
 
 gap_pipe = make_pipeline(
     TableVectorizer(high_cardinality=GapEncoder(n_components=30)),

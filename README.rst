@@ -18,10 +18,10 @@ skrub
 
 
 **skrub** (formerly *dirty_cat*) is a Python
-library that facilitates doing machine learning with dataframes.
+library that facilitates machine learning with dataframes.
 
 If you like the package, spread the word and ⭐ this repository!
-You can also join the `discord server <https://discord.gg/ABaPnm7fDC>`_.
+You can also join the `Discord server <https://discord.gg/ABaPnm7fDC>`_.
 
 Website: https://skrub-data.org/
 

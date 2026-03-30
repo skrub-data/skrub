@@ -2,10 +2,13 @@ import codecs
 import functools
 import json
 import numbers
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from skrub import selectors as s
 
 from .. import _config
 from .. import _dataframe as sbd
@@ -45,6 +48,52 @@ def _check_max_cols(max_plot_columns, max_association_columns):
     return max_plot_columns, max_association_columns
 
 
+def _check_col_filter(name, cols, df):
+    err_msg = (
+        "Custom column filters should be either a Selector or a list of column names"
+        f"\n  or a list of column indices. Got a bad filter for key {name!r}: {cols!r}"
+    )
+    if isinstance(cols, s.Selector):
+        return cols.expand_index(df)
+    if not isinstance(cols, Sequence):
+        raise TypeError(err_msg)
+    if all(isinstance(c, str) for c in cols):
+        all_col_names = set(sbd.column_names(df))
+        bad_col_names = [c for c in cols if c not in all_col_names]
+        if bad_col_names:
+            raise ValueError(
+                "The following column names passed for "
+                f"filter {name!r} are not in the dataframe: {bad_col_names}"
+            )
+        return s.make_selector(cols).expand_index(df)
+    if all(isinstance(c, numbers.Integral) for c in cols):
+        bad_idx = [c for c in cols if not 0 <= c < sbd.shape(df)[1]]
+        if bad_idx:
+            raise ValueError(
+                "The following column indices passed for "
+                f"filter {name!r} are out of range: {bad_idx}"
+            )
+        return list(cols)
+    raise TypeError(err_msg)
+
+
+def _check_column_filters(column_filters, df):
+    if column_filters is None:
+        return None
+    if not isinstance(column_filters, Mapping):
+        raise TypeError(
+            "column_filters should be a dict mapping names to column lists, "
+            f"got object of type: {type(column_filters)}"
+        )
+    return {
+        str(name): {
+            "display_name": str(name),
+            "columns": _check_col_filter(name, cols, df),
+        }
+        for name, cols in column_filters.items()
+    }
+
+
 class TableReport:
     r"""Summarize the contents of a dataframe.
 
@@ -69,9 +118,10 @@ class TableReport:
         Title for the report.
     column_filters : dict
         A dict for adding custom entries to the column filter dropdown menu.
-        Each key is an id for the filter (e.g. ``"first_10"``) and the value is a
-        mapping with the keys ``display_name`` (the name shown in the menu,
-        e.g. ``"First 10 columns"``) and ``columns`` (a list of column names).
+        Each key is the filter named to be displayed in the dropdown menu
+        (e.g. ``"first_10"``), and the value is the desired filter. Allowed
+        formats for the filter values are a list of column names,
+        a list of column indices, or a Selector object.
         See the end of the "Examples" section below for details.
     verbose : int, default = 1
         Whether to print progress information while the report is being generated.
@@ -173,10 +223,7 @@ class TableReport:
     in the report's dropdown menu.
 
     >>> filters = {
-    ...     "at_least_2": {
-    ...         "display_name": "Columns with at least 2 unique values",
-    ...         "columns": ["a", "b"],
-    ...     }
+    ...         "display_name": ["a", "b"],
     ... }
     >>> report = TableReport(df, column_filters=filters)
 
@@ -235,18 +282,13 @@ class TableReport:
         }
         self._to_html_kwargs = {}
         self.title = title
-        self.column_filters = column_filters
+        self.column_filters = _check_column_filters(column_filters, dataframe)
         self.max_plot_columns, self.max_association_columns = _check_max_cols(
             max_plot_columns, max_association_columns
         )
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
-        if sbd.is_polars(dataframe) and sbd.is_lazyframe(dataframe):
-            raise ValueError(
-                "The TableReport does not support lazy dataframes. Please call"
-                " `.collect()` to use the TableReport on the current dataframe."
-            )
         self.n_columns = sbd.shape(self.dataframe)[1]
 
     def _set_minimal_mode(self):

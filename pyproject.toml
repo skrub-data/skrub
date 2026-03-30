@@ -44,7 +44,7 @@ dependencies = [
 [tool.setuptools.dynamic]
 version = { file = "skrub/VERSION.txt" }
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
   "ipykernel",
   "ipython",
@@ -66,8 +66,7 @@ dev = [
   "statsmodels",
 
   # lint
-  "black==23.3.0",
-  "ruff==0.14.2",
+  "ruff==0.15.0",
   "pre-commit",
 
   # test
@@ -113,6 +112,7 @@ pydot = "*"
 numpydoc = "*"
 pydata-sphinx-theme = "*"
 plotly = "*"
+memory_profiler = "*"
 seaborn = "*"
   # TODO: unpin sphinx when incmpatibility with autosummary-accessors is fixed:
   # https://github.com/xarray-contrib/sphinx-autosummary-accessors/issues/165
@@ -124,10 +124,10 @@ sphinx-autosummary-accessors = ">=2025.3.1,<2026"
 sphinx-sitemap = "*"
 statsmodels = "*"
 optuna = "*"
+skorch = "*"
 
 [tool.pixi.feature.lint.dependencies]
-black = "==23.3.0"
-ruff = "==0.14.2"
+ruff = "==0.15.0"
 pre-commit = "*"
 
 [tool.pixi.feature.optional.dependencies]
@@ -171,10 +171,13 @@ jinja2 = "==3.1.2"
 matplotlib = "==3.4.3"
 pydot = "*"
 requests = "==2.27.1"
+# pinning pyparsing because it raises deprecation warnings in matplotlib
+# TODO: unpin when it gets fixed
+pyparsing = "<3.3"
 
 [tool.pixi.feature.min-optional-dependencies.dependencies]
 pyarrow = "==15.0.2"
-polars = "==0.20.15"
+polars = "==1.5.0"
 plotly = "*"
 optuna = "*"
 
@@ -220,9 +223,16 @@ python = "~=3.14.0"
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
-clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
+clean-doc = { cmd = "make clean", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
+
+[tool.pixi.feature.doc.target.win-64.tasks]
+build-doc = { cmd = ".\\make.bat html", cwd = "doc" }
+build-doc-quick = { cmd = ".\\make.bat html-noplot", cwd = "doc" }
+clean-doc = { cmd = ".\\make.bat clean", cwd = "doc" }
+linkcheck = { cmd = ".\\make.bat linkcheck", cwd = "doc" }
+linkcheck-quick = { cmd = ".\\make.bat linkcheck-noplot", cwd = "doc" }
 
 
 [tool.pixi.feature.lint.tasks]
@@ -271,7 +281,7 @@ exclude = [
 
 [tool.ruff.lint]
 # all rules can be found here: https://beta.ruff.rs/docs/rules/
-select = ["E", "F", "W", "C4", "I", "UP"]
+select = ["E", "F", "W", "B", "C4", "I", "UP"]
 ignore = [
   # use `is` and `is not` for type comparisons
   "E721",
@@ -279,6 +289,14 @@ ignore = [
   "E731",
   # do not use variables named 'l', 'O', or 'I'
   "E741",
+  "B004",
+  "B007",
+  "B010",
+  "B017",
+  "B018",
+  "B028",
+  "B904",
+  "B905",
   # unnecessary list comprehension (rewrite as a set comprehension)
   "C403",
   # unnecessary tuple literal (rewrite as a set literal)
@@ -293,6 +311,7 @@ ignore = [
 # It's fine not to put the import at the top of the file in the examples
 # folder.
 "examples/*" = ["E402"]
+"doc/tutorials/*" = ["E402"]
 "doc/conf.py" = ["E402"]
 # Long exception messages in docstrings
 "skrub/_clean_null_strings.py" = ["E501"]
@@ -316,6 +335,9 @@ filterwarnings = [
   'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
   # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
   'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
+  # Ignore pandas warning about converting Series of length 1 to scalar
+  # https://github.com/skrub-data/skrub/pull/1974
+  'ignore:Converting a Series or array of length 1 into a scalar is deprecated.*',
   # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
   # should be addressed in pandas
   'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
@@ -325,12 +347,18 @@ filterwarnings = [
   'ignore:The current process just got forked.*',
   'ignore:.*`clean_up_tokenization_spaces` was not set.*',
 ]
-addopts = "--doctest-modules"
+log_cli_level = "INFO"
+xfail_strict = true
+addopts = [
+  "--doctest-modules",
+  "--strict-config",
+  "--strict-markers",
+]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*'
+skip = '.git*,*.svg,package-lock.json,*.lock,*.css,*-min.*,pyproject.toml'
 check-hidden = true
 # ignore-regex = ''
 ignore-words-list = 'ans,serie,fulfilment'

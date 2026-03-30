@@ -284,43 +284,46 @@ class _Evaluator(_DataOpTraversal):
         self._data_op = data_op
         return super().run(data_op)
 
-    def _fetch(self, data_op):
-        """Fetch the result from the cache or environment if possible.
-
-        Raises a KeyError otherwise
-        """
-        impl = data_op._skrub_impl
-        if impl.is_X and X_NAME in self.environment:
-            return self.environment[X_NAME]
-        if impl.is_y and Y_NAME in self.environment:
-            return self.environment[Y_NAME]
-        if (
-            # if Var, let the usual mechanism fetch the value from the
-            # environment and store in results dict. Otherwise override with
-            # the provided value.
-            not isinstance(impl, Var)
-            and impl.name is not None
-            and impl.name in self.environment
-        ):
-            return self.environment[impl.name]
-        return impl.results[self.mode]
-
-    def _store(self, data_op, result, duration):
+    def _store(self, data_op, result, duration, env_key):
         """Store a result in the cache."""
         data_op._skrub_impl.results[self.mode] = result
         metadata = data_op._skrub_impl.metadata.setdefault(self.mode, {})
         metadata["eval_duration"] = duration
+        metadata["env_key"] = env_key
 
     def handle_data_op(self, data_op):
+        impl = data_op._skrub_impl
         try:
-            return self._fetch(data_op)
+            return impl.results[self.mode]
         except KeyError:
             pass
-        result = yield from self._eval_data_op(data_op)
+
+        if impl.is_X and X_NAME in self.environment:
+            env_key, fetch = X_NAME, True
+        elif impl.is_y and Y_NAME in self.environment:
+            env_key, fetch = Y_NAME, True
+        elif impl.name is not None and impl.name in self.environment:
+            env_key = impl.name
+
+            # If data_op is a Var, let the usual eval mechanism fetch the value
+            # from the environment (it provides an error message if it is
+            # missing). For other types of nodes fetch the provided value
+            # directly. (if is_X or is_y then the value is always fetched
+            # directly from the environment, as X and y have priority over
+            # variable's names)
+            fetch = not isinstance(impl, Var)
+        else:
+            env_key, fetch = None, False
+
+        if fetch:
+            result = self.environment[env_key]
+        else:
+            result = yield from self._eval_data_op(data_op)
+
         duration = yield _CurrentNodeDuration()
-        self._store(data_op, result, duration)
+        self._store(data_op, result, duration=duration, env_key=env_key)
         for cb in self.callbacks:
-            cb(data_op, result)
+            cb(data_op, result, duration=duration, env_key=env_key)
         return result
 
     def _eval_data_op(self, data_op):
@@ -454,41 +457,17 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
             clear_results(data_op, mode=mode)
 
 
-class _Reachable(_DataOpTraversal):
-    """
-    Find all nodes that are reachable from the root node, stopping at nodes
-    that have already been computed.
-
-    This is used to find which cached results are no longer needed and can be
-    discarded to free the corresponding memory. For example if we have this
-    DataOp: `b = a + a; c = b * b` and we want to evaluate `c`, once `b`
-    has been computed we no longer need `a` to compute `c` and we can clear its
-    cache.
-    """
-
-    def __init__(self, mode):
-        self.mode = mode
-
-    def run(self, data_op):
-        self._reachable = {}
-        super().run(data_op)
-        return self._reachable
-
-    def handle_data_op(self, data_op):
-        self._reachable[id(data_op)] = data_op
-        if self.mode in data_op._skrub_impl.results:
-            return data_op
-        return (yield from super().handle_data_op(data_op))
-
-
 def _cache_pruner(data_op, mode):
-    all_nodes = nodes(data_op)
+    g = graph(data_op)
+    ref_counts = {node_id: len(parents) for node_id, parents in g["parents"].items()}
+    id_map = {id(node): node_id for node_id, node in g["nodes"].items()}
 
-    def prune(*args, **kwargs):
-        reachable_nodes = _Reachable(mode).run(data_op)
-        for node in all_nodes:
-            if id(node) not in reachable_nodes:
-                node._skrub_impl.results.pop(mode, None)
+    def prune(data_op, result, **kwargs):
+        node_id = id_map[id(data_op)]
+        for c in g["children"].get(node_id, ()):
+            ref_counts[c] -= 1
+            if ref_counts[c] == 0:
+                g["nodes"][c]._skrub_impl.results.pop(mode, None)
 
     return prune
 
@@ -1231,8 +1210,9 @@ def find_conflicts(data_op):
     """
     We use a function that returns the conflicts, rather than raises an
     exception, because we want the exception to be raised higher in the call
-    stack (in ``_data_ops._check_data_op``) so that the user sees the line in
-    their code that created a problematic DataOp easily in the traceback.
+    stack (in ``_data_ops._checked_data_op_constructor``) so that the user sees
+    the line in their code that created a problematic DataOp easily in the
+    traceback.
     """
     try:
         _FindConflicts().run(data_op)
