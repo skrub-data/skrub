@@ -305,12 +305,6 @@ def test_thresholds_parameter(df_module):
 @skip_polars_installed_without_pyarrow
 def test_plot_distributions_parameter(df_module):
     # True: always plot regardless of threshold
-    df7 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
-    )
-    summary = TableReport(df7, plot_distributions=True)._summary
-    assert not summary["plots_skipped"]
-
     df8 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
