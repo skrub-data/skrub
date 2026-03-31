@@ -473,6 +473,12 @@ def _guess_datetime_format(column):
 def to_datetime(data, format=None):
     """Convert DataFrame or column to Datetime dtype.
 
+    .. caution ::
+
+       For versions of Pandas <3.0, inferring the format may fail if it includes
+       both date and time components, like ``"1959-07-01 19:59:16"``. In such
+       cases, the format should be specified explicitly.
+
     Parameters
     ----------
     data : pandas or polars ``{DataFrame, Series}``
