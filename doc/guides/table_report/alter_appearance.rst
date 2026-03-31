@@ -4,15 +4,15 @@
 
 .. _user_guide_table_report_customize:
 
-Altering the Appearance of the |TableReport|
---------------------------------------------
+How to tweak the Appearance of the |TableReport|
+------------------------------------------------
 
 The skrub global configuration includes various parameters that allow to tweak
 the HTML representation of the |TableReport|.
 
 For performance reasons, the |TableReport| disables the computation of
 distributions and associations for tables with more than 30 columns. This behavior
-can be changed by modifying the ``max_plot_columns`` and ``max_association_columns``
+can be changed by modifying the ``plots_threshold`` and ``association_threshold``
 parameter.
 
 It is also possible to specify the floating point precision by setting the appropriate

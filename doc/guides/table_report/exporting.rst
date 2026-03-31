@@ -3,23 +3,37 @@
 .. |column_associations| replace:: :func:`~skrub.column_associations`
 
 .. _user_guide_table_report_sharing:
-Exporting and Sharing the |TableReport|
----------------------------------------
+How to export and share the |TableReport|
+-----------------------------------------
 
-The |TableReport| is a standalone object that does not require a running notebook
-to be accessed after generation: it can be exported in HTML format and opened
-directly in a browser as an HTML page.
+The |TableReport| is generated as a standalone HTML file that includes the report
+data, the plots, and the Javascript necessary to provide interactivity.
 
->>> import io # to avoid writing to disk in the example
->>> from skrub import TableReport
->>> import pandas as pd
->>> df = pd.DataFrame({
-...     "id": [1, 2, 3],
-...     "value": [10, 20, 30],
-... })
->>> tr = TableReport(df)
->>> html_buffer = io.StringIO()
->>> tr.write_html(html_buffer)  # save to file
->>> html = tr.html()  # get a string containing the HTML for a full page
->>> html_snippet = tr.html_snippet()  # get an HTML fragment to embed in a page
->>> tr_json = tr.json()  # get the content of the report in JSON format
+If it is generated inside a notebook (Jupyter or Marimo), the |TableReport| is
+rendered directly inside the cell where it is called. If, instead, it is generated
+by a script, the report will need to be opened by calling ``.open()``:
+
+>>> TableReport(df).open() # doctest: +SKIP
+
+Note that calling ``.open()`` will start a standalone process that hosts the report,
+and a tab will be opened in the default browser. It is not possible to save the
+report from the webpage. The function :func:`~skrub.TableReport.write_html`
+be used for that:
+
+.. code-block::
+
+    tr = TableReport(df)
+    tr.write_html("my_report.html")
+
+It is also possible to export the raw HTML, or a HTML fragment to embed in a page
+with :func:`~skrub.TableReport.html` and  :func:`~skrub.TableReport.html_snippet`
+respectively.
+
+Finally, it is possible to export the data in JSON format, which allows structured
+access to the data and statistics used to build the report with
+:func:`~skrub.TableReport.json`.
+
+.. code-block::
+
+    tr = TableReport(df)
+    json_data = tr.json()

@@ -9,8 +9,8 @@ Skrub is a Python library that facilitates machine learning with tabular data
 Use the sections below to navigate the guide. For a quickstart example,
 try :ref:`Getting Started <sphx_glr_auto_tutorials_0000_getting_started.py>`.
 For runnable code, see the :doc:`Example gallery <auto_examples/index>`.
-For class and function details, see the :ref:`API Reference <api_ref>`. For common use cases and how to address them,
-see the :ref:`How-to guides <how_to`.
+For class and function details, see the :ref:`API Reference <api_ref>`.
+For common use cases and how to address them, see the :ref:`How-to guides <how_to>`.
 
 
 .. include:: includes/big_toc_css.rst
