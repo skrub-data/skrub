@@ -145,7 +145,7 @@ class TableReport:
 
             export SKB_MAX_PLOT_COLUMNS=30
 
-      : int, default=30
+    max_association_columns : int, default=30
         Maximum number of columns for which associations should be computed.
         If the number of columns in the dataframe is greater than this value,
         the associations will not be computed. If "all", the associations
