@@ -43,39 +43,39 @@ class _TextExtractor(HTMLParser):
         {"script", "style", "head", "noscript", "nav", "footer", "aside", "button"}
     )
 
-    def __init__(self) -> None:
+    def __init__(self):
         super().__init__()
         self._skip_depth = 0
-        self._parts: list[str] = []
+        self._parts = []
 
-    def handle_starttag(self, tag: str, attrs) -> None:
+    def handle_starttag(self, tag, attrs):
         if tag in self._SKIP_TAGS:
             self._skip_depth += 1
 
-    def handle_endtag(self, tag: str) -> None:
+    def handle_endtag(self, tag):
         if tag in self._SKIP_TAGS and self._skip_depth:
             self._skip_depth -= 1
 
-    def handle_data(self, data: str) -> None:
+    def handle_data(self, data):
         if self._skip_depth:
             return
         text = data.strip()
         if text:
             self._parts.append(text)
 
-    def get_text(self, max_chars: int = 3000) -> str:
+    def get_text(self, max_chars=3000):
         text = " ".join(self._parts)
         text = re.sub(r"\s+", " ", text)
         return text[:max_chars]
 
 
-def _plain_text(html_fragment: str, max_chars: int = 3000) -> str:
+def _plain_text(html_fragment, max_chars=3000):
     ext = _TextExtractor()
     ext.feed(html_fragment)
     return ext.get_text(max_chars)
 
 
-def _extract_article_html(full_html: str) -> str:
+def _extract_article_html(full_html):
     """Return the HTML of the main article element, or the full page."""
     m = re.search(r"(<article\b[^>]*>)(.*?)</article>", full_html, re.DOTALL)
     if m:
@@ -88,7 +88,7 @@ def _extract_article_html(full_html: str) -> str:
     return full_html
 
 
-def _strip_h1(article_html: str) -> str:
+def _strip_h1(article_html):
     """Remove the first h1 element so it isn't repeated in content snippets."""
     return re.sub(
         r"<h1\b[^>]*>.*?</h1>",
@@ -99,7 +99,7 @@ def _strip_h1(article_html: str) -> str:
     )
 
 
-def _extract_title(full_html: str) -> str:
+def _extract_title(full_html):
     from html import unescape
 
     m = re.search(r"<title>(.*?)</title>", full_html, re.DOTALL)
@@ -125,7 +125,7 @@ _HEADING_RE = re.compile(r"<h[2-4]\b[^>]*>(.*?)</h[2-4]>", re.IGNORECASE | re.DO
 _SECTION_CLOSE_RE = re.compile(r"</section\s*>", re.IGNORECASE)
 
 
-def _split_sections(article_html: str) -> list[tuple[str, str, str]]:
+def _split_sections(article_html):
     """Return list of (section_id, heading_text, body_html) for each h2–h4
     section found in *article_html*.
 
@@ -193,6 +193,7 @@ _SKIP_EXACT = frozenset(
     {
         "documentation.html",
         "auto_examples/index.html",
+        "auto_tutorials/index.html",
         "auto_examples/sg_execution_times.html",
         "auto_examples/data_ops/index.html",
         "auto_examples/data_ops/sg_execution_times.html",
@@ -213,10 +214,13 @@ _SKIP_PREFIXES = (
 _API_PREFIXES = ("reference/generated/",)
 
 #: Relative path prefixes treated as example-gallery pages
-_EXAMPLE_PREFIXES = ("auto_examples/",)
+_EXAMPLE_PREFIXES = (
+    "auto_examples/",
+    "auto_tutorials/",
+)
 
 
-def _build_finished(app, exception) -> None:
+def _build_finished(app, exception):
     if exception:
         return
     if app.builder.name not in ("html", "dirhtml"):
@@ -226,7 +230,7 @@ def _build_finished(app, exception) -> None:
     static_dir = outdir / "_static"
     static_dir.mkdir(exist_ok=True)
 
-    entries: list[dict] = []
+    entries = []
 
     for html_path in sorted(outdir.rglob("*.html")):
         rel = html_path.relative_to(outdir)
