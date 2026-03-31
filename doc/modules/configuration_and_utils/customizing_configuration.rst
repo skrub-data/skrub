@@ -16,6 +16,7 @@ It is possible to change configuration options using the |set_config| function:
 
 >>> from skrub import set_config
 >>> set_config(table_report_verbosity=0)
+>>> set_config(table_report_verbosity=0)
 
 This alters the behavior of skrub in the current script. Each configuration parameter
 has an environment variable that can be used to set it permanently.
@@ -57,6 +58,10 @@ These are the parameters currently available in the global configuration:
      - ``SKB_USE_TABLE_REPORT_DATA_OPS``
      - Set the HTML representation used for the Data Ops previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
     * - ``table_report_verbosity``
+     - ``1``
+     - ``SKB_TABLE_REPORT_VERBOSITY``
+     - Set the verbosity of the :class:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
+   * - ``table_report_verbosity``
      - ``1``
      - ``SKB_TABLE_REPORT_VERBOSITY``
      - Set the verbosity of the :class:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
