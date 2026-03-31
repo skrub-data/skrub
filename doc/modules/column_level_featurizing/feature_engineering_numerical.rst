@@ -29,13 +29,13 @@ What |ToFloat| does
 
 The |ToFloat| transformer provides:
 
-- **Automatic conversion to 32-bit floating-point values (`float32`).**
+- **Automatic conversion to 32-bit floating-point values (``float32``).**
   This dtype is lightweight and fully supported by scikit-learn estimators.
 
 - **Automatic parsing of decimal and thousands separators**, regardless of locale:
   - The decimal separator must be specified explicitly and can be either ``.`` or ``,``
   - The thousands separator can be one of ``.``, ``,``, space (``" "``), apostrophe (``'``),
-  or None (no thousands separator)
+  or ``None`` (no thousands separator)
   - The transformer supports integers, decimals (including leading-decimal forms such as .56 or ,56), scientific notation
   and negative numbers
   - Numbers in parentheses are interpreted as negative numbers (``(1,234.56)`` → ``-1234.56``). This format is more common in financial datasets.

@@ -127,9 +127,9 @@ def test_invalid_parameters(decimal, thousand, df_module):
     [
         # 1) Western 3-digit grouping
         (["1,234.56", "12,345.78"], ".", ",", [1234.56, 12345.78]),
-        # 2) Multi-group (Indian style)
+        # 2) Multi-group
         (["1,23,456.78", "12,34,567.89"], ".", ",", [123456.78, 1234567.89]),
-        # 3) 4-digit grouping (Chinese style)
+        # 3) 4-digit grouping
         (["1,2345.67", "12,3456.78"], ".", ",", [12345.67, 123456.78]),
     ],
 )

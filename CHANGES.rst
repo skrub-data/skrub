@@ -11,9 +11,13 @@ Ongoing Development
 
 New Features
 ------------
-- :class:`ToFloat32` has the parameter decimal to let the user specify whether they use ',' or '.'
-  as decimal separator and it also handles negative numbers indicated with parentheses.
-  :pr:`1772` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+separators to parse numerical columns that use formatting different from the default
+formatting used in Python, such as ``1'234,5``.  Multi-group formats
+(``1,23,456.78``) and groups of 4 digits (``12,3456.78``) are also supported.
+Additionally, negative numbers indicated with parentheses are converted to the
+regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------
@@ -112,9 +116,6 @@ Bug Fixes
 
 Release 0.7.2
 =============
-- :class:`ToFloat32` has the parameter decimal to let the user specify whether they use ',' or '.'
-  as decimal separator and it also handles negative numbers indicated with parentheses.
-  :pr:`1772` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 Changes
 -------

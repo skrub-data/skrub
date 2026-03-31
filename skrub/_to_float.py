@@ -42,8 +42,8 @@ def _build_number_regex(decimal, thousand):
 
 def _build_multigroup_number_regex(decimal, thousand):
     """
-    Matches numbers that use either Western or non-Western grouping styles,
-    including multi-group systems such as the Indian numbering system.
+    Matches numbers that use either different grouping styles,
+    including multi-group systems.
 
     - Optional leading sign or parentheses
     - Supports multiple grouping patterns (e.g., groups of 3 + groups of 2)
@@ -53,7 +53,7 @@ def _build_multigroup_number_regex(decimal, thousand):
     d = re.escape(decimal)
     t = re.escape(thousand)
 
-    # Supports Indian-style grouping: 1,23,456 or 12,34,567
+    # Supports 2-3 digit grouping: 1,23,456 or 12,34,567
     # i.e. one-to-three leading digits, one or more 2-digit groups,
     # and a final 3-digit group.
     integer = rf"(?:\d{{1,3}}(?:{t}\d{{2}})+{t}\d{{3}}|\d+)"
@@ -138,8 +138,8 @@ def _str_replace_polars(col, decimal, thousand):
 
 def _validate_number_column(column, decimal, thousand):
     """
-    Try 1) 3-digit grouping (Western), 2) 2+3 digit (e.g., Indian),
-    3) 4-digit e.g., Chinese).
+    Try 1) 3-digit grouping, 2) 2+3 digit,
+    3) 4-digit.
     Reject if all fail.
     """
     # 3-digit
@@ -148,7 +148,7 @@ def _validate_number_column(column, decimal, thousand):
         _str_is_valid_number(column, threegroup_re)
         return threegroup_re
     except RejectColumn:
-        # Indian multi-group
+        # Multi-group
         multigroup_re = re.compile(
             _build_multigroup_number_regex(decimal, thousand), re.VERBOSE
         )
@@ -156,7 +156,7 @@ def _validate_number_column(column, decimal, thousand):
             _str_is_valid_number(column, multigroup_re)
             return multigroup_re
         except RejectColumn:
-            # Chinese 4-digit
+            # 4-digit
             fourgroup_re = re.compile(
                 _build_number_regex_4(decimal, thousand), re.VERBOSE
             )
@@ -366,21 +366,21 @@ class ToFloat(SingleColumnTransformer):
     >>> import pandas as pd
     >>> from skrub._to_float import ToFloat
 
-    # 1) Groups of 3 digits (Western style)
+    # 1) Groups of 3 digits
     >>> s = pd.Series(["1,234.56", "12,345.78"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
     0     1234.56...
     1    12345.78...
     Name: x, dtype: float32
 
-    # 2) Multi-group (1–3 + 2-digit, e.g., Indian style: 1,23,456)
+    # 2) Multi-group (1–3 + 2-digit)
     >>> s = pd.Series(["1,23,456.78", "12,34,567.89"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
     0    1.234568e+05
     1    1.234568e+06
     Name: x, dtype: float32
 
-    # 3) Groups of 4 digits (e.g., Chinese style: 1234,5678)
+    # 3) Groups of 4 digits
     >>> s = pd.Series(["1,2345.67", "12,3456.78"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
     0     12345.6...
@@ -423,7 +423,11 @@ class ToFloat(SingleColumnTransformer):
             )
         try:
             if sbd.is_string(column):
+                # Default case it's directly converted to float32.
+                # Optimization: allows us to avoid manipulation for
+                # formats that Python can parse natively.
                 if self.decimal == "." and self.thousand == "":
+                    # Regex validation and string replacement is skipped.
                     numeric = sbd.to_float32(column, strict=True)
                     return numeric
 
