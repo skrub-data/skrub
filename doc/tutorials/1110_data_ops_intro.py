@@ -1,17 +1,6 @@
 """
-Introduction to machine-learning pipelines with skrub DataOps
-==============================================================
-
-In this example, we show how we can use Skrub's
-:ref:`DataOps <user_guide_data_ops_index>`
-to build a machine learning pipeline that records all the operations involved in
-pre-processing data and training a model. We will also show how to save the model,
-load it back, and then use it to make predictions on new, unseen data.
-
-This example is meant to be an introduction to Skrub DataOps, and as such it
-will not cover all the features. Further examples in the gallery
-:ref:`data_ops_examples_ref` will go into more detail on how to use Skrub DataOps
-for more complex tasks.
+Tutorial: Using Data Ops to build a machine-learning pipeline
+=======================================================================
 
 .. currentmodule:: skrub
 
@@ -21,6 +10,7 @@ for more complex tasks.
 .. |skb.mark_as_X| replace:: :meth:`DataOp.skb.mark_as_X`
 .. |skb.mark_as_y| replace:: :meth:`DataOp.skb.mark_as_y`
 .. |TableVectorizer| replace:: :class:`TableVectorizer`
+.. |ToDatetime| replace:: :class:`ToDatetime`
 .. |skb.apply| replace:: :meth:`.skb.apply() <DataOp.skb.apply>`
 .. |HistGradientBoostingRegressor| replace::
    :class:`~sklearn.ensemble.HistGradientBoostingRegressor`
@@ -28,6 +18,41 @@ for more complex tasks.
 .. |choose_float| replace:: :func:`choose_float`
 .. |make_randomized_search| replace::
    :meth:`.skb.make_randomized_search <DataOp.skb.make_randomized_search>`
+
+This example shows data how we can use skrub's
+:ref:`DataOps <user_guide_data_ops_index>` for building a machine learning pipeline.
+
+The challenge of preparing data for machine learning is the need to
+apply the same data preparation and wrangling operations to new data, for prediction.
+
+Skrub's DataOps build pipelines that blend data wrangling and machine
+learning by recording all the operations involved in pre-processing data
+and training models, as well as the state of the transformers and models used to
+make predictions.
+
+.. admonition:: What is a state?
+   :collapsible: closed
+
+   The state of a transformer or model refers to the internal parameters and
+   attributes that are learned or set during the fitting process. For example,
+   in a :class:`~sklearn.preprocessing.StandardScaler`, the state would include
+   the mean and standard deviation calculated from the training data.
+   In a pre-processing transformer like |ToDatetime|, the state would include the
+   inferred datetime format based on the data it was fitted on.
+   In a machine learning model like |HistGradientBoostingRegressor|, the state
+   would include the fitted parameters of the model after training on the data.
+
+The result of building a DataOps plan is a *learner*, an object with an interface
+similar to that of a scikit-learn estimator, but which contains all the steps in the
+data preparation and model training process, along with the state of all the
+transformers and models: this allows to save the learner, load it back later,
+and use it to make predictions on new data.
+
+This example is meant to be an introduction to Skrub DataOps, and as such it
+will not cover all the features. Further examples in the gallery
+:ref:`data_ops_examples_ref` go into more detail on Skrub DataOps
+for more complex tasks.
+
 
 """
 
@@ -40,9 +65,13 @@ for more complex tasks.
 # By default, the |fetch_employee_salaries| function returns the training set.
 # We will load the test set later, to evaluate our model on unseen data.
 
+import pandas as pd
+
 from skrub.datasets import fetch_employee_salaries
 
-training_data = fetch_employee_salaries(split="train").employee_salaries
+training_data = pd.read_csv(
+    fetch_employee_salaries(split="train").employee_salaries_path
+)
 
 # %%
 # We can take a look at the dataset using the |TableReport|.
@@ -154,7 +183,7 @@ loaded_model = pickle.loads(saved_model)
 # case, "data").
 #
 # We can now get the test set of the employee salaries dataset:
-unseen_data = fetch_employee_salaries(split="test").employee_salaries
+unseen_data = pd.read_csv(fetch_employee_salaries(split="test").employee_salaries_path)
 
 # %%
 # Then, we can use the loaded model to make predictions on the unseen data by

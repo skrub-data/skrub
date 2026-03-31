@@ -49,7 +49,7 @@ from skrub.datasets import fetch_flight_delays
 
 dataset = fetch_flight_delays()
 seed = 1
-flights = dataset.flights
+flights = pd.read_csv(dataset.flights_path)
 
 # Sampling for faster computation.
 flights = flights.sample(5_000, random_state=seed, ignore_index=True)
@@ -76,7 +76,7 @@ plt.show()
 #     - The ``airports`` dataset, with information such as their name
 #       and location (longitude, latitude).
 
-airports = dataset.airports
+airports = pd.read_csv(dataset.airports_path)
 airports.head()
 
 ########################################################################
@@ -86,7 +86,7 @@ airports.head()
 #       Both tables are from the Global Historical Climatology Network.
 #       Here, we consider only weather measurements from 2008.
 
-weather = dataset.weather
+weather = pd.read_csv(dataset.weather_path)
 # Sampling for faster computation.
 weather = weather.sample(10_000, random_state=seed, ignore_index=True)
 weather.head()
@@ -95,7 +95,7 @@ weather.head()
 #     - The ``stations`` dataset. Provides location of all the weather
 #       measurement stations in the US.
 
-stations = dataset.stations
+stations = pd.read_csv(dataset.stations_path)
 stations.head()
 
 ###############################################################################

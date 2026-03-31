@@ -47,7 +47,7 @@ from .. import _dataframe as sbd
 from .. import selectors as s
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
-from .._utils import PassThrough, short_repr
+from .._utils import PassThrough, set_module, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import get_chosen_or_default
@@ -546,6 +546,7 @@ class _DataOpDoc:
         return f"""Skrub DataOp.\nDocstring of the preview:\n{doc}"""
 
 
+@set_module("skrub")
 class DataOp:
     """A skrub DataOp."""
 
@@ -851,7 +852,7 @@ def _check_apply_how(how):
 
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
     """
-    Wrap the estimator passed to .skb.apply in ApplyToCols or ApplyToFrame if
+    Wrap the estimator passed to .skb.apply in ApplyToEachCol or ApplyToSubFrame if
     needed.
     """
     how = _check_apply_how(how)
@@ -1488,7 +1489,7 @@ class Apply(DataOpImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["ApplyToCols", "ApplyToFrame"]:
+        if estimator.__class__.__name__ in ["ApplyToEachCol", "ApplyToSubFrame"]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):
@@ -1974,3 +1975,13 @@ def eval_mode():
     2
     """
     return DataOp(EvalMode())
+
+
+class SplitX(DataOpImpl):
+    _fields = ["X", "cv", "split_kwargs"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.X)
+
+    def __repr__(self):
+        return "<X>"

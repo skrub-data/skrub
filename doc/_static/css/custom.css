@@ -214,11 +214,11 @@ div.pipeline-img svg g.edge polygon {
 }
 
 html[data-theme="light"] .encoding-image {
-    background-image: url('../encoding_light.png');
+    background-image: url('../periodic_features_light_transparent.png');
 }
 
 html[data-theme="dark"] .encoding-image {
-    background-image: url('../encoding_dark.png');
+    background-image: url('../periodic_features_dark_transparent.png');
 }
 
 
@@ -227,16 +227,13 @@ html[data-theme="dark"] .encoding-image {
 /* Make the footer a bit less visible */
 .bd-footer {
     border-top: 1px solid var(--pst-color-on-surface);
-    opacity: .7;
+    opacity: .8;
 }
 
 .bd-footer p {
     color: var(--pst-color-text-muted);
 }
 
-.bd-footer a {
-    color: var(--pst-color-info-highlight);
-}
 
 /** Adapt bootstrap colors ************************/
 :root {

@@ -11,6 +11,7 @@ from sklearn.utils import Bunch
 
 from skrub import TableReport, ToDatetime
 from skrub import _dataframe as sbd
+from skrub import selectors as s
 from skrub._reporting._sample_table import make_table
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
@@ -37,10 +38,7 @@ def get_report_id(html):
 @skip_polars_installed_without_pyarrow
 def test_report(air_quality):
     col_filt = {
-        "first_2": {
-            "display_name": "First 2",
-            "columns": sbd.column_names(air_quality)[:2],
-        }
+        "First 2": sbd.column_names(air_quality)[:2],
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
     assert report.plots_threshold == 30
@@ -104,9 +102,7 @@ def test_lazyframe_exception():
     pl = pytest.importorskip("polars")
     lazy_df = pl.DataFrame({"a": ["1", "2", "3"]}).lazy()
 
-    with pytest.raises(
-        ValueError, match=r"TableReport does not support lazy dataframes"
-    ):
+    with pytest.raises(TypeError, match=r".*LazyFrames are not yet supported"):
         TableReport(lazy_df)
 
 
@@ -593,3 +589,70 @@ def test_open_tab_minimal_mode(df_module):
     report2 = TableReport(df, open_tab="associations")
     report2._set_minimal_mode()
     assert report2.open_tab == "table"
+
+
+@pytest.mark.parametrize(
+    "filter",
+    [
+        {"indices": [0]},
+        {"column_names": ["data1", "names"]},
+        {"selector": s.string()},
+    ],
+    ids=[
+        "pass_index",
+        "pass_name",
+        "pass_input",
+    ],
+)
+def test_column_filters_pass(df_module, filter):
+    df = df_module.make_dataframe(
+        {
+            "names": ["name_1", "name_2", "name_3"],
+            "data1": np.random.normal(size=3),
+            "data2": np.random.uniform(size=3),
+        }
+    )
+
+    report = TableReport(df, column_filters=filter)
+    (column_title,) = filter.keys()
+    html = report.html()
+    assert column_title in html
+
+
+@pytest.mark.parametrize(
+    "filter, expected, match",
+    [
+        (
+            0,
+            TypeError,
+            "column_filters should be a dict.*",
+        ),
+        (
+            {"indices": [0, 1, 100]},
+            ValueError,
+            "are out of range:.*",
+        ),
+        (
+            {"names": ["data1", " data2", "data3"]},
+            ValueError,
+            ".*are not in the dataframe:.*",
+        ),
+        (
+            {"mixed_input": ["data1", 0]},
+            TypeError,
+            "Custom column filters should.*",
+        ),
+        ({"selector": np.arange(3)}, TypeError, "Custom column filters should be.*"),
+    ],
+    ids=["fail_mapping", "fail_index", "fail_name", "fail_mixed_input", "fail_input"],
+)
+def test_column_filters_fail(df_module, filter, expected, match):
+    df = df_module.make_dataframe(
+        {
+            "names": ["name_1", "name_2", "name_3"],
+            "data1": np.random.normal(size=3),
+            "data2": np.random.uniform(size=3),
+        }
+    )
+    with pytest.raises(expected, match=match):
+        TableReport(df, column_filters=filter)

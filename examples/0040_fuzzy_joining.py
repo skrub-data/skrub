@@ -34,10 +34,12 @@ machine-learning pipeline. In particular, it enables tuning parameters of
 # --------------------------------
 #
 # We import the happiness score table first:
+import pandas as pd
+
 from skrub import datasets
 
 happiness_data = datasets.fetch_country_happiness()
-df = happiness_data.happiness_report
+df = pd.read_csv(happiness_data.happiness_report_path)
 
 ###############################################################################
 # Let's look at the table:
@@ -65,17 +67,17 @@ df = df[["Country", "Happiness score"]]
 # <https://data.worldbank.org/>`_, which are also available in the dataset
 # We extract the table containing GDP per capita by country:
 
-gdp_per_capita = happiness_data.GDP_per_capita
+gdp_per_capita = pd.read_csv(happiness_data.GDP_per_capita_path)
 gdp_per_capita.head(3)
 
 ###############################################################################
 # Then another table, with life expectancy by country:
-life_exp = happiness_data.life_expectancy
+life_exp = pd.read_csv(happiness_data.life_expectancy_path)
 life_exp.head(3)
 
 ###############################################################################
 # And a table with legal rights strength by country:
-legal_rights = happiness_data.legal_rights_index
+legal_rights = pd.read_csv(happiness_data.legal_rights_index_path)
 legal_rights.head(3)
 
 ###############################################################################

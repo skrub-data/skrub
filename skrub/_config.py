@@ -1,11 +1,43 @@
 import numbers
 import os
 import threading
+import warnings
 from contextlib import contextmanager
+from pathlib import Path
 
 import numpy as np
 
-from ._reporting import _patching
+
+def _get_default_data_dir():
+    """Get the default data directory path.
+
+    Returns the path to SKB_DATA_DIRECTORY if set and absolute,
+    otherwise defaults to ~/skrub_data.
+
+    Deprecated env var SKRUB_DATA_DIRECTORY is still supported with a warning.
+    """
+    # Check for the new env var first
+    data_home_envar = os.environ.get("SKB_DATA_DIRECTORY")
+
+    # Check for deprecated env var
+    if not data_home_envar:
+        deprecated_envar = os.environ.get("SKRUB_DATA_DIRECTORY")
+        if deprecated_envar:
+            warnings.warn(
+                "The environment variable 'SKRUB_DATA_DIRECTORY' is deprecated. "
+                "Please use 'SKB_DATA_DIRECTORY' instead.",
+                DeprecationWarning,
+            )
+            data_home_envar = deprecated_envar
+
+    if data_home_envar and (path := Path(data_home_envar)).is_absolute():
+        data_home = path
+    else:
+        data_home = Path.home() / "skrub_data"
+
+    data_home.mkdir(parents=True, exist_ok=True)
+
+    return str(data_home)
 
 
 def _parse_env_bool(env_variable_name, default):
@@ -23,7 +55,6 @@ def _parse_env_bool(env_variable_name, default):
 
 
 _global_config = {
-    "use_table_report": _parse_env_bool("SKB_USE_TABLE_REPORT", False),
     "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
     "plots_threshold": int(os.environ.get("SKB_PLOTS_THRESHOLD", 30)),
     "associations_threshold": int(os.environ.get("SKB_ASSOCIATIONS_THRESHOLD", 30)),
@@ -32,6 +63,7 @@ _global_config = {
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
+    "data_dir": _get_default_data_dir(),
     "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
 }
 _threadlocal = threading.local()
@@ -71,20 +103,7 @@ def get_config():
     return _get_threadlocal_config().copy()
 
 
-def _apply_external_patches(config):
-    if config["use_table_report"]:
-        _patching._patch_display(
-            plots_threshold=config["plots_threshold"],
-            associations_threshold=config["associations_threshold"],
-            verbose=config["table_report_verbosity"],
-        )
-    else:
-        # No-op if dispatch haven't been previously enabled
-        _patching._unpatch_display()
-
-
 def set_config(
-    use_table_report=None,
     use_table_report_data_ops=None,
     plots_threshold=None,
     associations_threshold=None,
@@ -93,24 +112,13 @@ def set_config(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    data_dir=None,
     eager_data_ops=None,
 ):
     """Set global skrub configuration.
 
     Parameters
     ----------
-    use_table_report : bool, default=None
-        The type of display used for dataframes. If ``None``, falls back to the current
-        configuration, which is ``False`` by default.
-
-        - If ``True``, replace the default DataFrame HTML displays with
-          :class:`~skrub.TableReport`.
-        - If ``False``, the original Pandas or Polars dataframe HTML representation
-          will be used.
-
-        This configuration can also be set with the ``SKB_USE_TABLE_REPORT``
-        environment variable.
-
     use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         DataOps. If ``None``, falls back to the current configuration, which is ``True``
@@ -181,6 +189,18 @@ def set_config(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    data_dir : str or pathlib.Path, default=None
+        Set the data directory path for skrub datasets. If ``None``, falls back to
+        the current configuration.
+
+        - If the ``SKB_DATA_DIRECTORY`` environment variable is set to an absolute
+          path, that path will be used.
+        - Otherwise, the default is ``~/skrub_data``.
+
+        This configuration can also be set with the ``SKB_DATA_DIRECTORY``
+        environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
+        supported with a deprecation warning.
+
     eager_data_ops : bool, default=True
         Eagerly perform checks on the DataOps as soon they are created, and
         compute previews if preview data is available. If disabled, those
@@ -201,22 +221,16 @@ def set_config(
 
     See Also
     --------
+
     get_config : Retrieve current values for global configuration.
     config_context : Context manager for global skrub configuration.
 
     Examples
     --------
     >>> from skrub import set_config
-    >>> set_config(use_table_report=True)  # doctest: +SKIP
+    >>> set_config(use_table_report_data_ops=True)  # doctest: +SKIP
     """
     local_config = _get_threadlocal_config()
-    if use_table_report is not None:
-        if not isinstance(use_table_report, bool):
-            raise ValueError(
-                f"'use_table_report' must be a boolean, got {use_table_report!r}."
-            )
-        local_config["use_table_report"] = use_table_report
-
     if use_table_report_data_ops is not None:
         if not isinstance(use_table_report_data_ops, bool):
             raise ValueError(
@@ -284,15 +298,17 @@ def set_config(
                 f"integer, got {cardinality_threshold!r}"
             )
 
+    if data_dir is not None:
+        data_dir = Path(data_dir).expanduser().resolve()
+        local_config["data_dir"] = str(data_dir)
+
     if eager_data_ops is not None:
         local_config["eager_data_ops"] = eager_data_ops
-    _apply_external_patches(local_config)
 
 
 @contextmanager
 def config_context(
     *,
-    use_table_report=None,
     use_table_report_data_ops=None,
     plots_threshold=None,
     associations_threshold=None,
@@ -301,23 +317,13 @@ def config_context(
     enable_subsampling=None,
     float_precision=None,
     cardinality_threshold=None,
+    data_dir=None,
     eager_data_ops=None,
 ):
     """Context manager for global skrub configuration.
 
     Parameters
     ----------
-    use_table_report : bool, default=None
-        The type of display used for dataframes. Default is ``False``.
-
-        - If ``True``, replace the default DataFrame HTML displays with
-          :class:`~skrub.TableReport`.
-        - If ``False``, the original Pandas or Polars dataframe HTML representation
-          will be used.
-
-        This configuration can also be set with the ``SKB_USE_TABLE_REPORT``
-        environment variable.
-
     use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         DataOps. Default is ``True``.
@@ -383,6 +389,18 @@ def config_context(
         This configuration can also be set with the ``SKB_CARDINALITY_THRESHOLD``
         environment variable.
 
+    data_dir : str or pathlib.Path, default=None
+        Set the data directory path for skrub datasets. If ``None``, falls back to
+        the current configuration.
+
+        - If the ``SKB_DATA_DIRECTORY`` environment variable is set to an absolute
+          path, that path will be used.
+        - Otherwise, the default is ``~/skrub_data``.
+
+        This configuration can also be set with the ``SKB_DATA_DIRECTORY``
+        environment variable. The deprecated ``SKRUB_DATA_DIRECTORY`` is still
+        supported with a deprecation warning.
+
     eager_data_ops : bool, default=True
         Eagerly perform checks on the DataOps as soon they are created, and
         compute previews if preview data is available. If disabled, those
@@ -418,7 +436,6 @@ def config_context(
     """
     original_config = get_config()
     set_config(
-        use_table_report=use_table_report,
         use_table_report_data_ops=use_table_report_data_ops,
         plots_threshold=plots_threshold,
         associations_threshold=associations_threshold,
@@ -427,6 +444,7 @@ def config_context(
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
         cardinality_threshold=cardinality_threshold,
+        data_dir=data_dir,
         eager_data_ops=eager_data_ops,
     )
 
@@ -434,8 +452,3 @@ def config_context(
         yield
     finally:
         set_config(**original_config)
-
-
-# Apply patching set by environment variables. Without it, setting SKB_USE_TABLE_REPORT
-# or SKB_USE_TABLE_REPORT_DATA_OPS would not have an effect.
-_apply_external_patches(get_config())
