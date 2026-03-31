@@ -336,35 +336,29 @@ def test_plot_distributions_parameter(df_module):
 def test_compute_associations_parameter(df_module):
     # True: always compute regardless of threshold
     df11 = df_module.make_dataframe(
-        {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
-    )
-    summary = TableReport(df11, compute_associations=True)._summary
-    assert not summary["associations_skipped"]
-
-    df12 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
-    summary = TableReport(df12, compute_associations=True)._summary
+    summary = TableReport(df11, compute_associations=True)._summary
     assert not summary["associations_skipped"]  # True ignores threshold
 
     # False: never compute
-    df13 = df_module.make_dataframe(
+    df12 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df13, compute_associations=False)._summary
+    summary = TableReport(df12, compute_associations=False)._summary
     assert summary["associations_skipped"]
 
     # None and "auto": use threshold
-    df14 = df_module.make_dataframe(
+    df13 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df14, compute_associations=None)._summary
+    summary = TableReport(df13, compute_associations=None)._summary
     assert not summary["associations_skipped"]
 
-    df14b = df_module.make_dataframe(
+    df14 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
-    summary = TableReport(df14b, compute_associations="auto")._summary
+    summary = TableReport(df14, compute_associations="auto")._summary
     assert summary["associations_skipped"]  # "auto" respects threshold
 
 
