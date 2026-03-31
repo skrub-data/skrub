@@ -36,8 +36,8 @@ def test_default_config():
     # On CI the absolute path is different, check that it ends with skrub_data
     assert pathlib.Path(cfg["data_dir"]).name == "skrub_data"
     assert cfg["table_report_verbosity"] == 1
-    assert cfg["max_plot_columns"] == 30
-    assert cfg["max_association_columns"] == 30
+    assert cfg["plots_threshold"] == 30
+    assert cfg["associations_threshold"] == 30
     assert cfg["subsampling_seed"] == 0
     assert cfg["enable_subsampling"] == "default"
     assert cfg["float_precision"] == 3
