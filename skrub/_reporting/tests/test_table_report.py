@@ -305,30 +305,30 @@ def test_thresholds_parameter(df_module):
 @skip_polars_installed_without_pyarrow
 def test_plot_distributions_parameter(df_module):
     # True: always plot regardless of threshold
-    df8 = df_module.make_dataframe(
+    df7 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
-    summary = TableReport(df8, plot_distributions=True)._summary
+    summary = TableReport(df7, plot_distributions=True)._summary
     assert not summary["plots_skipped"]  # True ignores threshold
 
     # False: never plot
-    df9 = df_module.make_dataframe(
+    df8 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df9, plot_distributions=False)._summary
+    summary = TableReport(df8, plot_distributions=False)._summary
     assert summary["plots_skipped"]
 
     # None and "auto": use threshold
-    df10 = df_module.make_dataframe(
+    d9 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df10, plot_distributions=None)._summary
+    summary = TableReport(d9, plot_distributions=None)._summary
     assert not summary["plots_skipped"]
 
-    df10b = df_module.make_dataframe(
+    df10 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(31)}
     )
-    summary = TableReport(df10b, plot_distributions="auto")._summary
+    summary = TableReport(df10, plot_distributions="auto")._summary
     assert summary["plots_skipped"]  # "auto" respects threshold
 
 
