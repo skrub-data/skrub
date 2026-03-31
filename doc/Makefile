@@ -53,5 +53,5 @@ linkcheck-noplot:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 clean:
-	rm -rf _build/ auto_examples/ generated/ generated_for_index/ reference/generated/
+	rm -rf _build/ auto_examples/ auto_tutorials/ generated/ generated_for_index/ reference/generated/
 	rm -f reference/*.rst

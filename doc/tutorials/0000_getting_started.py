@@ -1,6 +1,6 @@
 """
-Getting Started
-===============
+Getting Started with skrub
+==========================
 
 This guide showcases some of the features of skrub.
 Much of skrub revolves around simplifying many of the tasks that are involved
@@ -54,11 +54,8 @@ TableReport(employees_df)
 # %%
 # You can use the interactive display above to explore the dataset visually.
 #
-# It is also possible to tell skrub to replace the default pandas and polars
-# displays with |TableReport| by modifying the global config with
-# |set_config|.
-#
-# .. note::
+# .. admonition:: Additional examples
+#    :collapsible: closed
 #
 #    You can see a few more `example reports`_ online. We also
 #    provide an experimental online demo_ that allows you to select a CSV or
@@ -69,7 +66,7 @@ TableReport(employees_df)
 #    .. _demo: https://skrub-data.org/skrub-reports/
 #
 # From the report above, we see that there are columns with date and time stored
-# as `object` dtype (cf. "Stats" tab of the report).
+# as ``object`` dtype (cf. "Stats" tab of the report).
 # Datatypes not being parsed correctly is a scenario that occurs commonly after
 # reading a table. We can use the |Cleaner| to address this.
 # In the next section, we show that this transformer does additional cleaning.
@@ -77,7 +74,7 @@ TableReport(employees_df)
 # %%
 # Sanitizing data with the |Cleaner|
 # ----------------------------------
-# Here, we use the |Cleaner|, a transformer that sanitizing the
+# Here, we use the |Cleaner|, a transformer that sanitizes the
 # dataframe by parsing nulls and dates, and by dropping "uninformative" columns
 # (e.g., columns with too many nulls or that are constant).
 #
@@ -88,7 +85,7 @@ employees_df = Cleaner().fit_transform(employees_df)
 TableReport(employees_df)
 
 # %%
-# We can see from the "Stats" tab that now the column `date_first_hired` has been
+# We can see from the "Stats" tab that now the column ``date_first_hired`` has been
 # parsed correctly as a Datetime.
 
 # %%
@@ -196,23 +193,6 @@ StringEncoder(n_components=3).fit_transform(data["city"])
 # provided by skrub, and :ref:`sphx_glr_auto_examples_0010_encodings.py` for a
 # comparison between the different methods.
 #
-
-# %%
-# Assembling data
-# ---------------
-#
-# Skrub allows imperfect assembly of data, such as joining dataframes
-# on columns that contain typos. Skrub's joiners have ``fit`` and
-# ``transform`` methods, storing information about the data across calls.
-#
-# The |Joiner| allows fuzzy-joining multiple tables, where each row of
-# a main table will be augmented with values from the best match in the auxiliary table.
-# You can control how distant fuzzy-matches are allowed to be with the
-# ``max_dist`` parameter.
-#
-# Skrub also allows you to aggregate multiple tables according to various strategies.
-# You can see other ways to join multiple tables in
-# :ref:`user_guide_joining_dataframes`.
 
 # %%
 # Advanced use cases

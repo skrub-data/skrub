@@ -18,6 +18,7 @@ see the :ref:`How-to guides <how_to`.
 .. toctree::
    :maxdepth: 3
 
+   auto_tutorials/0000_getting_started
    exploring_a_dataframe
    default_wrangling
    column_level_featurizing
