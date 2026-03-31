@@ -195,7 +195,7 @@ html_theme_options = {
     #         "name": "PyData",
     #     },
     # ],
-    "header_links_before_dropdown": 4,
+    "header_links_before_dropdown": 5,
     "icon_links": [
         {
             "name": "GitHub",
@@ -479,8 +479,8 @@ sphinx_gallery_conf = {
         # See https://sphinx-gallery.github.io/stable/configuration.html#link-to-documentation  # noqa
     },
     "filename_pattern": ".*",
-    "examples_dirs": "../examples",
-    "gallery_dirs": "auto_examples",
+    "examples_dirs": ["../examples", "tutorials"],
+    "gallery_dirs": ["auto_examples", "auto_tutorials"],
     "within_subsection_order": FileNameSortKey,
     "download_all_examples": False,
     "binder": {

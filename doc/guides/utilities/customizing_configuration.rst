@@ -4,9 +4,8 @@
 
 .. _user_guide_configuration_parameters:
 
-====================================
-Customizing the global configuration
-====================================
+How to configure and customize the default behavior of skrub
+============================================================
 
 
 Skrub includes a configuration manager that allows setting various parameters
@@ -15,7 +14,7 @@ Skrub includes a configuration manager that allows setting various parameters
 It is possible to change configuration options using the |set_config| function:
 
 >>> from skrub import set_config
->>> set_config(table_report_verbosity=0)
+>>> set_config(table_report_verbosity=0) # doctest: +SKIP
 
 This alters the behavior of skrub in the current script. Each configuration parameter
 has an environment variable that can be used to set it permanently.
@@ -29,7 +28,7 @@ configuration:
 
 Within this context, only the code executed inside the ``with`` statement is affected.
 
-The |get_config| function allows retrieving the current configuration.
+The |get_config| function allows to retrieve the current configuration.
 
 Configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -59,7 +58,7 @@ These are the parameters currently available in the global configuration:
    * - ``table_report_verbosity``
      - ``1``
      - ``SKB_TABLE_REPORT_VERBOSITY``
-     - Set the verbosity of the :clas:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
+     - Set the verbosity of the :class:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
    * - ``max_plot_columns``
      - 30
      - ``SKB_MAX_PLOT_COLUMNS``
