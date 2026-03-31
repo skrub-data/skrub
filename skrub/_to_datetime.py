@@ -136,8 +136,9 @@ class ToDatetime(SingleColumnTransformer):
     .. caution ::
 
        For versions of Pandas <3.0, inferring the format may fail if it includes
-       both date and time components, like ``"1959-07-01 19:59:16"``. In such
-       cases, the format should be specified explicitly.
+       both date and time components, and the digits of the year are the same
+       as the digits of the hour and minutes, like ``"1959-07-01 19:59:16"``.
+       In such cases, the format should be specified explicitly.
 
     Examples
     --------
@@ -476,8 +477,9 @@ def to_datetime(data, format=None):
     .. caution ::
 
        For versions of Pandas <3.0, inferring the format may fail if it includes
-       both date and time components, like ``"1959-07-01 19:59:16"``. In such
-       cases, the format should be specified explicitly.
+       both date and time components, and the digits of the year are the same
+       as the digits of the hour and minutes, like ``"1959-07-01 19:59:16"``.
+       In such cases, the format should be specified explicitly.
 
     Parameters
     ----------
