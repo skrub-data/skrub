@@ -89,6 +89,10 @@ Changes
 - The overplotting of the counts atop the vertical histogram bars in the
   :class:`TableReport` has been removed due to formatting issues.
   :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
+- The maximum number of associations that can be displayed in the
+  :class:`TableReport` has been increased to N=1000, and the associations
+  are now displayed in a scrollable table.
+  :pr:`1992` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
 --------
