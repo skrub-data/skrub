@@ -119,7 +119,8 @@ def _str_replace_pandas(col, decimal, thousand):
     # e.g., "(123.45)" → "-123.45"
     col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
     # Remove thousand separators
-    col = col.str.replace(thousand, "", regex=False)
+    if thousand:
+        col = col.str.replace(thousand, "", regex=False)
     # Replace decimal separator with '.'
     return col.str.replace(decimal, ".", regex=False)
 
