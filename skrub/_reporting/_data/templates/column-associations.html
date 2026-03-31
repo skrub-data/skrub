@@ -1,4 +1,4 @@
-<article class="margin-t-s flex-reverse wrapper gap-l">
+<article class="margin-t-s flex-reverse flex-end wrapper gap-l">
     {% if summary["associations_skipped"] %}
 
     <div id="skipped-associations-alert" class="alert-info-dismissable flex space-between">
@@ -46,8 +46,8 @@
 
     {% elif summary["top_associations"] %}
 
-    <div class="horizontal-scroll padding-b-s">
-    <table class="pure-table">
+    <div class="horizontal-scroll vertical-scroll-table-wrapper">
+    <table class="pure-table pure-table-bordered sticky-header-table">
         <thead>
             <tr>
                 <th scope="col">Column 1</th>

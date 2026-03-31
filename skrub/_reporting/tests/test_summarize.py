@@ -91,7 +91,7 @@ def test_summarize(
 
     # checking top associations
     if with_associations:
-        assert len(summary["top_associations"]) == 20
+        assert len(summary["top_associations"]) == 55
         asso = [
             d | {"cramer_v": round(d["cramer_v"], 1)}
             for d in summary["top_associations"]

@@ -10,6 +10,8 @@
 Advanced columnwise operations
 ------------------------------
 
+.. _single_column_transformer:
+
 The single column transformer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
