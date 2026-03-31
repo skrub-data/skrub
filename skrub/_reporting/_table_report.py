@@ -147,10 +147,6 @@ class TableReport:
         (e.g. ``"first_10"``), and the value is the desired filter. Allowed
         formats for the filter values are a list of column names,
         a list of column indices, or a Selector object.
-        Each key is the filter named to be displayed in the dropdown menu
-        (e.g. ``"first_10"``), and the value is the desired filter. Allowed
-        formats for the filter values are a list of column names,
-        a list of column indices, or a Selector object.
         See the end of the "Examples" section below for details.
     verbose : int, default = 1
         Whether to print progress information while the report is being generated.
@@ -265,7 +261,6 @@ class TableReport:
     in the report's dropdown menu.
 
     >>> filters = {
-    ...         "display_name": ["a", "b"],
     ...         "display_name": ["a", "b"],
     ... }
     >>> report = TableReport(df, column_filters=filters)
