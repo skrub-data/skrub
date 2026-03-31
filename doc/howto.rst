@@ -1,10 +1,10 @@
 .. _how_to:
 
-How to
-------
+How-to's
+--------
 
-This page indexes guides on how to perform specific operations with skrub objects.
-Each guide is meant to be standalone, and focused on a particular problem.
+This page is the index of skrub's How-to guides: these are short guides and examples
+on how to complete specific tasks and address specific circumstances.
 
 For a more long-form discussion on how skrub works and the reasoning behind specific
 design choices, refer to the :ref:`User Guide <user_guide>`. For runnable code, see the
