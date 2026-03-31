@@ -133,6 +133,12 @@ class ToDatetime(SingleColumnTransformer):
     is fitted, entries that fail to be converted during subsequent calls to
     ``transform`` are replaced with nulls.
 
+    .. caution ::
+
+       For versions of Pandas <3.0, inferring the format may fail if it includes
+       both date and time components, like ``"1959-07-01 19:59:16"``. In such
+       cases, the format should be specified explicitly.
+
     Examples
     --------
     >>> import pandas as pd
