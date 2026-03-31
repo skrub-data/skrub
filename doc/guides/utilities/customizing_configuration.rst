@@ -55,27 +55,15 @@ These are the parameters currently available in the global configuration:
      - ``True``
      - ``SKB_USE_TABLE_REPORT_DATA_OPS``
      - Set the HTML representation used for the Data Ops previews. If ``True``, use the :class:`~skrub.TableReport`, otherwise use the default Pandas or Polars representation.
-    * - ``table_report_verbosity``
-     - ``1``
-     - ``SKB_TABLE_REPORT_VERBOSITY``
-     - Set the verbosity of the :class:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
    * - ``table_report_verbosity``
      - ``1``
      - ``SKB_TABLE_REPORT_VERBOSITY``
      - Set the verbosity of the :class:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
-   * - ``plot_distributions``
-      - ``True``
-      - ``SKB_PLOT_DISTRIBUTIONS``
-      - If set to False, the :class:`~skrub.TableReport` will skip generating the plots.
-    * - ``compute_associations``
-      - ``True``
-      - ``SKB_COMPUTE_ASSOCIATIONS``
-        - If set to False, the :class:`~skrub.TableReport` will skip computing the associations.
-    * - ``plots_threshold``
+   * - ``plots_threshold``
       - 30
       - ``SKB_PLOTS_THRESHOLD``
       - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip generating the distribution plots (when ``plot_distributions="auto"``, the default).
-    * - ``associations_threshold``
+   * - ``associations_threshold``
       - 30
       - ``SKB_ASSOCIATIONS_THRESHOLD``
       - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip computing the associations (when ``compute_associations="auto"``, the default).

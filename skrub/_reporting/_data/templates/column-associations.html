@@ -15,7 +15,10 @@
             <p>You can adjust this behavior in several ways:</p>
             <ul>
                 <li>To fix it for a single report, change the parameters passed when creating <code>TableReport</code>:
-                    <pre><code class="language-python">    report = TableReport(associations_threshold=50)</code></pre>
+                    <pre><code class="language-python">    # Raise the threshold:
+    report = TableReport(df, associations_threshold=50)
+    # Or force computation regardless of the threshold:
+    report = TableReport(df, compute_associations=True)</code></pre>
                 </li>
                 <li>To change the default during the current Python session, use <code>skrub.set_config</code>:
                     <pre><code class="language-python">    from skrub import set_config
