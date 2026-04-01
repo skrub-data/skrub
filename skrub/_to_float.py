@@ -101,7 +101,7 @@ def _str_is_valid_number_pandas(col, number_re):
 def _str_is_valid_number_polars(col, number_re):
     # Check if all values in the column match the number regex.
     # - Fill NaN values with empty string to avoid match errors.
-    # - Use `str.match` with `na=False` to treat empty/missing values as non-matching.
+    # - Use `str.contains` with `literal=False` to treat empty/missing values as non-matching.
     # - If any value does not match, raise RejectColumn with a descriptive message.
     if not col.fill_null("").str.contains(number_re.pattern, literal=False).all():
         raise RejectColumn(f"Could not convert column {sbd.name(col)!r} to numbers.")
