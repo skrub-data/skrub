@@ -299,6 +299,9 @@ class DataOpImpl:
 
     @staticmethod
     def __skrub_preview_heading__():
+        """
+        Title displayed above the preview value in the DataOp's repr and html repr.
+        """
         return "Result"
 
 

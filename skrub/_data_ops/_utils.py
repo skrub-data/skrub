@@ -91,6 +91,27 @@ def prune_directory(path: str):
 
 
 def unique_renaming():
+    """Factory of unique names
+
+    The returned function is called with a string and returns a string. If the
+    input was seen before, the output will have a number appended so that all
+    outputs are unique. This is best understood with an example (see below).
+
+    Examples
+    --------
+    >>> from skrub._data_ops._utils import unique_renaming
+    >>> rename = unique_renaming()
+    >>> rename('a')
+    'a'
+    >>> rename('b')
+    'b'
+    >>> rename('a')
+    'a_1'
+    >>> rename('a')
+    'a_2'
+    >>> rename('c')
+    'c'
+    """
     used = set()
 
     def rename(name):
