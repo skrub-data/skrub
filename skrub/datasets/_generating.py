@@ -39,6 +39,12 @@ def make_deduplication_data(
     -------
     list of str
         List of duplicated examples with spelling mistakes
+
+    Examples
+    --------
+    >>> from skrub.datasets import make_deduplication_data
+    >>> make_deduplication_data(["string1", "string2"], entries_per_example=[3, 4])
+    ['string1', 'string1', 'string1', 'string2', 'string2', 'string2', 'string2']
     """
     rng = check_random_state(random_state)
 
@@ -92,7 +98,7 @@ def toy_orders(split="train"):
     3    False
     Name: delayed, dtype: bool
 
-    If you want the whole dataframe, use `.orders`:
+    If you want both X and y in a dataframe, use `.orders`:
 
     >>> toy_orders().orders
     ID	product	quantity	date	delayed
