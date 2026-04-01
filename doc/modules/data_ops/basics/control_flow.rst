@@ -5,6 +5,9 @@
 Running complex operations on DataOps variables: deferred evaluation
 ====================================================================
 
+Why DataOps cannot handle complex operations
+--------------------------------------------
+
 DataOps represent computations that have not been executed yet, and will
 only be triggered when we call :meth:`.skb.eval() <DataOp.skb.eval>`, or when we
 create the pipeline with :meth:`.skb.make_learner() <DataOp.skb.make_learner>` and
@@ -36,8 +39,11 @@ referred to here as *eager* evaluation. However, ``orders.columns`` is not an ac
 list of columns: it is a skrub DataOp that will produce a list of columns, later,
 when we run the computation.
 
-Therefore, we must delay the execution of the ``for`` statement until the computation
-actually runs and ``orders.columns`` has been evaluated, hence the designation of
+Eager vs. deferred
+------------------
+
+To circumvent this issue, we must delay the execution of the ``for`` statement until
+the computation actually runs and ``orders.columns`` has been evaluated, hence the designation of
 *deferred* computation rather than *eager*.
 
 We can achieve this by defining a function that contains the control flow logic
@@ -72,6 +78,13 @@ so it is possible to use standard Python control flow statements such as
 ``if``, ``for``, and it is possible to treat the inputs as if they were
 regular objects (e.g., a Pandas DataFrame or Series).
 
+Since DataOps are evaluated lazily (we are building a pipeline, not immediately
+computing a single result), any transformation that we apply *must not modify its
+input in-place*, but leave it unchanged and return a new value.
+
+Alternate notations
+-------------------
+
 A function can be marked as deferred using the :func:`deferred` decorator, but
 also applied directly to a skrub DataOp using
 :meth:`.skb.apply_func() <DataOp.skb.apply_func>`:
@@ -97,10 +110,28 @@ example, to delay the loading of a CSV file, we could write something like:
 >>> csv_path = skrub.var("csv_path")
 >>> data = skrub.deferred(pd.read_csv)(csv_path)
 
-Another consequence of the fact that DataOps are evaluated lazily (we are
-building a pipeline, not immediately computing a single result), any
-transformation that we apply *must not modify its input in-place*, but leave it
-unchanged and return a new value.
+Unpacking multiple outputs from deferred functions
+--------------------------------------------------
+
+When a deferred function returns more than one value, you cannot unpack the
+result directly because unpacking iterates over the result. Iteration is not
+supported on DataOps until evaluation.
+
+In general, it is recommended that deferred functions return a single
+value whenever possible. Returning multiple outputs should be avoided unless
+strictly necessary, as it makes downstream usage more complex.
+
+Instead, keep the result as a single DataOp and index into it:
+
+>>> test = skrub.var("test", [1, 2])
+>>> @skrub.deferred
+... def process_test_data(test):
+...     left = test[0]
+...     right = test[1]
+...     return left, right
+>>> res = test.skb.apply_func(process_test_data)
+>>> left = res[0]
+>>> right = res[1]
 
 Finally, there are other situations where using :func:`deferred` can be helpful:
 
