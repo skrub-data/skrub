@@ -136,11 +136,11 @@ def fetch_midwest_survey(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        midwest_survey : DataFrame of shape: (2494, 29)
+        midwest_survey : DataFrame of shape (2494, 29)
             The dataframe.
-        X : DataFrame of shape: (2494, 28)
+        X : DataFrame of shape (2494, 28)
             Features, i.e. the dataframe without the target labels.
-        y : DataFrame of shape: (2494, 1)
+        y : DataFrame of shape (2494, 1)
             Target labels,
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -168,11 +168,11 @@ def fetch_open_payments(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        open_payments : DataFrame of shape: (73558, 6)
+        open_payments : DataFrame of shape (73558, 6)
             The dataframe.
-        X : DataFrame of shape: (73558, 5)
+        X : DataFrame of shape (73558, 5)
             Features, i.e. the dataframe without the target labels.
-        y : DataFrame of shape: (73558, 1)
+        y : DataFrame of shape (73558, 1)
             Target labels.
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -417,7 +417,7 @@ def fetch_bike_sharing(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        bike_sharing: DataFrame of shape (17379, 11)
+        bike_sharing : DataFrame of shape (17379, 11)
             The full dataframe.
         X : DataFrame of shape (17379, 10)
             Features, i.e. the dataframe without the target labels.
@@ -538,7 +538,7 @@ def fetch_country_happiness(data_home=None):
             Data from the World Bank.
         life_expectancy : DataFrame of shape (260, 2)
             Data from the World Bank.
-        legal_rights_index``: DataFrame of shape (238, 2)
+        legal_rights_index : DataFrame of shape (238, 2)
             Data from the World Bank.
         metadata : dict
             A dictionary containing the name of the dataset, a description
