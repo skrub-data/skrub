@@ -24,10 +24,10 @@ def fetch_employee_salaries(data_home=None, split="all"):
         connecting to a remote server, but OpenML provides CORS headers. To
         download this dataset using OpenML instead of Github or Figshare, run:
 
-    .. code:: python
+        .. code:: python
 
-        from sklearn.datasets import fetch_openml
-        df = fetch_openml(data_id=42125)
+            from sklearn.datasets import fetch_openml
+            df = fetch_openml(data_id=42125)
 
     Parameters
     ----------
@@ -42,11 +42,11 @@ def fetch_employee_salaries(data_home=None, split="all"):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        employee_salaries : pd.DataFrame of shape (9228, 8)
+        employee_salaries : DataFrame of shape (9228, 8)
             The dataframe.
-        X : pd.DataFrame of shape (9228, 7)
+        X : DataFrame of shape (9228, 7)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape (9228, 1)
+        y : DataFrame of shape (9228, 1)
             Target labels.
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -88,14 +88,11 @@ def fetch_medical_charge(data_home=None):
         https://github.com/skrub-data/skrub-data-files
 
     Description of the dataset:
-        The Inpatient Utilization and Payment Public Use File (Inpatient PUF)
-        provides information on inpatient discharges for Medicare
-        fee-for-service beneficiaries. The Inpatient PUF includes information
+        The dataset provides information on inpatient discharges for Medicare
+        fee-for-service beneficiaries. It includes information
         on utilization, payment (total payment and Medicare payment), and
         hospital-specific charges for the more than 3,000 U.S. hospitals that
         receive Medicare Inpatient Prospective Payment System (IPPS) payments.
-        The PUF is organized by hospital and Medicare Severity Diagnosis
-        Related Group (MS-DRG) and covers Fiscal Year (FY) 2011 through FY 2016.
         Size on disk: 36MB.
 
     Parameters
@@ -108,11 +105,11 @@ def fetch_medical_charge(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        medical_charge : pd.DataFrame of shape (163065, 12)
+        medical_charge : DataFrame of shape (163065, 12)
             The dataframe.
-        X : pd.DataFrame of shape (163065, 11)
+        X : DataFrame of shape (163065, 11)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape (163065, 1)
+        y : DataFrame of shape (163065, 1)
             Target labels.
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -139,11 +136,11 @@ def fetch_midwest_survey(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        midwest_survey : pd.DataFrame of shape: (2494, 29)
+        midwest_survey : DataFrame of shape: (2494, 29)
             The dataframe.
-        X : pd.DataFrame of shape: (2494, 28)
+        X : DataFrame of shape: (2494, 28)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape: (2494, 1)
+        y : DataFrame of shape: (2494, 1)
             Target labels,
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -171,13 +168,13 @@ def fetch_open_payments(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        open_payments : pd.DataFrame of shape: (73558, 6)
+        open_payments : DataFrame of shape: (73558, 6)
             The dataframe.
-        X : pd.DataFrame of shape: (73558, 5)
+        X : DataFrame of shape: (73558, 5)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape: (73558, 1)
+        y : DataFrame of shape: (73558, 1)
             Target labels.
-        metadata`` : dict
+        metadata : dict
             A dictionary containing the name, description, source and target.
         path : str
             The path to the open payments CSV file.
@@ -205,11 +202,11 @@ def fetch_traffic_violations(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        traffic_violations : pd.DataFrame of shape (1578154, 43)
+        traffic_violations : DataFrame of shape (1578154, 43)
             The dataframe.
-        X : pd.DataFrame of shape (1578154, 42)
+        X : DataFrame of shape (1578154, 42)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape (1578154, 1)
+        y : DataFrame of shape (1578154, 1)
             Target labels.
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -237,11 +234,11 @@ def fetch_drug_directory(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        drug_directory : pd.DataFrame of shape (120215, 21)
+        drug_directory : DataFrame of shape (120215, 21)
             The dataframe.
-        X : pd.DataFrame of shape (120215, 20)
+        X : DataFrame of shape (120215, 20)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape (120215, 1)
+        y : DataFrame of shape (120215, 1)
             The target labels.
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -279,9 +276,9 @@ def fetch_credit_fraud(data_home=None, split="train"):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        baskets : pd.DataFrame of shape (92790, 2)
+        baskets : DataFrame of shape (92790, 2)
             Table containing baskets ID and target.
-        products : pd.DataFrame of shape (163357, 7)
+        products : DataFrame of shape (163357, 7)
             Table containing features about products contained in baskets
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -344,11 +341,11 @@ def fetch_toxicity(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        toxicity : pd.DataFrame of shape (1000, 2)
+        toxicity : DataFrame of shape (1000, 2)
             The dataframe.
-        X : pd.DataFrame of shape (1000, 1)
+        X : DataFrame of shape (1000, 1)
             Features, i.e. the dataframe without the target.
-        y : pd.DataFrame of shape (1000, 1)
+        y : DataFrame of shape (1000, 1)
             Target labels.
         metadata : dict
             A dictionary containing the name, description, source and target.
@@ -383,11 +380,11 @@ def fetch_videogame_sales(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        videogame_sales : pd.DataFrame of shape (16572, 11)
+        videogame_sales : DataFrame of shape (16572, 11)
             The dataframe.
-        X : pd.DataFrame of shape (16572, 5)
+        X : DataFrame of shape (16572, 5)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape (16572, 1)
+        y : DataFrame of shape (16572, 1)
             Target labels.
         metadata : dict
             A dictionary containing the name, source and target.
@@ -420,11 +417,11 @@ def fetch_bike_sharing(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        bike_sharing: pd.DataFrame of shape (17379, 11)
+        bike_sharing: DataFrame of shape (17379, 11)
             The full dataframe.
-        X : pd.DataFrame of shape (17379, 10)
+        X : DataFrame of shape (17379, 10)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape (17379, 1)
+        y : DataFrame of shape (17379, 1)
             Target labels.
         metadata : dict
             A dictionary containing the name and target.
@@ -453,11 +450,16 @@ def fetch_movielens(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        movies`` : pd.DataFrame of shape (9742, 3), movie ID, title and genres
-        ratings``: pd.DataFrame of shape (100836, 4), user ID, movie ID, rating
-        metadata`` : a dictionary containing the name source and description
-        movies_path`` : str, the path to the movies CSV file
-        ratings_path`` : str, the path to the ratings CSV file
+        movies : DataFrame of shape (9742, 3)
+            Dataframe with movie titles and genres.
+        ratings : DataFrame of shape (100836, 4)
+            Dataframe with ratings of movies.
+        metadata : dict
+            A dictionary containing the name source and description.
+        movies_path : str
+            The path to the movies CSV file.
+        ratings_path : str
+            The path to the ratings CSV file.
     """
 
     return load_dataset_files("movielens", data_home)
@@ -480,19 +482,19 @@ def fetch_flight_delays(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        flights: DataFrame of shape (2370030, 12)
+        flights : DataFrame of shape (2370030, 12)
             Information about the flights, including departure and
             arrival airports, and delay.
-        airports: DataFrame of shape (3376, 7)
+        airports : DataFrame of shape (3376, 7)
             Information about airports, such as city and coordinates.
             The airport's ``iata`` can be matched to the flights' ``Origin`` and
             ``Dest``.
-        weather: DataFrame of shape (11282238, 5)
+        weather : DataFrame of shape (11282238, 5)
             Weather data that could be used to help improve the delay
             predictions. Note the weather data is not measured at the airports
             directly but at weather stations, whose location and information is
             provided in ``stations``.
-        stations: dataframe of shape (124245, 9)
+        stations : dataframe of shape (124245, 9)
             Information about the weather stations. ``weather`` and
             ``stations`` can be joined on their ``ID`` columns. Weather stations
             can only be matched to the nearest airport based on the latitude and
@@ -544,11 +546,11 @@ def fetch_country_happiness(data_home=None):
         happiness_report_path : str
             The path to the happiness report CSV file.
         GDP_per_capita_path : str
-            The path to the GDP per capita CSV file
+            The path to the GDP per capita CSV file.
         life_expectancy_path : str
-            The path to the life expectancy CSV file
+            The path to the life expectancy CSV file.
         legal_rights_index_path : str
-            The path to the legal rights index CSV file
+            The path to the legal rights index CSV file.
     """
     return load_dataset_files("country_happiness", data_home)
 
@@ -588,15 +590,15 @@ def fetch_california_housing(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        california_housing : pd.DataFrame of shape (20640, 9)
+        california_housing : DataFrame of shape (20640, 9)
             A dataframe with the California housing data.
-        X : pd.DataFrame of shape (20640, 8)
+        X : DataFrame of shape (20640, 8)
             Features, i.e. the dataframe without the target labels.
-        y : pd.DataFrame of shape (20640, 1)
+        y : DataFrame of shape (20640, 1)
             Target labels.
         metadata : dict
             A dictionary containing the name, description, source and target.
         path : str
-            The path to the california housing CSV file
+            The path to the california housing CSV file.
     """
     return load_simple_dataset("california_housing", data_home)
