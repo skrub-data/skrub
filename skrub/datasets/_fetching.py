@@ -31,7 +31,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     split : str, default="all"
@@ -100,7 +100,7 @@ def fetch_medical_charge(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -108,13 +108,16 @@ def fetch_medical_charge(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        medical_charge`` : pd.DataFrame, the dataframe. Shape: (163065, 12)
-        X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (163065, 11)
-        y`` : pd.DataFrame, target labels. Shape: (163065, 1)
-        metadata`` : a dictionary containing the name, description, source and
-          target
-        path`` : str, the path to the medical charge CSV file
+        medical_charge : pd.DataFrame of shape (163065, 12)
+            The dataframe.
+        X : pd.DataFrame of shape (163065, 11)
+            Features, i.e. the dataframe without the target labels.
+        y : pd.DataFrame of shape (163065, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, description, source and target.
+        path : str
+            The path to the medical charge CSV file.
     """
     return load_simple_dataset("medical_charge", data_home)
 
@@ -128,7 +131,7 @@ def fetch_midwest_survey(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -160,7 +163,7 @@ def fetch_open_payments(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -172,11 +175,11 @@ def fetch_open_payments(data_home=None):
             The dataframe.
         X : pd.DataFrame of shape: (73558, 5)
             Features, i.e. the dataframe without the target labels.
-        y`` : pd.DataFrame of shape: (73558, 1)
+        y : pd.DataFrame of shape: (73558, 1)
             Target labels.
         metadata`` : dict
             A dictionary containing the name, description, source and target.
-        path`` : str
+        path : str
             The path to the open payments CSV file.
     """
     return load_simple_dataset("open_payments", data_home)
@@ -194,7 +197,7 @@ def fetch_traffic_violations(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -226,7 +229,7 @@ def fetch_drug_directory(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -333,7 +336,7 @@ def fetch_toxicity(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -342,6 +345,7 @@ def fetch_toxicity(data_home=None):
         A dictionary-like object with the following keys:
 
         toxicity : pd.DataFrame of shape (1000, 2)
+            The dataframe.
         X : pd.DataFrame of shape (1000, 1)
             Features, i.e. the dataframe without the target.
         y : pd.DataFrame of shape (1000, 1)
@@ -371,7 +375,7 @@ def fetch_videogame_sales(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -379,12 +383,16 @@ def fetch_videogame_sales(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        videogame_sales`` : pd.DataFrame, the full dataframe of shape (16572, 11)
-        X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels of shape (16572, 5)
-        y`` : pd.DataFrame, target labels of shape (16572, 1)
-        metadata`` : a dictionary containing the name, source and target
-        path`` : str, the path to the videogame sales CSV file
+        videogame_sales : pd.DataFrame of shape (16572, 11)
+            The dataframe.
+        X : pd.DataFrame of shape (16572, 5)
+            Features, i.e. the dataframe without the target labels.
+        y : pd.DataFrame of shape (16572, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name, source and target.
+        path : str
+            The path to the videogame sales CSV file.
     """
 
     result = load_simple_dataset("videogame_sales", data_home)
@@ -404,7 +412,7 @@ def fetch_bike_sharing(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -412,12 +420,16 @@ def fetch_bike_sharing(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        bike_sharing``: pd.DataFrame, the full dataframe of shape (17379, 11)
-        X`` : pd.DataFrame, features, i.e. the dataframe without the target labels.
-          of shape (17379, 10)
-        y`` : pd.DataFrame, target labels of shape (17379, 1)
-        metadata`` : a dictionary containing the name and target
-        path`` : str, the path to the bike sharing CSV file
+        bike_sharing: pd.DataFrame of shape (17379, 11)
+            The full dataframe.
+        X : pd.DataFrame of shape (17379, 10)
+            Features, i.e. the dataframe without the target labels.
+        y : pd.DataFrame of shape (17379, 1)
+            Target labels.
+        metadata : dict
+            A dictionary containing the name and target.
+        path : str
+            The path to the bike sharing CSV file.
     """
 
     return load_simple_dataset("bike_sharing", data_home)
@@ -433,7 +445,7 @@ def fetch_movielens(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -460,7 +472,7 @@ def fetch_flight_delays(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -468,26 +480,33 @@ def fetch_flight_delays(data_home=None):
     bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        flights``: dataframe of shape (2370030, 12)
-        Information about the flights, including departure and
-        arrival airports, and delay.
-        airports``: information about airports, such as city and coordinates.
-          The airport's ``iata`` can be matched to the flights' ``Origin`` and
-          ``Dest`` of shape (3376, 7)
-        weather``: weather data that could be used to help improve the delay
-          predictions. Note the weather data is not measured at the airports
-          directly but at weather stations, whose location and information is
-          provided in ``stations``. Shape: (11282238, 5)
-        stations``: dataframe of shape: (124245, 9)
-        Information about the weather stations. ``weather`` and
-        ``stations`` can be joined on their ``ID`` columns. Weather stations
-        can only be matched to the nearest airport based on the latitude and
-        longitude
-        metadata`` : a dictionary containing the name of the dataset.
-        flights_path`` : str, the path to the flights CSV file
-        airports_path`` : str, the path to the airports CSV file
-        weather_path`` : str, the path to the weather CSV file
-        stations_path`` : str, the path to the stations CSV file
+        flights: DataFrame of shape (2370030, 12)
+            Information about the flights, including departure and
+            arrival airports, and delay.
+        airports: DataFrame of shape (3376, 7)
+            Information about airports, such as city and coordinates.
+            The airport's ``iata`` can be matched to the flights' ``Origin`` and
+            ``Dest``.
+        weather: DataFrame of shape (11282238, 5)
+            Weather data that could be used to help improve the delay
+            predictions. Note the weather data is not measured at the airports
+            directly but at weather stations, whose location and information is
+            provided in ``stations``.
+        stations: dataframe of shape (124245, 9)
+            Information about the weather stations. ``weather`` and
+            ``stations`` can be joined on their ``ID`` columns. Weather stations
+            can only be matched to the nearest airport based on the latitude and
+            longitude.
+        metadata : dict
+            A dictionary containing the name of the dataset.
+        flights_path : str
+            The path to the flights CSV file.
+        airports_path : str
+            The path to the airports CSV file.
+        weather_path : str
+            The path to the weather CSV file.
+        stations_path : str
+            The path to the stations CSV file.
     """
     return load_dataset_files("flight_delays", data_home)
 
@@ -503,7 +522,7 @@ def fetch_country_happiness(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
@@ -561,7 +580,7 @@ def fetch_california_housing(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path-like, default=None
+    data_home : str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
