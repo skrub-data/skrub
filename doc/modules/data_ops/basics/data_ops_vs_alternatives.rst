@@ -52,7 +52,7 @@ pre-processing tasks, and simple and robust baselines for
 machine learning. As a result, these objects are more opinionated and
 less flexible than DataOps.
 
-However, it is possible to combine DataOps and regular krub and scikit-learn
+However, it is possible to combine DataOps and regular skrub and scikit-learn
 transformers to improve their flexibility, particularly in multi-table scenarios.
 
 Can I use library "x" with skrub DataOps?
