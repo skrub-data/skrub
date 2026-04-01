@@ -2933,7 +2933,7 @@ class SkrubNamespace:
         >>> sample_weight = X["price"]
         >>> pred.skb.with_scoring(
         ...     "accuracy", kwargs={"sample_weight": sample_weight}
-        ... ).skb.cross_validate(cv=2) # doctest: +SKIP
+        ... ).skb.cross_validate() # doctest: +SKIP
            fit_time  score_time  test_accuracy
         0  0.003045    0.003275       0.888889
         1  0.002659    0.003026       0.647059
@@ -2944,7 +2944,7 @@ class SkrubNamespace:
         ...     "accuracy",
         ...     kwargs={"sample_weight": sample_weight},
         ...     name="weighted_accuracy",
-        ... ).skb.cross_validate(cv=2) # doctest: +SKIP
+        ... ).skb.cross_validate() # doctest: +SKIP
            fit_time  score_time  test_accuracy  test_weighted_accuracy
         0  0.002738    0.005733       0.666667                0.888889
         1  0.002845    0.005705       0.666667                0.647059
@@ -2955,7 +2955,7 @@ class SkrubNamespace:
         >>> sample_weight = X["price"]
         >>> pred.skb.with_scoring(
         ...     ["accuracy", "neg_log_loss"], kwargs={"sample_weight": sample_weight}
-        ... ).skb.cross_validate(cv=2) # doctest: +SKIP
+        ... ).skb.cross_validate() # doctest: +SKIP
            fit_time  score_time  test_accuracy  test_neg_log_loss
         0  0.002694    0.007017       0.888889          -0.482481
         1  0.002833    0.006627       0.647059          -0.650105

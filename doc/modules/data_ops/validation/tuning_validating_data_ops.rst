@@ -233,7 +233,7 @@ We set the scoring to provide the sample weights:
 >>> sample_weight = X["price"]
 >>> pred.skb.with_scoring(
 ...     "accuracy", kwargs={"sample_weight": sample_weight}
-... ).skb.cross_validate(cv=2) # doctest: +SKIP
+... ).skb.cross_validate() # doctest: +SKIP
    fit_time  score_time  test_accuracy
 0  0.003045    0.003275       0.888889
 1  0.002659    0.003026       0.647059
