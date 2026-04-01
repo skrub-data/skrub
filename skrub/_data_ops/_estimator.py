@@ -657,7 +657,12 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             scorer_output = scorer(self, X, y)
             all_scores.extend(self._process_scores(scorer_info, scorer_output))
         rename = unique_renaming()
-        return {rename(name): score for name, score in all_scores}
+        result = {rename(name): score for name, score in all_scores}
+        if len(result) == 1:
+            # If there is a single score stick to scikit-learn interface which
+            # returns a number.
+            return next(iter(result.values()))
+        return result
 
 
 def _find_X_y_and_cv(data_op):
@@ -1113,6 +1118,13 @@ def _get_results_metadata(data_op_choices):
     }
 
 
+def default_score(estimator, X, y):
+    """
+    Wrap estimator.score to force sklearn to take refit parameter into account.
+    """
+    return estimator.score(X, y)
+
+
 @set_module("skrub")
 class ParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
@@ -1143,6 +1155,8 @@ class ParamSearch(_BaseParamSearch):
             search.param_distributions = param_grid
         X, y, splitter = _compute_cv_data(self.data_op, environment, search.cv)
         search.cv = splitter
+        if search.scoring is None:
+            search.scoring = default_score
         search.fit(X, y)
         _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
         try:

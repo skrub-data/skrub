@@ -17,7 +17,13 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.exceptions import FitFailedWarning, NotFittedError
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import accuracy_score, get_scorer, make_scorer, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score,
+    brier_score_loss,
+    get_scorer,
+    make_scorer,
+    roc_auc_score,
+)
 from sklearn.model_selection import (
     GridSearchCV,
     KFold,
@@ -175,7 +181,6 @@ def test_cross_validate(data_op, data, n_jobs):
 
 
 def test_cross_validate_with_scoring():
-    data_op, data = get_data_op_and_data("simple")
     X_a, y_a = make_classification(random_state=0)
     X = skrub.X(X_a)
 
@@ -261,6 +266,17 @@ def test_cross_validate_with_scoring():
         assert np.allclose(skrub_scores["test_accuracy"], sklearn_scores["test_score"])
 
 
+def test_score_with_scoring():
+    data_op, data = get_data_op_and_data("simple")
+    data_op = data_op.skb.with_scoring("neg_brier_score")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    skrub_score = learner.score(split["test"])["neg_brier_score"]
+    pred = learner.predict_proba(split["test"])
+    sklearn_score = -brier_score_loss(split["y_test"], pred)
+    assert np.allclose(skrub_score, sklearn_score)
+
+
 def test_cross_validate_return_indices():
     """
     Non-regression for #1487.
@@ -315,6 +331,32 @@ def test_randomized_search(data_op, data, n_jobs, randomized_search_backend):
     assert search.decision_function(data).shape == (100,)
     train_score = search.score(data)
     assert train_score == pytest.approx(0.94, abs=0.05)
+
+
+def test_randomized_search_with_scoring(randomized_search_backend):
+    data_op, data = get_data_op_and_data("simple")
+
+    # single score
+
+    split = data_op.skb.train_test_split(data)
+
+    search = data_op.skb.with_scoring("neg_brier_score").skb.make_randomized_search(
+        n_iter=3, random_state=0, backend=randomized_search_backend
+    )
+    search.fit(split["train"])
+    assert (search.results_["mean_test_score"] <= 0).all()
+    assert search.score(split["test"]) < 0
+
+    # multiple scores
+
+    search = data_op.skb.with_scoring(
+        ["neg_brier_score", "roc_auc"]
+    ).skb.make_randomized_search(
+        n_iter=3, random_state=0, backend=randomized_search_backend, refit="roc_auc"
+    )
+    search.fit(split["train"])
+    assert (search.results_["mean_test_neg_brier_score"] <= 0).all()
+    assert list(search.score(split["test"]).keys()) == ["neg_brier_score", "roc_auc"]
 
 
 def test_grid_search(data_op, data, n_jobs):
