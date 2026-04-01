@@ -2,6 +2,7 @@ import copy
 import io
 import pickle
 import warnings
+from functools import partial
 from unittest.mock import Mock
 
 import numpy as np
@@ -205,6 +206,13 @@ def test_cross_validate_with_scoring():
     def custom_brier_score(estimator, X, y):
         return get_scorer("neg_brier_score")(estimator, X, y)
 
+    def custom_roc_auc(estimator, X, y):
+        return get_scorer("roc_auc")(estimator, X, y)
+
+    # unlikely case of a scorer with metadata routing but not _kwargs nor
+    # _scorers, mostly here to get full test coverage
+    custom_roc_auc.get_metadata_routing = None
+
     skrub_scores = (
         data_op.skb.with_scoring("accuracy")
         .skb.with_scoring("roc_auc", name="ROC")
@@ -213,6 +221,7 @@ def test_cross_validate_with_scoring():
                 "accuracy": acc_scorer,
                 "roc": roc_scorer,
                 "custom_brier": custom_brier_score,
+                "custom_roc_auc": custom_roc_auc,
             },
             name="in_dict",
         )
@@ -228,6 +237,7 @@ def test_cross_validate_with_scoring():
             "in_dict_accuracy": acc_scorer,
             "in_dict_roc": roc_scorer,
             "in_dict_custom_brier": custom_brier_score,
+            "in_dict_custom_roc_auc": custom_roc_auc,
         },
     )
     for name in [
@@ -236,6 +246,7 @@ def test_cross_validate_with_scoring():
         "in_dict_accuracy",
         "in_dict_roc",
         "in_dict_custom_brier",
+        "in_dict_custom_roc_auc",
     ]:
         assert np.allclose(skrub_scores[f"test_{name}"], sklearn_scores[f"test_{name}"])
 
@@ -266,6 +277,16 @@ def test_cross_validate_with_scoring():
         assert np.allclose(skrub_scores["test_score"], sklearn_scores["test_score"])
 
 
+def test_score_no_scoring():
+    data_op, data = get_data_op_and_data("simple")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    skrub_score = learner.score(split["test"])
+    pred = learner.predict(split["test"])
+    sklearn_score = accuracy_score(split["y_test"], pred)
+    assert np.allclose(skrub_score, sklearn_score)
+
+
 def test_score_with_scoring():
     data_op, data = get_data_op_and_data("simple")
     data_op = data_op.skb.with_scoring("neg_brier_score")
@@ -275,6 +296,35 @@ def test_score_with_scoring():
     pred = learner.predict_proba(split["test"])[:, 1]
     sklearn_score = -brier_score_loss(split["y_test"], pred)
     assert np.allclose(skrub_score, sklearn_score)
+
+
+def test_with_scoring_names():
+    data_op, data = get_data_op_and_data("simple")
+    acc_scorer = make_scorer(accuracy_score)
+
+    def acc_scorer_func(e, X, y):
+        return acc_scorer(e, X, y)
+
+    acc_scorer_func_no_name = partial(acc_scorer_func)
+
+    data_op = (
+        data_op.skb.with_scoring("accuracy")
+        .skb.with_scoring(acc_scorer)
+        .skb.with_scoring(acc_scorer, name="accuracy_with_name")
+        .skb.with_scoring(acc_scorer_func_no_name)
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring({"a1": acc_scorer, "a2": acc_scorer_func}, name="dict_name")
+    )
+    scores = data_op.skb.make_learner().fit(data).score(data)
+    assert list(scores.keys()) == [
+        "accuracy",
+        "accuracy_score",
+        "accuracy_with_name",
+        "score",
+        "accuracy_1",
+        "dict_name_a1",
+        "dict_name_a2",
+    ]
 
 
 def test_cross_validate_return_indices():
