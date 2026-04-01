@@ -43,8 +43,16 @@ def make_deduplication_data(
     Examples
     --------
     >>> from skrub.datasets import make_deduplication_data
-    >>> make_deduplication_data(["string1", "string2"], entries_per_example=[3, 4])
-    ['string1', 'string1', 'string1', 'string2', 'string2', 'string2', 'string2']
+    >>> make_deduplication_data(["string1", "string2"], entries_per_example=[4, 5])
+    ['stjing1',
+    'string1',
+    'string1',
+    'string1',
+    'strmng2',
+    'string2',
+    'string2',
+    'string2',
+    'string2']
     """
     rng = check_random_state(random_state)
 
@@ -79,7 +87,7 @@ def toy_orders(split="train"):
 
     Returns
     -------
-    bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the keys 'X', 'y' and 'orders'.
 
     Examples
