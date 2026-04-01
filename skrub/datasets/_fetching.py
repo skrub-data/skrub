@@ -31,7 +31,7 @@ def fetch_employee_salaries(data_home=None, split="all"):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home: str or path-like, default=None
         The directory where to download and unzip the files.
 
     split : str, default="all"
@@ -193,10 +193,10 @@ def fetch_traffic_violations(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``traffic_violations`` : pd.DataFrame, the dataframe. Shape: (1578154, 43)
+        - ``traffic_violations`` : pd.DataFrame, the dataframe of shape (1578154, 43)
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (1578154, 42)
-        - ``y`` : pd.DataFrame, target labels. Shape: (1578154, 1)
+          labels of shape (1578154, 42)
+        - ``y`` : pd.DataFrame, target labels of shape (1578154, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
         - ``path`` : str, the path to the traffic violations CSV file
@@ -222,10 +222,10 @@ def fetch_drug_directory(data_home=None):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``drug_directory`` : pd.DataFrame, the dataframe. Shape: (120215, 21)
+        - ``drug_directory`` : pd.DataFrame, the dataframe of shape (120215, 21)
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (120215, 20)
-        - ``y`` : pd.DataFrame, target labels. Shape: (120215, 1)
+          labels of shape (120215, 20)
+        - ``y`` : pd.DataFrame, target labels of shape (120215, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
         - ``path`` : str, the path to the drug directory CSV file
@@ -261,10 +261,10 @@ def fetch_credit_fraud(data_home=None, split="train"):
     bunch : sklearn.utils.Bunch
         A dictionary-like object with the following keys:
 
-        - ``baskets`` : pd.DataFrame, table containing baskets ID and target.
-        Shape: (92790, 2)
+        - ``baskets`` : pd.DataFrame, table containing baskets ID and target of
+        shape (92790, 2)
         - ``products`` : pd.DataFrame, table containing features about products
-          contained in baskets. Shape: (163357, 7)
+          contained in baskets of shape (163357, 7)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
         - ``baskets_path`` : str, the path to the baskets CSV file
@@ -316,18 +316,18 @@ def fetch_toxicity(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home: str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``toxicity`` : pd.DataFrame, the dataframe. Shape: (1000, 2)
+        - ``toxicity`` : pd.DataFrame, the dataframe of shape (1000, 2)
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (1000, 1)
-        - ``y`` : pd.DataFrame, target labels. Shape: (1000, 1)
+          labels of shape (1000, 1)
+        - ``y`` : pd.DataFrame, target labels of shape (1000, 1)
         - ``metadata`` : a dictionary containing the name, description, source and
           target
         - ``path`` : str, the path to the toxicity CSV file
@@ -352,18 +352,18 @@ def fetch_videogame_sales(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home: str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``videogame_sales`` : pd.DataFrame, the full dataframe. Shape: (16572, 11)
+        - ``videogame_sales`` : pd.DataFrame, the full dataframe of shape (16572, 11)
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target
-          labels. Shape: (16572, 5)
-        - ``y`` : pd.DataFrame, target labels. Shape: (16572, 1)
+          labels of shape (16572, 5)
+        - ``y`` : pd.DataFrame, target labels of shape (16572, 1)
         - ``metadata`` : a dictionary containing the name, source and target
         - ``path`` : str, the path to the videogame sales CSV file
     """
@@ -385,18 +385,18 @@ def fetch_bike_sharing(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home: str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``bike_sharing``: pd.DataFrame, the full dataframe. Shape: (17379, 11)
+        - ``bike_sharing``: pd.DataFrame, the full dataframe of shape (17379, 11)
         - ``X`` : pd.DataFrame, features, i.e. the dataframe without the target labels.
-          Shape: (17379, 10)
-        - ``y`` : pd.DataFrame, target labels. Shape: (17379, 1)
+          of shape (17379, 10)
+        - ``y`` : pd.DataFrame, target labels of shape (17379, 1)
         - ``metadata`` : a dictionary containing the name and target
         - ``path`` : str, the path to the bike sharing CSV file
     """
@@ -414,16 +414,16 @@ def fetch_movielens(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home: str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``movies`` : pd.DataFrame, movie ID, title and genres. Shape: (9742, 3)
-        - ``ratings``: pd.DataFrame, user ID, movie ID, rating. Shape: (100836, 4)
+        - ``movies`` : pd.DataFrame of shape (9742, 3), movie ID, title and genres
+        - ``ratings``: pd.DataFrame of shape (100836, 4), user ID, movie ID, rating
         - ``metadata`` : a dictionary containing the name source and description
         - ``movies_path`` : str, the path to the movies CSV file
         - ``ratings_path`` : str, the path to the ratings CSV file
@@ -441,28 +441,30 @@ def fetch_flight_delays(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home: str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``flights``: information about the flights, including departure and
-          arrival airports, and delay. Shape: (2370030, 12)
+        - ``flights``: dataframe of shape (2370030, 12)
+        Information about the flights, including departure and
+        arrival airports, and delay.
         - ``airports``: information about airports, such as city and coordinates.
           The airport's ``iata`` can be matched to the flights' ``Origin`` and
-          ``Dest``. Shape: (3376, 7)
+          ``Dest`` of shape (3376, 7)
         - ``weather``: weather data that could be used to help improve the delay
           predictions. Note the weather data is not measured at the airports
           directly but at weather stations, whose location and information is
           provided in ``stations``. Shape: (11282238, 5)
-        - ``stations``: information about the weather stations. ``weather`` and
-          ``stations`` can be joined on their ``ID`` columns. Weather stations
-          can only be matched to the nearest airport based on the latitude and
-          longitude. Shape: (124245, 9)
-        - ``metadata`` : a dictionary containing the name  of the dataset.
+        - ``stations``: dataframe of shape: (124245, 9)
+        Information about the weather stations. ``weather`` and
+        ``stations`` can be joined on their ``ID`` columns. Weather stations
+        can only be matched to the nearest airport based on the latitude and
+        longitude
+        - ``metadata`` : a dictionary containing the name of the dataset.
         - ``flights_path`` : str, the path to the flights CSV file
         - ``airports_path`` : str, the path to the airports CSV file
         - ``weather_path`` : str, the path to the weather CSV file
@@ -482,17 +484,18 @@ def fetch_country_happiness(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home: str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
-        - ``happiness_report``: dataframe, data from the world happiness report.
-          Shape: (146, 12)
-        - ``GDP_per_capita``: dataframe from the World Bank. Shape: (262, 2)
+        - ``happiness_report``: dataframe of shape: (146, 12)
+        Data from the world happiness report.
+        - ``GDP_per_capita``: dataframe shape (262, 2)
+        Data from the World Bank.
         - ``life_expectancy``: dataframe from the World Bank. Shape: (260, 2)
         - ``legal_rights_index``: dataframe from the World Bank. Shape: (238, 2)
         - ``metadata`` : a dictionary containing the name of the dataset, a
@@ -532,12 +535,12 @@ def fetch_california_housing(data_home=None):
 
     Parameters
     ----------
-    data_home: str or path, default=None
+    data_home: str or path-like, default=None
         The directory where to download and unzip the files.
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
         - ``california_housing`` : pd.DataFrame, the dataframe. Shape: (20640, 9)

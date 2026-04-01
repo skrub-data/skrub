@@ -38,21 +38,18 @@ def make_deduplication_data(
     Returns
     -------
     list of str
-        List of duplicated examples with spelling mistakes
+        List of duplicated examples with spelling mistakes.
 
     Examples
     --------
     >>> from skrub.datasets import make_deduplication_data
-    >>> make_deduplication_data(["string1", "string2"], entries_per_example=[4, 5],
+    >>> make_deduplication_data(["string1", "string2"],
+    ...                         entries_per_example=[4, 5],
     ...                         random_state=9)
-    ['btrwng1',
-    'string1',
-    'string1',
-    'string1',
-    'saoing2',
-    'string2',
-    'string2',
-    'string2',
+    ['btrwng1', 'string1',
+    'string1', 'string1',
+    'saoing2', 'string2',
+    'string2', 'string2',
     'string2']
     """
     rng = check_random_state(random_state)
