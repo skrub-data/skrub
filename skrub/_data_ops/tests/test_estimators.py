@@ -195,7 +195,7 @@ def test_cross_validate_with_scoring():
     data_op = X.skb.apply(DummyClassifier(), y=skrub.y(y_a))
     skrub_scores = data_op.skb.with_scoring("accuracy").skb.cross_validate()
     sklearn_scores = cross_validate(DummyClassifier(), X_a, y_a, scoring="accuracy")
-    assert np.allclose(skrub_scores["test_accuracy"], sklearn_scores["test_score"])
+    assert np.allclose(skrub_scores["test_score"], sklearn_scores["test_score"])
 
     # Different types of scoring such as strings, callables and multimetric
 
@@ -263,7 +263,7 @@ def test_cross_validate_with_scoring():
             params=dict(sample_weight=sw_a),
         )
     for skrub_scores in [kwargs_skrub_scores, deferred_skrub_scores]:
-        assert np.allclose(skrub_scores["test_accuracy"], sklearn_scores["test_score"])
+        assert np.allclose(skrub_scores["test_score"], sklearn_scores["test_score"])
 
 
 def test_score_with_scoring():
@@ -271,7 +271,7 @@ def test_score_with_scoring():
     data_op = data_op.skb.with_scoring("neg_brier_score")
     split = data_op.skb.train_test_split(data)
     learner = data_op.skb.make_learner().fit(split["train"])
-    skrub_score = learner.score(split["test"])["neg_brier_score"]
+    skrub_score = learner.score(split["test"])
     pred = learner.predict_proba(split["test"])
     sklearn_score = -brier_score_loss(split["y_test"], pred)
     assert np.allclose(skrub_score, sklearn_score)
