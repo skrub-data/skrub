@@ -206,6 +206,7 @@ class SkrubNamespace:
         how : "auto", "cols", "frame" or "no_wrap", optional
             How the estimator is applied. In most cases the default "auto"
             is appropriate.
+
             - "cols" means `estimator` is wrapped in a :class:`ApplyToEachCol`
               transformer, which fits a separate clone of `estimator` each
               column in `cols`. `estimator` must be a transformer (have a
@@ -276,11 +277,8 @@ class SkrubNamespace:
         --------
         skrub.DataOp.skb.make_learner :
             Get a skrub learner for this DataOp.
-        skrub.ApplyToEachCol :
-            Transformer that applies a given transformer separately to each
-            selected column.
-        skrub.ApplyToSubFrame:
-            Transformer that applies a given transformer to part of a
+        skrub.ApplyToCols :
+            Transformer that applies a given estimator to selected columns of a
             dataframe.
 
         Examples

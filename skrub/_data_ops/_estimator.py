@@ -336,7 +336,8 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         -------
         scikit-learn estimator
             The fitted estimator. Depending on the nature of the estimator it
-            may be wrapped in a ``skrub.ApplyToEachCol`` or ``skrub.ApplyToSubFrame``,
+            may be wrapped in a ``skrub._apply_to_each_col.ApplyToEachCol``
+            or ``skrub._apply_to_sub_frame.ApplyToSubFrame``,
             see examples below.
 
         See also
