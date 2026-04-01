@@ -1998,10 +1998,15 @@ class SplitX(DataOpImpl):
         return "<X>"
 
 
-def _scorer_repr(scorer):
+def _scorer_repr(scorer_info):
+    scorer = scorer_info["scoring"]
+    if name := scorer_info.get("name"):
+        prefix = f"{name}: "
+    else:
+        prefix = ""
     if isinstance(scorer, (list, tuple, set, dict)):
-        return [repr(s) for s in scorer]
-    return [repr(scorer)]
+        return [f"{prefix}{s!r}" for s in scorer]
+    return [f"{prefix}{scorer!r}"]
 
 
 class Scoring(DataOpImpl):
@@ -2014,7 +2019,7 @@ class Scoring(DataOpImpl):
         details = ["    This DataOp will be scored with:\n"]
         all_scorer_reprs = []
         for scorer_info in self.scorers:
-            all_scorer_reprs.extend(_scorer_repr(scorer_info["scoring"]))
+            all_scorer_reprs.extend(_scorer_repr(scorer_info))
         details.extend(f"      - {s_repr}\n" for s_repr in all_scorer_reprs)
         details.append(
             "    Use .skb.cross_validate(…) or "

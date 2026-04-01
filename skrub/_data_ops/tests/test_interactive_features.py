@@ -2,6 +2,8 @@ import inspect
 
 import numpy as np
 import pytest
+from sklearn.datasets import make_classification
+from sklearn.dummy import DummyClassifier
 
 import skrub
 
@@ -85,6 +87,17 @@ def test_repr_html():
     assert "on a subsample" not in a._repr_html_()
     a = skrub.X(np.ones((5, 2))).skb.subsample(n=2) + 10
     assert "on a subsample" in a._repr_html_()
+
+
+def test_with_scoring_repr_html():
+    X, y = make_classification(n_samples=10)
+    r = (
+        skrub.X(X)
+        .skb.apply(DummyClassifier(), y=skrub.y(y))
+        .skb.with_scoring("accuracy")
+        ._repr_html_()
+    )
+    assert "accuracy" in r
 
 
 def test_repr():
@@ -276,6 +289,32 @@ def test_repr():
     >>> print(e.skb.describe_param_grid())
     - choose_float(10, 100): choose_float(10, 100)
       choose_float(1, 100, log=True, n_...): choose_float(1, 100, log=True, n_steps=100, default=10)
+    >>> from sklearn.dummy import DummyClassifier
+    >>> from sklearn.metrics import get_scorer
+
+    >>> data = skrub.var("df")
+    >>> X = data[["description", "price"]].skb.mark_as_X(cv=2)
+    >>> y = data["category"].skb.mark_as_y()
+    >>> pred = X.skb.apply(DummyClassifier(), y=y)
+
+    >>> sample_weight = X["price"]
+    >>> pred.skb.with_scoring("accuracy", kwargs={"sample_weight": sample_weight})
+    <Scoring <Apply DummyClassifier> (1 scorers)>
+        This DataOp will be scored with:
+          - 'accuracy'
+        Use .skb.cross_validate(…) or .skb.make_learner(…).score(…) to compute scores.
+
+    >>> pred.skb.with_scoring(["accuracy", get_scorer("roc_auc")]).skb.with_scoring(
+    ...     "accuracy",
+    ...     kwargs={"sample_weight": sample_weight},
+    ...     name="weighted_accuracy",
+    ... )
+    <Scoring <Apply DummyClassifier> (3 scorers)>
+        This DataOp will be scored with:
+          - 'accuracy'
+          - make_scorer(roc_auc_score, response_method=('decision_function', 'predict_proba'))
+          - weighted_accuracy: 'accuracy'
+        Use .skb.cross_validate(…) or .skb.make_learner(…).score(…) to compute scores.
     """  # noqa: E501
 
 

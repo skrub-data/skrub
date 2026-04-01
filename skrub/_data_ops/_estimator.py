@@ -619,8 +619,9 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         if hasattr(scorer, "_kwargs"):
             scorer._kwargs = {**scorer._kwargs, **kwargs}
         elif hasattr(scorer, "_scorers"):
-            for sub_scorer in scorer._scorers.values():
-                sub_scorer._kwargs = {**sub_scorer._kwargs, **kwargs}
+            scorer._scorers = {
+                k: self._prepare_scorer(v, kwargs) for k, v in scorer._scorers.items()
+            }
         return scorer
 
     @staticmethod

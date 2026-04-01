@@ -17,7 +17,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.exceptions import FitFailedWarning, NotFittedError
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import accuracy_score, make_scorer, roc_auc_score
+from sklearn.metrics import accuracy_score, get_scorer, make_scorer, roc_auc_score
 from sklearn.model_selection import (
     GridSearchCV,
     KFold,
@@ -174,7 +174,8 @@ def test_cross_validate(data_op, data, n_jobs):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
-def test_cross_validate_with_scoring(data_op, data):
+def test_cross_validate_with_scoring():
+    data_op, data = get_data_op_and_data("simple")
     X_a, y_a = make_classification(random_state=0)
     X = skrub.X(X_a)
 
@@ -184,17 +185,32 @@ def test_cross_validate_with_scoring(data_op, data):
     sw_a = get_sw(X_a)
     sw = X.skb.apply_func(get_sw)
 
+    # Single metric without kwargs
+
     data_op = X.skb.apply(DummyClassifier(), y=skrub.y(y_a))
     skrub_scores = data_op.skb.with_scoring("accuracy").skb.cross_validate()
     sklearn_scores = cross_validate(DummyClassifier(), X_a, y_a, scoring="accuracy")
     assert np.allclose(skrub_scores["test_accuracy"], sklearn_scores["test_score"])
 
+    # Different types of scoring such as strings, callables and multimetric
+
     acc_scorer = make_scorer(accuracy_score)
     roc_scorer = make_scorer(roc_auc_score)
+
+    def custom_brier_score(estimator, X, y):
+        return get_scorer("neg_brier_score")(estimator, X, y)
+
     skrub_scores = (
         data_op.skb.with_scoring("accuracy")
         .skb.with_scoring("roc_auc", name="ROC")
-        .skb.with_scoring({"accuracy": acc_scorer, "roc": roc_scorer}, name="in_dict")
+        .skb.with_scoring(
+            {
+                "accuracy": acc_scorer,
+                "roc": roc_scorer,
+                "custom_brier": custom_brier_score,
+            },
+            name="in_dict",
+        )
         .skb.cross_validate()
     )
     sklearn_scores = cross_validate(
@@ -206,17 +222,31 @@ def test_cross_validate_with_scoring(data_op, data):
             "ROC": roc_scorer,
             "in_dict_accuracy": acc_scorer,
             "in_dict_roc": roc_scorer,
+            "in_dict_custom_brier": custom_brier_score,
         },
     )
-    for name in ["accuracy", "ROC", "in_dict_accuracy", "in_dict_roc"]:
+    for name in [
+        "accuracy",
+        "ROC",
+        "in_dict_accuracy",
+        "in_dict_roc",
+        "in_dict_custom_brier",
+    ]:
         assert np.allclose(skrub_scores[f"test_{name}"], sklearn_scores[f"test_{name}"])
+
+    # Using dynamically-computed kwargs or a dynamically-computed-scorer
 
     data_op = X.skb.apply(
         DummyClassifier(), y=skrub.y(y_a), fit_kwargs={"sample_weight": sw}
     )
-    skrub_scores = data_op.skb.with_scoring(
+    kwargs_skrub_scores = data_op.skb.with_scoring(
         "accuracy", kwargs={"sample_weight": sw}
     ).skb.cross_validate()
+
+    deferred_skrub_scores = data_op.skb.with_scoring(
+        skrub.deferred(make_scorer)(accuracy_score, sample_weight=sw), name="accuracy"
+    ).skb.cross_validate()
+
     scorer = make_scorer(accuracy_score)
     with sklearn.config_context(enable_metadata_routing=True):
         scorer.set_score_request(sample_weight=True)
@@ -227,7 +257,8 @@ def test_cross_validate_with_scoring(data_op, data):
             scoring=scorer,
             params=dict(sample_weight=sw_a),
         )
-    assert np.allclose(skrub_scores["test_accuracy"], sklearn_scores["test_score"])
+    for skrub_scores in [kwargs_skrub_scores, deferred_skrub_scores]:
+        assert np.allclose(skrub_scores["test_accuracy"], sklearn_scores["test_score"])
 
 
 def test_cross_validate_return_indices():

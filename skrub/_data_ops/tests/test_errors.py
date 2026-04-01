@@ -188,6 +188,13 @@ def test_duplicate_y():
         skrub.y() + skrub.var("a").skb.mark_as_y()
 
 
+def test_2_scoring_nodes():
+    with pytest.raises(ValueError, match=r".*can only contain one scoring node"):
+        skrub.X().skb.apply(DummyClassifier(), y=skrub.y()).skb.with_scoring(
+            "accuracy"
+        ).skb.apply_func(lambda x: x).skb.with_scoring("roc_auc")
+
+
 def test_missing_X_or_y():
     X_a, y_a = make_classification(random_state=0)
     env = {"X": X_a, "y": y_a}
@@ -619,3 +626,8 @@ def test_unhashable():
 def test_int_column_names():
     with pytest.warns(match="Some dataframe column names are not strings"):
         skrub.X(pd.DataFrame({0: [1, 2]})).skb.apply("passthrough")
+
+
+def test_mark_as_X_missing_cv():
+    with pytest.raises(TypeError, match=".*you must also provide a splitter"):
+        skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})
