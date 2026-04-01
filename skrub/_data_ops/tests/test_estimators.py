@@ -272,7 +272,7 @@ def test_score_with_scoring():
     split = data_op.skb.train_test_split(data)
     learner = data_op.skb.make_learner().fit(split["train"])
     skrub_score = learner.score(split["test"])
-    pred = learner.predict_proba(split["test"])
+    pred = learner.predict_proba(split["test"])[:, 1]
     sklearn_score = -brier_score_loss(split["y_test"], pred)
     assert np.allclose(skrub_score, sklearn_score)
 
