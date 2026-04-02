@@ -5,6 +5,7 @@ import warnings
 from contextlib import contextmanager
 from pathlib import Path
 
+import joblib
 import numpy as np
 
 
@@ -40,6 +41,12 @@ def _get_default_data_dir():
     return str(data_home)
 
 
+def _get_default_cache_dir():
+    cache_dir = Path(_get_default_data_dir()) / "_cache"
+    cache_dir.mkdir(exist_ok=True)
+    return str(cache_dir)
+
+
 def _parse_env_bool(env_variable_name, default):
     value = os.getenv(env_variable_name, default)
     if isinstance(value, bool):
@@ -64,6 +71,8 @@ _global_config = {
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
     "data_dir": _get_default_data_dir(),
+    "cache_dir": _get_default_cache_dir(),
+    "memory": joblib.Memory(_get_default_cache_dir(), verbose=0),
     "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
 }
 _threadlocal = threading.local()
@@ -113,6 +122,8 @@ def set_config(
     float_precision=None,
     cardinality_threshold=None,
     data_dir=None,
+    cache_dir=None,
+    memory=None,
     eager_data_ops=None,
 ):
     """Set global skrub configuration.
@@ -314,6 +325,8 @@ def config_context(
     float_precision=None,
     cardinality_threshold=None,
     data_dir=None,
+    cache_dir=None,
+    memory=None,
     eager_data_ops=None,
 ):
     """Context manager for global skrub configuration.
