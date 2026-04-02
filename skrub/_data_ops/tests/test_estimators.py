@@ -292,7 +292,7 @@ def test_score_with_scoring():
     data_op = data_op.skb.with_scoring("neg_brier_score")
     split = data_op.skb.train_test_split(data)
     learner = data_op.skb.make_learner().fit(split["train"])
-    skrub_score = learner.score(split["test"])
+    skrub_score = learner.score(split["test"])["neg_brier_score"]
     pred = learner.predict_proba(split["test"])[:, 1]
     sklearn_score = -brier_score_loss(split["y_test"], pred)
     assert np.allclose(skrub_score, sklearn_score)
@@ -395,7 +395,7 @@ def test_randomized_search_with_scoring(randomized_search_backend):
     )
     search.fit(split["train"])
     assert (search.results_["mean_test_score"] <= 0).all()
-    assert search.score(split["test"]) < 0
+    assert search.score(split["test"])["neg_brier_score"] < 0
 
     # multiple scores
 
