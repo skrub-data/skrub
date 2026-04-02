@@ -3,8 +3,38 @@
 
     <div id="skipped-associations-alert" class="alert-info-dismissable flex space-between">
         <div class="alert-content shrinkable-text">
-            Computing pairwise associations was skipped because the dataframe has many columns.
-            See TableReport's <code>max_association_columns</code> parameter.
+            <p>Computing pairwise associations was skipped. This is due to either:</p>
+            <ul>
+                <li>The dataframe exceeding the
+                    <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>associations_threshold</code></a>
+                    limit (default: 30).
+                </li>
+                <li>The <code>compute_associations</code> option being set to <code>False</code> (default: "auto").</li>
+            </ul>
+
+            <p>You can adjust this behavior in several ways:</p>
+            <ul>
+                <li>To fix it for a single report, change the parameters passed when creating <code>TableReport</code>:
+                    <pre><code class="language-python">    # Raise the threshold:
+    report = TableReport(df, associations_threshold=50)
+    # Or force computation regardless of the threshold:
+    report = TableReport(df, compute_associations=True)</code></pre>
+                </li>
+                <li>To change the default during the current Python session, use <code>skrub.set_config</code>:
+                    <pre><code class="language-python">    from skrub import set_config
+    set_config(associations_threshold=50)</code></pre>
+                </li>
+                <li>To make the change permanent, use an environment variable:
+                    <pre><code class="language-shell">    export SKB_ASSOCIATIONS_THRESHOLD=50</code></pre>
+                </li>
+            </ul>
+            <p>
+            Note that <code>TableReport</code> accepts these parameters:
+            </p>
+            <ul>
+                <li>The <code>compute_associations</code> parameter: <code>True</code> always computes, <code>False</code> never computes, <code>"auto"</code> (default) respects <code>associations_threshold</code>.</li>
+                <li>The <code>associations_threshold</code> limits the number of columns for which associations are computed (when <code>compute_associations="auto"</code>).</li>
+            </ul>
         </div>
     </div>
 
