@@ -38,7 +38,19 @@ def make_deduplication_data(
     Returns
     -------
     list of str
-        List of duplicated examples with spelling mistakes
+        List of duplicated examples with spelling mistakes.
+
+    Examples
+    --------
+    >>> from skrub.datasets import make_deduplication_data
+    >>> make_deduplication_data(["string1", "string2"],
+    ...                         entries_per_example=[4, 5],
+    ...                         random_state=9)
+    ['btrwng1', 'string1',
+    'string1', 'string1',
+    'saoing2', 'string2',
+    'string2', 'string2',
+    'string2']
     """
     rng = check_random_state(random_state)
 
@@ -73,8 +85,33 @@ def toy_orders(split="train"):
 
     Returns
     -------
-    bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the keys 'X', 'y' and 'orders'.
+
+    Examples
+    --------
+    >>> from skrub.datasets import toy_orders
+    >>> toy_orders(split="train").X
+    ID	product	quantity	date
+    0	1	pen	2	2020-04-03
+    1	2	cup	3	2020-04-04
+    2	3	cup	5	2020-04-04
+    3	4	spoon	1	2020-04-05
+    >>> toy_orders(split="train").y
+    0    False
+    1    False
+    2     True
+    3    False
+    Name: delayed, dtype: bool
+
+    If you want both X and y in a dataframe, use `.orders`:
+
+    >>> toy_orders().orders
+    ID	product	quantity	date	delayed
+    0	1	pen	2	2020-04-03	False
+    1	2	cup	3	2020-04-04	False
+    2	3	cup	5	2020-04-04	True
+    3	4	spoon	1	2020-04-05	False
     """
     X = pd.DataFrame(
         {
