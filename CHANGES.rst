@@ -11,6 +11,11 @@ Ongoing Development
 
 New Features
 ------------
+- It is now possible to pass additional (dynamically computed) arguments to the
+  scorers used by :class:`DataOp` objects for validation, hyperparameter search
+  etc. For example, sample weights. This is achieved by passing the scorers and
+  their arguments to :meth:`DataOp.skb.with_scoring`. :pr:`1995` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
