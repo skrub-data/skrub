@@ -842,6 +842,8 @@ def iter_cv_splits(data_op, environment, *, keep_subsampling=False, cv=None):
             "test": test_env,
             "X_train": X_train,
             "X_test": X_test,
+            "row_indices_train": train_idx,
+            "row_indices_test": test_idx,
         }
         if y is not None:
             y_train, y_test = (

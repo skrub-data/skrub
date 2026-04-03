@@ -606,9 +606,13 @@ def test_iter_cv_splits():
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30, 40]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
+    assert list(s["row_indices_train"]) == [1, 2, 3, 4]
+    assert list(s["row_indices_test"]) == [0]
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30, 40]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
+    assert list(s["row_indices_train"]) == [0, 2, 3, 4]
+    assert list(s["row_indices_test"]) == [1]
 
     X = skrub.X(np.arange(4) * 10)
     y = skrub.y(np.arange(4) * -10)
@@ -618,11 +622,15 @@ def test_iter_cv_splits():
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
     assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [-10, -20, -30]
     assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [0]
+    assert list(s["row_indices_train"]) == [1, 2, 3]
+    assert list(s["row_indices_test"]) == [0]
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
     assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [0, -20, -30]
     assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [-10]
+    assert list(s["row_indices_train"]) == [0, 2, 3]
+    assert list(s["row_indices_test"]) == [1]
 
 
 def test_train_test_split_splitter_renaming():
