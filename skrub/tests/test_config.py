@@ -50,6 +50,8 @@ def test_default_config():
     expected_keys = {
         "use_table_report_data_ops",
         "data_dir",
+        "cache_dir",
+        "memory",
         "table_report_verbosity",
         "max_plot_columns",
         "max_association_columns",
