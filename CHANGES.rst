@@ -22,6 +22,10 @@ Bugfixes
 --------
 
 
+Deprecations
+------------
+
+
 Release 0.8.0
 =============
 
