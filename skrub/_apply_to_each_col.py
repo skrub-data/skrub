@@ -440,10 +440,14 @@ def _fit_transform_column(
     except allowed:
         return col_name, [column], None
     except Exception as e:
-        raise ValueError(
+        msg = (
             f"Transformer {transformer.__class__.__name__}.fit_transform "
             f"failed on column {col_name!r}. See above for the full traceback."
-        ) from e
+        )
+        if hasattr(e, "add_note"):
+            e.add_note(msg)
+            raise
+        raise RuntimeError(msg) from e
     output = _utils.check_output(transformer, transformer_input, output)
     output_cols = sbd.to_column_list(output)
     return col_name, output_cols, transformer
