@@ -21,6 +21,9 @@ Changes
   columns for which these are computed have been renamed to
   ``plots_threshold`` and ``associations_threshold`` for clarity.
   :pr:`1907` by :user:`JulietteBgl <JulietteBgl>`.
+- The row indices of training and testing samples are now also included in the
+  dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
@@ -365,7 +368,7 @@ Highlights
 New features
 ------------
 
-- The Skrub DataOps are new mechanism for building machine-learning
+- The skrub DataOps are new mechanism for building machine-learning
   pipelines that handle multiple tables and easily describing their
   hyperparameter spaces. Main PR: :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`.
   Additional work from other contributors can be found

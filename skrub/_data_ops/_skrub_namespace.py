@@ -1939,6 +1939,8 @@ class SkrubNamespace:
             - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
               the test environment, if there is one (may not be the case for
               unsupervised learning).
+            - row_indices_train: the row indices (in X and y) of the training samples.
+            - row_indices_test: the row indices (in X and y) of the testing samples.
 
         Examples
         --------
