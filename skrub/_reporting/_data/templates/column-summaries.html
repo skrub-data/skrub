@@ -27,35 +27,25 @@
 
             <p>Plotting was skipped. This is due to either:</p>
             <ul>
-                <li>The dataframe exceeding the
-                    <a href="https://skrub-data.org/stable/reference/generated/skrub.TableReport.html"><code>plots_threshold</code></a>
+                <li>The dataframe exceeding the configured
+                    <code>plots_threshold</code>
                     limit (default: 30).
                 </li>
-                <li>The <code>plot_distributions</code> option being set to <code>False</code> (default: "auto").</li>
+                <li>The <code>plot_distributions</code> option being set to <code>False</code> (default: <code>"auto"</code>, which applies the configured <code>plots_threshold</code>).</li>
             </ul>
 
             <p>You can adjust this behavior in several ways:</p>
             <ul>
-                <li>To fix it for a single report, change the parameters passed when creating <code>TableReport</code>:
-                    <pre><code class="language-python">    # Raise the threshold:
-    report = TableReport(df, plots_threshold=50)
-    # Or force plotting regardless of the threshold:
-    report = TableReport(df, plot_distributions=True)</code></pre>
+                <li>To force plotting for a single report:
+                    <pre><code class="language-python">    report = TableReport(df, plot_distributions=True)</code></pre>
                 </li>
-                <li>To change the default during the current Python session, use <code>skrub.set_config</code>:
+                <li>To change the threshold for the current Python session, use <code>skrub.set_config</code>:
                     <pre><code class="language-python">    from skrub import set_config
     set_config(plots_threshold=50)</code></pre>
                 </li>
                 <li>To make the change permanent, use an environment variable:
                     <pre><code class="language-shell">    export SKB_PLOTS_THRESHOLD=50</code></pre>
                 </li>
-            </ul>
-            <p>
-            Note that <code>TableReport</code> accepts these parameters:
-            </p>
-            <ul>
-                <li>The <code>plot_distributions</code> parameter: <code>True</code> always plots, <code>False</code> never plots, <code>"auto"</code> (default) respects <code>plots_threshold</code>.</li>
-                <li>The <code>plots_threshold</code> limits the number of columns for which distributions are plotted (when <code>plot_distributions="auto"</code>).</li>
             </ul>
         </div>
         <div class="dismiss-container">

@@ -88,21 +88,10 @@ def test_use_table_report_data_ops(simple_df):
 
 
 @skip_polars_installed_without_pyarrow
-def test_max_plot_columns(simple_df):
-    report = TableReport(simple_df)
-    assert report.associations_threshold == 30
-    assert report.plots_threshold == 30
-
-    # Set default to 1
+def test_max_plot_columns():
     with config_context(plots_threshold=1):
-        report = TableReport(simple_df)
-        assert report.associations_threshold == 30
-        assert report.plots_threshold == 1
-
-        # Argument takes precedence over default configuration
-        report = TableReport(simple_df, associations_threshold=50, plots_threshold=50)
-        assert report.associations_threshold == 50
-        assert report.plots_threshold == 50
+        assert get_config()["associations_threshold"] == 30
+        assert get_config()["plots_threshold"] == 1
 
 
 def test_enable_subsampling(simple_df):

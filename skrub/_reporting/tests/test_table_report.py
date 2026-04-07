@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from sklearn.utils import Bunch
 
-from skrub import TableReport, ToDatetime
+from skrub import TableReport, ToDatetime, config_context
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._reporting._sample_table import make_table
@@ -41,8 +41,6 @@ def test_report(air_quality):
         "First 2": sbd.column_names(air_quality)[:2],
     }
     report = TableReport(air_quality, title="the title", column_filters=col_filt)
-    assert report.plots_threshold == 30
-    assert report.associations_threshold == 30
     html = report.html()
     assert "the title" in html
     assert "With nulls" in html
@@ -286,19 +284,21 @@ def test_thresholds_parameter(df_module):
     df4 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df4, plots_threshold=10)._summary
+    with config_context(plots_threshold=10):
+        summary = TableReport(df4)._summary
     assert summary["plots_skipped"]
 
     df5 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    summary = TableReport(df5, plots_threshold=15)._summary
+    with config_context(plots_threshold=15):
+        summary = TableReport(df5)._summary
     assert not summary["plots_skipped"]
 
     df6 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df6, plots_threshold=None)._summary
+    summary = TableReport(df6)._summary
     assert not summary["plots_skipped"]
 
 
@@ -367,15 +367,15 @@ def test_combined_parameters(df_module):
     df15 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(df15, plots_threshold=3, associations_threshold=3)._summary
+    with config_context(plots_threshold=3, associations_threshold=3):
+        summary = TableReport(df15)._summary
     assert summary["associations_skipped"] and summary["plots_skipped"]
 
     df16 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    summary = TableReport(
-        df16, plot_distributions=False, associations_threshold=7
-    )._summary
+    with config_context(associations_threshold=7):
+        summary = TableReport(df16, plot_distributions=False)._summary
     assert not summary["associations_skipped"] and summary["plots_skipped"]
 
 
@@ -418,8 +418,6 @@ def test_error_make_table():
     [
         "plot_distributions",
         "compute_associations",
-        "plots_threshold",
-        "associations_threshold",
     ],
 )
 def test_bad_cols_parameter(pd_module, arg):
@@ -465,7 +463,7 @@ numpy_test_cases = [
 
 @pytest.mark.parametrize("input_array, expected_columns", numpy_test_cases)
 def test_numpy_array_columns(input_array, expected_columns):
-    report = TableReport(input_array, associations_threshold=0)
+    report = TableReport(input_array, compute_associations=False)
 
     assert report._summary["n_columns"] == expected_columns
 

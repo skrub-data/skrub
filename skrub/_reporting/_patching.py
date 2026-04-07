@@ -17,8 +17,6 @@ def _patch(
     verbose,
     plot_distributions,
     compute_associations,
-    plots_threshold,
-    associations_threshold,
 ):
     if (original_method := getattr(cls, method_name, None)) is None:
         return
@@ -34,8 +32,6 @@ def _patch(
                 verbose=verbose,
                 plot_distributions=plot_distributions,
                 compute_associations=compute_associations,
-                plots_threshold=plots_threshold,
-                associations_threshold=associations_threshold,
             ),
             method_name,
         )(),
@@ -76,8 +72,6 @@ def patch_display(
     verbose=1,
     plot_distributions="auto",
     compute_associations="auto",
-    plots_threshold=30,
-    associations_threshold=30,
 ):
     """Replace the default DataFrame HTML displays with ``skrub.TableReport``.
 
@@ -103,19 +97,14 @@ def patch_display(
         - ``True``: always generate plots, regardless of column count.
         - ``False``: never generate plots.
         - ``"auto"`` (default): generate plots only when the number of columns
-          does not exceed ``plots_threshold``.
+          does not exceed the configured ``plots_threshold`` (see :func:`set_config`).
     compute_associations : bool or "auto", default="auto"
         Whether to compute associations in :class:`~skrub.TableReport`.
         - ``True``: always compute associations, regardless of column count.
         - ``False``: never compute associations.
         - ``"auto"`` (default): compute associations only when the number of
-          columns does not exceed ``associations_threshold``.
-    plots_threshold : int, default=30
-        Maximum number of columns for which distribution plots are generated
-        when ``plot_distributions="auto"``.
-    associations_threshold : int, default=30
-        Maximum number of columns for which associations are computed
-        when ``compute_associations="auto"``.
+          columns does not exceed the configured ``associations_threshold``
+          (see :func:`set_config`).
 
     See Also
     --------
@@ -131,8 +120,6 @@ def patch_display(
         verbose=verbose,
         plot_distributions=plot_distributions,
         compute_associations=compute_associations,
-        plots_threshold=plots_threshold,
-        associations_threshold=associations_threshold,
     )
 
 
@@ -142,8 +129,6 @@ def _patch_display(
     verbose=1,
     plot_distributions="auto",
     compute_associations="auto",
-    plots_threshold=30,
-    associations_threshold=30,
 ):
     _change_display(
         _patch,
@@ -151,8 +136,6 @@ def _patch_display(
         verbose=verbose,
         plot_distributions=plot_distributions,
         compute_associations=compute_associations,
-        plots_threshold=plots_threshold,
-        associations_threshold=associations_threshold,
     )
 
 
