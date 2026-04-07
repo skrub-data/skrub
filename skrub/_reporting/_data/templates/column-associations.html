@@ -6,10 +6,10 @@
             <p>Computing pairwise associations was skipped. This is due to either:</p>
             <ul>
                 <li>The dataframe exceeding the configured
-                    <code>associations_threshold</code>
+                    <code>table_report_associations_threshold</code>
                     limit (default: 30).
                 </li>
-                <li>The <code>compute_associations</code> option being set to <code>False</code> (default: <code>"auto"</code>, which applies the configured <code>associations_threshold</code>).</li>
+                <li>The <code>compute_associations</code> option being set to <code>False</code> (default: <code>"auto"</code>, which applies the configured <code>table_report_associations_threshold</code>).</li>
             </ul>
 
             <p>You can adjust this behavior in several ways:</p>
@@ -19,10 +19,10 @@
                 </li>
                 <li>To change the threshold for the current Python session, use <code>skrub.set_config</code>:
                     <pre><code class="language-python">    from skrub import set_config
-    set_config(associations_threshold=50)</code></pre>
+    set_config(table_report_associations_threshold=50)</code></pre>
                 </li>
                 <li>To make the change permanent, use an environment variable:
-                    <pre><code class="language-shell">    export SKB_ASSOCIATIONS_THRESHOLD=50</code></pre>
+                    <pre><code class="language-shell">    export SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD=50</code></pre>
                 </li>
             </ul>
         </div>

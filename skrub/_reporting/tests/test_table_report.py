@@ -284,14 +284,14 @@ def test_thresholds_parameter(df_module):
     df4 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    with config_context(plots_threshold=10):
+    with config_context(table_report_plots_threshold=10):
         summary = TableReport(df4)._summary
     assert summary["plots_skipped"]
 
     df5 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    with config_context(plots_threshold=15):
+    with config_context(table_report_plots_threshold=15):
         summary = TableReport(df5)._summary
     assert not summary["plots_skipped"]
 
@@ -367,14 +367,16 @@ def test_combined_parameters(df_module):
     df15 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    with config_context(plots_threshold=3, associations_threshold=3):
+    with config_context(
+        table_report_plots_threshold=3, table_report_associations_threshold=3
+    ):
         summary = TableReport(df15)._summary
     assert summary["associations_skipped"] and summary["plots_skipped"]
 
     df16 = df_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    with config_context(associations_threshold=7):
+    with config_context(table_report_associations_threshold=7):
         summary = TableReport(df16, plot_distributions=False)._summary
     assert not summary["associations_skipped"] and summary["plots_skipped"]
 

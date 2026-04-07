@@ -88,7 +88,9 @@ def test_max_plot_max_assoc_columns_parameter(pd_module):
     df4 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    with config_context(plots_threshold=10, associations_threshold=10):
+    with config_context(
+        table_report_plots_threshold=10, table_report_associations_threshold=10
+    ):
         patch_display()
         assert "data-test-plots-skipped" in df4._repr_html_()
         assert "data-test-associations-skipped" in df4._repr_html_()
@@ -97,7 +99,9 @@ def test_max_plot_max_assoc_columns_parameter(pd_module):
     df5 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    with config_context(plots_threshold=15, associations_threshold=15):
+    with config_context(
+        table_report_plots_threshold=15, table_report_associations_threshold=15
+    ):
         patch_display()
         assert "data-test-plots-skipped" not in df5._repr_html_()
         assert "data-test-associations-skipped" not in df5._repr_html_()

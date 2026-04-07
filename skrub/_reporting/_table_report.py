@@ -37,10 +37,12 @@ def _validate_plot_and_association(plot_distributions, compute_associations, n_c
         )
 
     if plot_distributions == "auto":
-        plot_distributions = _config.get_config()["plots_threshold"] >= n_columns
+        plot_distributions = (
+            _config.get_config()["table_report_plots_threshold"] >= n_columns
+        )
     if compute_associations == "auto":
         compute_associations = (
-            _config.get_config()["associations_threshold"] >= n_columns
+            _config.get_config()["table_report_associations_threshold"] >= n_columns
         )
 
     return plot_distributions, compute_associations
@@ -132,7 +134,7 @@ class TableReport:
         - ``True``: always generate plots, regardless of column count.
         - ``False``: never generate plots.
         - ``"auto"`` (default): generate plots only when the number of columns
-          does not exceed the configured ``plots_threshold``
+          does not exceed the configured ``table_report_plots_threshold``
           (see :func:`set_config`).
 
     compute_associations : bool or "auto", default="auto"
@@ -141,7 +143,7 @@ class TableReport:
         - ``True``: always compute associations, regardless of column count.
         - ``False``: never compute associations.
         - ``"auto"`` (default): compute associations only when the number of
-          columns does not exceed the configured ``associations_threshold``
+          columns does not exceed the configured ``table_report_associations_threshold``
           (see :func:`set_config`).
 
     open_tab : str, default="table"

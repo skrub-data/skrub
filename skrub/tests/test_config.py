@@ -36,8 +36,8 @@ def test_default_config():
     # On CI the absolute path is different, check that it ends with skrub_data
     assert pathlib.Path(cfg["data_dir"]).name == "skrub_data"
     assert cfg["table_report_verbosity"] == 1
-    assert cfg["plots_threshold"] == 30
-    assert cfg["associations_threshold"] == 30
+    assert cfg["table_report_plots_threshold"] == 30
+    assert cfg["table_report_associations_threshold"] == 30
     assert cfg["subsampling_seed"] == 0
     assert cfg["enable_subsampling"] == "default"
     assert cfg["float_precision"] == 3
@@ -51,8 +51,8 @@ def test_default_config():
         "use_table_report_data_ops",
         "data_dir",
         "table_report_verbosity",
-        "plots_threshold",
-        "associations_threshold",
+        "table_report_plots_threshold",
+        "table_report_associations_threshold",
         "subsampling_seed",
         "enable_subsampling",
         "float_precision",
@@ -89,9 +89,9 @@ def test_use_table_report_data_ops(simple_df):
 
 @skip_polars_installed_without_pyarrow
 def test_max_plot_columns():
-    with config_context(plots_threshold=1):
-        assert get_config()["associations_threshold"] == 30
-        assert get_config()["plots_threshold"] == 1
+    with config_context(table_report_plots_threshold=1):
+        assert get_config()["table_report_associations_threshold"] == 30
+        assert get_config()["table_report_plots_threshold"] == 1
 
 
 def test_enable_subsampling(simple_df):
@@ -140,8 +140,8 @@ def test_float_precision(simple_series):
     "params",
     [
         {"use_table_report_data_ops": 1},
-        {"plots_threshold": "hello"},
-        {"associations_threshold": "hello"},
+        {"table_report_plots_threshold": "hello"},
+        {"table_report_associations_threshold": "hello"},
         {"subsampling_seed": -1},
         {"enable_subsampling": "no"},
         {"float_precision": -1},
