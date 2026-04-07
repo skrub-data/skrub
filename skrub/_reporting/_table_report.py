@@ -18,7 +18,7 @@ from ._summarize import summarize_dataframe
 from ._utils import JSONEncoder
 
 
-def _validate_plot_and_association(plot_distributions, compute_associations):
+def _validate_plot_and_association(plot_distributions, compute_associations, n_columns):
     if plot_distributions is None:
         plot_distributions = "auto"
     if compute_associations is None:
@@ -34,6 +34,13 @@ def _validate_plot_and_association(plot_distributions, compute_associations):
         raise ValueError(
             "'compute_associations' must be True, False, or 'auto', got"
             f" {compute_associations!r}."
+        )
+
+    if plot_distributions == "auto":
+        plot_distributions = _config.get_config()["plots_threshold"] >= n_columns
+    if compute_associations == "auto":
+        compute_associations = (
+            _config.get_config()["associations_threshold"] >= n_columns
         )
 
     return plot_distributions, compute_associations
@@ -258,18 +265,18 @@ class TableReport:
         self.title = title
         self.column_filters = _check_column_filters(column_filters, dataframe)
         self.verbose = verbose
+        self.dataframe = (
+            sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
+        )
+        self.n_columns = sbd.shape(self.dataframe)[1]
         (
             self.plot_distributions,
             self.compute_associations,
         ) = _validate_plot_and_association(
             plot_distributions,
             compute_associations,
+            self.n_columns,
         )
-
-        self.dataframe = (
-            sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
-        )
-        self.n_columns = sbd.shape(self.dataframe)[1]
 
     def _set_minimal_mode(self):
         """Put the report in minimal mode.
@@ -303,26 +310,10 @@ class TableReport:
 
     @functools.cached_property
     def _summary(self):
-        if self.plot_distributions is True:
-            with_plots = True
-        elif self.plot_distributions is False:
-            with_plots = False
-        else:
-            with_plots = _config.get_config()["plots_threshold"] >= self.n_columns
-
-        if self.compute_associations is True:
-            with_associations = True
-        elif self.compute_associations is False:
-            with_associations = False
-        else:
-            with_associations = (
-                _config.get_config()["associations_threshold"] >= self.n_columns
-            )
-
         return summarize_dataframe(
             self.dataframe,
-            with_plots=with_plots,
-            with_associations=with_associations,
+            with_plots=self.plot_distributions,
+            with_associations=self.compute_associations,
             title=self.title,
             **self._summary_kwargs,
         )
