@@ -17,8 +17,8 @@ from ._to_str import ToStr
 
 
 class StringEncoder(TransformerMixin, SingleColumnTransformer):
-    """Generate a lightweight string encoding of a given column using tf-idf \
-        vectorization and truncated singular value decomposition (SVD).
+    """Encode string features by using tf-idf vectorization and truncated singular \
+    value decomposition (SVD).
 
     First, apply a tf-idf vectorization of the text, then reduce the dimensionality
     with a truncated SVD with the given number of parameters.

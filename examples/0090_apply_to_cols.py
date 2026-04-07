@@ -9,8 +9,6 @@ In this new example, we show how to create more flexible pipelines by selecting
 and transforming dataframe columns using arbitrary logic.
 
 .. |ApplyToCols| replace:: :class:`~skrub.ApplyToCols`
-.. |ApplyToEachCol| replace:: :class:`~skrub.ApplyToEachCol`
-.. |ApplyToSubFrame| replace:: :class:`~skrub.ApplyToSubFrame`
 .. |StringEncoder| replace:: :class:`~skrub.StringEncoder`
 .. |SelectCols| replace:: :class:`~skrub.SelectCols`
 .. |DropCols| replace:: :class:`~skrub.DropCols`
@@ -24,13 +22,13 @@ and transforming dataframe columns using arbitrary logic.
 
 # %%
 # We begin with loading a dataset with heterogeneous datatypes, and replacing Pandas's
-# display with the TableReport display via :func:`skrub.set_config`.
+# display with the TableReport display via :func:`skrub.patch_display`.
 import pandas as pd
 
 import skrub
 from skrub.datasets import fetch_employee_salaries
 
-skrub.set_config(use_table_report=True)
+skrub.patch_display()
 file_path = fetch_employee_salaries().path
 data = pd.read_csv(file_path)
 X = data.drop(columns="current_annual_salary")
@@ -106,7 +104,7 @@ model = make_pipeline(
 # .. admonition:: Under the hood of |ApplyToCols|
 #   :collapsible: closed
 #
-#   |ApplyToCols| is implemented using the |ApplyToEachCol| and |ApplyToSubFrame|
+#   |ApplyToCols| is implemented using the ``ApplyToEachCol`` and ``ApplyToSubFrame``
 #   classes.
 #   The former applies a transformer to each column independently, while the latter
 #   applies a transformer to a sub-dataframe.

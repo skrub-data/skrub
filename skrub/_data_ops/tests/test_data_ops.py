@@ -14,8 +14,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import check_random_state
 
 import skrub
-from skrub import ApplyToEachCol
 from skrub import selectors as s
+from skrub._apply_to_each_col import ApplyToEachCol
 from skrub._data_ops import _data_ops
 from skrub._utils import PassThrough
 
@@ -907,3 +907,8 @@ def test_copy_attrs():
         .skb.set_name("transform")
     )
     assert isinstance(out.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+
+
+def test_mark_as_X_missing_cv():
+    with pytest.raises(TypeError, match=".*you must also provide a splitter"):
+        skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})
