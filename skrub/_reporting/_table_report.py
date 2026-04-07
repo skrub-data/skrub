@@ -266,7 +266,6 @@ class TableReport:
         self._to_html_kwargs = {}
         self.title = title
         self.column_filters = _check_column_filters(column_filters, dataframe)
-        self.verbose = verbose
         self.dataframe = (
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
