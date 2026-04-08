@@ -202,10 +202,10 @@ weights, group information etc.
 
 We can control how scoring is performed by using
 :meth:`DataOp.skb.with_scoring`. It has a ``scoring`` parameter, which can be
-anything :func:`sklearn.model_selection.cross_validate` accepts for ``scoring``
-such as a metric name, callable scorer, or dict mapping metric names to scorers
-(see the reference documentation of :meth:`DataOp.skb.with_scoring` for
-details).
+anything scikit-learn's :func:`~sklearn.model_selection.cross_validate` accepts
+for ``scoring`` such as a metric name, callable scorer, or dict mapping metric
+names to scorers (see the reference documentation of
+:meth:`DataOp.skb.with_scoring` for details).
 
 It also accepts a ``kwargs`` argument, which are passed to the scorer when
 evaluating the learner.
@@ -253,14 +253,14 @@ SkrubLearner(data_op=<Scoring <Apply DummyClassifier> (1 scorers)>
 >>> learner.score(split['test']) # doctest: +SKIP
 -0.6365141682948128
 
-(The score above is the negative log loss, not the default accuracy which would
-be positive.)
+Note that the score above is negative: it is the negative log loss we passed to
+``with_scoring``, and not the default score (accuracy, which would be positive).
 
-Note that :meth:`DataOp.skb.with_scoring` only changes how scoring is performed
+:meth:`DataOp.skb.with_scoring` only changes how scoring is performed
 (the outputs of :meth:`DataOp.skb.cross_validate`,
-:meth:`DataOp.skb.make_randomized_search`, :meth:`SkrubLearner.score` etc.),
+:meth:`DataOp.skb.make_randomized_search`, :class:`SkrubLearner.score <SkrubLearner>` etc.),
 **not** the actual outputs of the learner (it does _not_ affect the outputs of
-:meth:`DataOp.skb.eval`, :meth:`SkrubLearner.predict`, etc.)
+:meth:`DataOp.skb.eval`, :class:`SkrubLearner.predict <SkrubLearner>`, etc.)
 
 This method can be called several times to add scorers that take different
 kwargs. See the reference documentation for details.

@@ -185,11 +185,11 @@ def test_cross_validate_with_scoring():
     X_a, y_a = make_classification(random_state=0)
     X = skrub.X(X_a)
 
-    def get_sw(X):
+    def get_sample_weight(X):
         return np.abs(X[:, 0])
 
-    sw_a = get_sw(X_a)
-    sw = X.skb.apply_func(get_sw)
+    sw_a = get_sample_weight(X_a)
+    sw = X.skb.apply_func(get_sample_weight)
 
     # Single metric without kwargs
 

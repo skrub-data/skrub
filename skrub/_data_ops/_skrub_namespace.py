@@ -2846,10 +2846,10 @@ class SkrubNamespace:
         to compute any additional arguments needed for scoring (such as sample
         weights) as part of the DataOp evaluation.
 
-        This method can be called several times to add multiple scorers that
+        Calls to this method can be chained to add multiple scorers that
         use different kwargs. Several scoring strategies can be passed to a
         single calls if they do not need different kwargs (see the description
-        of the `scoring` parameter).
+        of the ``scoring`` parameter).
 
         Parameters
         ----------
@@ -2858,13 +2858,13 @@ class SkrubNamespace:
             exactly the same inputs as
             :func:`sklearn.model_selection.cross_validate`:
 
-            If `scoring` represents a single score, one can use:
+            If ``scoring`` represents a single score, one can use:
 
             - a single string;
             - a callable that returns a single value.
-            - `None`, the `estimator`'s default evaluation criterion is used.
+            - ``None``, the ``esti`mator`'s default evaluation criterion is used.
 
-            If `scoring` represents multiple scores, one can use:
+            If ``scoring`` represents multiple scores, one can use:
 
             - a list or tuple of unique strings;
             - a callable returning a dictionary where the keys are the metric
@@ -2875,21 +2875,21 @@ class SkrubNamespace:
             `documentation <https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-api-overview>`_
             on scoring for details.
 
-            `scoring` can be a DataOp, so it is possible to pass something like
+            ``scoring`` can be a DataOp, so it is possible to pass something like
             ``skrub.deferred(sklearn.metrics.make_scorer)(...)``, although it
-            is usually simpler to pass an actual value for `scoring` and rely
-            on `kwargs` for any inputs that need to be computed dynamically.
+            is usually simpler to pass an actual value for ``scoring`` and rely
+            on ``kwargs`` for any inputs that need to be computed dynamically.
 
         kwargs : dict or None, optional, default=None
             Additional named arguments to be passed to the scorer. A typical
             example is ``sample_weight``, used by many scikit-learn metrics.
-            Note that `kwargs` can be a DataOp that will be evaluated
+            Note that ``kwargs`` can be a DataOp that will be evaluated
             when scoring the learner, so scorer inputs such as sample weights
             can be dynamic. None is the same as an empty dict
 
         name : str or None, optional, default=None
-            A name used when displaying scoring results. If `scoring`
-            represents multiple metrics, `name` will be prepended to each of
+            A name used when displaying scoring results. If ``scoring``
+            represents multiple metrics, ``name`` will be prepended to each of
             the metrics' name.
 
         Returns
@@ -2903,9 +2903,9 @@ class SkrubNamespace:
         -----
         If this method is used several times, all calls to it must be grouped
         -- there can be no other nodes in-between. For example
-        `pred.skb.score_with('accuracy').skb.score_with('roc_auc')` is allowed
-        but not
-        `pred.skb.score_with('accuracy').skb.apply_func(a_function).skb.score_with('roc_auc')`.
+        ``pred.skb.score_with('accuracy').skb.score_with('roc_auc')`` is allowed,
+        whereas
+        ``pred.skb.score_with('accuracy').skb.apply_func(a_function).skb.score_with('roc_auc')`` is not.
         Typically all the ``score_with`` calls happen at the very end of the
         DataOp construction.
 
@@ -2949,7 +2949,7 @@ class SkrubNamespace:
         0  0.002738    0.005733       0.666667                0.888889
         1  0.002845    0.005705       0.666667                0.647059
 
-        When we have several scorers but they use the same kwargs we can pass a list
+        When we have several scorers that use the same kwargs, we can pass a list
         or dict of metrics, as for :func:`sklearn.model_selection.cross_validate`:
 
         >>> sample_weight = X["price"]
