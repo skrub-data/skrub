@@ -7,13 +7,42 @@ from . import _dataframe as sbd
 
 
 class DropSimilar(TransformerMixin):
-    """ """
+    """Drop columns found too redundant to the rest of the dataframe,
+    according to association defined by Cramér's V.
 
-    def __init__(self, threshold=0.8, verbose=1):
+    This is done by computing Cramér's V between every possible two columns,
+    and sorting these couples in descending order. Then, for every association above
+    a preestablished threshold:
+    - If one of the two columns has already been dropped, nothing happens
+    - Otherwise, the column that has the highest average association score with
+    every other column is dropped.
+
+    Parameters
+    ----------
+    threshold : float, default=0.8
+        If True, drop the column if it contains only one unique value. Missing values
+        count as one additional distinct value.
+
+    Attributes
+    ----------
+    to_drop : list
+        The names of columns evaluated for removal
+
+    See Also
+    --------
+    DropUninformative :
+        Drops columns for which various other criteria indicate that they contain
+        little to no information (amount of nulls, of distinct values...)
+
+    Cleaner :
+        Runs several checks to sanitize a dataframe, including converting columns
+        to standard formats or dropping certain columns.
+    """
+
+    def __init__(self, threshold=0.8):
         self.threshold = threshold
         self.to_drop = []
-        self.dropper = DropCols([])
-        self.verbose = verbose
+        self._dropper = DropCols([])
 
     def list_similar(self, associations, col_names):
         averages = []
@@ -39,6 +68,10 @@ class DropSimilar(TransformerMixin):
         return [col_names[x] for x in remove]
 
     def associations_as_report(self, X):
+        """Generate column associations between columns of dataframe X
+        using Cramér's V.
+
+        """
         _SUBSAMPLE_SIZE = 3000
 
         df = sbd.sample(
@@ -62,15 +95,15 @@ class DropSimilar(TransformerMixin):
                 association_df["right_column_name"][i],
             )
 
-            try:
+            if col1 in col_names:
                 i1 = col_names.index(col1)
-            except:
+            else:
                 col_names.append(col1)
                 i1 = len(col_names) - 1
 
-            try:
+            if col2 in col_names:
                 i2 = col_names.index(col2)
-            except:
+            else:
                 col_names.append(col2)
                 i2 = len(col_names) - 1
 
@@ -79,8 +112,8 @@ class DropSimilar(TransformerMixin):
             associations[i1, i2] = cramer
 
         self.to_drop = self.list_similar(associations, col_names)
-        self.dropper = DropCols(self.to_drop)
-        return self.dropper.fit_transform(X, y)
+        self._dropper = DropCols(self.to_drop)
+        return self._dropper.fit_transform(X, y)
 
     def transform(self, X):
-        return self.dropper.transform(X)
+        return self._dropper.transform(X)
