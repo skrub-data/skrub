@@ -2862,7 +2862,7 @@ class SkrubNamespace:
 
             - a single string;
             - a callable that returns a single value.
-            - ``None``, the ``esti`mator`'s default evaluation criterion is used.
+            - ``None``, the estimator's default evaluation criterion is used.
 
             If ``scoring`` represents multiple scores, one can use:
 
