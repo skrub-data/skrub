@@ -16,6 +16,10 @@ New Features
   etc. For example, sample weights. This is achieved by passing the scorers and
   their arguments to :meth:`DataOp.skb.with_scoring`. :pr:`1995` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The diagrams displayed in notebooks for :class:`SkrubLearner`,
+  :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
+  display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Changes
 -------
