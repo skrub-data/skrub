@@ -356,12 +356,21 @@ def test_estimator_repr_html():
     else:
         assert svg in learner._repr_html_()
 
-    search_repr = data_op.skb.make_randomized_search()._repr_html_()
+    rand_search_repr = data_op.skb.make_randomized_search()._repr_html_()
     if old_sklearn:
-        assert data_op_repr in search_repr
+        assert data_op_repr in rand_search_repr
     else:
-        assert svg in search_repr
-        assert "n_iter" in search_repr
+        assert svg in rand_search_repr
+        assert "n_iter" in rand_search_repr
+        assert "randomized search" in rand_search_repr
+
+    grid_search_repr = data_op.skb.make_grid_search()._repr_html_()
+    if old_sklearn:
+        assert data_op_repr in grid_search_repr
+    else:
+        assert svg in grid_search_repr
+        assert "n_jobs" in grid_search_repr
+        assert "grid search" in grid_search_repr
 
     pytest.importorskip("optuna")
     optuna_search_repr = data_op.skb.make_randomized_search(
