@@ -322,3 +322,33 @@ def test_format():
     assert f"{skrub.X()}" == "<Var 'X'>"
     with pytest.raises(ValueError, match="Invalid format specifier"):
         f"{skrub.X(0.2):.2f}"
+
+
+def test_estimator_repr_html():
+    # diagrams generated for scikit-learn estimators should contain the graph
+    # drawing.
+
+    data_op = (
+        skrub.X()
+        .skb.apply(skrub.SquashingScaler())
+        .skb.apply(DummyClassifier(), y=skrub.y())
+    )
+    svg = data_op._repr_html_()
+
+    learner = data_op.skb.make_learner()
+    assert svg in learner._repr_html_()
+
+    X, y = make_classification()
+    learner.fit({"X": X, "y": y})
+    assert svg in learner._repr_html_()
+
+    search_repr = data_op.skb.make_randomized_search()._repr_html_()
+    assert svg in search_repr
+    assert "n_iter" in search_repr
+
+    pytest.importorskip("optuna")
+    optuna_search_repr = data_op.skb.make_randomized_search(
+        backend="optuna"
+    )._repr_html_()
+    assert svg in optuna_search_repr
+    assert "n_iter" in optuna_search_repr

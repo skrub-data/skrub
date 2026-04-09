@@ -730,13 +730,20 @@ class DataOp:
         try:
             graph = self.skb.draw_graph().svg.decode("utf-8")
             graph = strip_xml_declaration(graph)
+            has_graph = True
         except Exception:
             graph = (
                 "Please install Pydot and GraphViz to display the computation graph."
             )
+            has_graph = False
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
-            return f"<div>{graph}</div>"
+            if has_graph:
+                return f"<div>{graph}</div>"
+            return (
+                f"<div><div><strong><samp>{html.escape(short_repr(self))}</samp></strong>"
+                f"</div><div>{graph}</div></div>"
+            )
         if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
                 "<strong><samp>Name:"
