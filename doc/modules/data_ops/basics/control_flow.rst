@@ -5,8 +5,8 @@
 Running complex operations on DataOps variables: deferred evaluation
 ====================================================================
 
-Why DataOps cannot handle complex operations
---------------------------------------------
+Why some operations cannot be passed straight to DataOps objects
+----------------------------------------------------------------
 
 DataOps represent computations that have not been executed yet, and will
 only be triggered when we call :meth:`.skb.eval() <DataOp.skb.eval>`, or when we
@@ -78,9 +78,11 @@ so it is possible to use standard Python control flow statements such as
 ``if``, ``for``, and it is possible to treat the inputs as if they were
 regular objects (e.g., a Pandas DataFrame or Series).
 
-Since DataOps are evaluated lazily (we are building a pipeline, not immediately
-computing a single result), any transformation that we apply *must not modify its
-input in-place*, but leave it unchanged and return a new value.
+
+.. warning::
+  Since DataOps are evaluated lazily (we are building a pipeline, not immediately
+  computing a single result), any transformation that we apply *must not modify its
+  input in-place*, but leave it unchanged and return a new value.
 
 Alternate notations
 -------------------
