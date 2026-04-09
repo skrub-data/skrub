@@ -21,6 +21,9 @@ New Features
 
 Changes
 -------
+- The row indices of training and testing samples are now also included in the
+  dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
@@ -96,6 +99,10 @@ Changes
 - The overplotting of the counts atop the vertical histogram bars in the
   :class:`TableReport` has been removed due to formatting issues.
   :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
+- The maximum number of associations that can be displayed in the
+  :class:`TableReport` has been increased to N=1000, and the associations
+  are now displayed in a scrollable table.
+  :pr:`1992` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
 --------
@@ -361,7 +368,7 @@ Highlights
 New features
 ------------
 
-- The Skrub DataOps are new mechanism for building machine-learning
+- The skrub DataOps are new mechanism for building machine-learning
   pipelines that handle multiple tables and easily describing their
   hyperparameter spaces. Main PR: :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`.
   Additional work from other contributors can be found
