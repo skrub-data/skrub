@@ -1,9 +1,12 @@
+import html
 import inspect
 
 import numpy as np
 import pytest
+import sklearn
 from sklearn.datasets import make_classification
 from sklearn.dummy import DummyClassifier
+from sklearn.utils.fixes import parse_version
 
 import skrub
 
@@ -328,27 +331,44 @@ def test_estimator_repr_html():
     # diagrams generated for scikit-learn estimators should contain the graph
     # drawing.
 
+    old_sklearn = parse_version(sklearn.__version__) < parse_version("1.7")
+
     data_op = (
         skrub.X()
         .skb.apply(skrub.SquashingScaler())
         .skb.apply(DummyClassifier(), y=skrub.y())
     )
     svg = data_op._repr_html_()
+    data_op_repr = html.escape(repr(data_op))
 
     learner = data_op.skb.make_learner()
-    assert svg in learner._repr_html_()
+    learner_repr = learner._repr_html_()
+    if old_sklearn:
+        assert data_op_repr in learner_repr
+    else:
+        assert svg in learner_repr
 
     X, y = make_classification()
     learner.fit({"X": X, "y": y})
-    assert svg in learner._repr_html_()
+    learner_repr = learner._repr_html_()
+    if old_sklearn:
+        assert data_op_repr in learner_repr
+    else:
+        assert svg in learner._repr_html_()
 
     search_repr = data_op.skb.make_randomized_search()._repr_html_()
-    assert svg in search_repr
-    assert "n_iter" in search_repr
+    if old_sklearn:
+        assert data_op_repr in search_repr
+    else:
+        assert svg in search_repr
+        assert "n_iter" in search_repr
 
     pytest.importorskip("optuna")
     optuna_search_repr = data_op.skb.make_randomized_search(
         backend="optuna"
     )._repr_html_()
-    assert svg in optuna_search_repr
-    assert "n_iter" in optuna_search_repr
+    if old_sklearn:
+        assert data_op_repr in optuna_search_repr
+    else:
+        assert svg in optuna_search_repr
+        assert "n_iter" in optuna_search_repr

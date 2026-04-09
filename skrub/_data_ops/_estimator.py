@@ -1206,7 +1206,7 @@ class ParamSearch(_BaseParamSearch):
             name += " (grid search)"
         else:
             name += " (randomized search)"
-        return _VisualBlock("single", self, names=name, name_details="")
+        return _VisualBlock("single", self, names=name, name_details=repr(self))
 
     def _get_params_html(self, deep=True, doc_link=""):
         # Function called by scikit-learn to display the estimator params in
