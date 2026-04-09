@@ -1,9 +1,26 @@
+import polars as pl
 from sklearn.base import TransformerMixin
+from sklearn.utils.validation import check_is_fitted
 
-from . import DropCols, _column_associations, _config
-from . import _dataframe as sbd
+from skrub._dataframe._common import raise_dispatch_unregistered_type
 
-_SUBSAMPLE_SIZE = 3000
+from . import DropCols, _column_associations
+from ._dispatch import dispatch
+
+
+@dispatch
+def _filter_associations(obj):
+    raise_dispatch_unregistered_type(obj, kind="Series")
+
+
+@_filter_associations.specialize("pandas")
+def _filter_associations_pandas(obj, threshold):
+    return obj[obj["cramer_v"] > threshold]
+
+
+@_filter_associations.specialize("polars")
+def _filter_associations_polars(obj, threshold):
+    return obj.filter(pl.col("cramer_v") > threshold)
 
 
 class DropSimilar(TransformerMixin):
@@ -41,42 +58,24 @@ class DropSimilar(TransformerMixin):
 
     def __init__(self, threshold=0.8):
         self.threshold = threshold
-        self.to_drop = []
-        self._dropper = DropCols([])
-
-    def associations_as_report(self, X):
-        df = sbd.sample(
-            X,
-            n=min(sbd.shape(X)[0], _SUBSAMPLE_SIZE),
-            seed=_config.get_config()["subsampling_seed"],
-        )
-
-        return _column_associations.column_associations(df)
 
     def fit_transform(self, X, y=None):
+        # check that the threshold is correct
+        if not (0 <= self.threshold <= 1):
+            raise ValueError("Threshold must be between 0 and 1")
+
+        self.to_drop_ = []
+
         association_df = _column_associations.column_associations(X)
 
-        averages = {
-            col: association_df[association_df["left_column_name"] == col]
-            for col in X.columns()
-        }
-        max_associations = association_df[association_df["cramer_v"] > self.threshold]
+        pairs_to_drop = _filter_associations(association_df, self.threshold)
 
-        self.to_drop = []
+        self.to_drop_.extend(pairs_to_drop["right_column_name"].unique())
 
-        for i in range(len(max_associations)):
-            left, right = (
-                max_associations["left_column_name"][i],
-                max_associations["right_column_name"][i],
-            )
-            if left not in self.to_drop and right not in self.to_drop:
-                if averages[left] > averages[right]:
-                    self.to_drop.append(left)
-                else:
-                    self.to_drop.append(right)
+        self._dropper = DropCols(self.to_drop_)
 
-        self._dropper = DropCols(self.to_drop)
         return self._dropper.fit_transform(X, y)
 
     def transform(self, X):
+        check_is_fitted()
         return self._dropper.transform(X)
