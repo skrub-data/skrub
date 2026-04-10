@@ -11,10 +11,15 @@ Ongoing Development
 
 New Features
 ------------
+- It is now possible to pass additional (dynamically computed) arguments to the
+  scorers used by :class:`DataOp` objects for validation, hyperparameter search
+  etc. For example, sample weights. This is achieved by passing the scorers and
+  their arguments to :meth:`DataOp.skb.with_scoring`. :pr:`1995` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`DropSimilar` transformer has been added, for removing columns in a
   dataframe that present high correlation with other columns. :pr:`2023` by
   :user:`Eloi Massoulié <emassoulie>`.
-
+ 
 Changes
 -------
 - The row indices of training and testing samples are now also included in the
@@ -23,6 +28,10 @@ Changes
 
 Bugfixes
 --------
+
+
+Deprecations
+------------
 
 
 Release 0.8.0
