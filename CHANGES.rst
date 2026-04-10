@@ -18,6 +18,11 @@ New Features
   value. A new dataset has also been added and can be accessed by using the fetcher
   :class:`~skrub.datasets.fetch_wowah`.
   :pr:`1930` by  :user:`Riccardo Cappuzzo <rcap107>`.
+- It is now possible to pass additional (dynamically computed) arguments to the
+  scorers used by :class:`DataOp` objects for validation, hyperparameter search
+  etc. For example, sample weights. This is achieved by passing the scorers and
+  their arguments to :meth:`DataOp.skb.with_scoring`. :pr:`1995` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
@@ -27,6 +32,10 @@ Changes
 
 Bugfixes
 --------
+
+
+Deprecations
+------------
 
 
 Release 0.8.0
