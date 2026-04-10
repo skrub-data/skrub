@@ -319,7 +319,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     >>> from skrub import ApplyToCols
     >>> import skrub.selectors as s
-    >>> ApplyToCols(Cleaner(), s.exclude('B')).fit_transform(df)
+    >>> ApplyToCols(Cleaner(), s.all() - 'B').fit_transform(df)
                 B      A     C    D
     0  02/02/2024    one   1.5  1.5
     1  23/02/2024    two   NaN  2.0
