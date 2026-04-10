@@ -313,6 +313,19 @@ class Cleaner(TransformerMixin, BaseEstimator):
     D           float64
     dtype: object
 
+    Columns can be excluded from processing by combining the ``Cleaner`` with
+    `:class:`~skrub.ApplyToCols`. For example, to exclude the datetime column from
+    processing and keep it as a string, we can do:
+
+    >>> from skrub import ApplyToCols
+    >>> import skrub.selectors as s
+    >>> ApplyToCols(Cleaner(), s.exclude('B')).fit_transform(df)
+                B      A     C    D
+    0  02/02/2024    one   1.5  1.5
+    1  23/02/2024    two   NaN  2.0
+    2  12/03/2024    two  12.2  2.5
+    3  13/03/2024  three   NaN  3.0
+
     We can inspect all the processing steps that were applied to a given column:
 
     >>> cleaner.all_processing_steps_['A']
