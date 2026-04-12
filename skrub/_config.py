@@ -56,9 +56,13 @@ def _parse_env_bool(env_variable_name, default):
 
 _global_config = {
     "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
+    "table_report_plots_threshold": int(
+        os.environ.get("SKB_TABLE_REPORT_PLOTS_THRESHOLD", 30)
+    ),
+    "table_report_associations_threshold": int(
+        os.environ.get("SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD", 30)
+    ),
     "table_report_verbosity": int(os.environ.get("SKB_TABLE_REPORT_VERBOSITY", 1)),
-    "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
-    "max_association_columns": int(os.environ.get("SKB_MAX_ASSOCIATION_COLUMNS", 30)),
     "subsampling_seed": int(os.environ.get("SKB_SUBSAMPLING_SEED", 0)),
     "enable_subsampling": os.environ.get("SKB_ENABLE_SUBSAMPLING", "default"),
     "float_precision": int(os.environ.get("SKB_FLOAT_PRECISION", 3)),
@@ -105,9 +109,9 @@ def get_config():
 
 def set_config(
     use_table_report_data_ops=None,
+    table_report_plots_threshold=None,
+    table_report_associations_threshold=None,
     table_report_verbosity=None,
-    max_plot_columns=None,
-    max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
@@ -131,24 +135,28 @@ def set_config(
         This configuration can also be set with the ``SKB_USE_TABLE_REPORT_DATA_OPS``
         environment variable.
 
+    table_report_plots_threshold : int, default=None
+        Maximum number of columns for which distribution plots are generated
+        in :class:`~skrub.TableReport` when ``plot_distributions="auto"``
+        (the default). Dataframes with more columns will skip plots.
+        Default is 30.
+
+        This configuration can also be set with the ``SKB_TABLE_REPORT_PLOTS_THRESHOLD``
+        environment variable.
+
+    table_report_associations_threshold : int, default=None
+        Maximum number of columns for which associations are computed
+        in :class:`~skrub.TableReport` when ``compute_associations="auto"``
+        (the default). Dataframes with more columns will skip associations.
+        Default is 30.
+
+        This configuration can also be set with the
+        ``SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD`` environment variable.
+
     table_report_verbosity : int, default=None
         Set the level of verbosity of the :class:`~skrub.TableReport`.
         Default is 1 (print the progress bar). Refer to the ``TableReport``
         documentation for more details.
-
-    max_plot_columns : int, default=None
-        Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30. If "all", all columns will be plotted.
-
-        This configuration can also be set with the ``SKB_MAX_PLOT_COLUMNS``
-        environment variable.
-
-    max_association_columns : int, default=None
-        Set the ``max_association_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30. If "all", all columns will be plotted.
-
-        This configuration can also be set with the ``SKB_MAX_ASSOCIATION_COLUMNS``
-        environment variable.
 
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub DataOps
@@ -235,6 +243,30 @@ def set_config(
             )
         local_config["use_table_report_data_ops"] = use_table_report_data_ops
 
+    if table_report_plots_threshold is not None:
+        if (
+            not isinstance(table_report_plots_threshold, numbers.Integral)
+            or table_report_plots_threshold < 0
+        ):
+            raise ValueError(
+                "'table_report_plots_threshold' must be a non-negative integer, got"
+                f" {table_report_plots_threshold!r}"
+            )
+        local_config["table_report_plots_threshold"] = table_report_plots_threshold
+
+    if table_report_associations_threshold is not None:
+        if (
+            not isinstance(table_report_associations_threshold, numbers.Integral)
+            or table_report_associations_threshold < 0
+        ):
+            raise ValueError(
+                "'table_report_associations_threshold' must be a non-negative integer,"
+                f" got {table_report_associations_threshold!r}"
+            )
+        local_config["table_report_associations_threshold"] = (
+            table_report_associations_threshold
+        )
+
     if table_report_verbosity is not None:
         if (
             not isinstance(table_report_verbosity, numbers.Integral)
@@ -245,25 +277,6 @@ def set_config(
                 f" {table_report_verbosity!r}"
             )
         local_config["table_report_verbosity"] = table_report_verbosity
-
-    if max_plot_columns is not None:
-        if not isinstance(max_plot_columns, numbers.Real) and max_plot_columns != "all":
-            raise ValueError(
-                "'max_plot_columns' must be a number or 'all', got "
-                f"{type(max_plot_columns)!r}"
-            )
-        local_config["max_plot_columns"] = max_plot_columns
-
-    if max_association_columns is not None:
-        if (
-            not isinstance(max_association_columns, numbers.Real)
-            and max_plot_columns != "all"
-        ):
-            raise ValueError(
-                "'max_association_columns' must be a number or 'all', got "
-                f"{type(max_association_columns)!r}"
-            )
-        local_config["max_association_columns"] = max_association_columns
 
     if subsampling_seed is not None:
         np.random.RandomState(subsampling_seed)  # check seed
@@ -306,9 +319,9 @@ def set_config(
 def config_context(
     *,
     use_table_report_data_ops=None,
+    table_report_plots_threshold=None,
+    table_report_associations_threshold=None,
     table_report_verbosity=None,
-    max_plot_columns=None,
-    max_association_columns=None,
     subsampling_seed=None,
     enable_subsampling=None,
     float_precision=None,
@@ -336,19 +349,19 @@ def config_context(
         Default is 0 (no verbosity). Refer to the ``TableReport`` documentation for
         more details.
 
-    max_plot_columns : int, default=None
-        Set the ``max_plot_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30. If "all", all columns will be plotted.
+    table_report_plots_threshold : int, default=None
+        Maximum number of columns for which distribution plots are generated
+        when ``plot_distributions="auto"`` (the default). Default is 30.
 
-        This configuration can also be set with the ``SKB_MAX_PLOT_COLUMNS``
+        This configuration can also be set with the ``SKB_TABLE_REPORT_PLOTS_THRESHOLD``
         environment variable.
 
-    max_association_columns : int, default=None
-        Set the ``max_association_columns`` argument of :class:`~skrub.TableReport`.
-        Default is 30. If "all", all columns will be plotted.
+    table_report_associations_threshold : int, default=None
+        Maximum number of columns for which associations are computed
+        when ``compute_associations="auto"`` (the default). Default is 30.
 
-        This configuration can also be set with the ``SKB_MAX_ASSOCIATION_COLUMNS``
-        environment variable.
+        This configuration can also be set with the
+        ``SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD``environment variable.
 
     subsampling_seed : int, default=None
         Set the random seed of subsampling in skrub DataOps
@@ -427,15 +440,15 @@ def config_context(
     Examples
     --------
     >>> import skrub
-    >>> with skrub.config_context(max_plot_columns=1):
+    >>> with skrub.config_context(table_report_plots_threshold=1):
     ...     ...  # doctest: +SKIP
     """
     original_config = get_config()
     set_config(
         use_table_report_data_ops=use_table_report_data_ops,
+        table_report_plots_threshold=table_report_plots_threshold,
+        table_report_associations_threshold=table_report_associations_threshold,
         table_report_verbosity=table_report_verbosity,
-        max_plot_columns=max_plot_columns,
-        max_association_columns=max_association_columns,
         subsampling_seed=subsampling_seed,
         enable_subsampling=enable_subsampling,
         float_precision=float_precision,
