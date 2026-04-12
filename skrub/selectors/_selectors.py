@@ -11,6 +11,7 @@ __all__ = [
     "numeric",
     "integer",
     "float",
+    "has_dtype",
     "any_date",
     "categorical",
     "string",
@@ -290,6 +291,50 @@ def float():
 
     """
     return Filter(sbd.is_float, name="float")
+
+
+def _has_dtype(column, *dtypes):
+    return sbd.dtype(column) in dtypes
+
+
+def has_dtype(*dtypes):
+    """
+    Select columns whose dtype exactly matches one of the provided dtypes.
+
+
+    This selector takes a hands-off approach: skrub does not normalize or infer
+    dtypes across dataframe libraries. A column is selected if
+    ``sbd.dtype(column) == dtype`` for at least one of the provided ``dtypes``.
+
+    The most reliable way to use this selector is to get the dtype from an
+    existing column and pass that dtype object directly.
+
+    Examples
+    --------
+    >>> from skrub import selectors as s
+    >>> import pandas as pd
+    >>> df = pd.DataFrame(
+    ...     {
+    ...         "items": [["A4", "A3"], ["A5"]],
+    ...         "count": [2, 1],
+    ...     }
+    ... )
+    >>> items_dtype = df["items"].dtype
+    >>> s.select(df, s.has_dtype(items_dtype))
+           items
+    0  [A4, A3]
+    1      [A5]
+
+    Several dtypes can be accepted:
+
+    >>> count_dtype = df["count"].dtype
+    >>> s.select(df, s.has_dtype(items_dtype, count_dtype))
+           items  count
+    0  [A4, A3]      2
+    1      [A5]      1
+
+    """
+    return Filter(_has_dtype, args=dtypes, name="has_dtype")
 
 
 def any_date():
