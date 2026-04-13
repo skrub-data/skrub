@@ -292,9 +292,9 @@ def _node_kwargs(data_op, url=None):
     label = html.escape(_utils.simple_repr(data_op))
     kwargs = {
         "shape": "box",
-        "fontsize": 12,
-        "height": 0.3,
-        "margin": "0.1,0.08",
+        "fontsize": 10,
+        "height": 0.25,
+        "margin": "0.08,0.04",
         "labelloc": "c",
         "fontname": "sans-serif",
         "color": "black",
