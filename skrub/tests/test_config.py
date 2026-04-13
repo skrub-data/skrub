@@ -59,6 +59,7 @@ def test_default_config():
         "float_precision",
         "cardinality_threshold",
         "eager_data_ops",
+        "data_ops_open_graph_dropdown",
     }
     assert set(cfg.keys()) == expected_keys
 
