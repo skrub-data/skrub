@@ -19,7 +19,7 @@ New Features
 - The :class:`DropSimilar` transformer has been added, for removing columns in a
   dataframe that present high correlation with other columns. :pr:`2023` by
   :user:`Eloi Massoulié <emassoulie>`.
- 
+
 Changes
 -------
 - The row indices of training and testing samples are now also included in the

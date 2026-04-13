@@ -4,7 +4,7 @@ from skrub._drop_similar import DropSimilar
 
 
 @pytest.fixture
-def table_with_associations(df_module):
+def test_table_with_associations(df_module):
     return df_module.make_dataframe(
         {
             "letters": [

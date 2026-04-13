@@ -29,16 +29,12 @@ class DropSimilar(TransformerMixin):
 
     This is done by computing Cramér's V between every possible two columns,
     and sorting these couples in descending order. Then, for every association above
-    a preestablished threshold:
-    - If one of the two columns has already been dropped, nothing happens
-    - Otherwise, the column that has the highest average association score with
-    every other column is dropped.
+    a preestablished threshold, one of the two columns is dropped.
 
     Parameters
     ----------
     threshold : float, default=0.8
-        If True, drop the column if it contains only one unique value. Missing values
-        count as one additional distinct value.
+        The Cramér association score value above which to start dropping columns.
 
     Attributes
     ----------
