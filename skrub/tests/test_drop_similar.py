@@ -50,7 +50,7 @@ def table_with_associations(df_module):
 @pytest.mark.parametrize(
     "threshold, result",
     [
-        (0.8, ["letters", "ranks", "words"]),
+        (None, ["letters", "ranks", "words"])(0.8, ["letters", "ranks", "words"]),
         (0.5, ["letters"]),
         (0, ["letters"]),
     ],
@@ -64,5 +64,11 @@ def test_drop_similar(df_module, table_with_associations, threshold, result):
 
 def test_wrong_threshold(df_module, table_with_associations):
     ds = DropSimilar(threshold=-0.5)
+    with pytest.raises(ValueError):
+        ds.fit_transform(table_with_associations)
+    ds = DropSimilar(threshold=3)
+    with pytest.raises(ValueError):
+        ds.fit_transform(table_with_associations)
+    ds = DropSimilar(threshold=False)
     with pytest.raises(ValueError):
         ds.fit_transform(table_with_associations)
