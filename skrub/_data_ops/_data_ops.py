@@ -33,6 +33,7 @@ import inspect
 import itertools
 import operator
 import pathlib
+import pickle
 import re
 import textwrap
 import traceback
@@ -49,7 +50,7 @@ from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, set_module, short_repr
 from .._wrap_transformer import wrap_transformer
-from . import _utils
+from . import _cached_helpers, _utils
 from ._choosing import get_chosen_or_default
 from ._utils import FITTED_PREDICTOR_METHODS, NULL, attribute_error
 
@@ -1339,6 +1340,36 @@ def check_subsampled_X_y_shape(X_op, y_op, X_value, y_value, mode, environment, 
     )
 
 
+def _call_fitting_method(estimator, method_name, args, kwargs):
+    memory = _config.get_config()["memory"]
+    if memory is None:
+        result = getattr(estimator, method_name)(*args, **kwargs)
+        return estimator, result, None
+    try:
+        return memory.cache(_cached_helpers._call_fitting_method)(
+            estimator, method_name, args, kwargs
+        )
+    except pickle.PicklingError:
+        pass
+    # Fall back to non-cached call if arguments cannot be serialized
+    result = getattr(estimator, method_name)(*args, **kwargs)
+    return estimator, result, None
+
+
+def _call_non_fitting_method(estimator, method_name, args, kwargs, estimator_id):
+    memory = _config.get_config()["memory"]
+    if memory is None or estimator_id is None:
+        return getattr(estimator, method_name)(*args, **kwargs)
+    try:
+        return memory.cache(
+            _cached_helpers._call_non_fitting_method, ignore=["estimator"]
+        )(estimator, method_name, args, kwargs, estimator_id)
+    except pickle.PicklingError:
+        pass
+    # Fall back to non-cached call if arguments cannot be serialized
+    return getattr(estimator, method_name)(*args, **kwargs)
+
+
 class Apply(DataOpImpl):
     """.skb.apply() nodes."""
 
@@ -1403,9 +1434,13 @@ class Apply(DataOpImpl):
             # with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
-                self.estimator_.fit(X, y, **fit_kwargs)
+                self.estimator_, _, self.estimator_id_ = _call_fitting_method(
+                    self.estimator_, "fit", (X, y), fit_kwargs
+                )
             predict_kwargs = yield from self._eval_kwargs("predict")
-            pred = self.estimator_.predict(X, **predict_kwargs)
+            pred = _call_non_fitting_method(
+                self.estimator_, "predict", (X,), predict_kwargs, self.estimator_id_
+            )
             # In `(fit_)transform` mode only, format the predictions as a
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
@@ -1416,13 +1451,20 @@ class Apply(DataOpImpl):
             method_name = "fit_transform"
 
         if "fit" in method_name:
-            y_arg = () if self.unsupervised else (y,)
+            args = (X,) if self.unsupervised else (X, y)
         elif method_name == "score":
-            y_arg = (y,)
+            args = (X, y)
         else:
-            y_arg = ()
-        method_kwargs = yield from self._eval_kwargs(method_name)
-        return getattr(self.estimator_, method_name)(X, *y_arg, **method_kwargs)
+            args = (X,)
+        kwargs = yield from self._eval_kwargs(method_name)
+        if "fit" in method_name:
+            self.estimator_, result, self.estimator_id_ = _call_fitting_method(
+                self.estimator_, method_name, args, kwargs
+            )
+            return result
+        return _call_non_fitting_method(
+            self.estimator_, method_name, args, kwargs, self.estimator_id_
+        )
 
     def _store_y_format(self, y):
         if sbd.is_dataframe(y):
