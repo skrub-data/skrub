@@ -4,7 +4,7 @@ from skrub._drop_similar import DropSimilar
 
 
 @pytest.fixture
-def test_table_with_associations(df_module):
+def table_with_associations(df_module):
     return df_module.make_dataframe(
         {
             "letters": [
@@ -52,13 +52,13 @@ def test_table_with_associations(df_module):
     [
         (0.8, ["letters", "ranks", "words"]),
         (0.5, ["letters"]),
-        (0, []),
+        (0, ["letters"]),
     ],
 )
 def test_drop_similar(df_module, table_with_associations, threshold, result):
     ds = DropSimilar(threshold=threshold)
     res = ds.fit_transform(table_with_associations)
-    resulting_columns = res.columns()
+    resulting_columns = list(res.columns)
     assert resulting_columns == result
 
 

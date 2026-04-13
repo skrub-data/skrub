@@ -2,10 +2,10 @@ import polars as pl
 from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
-from skrub._dataframe._common import raise_dispatch_unregistered_type
-
-from . import DropCols, _column_associations
+from ._column_associations import column_associations
+from ._dataframe._common import raise_dispatch_unregistered_type
 from ._dispatch import dispatch
+from ._select_cols import DropCols
 
 
 @dispatch
@@ -62,7 +62,7 @@ class DropSimilar(TransformerMixin):
 
         self.to_drop_ = []
 
-        association_df = _column_associations.column_associations(X)
+        association_df = column_associations(X)
 
         pairs_to_drop = _filter_associations(association_df, self.threshold)
 
