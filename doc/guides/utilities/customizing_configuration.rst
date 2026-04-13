@@ -39,7 +39,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops'])
+dict_keys(['use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops', 'data_ops_open_graph_dropdown'])
 
 These are the parameters currently available in the global configuration:
 
