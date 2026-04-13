@@ -294,7 +294,7 @@ def _node_kwargs(data_op, url=None):
         "shape": "box",
         "fontsize": 10,
         "height": 0.25,
-        "margin": "0.08,0.04",
+        "margin": "0.08,0.06",
         "labelloc": "c",
         "fontname": "sans-serif",
         "color": "black",
