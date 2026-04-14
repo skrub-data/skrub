@@ -9,28 +9,102 @@ from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+from . import _utils
 
 __all__ = ["SingleColumnTransformer", "RejectColumn"]
 
 _SINGLE_COL_LINE = (
-    "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
-    " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
-    " single column (a pandas or polars Series) rather than a full dataframe. To apply"
-    " this transformer to one or more columns in a dataframe, use it as a parameter in"
-    " a ``skrub.ApplyToEachCol`` or a ``skrub.TableVectorizer``.\n\n"
+    "``{class_name}`` is a type of "
+    ":ref:`single column transformation <single_column_transformer>` . Unlike most "
+    "scikit-learn estimators, its ``fit``, ``transform`` and ``fit_transform`` methods"
+    " expect a single column (e.g. Series) not a full dataframe."
+    " To apply this transformer to one or more columns in a dataframe, use it "
+    "in a :class:`ApplyToCols` or a :class:`TableVectorizer`.\n\n"
     "To apply to all columns::\n\n"
-    "   ApplyToCol({class_name}())\n\n"
+    "   ApplyToCols({class_name}())\n\n"
     "To apply to selected columns::\n\n"
-    "   ApplyToEachCol({class_name}(), cols=['col_name_1', 'col_name_2'])"
+    "   ApplyToCols({class_name}(), cols=['col_name_1', 'col_name_2'])"
 )
-_SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 4)
-_SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
 
 
+_SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 3)
+_SINGLE_COL_NOTE = (
+    f".. admonition:: A note on using single column transformations \n"
+    f"   :collapsible: closed\n\n{_SINGLE_COL_PARAGRAPH}\n"
+)
+
+
+@_utils.set_module("skrub.core")
 class RejectColumn(ValueError):
     """Used by single-column transformers to indicate they do not apply to a column.
 
+    Examples
+    ----------
+    A :class:`SingleColumnTransformer` can raise ``RejectColumn`` exceptions
+    to indicate it cannot handle a given column.
+
+    >>> from skrub import ToDatetime
     >>> import pandas as pd
+    >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
+    >>> df
+         birthday    city
+    0  29/01/2024  London
+    >>> df.dtypes
+    birthday    ...
+    city        ...
+    dtype: object
+    >>> ToDatetime().fit_transform(df["birthday"])
+    0   2024-01-29
+    Name: birthday, dtype: datetime64[...]
+    >>> ToDatetime().fit_transform(df["city"])
+    Traceback (most recent call last):
+        ...
+    skrub.core.RejectColumn: Could not find a datetime format...
+
+    ``RejectColumn`` exceptions can be used to indicate that a column cannot be
+    handled by the current transformer: this may mean that the data is invalid,
+    or that the transformer is simply not designed to handle that type of data.
+    For example, a ``ToDatetime`` transformer might raise ``RejectColumn`` when it is
+    passed a column that does not contain strings, or that contains strings but none
+    of them look like dates.
+
+    :class:`ApplyToCols` relies on these exceptions to decide whether a column should be
+    transformed or passed through unchanged.
+
+    How these rejections are handled depends on the ``allow_reject`` parameter.
+    By default, no special handling is performed and rejections are considered
+    to be errors:
+
+    >>> from skrub import ApplyToCols
+    >>> to_datetime = ApplyToCols(ToDatetime())
+    >>> to_datetime.fit_transform(df)
+    Traceback (most recent call last):
+        ...
+    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'...
+
+    However, setting ``allow_reject=True`` gives the transformer itself some
+    control over which columns it should be applied to. For example, whether a
+    string column contains dates is only known once we try to parse them.
+    Therefore it might be sensible to try to parse all string columns but allow
+    the transformer to reject those that, upon inspection, do not contain dates.
+
+    >>> to_datetime = ApplyToCols(ToDatetime(), allow_reject=True)
+    >>> transformed = to_datetime.fit_transform(df)
+    >>> transformed
+        birthday    city
+    0 2024-01-29  London
+
+    Now the column 'city' was rejected but this was not treated as an error;
+    'city' was passed through unchanged and only 'birthday' was converted to a
+    datetime column.
+
+    >>> transformed.dtypes
+    birthday    datetime64[...]
+    city                ...
+    dtype: object
+    >>> to_datetime.transformers_
+    {'birthday': ToDatetime()}
+
     >>> from skrub import ToDatetime
     >>> df = pd.DataFrame(dict(a=['2020-02-02'], b=[12.5]))
     >>> ToDatetime().fit_transform(df['a'])
@@ -39,7 +113,7 @@ class RejectColumn(ValueError):
     >>> ToDatetime().fit_transform(df['b'])
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Column 'b' does not contain strings.
+    skrub.core.RejectColumn: Column 'b' does not contain strings.
     """
 
     pass
@@ -49,20 +123,20 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToEachCol``; see the docstring of ``ApplyToEachCol`` for more
+    ``ApplyToCols``; see the docstring of ``ApplyToCols`` for more
     information.
 
     Single-column transformers are not required to inherit from this class in
-    order to work with ``ApplyToEachCol``, however doing so avoids some
+    order to work with ``ApplyToCols``, however doing so avoids some
     boilerplate:
 
-        - The required ``__single_column_transformer__`` attribute is set.
-        - ``fit`` is defined (calls ``fit_transform`` and discards the result).
-        - ``fit``, ``transform`` and ``fit_transform`` are wrapped to check
-          that the input is a single column and raise a ``ValueError`` with a
-          helpful message when it is not.
-        - A note about single-column transformers (vs dataframe transformers)
-          is added after the summary line of the docstring.
+    - The required ``__single_column_transformer__`` attribute is set.
+    - ``fit`` is defined (calls ``fit_transform`` and discards the result).
+    - ``fit``, ``transform`` and ``fit_transform`` are wrapped to check
+        that the input is a single column and raise a ``ValueError`` with a
+        helpful message when it is not.
+    - A note about single-column transformers (vs dataframe transformers)
+        is added after the summary line of the docstring.
 
     Subclasses must define ``fit_transform`` and ``transform`` (or inherit them
     from another superclass).
@@ -161,7 +235,7 @@ class SingleColumnTransformer(BaseEstimator):
 
         Returns
         --------
-        all_outputs_
+        list of str
             The names of the output features.
         """
         check_is_fitted(self, "all_outputs_")

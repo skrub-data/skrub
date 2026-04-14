@@ -150,14 +150,14 @@ def get_data_home(data_home=None):
 
     Parameters
     ----------
-    data_home : pathlib.Path or string, optional
+    data_home : str or path-like, optional
         The path to the skrub data directory. If `None`, the default path
         is obtained from the skrub configuration (SKB_DATA_DIRECTORY environment
         variable or `~/skrub_data`).
 
     Returns
     -------
-    data_home : pathlib.Path
+    data_home : :class:`~pathlib.Path`
         The validated path to the skrub data directory.
     """
     if data_home is not None:
@@ -191,7 +191,7 @@ def get_data_dir(name=None, data_home=None):
     ----------
     name : str, optional
         Subdirectory name. If omitted, the root data directory is returned.
-    data_home : pathlib.Path or str, optional
+    data_home : str or path-like, optional
         The path to skrub data directory. If `None`, the default path
         is `~/skrub_data`.
     """
@@ -220,14 +220,14 @@ def load_simple_dataset(dataset_name, data_home=None):
     dataset_name : str
         The name of the dataset to load. The name must be a key of `DATASET_INFO`.
 
-    data_home : path, default=None
+    data_home : path-like, default=None
         The directory where to download and unpack a zip file. If None, the default path
         is obtained from the skrub configuration (SKB_DATA_DIRECTORY environment
         variable or `~/skrub_data`).
 
     Returns
     -------
-    bunch : sklearn.utils.Bunch
+    bunch : :class:`~sklearn.utils.Bunch`
         A dictionary-like object with the following keys:
 
         - <dataset_name> : pd.DataFrame, the dataframe
