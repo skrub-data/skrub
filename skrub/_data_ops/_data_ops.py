@@ -751,7 +751,7 @@ class DataOp:
             f"<strong><samp>{html.escape(repr_start)}</samp></strong>"
             f"<br />{repr_rest}\n"
         )
-        summary = "<samp>Show graph</samp>"
+        summary = "<samp>Show/Hide graph</samp>"
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
         details_open_or_not = (
             "open"
