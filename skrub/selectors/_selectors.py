@@ -1,4 +1,5 @@
 import fnmatch
+import numbers
 import re
 
 from .. import _dataframe as sbd
@@ -144,6 +145,7 @@ def numeric():
     """
     Select columns that have a numeric data type.
 
+
     This selects float and integer columns but not Boolean columns.
 
     Examples
@@ -175,7 +177,7 @@ def numeric():
     i8          int8
     bool_       bool
     Bool_    boolean
-    str_     ...
+    str_      ...
     dtype: object
 
     >>> s.select(df, s.numeric())
@@ -195,6 +197,7 @@ def numeric():
 def integer():
     """
     Select columns that have an integer data type.
+
 
     This selects integer columns but not Boolean columns.
 
@@ -247,6 +250,7 @@ def float():
     """
     Select columns that have a floating-point data type.
 
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -292,6 +296,7 @@ def any_date():
     """
     Select columns that have a Date or Datetime data type.
 
+
     Examples
     --------
     >>> import datetime
@@ -329,6 +334,7 @@ def categorical():
     """
     Select columns that have a Categorical (or polars Enum) data type.
 
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -363,6 +369,7 @@ def string():
     """
     Select columns that have a String data type.
 
+
     In pandas, object columns containing (only) strings are also selected.
 
     Examples
@@ -386,7 +393,7 @@ def string():
     >>> df.dtypes
     os            ...
     o             object
-    s     ...
+    s             ...
     c           category
     dtype: object
 
@@ -407,6 +414,7 @@ def string():
 def boolean():
     """
     Select columns that have a Boolean data type.
+
 
     Examples
     --------
@@ -496,9 +504,18 @@ def cardinality_below(threshold):
     return Filter(_cardinality_below, args=(threshold,), name="cardinality_below")
 
 
-def has_nulls():
+def _null_count_check(column, proportion):
+    if proportion == 0.0:
+        return sbd.has_nulls(column)
+    if proportion == 1.0:
+        return sbd.is_all_null(column)
+    return sum(sbd.is_null(column)) / len(column) > proportion
+
+
+def has_nulls(proportion=0.0):
     """
     Select columns that contain at least one null value.
+
 
     Examples
     --------
@@ -508,7 +525,33 @@ def has_nulls():
     >>> s.select(df, s.has_nulls())
           b     c
     0   0.0     a
-    1   NaN     b
+    1   ...     b
     2  20.0  ...
+
+    Use the ``proportion`` parameter to filter columns by null percentage:
+
+    >>> df2 = pd.DataFrame(dict(
+    ...     few_nulls=[1, 2, 3, None],
+    ...     many_nulls=[1, None, None, None],
+    ...     no_nulls=[1, 2, 3, 4]))
+    >>> s.select(df2, s.has_nulls(proportion=0.20))
+       few_nulls  many_nulls
+    0        1.0         1.0
+    1        2.0         ...
+    2        3.0         ...
+    3        ...         ...
+
+    >>> s.select(df2, s.has_nulls(proportion=0.5))
+    many_nulls
+    0        1.0
+    1        ...
+    2        ...
+    3        ...
     """
-    return Filter(sbd.has_nulls, name="has_nulls")
+
+    if not isinstance(proportion, numbers.Number) or not 0.0 <= proportion <= 1.0:
+        raise ValueError(
+            f"Proportion {proportion} is invalid. Proportion"
+            " should be a number in the range [0.0, 1.0]"
+        )
+    return Filter(_null_count_check, args=(proportion,), name="has_nulls")

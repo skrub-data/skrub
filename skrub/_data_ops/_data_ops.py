@@ -47,7 +47,7 @@ from .. import _dataframe as sbd
 from .. import selectors as s
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
-from .._utils import PassThrough, short_repr
+from .._utils import PassThrough, set_module, short_repr
 from .._wrap_transformer import wrap_transformer
 from . import _utils
 from ._choosing import get_chosen_or_default
@@ -296,6 +296,13 @@ class DataOpImpl:
 
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
+
+    @staticmethod
+    def __skrub_preview_heading__():
+        """
+        Title displayed above the preview value in the DataOp's repr and html repr.
+        """
+        return "Result"
 
 
 def _find_dataframe(data_op, func_name):
@@ -546,6 +553,7 @@ class _DataOpDoc:
         return f"""Skrub DataOp.\nDocstring of the preview:\n{doc}"""
 
 
+@set_module("skrub")
 class DataOp:
     """A skrub DataOp."""
 
@@ -698,7 +706,7 @@ class DataOp:
         if preview is NULL:
             return result
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
-        header = f"Result{subsample_msg}:"
+        header = f"{self._skrub_impl.__skrub_preview_heading__()}{subsample_msg}:"
         underline = "―" * len(header)
         return f"{result}\n{header}\n{underline}\n{preview!r}"
 
@@ -736,14 +744,21 @@ class DataOp:
             )
         else:
             name_line = ""
-        title = f"<strong><samp>{html.escape(short_repr(self))}</samp></strong><br />\n"
+        repr_start, _, repr_rest = short_repr(self).partition("\n")
+        if repr_rest:
+            repr_rest = f"\n<pre>\n{html.escape(repr_rest)}\n</pre>"
+        title = (
+            f"<strong><samp>{html.escape(repr_start)}</samp></strong>"
+            f"<br />{repr_rest}\n"
+        )
         summary = "<samp>Show graph</samp>"
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
         prefix = (
             f"{title}{name_line}"
             f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
-            f"<strong><samp>Result{subsample_msg}:</samp></strong>"
+            f"<strong><samp>{impl.__skrub_preview_heading__()}{subsample_msg}:"
+            "</samp></strong>"
         )
         report = node_report(self)
         if hasattr(report, "_repr_html_"):
@@ -851,7 +866,7 @@ def _check_apply_how(how):
 
 def _wrap_estimator(estimator, cols, how, allow_reject, X):
     """
-    Wrap the estimator passed to .skb.apply in ApplyToCols or ApplyToFrame if
+    Wrap the estimator passed to .skb.apply in ApplyToEachCol or ApplyToSubFrame if
     needed.
     """
     how = _check_apply_how(how)
@@ -1488,7 +1503,7 @@ class Apply(DataOpImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["ApplyToCols", "ApplyToFrame"]:
+        if estimator.__class__.__name__ in ["ApplyToEachCol", "ApplyToSubFrame"]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):
@@ -1974,3 +1989,50 @@ def eval_mode():
     2
     """
     return DataOp(EvalMode())
+
+
+class SplitX(DataOpImpl):
+    _fields = ["X", "cv", "split_kwargs"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.X)
+
+    def __repr__(self):
+        return "<X>"
+
+
+def _scorer_repr(scorer_info):
+    scorer = scorer_info["scoring"]
+    if name := scorer_info.get("name"):
+        prefix = f"{name}: "
+    else:
+        prefix = ""
+    if isinstance(scorer, (list, tuple, set, dict)):
+        return [f"{prefix}{s!r}" for s in scorer]
+    return [f"{prefix}{scorer!r}"]
+
+
+class Scoring(DataOpImpl):
+    _fields = ["pred", "scorers"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.pred)
+
+    def __repr__(self):
+        details = ["    This DataOp will be scored with:\n"]
+        all_scorer_reprs = []
+        for scorer_info in self.scorers:
+            all_scorer_reprs.extend(_scorer_repr(scorer_info))
+        details.extend(f"      - {s_repr}\n" for s_repr in all_scorer_reprs)
+        details.append(
+            "    Use .skb.cross_validate(…) or "
+            ".skb.make_learner(…).score(…) to compute scores."
+        )
+        return (
+            f"<Scoring {short_repr(self.pred)} ({len(all_scorer_reprs)} scorers)>\n"
+            f"{''.join(details)}"
+        )
+
+    @staticmethod
+    def __skrub_preview_heading__():
+        return "Result (preview of the learner's output, not the scores)"

@@ -26,34 +26,6 @@ becomes expensive when the number of distinct values becomes large, while the
 To address these shortcomings and generalize to more columns, skrub implements
 four different transformers, each with its own pros and cons.
 
-- |StringEncoder|: **the default encoder, strong in most cases**: A strong and quick
-  baseline for both short strings with high cardinality and long text. This encoder
-  computes the n-gram frequency using tf-idf vectorization, followed by truncated SVD
-  (`Latent Semantic Analysis <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_).
-  This is the default encoder used by the |TableVectorizer| and the |tabular_pipeline|.
-
-- |TextEncoder|: **language model-based, strong on text but expensive to run**:
-  This encoder encodes string features using pretrained language models from the
-  HuggingFace Hub. It is a wrapper around `sentence-transformers <https://sbert.net/>`_
-  compatible with the scikit-learn API and usable in pipelines. Best for free-flowing
-  text and when columns include context found in the pretrained model (e.g., names of
-  cities etc.). Note that this encoder can take a very long time to train, especially
-  on large datasets and on CPU. The |TextEncoder| has additional dependencies that
-  are not included in the standard skrub installation.
-  Refer to :ref:`installation_instructions` for info on how to prepare the
-  environment.
-
-- |MinHashEncoder|: **very fast encoder, but not as effective as the others**:
-  This encoder decomposes strings into n-grams, then applies the MinHash method to
-  convert them into numeric features. Fast to train, but features may yield worse
-  results compared to other methods.
-
-- |GapEncoder|: **an interpretable, if slower encoder**: The |GapEncoder| estimates
-  "latent categories" on the training data by finding common n-grams between strings,
-  then encodes the categories as real numbers. It allows access to grouped features
-  via ``.get_feature_names_out()``, which allows for better interpretability. This
-  encoder may require a long time to train.
-
 All encoders work like regular scikit-learn transformers. All encoders
 take a parameter ``n_components`` to specify how many features should
 be generated for each input feature.
@@ -93,9 +65,36 @@ is available in the documentation of the encoder itself.
 1                                     0.559531                                         0.000717
 2                                     0.982307                                         0.099680
 
-
-Comparing the categorical encoders included in skrub
+Choosing the right encoder for the job
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- |StringEncoder|: **the default encoder, strong in most cases**: A strong and quick
+  baseline for both short strings with high cardinality and long text. This encoder
+  computes the n-gram frequency using tf-idf vectorization, followed by truncated SVD
+  (`Latent Semantic Analysis <https://en.wikipedia.org/wiki/Latent_semantic_analysis>`_).
+  This is the default encoder used by the |TableVectorizer| and the |tabular_pipeline|.
+
+- |TextEncoder|: **language model-based, strong on text but expensive to run**:
+  This encoder encodes string features using pretrained language models from the
+  HuggingFace Hub. It is a wrapper around `sentence-transformers <https://sbert.net/>`_
+  compatible with the scikit-learn API and usable in pipelines. Best for free-flowing
+  text and when columns include context found in the pretrained model (e.g., names of
+  cities etc.). Note that this encoder can take a very long time to train, especially
+  on large datasets and on CPU. The |TextEncoder| has additional dependencies that
+  are not included in the standard skrub installation.
+  Refer to :ref:`installation_instructions` for info on how to prepare the
+  environment.
+
+- |MinHashEncoder|: **very fast encoder, but not as effective as the others**:
+  This encoder decomposes strings into n-grams, then applies the MinHash method to
+  convert them into numeric features. Fast to train, but features usually yield worse
+  results compared to other methods.
+
+- |GapEncoder|: **an interpretable, if slower encoder**: The |GapEncoder| estimates
+  "latent categories" on the training data by finding common n-grams between strings,
+  then encodes the categories as real numbers. It allows access to grouped features
+  via ``.get_feature_names_out()``, which allows for better interpretability. This
+  encoder may require a long time to train.
 
 .. list-table::
     :header-rows: 1

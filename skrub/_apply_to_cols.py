@@ -1,57 +1,36 @@
-import itertools
+"""
+ApplyToCols selects the correct transformer between ApplyToEachCol and ApplyToSubFrame
+based on the type of the transformer passed to it.
+"""
 
-from joblib import Parallel, delayed
-from sklearn.base import BaseEstimator, TransformerMixin, clone
-from sklearn.utils.validation import check_is_fitted
+from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 
-from . import _dataframe as sbd
-from . import _utils, selectors
-from ._join_utils import pick_column_names
-from ._single_column_transformer import RejectColumn
+from . import selectors
+from ._apply_to_each_col import ApplyToEachCol
+from ._apply_to_sub_frame import ApplyToSubFrame
+from ._wrap_transformer import wrap_transformer
 
-__all__ = ["ApplyToCols"]
-
-# By default, select all columns
 _SELECT_ALL_COLUMNS = selectors.all()
 
 
-class ApplyToCols(BaseEstimator, TransformerMixin):
+class ApplyToCols(TransformerMixin, BaseEstimator):
     """
-    Map a transformer to columns in a dataframe.
+    Apply a transformer to selected columns in a dataframe.
 
-    A separate clone of the transformer is applied to each column separately.
+    This transformer applies the given transformer to all the selected columns in
+    the input dataframe; non-selected columns are passed through without modification.
+    By default, all selected columns are passed to the same transformer; if the
+    transformer is a :class:`~core.SingleColumnTransformer`, a
+    separate clone of the transformer is created for each selected column and
+    fitted to that column independently.
 
-    Columns that are not selected in the ``cols`` parameter are passed through
-    without modification.
-
-    All columns not listed in ``cols`` remain unmodified in the output.
-    Moreover, if ``allow_reject`` is ``True`` and the transformers'
-    ``fit_transform`` raises a ``RejectColumn`` exception for a particular
-    column, that column is passed through unchanged. If ``allow_reject`` is
-    ``False``, ``RejectColumn`` exceptions are propagated, like other errors
-    raised by the transformer.
-
-    .. note::
-
-        The ``transform`` and ``fit_transform`` methods of ``transformer`` must
-        return a column, a list of columns or a dataframe of the same module
-        (polars or pandas) as the input, either by default or by supporting the
-        scikit-learn ``set_output`` API.
+    Refer to the documentation of :class:`~core.SingleColumnTransformer` for more
+    details on single-column transformers and how to create them.
 
     Parameters
     ----------
-    transformer : scikit-learn Transformer
-        The transformer to map to the selected columns. For each column in
-        ``cols``, a clone of the transformer is created then ``fit_transform``
-        is called on a single-column dataframe. If the transformer has a
-        ``__single_column_transformer__`` attribute, ``fit_transform`` is
-        passed directly the column (a pandas or polars Series) rather than a
-        DataFrame. ``fit_transform`` must return either a DataFrame, a Series,
-        or a list of Series. ``fit_transform`` can raise ``RejectColumn`` to
-        indicate that this transformer does not apply to this column -- for
-        example the ``ToDatetime`` transformer will raise ``RejectColumn`` for
-        numerical columns. In this case, the column will appear unchanged in
-        the output.
+    transformer : transformer instance
+        The transformer to apply to the selected columns.
 
     cols : str, sequence of str, or skrub selector, optional
         The columns to attempt to transform. Only the selected columns will have
@@ -61,12 +40,11 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         columns.
 
     allow_reject : bool, default=False
-        Whether the transformer is allowed to reject a column by raising a
-        ``RejectColumn`` exception. If ``True``, rejected columns will be
-        passed through unchanged by ``ApplyToCols`` and will not appear in
-        attributes such as ``transformers_``, ``used_inputs_``, etc. If
-        ``False``, column rejections are considered as errors and
-        ``RejectColumn`` exceptions are propagated.
+        Whether to allow refusing to transform columns for which the provided
+        transformer is not suited, for example rejecting non-datetime columns if
+        transformer is a DatetimeEncoder. Only relevant if the transformer is a
+        :class:`~core.SingleColumnTransformer`. Rejected columns are passed through
+        unchanged.
 
     keep_original : bool, default=False
         If ``True``, the original columns are preserved in the output. If the
@@ -87,6 +65,8 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         Number of jobs to run in parallel.
         ``None`` means 1 unless in a joblib ``parallel_backend`` context.
         ``-1`` means using all processors.
+        Note that this parameter is only used when the transformer
+        is a :class:`~core.SingleColumnTransformer`.
 
     Attributes
     ----------
@@ -103,109 +83,155 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         The names of columns in the output dataframe that were created by one
         of the fitted transformers.
 
+    transformers_ : dict
+        Maps the name of each column that was transformed to the corresponding
+        fitted transformer. Only available when the transformer is a
+        :class:`~core.SingleColumnTransformer`.
+
     input_to_outputs_ : dict
         Maps the name of each column that was transformed to the list of the
-        resulting columns' names in the output.
+        resulting columns' names in the output. Only available when the
+        transformer is a :class:`~core.SingleColumnTransformer`.
 
     output_to_input_ : dict
         Maps the name of each column in the transformed output to the name of
-        the input column from which it was derived.
+        the input column from which it was derived. Only available when the
+        transformer is a :class:`~core.SingleColumnTransformer`.
 
-    transformers_ : dict
-        Maps the name of each column that was transformed to the corresponding
-        fitted transformer.
+    transformer_ : Transformer
+        The fitted transformer. Only available when the transformer is **not** a
+        :class:`~core.SingleColumnTransformer`.
+
+    Notes
+    -----
+    All columns not listed in ``cols`` remain unmodified in the output.
+    Moreover, if ``allow_reject`` is ``True`` and the transformers'
+    ``fit_transform`` raises a :class:`~core.RejectColumn` exception for a particular
+    column, that column is passed through unchanged. If ``allow_reject`` is
+    ``False``, :class:`~core.RejectColumn` exceptions are propagated, like other errors
+    raised by the transformer.
+
+    See also
+    --------
+    :class:`~core.SingleColumnTransformer` :
+        Base class for single-column transformers,
+        which allows to define custom logic to be applied to each column independently,
+        and to indicate that a column cannot be transformed by raising
+        :class:`~core.RejectColumn` exceptions.
 
     Examples
     --------
+    Consider the following dataframe:
+
     >>> import pandas as pd
     >>> from skrub import ApplyToCols
+
+    >>> df = pd.DataFrame(dict(
+    ...     A=[-10., 10.], B=[-10., 0.], C=[19, 20], city=["Paris", "Rome"],
+    ...     D=pd.to_datetime(["2024-05-13T12:05:36", "2024-05-15T13:46:02"]))
+    ... )
+    >>> df
+        A     B   C   city                   D
+    0 -10.0 -10.0  19  Paris 2024-05-13 12:05:36
+    1  10.0   0.0  20   Rome 2024-05-15 13:46:02
+
+    We can apply a :class:`StringEncoder` to the string column "city" by selecting
+    it with the ``cols`` parameter:
+
+    >>> from skrub import StringEncoder
+    >>> string_encoder = ApplyToCols(StringEncoder(n_components=2), cols=["city"])
+    >>> df_enc = string_encoder.fit_transform(df)
+    >>> df_enc # doctest: +SKIP
+        A     B   C    city_0    city_1                   D
+    0 -10.0 -10.0  19  1.414214  1.414214 2024-05-13 12:05:36
+    1  10.0   0.0  20  0.000000  0.000000 2024-05-15 13:46:02
+
+    Since we selected only column "city", the transformer was applied only to that
+    column, while the other columns were left unchanged.
+
+    Scikit-learn transformers that can be applied to multiple columns at once can also
+    be used with ``ApplyToCols``. For example, to apply a
+    :class:`sklearn.decomposition.PCA` to the numeric columns "A", "B", and "C",
+    we can do:
+
+    >>> from sklearn.decomposition import PCA
+    >>> pca = ApplyToCols(PCA(n_components=2), cols=["A", "B", "C"])
+    >>> pca.fit_transform(df) # doctest: +SKIP
+        city                   D       pca0          pca1
+    0  Paris 2024-05-13 12:05:36 -11.191515  1.976705e-16
+    1   Rome 2024-05-15 13:46:02  11.191515  1.976705e-16
+
+    Note that the columns "city" and "D" were not modified since they were not
+    selected.
+
+    We can also rely on the skrub selectors to select the columns. For example,
+    we can use :meth:`~skrub.selectors.numeric` to select all numeric columns:
+
+    >>> from skrub import selectors as s
     >>> from sklearn.preprocessing import StandardScaler
-    >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
-    >>> df
-          A     B     C
-    0 -10.0 -10.0   0.0
-    1  10.0   0.0  10.0
-
-    Fit a StandardScaler to each column in df:
-
-    >>> scaler = ApplyToCols(StandardScaler())
+    >>> scaler = ApplyToCols(StandardScaler(), cols=s.numeric())
     >>> scaler.fit_transform(df)
-         A    B    C
-    0 -1.0 -1.0 -1.0
-    1  1.0  1.0  1.0
-    >>> scaler.transformers_
-    {'A': StandardScaler(), 'B': StandardScaler(), 'C': StandardScaler()}
+        city                   D    A    B    C
+    0  Paris 2024-05-13 12:05:36 -1.0 -1.0 -1.0
+    1   Rome 2024-05-15 13:46:02  1.0  1.0  1.0
 
-    We can restrict the columns on which the transformation is applied:
 
-    >>> scaler = ApplyToCols(StandardScaler(), cols=["A", "B"])
-    >>> scaler.fit_transform(df)
-         A    B     C
-    0 -1.0 -1.0   0.0
-    1  1.0  1.0  10.0
+    It is possible to set ``allow_reject=True`` to allow the transformer to reject
+    columns it cannot handle. For example, the :class:`DatetimeEncoder` cannot handle
+    columns that do not have datetime as their dtype. We can still apply it to
+    all the columns by setting ``allow_reject=True``; in this case, the rejected
+    columns are passed through unchanged:
 
-    We see that the scaling has not been applied to "C", which also does not
-    appear in the transformers_:
+    >>> from skrub import DatetimeEncoder
+    >>> datetime = ApplyToCols(DatetimeEncoder(), allow_reject=True)
+    >>> datetime.fit_transform(df)
+        A     B   C   city  D_year  D_month  D_day  D_hour  D_total_seconds
+    0 -10.0 -10.0  19  Paris  2024.0      5.0   13.0    12.0     1.715602e+09
+    1  10.0   0.0  20   Rome  2024.0      5.0   15.0    13.0     1.715781e+09
 
-    >>> scaler.transformers_
-    {'A': StandardScaler(), 'B': StandardScaler()}
-    >>> scaler.used_inputs_
-    ['A', 'B']
 
-    **Rejected columns**
+    If ``allow_reject=False`` (the default), the same transformation would raise
+    an error since the transformer cannot handle the columns "A", "B", and "C":
 
-    The transformer can raise ``RejectColumn`` to indicate it cannot handle a
-    given column.
-
-    >>> from skrub import ToDatetime
-    >>> df = pd.DataFrame(dict(birthday=["29/01/2024"], city=["London"]))
-    >>> df
-         birthday    city
-    0  29/01/2024  London
-    >>> df.dtypes
-    birthday    ...
-    city        ...
-    dtype: object
-    >>> ToDatetime().fit_transform(df["birthday"])
-    0   2024-01-29
-    Name: birthday, dtype: datetime64[...]
-    >>> ToDatetime().fit_transform(df["city"])
+    >>> datetime = ApplyToCols(DatetimeEncoder(), allow_reject=False)
+    >>> datetime.fit_transform(df)
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
+    ValueError: Transformer DatetimeEncoder.fit_transform failed on column 'A'...
 
-    How these rejections are handled depends on the ``allow_reject`` parameter.
-    By default, no special handling is performed and rejections are considered
-    to be errors:
+    ** Accessing fitted transformers **
 
-    >>> to_datetime = ApplyToCols(ToDatetime())
-    >>> to_datetime.fit_transform(df)
-    Traceback (most recent call last):
-        ...
-    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
+    Depending on the transformer, the fitted transformers
+    are stored in different attributes. For single-column transformers, the fitted
+    transformers are stored in the
+    ``transformers_`` attribute as a dictionary mapping column names to fitted
+    transformers. Columns that were not selected or were rejected do not have a
+    transformer:
 
-    However, setting ``allow_reject=True`` gives the transformer itself some
-    control over which columns it should be applied to. For example, whether a
-    string column contains dates is only known once we try to parse them.
-    Therefore it might be sensible to try to parse all string columns but allow
-    the transformer to reject those that, upon inspection, do not contain dates.
+    >>> string_encoder.transformers_
+    {'city': StringEncoder(n_components=2)}
 
-    >>> to_datetime = ApplyToCols(ToDatetime(), allow_reject=True)
-    >>> transformed = to_datetime.fit_transform(df)
-    >>> transformed
-        birthday    city
-    0 2024-01-29  London
+    In all other cases, the fitted transformer is stored in the ``transformer_``
+    attribute:
 
-    Now the column 'city' was rejected but this was not treated as an error;
-    'city' was passed through unchanged and only 'birthday' was converted to a
-    datetime column.
+    >>> scaler.transformer_
+    StandardScaler()
 
-    >>> transformed.dtypes
-    birthday    datetime64[...]
-    city                ...
-    dtype: object
-    >>> to_datetime.transformers_
-    {'birthday': ToDatetime()}
+    If a single-column transformer can be applied to multiple columns, for example
+    if there are multiple string columns, the transformer provided to ``ApplyToCols``
+    is cloned and fitted separately to each column.
+
+    >>> df_str = pd.DataFrame(dict(C1=["a", "b"], C2=["c", "d"]))
+    >>> se = ApplyToCols(StringEncoder(n_components=2))
+    >>> se.fit_transform(df_str)
+        C1_0      C1_1      C2_0      C2_1
+    0  1.414214  0.000000  1.414214  0.000000
+    1  0.000000  1.414214  0.000000  1.414214
+
+    Then, each fitted transformer is stored in the ``transformers_`` attribute:
+
+    >>> se.transformers_
+    {'C1': StringEncoder(n_components=2), 'C2': StringEncoder(n_components=2)}
 
     **Renaming outputs & keeping the original columns**
 
@@ -223,9 +249,9 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
 
     >>> scaler = ApplyToCols(StandardScaler(), cols=['A'], rename_columns='{}_scaled')
     >>> scaler.fit_transform(df)
-       A_scaled      B
-    0      -1.0    0.0
-    1       1.0  100.0
+        B  A_scaled
+    0    0.0      -1.0
+    1  100.0       1.0
 
     ``rename_columns`` can be particularly useful when ``keep_original`` is
     ``True``. When a column is transformed, we can tell ``ApplyToCols`` to
@@ -245,15 +271,16 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     ...     StandardScaler(), keep_original=True, rename_columns="{}_scaled"
     ... )
     >>> scaler.fit_transform(df)
-          A  A_scaled      B  B_scaled
-    0 -10.0      -1.0    0.0      -1.0
-    1  10.0       1.0  100.0       1.0
-    """  # noqa: E501
+          A      B  A_scaled  B_scaled
+    0 -10.0    0.0      -1.0      -1.0
+    1  10.0  100.0       1.0       1.0
+    """
 
     def __init__(
         self,
         transformer,
         cols=_SELECT_ALL_COLUMNS,
+        *,
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
@@ -261,13 +288,13 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
     ):
         self.transformer = transformer
         self.cols = cols
+        self.n_jobs = n_jobs
         self.allow_reject = allow_reject
         self.keep_original = keep_original
         self.rename_columns = rename_columns
-        self.n_jobs = n_jobs
 
     def fit(self, X, y=None, **kwargs):
-        """Fit the transformer on each column independently.
+        """Fit the transformer to the data.
 
         Parameters
         ----------
@@ -290,7 +317,7 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         return self
 
     def fit_transform(self, X, y=None, **kwargs):
-        """Fit the transformer on each column independently and transform X.
+        """Fit the transformer on all columns and transform X.
 
         Parameters
         ----------
@@ -301,33 +328,54 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
             The target data.
 
         **kwargs
-            Extra named arguments are passed to the ``fit_transform()`` method of
-            the individual column transformers (the clones of ``self.transformer``).
+            Extra named arguments are passed to the ``fit_transform()`` method
+            of ``self.transformer``.
 
         Returns
         -------
         result : Pandas or Polars DataFrame
             The transformed data.
         """
-        self._columns = selectors.make_selector(self.cols).expand(X)
-        results = []
-        all_columns = sbd.column_names(X)
-        parallel = Parallel(n_jobs=self.n_jobs)
-        func = delayed(_fit_transform_column)
-        results = parallel(
-            func(
-                sbd.col(X, col_name),
-                y,
-                self._columns,
-                self.transformer,
-                self.allow_reject,
-                kwargs,
-            )
-            for col_name in all_columns
-        )
-        return self._process_fit_transform_results(results, X)
 
-    def transform(self, X, **kwargs):
+        if not isinstance(self.allow_reject, bool):
+            raise TypeError(
+                f"Invalid value for 'allow_reject': {self.allow_reject}. "
+                "Expected a boolean."
+            )
+        if not isinstance(self.keep_original, bool):
+            raise TypeError(
+                f"Invalid value for 'keep_original': {self.keep_original}. "
+                "Expected a boolean."
+            )
+
+        self._wrapped_transformer = wrap_transformer(
+            self.transformer,
+            self.cols,
+            allow_reject=self.allow_reject,
+            keep_original=self.keep_original,
+            rename_columns=self.rename_columns,
+            n_jobs=self.n_jobs,
+            columnwise="auto",
+        )
+        X_transformed = self._wrapped_transformer.fit_transform(X, y, **kwargs)
+
+        self.all_inputs_ = self._wrapped_transformer.all_inputs_
+        self.used_inputs_ = self._wrapped_transformer.used_inputs_
+        self.all_outputs_ = self._wrapped_transformer.all_outputs_
+        self.created_outputs_ = self._wrapped_transformer.created_outputs_
+        self.feature_names_in_ = self._wrapped_transformer.feature_names_in_
+        self.n_features_in_ = self._wrapped_transformer.n_features_in_
+
+        if isinstance(self._wrapped_transformer, ApplyToEachCol):
+            self.transformers_ = self._wrapped_transformer.transformers_
+            self.input_to_outputs_ = self._wrapped_transformer.input_to_outputs_
+            self.output_to_input_ = self._wrapped_transformer.output_to_input_
+        else:
+            self.transformer_ = self._wrapped_transformer.transformer_
+
+        return X_transformed
+
+    def transform(self, X):
         """Transform a dataframe.
 
         Parameters
@@ -336,71 +384,17 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
             The column to transform.
 
         **kwargs
-            Extra named arguments are passed to the ``transform()`` method of
-            the fitted individual column transformers (the values of
-            ``self.transformers_``, which are clones of ``self.transformer``).
+            Extra named arguments are passed to the ``transform()``.
 
         Returns
         -------
         result : Pandas or Polars DataFrame
             The transformed data.
         """
-        check_is_fitted(self, "transformers_")
-        parallel = Parallel(n_jobs=self.n_jobs)
-        func = delayed(_transform_column)
-        outputs = parallel(
-            func(sbd.col(X, col_name), self.transformers_.get(col_name), kwargs)
-            for col_name in sbd.column_names(X)
-        )
-        transformed_columns = []
-        for col_name, col_outputs in zip(sbd.column_names(X), outputs):
-            if self.transformers_.get(col_name) is not None and self.keep_original:
-                col_outputs = [sbd.col(X, col_name)] + col_outputs
-            transformed_columns.extend(col_outputs)
-        transformed_columns = _rename_columns(transformed_columns, self.all_outputs_)
-        result = sbd.make_dataframe_like(X, transformed_columns)
-        result = sbd.copy_index(X, result)
-        return result
 
-    def _process_fit_transform_results(self, results, X):
-        all_input_names = sbd.column_names(X)
-        self.all_inputs_ = all_input_names
-        self.transformers_ = {}
-        self.input_to_outputs_ = {}
-        self.output_to_input_ = {}
-        transformed_columns = []
-        forbidden_names = set(all_input_names)
-        for input_name, output_cols, transformer in results:
-            if transformer is not None:
-                suggested_names = _column_names(output_cols)
-                suggested_names = list(
-                    map(_utils.renaming_func(self.rename_columns), suggested_names)
-                )
-                output_names = pick_column_names(
-                    suggested_names,
-                    forbidden_names - (set() if self.keep_original else {input_name}),
-                )
-                output_cols = _rename_columns(output_cols, output_names)
-                forbidden_names.update(output_names)
-                self.transformers_[input_name] = transformer
-                self.input_to_outputs_[input_name] = output_names
-                self.output_to_input_.update(**dict.fromkeys(output_names, input_name))
-                if self.keep_original:
-                    output_cols = [sbd.col(X, input_name)] + output_cols
-            transformed_columns.extend(output_cols)
+        check_is_fitted(self)
 
-        self.all_outputs_ = _column_names(transformed_columns)
-        self.used_inputs_ = list(self.transformers_.keys())
-        self.created_outputs_ = list(itertools.chain(*self.input_to_outputs_.values()))
-        # for sklearn
-        self.feature_names_in_ = self.all_inputs_
-        self.n_features_in_ = len(self.all_inputs_)
-
-        result = sbd.make_dataframe_like(X, transformed_columns)
-        result = sbd.copy_index(X, result)
-        return result
-
-    # set_output api compatibility
+        return self._wrapped_transformer.transform(X)
 
     def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
@@ -415,61 +409,25 @@ class ApplyToCols(BaseEstimator, TransformerMixin):
         feature_names_out : ndarray of str objects
             Transformed feature names.
         """
-        check_is_fitted(self, "all_outputs_")
-        return self.all_outputs_
+        check_is_fitted(self)
 
+        return self._wrapped_transformer.get_feature_names_out(input_features)
 
-def _prepare_transformer_input(transformer, column):
-    if hasattr(transformer, "__single_column_transformer__"):
-        return column
-    return sbd.make_dataframe_like(column, [column])
-
-
-def _fit_transform_column(
-    column, y, columns_to_handle, transformer, allow_reject, kwargs
-):
-    col_name = sbd.name(column)
-    if col_name not in columns_to_handle:
-        return col_name, [column], None
-    transformer = clone(transformer)
-    _utils.set_output(transformer, column)
-    transformer_input = _prepare_transformer_input(transformer, column)
-    allowed = (RejectColumn,) if allow_reject else ()
-    try:
-        output = transformer.fit_transform(transformer_input, y=y, **kwargs)
-    except allowed:
-        return col_name, [column], None
-    except Exception as e:
-        raise ValueError(
-            f"Transformer {transformer.__class__.__name__}.fit_transform "
-            f"failed on column {col_name!r}. See above for the full traceback."
-        ) from e
-    output = _utils.check_output(transformer, transformer_input, output)
-    output_cols = sbd.to_column_list(output)
-    return col_name, output_cols, transformer
-
-
-def _transform_column(column, transformer, kwargs):
-    if transformer is None:
-        return [column]
-    transformer_input = _prepare_transformer_input(transformer, column)
-    try:
-        output = transformer.transform(transformer_input, **kwargs)
-    except Exception as e:
-        raise ValueError(
-            f"Transformer {transformer.__class__.__name__}.transform "
-            f"failed on column {sbd.name(column)!r}. See above for the full traceback."
-        ) from e
-    # we do not call `_utils.check_output` here, assuming that if the output
-    # had a correct type (e.g. polars dataframe) in `fit_transform` it will
-    # have the same (correct) type in `transform`.
-    output_cols = sbd.to_column_list(output)
-    return output_cols
-
-
-def _column_names(column_list):
-    return [sbd.name(column) for column in column_list]
-
-
-def _rename_columns(columns_list, new_names):
-    return [sbd.rename(column, name) for (column, name) in zip(columns_list, new_names)]
+    def __getattr__(self, name):
+        if name == "transformers_" and isinstance(
+            getattr(self, "_wrapped_transformer", None), ApplyToSubFrame
+        ):
+            raise AttributeError(
+                "'transformers_' is only available for single-column transformers. "
+                "Did you mean 'transformer_'?"
+            )
+        if name == "transformer_" and isinstance(
+            getattr(self, "_wrapped_transformer", None), ApplyToEachCol
+        ):
+            raise AttributeError(
+                "'transformer_' is only available for non-single-column transformers. "
+                "Did you mean 'transformers_'?"
+            )
+        raise AttributeError(
+            f"{self.__class__.__name__} object has no attribute {name!r}"
+        )

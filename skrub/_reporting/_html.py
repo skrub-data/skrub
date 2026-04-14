@@ -28,8 +28,8 @@ _FILTER_NAMES = {
     "first_10": "First 10",
     "high_association": "High similarity",
     "all()": "All columns",
-    "has_nulls()": "With nulls",
-    "(~has_nulls())": "Without nulls",
+    "has_nulls(0.0)": "With nulls",
+    "(~has_nulls(0.0))": "Without nulls",
     "numeric()": "Numeric",
     "(~numeric())": "Non-numeric",
     "string()": "String",
@@ -80,6 +80,7 @@ def _get_high_association_columns(summary):
 def _get_column_filters(summary):
     df = summary["dataframe"]
     filters = {}
+
     filters["all()"] = {
         "display_name": _FILTER_NAMES["all()"],
         "columns": list(range(sbd.shape(df)[1])),

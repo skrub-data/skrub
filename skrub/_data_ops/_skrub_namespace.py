@@ -18,6 +18,8 @@ from ._data_ops import (
     FreezeAfterFit,
     IfElse,
     Match,
+    Scoring,
+    SplitX,
     Var,
     check_data_op,
     check_name,
@@ -45,7 +47,7 @@ from ._inspection import (
 )
 from ._optuna import OptunaParamSearch
 from ._subsampling import SubsamplePreviews, env_with_subsampling
-from ._utils import KFOLD_5, NULL, attribute_error
+from ._utils import NULL, attribute_error
 
 # By default, select all columns
 _SELECT_ALL_COLUMNS = s.all()
@@ -204,11 +206,12 @@ class SkrubNamespace:
         how : "auto", "cols", "frame" or "no_wrap", optional
             How the estimator is applied. In most cases the default "auto"
             is appropriate.
-            - "cols" means `estimator` is wrapped in a :class:`ApplyToCols`
+
+            - "cols" means `estimator` is wrapped in a :class:`ApplyToEachCol`
               transformer, which fits a separate clone of `estimator` each
               column in `cols`. `estimator` must be a transformer (have a
               ``fit_transform`` method).
-            - "frame" means `estimator` is wrapped in a :class:`ApplyToFrame`
+            - "frame" means `estimator` is wrapped in a :class:`ApplyToSubFrame`
               transformer, which fits a single clone of `estimator` to the
               selected part of the input dataframe. `estimator` must be a
               transformer.
@@ -275,10 +278,7 @@ class SkrubNamespace:
         skrub.DataOp.skb.make_learner :
             Get a skrub learner for this DataOp.
         skrub.ApplyToCols :
-            Transformer that applies a given transformer separately to each
-            selected column.
-        skrub.ApplyToFrame:
-            Transformer that applies a given transformer to part of a
+            Transformer that applies a given estimator to selected columns of a
             dataframe.
 
         Examples
@@ -1814,7 +1814,7 @@ class SkrubNamespace:
         environment=None,
         *,
         keep_subsampling=False,
-        split_func=model_selection.train_test_split,
+        split_func=None,
         **split_func_kwargs,
     ):
         """Split an environment into training and testing environments.
@@ -1831,7 +1831,7 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        split_func : function, optional
+        split_func : function, optional, default=None
             The function used to split X and y once they have been computed. By
             default, :func:`~sklearn.model_selection.train_test_split` is used.
 
@@ -1903,7 +1903,7 @@ class SkrubNamespace:
         )
 
     @_check_before
-    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=KFOLD_5):
+    def iter_cv_splits(self, environment=None, *, keep_subsampling=False, cv=None):
         """Yield splits of an environment into training and testing environments.
 
         Parameters
@@ -1918,7 +1918,7 @@ class SkrubNamespace:
             :meth:`DataOp.skb.subsample`), use a subsample of the data. By
             default subsampling is not applied and all the data is used.
 
-        cv : int, cross-validation generator or iterable, default=KFold(5)
+        cv : int, cross-validation generator or iterable, default=None
             The default is 5-fold without shuffling. Can be a cross-validation
             splitter, an iterable yielding pairs of (train, test) indices, or an
             int to specify the number of folds for KFold splitting.
@@ -1940,6 +1940,8 @@ class SkrubNamespace:
             - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
               the test environment, if there is one (may not be the case for
               unsupervised learning).
+            - row_indices_train: the row indices (in X and y) of the training samples.
+            - row_indices_test: the row indices (in X and y) of the testing samples.
 
         Examples
         --------
@@ -2532,7 +2534,7 @@ class SkrubNamespace:
         ----------
         environment : dict or None
             Bindings for variables contained in the DataOp plan. If not
-            provided, the ``value``s passed when initializing ``var()`` are
+            provided, the values passed when initializing ``var()`` are
             used.
 
         keep_subsampling : bool, default=False
@@ -2587,30 +2589,71 @@ class SkrubNamespace:
         )
 
     @checked_data_op_constructor
-    def mark_as_X(self):
-        """Mark this DataOp as being the ``X`` table.
+    def mark_as_X(self, *, cv=None, split_kwargs=None):
+        """
+        Mark this DataOp as being the ``X`` table.
 
-        This is used for cross-validation and hyperparameter selection: operations
-        done before :meth:`.skb.mark_as_X()` and :meth:`.skb.mark_as_y()` are executed
-        on the entire data and cannot benefit from hyperparameter tuning.
         Returns a copy; the original DataOp is left unchanged.
+
+        This is used for train/test splits and cross-validation.
+        To create a split,
+
+        - The nodes that are marked as ``X`` and ``y`` are materialized: all
+          the operations that come before are executed, to compute the value of
+          ``X`` and ``y``.
+        - Then the resulting tables are divided into train and test parts
+          according to the splitting strategy.
+        - For each split, the rest of the DataOp is fitted on the train set and
+          tested on the test set.
+
+        In addition, ``mark_as_X`` can be passed a splitter (``cv``) and named
+        arguments for the splitter. Those will be evaluated at the same time as
+        ``X`` and ``y`` and used to create the train/test splits.
+
+        Parameters
+        ----------
+        cv : int, cross-validation iterator or iterable, default=None
+            Cross-validation splitting strategy. It can be:
+
+            - None: 5-fold (stratified) cross-validation
+            - integer: specify the number of folds
+            - sklearn `CV splitter <https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators>`_
+            - iterable yielding (train, test) splits as arrays of indices.
+
+        split_kwargs : dict or None, default=None
+            Named arguments for the ``split()`` function (such as groups for a
+            :class:`~sklearn.model_selection.GroupKFold`). Note that
+            ``split_kwargs`` (and ``cv``) can themselves be DataOps.
 
         Returns
         -------
-        The input DataOp, which has been marked as being ``X``
+        A new DataOp, which has been marked as being the ``X`` table (which
+        must be split for cross-validation).
 
         See also
         --------
+        :meth:`DataOp.skb.mark_as_y`
+            The equivalent of this function for the targets: mark a node as
+            being the ``y`` table.
         :func:`skrub.X`
             ``skrub.X(value)`` can be used as a shorthand for
             ``skrub.var('X', value).skb.mark_as_X()``.
+        :meth:`DataOp.skb.train_test_split`
+            Prepare training and testing sets for a DataOp.
+        :meth:`DataOp.skb.cross_validate`
+            Perform cross-validation on a DataOp.
+        :meth:`DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
 
         Notes
         -----
         During cross-validation, all the previous steps are first executed,
-        until X and y have been materialized. Then, those are split into
-        training and testing sets. The following steps in the DataOp are
-        fitted on the train data, and applied to test data, within each split.
+        until X and y (and the splitter and its additional arguments, if any)
+        have been materialized. Then, X and y are split into training and
+        testing sets. The following steps in the DataOp are fitted on the train
+        data, and applied to test data, within each split.
 
         This means that any step that comes before ``mark_as_X()`` or
         ``mark_as_y()``, meaning that it is needed to compute X and y, sees the
@@ -2620,8 +2663,6 @@ class SkrubNamespace:
 
         ``skrub.X(value)`` can be used as a shorthand for
         ``skrub.var('X', value).skb.mark_as_X()``.
-
-        Note: this marks the DataOp in-place and also returns it.
 
         Examples
         --------
@@ -2657,9 +2698,60 @@ class SkrubNamespace:
         rest of the learner (in this case the last step, the
         ``DummyClassifier``) is evaluated on those splits.
 
-        Please see the examples gallery for more information.
+        We can pass additional data to the cross-validation splitter by using
+        the ``cv`` and ``split_kwargs`` parameters:
+
+        >>> df = skrub.datasets.toy_products()
+        >>> df
+           description  price            seller     category
+        0       screen    100   supermarket.com  electronics
+        1       hammer     15  bestproducts.com        tools
+        2     keyboard     20   supermarket.com  electronics
+        3      usb key      9  bestproducts.com  electronics
+        4      charger     13  bestproducts.com  electronics
+        5  screwdriver     12   supermarket.com        tools
+
+        Suppose we want to assess generalization to new sellers. While splitting for
+        cross-validation we must group products by seller. We do it with
+        :class:`sklearn.model_selection.LeaveOneGroupOut`.
+
+        >>> from sklearn.dummy import DummyClassifier
+        >>> from sklearn.model_selection import LeaveOneGroupOut
+
+        >>> data = skrub.var("df", df)
+        >>> groups = data["seller"]
+        >>> X = data[["description", "price"]].skb.mark_as_X(
+        ...     cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+        ... )
+        >>> y = data["category"].skb.mark_as_y()
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> split = pred.skb.train_test_split()
+
+        The train set only contains data from the "supermarket.com" seller.
+
+        >>> split["X_train"]
+           description  price
+        0       screen    100
+        2     keyboard     20
+        5  screwdriver     12
+
+        The test set only contains data from the "bestproducts.com" seller.
+
+        >>> split["X_test"]
+          description  price
+        1      hammer     15
+        3     usb key      9
+        4     charger     13
         """
-        new = self._data_op._skrub_impl.__copy__()
+        if cv is None:
+            if split_kwargs is not None:
+                raise TypeError(
+                    "To pass split_kwargs you must also provide a splitter. "
+                    f"Got cv=None and split_kwargs={split_kwargs}."
+                )
+            new = self._data_op._skrub_impl.__copy__()
+        else:
+            new = SplitX(self._data_op, cv, split_kwargs)
         new.is_X = True
         return DataOp(new)
 
@@ -2743,6 +2835,141 @@ class SkrubNamespace:
     def is_y(self):
         """Whether this DataOp has been marked with :meth:`.skb.mark_as_y()`."""
         return self._data_op._skrub_impl.is_y
+
+    @checked_data_op_constructor
+    def with_scoring(self, scoring, kwargs=None, name=None):
+        """Attach a scoring method to this DataOp.
+
+        This records a scikit-learn
+        `scorer <https://scikit-learn.org/stable/modules/model_evaluation.html#the-scoring-parameter-defining-model-evaluation-rules>`_
+        to be used when measuring the quality of predictions.
+
+        It allows configuring the default scoring metrics, and most importantly
+        to compute any additional arguments needed for scoring (such as sample
+        weights) as part of the DataOp evaluation.
+
+        Calls to this method can be chained to add multiple scorers that
+        use different kwargs. Several scoring strategies can be passed to a
+        single calls if they do not need different kwargs (see the description
+        of the ``scoring`` parameter).
+
+        Parameters
+        ----------
+        scoring : str, callable, list, tuple, or dict, default=None
+            Strategy to evaluate the performance of the learner. This accepts
+            exactly the same inputs as
+            :func:`sklearn.model_selection.cross_validate`:
+
+            If ``scoring`` represents a single score, one can use:
+
+            - a single string;
+            - a callable that returns a single value.
+            - ``None``, the estimator's default evaluation criterion is used.
+
+            If ``scoring`` represents multiple scores, one can use:
+
+            - a list or tuple of unique strings;
+            - a callable returning a dictionary where the keys are the metric
+              names and the values are the metric scores;
+            - a dictionary with metric names as keys and callables a values.
+
+            See the scikit-learn
+            `documentation <https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-api-overview>`_
+            on scoring for details.
+
+            ``scoring`` can be a DataOp, so it is possible to pass something like
+            ``skrub.deferred(sklearn.metrics.make_scorer)(...)``, although it
+            is usually simpler to pass an actual value for ``scoring`` and rely
+            on ``kwargs`` for any inputs that need to be computed dynamically.
+
+        kwargs : dict or None, optional, default=None
+            Additional named arguments to be passed to the scorer. A typical
+            example is ``sample_weight``, used by many scikit-learn metrics.
+            Note that ``kwargs`` can be a DataOp that will be evaluated
+            when scoring the learner, so scorer inputs such as sample weights
+            can be dynamic. None is the same as an empty dict
+
+        name : str or None, optional, default=None
+            A name used when displaying scoring results. If ``scoring``
+            represents multiple metrics, ``name`` will be prepended to each of
+            the metrics' name.
+
+        Returns
+        -------
+        DataOp
+            A DataOp that performs the same transformations and prediction, but
+            with scoring information attached to it, which will be used for
+            example in cross-validation.
+
+        Notes
+        -----
+        If this method is used several times, all calls to it must be grouped
+        -- there can be no other nodes in-between. For example
+        ``pred.skb.score_with('accuracy').skb.score_with('roc_auc')`` is allowed,
+        whereas
+        ``pred.skb.score_with('accuracy').skb.apply_func(a_function).skb.score_with('roc_auc')`` is not.
+        Typically all the ``score_with`` calls happen at the very end of the
+        DataOp construction.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> df = skrub.datasets.toy_products()
+        >>> data = skrub.var("df", df)
+        >>> X = data[["description", "price"]].skb.mark_as_X(cv=2)
+        >>> y = data["category"].skb.mark_as_y()
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+
+        We can get the accuracy (the default metric) with 2-fold cross-validation:
+
+        >>> pred.skb.cross_validate() # doctest: +SKIP
+           fit_time  score_time  test_score
+        0  0.003982    0.002405    0.666667
+        1  0.002582    0.002169    0.666667
+
+        But suppose we want to give more importance to the pricier products. We can
+        weight the accuracy by the item price:
+
+        >>> sample_weight = X["price"]
+        >>> pred.skb.with_scoring(
+        ...     "accuracy", kwargs={"sample_weight": sample_weight}
+        ... ).skb.cross_validate() # doctest: +SKIP
+           fit_time  score_time  test_accuracy
+        0  0.003045    0.003275       0.888889
+        1  0.002659    0.003026       0.647059
+
+        We can also have both by calling ``with_scoring`` twice:
+
+        >>> pred.skb.with_scoring("accuracy").skb.with_scoring(
+        ...     "accuracy",
+        ...     kwargs={"sample_weight": sample_weight},
+        ...     name="weighted_accuracy",
+        ... ).skb.cross_validate() # doctest: +SKIP
+           fit_time  score_time  test_accuracy  test_weighted_accuracy
+        0  0.002738    0.005733       0.666667                0.888889
+        1  0.002845    0.005705       0.666667                0.647059
+
+        When we have several scorers that use the same kwargs, we can pass a list
+        or dict of metrics, as for :func:`sklearn.model_selection.cross_validate`:
+
+        >>> sample_weight = X["price"]
+        >>> pred.skb.with_scoring(
+        ...     ["accuracy", "neg_log_loss"], kwargs={"sample_weight": sample_weight}
+        ... ).skb.cross_validate() # doctest: +SKIP
+           fit_time  score_time  test_accuracy  test_neg_log_loss
+        0  0.002694    0.007017       0.888889          -0.482481
+        1  0.002833    0.006627       0.647059          -0.650105
+        """  # noqa: E501
+        scorer_info = {"scoring": scoring, "kwargs": kwargs, "name": name}
+        impl = self._data_op._skrub_impl
+        if isinstance(impl, Scoring):
+            new = impl.__copy__()
+            new.scorers = [*new.scorers, scorer_info]
+        else:
+            new = Scoring(self._data_op, [scorer_info])
+        return DataOp(new)
 
     @checked_data_op_constructor
     def set_name(self, name):
@@ -2889,14 +3116,14 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToFrame(transformer=TableVectorizer())
+        ApplyToSubFrame(transformer=TableVectorizer())
 
         Note that in order to restrict transformers to a subset of columns,
-        they will be wrapped in a meta-estimator ``ApplyToFrame`` or
-        ``ApplyToCols`` depending if the transformer is applied to each column
+        they will be wrapped in a meta-estimator ``ApplyToSubFrame`` or
+        ``ApplyToEachCol`` depending if the transformer is applied to each column
         separately or not. The actual transformer can be retrieved through the
-        ``transformer_`` attribute of ``ApplyToFrame`` or ``transformers_``
-        attribute of ``ApplyToCols`` (a dictionary mapping column names to the
+        ``transformer_`` attribute of ``ApplyToSubFrame`` or ``transformers_``
+        attribute of ``ApplyToEachCol`` (a dictionary mapping column names to the
         corresponding transformer).
 
         >>> fitted_vectorizer.transformer_
@@ -2923,7 +3150,7 @@ class SkrubNamespace:
         <AppliedEstimator>
         Result:
         ―――――――
-        ApplyToCols(cols=(string() - cols('date')),
+        ApplyToEachCol(cols=(string() - cols('date')),
                      transformer=StringEncoder(n_components=2))
         >>> fitted_vectorizer.transformers_
         <GetAttr 'transformers_'>
