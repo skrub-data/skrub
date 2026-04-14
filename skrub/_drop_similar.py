@@ -1,7 +1,9 @@
 try:
-	import polars as pl
+    import polars as pl
 except ImportError:
-	pass
+    pass
+import numbers
+
 from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -24,7 +26,7 @@ def _filter_associations_pandas(obj, threshold):
 
 @_filter_associations.specialize("polars")
 def _filter_associations_polars(obj, threshold):
-    return obj.filter(pl.col("cramer_v") > threshold)
+    return obj.filter(pl.col("cramer_v") >= threshold)
 
 
 class DropSimilar(TransformerMixin):
@@ -61,8 +63,12 @@ class DropSimilar(TransformerMixin):
 
     def fit_transform(self, X, y=None):
         # check that the threshold is correct
-        if not (0 <= self.threshold <= 1):
-            raise ValueError(f"Threshold must be between 0 and 1, got {self.threshold!r}")
+        if isinstance(self.threshold, bool) or not (
+            isinstance(self.threshold, numbers.Real) and 0 <= self.threshold <= 1
+        ):
+            raise ValueError(
+                f"Threshold must be a number between 0 and 1, got {self.threshold!r}"
+            )
 
         self.to_drop_ = []
 
@@ -70,7 +76,9 @@ class DropSimilar(TransformerMixin):
 
         pairs_to_drop = _filter_associations(association_df, self.threshold)
 
-        self.to_drop_.extend(sbd.unique(pairs_to_drop["right_column_name"]))
+        self.to_drop_.extend(
+            sbd.to_list(sbd.unique(pairs_to_drop["right_column_name"]))
+        )
 
         self._dropper = DropCols(self.to_drop_)
 
