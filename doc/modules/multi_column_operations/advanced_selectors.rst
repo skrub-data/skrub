@@ -1,6 +1,5 @@
 .. currentmodule:: skrub.selectors
 
-.. |ApplyToEachCol| replace:: :class:`~skrub.ApplyToEachCol`
 .. |StandardScaler| replace:: :class:`~sklearn.preprocessing.StandardScaler`
 .. |filter| replace:: :func:`filter`
 .. |filter_names| replace:: :func:`filter_names`
@@ -125,7 +124,3 @@ Select columns with at least 25% missing values:
 5             NaN       ...
 6             NaN       ...
 7           150.0       ...
-
-Example: Dropping columns with :func:`DropUninformative`
-..........................................................
-:ref:`user_guide_drop_uninformative`
