@@ -1,4 +1,7 @@
-import polars as pl
+try:
+	import polars as pl
+except ImportError:
+	pass
 from sklearn.base import TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
@@ -16,7 +19,7 @@ def _filter_associations(obj):
 
 @_filter_associations.specialize("pandas")
 def _filter_associations_pandas(obj, threshold):
-    return obj[obj["cramer_v"] > threshold]
+    return obj[obj["cramer_v"] >= threshold]
 
 
 @_filter_associations.specialize("polars")
@@ -30,7 +33,7 @@ class DropSimilar(TransformerMixin):
 
     This is done by computing Cramér's V between every possible two columns,
     and sorting these couples in descending order. Then, for every association above
-    a preestablished threshold, one of the two columns is dropped.
+    the given threshold, one of the two columns is dropped.
 
     Parameters
     ----------
@@ -39,7 +42,7 @@ class DropSimilar(TransformerMixin):
 
     Attributes
     ----------
-    to_drop : list
+    to_drop_ : list
         The names of columns evaluated for removal
 
     See Also
@@ -59,7 +62,7 @@ class DropSimilar(TransformerMixin):
     def fit_transform(self, X, y=None):
         # check that the threshold is correct
         if not (0 <= self.threshold <= 1):
-            raise ValueError("Threshold must be between 0 and 1")
+            raise ValueError(f"Threshold must be between 0 and 1, got {self.threshold!r}")
 
         self.to_drop_ = []
 
