@@ -22,6 +22,8 @@ Changes
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 
 Bugfixes
 --------
@@ -105,8 +107,6 @@ Changes
   :class:`TableReport` has been increased to N=1000, and the associations
   are now displayed in a scrollable table.
   :pr:`1992` by :user:`Lisa McBride<lisaleemcb>`.
-- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
-  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 
 Bug Fixes
 --------
