@@ -6,7 +6,7 @@ Complex multi-table pipelines with Data Ops
 Skrub provides an easy way to build complex, flexible machine learning pipelines.
 There are several needs that are not easily addressed with standard scikit-learn
 tools such as :class:`~sklearn.pipeline.Pipeline` and
-:class:`~sklearn.compose.ColumnTransformer`, and for which the Skrub DataOps offer
+:class:`~sklearn.compose.ColumnTransformer`, and for which the skrub DataOps offer
 a solution:
 
 - Multiple tables: We often have several tables of different shapes (for
@@ -40,6 +40,7 @@ Data Ops basic concepts
 
    modules/data_ops/basics/what_are_data_ops
    modules/data_ops/basics/building_data_ops_plan
+   auto_tutorials/1110_data_ops_intro
    modules/data_ops/basics/using_previews
    modules/data_ops/basics/direct_access_methods
    modules/data_ops/basics/control_flow
@@ -58,7 +59,7 @@ Building a complex pipeline with the skrub Data Ops
    modules/data_ops/ml_pipeline/using_part_of_data_ops_plan
    modules/data_ops/ml_pipeline/subsampling_data
 
-Tuning and validating Skrub DataOps plans
+Tuning and validating skrub DataOps plans
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. toctree::

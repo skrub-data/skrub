@@ -1,18 +1,23 @@
 [
     {
-        "name": "0.8.dev0 (dev)",
-        "version": "0.8.dev0",
+        "name": "0.9.dev0 (dev)",
+        "version": "0.9.dev0",
         "url": "https://skrub-data.org/dev/"
     },
     {
-        "name": "0.7.1 (stable)",
-        "version": "0.7.1",
+        "name": "0.8.0 (stable)",
+        "version": "0.8.0",
         "url": "https://skrub-data.org/stable/",
         "preferred": true
     },
     {
-	"name": "0.6",
-	"url": "https://skrub-data.org/0.6/"
+        "name": "0.7",
+        "version": "0.7",
+        "url": "https://skrub-data.org/0.7/"
+    },
+    {
+        "name": "0.6",
+        "url": "https://skrub-data.org/0.6/"
     },
     {
         "version": "0.5",

@@ -12,35 +12,35 @@ Very often, the first steps in preparing a dataframe for further use involve
 understanding the datatypes in the data and changing them into a more suitable format
 (e.g., from string to number or datetime).
 
-The |Cleaner| aids with this by running the following set of transformations on
-each column:
+The |Cleaner| aids with this by running common operations on each column, including
+replacing "null-looking" strings (e.g., ``NULL``) with actual null values, and
+parsing datetimes and numbers.
 
-- Clean null strings: Replace strings typically used to represent missing values
-  with a null value suitable for the column under consideration.
+.. admonition:: All the transformations done by the |Cleaner|
+  :collapsible: closed
 
-- |DropUninformative|: Drop the column if it is considered "uninformative."
-  A column is considered "uninformative" if it contains only missing values
-  (``drop_null_fraction``), only a constant value (``drop_if_constant``), or if all
-  values are distinct (``drop_if_unique``). By default, the |Cleaner| keeps all columns
-  unless they contain only missing values. Refer to :ref:`user_guide_drop_uninformative`
-  for more detail on this operation.
+  - Clean null strings: Replace strings typically used to represent missing values
+    with a null value suitable for the column under consideration.
 
-.. note::
+  - |DropUninformative|: Drop the column if it is considered "uninformative."
+    A column is considered "uninformative" if it contains only missing values
+    (``drop_null_fraction``), only a constant value (``drop_if_constant``), or if all
+    values are distinct (``drop_if_unique``). By default, the |Cleaner| keeps all columns
+    unless they contain only missing values. Refer to :ref:`user_guide_drop_uninformative`
+    for more detail on this operation.
 
-  Setting ``drop_if_unique`` to ``True`` may lead to dropping columns
-  that contain text or IDs. Numeric columns are never dropped by ``drop_if_unique``.
+  .. note::
 
-- |ToDatetime|: Parse datetimes represented as strings and return them as
-  actual datetimes with the correct dtype. If ``datetime_format`` is provided,
-  it is forwarded to |ToDatetime|. Otherwise, the format is guessed according
-  to common datetime formats.
+    Setting ``drop_if_unique`` to ``True`` may lead to dropping columns
+    that contain text or IDs. Numeric columns are never dropped by ``drop_if_unique``.
 
-- Clean categories: If the dtype of the column is detected as "Categorical",
-  process it based on the dataframe library (Pandas or Polars) to ensure
-  consistent typing and avoid downstream issues.
+  - |ToDatetime|: Parse datetimes represented as strings and return them as
+    actual datetimes with the correct dtype. If ``datetime_format`` is provided,
+    it is forwarded to |ToDatetime|. Otherwise, the format is guessed according
+    to common datetime formats.
 
-- Convert to strings: Convert columns to strings unless they have a more informative
-  dtype, such as numeric, categorical, or datetime.
+  - Convert to strings: Convert columns to strings unless they have a more informative
+    dtype, such as numeric, categorical, or datetime.
 
 If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
 numeric columns to ``np.float32`` dtype, ensuring a consistent representation
@@ -64,8 +64,8 @@ The |Cleaner| is a scikit-learn compatible transformer:
   2   3 2024-05-07
 >>> df_clean.dtypes
 id               int64
-date    datetime64[ns]
-dtype: object
+date    datetime64[...]
+dtype:  ...
 
 Note that the ``"all_missing"`` column has been dropped, and that the ``"date"``
 column has been correctly parsed as a datetime column.
@@ -89,11 +89,11 @@ the ``numeric_dtype`` parameter:
 ... })
 >>> df.dtypes
 id    int64
-dtype: object
+dtype: ...
 >>> df_cleaned = cleaner.fit_transform(df)
 >>> df_cleaned.dtypes
 id    float32
-dtype: object
+dtype: ...
 
 Setting the dtype to ``float32`` reduces RAM footprint for most use cases and
 ensures that all missing values have the same representation. This also ensures

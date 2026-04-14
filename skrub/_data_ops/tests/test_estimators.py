@@ -2,11 +2,13 @@ import copy
 import io
 import pickle
 import warnings
+from functools import partial
 from unittest.mock import Mock
 
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from numpy.testing import assert_allclose
 from sklearn.base import BaseEstimator, clone
 from sklearn.cluster import KMeans
@@ -16,8 +18,20 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.exceptions import FitFailedWarning, NotFittedError
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import GridSearchCV, cross_validate, train_test_split
+from sklearn.metrics import (
+    accuracy_score,
+    brier_score_loss,
+    get_scorer,
+    make_scorer,
+    roc_auc_score,
+)
+from sklearn.model_selection import (
+    GridSearchCV,
+    KFold,
+    LeaveOneGroupOut,
+    cross_validate,
+    train_test_split,
+)
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.utils.validation import check_is_fitted
 
@@ -167,6 +181,162 @@ def test_cross_validate(data_op, data, n_jobs):
     assert score.mean() == pytest.approx(0.84, abs=0.05)
 
 
+def test_cross_validate_with_scoring():
+    X_a, y_a = make_classification(random_state=0)
+    X = skrub.X(X_a)
+
+    def get_sample_weight(X):
+        return np.abs(X[:, 0])
+
+    sw_a = get_sample_weight(X_a)
+    sw = X.skb.apply_func(get_sample_weight)
+
+    # Single metric without kwargs
+
+    data_op = X.skb.apply(DummyClassifier(), y=skrub.y(y_a))
+    skrub_scores = data_op.skb.with_scoring("accuracy").skb.cross_validate()
+    sklearn_scores = cross_validate(DummyClassifier(), X_a, y_a, scoring="accuracy")
+    assert np.allclose(skrub_scores["test_score"], sklearn_scores["test_score"])
+
+    # Different types of scoring such as strings, callables and multimetric
+
+    acc_scorer = make_scorer(accuracy_score)
+    roc_scorer = make_scorer(roc_auc_score)
+
+    def custom_brier_score(estimator, X, y):
+        return get_scorer("neg_brier_score")(estimator, X, y)
+
+    def custom_roc_auc(estimator, X, y):
+        return get_scorer("roc_auc")(estimator, X, y)
+
+    # unlikely case of a scorer with metadata routing but not _kwargs nor
+    # _scorers, mostly here to get full test coverage
+    custom_roc_auc.get_metadata_routing = None
+
+    skrub_scores = (
+        data_op.skb.with_scoring("accuracy")
+        .skb.with_scoring("roc_auc", name="ROC")
+        .skb.with_scoring(
+            {
+                "accuracy": acc_scorer,
+                "roc": roc_scorer,
+                "custom_brier": custom_brier_score,
+                "custom_roc_auc": custom_roc_auc,
+            },
+            name="in_dict",
+        )
+        .skb.cross_validate()
+    )
+    sklearn_scores = cross_validate(
+        DummyClassifier(),
+        X_a,
+        y_a,
+        scoring={
+            "accuracy": acc_scorer,
+            "ROC": roc_scorer,
+            "in_dict_accuracy": acc_scorer,
+            "in_dict_roc": roc_scorer,
+            "in_dict_custom_brier": custom_brier_score,
+            "in_dict_custom_roc_auc": custom_roc_auc,
+        },
+    )
+    for name in [
+        "accuracy",
+        "ROC",
+        "in_dict_accuracy",
+        "in_dict_roc",
+        "in_dict_custom_brier",
+        "in_dict_custom_roc_auc",
+    ]:
+        assert np.allclose(skrub_scores[f"test_{name}"], sklearn_scores[f"test_{name}"])
+
+    # Using dynamically-computed kwargs or a dynamically-computed-scorer
+
+    data_op = X.skb.apply(
+        DummyClassifier(), y=skrub.y(y_a), fit_kwargs={"sample_weight": sw}
+    )
+    kwargs_skrub_scores = data_op.skb.with_scoring(
+        "accuracy", kwargs={"sample_weight": sw}
+    ).skb.cross_validate()
+
+    deferred_skrub_scores = data_op.skb.with_scoring(
+        skrub.deferred(make_scorer)(accuracy_score, sample_weight=sw), name="accuracy"
+    ).skb.cross_validate()
+
+    scorer = make_scorer(accuracy_score)
+    with sklearn.config_context(enable_metadata_routing=True):
+        scorer.set_score_request(sample_weight=True)
+        sklearn_scores = cross_validate(
+            DummyClassifier().set_fit_request(sample_weight=True),
+            X_a,
+            y_a,
+            scoring=scorer,
+            params=dict(sample_weight=sw_a),
+        )
+    for skrub_scores in [kwargs_skrub_scores, deferred_skrub_scores]:
+        assert np.allclose(skrub_scores["test_score"], sklearn_scores["test_score"])
+
+
+def test_score_no_scoring():
+    data_op, data = get_data_op_and_data("simple")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    skrub_score = learner.score(split["test"])
+    pred = learner.predict(split["test"])
+    sklearn_score = accuracy_score(split["y_test"], pred)
+    assert np.allclose(skrub_score, sklearn_score)
+
+
+def test_score_with_scoring():
+    data_op, data = get_data_op_and_data("simple")
+    data_op = data_op.skb.with_scoring("neg_brier_score")
+    split = data_op.skb.train_test_split(data)
+    learner = data_op.skb.make_learner().fit(split["train"])
+    skrub_score = learner.score(split["test"])["neg_brier_score"]
+    pred = learner.predict_proba(split["test"])[:, 1]
+    sklearn_score = -brier_score_loss(split["y_test"], pred)
+    assert np.allclose(skrub_score, sklearn_score)
+
+
+def test_with_scoring_names():
+    data_op, data = get_data_op_and_data("simple")
+    acc_scorer = make_scorer(accuracy_score)
+
+    def acc_scorer_func(e, X, y):
+        return acc_scorer(e, X, y)
+
+    acc_scorer_func_no_name = partial(acc_scorer_func)
+
+    data_op = (
+        data_op.skb.with_scoring("accuracy")
+        .skb.with_scoring(acc_scorer)
+        .skb.with_scoring(acc_scorer, name="accuracy_with_name")
+        .skb.with_scoring(acc_scorer_func_no_name)
+        .skb.with_scoring("accuracy")
+        .skb.with_scoring({"a1": acc_scorer, "a2": acc_scorer_func}, name="dict_name")
+    )
+    scores = data_op.skb.make_learner().fit(data).score(data)
+    assert list(scores.keys()) == [
+        "accuracy",
+        "accuracy_score",
+        "accuracy_with_name",
+        "score",
+        "accuracy_1",
+        "dict_name_a1",
+        "dict_name_a2",
+    ]
+
+
+def test_cross_validate_return_indices():
+    """
+    Non-regression for #1487.
+    """
+    data_op, data = get_data_op_and_data("simple")
+    results = data_op.skb.cross_validate(data, return_indices=True)
+    for col in ["train_indices", "test_indices"]:
+        assert col in results.columns
+
+
 def test_cross_validate_type_error():
     # Checks that cross_validate fails as expected when passed anything
     # other than a Learner, ParamSearch or OptunaParamSearch object
@@ -213,10 +383,36 @@ def test_randomized_search(data_op, data, n_jobs, randomized_search_backend):
     assert train_score == pytest.approx(0.94, abs=0.05)
 
 
+def test_randomized_search_with_scoring(randomized_search_backend):
+    data_op, data = get_data_op_and_data("simple")
+
+    # single score
+
+    split = data_op.skb.train_test_split(data)
+
+    search = data_op.skb.with_scoring("neg_brier_score").skb.make_randomized_search(
+        n_iter=3, random_state=0, backend=randomized_search_backend
+    )
+    search.fit(split["train"])
+    assert (search.results_["mean_test_score"] <= 0).all()
+    assert search.score(split["test"])["neg_brier_score"] < 0
+
+    # multiple scores
+
+    search = data_op.skb.with_scoring(
+        ["neg_brier_score", "roc_auc"]
+    ).skb.make_randomized_search(
+        n_iter=3, random_state=0, backend=randomized_search_backend, refit="roc_auc"
+    )
+    search.fit(split["train"])
+    assert (search.results_["mean_test_neg_brier_score"] <= 0).all()
+    assert list(search.score(split["test"]).keys()) == ["neg_brier_score", "roc_auc"]
+
+
 def test_grid_search(data_op, data, n_jobs):
     search = data_op.skb.make_grid_search(n_jobs=n_jobs)
     search.fit(data)
-    search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
+    assert search.results_["mean_test_score"].iloc[0] == pytest.approx(0.84, abs=0.05)
     assert search.decision_function(data).shape == (100,)
     train_score = search.score(data)
     assert train_score == pytest.approx(0.94)
@@ -569,15 +765,34 @@ def test_train_test_split(with_y):
         assert e.skb.eval() == [7, 6, 5, 4, 3, 2, 1, 0]
 
 
+def test_train_test_split_X_y_aligned():
+    """
+    Assert that X & y are evaluated jointly in train-test-split, CV etc.
+    """
+    df = skrub.var(
+        "df", pd.DataFrame({"a": list(range(1_000)), "b": list(range(1_000))})
+    )
+    shuffled = df.sample(frac=1)
+    X = shuffled[["a"]].skb.mark_as_X()
+    y = shuffled["b"].skb.mark_as_y()
+    data_op = X.skb.apply(Ridge(), y=y)
+    split = data_op.skb.train_test_split()
+    assert (split["X_train"]["a"].to_numpy() == split["y_train"].to_numpy()).all()
+
+
 def test_iter_cv_splits():
     X = skrub.X(np.arange(5) * 10)
     splits = X.skb.iter_cv_splits()
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [10, 20, 30, 40]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
+    assert list(s["row_indices_train"]) == [1, 2, 3, 4]
+    assert list(s["row_indices_test"]) == [0]
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30, 40]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
+    assert list(s["row_indices_train"]) == [0, 2, 3, 4]
+    assert list(s["row_indices_test"]) == [1]
 
     X = skrub.X(np.arange(4) * 10)
     y = skrub.y(np.arange(4) * -10)
@@ -587,11 +802,15 @@ def test_iter_cv_splits():
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [0]
     assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [-10, -20, -30]
     assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [0]
+    assert list(s["row_indices_train"]) == [1, 2, 3]
+    assert list(s["row_indices_test"]) == [0]
     s = next(splits)
     assert list(s["X_train"]) == list(s["train"]["_skrub_X"]) == [0, 20, 30]
     assert list(s["X_test"]) == list(s["test"]["_skrub_X"]) == [10]
     assert list(s["y_train"]) == list(s["train"]["_skrub_y"]) == [0, -20, -30]
     assert list(s["y_test"]) == list(s["test"]["_skrub_y"]) == [-10]
+    assert list(s["row_indices_train"]) == [0, 2, 3]
+    assert list(s["row_indices_test"]) == [1]
 
 
 def test_train_test_split_splitter_renaming():
@@ -605,6 +824,91 @@ def test_train_test_split_splitter_renaming():
         assert X.skb.train_test_split(splitter=split, shuffle=False)["X_train"] == list(
             range(7)
         )
+
+
+def _make_grouped_data():
+    return pd.DataFrame(
+        {"x": np.arange(100), "g": np.arange(100) % 2, "y": np.arange(100)}
+    )
+
+
+def _to_list(s):
+    return list(map(list, s))
+
+
+def _train_idx(cv_results):
+    return _to_list(cv_results["train_indices"])
+
+
+def _test_idx(cv_results):
+    return _to_list(cv_results["test_indices"])
+
+
+def _unzip_splits(splits):
+    train, test = zip(*splits)
+    return _to_list(train), _to_list(test)
+
+
+def test_mark_as_X_splitter():
+    data_value = _make_grouped_data()
+
+    data = skrub.var("df", data_value)
+    groups = data["g"]
+    targets = data["y"].skb.mark_as_y()
+    features_with_groups = data[["x"]].skb.mark_as_X(
+        cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+    )
+    features_no_groups = data[["x"]].skb.mark_as_X()
+    pred_with_groups = features_with_groups.skb.apply(DummyRegressor(), y=targets)
+    pred_no_groups = features_no_groups.skb.apply(DummyRegressor(), y=targets)
+
+    # Use the default splitter when nothing is specified
+    cv_results = pred_no_groups.skb.cross_validate(return_indices=True)
+    train, test = _unzip_splits(KFold().split(data_value))
+    assert _train_idx(cv_results) == train
+    assert _test_idx(cv_results) == test
+
+    assert pred_no_groups.skb.make_grid_search(fitted=True).n_splits_ == 5
+
+    split = pred_no_groups.skb.train_test_split()
+    assert split["X_train"].shape[0] == 75
+    assert split["X_test"].shape[0] == 25
+
+    # Use the splitter passed to mark_as_X
+    cv_results = pred_with_groups.skb.cross_validate(return_indices=True)
+    train, test = _unzip_splits(
+        LeaveOneGroupOut().split(data_value, groups=data_value["g"])
+    )
+    assert _train_idx(cv_results) == train
+    assert _test_idx(cv_results) == test
+
+    assert pred_with_groups.skb.make_grid_search(fitted=True).n_splits_ == 2
+
+    split = pred_with_groups.skb.train_test_split()
+    assert list(split["X_train"]["x"]) == train[0]
+    assert list(split["X_test"]["x"]) == test[0]
+
+    # Override with another splitter
+    cv_results = pred_with_groups.skb.cross_validate(return_indices=True, cv=7)
+    train, test = _unzip_splits(KFold(7).split(data_value))
+    assert _train_idx(cv_results) == train
+    assert _test_idx(cv_results) == test
+
+    assert pred_with_groups.skb.make_grid_search(fitted=True, cv=7).n_splits_ == 7
+
+    split = pred_with_groups.skb.train_test_split(
+        split_func=train_test_split, test_size=30
+    )
+    assert split["X_train"].shape[0] == 70
+    assert split["X_test"].shape[0] == 30
+
+    # Check for unsupervised estimator (train/test split without y)
+
+    split = features_with_groups.skb.train_test_split()
+    assert split["X_train"].shape[0] == 50
+
+    split = features_no_groups.skb.train_test_split()
+    assert split["X_train"].shape[0] == 75
 
 
 def test_iter_learners():

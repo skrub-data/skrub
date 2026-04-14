@@ -85,8 +85,6 @@ class CleanCategories(SingleColumnTransformer):
     2    three
     Name: c, dtype: category
     Categories (3, ...): ['one', 'three', 'two']
-    >>> cleaner.fit_transform(s) is s # doctest: +SKIP
-    True
 
     Categories stored with the ``StringDtype`` dtype are converted to ``object``:
 
@@ -150,7 +148,7 @@ class CleanCategories(SingleColumnTransformer):
     >>> cleaner.fit_transform(s)
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Column 'c' is not categorical.
+    skrub.core.RejectColumn: Column 'c' is not categorical.
 
     However once a column has been accepted, the output of ``transform`` will
     always have a categorical dtype:

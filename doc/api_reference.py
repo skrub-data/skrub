@@ -64,10 +64,9 @@ API_REFERENCE = {
                 "autosummary": [
                     "tabular_pipeline",
                     "TableVectorizer",
+                    "ApplyToCols",
                     "SelectCols",
                     "DropCols",
-                    "ApplyToCols",
-                    "ApplyToFrame",
                 ],
             }
         ],
@@ -91,7 +90,6 @@ API_REFERENCE = {
                     "ToCategorical",
                     "DatetimeEncoder",
                     "ToDatetime",
-                    "to_datetime",
                     "ToFloat",
                 ],
             }
@@ -125,6 +123,7 @@ API_REFERENCE = {
                     "deduplicate",
                     "Cleaner",
                     "DropUninformative",
+                    "to_datetime",
                 ],
             },
         ],
@@ -159,6 +158,7 @@ API_REFERENCE = {
                     " details."
                 ),
                 "autosummary": [
+                    "selectors.Selector",
                     "selectors.all",
                     "selectors.any_date",
                     "selectors.boolean",
@@ -251,6 +251,7 @@ API_REFERENCE = {
                     "DataOp.skb.set_name",
                     "DataOp.skb.subsample",
                     "DataOp.skb.train_test_split",
+                    "DataOp.skb.with_scoring",
                 ],
                 "template": "autosummary/accessor_method.rst",
             },
@@ -274,6 +275,20 @@ API_REFERENCE = {
                 ],
                 "template": "base.rst",
             },
+        ],
+    },
+    "advanced": {
+        "title": "Advanced topics",
+        "short_summary": None,
+        "description": None,
+        "sections": [
+            {
+                "description": None,
+                "autosummary": [
+                    "core.SingleColumnTransformer",
+                    "core.RejectColumn",
+                ],
+            }
         ],
     },
     "config": {
@@ -306,9 +321,6 @@ API_REFERENCE = {
                     "datasets.fetch_drug_directory",
                     "datasets.fetch_employee_salaries",
                     "datasets.fetch_flight_delays",
-                    "datasets.fetch_ken_embeddings",
-                    "datasets.fetch_ken_table_aliases",
-                    "datasets.fetch_ken_types",
                     "datasets.fetch_medical_charge",
                     "datasets.fetch_midwest_survey",
                     "datasets.fetch_movielens",

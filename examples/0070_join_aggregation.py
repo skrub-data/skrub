@@ -80,11 +80,15 @@ Each product has several attributes:
 """
 
 # %%
+import pandas as pd
+
 from skrub import TableReport
 from skrub.datasets import fetch_credit_fraud
 
 bunch = fetch_credit_fraud()
-products, baskets = bunch.products, bunch.baskets
+products = pd.read_csv(bunch.products_path)
+baskets = pd.read_csv(bunch.baskets_path)
+
 TableReport(products)
 
 # %%
@@ -111,7 +115,6 @@ TableReport(products_grouped)
 # Then, we can expand all lists into columns, as if we were "flattening" the dataframe.
 # We end up with a products dataframe ready to be joined on the baskets dataframe, using
 # ``"basket_ID"`` as the join key.
-import pandas as pd
 
 products_flatten = []
 for col in products_grouped.columns:

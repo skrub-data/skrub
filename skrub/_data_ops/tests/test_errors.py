@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 
 import skrub
 from skrub._utils import PassThrough
+from skrub.conftest import skip_polars_installed_without_pyarrow
 
 #
 # Using eager statements on DataOps
@@ -23,7 +24,7 @@ def test_for():
     with pytest.raises(
         TypeError, match=".*it is not possible to eagerly iterate over it"
     ):
-        for item in a:
+        for _item in a:
             pass
 
 
@@ -41,7 +42,7 @@ def test_contains():
     with pytest.raises(
         TypeError, match=".*it is not possible to eagerly perform membership tests"
     ):
-        2 in a
+        2 in a  # noqa: B015
 
 
 def test_setitem():
@@ -185,6 +186,13 @@ def test_duplicate_y():
         ValueError, match=r"Only one node can be marked with `mark_as_y\(\)`"
     ):
         skrub.y() + skrub.var("a").skb.mark_as_y()
+
+
+def test_2_scoring_nodes():
+    with pytest.raises(ValueError, match=r".*can only contain one scoring node"):
+        skrub.X().skb.apply(DummyClassifier(), y=skrub.y()).skb.with_scoring(
+            "accuracy"
+        ).skb.apply_func(lambda x: x).skb.with_scoring("roc_auc")
 
 
 def test_missing_X_or_y():
@@ -550,6 +558,7 @@ def test_bad_names():
         skrub.var("_skrub_X")
 
 
+@skip_polars_installed_without_pyarrow
 def test_pass_df_instead_of_data_op():
     df = skrub.datasets.toy_orders().orders
     with pytest.raises(TypeError, match="You passed an actual DataFrame"):
@@ -617,3 +626,8 @@ def test_unhashable():
 def test_int_column_names():
     with pytest.warns(match="Some dataframe column names are not strings"):
         skrub.X(pd.DataFrame({0: [1, 2]})).skb.apply("passthrough")
+
+
+def test_mark_as_X_missing_cv():
+    with pytest.raises(TypeError, match=".*you must also provide a splitter"):
+        skrub.var("a").skb.mark_as_X(split_kwargs={"groups": None})

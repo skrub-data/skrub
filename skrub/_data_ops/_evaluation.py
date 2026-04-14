@@ -20,10 +20,11 @@ from sklearn.base import clone as skl_clone
 from sklearn.utils import check_random_state
 
 from .._utils import short_repr
-from . import _choosing
+from . import _choosing, _utils
 from ._data_ops import (
     Apply,
     DataOp,
+    Scoring,
     Value,
     Var,
 )
@@ -284,43 +285,46 @@ class _Evaluator(_DataOpTraversal):
         self._data_op = data_op
         return super().run(data_op)
 
-    def _fetch(self, data_op):
-        """Fetch the result from the cache or environment if possible.
-
-        Raises a KeyError otherwise
-        """
-        impl = data_op._skrub_impl
-        if impl.is_X and X_NAME in self.environment:
-            return self.environment[X_NAME]
-        if impl.is_y and Y_NAME in self.environment:
-            return self.environment[Y_NAME]
-        if (
-            # if Var, let the usual mechanism fetch the value from the
-            # environment and store in results dict. Otherwise override with
-            # the provided value.
-            not isinstance(impl, Var)
-            and impl.name is not None
-            and impl.name in self.environment
-        ):
-            return self.environment[impl.name]
-        return impl.results[self.mode]
-
-    def _store(self, data_op, result, duration):
+    def _store(self, data_op, result, duration, env_key):
         """Store a result in the cache."""
         data_op._skrub_impl.results[self.mode] = result
         metadata = data_op._skrub_impl.metadata.setdefault(self.mode, {})
         metadata["eval_duration"] = duration
+        metadata["env_key"] = env_key
 
     def handle_data_op(self, data_op):
+        impl = data_op._skrub_impl
         try:
-            return self._fetch(data_op)
+            return impl.results[self.mode]
         except KeyError:
             pass
-        result = yield from self._eval_data_op(data_op)
+
+        if impl.is_X and X_NAME in self.environment:
+            env_key, fetch = X_NAME, True
+        elif impl.is_y and Y_NAME in self.environment:
+            env_key, fetch = Y_NAME, True
+        elif impl.name is not None and impl.name in self.environment:
+            env_key = impl.name
+
+            # If data_op is a Var, let the usual eval mechanism fetch the value
+            # from the environment (it provides an error message if it is
+            # missing). For other types of nodes fetch the provided value
+            # directly. (if is_X or is_y then the value is always fetched
+            # directly from the environment, as X and y have priority over
+            # variable's names)
+            fetch = not isinstance(impl, Var)
+        else:
+            env_key, fetch = None, False
+
+        if fetch:
+            result = self.environment[env_key]
+        else:
+            result = yield from self._eval_data_op(data_op)
+
         duration = yield _CurrentNodeDuration()
-        self._store(data_op, result, duration)
+        self._store(data_op, result, duration=duration, env_key=env_key)
         for cb in self.callbacks:
-            cb(data_op, result)
+            cb(data_op, result, duration=duration, env_key=env_key)
         return result
 
     def _eval_data_op(self, data_op):
@@ -454,41 +458,17 @@ def evaluate(data_op, mode="preview", environment=None, clear=False, callbacks=(
             clear_results(data_op, mode=mode)
 
 
-class _Reachable(_DataOpTraversal):
-    """
-    Find all nodes that are reachable from the root node, stopping at nodes
-    that have already been computed.
-
-    This is used to find which cached results are no longer needed and can be
-    discarded to free the corresponding memory. For example if we have this
-    DataOp: `b = a + a; c = b * b` and we want to evaluate `c`, once `b`
-    has been computed we no longer need `a` to compute `c` and we can clear its
-    cache.
-    """
-
-    def __init__(self, mode):
-        self.mode = mode
-
-    def run(self, data_op):
-        self._reachable = {}
-        super().run(data_op)
-        return self._reachable
-
-    def handle_data_op(self, data_op):
-        self._reachable[id(data_op)] = data_op
-        if self.mode in data_op._skrub_impl.results:
-            return data_op
-        return (yield from super().handle_data_op(data_op))
-
-
 def _cache_pruner(data_op, mode):
-    all_nodes = nodes(data_op)
+    g = graph(data_op)
+    ref_counts = {node_id: len(parents) for node_id, parents in g["parents"].items()}
+    id_map = {id(node): node_id for node_id, node in g["nodes"].items()}
 
-    def prune(*args, **kwargs):
-        reachable_nodes = _Reachable(mode).run(data_op)
-        for node in all_nodes:
-            if id(node) not in reachable_nodes:
-                node._skrub_impl.results.pop(mode, None)
+    def prune(data_op, result, **kwargs):
+        node_id = id_map[id(data_op)]
+        for c in g["children"].get(node_id, ()):
+            ref_counts[c] -= 1
+            if ref_counts[c] == 0:
+                g["nodes"][c]._skrub_impl.results.pop(mode, None)
 
     return prune
 
@@ -678,21 +658,13 @@ def _choice_display_names(choices):
     When the choice is given an explicit `name` by the user that is used,
     otherwise a shorted repr + number suffix to make them unique.
     """
-    used = set()
+    rename = _utils.unique_renaming()
     names = {}
 
     def add(choice_ids):
         for c_id in choice_ids:
             stem = _choosing.get_display_name(choices[c_id])
-            if stem not in used:
-                used.add(stem)
-                names[c_id] = stem
-                continue
-            i = 1
-            while (numbered := f"{stem}_{i}") in used:
-                i += 1
-            used.add(numbered)
-            names[c_id] = numbered
+            names[c_id] = rename(stem)
         return names
 
     add(c_id for (c_id, c) in choices.items() if c.name is not None)
@@ -1159,6 +1131,7 @@ class _FindConflicts(_DataOpTraversal):
         self._names = {}
         self._x = {}
         self._y = {}
+        self._score_nodes = {}
 
     def handle_data_op(self, e):
         self._add(
@@ -1166,11 +1139,12 @@ class _FindConflicts(_DataOpTraversal):
             getattr(e._skrub_impl, "name", None),
             e._skrub_impl.is_X,
             e._skrub_impl.is_y,
+            isinstance(e._skrub_impl, Scoring),
         )
         yield from super().handle_data_op(e)
 
     def handle_choice(self, choice):
-        self._add(choice, getattr(choice, "name", None), False, False)
+        self._add(choice, getattr(choice, "name", None), False, False, False)
         yield from super().handle_choice(choice)
 
     def _conflict_error_message(self, conflict):
@@ -1188,6 +1162,13 @@ class _FindConflicts(_DataOpTraversal):
                 "2 different objects were marked as y:\n"
                 f"first object that used `.mark_as_y()`:\n{first}\n"
                 f"second object that used `.mark_as_y()`:\n{second}"
+            )
+        if conflict["reason"] == "is_score":
+            return (
+                "The DataOp can only contain one scoring node;\ngroup the "
+                ".skb.with_scoring() calls together with no other nodes in-between.\n"
+                f"first scoring node:\n{first}\n"
+                f"second scoring node:\n{second}\n"
             )
         assert conflict["reason"] == "name", conflict["reason"]
         name = conflict["name"]
@@ -1219,11 +1200,13 @@ class _FindConflicts(_DataOpTraversal):
         conflict["message"] = self._conflict_error_message(conflict)
         raise _Found(conflict)
 
-    def _add(self, obj, name, is_X, is_y):
+    def _add(self, obj, name, is_X, is_y, is_score):
         if is_X:
             self._add_to_dict(self._x, "X", obj, "is_X")
         if is_y:
             self._add_to_dict(self._y, "y", obj, "is_y")
+        if is_score:
+            self._add_to_dict(self._score_nodes, "score", obj, "is_score")
         self._add_to_dict(self._names, name, obj, "name")
 
 
@@ -1231,8 +1214,9 @@ def find_conflicts(data_op):
     """
     We use a function that returns the conflicts, rather than raises an
     exception, because we want the exception to be raised higher in the call
-    stack (in ``_data_ops._check_data_op``) so that the user sees the line in
-    their code that created a problematic DataOp easily in the traceback.
+    stack (in ``_data_ops._checked_data_op_constructor``) so that the user sees
+    the line in their code that created a problematic DataOp easily in the
+    traceback.
     """
     try:
         _FindConflicts().run(data_op)

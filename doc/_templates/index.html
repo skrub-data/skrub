@@ -4,6 +4,13 @@
 {%- block extrahead %}
     {{ super() }}
     {# Add here landing-page specific stuff that goes in the header (eg css) #}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Skrub">
+    <meta property="og:site_name" content="skrub">
+    <meta property="og:description" content="Machine learning with dataframes">
+    <meta property="og:image" content="https://skrub-data.github.io/stable/_static/skrub.svg">
+    <meta property="og:image:alt" content="skrub">
+    <meta name="description" content="skrub is a Python library to ease preprocessing and feature engineering for tabular machine learning.">
 {%- endblock extrahead %}
 
 {% block docs_navbar %}
@@ -40,7 +47,7 @@ still full-width (unlike the article) #}
       We directly connect database tables to machine learning.
     </p>
     <div class="text-center mt-4">
-        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_examples/0000_getting_started') }}" role="button">Get started →</a>
+        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_tutorials/0000_getting_started') }}" role="button">Get started →</a>
     </div>
   </div>
 
@@ -122,7 +129,6 @@ fa-caret-down visible-small-screen"></i></p>
         title="skrub.SquashingScaler"><code class="xref py py-class docutils
         literal notranslate"><span class="pre">SquashingScaler</span></code></a>.
       </p>
-      {% include "demo_gap_encoder.html" %}
     </div>
     <div class="col-md-7 pe-5">
       <div class="encoding-image"></div>
@@ -134,9 +140,8 @@ fa-caret-down visible-small-screen"></i></p>
     <div class="col-md-5">
       <h4 class="feature-title">Tune arbitrary data wrangling</h4>
       <h5 class="feature-title">Inspect it, apply it to new data</h5>
-      <p class="feature-text">Chain an arbitrary set of operations to prepare,
-      transform, assemble <strong>multiple tables</strong> for machine
-      learning, and then <strong>tune the full pipeline,
+      <p class="feature-text">Assemble and prepare tables for machine
+      learning with any operations and then <strong>tune the full pipeline,
       inspect it</strong>, or apply it to new data.
       </p>
       <p class="feature-text">
@@ -147,7 +152,7 @@ fa-caret-down visible-small-screen"></i></p>
       </div>
       <p class="feature-text-see-also">
         <!-- name of the userguide file on DataOps -->
-        <a href="{{ pathto('auto_examples/data_ops/1110_data_ops_intro') }}">Discover the skrub DataOps →</a>
+        <a href="{{ pathto('auto_tutorials/1110_data_ops_intro') }}">Discover the skrub DataOps →</a>
       </p>
     </div>
     <div class="col-md-7">
@@ -178,7 +183,7 @@ class="pre">baskets_df</span></code>: <i>(expand for full code)</i></summary>
     <div class="col-md-4 mb-4">
       <h4 class="feature-title">Our Community</h4>
       <p class="feature-text">
-        The Skrub project is powered by the efforts of a world-wide community of contributors.
+        The skrub project is powered by the efforts of a world-wide community of contributors.
         Here we display a randomly selected group of 30 contributors.
       </p>
     </div>
@@ -196,7 +201,7 @@ class="pre">baskets_df</span></code>: <i>(expand for full code)</i></summary>
       and be part of an emerging community!
     </p>
     <div class="text-center mt-4">
-        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_examples/0000_getting_started') }}" role="button">Get started →</a>
+        <a class="btn sk-btn-orange mb-1 d-inline-block" href="{{ pathto('auto_tutorials/0000_getting_started') }}" role="button">Get started →</a>
     </div>
   </div>
 </div>
@@ -259,6 +264,8 @@ fetchContributors();
 
 {%- block footer %}
 
-<div class="home-footer">the skrub developers - 2026</div>
+<div class="home-footer">The skrub developers - 2026
+&nbsp;&mdash;&nbsp;
+Financial support from <a href="https://inria.fr">inria</a> and <a href="https://probabl.ai">:probabl.</a></div>
 
 {%- endblock footer %}
