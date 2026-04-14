@@ -74,5 +74,5 @@ class DropSimilar(TransformerMixin):
         return self._dropper.fit_transform(X, y)
 
     def transform(self, X):
-        check_is_fitted()
+        check_is_fitted(self)
         return self._dropper.transform(X)
