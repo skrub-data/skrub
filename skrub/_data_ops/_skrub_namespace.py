@@ -1110,13 +1110,13 @@ class SkrubNamespace:
         <CallMethod 'unique'>
         Result:
         ―――――――
-        array([1, 2, 3, 4])
+        array([1, 2, 3, 4]...)
 
         >>> unique.skb.eval()
-        array([1, 2, 3, 4])
+        array([1, 2, 3, 4]...)
 
         >>> unique.skb.eval({"a": pd.Series([5, 5, 6])})
-        array([5, 6])
+        array([5, 6]...)
 
         """
         if environment is not None and not isinstance(environment, typing.Mapping):
