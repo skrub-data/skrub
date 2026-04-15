@@ -364,6 +364,9 @@ def choose_from(outcomes, *, name=None):
     choose_int :
         Construct a choice of integers from a numeric range.
 
+    optional :
+        Choose between executing an operation or not.
+
     Examples
     --------
     Outcomes can be provided in a list:
@@ -454,7 +457,12 @@ class Optional(Choice):
 
 
 def optional(value, *, name=None, default=OPTIONAL_VALUE):
-    """A choice between ``value`` and ``None``.
+    """A choice between ``value`` and ``None``. ``value`` can be a DataOp,
+    an estimator, or any other object.
+
+    ``optional`` allows to build a branch in the search space where a given component
+    (eg a dimensionality reduction step, a feature selection step, etc) is either
+    present or not. When the component is not present, it is represented by ``None``.
 
     When a learner is fitted *without hyperparameter tuning*, the outcome of
     this choice is ``value``. Pass ``default=None`` to make ``None`` the
@@ -512,6 +520,20 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
 
     >>> print(optional(PCA(), default=None).default())
     None
+
+    See also
+    --------
+    choose_bool :
+        Construct a choice between False and True.
+
+    choose_float :
+        Construct a choice of floating-point numbers from a numeric range.
+
+    choose_from :
+        Construct a choice among several possible outcomes.
+
+    choose_int :
+        Construct a choice of integers from a numeric range.
     """
     if default is not OPTIONAL_VALUE and default is not None:
         raise TypeError(
@@ -589,6 +611,9 @@ def choose_bool(*, name=None, default=True):
 
     choose_int :
         Construct a choice of integers from a numeric range.
+
+    optional :
+        Choose between executing an operation or not.
 
     Examples
     --------
@@ -814,6 +839,9 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
 
     choose_from :
         Construct a choice among several possible outcomes.
+
+    optional :
+        Choose between executing an operation or not.
     """
     if n_steps is None:
         return NumericChoice(
@@ -882,6 +910,9 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
 
     choose_from :
         Construct a choice among several possible outcomes.
+
+    optional :
+        Choose between executing an operation or not.
     """
     if n_steps is None:
         return NumericChoice(
