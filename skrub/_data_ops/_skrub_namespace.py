@@ -1897,14 +1897,16 @@ class SkrubNamespace:
 
             - train: a dictionary containing the training environment
             - test: a dictionary containing the test environment
-            - X_train: the value of the variable marked with :func:`~skb.mark_as_X()` in
-              the train environment
-            - X_test: the value of the variable marked with :func:`~skb.mark_as_X()` in
-              the test environment
-            - y_train: the value of the variable marked with :func:`~skb.mark_as_y()` in
+            - X_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the train environment
+            - X_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the test environment
+            - y_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the train environment, if there is one (may not be the case for
               unsupervised learning).
-            - y_test: the value of the variable marked with :func:`~skb.mark_as_y()` in
+            - y_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the test environment, if there is one (may not be the case for
               unsupervised learning).
 
