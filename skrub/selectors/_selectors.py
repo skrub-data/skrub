@@ -34,6 +34,11 @@ def glob(pattern):
         [seq]   matches any character in seq
         [!seq]  matches any char not in seq
 
+    See Also
+    --------
+    regex :
+        Select columns by name using a regular expression.
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -76,6 +81,11 @@ def regex(pattern, flags=0):
     documentation:
 
     https://docs.python.org/3/library/re.html#flags
+
+    See Also
+    --------
+    glob :
+        Select columns by name with a Unix shell-style glob pattern.
 
     Examples
     --------
@@ -148,6 +158,15 @@ def numeric():
 
     This selects float and integer columns but not Boolean columns.
 
+    See Also
+    --------
+    integer :
+        Select integer columns.
+    float :
+        Select floating-point columns.
+    boolean :
+        Select Boolean columns.
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -201,6 +220,15 @@ def integer():
 
     This selects integer columns but not Boolean columns.
 
+    See Also
+    --------
+    numeric :
+        Select all numeric columns (integer and float).
+    float :
+        Select floating-point columns.
+    boolean :
+        Select Boolean columns.
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -250,6 +278,12 @@ def float():
     """
     Select columns that have a floating-point data type.
 
+    See Also
+    --------
+    numeric :
+        Select all numeric columns (integer and float).
+    integer :
+        Select integer columns.
 
     Examples
     --------
@@ -334,6 +368,10 @@ def categorical():
     """
     Select columns that have a Categorical (or polars Enum) data type.
 
+    See Also
+    --------
+    string :
+        Select string columns.
 
     Examples
     --------
@@ -372,6 +410,21 @@ def string():
 
     In pandas, object columns containing (only) strings are also selected.
 
+    Notes
+    -----
+
+    The behavior of string columns may change depending
+    on the major version of pandas: before pandas 3.0, string columns would have
+    the 'object' dtype, and after pandas 3.0 they have the 'string' dtype. This
+    selector is designed to select string columns in both cases, even if a column
+    has both the 'object' and 'string' dtype. If a column has only the 'object'
+    dtype (e.g., it contains both strings and numbers), then it will not be selected.
+
+    See Also
+    --------
+    categorical :
+        Select categorical columns.
+
     Examples
     --------
 
@@ -379,28 +432,34 @@ def string():
     >>> import pandas as pd
     >>> df = pd.DataFrame(
     ...     dict(
-    ...         os=pd.Series(['A', 'B']),
-    ...         o=pd.Series(['A', 10]),
-    ...         s=pd.Series(['A', 'B']).convert_dtypes(),
-    ...         c=pd.Series(['A', 'B'], dtype="category"),
+    ...         object_string=pd.Series(['A', 'B']),
+    ...         object=pd.Series(['A', 10]),
+    ...         string=pd.Series(['A', 'B']).convert_dtypes(),
+    ...         categorical=pd.Series(['A', 'B'], dtype="category"),
     ...     )
     ... )
     >>> df
-      os   o  s  c
-    0  A   A  A  A
-    1  B  10  B  B
+    object_string object string categorical
+    0             A      A      A           A
+    1             B     10      B           B
 
     >>> df.dtypes
-    os            ...
-    o             object
-    s             ...
-    c           category
+    object_string         ...
+    object             object
+    string                ...
+    categorical      category
     dtype: object
 
+    Both the 'object_string' and 'string' columns are selected, but not the 'object'
+    column. Categorical columns are not selected.
+
     >>> s.select(df, s.string())
-      os  s
-    0  A  A
-    1  B  B
+    object_string string
+    0             A      A
+    1             B      B
+
+    To select categorical columns as well, use the bitwise OR operator to combine
+    ``s.string()`` with :func:`~skrub.selectors.categorical`:
 
     >>> s.select(df, s.string() | s.categorical())
       os  s  c
@@ -415,6 +474,12 @@ def boolean():
     """
     Select columns that have a Boolean data type.
 
+    See Also
+    --------
+    numeric :
+        Select all numeric columns (integer and float).
+    integer :
+        Select integer columns.
 
     Examples
     --------
@@ -467,6 +532,11 @@ def cardinality_below(threshold):
 
     Null values do not count in the cardinality.
 
+    See Also
+    --------
+    has_nulls :
+        Select columns that contain null values.
+
     Examples
     --------
     >>> from skrub import selectors as s
@@ -514,8 +584,17 @@ def _null_count_check(column, proportion):
 
 def has_nulls(proportion=0.0):
     """
-    Select columns that contain at least one null value.
+    Select columns that contain at least one null value, or a proportion of null values
+    above a given threshold.
 
+
+    See Also
+    --------
+    cardinality_below :
+        Select columns whose cardinality is below a threshold.
+    skrub.DropUninformative :
+        Automatically drop columns that are uninformative, including columns with
+        a fraction of null values above a given threshold.
 
     Examples
     --------
@@ -534,7 +613,7 @@ def has_nulls(proportion=0.0):
     ...     few_nulls=[1, 2, 3, None],
     ...     many_nulls=[1, None, None, None],
     ...     no_nulls=[1, 2, 3, 4]))
-    >>> s.select(df2, s.has_nulls(proportion=0.20))
+    >>> s.select(df2, s.has_nulls(proportion=0.2))
        few_nulls  many_nulls
     0        1.0         1.0
     1        2.0         ...
