@@ -91,10 +91,11 @@ class DropSimilar(TransformerMixin, BaseEstimator):
 
         if isinstance(X, pl.DataFrame):
             try:
-                import pyarrow
+                import pyarrow  # noqa F401
             except ImportError:
                 raise ImportError(
-                    "DropSimilar requires the Pyarrow package to run on Polars dataframes."
+                    "DropSimilar requires the Pyarrow package to run on Polars\
+                        dataframes."
                 )
 
         self.to_drop_ = []
