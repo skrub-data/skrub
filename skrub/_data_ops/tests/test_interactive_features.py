@@ -87,6 +87,9 @@ def test_repr_html():
     assert "on a subsample" not in a._repr_html_()
     a = skrub.X(np.ones((5, 2))).skb.subsample(n=2) + 10
     assert "on a subsample" in a._repr_html_()
+    assert "details open" not in a._repr_html_()
+    with skrub.config_context(data_ops_open_graph_dropdown=True):
+        assert "details open" in a._repr_html_()
 
 
 def test_with_scoring_repr_html():

@@ -43,6 +43,7 @@ def test_default_config():
     assert cfg["float_precision"] == 3
     assert cfg["cardinality_threshold"] == 40
     assert cfg["eager_data_ops"] is True
+    assert cfg["data_ops_open_graph_dropdown"] is False
 
     # Fail the test if new configuration keys are present but not checked here.
     # doc/modules/configurations_and_utils/customizing_configurations.rst
@@ -58,6 +59,7 @@ def test_default_config():
         "float_precision",
         "cardinality_threshold",
         "eager_data_ops",
+        "data_ops_open_graph_dropdown",
     }
     assert set(cfg.keys()) == expected_keys
 
