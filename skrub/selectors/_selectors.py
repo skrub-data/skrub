@@ -462,9 +462,9 @@ def string():
     ``s.string()`` with :func:`~skrub.selectors.categorical`:
 
     >>> s.select(df, s.string() | s.categorical())
-      os  s  c
-    0  A  A  A
-    1  B  B  B
+    object_string string categorical
+    0             A      A           A
+    1             B      B           B
 
     """
     return Filter(sbd.is_string, name="string")
