@@ -89,7 +89,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
                 f"Threshold must be a number between 0 and 1, got {self.threshold!r}."
             )
 
-        if isinstance(X, pl.DataFrame):
+        if sbd.is_polars(X):
             try:
                 import pyarrow  # noqa F401
             except ImportError:
