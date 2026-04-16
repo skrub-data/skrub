@@ -61,6 +61,10 @@ class DropSimilar(TransformerMixin):
     def __init__(self, threshold=0.8):
         self.threshold = threshold
 
+    def get_feature_names_out(self):
+        check_is_fitted(self)
+        return self._dropper.kept_cols_
+
     def fit_transform(self, X, y=None):
         # check that the threshold is correct
         if isinstance(self.threshold, bool) or not (
