@@ -1,4 +1,4 @@
-import sys
+import builtins
 
 import pytest
 
@@ -103,8 +103,15 @@ def test_wrong_threshold(df_module):
 def test_without_pyarrow(monkeypatch):
     pl = pytest.importorskip("polars")
     example_dataframe = pl.DataFrame({"a": [1, 2, 3]})
-    monkeypatch.delitem(sys.modules, "pyarrow", raising=False)
-    assert "pyarrow" not in sys.modules
     ds = DropSimilar()
+
+    builtin_import = builtins.__import__
+
+    def _import(name, *args, **kwargs):
+        if name == "pyarrow":
+            raise ImportError(name)
+        return builtin_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _import)
     with pytest.raises(ImportError, match=_PYARROW_ERROR):
         ds.fit_transform(example_dataframe)
