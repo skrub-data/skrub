@@ -63,7 +63,7 @@ class DropSimilar(TransformerMixin, BaseEstimator):
 
     def get_feature_names_out(self):
         check_is_fitted(self)
-        return self._dropper.kept_cols_
+        return self.all_outputs_
 
     def fit(self, X, y=None):
         self.fit_transform(X, y=y)
@@ -89,6 +89,8 @@ class DropSimilar(TransformerMixin, BaseEstimator):
         )
 
         self._dropper = DropCols(self.to_drop_)
+
+        self.all_outputs_ = self._dropper.kept_cols_
 
         return self._dropper.fit_transform(X, y)
 
