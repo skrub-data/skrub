@@ -8,6 +8,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
+from . import selectors as s
 from ._column_associations import column_associations
 from ._dataframe._common import raise_dispatch_unregistered_type
 from ._dispatch import dispatch
@@ -47,6 +48,13 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     to_drop_ : list
         The names of columns evaluated for removal
 
+    all_outputs_ : list
+        The names of columns that the transformer keeps
+
+    table_associations_ : dataframe
+        A dataframe with columns `left_column_name', 'right_column_name' and 'cramer_v'
+        listing association scores between every pair of columns.
+
     See Also
     --------
     DropUninformative :
@@ -56,6 +64,9 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     Cleaner :
         Runs several checks to sanitize a dataframe, including converting columns
         to standard formats or dropping certain columns.
+
+    Examples
+    --------
     """
 
     def __init__(self, threshold=0.8):
@@ -81,18 +92,22 @@ class DropSimilar(TransformerMixin, BaseEstimator):
         self.to_drop_ = []
 
         association_df = column_associations(X)
+        self.table_associations_ = s.select(
+            association_df, ["left_column_name", "right_column_name", "cramer_v"]
+        )
 
-        pairs_to_drop = _filter_associations(association_df, self.threshold)
+        pairs_to_drop = _filter_associations(self.table_associations_, self.threshold)
 
         self.to_drop_.extend(
             sbd.to_list(sbd.unique(pairs_to_drop["right_column_name"]))
         )
 
         self._dropper = DropCols(self.to_drop_)
+        new_X = self._dropper.fit_transform(X, y)
 
         self.all_outputs_ = self._dropper.kept_cols_
 
-        return self._dropper.fit_transform(X, y)
+        return new_X
 
     def transform(self, X):
         check_is_fitted(self)
