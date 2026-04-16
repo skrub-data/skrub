@@ -86,8 +86,16 @@ class DropSimilar(TransformerMixin, BaseEstimator):
             isinstance(self.threshold, numbers.Real) and 0 <= self.threshold <= 1
         ):
             raise ValueError(
-                f"Threshold must be a number between 0 and 1, got {self.threshold!r}"
+                f"Threshold must be a number between 0 and 1, got {self.threshold!r}."
             )
+
+        if isinstance(X, pl.DataFrame):
+            try:
+                import pyarrow
+            except ImportError:
+                raise ImportError(
+                    "DropSimilar requires the Pyarrow package to run on Polars dataframes."
+                )
 
         self.to_drop_ = []
 
