@@ -4,9 +4,8 @@
 
 .. _user_guide_configuration_parameters:
 
-====================================
-Customizing the global configuration
-====================================
+How to configure and customize the default behavior of skrub
+============================================================
 
 
 Skrub includes a configuration manager that allows setting various parameters
@@ -15,7 +14,7 @@ Skrub includes a configuration manager that allows setting various parameters
 It is possible to change configuration options using the |set_config| function:
 
 >>> from skrub import set_config
->>> set_config(table_report_verbosity=0)
+>>> set_config(table_report_verbosity=0) # doctest: +SKIP
 
 This alters the behavior of skrub in the current script. Each configuration parameter
 has an environment variable that can be used to set it permanently.
@@ -29,7 +28,7 @@ configuration:
 
 Within this context, only the code executed inside the ``with`` statement is affected.
 
-The |get_config| function allows retrieving the current configuration.
+The |get_config| function allows to retrieve the current configuration.
 
 Configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,7 +39,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops'])
+dict_keys(['use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops', 'data_ops_open_graph_dropdown'])
 
 These are the parameters currently available in the global configuration:
 

@@ -297,6 +297,13 @@ class DataOpImpl:
     def __repr__(self):
         return f"<{self.__class__.__name__}>"
 
+    @staticmethod
+    def __skrub_preview_heading__():
+        """
+        Title displayed above the preview value in the DataOp's repr and html repr.
+        """
+        return "Result"
+
 
 def _find_dataframe(data_op, func_name):
     # If a dataframe is found in a DataOp that is likely a mistake.
@@ -699,7 +706,7 @@ class DataOp:
         if preview is NULL:
             return result
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
-        header = f"Result{subsample_msg}:"
+        header = f"{self._skrub_impl.__skrub_preview_heading__()}{subsample_msg}:"
         underline = "―" * len(header)
         return f"{result}\n{header}\n{underline}\n{preview!r}"
 
@@ -737,14 +744,27 @@ class DataOp:
             )
         else:
             name_line = ""
-        title = f"<strong><samp>{html.escape(short_repr(self))}</samp></strong><br />\n"
-        summary = "<samp>Show graph</samp>"
+        repr_start, _, repr_rest = short_repr(self).partition("\n")
+        if repr_rest:
+            repr_rest = f"\n<pre>\n{html.escape(repr_rest)}\n</pre>"
+        title = (
+            f"<strong><samp>{html.escape(repr_start)}</samp></strong>"
+            f"<br />{repr_rest}\n"
+        )
+        summary = "<samp>Show/Hide graph</samp>"
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
+        details_open_or_not = (
+            "open"
+            if _config.get_config().get("data_ops_open_graph_dropdown", False)
+            else ""
+        )
         prefix = (
             f"{title}{name_line}"
-            f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
+            f"<details {details_open_or_not}>\n"
+            f"<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
-            f"<strong><samp>Result{subsample_msg}:</samp></strong>"
+            f"<strong><samp>{impl.__skrub_preview_heading__()}{subsample_msg}:"
+            "</samp></strong>"
         )
         report = node_report(self)
         if hasattr(report, "_repr_html_"):
@@ -1985,3 +2005,40 @@ class SplitX(DataOpImpl):
 
     def __repr__(self):
         return "<X>"
+
+
+def _scorer_repr(scorer_info):
+    scorer = scorer_info["scoring"]
+    if name := scorer_info.get("name"):
+        prefix = f"{name}: "
+    else:
+        prefix = ""
+    if isinstance(scorer, (list, tuple, set, dict)):
+        return [f"{prefix}{s!r}" for s in scorer]
+    return [f"{prefix}{scorer!r}"]
+
+
+class Scoring(DataOpImpl):
+    _fields = ["pred", "scorers"]
+
+    def eval(self, *, mode, environment):
+        return (yield self.pred)
+
+    def __repr__(self):
+        details = ["    This DataOp will be scored with:\n"]
+        all_scorer_reprs = []
+        for scorer_info in self.scorers:
+            all_scorer_reprs.extend(_scorer_repr(scorer_info))
+        details.extend(f"      - {s_repr}\n" for s_repr in all_scorer_reprs)
+        details.append(
+            "    Use .skb.cross_validate(…) or "
+            ".skb.make_learner(…).score(…) to compute scores."
+        )
+        return (
+            f"<Scoring {short_repr(self.pred)} ({len(all_scorer_reprs)} scorers)>\n"
+            f"{''.join(details)}"
+        )
+
+    @staticmethod
+    def __skrub_preview_heading__():
+        return "Result (preview of the learner's output, not the scores)"

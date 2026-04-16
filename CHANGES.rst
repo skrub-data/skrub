@@ -12,18 +12,30 @@ Ongoing Development
 New Features
 ------------
 - :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
-separators to parse numerical columns that use formatting different from the default
-formatting used in Python, such as ``1'234,5``.  Multi-group formats
-(``1,23,456.78``) and groups of 4 digits (``12,3456.78``) are also supported.
-Additionally, negative numbers indicated with parentheses are converted to the
-regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
-Gómez Jiménez <gabrielapgomezji>`.
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.  Multi-group formats
+  (``1,23,456.78``) and groups of 4 digits (``12,3456.78``) are also supported.
+  Additionally, negative numbers indicated with parentheses are converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
+- It is now possible to pass additional (dynamically computed) arguments to the
+  scorers used by :class:`DataOp` objects for validation, hyperparameter search
+  etc. For example, sample weights. This is achieved by passing the scorers and
+  their arguments to :meth:`DataOp.skb.with_scoring`. :pr:`1995` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
+- The row indices of training and testing samples are now also included in the
+  dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
+
+
+Deprecations
+------------
 
 
 Release 0.8.0
@@ -96,6 +108,10 @@ Changes
 - The overplotting of the counts atop the vertical histogram bars in the
   :class:`TableReport` has been removed due to formatting issues.
   :pr:`1984` by :user:`Lisa McBride<lisaleemcb>`.
+- The maximum number of associations that can be displayed in the
+  :class:`TableReport` has been increased to N=1000, and the associations
+  are now displayed in a scrollable table.
+  :pr:`1992` by :user:`Lisa McBride<lisaleemcb>`.
 
 Bug Fixes
 --------
@@ -361,7 +377,7 @@ Highlights
 New features
 ------------
 
-- The Skrub DataOps are new mechanism for building machine-learning
+- The skrub DataOps are new mechanism for building machine-learning
   pipelines that handle multiple tables and easily describing their
   hyperparameter spaces. Main PR: :pr:`1233` by :user:`Jérôme Dockès <jeromedockes>`.
   Additional work from other contributors can be found
