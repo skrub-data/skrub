@@ -67,7 +67,78 @@ class DropSimilar(TransformerMixin, BaseEstimator):
 
     Examples
     --------
-    """
+    >>> from skrub import DropSimilar
+    >>> from skrub.datasets import fetch_employee_salaries
+    >>> df = fetch_employee_salaries().X
+    >>> df.columns
+    ['gender',
+    'department',
+    'department_name',
+    'division',
+    'assignment_category',
+    'employee_position_title',
+    'date_first_hired',
+    'year_first_hired']
+    >>> ds = DropSimilar(threshold=0.4)
+    >>> clean_df = ds.fit_transform(df)
+
+    `ds` has now removed a column for each pair with association above 0.6.
+    These associations are stored in the `table_associations` attribute:
+
+    >>> ds.table_associations
+            left_column_name        right_column_name  cramer_v
+    0                department          department_name  1.000000
+    1                  division      assignment_category  0.601097
+    2       assignment_category  employee_position_title  0.496814
+    3                  division  employee_position_title  0.416034
+    4           department_name  employee_position_title  0.413871
+    5                department  employee_position_title  0.413871
+    6           department_name      assignment_category  0.408823
+    7                department      assignment_category  0.408823
+    8                    gender               department  0.370436
+    9                    gender          department_name  0.370436
+    10               department                 division  0.362828
+    11          department_name                 division  0.362828
+    12  employee_position_title         date_first_hired  0.305385
+    13                   gender  employee_position_title  0.263627
+    14                   gender      assignment_category  0.255649
+    15                   gender                 division  0.248813
+    16               department         date_first_hired  0.150310
+    17          department_name         date_first_hired  0.150310
+    18         date_first_hired         year_first_hired  0.142581
+    19  employee_position_title         year_first_hired  0.140087
+    20                 division         date_first_hired  0.111298
+    21                   gender         date_first_hired  0.099101
+    22      assignment_category         date_first_hired  0.074086
+    23          department_name         year_first_hired  0.069520
+    24               department         year_first_hired  0.069520
+    25                   gender         year_first_hired  0.063211
+    26                 division         year_first_hired  0.060613
+    27      assignment_category         year_first_hired  0.044855
+
+    Six pairs are above the threshold, and they can be eliminated by
+    dropping three columns. Therefore, these three have been marked
+    as dropped by `ds`:
+
+    >>> ds.to_drop_
+    ['department_name', 'assignment_category', 'employee_position_title']
+
+    This leaves us with the shortened employee salary database:
+
+    >>> clean_df
+        gender department                                           division date_first_hired  year_first_hired
+    0         F        POL  MSB Information Mgmt and Tech Division Records...       09/22/1986              1986
+    1         M        POL         ISB Major Crimes Division Fugitive Section       09/12/1988              1988
+    2         F        HHS      Adult Protective and Case Management Services       11/19/1989              1989
+    3         M        COR                         PRRS Facility and Security       05/05/2014              2014
+    4         M        HCA                        Affordable Housing Programs       03/05/2007              2007
+    ...     ...        ...                                                ...              ...               ...
+    9223      F        HHS                        School Based Health Centers       11/03/2015              2015
+    9224      F        FRS                           Human Resources Division       11/28/1988              1988
+    9225      M        HHS  Child and Adolescent Mental Health Clinic Serv...       04/30/2001              2001
+    9226      M        CCL                              Council Central Staff       09/05/2006              2006
+    9227      M        DLC                Licensure, Regulation and Education       01/30/2012              2012
+    """  # noqa: E501
 
     def __init__(self, threshold=0.8):
         self.threshold = threshold
