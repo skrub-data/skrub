@@ -570,6 +570,14 @@ def cardinality_below(threshold):
     2     1     2     2     3     3
     3  <NA>  <NA>     2  <NA>     3
 
+    Invert the selector to select columns whose cardinality is above the threshold:
+    >>> s.select(df, ~s.cardinality_below(3))
+        a3  a3_b  a4
+    0     1     1   1
+    1     2     2   2
+    2     3     3   3
+    3  <NA>     3   4
+
     """
     return Filter(_cardinality_below, args=(threshold,), name="cardinality_below")
 
