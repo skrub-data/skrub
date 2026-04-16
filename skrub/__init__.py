@@ -29,6 +29,7 @@ from ._data_ops import (
 )
 from ._datetime_encoder import DatetimeEncoder
 from ._deduplicate import deduplicate
+from ._drop_similar import DropSimilar
 from ._drop_uninformative import DropUninformative
 from ._fuzzy_join import fuzzy_join
 from ._gap_encoder import GapEncoder
@@ -74,6 +75,7 @@ __all__ = [
     "SimilarityEncoder",
     "TableVectorizer",
     "Cleaner",
+    "DropSimilar",
     "DropUninformative",
     "deduplicate",
     "deduplicate",
