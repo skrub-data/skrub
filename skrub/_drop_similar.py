@@ -4,7 +4,7 @@ except ImportError:
     pass
 import numbers
 
-from sklearn.base import TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils.validation import check_is_fitted
 
 from . import _dataframe as sbd
@@ -29,7 +29,7 @@ def _filter_associations_polars(obj, threshold):
     return obj.filter(pl.col("cramer_v") >= threshold)
 
 
-class DropSimilar(TransformerMixin):
+class DropSimilar(TransformerMixin, BaseEstimator):
     """Drop columns found too redundant to the rest of the dataframe,
     according to association defined by Cramér's V.
 
@@ -64,6 +64,10 @@ class DropSimilar(TransformerMixin):
     def get_feature_names_out(self):
         check_is_fitted(self)
         return self._dropper.kept_cols_
+
+    def fit(self, X, y=None):
+        self.fit_transform(X, y=y)
+        return self
 
     def fit_transform(self, X, y=None):
         # check that the threshold is correct

@@ -74,7 +74,8 @@ def test_drop_similar(table_with_associations, threshold, result):
     ds = DropSimilar(threshold=threshold)
     res = ds.fit_transform(table_with_associations)
     resulting_columns = list(res.columns)
-    assert ds.kept_cols_ == resulting_columns
+    kept_cols = list(ds.get_feature_names_out())
+    assert kept_cols == resulting_columns
     assert resulting_columns == result
 
 
