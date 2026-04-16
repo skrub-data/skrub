@@ -69,8 +69,8 @@ class DropSimilar(TransformerMixin, BaseEstimator):
     --------
     >>> from skrub import DropSimilar
     >>> from skrub.datasets import fetch_employee_salaries
-    >>> df = fetch_employee_salaries().X # doctest: +SKIP
-    >>> df.columns
+    >>> df = fetch_employee_salaries().X
+    >>> list(df.columns)
     ['gender',
     'department',
     'department_name',
