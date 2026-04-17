@@ -173,7 +173,7 @@ def _select_col_names_polars(df, col_names):
 
 
 def select(df, selector):
-    """Apply a selector to a dataframe and return a dataframe with the selected
+    """Apply a selector to a dataframe and return a dataframe with the selected \
     columns.
 
 
