@@ -54,6 +54,7 @@ __all__ = [
     "reset_index",
     "copy_index",
     "index",
+    "drop_columns",
     #
     # Inspecting dtypes and casting
     #
@@ -630,6 +631,21 @@ def index(obj):
 @index.specialize("pandas")
 def _index_pandas(obj):
     return obj.index
+
+
+@dispatch
+def drop_columns(df, columns):
+    raise_dispatch_unregistered_type(df, kind="DataFrame")
+
+
+@drop_columns.specialize("pandas", argument_type="DataFrame")
+def _drop_columns_pandas(df, columns):
+    return df.drop(columns=columns)
+
+
+@drop_columns.specialize("polars", argument_type="DataFrame")
+def _drop_columns_polars(df, columns):
+    return df.drop(columns)
 
 
 #
