@@ -169,6 +169,7 @@ API_REFERENCE = {
                     "selectors.filter_names",
                     "selectors.float",
                     "selectors.glob",
+                    "selectors.has_dtype",
                     "selectors.has_nulls",
                     "selectors.integer",
                     "selectors.inv",
