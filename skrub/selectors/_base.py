@@ -275,7 +275,7 @@ class Selector:
         return matching_col_names
 
     def expand_index(self, df):
-        """Lists the indices of dataframe ``df``'s columns that the selector
+        """Lists the indices of dataframe ``df``'s columns that the selector \
         would retain if applied to ``df``.
 
         Parameters
