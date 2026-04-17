@@ -232,7 +232,7 @@ class Selector:
         raise NotImplementedError()
 
     def expand(self, df):
-        """Lists the column names that the selector would retain if applied to
+        """Lists the column names that the selector would retain if applied to \
         the dataframe ``df``.
 
         Parameters

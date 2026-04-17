@@ -527,7 +527,7 @@ def _cardinality_below(column, threshold):
 
 def cardinality_below(threshold):
     """
-    Select columns whose cardinality (number of unique values) is (strictly)
+    Select columns whose cardinality (number of unique values) is (strictly) \
     below ``threshold``.
 
     Null values do not count in the cardinality.
@@ -592,8 +592,8 @@ def _null_count_check(column, proportion):
 
 def has_nulls(proportion=0.0):
     """
-    Select columns that contain at least one null value, or a proportion of null values
-    above a given threshold.
+    Select columns that contain at least one null value, or a proportion of null \
+    values above a given threshold.
 
 
     See Also
