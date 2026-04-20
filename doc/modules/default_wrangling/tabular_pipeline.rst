@@ -74,6 +74,15 @@ problems, but may not beat properly tuned ad-hoc pipelines.
      - Native support
      - :class:`~sklearn.impute.SimpleImputer`
 
+.. note::
+  :sup:`(1)` if scikit-learn installed is lower than 1.4, then
+  :class:`~sklearn.preprocessing.OrdinalEncoder` is used since native support
+  for categorical features is not available.
+
+  :sup:`(2)` if scikit-learn installed is lower than 1.4, then
+  :class:`~sklearn.impute.SimpleImputer` is used since native support
+  for missing values is not available.
+
 Extending the pipeline with the ``.steps`` attribute
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
