@@ -56,8 +56,8 @@ for ``alpha``.
    in :ref:`this example <example_optuna_choices>`.
 
 
-Skrub provides over 10 different ``choose`` methods for tuning use cases, all detailed
-in :ref:`here <choice_list>`
+Here are the different kinds of choices, along with their default outcome when
+we are not using hyperparameter search:
 
 .. _choice-defaults-table:
 

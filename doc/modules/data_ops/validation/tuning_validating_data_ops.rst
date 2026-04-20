@@ -96,7 +96,7 @@ on several splits. This is done with :meth:`.skb.cross_validate()
 
 .. _user_guide_data_ops_splitting_data:
 
-More advanced train/test splitting
+Splitting the data in train and test sets
 ----------------------------------
 
 We can use :meth:`.skb.train_test_split() <DataOp.skb.train_test_split>` to
