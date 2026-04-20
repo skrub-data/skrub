@@ -173,7 +173,8 @@ def _select_col_names_polars(df, col_names):
 
 
 def select(df, selector):
-    """Apply a selector to a dataframe and return the resulting dataframe.
+    """Apply a selector to a dataframe and return a dataframe with the selected \
+    columns.
 
 
     ``selector`` can be anything accepted by ``make_selector`` i.e. a selector,
@@ -231,7 +232,7 @@ class Selector:
         raise NotImplementedError()
 
     def expand(self, df):
-        """Lists the column names that the selector would retain if applied to
+        """Lists the column names that the selector would retain if applied to \
         the dataframe ``df``.
 
         Parameters
@@ -274,8 +275,8 @@ class Selector:
         return matching_col_names
 
     def expand_index(self, df):
-        """Lists the indices of dataframe `df`'s columns that the selector
-        would retain if applied to `df`.
+        """Lists the indices of dataframe ``df``'s columns that the selector \
+        would retain if applied to ``df``.
 
         Parameters
         ----------
@@ -543,7 +544,7 @@ def filter_names(predicate, *args, **kwargs):
     For a column whose name is ``col_name``, ``predicate`` is called as
     ``predicate(col_name, *args, **kwargs)`` and the column is selected if
     returns ``True``. Note this is different from ``filter``, because here the
-    predicate is passed the column name whereas with ``filter``, the predicate
+    predicate is passed the column name; with ``filter``, the predicate
     is passed the actual column (pandas or polars Series).
 
 

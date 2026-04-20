@@ -80,6 +80,7 @@ def _get_high_association_columns(summary):
 def _get_column_filters(summary):
     df = summary["dataframe"]
     filters = {}
+
     filters["all()"] = {
         "display_name": _FILTER_NAMES["all()"],
         "columns": list(range(sbd.shape(df)[1])),
