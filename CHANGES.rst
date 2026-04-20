@@ -38,7 +38,8 @@ New Features
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
 - :func:`selectors.has_dtype` has been added, allowing users to select columns
-  by passing the dtype objects they want to match.
+  by passing the dtype objects they want to match. :pr:`2027` by
+  :user:`kudos07 <kudos07>`.
 
 Changes
 -------
