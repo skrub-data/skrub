@@ -333,14 +333,10 @@ def has_dtype(*dtypes):
     0  [A4, A3]      2
     1      [A5]      1
 
-    For some dataframe libraries, shorthand values can also compare equal to
-    a dtype object. For example, with pandas integer columns:
-
-    >>> df = pd.DataFrame({"count": [2, 1]})
-    >>> s.select(df, s.has_dtype(int))
-       count
-    0      2
-    1      1
+    Some dataframe libraries may also accept shorthand values that compare
+    equal to a dtype object. However, this is backend-specific, so the most
+    robust approach is still to pass the dtype obtained from the dataframe
+    library itself.
 
     """
     return Filter(_has_dtype, args=dtypes, name="has_dtype")
