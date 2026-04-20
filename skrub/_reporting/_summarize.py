@@ -15,7 +15,7 @@ except ImportError:
 
 
 _SUBSAMPLE_SIZE = 3000
-_N_TOP_ASSOCIATIONS = 20
+_N_TOP_ASSOCIATIONS = 1000
 
 
 def summarize_dataframe(

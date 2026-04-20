@@ -292,9 +292,9 @@ def _node_kwargs(data_op, url=None):
     label = html.escape(_utils.simple_repr(data_op))
     kwargs = {
         "shape": "box",
-        "fontsize": 12,
-        "height": 0.3,
-        "margin": "0.1,0.08",
+        "fontsize": 10,
+        "height": 0.25,
+        "margin": "0.08,0.06",
         "labelloc": "c",
         "fontname": "sans-serif",
         "color": "black",
@@ -356,7 +356,7 @@ def draw_data_op_graph(data_op, url=None, direction="TB"):
     import pydot
 
     g = graph(data_op)
-    dot_graph = pydot.Dot(rankdir=direction)
+    dot_graph = pydot.Dot(rankdir=direction, ranksep=0.4)
     for node_id, e in g["nodes"].items():
         kwargs = _node_kwargs(e, url=url)
         kwargs["id"] = _dot_id(node_id)
@@ -364,7 +364,7 @@ def draw_data_op_graph(data_op, url=None, direction="TB"):
         dot_graph.add_node(node)
     for c, children in g["children"].items():
         for child in children:
-            dot_graph.add_edge(pydot.Edge(_dot_id(child), _dot_id(c)))
+            dot_graph.add_edge(pydot.Edge(_dot_id(child), _dot_id(c), arrowsize=0.7))
 
     return GraphDrawing(dot_graph)
 
