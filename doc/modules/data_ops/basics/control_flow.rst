@@ -80,8 +80,10 @@ regular objects (e.g., a Pandas DataFrame or Series).
 
 
 .. warning::
-  Since DataOps are evaluated lazily (we are building a pipeline, not immediately
-  computing a single result), any transformation that we apply *must not modify its
+  DataOps are evaluated *lazily* (we are building a pipeline, not immediately
+  computing a single result), similarly to the transformers in a scikit-learn
+  pipeline where each transformer computes a new result without modifying its input.
+  As a result, any transformation that we apply *must not modify its
   input in-place*, but leave it unchanged and return a new value.
 
 Alternate notations
