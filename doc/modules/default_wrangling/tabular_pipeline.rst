@@ -55,7 +55,7 @@ problems, but may not beat properly tuned ad-hoc pipelines.
      - Linear models and others
    * - Low-cardinality encoder
      - :class:`~sklearn.preprocessing.OrdinalEncoder`
-     - Native support :sup:`(1)`
+     - Native support
      - :class:`~sklearn.preprocessing.OneHotEncoder`
    * - High-cardinality encoder
      - :class:`StringEncoder`
@@ -64,24 +64,16 @@ problems, but may not beat properly tuned ad-hoc pipelines.
    * - Numeric preprocessor
      - No processing
      - No processing
-     - :class:`~sklearn.preprocessing.SquashingScaler`
+     - :class:`~skrub.SquashingScaler`
    * - Date preprocessor
      - :class:`DatetimeEncoder`
      - :class:`DatetimeEncoder`
      - :class:`DatetimeEncoder` with spline encoding
    * - Missing value strategy
-     - Native support :sup:`(2)`
+     - Native support
      - Native support
      - :class:`~sklearn.impute.SimpleImputer`
 
-.. note::
-  :sup:`(1)` if scikit-learn installed is lower than 1.4, then
-  :class:`~sklearn.preprocessing.OrdinalEncoder` is used since native support
-  for categorical features is not available.
-
-  :sup:`(2)` if scikit-learn installed is lower than 1.4, then
-  :class:`~sklearn.impute.SimpleImputer` is used since native support
-  for missing values is not available.
 
 The logic used by the tabular pipeline is quite simple
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
