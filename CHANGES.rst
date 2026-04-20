@@ -37,6 +37,9 @@ New Features
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
 
+- :func:`selectors.has_dtype` has been added, allowing users to select columns
+  by passing the dtype objects they want to match.
+
 Changes
 -------
 - Increased the minimum version of polars from 0.20 to 1.5.0.
