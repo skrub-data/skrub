@@ -83,6 +83,25 @@ problems, but may not beat properly tuned ad-hoc pipelines.
   :class:`~sklearn.impute.SimpleImputer` is used since native support
   for missing values is not available.
 
+The logic used by the tabular pipeline is quite simple
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The logic that is used by the |tabular_pipeline| is in fact quite simple, so
+users do not lose much if they decide to write their own pipeline instead.
+In practice it does only three things:
+
+- It chooses a |TableVectorizer| configuration from the estimator type. For
+  example, linear models get spline datetime features, while histogram gradient
+  boosting models with ``categorical_features="from_dtype"`` get
+  ``low_cardinality=ToCategorical()``.
+- It inserts a |SimpleImputer| when the estimator cannot handle missing values.
+- It inserts a |SquashingScaler| for estimators that benefit from scaling, and
+  skips it for tree ensembles.
+
+If your use case needs more control, writing the full pipeline yourself is
+usually straightforward and gives you access to the exact same building blocks.
+See the source of :func:`~skrub.tabular_pipeline` for the exact logic.
+
 Extending the pipeline with the ``.steps`` attribute
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -133,22 +152,3 @@ the default table preprocessing:
 The user-provided estimator pipeline is appended as a single final step. This
 means that ``tabular_pipeline`` can still decide which preprocessing steps to
 add before your own estimator logic.
-
-The logic used by the tabular pipeline is quite simple
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The logic that is used by the |tabular_pipeline| is in fact quite simple, so
-users do not lose much if they decide to write their own pipeline instead.
-In practice it does only three things:
-
-- It chooses a |TableVectorizer| configuration from the estimator type. For
-  example, linear models get spline datetime features, while histogram gradient
-  boosting models with ``categorical_features="from_dtype"`` get
-  ``low_cardinality=ToCategorical()``.
-- It inserts a |SimpleImputer| when the estimator cannot handle missing values.
-- It inserts a |SquashingScaler| for estimators that benefit from scaling, and
-  skips it for tree ensembles.
-
-If your use case needs more control, writing the full pipeline yourself is
-usually straightforward and gives you access to the exact same building blocks.
-See the source of :func:`~skrub.tabular_pipeline` for the exact logic.
