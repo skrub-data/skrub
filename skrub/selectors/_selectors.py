@@ -299,7 +299,7 @@ def _has_dtype(column, *dtypes):
 
 def has_dtype(*dtypes):
     """
-    Select columns whose dtype exactly matches one of the provided dtypes.
+    Select columns whose dtype is equal to one of the provided dtypes.
 
 
     This selector takes a hands-off approach: skrub does not normalize or infer
@@ -332,6 +332,15 @@ def has_dtype(*dtypes):
            items  count
     0  [A4, A3]      2
     1      [A5]      1
+
+    For some dataframe libraries, shorthand values can also compare equal to
+    a dtype object. For example, with pandas integer columns:
+
+    >>> df = pd.DataFrame({"count": [2, 1]})
+    >>> s.select(df, s.has_dtype(int))
+       count
+    0      2
+    1      1
 
     """
     return Filter(_has_dtype, args=dtypes, name="has_dtype")
