@@ -8,6 +8,7 @@ from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 from . import selectors
 from ._apply_to_each_col import ApplyToEachCol
 from ._apply_to_sub_frame import ApplyToSubFrame
+from ._sklearn_compat import _VisualBlock
 from ._wrap_transformer import wrap_transformer
 
 _SELECT_ALL_COLUMNS = selectors.all()
@@ -430,6 +431,18 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         check_is_fitted(self)
 
         return self._wrapped_transformer.get_feature_names_out(input_features)
+
+    def _sk_visual_block_(self):
+        # This is needed because when ApplyToCols is used with a transformer like
+        # TableVectorizser then the estimator is shown as a parallel block, which
+        # would not add the documentation link.
+        # With this override the problem is fixed.
+        return _VisualBlock(
+            "serial",
+            [self.transformer],
+            names=[self.transformer.__class__.__name__],
+            name_details=[str(self.transformer)],
+        )
 
     def __getattr__(self, name):
         if name == "transformers_" and isinstance(
