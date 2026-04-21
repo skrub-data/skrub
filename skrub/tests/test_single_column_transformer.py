@@ -110,6 +110,10 @@ def test_doc_link_user_defined_subclass():
         def transform(self, column):
             return column
 
+    # Needed to simulate a user-defined class outside of skrub.*.
+    # Since this test is running in a module named
+    # "skrub.tests.test_single_column_transformer", that is the default modulee
+    # for MyTransformer, which would cause a doc link to be generated.
     MyTransformer.__module__ = "user_package"
     assert MyTransformer()._get_doc_link() == ""
 
