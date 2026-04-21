@@ -434,7 +434,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     def _sk_visual_block_(self):
         # This is needed because when ApplyToCols is used with a transformer like
-        # TableVectorizser then the estimator is shown as a parallel block, which
+        # TableVectorizer then the estimator is shown as a parallel block, which
         # would not add the documentation link.
         # With this override the problem is fixed.
         return _VisualBlock(
