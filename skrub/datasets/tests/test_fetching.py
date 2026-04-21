@@ -85,7 +85,7 @@ def test_fetch_employee_salaries():
         ("midwest_survey", (2494, 29)),
         ("open_payments", (73558, 6)),
         ("traffic_violations", (1578154, 43)),
-        ("toxicity", (1000, 2)),
+        ("toxicity_shuffled", (1000, 2)),
         ("videogame_sales", (16572, 11)),
         ("bike_sharing", (17379, 11)),
     ],
