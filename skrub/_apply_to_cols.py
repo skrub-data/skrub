@@ -291,10 +291,6 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
             "{estimator_module}.{estimator_name}.html",
         )
 
-    @_doc_link_template.setter
-    def _doc_link_template(self, value):
-        setattr(self, "__doc_link_template", value)
-
     def __init__(
         self,
         transformer,

@@ -571,10 +571,6 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
             "{estimator_module}.{estimator_name}.html",
         )
 
-    @_doc_link_template.setter
-    def _doc_link_template(self, value):
-        setattr(self, "__doc_link_template", value)
-
 
 def _to_Xy_pipeline(learner, environment):
     return learner.__skrub_to_Xy_pipeline__(environment)

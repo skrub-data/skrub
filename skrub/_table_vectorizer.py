@@ -473,10 +473,6 @@ class Cleaner(TransformerMixin, BaseEstimator):
             "{estimator_module}.{estimator_name}.html",
         )
 
-    @_doc_link_template.setter
-    def _doc_link_template(self, value):
-        setattr(self, "__doc_link_template", value)
-
 
 class TableVectorizer(TransformerMixin, BaseEstimator):
     """Transform a dataframe to a numeric (vectorized) representation.
@@ -1110,7 +1106,3 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             "https://skrub-data.org/stable/reference/generated/"
             "{estimator_module}.{estimator_name}.html",
         )
-
-    @_doc_link_template.setter
-    def _doc_link_template(self, value):
-        setattr(self, "__doc_link_template", value)

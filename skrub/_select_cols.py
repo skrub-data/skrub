@@ -112,10 +112,6 @@ class SelectCols(TransformerMixin, BaseEstimator):
             "{estimator_module}.{estimator_name}.html",
         )
 
-    @_doc_link_template.setter
-    def _doc_link_template(self, value):
-        setattr(self, "__doc_link_template", value)
-
 
 class DropCols(TransformerMixin, BaseEstimator):
     """Drop a subset of a DataFrame's columns.
@@ -226,10 +222,6 @@ class DropCols(TransformerMixin, BaseEstimator):
             "https://skrub-data.org/stable/reference/generated/"
             "{estimator_module}.{estimator_name}.html",
         )
-
-    @_doc_link_template.setter
-    def _doc_link_template(self, value):
-        setattr(self, "__doc_link_template", value)
 
 
 class Drop(SingleColumnTransformer):

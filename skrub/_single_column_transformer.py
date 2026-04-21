@@ -157,10 +157,6 @@ class SingleColumnTransformer(BaseEstimator):
             "{estimator_module}.{estimator_name}.html",
         )
 
-    @_doc_link_template.setter
-    def _doc_link_template(self, value):
-        setattr(self, "__doc_link_template", value)
-
     def set_output(self, *, transform=None):
         """
         Default no-op implementation for set_output.
