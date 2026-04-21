@@ -3,6 +3,7 @@ import pytest
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 
+from skrub import GapEncoder
 from skrub import _dataframe as sbd
 from skrub._single_column_transformer import (
     SingleColumnTransformer,
@@ -89,6 +90,28 @@ def test_single_column_transformer_all_outputs(df_module):
     transformer.fit(column)
 
     assert transformer.get_feature_names_out() == [sbd.name(column)]
+
+
+def test_doc_link_skrub_class():
+    """Public skrub classes get a link to skrub documentation."""
+    link = GapEncoder()._get_doc_link()
+    assert link == (
+        "https://skrub-data.org/stable/reference/generated/skrub.GapEncoder.html"
+    )
+
+
+def test_doc_link_user_defined_subclass():
+    """User-defined subclasses outside skrub.* produce no link."""
+
+    class MyTransformer(SingleColumnTransformer):
+        def fit_transform(self, column, y=None):
+            return column
+
+        def transform(self, column):
+            return column
+
+    MyTransformer.__module__ = "user_package"
+    assert MyTransformer()._get_doc_link() == ""
 
 
 def test_is_single_column_transformer():

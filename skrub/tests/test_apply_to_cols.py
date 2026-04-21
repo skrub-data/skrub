@@ -1,11 +1,13 @@
 import datetime
+import re
 
 import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
 from sklearn.preprocessing import OrdinalEncoder
+from sklearn.utils import estimator_html_repr
 
-from skrub import ApplyToCols
+from skrub import ApplyToCols, StringEncoder, TableVectorizer
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._to_datetime import ToDatetime
@@ -160,6 +162,23 @@ def test_get_feature_names_out_after_fit(df_module):
 
     feature_names = at.get_feature_names_out()
     assert feature_names == ["date_col"]
+
+
+def test_doc_link_wrapped_transformer_in_html_repr():
+    """The wrapped transformer's doc link appears in the HTML repr of ApplyToCols."""
+    html = estimator_html_repr(ApplyToCols(StringEncoder()))
+    links = set(re.findall(r'href="(https?://[^#"]+)"', html))
+    assert (
+        "https://skrub-data.org/stable/reference/generated/skrub.StringEncoder.html"
+        in links
+    )
+
+    html = estimator_html_repr(ApplyToCols(TableVectorizer()))
+    links = set(re.findall(r'href="(https?://[^#"]+)"', html))
+    assert (
+        "https://skrub-data.org/stable/reference/generated/skrub.TableVectorizer.html"
+        in links
+    )
 
 
 def test_getattr_raises_for_wrong_attribute(df_module):
