@@ -29,6 +29,8 @@ __all__ = ["TableVectorizer"]
 
 
 class PassThrough(SingleColumnTransformer):
+    _doc_link_module = ""
+
     def fit_transform(self, column, y=None):
         return column
 
@@ -337,6 +339,24 @@ class Cleaner(TransformerMixin, BaseEstimator):
     >>> cleaner.all_processing_steps_['D']
     [DropUninformative()]
     """
+
+    _doc_link_module = "skrub"
+
+    # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
+    # which also defines _doc_link_template as a property, and we want to be able
+    # to override it.
+    @property
+    def _doc_link_template(self):
+        return getattr(
+            self,
+            "__doc_link_template",
+            "https://skrub-data.org/stable/reference/generated/"
+            "{estimator_module}.{estimator_name}.html",
+        )
+
+    @_doc_link_template.setter
+    def _doc_link_template(self, value):
+        setattr(self, "__doc_link_template", value)
 
     def __init__(
         self,
@@ -795,6 +815,24 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         ...
     ValueError: Column 'A' used twice in 'specific_transformers', at indices 0 and 1.
     """  # noqa: E501
+
+    _doc_link_module = "skrub"
+
+    # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
+    # which also defines _doc_link_template as a property, and we want to be able
+    # to override it.
+    @property
+    def _doc_link_template(self):
+        return getattr(
+            self,
+            "__doc_link_template",
+            "https://skrub-data.org/stable/reference/generated/"
+            "{estimator_module}.{estimator_name}.html",
+        )
+
+    @_doc_link_template.setter
+    def _doc_link_template(self, value):
+        setattr(self, "__doc_link_template", value)
 
     def __init__(
         self,
