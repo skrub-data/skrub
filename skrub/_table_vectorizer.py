@@ -146,6 +146,7 @@ def _get_preprocessors(
         (ToDatetime(format=datetime_format), cols),
     ]
 
+    tofloat_cols = None
     match add_tofloat32, parse_strings, cast_to_float:
         case True, _, _:
             tofloat_cols = cols
@@ -390,7 +391,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         datetime_format=None,
         null_strings=None,
         parse_strings=False,
-        cast_to_float=None,
+        cast_to_float=False,
         cast_to_str=False,
         n_jobs=1,
     ):

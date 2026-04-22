@@ -234,7 +234,7 @@ def test_get_preprocessors(df_module):
         drop_if_constant=True,
         drop_if_unique=False,
         n_jobs=1,
-        cast_to_float="float32",
+        cast_to_float=True,
     )
     assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
@@ -466,7 +466,7 @@ def test_convert_float32(df_module):
     assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
     assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
-    vectorizer = Cleaner(cast_to_float="float32")
+    vectorizer = Cleaner(cast_to_float=True)
     out = vectorizer.fit_transform(X)
     # cast_to_float applies ToFloat only to floating-point columns
     assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
@@ -502,9 +502,9 @@ def test_cleaner_parse_strings(df_module, parse_strings, expected_df):
 @pytest.mark.parametrize(
     "cast_to_float, expected_df",
     [
-        (None, lambda X: X),
+        (False, lambda X: X),
         (
-            "float32",
+            True,
             lambda X: sbd.with_columns(
                 X,
                 float_col=ToFloat().fit_transform(X["float_col"]),
@@ -538,7 +538,7 @@ def test_cleaner_parse_strings_and_cast_to_float(df_module):
         num_str=ToFloat().fit_transform(X["num_str"]),
         float_col=ToFloat().fit_transform(X["float_col"]),
     )
-    out = Cleaner(parse_strings=True, cast_to_float="float32").fit_transform(X)
+    out = Cleaner(parse_strings=True, cast_to_float=True).fit_transform(X)
     df_module.assert_frame_equal(out, expected)
 
 
