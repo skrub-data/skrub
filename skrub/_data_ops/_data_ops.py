@@ -730,13 +730,20 @@ class DataOp:
         try:
             graph = self.skb.draw_graph().svg.decode("utf-8")
             graph = strip_xml_declaration(graph)
+            has_graph = True
         except Exception:
             graph = (
                 "Please install Pydot and GraphViz to display the computation graph."
             )
+            has_graph = False
         impl = self._skrub_impl
         if impl.preview_if_available() is NULL:
-            return f"<div>{graph}</div>"
+            if has_graph:
+                return f"<div>{graph}</div>"
+            return (
+                f"<div><div><strong><samp>{html.escape(short_repr(self))}</samp></strong>"
+                f"</div><div>{graph}</div></div>"
+            )
         if not isinstance(impl, Var) and impl.name is not None:
             name_line = (
                 "<strong><samp>Name:"
@@ -751,11 +758,17 @@ class DataOp:
             f"<strong><samp>{html.escape(repr_start)}</samp></strong>"
             f"<br />{repr_rest}\n"
         )
-        summary = "<samp>Show graph</samp>"
+        summary = "<samp>Show/Hide graph</samp>"
         subsample_msg = " (on a subsample)" if uses_subsampling(self) else ""
+        details_open_or_not = (
+            "open"
+            if _config.get_config().get("data_ops_open_graph_dropdown", False)
+            else ""
+        )
         prefix = (
             f"{title}{name_line}"
-            f"<details>\n<summary style='cursor: pointer;'>{summary}</summary>\n"
+            f"<details {details_open_or_not}>\n"
+            f"<summary style='cursor: pointer;'>{summary}</summary>\n"
             f"{graph}<br /><br />\n</details>\n"
             f"<strong><samp>{impl.__skrub_preview_heading__()}{subsample_msg}:"
             "</samp></strong>"
