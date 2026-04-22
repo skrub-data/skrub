@@ -44,7 +44,7 @@ parsing datetimes and numbers.
 
 If ``parse_strings`` is set to ``True``, the ``Cleaner`` will parse
 string columns that contain only numbers and convert them to ``np.float32``.
-If ``numeric_dtype="float32"``, the ``Cleaner`` will also downcast columns
+If ``cast_to_str=True``, the ``Cleaner`` will also downcast columns
 that are already floating-point (e.g. ``float64``) to ``np.float32`` while
 leaving integer columns unchanged.
 
@@ -108,10 +108,10 @@ Downcasting float dtypes to ``float32`` with the |Cleaner|
 
 By default, floating-point columns (e.g. ``float64``) keep their original dtype.
 To downcast only floating-point columns to ``float32``, set
-``numeric_dtype="float32"``:
+``cast_to_str=True``:
 
 >>> from skrub import Cleaner
->>> cleaner = Cleaner(numeric_dtype="float32")
+>>> cleaner = Cleaner(cast_to_float=True)
 >>> import pandas as pd
 >>> df = pd.DataFrame({
 ...     "f64": [1.0, 2.0, 3.0],
