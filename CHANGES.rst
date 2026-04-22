@@ -26,6 +26,11 @@ Changes
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``np.float32``, and a ``numeric_dtype`` parameter to downcast floating-point
+  columns to ``np.float32`` (without converting integer columns).
+  :pr:`1910` by :user:`<Varshith-yadaV>`.
 
 Bugfixes
 --------
