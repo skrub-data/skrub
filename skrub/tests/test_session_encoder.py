@@ -576,6 +576,32 @@ def test_check_is_new_session_with_by(df_module):
     assert session_ids == [0, 0, 1, 1]
 
 
+def test_session_encoder_preserves_input_order(df_module):
+    """Test that the output rows are in the same order as the input rows.
+
+    The encoder sorts internally to detect sessions correctly, but the result
+    must be returned in the original input order.
+    """
+    # Deliberately unsorted: bob first, then alice, timestamps out of order
+    timestamps = [
+        datetime.datetime(2024, 1, 1, 10, 20),  # row 0: bob
+        datetime.datetime(2024, 1, 1, 10, 0),  # row 1: alice
+        datetime.datetime(2024, 1, 1, 10, 25),  # row 2: bob
+        datetime.datetime(2024, 1, 1, 10, 5),  # row 3: alice
+    ]
+    user_ids = ["bob", "alice", "bob", "alice"]
+
+    df = df_module.make_dataframe({"timestamp": timestamps, "user_id": user_ids})
+
+    se = SessionEncoder(group_by="user_id", timestamp_col="timestamp", session_gap=30)
+    result = se.fit_transform(df)
+
+    # The user_id column must still be in the original order
+    assert sbd.to_list(sbd.col(result, "user_id")) == user_ids
+    # The timestamp column must still be in the original order
+    assert sbd.to_list(sbd.col(result, "timestamp")) == timestamps
+
+
 @pytest.mark.parametrize(
     "func",
     (

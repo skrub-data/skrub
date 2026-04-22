@@ -338,6 +338,9 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         if not isinstance(self.session_gap, numbers.Number) or self.session_gap <= 0:
             raise ValueError("session_gap must be a positive number")
 
+        row_order_col = f"_row_order_skrub_{random_string()}"
+        X = sbd.with_columns(X, **{row_order_col: range(X.shape[0])})
+
         # sort the input dataframe by the "group_by" and "timestamp" columns
         sort_by = (
             self.group_by_columns + [self.timestamp_col]
@@ -356,8 +359,11 @@ class SessionEncoder(TransformerMixin, BaseEstimator):
         to_drop = [col for col in factorized_by if col not in self.group_by_columns]
         X_with_session_id = sbd.drop_columns(X_with_session_id, to_drop)
 
-        self.all_outputs_ = sbd.column_names(X_with_session_id)
-        return X_with_session_id
+        X_result = sbd.sort(X_with_session_id, by=row_order_col)
+        X_result = sbd.drop_columns(X_result, row_order_col)
+
+        self.all_outputs_ = sbd.column_names(X_result)
+        return X_result
 
     def transform(self, X):
         """Transform the data by encoding sessions.
