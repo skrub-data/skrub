@@ -586,8 +586,10 @@ def test_cleaner_invalid_parse_strings(df_module):
 
 def test_cleaner_invalid_cast_to_float(df_module):
     X = _get_clean_dataframe(df_module)
-    with pytest.raises(ValueError, match="cast_to_float.*must be one of"):
+    with pytest.raises(ValueError, match="cast_to_float.*must be a boolean"):
         Cleaner(cast_to_float="wrong").fit_transform(X)
+    with pytest.raises(ValueError, match="cast_to_float.*must be a boolean"):
+        Cleaner(cast_to_float=None).fit_transform(X)
 
 
 def test_cleaner_get_feature_names_out(df_module):

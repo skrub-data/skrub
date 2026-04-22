@@ -121,7 +121,7 @@ def _get_preprocessors(
     n_jobs,
     add_tofloat32=False,
     parse_strings=False,
-    cast_to_float=None,
+    cast_to_float=False,
     cast_to_str=True,
     null_strings=None,
     datetime_format=None,
@@ -146,7 +146,7 @@ def _get_preprocessors(
         (ToDatetime(format=datetime_format), cols),
     ]
 
-    match add_tofloat32, parse_strings, cast_to_float == "float32":
+    match add_tofloat32, parse_strings, cast_to_float:
         case True, _, _:
             tofloat_cols = cols
         case False, False, False:
@@ -427,10 +427,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
             raise ValueError(
                 f"`parse_strings` must be a boolean. Found {self.parse_strings!r}."
             )
-        if self.cast_to_float not in (None, "float32"):
+        if not isinstance(self.cast_to_float, bool):
             raise ValueError(
-                "`cast_to_float` must be one of "
-                f"[`None`, `'float32'`]. Found {self.cast_to_float}."
+                f"`cast_to_float` must be a boolean. Found {self.cast_to_float!r}."
             )
 
         all_steps = _get_preprocessors(
