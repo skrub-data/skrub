@@ -1,3 +1,5 @@
+import datetime
+
 import numpy as np
 import pytest
 
@@ -188,6 +190,24 @@ def drop_id_column(df_module):
                 None,
             ],
             "variable": ["A", "B", "B"],
+            "datetime_str": [
+                "2020-01-01 00:01:02",
+                "2020-01-02 00:01:02",
+                "2020-01-03 00:01:02",
+            ],
+            "datetime_str_with_nulls": [
+                "2020-01-01 00:01:02",
+                "2020-01-02 00:01:02",
+                None,
+            ],
+            "datetime-col": [
+                datetime.datetime.fromisoformat(dt)
+                for dt in [
+                    "2020-02-03T12:30:05",
+                    "2021-03-15T00:37:15",
+                    "2022-02-13T17:03:25",
+                ]
+            ],
         }
     )
 
@@ -198,7 +218,7 @@ def test_drop_id(df_module, drop_id_column, drop_if_unique):
     for column in drop_id_column.columns:
         res = enc.fit_transform(drop_id_column[column])
         # Check that "str" is the only column that gets dropped
-        if column == "str" and drop_if_unique:
+        if column in ["str", "datetime_str"] and drop_if_unique:
             assert res == []
         else:
             df_module.assert_column_equal(res, df_module.make_column(column, res))

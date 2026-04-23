@@ -22,8 +22,9 @@ class DropUninformative(SingleColumnTransformer):
 
     drop_if_unique : bool, default=False
         If True, drop the column if all values are distinct. Missing values count as
-        one additional distinct value. Numeric columns are never dropped. This may
-        lead to dropping columns that contain free-flowing text.
+        one additional distinct value. Numeric and datetime columns are never dropped.
+        Note that activating this parameter may lead to dropping columns that contain
+        free-flowing text, or string columns that contain datetimes.
 
     drop_null_fraction : float or None, default=1.0
         Drop columns with a fraction of missing values larger than threshold. If None,
@@ -126,7 +127,9 @@ class DropUninformative(SingleColumnTransformer):
         return False
 
     def _drop_if_unique(self, column):
-        if self.drop_if_unique and not sbd.is_numeric(column):
+        if self.drop_if_unique and not (
+            sbd.is_numeric(column) or sbd.is_any_date(column)
+        ):
             n_unique = sbd.n_unique(column)
             if self._null_count > 0:
                 return False
