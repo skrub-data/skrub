@@ -48,9 +48,9 @@ data preparation and model training process, along with the state of all the
 transformers and models: this allows to save the learner, load it back later,
 and use it to make predictions on new data.
 
-This example is meant to be an introduction to Skrub DataOps, and as such it
+This example is meant to be an introduction to skrub DataOps, and as such it
 will not cover all the features. Further examples in the gallery
-:ref:`data_ops_examples_ref` go into more detail on Skrub DataOps
+:ref:`data_ops_examples_ref` go into more detail on skrub DataOps
 for more complex tasks.
 
 
