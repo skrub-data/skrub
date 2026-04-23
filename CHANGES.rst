@@ -29,6 +29,10 @@ Changes
 - Skrub estimators now correctly show links to the documentation in the HTML
   representation that is generated for notebooks. :pr:`2036` by :user:`Riccardo
   Cappuzzo <rcap107>`.
+- Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
+  the nearest-neighbor distance used for matching. The metric can be any value
+  supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
+  :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
 
 Bugfixes
 --------
