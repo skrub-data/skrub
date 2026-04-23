@@ -43,3 +43,110 @@ def test_rejected_columns(df_module):
             ToFloat().fit_transform(col)
         to_float = ToFloat().fit(df_module.make_column("c", [1.1]))
         assert is_float32(df_module, to_float.transform(col))
+
+
+@pytest.mark.parametrize(
+    "input_str, expected_float, decimal, thousand",
+    [
+        # valid numbers
+        ("1,234.56", 1234.56, ".", ","),
+        ("1.234,56", 1234.56, ",", "."),
+        ("1 234,56", 1234.56, ",", " "),
+        ("1234.56", 1234.56, ".", None),
+        ("1234,56", 1234.56, ",", None),
+        ("1,234,567.89", 1234567.89, ".", ","),
+        ("1.234.567,89", 1234567.89, ",", "."),
+        ("1 234 567,89", 1234567.89, ",", " "),
+        ("1'234'567.89", 1234567.89, ".", "'"),
+        ("1.23e+4", 12300.0, ".", None),
+        ("1.23E+4", 12300.0, ".", None),
+        ("-1,234.56", -1234.56, ".", ","),
+        ("(1,234.56)", -1234.56, ".", ","),
+        (".56", 0.56, ".", None),
+        (",56", 0.56, ",", None),
+        ("56", 56.0, ".", None),
+    ],
+)
+def test_number_parsing_valid(input_str, expected_float, decimal, thousand, df_module):
+    column = df_module.make_column("col", [input_str])
+    result = ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
+    assert np.allclose(result[0], expected_float)
+
+
+@pytest.mark.parametrize(
+    "input_str, decimal, thousand",
+    [
+        # invalid grouping
+        ("1.2.3.4", ".", None),
+        ("1.2.3.4,0", ",", "."),
+        ("1 234,567.34", ".", ","),
+        ("1'234,567.34", ".", ","),
+        ("1'234'234,567.34", ",", "'"),
+        ("123.45.67", ".", None),
+        ("1,,234", ".", ","),
+        ("1.23,45", ".", ","),
+    ],
+)
+def test_number_parsing_invalid(input_str, decimal, thousand, df_module):
+    column = df_module.make_column("col", [input_str])
+    with pytest.raises((RejectColumn, ValueError)):
+        ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
+
+
+@pytest.mark.parametrize(
+    "decimal, thousand",
+    [
+        # invalid because decimal and thousand are the same
+        (",", ","),
+        (".", "."),
+        # invalid because decimal is None
+        (None, ","),
+        (None, None),
+    ],
+)
+def test_invalid_parameters(decimal, thousand, df_module):
+    """
+    Test that ToFloat raises an exception if the parameters are invalid:
+    - decimal is None → ValueError
+    - thousand == decimal → ValueError
+    """
+    column = df_module.make_column("col", ["123", "456"])
+
+    if decimal is None:
+        with pytest.raises(ValueError, match="decimal separator cannot be None"):
+            ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
+    else:
+        with pytest.raises(
+            ValueError, match="thousand and decimal separators must differ"
+        ):
+            ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
+
+
+@pytest.mark.parametrize(
+    "values, decimal, thousand, expected",
+    [
+        # 1) Western 3-digit grouping
+        (["1,234.56", "12,345.78"], ".", ",", [1234.56, 12345.78]),
+        # 2) Multi-group
+        (["1,23,456.78", "12,34,567.89"], ".", ",", [123456.78, 1234567.89]),
+        # 3) 4-digit grouping
+        (["1,2345.67", "12,3456.78"], ".", ",", [12345.67, 123456.78]),
+    ],
+)
+def test_number_groupings(values, decimal, thousand, expected, df_module):
+    """Test that ToFloat correctly parses three types of grouping patterns."""
+    column = df_module.make_column("col", values)
+    result = ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
+    assert np.allclose(result, expected)
+
+
+def test_number_groupings_invalid(df_module):
+    """Test that an invalid grouping raises RejectColumn."""
+    # neither 3-digit, multi-group, nor 4-digit
+    invalid_values = [
+        "12,34,56.78",
+        "1,2,3456.78",
+    ]
+    column = df_module.make_column("col", invalid_values)
+    with pytest.raises(RejectColumn):
+        ToFloat(decimal=".", thousand=",").fit_transform(column)
