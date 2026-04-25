@@ -23,6 +23,13 @@ New Features
 
 Changes
 -------
+- :class:`TableReport` now accepts ``plot_distributions`` and
+  ``compute_associations`` parameters (``True``, ``False``, or ``"auto"``)
+  to explicitly control whether distribution plots and pairwise associations
+  are computed. The threshold parameters controlling the maximum number of
+  columns for which these are computed have been renamed to
+  ``plots_threshold`` and ``associations_threshold`` for clarity.
+  :pr:`1907` by :user:`JulietteBgl <JulietteBgl>`.
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
