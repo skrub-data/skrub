@@ -31,9 +31,12 @@ Changes
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
   :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
 
+
 Bugfixes
 --------
-
+- :meth:`deduplicate` now proceeds even though the clustering of the strings fails,
+  with a possibility to display the warnings.
+  :pr:`1996` by :user:`Marie Sacksick <MarieSacksick>`.
 
 Deprecations
 ------------

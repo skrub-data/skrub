@@ -2,6 +2,8 @@
 Implements deduplication based on clustering string distance matrices.
 """
 
+import warnings
+
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
@@ -136,6 +138,7 @@ def deduplicate(
     analyzer="char_wb",
     linkage_method="average",
     n_jobs=None,
+    warn=False,
 ):
     """Deduplicate categorical data by hierarchically clustering similar strings.
 
@@ -168,6 +171,9 @@ def deduplicate(
         average distance between data points in the first and second cluster.
     n_jobs : int, default=None
         The number of jobs to run in parallel.
+    warn : bool, default=False
+        If True, emit a warning when clustering fails (e.g. too few or too
+        similar entries) and the input is returned unchanged.
 
     Returns
     -------
@@ -260,14 +266,21 @@ def deduplicate(
     9  white      9              white
     """
     unique_words, counts = np.unique(X, return_counts=True)
-    distance_mat = _compute_ngram_distance(
-        unique_words, ngram_range=ngram_range, analyzer=analyzer
-    )
-
-    Z = linkage(distance_mat, method=linkage_method, optimal_ordering=True)
-    if n_clusters is None:
-        n_clusters = _guess_clusters(Z, distance_mat, n_jobs)
-    clusters = fcluster(Z, n_clusters, criterion="maxclust")
+    try:
+        distance_mat = _compute_ngram_distance(
+            unique_words, ngram_range=ngram_range, analyzer=analyzer
+        )
+        Z = linkage(distance_mat, method=linkage_method, optimal_ordering=True)
+        if n_clusters is None:
+            n_clusters = _guess_clusters(Z, distance_mat, n_jobs)
+        clusters = fcluster(Z, n_clusters, criterion="maxclust")
+    except Exception:
+        if warn:
+            warnings.warn(
+                "Deduplication could not cluster the data (too few or too similar"
+                " entries). Returning the input unchanged."
+            )
+        return list(X)
 
     translation_table = _create_spelling_correction(unique_words, counts, clusters)
     unrolled_corrections = translation_table[X]
