@@ -1,4 +1,5 @@
 import pathlib
+import warnings
 
 import pytest
 
@@ -218,6 +219,22 @@ def test_deprecated_max_association_columns_set_config():
     set_config(table_report_associations_threshold=30)
 
 
+def test_deprecated_max_plot_columns_all_set_config():
+    """set_config(max_plot_columns='all') warns but does not change threshold."""
+    original = get_config()["table_report_plots_threshold"]
+    with pytest.warns(DeprecationWarning, match="max_plot_columns.*deprecated"):
+        set_config(max_plot_columns="all")
+    assert get_config()["table_report_plots_threshold"] == original
+
+
+def test_deprecated_max_association_columns_all_set_config():
+    """set_config(max_association_columns='all') warns but does not change threshold."""
+    original = get_config()["table_report_associations_threshold"]
+    with pytest.warns(DeprecationWarning, match="max_association_columns.*deprecated"):
+        set_config(max_association_columns="all")
+    assert get_config()["table_report_associations_threshold"] == original
+
+
 @pytest.mark.parametrize(
     "old_var,new_var",
     [
@@ -235,3 +252,32 @@ def test_deprecated_env_var_plot_association(monkeypatch, old_var, new_var):
         with pytest.warns(DeprecationWarning, match=f"'{old_var}' is deprecated"):
             result = _get_deprecated_int_env(new_var, old_var, 30)
         assert result == 42
+
+
+def test_get_deprecated_int_env_new_var_takes_precedence(monkeypatch):
+    """New env var takes precedence over deprecated one, no warning emitted."""
+    from skrub._config import _get_deprecated_int_env
+
+    with monkeypatch.context() as mp:
+        mp.setenv("SKB_TABLE_REPORT_PLOTS_THRESHOLD", "20")
+        mp.setenv("SKB_MAX_PLOT_COLUMNS", "99")
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = _get_deprecated_int_env(
+                "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
+            )
+        assert result == 20
+        assert not any(issubclass(w.category, DeprecationWarning) for w in caught)
+
+
+def test_get_deprecated_int_env_default(monkeypatch):
+    """Returns default when neither env var is set."""
+    from skrub._config import _get_deprecated_int_env
+
+    with monkeypatch.context() as mp:
+        mp.delenv("SKB_TABLE_REPORT_PLOTS_THRESHOLD", raising=False)
+        mp.delenv("SKB_MAX_PLOT_COLUMNS", raising=False)
+        result = _get_deprecated_int_env(
+            "SKB_TABLE_REPORT_PLOTS_THRESHOLD", "SKB_MAX_PLOT_COLUMNS", 30
+        )
+    assert result == 30
