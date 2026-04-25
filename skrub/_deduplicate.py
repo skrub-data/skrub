@@ -278,9 +278,7 @@ def deduplicate(
         if warn:
             warnings.warn(
                 "Deduplication could not cluster the data (too few or too similar"
-                " entries). Returning the input unchanged.",
-                UserWarning,
-                stacklevel=2,
+                " entries). Returning the input unchanged."
             )
         return list(X)
 
