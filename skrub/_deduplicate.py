@@ -77,7 +77,7 @@ def _guess_clusters(Z, distance_mat, n_jobs=None):
         number of clusters that maximize the silhouette score.
     """
     max_clusters = Z.shape[0]
-    n_clusters = np.arange(1, max_clusters)
+    n_clusters = np.arange(2, max_clusters)
     # silhouette score needs a redundant distance matrix
     redundant_dist = squareform(distance_mat)
     silhouette_scores = Parallel(n_jobs=n_jobs, prefer="processes")(
