@@ -2,6 +2,7 @@ import codecs
 import functools
 import json
 import numbers
+import warnings
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
@@ -227,6 +228,9 @@ class TableReport:
         plot_distributions="auto",
         compute_associations="auto",
         open_tab="table",
+        # Deprecated parameters kept for backward compatibility
+        max_plot_columns=None,
+        max_association_columns=None,
     ):
         if isinstance(dataframe, np.ndarray):
             if dataframe.ndim == 1:
@@ -270,6 +274,30 @@ class TableReport:
             sbd.to_frame(dataframe) if sbd.is_column(dataframe) else dataframe
         )
         self.n_columns = sbd.shape(self.dataframe)[1]
+
+        if max_plot_columns is not None:
+            warnings.warn(
+                "'max_plot_columns' is deprecated. Use 'plot_distributions'"
+                " (bool) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            plot_distributions = (
+                max_plot_columns == "all" or max_plot_columns >= self.n_columns
+            )
+
+        if max_association_columns is not None:
+            warnings.warn(
+                "'max_association_columns' is deprecated. Use 'compute_associations'"
+                " (bool) instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            compute_associations = (
+                max_association_columns == "all"
+                or max_association_columns >= self.n_columns
+            )
+
         (
             self.plot_distributions,
             self.compute_associations,
