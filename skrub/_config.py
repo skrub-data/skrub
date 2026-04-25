@@ -69,6 +69,9 @@ _global_config = {
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
     "data_dir": _get_default_data_dir(),
     "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
+    "data_ops_open_graph_dropdown": _parse_env_bool(
+        "SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN", False
+    ),
 }
 _threadlocal = threading.local()
 
@@ -118,6 +121,7 @@ def set_config(
     cardinality_threshold=None,
     data_dir=None,
     eager_data_ops=None,
+    data_ops_open_graph_dropdown=None,
 ):
     """Set global skrub configuration.
 
@@ -223,6 +227,16 @@ def set_config(
         This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
         environment variable.
 
+    data_ops_open_graph_dropdown : bool, default=False
+        When displaying a DataOp that has a preview value in a jupyter
+        notebook, should the dropdown that reveals the computational graph
+        drawing be open (if True) or close (if False). This option mostly
+        exists to control the display of DataOps in the skrub documentation
+        examples. This configuration can also be set with the
+        ``SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN`` environment variable.
+
+
+
     See Also
     --------
 
@@ -314,6 +328,11 @@ def set_config(
     if eager_data_ops is not None:
         local_config["eager_data_ops"] = eager_data_ops
 
+    if data_ops_open_graph_dropdown is not None:
+        local_config["data_ops_open_graph_dropdown"] = bool(
+            data_ops_open_graph_dropdown
+        )
+
 
 @contextmanager
 def config_context(
@@ -328,6 +347,7 @@ def config_context(
     cardinality_threshold=None,
     data_dir=None,
     eager_data_ops=None,
+    data_ops_open_graph_dropdown=None,
 ):
     """Context manager for global skrub configuration.
 
@@ -428,6 +448,14 @@ def config_context(
         This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
         environment variable.
 
+    data_ops_open_graph_dropdown : bool, default=False
+        When displaying a DataOp that has a preview value in a jupyter
+        notebook, should the dropdown that reveals the computational graph
+        drawing be open (if True) or close (if False). This option mostly
+        exists to control the display of DataOps in the skrub documentation
+        examples. This configuration can also be set with the
+        ``SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN`` environment variable.
+
     Yields
     ------
     None.
@@ -455,6 +483,7 @@ def config_context(
         cardinality_threshold=cardinality_threshold,
         data_dir=data_dir,
         eager_data_ops=eager_data_ops,
+        data_ops_open_graph_dropdown=data_ops_open_graph_dropdown,
     )
 
     try:

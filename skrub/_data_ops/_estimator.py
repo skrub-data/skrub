@@ -1,22 +1,29 @@
 # Scikit-learn-ish interface to the skrub DataOps
+import copy
+from functools import partial
+
 import pandas as pd
+import sklearn
 from sklearn import model_selection
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.exceptions import NotFittedError
+from sklearn.metrics import check_scoring
 from sklearn.model_selection import check_cv
+from sklearn.utils.fixes import parse_version
 from sklearn.utils.validation import check_is_fitted
 
 from .. import _dataframe as sbd
 from .. import _join_utils
-from .._sklearn_compat import _safe_indexing
+from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply, DataOp, SplitX, check_subsampled_X_y_shape
+from ._data_ops import Apply, DataOp, Scoring, SplitX, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     eval_choices,
     evaluate,
     find_first_apply,
+    find_node,
     find_node_by_name,
     find_X,
     find_y,
@@ -28,7 +35,7 @@ from ._evaluation import (
 from ._inspection import describe_params
 from ._parallel_coord import DEFAULT_COLORSCALE, plot_parallel_coord
 from ._subsampling import env_with_subsampling
-from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error
+from ._utils import X_NAME, Y_NAME, _CloudPickle, attribute_error, unique_renaming
 
 _FITTING_METHODS = ["fit", "fit_transform"]
 _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY = [
@@ -91,6 +98,18 @@ def _get_default_sklearn_tags():
 _DEFAULT_SKLEARN_TAGS = _get_default_sklearn_tags()
 
 
+class _SklearnParamsReprHtml:
+    """
+    Helper for adding the dataop graph to the sklearn estimator diagram.
+    """
+
+    def __init__(self, html):
+        self.html = html
+
+    def _repr_html_inner(self):
+        return self.html
+
+
 class _DataOpWrapperMixin(_CloudPickle):
     """
     Mixin for learners and estimators that wrap a DataOp.
@@ -139,6 +158,29 @@ class _DataOpWrapperMixin(_CloudPickle):
             return _get_classes(self.data_op)
         except AttributeError:
             attribute_error(self, "classes_")
+
+    def _get_params_html(self, deep=True, doc_link=""):
+        # Function called by scikit-learn to display the estimator params in
+        # diagram.
+        # We override it to display the graph instead of just the default which
+        # would be 'data_op: repr(self.data_op)'
+
+        data_op_html = self.data_op._repr_html_()
+        sklearn_params = super()._get_params_html()
+        sklearn_params.pop("data_op")
+        if sklearn_params:
+            sklearn_html = sklearn_params._repr_html_inner()
+            html = f"<div><div>{sklearn_html}</div><div>{data_op_html}</div></div>"
+        else:
+            html = f"<div>{data_op_html}</div>"
+        return _SklearnParamsReprHtml(html)
+
+
+def _find_scoring_node(data_op):
+    return find_node(
+        data_op,
+        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
+    )
 
 
 @set_module("skrub")
@@ -245,11 +287,22 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         self._set_is_fitted(mode)
         return result
 
+    def _score(self, environment):
+        score_node = _find_scoring_node(self.data_op)
+        if score_node is None:
+            return self._eval_in_mode("score", environment)
+        estimator = self.__skrub_to_Xy_pipeline__(environment)
+        cv_data = _compute_X_y_and_cv(self.data_op, environment)
+        X, y = cv_data["X"], cv_data.get("y")
+        return estimator._score(X, y, cast_to_float=False)
+
     def __getattr__(self, name):
         if name not in supported_modes(self.data_op):
             attribute_error(self, name)
 
         def f(*args, **kwargs):
+            if name == "score":
+                return self._score(*args, **kwargs)
             result = self._eval_in_mode(name, *args, **kwargs)
             return self if name == "fit" else result
 
@@ -535,6 +588,16 @@ class _XyPipelineMixin:
         return {**self.environment, **xy_environment}
 
 
+class _MultiMetricScorer:
+    """Compatibility helper for scikit-learn < 1.5"""
+
+    def __init__(self, scorers):
+        self.scorers = scorers
+
+    def __call__(self, estimator, X, y):
+        return {name: scorer(estimator, X, y) for name, scorer in self.scorers.items()}
+
+
 class _XyPipeline(_XyPipelineMixin, SkrubLearner):
     """
     Scikit-learn compatible interface to the SkrubLearner.
@@ -564,6 +627,69 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
     def _eval_in_mode(self, mode, X, y=None):
         result = evaluate(self.data_op, mode, self._get_env(X, y), clear=True)
         self._set_is_fitted(mode)
+        return result
+
+    def _prepare_scorer(self, scoring, kwargs):
+        if parse_version(sklearn.__version__) < parse_version("1.5"):
+            if isinstance(scoring, (list, tuple, set)):
+                return _MultiMetricScorer(
+                    {k: self._prepare_scorer(k, kwargs) for k in scoring}
+                )
+            if isinstance(scoring, dict):
+                return _MultiMetricScorer(
+                    {k: self._prepare_scorer(v, kwargs) for k, v in scoring.items()}
+                )
+        scorer = check_scoring(self, scoring)
+        kwargs = kwargs or {}
+        if not hasattr(scorer, "get_metadata_routing"):
+            return partial(scorer, **kwargs)
+        scorer = copy.deepcopy(scorer)
+        if hasattr(scorer, "_kwargs"):
+            scorer._kwargs = {**scorer._kwargs, **kwargs}
+        elif hasattr(scorer, "_scorers"):
+            scorer._scorers = {
+                k: self._prepare_scorer(v, kwargs) for k, v in scorer._scorers.items()
+            }
+        return scorer
+
+    @staticmethod
+    def _process_scores(scorer_info, scorer_output):
+        name = scorer_info["name"]
+        scoring = scorer_info["scoring"]
+        if isinstance(scoring, str):
+            return [(name or scoring, scorer_output)]
+        if isinstance(scorer_output, dict):
+            prefix = f"{name}_" if name else ""
+            return [(f"{prefix}{k}", v) for (k, v) in scorer_output.items()]
+        if not name:
+            try:
+                name = scoring._score_func.__name__
+            except AttributeError:
+                try:
+                    name = scoring.__name__
+                except AttributeError:
+                    name = "score"
+        return [(name, scorer_output)]
+
+    def _score(self, X, y=None, cast_to_float=True):
+        score_node = _find_scoring_node(self.data_op)
+        if score_node is None:
+            return self._eval_in_mode("score", X, y)
+        env = self._get_env(X, y)
+        scorers = evaluate(
+            score_node._skrub_impl.scorers, mode="fit_transform", environment=env
+        )
+        all_scores = []
+        for scorer_info in scorers:
+            scorer = self._prepare_scorer(scorer_info["scoring"], scorer_info["kwargs"])
+            scorer_output = scorer(self, X, y)
+            all_scores.extend(self._process_scores(scorer_info, scorer_output))
+        rename = unique_renaming()
+        result = {rename(name): score for name, score in all_scores}
+        if cast_to_float and len(result) == 1:
+            # If there is a single score stick to scikit-learn interface which
+            # returns a number.
+            return next(iter(result.values()))
         return result
 
 
@@ -614,7 +740,7 @@ def _compute_X_y_and_cv(data_op, environment):
 class _Splitter:
     def __init__(self, splitter, split_kwargs):
         self.splitter = splitter
-        self.split_kwargs = split_kwargs
+        self.split_kwargs = split_kwargs or {}
 
     def split(self, X, y=None, groups=None):
         # If user passed groups they will be in split_kwargs, the groups param
@@ -1022,6 +1148,13 @@ def _get_results_metadata(data_op_choices):
     }
 
 
+def default_score(estimator, X, y):
+    """
+    Wrap estimator.score to force sklearn to take refit parameter into account.
+    """
+    return estimator.score(X, y)
+
+
 @set_module("skrub")
 class ParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
@@ -1052,6 +1185,8 @@ class ParamSearch(_BaseParamSearch):
             search.param_distributions = param_grid
         X, y, splitter = _compute_cv_data(self.data_op, environment, search.cv)
         search.cv = splitter
+        if search.scoring is None:
+            search.scoring = default_score
         search.fit(X, y)
         _copy_attr(search, self, _SKLEARN_SEARCH_FITTED_ATTRIBUTES_TO_COPY)
         try:
@@ -1060,6 +1195,32 @@ class ParamSearch(_BaseParamSearch):
             # refit is set to False, there is no best_estimator_
             pass
         return self
+
+    def _sk_visual_block_(self):
+        # Function called by scikit-learn to get the kind of estimator to
+        # display (nested in parallel or sequentially, or not nested). We
+        # override it to not display the inner search object and add detail to
+        # the title.
+        name = self.__class__.__name__
+        if hasattr(self.search, "param_grid"):
+            name += " (grid search)"
+        else:
+            name += " (randomized search)"
+        return _VisualBlock("single", self, names=name, name_details=repr(self))
+
+    def _get_params_html(self, deep=True, doc_link=""):
+        # Function called by scikit-learn to display the estimator params in
+        # diagram.
+        # We override it to display the graph and the search parameters (n_iter etc.)
+
+        data_op_html = self.data_op._repr_html_()
+        search_params = self.search._get_params_html()
+        search_params.pop("estimator")
+        search_params.pop("param_grid", None)
+        search_params.pop("param_distributions", None)
+        sklearn_html = search_params._repr_html_inner()
+        html = f"<div><div>{sklearn_html}</div><div>{data_op_html}</div></div>"
+        return _SklearnParamsReprHtml(html)
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):

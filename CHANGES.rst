@@ -11,6 +11,15 @@ Ongoing Development
 
 New Features
 ------------
+- It is now possible to pass additional (dynamically computed) arguments to the
+  scorers used by :class:`DataOp` objects for validation, hyperparameter search
+  etc. For example, sample weights. This is achieved by passing the scorers and
+  their arguments to :meth:`DataOp.skb.with_scoring`. :pr:`1995` by
+  :user:`Jérôme Dockès <jeromedockes>`.
+- The diagrams displayed in notebooks for :class:`SkrubLearner`,
+  :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
+  display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Changes
 -------
@@ -24,9 +33,17 @@ Changes
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
+  the nearest-neighbor distance used for matching. The metric can be any value
+  supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
+  :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
 
 Bugfixes
 --------
+
+
+Deprecations
+------------
 
 
 Release 0.8.0

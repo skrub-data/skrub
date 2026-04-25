@@ -142,7 +142,7 @@ def toy_products():
     return pd.DataFrame(
         {
             "description": [
-                "mouse",
+                "screen",
                 "hammer",
                 "keyboard",
                 "usb key",
@@ -150,7 +150,7 @@ def toy_products():
                 "screwdriver",
             ],
             "price": [
-                10,
+                100,
                 15,
                 20,
                 9,
