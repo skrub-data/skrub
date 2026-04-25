@@ -43,6 +43,8 @@ class SelectCols(TransformerMixin, BaseEstimator):
     ValueError: The following columns are requested for selection but missing from dataframe: ['X']
     """  # noqa: E501
 
+    _doc_link_module = "skrub"
+
     def __init__(self, cols):
         self.cols = cols
 
@@ -98,6 +100,18 @@ class SelectCols(TransformerMixin, BaseEstimator):
         check_is_fitted(self, "columns_")
         return self.columns_
 
+    # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
+    # which also defines _doc_link_template as a property, and we want to be able
+    # to override it.
+    @property
+    def _doc_link_template(self):
+        return getattr(
+            self,
+            "__doc_link_template",
+            "https://skrub-data.org/stable/reference/generated/"
+            "{estimator_module}.{estimator_name}.html",
+        )
+
 
 class DropCols(TransformerMixin, BaseEstimator):
     """Drop a subset of a DataFrame's columns.
@@ -137,6 +151,8 @@ class DropCols(TransformerMixin, BaseEstimator):
         ...
     ValueError: The following columns are requested for selection but missing from dataframe: ['X']
     """  # noqa: E501
+
+    _doc_link_module = "skrub"
 
     def __init__(self, cols):
         self.cols = cols
@@ -194,6 +210,18 @@ class DropCols(TransformerMixin, BaseEstimator):
         """
         check_is_fitted(self, "kept_cols_")
         return self.kept_cols_
+
+    # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
+    # which also defines _doc_link_template as a property, and we want to be able
+    # to override it.
+    @property
+    def _doc_link_template(self):
+        return getattr(
+            self,
+            "__doc_link_template",
+            "https://skrub-data.org/stable/reference/generated/"
+            "{estimator_module}.{estimator_name}.html",
+        )
 
 
 class Drop(SingleColumnTransformer):

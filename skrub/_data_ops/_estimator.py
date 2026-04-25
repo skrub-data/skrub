@@ -560,6 +560,17 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         """
         return describe_params(eval_choices(self.data_op), choice_graph(self.data_op))
 
+    _doc_link_module = "skrub"
+
+    @property
+    def _doc_link_template(self):
+        return getattr(
+            self,
+            "__doc_link_template",
+            "https://skrub-data.org/stable/reference/generated/"
+            "{estimator_module}.{estimator_name}.html",
+        )
+
 
 def _to_Xy_pipeline(learner, environment):
     return learner.__skrub_to_Xy_pipeline__(environment)

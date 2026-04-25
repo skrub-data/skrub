@@ -88,3 +88,15 @@ def test_get_feature_names_out(df):
     pipeline = make_pipeline(DropCols(cols=["A", "B"]), DummyClassifier())
     pipeline.fit(df, df["C"])
     assert pipeline[:-1].get_feature_names_out() == ["C"]
+
+
+def test_doc_link_skrub_class():
+    """Public skrub classes get a link to skrub documentation."""
+    link = SelectCols(cols=[])._get_doc_link()
+    assert link == (
+        "https://skrub-data.org/stable/reference/generated/skrub.SelectCols.html"
+    )
+    link = DropCols(cols=[])._get_doc_link()
+    assert link == (
+        "https://skrub-data.org/stable/reference/generated/skrub.DropCols.html"
+    )

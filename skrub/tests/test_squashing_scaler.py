@@ -144,3 +144,11 @@ def test_squashing_scaler_known_values(df_module):
         -1, 1
     )
     assert_almost_equal(X_target, X_out)
+
+
+def test_doc_link_skrub_class():
+    """Public skrub classes get a link to skrub documentation."""
+    link = SquashingScaler()._get_doc_link()
+    assert link == (
+        "https://skrub-data.org/stable/reference/generated/skrub.SquashingScaler.html"
+    )
