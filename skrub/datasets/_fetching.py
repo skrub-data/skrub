@@ -4,7 +4,7 @@ Fetching functions to retrieve example datasets from GitHub and OSF.
 
 from pathlib import Path
 
-from ._utils import load_dataset_files, load_simple_dataset
+from ._utils import download_dataset, load_dataset_files, load_simple_dataset
 
 
 def fetch_employee_salaries(data_home=None, split="all"):
@@ -602,3 +602,40 @@ def fetch_california_housing(data_home=None):
             The path to the california housing CSV file.
     """
     return load_simple_dataset("california_housing", data_home)
+
+
+def fetch_electricity_usage(data_home=None):
+    """Fetches the electricity usage dataset (forecasting), available at \
+        https://github.com/skrub-data/skrub-data-files
+
+    Description of the dataset:
+        This dataset was generated from data obtained from the
+        ENTSOE Open Data portal.:
+        https://transparency.entsoe.eu/load-domain/r2/totalLoadR2/show?name=&defaultValue=false&viewType=TABLE&areaType=BZN&atch=false&dateTime.dateTime=12.10.2023+00:00%7CUTC%7CDAY&biddingZone.values=CTY%7C10YFR-RTE------C!BZN%7C10YFR-RTE------C&dateTime.timezone=UTC&dateTime.timezone_input=UTC#
+        and the Open Meteo Historcal Weather API:
+        https://open-meteo.com/en/docs/historical-forecast-api
+        This is a time-series forecasting use case.
+
+        This dataset gives the total electricity load in MW in France,
+        covering a time range from March 23, 2021 to May 31,
+        2025.
+
+        In addition, the dataset contains weather data for several cities
+        within France.
+
+        It can be downloaded/loaded using the
+        sklearn.datasets.fetch_electricity_usage function.
+        Size on disk: 26MB.
+
+    Parameters
+    ----------
+    data_home: str or path, default=None
+        The directory where to download and unzip the files.
+
+    Returns
+    -------
+    Path : PosixPath
+         The path to the electricity usage CSV files
+
+    """
+    return download_dataset("electricity_usage", data_home=None)
