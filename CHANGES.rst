@@ -49,6 +49,9 @@ New Features
 - :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
+- Added a new dataset, :func:`fetch_electricity_usage`, which contains electricity usage data
+  for several French cities and corresponding weather data.
+  :pr:`2013` by :user:`Lisa McBride<lisaleemcb>`.
 
 Changes
 -------

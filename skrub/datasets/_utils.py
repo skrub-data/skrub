@@ -53,7 +53,7 @@ DATASET_INFO = {
     "electricity_usage": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/electricity_usage.zip",
-            # "https://osf.io/download/XXXXX",
+            "https://osf.io/download/d8ykq",
         ],
         "sha256": "d929d73ce79e0e07a200941a476bde253ecb8fcd5d08ab276c0b5458dbf3bc7f",
     },
