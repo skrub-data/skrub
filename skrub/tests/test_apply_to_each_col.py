@@ -150,7 +150,7 @@ def test_forbidden_column_rejections(df_module):
     mapper = ApplyToEachCol(Rejector())
 
     # TODO simplify after dropping support for python 3.10
-    err_t = RuntimeError if sys.version_info < (3, 11) else TypeError
+    err_t = RuntimeError if sys.version_info < (3, 11) else RejectColumn
     with pytest.raises(err_t, match=".*failed on.*int-col"):
         mapper.fit(df)
 
@@ -169,7 +169,7 @@ def test_rejection_forbidden_in_transform(df_module):
     mapper.fit(df)
 
     # TODO simplify after dropping support for python 3.10
-    err_t = RuntimeError if sys.version_info < (3, 11) else TypeError
+    err_t = RuntimeError if sys.version_info < (3, 11) else RejectColumn
     with pytest.raises(err_t, match=".*failed on.*int-col"):
         mapper.transform(df)
 
