@@ -35,12 +35,10 @@ def test_invalid_parameters():
 
     X = None  # Placeholder for the dataframe, not used in this test
 
-    # TODO simplify after dropping support for python 3.10
-    err_t = RuntimeError if sys.version_info < (3, 11) else TypeError
-    with pytest.raises(err_t, match=r"allow_reject.*bool"):
+    with pytest.raises(TypeError, match=r"allow_reject.*bool"):
         at = ApplyToCols(ToDatetime(), allow_reject="yes")
         at.fit_transform(X)
-    with pytest.raises(err_t, match=r"keep_original.*bool"):
+    with pytest.raises(TypeError, match=r"keep_original.*bool"):
         at = ApplyToCols(ToDatetime(), keep_original="no")
         at.fit_transform(X)
 
