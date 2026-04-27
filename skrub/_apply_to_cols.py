@@ -8,6 +8,7 @@ from sklearn.base import BaseEstimator, TransformerMixin, check_is_fitted
 from . import selectors
 from ._apply_to_each_col import ApplyToEachCol
 from ._apply_to_sub_frame import ApplyToSubFrame
+from ._sklearn_compat import _VisualBlock
 from ._wrap_transformer import wrap_transformer
 
 _SELECT_ALL_COLUMNS = selectors.all()
@@ -276,6 +277,20 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     1  10.0  100.0       1.0       1.0
     """
 
+    _doc_link_module = "skrub"
+
+    # Defining this as a property because it inherits from _HTMLDocumentationLinkMixin,
+    # which also defines _doc_link_template as a property, and we want to be able
+    # to override it.
+    @property
+    def _doc_link_template(self):
+        return getattr(
+            self,
+            "__doc_link_template",
+            "https://skrub-data.org/stable/reference/generated/"
+            "{estimator_module}.{estimator_name}.html",
+        )
+
     def __init__(
         self,
         transformer,
@@ -412,6 +427,18 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         check_is_fitted(self)
 
         return self._wrapped_transformer.get_feature_names_out(input_features)
+
+    def _sk_visual_block_(self):
+        # This is needed because when ApplyToCols is used with a transformer like
+        # TableVectorizer then the estimator is shown as a parallel block, which
+        # would not add the documentation link.
+        # With this override the problem is fixed.
+        return _VisualBlock(
+            "serial",
+            [self.transformer],
+            names=[self.transformer.__class__.__name__],
+            name_details=[str(self.transformer)],
+        )
 
     def __getattr__(self, name):
         if name == "transformers_" and isinstance(
