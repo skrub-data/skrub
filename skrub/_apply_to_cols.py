@@ -33,11 +33,15 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         The transformer to apply to the selected columns.
 
     cols : str, sequence of str, or skrub selector, optional
-        The columns to attempt to transform. Only the selected columns will have
-        the transformer applied. Columns outside this selection are passed
-        through unchanged (``fit_transform`` is not called on them) and remain
-        unmodified in the output. The default is to attempt transforming all
-        columns.
+        The columns to attempt to transform. The transformer is applied to the
+        columns matched by ``cols`` and not matched by ``exclude_cols``.
+        Columns outside this selection are passed through unchanged
+        (``fit_transform`` is not called on them) and remain unmodified in the
+        output. The default is to attempt transforming all columns.
+
+    exclude_cols : str, sequence of str, or skrub selector, optional
+        Columns to exclude from transformation. The transformed columns are the
+        ones matched by ``cols`` and not matched by ``exclude_cols``.
 
     allow_reject : bool, default=False
         Whether to allow refusing to transform columns for which the provided
@@ -104,8 +108,9 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
 
     Notes
     -----
-    All columns not listed in ``cols`` remain unmodified in the output.
-    Moreover, if ``allow_reject`` is ``True`` and the transformers'
+    All columns not selected by ``cols`` or matched by ``exclude_cols`` remain
+    unmodified in the output. Moreover, if ``allow_reject`` is ``True`` and
+    the transformers'
     ``fit_transform`` raises a :class:`~core.RejectColumn` exception for a particular
     column, that column is passed through unchanged. If ``allow_reject`` is
     ``False``, :class:`~core.RejectColumn` exceptions are propagated, like other errors
@@ -174,6 +179,15 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         city                   D    A    B    C
     0  Paris 2024-05-13 12:05:36 -1.0 -1.0 -1.0
     1   Rome 2024-05-15 13:46:02  1.0  1.0  1.0
+
+    We can also exclude columns from a broader selection. For example, to
+    transform all numeric columns except ``"C"``:
+
+    >>> scaler = ApplyToCols(StandardScaler(), cols=s.numeric(), exclude_cols="C")
+    >>> scaler.fit_transform(df)                                     # doctest: +SKIP
+        C   city                   D    A    B
+    0  19  Paris 2024-05-13 12:05:36 -1.0 -1.0
+    1  20   Rome 2024-05-15 13:46:02  1.0  1.0
 
 
     It is possible to set ``allow_reject=True`` to allow the transformer to reject
@@ -281,6 +295,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
         transformer,
         cols=_SELECT_ALL_COLUMNS,
         *,
+        exclude_cols=None,
         allow_reject=False,
         keep_original=False,
         rename_columns="{}",
@@ -288,6 +303,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     ):
         self.transformer = transformer
         self.cols = cols
+        self.exclude_cols = exclude_cols
         self.n_jobs = n_jobs
         self.allow_reject = allow_reject
         self.keep_original = keep_original
@@ -348,9 +364,13 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
                 "Expected a boolean."
             )
 
+        cols = self.cols
+        if self.exclude_cols is not None:
+            cols = selectors.make_selector(cols) - self.exclude_cols
+
         self._wrapped_transformer = wrap_transformer(
             self.transformer,
-            self.cols,
+            cols,
             allow_reject=self.allow_reject,
             keep_original=self.keep_original,
             rename_columns=self.rename_columns,
