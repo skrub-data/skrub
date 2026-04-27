@@ -7,8 +7,6 @@ from pathlib import Path
 
 import numpy as np
 
-from ._reporting import _patching
-
 
 def _get_default_data_dir():
     """Get the default data directory path.
@@ -57,7 +55,6 @@ def _parse_env_bool(env_variable_name, default):
 
 
 _global_config = {
-    "use_table_report": _parse_env_bool("SKB_USE_TABLE_REPORT", False),
     "use_table_report_data_ops": _parse_env_bool("SKB_USE_TABLE_REPORT_DATA_OPS", True),
     "table_report_verbosity": int(os.environ.get("SKB_TABLE_REPORT_VERBOSITY", 1)),
     "max_plot_columns": int(os.environ.get("SKB_MAX_PLOT_COLUMNS", 30)),
@@ -68,6 +65,9 @@ _global_config = {
     "cardinality_threshold": int(os.environ.get("SKB_CARDINALITY_THRESHOLD", 40)),
     "data_dir": _get_default_data_dir(),
     "eager_data_ops": _parse_env_bool("SKB_EAGER_DATA_OPS", True),
+    "data_ops_open_graph_dropdown": _parse_env_bool(
+        "SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN", False
+    ),
 }
 _threadlocal = threading.local()
 
@@ -106,20 +106,7 @@ def get_config():
     return _get_threadlocal_config().copy()
 
 
-def _apply_external_patches(config):
-    if config["use_table_report"]:
-        _patching._patch_display(
-            max_plot_columns=config["max_plot_columns"],
-            max_association_columns=config["max_plot_columns"],
-            verbose=config["table_report_verbosity"],
-        )
-    else:
-        # No-op if dispatch haven't been previously enabled
-        _patching._unpatch_display()
-
-
 def set_config(
-    use_table_report=None,
     use_table_report_data_ops=None,
     table_report_verbosity=None,
     max_plot_columns=None,
@@ -130,23 +117,12 @@ def set_config(
     cardinality_threshold=None,
     data_dir=None,
     eager_data_ops=None,
+    data_ops_open_graph_dropdown=None,
 ):
     """Set global skrub configuration.
 
     Parameters
     ----------
-    use_table_report : bool, default=None
-        The type of display used for dataframes. If ``None``, falls back to the current
-        configuration, which is ``False`` by default.
-
-        - If ``True``, replace the default DataFrame HTML displays with
-          :class:`~skrub.TableReport`.
-        - If ``False``, the original Pandas or Polars dataframe HTML representation
-          will be used.
-
-        This configuration can also be set with the ``SKB_USE_TABLE_REPORT``
-        environment variable.
-
     use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         DataOps. If ``None``, falls back to the current configuration, which is ``True``
@@ -243,6 +219,16 @@ def set_config(
         This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
         environment variable.
 
+    data_ops_open_graph_dropdown : bool, default=False
+        When displaying a DataOp that has a preview value in a jupyter
+        notebook, should the dropdown that reveals the computational graph
+        drawing be open (if True) or close (if False). This option mostly
+        exists to control the display of DataOps in the skrub documentation
+        examples. This configuration can also be set with the
+        ``SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN`` environment variable.
+
+
+
     See Also
     --------
 
@@ -252,16 +238,9 @@ def set_config(
     Examples
     --------
     >>> from skrub import set_config
-    >>> set_config(use_table_report=True)  # doctest: +SKIP
+    >>> set_config(use_table_report_data_ops=True)  # doctest: +SKIP
     """
     local_config = _get_threadlocal_config()
-    if use_table_report is not None:
-        if not isinstance(use_table_report, bool):
-            raise ValueError(
-                f"'use_table_report' must be a boolean, got {use_table_report!r}."
-            )
-        local_config["use_table_report"] = use_table_report
-
     if use_table_report_data_ops is not None:
         if not isinstance(use_table_report_data_ops, bool):
             raise ValueError(
@@ -335,13 +314,16 @@ def set_config(
 
     if eager_data_ops is not None:
         local_config["eager_data_ops"] = eager_data_ops
-    _apply_external_patches(local_config)
+
+    if data_ops_open_graph_dropdown is not None:
+        local_config["data_ops_open_graph_dropdown"] = bool(
+            data_ops_open_graph_dropdown
+        )
 
 
 @contextmanager
 def config_context(
     *,
-    use_table_report=None,
     use_table_report_data_ops=None,
     table_report_verbosity=None,
     max_plot_columns=None,
@@ -352,22 +334,12 @@ def config_context(
     cardinality_threshold=None,
     data_dir=None,
     eager_data_ops=None,
+    data_ops_open_graph_dropdown=None,
 ):
     """Context manager for global skrub configuration.
 
     Parameters
     ----------
-    use_table_report : bool, default=None
-        The type of display used for dataframes. Default is ``False``.
-
-        - If ``True``, replace the default DataFrame HTML displays with
-          :class:`~skrub.TableReport`.
-        - If ``False``, the original Pandas or Polars dataframe HTML representation
-          will be used.
-
-        This configuration can also be set with the ``SKB_USE_TABLE_REPORT``
-        environment variable.
-
     use_table_report_data_ops : bool, default=None
         The type of HTML representation used for the dataframes preview in skrub
         DataOps. Default is ``True``.
@@ -463,6 +435,14 @@ def config_context(
         This configuration can also be set with the ``SKB_EAGER_DATA_OPS``
         environment variable.
 
+    data_ops_open_graph_dropdown : bool, default=False
+        When displaying a DataOp that has a preview value in a jupyter
+        notebook, should the dropdown that reveals the computational graph
+        drawing be open (if True) or close (if False). This option mostly
+        exists to control the display of DataOps in the skrub documentation
+        examples. This configuration can also be set with the
+        ``SKB_DATA_OPS_OPEN_GRAPH_DROPDOWN`` environment variable.
+
     Yields
     ------
     None.
@@ -480,7 +460,6 @@ def config_context(
     """
     original_config = get_config()
     set_config(
-        use_table_report=use_table_report,
         use_table_report_data_ops=use_table_report_data_ops,
         table_report_verbosity=table_report_verbosity,
         max_plot_columns=max_plot_columns,
@@ -491,14 +470,10 @@ def config_context(
         cardinality_threshold=cardinality_threshold,
         data_dir=data_dir,
         eager_data_ops=eager_data_ops,
+        data_ops_open_graph_dropdown=data_ops_open_graph_dropdown,
     )
 
     try:
         yield
     finally:
         set_config(**original_config)
-
-
-# Apply patching set by environment variables. Without it, setting SKB_USE_TABLE_REPORT
-# or SKB_USE_TABLE_REPORT_DATA_OPS would not have an effect.
-_apply_external_patches(get_config())

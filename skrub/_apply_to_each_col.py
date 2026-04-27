@@ -118,7 +118,7 @@ class ApplyToEachCol(BaseEstimator, TransformerMixin):
     Examples
     --------
     >>> import pandas as pd
-    >>> from skrub import ApplyToEachCol
+    >>> from skrub._apply_to_each_col import ApplyToEachCol
     >>> from sklearn.preprocessing import StandardScaler
     >>> df = pd.DataFrame(dict(A=[-10., 10.], B=[-10., 0.], C=[0., 10.]))
     >>> df
@@ -172,7 +172,7 @@ class ApplyToEachCol(BaseEstimator, TransformerMixin):
     >>> ToDatetime().fit_transform(df["city"])
     Traceback (most recent call last):
         ...
-    skrub._single_column_transformer.RejectColumn: Could not find a datetime format for column 'city'.
+    skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
 
     How these rejections are handled depends on the ``allow_reject`` parameter.
     By default, no special handling is performed and rejections are considered

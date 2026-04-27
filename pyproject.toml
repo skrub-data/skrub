@@ -223,9 +223,16 @@ python = "~=3.14.0"
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
 build-doc-quick = { cmd = "make html-noplot", cwd = "doc" }
-clean-doc = { cmd = "rm -rf _build/ && rm -rf auto_examples/ && rm -rf reference/generated/", cwd = "doc" }
+clean-doc = { cmd = "make clean", cwd = "doc" }
 linkcheck = { cmd = "make linkcheck", cwd = "doc" }
 linkcheck-quick = { cmd = "make linkcheck-noplot", cwd = "doc" }
+
+[tool.pixi.feature.doc.target.win-64.tasks]
+build-doc = { cmd = ".\\make.bat html", cwd = "doc" }
+build-doc-quick = { cmd = ".\\make.bat html-noplot", cwd = "doc" }
+clean-doc = { cmd = ".\\make.bat clean", cwd = "doc" }
+linkcheck = { cmd = ".\\make.bat linkcheck", cwd = "doc" }
+linkcheck-quick = { cmd = ".\\make.bat linkcheck-noplot", cwd = "doc" }
 
 
 [tool.pixi.feature.lint.tasks]
@@ -304,6 +311,7 @@ ignore = [
 # It's fine not to put the import at the top of the file in the examples
 # folder.
 "examples/*" = ["E402"]
+"doc/tutorials/*" = ["E402"]
 "doc/conf.py" = ["E402"]
 # Long exception messages in docstrings
 "skrub/_clean_null_strings.py" = ["E501"]
@@ -327,6 +335,9 @@ filterwarnings = [
   'ignore:.*Attribute n is deprecated.*:DeprecationWarning',
   # FIXME we need to decided what to do with pyarrow that is required by pandas >= 3.0
   'ignore:(?s).*Pyarrow will become a required dependency of pandas.*:DeprecationWarning',
+  # Ignore pandas warning about converting Series of length 1 to scalar
+  # https://github.com/skrub-data/skrub/pull/1974
+  'ignore:Converting a Series or array of length 1 into a scalar is deprecated.*',
   # accessing .values on a pandas dataframe raises this warning after numpy 1.25;
   # should be addressed in pandas
   'ignore:np.find_common_type is deprecated.*:DeprecationWarning',
