@@ -147,7 +147,7 @@ def test_allowed_column_rejections(df_module, use_fit_transform):
 def test_forbidden_column_rejections(df_module):
     df = df_module.example_dataframe
     mapper = ApplyToEachCol(Rejector())
-    with pytest.raises(ValueError, match=".*failed on.*int-col"):
+    with pytest.raises((RejectColumn, RuntimeError), match=".*failed on.*int-col"):
         mapper.fit(df)
 
 
@@ -163,7 +163,7 @@ def test_rejection_forbidden_in_transform(df_module):
     df = df_module.example_dataframe
     mapper = ApplyToEachCol(RejectInTransform(), allow_reject=True)
     mapper.fit(df)
-    with pytest.raises(ValueError, match=".*failed on.*int-col"):
+    with pytest.raises((RejectColumn, RuntimeError), match=".*failed on.*int-col"):
         mapper.transform(df)
 
 

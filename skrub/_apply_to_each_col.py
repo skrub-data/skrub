@@ -460,10 +460,14 @@ def _transform_column(column, transformer, kwargs):
     try:
         output = transformer.transform(transformer_input, **kwargs)
     except Exception as e:
-        raise ValueError(
+        msg = (
             f"Transformer {transformer.__class__.__name__}.transform "
             f"failed on column {sbd.name(column)!r}. See above for the full traceback."
-        ) from e
+        )
+        if hasattr(e, "add_note"):
+            e.add_note(msg)
+            raise
+        raise RuntimeError(msg) from e
     # we do not call `_utils.check_output` here, assuming that if the output
     # had a correct type (e.g. polars dataframe) in `fit_transform` it will
     # have the same (correct) type in `transform`.
