@@ -486,6 +486,12 @@ def test_cleaner_invalid_numeric_dtype(df_module):
         Cleaner(numeric_dtype="wrong").fit_transform(X)
 
 
+def test_cleaner_drop_if_unique_deprecation(df_module):
+    X = df_module.make_dataframe({"a": ["x", "y", "z"], "b": [1, 2, 3]})
+    with pytest.warns(DeprecationWarning, match="drop_if_unique.*deprecated"):
+        Cleaner(drop_if_unique=True).fit_transform(X)
+
+
 def test_cleaner_get_feature_names_out(df_module):
     """Test that Cleaner.get_feature_names_out returns the correct column names."""
     X = _get_clean_dataframe(df_module)
