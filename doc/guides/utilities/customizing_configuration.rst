@@ -23,7 +23,7 @@ Additionally, a |config_context| is provided to allow temporarily altering the
 configuration:
 
 >>> import skrub
->>> with skrub.config_context(max_plot_columns=1):
+>>> with skrub.config_context(table_report_plots_threshold=1):
 ...     pass
 
 Within this context, only the code executed inside the ``with`` statement is affected.
@@ -39,7 +39,7 @@ are available by using
 >>> import skrub
 >>> config = skrub.get_config()
 >>> config.keys()
-dict_keys(['use_table_report_data_ops', 'table_report_verbosity', 'max_plot_columns', 'max_association_columns', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops', 'data_ops_open_graph_dropdown'])
+dict_keys(['use_table_report_data_ops', 'table_report_plots_threshold', 'table_report_associations_threshold', 'table_report_verbosity', 'subsampling_seed', 'enable_subsampling', 'float_precision', 'cardinality_threshold', 'data_dir', 'eager_data_ops', 'data_ops_open_graph_dropdown'])
 
 These are the parameters currently available in the global configuration:
 
@@ -59,14 +59,14 @@ These are the parameters currently available in the global configuration:
      - ``1``
      - ``SKB_TABLE_REPORT_VERBOSITY``
      - Set the verbosity of the :class:`~skrub.TableReport`. If ``1``, print on screen the progress by column, if ``0`` print nothing.
-   * - ``max_plot_columns``
+   * - ``table_report_plots_threshold``
      - 30
-     - ``SKB_MAX_PLOT_COLUMNS``
-     - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip generating the plots.
-   * - ``max_association_columns``
+     - ``SKB_TABLE_REPORT_PLOTS_THRESHOLD``
+     - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip generating the distribution plots (when ``plot_distributions="auto"``, the default).
+   * - ``table_report_associations_threshold``
      - 30
-     - ``SKB_MAX_ASSOCIATION_COLUMNS``
-     - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip computing the associations.
+     - ``SKB_TABLE_REPORT_ASSOCIATIONS_THRESHOLD``
+     - If a dataframe has more columns than the value set here, the :class:`~skrub.TableReport` will skip computing the associations (when ``compute_associations="auto"``, the default).
    * - ``subsampling_seed``
      - 0
      - ``SKB_SUBSAMPLING_SEED``
