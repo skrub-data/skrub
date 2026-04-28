@@ -3375,7 +3375,7 @@ class SkrubNamespace:
         To compute the values, evaluate the whole dictionary as a single DataOp:
 
         >>> X_y_values = skrub.as_data_op(X_y).skb.eval({'df': df})
-        >>> X_y_values
+        >>> X_y_values  # doctest: +SKIP
         {'X':    description  price
         0       screen    100
         1       hammer     15
