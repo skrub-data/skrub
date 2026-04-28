@@ -4,7 +4,7 @@ Tests generating.py (synthetic dataset generation).
 
 import numpy as np
 
-from skrub.datasets._generating import make_deduplication_data
+from skrub.datasets._generating import make_deduplication_data, toy_random
 
 
 def test_make_deduplication_data():
@@ -25,3 +25,24 @@ def test_make_deduplication_data():
         "test1",
         "test1",
     ]
+
+
+def test_toy_random():
+    df = toy_random(seed=33, size=10)
+    assert len(df.columns) == 9
+    assert len(df["uid"]) == 10
+    assert (
+        df["cities"]
+        == [
+            "Helsinki",
+            "None",
+            "Warsaw",
+            "Madrid",
+            "Bucharest",
+            "Dublin",
+            "Zagreb",
+            "Sofia",
+            "Paris",
+            "None",
+        ]
+    ).all()

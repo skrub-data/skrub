@@ -5,7 +5,6 @@ Functions that generate example data.
 
 from __future__ import annotations
 
-import random as rd
 import string
 import time
 
@@ -146,7 +145,7 @@ def toy_products():
 
 
 def toy_random(seed=0, size=1000, nulls=0.1, n_metrics=4):
-    rd.seed(seed)
+    np.random.seed(seed)
     t = time.time()
     capitals = [
         "Amsterdam",
@@ -174,9 +173,9 @@ def toy_random(seed=0, size=1000, nulls=0.1, n_metrics=4):
     d = {}
 
     d["uid"] = [random_string() for i in range(size)]
-    d["cities"] = rd.choices(capitals, k=size)
+    d["cities"] = np.random.choice(capitals, size=size)
     for i in range(size):
-        p = rd.random()
+        p = np.random.random()
         if p < nulls:
             d["cities"][i] = None
 
@@ -185,9 +184,9 @@ def toy_random(seed=0, size=1000, nulls=0.1, n_metrics=4):
 
     start_times, end_times = [], []
     for _ in range(size):
-        s = rd.randint(0, int(t))
-        e = rd.randint(s, int(t))
-        p = rd.random()
+        s = np.random.randint(0, int(t))
+        e = np.random.randint(s, int(t))
+        p = np.random.random()
         start_times.append(time.ctime(s))
 
         if p >= nulls:
@@ -195,11 +194,11 @@ def toy_random(seed=0, size=1000, nulls=0.1, n_metrics=4):
         else:
             end_times.append(None)
 
-    d["start_times"] = pd.to_datetime(start_times)
-    d["end_times"] = pd.to_datetime(end_times)
+    d["start_times"] = pd.to_datetime(start_times, format="mixed")
+    d["end_times"] = pd.to_datetime(end_times, format="mixed")
 
     for k in range(n_metrics):
-        d[f"metric_{k}"] = [rd.random() for i in range(size)]
+        d[f"metric_{k}"] = np.random.random(size)
 
     df = pd.DataFrame(d)
 
