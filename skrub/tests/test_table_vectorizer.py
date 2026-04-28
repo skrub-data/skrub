@@ -609,6 +609,13 @@ def test_cleaner_numeric_dtype_deprecation(df_module):
     df_module.assert_frame_equal(out, expected)
 
 
+def test_cleaner_invalid_numeric_dtype(df_module):
+    X = _get_clean_dataframe(df_module)
+    with pytest.warns(DeprecationWarning, match="numeric_dtype.*deprecated"):
+        with pytest.raises(ValueError, match="Unsupported value for `numeric_dtype`"):
+            Cleaner(numeric_dtype="wrong").fit_transform(X)
+
+
 def test_cleaner_get_feature_names_out(df_module):
     """Test that Cleaner.get_feature_names_out returns the correct column names."""
     X = _get_clean_dataframe(df_module)

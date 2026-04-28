@@ -437,6 +437,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
             )
             if self.numeric_dtype == "float32":
                 cast_to_float = True
+            else:
+                raise ValueError(
+                    f"Unsupported value for `numeric_dtype`: {self.numeric_dtype!r}. "
+                    "The only supported value is 'float32'."
+                )
 
         if not isinstance(self.parse_strings, bool):
             raise ValueError(
