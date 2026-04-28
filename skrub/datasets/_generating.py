@@ -5,11 +5,16 @@ Functions that generate example data.
 
 from __future__ import annotations
 
+import random as rd
 import string
+import time
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.utils import Bunch, check_random_state
+
+from skrub._utils import random_string
 
 
 def make_deduplication_data(
@@ -138,3 +143,66 @@ def toy_products():
             ],
         }
     )
+
+
+def toy_random(seed=0, size=1000, nulls=0.1, n_metrics=4):
+    rd.seed(seed)
+    t = time.time()
+    capitals = [
+        "Amsterdam",
+        "Athens",
+        "Berlin",
+        "Bucharest",
+        "Budapest",
+        "Copenhagen",
+        "Dublin",
+        "Helsinki",
+        "London",
+        "Madrid",
+        "Paris",
+        "Prague",
+        "Riga",
+        "Rome",
+        "Sofia",
+        "Stockholm",
+        "Vienna",
+        "Vilnius",
+        "Warsaw",
+        "Zagreb",
+    ]
+
+    d = {}
+
+    d["uid"] = [random_string() for i in range(size)]
+    d["cities"] = rd.choices(capitals, k=size)
+    for i in range(size):
+        p = rd.random()
+        if p < nulls:
+            d["cities"][i] = None
+
+    cities_array = np.array(d["cities"]).reshape(-1, 1)
+    d["encoded_cities"] = list(OrdinalEncoder().fit_transform(cities_array))
+
+    start_times, end_times = [], []
+    for _ in range(size):
+        s = rd.randint(0, int(t))
+        e = rd.randint(s, int(t))
+        p = rd.random()
+        start_times.append(time.ctime(s))
+
+        if p >= nulls:
+            end_times.append(time.ctime(e))
+        else:
+            end_times.append(None)
+
+    d["start_times"] = pd.to_datetime(start_times)
+    d["end_times"] = pd.to_datetime(end_times)
+
+    for k in range(n_metrics):
+        d[f"metric_{k}"] = [rd.random() for i in range(size)]
+
+    df = pd.DataFrame(d)
+
+    df["encoded_cities"] = df.encoded_cities.explode().astype(int)
+
+    return df
