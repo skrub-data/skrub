@@ -3,7 +3,7 @@ import datetime
 import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 
 from skrub import ApplyToCols
 from skrub import _dataframe as sbd
@@ -83,6 +83,62 @@ def test_column_selection_with_selector(df_module):
     # Check that numeric columns were unchanged
     assert np.array_equal(sbd.col(X_transformed, "numeric1"), [1.0, 2.0, 3.0])
     assert np.array_equal(sbd.col(X_transformed, "numeric2"), [10.0, 20.0, 30.0])
+
+
+def test_exclude_single_column(df_module):
+    at = ApplyToCols(OrdinalEncoder(), exclude_cols="col2")
+    X = df_module.make_dataframe(
+        {"col1": ["a", "b", "c"], "col2": ["x", "y", "z"]}
+    )
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(
+        sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2]
+    )
+    assert sbd.to_list(sbd.col(X_transformed, "col2")) == ["x", "y", "z"]
+
+
+def test_exclude_multiple_columns(df_module):
+    at = ApplyToCols(OrdinalEncoder(), exclude_cols=["col2", "col3"])
+    X = df_module.make_dataframe(
+        {
+            "col1": ["a", "b", "c"],
+            "col2": ["x", "y", "z"],
+            "col3": ["m", "n", "o"],
+        }
+    )
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(
+        sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2]
+    )
+    assert sbd.to_list(sbd.col(X_transformed, "col2")) == ["x", "y", "z"]
+    assert sbd.to_list(sbd.col(X_transformed, "col3")) == ["m", "n", "o"]
+
+
+def test_cols_selector_with_excluded_column(df_module):
+    at = ApplyToCols(StandardScaler(), cols=s.numeric(), exclude_cols="id")
+    X = df_module.make_dataframe(
+        {
+            "id": [1, 2],
+            "value1": [10.0, 20.0],
+            "value2": [100.0, 300.0],
+            "name": ["a", "b"],
+        }
+    )
+
+    X_transformed = at.fit_transform(X)
+
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "id")), [1, 2])
+    assert np.allclose(
+        sbd.to_numpy(sbd.col(X_transformed, "value1")), [-1.0, 1.0]
+    )
+    assert np.allclose(
+        sbd.to_numpy(sbd.col(X_transformed, "value2")), [-1.0, 1.0]
+    )
+    assert sbd.to_list(sbd.col(X_transformed, "name")) == ["a", "b"]
 
 
 def test_fit_and_transform_separate(df_module):
