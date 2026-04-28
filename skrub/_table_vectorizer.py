@@ -1,4 +1,5 @@
 import reprlib
+import warnings
 from collections import UserDict
 from collections.abc import Iterable
 
@@ -394,6 +395,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         cast_to_float=False,
         cast_to_str=False,
         n_jobs=1,
+        numeric_dtype=None,
     ):
         self.null_strings = null_strings
         self.drop_null_fraction = drop_null_fraction
@@ -404,6 +406,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.cast_to_float = cast_to_float
         self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
+        self.numeric_dtype = numeric_dtype
 
     def fit_transform(self, X, y=None):
         """Fit transformer and transform dataframe.
@@ -424,13 +427,24 @@ class Cleaner(TransformerMixin, BaseEstimator):
             The transformed input.
         """
 
+        cast_to_float = self.cast_to_float
+        if self.numeric_dtype is not None:
+            warnings.warn(
+                "The `numeric_dtype` parameter of `Cleaner` is deprecated and will be"
+                " removed in a future version. Use `cast_to_float=True` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if self.numeric_dtype == "float32":
+                cast_to_float = True
+
         if not isinstance(self.parse_strings, bool):
             raise ValueError(
                 f"`parse_strings` must be a boolean. Found {self.parse_strings!r}."
             )
-        if not isinstance(self.cast_to_float, bool):
+        if not isinstance(cast_to_float, bool):
             raise ValueError(
-                f"`cast_to_float` must be a boolean. Found {self.cast_to_float!r}."
+                f"`cast_to_float` must be a boolean. Found {cast_to_float!r}."
             )
 
         all_steps = _get_preprocessors(
@@ -440,7 +454,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             parse_strings=self.parse_strings,
-            cast_to_float=self.cast_to_float,
+            cast_to_float=cast_to_float,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,

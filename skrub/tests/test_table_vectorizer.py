@@ -592,6 +592,23 @@ def test_cleaner_invalid_cast_to_float(df_module):
         Cleaner(cast_to_float=None).fit_transform(X)
 
 
+def test_cleaner_numeric_dtype_deprecation(df_module):
+    X = df_module.make_dataframe(
+        {
+            "str_float": ["1.5", "2.5", "3.5"],
+            "float_col": [1.5, 2.5, 3.5],
+            "int_col": [1, 2, 3],
+        }
+    )
+    # Setting numeric_dtype="float32" should raise a DeprecationWarning ...
+    with pytest.warns(DeprecationWarning, match="numeric_dtype.*deprecated"):
+        out = Cleaner(numeric_dtype="float32").fit_transform(X)
+
+    # ... and behave identically to cast_to_float=True
+    expected = Cleaner(cast_to_float=True).fit_transform(X)
+    df_module.assert_frame_equal(out, expected)
+
+
 def test_cleaner_get_feature_names_out(df_module):
     """Test that Cleaner.get_feature_names_out returns the correct column names."""
     X = _get_clean_dataframe(df_module)
