@@ -253,6 +253,8 @@ API_REFERENCE = {
                     "DataOp.skb.subsample",
                     "DataOp.skb.train_test_split",
                     "DataOp.skb.with_scoring",
+                    "DataOp.skb.find",
+                    "DataOp.skb.find_X_y",
                 ],
                 "template": "autosummary/accessor_method.rst",
             },
