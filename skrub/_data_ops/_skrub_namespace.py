@@ -38,6 +38,9 @@ from ._evaluation import (
     clone,
     describe_steps,
     evaluate,
+    find_node,
+    find_node_by_name,
+    find_X_y_and_cv,
     nodes,
 )
 from ._inspection import (
@@ -3168,3 +3171,235 @@ class SkrubNamespace:
                 ),
             )
         return DataOp(AppliedEstimator(self._data_op))
+
+    def find(self, what):
+        """
+        Find a node (DataOp or choice) in the computational graph.
+
+        Parameters
+        ----------
+        what : str or callable
+            - If a string, it is the name (set with
+              :meth:`DataOp.skb.set_name`) of the node to search for.
+            - If a callable, it is the search predicate: it accepts a DataOp
+              and returns a Boolean. The first node for which it returns True
+              is returned.
+
+        Returns
+        -------
+        DataOp or None
+            The node named ``what``, when ``what`` is a string, or the first
+            node for which ``what`` returned True, if ``what`` is a callable.
+            If nothing was found, ``None`` is returned.
+
+        See Also
+        --------
+        DataOp.skb.find_X_y
+            Find the nodes that have been marked with
+            :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`.
+
+        SkrubLearner.truncated_after
+            Truncate the (possibly fitted) SkrubLearner after the specified node.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> data = skrub.datasets.toy_orders()
+        >>> x = skrub.X(data.X)
+        >>> x
+        <Var 'X'>
+        Result:
+        ―――――――
+           ID product  quantity        date
+        0   1     pen         2  2020-04-03
+        1   2     cup         3  2020-04-04
+        2   3     cup         5  2020-04-04
+        3   4   spoon         1  2020-04-05
+        >>> vectorized = x.skb.apply(skrub.TableVectorizer()).skb.set_name("vectorized")
+        >>> vectorized  # doctest: +SKIP
+        <vectorized | Apply TableVectorizer>
+        Result:
+        ―――――――
+            ID  product_cup  product_pen  ...  date_month  date_day  date_total_seconds
+        0  1.0          0.0          1.0  ...         4.0       3.0        1.585872e+09
+        1  2.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        2  3.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        3  4.0          0.0          0.0  ...         4.0       5.0        1.586045e+09
+        [4 rows x 9 columns]
+        >>> y = skrub.y(data.y)
+        >>> y
+        <Var 'y'>
+        Result:
+        ―――――――
+        0    False
+        1    False
+        2     True
+        3    False
+        Name: delayed, dtype: bool
+        >>> strategy = skrub.choose_from(["most_frequent", "prior"], name="strategy")
+        >>> pred = vectorized.skb.apply(DummyClassifier(strategy=strategy), y=y)
+
+        Find a node by its name:
+
+        >>> found = pred.skb.find("vectorized")
+        >>> found  # doctest: +SKIP
+        <vectorized | Apply TableVectorizer>
+        Result:
+        ―――――――
+            ID  product_cup  product_pen  ...  date_month  date_day  date_total_seconds
+        0  1.0          0.0          1.0  ...         4.0       3.0        1.585872e+09
+        1  2.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        2  3.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        3  4.0          0.0          0.0  ...         4.0       5.0        1.586045e+09
+        [4 rows x 9 columns]
+        >>> found is vectorized
+        True
+
+        Note that choices are also considered:
+
+        >>> found = pred.skb.find("strategy")
+        >>> found
+        choose_from(['most_frequent', 'prior'], name='strategy')
+        >>> found is strategy
+        True
+
+        Find by a predicate function:
+
+        >>> def has_9_columns(data_op):
+        ...     value = data_op.skb.preview()
+        ...     if (shape := getattr(value, "shape")) is None:
+        ...         return False
+        ...     if len(shape) == 1:
+        ...         return False
+        ...     return shape[1] == 9
+
+
+        >>> found = pred.skb.find(has_9_columns)
+        >>> found  # doctest: +SKIP
+        <vectorized | Apply TableVectorizer>
+        Result:
+        ―――――――
+            ID  product_cup  product_pen  ...  date_month  date_day  date_total_seconds
+        0  1.0          0.0          1.0  ...         4.0       3.0        1.585872e+09
+        1  2.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        2  3.0          1.0          0.0  ...         4.0       4.0        1.585958e+09
+        3  4.0          0.0          0.0  ...         4.0       5.0        1.586045e+09
+        [4 rows x 9 columns]
+        >>> found is vectorized
+        True
+        """
+        if not isinstance(what, DataOp) and callable(what):
+            return find_node(self._data_op, what)
+        if isinstance(what, str):
+            return find_node_by_name(self._data_op, what)
+        raise TypeError(
+            "what should either be a string or a callable accepting a "
+            f"DataOp and returning a Boolean, got object of type: {type(what)}."
+        )
+
+    def find_X_y(self):
+        """
+        Find the nodes that have been marked with ``mark_as_X()`` and ``mark_as_y()``.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the following keys (all are optional):
+
+            - "X", if a node has been marked with :meth:`DataOp.skb.mark_as_X`.
+            - "y", if a node has been marked with :meth:`DataOp.skb.mark_as_y`.
+            - Additionally, if a ``cv`` has been passed to
+              :meth:`DataOp.skb.mark_as_X`, the parameters that were passed to
+              ``mark_as_X``:
+
+              - "cv"
+              - "split_kwargs"
+
+        See Also
+        --------
+        DataOp.skb.find
+            Find a node by name or by an arbitrary predicate.
+        SkrubLearner.truncated_after
+            Truncate the (possibly fitted) SkrubLearner after the specified node.
+
+        Notes
+        -----
+        To evaluate the DataOps in the returned dictionary, it is recommended
+        to evaluate the whole dict as a single DataOp::
+
+            Xy = my_data_op.skb.find_X_y()
+            Xy_values = skrub.as_data_op(Xy).skb.eval({...})
+            X_value = Xy_values['X']
+            y_value = Xy_values['y']
+
+        rather than::
+
+            Xy = my_data_op.skb.find_X_y()
+            X_value = Xy['X'].skb.eval({...})
+            y_value = Xy['y'].skb.eval({...})
+
+        Indeed, evaluating each value in the dict separately can result in
+        running some computation twice, and worse, obtaining X and y that are
+        not aligned if the data loading and processing that produces X and y
+        produces row in an undeterministic order (e.g. due to aggregations,
+        joins, database queries etc.).
+
+        Examples
+        --------
+        >>> import skrub
+        >>> from sklearn.dummy import DummyClassifier
+
+        >>> df = skrub.datasets.toy_products()
+        >>> df
+           description  price            seller     category
+        0       screen    100   supermarket.com  electronics
+        1       hammer     15  bestproducts.com        tools
+        2     keyboard     20   supermarket.com  electronics
+        3      usb key      9  bestproducts.com  electronics
+        4      charger     13  bestproducts.com  electronics
+        5  screwdriver     12   supermarket.com        tools
+
+        >>> data = skrub.var("df")
+        >>> groups = data["seller"]
+        >>> X = data[["description", "price"]].skb.mark_as_X()
+        >>> y = data["category"].skb.mark_as_y()
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> X_y = pred.skb.find_X_y()
+        >>> X_y
+        {'X': <GetItem ['description', 'price']>, 'y': <GetItem 'category'>}
+        >>> X_y['X'] is X
+        True
+
+        To compute the values, evaluate the whole dictionary as a single DataOp:
+
+        >>> X_y_values = skrub.as_data_op(X_y).skb.eval({'df': df})
+        >>> X_y_values  # doctest: +SKIP
+        {'X':    description  price
+        0       screen    100
+        1       hammer     15
+        2     keyboard     20
+        3      usb key      9
+        4      charger     13
+        5  screwdriver     12, 'y': 0    electronics
+        1          tools
+        2    electronics
+        3    electronics
+        4    electronics
+        5          tools
+        Name: category, dtype: str}
+
+        When a ``cv`` object was passed to :meth:`DataOp.skb.mark_as_X()`, the result
+        will also contain the keys ``"cv"`` and ``"split_kwargs"``:
+
+        >>> from sklearn.model_selection import LeaveOneGroupOut
+
+        >>> X = data[["description", "price"]].skb.mark_as_X(
+        ...     cv=LeaveOneGroupOut(), split_kwargs={"groups": groups}
+        ... )
+        >>> pred = X.skb.apply(DummyClassifier(), y=y)
+        >>> pred.skb.find_X_y()
+        {'X': <X>, 'cv': LeaveOneGroupOut(), 'split_kwargs': {'groups': <GetItem 'seller'>}, 'y': <GetItem 'category'>}
+        """  # noqa: E501
+        return find_X_y_and_cv(self._data_op)

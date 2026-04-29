@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupKFold, train_test_split
 from sklearn.utils import check_random_state
 
 import skrub
@@ -907,3 +907,49 @@ def test_copy_attrs():
         .skb.set_name("transform")
     )
     assert isinstance(out.skb.applied_estimator.skb.eval().transformer_, PassThrough)
+
+
+def test_find():
+    a = skrub.var("a")
+    b = skrub.var("b")
+    c = skrub.choose_from([1, 2], name="c")
+    d = (a + b).skb.set_name("d")
+    e = c + d
+    assert e.skb.find("c") is c
+    assert e.skb.find(lambda n: not hasattr(n, "skb") and n.name == "c") is c
+    assert e.skb.find("d") is d
+    assert e.skb.find(lambda n: hasattr(n, "skb") and n.skb.name == "d") is d
+    assert e.skb.find("z") is None
+    assert e.skb.find(lambda n: False) is None
+    with pytest.raises(TypeError, match="what should either be a string or a callable"):
+        e.skb.find(c)
+    with pytest.raises(TypeError, match="what should either be a string or a callable"):
+        e.skb.find(0)
+
+
+def test_find_X_y():
+    X = skrub.X()
+    y = skrub.y()
+    pred = X.skb.apply(DummyRegressor(), y=y)
+    Xy = pred.skb.find_X_y()
+    assert list(Xy) == ["X", "y"]
+    assert Xy["X"] is X
+    assert Xy["y"] is y
+    Xy = X.skb.find_X_y()
+    assert list(Xy) == ["X"]
+    assert Xy["X"] is X
+    Xy = y.skb.find_X_y()
+    assert list(Xy) == ["y"]
+    assert Xy["y"] is y
+    assert skrub.var("a").skb.find_X_y() == {}
+    groups = skrub.var("groups")
+    kfold = GroupKFold()
+    X = skrub.var("X").skb.mark_as_X(cv=kfold, split_kwargs={"groups": groups})
+    y = skrub.y()
+    pred = X.skb.apply(DummyRegressor(), y=y)
+    Xy = pred.skb.find_X_y()
+    assert list(Xy) == ["X", "cv", "split_kwargs", "y"]
+    assert Xy["X"] is X
+    assert Xy["y"] is y
+    assert Xy["cv"] is kfold
+    assert Xy["split_kwargs"]["groups"] is groups

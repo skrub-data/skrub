@@ -20,6 +20,12 @@ New Features
   :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
   display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- The method :meth:`DataOp.skb.find` can find a node by name (or by a callable
+  predicate) in a DataOp. The method :meth:`DataOp.skb.find_X_y` finds the nodes
+  marked with :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`, and
+  the ``cv`` splitter and ``split_kwargs`` passed to
+  :meth:`DataOp.skb.mark_as_X`, if they exist. :pr:`2041`
+  by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
