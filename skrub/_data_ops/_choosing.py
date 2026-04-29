@@ -457,8 +457,10 @@ class Optional(Choice):
 
 
 def optional(value, *, name=None, default=OPTIONAL_VALUE):
-    """A choice between ``value`` and ``None``. ``value`` can be an estimator, or \
-    a DataOp that evaluates to an estimator.
+    """A choice between ``value`` and ``None``.
+
+    Typically, ``value`` is an estimator and this choice is passed to
+    :meth:`DataOp.skb.apply`.
 
     ``optional`` allows to build a branch in the search space where the ``value``
     is a component of the pipeline
