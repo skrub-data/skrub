@@ -1080,9 +1080,9 @@ def X(value=NULL):
     Parameters
     ----------
     value : object
-        The value passed to ``skrub.var()``, which is used for previews of the
+        The value passed to :func:`skrub.var()`, which is used for previews of the
         learner's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for :func:`skrub.var()` and the examples gallery.
 
     Returns
     -------
@@ -1142,9 +1142,9 @@ def y(value=NULL):
     Parameters
     ----------
     value : object
-        The value passed to ``skrub.var()``, which is used for previews of the
+        The value passed to :func:`skrub.var()`, which is used for previews of the
         learner's outputs, cross-validation etc. as described in the
-        documentation for ``skrub.var()`` and the examples gallery.
+        documentation for :func:`skrub.var()` and the examples gallery.
 
     Returns
     -------
@@ -1971,7 +1971,7 @@ def eval_mode():
     This can be:
 
     - 'preview': when the previews are being eagerly computed when the
-      DataOp is defined or when we call ``.skb.eval()`` without
+      DataOp is defined or when we call :func:`DataOp.skb.eval()` without
       arguments.
     - otherwise, the method we called on the learner such as ``'predict'``
       or ``'fit_transform'``.

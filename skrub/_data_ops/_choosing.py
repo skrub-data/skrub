@@ -364,6 +364,9 @@ def choose_from(outcomes, *, name=None):
     choose_int :
         Construct a choice of integers from a numeric range.
 
+    optional :
+        Choose between executing an operation or not.
+
     Examples
     --------
     Outcomes can be provided in a list:
@@ -456,6 +459,15 @@ class Optional(Choice):
 def optional(value, *, name=None, default=OPTIONAL_VALUE):
     """A choice between ``value`` and ``None``.
 
+    Typically, ``value`` is an estimator and this choice is passed to
+    :meth:`DataOp.skb.apply`.
+
+    ``optional`` allows to build a branch in the search space where the ``value``
+    is a component of the pipeline
+    (e.g., a dimensionality reduction step, a feature selection step, etc) which may
+    be present or not. When the component is not present, it is represented by ``None``.
+    This is equivalent to ``skrub.choose_from([value, None], name=name)``.
+
     When a learner is fitted *without hyperparameter tuning*, the outcome of
     this choice is ``value``. Pass ``default=None`` to make ``None`` the
     default outcome.
@@ -512,6 +524,37 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
 
     >>> print(optional(PCA(), default=None).default())
     None
+
+    In practice, ``optional`` is used with :func:`DataOp.skb.apply` to make the
+    application of a transformer optional.
+    For example, if we want to make the application of PCA optional, we can do:
+
+    >>> import skrub
+    >>> from skrub.datasets import toy_products
+    >>> from sklearn.decomposition import PCA
+
+    >>> products = skrub.var("products", toy_products())
+    >>> vectorized = products.skb.apply(skrub.TableVectorizer())
+    >>> reduced = vectorized.skb.apply(skrub.optional(PCA(n_components=2), name="pca"))
+    >>> print(reduced.skb.describe_param_grid())
+    - pca: [PCA(n_components=2), None]
+
+    If we perform a hyperparameter search (for example with
+    :meth:`DataOp.skb.make_grid_search`), both pipelines (with and without a PCA)
+    will be considered and the one giving the best predictions will be selected.
+    See also
+    --------
+    choose_bool :
+        Construct a choice between False and True.
+
+    choose_float :
+        Construct a choice of floating-point numbers from a numeric range.
+
+    choose_from :
+        Construct a choice among several possible outcomes.
+
+    choose_int :
+        Construct a choice of integers from a numeric range.
     """
     if default is not OPTIONAL_VALUE and default is not None:
         raise TypeError(
@@ -589,6 +632,9 @@ def choose_bool(*, name=None, default=True):
 
     choose_int :
         Construct a choice of integers from a numeric range.
+
+    optional :
+        Choose between executing an operation or not.
 
     Examples
     --------
@@ -814,6 +860,9 @@ def choose_float(low, high, *, log=False, n_steps=None, name=None, default=None)
 
     choose_from :
         Construct a choice among several possible outcomes.
+
+    optional :
+        Choose between executing an operation or not.
     """
     if n_steps is None:
         return NumericChoice(
@@ -882,6 +931,9 @@ def choose_int(low, high, *, log=False, n_steps=None, name=None, default=None):
 
     choose_from :
         Construct a choice among several possible outcomes.
+
+    optional :
+        Choose between executing an operation or not.
     """
     if n_steps is None:
         return NumericChoice(

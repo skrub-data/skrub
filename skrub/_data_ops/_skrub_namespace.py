@@ -188,7 +188,7 @@ class SkrubNamespace:
         score_kwargs=None,
     ):
         """
-        Apply a scikit-learn estimator to a dataframe or numpy array.
+        Apply an estimator that follows the scikit-learn API to a dataframe or numpy array.
 
         Parameters
         ----------
@@ -230,12 +230,12 @@ class SkrubNamespace:
             Whether the transformer can refuse to transform columns for which
             it does not apply, in which case they are passed through unchanged.
             This can be useful to avoid specifying exactly which columns should
-            be transformed. For example if we apply ``skrub.ToDatetime()`` to
-            all columns with ``allow_reject=True``, string columns that can be
+            be transformed. For example if we apply :class:`~skrub.ToDatetime()`
+            to all columns with ``allow_reject=True``, string columns that can be
             parsed as dates will be converted and all other columns will be
             passed through. If we use ``allow_reject=False`` (the default), an
             error would be raised if the dataframe contains columns for which
-            ``ToDatetime`` does not apply (eg a column of numbers).
+            :class:`~skrub.ToDatetime()` does not apply (eg a column of numbers).
 
         unsupervised : bool, optional
             Use this to indicate that ``y`` is required for scoring but not
@@ -647,10 +647,10 @@ class SkrubNamespace:
     def select(self, cols):
         """Select a subset of columns.
 
-        ``cols`` can be a column name or a list of column names, but also a
-        skrub selector. Importantly, the exact list of columns that match the
-        selector is stored during ``fit`` and then this same list of columns is
-        selected during ``transform``.
+        ``cols`` can be a column name, a list of column names, or a
+        :ref:`skrub selector <selectors_ref>`. Importantly, the exact list of
+        columns that match ``.skb.select`` is stored during ``fit`` and then this
+        same list of columns is selected during ``transform``.
 
         Parameters
         ----------
@@ -700,10 +700,10 @@ class SkrubNamespace:
     def drop(self, cols):
         """Drop some columns.
 
-        ``cols`` can be a column name or a list of column names, but also a
-        skrub selector. Importantly, the exact list of columns that match the
-        selector is stored during ``fit`` and then this same list of columns is
-        dropped during ``transform``.
+        ``cols`` can be a column name, a list of column names, or a
+        :ref:`skrub selector <selectors_ref>`. Importantly, the exact list of
+        columns that match ``.skb.drop`` is stored during ``fit`` and then this
+        same list of columns is dropped during ``transform``.
 
         Parameters
         ----------
@@ -980,7 +980,7 @@ class SkrubNamespace:
         Parameters
         ----------
         drop_values : bool, default=True
-            Whether to drop the initial values passed to ``skrub.var()``.
+            Whether to drop the initial values passed to :func:`skrub.var()`.
             This is convenient for example to serialize DataOps without
             creating large files.
 
@@ -1070,6 +1070,8 @@ class SkrubNamespace:
 
         Examples
         --------
+        We can define variables with initial values that can be used for evaluation:
+
         >>> import skrub
         >>> a = skrub.var('a', 10)
         >>> b = skrub.var('b', 5)
@@ -1245,9 +1247,9 @@ class SkrubNamespace:
         Parameters
         ----------
         all_named_ops : bool, default = False
-            If False, return only actual variables (DataOps created with
-            :func:`var()`, :func:`X()` or :func:`y()`). If False, return all
-            nodes that have a name (ie for which a value can be passed in the
+            If ``False``, return only actual variables (DataOps created with
+            :func:`var()`, :func:`X()` or :func:`y()`). If ``True``, return all
+            nodes that have a name (i.e., for which a value can be passed in the
             environment).
 
         Returns
@@ -1255,33 +1257,46 @@ class SkrubNamespace:
         dict :
             Keys are names, and values the corresponding DataOp.
 
+        See Also
+        --------
+        DataOp.skb.get_data :
+            Get the values of the variables contained in the DataOp.
+
+        DataOp.skb.set_name :
+            Assign a name to a DataOp.
+
         Examples
         --------
         >>> import skrub
 
         >>> a = skrub.var("a")
         >>> b = skrub.var("b")
+
+        We assign a name to a DataOp that is not a variable with
+        :func:`~DataOp.skb.set_name`:
+
         >>> c = (a + b).skb.set_name("c")
+
         >>> d = c + c
         >>> d
         <BinOp: add>
 
-        Our DataOp, `d`, contains 2 variables: "a" and "b":
+        Our DataOp, ``d``, contains 2 variables: "a" and "b":
 
         >>> d.skb.get_vars()
         {'a': <Var 'a'>, 'b': <Var 'b'>}
 
         Those are the keys for which we need to provide values in the
-        environment when evaluating `d`:
+        environment when evaluating ``d``:
 
         >>> d.skb.eval({"a": 10, "b": 3}) # (10 + 3) + (10 + 3) = 26
         26
 
-        In addition, we set a name on the internal node `c`. It is not a
-        variable, and normally it is computed as `(a + b)`. But as it has a
-        name, we can override its output by passing a value for "c" in the
-        environment. When we do, the computation of `c` never happens (nor of
-        `a` or `b`, here, because they are only used to compute `c`) -- it is
+        In addition, we set a name on the internal node ``c``. It is not a
+        variable, and normally it is computed as ``(a + b)``. But as it has a
+        name, we can override its output by passing a value for ``c`` in the
+        environment. When we do, the computation of ``c`` never happens (nor of
+        ``a`` or ``b``, here, because they are only used to compute ``c``) -- it is
         bypassed and the provided value is used instead.
 
         >>> d.skb.eval({"c": 7}) # 7 + 7 = 14
@@ -1849,31 +1864,52 @@ class SkrubNamespace:
 
             - train: a dictionary containing the training environment
             - test: a dictionary containing the test environment
-            - X_train: the value of the variable marked with ``skb.mark_as_X()`` in
-              the train environment
-            - X_test: the value of the variable marked with ``skb.mark_as_X()`` in
-              the test environment
-            - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
+            - X_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the train environment
+            - X_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the test environment
+            - y_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the train environment, if there is one (may not be the case for
               unsupervised learning).
-            - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
+            - y_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the test environment, if there is one (may not be the case for
               unsupervised learning).
+
+        See Also
+        --------
+        :func:`~skrub.DataOp.skb.mark_as_X` :
+            Mark a variable as the input features (X) for training and testing.
+            This function can also take a custom splitter.
+        :meth:`~DataOp.skb.cross_validate`
+            Perform cross-validation on a DataOp.
+        :meth:`~DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`~DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
 
         Examples
         --------
         >>> import skrub
         >>> from sklearn.dummy import DummyClassifier
-        >>> from sklearn.metrics import accuracy_score
-
         >>> orders = skrub.var("orders", skrub.datasets.toy_orders().orders)
+
+        We want to predict whether orders are "delayed":
+
         >>> X = orders.skb.drop("delayed").skb.mark_as_X()
         >>> y = orders["delayed"].skb.mark_as_y()
         >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
         ...     DummyClassifier(), y=y
         ... )
 
-        >>> split = delayed.skb.train_test_split(random_state=0)
+        We can split the data into a training and test set with
+        ``.skb.train_test_split()``. It it also possible to specify parameters
+        for the splitting function, such as the random state, or the size of the
+        test set. These parameters are passed as keyword arguments to
+        ``train_test_split``, which then passes them to the splitting function.
+
+        >>> split = delayed.skb.train_test_split(random_state=0, test_size=0.2)
         >>> split.keys()
         dict_keys(['train', 'test', 'X_train', 'X_test', 'y_train', 'y_test'])
         >>> learner = delayed.skb.make_learner()
@@ -1881,9 +1917,32 @@ class SkrubNamespace:
         SkrubLearner(data_op=<Apply DummyClassifier>)
         >>> learner.score(split["test"])
         0.0
+
+        The test split can then be used to evaluate the learner with any metric,
+        for example accuracy:
+
+        >>> from sklearn.metrics import accuracy_score
         >>> predictions = learner.predict(split["test"])
         >>> accuracy_score(split["y_test"], predictions)
         0.0
+
+        If :func:`~skrub.DataOp.skb.mark_as_X` was defined to use a specific
+        splitting function, the splitter will be used by ``train_test_split``.
+
+        Note that if a ``cv`` is passed to ``train_test_split``, the splitter
+        defined in ``mark_as_X`` is ignored, and the one passed to ``train_test_split``
+        is used instead.
+
+        >>> from sklearn.model_selection import LeaveOneOut
+        >>> X = orders.skb.drop("delayed").skb.mark_as_X(cv=LeaveOneOut())
+        >>> y = orders["delayed"].skb.mark_as_y()
+        >>> delayed = X.skb.apply(skrub.TableVectorizer()).skb.apply(
+        ...     DummyClassifier(), y=y
+        ... )
+        >>> split = delayed.skb.train_test_split()
+        >>> split["y_test"]
+        0    False
+        Name: delayed, dtype: bool
         """
         if (splitter := split_func_kwargs.pop("splitter", None)) is not None:
             warnings.warn(
@@ -1933,14 +1992,16 @@ class SkrubNamespace:
 
             - train: a dictionary containing the training environment
             - test: a dictionary containing the test environment
-            - X_train: the value of the variable marked with ``skb.mark_as_X()`` in
-              the train environment
-            - X_test: the value of the variable marked with ``skb.mark_as_X()`` in
-              the test environment
-            - y_train: the value of the variable marked with ``skb.mark_as_y()`` in
+            - X_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the train environment
+            - X_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_X()` in the test environment
+            - y_train: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the train environment, if there is one (may not be the case for
               unsupervised learning).
-            - y_test: the value of the variable marked with ``skb.mark_as_y()`` in
+            - y_test: the value of the variable marked with
+              :func:`~DataOp.skb.mark_as_y()` in
               the test environment, if there is one (may not be the case for
               unsupervised learning).
             - row_indices_train: the row indices (in X and y) of the training samples.
@@ -2556,6 +2617,15 @@ class SkrubNamespace:
         dict
             Cross-validation results.
 
+        See Also
+        --------
+        :meth:`DataOp.skb.train_test_split`
+            Prepare training and testing sets for a DataOp.
+        :meth:`DataOp.skb.make_randomized_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+        :meth:`DataOp.skb.make_grid_search`
+            Perform hyperparameter tuning driven by cross-validation scores.
+
         Examples
         --------
         >>> from sklearn.datasets import make_classification
@@ -2789,8 +2859,6 @@ class SkrubNamespace:
         should be careful to start our learner by building X and y, and to use
         ``mark_as_X()`` and ``mark_as_y()`` as soon as possible.
 
-        Note: this marks the DataOp in-place and also returns it.
-
         See also
         --------
         :func:`skrub.y`
@@ -2984,8 +3052,9 @@ class SkrubNamespace:
         mark relevant parts of the learner.
 
         Moreover, the evaluation of this step can be bypassed and the result
-        provided directly by providing a value for this name to ``eval()``,
-        ``transform()``, ``predict()`` etc. (see examples)
+        provided directly by providing a value for this name to
+        :func:`~DataOp.skb.eval()`, ``.transform()``,
+        ``.predict()`` etc. (see examples)
 
         Parameters
         ----------
@@ -3057,7 +3126,7 @@ class SkrubNamespace:
         Returns a modified copy.
 
         The description can help document our learner. It is displayed in the
-        execution report and can be retrieved from the ``.skb.description``
+        execution report and can be retrieved from the :attr:`DataOp.skb.description`
         attribute.
 
         Parameters
@@ -3091,8 +3160,23 @@ class SkrubNamespace:
     def description(self):
         """A user-defined description or comment about the DataOp.
 
-        This can be set with ``.skb.set_description()`` and is displayed in the
-        execution report.
+        This can be set with :func:`DataOp.skb.set_description` and is displayed
+        in the execution report generated with :func:`~DataOp.skb.full_report()`
+        or :func:`~skrub.SkrubLearner.report()`.
+
+        Examples
+        --------
+        >>> import skrub
+        >>> a = skrub.var('a', 1)
+        >>> b = skrub.var('b', 2)
+        >>> c = (a + b).skb.set_description('the addition of a and b')
+        >>> c
+        <BinOp: add>
+        Result:
+        ―――――――
+        3
+        >>> c.skb.description
+        'the addition of a and b'
         """
         return self._data_op._skrub_impl.description
 
