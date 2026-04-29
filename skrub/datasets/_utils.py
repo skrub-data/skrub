@@ -106,6 +106,13 @@ DATASET_INFO = {
         ],
         "sha256": "ee187c119925ea4cdb9abd7f0f3758159f042e71b172cafe5b784d79c7590ce3",
     },
+    "toxicity_v1": {
+        "urls": [
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/toxicity_v1.zip",
+            "https://osf.io/download/hgptz",
+        ],
+        "sha256": "2f82b58f2fc04dfd8ddcfef8fb46eae25ba4beaf70e3ebd26326d5bf17e40329",
+    },
     "traffic_violations": {
         "urls": [
             "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/traffic_violations.zip",

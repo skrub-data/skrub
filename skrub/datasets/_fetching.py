@@ -352,7 +352,11 @@ def fetch_toxicity(data_home=None):
         path : str
             The path to the toxicity CSV file.
     """
-    return load_simple_dataset("toxicity", data_home)
+    result = load_simple_dataset("toxicity_v1", data_home)
+    result["toxicity"] = result.pop("toxicity_v1")
+    result["toxicity_path"] = result.pop("toxicity_v1_path")
+
+    return result
 
 
 def fetch_videogame_sales(data_home=None):
