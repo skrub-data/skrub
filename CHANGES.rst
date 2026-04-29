@@ -41,9 +41,12 @@ Changes
   transformer fails, in python versions >= 3.11. :pr:`1979` by :user:`Jérôme
   Dockès <jeromedockes>`.
 
+
 Bugfixes
 --------
-
+- :meth:`deduplicate` now proceeds even though the clustering of the strings fails,
+  with a possibility to display the warnings.
+  :pr:`1996` by :user:`Marie Sacksick <MarieSacksick>`.
 
 Deprecations
 ------------
