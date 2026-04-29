@@ -33,6 +33,11 @@ Changes
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`Cleaner` now exposes a ``parse_strings`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``np.float32``, and a ``cast_to_float`` parameter to downcast floating-point
+  columns to ``np.float32`` (without converting integer columns).
+  :pr:`1910` by :user:`<Varshith-yadaV>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
@@ -47,7 +52,8 @@ Bugfixes
 
 Deprecations
 ------------
-
+- The parameter ``numeric_dtype`` in the :class:`Cleaner` has been deprecated in
+  favor of ``cast_to_float`` in :pr:`1910`.
 
 Release 0.8.0
 =============

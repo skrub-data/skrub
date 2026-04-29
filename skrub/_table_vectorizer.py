@@ -1,4 +1,5 @@
 import reprlib
+import warnings
 from collections import UserDict
 from collections.abc import Iterable
 
@@ -119,36 +120,58 @@ def _get_preprocessors(
     drop_if_unique,
     drop_if_constant,
     n_jobs,
-    add_tofloat32=True,
+    add_tofloat32=False,
+    parse_strings=False,
+    cast_to_float=False,
     cast_to_str=True,
     null_strings=None,
     datetime_format=None,
 ):
+    cols = s.make_selector(cols)
     steps = [CheckInputDataFrame()]
     transformers = [
-        CleanNullStrings(
-            null_strings=null_strings,
+        (
+            CleanNullStrings(
+                null_strings=null_strings,
+            ),
+            cols,
         ),
-        DropUninformative(
-            drop_null_fraction=drop_null_fraction,
-            drop_if_constant=drop_if_constant,
-            drop_if_unique=drop_if_unique,
+        (
+            DropUninformative(
+                drop_null_fraction=drop_null_fraction,
+                drop_if_constant=drop_if_constant,
+                drop_if_unique=drop_if_unique,
+            ),
+            cols,
         ),
-        ToDatetime(format=datetime_format),
+        (ToDatetime(format=datetime_format), cols),
     ]
-    if add_tofloat32:
-        transformers.append(ToFloat())
 
-    transformers.append(CleanCategories())
+    tofloat_cols = None
+    match add_tofloat32, parse_strings, cast_to_float:
+        case True, _, _:
+            tofloat_cols = cols
+        case False, False, False:
+            tofloat_cols = None
+        case False, False, True:
+            tofloat_cols = cols & s.float()
+        case False, True, False:
+            tofloat_cols = cols & s.string()
+        case False, True, True:
+            tofloat_cols = cols & (s.string() | s.float())
+    if tofloat_cols is not None:
+        transformers.append((ToFloat(), tofloat_cols))
+
+    transformers.append((CleanCategories(), cols))
 
     if cast_to_str:
-        transformers.append(ToStr())
+        transformers.append((ToStr(), cols))
 
-    for transformer in transformers:
+    for transformer, transformer_cols in transformers:
         steps.append(
             wrap_transformer(
                 transformer,
-                cols,
+                transformer_cols,
                 allow_reject=True,
                 n_jobs=n_jobs,
                 columnwise=True,
@@ -187,10 +210,19 @@ class Cleaner(TransformerMixin, BaseEstimator):
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
-    numeric_dtype : "float32" or None, default=None
-        If set to ``float32``, convert columns with numerical information
-        to ``np.float32`` dtype thanks to the transformer ``ToFloat``.
-        If ``None``, numerical columns are not modified.
+    parse_strings : bool, default=False
+        Whether to parse strings that represent numeric values.
+
+        - ``False``: no numeric parsing is attempted.
+        - ``True``: apply :class:`ToFloat` to string columns only. String columns
+          whose non-missing values can all be parsed as numbers are converted to
+          ``np.float32``.
+
+    cast_to_float : bool, default=False
+        Whether to cast floating-point columns to ``np.float32``.
+        If set to ``True``, only columns that are already floating-point
+        are converted to ``np.float32``. Integer columns keep their original dtype
+        in any case.
 
     cast_to_str : bool, default=False
         If ``True``, apply the ``ToStr`` transformer to non-numeric,
@@ -226,12 +258,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         types and representation of missing values. More informative columns (e.g.,
         categorical or datetime) are not converted.
 
-    ApplyToEachCol :
-        Apply a given transformer separately to each column in a selection of columns.
-        Useful to complement the default heuristics of the ``Cleaner``.
-
-    ApplyToSubFrame :
-        Apply a given transformer jointly to all columns in a selection of columns.
+    ApplyToCols :
+        Apply a given transformer to each column in a selection of columns.
         Useful to complement the default heuristics of the ``Cleaner``.
 
     DropUninformative :
@@ -254,9 +282,17 @@ class Cleaner(TransformerMixin, BaseEstimator):
       Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
       that contain text.
 
-    - ``ToDatetime()``: parse datetimes represented as strings and return them as
+    - :class:`ToDatetime`: parse datetimes represented as strings and return them as
       actual datetimes with the correct dtype. If ``datetime_format`` is provided,
-      it is forwarded to ``ToDatetime()``. Otherwise, the format is inferred.
+      it is forwarded to :class:`ToDatetime`. Otherwise, the format is inferred.
+
+    - :class:`ToFloat`:
+      - if ``parse_strings=True``, apply :class:`ToFloat` on string columns only,
+        converting strings whose non-missing values can all be parsed as numbers
+        to ``np.float32``;
+      - if ``cast_to_float=True``, apply :class:`ToFloat` on floating-point
+        columns only to cast them to ``float32``. Integer columns are not
+        affected.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
@@ -266,11 +302,21 @@ class Cleaner(TransformerMixin, BaseEstimator):
     parameter. When ``cast_to_str=False`` (default), string conversion is skipped.
     When ``cast_to_str=True``, string conversion is applied.
 
-    If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
-    numeric columns to this dtype, including numbers represented
-    as string, ensuring a consistent representation
-    of numbers and missing values. This can be useful if the ``Cleaner``
-    is used as a preprocessing step in a skrub pipeline.
+    Example:
+
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2], "f": [1.0, 2.0]})
+    >>> Cleaner(parse_strings=False).fit_transform(df).dtypes  # doctest: +SKIP
+    num_str    ...
+    num        ...
+    f          float64
+    dtype: object
+    >>> cleaner = Cleaner(parse_strings=True, cast_to_float=True)
+    >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
+    num_str    float32
+    num        ...
+    f          float32
+    dtype: object
 
     Examples
     --------
@@ -345,18 +391,22 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_unique=False,
         datetime_format=None,
         null_strings=None,
-        numeric_dtype=None,
+        parse_strings=False,
+        cast_to_float=False,
         cast_to_str=False,
         n_jobs=1,
+        numeric_dtype=None,
     ):
         self.null_strings = null_strings
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
-        self.numeric_dtype = numeric_dtype
+        self.parse_strings = parse_strings
+        self.cast_to_float = cast_to_float
         self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
+        self.numeric_dtype = numeric_dtype
 
     def fit_transform(self, X, y=None):
         """Fit transformer and transform dataframe.
@@ -377,11 +427,29 @@ class Cleaner(TransformerMixin, BaseEstimator):
             The transformed input.
         """
 
-        add_tofloat32 = self.numeric_dtype == "float32"
-        if self.numeric_dtype not in (None, "float32"):
+        cast_to_float = self.cast_to_float
+        if self.numeric_dtype is not None:
+            warnings.warn(
+                "The `numeric_dtype` parameter of `Cleaner` is deprecated and will be"
+                " removed in a future version. Use `cast_to_float=True` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if self.numeric_dtype == "float32":
+                cast_to_float = True
+            else:
+                raise ValueError(
+                    f"Unsupported value for `numeric_dtype`: {self.numeric_dtype!r}. "
+                    "The only supported value is 'float32'."
+                )
+
+        if not isinstance(self.parse_strings, bool):
             raise ValueError(
-                "`numeric_dtype` must be one of"
-                f"[`None`, `'float32'`]. Found {self.numeric_dtype}."
+                f"`parse_strings` must be a boolean. Found {self.parse_strings!r}."
+            )
+        if not isinstance(cast_to_float, bool):
+            raise ValueError(
+                f"`cast_to_float` must be a boolean. Found {cast_to_float!r}."
             )
 
         all_steps = _get_preprocessors(
@@ -390,7 +458,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=add_tofloat32,
+            parse_strings=self.parse_strings,
+            cast_to_float=cast_to_float,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
