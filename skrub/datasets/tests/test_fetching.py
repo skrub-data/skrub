@@ -1,3 +1,4 @@
+import os
 from tempfile import TemporaryDirectory
 
 import pandas as pd
@@ -169,3 +170,51 @@ def test_cant_download(monkeypatch):
     with TemporaryDirectory() as temp_dir:
         with pytest.raises(OSError, match="Can't download"):
             _ = _fetching.fetch_employee_salaries(data_home=temp_dir)
+
+
+@xfail_with_download_error
+@pytest.mark.parametrize(
+    "dataset_name, dataset_path",
+    [
+        ("electricity_usage", ("electricity_usage", "electricity_usage")),
+    ],
+)
+def test_dataset_paths(dataset_name, dataset_path):
+    "Test datasets whose fetcher returns a PosixPath."
+    path = getattr(_fetching, f"fetch_{dataset_name}")()
+    assert path.parts[-2:] == dataset_path
+
+
+@xfail_with_download_error
+@pytest.mark.parametrize(
+    "dataset_name, files",
+    [
+        (
+            "electricity_usage",
+            [
+                "weather_bayonne.csv",
+                "weather_brest.csv",
+                "weather_lille.csv",
+                "weather_limoges.csv",
+                "weather_lyon.csv",
+                "weather_marseille.csv",
+                "weather_nantes.csv",
+                "weather_paris.csv",
+                "weather_strasbourg.csv",
+                "weather_toulouse.csv",
+                "Total Load - Day Ahead _ Actual_202501010000-202601010000.csv",
+                "Total Load - Day Ahead _ Actual_202401010000-202501010000.csv",
+                "Total Load - Day Ahead _ Actual_202301010000-202401010000.csv",
+                "Total Load - Day Ahead _ Actual_202201010000-202301010000.csv",
+                "Total Load - Day Ahead _ Actual_202101010000-202201010000.csv",
+            ],
+        ),
+    ],
+)
+def test_dataset_files(dataset_name, files):
+    "Test datasets whose fetcher returns a PosixPath."
+    path = getattr(_fetching, f"fetch_{dataset_name}")()
+    for file in files:
+        print(f"Checking for {file}")
+        print(file in os.listdir(path))
+    assert all(file in os.listdir(path) for file in files)
