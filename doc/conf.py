@@ -75,6 +75,7 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_gallery.gen_gallery",
     "autoshortsummary",
+    "fuse_search_index",
 ]
 
 try:
@@ -278,9 +279,13 @@ html_static_path = ["_static"]
 
 html_css_files = [
     "css/custom.css",
+    "css/fuse-search.css",
 ]
 html_js_files = [
     "scripts/sg_plotly_resize.js",
+    # Fuse.js search — order matters: library before custom script
+    ("scripts/fuse.min.js", {"defer": "defer"}),
+    ("scripts/fuse-search.js", {"defer": "defer"}),
 ]
 
 
