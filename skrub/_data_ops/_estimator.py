@@ -14,7 +14,7 @@ from sklearn.utils.validation import check_is_fitted
 
 from .. import _dataframe as sbd
 from .. import _join_utils
-from .._sklearn_compat import _safe_indexing
+from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
 from ._choosing import BaseNumericChoice, get_default
 from ._data_ops import Apply, DataOp, Scoring, SplitX, check_subsampled_X_y_shape
@@ -98,6 +98,18 @@ def _get_default_sklearn_tags():
 _DEFAULT_SKLEARN_TAGS = _get_default_sklearn_tags()
 
 
+class _SklearnParamsReprHtml:
+    """
+    Helper for adding the dataop graph to the sklearn estimator diagram.
+    """
+
+    def __init__(self, html):
+        self.html = html
+
+    def _repr_html_inner(self):
+        return self.html
+
+
 class _DataOpWrapperMixin(_CloudPickle):
     """
     Mixin for learners and estimators that wrap a DataOp.
@@ -146,6 +158,22 @@ class _DataOpWrapperMixin(_CloudPickle):
             return _get_classes(self.data_op)
         except AttributeError:
             attribute_error(self, "classes_")
+
+    def _get_params_html(self, deep=True, doc_link=""):
+        # Function called by scikit-learn to display the estimator params in
+        # diagram.
+        # We override it to display the graph instead of just the default which
+        # would be 'data_op: repr(self.data_op)'
+
+        data_op_html = self.data_op._repr_html_()
+        sklearn_params = super()._get_params_html()
+        sklearn_params.pop("data_op")
+        if sklearn_params:
+            sklearn_html = sklearn_params._repr_html_inner()
+            html = f"<div><div>{sklearn_html}</div><div>{data_op_html}</div></div>"
+        else:
+            html = f"<div>{data_op_html}</div>"
+        return _SklearnParamsReprHtml(html)
 
 
 def _find_scoring_node(data_op):
@@ -1168,6 +1196,32 @@ class ParamSearch(_BaseParamSearch):
             # refit is set to False, there is no best_estimator_
             pass
         return self
+
+    def _sk_visual_block_(self):
+        # Function called by scikit-learn to get the kind of estimator to
+        # display (nested in parallel or sequentially, or not nested). We
+        # override it to not display the inner search object and add detail to
+        # the title.
+        name = self.__class__.__name__
+        if hasattr(self.search, "param_grid"):
+            name += " (grid search)"
+        else:
+            name += " (randomized search)"
+        return _VisualBlock("single", self, names=name, name_details=repr(self))
+
+    def _get_params_html(self, deep=True, doc_link=""):
+        # Function called by scikit-learn to display the estimator params in
+        # diagram.
+        # We override it to display the graph and the search parameters (n_iter etc.)
+
+        data_op_html = self.data_op._repr_html_()
+        search_params = self.search._get_params_html()
+        search_params.pop("estimator")
+        search_params.pop("param_grid", None)
+        search_params.pop("param_distributions", None)
+        sklearn_html = search_params._repr_html_inner()
+        html = f"<div><div>{sklearn_html}</div><div>{data_op_html}</div></div>"
+        return _SklearnParamsReprHtml(html)
 
 
 class _XyParamSearch(_XyPipelineMixin, ParamSearch):
