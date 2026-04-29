@@ -25,6 +25,13 @@ class DropUninformative(SingleColumnTransformer):
         Drop columns with a fraction of missing values larger than threshold. If None,
         keep the column even if all its values are missing.
 
+    drop_if_unique : bool, default=False
+        If True, drop the column if all values are unique (i.e. the
+        number of unique values is equal to the number of rows). Missing values
+        do not count as unique values for this criterion.
+
+        .. deprecated:: 0.9.0
+
     See Also
     --------
     Cleaner :
