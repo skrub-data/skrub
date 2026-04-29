@@ -1078,46 +1078,10 @@ class SkrubNamespace:
         Result:
         ―――――――
         15
-
-        Note that in this case ``c`` has a value of ``15``, which has been computed
-        by evaluating the DataOp on the values of the variables.
-
-        To actually evaluate the DataOp and obtain the result, we can use
-        :func:`DataOp.skb.eval`:
-
         >>> c.skb.eval()
         15
-
-        If :func:`~DataOp.skb.eval` is called without specifying an ``environment``,
-        the evaluation is made using the initial values of the variables, which is
-        why we get ``15`` as the result.
-
-        We can also pass new values for the variables by providing an ``environment``,
-        which is a dictionary mapping variable names to their values. In this case,
-        the result is different because we are using different values for the variables:
-
         >>> c.skb.eval({'a': 1, 'b': 2})
         3
-
-        This also works for more complex operations, for example when working with
-        dataframes:
-
-        >>> import pandas as pd
-        >>> s = pd.Series([1, 1, 2, 3, 4])
-        >>> a = skrub.var("a", s)
-        >>> unique = a.unique()
-        >>> unique
-        <CallMethod 'unique'>
-        Result:
-        ―――――――
-        array([1, 2, 3, 4]...)
-
-        >>> unique.skb.eval()
-        array([1, 2, 3, 4]...)
-
-        >>> unique.skb.eval({"a": pd.Series([5, 5, 6])})
-        array([5, 6]...)
-
         """
         if environment is not None and not isinstance(environment, typing.Mapping):
             raise TypeError(
