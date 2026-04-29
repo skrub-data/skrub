@@ -457,12 +457,14 @@ class Optional(Choice):
 
 
 def optional(value, *, name=None, default=OPTIONAL_VALUE):
-    """A choice between ``value`` and ``None``. ``value`` can be a DataOp,
-    an estimator, or any other object.
+    """A choice between ``value`` and ``None``. ``value`` can be an estimator, or \
+    a DataOp that evaluates to an estimator.
 
-    ``optional`` allows to build a branch in the search space where a given component
-    (eg a dimensionality reduction step, a feature selection step, etc) is either
-    present or not. When the component is not present, it is represented by ``None``.
+    ``optional`` allows to build a branch in the search space where the ``value``
+    is a component of the pipeline
+    (e.g., a dimensionality reduction step, a feature selection step, etc) which may
+    be present or not. When the component is not present, it is represented by ``None``.
+    This is equivalent to ``skrub.choose_from([value, None], name=name)``.
 
     When a learner is fitted *without hyperparameter tuning*, the outcome of
     this choice is ``value``. Pass ``default=None`` to make ``None`` the
@@ -520,6 +522,20 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
 
     >>> print(optional(PCA(), default=None).default())
     None
+
+    In practice, ``optional`` is used with :func:`DataOp.skb.apply` to make the
+    application of a DataOp conditional.
+    For example, if we want to make the application of PCA optional, we can do:
+
+    >>> import skrub
+    >>> from skrub.datasets import toy_products
+    >>> from sklearn.decomposition import PCA
+
+    >>> products = skrub.var("products", toy_products())
+    >>> vectorized = products.skb.apply(skrub.TableVectorizer())
+    >>> reduced = vectorized.skb.apply(skrub.optional(PCA(n_components=2), name="pca"))
+    >>> print(reduced.skb.describe_param_grid())
+    - pca: [PCA(n_components=2), None]
 
     See also
     --------

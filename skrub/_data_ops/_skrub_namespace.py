@@ -185,7 +185,7 @@ class SkrubNamespace:
         score_kwargs=None,
     ):
         """
-        Apply an estimator with a scikit-learn interface to a dataframe or numpy array.
+        Apply an estimator that follows the scikit-learn API to a dataframe or numpy array.
 
         Parameters
         ----------
@@ -1939,7 +1939,8 @@ class SkrubNamespace:
         We can split the data into a training and test set with
         ``.skb.train_test_split()``. It it also possible to specify parameters
         for the splitting function, such as the random state, or the size of the
-        test set:
+        test set. These parameters are passed as keyword arguments to
+        ``train_test_split``, which then passes them to the splitting function.
 
         >>> split = delayed.skb.train_test_split(random_state=0, test_size=0.2)
         >>> split.keys()
@@ -1959,7 +1960,11 @@ class SkrubNamespace:
         0.0
 
         If :func:`~skrub.DataOp.skb.mark_as_X` was defined to use a specific
-        splitting function, the splitter will be used by ``train_test_split``:
+        splitting function, the splitter will be used by ``train_test_split``.
+
+        Note that if a ``cv`` is passed to ``train_test_split``, the splitter
+        defined in ``mark_as_X`` is ignored, and the one passed to ``train_test_split``
+        is used instead.
 
         >>> from sklearn.model_selection import LeaveOneOut
         >>> X = orders.skb.drop("delayed").skb.mark_as_X(cv=LeaveOneOut())
@@ -3189,7 +3194,8 @@ class SkrubNamespace:
         """A user-defined description or comment about the DataOp.
 
         This can be set with :func:`DataOp.skb.set_description` and is displayed
-        in the execution report.
+        in the execution report generated with :func:`~DataOp.skb.full_report()`
+        or :func:`~skrub.SkrubLearner.report()`.
 
         Examples
         --------
