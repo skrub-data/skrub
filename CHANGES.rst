@@ -16,14 +16,32 @@ New Features
   etc. For example, sample weights. This is achieved by passing the scorers and
   their arguments to :meth:`DataOp.skb.with_scoring`. :pr:`1995` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The diagrams displayed in notebooks for :class:`SkrubLearner`,
+  :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
+  display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Changes
 -------
+- :class:`TableReport` now accepts ``plot_distributions`` and
+  ``compute_associations`` parameters (``True``, ``False``, or ``"auto"``)
+  to explicitly control whether distribution plots and pairwise associations
+  are computed. The threshold parameters controlling the maximum number of
+  columns for which these are computed have been renamed to
+  ``plots_threshold`` and ``associations_threshold`` for clarity.
+  :pr:`1907` by :user:`JulietteBgl <JulietteBgl>`.
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
 - :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
   :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
+- Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
+  the nearest-neighbor distance used for matching. The metric can be any value
+  supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
+  :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
+- :class:`ApplyToCols` now produces better error tracebacks when the wrapped
+  transformer fails, in python versions >= 3.11. :pr:`1979` by :user:`Jérôme
+  Dockès <jeromedockes>`.
 
 Bugfixes
 --------
@@ -63,6 +81,10 @@ New Features
 - :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
+
+- :func:`selectors.has_dtype` has been added, allowing users to select columns
+  by passing the dtype objects they want to match. :pr:`2027` by
+  :user:`kudos07 <kudos07>`.
 
 Changes
 -------
