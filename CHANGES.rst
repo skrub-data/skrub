@@ -53,7 +53,8 @@ Bugfixes
 
 Deprecations
 ------------
-
+- The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
+  has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.8.0
 =============
