@@ -11,6 +11,13 @@ Ongoing Development
 
 New Features
 ------------
+- :class:`ToFloat32` now allows users to specify ``decimal`` and ``thousand``
+  separators to parse numerical columns that use formatting different from the default
+  formatting used in Python, such as ``1'234,5``.  Multi-group formats
+  (``1,23,456.78``) and groups of 4 digits (``12,3456.78``) are also supported.
+  Additionally, negative numbers indicated with parentheses are converted to the
+  regular numeric format (``(432)`` becomes ``-432``). :pr:`1772` by :user:`Gabriela
+  Gómez Jiménez <gabrielapgomezji>`.
 - It is now possible to pass additional (dynamically computed) arguments to the
   scorers used by :class:`DataOp` objects for validation, hyperparameter search
   etc. For example, sample weights. This is achieved by passing the scorers and
