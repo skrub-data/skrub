@@ -79,6 +79,8 @@ New Features
 - :func:`selectors.has_nulls` now takes a ``proportion`` parameter, which allows
   selecting columns that have a fraction of null values above the given threshold.
   :pr:`1881` by :user:`Gabriela Gómez Jiménez <gabrielapgomezji>`.
+- :class:`TextEncoder` has cache support, by allowing to store the values it computes
+  in a custom parquet file. :pr:`1955` by :user:`Eloi Massoulié <emassoulie>`.
 
 - :func:`selectors.has_dtype` has been added, allowing users to select columns
   by passing the dtype objects they want to match. :pr:`2027` by
