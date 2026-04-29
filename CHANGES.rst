@@ -37,6 +37,9 @@ Changes
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
   :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
+- :class:`ApplyToCols` now produces better error tracebacks when the wrapped
+  transformer fails, in python versions >= 3.11. :pr:`1979` by :user:`Jérôme
+  Dockès <jeromedockes>`.
 
 Bugfixes
 --------
