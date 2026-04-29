@@ -106,12 +106,12 @@ DATASET_INFO = {
         ],
         "sha256": "ee187c119925ea4cdb9abd7f0f3758159f042e71b172cafe5b784d79c7590ce3",
     },
-    "toxicity_shuffled": {
+    "toxicity_v1": {
         "urls": [
-            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/toxicity_shuffled.zip",
-            "https://osf.io/download/zebm7",
+            "https://github.com/skrub-data/skrub-data-files/raw/refs/heads/main/toxicity_v1.zip",
+            "https://osf.io/download/hgptz",
         ],
-        "sha256": "01382d19987c04faab8c7b10dfa87719ae4af273dba08a48a95b0c9a69aeb009",
+        "sha256": "2f82b58f2fc04dfd8ddcfef8fb46eae25ba4beaf70e3ebd26326d5bf17e40329",
     },
     "traffic_violations": {
         "urls": [

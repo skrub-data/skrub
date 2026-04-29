@@ -85,7 +85,7 @@ def test_fetch_employee_salaries():
         ("midwest_survey", (2494, 29)),
         ("open_payments", (73558, 6)),
         ("traffic_violations", (1578154, 43)),
-        ("toxicity_shuffled", (1000, 2)),
+        ("toxicity_v1", (1000, 2)),
         ("videogame_sales", (16572, 11)),
         ("bike_sharing", (17379, 11)),
     ],
@@ -94,6 +94,12 @@ def test_datasets_without_splitting(dataset_name, shape):
     "Test datasets that do not have a split argument in their fetching function."
     data = getattr(_fetching, f"fetch_{dataset_name}")()
     assert data[dataset_name].shape == shape
+
+
+@xfail_with_download_error
+def test_toxicity():
+    data = _fetching.fetch_toxicity()
+    assert data.toxicity_v1.shape == (1000, 2)
 
 
 @xfail_with_download_error
