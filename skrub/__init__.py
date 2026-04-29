@@ -38,6 +38,7 @@ from ._minhash_encoder import MinHashEncoder
 from ._multi_agg_joiner import MultiAggJoiner
 from ._reporting import TableReport, patch_display, unpatch_display
 from ._select_cols import Drop, DropCols, SelectCols
+from ._session_encoder import SessionEncoder
 from ._similarity_encoder import SimilarityEncoder
 from ._squashing_scaler import SquashingScaler
 from ._string_encoder import StringEncoder
@@ -103,5 +104,6 @@ __all__ = [
     "config_context",
     "ApplyToCols",
     "ToFloat",
+    "SessionEncoder",
     "core",
 ]
