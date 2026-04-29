@@ -539,7 +539,9 @@ def optional(value, *, name=None, default=OPTIONAL_VALUE):
     >>> print(reduced.skb.describe_param_grid())
     - pca: [PCA(n_components=2), None]
 
-If we perform a hyperparameter search (for example with :meth:`DataOp.skb.make_grid_search`), both pipelines (with and without a PCA) will be considered and the one giving the best predictions will be selected.
+    If we perform a hyperparameter search (for example with
+    :meth:`DataOp.skb.make_grid_search`), both pipelines (with and without a PCA)
+    will be considered and the one giving the best predictions will be selected.
     See also
     --------
     choose_bool :
