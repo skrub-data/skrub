@@ -14,7 +14,7 @@ from ._fetching import (
     fetch_traffic_violations,
     fetch_videogame_sales,
 )
-from ._generating import make_deduplication_data, toy_orders, toy_products, toy_random
+from ._generating import make_deduplication_data, toy_cities, toy_orders, toy_products
 from ._utils import get_data_dir
 
 __all__ = [
@@ -36,5 +36,5 @@ __all__ = [
     "make_deduplication_data",
     "toy_orders",
     "toy_products",
-    "toy_random",
+    "toy_cities",
 ]
