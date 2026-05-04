@@ -44,6 +44,8 @@ Changes
   to ``np.float32``, and a ``cast_to_float`` parameter to downcast floating-point
   columns to ``np.float32`` (without converting integer columns).
   :pr:`1910` by :user:`<Varshith-yadaV>`.
+- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
@@ -59,7 +61,8 @@ Bugfixes
 Deprecations
 ------------
 - The parameter ``numeric_dtype`` in the :class:`Cleaner` has been deprecated in
-  favor of ``cast_to_float`` in :pr:`1910`.- The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
+  favor of ``cast_to_float`` in :pr:`1910`.
+- The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
   has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.8.0
@@ -168,11 +171,6 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- The repository wheel has been made smaller by removing some material that was
-  not necessary for using the library. Benchmarks are now available in a separate
-  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
-  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
-
 
 Bugfixes
 --------
