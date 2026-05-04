@@ -32,9 +32,6 @@ New Features
 
 Changes
 -------
-- The row indices of training and testing samples are now also included in the
-  dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
-  :user:`Jérôme Dockès <jeromedockes>`.
 - :class:`TableReport` now accepts ``plot_distributions`` and
   ``compute_associations`` parameters (``True``, ``False``, or ``"auto"``)
   to explicitly control whether distribution plots and pairwise associations
@@ -42,6 +39,9 @@ Changes
   columns for which these are computed have been renamed to
   ``plots_threshold`` and ``associations_threshold`` for clarity.
   :pr:`1907` by :user:`JulietteBgl <JulietteBgl>`.
+- The row indices of training and testing samples are now also included in the
+  dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
+  :user:`Jérôme Dockès <jeromedockes>`.
 - :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
   :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
