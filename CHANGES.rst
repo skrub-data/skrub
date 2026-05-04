@@ -20,6 +20,12 @@ New Features
   :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
   display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- The method :meth:`DataOp.skb.find` can find a node by name (or by a callable
+  predicate) in a DataOp. The method :meth:`DataOp.skb.find_X_y` finds the nodes
+  marked with :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`, and
+  the ``cv`` splitter and ``split_kwargs`` passed to
+  :meth:`DataOp.skb.mark_as_X`, if they exist. :pr:`2041`
+  by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
@@ -42,6 +48,9 @@ Changes
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
   :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
+- :class:`ApplyToCols` now produces better error tracebacks when the wrapped
+  transformer fails, in python versions >= 3.11. :pr:`1979` by :user:`Jérôme
+  Dockès <jeromedockes>`.
 
 Bugfixes
 --------
@@ -50,7 +59,8 @@ Bugfixes
 Deprecations
 ------------
 - The parameter ``numeric_dtype`` in the :class:`Cleaner` has been deprecated in
-  favor of ``cast_to_float`` in :pr:`1910`.
+  favor of ``cast_to_float`` in :pr:`1910`.- The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
+  has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.8.0
 =============
