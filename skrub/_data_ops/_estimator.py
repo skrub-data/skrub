@@ -287,7 +287,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         estimator = self.__skrub_to_Xy_pipeline__(environment)
         cv_data = _compute_X_y_and_cv(self.data_op, environment)
         X, y = cv_data["X"], cv_data.get("y")
-        return estimator._score(X, y, cast_to_float=False)
+        return estimator._score(X, y, cast_numbers_to_float32=False)
 
     def __getattr__(self, name):
         if name not in supported_modes(self.data_op):
@@ -678,7 +678,7 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
                     name = "score"
         return [(name, scorer_output)]
 
-    def _score(self, X, y=None, cast_to_float=True):
+    def _score(self, X, y=None, cast_numbers_to_float32=True):
         score_node = find_scoring_node(self.data_op)
         if score_node is None:
             return self._eval_in_mode("score", X, y)
@@ -693,7 +693,7 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
             all_scores.extend(self._process_scores(scorer_info, scorer_output))
         rename = unique_renaming()
         result = {rename(name): score for name, score in all_scores}
-        if cast_to_float and len(result) == 1:
+        if cast_numbers_to_float32 and len(result) == 1:
             # If there is a single score stick to scikit-learn interface which
             # returns a number.
             return next(iter(result.values()))
