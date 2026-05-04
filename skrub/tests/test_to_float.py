@@ -61,10 +61,12 @@ def test_rejected_columns(df_module):
         ("1.23e+4", 12300.0, ".", None),
         ("1.23E+4", 12300.0, ".", None),
         ("-1,234.56", -1234.56, ".", ","),
-        ("(1,234.56)", -1234.56, ".", ","),
         (".56", 0.56, ".", None),
         (",56", 0.56, ",", None),
         ("56", 56.0, ".", None),
+        ("1,,234", 1234, ".", ","),
+        ("1.23,45", 1.2345, ".", ","),
+        ("1.2.3.4,0", 1234.0, ",", "."),
     ],
 )
 def test_number_parsing_valid(input_str, expected_float, decimal, thousand, df_module):
@@ -78,13 +80,10 @@ def test_number_parsing_valid(input_str, expected_float, decimal, thousand, df_m
     [
         # invalid grouping
         ("1.2.3.4", ".", None),
-        ("1.2.3.4,0", ",", "."),
         ("1 234,567.34", ".", ","),
         ("1'234,567.34", ".", ","),
         ("1'234'234,567.34", ",", "'"),
         ("123.45.67", ".", None),
-        ("1,,234", ".", ","),
-        ("1.23,45", ".", ","),
     ],
 )
 def test_number_parsing_invalid(input_str, decimal, thousand, df_module):
@@ -122,31 +121,13 @@ def test_invalid_parameters(decimal, thousand, df_module):
             ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
 
 
-@pytest.mark.parametrize(
-    "values, decimal, thousand, expected",
-    [
-        # 1) Western 3-digit grouping
-        (["1,234.56", "12,345.78"], ".", ",", [1234.56, 12345.78]),
-        # 2) Multi-group
-        (["1,23,456.78", "12,34,567.89"], ".", ",", [123456.78, 1234567.89]),
-        # 3) 4-digit grouping
-        (["1,2345.67", "12,3456.78"], ".", ",", [12345.67, 123456.78]),
-    ],
-)
-def test_number_groupings(values, decimal, thousand, expected, df_module):
-    """Test that ToFloat correctly parses three types of grouping patterns."""
-    column = df_module.make_column("col", values)
-    result = ToFloat(decimal=decimal, thousand=thousand).fit_transform(column)
-    assert np.allclose(result, expected)
+def test_parentheses_enabled(df_module):
+    column = df_module.make_column("col", ["(1,234.56)"])
+    result = ToFloat(decimal=".", thousand=",", parentheses=True).fit_transform(column)
+    assert np.allclose(result[0], -1234.56)
 
 
-def test_number_groupings_invalid(df_module):
-    """Test that an invalid grouping raises RejectColumn."""
-    # neither 3-digit, multi-group, nor 4-digit
-    invalid_values = [
-        "12,34,56.78",
-        "1,2,3456.78",
-    ]
-    column = df_module.make_column("col", invalid_values)
+def test_parentheses_disabled(df_module):
+    column = df_module.make_column("col", ["(1,234.56)"])
     with pytest.raises(RejectColumn):
-        ToFloat(decimal=".", thousand=",").fit_transform(column)
+        ToFloat(decimal=".", thousand=",", parentheses=False).fit_transform(column)

@@ -1,111 +1,8 @@
-import re
-
 from . import _dataframe as sbd
 from ._dispatch import dispatch, raise_dispatch_unregistered_type
 from ._single_column_transformer import RejectColumn, SingleColumnTransformer
 
 __all__ = ["ToFloat"]
-
-
-def _build_number_regex(decimal, thousand):
-    # Escape decimal and thousand separators to use in regex
-    d = re.escape(decimal)  # e.g., '.' → '\.', ',' → '\,'
-    t = re.escape(thousand)  # e.g., ',' → '\,', '.' → '\.'
-
-    # Matches integer parts:
-    # Either:
-    #   - one or more digits without thousand separators: \d+
-    #   - or digits grouped by thousand separators: \d{1,3}(?:{t}\d{3})+
-    #     e.g., '1,234' or '12,345,678'
-    integer = rf"(?:\d+|\d{{1,3}}(?:{t}\d{{3}})+)"
-
-    # Matches decimal part after the decimal separator
-    # e.g., '.456' or ',456' depending on locale
-    decimal_part = rf"{d}\d+"
-
-    # Matches optional scientific notation
-    # e.g., 'e10', 'E-5', 'e+3'
-    scientific = r"(?:[eE][+-]?\d+)?"
-
-    # Full number can be:
-    #   - integer with optional decimal part
-    #   - or only decimal part (like '.5')
-    number = rf"(?:{integer}(?:{decimal_part})?|{decimal_part})"
-
-    # Final regex:
-    #   - optional parentheses around the number: \( ... \)?
-    #   - optional leading + or - sign: [+-]?
-    #   - optional scientific notation is included in `number`
-    # Anchored to start (^) and end ($) of string
-    return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
-
-
-def _build_multigroup_number_regex(decimal, thousand):
-    """
-    Matches numbers that use either different grouping styles,
-    including multi-group systems.
-
-    - Optional leading sign or parentheses
-    - Supports multiple grouping patterns (e.g., groups of 3 + groups of 2)
-    - Optional decimal part
-    - Optional scientific notation
-    """
-    d = re.escape(decimal)
-    t = re.escape(thousand)
-
-    # Supports 2-3 digit grouping: 1,23,456 or 12,34,567
-    # i.e. one-to-three leading digits, one or more 2-digit groups,
-    # and a final 3-digit group.
-    integer = rf"(?:\d{{1,3}}(?:{t}\d{{2}})+{t}\d{{3}}|\d+)"
-
-    decimal_part = rf"{d}\d+"
-    scientific = r"(?:[eE][+-]?\d+)?"
-    number = rf"(?:{integer}(?:{decimal_part})?|{decimal_part})"
-
-    return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
-
-
-def _build_number_regex_4(decimal, thousand):
-    """Style: all groups of 4 digits."""
-    d = re.escape(decimal)
-    t = re.escape(thousand)
-
-    integer = rf"(?:\d{{1,4}}(?:{t}\d{{4}})+|\d+)"
-    decimal_part = rf"{d}\d+"
-    scientific = r"(?:[eE][+-]?\d+)?"
-    number = rf"(?:{integer}(?:{decimal_part})?|{decimal_part})"
-
-    return rf"^\(?[+-]?(?:{number}{scientific})?\)?$"
-
-
-@dispatch
-def _str_is_valid_number(col, number_re):
-    raise_dispatch_unregistered_type(col, kind="Series")
-
-
-@_str_is_valid_number.specialize("pandas", argument_type="Column")
-def _str_is_valid_number_pandas(col, number_re):
-    # Check if all values in the column match the number regex.
-    # - Fill NaN values with empty string to avoid match errors.
-    # - Use `str.match` with `na=False` to treat empty/missing values as non-matching.
-    # - If any value does not match, raise RejectColumn with a descriptive message.
-    # pandas StringArray raises when compiled regex flags differ from
-    # the implicit flags used by str.match; passing the raw pattern avoids
-    # that mismatch while preserving equivalent matching semantics.
-    if not col.fillna("").str.match(number_re.pattern, na=False).all():
-        raise RejectColumn(f"Could not convert column {sbd.name(col)!r} to numbers.")
-    return True
-
-
-@_str_is_valid_number.specialize("polars", argument_type="Column")
-def _str_is_valid_number_polars(col, number_re):
-    # Check if all values in the column match the number regex.
-    # - Fill NaN values with empty string to avoid match errors.
-    # - Use `str.match` with `na=False` to treat empty/missing values as non-matching.
-    # - If any value does not match, raise RejectColumn with a descriptive message.
-    if not col.fill_null("").str.contains(number_re.pattern, literal=False).all():
-        raise RejectColumn(f"Could not convert column {sbd.name(col)!r} to numbers.")
-    return True
 
 
 @dispatch
@@ -114,10 +11,11 @@ def _str_replace(col, strict=True):
 
 
 @_str_replace.specialize("pandas", argument_type="Column")
-def _str_replace_pandas(col, decimal, thousand):
+def _str_replace_pandas(col, decimal, thousand, parentheses):
     # Replace parentheses around numbers with a leading minus sign
     # e.g., "(123.45)" → "-123.45"
-    col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
+    if parentheses:
+        col = col.str.replace(r"^\((.*)\)$", r"-\1", regex=True)
     # Remove thousand separators
     if thousand:
         col = col.str.replace(thousand, "", regex=False)
@@ -126,42 +24,15 @@ def _str_replace_pandas(col, decimal, thousand):
 
 
 @_str_replace.specialize("polars", argument_type="Column")
-def _str_replace_polars(col, decimal, thousand):
+def _str_replace_polars(col, decimal, thousand, parentheses):
     # Replace parentheses around numbers with a leading minus sign
     # e.g., "(123.45)" → "-123.45"
-    col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
+    if parentheses:
+        col = col.str.replace_all(r"^\((.*)\)$", r"-$1")
     # Remove thousand separators
     col = col.str.replace_all(thousand, "", literal=True)
     # Replace decimal separator with '.'
     return col.str.replace_all(f"[{decimal}]", ".")
-
-
-def _validate_number_column(column, decimal, thousand):
-    """
-    Try 1) 3-digit grouping, 2) 2+3 digit,
-    3) 4-digit.
-    Reject if all fail.
-    """
-    # 3-digit
-    threegroup_re = re.compile(_build_number_regex(decimal, thousand), re.VERBOSE)
-    try:
-        _str_is_valid_number(column, threegroup_re)
-        return threegroup_re
-    except RejectColumn:
-        # Multi-group
-        multigroup_re = re.compile(
-            _build_multigroup_number_regex(decimal, thousand), re.VERBOSE
-        )
-        try:
-            _str_is_valid_number(column, multigroup_re)
-            return multigroup_re
-        except RejectColumn:
-            # 4-digit
-            fourgroup_re = re.compile(
-                _build_number_regex_4(decimal, thousand), re.VERBOSE
-            )
-            _str_is_valid_number(column, fourgroup_re)
-            return fourgroup_re
 
 
 class ToFloat(SingleColumnTransformer):
@@ -340,7 +211,7 @@ class ToFloat(SingleColumnTransformer):
     Negative numbers represented using parentheses are converted
     so they use "-" instead.
     >>> s = pd.Series(["-1,234.56", "1,234.56", "(1,234.56)"], name='parens')
-    >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
+    >>> ToFloat(decimal=".", thousand=",", parentheses=True).fit_transform(s)
     0   -1234.5...
     1    1234.5...
     2   -1234.5...
@@ -360,38 +231,39 @@ class ToFloat(SingleColumnTransformer):
     1    12567.8...
     Name: x, dtype: float32
 
+    Note
+    ----
+    This transformer does not validate number formatting. It simply removes
+    thousands separators and replaces the decimal separator. As a result,
+    some malformed inputs may still be converted but yield unexpected values.
 
-    Number grouping patterns supported:
-
-    >>> import pandas as pd
-    >>> from skrub._to_float import ToFloat
-
-    # 1) Groups of 3 digits
-    >>> s = pd.Series(["1,234.56", "12,345.78"], name="x")
+    For example: extra separators, mixed separators, or multiple grouping separators may lead to unwanted results.
+    Extra separators may be ignored:
+    >>> s = pd.Series(["1,,234"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
-    0     1234.56...
-    1    12345.78...
+    0    1234.0
     Name: x, dtype: float32
 
-    # 2) Multi-group (1–3 + 2-digit)
-    >>> s = pd.Series(["1,23,456.78", "12,34,567.89"], name="x")
+    Mixed or inconsistent separators may lead to unwanted results:
+
+    >>> s = pd.Series(["1.23,45"], name="x")
     >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
-    0    1.234568e+05
-    1    1.234568e+06
+    0    1.2345
     Name: x, dtype: float32
 
-    # 3) Groups of 4 digits
-    >>> s = pd.Series(["1,2345.67", "12,3456.78"], name="x")
-    >>> ToFloat(decimal=".", thousand=",").fit_transform(s)
-    0     12345.6...
-    1    123456.7...
+    Multiple grouping separators may be collapsed:
+
+    >>> s = pd.Series(["1.2.3.4,0"], name="x")
+    >>> ToFloat(decimal=",", thousand=".").fit_transform(s)
+    0    1234.0
     Name: x, dtype: float32
     """  # noqa: E501
 
-    def __init__(self, decimal=".", thousand=None):
+    def __init__(self, decimal=".", thousand=None, parentheses=False):
         super().__init__()
         self.decimal = decimal
         self.thousand = "" if thousand is None else thousand
+        self.parentheses = parentheses
 
     def fit_transform(self, column, y=None):
         """Fit the encoder and transform a column.
@@ -431,11 +303,11 @@ class ToFloat(SingleColumnTransformer):
                     numeric = sbd.to_float32(column, strict=True)
                     return numeric
 
-                self._number_re_ = _validate_number_column(
-                    column, self.decimal, self.thousand
-                )
                 column = _str_replace(
-                    column, decimal=self.decimal, thousand=self.thousand
+                    column,
+                    decimal=self.decimal,
+                    thousand=self.thousand,
+                    parentheses=self.parentheses,
                 )
             numeric = sbd.to_float32(column, strict=True)
             return numeric

@@ -38,7 +38,8 @@ The |ToFloat| transformer provides:
   or ``None`` (no thousands separator)
   - The transformer supports integers, decimals (including leading-decimal forms such as .56 or ,56), scientific notation
   and negative numbers
-  - Numbers in parentheses are interpreted as negative numbers (``(1,234.56)`` → ``-1234.56``). This format is more common in financial datasets.
+  - Numbers in parentheses can be interpreted as negative numbers (``(1,234.56)`` → ``-1234.56``)
+  by setting the ``parentheses`` parameter to ``True``. This format is more common in financial datasets.
   - Decimal and thousands separators must be different characters
 
 - **Scientific notation parsing** (e.g. ``1.23e+4``)
@@ -56,19 +57,26 @@ How to use |ToFloat|
 --------------------
 The |ToFloat| transformer must be applied to individual columns, and it behaves
 like a standard scikit-learn transformer.
-|ToFloat| requires a ``decimal`` and a ``thousands`` separator, which are ``'.'`` and
+|ToFloat| requires a ``decimal`` and a ``thousand`` separator, which are ``'.'`` and
 ``None`` (no thousands separator) by default.
 Each column is expected to use a single separator for decimals, and one for thousands:
 if any characters other than the provided selectors are encountered in the column, it will not
 be converted.
 
 During ``fit``, |ToFloat| attempts to convert all values in the column to
-numeric values after automatically removing other possible thousands separators
-(``,``, ``.``, space, apostrophe). If any value cannot be converted, the column
-is rejected with a ``RejectColumn`` exception.
+numeric values by removing the specified thousands separators and normalizing the decimal separator.
+If any value cannot be converted, the column is rejected with a ``RejectColumn`` exception.
 
 During ``transform``, invalid or non-convertible values are replaced by ``NaN``
 instead of raising an error.
+
+Permissive parsing behavior
+--------------------------
+
+Because |ToFloat| relies on string normalization rather than strict validation,
+some loosely formatted numbers may still be parsed successfully. Be cautious
+when working with highly irregular numeric formats, as unintended
+interpretations may occur.
 
 Examples
 --------
@@ -97,7 +105,7 @@ Name: x, dtype: float32
 Parentheses interpreted as negative numbers:
 
 >>> s = pd.Series(["-1,234.56", "(1,234.56)"], name="neg")
->>> ToFloat(thousand=",").fit_transform(s)
+>>> ToFloat(thousand=",", parentheses=True).fit_transform(s)
 0   -1234.5...
 1   -1234.5...
 Name: neg, dtype: float32
