@@ -232,6 +232,14 @@ class Cleaner(TransformerMixin, BaseEstimator):
         If ``False``, this step is skipped and such columns retain their
         original dtype (e.g., lists, structs).
 
+    numeric_dtype : "float32" or None, default=None
+        If set to "float32", this parameter has the same effect as
+        ``cast_to_float=True``: it casts floating-point columns to ``np.float32``.
+        Integer columns are not affected.
+
+        .. deprecated:: 0.9.0
+            Use ``cast_to_float=True`` instead.
+
     null_strings : str or sequence of str, default=None
         Additional strings to consider as null values, beyond the default list.
 
