@@ -183,8 +183,12 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     We can also exclude columns from a broader selection. For example, to
     transform all numeric columns except ``"C"``:
 
-    >>> scaler = ApplyToCols(StandardScaler(), cols=s.numeric(), exclude_cols="C")
-    >>> scaler.fit_transform(df)  # doctest: +SKIP
+    >>> exc_scaler = ApplyToCols(StandardScaler(), cols=s.numeric(), exclude_cols="C")
+    >>> df_enc = exc_scaler.fit_transform(df)  # doctest: +SKIP
+    >>> df_enc  # doctest: +SKIP
+        C   city                   D    A    B
+    0  19  Paris 2024-05-13 12:05:36 -1.0 -1.0
+    1  20   Rome 2024-05-15 13:46:02  1.0  1.0
 
 
     It is possible to set ``allow_reject=True`` to allow the transformer to reject

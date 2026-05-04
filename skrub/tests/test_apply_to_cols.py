@@ -89,15 +89,11 @@ def test_column_selection_with_selector(df_module):
 
 def test_exclude_single_column(df_module):
     at = ApplyToCols(OrdinalEncoder(), exclude_cols="col2")
-    X = df_module.make_dataframe(
-        {"col1": ["a", "b", "c"], "col2": ["x", "y", "z"]}
-    )
+    X = df_module.make_dataframe({"col1": ["a", "b", "c"], "col2": ["x", "y", "z"]})
 
     X_transformed = at.fit_transform(X)
 
-    assert np.array_equal(
-        sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2]
-    )
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2])
     assert sbd.to_list(sbd.col(X_transformed, "col2")) == ["x", "y", "z"]
 
 
@@ -113,9 +109,7 @@ def test_exclude_multiple_columns(df_module):
 
     X_transformed = at.fit_transform(X)
 
-    assert np.array_equal(
-        sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2]
-    )
+    assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "col1")), [0, 1, 2])
     assert sbd.to_list(sbd.col(X_transformed, "col2")) == ["x", "y", "z"]
     assert sbd.to_list(sbd.col(X_transformed, "col3")) == ["m", "n", "o"]
 
@@ -134,12 +128,8 @@ def test_cols_selector_with_excluded_column(df_module):
     X_transformed = at.fit_transform(X)
 
     assert np.array_equal(sbd.to_numpy(sbd.col(X_transformed, "id")), [1, 2])
-    assert np.allclose(
-        sbd.to_numpy(sbd.col(X_transformed, "value1")), [-1.0, 1.0]
-    )
-    assert np.allclose(
-        sbd.to_numpy(sbd.col(X_transformed, "value2")), [-1.0, 1.0]
-    )
+    assert np.allclose(sbd.to_numpy(sbd.col(X_transformed, "value1")), [-1.0, 1.0])
+    assert np.allclose(sbd.to_numpy(sbd.col(X_transformed, "value2")), [-1.0, 1.0])
     assert sbd.to_list(sbd.col(X_transformed, "name")) == ["a", "b"]
 
 
