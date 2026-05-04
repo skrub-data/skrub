@@ -39,7 +39,7 @@ access to the data and statistics used to build the report with
     json_data = tr.json()
 
 Note that this will export all parts of the |TableReport|, including the distribution
-plots in SVG format if they have been generated. To avoid this, plots should be
+plots in SVG format if they have been generated. If you do not need them, plots should be
 disabled directly when generating the table report.
 
 .. code-block::
