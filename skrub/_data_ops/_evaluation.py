@@ -25,6 +25,7 @@ from ._data_ops import (
     Apply,
     DataOp,
     Scoring,
+    SplitX,
     Value,
     Var,
 )
@@ -1107,6 +1108,26 @@ def find_node_by_name(data_op, name):
         return getattr(obj, "name", None) == name
 
     return find_node(data_op, pred)
+
+
+def find_X_y_and_cv(data_op):
+    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
+    result = {}
+    if (x_node := find_X(data_op)) is not None:
+        result["X"] = x_node
+        if isinstance(x_node._skrub_impl, SplitX):
+            result["cv"] = x_node._skrub_impl.cv
+            result["split_kwargs"] = x_node._skrub_impl.split_kwargs
+    if (y_node := find_y(data_op)) is not None:
+        result["y"] = y_node
+    return result
+
+
+def find_scoring_node(data_op):
+    return find_node(
+        data_op,
+        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
+    )
 
 
 def needs_eval(obj, return_node=False):

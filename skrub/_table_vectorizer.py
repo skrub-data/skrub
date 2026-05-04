@@ -184,6 +184,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
 
+        .. deprecated:: 0.9.0
+
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
@@ -247,12 +249,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     - :class:`DropUninformative`: drop the column if it is considered to be
       "uninformative". A column is considered to be "uninformative" if it contains
-      only missing values (``drop_null_fraction``), only a constant value
-      (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      only missing values (``drop_null_fraction``) or only a constant value
+      (``drop_if_constant``).
       By default, the ``Cleaner`` keeps all columns, unless they contain only
       missing values.
-      Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
-      that contain text.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
       actual datetimes with the correct dtype. If ``datetime_format`` is provided,
