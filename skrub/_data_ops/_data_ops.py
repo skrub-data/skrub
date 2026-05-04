@@ -883,7 +883,7 @@ def _wrap_estimator(estimator, cols, no_wrap, how, allow_reject, X):
     _check_estimator_type(estimator)
 
     def _check(reason):
-        _check_wrap_params(cols, no_wrap, how, allow_reject, reason)
+        _check_wrap_params(cols, how, allow_reject, reason)
 
     if no_wrap:
         _check("`no_wrap` is True")
