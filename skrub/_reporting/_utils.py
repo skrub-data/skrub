@@ -85,6 +85,8 @@ def ellide_string(s, max_len=30):
 
 
 def format_number(number):
+    if isinstance(number, bool):
+        return str(number)
     if isinstance(number, numbers.Integral):
         return f"{number:,}"
     if isinstance(number, numbers.Real):

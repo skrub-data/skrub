@@ -194,10 +194,11 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     an error since the transformer cannot handle the columns "A", "B", and "C":
 
     >>> datetime = ApplyToCols(DatetimeEncoder(), allow_reject=False)
-    >>> datetime.fit_transform(df)
+    >>> datetime.fit_transform(df) #  doctest: +SKIP
     Traceback (most recent call last):
         ...
-    ValueError: Transformer DatetimeEncoder.fit_transform failed on column 'A'...
+    skrub.core.RejectColumn: Column 'A' does not have Date or Datetime dtype.
+    Transformer DatetimeEncoder.fit_transform failed on column 'A'. See above for the full traceback.
 
     ** Accessing fitted transformers **
 
@@ -274,7 +275,7 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
           A      B  A_scaled  B_scaled
     0 -10.0    0.0      -1.0      -1.0
     1  10.0  100.0       1.0       1.0
-    """
+    """  # noqa: E501
 
     def __init__(
         self,

@@ -20,10 +20,12 @@ from sklearn.base import clone as skl_clone
 from sklearn.utils import check_random_state
 
 from .._utils import short_repr
-from . import _choosing
+from . import _choosing, _utils
 from ._data_ops import (
     Apply,
     DataOp,
+    Scoring,
+    SplitX,
     Value,
     Var,
 )
@@ -657,21 +659,13 @@ def _choice_display_names(choices):
     When the choice is given an explicit `name` by the user that is used,
     otherwise a shorted repr + number suffix to make them unique.
     """
-    used = set()
+    rename = _utils.unique_renaming()
     names = {}
 
     def add(choice_ids):
         for c_id in choice_ids:
             stem = _choosing.get_display_name(choices[c_id])
-            if stem not in used:
-                used.add(stem)
-                names[c_id] = stem
-                continue
-            i = 1
-            while (numbered := f"{stem}_{i}") in used:
-                i += 1
-            used.add(numbered)
-            names[c_id] = numbered
+            names[c_id] = rename(stem)
         return names
 
     add(c_id for (c_id, c) in choices.items() if c.name is not None)
@@ -1116,6 +1110,26 @@ def find_node_by_name(data_op, name):
     return find_node(data_op, pred)
 
 
+def find_X_y_and_cv(data_op):
+    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
+    result = {}
+    if (x_node := find_X(data_op)) is not None:
+        result["X"] = x_node
+        if isinstance(x_node._skrub_impl, SplitX):
+            result["cv"] = x_node._skrub_impl.cv
+            result["split_kwargs"] = x_node._skrub_impl.split_kwargs
+    if (y_node := find_y(data_op)) is not None:
+        result["y"] = y_node
+    return result
+
+
+def find_scoring_node(data_op):
+    return find_node(
+        data_op,
+        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
+    )
+
+
 def needs_eval(obj, return_node=False):
     """
     Whether a python object contains any object that requires evaluation such
@@ -1138,6 +1152,7 @@ class _FindConflicts(_DataOpTraversal):
         self._names = {}
         self._x = {}
         self._y = {}
+        self._score_nodes = {}
 
     def handle_data_op(self, e):
         self._add(
@@ -1145,11 +1160,12 @@ class _FindConflicts(_DataOpTraversal):
             getattr(e._skrub_impl, "name", None),
             e._skrub_impl.is_X,
             e._skrub_impl.is_y,
+            isinstance(e._skrub_impl, Scoring),
         )
         yield from super().handle_data_op(e)
 
     def handle_choice(self, choice):
-        self._add(choice, getattr(choice, "name", None), False, False)
+        self._add(choice, getattr(choice, "name", None), False, False, False)
         yield from super().handle_choice(choice)
 
     def _conflict_error_message(self, conflict):
@@ -1167,6 +1183,13 @@ class _FindConflicts(_DataOpTraversal):
                 "2 different objects were marked as y:\n"
                 f"first object that used `.mark_as_y()`:\n{first}\n"
                 f"second object that used `.mark_as_y()`:\n{second}"
+            )
+        if conflict["reason"] == "is_score":
+            return (
+                "The DataOp can only contain one scoring node;\ngroup the "
+                ".skb.with_scoring() calls together with no other nodes in-between.\n"
+                f"first scoring node:\n{first}\n"
+                f"second scoring node:\n{second}\n"
             )
         assert conflict["reason"] == "name", conflict["reason"]
         name = conflict["name"]
@@ -1198,11 +1221,13 @@ class _FindConflicts(_DataOpTraversal):
         conflict["message"] = self._conflict_error_message(conflict)
         raise _Found(conflict)
 
-    def _add(self, obj, name, is_X, is_y):
+    def _add(self, obj, name, is_X, is_y, is_score):
         if is_X:
             self._add_to_dict(self._x, "X", obj, "is_X")
         if is_y:
             self._add_to_dict(self._y, "y", obj, "is_y")
+        if is_score:
+            self._add_to_dict(self._score_nodes, "score", obj, "is_score")
         self._add_to_dict(self._names, name, obj, "name")
 
 
