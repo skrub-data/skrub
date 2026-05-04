@@ -39,6 +39,8 @@ Changes
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
@@ -162,11 +164,6 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- The repository wheel has been made smaller by removing some material that was
-  not necessary for using the library. Benchmarks are now available in a separate
-  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
-  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
-
 
 Bugfixes
 --------
