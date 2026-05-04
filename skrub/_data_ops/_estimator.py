@@ -17,16 +17,15 @@ from .. import _join_utils
 from .._sklearn_compat import _safe_indexing, _VisualBlock
 from .._utils import set_module
 from ._choosing import BaseNumericChoice, get_default
-from ._data_ops import Apply, DataOp, Scoring, SplitX, check_subsampled_X_y_shape
+from ._data_ops import Apply, DataOp, as_data_op, check_subsampled_X_y_shape
 from ._evaluation import (
     choice_graph,
     eval_choices,
     evaluate,
     find_first_apply,
-    find_node,
     find_node_by_name,
-    find_X,
-    find_y,
+    find_scoring_node,
+    find_X_y_and_cv,
     get_params,
     param_grid,
     set_params,
@@ -176,20 +175,14 @@ class _DataOpWrapperMixin(_CloudPickle):
         return _SklearnParamsReprHtml(html)
 
 
-def _find_scoring_node(data_op):
-    return find_node(
-        data_op,
-        lambda o: isinstance(o, DataOp) and isinstance(o._skrub_impl, Scoring),
-    )
-
-
 @set_module("skrub")
 class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
     """Learner that evaluates a skrub DataOp.
 
     This class is not meant to be instantiated manually, ``SkrubLearner``
     objects are created by calling :meth:`DataOp.skb.make_learner()` on a
-    DataOp.
+    DataOp, or by accessing the ``best_learner_`` attribute of a :class:`ParamSearch`
+    after fitting it.
     """
 
     def __init__(self, data_op):
@@ -288,7 +281,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         return result
 
     def _score(self, environment):
-        score_node = _find_scoring_node(self.data_op)
+        score_node = find_scoring_node(self.data_op)
         if score_node is None:
             return self._eval_in_mode("score", environment)
         estimator = self.__skrub_to_Xy_pipeline__(environment)
@@ -476,7 +469,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
             )
         return node._skrub_impl.estimator_
 
-    def truncated_after(self, name):
+    def truncated_after(self, what):
         """Extract the part of the learner that leads up to the given step.
 
         This is similar to slicing a scikit-learn pipeline. It can be useful
@@ -484,18 +477,29 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         task but then extract only the part of the learner that performs
         feature extraction.
 
-        The target step must have been given a name with ``.skb.set_name()``.
-
         Parameters
         ----------
-        name : str
-            The name of the intermediate step we want to extract.
+        what : str or callable
+            - If a string, it is the name (set with
+              :meth:`DataOp.skb.set_name`) of the step we want to extract.
+            - If a callable, it is the search predicate: it accepts a DataOp
+              and returns a Boolean. The first node for which it returns True
+              is returned.
 
         Returns
         -------
         SkrubLearner
             A skrub learner that performs all the transformations leading up to
             (and including) the required step.
+
+        See Also
+        --------
+        DataOp.skb.find
+            Search for a node directly from a DataOp rather than a SkrubLearner.
+
+        DataOp.skb.find_X_y
+            Find the nodes that have been marked with
+            :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`.
 
         Examples
         --------
@@ -544,9 +548,12 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> learner.find_fitted_estimator("vectorizer")
         ApplyToSubFrame(transformer=TableVectorizer(datetime=DatetimeEncoder(add_total_seconds=False)))
         """  # noqa: E501
-        node = find_node_by_name(self.data_op, name)
+        node = self.data_op.skb.find(what)
         if node is None:
-            raise KeyError(name)
+            raise ValueError(f"No node matching {what!r} could be found.")
+        if not isinstance(node, DataOp):
+            # If the found node is a choice, wrap it in a DataOp
+            node = as_data_op(node)
         new = self.__class__(node)
         _copy_attr(self, new, ["_is_fitted"])
         return new
@@ -672,7 +679,7 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         return [(name, scorer_output)]
 
     def _score(self, X, y=None, cast_to_float=True):
-        score_node = _find_scoring_node(self.data_op)
+        score_node = find_scoring_node(self.data_op)
         if score_node is None:
             return self._eval_in_mode("score", X, y)
         env = self._get_env(X, y)
@@ -693,31 +700,17 @@ class _XyPipeline(_XyPipelineMixin, SkrubLearner):
         return result
 
 
-def _find_X_y_and_cv(data_op):
-    """Find the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`"""
-    x_node = find_X(data_op)
-    if x_node is None:
+def _compute_X_y_and_cv(data_op, environment):
+    """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
+    nodes = find_X_y_and_cv(data_op.skb.clone())
+    if "X" not in nodes:
         raise ValueError('DataOp should have a node marked with "mark_as_X()"')
-    result = {"X": x_node}
-    if isinstance(x_node._skrub_impl, SplitX):
-        result["cv"] = x_node._skrub_impl.cv
-        result["split_kwargs"] = x_node._skrub_impl.split_kwargs
-    if (y_node := find_y(data_op)) is not None:
-        result["y"] = y_node
-    else:
+    if "y" not in nodes:
         first = find_first_apply(data_op)
-        if first is None:
-            return result
-        if getattr(first._skrub_impl, "y", None) is not None:
+        if first is not None and getattr(first._skrub_impl, "y", None) is not None:
             # the estimator requests a y so some node must have been
             # marked as y
             raise ValueError('DataOp should have a node marked with "mark_as_y()"')
-    return result
-
-
-def _compute_X_y_and_cv(data_op, environment):
-    """Evaluate the nodes marked with `.skb.mark_as_X()` and `.skb.mark_as_y()`."""
-    nodes = _find_X_y_and_cv(data_op.skb.clone())
     values = evaluate(nodes, mode="fit_transform", environment=environment, clear=True)
     if "y" in nodes:
         msg = (
@@ -815,8 +808,8 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     """Cross-validate a learner built from a DataOp.
 
     This runs cross-validation from a learner that was built from a skrub
-    DataOp with :func:`DataOp.skb.make_learner`, :func:`DataOp.skb.make_grid_search` or
-    :func:`DataOp.skb.make_randomized_search`.
+    DataOp with :func:`~DataOp.skb.make_learner`, :func:`~DataOp.skb.make_grid_search`
+    or :func:`~DataOp.skb.make_randomized_search`.
 
     It is useful to run nested cross-validation of a grid search or randomized
     search.
@@ -831,7 +824,7 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
 
     keep_subsampling : bool, default=False
         If True, and if subsampling has been configured (see
-        :meth:`DataOp.skb.subsample`), use a subsample of the data. By
+        :meth:`~DataOp.skb.subsample`), use a subsample of the data. By
         default subsampling is not applied and all the data is used.
 
     cv : int, cross-validation iterator or iterable, default=None
@@ -857,13 +850,13 @@ def cross_validate(learner, environment, *, keep_subsampling=False, cv=None, **k
     :func:`sklearn.model_selection.cross_validate`:
         Evaluate metric(s) by cross-validation and also record fit/score times.
 
-    :func:`skrub.DataOp.skb.make_learner`:
+    :func:`~skrub.DataOp.skb.make_learner`:
         Get a skrub learner for this DataOp.
 
-    :func:`skrub.DataOp.skb.make_grid_search`:
+    :func:`~skrub.DataOp.skb.make_grid_search`:
         Find the best parameters with grid search.
 
-    :func:`skrub.DataOp.skb.make_randomized_search`:
+    :func:`~skrub.DataOp.skb.make_randomized_search`:
         Find the best parameters with grid search.
 
     Examples
@@ -1160,8 +1153,8 @@ class ParamSearch(_BaseParamSearch):
     """Learner that evaluates a skrub DataOp with hyperparameter tuning.
 
     This class is not meant to be instantiated manually, ``ParamSearch``
-    objects are created by calling :meth:`DataOp.skb.make_grid_search()` or
-    :meth:`DataOp.skb.make_randomized_search()` on a DataOp.
+    objects are created by calling :meth:`~DataOp.skb.make_grid_search()` or
+    :meth:`~DataOp.skb.make_randomized_search()` on a DataOp.
     """
 
     def __init__(self, data_op, search):

@@ -20,6 +20,12 @@ New Features
   :class:`ParamSearch` and :class:`OptunaParamSearch` have been improved and now
   display the :class:`DataOp` they contain. :pr:`2024` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- The method :meth:`DataOp.skb.find` can find a node by name (or by a callable
+  predicate) in a DataOp. The method :meth:`DataOp.skb.find_X_y` finds the nodes
+  marked with :meth:`DataOp.skb.mark_as_X` and :meth:`DataOp.skb.mark_as_y`, and
+  the ``cv`` splitter and ``split_kwargs`` passed to
+  :meth:`DataOp.skb.mark_as_X`, if they exist. :pr:`2041`
+  by :user:`Jérôme Dockès <jeromedockes>`.
 
 Changes
 -------
@@ -33,6 +39,8 @@ Changes
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
+  :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
@@ -41,6 +49,9 @@ Changes
   possible to transform the columns selected by ``cols`` except for an
   explicit subset, mirroring :meth:`DataOp.skb.apply`.
   :pr:`2039` by :user:`Saba Siddique <sabasiddique1>`.
+- :class:`ApplyToCols` now produces better error tracebacks when the wrapped
+  transformer fails, in python versions >= 3.11. :pr:`1979` by :user:`Jérôme
+  Dockès <jeromedockes>`.
 
 Bugfixes
 --------
@@ -48,7 +59,8 @@ Bugfixes
 
 Deprecations
 ------------
-
+- The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
+  has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
 
 Release 0.8.0
 =============
@@ -156,11 +168,6 @@ Changes
   :pr:`1819` by :user:`Eloi Massoulié <emassoulie>`
 - :func:`compute_ngram_distance` has been renamed to :func:`_compute_ngram_distance` and is now a private function.
   :pr:`1838` by :user:`Siddharth Baleja <siddharthbaleja>`.
-- The repository wheel has been made smaller by removing some material that was
-  not necessary for using the library. Benchmarks are now available in a separate
-  `repository <https://github.com/skrub-data/skrub-benchmarks>`__.
-  :pr:`1893` by :user:`Riccardo Cappuzzo <rcap107>`.
-
 
 Bugfixes
 --------

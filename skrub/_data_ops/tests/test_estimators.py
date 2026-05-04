@@ -1248,18 +1248,19 @@ def test_find_fitted_estimator():
     assert isinstance(learner.find_fitted_estimator("predictor"), LogisticRegression)
 
 
-def test_truncated_after():
-    learner = (
-        skrub.X()
-        .skb.apply(MinMaxScaler())
-        .skb.set_name("scaling")
-        .skb.apply(LogisticRegression(), y=skrub.y())
-        .skb.make_learner()
-    )
+@pytest.mark.parametrize("wrap_in_choice", [False, True])
+def test_truncated_after(wrap_in_choice):
+    scaled = skrub.X().skb.apply(MinMaxScaler())
+    if wrap_in_choice:
+        scaled = skrub.as_data_op(skrub.choose_from([scaled], name="scaling"))
+    else:
+        scaled = scaled.skb.set_name("scaling")
+    learner = scaled.skb.apply(LogisticRegression(), y=skrub.y()).skb.make_learner()
     X = np.array([10.0, 5.0, 0.0])[:, None]
     y = np.array([1, 0, 1])
     learner.fit({"X": X, "y": y})
     sub_learner = learner.truncated_after("scaling")
+    assert isinstance(sub_learner.data_op, skrub.DataOp)
     assert np.allclose(
         sub_learner.transform({"X": X}), np.array([1.0, 0.5, 0.0])[:, None]
     )
@@ -1267,7 +1268,7 @@ def test_truncated_after():
     assert np.allclose(
         sub_learner.transform({"X": X}), np.array([10.0, 5.0, -1.0])[:, None]
     )
-    with pytest.raises(KeyError, match="'xyz'"):
+    with pytest.raises(ValueError, match="'xyz'"):
         learner.truncated_after("xyz")
 
 

@@ -95,7 +95,10 @@ def test_error_checking(drop_null_table):
     with pytest.raises(TypeError, match="drop_if_constant"):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
     dn = DropUninformative(drop_if_unique="wrong")
-    with pytest.raises(TypeError, match="drop_if_unique"):
+    with (
+        pytest.warns(DeprecationWarning),
+        pytest.raises(TypeError, match="drop_if_unique"),
+    ):
         dn.fit_transform(sbd.col(drop_null_table, "value_nan"))
     dn = DropUninformative(drop_null_fraction="wrong")
     with pytest.raises(ValueError, match="Threshold"):
@@ -192,11 +195,20 @@ def drop_id_column(df_module):
     )
 
 
+def test_drop_if_unique_deprecation(drop_id_column):
+    with pytest.warns(DeprecationWarning, match="drop_if_unique.*deprecated"):
+        DropUninformative(drop_if_unique=True).fit_transform(drop_id_column["str"])
+
+
 @pytest.mark.parametrize("drop_if_unique", [True, False])
 def test_drop_id(df_module, drop_id_column, drop_if_unique):
     enc = DropUninformative(drop_if_unique=drop_if_unique)
     for column in drop_id_column.columns:
-        res = enc.fit_transform(drop_id_column[column])
+        if drop_if_unique:
+            with pytest.warns(DeprecationWarning):
+                res = enc.fit_transform(drop_id_column[column])
+        else:
+            res = enc.fit_transform(drop_id_column[column])
         # Check that "str" is the only column that gets dropped
         if column == "str" and drop_if_unique:
             assert res == []
