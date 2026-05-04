@@ -121,7 +121,7 @@ def _get_preprocessors(
     drop_if_constant,
     n_jobs,
     parse_numbers=False,
-    cast_numbers_to_float32=False,
+    cast_to_float32=False,
     cast_to_str=True,
     null_strings=None,
     datetime_format=None,
@@ -146,7 +146,7 @@ def _get_preprocessors(
         (ToDatetime(format=datetime_format), cols),
     ]
 
-    match parse_numbers, cast_numbers_to_float32:
+    match parse_numbers, cast_to_float32:
         case False, False:
             tofloat_cols = None
         case False, True:
@@ -216,7 +216,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
           whose non-missing values can all be parsed as numbers are converted to
           ``float32``.
 
-    cast_numbers_to_float32 : bool, default=False
+    cast_to_float32 : bool, default=False
         Whether to cast numeric columns to ``float32``.
         If set to ``True``, numeric columns are converted to ``float32``.
 
@@ -228,11 +228,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     numeric_dtype : "float32" or None, default=None
         If set to "float32", this parameter has the same effect as
-        ``cast_numbers_to_float32=True`` and ``parse_numbers=True``: it casts
+        ``cast_to_float32=True`` and ``parse_numbers=True``: it casts
         numeric columns to ``float32``.
 
         .. deprecated:: 0.9.0
-            Use ``cast_numbers_to_float32=True`` with ``parse_numbers=True`` instead.
+            Use ``cast_to_float32=True`` with ``parse_numbers=True`` instead.
 
     null_strings : str or sequence of str, default=None
         Additional strings to consider as null values, beyond the default list.
@@ -292,7 +292,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
       - if ``parse_numbers=True``, apply :class:`ToFloat` on string columns,
         converting strings whose non-missing values can all be parsed as numbers
         to ``float32``;
-      - if ``cast_numbers_to_float32=True``, apply :class:`ToFloat` on numeric
+      - if ``cast_to_float32=True``, apply :class:`ToFloat` on numeric
         columns to cast them to ``float32``.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
@@ -312,7 +312,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     num        ...
     f          float64
     dtype: object
-    >>> cleaner = Cleaner(parse_numbers=True, cast_numbers_to_float32=True)
+    >>> cleaner = Cleaner(parse_numbers=True, cast_to_float32=True)
     >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     num_str    float32
     num        ...
@@ -393,7 +393,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         datetime_format=None,
         null_strings=None,
         parse_numbers=False,
-        cast_numbers_to_float32=False,
+        cast_to_float32=False,
         cast_to_str=False,
         n_jobs=1,
         numeric_dtype=None,
@@ -404,7 +404,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
         self.parse_numbers = parse_numbers
-        self.cast_numbers_to_float32 = cast_numbers_to_float32
+        self.cast_to_float32 = cast_to_float32
         self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
         self.numeric_dtype = numeric_dtype
@@ -428,17 +428,17 @@ class Cleaner(TransformerMixin, BaseEstimator):
             The transformed input.
         """
 
-        cast_numbers_to_float32 = self.cast_numbers_to_float32
+        cast_to_float32 = self.cast_to_float32
         if self.numeric_dtype is not None:
             warnings.warn(
                 "The `numeric_dtype` parameter of `Cleaner` is deprecated and will be"
                 " removed in a future version."
-                "Use `cast_numbers_to_float32=True` instead.",
+                "Use `cast_to_float32=True` instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
             if self.numeric_dtype == "float32":
-                cast_numbers_to_float32 = True
+                cast_to_float32 = True
             else:
                 raise TypeError(
                     f"Unsupported value for `numeric_dtype`: {self.numeric_dtype!r}. "
@@ -449,10 +449,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
             raise ValueError(
                 f"`parse_numbers` must be a boolean. Found {self.parse_numbers!r}."
             )
-        if not isinstance(cast_numbers_to_float32, bool):
+        if not isinstance(cast_to_float32, bool):
             raise TypeError(
-                "`cast_numbers_to_float32` must be a boolean."
-                f"Found {cast_numbers_to_float32!r}."
+                f"`cast_to_float32` must be a boolean.Found {cast_to_float32!r}."
             )
 
         all_steps = _get_preprocessors(
@@ -462,7 +461,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             parse_numbers=self.parse_numbers,
-            cast_numbers_to_float32=cast_numbers_to_float32,
+            cast_to_float32=cast_to_float32,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
@@ -1016,7 +1015,7 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
             parse_numbers=True,
-            cast_numbers_to_float32=True,
+            cast_to_float32=True,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
         )

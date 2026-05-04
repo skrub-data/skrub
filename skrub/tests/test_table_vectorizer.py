@@ -215,7 +215,7 @@ def test_get_preprocessors(df_module):
         drop_if_unique=False,
         n_jobs=1,
         parse_numbers=True,
-        cast_numbers_to_float32=True,
+        cast_to_float32=True,
     )
     assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
@@ -235,7 +235,7 @@ def test_get_preprocessors(df_module):
         drop_if_constant=True,
         drop_if_unique=False,
         n_jobs=1,
-        cast_numbers_to_float32=True,
+        cast_to_float32=True,
     )
     assert any(isinstance(step.transformer, ToFloat) for step in steps[1:])
 
@@ -467,9 +467,9 @@ def test_convert_float32(df_module):
     assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
     assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
-    vectorizer = Cleaner(cast_numbers_to_float32=True)
+    vectorizer = Cleaner(cast_to_float32=True)
     out = vectorizer.fit_transform(X)
-    # cast_numbers_to_float32 applies ToFloat to all numeric columns
+    # cast_to_float32 applies ToFloat to all numeric columns
     assert sbd.dtype(out["float"]) == sbd.dtype(sbd.to_float32(X["float"]))
     assert sbd.dtype(out["int"]) == sbd.dtype(sbd.to_float32(X["int"]))
 
@@ -501,7 +501,7 @@ def test_cleaner_parse_numbers(df_module, parse_numbers, expected_df):
 
 
 @pytest.mark.parametrize(
-    "cast_numbers_to_float32, expected_df",
+    "cast_to_float32, expected_df",
     [
         (False, lambda X: X),
         (
@@ -514,9 +514,7 @@ def test_cleaner_parse_numbers(df_module, parse_numbers, expected_df):
         ),
     ],
 )
-def test_cleaner_cast_numbers_to_float32(
-    df_module, cast_numbers_to_float32, expected_df
-):
+def test_cleaner_cast_to_float32(df_module, cast_to_float32, expected_df):
     X = df_module.make_dataframe(
         {
             "num_str": ["1", "2", "3"],
@@ -525,11 +523,11 @@ def test_cleaner_cast_numbers_to_float32(
         }
     )
     expected = expected_df(X)
-    out = Cleaner(cast_numbers_to_float32=cast_numbers_to_float32).fit_transform(X)
+    out = Cleaner(cast_to_float32=cast_to_float32).fit_transform(X)
     df_module.assert_frame_equal(out, expected)
 
 
-def test_cleaner_parse_numbers_and_cast_numbers_to_float32(df_module):
+def test_cleaner_parse_numbers_and_cast_to_float32(df_module):
     X = df_module.make_dataframe(
         {
             "num_str": ["1", "2", "3"],
@@ -543,7 +541,7 @@ def test_cleaner_parse_numbers_and_cast_numbers_to_float32(df_module):
         int_col=ToFloat().fit_transform(X["int_col"]),
         float_col=ToFloat().fit_transform(X["float_col"]),
     )
-    out = Cleaner(parse_numbers=True, cast_numbers_to_float32=True).fit_transform(X)
+    out = Cleaner(parse_numbers=True, cast_to_float32=True).fit_transform(X)
     df_module.assert_frame_equal(out, expected)
 
 
@@ -589,12 +587,12 @@ def test_cleaner_invalid_parse_numbers(df_module):
         Cleaner(parse_numbers=None).fit_transform(X)
 
 
-def test_cleaner_invalid_cast_numbers_to_float32(df_module):
+def test_cleaner_invalid_cast_to_float32(df_module):
     X = _get_clean_dataframe(df_module)
-    with pytest.raises(TypeError, match="cast_numbers_to_float32.*must be a boolean"):
-        Cleaner(cast_numbers_to_float32="wrong").fit_transform(X)
-    with pytest.raises(TypeError, match="cast_numbers_to_float32.*must be a boolean"):
-        Cleaner(cast_numbers_to_float32=None).fit_transform(X)
+    with pytest.raises(TypeError, match="cast_to_float32.*must be a boolean"):
+        Cleaner(cast_to_float32="wrong").fit_transform(X)
+    with pytest.raises(TypeError, match="cast_to_float32.*must be a boolean"):
+        Cleaner(cast_to_float32=None).fit_transform(X)
 
 
 def test_cleaner_numeric_dtype_deprecation(df_module):
@@ -609,8 +607,8 @@ def test_cleaner_numeric_dtype_deprecation(df_module):
     with pytest.warns(DeprecationWarning, match="numeric_dtype.*deprecated"):
         out = Cleaner(numeric_dtype="float32").fit_transform(X)
 
-    # ... and behave identically to cast_numbers_to_float32=True
-    expected = Cleaner(cast_numbers_to_float32=True).fit_transform(X)
+    # ... and behave identically to cast_to_float32=True
+    expected = Cleaner(cast_to_float32=True).fit_transform(X)
     df_module.assert_frame_equal(out, expected)
 
 
