@@ -217,7 +217,8 @@ class SkrubNamespace:
             :class:`ApplyToCols`, which allows applying it to part of the
             dataframe only through the ``cols`` and ``allow_reject``
             parameters. Passing ``no_wrap=True`` disables this wrapping in all
-            cases. When ``no_wrap`` is True, ``cols`` cannot be used.
+            cases. When ``no_wrap`` is True, ``cols`` and ``allow_reject``
+            cannot be used.
 
         how : "auto", "cols", "frame" or "no_wrap", optional
             Deprecated. Use ``no_wrap`` instead.

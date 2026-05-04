@@ -821,7 +821,7 @@ for op_name in _UNARY_OPS:
     setattr(DataOp, op_name, _make_unary_op(op_name))
 
 
-def _check_wrap_params(cols, no_wrap, how, allow_reject, reason):
+def _check_wrap_params(cols, how, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
@@ -859,8 +859,7 @@ def _check_estimator_type(estimator):
 
 def _wrap_estimator(estimator, cols, no_wrap, how, allow_reject, X):
     """
-    Wrap the estimator passed to .skb.apply in ApplyToEachCol or ApplyToSubFrame if
-    needed.
+    Wrap the estimator passed to .skb.apply in ApplyToCols if needed.
     """
     if not isinstance(no_wrap, bool):
         raise TypeError(
@@ -1518,7 +1517,11 @@ class Apply(DataOpImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["ApplyToEachCol", "ApplyToSubFrame"]:
+        if estimator.__class__.__name__ in [
+            "ApplyToEachCol",
+            "ApplyToSubFrame",
+            "ApplyToCols",
+        ]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):
