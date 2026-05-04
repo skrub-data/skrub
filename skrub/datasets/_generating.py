@@ -144,7 +144,7 @@ def toy_products():
     )
 
 
-def toy_random(seed=0, size=1000, nulls=0.1, n_metrics=4):
+def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
     np.random.seed(seed)
     t = time.time()
     capitals = [
