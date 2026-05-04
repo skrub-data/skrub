@@ -98,7 +98,7 @@ def test_datasets_without_splitting(dataset_name, shape):
 @xfail_with_download_error
 def test_toxicity():
     data = _fetching.fetch_toxicity()
-    assert data.toxicity_v1.shape == (1000, 2)
+    assert data.toxicity.shape == (1000, 2)
 
 
 @xfail_with_download_error
