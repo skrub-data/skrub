@@ -591,9 +591,9 @@ def test_cleaner_invalid_parse_numbers(df_module):
 
 def test_cleaner_invalid_cast_numbers_to_float32(df_module):
     X = _get_clean_dataframe(df_module)
-    with pytest.raises(ValueError, match="cast_numbers_to_float32.*must be a boolean"):
+    with pytest.raises(TypeError, match="cast_numbers_to_float32.*must be a boolean"):
         Cleaner(cast_numbers_to_float32="wrong").fit_transform(X)
-    with pytest.raises(ValueError, match="cast_numbers_to_float32.*must be a boolean"):
+    with pytest.raises(TypeError, match="cast_numbers_to_float32.*must be a boolean"):
         Cleaner(cast_numbers_to_float32=None).fit_transform(X)
 
 
@@ -617,7 +617,7 @@ def test_cleaner_numeric_dtype_deprecation(df_module):
 def test_cleaner_invalid_numeric_dtype(df_module):
     X = _get_clean_dataframe(df_module)
     with pytest.warns(DeprecationWarning, match="numeric_dtype.*deprecated"):
-        with pytest.raises(ValueError, match="Unsupported value for `numeric_dtype`"):
+        with pytest.raises(TypeError, match="Unsupported value for `numeric_dtype`"):
             Cleaner(numeric_dtype="wrong").fit_transform(X)
 
 
