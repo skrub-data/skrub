@@ -184,6 +184,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
 
+        .. deprecated:: 0.9.0
+
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
@@ -247,12 +249,10 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     - :class:`DropUninformative`: drop the column if it is considered to be
       "uninformative". A column is considered to be "uninformative" if it contains
-      only missing values (``drop_null_fraction``), only a constant value
-      (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      only missing values (``drop_null_fraction``) or only a constant value
+      (``drop_if_constant``).
       By default, the ``Cleaner`` keeps all columns, unless they contain only
       missing values.
-      Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
-      that contain text.
 
     - ``ToDatetime()``: parse datetimes represented as strings and return them as
       actual datetimes with the correct dtype. If ``datetime_format`` is provided,
@@ -312,6 +312,19 @@ class Cleaner(TransformerMixin, BaseEstimator):
     C               ...
     D           float64
     dtype: object
+
+    Columns can be excluded from processing by combining the ``Cleaner`` with
+    `:class:`~skrub.ApplyToCols`. For example, to exclude the datetime column from
+    processing and keep it as a string, we can do:
+
+    >>> from skrub import ApplyToCols
+    >>> import skrub.selectors as s
+    >>> ApplyToCols(Cleaner(), s.all() - 'B').fit_transform(df)
+                B      A     C    D
+    0  02/02/2024    one   1.5  1.5
+    1  23/02/2024    two   ...  2.0
+    2  12/03/2024    two  12.2  2.5
+    3  13/03/2024  three   ...  3.0
 
     We can inspect all the processing steps that were applied to a given column:
 

@@ -26,6 +26,8 @@ def test_repr():
     (float() & integer())
     >>> s.has_nulls()
     has_nulls(0.0)
+    >>> s.has_dtype('x', 'y')
+    has_dtype('x', 'y')
     """
 
 
@@ -77,6 +79,25 @@ def test_dtype_selectors(df_module):
         # pandas doesn't have a 'date' dtype, only datetime
         assert df_module.name == "pandas"
         assert s.any_date().expand(df) == ["datetime-col"]
+
+
+def test_has_dtype(df_module):
+    df = df_module.make_dataframe(
+        {
+            "int-col": [1, 2],
+            "float-col": [1.5, 2.5],
+            "list-col": [[1, 2], [3]],
+        }
+    )
+    int_dtype = sbd.dtype(sbd.col(df, "int-col"))
+    float_dtype = sbd.dtype(sbd.col(df, "float-col"))
+    list_dtype = sbd.dtype(sbd.col(df, "list-col"))
+
+    assert s.has_dtype(int_dtype).expand(df) == ["int-col"]
+    assert s.has_dtype(float_dtype).expand(df) == ["float-col"]
+    assert s.has_dtype(list_dtype).expand(df) == ["list-col"]
+    assert s.has_dtype(int_dtype, list_dtype).expand(df) == ["int-col", "list-col"]
+    assert s.has_dtype("definitely-not-a-dtype").expand(df) == []
 
 
 def test_dtype_pandas_object():
@@ -159,6 +180,7 @@ def test_pickling_selectors_with_args(df_module):
         s.glob("int-*"),
         s.regex("^int-.*$"),
         s.cardinality_below(4),
+        s.has_dtype(sbd.dtype(sbd.col(df, "float-col"))),
         s.cols("int-col", "float-col"),
     ]:
         unpickled = pickle.loads(pickle.dumps(selector))

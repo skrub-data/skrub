@@ -2,7 +2,7 @@ import pickle
 
 import pytest
 
-from skrub import patch_display, unpatch_display
+from skrub import config_context, patch_display, unpatch_display
 from skrub.conftest import skip_polars_installed_without_pyarrow
 
 
@@ -88,23 +88,29 @@ def test_max_plot_max_assoc_columns_parameter(pd_module):
     df4 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    patch_display(max_plot_columns=10, max_association_columns=10)
-    assert "data-test-plots-skipped" in df4._repr_html_()
-    assert "data-test-associations-skipped" in df4._repr_html_()
-    unpatch_display()
+    with config_context(
+        table_report_plots_threshold=10, table_report_associations_threshold=10
+    ):
+        patch_display()
+        assert "data-test-plots-skipped" in df4._repr_html_()
+        assert "data-test-associations-skipped" in df4._repr_html_()
+        unpatch_display()
 
     df5 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(12)}
     )
-    patch_display(max_plot_columns=15, max_association_columns=15)
-    assert "data-test-plots-skipped" not in df5._repr_html_()
-    assert "data-test-associations-skipped" not in df5._repr_html_()
-    unpatch_display()
+    with config_context(
+        table_report_plots_threshold=15, table_report_associations_threshold=15
+    ):
+        patch_display()
+        assert "data-test-plots-skipped" not in df5._repr_html_()
+        assert "data-test-associations-skipped" not in df5._repr_html_()
+        unpatch_display()
 
     df6 = pd_module.make_dataframe(
         {f"col_{i}": [i + j for j in range(3)] for i in range(5)}
     )
-    patch_display(max_plot_columns=None, max_association_columns=None)
+    patch_display()
     assert "data-test-plots-skipped" not in df6._repr_html_()
     assert "data-test-associations-skipped" not in df6._repr_html_()
     unpatch_display()

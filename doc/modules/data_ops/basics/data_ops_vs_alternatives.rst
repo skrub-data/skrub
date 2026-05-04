@@ -41,24 +41,24 @@ and do not offer capabilities for scheduling runs or provisioning resources and
 environments. Instead, they are a generalization of scikit-learn pipelines, which
 can still be used within an orchestrator.
 
-Skrub DataOps and other Skrub objects, like :func:`~skrub.tabular_pipeline`
+Skrub DataOps and other skrub objects, like :func:`~skrub.tabular_pipeline`
 ===============================================================================
 
 Skrub DataOps are built to maximize flexibility in the construction of complex
 pre-processing and machine learning pipelines. On the other hand, the main intent
-of Skrub objects such as :func:`~skrub.tabular_pipeline` and
+of skrub objects such as :func:`~skrub.tabular_pipeline` and
 :class:`~skrub.TableVectorizer` is to provide interfaces that for common
 pre-processing tasks, and simple and robust baselines for
 machine learning. As a result, these objects are more opinionated and
 less flexible than DataOps.
 
-However, it is possible to combine DataOps and regular Skrub and scikit-learn
+However, it is possible to combine DataOps and regular skrub and scikit-learn
 transformers to improve their flexibility, particularly in multi-table scenarios.
 
-Can I use library "x" with Skrub DataOps?
+Can I use library "x" with skrub DataOps?
 ==========================================
 
-Yes, Skrub DataOps are designed to be "transparent", so that any method used by
+Yes, skrub DataOps are designed to be "transparent", so that any method used by
 the underlying data structures (e.g., Pandas or Polars) can be accessed directly:
 check :ref:`user_guide_direct_access_ref` for more details.
 All DataOps-specific operations are available through the ``.skb`` attribute,

@@ -1,4 +1,5 @@
 import datetime
+import sys
 
 import numpy as np
 import pytest
@@ -9,6 +10,7 @@ from skrub import ApplyToCols
 from skrub import _dataframe as sbd
 from skrub import selectors as s
 from skrub._to_datetime import ToDatetime
+from skrub.core import RejectColumn
 
 
 def test_single_column_transformer_becomes_apply_to_each_col(df_module):
@@ -33,10 +35,10 @@ def test_invalid_parameters():
 
     X = None  # Placeholder for the dataframe, not used in this test
 
-    with pytest.raises((TypeError, ValueError), match=r"allow_reject.*bool"):
+    with pytest.raises(TypeError, match=r"allow_reject.*bool"):
         at = ApplyToCols(ToDatetime(), allow_reject="yes")
         at.fit_transform(X)
-    with pytest.raises((TypeError, ValueError), match=r"keep_original.*bool"):
+    with pytest.raises(TypeError, match=r"keep_original.*bool"):
         at = ApplyToCols(ToDatetime(), keep_original="no")
         at.fit_transform(X)
 
@@ -117,8 +119,9 @@ def test_reject_column(df_module):
 
     df_module.assert_frame_equal(X_transformed, X_expected)
 
-    # A RejectColumn exception should be raised
-    with pytest.raises(ValueError):
+    # TODO simplify after dropping support for python 3.10
+    err_t = RuntimeError if sys.version_info < (3, 11) else RejectColumn
+    with pytest.raises(err_t):
         at = ApplyToCols(ToDatetime(), cols=s.all(), allow_reject=False)
         X = df_module.make_dataframe(
             {"date": ["2020-01-01", "2020-01-02"], "value": [1, 2]}

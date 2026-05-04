@@ -150,7 +150,7 @@ Visualizing a selector
 ----------------------
 
 All selectors have the :meth:`expand` method, which allows dataframe manipulation
-outside of a Skrub workflow: applying it to any dataframe will return the list
+outside of a skrub workflow: applying it to any dataframe will return the list
 of column names from the dataframe that the selector would keep. This allows selectors
 to be applied on a variety of standard dataframe libraries, and can be particularly
 useful on complicated combinations of selectors. For instance, the following filter

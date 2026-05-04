@@ -14,18 +14,24 @@ from . import _utils
 __all__ = ["SingleColumnTransformer", "RejectColumn"]
 
 _SINGLE_COL_LINE = (
-    "``{class_name}`` is a type of single-column transformer. Unlike most scikit-learn"
-    " estimators, its ``fit``, ``transform`` and ``fit_transform`` methods expect a"
-    " single column (a pandas or polars Series) rather than a full dataframe. To apply"
-    " this transformer to one or more columns in a dataframe, use it as a parameter in"
-    " a ``skrub.ApplyToCols`` or a ``skrub.TableVectorizer``.\n\n"
+    "``{class_name}`` is a type of "
+    ":ref:`single column transformation <single_column_transformer>` . Unlike most "
+    "scikit-learn estimators, its ``fit``, ``transform`` and ``fit_transform`` methods"
+    " expect a single column (e.g. Series) not a full dataframe."
+    " To apply this transformer to one or more columns in a dataframe, use it "
+    "in a :class:`ApplyToCols` or a :class:`TableVectorizer`.\n\n"
     "To apply to all columns::\n\n"
     "   ApplyToCols({class_name}())\n\n"
     "To apply to selected columns::\n\n"
     "   ApplyToCols({class_name}(), cols=['col_name_1', 'col_name_2'])"
 )
-_SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 4)
-_SINGLE_COL_NOTE = f".. note::\n\n{_SINGLE_COL_PARAGRAPH}\n"
+
+
+_SINGLE_COL_PARAGRAPH = textwrap.indent(_SINGLE_COL_LINE, prefix=" " * 3)
+_SINGLE_COL_NOTE = (
+    f".. admonition:: A note on using single column transformations \n"
+    f"   :collapsible: closed\n\n{_SINGLE_COL_PARAGRAPH}\n"
+)
 
 
 @_utils.set_module("skrub.core")
@@ -58,12 +64,12 @@ class RejectColumn(ValueError):
     ``RejectColumn`` exceptions can be used to indicate that a column cannot be
     handled by the current transformer: this may mean that the data is invalid,
     or that the transformer is simply not designed to handle that type of data.
-    For example, a ``ToDatetime`` transformer might raise ``RejectColumn`` when it is
-    passed a column that does not contain strings, or that contains strings but none
-    of them look like dates.
+    For example, a :class:`ToDatetime` transformer might raise ``RejectColumn``
+    when  it is passed a column that does not contain strings, or that contains
+    strings but none of them look like dates.
 
-    :class:`ApplyToCols` relies on these exceptions to decide whether a column should be
-    transformed or passed through unchanged.
+    :class:`ApplyToCols` relies on these exceptions to decide whether a column
+    should be transformed or passed through unchanged.
 
     How these rejections are handled depends on the ``allow_reject`` parameter.
     By default, no special handling is performed and rejections are considered
@@ -71,10 +77,11 @@ class RejectColumn(ValueError):
 
     >>> from skrub import ApplyToCols
     >>> to_datetime = ApplyToCols(ToDatetime())
-    >>> to_datetime.fit_transform(df)
+    >>> to_datetime.fit_transform(df)  # doctest: +SKIP
     Traceback (most recent call last):
         ...
-    ValueError: Transformer ToDatetime.fit_transform failed on column 'city'...
+    skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
+    Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
 
     However, setting ``allow_reject=True`` gives the transformer itself some
     control over which columns it should be applied to. For example, whether a
@@ -108,7 +115,7 @@ class RejectColumn(ValueError):
     Traceback (most recent call last):
         ...
     skrub.core.RejectColumn: Column 'b' does not contain strings.
-    """
+    """  # noqa: E501
 
     pass
 
@@ -117,11 +124,11 @@ class SingleColumnTransformer(BaseEstimator):
     """Base class for single-column transformers.
 
     Such transformers are applied independently to each column by
-    ``ApplyToCols``; see the docstring of ``ApplyToCols`` for more
-    information.
+    :class:`~skrub.ApplyToCols`; see the docstring of :class:`~skrub.ApplyToCols`
+    for more information.
 
     Single-column transformers are not required to inherit from this class in
-    order to work with ``ApplyToCols``, however doing so avoids some
+    order to work with :class:`~skrub.ApplyToCols`, however doing so avoids some
     boilerplate:
 
     - The required ``__single_column_transformer__`` attribute is set.
@@ -146,7 +153,7 @@ class SingleColumnTransformer(BaseEstimator):
         default so there is usually no need for set_output to do anything.
 
         Subclasses are of course free to redefine set_output (e.g. by
-        inheriting from TransformerMixin before SingleColumnTransformer).
+        inheriting from ``TransformerMixin`` before SingleColumnTransformer).
 
         Parameters
         ----------
