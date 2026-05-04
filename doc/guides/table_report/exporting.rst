@@ -17,7 +17,7 @@ by a script, the report will need to be opened by calling ``.open()``:
 
 Note that calling ``.open()`` will start a standalone process that hosts the report,
 and a tab will be opened in the default browser. It is not possible to save the
-report from the webpage. The function :func:`~skrub.TableReport.write_html`
+report from the webpage. The function :func:`~skrub.TableReport.write_html` should
 be used for that:
 
 .. code-block::
@@ -36,4 +36,13 @@ access to the data and statistics used to build the report with
 .. code-block::
 
     tr = TableReport(df)
+    json_data = tr.json()
+
+Note that this will export all parts of the |TableReport|, including the distribution
+plots in SVG format if they have been generated. If you do not need them, plots should be
+disabled directly when generating the table report.
+
+.. code-block::
+
+    tr = TableReport(df, plot_distributions=False)
     json_data = tr.json()

@@ -1,6 +1,6 @@
 .. _how_to:
 
-How-to's
+How-tos
 --------
 
 This page is the index of skrub's How-to guides: these are short guides and examples
