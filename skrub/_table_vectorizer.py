@@ -208,7 +208,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
-    parse_strings : bool, default=False
+    parse_numbers : bool, default=False
         Whether to parse strings that represent numeric values.
 
         - ``False``: no numeric parsing is attempted.
@@ -219,8 +219,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
     cast_to_float : bool, default=False
         Whether to cast floating-point columns to ``np.float32``.
         If set to ``True``, only columns that are already floating-point
-        are converted to ``np.float32``. Integer columns keep their original dtype
-        in any case.
+        are converted to ``np.float32``.
 
     cast_to_str : bool, default=False
         If ``True``, apply the ``ToStr`` transformer to non-numeric,
@@ -291,12 +290,11 @@ class Cleaner(TransformerMixin, BaseEstimator):
       it is forwarded to :class:`ToDatetime`. Otherwise, the format is inferred.
 
     - :class:`ToFloat`:
-      - if ``parse_strings=True``, apply :class:`ToFloat` on string columns only,
+      - if ``parse_numbers=True``, apply :class:`ToFloat` on string columns only,
         converting strings whose non-missing values can all be parsed as numbers
         to ``np.float32``;
-      - if ``cast_to_float=True``, apply :class:`ToFloat` on floating-point
-        columns only to cast them to ``float32``. Integer columns are not
-        affected.
+      - if ``cast_to_float=True``, apply :class:`ToFloat` on numeric
+        columns to cast them to ``float32``.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
@@ -310,12 +308,12 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     >>> import pandas as pd
     >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2], "f": [1.0, 2.0]})
-    >>> Cleaner(parse_strings=False).fit_transform(df).dtypes  # doctest: +SKIP
+    >>> Cleaner(parse_numbers=False).fit_transform(df).dtypes  # doctest: +SKIP
     num_str    ...
     num        ...
     f          float64
     dtype: object
-    >>> cleaner = Cleaner(parse_strings=True, cast_to_float=True)
+    >>> cleaner = Cleaner(parse_numbers=True, cast_to_float=True)
     >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
     num_str    float32
     num        ...
@@ -395,7 +393,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_unique=False,
         datetime_format=None,
         null_strings=None,
-        parse_strings=False,
+        parse_numbers=False,
         cast_to_float=False,
         cast_to_str=False,
         n_jobs=1,
@@ -406,7 +404,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
-        self.parse_strings = parse_strings
+        self.parse_numbers = parse_numbers
         self.cast_to_float = cast_to_float
         self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
@@ -447,9 +445,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
                     "The only supported value is 'float32'."
                 )
 
-        if not isinstance(self.parse_strings, bool):
+        if not isinstance(self.parse_numbers, bool):
             raise ValueError(
-                f"`parse_strings` must be a boolean. Found {self.parse_strings!r}."
+                f"`parse_numbers` must be a boolean. Found {self.parse_numbers!r}."
             )
         if not isinstance(cast_to_float, bool):
             raise ValueError(
@@ -462,7 +460,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            parse_numbers=self.parse_strings,
+            parse_numbers=self.parse_numbers,
             cast_numbers_to_float32=cast_to_float,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,

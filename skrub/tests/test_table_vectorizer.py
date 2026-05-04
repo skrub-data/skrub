@@ -460,9 +460,9 @@ def test_convert_float32(df_module):
     assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
     assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
 
-    vectorizer = Cleaner(parse_strings=True)
+    vectorizer = Cleaner(parse_numbers=True)
     out = vectorizer.fit_transform(X)
-    # parse_strings applies ToFloat only to string columns, so numeric columns
+    # parse_numbers applies ToFloat only to string columns, so numeric columns
     # keep their original dtype
     assert sbd.dtype(out["float"]) == sbd.dtype(X["float"])
     assert sbd.dtype(out["int"]) == sbd.dtype(X["int"])
@@ -475,7 +475,7 @@ def test_convert_float32(df_module):
 
 
 @pytest.mark.parametrize(
-    "parse_strings, expected_df",
+    "parse_numbers, expected_df",
     [
         (False, lambda X: X),
         (
@@ -487,7 +487,7 @@ def test_convert_float32(df_module):
         ),
     ],
 )
-def test_cleaner_parse_strings(df_module, parse_strings, expected_df):
+def test_cleaner_parse_numbers(df_module, parse_numbers, expected_df):
     X = df_module.make_dataframe(
         {
             "num_str": ["1", "2", "3"],
@@ -496,7 +496,7 @@ def test_cleaner_parse_strings(df_module, parse_strings, expected_df):
         }
     )
     expected = expected_df(X)
-    out = Cleaner(parse_strings=parse_strings).fit_transform(X)
+    out = Cleaner(parse_numbers=parse_numbers).fit_transform(X)
     df_module.assert_frame_equal(out, expected)
 
 
@@ -527,7 +527,7 @@ def test_cleaner_cast_to_float(df_module, cast_to_float, expected_df):
     df_module.assert_frame_equal(out, expected)
 
 
-def test_cleaner_parse_strings_and_cast_to_float(df_module):
+def test_cleaner_parse_numbers_and_cast_to_float(df_module):
     X = df_module.make_dataframe(
         {
             "num_str": ["1", "2", "3"],
@@ -541,7 +541,7 @@ def test_cleaner_parse_strings_and_cast_to_float(df_module):
         int_col=ToFloat().fit_transform(X["int_col"]),
         float_col=ToFloat().fit_transform(X["float_col"]),
     )
-    out = Cleaner(parse_strings=True, cast_to_float=True).fit_transform(X)
+    out = Cleaner(parse_numbers=True, cast_to_float=True).fit_transform(X)
     df_module.assert_frame_equal(out, expected)
 
 
@@ -579,12 +579,12 @@ def test_cast_to_str(df_module):
     assert sbd.dtype(out["a"]) == sbd.dtype(expected_col)
 
 
-def test_cleaner_invalid_parse_strings(df_module):
+def test_cleaner_invalid_parse_numbers(df_module):
     X = _get_clean_dataframe(df_module)
-    with pytest.raises(ValueError, match="parse_strings.*must be a boolean"):
-        Cleaner(parse_strings="wrong").fit_transform(X)
-    with pytest.raises(ValueError, match="parse_strings.*must be a boolean"):
-        Cleaner(parse_strings=None).fit_transform(X)
+    with pytest.raises(ValueError, match="parse_numbers.*must be a boolean"):
+        Cleaner(parse_numbers="wrong").fit_transform(X)
+    with pytest.raises(ValueError, match="parse_numbers.*must be a boolean"):
+        Cleaner(parse_numbers=None).fit_transform(X)
 
 
 def test_cleaner_invalid_cast_to_float(df_module):

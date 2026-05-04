@@ -24,15 +24,10 @@ parsing datetimes and numbers.
 
   - |DropUninformative|: Drop the column if it is considered "uninformative."
     A column is considered "uninformative" if it contains only missing values
-    (``drop_null_fraction``), only a constant value (``drop_if_constant``), or if all
-    values are distinct (``drop_if_unique``). By default, the |Cleaner| keeps all columns
+    (``drop_null_fraction``), or only a constant value (``drop_if_constant``).
+    By default, the |Cleaner| keeps all columns
     unless they contain only missing values. Refer to :ref:`user_guide_drop_uninformative`
     for more detail on this operation.
-
-  .. note::
-
-    Setting ``drop_if_unique`` to ``True`` may lead to dropping columns
-    that contain text or IDs. Numeric columns are never dropped by ``drop_if_unique``.
 
   - |ToDatetime|: Parse datetimes represented as strings and return them as
     actual datetimes with the correct dtype. If ``datetime_format`` is provided,
@@ -42,11 +37,10 @@ parsing datetimes and numbers.
   - Convert to strings: Convert columns to strings unless they have a more informative
     dtype, such as numeric, categorical, or datetime.
 
-If ``parse_strings`` is set to ``True``, the ``Cleaner`` will parse
+If ``parse_numbers`` is set to ``True``, the ``Cleaner`` will parse
 string columns that contain only numbers and convert them to ``np.float32``.
-If ``cast_to_str=True``, the ``Cleaner`` will also downcast columns
-that are already floating-point (e.g. ``float64``) to ``np.float32`` while
-leaving integer columns unchanged.
+If ``cast_to_float=True``, the ``Cleaner`` will also numeric columns
+(e.g. ``float64``, ``int64``) to ``np.float32``.
 
 The |Cleaner| is a scikit-learn compatible transformer:
 
@@ -78,10 +72,10 @@ By default, when the |Cleaner| encounters a string series that contains only
 numeric-looking values (for example ``["1", "2", "3"]``), it leaves it
 unchanged.
 
-The |Cleaner| can parse those values by setting ``parse_strings=True``:
+The |Cleaner| can parse those values by setting ``parse_numbers=True``:
 
 >>> from skrub import Cleaner
->>> cleaner = Cleaner(parse_strings=True)
+>>> cleaner = Cleaner(parse_numbers=True)
 >>> import pandas as pd
 >>> df = pd.DataFrame({
 ...     "id_as_str": ["1", "2", "3"],
@@ -101,14 +95,14 @@ Parsed string values are converted to ``float32`` (not to ``int64`` or
 ``float64``), to keep a consistent numeric representation that is compatible
 with downstream scikit-learn transformers.
 
-When ``parse_strings=False`` (default), both columns keep their original dtypes.
+When ``parse_numbers=False`` (default), both columns keep their original dtypes.
 
 Downcasting float dtypes to ``float32`` with the |Cleaner|
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, floating-point columns (e.g. ``float64``) keep their original dtype.
-To downcast only floating-point columns to ``float32``, set
-``cast_to_str=True``:
+To downcast numeric columns to ``float32``, set
+``cast_to_float=True``:
 
 >>> from skrub import Cleaner
 >>> cleaner = Cleaner(cast_to_float=True)
@@ -123,7 +117,5 @@ i64      int64
 dtype: ...
 >>> cleaner.fit_transform(df).dtypes
 f64    float32
-i64      int64
+i64    float32
 dtype: ...
-
-Integer columns are left untouched by ``numeric_dtype="float32"``.
