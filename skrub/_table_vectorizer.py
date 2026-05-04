@@ -120,9 +120,8 @@ def _get_preprocessors(
     drop_if_unique,
     drop_if_constant,
     n_jobs,
-    add_tofloat32=False,
-    parse_strings=False,
-    cast_to_float=False,
+    parse_numbers=False,
+    cast_numbers_to_float32=False,
     cast_to_str=True,
     null_strings=None,
     datetime_format=None,
@@ -147,18 +146,15 @@ def _get_preprocessors(
         (ToDatetime(format=datetime_format), cols),
     ]
 
-    tofloat_cols = None
-    match add_tofloat32, parse_strings, cast_to_float:
-        case True, _, _:
-            tofloat_cols = cols
-        case False, False, False:
+    match parse_numbers, cast_numbers_to_float32:
+        case False, False:
             tofloat_cols = None
-        case False, False, True:
-            tofloat_cols = cols & s.float()
-        case False, True, False:
+        case False, True:
+            tofloat_cols = cols & s.numeric()
+        case True, False:
             tofloat_cols = cols & s.string()
-        case False, True, True:
-            tofloat_cols = cols & (s.string() | s.float())
+        case True, True:
+            tofloat_cols = cols
     if tofloat_cols is not None:
         transformers.append((ToFloat(), tofloat_cols))
 
@@ -466,8 +462,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            parse_strings=self.parse_strings,
-            cast_to_float=cast_to_float,
+            parse_numbers=self.parse_strings,
+            cast_numbers_to_float32=cast_to_float,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
@@ -1020,7 +1016,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=True,
+            parse_numbers=True,
+            cast_numbers_to_float32=True,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
         )
