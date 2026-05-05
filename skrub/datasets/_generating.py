@@ -231,8 +231,8 @@ def toy_cities(seed=0, size=1000, nulls=0.1, n_metrics=4):
         else:
             end_times.append(None)
 
-    d["start_times"] = pd.to_datetime(start_times, format="mixed")
-    d["end_times"] = pd.to_datetime(end_times, format="mixed")
+    d["start_times"] = pd.to_datetime(start_times)
+    d["end_times"] = pd.to_datetime(end_times)
 
     for k in range(n_metrics):
         d[f"metric_{k}"] = np.random.random(size)
