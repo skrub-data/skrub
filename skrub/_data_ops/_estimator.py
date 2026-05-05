@@ -357,7 +357,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         -------
         scikit-learn estimator
             The fitted estimator. Depending on the nature of the estimator it
-            may be wrapped in a ``skrub._apply_to_each_col.ApplyToEachCol``
+            may be wrapped in a :class:`ApplyToCols`
             or ``skrub._apply_to_sub_frame.ApplyToSubFrame``,
             see examples below.
 
@@ -399,14 +399,12 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         DummyClassifier()
 
         Depending on the parameters passed to :meth:`DataOp.skb.apply`, the
-        estimator we provide can be wrapped in a skrub transformer that applies
-        it to several columns in the input, or to a subset of the columns in a
-        dataframe. In other cases it may be applied without any wrapping. We
-        provide examples for those 3 different cases below.
+        estimator we provide may or may not be wrapped in a
+        :class:`ApplyToCols` transformer.
 
         Case 1: the ``StringEncoder`` is a skrub single-column transformer: it
         transforms a single column. In the learner it gets wrapped in a
-        :class:`ApplyToEachCol` which independently fits a separate instance of the
+        :class:`ApplyToCols` which independently fits a separate instance of the
         ``StringEncoder`` to each of the columns it transforms (in this case there is
         only one column, ``'product'``). The individual transformers can be found in the
         fitted attribute ``transformers_`` which maps column names to the corresponding
@@ -418,13 +416,13 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> encoder.transformers_['product'].vectorizer_.vocabulary_
         {' pe': 2, 'pen': 12, 'en ': 8, ' pen': 3, 'pen ': 13, ' cu': 0, 'cup': 6, 'up ': 18, ' cup': 1, 'cup ': 7, ' sp': 4, 'spo': 16, 'poo': 14, 'oon': 10, 'on ': 9, ' spo': 5, 'spoo': 17, 'poon': 15, 'oon ': 11}
 
-        This case (wrapping in :class:`ApplyToEachCol`) happens when the estimator is a skrub
+        This case happens when the estimator is a skrub
         single-column transformer (it has a ``__single_column_transformer__``
-        attribute), we pass ``.skb.apply(how='cols')`` or we pass
-        ``.skb.apply(allow_reject=True)``.
+        attribute), the input is a DataFrame and we pass ``no_wrap=False`` (the
+        default).
 
         Case 2: the ``PCA`` is a regular scikit-learn transformer. In the learner it
-        gets wrapped in a :class:`ApplyToSubFrame` which applies it to the subset of columns
+        gets wrapped in a :class:`ApplyToCols` which applies it to the subset of columns
         in the dataframe selected by the ``cols`` argument passed to ``.skb.apply()``.
         The fitted ``PCA`` can be found in the fitted attribute ``transformer_``.
 
@@ -436,9 +434,9 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> pca.transformer_.mean_
         array([2020.,    4.,    4.], dtype=float32)
 
-        This case (wrapping in :class:`ApplyToSubFrame`) happens when the estimator is a
-        scikit-learn transformer but not a single-column transformer, or we
-        pass ``.skb.apply(how='frame')``.
+        This case happens when the estimator is a scikit-learn transformer but
+        not a single-column transformer, the input is a DataFrame and we pass
+        ``no_wrap=False`` (the default).
 
         The ``DummyRegressor`` is a scikit-learn predictor. In the learner it gets
         applied directly to the input dataframe without any wrapping.
@@ -451,7 +449,7 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
 
         This case (no wrapping) happens when the estimator is a scikit-learn predictor
         (not a transformer), the input is not a dataframe (e.g. it is a numpy array), or
-        we pass ``.skb.apply(how='no_wrap')``.
+        we pass ``.skb.apply(no_wrap=True)``.
         """  # noqa: E501
         node = find_node_by_name(self.data_op, name)
         if node is None:

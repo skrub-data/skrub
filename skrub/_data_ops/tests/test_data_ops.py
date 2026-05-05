@@ -1,4 +1,5 @@
 import copy
+import re
 import sys
 import warnings
 
@@ -496,17 +497,17 @@ def test_data_op_impl():
         a.skb.eval()
 
 
-@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "how"])
+@pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "no_wrap", "how"])
 @pytest.mark.parametrize("bad_param", ["cols", "how", "allow_reject"])
 def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
-    # dataframe) (or how='no_wrap') the estimator can only be applied to the
-    # full input without wrapping in ApplyToEachCol or ApplyToSubFrame. In this case
-    # if the user passed a parameter that would require wrapping, such as
-    # passing a value for `cols` that is not `all()`, or passing
-    # how='cols' or allow_reject=True, we get an error.
+    # dataframe) (or no_wrap=True, or how='no_wrap') the estimator can only be
+    # applied to the full input without wrapping in ApplyToCols, ApplyToEachCol
+    # or ApplyToSubFrame. In this case if the user passed a parameter that
+    # would require wrapping, such as passing a value for `cols` that is not
+    # `all()`, or passing how='cols' or allow_reject=True, we get an error.
 
-    if why_no_wrap == bad_param == "how":
+    if bad_param == "how" and why_no_wrap in ["no_wrap", "how"]:
         return
     X_a, y_a = make_classification(random_state=0)
     X_df = pd.DataFrame(X_a, columns=[f"col_{i}" for i in range(X_a.shape[1])])
@@ -530,6 +531,7 @@ def test_apply_bad_params(why_no_wrap, bad_param):
         cols = s.all()
     how = "cols" if bad_param == "how" else how
     allow_reject = True if bad_param == "allow_reject" else False
+    no_wrap = True if why_no_wrap == "no_wrap" else False
 
     with pytest.raises(
         (ValueError, RuntimeError),
@@ -538,21 +540,53 @@ def test_apply_bad_params(why_no_wrap, bad_param):
             r" False)"
         ),
     ):
-        X.skb.apply(estimator, y=y, how=how, allow_reject=allow_reject, cols=cols)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message=".*how.*deprecated.*")
+            X.skb.apply(
+                estimator,
+                y=y,
+                no_wrap=no_wrap,
+                how=how,
+                allow_reject=allow_reject,
+                cols=cols,
+            )
 
 
-def test_apply_invalid_how():
+def test_apply_how():
     df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
     X = skrub.var("X", df)
     t = PassThrough()
-    for how in ["auto", "cols", "frame", "no_wrap"]:
-        assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
+    for how in ["cols", "frame", "no_wrap"]:
+        with pytest.warns(
+            FutureWarning,
+            match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
+        ):
+            assert list(X.skb.apply(t, how=how).skb.eval().columns) == ["a", "b"]
+    assert list(X.skb.apply(t, how="auto").skb.eval().columns) == ["a", "b"]
     with pytest.raises(RuntimeError, match="`how` must be one of"):
         X.skb.apply(t, how="bad value")
-    # TODO: remove when old names are dropped in 0.7.0
-    with pytest.warns(FutureWarning, match="'columnwise' has been renamed to 'cols'"):
-        wrapper = X.skb.apply(t, how="columnwise").skb.applied_estimator.skb.eval()
+    with pytest.warns(
+        FutureWarning,
+        match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
+    ):
+        wrapper = X.skb.apply(t, how="cols").skb.applied_estimator.skb.eval()
         assert isinstance(wrapper, ApplyToEachCol)
+
+
+def test_apply_no_wrap():
+    df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+    X = skrub.var("X", df)
+    t = PassThrough()
+    with pytest.raises(
+        RuntimeError,
+        match=re.escape("The parameter 'no_wrap' of .skb.apply() must be a Boolean"),
+    ):
+        X.skb.apply(t, no_wrap="bad")
+    applied = X.skb.apply(t).skb.applied_estimator.skb.eval()
+    assert isinstance(applied, skrub.ApplyToCols)
+    assert isinstance(applied.transformer_, PassThrough)
+    applied = X.skb.apply(t, no_wrap=True).skb.applied_estimator.skb.eval()
+    assert isinstance(applied, PassThrough)
 
 
 class Mul(BaseEstimator):
@@ -635,9 +669,13 @@ def test_apply_transformer_kwargs():
         .skb.make_learner()
     )
     df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-    learner.fit({"df": df})
-    learner.fit_transform({"df": df})
-    learner.transform({"df": df})
+    with pytest.warns(
+        FutureWarning,
+        match=re.escape("The 'how' parameter of .skb.apply() has been deprecated"),
+    ):
+        learner.fit({"df": df})
+        learner.fit_transform({"df": df})
+        learner.transform({"df": df})
 
 
 def test_apply_kwargs_evaluation():

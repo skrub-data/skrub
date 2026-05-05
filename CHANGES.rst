@@ -50,9 +50,16 @@ Changes
   the nearest-neighbor distance used for matching. The metric can be any value
   supported by :class:`~sklearn.neighbors.NearestNeighbors` (see its docstring).
   :pr:`1861` by :user:`Saba Siddique <sabasiddique1>`.
+- :class:`ApplyToCols` now accepts an ``exclude_cols`` parameter, making it
+  possible to transform the columns selected by ``cols`` except for an
+  explicit subset, mirroring :meth:`DataOp.skb.apply`.
+  :pr:`2039` by :user:`Saba Siddique <sabasiddique1>`.
 - :class:`ApplyToCols` now produces better error tracebacks when the wrapped
   transformer fails, in python versions >= 3.11. :pr:`1979` by :user:`Jérôme
   Dockès <jeromedockes>`.
+- The parameter ``how`` of :meth:`DataOp.skb.apply` is replaced by a simpler
+  Boolean parameter ``no_wrap``. :pr:`2049` by :user:`Jérôme Dockès
+  <jeromedockes>`.
 
 Bugfixes
 --------
