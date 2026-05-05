@@ -147,6 +147,7 @@ class SkrubNamespace:
         estimator,
         y=None,
         cols=_SELECT_ALL_COLUMNS,
+        exclude_cols=None,
         no_wrap=False,
         how="auto",
         allow_reject=False,
@@ -159,6 +160,7 @@ class SkrubNamespace:
             Apply(
                 estimator=estimator,
                 cols=cols,
+                exclude_cols=exclude_cols,
                 X=self._data_op,
                 y=y,
                 no_wrap=no_wrap,
@@ -449,14 +451,14 @@ class SkrubNamespace:
         """  # noqa: E501
         # TODO later we could also expose `wrap_transformer`'s `keep_original`
         # and `rename_cols` params
-        if exclude_cols is not None:
-            cols = s.make_selector(cols) - exclude_cols
+
         # unsupervised should be an actual bool
         unsupervised = bool(unsupervised)
         return self._apply(
             estimator=estimator,
             y=y,
             cols=cols,
+            exclude_cols=exclude_cols,
             no_wrap=no_wrap,
             how=how,
             allow_reject=allow_reject,
