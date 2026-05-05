@@ -204,6 +204,9 @@ class Cleaner(TransformerMixin, BaseEstimator):
         are never dropped.
 
         .. deprecated:: 0.9.0
+        This functionality can drop informative columns and is unlikely to be
+        of use in practice. It is therefore deprecated and will be removed in a
+        future version.
 
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
@@ -601,6 +604,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
+
+        .. deprecated:: 0.9.0
+        This functionality can drop informative columns and is unlikely to be
+        of use in practice. It is therefore deprecated and will be removed in a
+        future version.
 
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
