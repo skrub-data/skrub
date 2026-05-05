@@ -429,6 +429,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         """
 
         cast_to_float32 = self.cast_to_float32
+        parse_numbers = self.parse_numbers
+        # TODO: remove this deprecated parameter in a future version
         if self.numeric_dtype is not None:
             warnings.warn(
                 "The `numeric_dtype` parameter of `Cleaner` is deprecated and will be"
@@ -439,6 +441,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             )
             if self.numeric_dtype == "float32":
                 cast_to_float32 = True
+                parse_numbers = True
             else:
                 raise TypeError(
                     f"Unsupported value for `numeric_dtype`: {self.numeric_dtype!r}. "
@@ -446,7 +449,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
                 )
 
         if not isinstance(self.parse_numbers, bool):
-            raise ValueError(
+            raise TypeError(
                 f"`parse_numbers` must be a boolean. Found {self.parse_numbers!r}."
             )
         if not isinstance(cast_to_float32, bool):
@@ -460,7 +463,7 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            parse_numbers=self.parse_numbers,
+            parse_numbers=parse_numbers,
             cast_to_float32=cast_to_float32,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
