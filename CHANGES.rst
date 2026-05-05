@@ -39,6 +39,11 @@ Changes
 - The row indices of training and testing samples are now also included in the
   dictionaries produced by :meth:`DataOp.skb.iter_cv_splits`. :pr:`2012` by
   :user:`Jérôme Dockès <jeromedockes>`.
+- The :class:`Cleaner` now exposes a ``parse_numbers`` boolean parameter to
+  control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
+  to ``np.float32``, and a ``cast_to_float`` parameter to downcast numeric
+  columns to ``np.float32``.
+  :pr:`1910` by :user:`<Varshith-yadaV>`.
 - :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
   :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
 - Added a ``metric`` parameter to :func:`fuzzy_join` and :class:`Joiner` to configure
@@ -62,6 +67,8 @@ Bugfixes
 
 Deprecations
 ------------
+- The parameter ``numeric_dtype`` in the :class:`Cleaner` has been deprecated in
+  favor of ``cast_to_float`` in :pr:`1910`.
 - The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
   has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
 
