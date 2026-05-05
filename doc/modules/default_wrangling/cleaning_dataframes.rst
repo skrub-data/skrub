@@ -40,7 +40,7 @@ parsing datetimes and numbers.
 If ``parse_numbers`` is set to ``True``, the ``Cleaner`` will parse
 string columns that contain only numbers and convert them to ``float32``.
 If ``cast_to_float32=True``, the ``Cleaner`` will also convert numeric columns
-(e.g. ``float64``, ``int64``) to ``np.float32``.
+(e.g. ``float64``, ``int64``) to ``float32``.
 
 The |Cleaner| is a scikit-learn compatible transformer:
 
