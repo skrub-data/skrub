@@ -498,7 +498,7 @@ def test_data_op_impl():
 
 
 @pytest.mark.parametrize("why_no_wrap", ["numpy", "predictor", "no_wrap", "how"])
-@pytest.mark.parametrize("bad_param", ["cols", "how", "allow_reject"])
+@pytest.mark.parametrize("bad_param", ["cols", "exclude_cols", "how", "allow_reject"])
 def test_apply_bad_params(why_no_wrap, bad_param):
     # When the estimator is a predictor or the input is a numpy array (not a
     # dataframe) (or no_wrap=True, or how='no_wrap') the estimator can only be
@@ -529,6 +529,13 @@ def test_apply_bad_params(why_no_wrap, bad_param):
             cols = ["col_0", "col_1"]
     else:
         cols = s.all()
+    if bad_param == "exclude_cols":
+        if why_no_wrap == "numpy":
+            exclude_cols = [0]
+        else:
+            exclude_cols = ["col_0"]
+    else:
+        exclude_cols = None
     how = "cols" if bad_param == "how" else how
     allow_reject = True if bad_param == "allow_reject" else False
     no_wrap = True if why_no_wrap == "no_wrap" else False
@@ -536,8 +543,8 @@ def test_apply_bad_params(why_no_wrap, bad_param):
     with pytest.raises(
         (ValueError, RuntimeError),
         match=(
-            r"(`cols` must be `all\(\)`|`how` must be 'auto'|`allow_reject` must be"
-            r" False)"
+            r"(`cols` must be `all\(\)`|`exclude_cols` must be None|"
+            r"`how` must be 'auto'|`allow_reject` must be False)"
         ),
     ):
         with warnings.catch_warnings():
@@ -549,6 +556,7 @@ def test_apply_bad_params(why_no_wrap, bad_param):
                 how=how,
                 allow_reject=allow_reject,
                 cols=cols,
+                exclude_cols=exclude_cols,
             )
 
 
