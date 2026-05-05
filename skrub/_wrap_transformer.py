@@ -8,7 +8,9 @@ __all__ = ["wrap_transformer"]
 
 def wrap_transformer(
     transformer,
-    selector,
+    cols,
+    *,
+    exclude_cols=None,
     allow_reject=False,
     keep_original=False,
     rename_columns="{}",
@@ -34,8 +36,11 @@ def wrap_transformer(
     transformer : transformer (single-column or not)
         The transformer to wrap.
 
-    selector : skrub selector
+    cols : skrub selector
         The columns to which the transformer will be applied.
+
+    exclude_cols : skrub selector or None
+        Columns to subtract from cols.
 
     allow_reject : bool, default=False
         Whether to allow column rejections. Only used when the result is an
@@ -85,7 +90,9 @@ def wrap_transformer(
     >>> wrap_transformer(OrdinalEncoder(), s.string(), columnwise=True, n_jobs=4)
     ApplyToEachCol(cols=string(), n_jobs=4, transformer=OrdinalEncoder())
     """
-    selector = make_selector(selector)
+    cols = make_selector(cols)
+    if exclude_cols is not None:
+        cols = cols - exclude_cols
 
     if isinstance(columnwise, str) and columnwise == "auto":
         columnwise = is_single_column_transformer(transformer)

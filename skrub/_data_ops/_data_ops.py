@@ -821,10 +821,12 @@ for op_name in _UNARY_OPS:
     setattr(DataOp, op_name, _make_unary_op(op_name))
 
 
-def _check_wrap_params(cols, how, allow_reject, reason):
+def _check_wrap_params(cols, exclude_cols, how, allow_reject, reason):
     msg = None
     if not isinstance(cols, type(s.all())):
         msg = f"`cols` must be `all()` (the default) when {reason}"
+    if exclude_cols is not None:
+        msg = f"`exclude_cols` must be None (the default) when {reason}"
     elif how not in ["auto", "no_wrap"]:
         msg = f"`how` must be 'auto' (the default) or 'no_wrap' when {reason}"
     elif allow_reject:
@@ -857,7 +859,7 @@ def _check_estimator_type(estimator):
     )
 
 
-def _wrap_estimator(estimator, cols, no_wrap, how, allow_reject, X):
+def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X):
     """
     Wrap the estimator passed to .skb.apply in ApplyToCols if needed.
     """
@@ -883,7 +885,7 @@ def _wrap_estimator(estimator, cols, no_wrap, how, allow_reject, X):
     _check_estimator_type(estimator)
 
     def _check(reason):
-        _check_wrap_params(cols, how, allow_reject, reason)
+        _check_wrap_params(cols, exclude_cols, how, allow_reject, reason)
 
     if no_wrap:
         _check("`no_wrap` is True")
@@ -898,10 +900,10 @@ def _wrap_estimator(estimator, cols, no_wrap, how, allow_reject, X):
         _check("the input is not a DataFrame")
         return estimator
     if how == "auto":
-        return ApplyToCols(estimator, cols=cols, allow_reject=allow_reject)
+        return ApplyToCols(estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject)
     columnwise = {"cols": True, "frame": False}[how]
     return wrap_transformer(
-        estimator, cols, allow_reject=allow_reject, columnwise=columnwise
+        estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject, columnwise=columnwise
     )
 
 
@@ -1358,6 +1360,7 @@ class Apply(DataOpImpl):
         "estimator",
         "y",
         "cols",
+        "exclude_cols",
         "no_wrap",
         "how",
         "allow_reject",
@@ -1396,12 +1399,14 @@ class Apply(DataOpImpl):
 
         if "fit" in method_name:
             cols = yield self.cols
+            exclude_cols = yield self.exclude_cols
             no_wrap = yield self.no_wrap
             how = yield self.how
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
                 cols=cols,
+                exclude_cols=exclude_cols,
                 no_wrap=no_wrap,
                 how=how,
                 allow_reject=allow_reject,

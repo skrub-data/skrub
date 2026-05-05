@@ -366,13 +366,10 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
                 "Expected a boolean."
             )
 
-        cols = self.cols
-        if self.exclude_cols is not None:
-            cols = selectors.make_selector(cols) - self.exclude_cols
-
         self._wrapped_transformer = wrap_transformer(
             self.transformer,
-            cols,
+            cols=self.cols,
+            exclude_cols=self.exclude_cols,
             allow_reject=self.allow_reject,
             keep_original=self.keep_original,
             rename_columns=self.rename_columns,
