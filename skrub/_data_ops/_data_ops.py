@@ -900,10 +900,16 @@ def _wrap_estimator(estimator, cols, exclude_cols, no_wrap, how, allow_reject, X
         _check("the input is not a DataFrame")
         return estimator
     if how == "auto":
-        return ApplyToCols(estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject)
+        return ApplyToCols(
+            estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject
+        )
     columnwise = {"cols": True, "frame": False}[how]
     return wrap_transformer(
-        estimator, cols=cols, exclude_cols=exclude_cols, allow_reject=allow_reject, columnwise=columnwise
+        estimator,
+        cols=cols,
+        exclude_cols=exclude_cols,
+        allow_reject=allow_reject,
+        columnwise=columnwise,
     )
 
 
