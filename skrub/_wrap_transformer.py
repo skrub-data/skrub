@@ -100,7 +100,7 @@ def wrap_transformer(
     if columnwise:
         return ApplyToEachCol(
             transformer,
-            cols=selector,
+            cols=cols,
             allow_reject=allow_reject,
             keep_original=keep_original,
             rename_columns=rename_columns,
@@ -108,7 +108,7 @@ def wrap_transformer(
         )
     return ApplyToSubFrame(
         transformer,
-        cols=selector,
+        cols=cols,
         keep_original=keep_original,
         rename_columns=rename_columns,
     )
