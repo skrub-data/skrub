@@ -581,9 +581,9 @@ def test_cast_to_str(df_module):
 
 def test_cleaner_invalid_parse_numbers(df_module):
     X = _get_clean_dataframe(df_module)
-    with pytest.raises(ValueError, match="parse_numbers.*must be a boolean"):
+    with pytest.raises(TypeError, match="parse_numbers.*must be a boolean"):
         Cleaner(parse_numbers="wrong").fit_transform(X)
-    with pytest.raises(ValueError, match="parse_numbers.*must be a boolean"):
+    with pytest.raises(TypeError, match="parse_numbers.*must be a boolean"):
         Cleaner(parse_numbers=None).fit_transform(X)
 
 
@@ -607,8 +607,8 @@ def test_cleaner_numeric_dtype_deprecation(df_module):
     with pytest.warns(DeprecationWarning, match="numeric_dtype.*deprecated"):
         out = Cleaner(numeric_dtype="float32").fit_transform(X)
 
-    # ... and behave identically to cast_to_float32=True
-    expected = Cleaner(cast_to_float32=True).fit_transform(X)
+    # ... and behave identically to cast_to_float32=True and parse_numbers=True
+    expected = Cleaner(cast_to_float32=True, parse_numbers=True).fit_transform(X)
     df_module.assert_frame_equal(out, expected)
 
 
