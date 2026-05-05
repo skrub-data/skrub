@@ -45,6 +45,7 @@ from sklearn.base import BaseEstimator
 from .. import _config
 from .. import _dataframe as sbd
 from .. import selectors as s
+from .._apply_to_cols import ApplyToCols
 from .._check_input import cast_column_names_to_strings
 from .._reporting._utils import strip_xml_declaration
 from .._utils import PassThrough, set_module, short_repr
@@ -856,33 +857,25 @@ def _check_estimator_type(estimator):
     )
 
 
-def _check_apply_how(how):
+def _wrap_estimator(estimator, cols, no_wrap, how, allow_reject, X):
+    """
+    Wrap the estimator passed to .skb.apply in ApplyToCols if needed.
+    """
+    if not isinstance(no_wrap, bool):
+        raise TypeError(
+            "The parameter 'no_wrap' of .skb.apply() must be a Boolean, "
+            f"got: {no_wrap!r}."
+        )
     valid = ["auto", "cols", "frame", "no_wrap"]
-    if how in valid:
-        return how
-
-    # TODO remove when the old names are completely dropped in 0.7.0
-    translate = {"columnwise": "cols", "sub_frame": "frame", "full_frame": "no_wrap"}
-    if how in translate:
-        new = translate[how]
+    if how not in valid:
+        raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
+    if how != "auto":
         warnings.warn(
-            (
-                f"{how!r} has been renamed to {new!r}: use .skb.apply(how={new!r})"
-                " instead."
-            ),
+            "The 'how' parameter of .skb.apply() has been deprecated "
+            "and will  be removed in a future release. "
+            f"Use the 'no_wrap' parameter instead. Got how={how!r}",
             FutureWarning,
         )
-        return new
-
-    raise ValueError(f"`how` must be one of {valid}. Got: {how!r}")
-
-
-def _wrap_estimator(estimator, cols, how, allow_reject, X):
-    """
-    Wrap the estimator passed to .skb.apply in ApplyToEachCol or ApplyToSubFrame if
-    needed.
-    """
-    how = _check_apply_how(how)
 
     if estimator in [None, "passthrough"]:
         estimator = PassThrough()
@@ -892,6 +885,9 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     def _check(reason):
         _check_wrap_params(cols, how, allow_reject, reason)
 
+    if no_wrap:
+        _check("`no_wrap` is True")
+        return estimator
     if how == "no_wrap":
         _check("`how` is 'no_wrap'")
         return estimator
@@ -901,7 +897,9 @@ def _wrap_estimator(estimator, cols, how, allow_reject, X):
     if not sbd.is_dataframe(X):
         _check("the input is not a DataFrame")
         return estimator
-    columnwise = {"auto": "auto", "cols": True, "frame": False}[how]
+    if how == "auto":
+        return ApplyToCols(estimator, cols=cols, allow_reject=allow_reject)
+    columnwise = {"cols": True, "frame": False}[how]
     return wrap_transformer(
         estimator, cols, allow_reject=allow_reject, columnwise=columnwise
     )
@@ -1360,6 +1358,7 @@ class Apply(DataOpImpl):
         "estimator",
         "y",
         "cols",
+        "no_wrap",
         "how",
         "allow_reject",
         "unsupervised",
@@ -1397,11 +1396,13 @@ class Apply(DataOpImpl):
 
         if "fit" in method_name:
             cols = yield self.cols
+            no_wrap = yield self.no_wrap
             how = yield self.how
             allow_reject = yield self.allow_reject
             self.estimator_ = _wrap_estimator(
                 estimator=estimator,
                 cols=cols,
+                no_wrap=no_wrap,
                 how=how,
                 allow_reject=allow_reject,
                 X=X,
@@ -1516,7 +1517,11 @@ class Apply(DataOpImpl):
 
     def __repr__(self):
         estimator = get_chosen_or_default(self.estimator)
-        if estimator.__class__.__name__ in ["ApplyToEachCol", "ApplyToSubFrame"]:
+        if estimator.__class__.__name__ in [
+            "ApplyToEachCol",
+            "ApplyToSubFrame",
+            "ApplyToCols",
+        ]:
             estimator = estimator.transformer
         # estimator can be None or 'passthrough'
         if isinstance(estimator, str):
