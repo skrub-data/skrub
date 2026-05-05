@@ -55,6 +55,8 @@ Changes
 - The parameter ``how`` of :meth:`DataOp.skb.apply` is replaced by a simpler
   Boolean parameter ``no_wrap``. :pr:`2049` by :user:`Jérôme Dockès
   <jeromedockes>`.
+- The ``exclude_cols`` of :meth:`DataOp.skb.apply` can now be a DataOp.
+  :pr:`2050` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Bugfixes
 --------
