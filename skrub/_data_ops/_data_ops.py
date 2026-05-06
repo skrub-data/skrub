@@ -1446,9 +1446,9 @@ class Apply(DataOpImpl):
                 method_name = "fit_transform" if "fit" in method_name else "transform"
 
         if "transform" in method_name and not hasattr(self.estimator_, method_name):
-            # We are a predictor need to do 'transform' or 'fit_transform' (as in
-            # `.skb.preview()` or `.skb.eval()`). We replace `.transform()`
-            # with `.predict()`
+            # We are a predictor and need to do 'transform' or 'fit_transform'
+            # (as in `.skb.preview()` or `.skb.eval()`). We replace
+            # `.transform()` with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
                 self.estimator_.fit(X, y, **fit_kwargs)
