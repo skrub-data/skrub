@@ -1440,6 +1440,18 @@ class Apply(DataOpImpl):
             # `fit_transform()` so that subsequent steps can be fitted as well.
             method_name = "fit_transform"
 
+        if "transform" not in method_name and hasattr(self.estimator_, "transform"):
+            # We have a transformer but we are evaluating in another mode than
+            # transform or fit_transform and the transformer has the
+            # corresponding (e.g., score mode and the transformer has a
+            # score()). Unless we are the last estimator, we want to call
+            # transform instead.
+            from ._evaluation import HasRunningApplyAncestor
+
+            has_running_apply_ancestor = yield HasRunningApplyAncestor()
+            if has_running_apply_ancestor:
+                method_name = "fit_transform" if "fit" in method_name else "transform"
+
         if "fit" in method_name:
             y_arg = () if self.unsupervised else (y,)
         elif method_name == "score":

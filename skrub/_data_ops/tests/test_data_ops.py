@@ -9,6 +9,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 from sklearn.base import BaseEstimator
 from sklearn.datasets import make_classification, make_regression
+from sklearn.decomposition import PCA
 from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.model_selection import GroupKFold, train_test_split
@@ -198,6 +199,35 @@ def test_predictor_as_transformer():
     expected = pd.DataFrame({"a": [2.0, 2.0, 2.0], "b": [20.0, 20.0, 20.0]})
     assert_frame_equal(learner.fit_transform({"X": X, "y": X}), expected)
     assert_frame_equal(learner.transform({"X": X, "y": X}), expected)
+
+
+def test_transformer_with_score():
+    """
+    When a transformer is the last estimator, we can call score() on it, but
+    when it is the descendant of other estimators it does a (fit_)transform
+    even in other modes such as score.
+
+    What we consider is whether it is the last _estimator_ to be evaluated in
+    the current run, other nodes such as a Choice wrapping the final estimators
+    or other nodes than Apply do not affect this.
+    """
+    X_a, y_a = make_regression()
+    env = {"X": X_a, "y": y_a}
+    feat = skrub.X().skb.apply(PCA(n_components=2)).skb.apply_func(lambda x: x)
+    y = skrub.y()
+    ridge_1 = feat.skb.apply(Ridge(), y=y)
+    ridge_2 = feat.skb.apply(Ridge(), y=y)
+    pred = skrub.choose_from([ridge_1, ridge_2]).as_data_op()
+    cv = pred.skb.cross_validate(env)
+    assert not cv["test_score"].isna().any()
+
+    transformer = feat.skb.make_learner().fit(env)
+    # The PCA is the last estimator: it performs score()
+    assert isinstance(transformer.score(env), float)
+
+    predictor = pred.skb.make_learner().fit(env)
+    # The PCA is not the last estimator: it performs transform()
+    assert isinstance(predictor.score(env), float)
 
 
 def test_predictor_outputs():
