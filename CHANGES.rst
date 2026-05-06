@@ -41,8 +41,8 @@ Changes
   :user:`Jérôme Dockès <jeromedockes>`.
 - The :class:`Cleaner` now exposes a ``parse_numbers`` boolean parameter to
   control whether numeric-looking strings (e.g., ``["1", "2", "3"]``) are parsed
-  to ``np.float32``, and a ``cast_to_float`` parameter to downcast numeric
-  columns to ``np.float32``.
+  to ``float32``, and a ``cast_to_float`` parameter to downcast numeric
+  columns to ``float32``.
   :pr:`1910` by :user:`<Varshith-yadaV>`.
 - :func:`fetch_toxicity_dataset` now returns a shuffled version of the dataset by default.
   :pr:`1892` by user:`Riccardo Cappuzzo <rcap107>`.
@@ -54,8 +54,8 @@ Changes
   possible to transform the columns selected by ``cols`` except for an
   explicit subset, mirroring :meth:`DataOp.skb.apply`.
   :pr:`2039` by :user:`Saba Siddique <sabasiddique1>`.
-- :class:`ApplyToCols` now produces better error tracebacks when the wrapped
-  transformer fails, in python versions >= 3.11. :pr:`1979` by :user:`Jérôme
+- In python versions >= 3.11, :class:`ApplyToCols` now produces better error
+  tracebacks when the wrapped transformer fails, . :pr:`1979` by :user:`Jérôme
   Dockès <jeromedockes>`.
 - The parameter ``how`` of :meth:`DataOp.skb.apply` is replaced by a simpler
   Boolean parameter ``no_wrap``. :pr:`2049` by :user:`Jérôme Dockès
@@ -73,6 +73,9 @@ Deprecations
   favor of ``cast_to_float`` in :pr:`1910`.
 - The parameter ``drop_if_unique`` of :class:`Cleaner` and :class:`DropUninformative`
   has been deprecated. :pr:`2040` by :user:`Riccardo Cappuzzo <rcap107>`.
+- The parameters ``max_plot_columns`` and ``max_association_columns`` of the
+  :class:`TableReport` have been deprecated in favor of ``plot_distributions``
+  and ``compute_associations``. :pr:`1907`.
 
 Release 0.8.0
 =============
