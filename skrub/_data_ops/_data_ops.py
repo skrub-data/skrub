@@ -1422,10 +1422,33 @@ class Apply(DataOpImpl):
 
         # 2. Call the appropriate estimator method
 
+        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
+            # We are a transformer in 'fit' mode. Rather than `fit()` we call
+            # `fit_transform()`. This is done even if the transformer is the
+            # last estimator, as it can make things easier for downstream nodes
+            # if we are building a transformer rather than a predictor.
+            method_name = "fit_transform"
+
+        if "transform" not in method_name:
+            # We are evaluating in another mode than transform or fit_transform
+            # and the current estimator has the corresponding method. We check
+            # if we are the last estimator: if we are not, we want to transform
+            # instead so that subsequent steps get the transformed data rather
+            # than, for example, a fitted estimator or a score.
+            #
+            # An example situation where this arises is are in score mode and
+            # we have an internal transformer such as PCA that has a score()
+            # method.
+            from ._evaluation import HasRunningApplyAncestor
+
+            has_running_apply_ancestor = yield HasRunningApplyAncestor()
+            if has_running_apply_ancestor:
+                method_name = "fit_transform" if "fit" in method_name else "transform"
+
         if "transform" in method_name and not hasattr(self.estimator_, method_name):
-            # We are a predictor and the mode is 'transform' or 'fit_transform' (as in
-            # `.skb.preview()` or `.skb.eval()`). We replace `.transform()`
-            # with `.predict()`
+            # We are a predictor and need to do 'transform' or 'fit_transform'
+            # (as in `.skb.preview()` or `.skb.eval()`). We replace
+            # `.transform()` with `.predict()`
             if method_name == "fit_transform":
                 fit_kwargs = yield from self._eval_kwargs("fit")
                 self.estimator_.fit(X, y, **fit_kwargs)
@@ -1434,11 +1457,6 @@ class Apply(DataOpImpl):
             # In `(fit_)transform` mode only, format the predictions as a
             # dataframe or column if y was one during `fit()`
             return self._format_predictions(X, pred)
-
-        if method_name == "fit" and hasattr(self.estimator_, "fit_transform"):
-            # We are a transformer in 'fit' mode. Rather than `fit()` we call
-            # `fit_transform()` so that subsequent steps can be fitted as well.
-            method_name = "fit_transform"
 
         if "fit" in method_name:
             y_arg = () if self.unsupervised else (y,)
