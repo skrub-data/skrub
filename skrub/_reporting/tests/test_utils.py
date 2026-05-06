@@ -77,6 +77,8 @@ def test_ellide_non_string():
         (np.float32(10_045), "1.00e+04"),
         (1.0222222222222, "1.02"),
         (0.10222222222222, "0.102"),
+        (True, "True"),
+        (False, "False"),
     ],
 )
 def test_format_number(n_in, n_out):

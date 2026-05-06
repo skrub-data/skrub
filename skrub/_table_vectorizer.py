@@ -1,4 +1,5 @@
 import reprlib
+import warnings
 from collections import UserDict
 from collections.abc import Iterable
 
@@ -119,36 +120,54 @@ def _get_preprocessors(
     drop_if_unique,
     drop_if_constant,
     n_jobs,
-    add_tofloat32=True,
+    parse_numbers=False,
+    cast_to_float32=False,
     cast_to_str=True,
     null_strings=None,
     datetime_format=None,
 ):
+    cols = s.make_selector(cols)
     steps = [CheckInputDataFrame()]
     transformers = [
-        CleanNullStrings(
-            null_strings=null_strings,
+        (
+            CleanNullStrings(
+                null_strings=null_strings,
+            ),
+            cols,
         ),
-        DropUninformative(
-            drop_null_fraction=drop_null_fraction,
-            drop_if_constant=drop_if_constant,
-            drop_if_unique=drop_if_unique,
+        (
+            DropUninformative(
+                drop_null_fraction=drop_null_fraction,
+                drop_if_constant=drop_if_constant,
+                drop_if_unique=drop_if_unique,
+            ),
+            cols,
         ),
-        ToDatetime(format=datetime_format),
+        (ToDatetime(format=datetime_format), cols),
     ]
-    if add_tofloat32:
-        transformers.append(ToFloat())
 
-    transformers.append(CleanCategories())
+    match parse_numbers, cast_to_float32:
+        case False, False:
+            tofloat_cols = None
+        case False, True:
+            tofloat_cols = cols & s.numeric()
+        case True, False:
+            tofloat_cols = cols & s.string()
+        case True, True:
+            tofloat_cols = cols
+    if tofloat_cols is not None:
+        transformers.append((ToFloat(), tofloat_cols))
+
+    transformers.append((CleanCategories(), cols))
 
     if cast_to_str:
-        transformers.append(ToStr())
+        transformers.append((ToStr(), cols))
 
-    for transformer in transformers:
+    for transformer, transformer_cols in transformers:
         steps.append(
             wrap_transformer(
                 transformer,
-                cols,
+                transformer_cols,
                 allow_reject=True,
                 n_jobs=n_jobs,
                 columnwise=True,
@@ -184,19 +203,39 @@ class Cleaner(TransformerMixin, BaseEstimator):
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
 
+        .. deprecated:: 0.9.0
+        This functionality can drop informative columns and is unlikely to be
+        of use in practice. It is therefore deprecated and will be removed in a
+        future version.
+
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
 
-    numeric_dtype : "float32" or None, default=None
-        If set to ``float32``, convert columns with numerical information
-        to ``np.float32`` dtype thanks to the transformer ``ToFloat``.
-        If ``None``, numerical columns are not modified.
+    parse_numbers : bool, default=False
+        Whether to parse strings that represent numeric values.
+
+        - ``False``: no numeric parsing is attempted.
+        - ``True``: apply :class:`ToFloat` to string columns. String columns
+          whose non-missing values can all be parsed as numbers are converted to
+          ``float32``.
+
+    cast_to_float32 : bool, default=False
+        Whether to cast numeric columns to ``float32``.
+        If set to ``True``, numeric columns are converted to ``float32``.
 
     cast_to_str : bool, default=False
         If ``True``, apply the ``ToStr`` transformer to non-numeric,
         non-categorical, and non-datetime columns, converting them to strings.
         If ``False``, this step is skipped and such columns retain their
         original dtype (e.g., lists, structs).
+
+    numeric_dtype : "float32" or None, default=None
+        If set to "float32", this parameter has the same effect as
+        ``cast_to_float32=True`` and ``parse_numbers=True``: it casts
+        numeric columns to ``float32``.
+
+        .. deprecated:: 0.9.0
+            Use ``cast_to_float32=True`` with ``parse_numbers=True`` instead.
 
     null_strings : str or sequence of str, default=None
         Additional strings to consider as null values, beyond the default list.
@@ -226,12 +265,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
         types and representation of missing values. More informative columns (e.g.,
         categorical or datetime) are not converted.
 
-    ApplyToEachCol :
-        Apply a given transformer separately to each column in a selection of columns.
-        Useful to complement the default heuristics of the ``Cleaner``.
-
-    ApplyToSubFrame :
-        Apply a given transformer jointly to all columns in a selection of columns.
+    ApplyToCols :
+        Apply a given transformer to each column in a selection of columns.
         Useful to complement the default heuristics of the ``Cleaner``.
 
     DropUninformative :
@@ -247,16 +282,21 @@ class Cleaner(TransformerMixin, BaseEstimator):
 
     - :class:`DropUninformative`: drop the column if it is considered to be
       "uninformative". A column is considered to be "uninformative" if it contains
-      only missing values (``drop_null_fraction``), only a constant value
-      (``drop_if_constant``), or if all values are distinct (``drop_if_unique``).
+      only missing values (``drop_null_fraction``) or only a constant value
+      (``drop_if_constant``).
       By default, the ``Cleaner`` keeps all columns, unless they contain only
       missing values.
-      Note that setting ``drop_if_unique`` to ``True`` may lead to dropping columns
-      that contain text.
 
-    - ``ToDatetime()``: parse datetimes represented as strings and return them as
+    - :class:`ToDatetime`: parse datetimes represented as strings and return them as
       actual datetimes with the correct dtype. If ``datetime_format`` is provided,
-      it is forwarded to ``ToDatetime()``. Otherwise, the format is inferred.
+      it is forwarded to :class:`ToDatetime`. Otherwise, the format is inferred.
+
+    - :class:`ToFloat`:
+      - if ``parse_numbers=True``, apply :class:`ToFloat` on string columns,
+        converting strings whose non-missing values can all be parsed as numbers
+        to ``float32``;
+      - if ``cast_to_float32=True``, apply :class:`ToFloat` on numeric
+        columns to cast them to ``float32``.
 
     - ``CleanCategories()``: process categorical columns depending on the dataframe
       library (Pandas or Polars) to force consistent typing and avoid issues downstream.
@@ -266,11 +306,21 @@ class Cleaner(TransformerMixin, BaseEstimator):
     parameter. When ``cast_to_str=False`` (default), string conversion is skipped.
     When ``cast_to_str=True``, string conversion is applied.
 
-    If ``numeric_dtype`` is set to ``float32``, the ``Cleaner`` will also convert
-    numeric columns to this dtype, including numbers represented
-    as string, ensuring a consistent representation
-    of numbers and missing values. This can be useful if the ``Cleaner``
-    is used as a preprocessing step in a skrub pipeline.
+    Example:
+
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({"num_str": ["1", "2"], "num": [1, 2], "f": [1.0, 2.0]})
+    >>> Cleaner(parse_numbers=False).fit_transform(df).dtypes  # doctest: +SKIP
+    num_str    ...
+    num        ...
+    f          float64
+    dtype: object
+    >>> cleaner = Cleaner(parse_numbers=True, cast_to_float32=True)
+    >>> cleaner.fit_transform(df).dtypes  # doctest: +SKIP
+    num_str    float32
+    num        ...
+    f          float32
+    dtype: object
 
     Examples
     --------
@@ -313,6 +363,19 @@ class Cleaner(TransformerMixin, BaseEstimator):
     D           float64
     dtype: object
 
+    Columns can be excluded from processing by combining the ``Cleaner`` with
+    `:class:`~skrub.ApplyToCols`. For example, to exclude the datetime column from
+    processing and keep it as a string, we can do:
+
+    >>> from skrub import ApplyToCols
+    >>> import skrub.selectors as s
+    >>> ApplyToCols(Cleaner(), s.all() - 'B').fit_transform(df)
+                B      A     C    D
+    0  02/02/2024    one   1.5  1.5
+    1  23/02/2024    two   ...  2.0
+    2  12/03/2024    two  12.2  2.5
+    3  13/03/2024  three   ...  3.0
+
     We can inspect all the processing steps that were applied to a given column:
 
     >>> cleaner.all_processing_steps_['A']
@@ -332,18 +395,22 @@ class Cleaner(TransformerMixin, BaseEstimator):
         drop_if_unique=False,
         datetime_format=None,
         null_strings=None,
-        numeric_dtype=None,
+        parse_numbers=False,
+        cast_to_float32=False,
         cast_to_str=False,
         n_jobs=1,
+        numeric_dtype=None,
     ):
         self.null_strings = null_strings
         self.drop_null_fraction = drop_null_fraction
         self.drop_if_constant = drop_if_constant
         self.drop_if_unique = drop_if_unique
         self.datetime_format = datetime_format
-        self.numeric_dtype = numeric_dtype
+        self.parse_numbers = parse_numbers
+        self.cast_to_float32 = cast_to_float32
         self.cast_to_str = cast_to_str
         self.n_jobs = n_jobs
+        self.numeric_dtype = numeric_dtype
 
     def fit_transform(self, X, y=None):
         """Fit transformer and transform dataframe.
@@ -364,11 +431,33 @@ class Cleaner(TransformerMixin, BaseEstimator):
             The transformed input.
         """
 
-        add_tofloat32 = self.numeric_dtype == "float32"
-        if self.numeric_dtype not in (None, "float32"):
-            raise ValueError(
-                "`numeric_dtype` must be one of"
-                f"[`None`, `'float32'`]. Found {self.numeric_dtype}."
+        cast_to_float32 = self.cast_to_float32
+        parse_numbers = self.parse_numbers
+        # TODO: remove this deprecated parameter in a future version
+        if self.numeric_dtype is not None:
+            warnings.warn(
+                "The `numeric_dtype` parameter of `Cleaner` is deprecated and will be"
+                " removed in a future version."
+                "Use `cast_to_float32=True` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if self.numeric_dtype == "float32":
+                cast_to_float32 = True
+                parse_numbers = True
+            else:
+                raise TypeError(
+                    f"Unsupported value for `numeric_dtype`: {self.numeric_dtype!r}. "
+                    "The only supported value is 'float32'."
+                )
+
+        if not isinstance(self.parse_numbers, bool):
+            raise TypeError(
+                f"`parse_numbers` must be a boolean. Found {self.parse_numbers!r}."
+            )
+        if not isinstance(cast_to_float32, bool):
+            raise TypeError(
+                f"`cast_to_float32` must be a boolean.Found {cast_to_float32!r}."
             )
 
         all_steps = _get_preprocessors(
@@ -377,7 +466,8 @@ class Cleaner(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=add_tofloat32,
+            parse_numbers=parse_numbers,
+            cast_to_float32=cast_to_float32,
             cast_to_str=self.cast_to_str,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
@@ -514,6 +604,11 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
         If set to true, drop columns that contain only unique values, i.e., the number
         of unique values is equal to the number of rows in the column. Numeric columns
         are never dropped.
+
+        .. deprecated:: 0.9.0
+        This functionality can drop informative columns and is unlikely to be
+        of use in practice. It is therefore deprecated and will be removed in a
+        future version.
 
     datetime_format : str, default=None
         The format to use when parsing dates. If None, the format is inferred.
@@ -930,7 +1025,8 @@ class TableVectorizer(TransformerMixin, BaseEstimator):
             drop_if_constant=self.drop_if_constant,
             drop_if_unique=self.drop_if_unique,
             n_jobs=self.n_jobs,
-            add_tofloat32=True,
+            parse_numbers=True,
+            cast_to_float32=True,
             datetime_format=self.datetime_format,
             null_strings=self.null_strings,
         )

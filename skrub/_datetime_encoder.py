@@ -48,7 +48,7 @@ def _is_date(col):
 @_is_date.specialize("pandas", argument_type="Column")
 def _is_date_pandas(col):
     col = sbd.drop_nulls(col)
-    return (col.dt.date == col).all()
+    return (col.dt.normalize() == col).all()
 
 
 @_is_date.specialize("polars", argument_type="Column")
