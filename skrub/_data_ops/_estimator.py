@@ -266,6 +266,11 @@ class SkrubLearner(_DataOpWrapperMixin, BaseEstimator):
         >>> predict_results['result']  # doctest: +SKIP
         array([0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0])
         """
+        if mode == "score" and find_scoring_node(self.data_op) is not None:
+            raise NotImplementedError(
+                "Creating the report for 'score' mode when .skb.with_scoring() "
+                "has been used is not implemented yet."
+            )
         from ._inspection import full_report
 
         if mode not in _FITTING_METHODS:
