@@ -227,7 +227,8 @@ def test_transformer_with_score():
 
     predictor = pred.skb.make_learner().fit(env)
     # The PCA is not the last estimator: it performs transform()
-    assert isinstance(predictor.score(env), float)
+    # if it performed score() instead the next (Ridge) step would fail.
+    predictor.score(env)
 
 
 def test_predictor_outputs():

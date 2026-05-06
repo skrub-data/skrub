@@ -101,8 +101,9 @@ class HasRunningApplyAncestor:
     pipeline'. The 'last step' is treated differently: regardless of the
     evaluation mode, previous steps should do a transform(). For example when
     we call score() on a SkrubLearner, we need to call score() on the last
-    estimator it contains, but transform() on its descendants (even if they
-    have a score() method, as some transformers do).
+    estimator it contains, but transform() on the transformers that are
+    evaluated before (even if they have a score() method, as some transformers
+    do).
     """
 
 
