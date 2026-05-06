@@ -180,16 +180,15 @@ class ApplyToCols(TransformerMixin, BaseEstimator):
     0  Paris 2024-05-13 12:05:36 -1.0 -1.0 -1.0
     1   Rome 2024-05-15 13:46:02  1.0  1.0  1.0
 
-    We can also exclude columns from a broader selection. For example, to
-    transform all numeric columns except ``"C"``:
+    We can also exclude columns from a broader selection. For example, if we want
+    to scale numeric columns, but exclude an integer ID, we can do:
 
-    >>> exc_scaler = ApplyToCols(StandardScaler(), cols=s.numeric(), exclude_cols="C")
-    >>> df_enc = exc_scaler.fit_transform(df)  # doctest: +SKIP
-    >>> df_enc  # doctest: +SKIP
-        C   city                   D    A    B
-    0  19  Paris 2024-05-13 12:05:36 -1.0 -1.0
-    1  20   Rome 2024-05-15 13:46:02  1.0  1.0
-
+    >>> df_id = pd.DataFrame(dict(id=[1000, 2000], A=[-10., 10.], B=[-10., 0.], C=[19, 20]))
+    >>> exc_scaler = ApplyToCols(StandardScaler(), exclude_cols="id")
+    >>> exc_scaler.fit_transform(df_id)
+        id    A    B    C
+    0  1000 -1.0 -1.0 -1.0
+    1  2000  1.0  1.0  1.0
 
     It is possible to set ``allow_reject=True`` to allow the transformer to reject
     columns it cannot handle. For example, the :class:`DatetimeEncoder` cannot handle
