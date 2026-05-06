@@ -65,7 +65,9 @@ Changes
 
 Bugfixes
 --------
-
+- An error that could arise when calling ``score`` on a ``SkrubLearner`` that
+  contains an inner transformer that has a ``score`` method has been fixed.
+  :pr:`2052` by :user:`Jérôme Dockès <jeromedockes>`.
 
 Deprecations
 ------------
