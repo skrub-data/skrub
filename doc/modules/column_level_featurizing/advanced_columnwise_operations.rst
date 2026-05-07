@@ -84,11 +84,11 @@ we want our transformer to fail if it encounters a column that it cannot parse,
 we can keep the default value of ``allow_reject=False``, so that the transform
 fails as soon as a malformed column is encountered:
 
->>> ApplyToCols(ZipcodeParser()).fit_transform(df)
+>>> ApplyToCols(ZipcodeParser()).fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
     ...
-ValueError: Transformer ZipcodeParser.fit_transform failed on column 'received'. ...
-
+skrub.core.RejectColumn: This transformer only takes zip codes of length 5.
+Transformer ZipcodeParser.fit_transform failed on column 'received'. See above for the full traceback.
 Letting rejected columns through can be useful for situations in which we do not
 know the content of a column in advance, like when we are trying to convert to
 datetime columns in a dataframe, without knowing which ones actually contain dates.

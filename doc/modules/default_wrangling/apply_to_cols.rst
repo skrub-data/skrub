@@ -131,10 +131,11 @@ to be errors:
     birthday    city
 0  29/01/2024  London
 >>> to_datetime = ApplyToCols(ToDatetime())
->>> to_datetime.fit_transform(df)
+>>> to_datetime.fit_transform(df)  # doctest: +SKIP
 Traceback (most recent call last):
     ...
-ValueError: Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
+skrub.core.RejectColumn: Could not find a datetime format for column 'city'.
+Transformer ToDatetime.fit_transform failed on column 'city'. See above for the full traceback.
 
 However, setting ``allow_reject=True`` gives the transformer itself some
 control over which columns it should be applied to. For example, we can try to
