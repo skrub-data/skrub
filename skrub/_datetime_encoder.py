@@ -206,8 +206,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     2      2024.0          5.0       15.0        13.0          46.0           2.0
 
     We can also ask for the day of the week. The week starts at 1 on Monday and ends
-    at 7 on Sunday. This is consistent with the [ISO week date system](https://en.wikipedia.org/wiki/ISO_week_date), the standard library
-    [``datetime.isoweekday()``](https://docs.python.org/3/library/datetime.html#datetime.datetime.isoweekday) and polars ``weekday``, but not with pandas
+    at 7 on Sunday. This is consistent with the `ISO week date system <https://en.wikipedia.org/wiki/ISO_week_date>`_, the standard library
+    ` ``datetime.isoweekday()`` <https://docs.python.org/3/library/datetime.html#datetime.datetime.isoweekday>`_ and polars ``weekday``, but not with pandas
     ``day_of_week``, which counts days from 0.
 
     >>> login.dt.strftime('%A = %w')
@@ -317,7 +317,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     The DatetimeEncoder can also create new features based on either trigonometric
     functions or splines by setting ``periodic_encoder="circular"`` or ``periodic_encoder="spline"``
     respectively.
-    See [this example](https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html) in scikit-learn to know more about cyclical feature engineering.
+    See `this example <https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html>`_ in scikit-learn to know more about cyclical feature engineering.
 
     >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
     >>> encoder.fit_transform(login)
