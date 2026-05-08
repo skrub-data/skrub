@@ -99,7 +99,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     The ``DatetimeEncoder`` converts datetime features to numerical features that
     can be used by learners. It separates each datetime in its parts (year, month,
-    day, etc.), and adds new features based on the datetime (weekday, seconds
+    day, etc.), and can add new features based on the datetime (weekday, seconds
     from epoch, day of year). Circular or spline-based periodic features may also
     be included.
 
@@ -130,15 +130,16 @@ class DatetimeEncoder(SingleColumnTransformer):
     periodic_encoding : 'circular', 'spline', or None, default=None
         Add periodic features with different granularities. Add periodic features
         using either trigonometric (``circular``) or ``spline`` encoding.
+        If ``None``, no periodic encording is applied.
 
     Attributes
     ----------
     extracted_features_ : list of strings
         The features that are extracted, a subset of ["year", …, "nanosecond",
-        "weekday", "total_seconds"]. If ``periodic_encoding`` is set to either
-        ``circular`` or ``spline, the extracted periodic features will also be
+        "weekday", "total_seconds", "day_of_year"]. If ``periodic_encoding`` is set to either
+        ``circular`` or ``spline``, the extracted periodic features will also be
         added. Given a feature named ``date``, new features will be named
-        ``date_year_circular_0``, ``date_year_circular_1`` etc.
+        ``date_month_circular_0``, ``date_month_circular_1`` etc., or ``date_month_spline_00``, ``date_month_spline_01`` etc., accordingly.
 
     See Also
     --------
@@ -174,11 +175,10 @@ class DatetimeEncoder(SingleColumnTransformer):
     - ``day``: 4
     - ``hour``: 12
     - ``weekday``: 7
-
+    
     Examples
     --------
     >>> import pandas as pd
-
     >>> login = pd.to_datetime(
     ...     pd.Series(
     ...         ["2024-05-13T12:05:36", None, "2024-05-15T13:46:02"], name="login")
@@ -189,7 +189,6 @@ class DatetimeEncoder(SingleColumnTransformer):
     2   2024-05-15 13:46:02
     Name: login, dtype: datetime64[...]
     >>> from skrub import DatetimeEncoder
-
     >>> DatetimeEncoder().fit_transform(login)
        login_year  login_month  login_day  login_hour  login_total_seconds
     0      2024.0          5.0       13.0        12.0         1.715602e+09
@@ -207,9 +206,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     2      2024.0          5.0       15.0        13.0          46.0           2.0
 
     We can also ask for the day of the week. The week starts at 1 on Monday and ends
-    at 7 on Sunday. This is consistent with the ISO week date system
-    (https://en.wikipedia.org/wiki/ISO_week_date), the standard library
-    ``datetime.isoweekday()`` and polars ``weekday``, but not with pandas
+    at 7 on Sunday. This is consistent with the [ISO week date system](https://en.wikipedia.org/wiki/ISO_week_date), the standard library
+    [``datetime.isoweekday()``](https://docs.python.org/3/library/datetime.html#datetime.datetime.isoweekday) and polars ``weekday``, but not with pandas
     ``day_of_week``, which counts days from 0.
 
     >>> login.dt.strftime('%A = %w')
@@ -270,7 +268,7 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     **Time zones**
 
-    If the input column has a time zone, the extracted features are in this timezone.
+    If the input column has a time zone, the extracted features are in this time zone.
 
     >>> login = pd.to_datetime(
     ...     pd.Series(
@@ -313,13 +311,13 @@ class DatetimeEncoder(SingleColumnTransformer):
     2    13.0
     Name: login_hour, dtype: float32
 
-    Here we can see the input to ``transform`` has been converted back to the
-    timezone used during ``fit`` and that we get the same result for "hour".
+    Here we can see the Sao Paulo input of the encoder has been converted back to the
+    time zone used during the fitting and that we get the same result for "hour".
 
     The DatetimeEncoder can also create new features based on either trigonometric
     functions or splines by setting ``periodic_encoder="circular"`` or ``periodic_encoder="spline"``
     respectively.
-    (https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html).
+    See [this example](https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html) in scikit-learn to know more about cyclical feature engineering.
 
     >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
     >>> encoder.fit_transform(login)
