@@ -175,7 +175,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     - ``day``: 4
     - ``hour``: 12
     - ``weekday``: 7
-    
+
     Examples
     --------
     >>> import pandas as pd
