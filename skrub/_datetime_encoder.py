@@ -207,8 +207,8 @@ class DatetimeEncoder(SingleColumnTransformer):
 
     We can also ask for the day of the week. The week starts at 1 on Monday and ends
     at 7 on Sunday. This is consistent with the `ISO week date system <https://en.wikipedia.org/wiki/ISO_week_date>`_, the standard library
-    ` ``datetime.isoweekday()`` <https://docs.python.org/3/library/datetime.html#datetime.datetime.isoweekday>`_ and polars ``weekday``, but not with pandas
-    ``day_of_week``, which counts days from 0.
+    :meth:`datetime.isoweekday() <python:datetime.datetime.isoweekday>` and polars :meth:`weekday <polars:polars.Series.dt.weekday>`, but not with pandas
+    :attr:`day_of_week <pandas:pandas.Series.dt.day_of_week>`, which counts days from 0.
 
     >>> login.dt.strftime('%A = %w')
     0       Monday = 1
