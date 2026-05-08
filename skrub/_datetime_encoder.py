@@ -130,7 +130,7 @@ class DatetimeEncoder(SingleColumnTransformer):
     periodic_encoding : 'circular', 'spline', or None, default=None
         Add periodic features with different granularities. Add periodic features
         using either trigonometric (``circular``) or ``spline`` encoding.
-        If ``None``, no periodic encording is applied.
+        If ``None``, no periodic encoding is applied.
 
     Attributes
     ----------
