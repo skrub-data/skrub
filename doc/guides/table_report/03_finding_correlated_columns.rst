@@ -3,7 +3,7 @@
 
 .. _user_guide_table_report_associations:
 
-How to find correlated columns in a datarame
+How to find correlated columns in a dataframe
 ============================================
 
 In addition to |TableReport|'s **Associations** tab, you can compute associations
