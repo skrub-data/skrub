@@ -249,7 +249,8 @@ class DatetimeEncoder(SingleColumnTransformer):
     (The number of seconds since Epoch can still be extracted but not "hour",
     "minute", etc.)
 
-    Non-datetime columns are rejected by raising a :class:`~core.RejectColumn` exception.
+    Non-datetime columns are rejected by raising a :class:`~core.RejectColumn`
+    exception.
 
     >>> s = pd.Series(['2024-04-14', '2024-05-15'], name='birthday')
     >>> s
@@ -319,9 +320,10 @@ class DatetimeEncoder(SingleColumnTransformer):
     time zone used during the fitting and that we get the same result for "hour".
 
     The DatetimeEncoder can also create new features based on either trigonometric
-    functions or splines by setting ``periodic_encoder="circular"`` or ``periodic_encoder="spline"``
-    respectively.
-    See `this example <https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html>`_ in scikit-learn to know more about cyclical feature engineering.
+    functions or splines by setting ``periodic_encoder="circular"`` or
+    ``periodic_encoder="spline"`` respectively.
+    See `this example <https://scikit-learn.org/stable/auto_examples/applications/plot_cyclical_feature_engineering.html>`_
+    in scikit-learn to know more about cyclical feature engineering.
 
     >>> encoder = make_pipeline(ToDatetime(), DatetimeEncoder(periodic_encoding="circular"))
     >>> encoder.fit_transform(login)
